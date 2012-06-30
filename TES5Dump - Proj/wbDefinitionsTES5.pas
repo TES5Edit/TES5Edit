@@ -8728,7 +8728,6 @@ begin
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbInteger(LLCT, 'Count', itU8),
-    wbRArrayS('Leveled List Entries',
 
 //-----------------------------------------------------------------------------
 // function wbStructExSK(const aSortKey   : array of Integer;
@@ -8757,15 +8756,15 @@ begin
 //                                        : IwbSubRecordDef; overload;
 //-----------------------------------------------------------------------------
 
+    wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbUnknown(LVLO),
-  {*    wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16)
+        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+          wbInteger('Level', itS16),
           wbByteArray('Unused', 2),
           wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
           wbInteger('Count', itS16),
           wbByteArray('Unused', 2)
-        ]),  *}
+        ]),
         wbCOED
       ], [])
     )
@@ -8919,17 +8918,26 @@ begin
 
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
-    wbOBND,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbYNAM,
-    wbZNAM,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
-    ], cpNormal, True)
+// TES5 Routines
+    wbInteger(COCT, 'Count', itU32),
+    wbCNTOs,
+    wbCTDAs,
+    wbunknown(CNAM),
+    wbunknown(BNAM),
+    wbunknown(NAM1)
+
+// PRE TES5 Routines
+//   wbOBND,
+//   wbFULL,
+//   wbMODL,
+//   wbICON,
+//   wbSCRI,
+//   wbYNAM,
+//   wbZNAM,
+//   wbStruct(DATA, '', [
+//     wbInteger('Value', itS32),
+//     wbFloat('Weight')
+//   ], cpNormal, True)
   ]);
 
   wbFaceGen := wbRStruct('FaceGen Data', [
