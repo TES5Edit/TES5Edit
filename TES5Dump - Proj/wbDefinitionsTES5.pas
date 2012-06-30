@@ -93,6 +93,7 @@ const
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
   AVIF : TwbSignature = 'AVIF';
+  BIDS : TwbSignature = 'BIDS';
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
   BMDT : TwbSignature = 'BMDT';
@@ -10567,6 +10568,7 @@ begin
     wbDEST,
     wbREPL,
     wbETYPReq,
+    wbUnknown(BIDS),
     wbBIPL,
     wbYNAM,
     wbZNAM,
