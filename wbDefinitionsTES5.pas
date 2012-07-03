@@ -74,7 +74,9 @@ const
   _3_IAD : TwbSignature = #3'IAD';
   _4_IAD : TwbSignature = #4'IAD';
   _5_IAD : TwbSignature = #5'IAD';
-{* TES5-Team Place new entries in alphabetical order as much as possible *}
+//----------------------------------------------------------------------
+// TES5-Team Place new entries in alphabetical order as much as possible
+//----------------------------------------------------------------------
   ACBS : TwbSignature = 'ACBS';
   ACHR : TwbSignature = 'ACHR';
   ACRE : TwbSignature = 'ACRE';
@@ -93,6 +95,7 @@ const
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
   AVIF : TwbSignature = 'AVIF';
+  BIDS : TwbSignature = 'BIDS';
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
   BMDT : TwbSignature = 'BMDT';
@@ -111,7 +114,7 @@ const
   CLMT : TwbSignature = 'CLMT';
   CNAM : TwbSignature = 'CNAM';
   CNTO : TwbSignature = 'CNTO';
-  COCT : TwbSignature = 'COCT';  { New to Skyrim }
+  COCT : TwbSignature = 'COCT';  { New to Skyrim 'Count'}
   COBJ : TwbSignature = 'COBJ';
   COED : TwbSignature = 'COED';
   CONT : TwbSignature = 'CONT';
@@ -208,6 +211,7 @@ const
   IMAD : TwbSignature = 'IMAD';
   IMGS : TwbSignature = 'IMGS';
   INAM : TwbSignature = 'INAM';
+  INCC : TwbSignature = 'INCC';
   INDX : TwbSignature = 'INDX';
   INFO : TwbSignature = 'INFO';
   INGR : TwbSignature = 'INGR';
@@ -225,7 +229,7 @@ const
   LAND : TwbSignature = 'LAND';
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
-  LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI}
+  LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
   LNAM : TwbSignature = 'LNAM';
   LSCR : TwbSignature = 'LSCR';
   LTEX : TwbSignature = 'LTEX';
@@ -381,6 +385,7 @@ const
   POCA : TwbSignature = 'POCA';
   POEA : TwbSignature = 'POEA';
   PRKC : TwbSignature = 'PRKC';
+  PRKR : TwbSignature = 'PRKR';
   PRKE : TwbSignature = 'PRKE';
   PRKF : TwbSignature = 'PRKF';
   PROJ : TwbSignature = 'PROJ';
@@ -462,6 +467,10 @@ const
   TCLT : TwbSignature = 'TCLT';
   TERM : TwbSignature = 'TERM';
   TES4 : TwbSignature = 'TES4';
+  TIAS : TwbSignature = 'TIAS';
+  TINI : TwbSignature = 'TINI';
+  TINC : TwbSignature = 'TINC';
+  TINV : TwbSignature = 'TINV';
   TNAM : TwbSignature = 'TNAM';
   TPLT : TwbSignature = 'TPLT';
   TRDT : TwbSignature = 'TRDT';
@@ -562,8 +571,8 @@ const
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbEDIDReq: IwbSubRecordDef;
+  wbSoulGemEnum: IwbEnumDef;
   wbBMDT: IwbSubRecordDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
@@ -667,6 +676,9 @@ var
   wbFunctionsEnum: IwbEnumDef;
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
+//-----------------------------------------------------------------------------
+// New
+  wbBool: IwbIntegerDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -2013,6 +2025,13 @@ begin
 end;
 
 
+//----------------------------------------------------------------------------
+// 's': Added since GMST does contain strings originally removed by ElminsterAU
+//    : After looking at this more it may be a pointer to the localization files
+// 'b': Boolean Previously undefined does exists in Vanilla Files
+// 'r', 'h', 'c', 'u', 'a': Added to capture future Bethesda implimentation
+//
+//----------------------------------------------------------------------------
 function wbGMSTUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   rEDID: IwbRecord;
@@ -2024,8 +2043,30 @@ begin
     s := rEDID.Value;
     if Length(s) > 0 then
       case s[1] of
-        's': Result := 0;
-        'f': Result := 2;
+        's': Result := 0; {String}
+        'i': Result := 1; {intS32}
+        'f': Result := 2; {Float}
+        'b': Result := 3; {Boolean}
+{New}   'r': Begin
+              Result := 4; {Unknown Possibly related to formIDs}
+              wbProgressCallback('1st ' + '('+s[1]+')' + s);
+             End;
+{New}   'h': Begin
+              Result := 5; {Unknown Possibly int16}
+              wbProgressCallback('1st ' + '('+s[1]+')' + s);
+             End;
+{New}   'c': Begin
+              Result := 6; {Unknown Possibly int8}
+              wbProgressCallback('1st ' + '('+s[1]+')' + s);
+             End;
+{New}   'u': Begin
+              Result := 7; {Unknown Possibly uint32}
+              wbProgressCallback('1st ' + '('+s[1]+')' + s);
+             End;
+{New}   'a': Begin
+              Result := 8; {Unknown at this time}
+              wbProgressCallback('1st ' + '('+s[1]+')' + s);
+             End;
       end;
   end;
 end;
@@ -4172,39 +4213,47 @@ end;
 
 procedure DefineTES5a;
 begin
+//-----------------------------------------------------------------
+// New Routines
+//-----------------------------------------------------------------
+  wbBool:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
+//-----------------------------------------------------------------
+// End New Routines
+//-----------------------------------------------------------------
+
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
-    {0x00000001}'ESM',
-    {0x00000002}'',
-    {0x00000004}'',
-    {0x00000008}'',
-    {0x00000010}'',
-    {0x00000020}'Deleted',
-    {0x00000040}'Border Region / Has Tree LOD / Constant / Hidden From Local Map',
-    {0x00000080}'Turn Off Fire',
-    {0x00000100}'Inaccessible',
-    {0x00000200}'Casts shadows / On Local Map / Motion Blur',
-    {0x00000400}'Quest item / Persistent reference',
-    {0x00000800}'Initially disabled',
-    {0x00001000}'Ignored',
-    {0x00002000}'No Voice Filter',
-    {0x00004000}'',
-    {0x00008000}'Visible when distant',
-    {0x00010000}'Random Anim Start / High Priority LOD',
-    {0x00020000}'Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
-    {0x00040000}'Compressed',
-    {0x00080000}'Can''t wait / Platform Specific Texture',
-    {0x00100000}'Unknown 21',
-    {0x00200000}'Unknown 22',
-    {0x00400000}'Unknown 23',
-    {0x00800000}'Unknown 24',
-    {0x01000000}'Unknown 25',
-    {0x02000000}'Obstacle / No AI Acquire',
-    {0x03000000}'NavMesh Generation - Filter',
-    {0x08000000}'NavMesh Generation - Bounding Box',
-    {0x10000000}'Non-Pipboy / Reflected by Auto Water',
-    {0x20000000}'Child Can Use / Refracted by Auto Water',
-    {0x40000000}'NavMesh Generation - Ground',
-    {0x80000000}'Unknown 32'
+    {0x00000001}'0x00000001 *ESM',
+    {0x00000002}'0x00000002 *Unknown 2',
+    {0x00000004}'0x00000004 *Unknown 3',
+    {0x00000008}'0x00000008 *Unknown 4',
+    {0x00000010}'0x00000010 *Unknown 5',
+    {0x00000020}'0x00000020 *Deleted 6',
+    {0x00000040}'0x00000040 *Border Region / Has Tree LOD / Constant / Hidden From Local Map',
+    {0x00000080}'0x00000080 *Turn Off Fire',
+    {0x00000100}'0x00000100 *Inaccessible',
+    {0x00000200}'0x00000200 *Casts shadows / On Local Map / Motion Blur',
+    {0x00000400}'0x00000400 *Quest item / Persistent reference',
+    {0x00000800}'0x00000800 *Initially disabled',
+    {0x00001000}'0x00001000 *Ignored',
+    {0x00002000}'0x00002000 *No Voice Filter',
+    {0x00004000}'0x00004000 *Unknown 15',
+    {0x00008000}'0x00008000 *Visible when distant',
+    {0x00010000}'0x00010000 *Random Anim Start / High Priority LOD',
+    {0x00020000}'0x00020000 *Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
+    {0x00040000}'0x00040000 *Compressed',
+    {0x00080000}'0x00080000 *Can''t wait / Platform Specific Texture',
+    {0x00100000}'0x00100000 *Unknown 21',
+    {0x00200000}'0x00200000 *Unknown 22',
+    {0x00400000}'0x00400000 *Unknown 23',
+    {0x00800000}'0x00800000 *Unknown 24',
+    {0x01000000}'0x01000000 *Unknown 25',
+    {0x02000000}'0x02000000 *Obstacle / No AI Acquire',
+    {0x03000000}'0x03000000 *NavMesh Generation - Filter',
+    {0x08000000}'0x08000000 *NavMesh Generation - Bounding Box',
+    {0x10000000}'0x10000000 *Non-Pipboy / Reflected by Auto Water',
+    {0x20000000}'0x20000000 *Child Can Use / Refracted by Auto Water',
+    {0x40000000}'0x40000000 *NavMesh Generation - Ground',
+    {0x80000000}'0x80000000 *Unknown 32'
   ]));
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
@@ -4242,15 +4291,32 @@ begin
     {0x80000000}'Unknown 32'
   ]));                (**)
 
+//----------------------------------------------------------------------------
+// 24 Bytes Total
+// 6 is listed twice to indicate two intU16 from one intU32
+// 6 may be a flag.  It is used in GMST, and others not listed yet.
+//----------------------------------------------------------------------------
   wbMainRecordHeader := wbStruct('Record Header', [
-    wbString('Signature', 4, cpCritical),
-    wbInteger('Data Size', itU32, nil, cpIgnore),
+    wbString('1 Signature', 4, cpCritical),
+    wbByteArray('2 Unknon Data : itU32', 4, cpIgnore),
     wbRecordFlags,
-    wbFormID('FormID', cpFormID),
-    wbByteArray('Version Control Info 1', 4, cpIgnore),
-    wbInteger('Form Version', itU16, nil, cpIgnore),
-    wbByteArray('Version Control Info 2', 2, cpIgnore)
+    wbFormID('4 FormID', cpFormID),
+    wbByteArray('5 Unknon Data : itU32', 4, cpIgnore),
+    wbInteger('6 Form Version ', itU16, nil, cpNormal),
+    wbByteArray('6 Unknon Data : itU16 : (Possible Flag)', 2, cpIgnore)
   ]);
+//----------------------------------------------------------------------------
+// Old Routine
+//----------------------------------------------------------------------------
+//  wbMainRecordHeader := wbStruct('Record Header', [
+//    wbString('Signature', 4, cpCritical),
+//    wbInteger('Data Size', itU32, nil, cpIgnore),
+//    wbRecordFlags,
+//    wbFormID('FormID', cpFormID),
+//    wbByteArray('Version Control Info 1', 4, cpIgnore),
+//    wbInteger('Form Version', itU16, nil, cpIgnore),
+//    wbByteArray('Version Control Info 2', 2, cpIgnore)
+//  ]);
 
   wbSizeOfMainRecordStruct := 24;
 
@@ -4312,8 +4378,9 @@ begin
     'ReloadZ'
   ]);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
+  wbEDID    := wbString(EDID, 'Editor ID', 0, cpBenign);
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpBenign, True);
+
   wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
   wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
@@ -4624,105 +4691,106 @@ begin
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
 
+//-----------------------------------------------------------------------------
+// ACHR
+//-----------------------------------------------------------------------------
   wbRecord(ACHR, 'Placed NPC', [
-    wbEDID,
-    {VMAD}
-    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    {XPRD}
-    {XPPA}
-    {INAM}
-    {PDTO}
+    wbUnknown(EDID)
+  ], True, wbPlacedAddInfo);
 
-    {--- Ragdoll ---}
-    wbXRGD,
-    wbXRGB,
-
-    {XSCL}
-    {XLCM}
-    {XAPD}
-    {XAPR}
-    {XLRT}
-    {XHOR}
-    {XESP}
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-
-
-    {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
-    ], []),
-
-    {--- Leveled Actor ----}
-    wbXLCM,
-
-    {--- Merchant Container ----}
-    wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
-
-    {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
-
-    {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
-      ])
-    ),
-
-    {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ])
-    ]),
-
-    {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-
-    wbString(XATO, 'Activation Prompt'),
-
-    {--- Enable Parent ---}
-    wbXESP,
-
-    {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-
-    {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-
-    {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
-
-    {--- 3D Data ---}
-    wbXSCL,
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo); { End; ACHR }
+//-----------------------------------------------------------------------------
+// Begin New ACHR
+//
+// Begin Old ACHR
+//-----------------------------------------------------------------------------
+//  wbRecord(ACHR, 'Placed NPC', [
+//    wbEDID,
+//    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
+//    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+//
+//    {--- Ragdoll ---}
+//    wbXRGD,
+//    wbXRGB,
+//
+//    {--- Patrol Data ---}
+//    wbRStruct('Patrol Data', [
+//      wbFloat(XPRD, 'Idle Time', cpNormal, True),
+//      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+//      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+//      wbEmbeddedScriptReq,
+//      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+//    ], []),
+//
+//    {--- Leveled Actor ----}
+//    wbXLCM,
+//
+//    {--- Merchant Container ----}
+//    wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
+//
+//    {--- Extra ---}
+//    wbInteger(XCNT, 'Count', itS32),
+//    wbFloat(XRDS, 'Radius'),
+//    wbFloat(XHLP, 'Health'),
+//
+//    {--- Decals ---}
+//    wbRArrayS('Linked Decals',
+//      wbStructSK(XDCR, [0], 'Decal', [
+//        wbFormIDCk('Reference', [REFR]),
+//        wbUnknown
+//      ])
+//    ),
+//
+//    {--- Linked Ref ---}
+//    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+//    wbStruct(XCLP, 'Linked Reference Color', [
+//      wbStruct('Link Start Color', [
+//        wbInteger('Red', itU8),
+//        wbInteger('Green', itU8),
+//        wbInteger('Blue', itU8),
+//        wbByteArray('Unused', 1)
+//      ]),
+//      wbStruct('Link End Color', [
+//        wbInteger('Red', itU8),
+//        wbInteger('Green', itU8),
+//        wbInteger('Blue', itU8),
+//        wbByteArray('Unused', 1)
+//      ])
+//    ]),
+//
+//    {--- Activate Parents ---}
+//    wbRStruct('Activate Parents', [
+//      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+//        'Parent Activate Only'
+//      ], True)),
+//      wbRArrayS('Activate Parent Refs',
+//        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+//          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+//          wbFloat('Delay')
+//        ])
+//      )
+//    ], []),
+//
+//    wbString(XATO, 'Activation Prompt'),
+//
+//    {--- Enable Parent ---}
+//    wbXESP,
+//
+//    {--- Emittance ---}
+//    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+//
+//    {--- MultiBound ---}
+//    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+//
+//    {--- Flags ---}
+//    wbEmpty(XIBS, 'Ignored By Sandbox'),
+//
+//    {--- 3D Data ---}
+//    wbXSCL,
+//    wbDATAPosRot
+//  ], True, wbPlacedAddInfo);
+//-----------------------------------------------------------------------------
+//End OLD ACHR
+//-----------------------------------------------------------------------------
 
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
@@ -6698,21 +6766,65 @@ begin
     wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
   ]);
 
+//----------------------------------------------------------------------------
+// Begin New GLOB
+// For expansion to use wbGLOBUnionDecider to display Short, Long, Float
+// correctly without making a signed float by default
+//----------------------------------------------------------------------------
   wbRecord(GLOB, 'Global', [
     wbEDIDReq,
     wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
+//----------------------------------------------------------------------------
+// End New GLOB
+//
+// Begin Old GLOB
+//----------------------------------------------------------------------------
+//  wbRecord(GLOB, 'Global', [
+//    wbEDIDReq,
+//    wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
+//    wbFloat(FLTV, 'Value', cpNormal, True)
+//  ]);
+// End Old GLOB
 
-
+//----------------------------------------------------------------------------
+// New GMST
+//----------------------------------------------------------------------------
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbUnknown,
-      wbInteger('', itS32),
-      wbFloat('')
+      wbUnknown,                            //Possibly String/Localization
+      wbInteger('Int', itS32),              //Old Integer
+      wbFloat('Float'),                     //Old Float
+      wbBool,                               //New wbBool
+//----------------------------------------------------------------------------
+// Unused.  Here for future expansion
+//----------------------------------------------------------------------------
+      wbString('FormID'), //New wbFormID
+      wbString('it16'),   //New it16
+      wbString('it8'),    //New it8
+      wbString('itu32'),  //New itu32
+      wbString('Unk')     //New Unknown
+//----------------------------------------------------------------------------
     ], cpNormal, True)
   ]);
+//----------------------------------------------------------------------------
+// End New GMST
+//
+// Begin Old GMST
+//----------------------------------------------------------------------------
+// wbRecord(GMST, 'Game Setting', [
+//   wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
+//   wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
+//     wbUnknown,
+//     wbInteger('', itS32),
+//     wbFloat('')
+//   ], cpNormal, True)
+// ]);
+//----------------------------------------------------------------------------
+// End Old GMST
+//----------------------------------------------------------------------------
 
   wbRecord(KYWD, 'KYWD', [
     wbEDIDReq
@@ -8232,9 +8344,12 @@ begin
     wbEDIDReq
   ]);
 
+//----------------------------------------------------------------------------
+// New
+//----------------------------------------------------------------------------
   wbRecord(MATO, 'MATO', [
     wbEDIDReq,
-    wbMODLReq,
+    wbUnknown(MODL),
     wbUnknown(DNAM),
     wbUnknown(DATA)
   ]);
@@ -8263,6 +8378,9 @@ begin
     wbEDIDReq
   ]);
 
+//----------------------------------------------------------------------------
+// New
+//----------------------------------------------------------------------------
   wbRecord(CLFM, 'CLFM', [
     wbEDIDReq,
     wbFULLReq,
@@ -8716,7 +8834,11 @@ begin
     wbMODL
   ]);
 
-   wbRecord(LVLI, 'Leveled Item', [
+//----------------------------------------------------------------------------------
+// Begin New LVLI----------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
+
+  wbRecord(LVLI, 'Leveled Item', [
     wbEDIDReq,
     wbOBNDReq,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
@@ -8729,47 +8851,51 @@ begin
     wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbInteger(LLCT, 'Count', itU8),
     wbRArrayS('Leveled List Entries',
-
-//-----------------------------------------------------------------------------
-// function wbStructExSK(const aSortKey   : array of Integer;
-//                       const aExSortKey : array of Integer;
-//                       const aName      : string;
-//                       const aMembers   : array of IwbValueDef;
-//                             aPriority  : TwbConflictPriority = cpNormal;
-//                             aRequired  : Boolean = False;
-//                             aDontShow  : TwbDontShowCallback = nil;
-//                             aOptionalFromElement : Integer = -1;
-//                             aAfterLoad : TwbAfterLoadCallback = nil;
-//                             aAfterSet  : TwbAfterSetCallback = nil)
-//                                        : IwbStructDef; overload;
-//
-// function wbStructExSK(const aSignature : TwbSignature;
-//                       const aSortKey   : array of Integer;
-//                       const aExSortKey : array of Integer;
-//                       const aName      : string;
-//                       const aMembers   : array of IwbValueDef;
-//                             aPriority  : TwbConflictPriority = cpNormal;
-//                             aRequired  : Boolean = False;
-//                             aDontShow  : TwbDontShowCallback = nil;
-//                             aOptionalFromElement : Integer = -1;
-//                             aAfterLoad : TwbAfterLoadCallback = nil;
-//                             aAfterSet  : TwbAfterSetCallback = nil)
-//                                        : IwbSubRecordDef; overload;
-//-----------------------------------------------------------------------------
-
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbUnknown(LVLO),
-  {*    wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16)
-          wbByteArray('Unused', 2),
-          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unused', 2)
-        ]),  *}
-        wbCOED
+        wbUnknown(LVLO)
+//        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+//          wbInteger('Level', itS16),
+//          wbByteArray('Unused', 2),
+//          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
+//          wbInteger('Count', itS16),
+//          wbByteArray('Unused', 2)
+//        ]),
+//        wbCOED
       ], [])
     )
   ]);
+
+//----------------------------------------------------------------------------------
+// End New LVLI
+//
+// Begin Old LVLI
+//----------------------------------------------------------------------------------
+//   wbRecord(LVLI, 'Leveled Item', [
+//    wbEDIDReq,
+//    wbOBNDReq,
+//    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
+//    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+//      {0x01} 'Calculate from all levels <= player''s level',
+//      {0x02} 'Calculate for each item in count',
+//      {0x04} 'Use All'
+//    ]), cpNormal, True),
+//    wbFormIDCk(LVLG, 'Global', [GLOB]),
+//    wbRArrayS('Leveled List Entries',
+//      wbRStructExSK([0], [1], 'Leveled List Entry', [
+//        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+//          wbInteger('Level', itS16),
+//          wbByteArray('Unused', 2),
+//         wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
+//          wbInteger('Count', itS16),
+//          wbByteArray('Unused', 2)
+//        ]),
+//        wbCOED
+//      ], [])
+//    )
+//  ]);
+//----------------------------------------------------------------------------------
+// End Old LVLI
+//----------------------------------------------------------------------------------
 
    wbRecord(LVSP, 'Leveled Spell', [
     wbEDIDReq
@@ -8917,20 +9043,34 @@ begin
     ], cpNormal, True)
   ]);
 
+//-----------------------------------------------------------------------------
+// Begin New COBJ
+//-----------------------------------------------------------------------------
   wbRecord(COBJ, 'Constructible Object', [
-    wbEDID,
-    wbOBND,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbYNAM,
-    wbZNAM,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
-    ], cpNormal, True)
+    wbUnknown(EDID)
   ]);
+//-----------------------------------------------------------------------------
+// End New COBJ
+//
+// Begin Old COBJ
+//-----------------------------------------------------------------------------
+//  wbRecord(COBJ, 'Constructible Object', [
+//    wbEDID,
+//    wbOBND,
+//    wbFULL,
+//    wbMODL,
+//    wbICON,
+//    wbSCRI,
+//    wbYNAM,
+//    wbZNAM,
+//    wbStruct(DATA, '', [
+//      wbInteger('Value', itS32),
+//      wbFloat('Weight')
+//    ], cpNormal, True)
+//  ]);
+//-----------------------------------------------------------------------------
+// End Old COBJ
+//-----------------------------------------------------------------------------
 
   wbFaceGen := wbRStruct('FaceGen Data', [
     wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
@@ -8945,189 +9085,229 @@ begin
   ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
 
 
+//-----------------------------------------------------------------------------
+//Start New NPC_
+//-----------------------------------------------------------------------------
   wbRecord(NPC_, 'Non-Player Character', [
-    wbEDIDReq,
-    wbOBNDReq,
-    wbFULLActor,
-    wbMODLActor,
-    wbStruct(ACBS, 'Configuration', [
-      {00} wbInteger('Flags', itU32, wbFlags([
-             {0x000001} 'Female',
-             {0x000002} 'Essential',
-             {0x000004} 'Is CharGen Face Preset',
-             {0x000008} 'Respawn',
-             {0x000010} 'Auto-calc stats',
-             {0x000020} '',
-             {0x000040} '',
-             {0x000080} 'PC Level Mult',
-             {0x000100} 'Use Template',
-             {0x000200} 'No Low Level Processing',
-             {0x000400} '',
-             {0x000800} 'No Blood Spray',
-             {0x001000} 'No Blood Decal',
-             {0x002000} '',
-             {0x004000} '',
-             {0x008000} '',
-             {0x010000} '',
-             {0x020000} '',
-             {0x040000} '',
-             {0x080000} '',
-             {0x100000} 'No VATS Melee',
-           {0x00200000} '',
-           {0x00400000} 'Can be all races',
-           {0x00800000} 'Autocalc Service',
-           {0x01000000} '',
-           {0x02000000} '',
-           {0x03000000} 'No Knockdowns',
-           {0x08000000} 'Not Pushable',
-           {0x10000000} '', {28}
-           {0x20000000} '',
-           {0x40000000} 'No Rotating To Head-track',
-           {0x80000000} ''
-           ], [
-             {0x000001 Female} wbActorTemplateUseTraits,
-             {0x000002 Essential} wbActorTemplateUseBaseData,
-             {0x000004 Is CharGen Face Preset} nil,
-             {0x000008 Respawn} wbActorTemplateUseBaseData,
-             {0x000010 Auto-calc stats} wbActorTemplateUseStats,
-             {0x000020 } nil,
-             {0x000040 } nil,
-             {0x000080 PC Level Mult} wbActorTemplateUseStats,
-             {0x000100 Use Template} nil,
-             {0x000200 No Low Level Processing} wbActorTemplateUseBaseData,
-             {0x000400 } nil,
-             {0x000800 No Blood Spray} wbActorTemplateUseModelAnimation,
-             {0x001000 No Blood Decal} wbActorTemplateUseModelAnimation,
-             {0x002000 } nil,
-             {0x004000 } nil,
-             {0x008000 } nil,
-             {0x010000 } nil,
-             {0x020000 } nil,
-             {0x040000 } nil,
-             {0x080000 } nil,
-             {0x100000 No VATS Melee} nil,
-           {0x00200000 } nil,
-           {0x00400000 Can be all races} nil,
-           {0x00800000 } nil,
-           {0x01000000 } nil,
-           {0x02000000 } nil,
-           {0x03000000 No Knockdowns} nil,
-           {0x08000000 Not Pushable} wbActorTemplateUseModelAnimation,
-           {0x10000000 } nil,
-           {0x20000000 } nil,
-           {0x40000000 No Rotating To Head-track} wbActorTemplateUseModelAnimation,
-           {0x80000000 } nil
-           ])),
-      {04} wbInteger('Fatigue', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {06} wbInteger('Barter gold', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
-      {08} wbUnion('Level', wbCreaLevelDecider, [
-             wbInteger('Level', itS16, nil, cpNormal, True, wbActorTemplateUseStats),
-             wbInteger('Level Mult', itS16, wbDiv(1000), cpNormal, True, wbActorTemplateUseStats)
-           ], cpNormal, True, wbActorTemplateUseStats),
-      {10} wbInteger('Calc min', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {12} wbInteger('Calc max', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {14} wbInteger('Speed Multiplier', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      {16} wbFloat('Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
-      {20} wbInteger('Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
-      {22} wbInteger('Template Flags', itU16, wbFlags([
-        'Use Traits',
-        'Use Stats',
-        'Use Factions',
-        'Use Actor Effect List',
-        'Use AI Data',
-        'Use AI Packages',
-        'Use Model/Animation',
-        'Use Base Data',
-        'Use Inventory',
-        'Use Script'
-      ]))
-    ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
-      ]),
-    cpNormal, False, nil, nil, wbActorTemplateUseFactions),
-    wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, True, wbActorTemplateUseTraits),
-    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
-    wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
-    wbSPLOs,
-    wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
-    wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
-    wbDESTActor,
-    wbSCRIActor,
-    wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
-    wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
-    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True, wbActorTemplateUseTraits),
-    wbStruct(DATA, '', [
-      {00} wbInteger('Base Health', itS32),
-      {04} wbArray('Attributes', wbInteger('Attribute', itU8), [
-            'Strength',
-            'Perception',
-            'Endurance',
-            'Charisma',
-            'Intelligence',
-            'Agility',
-            'Luck'
-          ], cpNormal, False, wbActorAutoCalcDontShow),
-          wbByteArray('Unused'{, 14 - only present in old record versions})
-    ], cpNormal, True, wbActorTemplateUseStats),
-    wbStruct(DNAM, '', [
-      {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
-             'Barter',
-             'Big Guns (obsolete)',
-             'Energy Weapons',
-             'Explosives',
-             'Lockpick',
-             'Medicine',
-             'Melee Weapons',
-             'Repair',
-             'Science',
-             'Guns',
-             'Sneak',
-             'Speech',
-             'Survival',
-             'Unarmed'
-           ]),
-      {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
-             'Barter',
-             'Big Guns (obsolete)',
-             'Energy Weapons',
-             'Explosives',
-             'Lockpick',
-             'Medicine',
-             'Melee Weapons',
-             'Repair',
-             'Science',
-             'Guns',
-             'Sneak',
-             'Speech',
-             'Survival',
-             'Unarmed'
-           ])
-    ], cpNormal, False, wbActorTemplateUseStatsAutoCalc),
-    wbRArrayS('Head Parts',
-      wbFormIDCk(PNAM, 'Head Part', [HDPT]),
-    cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(HNAM, 'Hair', [HAIR], False, cpNormal, False, wbActorTemplateUseModelAnimation),
-    wbFloat(LNAM, 'Hair length', cpNormal, False, 1, -1, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(ENAM, 'Eyes', [EYES], False, cpNormal, False, wbActorTemplateUseModelAnimation),
-    wbStruct(HCLR, 'Hair color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True, wbActorTemplateUseModelAnimation),
-    wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
-    wbFaceGenNPC,
-    wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
-    wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
-    wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
+    wbUnknown(EDID),
+    wbRArray('Unknown - SNAM', wbRStruct('Unknown', [
+      wbUnknown(SNAM)
+    ], [])),
+    wbRArray('Unknown - PKID', wbRStruct('Unknown', [
+      wbUnknown(PKID)
+    ], [])),
+    wbRArray('Unknown - PRKR', wbRStruct('Unknown', [
+      wbUnknown(PRKR)
+    ], [])),
+//  wbInteger('Count', itU8),
+    wbUnknown(COCT),
+    wbRArray('Unknown - CNTO', wbRStruct('Unknown', [
+      wbUnknown(CNTO)
+    ], [])),
+    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
+      wbUnknown(PNAM)
+    ], [])),
+//-----------------------------------------------------------------------------
+//Start (NPC_) : TINI, TINC, TINV, TIAS
+//-----------------------------------------------------------------------------
+    wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
+      wbUnknown(TINI),
+      wbUnknown(TINC),
+      wbUnknown(TINV),
+      wbUnknown(TIAS)
+    ], []))
   ], True, nil, cpNormal, False, wbNPCAfterLoad);
+//-----------------------------------------------------------------------------
+//End New NPC_
+//
+//Start Old NPC_
+//-----------------------------------------------------------------------------
+//  wbRecord(NPC_, 'Non-Player Character', [
+//    wbEDIDReq,
+//    wbOBNDReq,
+//    wbFULLActor,
+//    wbMODLActor,
+//    wbStruct(ACBS, 'Configuration', [
+//      {00} wbInteger('Flags', itU32, wbFlags([
+//             {0x000001} 'Female',
+//             {0x000002} 'Essential',
+//             {0x000004} 'Is CharGen Face Preset',
+//             {0x000008} 'Respawn',
+//             {0x000010} 'Auto-calc stats',
+//             {0x000020} '',
+//             {0x000040} '',
+//             {0x000080} 'PC Level Mult',
+//             {0x000100} 'Use Template',
+//             {0x000200} 'No Low Level Processing',
+//             {0x000400} '',
+//             {0x000800} 'No Blood Spray',
+//             {0x001000} 'No Blood Decal',
+//             {0x002000} '',
+//             {0x004000} '',
+//             {0x008000} '',
+//             {0x010000} '',
+//             {0x020000} '',
+//             {0x040000} '',
+//             {0x080000} '',
+//             {0x100000} 'No VATS Melee',
+//           {0x00200000} '',
+//           {0x00400000} 'Can be all races',
+//           {0x00800000} 'Autocalc Service',
+//           {0x01000000} '',
+//           {0x02000000} '',
+//           {0x03000000} 'No Knockdowns',
+//           {0x08000000} 'Not Pushable',
+//           {0x10000000} '', {28}
+//           {0x20000000} '',
+//           {0x40000000} 'No Rotating To Head-track',
+//           {0x80000000} ''
+//           ], [
+//             {0x000001 Female} wbActorTemplateUseTraits,
+//             {0x000002 Essential} wbActorTemplateUseBaseData,
+//             {0x000004 Is CharGen Face Preset} nil,
+//             {0x000008 Respawn} wbActorTemplateUseBaseData,
+//             {0x000010 Auto-calc stats} wbActorTemplateUseStats,
+//             {0x000020 } nil,
+//             {0x000040 } nil,
+//             {0x000080 PC Level Mult} wbActorTemplateUseStats,
+//             {0x000100 Use Template} nil,
+//             {0x000200 No Low Level Processing} wbActorTemplateUseBaseData,
+//             {0x000400 } nil,
+//             {0x000800 No Blood Spray} wbActorTemplateUseModelAnimation,
+//             {0x001000 No Blood Decal} wbActorTemplateUseModelAnimation,
+//             {0x002000 } nil,
+//             {0x004000 } nil,
+//             {0x008000 } nil,
+//             {0x010000 } nil,
+//             {0x020000 } nil,
+//             {0x040000 } nil,
+//             {0x080000 } nil,
+//             {0x100000 No VATS Melee} nil,
+//           {0x00200000 } nil,
+//           {0x00400000 Can be all races} nil,
+//           {0x00800000 } nil,
+//           {0x01000000 } nil,
+//           {0x02000000 } nil,
+//           {0x03000000 No Knockdowns} nil,
+//           {0x08000000 Not Pushable} wbActorTemplateUseModelAnimation,
+//           {0x10000000 } nil,
+//           {0x20000000 } nil,
+//           {0x40000000 No Rotating To Head-track} wbActorTemplateUseModelAnimation,
+//           {0x80000000 } nil
+//           ])),
+//      {04} wbInteger('Fatigue', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+//      {06} wbInteger('Barter gold', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
+//      {08} wbUnion('Level', wbCreaLevelDecider, [
+//             wbInteger('Level', itS16, nil, cpNormal, True, wbActorTemplateUseStats),
+//             wbInteger('Level Mult', itS16, wbDiv(1000), cpNormal, True, wbActorTemplateUseStats)
+//           ], cpNormal, True, wbActorTemplateUseStats),
+//      {10} wbInteger('Calc min', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+//      {12} wbInteger('Calc max', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+//      {14} wbInteger('Speed Multiplier', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+//      {16} wbFloat('Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
+//      {20} wbInteger('Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
+//      {22} wbInteger('Template Flags', itU16, wbFlags([
+//        'Use Traits',
+//        'Use Stats',
+//        'Use Factions',
+//        'Use Actor Effect List',
+//        'Use AI Data',
+//        'Use AI Packages',
+//        'Use Model/Animation',
+//        'Use Base Data',
+//        'Use Inventory',
+//        'Use Script'
+//      ]))
+//    ], cpNormal, True),
+//    wbRArrayS('Factions',
+//      wbStructSK(SNAM, [0], 'Faction', [
+//        wbFormIDCk('Faction', [FACT]),
+//        wbInteger('Rank', itU8),
+//        wbByteArray('Unused', 3)
+//      ]),
+//    cpNormal, False, nil, nil, wbActorTemplateUseFactions),
+//    wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
+//    wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, True, wbActorTemplateUseTraits),
+//    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
+//    wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
+//    wbSPLOs,
+//    wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
+//    wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
+//    wbDESTActor,
+//    wbSCRIActor,
+//    wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
+//    wbAIDT,
+//    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
+//    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True, wbActorTemplateUseTraits),
+//    wbStruct(DATA, '', [
+//      {00} wbInteger('Base Health', itS32),
+//      {04} wbArray('Attributes', wbInteger('Attribute', itU8), [
+//            'Strength',
+//            'Perception',
+//            'Endurance',
+//            'Charisma',
+//            'Intelligence',
+//            'Agility',
+//            'Luck'
+//          ], cpNormal, False, wbActorAutoCalcDontShow),
+//          wbByteArray('Unused'{, 14 - only present in old record versions})
+//    ], cpNormal, True, wbActorTemplateUseStats),
+//    wbStruct(DNAM, '', [
+//      {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
+//             'Barter',
+//             'Big Guns (obsolete)',
+//             'Energy Weapons',
+//             'Explosives',
+//             'Lockpick',
+//             'Medicine',
+//             'Melee Weapons',
+//             'Repair',
+//             'Science',
+//             'Guns',
+//             'Sneak',
+//             'Speech',
+//             'Survival',
+//             'Unarmed'
+//           ]),
+//      {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
+//             'Barter',
+//             'Big Guns (obsolete)',
+//             'Energy Weapons',
+//             'Explosives',
+//             'Lockpick',
+//             'Medicine',
+//             'Melee Weapons',
+//             'Repair',
+//             'Science',
+//             'Guns',
+//             'Sneak',
+//             'Speech',
+//             'Survival',
+//             'Unarmed'
+//           ])
+//    ], cpNormal, False, wbActorTemplateUseStatsAutoCalc),
+//    wbRArrayS('Head Parts',
+//      wbFormIDCk(PNAM, 'Head Part', [HDPT]),
+//    cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
+//    wbFormIDCk(HNAM, 'Hair', [HAIR], False, cpNormal, False, wbActorTemplateUseModelAnimation),
+//    wbFloat(LNAM, 'Hair length', cpNormal, False, 1, -1, wbActorTemplateUseModelAnimation),
+//    wbFormIDCk(ENAM, 'Eyes', [EYES], False, cpNormal, False, wbActorTemplateUseModelAnimation),
+//    wbStruct(HCLR, 'Hair color', [
+//    wbInteger('Red', itU8),
+//      wbInteger('Green', itU8),
+//      wbInteger('Blue', itU8),
+//      wbByteArray('Unused', 1)
+//    ], cpNormal, True, wbActorTemplateUseModelAnimation),
+//    wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
+//    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+//    wbFaceGenNPC,
+//    wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
+//    wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
+//    wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
+//  ], True, nil, cpNormal, False, wbNPCAfterLoad);
+//-----------------------------------------------------------------------------
+//End NPC_
+//-----------------------------------------------------------------------------
 
   wbPKDTFlags := wbFlags([
           {0x00000001} 'Offers Services',
@@ -10331,16 +10511,17 @@ begin
     ])),
     wbFormIDCk(RNAM, 'Sound - Looping/Random', [SOUN])}
     wbUnknown(DNAM)
-  ]);
+ ]);
 
+//-----------------------------------------------------------------------------
+// Begin New Header
+//-----------------------------------------------------------------------------
   wbRecord(TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
       wbInteger('Number of Records', itU32),
       wbInteger('Next Object ID', itU32)
     ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
@@ -10348,9 +10529,35 @@ begin
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], [ONAM])),
     wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
-    wbByteArray(SCRN, 'Screenshot'),
-    wbUnknown(INTV)
-  ], True, nil, cpNormal, True, wbRemoveOFST);
+    wbUnknown(INTV),
+    wbUnknown(INCC)
+  ], True, nil, cpNormal, True);
+
+//-----------------------------------------------------------------------------
+// End New Header
+// Begin Old Header
+//-----------------------------------------------------------------------------
+//  wbRecord(TES4, 'Main File Header', [
+//    wbStruct(HEDR, 'Header', [
+//      wbFloat('Version'),
+//      wbInteger('Number of Records', itU32),
+//      wbInteger('Next Object ID', itU32)
+//    ], cpNormal, True),
+//    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
+//    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
+//    wbString(CNAM, 'Author', 0, cpTranslate, True),
+//    wbString(SNAM, 'Description', 0, cpTranslate),
+//    wbRArray('Master Files', wbRStruct('Master File', [
+//      wbString(MAST, 'Filename', 0, cpNormal, True),
+//      wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
+//    ], [ONAM])),
+//    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+//    wbByteArray(SCRN, 'Screenshot'),
+//    wbUnknown(INTV)
+//  ], True, nil, cpNormal, True, wbRemoveOFST);
+//-----------------------------------------------------------------------------
+//End old Header
+//-----------------------------------------------------------------------------
 
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
