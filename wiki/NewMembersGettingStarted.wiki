@@ -1,6 +1,6 @@
 #summary How to get set up
 
-Thanks go to WrinklyNinja and the BOSS team for allowing me to use their instructions.
+Thanks to WrinklyNinja and the BOSS team for allowing me to use their instructions.
 
 = Introduction =
 
