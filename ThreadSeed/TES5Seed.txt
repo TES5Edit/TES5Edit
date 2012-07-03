@@ -1,0 +1,103 @@
+[size="5"][b][color="#FF0000"]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He will compile the version himself with his original code once the necessary changes are made as a result of this project.[/color][/size][/b]
+
+[size="5"][b][color="#00BFFF"]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1388475-wipz-tes5dumpfuture-tes5edit/][WIPz] TES5Dump/Future TES5Edit[/url][/color][/size][/b]
+
+Threads:
+[spoiler]
+[topic='1388475']Thread 1[/topic]
+[/spoiler]
+
+
+[size="3"][url=http://forums.nexusmods.com/index.php?/topic/713668-wipz-tes5dumpfuture-tes5edit/]Fo3 Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
+[url=http://forums.nexusmods.com/index.php?/topic/713672-wipz-tes5dumpfuture-tes5edit/]FNV Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
+[url=http://forums.nexusmods.com/index.php?/topic/713028-wipz-tes5dumpfuture-tes5edit/]Skyrim Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
+[url=http://forums.nexusmods.com/index.php?/topic/715413-fnvedit-issue-depot-bug-reports/]FNVEdit Issue Depot (Bug Reports)[/url][/size]
+
+[color="#FF8C00"][size="4"][b]Name:[/color][/size][/b] Skyrim Plugin Decoding Project
+
+[color="#FF8C00"][size="4"][b]Summary:[/color][/size][/b] A collaborative project to decode Skyrim's record structure using TES5Dump and provide a working version of TES5Edit.
+
+[color="#FF8C00"][size="4"][b]Description:[/color][/size][/b] TES5Dump (a.k.a. TES4Dump / FO3Dump / FNVDump) are utilities that dump the contents of a .esp or .esm plugin to a text file, using internal record definitions. By comparing its output with plugins of known contents, the record definitions can be tweaked until the correct structures have been decoded. TES5Dump also forms the plugin parsing backend for the TES5Edit utility. (a.k.a. TES4Edit / FO3Edit / FNVEdit)
+
+Skyrim's record structure has not yet been fully decoded, and the Skyrim modding community suffers from the lack of a working TES5Edit.  This project's aim is to help the decoding effort by providing TES5Dump and allowing many people to update its definitions using Subversion, and to provide the TES5Edit utility. 
+
+Its predecessors FNVEdit, FO3Edit, and TES4Edit by ElminsterAU are the best tools to use for exploring overlaps between mods and cleaning mods.  TES5Edit will have the same functionality since the compiled release will be made with the same TES4 back engine using the definitions as a result of this project.  He would work on it himself, but unfortunately suffers from a severe lack of spare time.  He has offered to compile TES5Edit after the necessary supporting files are changed for Skirim's file format.   
+
+This utility will let you easily see how multiple mods interact and override each other, as well as giving you a quick view of the changes that a plugin makes. It lets you browse a graphical record tree of your active plugins, revealing the values set by most record types and comparing overlapping changes from each active plugin.
+
+When started it will automatically find your Skyrim Data directory. You then get a dialog to select which modules you want to load with the current selection from your plugins.txt as default value. Once you have confirmed that dialog the selected modules will start loading in the background.  The program will then work the same as its predecessors.
+
+[color="#FF8C00"][size="4"][b]License:[/color][/size][/b] Mozilla Public License (TES5Dump), proprietary (TES5Edit).
+
+Anyone is welcome to download the source to TES5Dump using the instructions below.
+
+[color="#FF8C00"][size="4"][b]Future Open source esEdit:[/color][/size][/b]
+
+TES5Edit as it is, has proprietary dependencies and the full source can not be compiled without it.  A separate project to provide an open source solution called [url=http://code.google.com/p/esedit/]esEdit[/url] is being started by WrinklyNinja.  The goal of that project is to provide an open source esEdit so that further development is not hindered by licensing issues.
+
+[color="#FF8C00"][size="4"][b]Why do we need TES5Dump:[/b][/size][/color]
+
+[quote name='WrinklyNinja']
+.snip. TES5Edit isn't the important thing in this scenario, what's important is getting the records decoded, because a whole load of things (Gecko, Bashed Patch, etc) require that, not just TES5Edit...[/quote]
+[quote name='WrinklyNinja']
+.snip. Because so much depends on the record decoding, it's sensible to open up the task to as many people as possible. As such, publicly hosting the definitions and the TES5Dump code/program is best for that. The plugin format has historically been documented at UESP.net for previous games, but I'm of the opinion that only verified decoded records should be documented there, so we still need a central location lots of people can read/write to. A SVN repository would be ideal...[/quote]
+
+[color="#FF8C00"][size="4"][b]How TES5Dump works:[/b][/size][/color]
+
+[quote name='ElminsterAU']
+TES5Dump Is a command line utility that can take an esm/esp file, decode it, and give a human readable dump to the console. The output can be redirected to a file, so you could use:
+
+TES5Dump Skyrim.esm > Skyrim.txt
+
+To turn the whole master into a huge text file.
+
+What works better when working on the record definitions is to create new .esp’s using the CK with just a single (or a few) records, of a single type, with specific values for all the different fields.
+
+The process is then basically:
+Create new .esp with example records
+Run TES5Dump
+Modify record definitions
+Repeat till dump is correct
+Repeat steps 2-4 until all possible record types and all possible fields are covered
+[/quote]
+
+[color="#FF8C00"][size="4"][b]What we need for this project:[/b][/size][/color]
+
+We are looking for volunteers and TES enthusiasts who are willing to contribute their time in decoding Skyrim's files, and making updates to the USEP Wiki.  Currently the file for TES5Edit is just a copy of the definitions file from FNVEdit.
+
+If you would like to participate in this project please send me a PM.
+
+[color="#FF8C00"][size="3"][b]Wiki Updaters:[/b][/size][/color]
+
+Any general knowledge of how to edit html and possibly xml.
+There is a bug tracker where you will find the records that need to be commited to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]USEP Wiki[/url]
+
+[color="#FF8C00"][size="3"][b]Record Decoders:[/b][/size][/color]
+
+The source is written in Delphi but you only need a basic knowledge with C++ or Java to interpret the Delphi code and figure out the references.
+Having knowledge of or, experience in decoding the records in plugins would be extremely helpful as well.
+
+To compile the source you need a trial version of Delphi found here.  [url=https://downloads.embarcadero.com/free/delphi]embarcadero.com[/url]
+
+[color="#FF8C00"][size="4"][b]Getting Set Up:[/b][/size][/color]
+
+You'll need an [url=http://tortoisesvn.net/downloads.html]SVN client[/url] program to submit your changes.  Instructions are listed [url=https://code.google.com/p/skyrim-plugin-decoding-project/wiki/NewMembersGettingStarted]here on Google Code.[/url]
+
+[color="#FF8C00"][size="4"][b]Workflow:[/b][/size][/color]
+
+[color="#FF8C00"][size="3"][b]Decoding: [/b][/size][/color]
+
+1. The decoders will create an entry in the bug tracker and assign it to themselves, marking it completed once the record definitions are determined.
+2. The decoders will create a 'Wiki Update' entry in the bug tracker with the record definitions once determined.
+
+[color="#FF8C00"][size="3"][b]Wiki Updates: [/b][/size][/color]
+
+Those making updates to the WIki will assign themself an update from the bug tracker.  Once the wiki update is completed the entry in the bug tracker is marked as resolved.
+
+[color="#FF8C00"][size="4"][b]Special Thanks:[/b][/size][/color]
+
+[i]Listed in alphabetical order.[/i]
+
+AndalayBay: Without her help getting me in touch with Elminster we would all still be waiting for confirmed record definitions, and even longer for a working TES5Edit.
+Bethesda: For their awesome program, and for this forum so we can accomplish this task.
+ElminsterAU: For all his hard work and agreeing to compile TES5Edit once we have made the necessary changes.
