@@ -1,0 +1,34 @@
+== Value ==
+Value type depends on the first character of the editorID.
+
+{| class="wikitable" width="100%" 
+! width="10%" | Id
+! width="10%" | Tag
+! width="15%" | Name
+! width="15%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| 0 || b || boolean || bool || 
+|-
+| 1 || c || || || ''Probably int8.''
+|-
+| 2 || h || || || ''Probably int16.''
+|-
+| 3 || i || int || int32 || 
+|-
+| 4 || u || || || ''Probably uint32.''
+|-
+| 5 || f || float || float || 
+|-
+| rowspan="2" | 6
+| s
+| rowspan="2" | string
+| rowspan="2" | lstring
+| rowspan="2" | 
+|-
+| S
+|-
+| 7 || r || || || ''Probably related to formIDs.''
+|-
+| 8 || a || || || 
+|}
