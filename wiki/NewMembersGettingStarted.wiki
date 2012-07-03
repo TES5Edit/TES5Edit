@@ -1,0 +1,33 @@
+#summary How to get set up
+
+Thanks go to WrinklyNinja and the BOSS team for allowing me to use their instructions.
+
+= Introduction =
+
+This wiki page contains the standard info dump I've been PMing people joining the team. Saves me having to keep track of it.
+
+= Getting Set Up =
+
+You'll need a SVN client program to work on the BOSS SVN, which is what we use to keep track of all the changes by all the project members. The following instructions are for TortoiseSVN, which is very popular and handy. You can do a Google search for it, then download it and install.
+
+First thing's first, you'll need to get your Google Code password, which is different from your Google account password. To get it, go to "https://code.google.com/p/skyrim-plugin-decoding-project/" and sign in. Then click Profile->Settings at the top of the page to see your password. At some point during your first commit of the BOSS SVN, you're going to be asked for a password by TortoiseSVN, use this Google Code one.
+
+1. After installing, navigate to the directory within which you want to hold your 'working copy' of the BOSS SVN, which is what you edit. This directory will soon have a BOSS folder (so no need to create a BOSS folder and go inside that).
+
+2. Right-click and select 'SVN Checkout...'. Ensure that the URL is "https://skyrim-plugin-decoding-project.googlecode.com/svn/" without quotes, that the checkout directory ends in "BOSS", the depth is "Fully Recursive" and the revision is "HEAD Revision".
+
+4. The repository will now be 'checked out' to your working copy. Once that's done, you can find the files we will be using in svn\TES5Dump.  To make changes you can edit it in whatever program you want.  You only need the trial version of Delphi XE2 to compile dump.
+
+5. To commit your changes (ie. upload them for everyone else to see), right-click the file you want to commit, or a parent directory (eg. you can commit either the masterlist, boss-skyrim, data or BOSS to have the changes applied), and click 'SVN Commit..'. This will open a window where you can give your commit a log message, and pick and choose which files will be changed. Click 'OK' to commit your changes.
+
+6. To update your working copy with the latest online changes, right-click a file or folder in your working copy and select 'SVN Update' to do so for the file or the folder you have selected.
+
+Tortoise SVN includes some handy icon overlays to let you know what the state of your local files are compared to the last SVN checkout: if there's a green tick, it means that the files are the same, and a red exclamation mark means your working copy has been edited since you updated from the SVN repo. Those are the two you're most likely to see.
+
+General workflow is something like:
+1. Update working copy from SVN using right-click 'SVN Update'
+2. Edit your working copy files with your changes.
+3. Commit your changes to the SVN using right-click 'SVN Commit...', entering a short message in the relevant box of what you changed so the rest of us can see at a glance.
+4. Rinse and repeat.
+
+Ask if you've got any questions.
