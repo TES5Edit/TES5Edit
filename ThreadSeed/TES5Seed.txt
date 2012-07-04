@@ -70,18 +70,26 @@ If you would like to participate in this project please send me a PM.
 [color="#FF8C00"][size="3"][b]Wiki Updaters:[/b][/size][/color]
 
 Any general knowledge of how to edit html and possibly xml.
-There is a bug tracker where you will find the records that need to be commited to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]USEP Wiki[/url]
+There is a [url=https://code.google.com/p/skyrim-plugin-decoding-project/issues/list]bug tracker[/url] where you will find the records that need to be commited to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]USEP Wiki[/url] site.
 
 [color="#FF8C00"][size="3"][b]Record Decoders:[/b][/size][/color]
 
 The source is written in Delphi but you only need a basic knowledge with C++ or Java to interpret the Delphi code and figure out the references.
 Having knowledge of or, experience in decoding the records in plugins would be extremely helpful as well.
 
-To compile the source you need a trial version of Delphi found here.  [url=https://downloads.embarcadero.com/free/delphi]embarcadero.com[/url]
-
 [color="#FF8C00"][size="4"][b]Getting Set Up:[/b][/size][/color]
 
-You'll need an [url=http://tortoisesvn.net/downloads.html]SVN client[/url] program to submit your changes.  Instructions are listed [url=https://code.google.com/p/skyrim-plugin-decoding-project/wiki/NewMembersGettingStarted]here on Google Code.[/url]
+Either team will need an [url=http://tortoisesvn.net/downloads.html]SVN client[/url] program to submit your changes.  Instructions are listed [url=https://code.google.com/p/skyrim-plugin-decoding-project/wiki/NewMembersGettingStarted]here on Google Code.[/url]
+
+[color="#FF8C00"][size="3"][b]Record Decoders:[/b][/size][/color]
+
+After you have checked out the files the folder you will work with is TES5Dump.  The only file you need to edit will be wbDefinitionsTES5.pas.
+To compile the source you need a trial version of Delphi found here.  [url=https://downloads.embarcadero.com/free/delphi]embarcadero.com[/url]
+
+[color="#FF8C00"][size="3"][b]Wiki Updaters:[/b][/size][/color]
+
+After you have checked out the files the folder you will work with is USEPWiki.  It will contain templets of each record posted on USEPWiki.
+To make changes to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]USEP Wiki[/url] site you need to register first.  Registration is free and hardly any information is required.
 
 [color="#FF8C00"][size="4"][b]Workflow:[/b][/size][/color]
 
