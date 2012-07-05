@@ -27,7 +27,8 @@ uses
   Direct3D9,
   D3DX9,
   Math,
-  wbInterface;
+  wbInterface,
+  Zlibex;
 
 var
   RecordToSkip : TStringList;
