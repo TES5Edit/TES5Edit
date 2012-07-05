@@ -4692,7 +4692,7 @@ begin
 end;
 
 constructor TwbRecordDef.Create(aPriority        : TwbConflictPriority;
-                                aRequired        : Boolean;     
+                                aRequired        : Boolean;
                           const aSignature       : TwbSignature;
                           const aName            : string;
                           const aMembers         : array of IwbRecordMemberDef;
@@ -4750,7 +4750,7 @@ end;
 
 function TwbRecordDef.GetMemberCount: Integer;
 begin
-  Result := Length(recMembers); 
+  Result := Length(recMembers);
 end;
 
 function TwbRecordDef.GetMemberFor(aSignature     : TwbSignature;
@@ -5069,7 +5069,7 @@ end;
 
 function TwbSubRecordStructDef.AllowUnordered: Boolean;
 begin
-  Result := srsAllowUnordered; 
+  Result := srsAllowUnordered;
 end;
 
 function TwbSubRecordStructDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -6495,7 +6495,7 @@ begin
         s := flgNames[i];
       if s = '' then
         if flgUnknownIsUnused then
-          s := 'Unused' 
+          s := 'Unused'
         else
           s := '<Unknown: '+IntToStr(i)+'>';
       if GetFlagDontShow(aElement, i) then
@@ -9503,7 +9503,7 @@ begin
 //  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
 //    Result := NamedDef.Name;
   Result := '';
-  
+
   Used(aElement, Result);
 end;
 

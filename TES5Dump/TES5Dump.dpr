@@ -23,12 +23,12 @@ uses
   Classes,
   SysUtils,
   Windows,
-  wbDefinitionsTES4,
-  wbDefinitionsFO3,
-  wbDefinitionsFNV,
-  wbDefinitionsTES5,
-  wbInterface in 'wbInterface.pas',
-  wbImplementation in 'wbImplementation.pas';
+  wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
+  wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
+  wbImplementation in 'wbImplementation.pas',
+  wbInterface in 'wbInterface.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
