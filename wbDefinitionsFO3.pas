@@ -36,35 +36,35 @@ const
   _04_IAD: TwbSignature = #$04'IAD';
   _44_IAD: TwbSignature = #$44'IAD';
   _05_IAD: TwbSignature = #$05'IAD';
-  _45_IAD: TwbSignature = #$45'IAD'; 
-  _06_IAD: TwbSignature = #$06'IAD'; 
-  _46_IAD: TwbSignature = #$46'IAD'; 
-  _07_IAD: TwbSignature = #$07'IAD'; 
-  _47_IAD: TwbSignature = #$47'IAD'; 
-  _08_IAD: TwbSignature = #$08'IAD'; 
-  _48_IAD: TwbSignature = #$48'IAD'; 
-  _09_IAD: TwbSignature = #$09'IAD'; 
-  _49_IAD: TwbSignature = #$49'IAD'; 
-  _0A_IAD: TwbSignature = #$0A'IAD'; 
-  _4A_IAD: TwbSignature = #$4A'IAD'; 
-  _0B_IAD: TwbSignature = #$0B'IAD'; 
-  _4B_IAD: TwbSignature = #$4B'IAD'; 
-  _0C_IAD: TwbSignature = #$0C'IAD'; 
-  _4C_IAD: TwbSignature = #$4C'IAD'; 
-  _0D_IAD: TwbSignature = #$0D'IAD'; 
-  _4D_IAD: TwbSignature = #$4D'IAD'; 
-  _0E_IAD: TwbSignature = #$0E'IAD'; 
-  _4E_IAD: TwbSignature = #$4E'IAD'; 
-  _0F_IAD: TwbSignature = #$0F'IAD'; 
-  _4F_IAD: TwbSignature = #$4F'IAD'; 
-  _10_IAD: TwbSignature = #$10'IAD'; 
-  _50_IAD: TwbSignature = #$50'IAD'; 
-  _11_IAD: TwbSignature = #$11'IAD'; 
+  _45_IAD: TwbSignature = #$45'IAD';
+  _06_IAD: TwbSignature = #$06'IAD';
+  _46_IAD: TwbSignature = #$46'IAD';
+  _07_IAD: TwbSignature = #$07'IAD';
+  _47_IAD: TwbSignature = #$47'IAD';
+  _08_IAD: TwbSignature = #$08'IAD';
+  _48_IAD: TwbSignature = #$48'IAD';
+  _09_IAD: TwbSignature = #$09'IAD';
+  _49_IAD: TwbSignature = #$49'IAD';
+  _0A_IAD: TwbSignature = #$0A'IAD';
+  _4A_IAD: TwbSignature = #$4A'IAD';
+  _0B_IAD: TwbSignature = #$0B'IAD';
+  _4B_IAD: TwbSignature = #$4B'IAD';
+  _0C_IAD: TwbSignature = #$0C'IAD';
+  _4C_IAD: TwbSignature = #$4C'IAD';
+  _0D_IAD: TwbSignature = #$0D'IAD';
+  _4D_IAD: TwbSignature = #$4D'IAD';
+  _0E_IAD: TwbSignature = #$0E'IAD';
+  _4E_IAD: TwbSignature = #$4E'IAD';
+  _0F_IAD: TwbSignature = #$0F'IAD';
+  _4F_IAD: TwbSignature = #$4F'IAD';
+  _10_IAD: TwbSignature = #$10'IAD';
+  _50_IAD: TwbSignature = #$50'IAD';
+  _11_IAD: TwbSignature = #$11'IAD';
   _51_IAD: TwbSignature = #$51'IAD';
-  _12_IAD: TwbSignature = #$12'IAD'; 
+  _12_IAD: TwbSignature = #$12'IAD';
   _52_IAD: TwbSignature = #$52'IAD';
-  _13_IAD: TwbSignature = #$13'IAD'; 
-  _53_IAD: TwbSignature = #$53'IAD'; 
+  _13_IAD: TwbSignature = #$13'IAD';
+  _53_IAD: TwbSignature = #$53'IAD';
   _14_IAD: TwbSignature = #$14'IAD';
   _54_IAD: TwbSignature = #$54'IAD';
 
@@ -1497,7 +1497,7 @@ begin
       Result := '<Out of range: '+IntToStr(aInt)+'>'
     else
       Result := '';
-  end else if aType = ctToStr then 
+  end else if aType = ctToStr then
     Result := IntToStr(aInt) + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
 end;
 
@@ -1845,7 +1845,7 @@ begin
   Result := 0;
   if not Assigned(aElement) then
     Exit;
-    
+
   if aElement.ElementType = etValue then
     Container := aElement.Container
   else
@@ -3413,7 +3413,7 @@ begin
        end;
        5: begin {Wander}
        end;
-       6: begin {Travel}                                                
+       6: begin {Travel}
        end;
        7: begin {Accompany}
        end;
@@ -3976,7 +3976,7 @@ begin
   Result := 0;
   if not Assigned(aElement) then
     Exit;
-    
+
   if aElement.ElementType = etValue then
     Container := aElement.Container
   else

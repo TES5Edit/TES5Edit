@@ -24,11 +24,11 @@ uses
   Classes,
   SysUtils,
   Contnrs,
-  ZLIBEX,
   Direct3D9,
   D3DX9,
+  Math,
   wbInterface,
-  Math;
+  Zlibex;
 
 var
   RecordToSkip : TStringList;
@@ -3090,7 +3090,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  
+
   DoInit;
   for i := Low(cntElements) to High(cntElements) do
     cntElements[i].InformStorage(aBasePtr, aEndPtr);
@@ -4735,7 +4735,7 @@ begin
     else if SubRecord.Signature = 'FULL' then
       mrFullName := SubRecord.Value
     else if SubRecord.Signature = 'NAME' then
-      Exclude(mrStates, mrsBaseRecordChecked);     
+      Exclude(mrStates, mrsBaseRecordChecked);
   end;
   inherited;
   UpdateRefs;
@@ -4830,7 +4830,7 @@ begin
     (Sig = 'PGRE') or
     (Sig = 'ACRE') or
     (Sig = 'ACHR');
-  if not Result then 
+  if not Result then
     Exit;
   if not Supports(GetContainer, IwbGroupRecord, Group1) then
     raise Exception.Create(GetName + ' is not contained in a group.');
@@ -6287,7 +6287,7 @@ function TwbMainRecord.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if wbReportMode then begin 
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -10260,7 +10260,7 @@ begin
   Result := wbIsInternalEdit;
   if Result then
     Exit;
-    
+
   if not wbEditAllowed then
     Exit;
 
