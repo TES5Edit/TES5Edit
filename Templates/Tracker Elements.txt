@@ -11,9 +11,10 @@ PROJ-VerifyingUESP   = The record is being updated by the Wiki Team
 
 Closed Issue Status Values:-------------------------------------------------
 
+PROJ-Decoded         = Decoded and ready to update on USEPWiki
+PROJ-USEPUpdated     = USEPWiki fixed the entry and it is now correct
 PROJ-USEPFixed       = USEPWiki fixed the entry and it is now correct
 PROJ-USEPVerified    = Team has verified the USEPWiki was already correct
-PROJ-Decoded         = Decoded and ready to update on USEPWiki
 Invalid              = This was not a valid issue report
 Duplicate            = This report duplicates an existing issue
 WontFix              = We decided to not take action on this issue
@@ -28,6 +29,7 @@ Verified-FNVEdit     = FNVEdit is functioning as intended
 Verified-TES3Edit    = TES3Edit is functioning as intended
 Verified-TES4Edit    = TES4Edit is functioning as intended
 Verified-TES5Edit    = TES5Edit is functioning as intended
+
 
 Predefined issue labels:-------------------------------------------------
 
