@@ -40,7 +40,7 @@
 			<DCC_K>false</DCC_K>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
-			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_Locale>1033</VerInfo_Locale>
 		</PropertyGroup>
@@ -61,6 +61,7 @@
 			</DelphiCompile>
 			<DCCReference Include="wbDefinitionsFNV.pas"/>
 			<DCCReference Include="wbDefinitionsFO3.pas"/>
+			<DCCReference Include="wbDefinitionsTES3.pas"/>
 			<DCCReference Include="wbDefinitionsTES4.pas"/>
 			<DCCReference Include="wbDefinitionsTES5.pas"/>
 			<DCCReference Include="wbImplementation.pas"/>
