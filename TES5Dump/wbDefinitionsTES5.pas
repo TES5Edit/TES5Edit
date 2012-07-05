@@ -678,7 +678,9 @@ var
   wbEffectsReq: IwbSubRecordArrayDef;
 //-----------------------------------------------------------------------------
 // New
-  wbBool: IwbIntegerDef;
+  wbBoolU8: IwbIntegerDef;
+  wbBoolU16: IwbIntegerDef;
+  wbBoolU32: IwbIntegerDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -2047,26 +2049,6 @@ begin
         'i': Result := 1; {intS32}
         'f': Result := 2; {Float}
         'b': Result := 3; {Boolean}
-{New}   'r': Begin
-              Result := 4; {Unknown Possibly related to formIDs}
-              wbProgressCallback('1st ' + '('+s[1]+')' + s);
-             End;
-{New}   'h': Begin
-              Result := 5; {Unknown Possibly int16}
-              wbProgressCallback('1st ' + '('+s[1]+')' + s);
-             End;
-{New}   'c': Begin
-              Result := 6; {Unknown Possibly int8}
-              wbProgressCallback('1st ' + '('+s[1]+')' + s);
-             End;
-{New}   'u': Begin
-              Result := 7; {Unknown Possibly uint32}
-              wbProgressCallback('1st ' + '('+s[1]+')' + s);
-             End;
-{New}   'a': Begin
-              Result := 8; {Unknown at this time}
-              wbProgressCallback('1st ' + '('+s[1]+')' + s);
-             End;
       end;
   end;
 end;
@@ -4216,7 +4198,9 @@ begin
 //-----------------------------------------------------------------
 // New Routines
 //-----------------------------------------------------------------
-  wbBool:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
+  wbBoolU8:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
+  wbBoolU16:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
+  wbBoolU32:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
 //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
@@ -6794,19 +6778,10 @@ begin
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbUnknown,                            //Possibly String/Localization
-      wbInteger('Int', itS32),              //Old Integer
-      wbFloat('Float'),                     //Old Float
-      wbBool,                               //New wbBool
-//----------------------------------------------------------------------------
-// Unused.  Here for future expansion
-//----------------------------------------------------------------------------
-      wbString('FormID'), //New wbFormID
-      wbString('it16'),   //New it16
-      wbString('it8'),    //New it8
-      wbString('itu32'),  //New itu32
-      wbString('Unk')     //New Unknown
-//----------------------------------------------------------------------------
+      wbUnknown,               //Possibly String/Localization
+      wbInteger('Int', itS32), //Old Integer
+      wbFloat('Float'),        //Old Float
+      wbBoolU32                //New wbBool
     ], cpNormal, True)
   ]);
 //----------------------------------------------------------------------------
@@ -8392,10 +8367,7 @@ begin
         wbByteArray('Unused', 1)
       ])
     ]),
-    wbInteger(FNAM, 'Flags', itU32, wbFlags([
-      'Playable'
-      ])
-    )
+    wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']))
   ]);
 
   wbRecord(REVB, 'REVB', [
