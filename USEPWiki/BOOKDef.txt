@@ -1,0 +1,91 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+
+== Base ==
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || OBND || objectBounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]] ||  Seems to always be 12 zeroes
+|- 
+| + || DESC || description || lstring || Ingame description or 0 if none.
+|- 
+| + || MODT || model data || [[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]] || model struct
+|-
+| + || EDID || editorID || zstring || Max 0x200 bytes, including null terminator. 
+|-
+| rowspan="2" | +
+| rowspan="2" | DATA
+| Flags
+| FormID
+| rowspan="2" | Values
+|-
+| SkillID or SpellFormID
+| ubyte
+|- 
+| + || INAM || STAT model || formID ||
+|- 
+| + || CNAM || Some alternate text || lstring || Book description may be as a tooltip, found in the dunTreasMapRiverwood book, string id 72543
+|- 
+| + || YNAM || pickup sound || formid || Pickup [[Tes5Mod:Mod_File_Format/SNDR|SNDR]]
+|- 
+| + || VMAD || Script data ||  ||
+|- 
+| + || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || KYWD count
+|- 
+| + || KWDA || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KWDA]] || formid[KSIZ] || Array of KYWD formids
+|- 
+| + || Full || Item name || lstring ||
+|}
+
+== Value ==
+
+{| class="wikitable" width="100%" 
+! width="10%" | Id
+! width="10%" | Tag
+! width="15%" | Name
+! width="15%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| rowspan="2" | DATA
+| rowspan="2" | ?
+| Flags
+| rowspan="2" | 16 bytes
+| 
+:dword Flags
+::0x0001 = Skill Book
+::0x0004 = Spell Tome
+::0xFF00 = Note/Scroll Type
+|-
+| SkillID or SpellFormID
+|
+:dword SkillID or SpellFormID  depending on if Spell Tome or SkillBook is set
+::SkillIDs (0x06 to 0x17)
+:::ONEHAND 	6 
+:::TWOHAND 	7 
+:::MARKSMAN 	8 
+:::BLOCK 	9 
+:::SMITHING 	10
+:::HEAVYARMOR 	11
+:::LIGHTARMOR 	12
+:::PICKPOCKET 	13
+:::LOCKPICKING	14
+:::SNEAK 	15
+:::ALCHEMY 	16
+:::SPEECHCRAFT 	17
+:::ALTERATION 	18
+:::CONJURATION 	19
+:::DESTRUCTION 	20
+:::ILLUSION 	21
+:::RESTORATION	22
+:::ENCHANTING 	23
+::dword Value
+::float Weight
+|-
+|}
+
+== Changes ==
+
+Skyrim Plugin Decoding Project
