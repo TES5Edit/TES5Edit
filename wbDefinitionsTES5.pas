@@ -681,6 +681,10 @@ var
   wbBoolU8: IwbIntegerDef;
   wbBoolU16: IwbIntegerDef;
   wbBoolU32: IwbIntegerDef;
+  wbLLCT: IwbSubRecordDef;
+  wbLVLD: IwbSubRecordDef;
+  wbMODT: IwbSubRecordDef;
+  wbOBNDUnused: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4198,9 +4202,14 @@ begin
 //-----------------------------------------------------------------
 // New Routines
 //-----------------------------------------------------------------
-  wbBoolU8:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
-  wbBoolU16:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
+  wbBoolU8:= wbInteger('Boolean', itU8, wbEnum(['False', 'True']));
+  wbBoolU16:= wbInteger('Boolean', itU16, wbEnum(['False', 'True']));
   wbBoolU32:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
+  wbLLCT:= wbInteger(LLCT, 'Count', itU8);
+  wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
+  wbMODT:= wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
+  wbOBNDUnused:= wbByteArray(OBND, 'Unused', 12, cpIgnore);
+
 //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
@@ -4371,16 +4380,26 @@ begin
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
+
   wbOBND := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
-    wbInteger('X', itS16),
-    wbInteger('Y', itS16),
-    wbInteger('Z', itS16)
+    wbInteger('X1', itS16),
+    wbInteger('Y1', itS16),
+    wbInteger('Z1', itS16),
+    wbInteger('X2', itS16),
+    wbInteger('Y2', itS16),
+    wbInteger('Z2', itS16)
   ]));
+
   wbOBNDReq := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
-    wbInteger('X', itS16),
-    wbInteger('Y', itS16),
-    wbInteger('Z', itS16)
+    wbInteger('X1', itS16),
+    wbInteger('Y1', itS16),
+    wbInteger('Z1', itS16),
+    wbInteger('X2', itS16),
+    wbInteger('Y2', itS16),
+    wbInteger('Z2', itS16)
   ]), 2, nil, nil, cpNormal, True);
+
+
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
@@ -8760,37 +8779,41 @@ begin
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]);
 
-  wbRecord(LVLC, 'Leveled Creature', [
-    wbEDIDReq,
-    wbOBNDReq,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count'
-    ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unused', 2),
-          wbFormIDCk('Reference', [CREA, LVLC]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unused', 2)
-        ]),
-        wbCOED
-      ], []),
-    cpNormal, True),
-    wbMODL
-  ]);
+//-----------------------------------------------------------------------------
+// LVLC, 'Leveled Creature' unused in Skyrim
+//-----------------------------------------------------------------------------
+//  wbRecord(LVLC, 'Leveled Creature', [
+//    wbEDIDReq,
+//    wbOBNDReq,
+//    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
+//    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+//      {0x01} 'Calculate from all levels <= player''s level',
+//      {0x02} 'Calculate for each item in count'
+//    ]), cpNormal, True),
+//    wbRArrayS('Leveled List Entries',
+//      wbRStructExSK([0], [1], 'Leveled List Entry', [
+//        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+//          wbInteger('Level', itS16),
+//          wbByteArray('Unused', 2),
+//          wbFormIDCk('Reference', [CREA, LVLC]),
+//          wbInteger('Count', itS16),
+//          wbByteArray('Unused', 2)
+//        ]),
+//        wbCOED
+//      ], []),
+//    cpNormal, True),
+//    wbMODL
+//  ]);
 
   wbRecord(LVLN, 'Leveled NPC', [
     wbEDIDReq,
-    wbOBNDReq,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
+    wbOBNDUnused,
+    wbLVLD,
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
+    wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
@@ -8799,11 +8822,9 @@ begin
           wbFormIDCk('Reference', [NPC_, LVLN]),
           wbInteger('Count', itS16),
           wbByteArray('Unused', 2)
-        ]),
-        wbCOED
+        ])
       ], []),
-    cpNormal, True),
-    wbMODL
+    cpNormal, True)
   ]);
 
 //----------------------------------------------------------------------------------
@@ -8812,8 +8833,8 @@ begin
 
   wbRecord(LVLI, 'Leveled Item', [
     wbEDIDReq,
-    wbOBNDReq,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
+    wbOBNDUnused,
+    wbLVLD,
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count',
@@ -8821,18 +8842,17 @@ begin
       {0x08} 'Special Loot'
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Global', [GLOB]),
-    wbInteger(LLCT, 'Count', itU8),
+    wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbUnknown(LVLO)
-//        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-//          wbInteger('Level', itS16),
-//          wbByteArray('Unused', 2),
-//          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
-//          wbInteger('Count', itS16),
-//          wbByteArray('Unused', 2)
-//        ]),
-//        wbCOED
+        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+          wbInteger('Level', itS16),
+          wbByteArray('Unused', 2),
+          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
+          wbInteger('Count', itS16),
+          wbByteArray('Unused', 2)
+        ]),
+        wbCOED
       ], [])
     )
   ]);
@@ -8869,8 +8889,30 @@ begin
 // End Old LVLI
 //----------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------
+// New LVSP
+//----------------------------------------------------------------------------------
    wbRecord(LVSP, 'Leveled Spell', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbOBNDUnused,
+    wbLVLD,
+    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+      {0x01} 'Calculate from all levels <= player''s level',
+      {0x02} 'Calculate for each item in count',
+      {0x04} 'Use All'
+    ]), cpNormal, True),
+    wbLLCT,
+    wbRArrayS('Leveled Spell List Entries',
+      wbRStructExSK([0], [1], 'Leveled Spell List Entry', [
+        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+        wbInteger('Level', itS16),
+        wbByteArray('Unused', 2),
+        wbFormIDCk('Reference', [SPEL]),
+        wbInteger('Count', itS16),
+        wbByteArray('Unused', 2)
+      ])
+      ], [])
+    )
   ]);
 
   wbRecord(MGEF, 'Base Effect', [

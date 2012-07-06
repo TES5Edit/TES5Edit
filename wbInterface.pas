@@ -46,8 +46,8 @@ var
   wbSimpleLAND : Boolean = False;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
-  wbHideUnused : Boolean{} = True;{}
-  wbHideIgnored : Boolean{} = True;{}
+  wbHideUnused : Boolean{ = True{};
+  wbHideIgnored : Boolean{ = True{};
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
