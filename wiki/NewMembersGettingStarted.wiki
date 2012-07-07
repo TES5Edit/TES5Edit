@@ -2,24 +2,19 @@
 
 Thanks to WrinklyNinja and the BOSS team for allowing me to use their instructions.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step1.jpg
-
-
-
-
-= Introduction =
-
-This wiki page contains the standard info dump I've been PMing people joining the team. Saves me having to keep track of it.
-
 = Getting Set Up =
 
-You'll need a SVN client program to work on the BOSS SVN, which is what we use to keep track of all the changes by all the project members. The following instructions are for TortoiseSVN, which is very popular and handy. You can do a Google search for it, then download it and install.
+You'll need a SVN client program to work on the skyrim-plugin-decoding-project SVN, which is what we use to keep track of all the changes by all the project members. The following instructions are for TortoiseSVN, which is very popular and handy. You can do a Google search for it, then download it and install.
 
-First thing's first, you'll need to get your Google Code password, which is different from your Google account password. To get it, go to "https://code.google.com/p/skyrim-plugin-decoding-project/" and sign in. Then click Profile->Settings at the top of the page to see your password. At some point during your first commit of the BOSS SVN, you're going to be asked for a password by TortoiseSVN, use this Google Code one.
+First thing's first, you'll need to get your Google Code password, which is different from your Google account password. To get it, go to "https://code.google.com/p/skyrim-plugin-decoding-project/" and sign in. Then click Profile->Settings at the top of the page to see your password. At some point during your first commit of the skyrim-plugin-decoding-project SVN, you're going to be asked for a password by TortoiseSVN, use this Google Code one.
 
-1. After installing, navigate to the directory within which you want to hold your 'working copy' of the BOSS SVN, which is what you edit. This directory will soon have a BOSS folder (so no need to create a BOSS folder and go inside that).
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step1.jpg
 
-2. Right-click and select 'SVN Checkout...'. Ensure that the URL is "https://skyrim-plugin-decoding-project.googlecode.com/svn/" without quotes, that the checkout directory ends in "BOSS", the depth is "Fully Recursive" and the revision is "HEAD Revision".
+1. After installing, navigate to the directory within which you want to hold your 'working copy' of the skyrim-plugin-decoding-project SVN, which is what you edit. This directory will soon have a several filders from the SVN so no need to create any aditional folders.
+
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step2.jpg
+
+2. Right-click and select 'SVN Checkout...'. Ensure that the URL is "https://skyrim-plugin-decoding-project.googlecode.com/svn/" without quotes, the depth is "Fully Recursive" and the revision is "HEAD Revision".  Ignore the "Checkout Directory" it the location you navagated to for your 'working copy'.
 
 4. The repository will now be 'checked out' to your working copy. Once that's done, you can find the files we will be using in svn\TES5Dump.  To make changes you can edit it in whatever program you want.  You only need the trial version of Delphi XE2 to compile dump.
 
