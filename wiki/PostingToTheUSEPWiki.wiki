@@ -4,306 +4,49 @@ http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format
 
 = The USEPWiki =
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki1.jpg
-
 Those updating the wiki can navagate to this page and click on one of the records.  
+
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki1.jpg
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki2.jpg
 
 For this example I'm going to use MISC since it isn't really formated properly and contains the same information you will recieve in a ticket from one of the decoders. To get started click the edit tab.
 
-<pre>https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki4.jpg - Toolbar</pre>
-
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki3.jpg
 
-1. Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed.
+For what our project is doing we only need to use the 'edit' tab at the top.  All the changes are shown under the history tab.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki5.jpg
 
-The text isn't formatted and the first time I tried to edit this I chose to just cut and past from other records to start with and then start making changes.
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki6.jpg
-
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki7.jpg
+Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki8.jpg
 
-{{Trail|File Formats}}
-{{TOCright}}'''Mod files''' ('''Plugin files''') are collections of [[#Records|records]], which are further divided into [[#Fields|fields]].
+Save the information to a txt file in the USEPWiki folder for our SVN.  Chose the nameof the record, followed by Def.   For the above example I called it MISCDef.txt.
 
-[[#Records|Records]] generally correspond to objects (e.g., a creature, a game setting, a dialog entry), with the fine details of the object (e.g., health of a creature, a dialog entry test) being handled by the [[#Fields|fields]] of the record. Records themselves are organized into [[#Groups|groups]].
+The text isn't formatted in this example which is why I chose it.  The information you are going to recieve from the decoders is going to be formatted in a simular way.  The first time I tried to edit a record I chose to just cut and paste from other records to start with and then start making changes.
 
-At the highest grouping level, a plugin file is generally:
-* A single [[Tes5Mod:Mod File Format/TES4|TES4 record]] (plugin information).
-* A collection of top [[#Groups|groups]].
-{{NewRight}}
-==Record Types==
-{| class="vtop" width="100%"
-|width="25%" | 
-{| class="wikitable" width="100%" style="margin:0;"
-! Type
-! Data Object
-|-
-| [[Tes5Mod:Mod File Format/AACT|AACT]] || Action
-|-
-| [[Tes5Mod:Mod File Format/ACHR|ACHR]] || Actor Reference
-|-
-| [[Tes5Mod:Mod File Format/ACTI|ACTI]] || Activator
-|-
-| [[Tes5Mod:Mod File Format/ADDN|ADDN]] || Addon Node
-|-
-| [[Tes5Mod:Mod File Format/ALCH|ALCH]] || Potion
-|-
-| [[Tes5Mod:Mod File Format/AMMO|AMMO]] || Ammo
-|-
-| [[Tes5Mod:Mod File Format/ANIO|ANIO]] || Animated Object
-|-
-| [[Tes5Mod:Mod File Format/APPA|APPA]] || Apparatus ''(probably unused)''
-|-
-| [[Tes5Mod:Mod File Format/ARMA|ARMA]] || Armature (Model)
-|-
-| [[Tes5Mod:Mod File Format/ARMO|ARMO]] || Armor
-|-
-| [[Tes5Mod:Mod File Format/ARTO|ARTO]] || Art Object
-|-
-| [[Tes5Mod:Mod File Format/ASPC|ASPC]] || Acoustic Space
-|-
-| [[Tes5Mod:Mod File Format/ASTP|ASTP]] || Association Type
-|-
-| [[Tes5Mod:Mod File Format/AVIF|AVIF]] || [[Tes5Mod:Actor_Value_Indices#Actor_Value_Codes|Actor Values]]/Perk Tree Graphics
-|-
-| [[Tes5Mod:Mod File Format/BOOK|BOOK]] || Book
-|-
-| [[Tes5Mod:Mod File Format/BPTD|BPTD]] || Body Part Data
-|-
-| [[Tes5Mod:Mod File Format/CAMS|CAMS]] || Camera Shot
-|-
-| [[Tes5Mod:Mod File Format/CELL|CELL]] || Cell
-|-
-| [[Tes5Mod:Mod File Format/CLAS|CLAS]] || Class
-|-
-| [[Tes5Mod:Mod File Format/CLFM|CLFM]] || Color
-|-
-| [[Tes5Mod:Mod File Format/CLMT|CLMT]] || Climate
-|-
-| [[Tes5Mod:Mod File Format/COBJ|COBJ]] || Constructible Object (recipes)
-|-
-| [[Tes5Mod:Mod File Format/COLL|COLL]] || Collision Layer
-|-
-| [[Tes5Mod:Mod File Format/CONT|CONT]] || Container
-|-
-| [[Tes5Mod:Mod File Format/CPTH|CPTH]] || Camera Path
-|-
-| [[Tes5Mod:Mod File Format/CSTY|CSTY]] || Combat Style
-|-
-| [[Tes5Mod:Mod File Format/DEBR|DEBR]] || Debris
-|-
-| [[Tes5Mod:Mod File Format/DIAL|DIAL]] || Dialog Topic
-|-
-| [[Tes5Mod:Mod File Format/DLBR|DLBR]] || Dialog Branch
-|-
-| [[Tes5Mod:Mod File Format/DLVW|DLVW]] || Dialog View
-|}
-|width="25%" |
-{| class="wikitable" width="100%" style="margin:0;"
-! Type
-! Data Object
-|-
-| [[Tes5Mod:Mod File Format/DOBJ|DOBJ]] || Dynamic Object?  Variable/formid pairs.
-|-
-| [[Tes5Mod:Mod File Format/DOOR|DOOR]] || Door
-|-
-| [[Tes5Mod:Mod File Format/DUAL|DUAL]] || Dual Cast Data (''possibly unused'')
-|-
-| [[Tes5Mod:Mod File Format/ECZN|ECZN]] || Encounter Zone
-|-
-| [[Tes5Mod:Mod File Format/EFSH|EFSH]] || Effect Shader
-|-
-| [[Tes5Mod:Mod File Format/ENCH|ENCH]] || Enchantment
-|-
-| [[Tes5Mod:Mod File Format/EQUP|EQUP]] || Equip Slot (flag-type values)
-|-
-| [[Tes5Mod:Mod File Format/EXPL|EXPL]] || Explosion
-|-
-| [[Tes5Mod:Mod File Format/EYES|EYES]] || Eyes
-|-
-| [[Tes5Mod:Mod File Format/FACT|FACT]] || Faction
-|-
-| [[Tes5Mod:Mod File Format/FLOR|FLOR]] || Flora
-|-
-| [[Tes5Mod:Mod File Format/FLST|FLST]] || Form List (non-leveled list)
-|-
-| [[Tes5Mod:Mod File Format/FSTP|FSTP]] || Footstep
-|-
-| [[Tes5Mod:Mod File Format/FSTS|FSTS]] || Footstep Set
-|-
-| [[Tes5Mod:Mod File Format/FURN|FURN]] || Furniture
-|-
-| [[Tes5Mod:Mod File Format/GLOB|GLOB]] || Global Variable
-|-
-| [[Tes5Mod:Mod File Format/GMST|GMST]] || Game Setting
-|-
-| [[Tes5Mod:Mod File Format/GRAS|GRAS]] || Grass
-|-
-| [[#Groups|GRUP]] || Form Group
-|-
-| [[Tes5Mod:Mod File Format/HAZD|HAZD]] || Hazard
-|-
-| [[Tes5Mod:Mod File Format/HDPT|HDPT]] || Head Part
-|-
-| [[Tes5Mod:Mod File Format/IDLE|IDLE]] || Idle Animation
-|-
-| [[Tes5Mod:Mod File Format/IDLM|IDLM]] || Idle Marker
-|-
-| [[Tes5Mod:Mod File Format/IMAD|IMAD]] || Image Space Modifier
-|-
-| [[Tes5Mod:Mod File Format/IMGS|IMGS]] || Image Space
-|-
-| [[Tes5Mod:Mod File Format/INFO|INFO]] || Dialog Topic Info
-|-
-| [[Tes5Mod:Mod File Format/INGR|INGR]] || Ingredient
-|-
-| [[Tes5Mod:Mod File Format/IPCT|IPCT]] || Impact Data
-|-
-| [[Tes5Mod:Mod File Format/IPDS|IPDS]] || Impact Data Set
-|-
-| [[Tes5Mod:Mod File Format/KEYM|KEYM]] || Key
-|}
-|width="25%" |
-{| class="wikitable" width="100%" style="margin:0;"
-! Type
-! Data Object
-|-
-| [[Tes5Mod:Mod File Format/KYWD|KYWD]] || Keyword
-|-
-| [[Tes5Mod:Mod File Format/LAND|LAND]] || Landscape
-|-
-| [[Tes5Mod:Mod File Format/LCRT|LCRT]] || Location Reference Type
-|-
-| [[Tes5Mod:Mod File Format/LCTN|LCTN]] || Location
-|-
-| [[Tes5Mod:Mod File Format/LGTM|LGTM]] || Lighting Template
-|-
-| [[Tes5Mod:Mod File Format/LIGH|LIGH]] || Light
-|-
-| [[Tes5Mod:Mod File Format/LSCR|LSCR]] || Load Screen
-|-
-| [[Tes5Mod:Mod File Format/LTEX|LTEX]] || Land Texture
-|-
-| [[Tes5Mod:Mod File Format/LVLI|LVLI]] || Leveled Item
-|-
-| [[Tes5Mod:Mod File Format/LVLN|LVLN]] || Leveled Actor
-|-
-| [[Tes5Mod:Mod File Format/LVSP|LVSP]] || Leveled Spell
-|-
-| [[Tes5Mod:Mod File Format/MATO|MATO]] || Material Object
-|-
-| [[Tes5Mod:Mod File Format/MATT|MATT]] || Material Type
-|-
-| [[Tes5Mod:Mod File Format/MESG|MESG]] || Message
-|-
-| [[Tes5Mod:Mod File Format/MGEF|MGEF]] || Magic Effect
-|-
-| [[Tes5Mod:Mod File Format/MISC|MISC]] || Misc. Object
-|-
-| [[Tes5Mod:Mod File Format/MOVT|MOVT]] || Movement Type
-|-
-| [[Tes5Mod:Mod File Format/MSTT|MSTT]] || Movable Static
-|-
-| [[Tes5Mod:Mod File Format/MUSC|MUSC]] || Music Type
-|-
-| [[Tes5Mod:Mod File Format/MUST|MUST]] || Music Track
-|-
-| [[Tes5Mod:Mod File Format/NAVI|NAVI]] || Navigation (master data)
-|-
-| [[Tes5Mod:Mod File Format/NAVM|NAVM]] || Nav Mesh
-|-
-| [[Tes5Mod:Mod File Format/NPC_|NPC_]] || Actor (NPC, Creature)
-|-
-| [[Tes5Mod:Mod File Format/OTFT|OTFT]] || Outfit
-|-
-| [[Tes5Mod:Mod File Format/PACK|PACK]] || AI Package
-|-
-| [[Tes5Mod:Mod File Format/PERK|PERK]] || Perk
-|-
-| [[Tes5Mod:Mod File Format/PGRE|PGRE]] || Placed grenade
-|-
-| [[Tes5Mod:Mod File Format/PHZD|PHZD]] || Placed hazard
-|-
-| [[Tes5Mod:Mod File Format/PROJ|PROJ]] || Projectile
-|-
-| [[Tes5Mod:Mod File Format/QUST|QUST]] || Quest
-|}
-|width="25%" |
-{| class="wikitable" width="100%" style="margin:0;"
-! Type
-! Data Object
-|-
-| [[Tes5Mod:Mod File Format/RACE|RACE]] || Race / Creature type
-|-
-| [[Tes5Mod:Mod File Format/REFR|REFR]] || Object Reference
-|-
-| [[Tes5Mod:Mod File Format/REGN|REGN]] || Region (Audio/Weather)
-|-
-| [[Tes5Mod:Mod File Format/RELA|RELA]] || Relationship
-|-
-| [[Tes5Mod:Mod File Format/REVB|REVB]] || Reverb Parameters
-|-
-| [[Tes5Mod:Mod File Format/RFCT|RFCT]] || Visual Effect
-|-
-| [[Tes5Mod:Mod File Format/SCEN|SCEN]] || Scene
-|-
-| [[Tes5Mod:Mod File Format/SCRL|SCRL]] || Scroll
-|-
-| [[Tes5Mod:Mod File Format/SHOU|SHOU]] || Shout
-|-
-| [[Tes5Mod:Mod File Format/SLGM|SLGM]] || Soul Gem
-|-
-| [[Tes5Mod:Mod File Format/SMBN|SMBN]] || Story Manager Branch Node
-|-
-| [[Tes5Mod:Mod File Format/SMEN|SMEN]] || Story Manager Event Node
-|-
-| [[Tes5Mod:Mod File Format/SMQN|SMQN]] || Story Manager Quest Node
-|-
-| [[Tes5Mod:Mod File Format/SNCT|SNCT]] || Sound Category
-|-
-| [[Tes5Mod:Mod File Format/SNDR|SNDR]] || Sound Reference
-|-
-| [[Tes5Mod:Mod File Format/SOPM|SOPM]] || Sound Output Marker
-|-
-| [[Tes5Mod:Mod File Format/SOUN|SOUN]] || Sound
-|-
-| [[Tes5Mod:Mod File Format/SPEL|SPEL]] || Spell
-|-
-| [[Tes5Mod:Mod File Format/SPGD|SPGD]] || Shader Particle Geometry
-|-
-| [[Tes5Mod:Mod File Format/STAT|STAT]] || Static
-|-
-| [[Tes5Mod:Mod File Format/TACT|TACT]] || Talking Activator
-|-
-| [[Tes5Mod:Mod File Format/TES4|TES4]] || Plugin info
-|-
-| [[Tes5Mod:Mod File Format/TREE|TREE]] || Tree
-|-
-| [[Tes5Mod:Mod File Format/TXST|TXST]] || Texture Set
-|-
-| [[Tes5Mod:Mod File Format/VTYP|VTYP]] || Voice Type
-|-
-| [[Tes5Mod:Mod File Format/WATR|WATR]] || Water Type
-|-
-| [[Tes5Mod:Mod File Format/WEAP|WEAP]] || Weapon
-|-
-| [[Tes5Mod:Mod File Format/WOOP|WOOP]] || Word Of Power
-|-
-| [[Tes5Mod:Mod File Format/WRLD|WRLD]] || World Space
-|-
-| [[Tes5Mod:Mod File Format/WTHR|WTHR]] || Weather
-|}
-|}
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki6.jpg
+
+I chose to cut and paste the formatting from the DOOR record for now but I need to make changes.
+
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki7.jpg
+
+After you make corrections to the fields should start to reflect the values of the actual record you are submiting to the wiki.  In this case I am editing the MISC record.
+
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki8.jpg
+
+When you are done you can priview your changes before subbmitting them.
+
+
+The last thing to do is cut and paste the text you   
 
 ==Groups==
+
 GRUPs are collections of [[#Records|records]], and are used to improve scanning of files to make it easier to skip over records that the reading program is not interested in. In addition to this, subgroups for WRLD and CELLS provide some useful structural information (e.g., the division of cell data into persistent and non-persistent references.)
 
 ===File Format===
+
 {| class="wikitable" width="100%" 
 ! width="20%" | Name
 ! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
@@ -377,6 +120,7 @@ GRUPs are collections of [[#Records|records]], and are used to improve scanning 
 |}
 
 ===Top Groups===
+
 In Skyrim.esm, the top, or highest level groups are stored in the following order:
 
 :GMST, KYWD, LCRT, AACT, TXST, GLOB, CLAS, FACT, HDPT, HAIR, EYES, RACE, SOUN, ASPC, MGEF, SCPT, LTEX, ENCH, SPEL, SCRL, ACTI, TACT, ARMO, BOOK, CONT, DOOR, INGR, LIGH, MISC, APPA, STAT, SCOL, MSTT, PWAT, GRAS,  TREE, CLDC, FLOR, FURN, WEAP, AMMO, NPC_, LVLN, KEYM, ALCH, IDLM, COBJ, PROJ, HAZD, SLGM, LVLI, WTHR, CLMT, SPGD, RFCT, REGN, NAVI, CELL, WRLD, DIAL, QUST, IDLE, PACK, CSTY, LSCR, LVSP, ANIO, WATR, EFSH, EXPL,  DEBR, IMGS, IMAD, FLST, PERK, BPTD, ADDN, AVIF, CAMS, CPTH, VTYP, MATT, IPCT, IPDS, ARMA, ECZN, LCTN, MESG, RGDL, DOBJ, LGTM, MUSC, FSTP, FSTS, SMBN, SMQN, SMEN, DLBR, MUST, DLVW, WOOP, SHOU, EQUP, RELA, SCEN, ASTP, OTFT, ARTO, MATO, MOVT, ''HAZD'', SNDR, DUAL, SNCT, SOPM, COLL, CLFM, REVB
@@ -393,6 +137,7 @@ Notes:
 *There are 2 HAZD groups, the second one has no records.
 
 ==Records==
+
 {| class="wikitable" width="100%" 
 ! width="20%" | Name
 ! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
@@ -459,6 +204,7 @@ Notes:
 |}
 
 ==Fields==
+
 {| class="wikitable" width="100%" 
 ! width="20%" | Name
 ! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
@@ -473,9 +219,3 @@ Notes:
 |}
 
 <sup>†</sup>If the preceding field has the type XXXX, then dataSize will be 0 and the size of the data is in fact the 32 bit quantity stored in the XXXX field.
-
-Commonly used fields and their definitions can be found [[Tes5Mod:Fields|here]]
-
-== Notes ==
-:* See [[Tes5Mod:Mod_File_Format/Raw_Data|Raw Data]] for a dump of all records/subrecords in Skyrim.esm and their associated counts/sizes.
-:* See [[Tes5Mod:Mod_File_Format/Raw_Function_Data|Raw Function Data]] for a dump of all script/console functions and events in TESV.exe.
