@@ -20,7 +20,7 @@ https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki
 
 Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki8.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki9.jpg
 
 Save the information to a txt file in the USEPWiki folder for our SVN.  Chose the nameof the record, followed by Def.   For the above example I called it MISCDef.txt.
 
