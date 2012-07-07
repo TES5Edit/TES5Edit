@@ -4,13 +4,13 @@ http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format
 
 = The USEPWiki =
 
-Those updating the wiki can navagate to this page and click on one of the records.  
+Those updating the wiki can navigate to this page and click on one of the records.  
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki1.jpg
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki2.jpg
 
-For this example I'm going to use MISC since it isn't really formated properly and contains the same information you will recieve in a ticket from one of the decoders. To get started click the edit tab.
+For this example I'm going to use MISC since it isn't really formated properly and contains the same information you will receive in a ticket from one of the decoders. To get started click the edit tab.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki3.jpg
 
@@ -30,11 +30,13 @@ The first time I tried to edit a record I chose to just cut and paste from other
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki7.jpg
 
-After you make corrections to the fields they should start to reflect the values of the actual record you are submiting to the wiki.  In this case I am editing the MISC record.  When you are done making changes save all the text you are submittiong to the file you made for it in the USEPWiki folder.
+After you make corrections to the fields they should start to reflect the values of the actual record you are submitting to the wiki.  In this case I am editing the MISC record.  When you are done making changes save all the text you are submitting to the file you made for it in the USEPWiki folder.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki8.jpg
 
-You can priview your changes before subbmitting them.
+You can preview your changes before submitting them.
+
+#summary Don't edit the text below.
 
 ==Groups==
 
