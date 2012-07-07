@@ -35,3 +35,5 @@ After you make corrections to the fields they should start to reflect the values
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki8.jpg
 
 You can preview your changes before submitting them.
+
+This is just a brief example of what to do.  You need to go to the bug tracker and assign a ticket to yourself, update the site, and close the ticket.  If a ticket is made for the same record you edited once before it's because there are changes and new information to add.
