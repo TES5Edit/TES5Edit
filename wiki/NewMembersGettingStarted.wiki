@@ -10,11 +10,11 @@ First thing's first, you'll need to get your Google Code password, which is diff
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step1.jpg
 
-1. After installing, create and navigate to the directory within which you want to hold your 'working copy' of the skyrim-plugin-decoding-project SVN, which is what you edit.  This directory will soon have a several folders from the SVN so no need to create any aditional folders.
+1. After installing, create and navigate to the directory within which you want to hold your 'working copy' of the skyrim-plugin-decoding-project SVN, which is what you edit.  This directory will soon have a several folders from the SVN so no need to create any additional folders.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step2.jpg
 
-2. Right-click and select 'SVN Checkout...'. Ensure that the URL is "https://skyrim-plugin-decoding-project.googlecode.com/svn/" without quotes, the depth is "Fully Recursive" and the revision is "HEAD Revision".  Ignore the "Checkout Directory" it the location you navagated to for your 'working copy'.
+2. Right-click and select 'SVN Checkout...'. Ensure that the URL is "https://skyrim-plugin-decoding-project.googlecode.com/svn/" without quotes, the depth is "Fully Recursive" and the revision is "HEAD Revision".  Ignore the "Checkout Directory" it the location you navigated to for your 'working copy'.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step3.jpg
 
@@ -56,7 +56,7 @@ https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step9.jp
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step10.jpg
 
-Once you do that the file or files will all have a blue plus symbol over them.  This means they are added to a list that TortoiseSVN will use when it is commiting the files to our SVN .  You can right click the folder name, a single file, or multiple highlighted files and click 'SVN Commit..' to commit them to our SVN.
+Once you do that the file or files will all have a blue plus symbol over them.  This means they are added to a list that TortoiseSVN will use when it is committing the files to our SVN .  You can right click the folder name, a single file, or multiple highlighted files and click 'SVN Commit..' to commit them to our SVN.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step11.jpg
 
