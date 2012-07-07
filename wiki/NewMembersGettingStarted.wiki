@@ -2,7 +2,7 @@
 
 Thanks to WrinklyNinja and the BOSS team for allowing me to use their instructions.
 
-[[File:https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step1.jpg]]
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step1.jpg
 
 
 
