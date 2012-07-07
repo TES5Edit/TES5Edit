@@ -44,76 +44,45 @@ GRUPs are collections of Records, and are used to improve scanning of files to m
 
 ===File Format===
 
-{| class="wikitable" width="100%" 
-! width="20%" | Name
-! width="20%" | Blank
-! width="60%" | Info
-|-
-| type
-| char[4]
-| Always "GRUP"
-|-
-| groupSize
-| uint32
-| Size of the entire group, ''including'' the group header (24 bytes).
-* This is in contrast to Records and Fields, whose sizes does ''not'' include their header sizes.
-|-
-| label
-| uint8[4]
-| Format depends on group type.
-|-
-| groupType
-| int32
-| Group type...
-  {| class="wikitable" width="100%" 
-  ! | Type
-  ! | Info
-  ! | Label 
-  ! | Label 
-  |-
-  | 0 || Top (Type) || char[4] || Record type
-  |-
-  | 1 || World Children || formid || Parent
-  |-
-  | 2 || Interior Cell Block || long|| Block number
-  |-
-  | 3 || Interior Cell Sub-Block || long || Sub-block number
-  |-
-  | 4 || Exterior Cell Block || short[2] || Grid Y, X (Note the reverse order)
-  |-
-  | 5 || Exterior Cell Sub-Block || short[2] || Grid Y, X (Note the reverse order)
-  |-
-  | 6 || Cell Children || formid || Parent
-  |-
-  | 7 || Topic Children || formid || Parent
-  |-
-  | 8 || Cell Persistent Childen || formid || Parent
-  |-
-  | 9 || Cell Temporary Children || formid || Parent
-  |-
-  | 10 || Cell Visible Distant Children || formid || Parent
-  |}
+|| Name || Blank || Info ||
+|| type || char[4] || Always "GRUP" ||
+|| groupSize || uint32 || Size of the entire group, ''including'' the group header (24 bytes).
+* This is in contrast to Records and Fields, whose sizes does ''not'' include their header sizes. ||
+|| label || uint8[4] || Format depends on group type. ||
+|| groupType || int32 || Group type...
+||           ||       || Type || Info || Label  || Label  ||
+||           ||       ||  0 || Top (Type) || char[4] || Record type ||
+||           ||       ||  1 || World Children || formid || Parent ||
+||           ||       || 2 || Interior Cell Block || long|| Block number ||
+||           ||       || 3 || Interior Cell Sub-Block || long || Sub-block number ||
+||           ||       || 4 || Exterior Cell Block || short[2] || Grid Y, X (Note the reverse order) ||
+||           ||       || 5 || Exterior Cell Sub-Block || short[2] || Grid Y, X (Note the reverse order) ||
+||           ||       || 6 || Cell Children || formid || Parent ||
+||           ||       || 7 || Topic Children || formid || Parent ||
+||           ||       || 8 || Cell Persistent Childen || formid || Parent ||
+||           ||       || 9 || Cell Temporary Children || formid || Parent ||
+||           ||       || 10 || Cell Visible Distant Children || formid || Parent ||
 
-|-
-| stamp
-| uint16
-| Date stamp, presumably of the last file modification. Low byte = day; high byte = number of months since December 2002 (i.e., 1 = January 2003).
-|-
-| unknown
-| uint16
-| 
-|-
-| version
-| uint16
-| 
-|-
-| unknown
-| uint16
-| 
-|-
-| data
-| uint8[groupSize]
-| Records and subgroups.
+||
+|| stamp
+|| uint16
+|| Date stamp, presumably of the last file modification. Low byte = day; high byte = number of months since December 2002 (i.e., 1 = January 2003).
+||
+|| unknown
+|| uint16
+|| 
+||
+|| version
+|| uint16
+|| 
+||
+|| unknown
+|| uint16
+|| 
+||
+|| data
+|| uint8[groupSize]
+|| Records and subgroups.
 |}
 
 ===Top Groups===
@@ -130,72 +99,72 @@ The following groups are only found in subgroups of other records:
 :REFR, ACHR, NAVM, PGRE, PHZD, LAND, INFO
 
 Notes:
-*6 record types have a GRUP but have no records:[[Tes5Mod:Mod File Format/CLDC|CLDC]], [[Tes5Mod:Mod File Format/HAIR|HAIR]], RGDL, SCPT, SCOL, PWAT.  
+*6 record types have a GRUP but have no records:[[Tes5Mod:Mod File Format/CLDC||CLDC]], [[Tes5Mod:Mod File Format/HAIR||HAIR]], RGDL, SCPT, SCOL, PWAT.  
 *There are 2 HAZD groups, the second one has no records.
 
 ==Records==
 
 {| class="wikitable" width="100%" 
-! width="20%" | Name
-! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
-! width="60%" | Info
-|-
-| type || char[4] || Type
-|-
-| dataSize || uint32 || Size of data field.
-|-
-| flags || uint32 || Flags...
+! width="20%" || Name
+! width="20%" || [[Tes5Mod:File Format Conventions||Type/Size]]
+! width="60%" || Info
+||
+|| type || char[4] || Type
+||
+|| dataSize || uint32 || Size of data field.
+||
+|| flags || uint32 || Flags...
 {| class="wikitable" width="100%" 
-! | Flag
-! | Meaning
-|-
-| 0x00000001 || ''(TES4 record only)'' Master (ESM) file.
-|-
-| 0x00000020 || Deleted
-|-
-| 0x00000040 || Related to shields
-|-
-| 0x00000080 || ''(TES4 record only)'' Is localized. This will make Skyrim load the .STRINGS, .DLSTRINGS, and .ILSTRINGS files associated with the mod. If this flag is not set, lstrings are treated as zstrings.
-|-
-| 0x00000200 || ''(REFR Record)'' Hidden From Local Map<br>''(ACHR Record)'' Starts Dead
-|-
-| 0x00000400 || Quest item / Persistent reference<br>''(LSCR Record)'' Displays in Main Menu
-|-
-| 0x00000800 || Initially disabled
-|-
-| 0x00001000 || Ignored
-|-
-| 0x00008000 || Visible when distant
-|-
-| 0x00020000 || Dangerous / Off limits (Interior cell)
-|-
-| 0x00040000 || Data is compressed
-|-
-| 0x00080000 || Can't wait
+! || Flag
+! || Meaning
+||
+|| 0x00000001 || ''(TES4 record only)'' Master (ESM) file.
+||
+|| 0x00000020 || Deleted
+||
+|| 0x00000040 || Related to shields
+||
+|| 0x00000080 || ''(TES4 record only)'' Is localized. This will make Skyrim load the .STRINGS, .DLSTRINGS, and .ILSTRINGS files associated with the mod. If this flag is not set, lstrings are treated as zstrings.
+||
+|| 0x00000200 || ''(REFR Record)'' Hidden From Local Map<br>''(ACHR Record)'' Starts Dead
+||
+|| 0x00000400 || Quest item / Persistent reference<br>''(LSCR Record)'' Displays in Main Menu
+||
+|| 0x00000800 || Initially disabled
+||
+|| 0x00001000 || Ignored
+||
+|| 0x00008000 || Visible when distant
+||
+|| 0x00020000 || Dangerous / Off limits (Interior cell)
+||
+|| 0x00040000 || Data is compressed
+||
+|| 0x00080000 || Can't wait
 |}
 
-|-
-| id || uint32 || Record (form) identifier.
+||
+|| id || uint32 || Record (form) identifier.
 * TES4 and GRUP (group) records have FormIds of 0.
-|-
-| revision || uint32 || Used for revision control by the CS (only if enabled)
+||
+|| revision || uint32 || Used for revision control by the CS (only if enabled)
 * Probably the same format as Oblivion's
-|-
-| version || uint16 || 
-|-
-| unknown || uint16 || unknown
-|-
-| data || uint8[dataSize] || Data
+||
+|| version || uint16 || 
+||
+|| unknown || uint16 || unknown
+||
+|| data || uint8[dataSize] || Data
 * For uncompressed records, this is a sequence of fields. 
 * Compressed data is the same, except that the fields are compressed using [http://zlib.net ZLIB], and stored into the data field like so...
 {| class="wikitable" width="100%" 
-! | Name
-! | [[Tes5Mod:File Format Conventions|Type/Size]]
-! | Info
-|-
-| decompSize || uint32 || Size of decompressed data.
-|-
-| compData || uint8[dataSize-4] || Compressed collection of fields.
+! || Name
+! || [[Tes5Mod:File Format Conventions||Type/Size]]
+! || Info
+||
+|| decompSize || uint32 || Size of decompressed data.
+||
+|| compData || uint8[dataSize-4] || Compressed collection of fields.
 |}
 
 |}
@@ -203,15 +172,15 @@ Notes:
 ==Fields==
 
 {| class="wikitable" width="100%" 
-! width="20%" | Name
-! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
-! width="60%" | Info
-|-
-| type || char[4] || Field type.
-|-
-| dataSize || uint16 || Size of data field. <sup>†</sup>
-|-
-| data|| uint8[dataSize] || Data.
+! width="20%" || Name
+! width="20%" || [[Tes5Mod:File Format Conventions||Type/Size]]
+! width="60%" || Info
+||
+|| type || char[4] || Field type.
+||
+|| dataSize || uint16 || Size of data field. <sup>†</sup>
+||
+|| data|| uint8[dataSize] || Data.
 * Format depends on record and field type.
 |}
 
