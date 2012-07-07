@@ -18,13 +18,11 @@ For what our project is doing we only need to use the 'edit' tab at the top.  Al
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki5.jpg
 
-Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed.
+Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed. The text isn't formatted in this example which is why I chose it.  The information you are going to recieve from the decoders is going to be formatted in a simular way.  The first time I tried to edit a record I chose to just cut and paste from other records to start with and then start making changes.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki9.jpg
 
-Save the information to a txt file in the USEPWiki folder for our SVN.  Chose the nameof the record, followed by Def.   For the above example I called it MISCDef.txt.
-
-The text isn't formatted in this example which is why I chose it.  The information you are going to recieve from the decoders is going to be formatted in a simular way.  The first time I tried to edit a record I chose to just cut and paste from other records to start with and then start making changes.
+Save the information to a txt file in the USEPWiki folder for our SVN.  Chose the name of the record, followed by Def.   For the above example I called it MISCDef.txt.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki6.jpg
 
