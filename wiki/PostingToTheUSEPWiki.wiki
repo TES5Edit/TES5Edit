@@ -18,7 +18,7 @@ For what our project is doing we only need to use the 'edit' tab at the top.  Al
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki5.jpg
 
-Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed. The text isn't formatted in this example which is why I chose it.  The information you are going to recieve from the decoders is going to be formatted in a simular way.  The first time I tried to edit a record I chose to just cut and paste from other records to start with and then start making changes.
+Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki9.jpg
 
@@ -26,28 +26,25 @@ Save the information to a txt file in the USEPWiki folder for our SVN.  Chose th
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki6.jpg
 
-I chose to cut and paste the formatting from the DOOR record for now but I need to make changes.
+The first time I tried to edit a record I chose to just cut and paste from other records to start with and then start making changes.  I chose to cut and paste the formatting from the DOOR record for now but changes need to be made.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki7.jpg
 
-After you make corrections to the fields should start to reflect the values of the actual record you are submiting to the wiki.  In this case I am editing the MISC record.
+After you make corrections to the fields they should start to reflect the values of the actual record you are submiting to the wiki.  In this case I am editing the MISC record.  When you are done making changes save all the text you are submittiong to the file you made for it in the USEPWiki folder.
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki8.jpg
 
-When you are done you can priview your changes before subbmitting them.
-
-
-The last thing to do is cut and paste the text you   
+You can priview your changes before subbmitting them.
 
 ==Groups==
 
-GRUPs are collections of [[#Records|records]], and are used to improve scanning of files to make it easier to skip over records that the reading program is not interested in. In addition to this, subgroups for WRLD and CELLS provide some useful structural information (e.g., the division of cell data into persistent and non-persistent references.)
+GRUPs are collections of Records, and are used to improve scanning of files to make it easier to skip over records that the reading program is not interested in. In addition to this, subgroups for WRLD and CELLS provide some useful structural information (e.g., the division of cell data into persistent and non-persistent references.)
 
 ===File Format===
 
 {| class="wikitable" width="100%" 
 ! width="20%" | Name
-! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! width="20%" | Blank
 ! width="60%" | Info
 |-
 | type
@@ -57,7 +54,7 @@ GRUPs are collections of [[#Records|records]], and are used to improve scanning 
 | groupSize
 | uint32
 | Size of the entire group, ''including'' the group header (24 bytes).
-* This is in contrast to [[#Records|records]] and [[#Fields|fields]], whose sizes does ''not'' include their header sizes.
+* This is in contrast to Records and Fields, whose sizes does ''not'' include their header sizes.
 |-
 | label
 | uint8[4]

@@ -1,0 +1,48 @@
+{{Trail|File Formats|Mod File Format}}
+MISC
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || VMAD || full name || lstring || In-game name
+|-
+| + || OBND || objectBounds || [[Tes5Mod:Mod_File_Format/OBND_Field|OBND]] || Object Bounds Data
+|- 
+| - || FULL ||  || lstring || Item Name (recommended max length of 24 characters)
+|-
+| - || MODL ||   || zstring  || Model Filename
+|-
+| - || MODT ||   ||   || 
+|-
+| - || MODS ||   ||   || 
+|-
+| - || ICON ||   || zstring || Inventory Icon filename
+|-
+| - || MICO ||   || zstring || Message Icon filename
+|-
+| - || DEST ||   ||   || Destruction Data
+|-
+| - || DSTD ||   ||   || Destruction Section Data 
+|-
+| - || DSTF ||   ||   || End of section marker
+|-
+| - || YNAM ||   || formid || Pickup SNDR
+|-
+| - || ZNAM ||   || formid || Drop SNDR
+|-
+| - || KSIZ ||   || dword || Number of formids in KWDA
+|-
+| - || KWDA ||   || formid || Keyword list
+|-
+| + || DATA ||  ||  || Door Flags
+:dword Value
+:float Weight
+|-
+|}
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
