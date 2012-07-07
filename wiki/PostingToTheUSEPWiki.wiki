@@ -13,6 +13,7 @@ https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki
 For this example I'm going to use MISC since it isn't really formated properly and contains the same information you will recieve in a ticket from one of the decoders. To get started click the edit tab.
 
 Toolbar
+
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki4.jpg
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki3.jpg
