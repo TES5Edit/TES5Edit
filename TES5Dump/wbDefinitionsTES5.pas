@@ -222,6 +222,7 @@ const
   IPDS : TwbSignature = 'IPDS';
   ITXT : TwbSignature = 'ITXT';
   IMOD : TwbSignature = 'IMOD';
+  JAIL : TwbSignature = 'JAIL'; { New To Skyrim }
   JNAM : TwbSignature = 'JNAM';
   JOUT : TwbSignature = 'JOUT'; { New To Skyrim }
   KSIZ : TwbSignature = 'KSIZ';
@@ -364,6 +365,7 @@ const
   PFPC : TwbSignature = 'PFPC';
   PGAG : TwbSignature = 'PGAG';
   PGRE : TwbSignature = 'PGRE';
+  PLCN : TwbSignature = 'PLCN'; { New to Skyrim }
   PMIS : TwbSignature = 'PMIS';
   TRGT : TwbSignature = 'TRGT';
   PGRI : TwbSignature = 'PGRI';
@@ -462,6 +464,7 @@ const
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
   STAT : TwbSignature = 'STAT';
+  STOL : TwbSignature = 'STOL'; { New to Skyrim }
   SPGD : TwbSignature = 'SPGD';
   RFCT : TwbSignature = 'RFCT';
   MMRK : TwbSignature = 'MMRK';
@@ -503,6 +506,7 @@ const
   VTEX : TwbSignature = 'VTEX';
   VTXT : TwbSignature = 'VTXT';
   VTYP : TwbSignature = 'VTYP';
+  WAIT : TwbSignature = 'WAIT'; { New To Skyrim }
   WATR : TwbSignature = 'WATR';
   WEAP : TwbSignature = 'WEAP';
   WLST : TwbSignature = 'WLST';
@@ -6749,7 +6753,11 @@ begin
 // General Tab ---------------------------------------------------------------
     wbFULL,
     wbXNAMs,
-    wbUnknown(DATA){wbXNAMs},
+    wbUnknown(DATA),
+    wbUnknown(JAIL),
+    wbUnknown(WAIT),
+    wbUnknown(STOL),
+    wbUnknown(PLCN),
     wbUnknown(CRGR){wbXNAMs},
     wbUnknown(JOUT){wbXNAMs},
 //    wbStruct(DATA, '', [

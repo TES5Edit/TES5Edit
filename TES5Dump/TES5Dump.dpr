@@ -237,13 +237,12 @@ begin
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
     else begin
-      RecordToSkip.Add('LAND');
-//      RecordToSkip.Add('REGN');
-      RecordToSkip.Add('PGRD');
-      RecordToSkip.Add('ROAD');
-      RecordToSkip.Add('NAVI');
-      RecordToSkip.Add('NAVM');
-      RecordToSkip.Add('IMAD');
+//    RecordToSkip.Add('LAND');
+//    RecordToSkip.Add('REGN');
+//    RecordToSkip.Add('PGRD');
+//    RecordToSkip.Add('ROAD');
+//    RecordToSkip.Add('NAVM');
+//    RecordToSkip.Add('IMAD');
       RecordToSkip.Add('NAVI');
       RecordToSkip.Add('CELL');
       RecordToSkip.Add('WRLD');
