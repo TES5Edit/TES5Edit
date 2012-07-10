@@ -95,7 +95,7 @@ const
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
   AVIF : TwbSignature = 'AVIF';
-  BIDS : TwbSignature = 'BIDS';
+  BIDS : TwbSignature = 'BIDS'; { New to Skyrim }
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
   BMDT : TwbSignature = 'BMDT';
@@ -123,7 +123,7 @@ const
   CRDT : TwbSignature = 'CRDT';
   CREA : TwbSignature = 'CREA';
   CRGR : TwbSignature = 'CRGR'; { New to Skyrim }
-  CRVA : TwbSignature = 'CRVA';
+  CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';
   CSDC : TwbSignature = 'CSDC';
@@ -214,7 +214,7 @@ const
   IMAD : TwbSignature = 'IMAD';
   IMGS : TwbSignature = 'IMGS';
   INAM : TwbSignature = 'INAM';
-  INCC : TwbSignature = 'INCC';
+  INCC : TwbSignature = 'INCC'; { New to Skyrim }
   INDX : TwbSignature = 'INDX';
   INFO : TwbSignature = 'INFO';
   INGR : TwbSignature = 'INGR';
@@ -390,7 +390,7 @@ const
   POCA : TwbSignature = 'POCA';
   POEA : TwbSignature = 'POEA';
   PRKC : TwbSignature = 'PRKC';
-  PRKR : TwbSignature = 'PRKR';
+  PRKR : TwbSignature = 'PRKR'; { New to Skyrim }
   PRKE : TwbSignature = 'PRKE';
   PRKF : TwbSignature = 'PRKF';
   PROJ : TwbSignature = 'PROJ';
@@ -472,10 +472,10 @@ const
   TCLT : TwbSignature = 'TCLT';
   TERM : TwbSignature = 'TERM';
   TES4 : TwbSignature = 'TES4';
-  TIAS : TwbSignature = 'TIAS';
-  TINI : TwbSignature = 'TINI';
-  TINC : TwbSignature = 'TINC';
-  TINV : TwbSignature = 'TINV';
+  TIAS : TwbSignature = 'TIAS'; { New to Skyrim }
+  TINI : TwbSignature = 'TINI'; { New to Skyrim }
+  TINC : TwbSignature = 'TINC'; { New to Skyrim }
+  TINV : TwbSignature = 'TINV'; { New to Skyrim }
   TNAM : TwbSignature = 'TNAM';
   TPLT : TwbSignature = 'TPLT';
   TRDT : TwbSignature = 'TRDT';
