@@ -110,17 +110,20 @@ const
   BTXT : TwbSignature = 'BTXT';
   CAMS : TwbSignature = 'CAMS';
   CELL : TwbSignature = 'CELL';
+  CITC : TwbSignature = 'CITC'; { New to Skyrim }
   CLAS : TwbSignature = 'CLAS';
   CLMT : TwbSignature = 'CLMT';
   CNAM : TwbSignature = 'CNAM';
   CNTO : TwbSignature = 'CNTO';
-  COCT : TwbSignature = 'COCT';  { New to Skyrim 'Count'}
+  COCT : TwbSignature = 'COCT'; { New to Skyrim 'Count'}
   COBJ : TwbSignature = 'COBJ';
   COED : TwbSignature = 'COED';
   CONT : TwbSignature = 'CONT';
   CPTH : TwbSignature = 'CPTH';
   CRDT : TwbSignature = 'CRDT';
   CREA : TwbSignature = 'CREA';
+  CRGR : TwbSignature = 'CRGR'; { New to Skyrim }
+  CRVA : TwbSignature = 'CRVA';
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';
   CSDC : TwbSignature = 'CSDC';
@@ -220,6 +223,7 @@ const
   ITXT : TwbSignature = 'ITXT';
   IMOD : TwbSignature = 'IMOD';
   JNAM : TwbSignature = 'JNAM';
+  JOUT : TwbSignature = 'JOUT'; { New To Skyrim }
   KSIZ : TwbSignature = 'KSIZ';
   KWDA : TwbSignature = 'KWDA';
   KEYM : TwbSignature = 'KEYM';
@@ -379,6 +383,7 @@ const
   PLD2 : TwbSignature = 'PLD2';
   PLDT : TwbSignature = 'PLDT';
   PLYR : TwbSignature = 'PLYR';
+  PLVD : TwbSignature = 'PLVD'; { New to Skyrim }
   PNAM : TwbSignature = 'PNAM';
   TDUM : TwbSignature = 'TDUM';
   POBA : TwbSignature = 'POBA';
@@ -487,6 +492,9 @@ const
   VANM : TwbSignature = 'VANM';
   VATS : TwbSignature = 'VATS';
   VCLR : TwbSignature = 'VCLR';
+  VENC : TwbSignature = 'VENC'; { New To Skyrim }
+  VEND : TwbSignature = 'VEND'; { New To Skyrim }
+  VENV : TwbSignature = 'VENV'; { New To Skyrim }
   VHGT : TwbSignature = 'VHGT';
   VMAD : TwbSignature = 'VMAD';
   VNAM : TwbSignature = 'VNAM';
@@ -4403,6 +4411,7 @@ begin
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
+
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
     {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
@@ -6721,42 +6730,82 @@ begin
 
   wbXNAM :=
     wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCkNoReach('Faction', [FACT, RACE]),
-      wbInteger('Modifier', itS32),
-      wbInteger('Group Combat Reaction', itU32, wbEnum([
-        'Neutral',
-        'Enemy',
-        'Ally',
-        'Friend'
-      ]))
+      wbFormIDCkNoReach('Faction', [FACT]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+//    wbInteger('Modifier', itS32),
+//    wbInteger('Group Combat Reaction', itU32, wbEnum([
+//      'Neutral',
+//      'Enemy',
+//      'Ally',
+//      'Friend'
+//    ]))
     ]);
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
   wbRecord(FACT, 'Faction', [
     wbEDIDReq,
+// General Tab ---------------------------------------------------------------
     wbFULL,
     wbXNAMs,
-    wbStruct(DATA, '', [
-      wbInteger('Flags 1', itU8, wbFlags([
-        'Hidden from PC',
-        'Evil',
-        'Special Combat'
-      ])),
-      wbInteger('Flags 2', itU8, wbFlags([
-        'Track Crime',
-        'Allow Sell'
-      ])),
-      wbByteArray('Unused', 2)
-    ], cpNormal, True, nil, 1),
-    wbFloat(CNAM, 'Unused'),
+    wbUnknown(DATA){wbXNAMs},
+    wbUnknown(CRGR){wbXNAMs},
+    wbUnknown(JOUT){wbXNAMs},
+//    wbStruct(DATA, '', [
+//      wbInteger('Flags 1', itU8, wbFlags([
+//        'Hidden from PC',
+//        'Evil',
+//        'Special Combat'
+//      ])),
+//      wbInteger('Flags 2', itU8, wbFlags([
+//        'Track Crime',
+//        'Allow Sell'
+//      ])),
+//      wbByteArray('Unused', 2)
+//    ], cpNormal, True, nil, 1),
+//    wbFloat(CNAM, 'Unused'),
+    wbUnknown(CRVA),
+// Ranks Tab ------------------------------------------------------------------
     wbRStructsSK('Ranks', 'Rank', [0], [
       wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia (Unused)')
+      wbString(MNAM, 'Male'),
+      wbString(FNAM, 'Female'),
+      wbString(INAM, 'Insignia Filename')
     ], []),
-    wbFormIDCk(WMI1, 'Reputation', [REPU])
+//    wbFormIDCk(WMI1, 'Reputation', [REPU])
+// Crime Tab ------------------------------------------------------------------
+// Ignores Crimes Against non-members ----------------------------------------
+//   Murder - Flag -----------------------------------------------------------
+//   Assult - Flag -----------------------------------------------------------
+//   Pickpocket - Flag -------------------------------------------------------
+//   Stealing - Flag ---------------------------------------------------------
+//   Trespass - Flag ---------------------------------------------------------
+//   WereWolf - Flag ---------------------------------------------------------
+//   Do not report crimes against members - Flag -----------------------------
+// Track Crime ---------------------------------------------------------------
+//   Exterior Jail Marker ----------------------------------------------------
+//   Follower Wait Marker ----------------------------------------------------
+//   Stolen Goods Container --------------------------------------------------
+//   Player Inventory Container ----------------------------------------------
+//   Shared Crime Faction List -----------------------------------------------
+//   Attack On Site - Flag ---------------------------------------------------
+//   Arrest - Flag -----------------------------------------------------------
+//     Crime Gold ------------------------------------------------------------
+//       Murder - Int --------------------------------------------------------
+//       Assult - Int --------------------------------------------------------
+//       Pickpocket - Int ----------------------------------------------------
+//       Trespass - Int ------------------------------------------------------
+//       Steal Mult. - Float -------------------------------------------------
+//       Escape - Int --------------------------------------------------------
+//       Werewolf - Int ------------------------------------------------------
+// Vendor Tab -----------------------------------------------------------------
+    wbUnknown(VEND),
+    wbUnknown(VENC),
+    wbUnknown(VENV),
+    wbUnknown(PLVD),
+    wbUnknown(CITC),
+    wbUnknown(CTDA)
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
   wbRecord(FURN, 'Furniture', [

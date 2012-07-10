@@ -1649,8 +1649,8 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aRequired            : Boolean = False;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterLoad : TwbAfterLoadCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
                                                : IwbStructDef; overload;
 
 function wbStructSK(const aSignature : TwbSignature;
