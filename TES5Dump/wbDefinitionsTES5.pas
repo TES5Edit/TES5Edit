@@ -625,6 +625,7 @@ var
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
+  wbFULLFact: IwbSubRecordDef;
   wbXNAM: IwbSubRecordDef;
   wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
@@ -1685,7 +1686,7 @@ begin
   if Assigned(Rec) then begin
     s := Trim(Rec.Value);
     if s <> '' then
-      Result := 'places ' + s;
+      Result := 'wbPlacedAddInfo places ' + s;
   end;
 
   Container := aMainRecord.Container;
@@ -4386,9 +4387,23 @@ begin
   wbEDID    := wbString(EDID, 'Editor ID', 0, cpBenign);
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpBenign, True);
 
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
   wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
   wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
   wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+  wbFULLFact := wbString(FULL, 'Name', 0, cpNormal, True);
+
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
@@ -6734,7 +6749,8 @@ begin
 
   wbXNAM :=
     wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCkNoReach('Faction', [FACT]),
+//    wbFormIDCkNoReach('Faction', [FACT]),
+      wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4)
 //    wbInteger('Modifier', itS32),
@@ -6754,12 +6770,12 @@ begin
     wbFULL,
     wbXNAMs,
     wbUnknown(DATA),
-    wbUnknown(JAIL),
-    wbUnknown(WAIT),
-    wbUnknown(STOL),
-    wbUnknown(PLCN),
-    wbUnknown(CRGR){wbXNAMs},
-    wbUnknown(JOUT){wbXNAMs},
+    wbFormID(JAIL, 'Unknown'),
+    wbFormID(WAIT, 'Unknown'),
+    wbFormID(STOL, 'Unknown'),
+    wbFormID(PLCN, 'Unknown'),
+    wbFormID(CRGR, 'Unknown'),
+    wbFormID(JOUT, 'Unknown'),
 //    wbStruct(DATA, '', [
 //      wbInteger('Flags 1', itU8, wbFlags([
 //        'Hidden from PC',
@@ -6776,10 +6792,10 @@ begin
     wbUnknown(CRVA),
 // Ranks Tab ------------------------------------------------------------------
     wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male'),
-      wbString(FNAM, 'Female'),
-      wbString(INAM, 'Insignia Filename')
+      wbInteger(RNAM, 'Rank#', itU32),
+      wbUnknown(MNAM),
+      wbUnknown(FNAM),
+      wbString(INAM, 'Insignia Unused')
     ], []),
 //    wbFormIDCk(WMI1, 'Reputation', [REPU])
 // Crime Tab ------------------------------------------------------------------
@@ -6808,8 +6824,8 @@ begin
 //       Escape - Int --------------------------------------------------------
 //       Werewolf - Int ------------------------------------------------------
 // Vendor Tab -----------------------------------------------------------------
-    wbUnknown(VEND),
-    wbUnknown(VENC),
+    wbFormID(VEND, 'Unknown'),
+    wbFormID(VENC, 'Unknown'),
     wbUnknown(VENV),
     wbUnknown(PLVD),
     wbUnknown(CITC),
