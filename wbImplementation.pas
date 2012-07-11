@@ -4258,7 +4258,7 @@ begin
     if PwbSignature(aPtr)^ = 'GRUP' then
       Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
     else
-      Result := TwbMainRecord.Create(aContainer,aPtr, aEndPtr, aPrevMainRecord);
+      Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
 end;
 
 function TwbRecord.GetName: string;

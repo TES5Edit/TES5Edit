@@ -1820,31 +1820,38 @@ function wbEmpty(const aName      : string;
                                   : IwbValueDef; overload;
 
 function wbFormID: IwbFormID; overload;
+
 function wbFormID(const aValidRefs : array of TwbSignature;
                         aPersistent: Boolean)
                                    : IwbFormID; overload;
+
 function wbFormIDNoReach(const aValidRefs  : array of TwbSignature;
                                aPersistent : Boolean)
                                            : IwbFormID; overload;
+
 function wbFormID(const aValidRefs     : array of TwbSignature;
                   const aValidFlstRefs : array of TwbSignature;
                         aPersistent    : Boolean)
                                        : IwbFormID; overload;
+
 function wbFormIDNoReach(const aValidRefs     : array of TwbSignature;
                          const aValidFlstRefs : array of TwbSignature;
                                aPersistent    : Boolean)
                                               : IwbFormID; overload;
+
 function wbFormID(const aSignature : TwbSignature;
                   const aName      : string = 'Unknown';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
+
 function wbFormID(const aName      : string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbIntegerDef; overload;
+
 function wbFormIDCk(const aSignature : TwbSignature;
                     const aName      : string;
                     const aValidRefs : array of TwbSignature;
@@ -1853,6 +1860,7 @@ function wbFormIDCk(const aSignature : TwbSignature;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil)
                                      : IwbSubRecordDef; overload;
+
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
                            const aName      : string;
                            const aValidRefs : array of TwbSignature;
@@ -1861,6 +1869,7 @@ function wbFormIDCkNoReach(const aSignature : TwbSignature;
                                  aRequired  : Boolean = False;
                                  aDontShow  : TwbDontShowCallback = nil)
                                             : IwbSubRecordDef; overload;
+
 function wbFormIDCk(const aName      : string;
                     const aValidRefs : array of TwbSignature;
                           aPersistent: Boolean = False;
@@ -1868,6 +1877,7 @@ function wbFormIDCk(const aName      : string;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil)
                                      : IwbIntegerDef; overload;
+
 function wbFormIDCkNoReach(const aName      : string;
                            const aValidRefs : array of TwbSignature;
                                  aPersistent: Boolean = False;
@@ -1875,6 +1885,7 @@ function wbFormIDCkNoReach(const aName      : string;
                                  aRequired  : Boolean = False;
                                  aDontShow  : TwbDontShowCallback = nil)
                                             : IwbIntegerDef; overload;
+
 function wbFormIDCk(const aSignature     : TwbSignature;
                     const aName          : string;
                     const aValidRefs     : array of TwbSignature;
@@ -1884,6 +1895,7 @@ function wbFormIDCk(const aSignature     : TwbSignature;
                           aRequired      : Boolean = False;
                           aDontShow      : TwbDontShowCallback = nil)
                                          : IwbSubRecordDef; overload;
+
 function wbFormIDCk(const aName          : string;
                     const aValidRefs     : array of TwbSignature;
                     const aValidFlstRefs : array of TwbSignature;
@@ -1892,6 +1904,7 @@ function wbFormIDCk(const aName          : string;
                           aRequired      : Boolean = False;
                           aDontShow      : TwbDontShowCallback = nil)
                                          : IwbIntegerDef; overload;
+
 function wbFormIDCkNoReach(const aName          : string;
                            const aValidRefs     : array of TwbSignature;
                            const aValidFlstRefs : array of TwbSignature;
@@ -1900,8 +1913,6 @@ function wbFormIDCkNoReach(const aName          : string;
                                  aRequired      : Boolean = False;
                                  aDontShow      : TwbDontShowCallback = nil)
                                                 : IwbIntegerDef; overload;
-
-
 
 function wbChar4: IwbChar4;
 
@@ -4191,7 +4202,15 @@ function wbFormID(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormID, aPriority, aRequired, False, aDontShow);
+  Result := wbInteger(
+              aSignature,
+              aName,
+              itU32,
+              wbFormID,
+              aPriority,
+              aRequired,
+              False,
+              aDontShow);
 end;
 
 function wbFormID(const aName     : string;
