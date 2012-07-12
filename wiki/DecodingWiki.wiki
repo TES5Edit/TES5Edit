@@ -4,36 +4,36 @@ The wbDefinitionsTES5.pas is but one of about 80 files used to make TES5Edit and
 
 For this example we are going to start with WTHR.  If you run TES5Dump you are going to notice that there are record names with undefined data after them.  Like this for example:
 
-{{{MNAM
+<code>MNAM
 RNAM
 QNAM
 JNAM
 FNAM
 IMSP
-DALC}}}
+DALC</code>
 
 
-{{{MNAM - missing all data x2}}}
+<code>MNAM - missing all data x2</code>
 I assume this is dumped as 
-{{{MNAM
-MNAM}}}
+<code>MNAM
+MNAM</code>
 
 In which you use one of the array functions to deal with both.  Other records could contain 2 or more of "MNAM" and the array function will capture all that exist.
 
 To start with you need to find the record you are working with.  So since this is weather you would use "wbRecords(WTHR" and that will take you to this record.  In it's current state like many of the records its simply a copy of FNV information for now.
 
 You also need to open the USEPWiki to refer to if some of the records follow a pattern, such as this in this example of the NPC_ record.  These are listed in this exact order several times.
-{{{    wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
+<code>    wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
       wbUnknown(TINI),
       wbUnknown(TINC),
       wbUnknown(TINV),
       wbUnknown(TIAS)
     ], []))
   ], True, nil, cpNormal, False, wbNPCAfterLoad);
-}}}
+</code>
 
 Here is how WTHR was when I started writing this example.
-{{{
+<code>
 // From the top of the file
   _0_IAD : TwbSignature = #0'IAD';
   _1_IAD : TwbSignature = #1'IAD';
@@ -110,11 +110,11 @@ Here is how WTHR was when I started writing this example.
       ]))
     ]))
   ]);
-}}}
+</code>
 
 I can't post the WTHR Record TES5Dump made because it's insane how much information is in even one of them.  Which is why I'm not working on it yet because there are smaller records that could be defined easier and then used in Wrye Bash.
 
-{{{    00TX
+<code>    00TX
     10TX
     20TX
     30TX
@@ -125,10 +125,10 @@ I can't post the WTHR Record TES5Dump made because it's insane how much informat
     C0TX
     D0TX
     L0TX
-}}} I don't know how those are handled yet I'm gonna skip those.
+</code> I don't know how those are handled yet I'm gonna skip those.
 
 but after LNAM we have MNAM, NNAM, RNAM, and QNAM.  Those MUST come after LNAM.  Any one of those could be a FromID but I'm going to use wbUnknown as just an example for now.  I'll use another command for unknown FormIds below.  
-{{{
+<code>
 *snip*
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
     wbUnknown(MNAM),
@@ -137,25 +137,25 @@ but after LNAM we have MNAM, NNAM, RNAM, and QNAM.  Those MUST come after LNAM. 
     wbUnknown(QNAM),
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
 *snip*
-}}}
+</code>
 
 After PNAM there is a JNAM
 Before SNAM is NAM1
-There are a bunch of TNAM after SNAM which the wiki says are FormIDs.  If you didn't know that use wbUnknown(TNAM) however, I'm going to use "    wbFormID(TNAM, 'Unknown')," inside a Record Array function{{{
+There are a bunch of TNAM after SNAM which the wiki says are FormIDs.  If you didn't know that use wbUnknown(TNAM) however, I'm going to use "    wbFormID(TNAM, 'Unknown')," inside a Record Array function<code>
     wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
       wbFormID(TNAM, 'Unknown')
-    ], []))}}}
+    ], []))</code>
 	
-After all the TNAM entries are some more things that need to be defined:{{{    IMSP
+After all the TNAM entries are some more things that need to be defined:<code>    IMSP
     DALC
     DALC
     DALC
     DALC
     MODL
-    MODT}}} 
+    MODT</code> 
 
 So something like this.	
-{{{    wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
+<code>    wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
       wbFormID(TNAM, 'Unknown')
     ], [])),
     wbUnknown(IMSP),
@@ -165,18 +165,18 @@ So something like this.
     wbUnknown(MODL),
     wbUnknown(MODT)
   ]);
-}}}
-{{{
+</code>
+<code>
   IMSP
   DALC
 	
   IMSP : TwbSignature = 'IMSP'; { New to Skyrim }
-  DALC : TwbSignature = 'DALC'; { New to Skyrim }}}}
+  DALC : TwbSignature = 'DALC'; { New to Skyrim </code>}
 Those are new so they need to be entered as a constant at the top of the file.  Also add them in alphabetical order and with a comment that they are new. :D  
 
 After all that and you re compile it, then xDump will give you different results.  Once you rinse and repeat, the record is defined and a decoder makes a ticket for the wiki team (Or just does it themselves) and then the USEPWiki has valid information for the cumunity to refer to.
 
 
-{{{wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
-wbMODL,}}}
+<code>wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
+wbMODL,</code>
 Now, with all that said though these are FNV structures and wbMODL could be in the wrong place.  To start decoding WTHR properly it's best to comment out ALL of the code.  Look at the order of things and then uncomment everything to fit that order.  Changing the order when needed.
