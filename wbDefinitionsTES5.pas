@@ -700,6 +700,7 @@ var
   wbLVLD: IwbSubRecordDef;
   wbMODT: IwbSubRecordDef;
   wbOBNDUnused: IwbSubRecordDef;
+  wbVMAD: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -9173,12 +9174,29 @@ begin
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
 
-
 //-----------------------------------------------------------------------------
 //Start New NPC_
 //-----------------------------------------------------------------------------
+  wbVMAD := wbStruct(VMAD, 'Papyrus script data', [
+    wbInteger('version', itS16),
+    wbInteger('objFormat', itS16),
+    wbInteger('scriptCount', itU16),
+    wbArray('scripts', wbStruct('Script entry', [
+      wbWString('scriptName'),
+      wbInteger('unknown', itU8),
+      wbInteger('propertyCount', itU16),
+      wbArray('properties', wbStruct('Property entry', [
+        wbWString('propertyName'),
+        wbInteger('propertyType', itU8),
+        wbInteger('unknown3', itU8),
+        wbInteger('data', itS16) // temp placeholder, variable length depending on type
+      ]))
+    ]))
+  ]);
+
   wbRecord(NPC_, 'Non-Player Character', [
-    wbUnknown(EDID),
+    wbEDIDReq,
+    wbVMAD,
     wbRArray('Unknown - SNAM', wbRStruct('Unknown', [
       wbUnknown(SNAM)
     ], [])),
