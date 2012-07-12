@@ -4,7 +4,8 @@ The wbDefinitionsTES5.pas is but one of about 80 files used to make TES5Edit and
 
 For this example we are going to start with WTHR.  If you run TES5Dump you are going to notice that there are record names with undefined data after them.  Like this for example:
 
-<code>  MNAM
+<code>
+  MNAM
   RNAM
   QNAM
   JNAM
@@ -14,7 +15,8 @@ For this example we are going to start with WTHR.  If you run TES5Dump you are g
 
 Sometimes you will see two or more entries of the same thing like:
   
-<code>  MNAM
+<code>
+  MNAM
   MNAM
   MNAM</code>
 
@@ -23,7 +25,8 @@ In which you use one of the array functions to deal with them.  Other records co
 Since this is the WTHR record you would use "wbRecords(WTHR" and that will take you to this record.  In it's current state like many of the records its simply a copy of FNV information for now.
 
 You also need to open the USEPWiki to refer to if some of the records follow a pattern, such as this in this example of the NPC_ record.  These are listed in this exact order several times.
-<code>    wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
+<code>    
+  wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
       wbUnknown(TINI),
       wbUnknown(TINC),
       wbUnknown(TINV),
@@ -114,7 +117,8 @@ Here is how WTHR was when I started writing this example.
 
 I can't post the WTHR Record TES5Dump made because it's insane how much information is in even one of them.  Which is why I'm not working on it yet because there are smaller records that could be defined easier and then used in Wrye Bash.
 
-<code>    00TX
+<code>
+    00TX
     10TX
     20TX
     30TX
@@ -141,22 +145,27 @@ but after LNAM we have MNAM, NNAM, RNAM, and QNAM.  Those MUST come after LNAM. 
 
 After PNAM there is a JNAM
 Before SNAM is NAM1
-There are a bunch of TNAM after SNAM which the wiki says are FormIDs.  If you didn't know that use wbUnknown(TNAM) however, I'm going to use "    wbFormID(TNAM, 'Unknown')," inside a Record Array function<code>
+There are a bunch of TNAM after SNAM which the wiki says are FormIDs.  If you didn't know that use wbUnknown(TNAM) however, I'm going to use "    wbFormID(TNAM, 'Unknown')," inside a Record Array function
+<code>
     wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
       wbFormID(TNAM, 'Unknown')
-    ], []))</code>
+    ], []))
+</code>
 	
 After all the TNAM entries are some more things that need to be defined:
-<code>  IMSP
+<code>
+  IMSP
   DALC
   DALC
   DALC
   DALC
   MODL
-  MODT</code> 
+  MODT
+</code> 
 
 So something like this.	
-<code>    wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
+<code>
+    wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
       wbFormID(TNAM, 'Unknown')
     ], [])),
     wbUnknown(IMSP),
@@ -167,16 +176,21 @@ So something like this.
     wbUnknown(MODT)
   ]);
 </code>
+
 <code>
   IMSP
   DALC
 	
   IMSP : TwbSignature = 'IMSP'; { New to Skyrim }
-  DALC : TwbSignature = 'DALC'; { New to Skyrim </code>}
+  DALC : TwbSignature = 'DALC'; { New to Skyrim }
+</code>}
 Those are new so they need to be entered as a constant at the top of the file.  Also add them in alphabetical order and with a comment that they are new. :D  
 
 After all that and you re compile it, then xDump will give you different results.  Once you rinse and repeat, the record is defined and a decoder makes a ticket for the wiki team (Or just does it themselves) and then the USEPWiki has valid information for the cumunity to refer to.
 
-<code>wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
-wbMODL,</code>
+<code>
+wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
+wbMODL,
+</code>
+
 Now, with all that said though these are FNV structures and wbMODL could be in the wrong place.  To start decoding WTHR properly it's best to comment out ALL of the code.  Look at the order of things and then uncomment everything to fit that order.  Changing the order when needed.
