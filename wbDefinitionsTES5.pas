@@ -140,6 +140,7 @@ const
   CHAL : TwbSignature = 'CHAL';
   CHIP : TwbSignature = 'CHIP';
   CSNO : TwbSignature = 'CSNO';
+  DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DEHY : TwbSignature = 'DEHY';
   DATA : TwbSignature = 'DATA';
   DAT2 : TwbSignature = 'DAT2';
@@ -218,6 +219,7 @@ const
   INDX : TwbSignature = 'INDX';
   INFO : TwbSignature = 'INFO';
   INGR : TwbSignature = 'INGR';
+  IMSP : TwbSignature = 'IMSP'; { New to Skyrim }
   IPCT : TwbSignature = 'IPCT';
   IPDS : TwbSignature = 'IPDS';
   ITXT : TwbSignature = 'ITXT';
@@ -11195,8 +11197,13 @@ begin
     wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
     wbMODL,
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
+    wbUnknown(MNAM),
+    wbUnknown(NNAM),
+    wbUnknown(RNAM),
+    wbUnknown(QNAM),
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
     wbByteArray(PNAM, 'Unused', 0, cpIgnore),
+    wbUnknown(JNAM),
     wbArray(NAM0, 'Colors by Types/Times',
       wbArray('Type',
         wbStruct('Time', [
@@ -11237,6 +11244,7 @@ begin
         wbInteger('Blue', itU8)
       ])
     ], cpNormal, True),
+    wbUnknown(NAM1),
     wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
       wbFormIDCk('Sound', [SOUN]),
       wbInteger('Type', itU32, wbEnum([
@@ -11245,7 +11253,16 @@ begin
        {2}'Wind',
        {3}'Thunder'
       ]))
-    ]))
+    ])),
+    wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
+      wbFormID(TNAM, 'Unknown')
+    ], [])),
+    wbUnknown(IMSP),
+    wbRArray('Unknown - DALC', wbRStruct('Unknown', [
+      wbFormID(DALC, 'Unknown')
+    ], [])),
+    wbUnknown(MODL),
+    wbUnknown(MODT)
   ]);
 
   wbRecord(IMOD, 'Item Mod', [

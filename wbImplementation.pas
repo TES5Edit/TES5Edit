@@ -4231,7 +4231,9 @@ begin
 end;
 {$D+}
 
-{ TwbRecord }
+//------------------------------------------------------------------------------
+// TwbRecord
+//------------------------------------------------------------------------------
 
 constructor TwbRecord.Create(const aContainer      : IwbContainer;
                                var aBasePtr        : Pointer;
@@ -8529,7 +8531,7 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  Result := Result + ' - ' + srDef.GetName;
+  Result := 'TwbSr.GetName' + Result + ' - ' + srDef.GetName;
 end;
 
 function TwbSubRecord.GetNativeValue: Variant;
@@ -9606,33 +9608,33 @@ begin
 
   case grStruct.grsGroupType of
     0: begin
-      Result := Result + ' Top "' + PwbSignature(@grStruct.grsLabel)^ + '"';
+      Result := 'TwbGR.GetN' + Result + ' Top "' + PwbSignature(@grStruct.grsLabel)^ + '"';
       Exit;
     end;
-    1: Result := Result + ' World Children of ';
+    1: Result := 'TwbGR.GetN' + Result + ' World Children of ';
     2: begin
-      Result := Result + ' Interior Cell Block ' + IntToStr(grStruct.grsLabel);
+      Result := 'TwbGR.GetN' + Result + ' Interior Cell Block ' + IntToStr(grStruct.grsLabel);
       Exit;
     end;
     3: begin
-      Result := Result + ' Interior Cell Sub-Block ' + IntToStr(grStruct.grsLabel);
+      Result := 'TwbGR.GetN' + Result + ' Interior Cell Sub-Block ' + IntToStr(grStruct.grsLabel);
       Exit;
     end;
     4: begin
-      Result := Result + ' Exterior Cell Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
+      Result := 'TwbGR.GetN' + Result + ' Exterior Cell Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
       Exit;
     end;
     5: begin
-      Result := Result + ' Exterior Cell Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
+      Result := 'TwbGR.GetN' + Result + ' Exterior Cell Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
       Exit;
     end;
-    6: Result := Result + ' Cell Children of ';
-    7: Result := Result + ' Topic Children of ';
-    8: Result := Result + ' Cell Persistent Children of ';
-    9: Result := Result + ' Cell Temporary Children of ';
-    10: Result := Result + ' Cell Visible Distant Children of ';
+    6: Result := 'TwbGR.GetN' + Result + ' Cell Children of ';
+    7: Result := 'TwbGR.GetN' + Result + ' Topic Children of ';
+    8: Result := 'TwbGR.GetN' + Result + ' Cell Persistent Children of ';
+    9: Result := 'TwbGR.GetN' + Result + ' Cell Temporary Children of ';
+    10: Result := 'TwbGR.GetN' + Result + ' Cell Visible Distant Children of ';
   else
-    Result := Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
+    Result := 'TwbGR.GetN' + Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
     Exit;
   end;
 
@@ -9657,18 +9659,18 @@ begin
       if wbRecordDefMap.Find(Result, i) then
         Result := IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])).GetName;
     end;
-    1: Result := 'World Children';
-    2: Result := 'Block ' + IntToStr(grStruct.grsLabel);
-    3: Result := 'Sub-Block ' + IntToStr(grStruct.grsLabel);
-    4: Result := 'Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
-    5: Result := 'Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
-    6: Result := 'Children';
-    7: Result := 'Children';
-    8: Result := 'Persistent';
-    9: Result := 'Temporary';
-    10: Result := 'Visible when Distant';
+    1: Result := 'TwbGR.Gsn World Children';
+    2: Result := 'TwbGR.Gsn Block ' + IntToStr(grStruct.grsLabel);
+    3: Result := 'TwbGR.Gsn Sub-Block ' + IntToStr(grStruct.grsLabel);
+    4: Result := 'TwbGR.Gsn Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
+    5: Result := 'TwbGR.Gsn Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
+    6: Result := 'TwbGR.Gsn Children';
+    7: Result := 'TwbGR.Gsn Children';
+    8: Result := 'TwbGR.Gsn Persistent';
+    9: Result := 'TwbGR.Gsn Temporary';
+    10: Result := 'TwbGR.Gsn Visible when Distant';
   else
-    Result := Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
+    Result := 'TwbGR.Gsn ' + Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
   end;
 end;
 
@@ -12577,7 +12579,7 @@ begin
   Result := nil;
   if not Assigned(aFormList) or (aFormList.Signature <> 'FLST') then
     Exit;
-  if not Supports(aFormList.ElementByName['FormIDs'], IwbContainerElementRef, Container) then
+  if not Supports(aFormList.ElementByName['wbFormListToArray FormIDs'], IwbContainerElementRef, Container) then
     Exit;
   if Container.ElementCount < 1 then
     Exit;
