@@ -1,3 +1,5 @@
+#summary How to Decode Skyrim's Records
+
 = Decoding Skyrim Records =
 
 The wbDefinitionsTES5.pas is but one of about 80 files used to make TES5Edit and it's predecessors FO3Edit, FNVEdit, and TES4Edit.  The complexity of the object oriented programing involved makes it so that once we are done with wbDefinitionsTES5.pas the pascal file is used to make TES5Edit.  Granted some other things will need to be updated in the supporting files but I am doing work on additional files to save Elminster some time, and help get us a working copy of TES5Edit.  Updates to TES5Edit will apply to previous versions automatically.
