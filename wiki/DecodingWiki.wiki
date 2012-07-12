@@ -4,23 +4,23 @@ The wbDefinitionsTES5.pas is but one of about 80 files used to make TES5Edit and
 
 For this example we are going to start with WTHR.  If you run TES5Dump you are going to notice that there are record names with undefined data after them.  Like this for example:
 
-<code>MNAM
-RNAM
-QNAM
-JNAM
-FNAM
-IMSP
-DALC</code>
+<code>  MNAM
+  RNAM
+  QNAM
+  JNAM
+  FNAM
+  IMSP
+  DALC</code>
 
+Sometimes you will see two or more entries of the same thing like:
+  
+<code>  MNAM
+  MNAM
+  MNAM</code>
 
-<code>MNAM - missing all data x2</code>
-I assume this is dumped as 
-<code>MNAM
-MNAM</code>
+In which you use one of the array functions to deal with them.  Other records could contain 2 or more of "MNAM" and the array function will capture all that exist.
 
-In which you use one of the array functions to deal with both.  Other records could contain 2 or more of "MNAM" and the array function will capture all that exist.
-
-To start with you need to find the record you are working with.  So since this is weather you would use "wbRecords(WTHR" and that will take you to this record.  In it's current state like many of the records its simply a copy of FNV information for now.
+Since this is the WTHR record you would use "wbRecords(WTHR" and that will take you to this record.  In it's current state like many of the records its simply a copy of FNV information for now.
 
 You also need to open the USEPWiki to refer to if some of the records follow a pattern, such as this in this example of the NPC_ record.  These are listed in this exact order several times.
 <code>    wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
@@ -146,13 +146,14 @@ There are a bunch of TNAM after SNAM which the wiki says are FormIDs.  If you di
       wbFormID(TNAM, 'Unknown')
     ], []))</code>
 	
-After all the TNAM entries are some more things that need to be defined:<code>    IMSP
-    DALC
-    DALC
-    DALC
-    DALC
-    MODL
-    MODT</code> 
+After all the TNAM entries are some more things that need to be defined:
+<code>  IMSP
+  DALC
+  DALC
+  DALC
+  DALC
+  MODL
+  MODT</code> 
 
 So something like this.	
 <code>    wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
@@ -175,7 +176,6 @@ So something like this.
 Those are new so they need to be entered as a constant at the top of the file.  Also add them in alphabetical order and with a comment that they are new. :D  
 
 After all that and you re compile it, then xDump will give you different results.  Once you rinse and repeat, the record is defined and a decoder makes a ticket for the wiki team (Or just does it themselves) and then the USEPWiki has valid information for the cumunity to refer to.
-
 
 <code>wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
 wbMODL,</code>
