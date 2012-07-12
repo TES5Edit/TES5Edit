@@ -29,7 +29,9 @@ uses
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
   wbImplementation in 'wbImplementation.pas',
-  wbInterface in 'wbInterface.pas';
+  wbInterface in 'wbInterface.pas',
+  wbLocalization in 'wbLocalization.pas',
+  wbSavedGames in 'wbSavedGames.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
