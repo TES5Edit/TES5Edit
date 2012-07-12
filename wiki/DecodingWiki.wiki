@@ -115,8 +115,6 @@ Here is how WTHR was when I started writing this example.
   ]);
 </code>
 
-I can't post the WTHR Record TES5Dump made because it's insane how much information is in even one of them.  Which is why I'm not working on it yet because there are smaller records that could be defined easier and then used in Wrye Bash.
-
 <code>
     00TX
     10TX
@@ -131,7 +129,7 @@ I can't post the WTHR Record TES5Dump made because it's insane how much informat
     L0TX
 </code> I don't know how those are handled yet I'm gonna skip those.
 
-but after LNAM we have MNAM, NNAM, RNAM, and QNAM.  Those MUST come after LNAM.  Any one of those could be a FromID but I'm going to use wbUnknown as just an example for now.  I'll use another command for unknown FormIds below.  
+but after LNAM we have MNAM, NNAM, RNAM, and QNAM.  Those MUST come after LNAM.  Any one of those could be a FromID but I'm going to use wbUnknown as just an example for now.  I'll use another command for unknown [FormIDs] below.  
 <code>
 *snip*
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
@@ -145,7 +143,7 @@ but after LNAM we have MNAM, NNAM, RNAM, and QNAM.  Those MUST come after LNAM. 
 
 After PNAM there is a JNAM
 Before SNAM is NAM1
-There are a bunch of TNAM after SNAM which the wiki says are FormIDs.  If you didn't know that use wbUnknown(TNAM) however, I'm going to use "    wbFormID(TNAM, 'Unknown')," inside a Record Array function
+There are a bunch of TNAM after SNAM which the wiki says are [FormIDs].  If you didn't know that use wbUnknown(TNAM) however, I'm going to use "    wbFormID(TNAM, 'Unknown')," inside a Record Array function
 <code>
     wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
       wbFormID(TNAM, 'Unknown')
