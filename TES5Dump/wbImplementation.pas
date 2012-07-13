@@ -8531,7 +8531,7 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  Result := 'TwbSr.GetName' + Result + ' - ' + srDef.GetName;
+  Result := Result + ' - ' + srDef.GetName;
 end;
 
 function TwbSubRecord.GetNativeValue: Variant;
@@ -9608,33 +9608,33 @@ begin
 
   case grStruct.grsGroupType of
     0: begin
-      Result := 'TwbGR.GetN' + Result + ' Top "' + PwbSignature(@grStruct.grsLabel)^ + '"';
+      Result := Result + ' Top "' + PwbSignature(@grStruct.grsLabel)^ + '"';
       Exit;
     end;
-    1: Result := 'TwbGR.GetN' + Result + ' World Children of ';
+    1: Result := Result + ' World Children of ';
     2: begin
-      Result := 'TwbGR.GetN' + Result + ' Interior Cell Block ' + IntToStr(grStruct.grsLabel);
+      Result := Result + ' Interior Cell Block ' + IntToStr(grStruct.grsLabel);
       Exit;
     end;
     3: begin
-      Result := 'TwbGR.GetN' + Result + ' Interior Cell Sub-Block ' + IntToStr(grStruct.grsLabel);
+      Result := Result + ' Interior Cell Sub-Block ' + IntToStr(grStruct.grsLabel);
       Exit;
     end;
     4: begin
-      Result := 'TwbGR.GetN' + Result + ' Exterior Cell Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
+      Result := Result + ' Exterior Cell Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
       Exit;
     end;
     5: begin
-      Result := 'TwbGR.GetN' + Result + ' Exterior Cell Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
+      Result := Result + ' Exterior Cell Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
       Exit;
     end;
-    6: Result := 'TwbGR.GetN' + Result + ' Cell Children of ';
-    7: Result := 'TwbGR.GetN' + Result + ' Topic Children of ';
-    8: Result := 'TwbGR.GetN' + Result + ' Cell Persistent Children of ';
-    9: Result := 'TwbGR.GetN' + Result + ' Cell Temporary Children of ';
-    10: Result := 'TwbGR.GetN' + Result + ' Cell Visible Distant Children of ';
+    6: Result := Result + ' Cell Children of ';
+    7: Result := Result + ' Topic Children of ';
+    8: Result := Result + ' Cell Persistent Children of ';
+    9: Result := Result + ' Cell Temporary Children of ';
+    10: Result := Result + ' Cell Visible Distant Children of ';
   else
-    Result := 'TwbGR.GetN' + Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
+    Result := Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
     Exit;
   end;
 

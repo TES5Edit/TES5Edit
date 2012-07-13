@@ -701,6 +701,7 @@ var
   wbMODT: IwbSubRecordDef;
   wbOBNDUnused: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
+  wbCOCT: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4225,6 +4226,7 @@ begin
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbMODT:= wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
   wbOBNDUnused:= wbByteArray(OBND, 'Unused', 12, cpIgnore);
+  wbCOCT:= wbInteger(COCT, 'Count', itU32);
 
 //-----------------------------------------------------------------
 // End New Routines
@@ -9156,7 +9158,13 @@ begin
 // Begin New COBJ
 //-----------------------------------------------------------------------------
   wbRecord(COBJ, 'Constructible Object', [
-    wbUnknown(EDID)
+    wbEDID,
+    wbCOCT,
+    wbCNTOs,
+    wbCTDAs,
+    wbFormID(CNAM, 'Unknown'),
+    wbFormID(BNAM, 'Unknown'),
+    wbUnknown(NAM1)
   ]);
 //-----------------------------------------------------------------------------
 // End New COBJ

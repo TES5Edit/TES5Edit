@@ -1538,9 +1538,9 @@ function wbFloat(const aName       : string = 'Unknown';
 
 {--- wbArray - list of identical elements -------------------------------------}
 //-----------------------------------------------------------------------------
-// Placeholder for New wbarray
+// New wbarray
 //-----------------------------------------------------------------------------
-//function wbArray(const aSignature : TwbSignature;
+// function wbArray(const aSignature : TwbSignature;
 //                 const aName      : string;
 //                 const aElement   : TwbIntegerDef;
 //                       aCount     : Integer = 0;  //!!!Update Count for xEdit
