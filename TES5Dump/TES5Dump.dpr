@@ -17,6 +17,8 @@
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 program TES5Dump;
 
+{$I Compilers.inc}
+
 {$APPTYPE CONSOLE}
 
 uses
