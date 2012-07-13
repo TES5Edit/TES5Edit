@@ -4427,8 +4427,27 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ]), 2, nil, nil, cpNormal, True);
+  ]), 1, nil, nil, cpNormal, True);
 
+  wbVMAD := wbStruct(VMAD, 'VMAD - Papyrus Script Data', [
+    wbInteger('version', itS16),
+    wbInteger('objFormat', itS16),
+    wbInteger('scriptCount', itU16),
+    wbByteArray('Scripts')
+    // dump code script data parser not working (too dynamic I guess), needs manual parse in AfterLoad callback
+    {wbArray('Scripts', wbStruct('Script entry', [
+      wbWString('scriptName'),
+      wbInteger('unknown', itU8),
+      wbInteger('propertyCount', itU16),
+      wbArray('Properties', wbStruct('Property entry', [
+        wbWString('propertyName'),
+        wbInteger('propertyType', itU8),
+        wbInteger('unknown3', itU8),
+        wbByteArray('propertyData', 0)
+        //wbInteger('data', itS16) // temp placeholder, variable length depending on type
+      ]), [], wbVMADScriptPropertyCount)
+    ]), [], wbVMADScriptCount)}
+  ]);
 
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
@@ -9177,29 +9196,94 @@ begin
 //-----------------------------------------------------------------------------
 //Start New NPC_
 //-----------------------------------------------------------------------------
-  wbVMAD := wbStruct(VMAD, 'Papyrus script data', [
-    wbInteger('version', itS16),
-    wbInteger('objFormat', itS16),
-    wbInteger('scriptCount', itU16),
-    wbArray('scripts', wbStruct('Script entry', [
-      wbWString('scriptName'),
-      wbInteger('unknown', itU8),
-      wbInteger('propertyCount', itU16),
-      wbArray('properties', wbStruct('Property entry', [
-        wbWString('propertyName'),
-        wbInteger('propertyType', itU8),
-        wbInteger('unknown3', itU8),
-        wbInteger('data', itS16) // temp placeholder, variable length depending on type
-      ]))
-    ]))
-  ]);
-
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDIDReq,
     wbVMAD,
-    wbRArray('Unknown - SNAM', wbRStruct('Unknown', [
+    wbOBNDReq,
+    wbStruct(ACBS, 'Configuration', [
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Female',
+        {0x00000002} 'Essential',
+        {0x00000004} 'Is CharGen Face Preset',
+        {0x00000008} 'Respawn',
+        {0x00000010} 'Auto-calc stats',
+        {0x00000020} 'Unique',
+        {0x00000040} 'Doesn''t affect stealth meter',
+        {0x00000080} 'PC Level Mult',
+        {0x00000100} 'Use Template?',
+        {0x00000800} 'Protected',
+        {0x00004000} 'Summonable',
+        {0x00010000} 'Doesn''t bleed',
+        {0x00040000} 'Owned',
+        {0x00080000} 'Opposite Gender Anims',
+        {0x00100000} 'Simple Actor',
+        {0x00200000} 'looped script?',
+        {0x10000000} 'looped audio?',
+        {0x20000000} 'Ghost/non-interactable'
+        ], [
+        {0x00000001} nil,
+        {0x00000002} nil,
+        {0x00000004} nil,
+        {0x00000008} nil,
+        {0x00000010} nil,
+        {0x00000020} nil,
+        {0x00000040} nil,
+        {0x00000080} nil,
+        {0x00000100} nil,
+        {0x00000800} nil,
+        {0x00004000} nil,
+        {0x00010000} nil,
+        {0x00040000} nil,
+        {0x00080000} nil,
+        {0x00100000} nil,
+        {0x00200000} nil,
+        {0x10000000} nil,
+        {0x20000000} nil
+      ])),
+      wbInteger('Magicka', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Stamina', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
+      wbUnion('Level', wbCreaLevelDecider, [
+        wbInteger('Level', itS16, nil, cpNormal, True, wbActorTemplateUseStats),
+        wbInteger('Level Mult', itS16, wbDiv(100), cpNormal, True, wbActorTemplateUseStats)
+      ], cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Calc min level', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Calc max level', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Speed Multiplier', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Disposition Base', itS16, nil, cpNormal, True, wbActorTemplateUseTraits),
+      wbInteger('Template Flags', itU16, wbFlags([
+        {0x0001} 'Use Traits',
+        {0x0002} 'Use Stats',
+        {0x0004} 'Use Factions',
+        {0x0008} 'Use Spell List',
+        {0x0010} 'Use AI Data',
+        {0x0020} 'Use AI Packages',
+        {0x0040} 'Use Model/Animation?',
+        {0x0080} 'Use Base Data',
+        {0x0100} 'Use Inventory',
+        {0x0200} 'Use Script',
+        {0x0400} 'Use Def Pack List',
+        {0x1000} 'Use Keywords'
+      ])),
+      wbInteger('Health', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Bleedout Override', itU16, nil, cpNormal, True, wbActorTemplateUseStats)
+    ], cpNormal, True),
+    wbRArrayS('Factions',
+      wbStructSK(SNAM, [0], 'Faction', [
+        wbFormIDCk('Faction', [FACT]),
+        wbInteger('Rank', itU8),
+        wbByteArray('Unused', 3)
+      ]),
+    cpNormal, False, nil, nil, wbActorTemplateUseFactions),
+    wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
+    wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
+    wbFormIDCk(WNAM, 'Worn Armor', [WNAM], False, cpNormal, False),
+    wbFormIDCk(ANAM, 'Armor', [ANAM], False, cpNormal, False),
+
+    {wbRArray('Unknown - SNAM', wbRStruct('Unknown', [
       wbUnknown(SNAM)
-    ], [])),
+    ], [])),}
     wbRArray('Unknown - PKID', wbRStruct('Unknown', [
       wbUnknown(PKID)
     ], [])),
