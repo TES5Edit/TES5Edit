@@ -112,6 +112,7 @@ const
   CELL : TwbSignature = 'CELL';
   CITC : TwbSignature = 'CITC'; { New to Skyrim }
   CLAS : TwbSignature = 'CLAS';
+  CLDC : TwbSignature = 'CLDC'; { New to Skyrim }
   CLMT : TwbSignature = 'CLMT';
   CNAM : TwbSignature = 'CNAM';
   CNTO : TwbSignature = 'CNTO';
@@ -492,6 +493,8 @@ const
   TX03 : TwbSignature = 'TX03';
   TX04 : TwbSignature = 'TX04';
   TX05 : TwbSignature = 'TX05';
+  TX06 : TwbSignature = 'TX06'; { New To Skyrim }
+  TX07 : TwbSignature = 'TX07'; { New To Skyrim }
   TXST : TwbSignature = 'TXST';
   UNAM : TwbSignature = 'UNAM';
   VANM : TwbSignature = 'VANM';
@@ -6951,23 +6954,33 @@ begin
   ]);
 
   wbDODT := wbStruct(DODT, 'Decal Data', [
-              wbFloat('Min Width'),
-              wbFloat('Max Width'),
-              wbFloat('Min Height'),
-              wbFloat('Max Height'),
-              wbFloat('Depth'),
-              wbFloat('Shininess'),
+{04}          wbFloat('Min Width'),
+{08}          wbFloat('Max Width'),
+{12}          wbFloat('Min Height'),
+{16}          wbFloat('Max Height'),
+{20}          wbFloat('Depth'),
+{24}          wbFloat('Shininess'),
               wbStruct('Parallax', [
-                wbFloat('Scale'),
-                wbInteger('Passes', itU8)
+{28}            wbFloat('Scale'),
+{29}            wbInteger('Passes', itU8)
               ]),
-              wbInteger('Flags', itU8, wbFlags([
-                'Parallax',
-                'Alpha - Blending',
-                'Alpha - Testing'
-              ], True)),
-              wbByteArray('Unused', 2),
-              wbStruct('Color', [
+{30}          wbInteger('Flags', itU8, wbFlags([
+                {0x00000001}'Unknown 1',
+                {0x00000002}'Unknown 2',
+                {0x00000004}'Unknown 3',
+                {0x00000008}'Unknown 4',
+                {0x00000010}'Unknown 5',
+                {0x00000020}'Unknown 6',
+                {0x00000040}'Unknown 7',
+                {0x00000080}'Unknown 8'
+               ], True)),
+//                'Parallax',
+//                'Alpha - Blending',
+//                'Alpha - Testing'
+//              wbByteArray('Unused', 2),
+              wbByteArray('Unknown', 1),
+              wbByteArray('Unknown', 1),
+{36}          wbStruct('Color', [
                 wbInteger('Red', itU8),
                 wbInteger('Green', itU8),
                 wbInteger('Blue', itU8),
@@ -6976,7 +6989,19 @@ begin
             ]);
 
   wbRecord(TXST, 'Texture Set', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(OBND),
+    wbRStruct('Textures (RGB/A)', [
+      wbString(TX00,'Difuse'),
+      wbString(TX01,'Normal/Gloss'),
+      wbString(TX02,'Environment Mask'),
+      wbString(TX03,'Glow'),
+      wbString(TX04,'Height'),
+      wbString(TX05,'Environment'),
+      wbString(TX06,'Multilayer'),
+      wbString(TX07,'Backlight Mask')
+    ], []),
+    wbUnknown(DODT),
 //    wbOBNDReq,
 //    wbRStruct('Textures (RGB/A)', [
 //      wbString(TX00,'Base Image / Transparency'),
@@ -6986,10 +7011,24 @@ begin
 //      wbString(TX04,'Parallax Map / Unused'),
 //      wbString(TX05,'Environment Map / Unused')
 //    ], []),
-//    wbDODT,
-//    wbInteger(DNAM, 'Flags', itU16, wbFlags([
-//      'No Specular Map'
-//    ]), cpNormal, True)
+    wbInteger(DNAM, 'DNAM Record Flags', itU16, wbFlags([
+      {0x00000001}'Unknown 1',
+      {0x00000002}'Unknown 2',
+      {0x00000004}'Unknown 3',
+      {0x00000008}'Unknown 4',
+      {0x00000010}'Unknown 5',
+      {0x00000020}'Unknown 6',
+      {0x00000040}'Unknown 7',
+      {0x00000080}'Unknown 8',
+      {0x00000100}'Unknown 9',
+      {0x00000200}'Unknown 10',
+      {0x00000400}'Unknown 11',
+      {0x00000800}'Unknown 12',
+      {0x00001000}'Unknown 13',
+      {0x00002000}'Unknown 14',
+      {0x00004000}'Unknown 15',
+      {0x00008000}'Unknown 16'
+    ]))
   ]);
 
 //------------------------------------------------------------------------------
@@ -11959,145 +11998,124 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(KYWD);
-  wbAddGroupOrder(LCRT);
-  wbAddGroupOrder(AACT);
-  wbAddGroupOrder(TXST);
-  wbAddGroupOrder(MICN);
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(HDPT);
-  wbAddGroupOrder(HAIR);
-  wbAddGroupOrder(EYES);
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(ASPC);
-  wbAddGroupOrder(MGEF);
-  wbAddGroupOrder(SCPT);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(SCRL);
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(TACT);
-  wbAddGroupOrder(TERM);
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(INGR);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(APPA);
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(SCOL);
-  wbAddGroupOrder(MSTT);
-  wbAddGroupOrder(PWAT);
-  wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(TREE);
-  wbAddGroupOrder(FLOR);
-  wbAddGroupOrder(FURN);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(AMMO);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(CREA);
-  wbAddGroupOrder(LVLC);
-  wbAddGroupOrder(LVLN);
-  wbAddGroupOrder(KEYM);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(IDLM);
-  wbAddGroupOrder(NOTE);
-  wbAddGroupOrder(COBJ);
-  wbAddGroupOrder(PROJ);
-  wbAddGroupOrder(HAZD);
-  wbAddGroupOrder(SLGM);
-  wbAddGroupOrder(LVLI);
-  wbAddGroupOrder(WTHR);
-  wbAddGroupOrder(CLMT);
-  wbAddGroupOrder(SPGD);
-  wbAddGroupOrder(RFCT);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(NAVI);
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(WRLD);
-  wbAddGroupOrder(DIAL);
-  wbAddGroupOrder(QUST);
-  wbAddGroupOrder(IDLE);
-  wbAddGroupOrder(PACK);
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  wbAddGroupOrder(LVSP);
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
-  wbAddGroupOrder(EXPL);
-  wbAddGroupOrder(DEBR);
-  wbAddGroupOrder(IMGS);
-  wbAddGroupOrder(IMAD);
-  wbAddGroupOrder(FLST);
-  wbAddGroupOrder(PERK);
-  wbAddGroupOrder(BPTD);
-  wbAddGroupOrder(ADDN);
-  wbAddGroupOrder(AVIF);
-  wbAddGroupOrder(RADS);
-  wbAddGroupOrder(CAMS);
-  wbAddGroupOrder(CPTH);
-  wbAddGroupOrder(VTYP);
-  wbAddGroupOrder(MATT);
-  wbAddGroupOrder(IPCT);
-  wbAddGroupOrder(IPDS);
-  wbAddGroupOrder(ARMA);
-  wbAddGroupOrder(ECZN);
-  wbAddGroupOrder(LCTN);
-  wbAddGroupOrder(MESG);
-  wbAddGroupOrder(RGDL);
-  wbAddGroupOrder(DOBJ);
-  wbAddGroupOrder(LGTM);
-  wbAddGroupOrder(MUSC);
-  wbAddGroupOrder(FSTP);
-  wbAddGroupOrder(FSTS);
-  wbAddGroupOrder(SMBN);
-  wbAddGroupOrder(SMQN);
-  wbAddGroupOrder(SMEN);
-  wbAddGroupOrder(DLBR);
-  wbAddGroupOrder(MUST);
-  wbAddGroupOrder(DLVW);
-  wbAddGroupOrder(WOOP);
-  wbAddGroupOrder(SHOU);
-  wbAddGroupOrder(EQUP);
-  wbAddGroupOrder(RELA);
-  wbAddGroupOrder(SCEN);
-  wbAddGroupOrder(ASTP);
-  wbAddGroupOrder(OTFT);
-  wbAddGroupOrder(ARTO);
-  wbAddGroupOrder(MATO);
-  wbAddGroupOrder(MOVT);
-  wbAddGroupOrder(SNDR);
-  wbAddGroupOrder(DUAL);
-  wbAddGroupOrder(SNCT);
-  wbAddGroupOrder(SOPM);
-  wbAddGroupOrder(COLL);
-  wbAddGroupOrder(CLFM);
-  wbAddGroupOrder(REVB);
-  wbAddGroupOrder(IMOD);
-  wbAddGroupOrder(REPU);
-  wbAddGroupOrder(RCPE);
-  wbAddGroupOrder(RCCT);
-  wbAddGroupOrder(CHIP);
-  wbAddGroupOrder(CSNO);
-  wbAddGroupOrder(LSCT);
-  wbAddGroupOrder(MSET);
-  wbAddGroupOrder(ALOC);
-  wbAddGroupOrder(CHAL);
-  wbAddGroupOrder(AMEF);
-  wbAddGroupOrder(CCRD);
-  wbAddGroupOrder(CMNY);
-  wbAddGroupOrder(CDCK);
-  wbAddGroupOrder(DEHY);
-  wbAddGroupOrder(HUNG);
-  wbAddGroupOrder(SLPD);
+   wbAddGroupOrder(GMST);
+   wbAddGroupOrder(KYWD);
+   wbAddGroupOrder(LCRT);
+   wbAddGroupOrder(AACT);
+   wbAddGroupOrder(TXST);
+   wbAddGroupOrder(GLOB);
+   wbAddGroupOrder(CLAS);
+   wbAddGroupOrder(FACT);
+   wbAddGroupOrder(HDPT);
+   wbAddGroupOrder(HAIR);
+   wbAddGroupOrder(EYES);
+   wbAddGroupOrder(RACE);
+   wbAddGroupOrder(SOUN);
+   wbAddGroupOrder(ASPC);
+   wbAddGroupOrder(MGEF);
+   wbAddGroupOrder(SCPT);
+   wbAddGroupOrder(LTEX);
+   wbAddGroupOrder(ENCH);
+   wbAddGroupOrder(SPEL);
+   wbAddGroupOrder(SCRL);
+   wbAddGroupOrder(ACTI);
+   wbAddGroupOrder(TACT);
+   wbAddGroupOrder(ARMO);
+   wbAddGroupOrder(BOOK);
+   wbAddGroupOrder(CONT);
+   wbAddGroupOrder(DOOR);
+   wbAddGroupOrder(INGR);
+   wbAddGroupOrder(LIGH);
+   wbAddGroupOrder(MISC);
+   wbAddGroupOrder(APPA);
+   wbAddGroupOrder(STAT);
+   wbAddGroupOrder(SCOL);
+   wbAddGroupOrder(MSTT);
+   wbAddGroupOrder(PWAT);
+   wbAddGroupOrder(GRAS);
+   wbAddGroupOrder(TREE);
+   wbAddGroupOrder(CLDC);
+   wbAddGroupOrder(FLOR);
+   wbAddGroupOrder(FURN);
+   wbAddGroupOrder(WEAP);
+   wbAddGroupOrder(AMMO);
+   wbAddGroupOrder(NPC_);
+   wbAddGroupOrder(LVLN);
+   wbAddGroupOrder(KEYM);
+   wbAddGroupOrder(ALCH);
+   wbAddGroupOrder(IDLM);
+   wbAddGroupOrder(COBJ);
+   wbAddGroupOrder(PROJ);
+   wbAddGroupOrder(HAZD);
+   wbAddGroupOrder(SLGM);
+   wbAddGroupOrder(LVLI);
+   wbAddGroupOrder(WTHR);
+   wbAddGroupOrder(CLMT);
+   wbAddGroupOrder(SPGD);
+   wbAddGroupOrder(RFCT);
+   wbAddGroupOrder(REGN);
+   wbAddGroupOrder(NAVI);
+   wbAddGroupOrder(CELL);
+   wbAddGroupOrder(WRLD);
+   wbAddGroupOrder(DIAL);
+   wbAddGroupOrder(QUST);
+   wbAddGroupOrder(IDLE);
+   wbAddGroupOrder(PACK);
+   wbAddGroupOrder(CSTY);
+   wbAddGroupOrder(LSCR);
+   wbAddGroupOrder(LVSP);
+   wbAddGroupOrder(ANIO);
+   wbAddGroupOrder(WATR);
+   wbAddGroupOrder(EFSH);
+   wbAddGroupOrder(EXPL);
+   wbAddGroupOrder(DEBR);
+   wbAddGroupOrder(IMGS);
+   wbAddGroupOrder(IMAD);
+   wbAddGroupOrder(FLST);
+   wbAddGroupOrder(PERK);
+   wbAddGroupOrder(BPTD);
+   wbAddGroupOrder(ADDN);
+   wbAddGroupOrder(AVIF);
+   wbAddGroupOrder(CAMS);
+   wbAddGroupOrder(CPTH);
+   wbAddGroupOrder(VTYP);
+   wbAddGroupOrder(MATT);
+   wbAddGroupOrder(IPCT);
+   wbAddGroupOrder(IPDS);
+   wbAddGroupOrder(ARMA);
+   wbAddGroupOrder(ECZN);
+   wbAddGroupOrder(LCTN);
+   wbAddGroupOrder(MESG);
+   wbAddGroupOrder(RGDL);
+   wbAddGroupOrder(DOBJ);
+   wbAddGroupOrder(LGTM);
+   wbAddGroupOrder(MUSC);
+   wbAddGroupOrder(FSTP);
+   wbAddGroupOrder(FSTS);
+   wbAddGroupOrder(SMBN);
+   wbAddGroupOrder(SMQN);
+   wbAddGroupOrder(SMEN);
+   wbAddGroupOrder(DLBR);
+   wbAddGroupOrder(MUST);
+   wbAddGroupOrder(DLVW);
+   wbAddGroupOrder(WOOP);
+   wbAddGroupOrder(SHOU);
+   wbAddGroupOrder(EQUP);
+   wbAddGroupOrder(RELA);
+   wbAddGroupOrder(SCEN);
+   wbAddGroupOrder(ASTP);
+   wbAddGroupOrder(OTFT);
+   wbAddGroupOrder(ARTO);
+   wbAddGroupOrder(MATO);
+   wbAddGroupOrder(MOVT);
+//   wbAddGroupOrder(HAZD);
+   wbAddGroupOrder(SNDR);
+   wbAddGroupOrder(DUAL);
+   wbAddGroupOrder(SNCT);
+   wbAddGroupOrder(SOPM);
+   wbAddGroupOrder(COLL);
+   wbAddGroupOrder(CLFM);
+   wbAddGroupOrder(REVB);
 end;
 
 procedure DefineTES5;
