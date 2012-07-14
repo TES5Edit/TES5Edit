@@ -1537,19 +1537,6 @@ function wbFloat(const aName       : string = 'Unknown';
                                    : IwbFloatDef; overload;
 
 {--- wbArray - list of identical elements -------------------------------------}
-//-----------------------------------------------------------------------------
-// New wbarray
-//-----------------------------------------------------------------------------
-// function wbArray(const aSignature : TwbSignature;
-//                 const aName      : string;
-//                 const aElement   : TwbIntegerDef;
-//                       aCount     : Integer = 0;  //!!!Update Count for xEdit
-//                       aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
-//                       aPriority  : TwbConflictPriority = cpNormal;
-//                       aRequired  : Boolean = False;
-//                       aDontShow  : TwbDontShowCallback = nil)
-//                                  : IwbSubRecordDef; overload;
-
 function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
