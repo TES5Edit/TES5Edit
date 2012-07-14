@@ -10,7 +10,7 @@ In xEdit, cpBenign differences are highlighted, but are otherwise ignored.
 
 NoReach is relevant when the determining which records can be reached by the player starting the game normally. Not every FormID everywhere is a link that should be followed for this purpose.
  
-e.g. suppose there is a DOOR that can be opened with a specific KEYM. Just because there is a way to get from the player record (and its initial location, the auto-start quests and a number of other relevant start records) to the record placing the DOOR by following FormID fields from one record to another doesn’t mean that the KEYM is also reachable. NoReach simply prevents a FormID field from being followed during reachability detection.
+e.g. suppose there is a DOOR that can be opened with a specific KEYM. Just because there is a way to get from the player record (and its initial location, the auto-start quests and a number of other relevant start records) to the record placing the DOOR by following FormID fields from one record to another doesn't mean that the KEYM is also reachable. NoReach simply prevents a FormID field from being followed during reachability detection.
 = Code Examples =
 
 == Arrays of FormID ==
@@ -35,7 +35,7 @@ Which is a KWDA subrecord, containing 1 or more FormIDs.
 
 If KSIZ and KWDA always appears together like that, you should probably define it as:
 
-== Other Keyword Posibilities ==
+== Other Keyword Possibilities ==
  
 <code>
  var
@@ -43,7 +43,7 @@ If KSIZ and KWDA always appears together like that, you should probably define i
  
   wbKeywords := wbRStruct('Keywords', [
     wbInteger(KSIZ, 'Count', itU32, nil, cpNormal, True),
-    wbArray(KWDA, ‘Keywords’, wbFormID(‘Keyword’), 0, nil, cpNormal, True)
+    wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, cpNormal, True)
   ], []);
 </code>
  
@@ -51,9 +51,9 @@ If only certain specific types of FormIDs are allowed, then you should be using 
  
 If the order of the keywords is not important, then you should use wbArrayS (S = sorted) instead. (Sorted arrays work better for comparison between different record versions in xEdit).
  
-KDIZ and KWDA are both marked as required, this way you can’t remove/add them individually in xEdit, you can only remove/add the Keywords record struct as a whole, which will add both KSIZ and KWDA subrecords together, or remove them together.
+KDIZ and KWDA are both marked as required, this way you can't remove/add them individually in xEdit, you can only remove/add the Keywords record struct as a whole, which will add both KSIZ and KWDA subrecords together, or remove them together.
  
-Also, for xEdit instead of xDump, there will need to be a mechanism in place that updates the value of KSIZ as elements are added/removed from the KWDA array. I’m not sure if there is an appropriate mechanism already in place that could be used for this, it might be necessary to add something to wbInterface/wbImplementation for this. Best make an “//!!!Update Count for xEdit” comment on the KSIZ line so that it can be reviewed later.
+Also, for xEdit instead of xDump, there will need to be a mechanism in place that updates the value of KSIZ as elements are added/removed from the KWDA array. I'm not sure if there is an appropriate mechanism already in place that could be used for this, it might be necessary to add something to wbInterface/wbImplementation for this. Best make an “//!!!Update Count for xEdit” comment on the KSIZ line so that it can be reviewed later.
 
 = Decoding Skyrim Records =
 
