@@ -1,5 +1,60 @@
 #summary How to Decode Skyrim's Records
 
+= Source Code Definitions =
+
+== Conflict checks with cpBenign ==
+
+In xEdit, cpBenign differences are highlighted, but are otherwise ignored.
+
+== wbFormIDCkNoReach ==
+
+NoReach is relevant when the determining which records can be reached by the player starting the game normally. Not every FormID everywhere is a link that should be followed for this purpose.
+ 
+e.g. suppose there is a DOOR that can be opened with a specific KEYM. Just because there is a way to get from the player record (and its initial location, the auto-start quests and a number of other relevant start records) to the record placing the DOOR by following FormID fields from one record to another doesn’t mean that the KEYM is also reachable. NoReach simply prevents a FormID field from being followed during reachability detection.
+= Code Examples =
+
+== Arrays of FormID ==
+
+<code>
+wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
+wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True)
+</code>
+
+<code>
+wbKWDA := wbFormID(KWDA, 'Keywords');
+wbKWDAs := wbRArray('Keyword', wbKWDA);
+</code>
+
+Is an array of 0 or more KWDA subrecords, each with a single FormID.
+
+<code>
+wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, cpNormal, True);
+</code>
+
+Which is a KWDA subrecord, containing 1 or more FormIDs.
+
+If KSIZ and KWDA always appears together like that, you should probably define it as:
+
+== Other Keyword Posibilities ==
+ 
+<code>
+ var
+  wbKeywords: IwbSubRecordStructDef;
+ 
+  wbKeywords := wbRStruct('Keywords', [
+    wbInteger(KSIZ, 'Count', itU32, nil, cpNormal, True),
+    wbArray(KWDA, ‘Keywords’, wbFormID(‘Keyword’), 0, nil, cpNormal, True)
+  ], []);
+</code>
+ 
+If only certain specific types of FormIDs are allowed, then you should be using wbFormIDCk (Ck = check)
+ 
+If the order of the keywords is not important, then you should use wbArrayS (S = sorted) instead. (Sorted arrays work better for comparison between different record versions in xEdit).
+ 
+KDIZ and KWDA are both marked as required, this way you can’t remove/add them individually in xEdit, you can only remove/add the Keywords record struct as a whole, which will add both KSIZ and KWDA subrecords together, or remove them together.
+ 
+Also, for xEdit instead of xDump, there will need to be a mechanism in place that updates the value of KSIZ as elements are added/removed from the KWDA array. I’m not sure if there is an appropriate mechanism already in place that could be used for this, it might be necessary to add something to wbInterface/wbImplementation for this. Best make an “//!!!Update Count for xEdit” comment on the KSIZ line so that it can be reviewed later.
+
 = Decoding Skyrim Records =
 
 The wbDefinitionsTES5.pas is but one of about 80 files used to make TES5Edit and it's predecessors FO3Edit, FNVEdit, and TES4Edit.  The complexity of the object oriented programing involved makes it so that once we are done with wbDefinitionsTES5.pas the pascal file is used to make TES5Edit.  Granted some other things will need to be updated in the supporting files but I am doing work on additional files to save Elminster some time, and help get us a working copy of TES5Edit.  Updates to TES5Edit will apply to previous versions automatically.
