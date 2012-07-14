@@ -702,6 +702,8 @@ var
   wbOBNDUnused: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
+  wbKWDAs: IwbSubRecordDef;
+  wbKSIZ: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4227,6 +4229,8 @@ begin
   wbMODT:= wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
   wbOBNDUnused:= wbByteArray(OBND, 'Unused', 12, cpIgnore);
   wbCOCT:= wbInteger(COCT, 'Count', itU32);
+  wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
+  wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
 
 //-----------------------------------------------------------------
 // End New Routines
@@ -6032,31 +6036,37 @@ begin
 
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
-  {Shar - altered - incomplete - USEP}
+//------------------------------------------------------------------------------
+// Begin New CONT
+//------------------------------------------------------------------------------
   wbRecord(CONT, 'Container', [
     wbEDIDReq,
-    {VMAD}
-    wbOBNDReq,
-    wbFULL,
-    wbMODL,
-    {MODT}
-    {MODS}
-    wbUnknown(COCT),
-    {Unused in this record for TES5
-    wbSCRI,}
-    wbCNTOs,
-    {COED}
-    {Unused in this record for TES5
-    wbDEST,}
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
-      wbFloat('Weight')
-    ], cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
-    wbFormIDCk(QNAM, 'Sound - Close', [SOUN]){, Must comment out for syntax}
-    {Unused in this record for TES5
-    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])}
+    wbFULL
   ], True);
+
+//------------------------------------------------------------------------------
+// Begin Old CONT
+//------------------------------------------------------------------------------
+//  wbRecord(CONT, 'Container', [
+//    wbEDIDReq,
+//    wbOBNDReq,
+//    wbFULL,
+//    wbMODL,
+//    wbSCRI,
+//    wbCNTOs,
+//    wbDEST,
+//    wbStruct(DATA, '', [
+//      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
+//      wbFloat('Weight')
+//    ], cpNormal, True),
+//    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
+//   wbFormIDCk(QNAM, 'Sound - Close', [SOUN]),
+//    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
+//  ], True);
+//------------------------------------------------------------------------------
+// End Old CONT
+//------------------------------------------------------------------------------
+
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
@@ -9012,116 +9022,240 @@ begin
     )
   ]);
 
+//------------------------------------------------------------------------------
+// Begin NEW MGEF
+//------------------------------------------------------------------------------
   wbRecord(MGEF, 'Base Effect', [
     wbEDIDReq,
     wbFULL,
-    wbDESCReq,
-    wbICON,
-    wbMODL,
+//    wbDESCReq,
+//    wbICON,
+//    wbMODL,
     wbUnknown(MDOB),
-    wbUnknown(KSIZ),
-    wbUnknown(KWDA),
-    wbUnknown(VMAD),
-    wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Hostile',
-        {0x00000002} 'Recover',
-        {0x00000004} 'Detrimental',
-        {0x00000008} '',
-        {0x00000010} 'Self',
-        {0x00000020} 'Touch',
-        {0x00000040} 'Target',
-        {0x00000080} 'No Duration',
-        {0x00000100} 'No Magnitude',
-        {0x00000200} 'No Area',
-        {0x00000400} 'FX Persist',
-        {0x00000800} '',
-        {0x00001000} 'Gory Visuals',
-        {0x00002000} 'Display Name Only',
-        {0x00004000} '',
-        {0x00008000} 'Radio Broadcast ??',
-        {0x00010000} '',
-        {0x00020000} '',
-        {0x00040000} '',
-        {0x00080000} 'Use skill',
-        {0x00100000} 'Use attribute',
-        {0x00200000} '',
-        {0x00400000} '',
-        {0x00800000} '',
-        {0x01000000} 'Painless',
-        {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
-        {0x04000000} 'Bolt projectile type (or Fog if Spray is specified as well)',
-        {0x08000000} 'No Hit Effect',
-        {0x10000000} 'No Death Dispel',
-        {0x20000000} '????'
-      ])),
-      {04} wbFloat('Base cost (Unused)'),
-      {08} wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-             wbFormID('Unused', cpIgnore),
-             wbFormID('Assoc. Item'),
-             wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
-             wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
-             wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
-           ]),
-      {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
-      ], [
-        -1, 'None'
-      ])),
-      {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-      {20} wbInteger('Unknown', itU16),
-      {22} wbByteArray('Unused', 2),
-      {24} wbFormIDCk('Light', [LIGH, NULL]),
-      {28} wbFloat('Projectile speed'),
-      {32} wbFormIDCk('Effect Shader', [EFSH, NULL]),
-      {36} wbFormIDCk('Object Display Shader', [EFSH, NULL]),
-      {40} wbFormIDCk('Effect sound', [NULL, SOUN]),
-      {44} wbFormIDCk('Bolt sound', [NULL, SOUN]),
-      {48} wbFormIDCk('Hit sound', [NULL, SOUN]),
-      {52} wbFormIDCk('Area sound', [NULL, SOUN]),
-      {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
-      {60} wbFloat('Constant Effect barter factor (Unused)'),
-      {64} wbInteger('Archtype', itU32, wbEnum([
-             {00} 'Value Modifier',
-             {01} 'Script',
-             {02} 'Dispel',
-             {03} 'Cure Disease',
-             {04} '',
-             {05} '',
-             {06} '',
-             {07} '',
-             {08} '',
-             {09} '',
-             {10} '',
-             {11} 'Invisibility',
-             {12} 'Chameleon',
-             {13} 'Light',
-             {14} '',
-             {15} '',
-             {16} 'Lock',
-             {17} 'Open',
-             {18} 'Bound Item',
-             {19} 'Summon Creature',
-             {20} '',
-             {21} '',
-             {22} '',
-             {23} '',
-             {24} 'Paralysis',
-             {25} '',
-             {26} '',
-             {27} '',
-             {28} '',
-             {29} '',
-             {30} 'Cure Paralysis',
-             {31} 'Cure Addiction',
-             {32} 'Cure Poison',
-             {33} 'Concussion',
-             {34} 'Value And Parts',
-             {35} 'Limb Condition',
-             {36} 'Turbo'
-           ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
-      {68} wbActorValue
-    ], cpNormal, True)
+    wbKSIZ,
+    wbKWDAs,
+    wbUnknown(DATA),
+//    wbUnknown(VMAD),
+//    wbStruct(DATA, 'Data', [
+//      wbInteger('Flags', itU32, wbFlags([
+//        {0x00000001} 'Hostile',
+//        {0x00000002} 'Recover',
+//        {0x00000004} 'Detrimental',
+//        {0x00000008} '',
+//        {0x00000010} 'Self',
+//        {0x00000020} 'Touch',
+//        {0x00000040} 'Target',
+//        {0x00000080} 'No Duration',
+//        {0x00000100} 'No Magnitude',
+//        {0x00000200} 'No Area',
+//        {0x00000400} 'FX Persist',
+//        {0x00000800} '',
+//        {0x00001000} 'Gory Visuals',
+//        {0x00002000} 'Display Name Only',
+//        {0x00004000} '',
+//        {0x00008000} 'Radio Broadcast ??',
+//        {0x00010000} '',
+//        {0x00020000} '',
+//        {0x00040000} '',
+//        {0x00080000} 'Use skill',
+//        {0x00100000} 'Use attribute',
+//        {0x00200000} '',
+//        {0x00400000} '',
+//        {0x00800000} '',
+//        {0x01000000} 'Painless',
+//        {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
+//        {0x04000000} 'Bolt projectile type (or Fog if Spray is specified as well)',
+//        {0x08000000} 'No Hit Effect',
+//        {0x10000000} 'No Death Dispel',
+//        {0x20000000} '????'
+//      ])),
+//      {04} wbFloat('Base cost (Unused)'),
+//      {08} wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
+//             wbFormID('Unused', cpIgnore),
+//             wbFormID('Assoc. Item'),
+//             wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
+//             wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
+//             wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
+//           ]),
+//      {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
+//      ], [
+//        -1, 'None'
+//      ])),
+//      {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
+//      {20} wbInteger('Unknown', itU16),
+//      {22} wbByteArray('Unused', 2),
+//      {24} wbFormIDCk('Light', [LIGH, NULL]),
+//      {28} wbFloat('Projectile speed'),
+//      {32} wbFormIDCk('Effect Shader', [EFSH, NULL]),
+//      {36} wbFormIDCk('Object Display Shader', [EFSH, NULL]),
+//      {40} wbFormIDCk('Effect sound', [NULL, SOUN]),
+//      {44} wbFormIDCk('Bolt sound', [NULL, SOUN]),
+//      {48} wbFormIDCk('Hit sound', [NULL, SOUN]),
+//      {52} wbFormIDCk('Area sound', [NULL, SOUN]),
+//      {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
+//      {60} wbFloat('Constant Effect barter factor (Unused)'),
+//      {64} wbInteger('Archtype', itU32, wbEnum([
+//             {00} 'Value Modifier',
+//             {01} 'Script',
+//             {02} 'Dispel',
+//             {03} 'Cure Disease',
+//             {04} '',
+//             {05} '',
+//             {06} '',
+//             {07} '',
+//             {08} '',
+//             {09} '',
+//             {10} '',
+//             {11} 'Invisibility',
+//             {12} 'Chameleon',
+//             {13} 'Light',
+//             {14} '',
+//             {15} '',
+//             {16} 'Lock',
+//             {17} 'Open',
+//             {18} 'Bound Item',
+//             {19} 'Summon Creature',
+//             {20} '',
+//             {21} '',
+//             {22} '',
+//             {23} '',
+//             {24} 'Paralysis',
+//             {25} '',
+//             {26} '',
+//             {27} '',
+//             {28} '',
+//             {29} '',
+//             {30} 'Cure Paralysis',
+//             {31} 'Cure Addiction',
+//             {32} 'Cure Poison',
+//             {33} 'Concussion',
+//             {34} 'Value And Parts',
+//             {35} 'Limb Condition',
+//             {36} 'Turbo'
+//           ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
+//      {68} wbActorValue
+//    ], cpNormal, True)
+    wbUnknown(SNDD),
+    wbFormID(DNAM, 'Unknown'),
+    wbCTDAs
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+
+//------------------------------------------------------------------------------
+// Begin Old MGEF
+//------------------------------------------------------------------------------
+//  wbRecord(MGEF, 'Base Effect', [
+//    wbEDIDReq,
+//    wbFULL,
+//    wbDESCReq,
+//    wbICON,
+//    wbMODL,
+//    wbUnknown(MDOB),
+//    wbUnknown(KSIZ),
+//    wbUnknown(KWDA),
+//    wbUnknown(VMAD),
+//    wbStruct(DATA, 'Data', [
+//      wbInteger('Flags', itU32, wbFlags([
+//        {0x00000001} 'Hostile',
+//        {0x00000002} 'Recover',
+//        {0x00000004} 'Detrimental',
+//        {0x00000008} '',
+//        {0x00000010} 'Self',
+//        {0x00000020} 'Touch',
+//        {0x00000040} 'Target',
+//        {0x00000080} 'No Duration',
+//        {0x00000100} 'No Magnitude',
+//        {0x00000200} 'No Area',
+//        {0x00000400} 'FX Persist',
+//        {0x00000800} '',
+//        {0x00001000} 'Gory Visuals',
+//        {0x00002000} 'Display Name Only',
+//        {0x00004000} '',
+//        {0x00008000} 'Radio Broadcast ??',
+//        {0x00010000} '',
+//        {0x00020000} '',
+//        {0x00040000} '',
+//        {0x00080000} 'Use skill',
+//        {0x00100000} 'Use attribute',
+//        {0x00200000} '',
+//        {0x00400000} '',
+//        {0x00800000} '',
+//        {0x01000000} 'Painless',
+//        {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
+//        {0x04000000} 'Bolt projectile type (or Fog if Spray is specified as well)',
+//        {0x08000000} 'No Hit Effect',
+//        {0x10000000} 'No Death Dispel',
+//        {0x20000000} '????'
+//      ])),
+//      {04} wbFloat('Base cost (Unused)'),
+//      {08} wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
+//             wbFormID('Unused', cpIgnore),
+//             wbFormID('Assoc. Item'),
+//             wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
+//             wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
+//             wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
+//           ]),
+//      {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
+//      ], [
+//        -1, 'None'
+//      ])),
+//      {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
+//      {20} wbInteger('Unknown', itU16),
+//      {22} wbByteArray('Unused', 2),
+//      {24} wbFormIDCk('Light', [LIGH, NULL]),
+//      {28} wbFloat('Projectile speed'),
+//      {32} wbFormIDCk('Effect Shader', [EFSH, NULL]),
+//      {36} wbFormIDCk('Object Display Shader', [EFSH, NULL]),
+//      {40} wbFormIDCk('Effect sound', [NULL, SOUN]),
+//      {44} wbFormIDCk('Bolt sound', [NULL, SOUN]),
+//      {48} wbFormIDCk('Hit sound', [NULL, SOUN]),
+//      {52} wbFormIDCk('Area sound', [NULL, SOUN]),
+//      {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
+//      {60} wbFloat('Constant Effect barter factor (Unused)'),
+//      {64} wbInteger('Archtype', itU32, wbEnum([
+//             {00} 'Value Modifier',
+//             {01} 'Script',
+//             {02} 'Dispel',
+//             {03} 'Cure Disease',
+//             {04} '',
+//             {05} '',
+//             {06} '',
+//             {07} '',
+//             {08} '',
+//             {09} '',
+//             {10} '',
+//             {11} 'Invisibility',
+//             {12} 'Chameleon',
+//             {13} 'Light',
+//             {14} '',
+//             {15} '',
+//             {16} 'Lock',
+//             {17} 'Open',
+//             {18} 'Bound Item',
+//             {19} 'Summon Creature',
+//             {20} '',
+//             {21} '',
+//             {22} '',
+//             {23} '',
+//             {24} 'Paralysis',
+//             {25} '',
+//             {26} '',
+//             {27} '',
+//             {28} '',
+//             {29} '',
+//             {30} 'Cure Paralysis',
+//             {31} 'Cure Addiction',
+//             {32} 'Cure Poison',
+//             {33} 'Concussion',
+//             {34} 'Value And Parts',
+//             {35} 'Limb Condition',
+//             {36} 'Turbo'
+//           ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
+//      {68} wbActorValue
+//    ], cpNormal, True)
+//  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+//------------------------------------------------------------------------------
+// End Old MGEF
+//------------------------------------------------------------------------------
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDIDReq,
