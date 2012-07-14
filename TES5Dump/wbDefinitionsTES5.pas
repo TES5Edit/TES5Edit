@@ -6966,7 +6966,7 @@ begin
 // {21}            00 00 80 40 6 Shininess
 //                 ------------Parallax-----
 // {25}            00 00 80 3F 7 Scale
-// {29}            04            Passes
+// {29}            04            Passes  {This can't be higher than 30}
 //                 -------------------------
 // {30}               00         Flags
 //                       32 30 <-- Not Sure
@@ -6981,7 +6981,7 @@ begin
    {21}       wbFloat('Shininess'),
               wbStruct('Parallax', [
    {25}         wbFloat('Scale'),
-   {29}         wbInteger('Passes', itU8)
+   {29}         wbInteger('Passes', itU8) {This can't be higher than 30}
               ]),
    {30}       wbInteger('Flags', itU8, wbFlags([
                 {0x00000001}'Parallax',
@@ -7034,7 +7034,7 @@ begin
 
   wbRecord(TXST, 'Texture Set', [
     wbEDIDReq,
-    wbUnknown(OBND),
+    wbOBNDReq,
     wbRStruct('Textures (RGB/A)', [
       wbString(TX00,'Difuse'),
       wbString(TX01,'Normal/Gloss'),
@@ -7046,15 +7046,6 @@ begin
       wbString(TX07,'Backlight Mask')
     ], []),
     wbDODT,
-//    wbOBNDReq,
-//    wbRStruct('Textures (RGB/A)', [
-//      wbString(TX00,'Base Image / Transparency'),
-//      wbString(TX01,'Normal Map / Specular'),
-//      wbString(TX02,'Environment Map Mask / ?'),
-//      wbString(TX03,'Glow Map / Unused'),
-//      wbString(TX04,'Parallax Map / Unused'),
-//      wbString(TX05,'Environment Map / Unused')
-//    ], []),
     wbInteger(DNAM, 'DNAM Record Flags', itU16, wbFlags([
       {0x00000001}'No Specular Map',
       {0x00000002}'Facegen Textures',
@@ -10966,11 +10957,20 @@ begin
 //-----------------------------------------------------------------------------
 // Begin New Header
 //-----------------------------------------------------------------------------
+  wbCNAM:= wbStruct(XCLP, 'Linked Reference Color', [
+             wbStruct('Link Start Color', [
+               wbInteger('Red', itU8),
+               wbInteger('Green', itU8),
+               wbInteger('Blue', itU8),
+               wbByteArray('Unused', 1)
+             ])
+           ]);
+
   wbRecord(TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
-      wbFloat('Version'),
-      wbInteger('Number of Records', itU32),
-      wbInteger('Next Object ID', itU32)
+      wbFloat('{Byte  1-4} Version'),
+      wbInteger('{Byte  5-8} Number of Records', itU32),
+      wbByteArray('{Byte 9-12} Unknown', 4)
     ], cpNormal, True),
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
