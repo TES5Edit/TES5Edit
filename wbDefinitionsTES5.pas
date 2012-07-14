@@ -704,6 +704,7 @@ var
   wbCOCT: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
+  wbCNAM: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4231,7 +4232,14 @@ begin
   wbCOCT:= wbInteger(COCT, 'Count', itU32);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
-
+  wbCNAM:= wbStruct(XCLP, 'Linked Reference Color', [
+             wbStruct('Link Start Color', [
+               wbInteger('Red', itU8),
+               wbInteger('Green', itU8),
+               wbInteger('Blue', itU8),
+               wbByteArray('Unused', 1)
+             ])
+           ]);
 //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
@@ -6928,15 +6936,18 @@ begin
 //----------------------------------------------------------------------------
 
   wbRecord(KYWD, 'KYWD', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbCNAM
   ]);
 
   wbRecord(LCRT, 'LCRT', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbCNAM
   ]);
 
   wbRecord(AACT, 'AACT', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbCNAM
   ]);
 
   wbDODT := wbStruct(DODT, 'Decal Data', [
@@ -6965,21 +6976,44 @@ begin
             ]);
 
   wbRecord(TXST, 'Texture Set', [
-    wbEDIDReq,
-    wbOBNDReq,
-    wbRStruct('Textures (RGB/A)', [
-      wbString(TX00,'Base Image / Transparency'),
-      wbString(TX01,'Normal Map / Specular'),
-      wbString(TX02,'Environment Map Mask / ?'),
-      wbString(TX03,'Glow Map / Unused'),
-      wbString(TX04,'Parallax Map / Unused'),
-      wbString(TX05,'Environment Map / Unused')
-    ], []),
-    wbDODT,
-    wbInteger(DNAM, 'Flags', itU16, wbFlags([
-      'No Specular Map'
-    ]), cpNormal, True)
+    wbEDIDReq
+//    wbOBNDReq,
+//    wbRStruct('Textures (RGB/A)', [
+//      wbString(TX00,'Base Image / Transparency'),
+//      wbString(TX01,'Normal Map / Specular'),
+//      wbString(TX02,'Environment Map Mask / ?'),
+//      wbString(TX03,'Glow Map / Unused'),
+//      wbString(TX04,'Parallax Map / Unused'),
+//      wbString(TX05,'Environment Map / Unused')
+//    ], []),
+//    wbDODT,
+//    wbInteger(DNAM, 'Flags', itU16, wbFlags([
+//      'No Specular Map'
+//    ]), cpNormal, True)
   ]);
+
+//------------------------------------------------------------------------------
+// Begin Old TXST
+//------------------------------------------------------------------------------
+//  wbRecord(TXST, 'Texture Set', [
+//    wbEDIDReq,
+//    wbOBNDReq,
+//    wbRStruct('Textures (RGB/A)', [
+//      wbString(TX00,'Base Image / Transparency'),
+//      wbString(TX01,'Normal Map / Specular'),
+//      wbString(TX02,'Environment Map Mask / ?'),
+//      wbString(TX03,'Glow Map / Unused'),
+//      wbString(TX04,'Parallax Map / Unused'),
+//      wbString(TX05,'Environment Map / Unused')
+//    ], []),
+//    wbDODT,
+//    wbInteger(DNAM, 'Flags', itU16, wbFlags([
+//      'No Specular Map'
+//    ]), cpNormal, True)
+//  ]);
+//------------------------------------------------------------------------------
+// End Old TXST
+//------------------------------------------------------------------------------
 
   wbRecord(MICN, 'Menu Icon', [
     wbEDIDReq,
