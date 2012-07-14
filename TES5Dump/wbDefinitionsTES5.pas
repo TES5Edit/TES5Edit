@@ -4247,7 +4247,7 @@ begin
 // End New Routines
 //-----------------------------------------------------------------
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbRecordFlags := wbInteger('{Byte  9-12} Record Flags', itU32, wbFlags([
     {0x00000001}'0x00000001 *ESM',
     {0x00000002}'0x00000002 *Unknown 2',
     {0x00000004}'0x00000004 *Unknown 3',
@@ -4323,13 +4323,13 @@ begin
 // 6 may be a flag.  It is used in GMST, and others not listed yet.
 //----------------------------------------------------------------------------
   wbMainRecordHeader := wbStruct('Record Header', [
-    wbString('1 Signature', 4, cpCritical),
-    wbByteArray('2 Unknon Data : itU32', 4, cpIgnore),
+    wbString('{Byte   1-4} Signature', 4, cpCritical),
+    wbByteArray('{Byte   5-8} Unknon Data', 4, cpIgnore),
     wbRecordFlags,
-    wbFormID('4 FormID', cpFormID),
-    wbByteArray('5 Unknon Data : itU32', 4, cpIgnore),
-    wbInteger('6 Form Version ', itU16, nil, cpNormal),
-    wbByteArray('6 Unknon Data : itU16 : (Possible Flag)', 2, cpIgnore)
+    wbFormID('{Byte 13-16} FormID', cpFormID),
+    wbByteArray('{Byte 17-20} Unknon Data', 4, cpIgnore),
+    wbInteger('{Byte 21-22} Form Version ', itU16, nil, cpNormal),
+    wbByteArray('{Byte 23-24} Unknon Data (Possible Flag)', 2, cpIgnore)
   ]);
 //----------------------------------------------------------------------------
 // Old Routine
@@ -6953,40 +6953,84 @@ begin
     wbCNAM
   ]);
 
+//------------------------------------------------------------------------------
+// Begin New DODT
+//------------------------------------------------------------------------------
+// Sample DODT
+// DODT - Unknown:
+// {00}            00 00 00 41 1 Min Width
+// {05}            00 00 00 42 2 Max Width
+// {09}            00 00 00 41 3 Min Height
+// {13}            00 00 00 42 4 Max Height
+// {17}            00 00 00 42 5 Depth
+// {21}            00 00 80 40 6 Shininess
+//                 ------------Parallax-----
+// {25}            00 00 80 3F 7 Scale
+// {29}            04            Passes
+//                 -------------------------
+// {30}               00         Flags
+//                       32 30 <-- Not Sure
+// {31}            FF FF FF 00   Color
+//------------------------------------------------------------------------------
   wbDODT := wbStruct(DODT, 'Decal Data', [
-{04}          wbFloat('Min Width'),
-{08}          wbFloat('Max Width'),
-{12}          wbFloat('Min Height'),
-{16}          wbFloat('Max Height'),
-{20}          wbFloat('Depth'),
-{24}          wbFloat('Shininess'),
+   {00}       wbFloat('Min Width'),
+   {05}       wbFloat('Max Width'),
+   {09}       wbFloat('Min Height'),
+   {13}       wbFloat('Max Height'),
+   {17}       wbFloat('Depth'),
+   {21}       wbFloat('Shininess'),
               wbStruct('Parallax', [
-{28}            wbFloat('Scale'),
-{29}            wbInteger('Passes', itU8)
+   {25}         wbFloat('Scale'),
+   {29}         wbInteger('Passes', itU8)
               ]),
-{30}          wbInteger('Flags', itU8, wbFlags([
-                {0x00000001}'Unknown 1',
-                {0x00000002}'Unknown 2',
-                {0x00000004}'Unknown 3',
-                {0x00000008}'Unknown 4',
-                {0x00000010}'Unknown 5',
-                {0x00000020}'Unknown 6',
-                {0x00000040}'Unknown 7',
-                {0x00000080}'Unknown 8'
+   {30}       wbInteger('Flags', itU8, wbFlags([
+                {0x00000001}'Parallax',
+                {0x00000002}'Alpha - Blending',
+                {0x00000004}'Alpha - Testing',
+                {0x00000008}'No Subtextures',
+                {0x00000010}'DODT Unknown 5',
+                {0x00000020}'DODT Unknown 6',
+                {0x00000040}'DODT Unknown 7',
+                {0x00000080}'DODT Unknown 8'
                ], True)),
-//                'Parallax',
-//                'Alpha - Blending',
-//                'Alpha - Testing'
-//              wbByteArray('Unused', 2),
-              wbByteArray('Unknown', 1),
-              wbByteArray('Unknown', 1),
-{36}          wbStruct('Color', [
+   {31}       wbByteArray('{Byte 31-32} Unknown', 2),
+   {33}       wbStruct('Color', [
                 wbInteger('Red', itU8),
                 wbInteger('Green', itU8),
                 wbInteger('Blue', itU8),
                 wbByteArray('Unused', 1)
               ])
             ]);
+//------------------------------------------------------------------------------
+// Begin Old DODT
+//------------------------------------------------------------------------------
+//  wbDODT := wbStruct(DODT, 'Decal Data', [
+//              wbFloat('Min Width'),
+//              wbFloat('Max Width'),
+//              wbFloat('Min Height'),
+//              wbFloat('Max Height'),
+//              wbFloat('Depth'),
+//              wbFloat('Shininess'),
+//              wbStruct('Parallax', [
+//                wbFloat('Scale'),
+//                wbInteger('Passes', itU8)
+//              ]),
+//              wbInteger('Flags', itU8, wbFlags([
+//                'Parallax',
+//                'Alpha - Blending',
+//                'Alpha - Testing'
+//              ], True)),
+//              wbByteArray('Unused', 2),
+//              wbStruct('Color', [
+//                wbInteger('Red', itU8),
+//                wbInteger('Green', itU8),
+//                wbInteger('Blue', itU8),
+//                wbByteArray('Unused', 1)
+//              ])
+//            ]);
+//------------------------------------------------------------------------------
+// End Old wbDODT
+//------------------------------------------------------------------------------
 
   wbRecord(TXST, 'Texture Set', [
     wbEDIDReq,
@@ -6995,13 +7039,13 @@ begin
       wbString(TX00,'Difuse'),
       wbString(TX01,'Normal/Gloss'),
       wbString(TX02,'Environment Mask'),
-      wbString(TX03,'Glow'),
+      wbString(TX03,'Glow/SubSurface Tint'),
       wbString(TX04,'Height'),
       wbString(TX05,'Environment'),
       wbString(TX06,'Multilayer'),
       wbString(TX07,'Backlight Mask')
     ], []),
-    wbUnknown(DODT),
+    wbDODT,
 //    wbOBNDReq,
 //    wbRStruct('Textures (RGB/A)', [
 //      wbString(TX00,'Base Image / Transparency'),
@@ -7012,22 +7056,22 @@ begin
 //      wbString(TX05,'Environment Map / Unused')
 //    ], []),
     wbInteger(DNAM, 'DNAM Record Flags', itU16, wbFlags([
-      {0x00000001}'Unknown 1',
-      {0x00000002}'Unknown 2',
-      {0x00000004}'Unknown 3',
-      {0x00000008}'Unknown 4',
-      {0x00000010}'Unknown 5',
-      {0x00000020}'Unknown 6',
-      {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8',
-      {0x00000100}'Unknown 9',
-      {0x00000200}'Unknown 10',
-      {0x00000400}'Unknown 11',
-      {0x00000800}'Unknown 12',
-      {0x00001000}'Unknown 13',
-      {0x00002000}'Unknown 14',
-      {0x00004000}'Unknown 15',
-      {0x00008000}'Unknown 16'
+      {0x00000001}'No Specular Map',
+      {0x00000002}'Facegen Textures',
+      {0x00000004}'Has Model Space Normal Map',
+      {0x00000008}'DNAM Unknown 4',
+      {0x00000010}'DNAM Unknown 5',
+      {0x00000020}'DNAM Unknown 6',
+      {0x00000040}'DNAM Unknown 7',
+      {0x00000080}'DNAM Unknown 8',
+      {0x00000100}'DNAM Unknown 9',
+      {0x00000200}'DNAM Unknown 10',
+      {0x00000400}'DNAM Unknown 11',
+      {0x00000800}'DNAM Unknown 12',
+      {0x00001000}'DNAM Unknown 13',
+      {0x00002000}'DNAM Unknown 14',
+      {0x00004000}'DNAM Unknown 15',
+      {0x00008000}'DNAM Unknown 16'
     ]))
   ]);
 
