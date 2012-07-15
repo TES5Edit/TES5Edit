@@ -64,7 +64,7 @@ Not enough properties that require additional review.
     {31}    FF FF FF 00   Color
 </code>
 
-Bytes 29 and 30 seem to be decoded correctly until you look at a texture for an NPC_ or interior.
+Bytes 29 and 30 seem to be decoded correctly until you look at a texture for an NPC_ or Interior.
 
 == TXST ==
 
