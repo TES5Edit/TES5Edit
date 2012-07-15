@@ -34,7 +34,7 @@ Not enough properties that require additional review.
 
 Not enough properties that require additional review.
 
-== DODT ==
+== DODT  Part of TXST ==
 
 <code>
   Sample DODT
@@ -60,6 +60,7 @@ https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/DecodeTX
 
 == TXST ==
 
+Has only rough definition.
 
 == GLOB ==
 
