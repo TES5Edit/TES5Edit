@@ -14,7 +14,7 @@ You can make a small plugin in the CK to use with TES5Dump.  Use the follwoing S
 
 The Dumplog.txt will capture the console messages.  You can review it for errors.
 
-You can also use update or Skyrim.esm to look for anything that might have been missed.  The example would dump only the COBJ record.
+You can also use Update.esm or Skyrim.esm to look for anything that might have been missed.  The example would dump only the COBJ record.
 
 <code>TES5Dump -dg:COBJ "Skyrim.esm" > "TES5Skyrim.txt" 2> "Dumplog.txt"</code>
 
