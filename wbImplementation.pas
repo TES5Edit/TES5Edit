@@ -9659,18 +9659,18 @@ begin
       if wbRecordDefMap.Find(Result, i) then
         Result := IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])).GetName;
     end;
-    1: Result := 'TwbGR.Gsn World Children';
-    2: Result := 'TwbGR.Gsn Block ' + IntToStr(grStruct.grsLabel);
-    3: Result := 'TwbGR.Gsn Sub-Block ' + IntToStr(grStruct.grsLabel);
-    4: Result := 'TwbGR.Gsn Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
-    5: Result := 'TwbGR.Gsn Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
-    6: Result := 'TwbGR.Gsn Children';
-    7: Result := 'TwbGR.Gsn Children';
-    8: Result := 'TwbGR.Gsn Persistent';
-    9: Result := 'TwbGR.Gsn Temporary';
-    10: Result := 'TwbGR.Gsn Visible when Distant';
+    1: Result := 'World Children';
+    2: Result := 'Block ' + IntToStr(grStruct.grsLabel);
+    3: Result := 'Sub-Block ' + IntToStr(grStruct.grsLabel);
+    4: Result := 'Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
+    5: Result := 'Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
+    6: Result := 'Children';
+    7: Result := 'Children';
+    8: Result := 'Persistent';
+    9: Result := 'Temporary';
+    10: Result := 'Visible when Distant';
   else
-    Result := 'TwbGR.Gsn ' + Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
+    Result := Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
   end;
 end;
 
