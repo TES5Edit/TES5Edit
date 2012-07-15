@@ -1,0 +1,115 @@
+#summary Records covered in current TES5Dump-SVN
+
+= Introduction =
+
+In order to assure accuracy of TES5Edit I'm releasing complied versions of TES5Dump.  It will not correctly decode all of Skyrim Records.  The records that have been roughly decoded will be listed below.
+
+= Current TES5Dump-SVN =
+
+TES5Dump-SVN108.exe
+
+= Records covered by the current revision =
+
+== GMST ==
+
+wbGMSTUnionDecider needs to be defined to handle the values for DATA.
+
+*ID* field defined in {Byte 23-24} of record header. (wbMainRecordHeader)
+
+|| *Id* || *Tag* || *Name* || *Type/Size* || *Info* ||
+|| 0 || b || boolean || bool || ||
+|| 0 || i || int || int32 || ||
+|| 0 || f || float || float || ||
+|| 2 || s/S || string || lstring || Under investigation. Suspected Localization Pointer ||
+
+== KYWD ==
+
+Not enough properties that require additional review.
+
+== LCRT ==
+
+Not enough properties that require additional review.
+
+== AACT ==
+
+Not enough properties that require additional review.
+
+== DODT ==
+
+<code>
+  Sample DODT
+  DODT - Unknown:
+    {00}    00 00 00 41 1 Min Width
+    {05}    00 00 00 42 2 Max Width
+    {09}    00 00 00 41 3 Min Height
+    {13}    00 00 00 42 4 Max Height
+    {17}    00 00 00 42 5 Depth
+    {21}    00 00 80 40 6 Shininess
+            ------------Parallax-----
+    {25}    00 00 80 3F 7 Scale
+    {29}    04            Passes  {This can't be higher than 30}
+            -------------------------
+    {30}       00         Flags
+                  32 30   <-- Not Sure
+    {31}    FF FF FF 00   Color
+</code>
+
+Bytes 29 and 30 seem to be decoded correctly until you look at a texture for an NPC_ or interior.  OBND and unknown flags are not set in the Texture Panel shown below.
+
+
+== TXST ==
+
+
+== GLOB ==
+
+Values for FLTV may need a wbGLOBUnionDecider.
+
+== FACT ==
+
+Has only rough definition. Check later for an update.
+
+== MGEF ==
+
+Has only rough definition. Check later for an update.
+
+== COBJ ==
+
+FULL Not displayed correctly after names.  FULL needs to be updated.
+
+Has only rough definition for CNAM, BNAM, and NAM1 if dumped list FormIDs for CNAM and BNAM, and use of NAM1.
+
+CTDA - Needs review not defined correctly.
+
+== NPC_ ==
+
+Rough Definition of NPC_ flags definitions incorrect. Needs Review.
+
+== LVLN ==
+
+FormID References need updated.
+COED might need reviewing.
+
+== LVLI ==
+
+FormID References need updated.
+Flags correct.
+
+== LVSP ==
+
+FormID References need updated.
+
+== WTHR ==
+
+Has only rough definition. Check later for an update.
+
+== CONT ==
+
+Has only rough definition. Check later for an update.
+
+== MATO ==
+
+Has only rough definition. Check later for an update.
+
+== CLFM ==
+
+Defined.
