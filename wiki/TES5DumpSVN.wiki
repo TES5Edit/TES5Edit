@@ -8,7 +8,7 @@ In order to assure accuracy of TES5Edit I'm releasing complied versions of TES5D
 
 TES5Dump-SVN108.exe
 
-You can make a small plugin in the CK to use with TES5Dump.  Use the follwoing Syntax:
+You can make a small plugin in the CK to use with TES5Dump.  Use the following Syntax:
 
 <code>TES5Dump "Your Plugin.esp" > "Your Plugin.txt" 2> "Dumplog.txt"</code>
 
