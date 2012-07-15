@@ -18,6 +18,10 @@ You can also use Update.esm or Skyrim.esm to look for anything that might have b
 
 The Dumplog.txt will capture the console messages.  You can review it for errors.
 
+= Localization Strings =
+
+With Skyrim comes some new string handling.  Skyrim_English.DLSTRINGS, Skyrim_English.ILSTRINGS, Skyrim_English.STRINGS contain all the strings and Skyrim.esm and Update.esm have pointers to the strings contained in those files.  If you run dump on Skyrim.esm, Update.esm all you will see are unusual characters where a string should be.  If you run Dump on a plugin you have created it may or may not have the correct string.  Some strings are saved directly into the plugin.  I suspect, only strings that have changed are saved.  If the string is unaltered then I believe that the CK saves a pointer to the localization files.  For now ignore the names of things and consider it a know issue.  There is no way to correctly display the strings with the current code in Dump.  New routines will have to be created for both Dump and TES5Edit to utilize the new strings files.
+
 = Records covered by the current revision =
 
 == GMST ==
