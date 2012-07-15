@@ -56,6 +56,7 @@ Not enough properties that require additional review.
 
 Bytes 29 and 30 seem to be decoded correctly until you look at a texture for an NPC_ or interior.  OBND and unknown flags are not set in the Texture Panel shown below.
 
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/DecodeTXST.jpg
 
 == TXST ==
 
