@@ -2,7 +2,7 @@
 
 = Introduction =
 
-In order to assure accuracy of TES5Edit I'm releasing complied versions of TES5Dump.  It will not correctly decode all of Skyrim Records.  The records that have been roughly decoded will be listed below.
+In order to assure accuracy of TES5Edit I'm releasing complied versions of TES5Dump.  It will not correctly decode all of Skyrim's Records.  The records that have been roughly decoded will be listed below.
 
 = Current TES5Dump-SVN =
 
@@ -22,7 +22,7 @@ The Dumplog.txt will capture the console messages.  You can review it for errors
 
 With Skyrim comes some new string handling.  Skyrim_English.DLSTRINGS, Skyrim_English.ILSTRINGS, Skyrim_English.STRINGS contain all the strings and Skyrim.esm and Update.esm.  In place of the actuall strings there are pointers to the strings contained in those files.  If you run dump on Skyrim.esm, Update.esm all you will see are unusual characters where a string should be.  If you run Dump on a plugin you have created it may or may not have the correct string.  Some strings are saved directly into the plugin.  I suspect, only strings that have changed are saved.  If the string is unaltered then I believe that the CK saves a pointer to the localization files.  For now ignore the names of things and consider it a know issue.  There is no way to correctly display the strings with the current code in Dump.  New routines will have to be created for both Dump and TES5Edit to utilize the new strings files.
 
-This affects any Quest text, Dialogue, and so on.  It does not seem to apply to scripts and it being looked at.
+This affects any Quest text, Dialogue, and so on.  It does not seem to apply to scripts.
 
 = Records covered by the current revision =
 
