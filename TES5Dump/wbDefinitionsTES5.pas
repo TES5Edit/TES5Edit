@@ -705,7 +705,6 @@ var
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbMODT: IwbSubRecordDef;
-  wbOBNDUnused: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
@@ -1700,7 +1699,7 @@ begin
   if Assigned(Rec) then begin
     s := Trim(Rec.Value);
     if s <> '' then
-      Result := 'wbPlacedAddInfo places ' + s;
+      Result := 'places ' + s;
   end;
 
   Container := aMainRecord.Container;
@@ -2535,24 +2534,6 @@ begin
 end;
 
 function wbCTDACompValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container: IwbContainer;
-begin
-//  Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if Integer(Container.ElementByName['Type'].NativeValue) and $04 = 0 then
-    Result := 0
-  else
-    Result := 1;
-end;
-
-//------------------------------------------------------------------------------
-// Faction Union Decider for Float or Global
-//------------------------------------------------------------------------------
-function wbFACTCompValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainer;
 begin
@@ -4280,7 +4261,6 @@ begin
   wbLLCT:= wbInteger(LLCT, 'Count', itU8);
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbMODT:= wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
-  wbOBNDUnused:= wbByteArray(OBND, 'Unused', 12, cpIgnore);
   wbCOCT:= wbInteger(COCT, 'Count', itU32);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
@@ -4368,32 +4348,15 @@ begin
     {0x80000000}'Unknown 32'
   ]));                (**)
 
-//----------------------------------------------------------------------------
-// 24 Bytes Total
-// 6 is listed twice to indicate two intU16 from one intU32
-// 6 may be a flag.  It is used in GMST, and others not listed yet.
-//----------------------------------------------------------------------------
   wbMainRecordHeader := wbStruct('Record Header', [
-    wbString('{Byte   1-4} Signature', 4, cpCritical),
-    wbInteger('{Byte   5-8} Data Size', itU32, nil, cpIgnore),
+    wbString('Signature', 4, cpCritical),
+    wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
-    wbFormID('{Byte 13-16} FormID', cpFormID),
-    wbByteArray('{Byte 17-20} Version Control Info 1', 4, cpIgnore),
-    wbInteger('{Byte 21-22} Form Version ', itU16, nil, cpNormal),
-    wbByteArray('{Byte 23-24} Version Control Info 2 (Possible Flag)', 2, cpIgnore)
+    wbFormID('FormID', cpFormID),
+    wbByteArray('Version Control Info 1', 4, cpIgnore),
+    wbInteger('Form Version', itU16, nil, cpIgnore),
+    wbByteArray('Version Control Info 2', 2, cpIgnore)
   ]);
-//----------------------------------------------------------------------------
-// Old Routine
-//----------------------------------------------------------------------------
-//  wbMainRecordHeader := wbStruct('Record Header', [
-//    wbString('Signature', 4, cpCritical),
-//    wbInteger('Data Size', itU32, nil, cpIgnore),
-//    wbRecordFlags,
-//    wbFormID('FormID', cpFormID),
-//    wbByteArray('Version Control Info 1', 4, cpIgnore),
-//    wbInteger('Form Version', itU16, nil, cpIgnore),
-//    wbByteArray('Version Control Info 2', 2, cpIgnore)
-//  ]);
 
   wbSizeOfMainRecordStruct := 24;
 
@@ -4455,28 +4418,11 @@ begin
     'ReloadZ'
   ]);
 
-  wbEDID    := wbString(EDID, 'Editor ID', 0, cpBenign);
+  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpBenign, True);
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-//  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
-  wbFULL := wbString(FULL, 'Name', 0, cpNormal);
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-//  wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
-  wbFULLActor := wbString(FULL, 'Name', 0, cpNormal, False, wbActorTemplateUseBaseData);
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
+  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
+  wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
   wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-  wbFULLFact := wbString(FULL, 'Name', 0, cpNormal, True);
-
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
@@ -6881,10 +6827,11 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbXNAM := wbStructSK(XNAM, [0], 'Relation', [
-    wbFormIDCkNoReach('Opposing/iated Faction', [FACT]),
-    wbByteArray('Unknown', 4),
-    wbInteger('Group Combat Reaction', itU32, wbEnum([
+  wbXNAM :=
+    wbStructSK(XNAM, [0], 'Relation', [
+      wbFormIDCkNoReach('Faction', [FACT, RACE]),
+      wbInteger('Modifier', itS32),
+      wbInteger('Group Combat Reaction', itU32, wbEnum([
       {0x00000001}'Ally',
       {0x00000002}'Friend',
       {0x00000004}'Neutral',
@@ -7033,104 +6980,7 @@ begin
     ]),
 //    wbUnknown(PLVD),
     wbCITC,
-//------------------------------------------------------------------------------
-// 32 Bytes -- 8 itU32
-// Vender Conditions
-//   Condition
-//     CTDA - Unknown: 20 00 00 00 00 00 80 3F 2F 00 00 00 5E 4C 03 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF
-//   Condition
-//     CTDA - Unknown: 00 00 00 00 00 00 80 3F C0 01 00 00 80 36 0C 00 00 00 00 00 01 00 00 00 00 00 00 00 FF FF FF FF
-    wbRArray('Vender Conditions',
-      wbStruct(CTDA, 'Condition Flags', [
-        wbInteger('{Byte 1-4} Comparison', itU32, wbFlags([
-          {0x00000001}'Use OR',
-          {0x00000002}'Parameters - Use Aliases',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Parameters - Use Pack Data',
-          {0x00000010}'Swap Subject and Target',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000001}'Unknown 9',
-          {0x00000002}'Unknown 10',
-          {0x00000004}'Unknown 11',
-          {0x00000008}'Unknown 12',
-          {0x00000010}'Unknown 13',
-          {0x00000020}'Unknown 14',
-          {0x00000040}'Unknown 15',
-          {0x00008000}'Unknown 16',
-          {0x00010000}'Unknown 17',
-          {0x00020000}'Unknown 18',
-          {0x00040000}'Unknown 19',
-          {0x00080000}'Unknown 20',
-          {0x00100000}'Unknown 21',
-          {0x00200000}'Unknown 22',
-          {0x00400000}'Unknown 23',
-          {0x00800000}'Unknown 24',
-          {0x01000000}'Unknown 25',
-          {0x02000000}'Unknown 26',
-          {0x03000000}'Unknown 27',
-          {0x08000000}'Unknown 28',
-          {0x10000000}'Unknown 29',
-          {0x20000000}'Unknown 30',
-          {0x40000000}'Unknown 31',
-          {0x80000000}'Unknown 32'
-        ])),
-// Run On:
-// Subject
-// Target
-// Reference
-// Combat Target
-// Linked Reference
-// Quest Alias
-// Package Data
-// Event Data
-// Player
-// Booleans
-// Parameters - Use Aliases
-// Parameters - Use Pack Data
-// Swap Subject and Target
-// Use Global
-// OR - Instead of And
-//------------------------------------------------------------------------------
-// wbFACTCompValueDecider
-// Replaces Unknown 2
-//------------------------------------------------------------------------------
-//      wbUnion('Condition Value', wbFACTCompValueDecider, [
-//        wbFloat('Float'),
-//        wbFormID('Global')
-//      ]),
-      {02} wbByteArray('Unknown 2', 4),
-      {02} wbByteArray('Unknown 3', 4),
-           wbFormID('Unknown'),
-//      {02} wbByteArray('Unknown 4', 4),
-      {02} wbByteArray('Unknown 5', 4),
-      {02} wbByteArray('Unknown 6', 4),
-      {02} wbByteArray('Unknown 7', 4),
-      {02} wbByteArray('Unknown 8', 4)
-//        wbFormIDCk('Sound', [SOUN]),
-//        wbInteger('Chance', itU8),
-//        wbByteArray('Unused', 3),
-//        wbInteger('Type', itU32, wbEnum([], [
-//          19, 'Run',
-//          21, 'Run (Armor)',
-//          18, 'Sneak',
-//          20, 'Sneak (Armor)',
-//          17, 'Walk',
-//          22, 'Walk (Armor)'
-//        ]))
-      ])
-    )
-//    wbRArray('Vender Conditions', wbRStruct('Condition', [
-//      {02} wbByteArray('Unknown 2', 4),
-//      {02} wbByteArray('Unknown 2', 4),
-//      {02} wbByteArray('Unknown 2', 4),
-//      {02} wbByteArray('Unknown 2', 4),
-//      {02} wbByteArray('Unknown 2', 4),
-//      {02} wbByteArray('Unknown 2', 4),
-//      {02} wbByteArray('Unknown 2', 4),
-//      {02} wbByteArray('Unknown 2', 4)
-//      ], []))
+	  wbCTDAs
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
 //----------------------------------------------------------------------------
@@ -9310,7 +9160,7 @@ begin
 
   wbRecord(LVLN, 'Leveled NPC', [
     wbEDIDReq,
-    wbOBNDUnused,
+    wbOBNDReq,
     wbLVLD,
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
@@ -9336,7 +9186,7 @@ begin
 
   wbRecord(LVLI, 'Leveled Item', [
     wbEDIDReq,
-    wbOBNDUnused,
+    wbOBNDReq,
     wbLVLD,
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
@@ -9397,7 +9247,7 @@ begin
 //----------------------------------------------------------------------------------
    wbRecord(LVSP, 'Leveled Spell', [
     wbEDIDReq,
-    wbOBNDUnused,
+    wbOBNDReq,
     wbLVLD,
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
@@ -11242,15 +11092,14 @@ begin
     wbUnknown(DNAM)
  ]);
 
-//-----------------------------------------------------------------------------
-// Begin New Header
-//-----------------------------------------------------------------------------
   wbRecord(TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
-      wbFloat('{Byte  1-4} Version'),
-      wbInteger('{Byte  5-8} Number of Records', itU32),
-      wbByteArray('{Byte 9-12} Unknown Data', 4, cpIgnore)
+      wbFloat('Version'),
+      wbInteger('Number of Records', itU32),
+      wbByteArray('Next Object ID', 4)
     ], cpNormal, True),
+    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
+    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
@@ -11258,35 +11107,9 @@ begin
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], [ONAM])),
     wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
-    wbUnknown(INTV),
-    wbUnknown(INCC)
-  ], True, nil, cpNormal, True);
-
-//-----------------------------------------------------------------------------
-// End New Header
-// Begin Old Header
-//-----------------------------------------------------------------------------
-//  wbRecord(TES4, 'Main File Header', [
-//    wbStruct(HEDR, 'Header', [
-//      wbFloat('Version'),
-//      wbInteger('Number of Records', itU32),
-//      wbInteger('Next Object ID', itU32)
-//    ], cpNormal, True),
-//    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
-//    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
-//    wbString(CNAM, 'Author', 0, cpTranslate, True),
-//    wbString(SNAM, 'Description', 0, cpTranslate),
-//    wbRArray('Master Files', wbRStruct('Master File', [
-//      wbString(MAST, 'Filename', 0, cpNormal, True),
-//      wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
-//    ], [ONAM])),
-//    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
-//    wbByteArray(SCRN, 'Screenshot'),
-//    wbUnknown(INTV)
-//  ], True, nil, cpNormal, True, wbRemoveOFST);
-//-----------------------------------------------------------------------------
-//End old Header
-//-----------------------------------------------------------------------------
+    wbByteArray(SCRN, 'Screenshot'),
+    wbUnknown(INTV)
+  ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
