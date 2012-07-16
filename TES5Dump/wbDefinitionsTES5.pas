@@ -699,6 +699,9 @@ var
   wbBoolU8: IwbIntegerDef;
   wbBoolU16: IwbIntegerDef;
   wbBoolU32: IwbIntegerDef;
+  wbScriptEntry: IwbStructDef;
+  wbPropTypeEnum: IwbEnumDef;
+  wbScriptObject: IwbStructDef;
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbMODT: IwbSubRecordDef;
@@ -2147,6 +2150,33 @@ begin
     if Integer(Container.ElementNativeValues['..\DATA\Entry Point\Function']) = 5 then
       Result := 5;
 end;
+
+function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+begin
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+
+  if not Assigned(Container) then Exit;
+
+  Result := 0;
+  case Integer(Container.ElementNativeValues['propertyType']) of
+     1: Result := 1;
+     2: Result := 2;
+     3: Result := 3;
+     4: Result := 4;
+     5: Result := 5;
+    11: Result := 6;
+    12: Result := 7;
+    13: Result := 8;
+    14: Result := 9;
+    15: Result := 10;
+  end;
+end;
+
 
 type
   TCTDAFunctionParamType = (
@@ -4469,24 +4499,60 @@ begin
     wbInteger('Z2', itS16)
   ]), 1, nil, nil, cpNormal, True);
 
+  wbPropTypeEnum := wbEnum([
+    {00} '',
+    {01} 'Object',
+    {02} 'String',
+    {03} 'Int32',
+    {04} 'Float',
+    {05} 'Bool',
+    {06} '',
+    {07} '',
+    {08} '',
+    {09} '',
+    {10} '',
+    {11} 'Array of Object',
+    {12} 'Array of String',
+    {13} 'Array of Int32',
+    {14} 'Array of Float',
+    {15} 'Array of Bool'
+  ]);
+
+  wbScriptObject := wbStruct('Object', [
+    wbInteger('unused', itU16),
+    wbInteger('AliasID', itU16),
+    wbFormID('FormID')
+  ]);
+
+  wbScriptEntry := wbStruct('Script', [
+    wbWString('scriptName'),
+    wbInteger('unknown', itU8),
+    //wbInteger('propertyCount', itU16),
+    wbArray('Properties', wbStruct('Property', [
+      wbWString('propertyName'),
+      wbInteger('propertyType', itU8, wbPropTypeEnum),
+      wbInteger('unknown', itU8),
+      wbUnion('Value', wbScriptPropertyDecider, [
+        {00} wbStruct('Data', [wbUnknown]),
+        {01} wbByteArray('Data', 8), {wbScriptObject,}
+        {02} wbWString('Data'),
+        {03} wbInteger('Data', itU32),
+        {04} wbFloat('Data'),
+        {05} wbInteger('Data', itU8),
+        {11} wbArray('Data', wbByteArray('Element', 8), -1),
+        {12} wbArray('Data', wbWString('Element'), -1),
+        {13} wbArray('Data', wbInteger('Element', itU32), -1),
+        {14} wbArray('Data', wbFloat('Element'), -1),
+        {15} wbArray('Data', wbInteger('Element', itU8), -1)
+      ])
+    ]), -2)
+  ]);
+
   wbVMAD := wbStruct(VMAD, 'VMAD - Papyrus Script Data', [
     wbInteger('version', itS16),
     wbInteger('objFormat', itS16),
     wbInteger('scriptCount', itU16),
-    wbByteArray('Scripts')
-    // dump code script data parser not working (too dynamic I guess), needs manual parse in AfterLoad callback
-    {wbArray('Scripts', wbStruct('Script entry', [
-      wbWString('scriptName'),
-      wbInteger('unknown', itU8),
-      wbInteger('propertyCount', itU16),
-      wbArray('Properties', wbStruct('Property entry', [
-        wbWString('propertyName'),
-        wbInteger('propertyType', itU8),
-        wbInteger('unknown3', itU8),
-        wbByteArray('propertyData', 0)
-        //wbInteger('data', itS16) // temp placeholder, variable length depending on type
-      ]), [], wbVMADScriptPropertyCount)
-    ]), [], wbVMADScriptCount)}
+    wbArray('Scripts', wbScriptEntry)
   ]);
 
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
