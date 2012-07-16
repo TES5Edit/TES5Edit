@@ -84,7 +84,9 @@ Values for FLTV may need a wbGLOBUnionDecider.
 
 == FACT ==
 
-Has only rough definition. Check later for an update.
+More definitions added.  Location reference (shown below) can be set from the Vendor tab when editing the Faction.  The field I assigned "Location Type Flag" changes depending on which radial dot you select.  The field labeled "Location Type" is currently using an Integer value but, It is unclear if should be an integer or Flag.  Some of the radial dots are always greyed out and choosing "PackData Target" crashes the CK.
+
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/DecodeFACTLocation.jpg
 
 == MGEF ==
 
