@@ -708,6 +708,7 @@ var
   wbKWDAs: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbCNAM: IwbSubRecordDef;
+  wbCITC: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -2518,6 +2519,24 @@ begin
     Result := 1;
 end;
 
+//------------------------------------------------------------------------------
+// Faction Union Decider for Float or Global
+//------------------------------------------------------------------------------
+function wbFACTCompValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container: IwbContainer;
+begin
+//  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if Integer(Container.ElementByName['Type'].NativeValue) and $04 = 0 then
+    Result := 0
+  else
+    Result := 1;
+end;
+
 function wbCTDAParam1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Desc: PCTDAFunction;
@@ -4235,7 +4254,7 @@ begin
   wbCOCT:= wbInteger(COCT, 'Count', itU32);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
-  wbCNAM:= wbStruct(XCLP, 'Linked Reference Color', [
+  wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
              wbStruct('Link Start Color', [
                wbInteger('Red', itU8),
                wbInteger('Green', itU8),
@@ -4243,43 +4262,45 @@ begin
                wbByteArray('Unused', 1)
              ])
            ]);
+  wbCITC:= wbInteger(CITC, 'Count', itU32);
+
 //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
 
   wbRecordFlags := wbInteger('{Byte  9-12} Record Flags', itU32, wbFlags([
-    {0x00000001}'0x00000001 *ESM',
-    {0x00000002}'0x00000002 *Unknown 2',
-    {0x00000004}'0x00000004 *Unknown 3',
-    {0x00000008}'0x00000008 *Unknown 4',
-    {0x00000010}'0x00000010 *Unknown 5',
-    {0x00000020}'0x00000020 *Deleted 6',
-    {0x00000040}'0x00000040 *Border Region / Has Tree LOD / Constant / Hidden From Local Map',
-    {0x00000080}'0x00000080 *Turn Off Fire',
-    {0x00000100}'0x00000100 *Inaccessible',
-    {0x00000200}'0x00000200 *Casts shadows / On Local Map / Motion Blur',
-    {0x00000400}'0x00000400 *Quest item / Persistent reference',
-    {0x00000800}'0x00000800 *Initially disabled',
-    {0x00001000}'0x00001000 *Ignored',
-    {0x00002000}'0x00002000 *No Voice Filter',
-    {0x00004000}'0x00004000 *Unknown 15',
-    {0x00008000}'0x00008000 *Visible when distant',
-    {0x00010000}'0x00010000 *Random Anim Start / High Priority LOD',
-    {0x00020000}'0x00020000 *Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
-    {0x00040000}'0x00040000 *Compressed',
-    {0x00080000}'0x00080000 *Can''t wait / Platform Specific Texture',
-    {0x00100000}'0x00100000 *Unknown 21',
-    {0x00200000}'0x00200000 *Unknown 22',
-    {0x00400000}'0x00400000 *Unknown 23',
-    {0x00800000}'0x00800000 *Unknown 24',
-    {0x01000000}'0x01000000 *Unknown 25',
-    {0x02000000}'0x02000000 *Obstacle / No AI Acquire',
-    {0x03000000}'0x03000000 *NavMesh Generation - Filter',
-    {0x08000000}'0x08000000 *NavMesh Generation - Bounding Box',
-    {0x10000000}'0x10000000 *Non-Pipboy / Reflected by Auto Water',
-    {0x20000000}'0x20000000 *Child Can Use / Refracted by Auto Water',
-    {0x40000000}'0x40000000 *NavMesh Generation - Ground',
-    {0x80000000}'0x80000000 *Unknown 32'
+    {0x00000001}'ESM',
+    {0x00000002}'Unknown 2',
+    {0x00000004}'Unknown 3',
+    {0x00000008}'Unknown 4',
+    {0x00000010}'Unknown 5',
+    {0x00000020}'Unknown 6',
+    {0x00000040}'Unknown 7',
+    {0x00000080}'Unknown 8',
+    {0x00000100}'Unknown 9',
+    {0x00000200}'Unknown 10',
+    {0x00000400}'Unknown 11',
+    {0x00000800}'Unknown 12',
+    {0x00001000}'Unknown 13',
+    {0x00002000}'Unknown 14',
+    {0x00004000}'Unknown 15',
+    {0x00008000}'Unknown 16',
+    {0x00010000}'Unknown 17',
+    {0x00020000}'Unknown 18',
+    {0x00040000}'Unknown 19',
+    {0x00080000}'Unknown 20',
+    {0x00100000}'Unknown 21',
+    {0x00200000}'Unknown 22',
+    {0x00400000}'Unknown 23',
+    {0x00800000}'Unknown 24',
+    {0x01000000}'Unknown 25',
+    {0x02000000}'Unknown 26',
+    {0x03000000}'Unknown 27',
+    {0x08000000}'Unknown 28',
+    {0x10000000}'Unknown 29',
+    {0x20000000}'Unknown 30',
+    {0x40000000}'Unknown 31',
+    {0x80000000}'Unknown 32'
   ]));
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
@@ -4324,12 +4345,12 @@ begin
 //----------------------------------------------------------------------------
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('{Byte   1-4} Signature', 4, cpCritical),
-    wbByteArray('{Byte   5-8} Unknon Data', 4, cpIgnore),
+    wbInteger('{Byte   5-8} Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
     wbFormID('{Byte 13-16} FormID', cpFormID),
-    wbByteArray('{Byte 17-20} Unknon Data', 4, cpIgnore),
+    wbByteArray('{Byte 17-20} Version Control Info 1', 4, cpIgnore),
     wbInteger('{Byte 21-22} Form Version ', itU16, nil, cpNormal),
-    wbByteArray('{Byte 23-24} Unknon Data (Possible Flag)', 2, cpIgnore)
+    wbByteArray('{Byte 23-24} Version Control Info 2 (Possible Flag)', 2, cpIgnore)
   ]);
 //----------------------------------------------------------------------------
 // Old Routine
@@ -4410,11 +4431,13 @@ begin
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
+//  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
+  wbFULL := wbString(FULL, 'Name', 0, cpNormal);
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-  wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
+//  wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
+  wbFULLActor := wbString(FULL, 'Name', 0, cpNormal, False, wbActorTemplateUseBaseData);
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -6792,21 +6815,20 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbXNAM :=
-    wbStructSK(XNAM, [0], 'Relation', [
-//    wbFormIDCkNoReach('Faction', [FACT]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-//    wbInteger('Modifier', itS32),
-//    wbInteger('Group Combat Reaction', itU32, wbEnum([
-//      'Neutral',
-//      'Enemy',
-//      'Ally',
-//      'Friend'
-//    ]))
-    ]);
-
+  wbXNAM := wbStructSK(XNAM, [0], 'Relation', [
+    wbFormIDCkNoReach('Opposing/iated Faction', [FACT]),
+    wbByteArray('Unknown', 4),
+    wbInteger('Group Combat Reaction', itU32, wbEnum([
+      {0x00000001}'Ally',
+      {0x00000002}'Friend',
+      {0x00000004}'Neutral',
+      {0x00000008}'Enemy',
+      {0x00000010}'Unknown 5',
+      {0x00000020}'Unknown 6',
+      {0x00000040}'Unknown 7',
+      {0x00000080}'Unknown 8'
+    ]))
+  ]);
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
   wbRecord(FACT, 'Faction', [
@@ -6814,13 +6836,244 @@ begin
 // General Tab ---------------------------------------------------------------
     wbFULL,
     wbXNAMs,
-    wbUnknown(DATA),
+    wbStruct(DATA, 'Flags', [
+      wbInteger('{Byte 1-4} Flags', itU32, wbFlags([
+        {0x00000001}'Hidden From NPC',
+        {0x00000002}'Special Combat',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+// Track Crime ---------------------------------------------------------------
+        {0x00000040}'Track Crime',
+// Ignores Crimes Against non-members ----------------------------------------
+//   Murder - Flag -----------------------------------------------------------
+//   Assult - Flag -----------------------------------------------------------
+//   Stealing - Flag ---------------------------------------------------------
+//   Trespass - Flag ---------------------------------------------------------
+//   Do not report crimes against members - Flag -----------------------------
+//   Pickpocket - Flag -------------------------------------------------------
+//   WereWolf - Flag ---------------------------------------------------------
+        {0x00000080}'Murder',
+        {0x00000100}'Assult',
+        {0x00000200}'Stealing',
+        {0x00000400}'Trespass',
+        {0x00000800}'Do Not Report Crimes Against Members',
+        {0x00001000}'Crime Gold - Use Defaults',
+        {0x00002000}'Pickpocket',
+        {0x00004000}'Vendor',
+        {0x00008000}'Can Be Owner',
+        {0x00010000}'Werewolf',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ]))
+    ], cpNormal, True, nil, 1),
+//    wbStruct(DATA, '', [
+//      wbInteger('Flags 1', itU8, wbFlags([
+//        'Hidden from PC',
+//        'Evil',
+//        'Special Combat'
+//      ])),
+//      wbInteger('Flags 2', itU8, wbFlags([
+//        'Track Crime',
+//        'Allow Sell'
+//      ])),
+//      wbByteArray('Unused', 2)
+//    ], cpNormal, True, nil, 1),
     wbFormID(JAIL, 'Unknown'),
     wbFormID(WAIT, 'Unknown'),
     wbFormID(STOL, 'Unknown'),
     wbFormID(PLCN, 'Unknown'),
     wbFormID(CRGR, 'Unknown'),
     wbFormID(JOUT, 'Unknown'),
+//    wbFloat(CNAM, 'Unused'),
+//     Crime Gold ------------------------------------------------------------
+//       Murder - Int --------------------------------------------------------
+//       Assult - Int --------------------------------------------------------
+//       Pickpocket - Int ----------------------------------------------------
+//       Trespass - Int ------------------------------------------------------
+//       Steal Mult. - Float -------------------------------------------------
+//       Escape - Int --------------------------------------------------------
+//       Werewolf - Int ------------------------------------------------------
+    wbStruct(CRVA, 'Grime Gold', [
+      {01} wbInteger('Arrest', itU8, wbEnum(['False', 'True'])),
+      {02} wbInteger('Attack On Sight', itU8, wbEnum(['False', 'True'])),
+      {02} wbInteger('Murder', itU16),
+      {02} wbInteger('Assult', itU16),
+      {02} wbInteger('Trespass', itU16),
+      {02} wbInteger('Pickpocket', itU16),
+      {02} wbInteger('Unknown', itU16),
+      {02} wbFloat('Steal Multiplier'),
+      {02} wbInteger('Escape', itU16),
+      {02} wbInteger('Werewolf', itU16)
+      ]),
+// Ranks Tab ------------------------------------------------------------------
+    wbRStructsSK('Ranks', 'Rank', [0], [
+      wbInteger(RNAM, 'Rank#', itU32),
+      wbString(MNAM, 'Male', 0, cpTranslate),
+      wbString(FNAM, 'Female', 0, cpTranslate),
+      wbString(INAM, 'Insignia Unused')
+    ], []),
+//    wbFormIDCk(WMI1, 'Reputation', [REPU])
+// Crime Tab ------------------------------------------------------------------
+// Track Crime ---------------------------------------------------------------
+//   Exterior Jail Marker ----------------------------------------------------
+//   Follower Wait Marker ----------------------------------------------------
+//   Stolen Goods Container --------------------------------------------------
+//   Player Inventory Container ----------------------------------------------
+//   Shared Crime Faction List -----------------------------------------------
+//   Attack On Site - Flag ---------------------------------------------------
+//   Arrest - Flag -----------------------------------------------------------
+// Vendor Tab -----------------------------------------------------------------
+    wbFormID(VEND, 'Vendor Buy/Sell List'),
+    wbFormID(VENC, 'Merchant Container'),
+// VENV - Unknown: 01 00 02 00 00 00 00 00 00 01 00 00
+// 12 bytes or six intU16
+//    wbUnknown(VENV),
+    wbStruct(VENV, 'Grime Gold', [
+      {01} wbInteger('Start Hour', itU16),
+      {02} wbInteger('End Hour', itU16),
+      {02} wbInteger('Radius', itU16),
+      {02} wbByteArray('Unknown 1', 2),
+             wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
+             wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
+      {02} wbByteArray('Unknown 2', 2)
+      ]),
+    wbStruct(PLVD, 'Location', [
+      wbInteger('Location Type', itU8, wbEnum([], [
+          0, 'Near Reference',
+          1, 'In Cell',
+          2, 'Near Packafe Start Location',
+          3, 'Near Editor Location',
+          6, 'KYWD Reference',
+          12, 'Near Self'
+        ])),
+      wbByteArray('Unknown 1', 3),
+      wbFormID('Location Reference'),
+      wbByteArray('Unknown 2', 4)
+    ]),
+//    wbUnknown(PLVD),
+    wbCITC,
+//------------------------------------------------------------------------------
+// 32 Bytes -- 8 itU32
+// Vender Conditions
+//   Condition
+//     CTDA - Unknown: 20 00 00 00 00 00 80 3F 2F 00 00 00 5E 4C 03 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF
+//   Condition
+//     CTDA - Unknown: 00 00 00 00 00 00 80 3F C0 01 00 00 80 36 0C 00 00 00 00 00 01 00 00 00 00 00 00 00 FF FF FF FF
+    wbRArray('Vender Conditions',
+      wbStruct(CTDA, 'Condition Flags', [
+        wbInteger('{Byte 1-4} Comparison', itU32, wbFlags([
+          {0x00000001}'Use OR',
+          {0x00000002}'Parameters - Use Aliases',
+          {0x00000004}'Unknown 3',
+          {0x00000008}'Parameters - Use Pack Data',
+          {0x00000010}'Swap Subject and Target',
+          {0x00000020}'Unknown 6',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8',
+          {0x00000001}'Unknown 9',
+          {0x00000002}'Unknown 10',
+          {0x00000004}'Unknown 11',
+          {0x00000008}'Unknown 12',
+          {0x00000010}'Unknown 13',
+          {0x00000020}'Unknown 14',
+          {0x00000040}'Unknown 15',
+          {0x00008000}'Unknown 16',
+          {0x00010000}'Unknown 17',
+          {0x00020000}'Unknown 18',
+          {0x00040000}'Unknown 19',
+          {0x00080000}'Unknown 20',
+          {0x00100000}'Unknown 21',
+          {0x00200000}'Unknown 22',
+          {0x00400000}'Unknown 23',
+          {0x00800000}'Unknown 24',
+          {0x01000000}'Unknown 25',
+          {0x02000000}'Unknown 26',
+          {0x03000000}'Unknown 27',
+          {0x08000000}'Unknown 28',
+          {0x10000000}'Unknown 29',
+          {0x20000000}'Unknown 30',
+          {0x40000000}'Unknown 31',
+          {0x80000000}'Unknown 32'
+        ])),
+// Run On:
+// Subject
+// Target
+// Reference
+// Combat Target
+// Linked Reference
+// Quest Alias
+// Package Data
+// Event Data
+// Player
+// Booleans
+// Parameters - Use Aliases
+// Parameters - Use Pack Data
+// Swap Subject and Target
+// Use Global
+// OR - Instead of And
+//------------------------------------------------------------------------------
+// wbFACTCompValueDecider
+// Replaces Unknown 2
+//------------------------------------------------------------------------------
+//      wbUnion('Condition Value', wbFACTCompValueDecider, [
+//        wbFloat('Float'),
+//        wbFormID('Global')
+//      ]),
+      {02} wbByteArray('Unknown 2', 4),
+      {02} wbByteArray('Unknown 3', 4),
+           wbFormID('Unknown'),
+//      {02} wbByteArray('Unknown 4', 4),
+      {02} wbByteArray('Unknown 5', 4),
+      {02} wbByteArray('Unknown 6', 4),
+      {02} wbByteArray('Unknown 7', 4),
+      {02} wbByteArray('Unknown 8', 4)
+//        wbFormIDCk('Sound', [SOUN]),
+//        wbInteger('Chance', itU8),
+//        wbByteArray('Unused', 3),
+//        wbInteger('Type', itU32, wbEnum([], [
+//          19, 'Run',
+//          21, 'Run (Armor)',
+//          18, 'Sneak',
+//          20, 'Sneak (Armor)',
+//          17, 'Walk',
+//          22, 'Walk (Armor)'
+//        ]))
+      ])
+    )
+//    wbRArray('Vender Conditions', wbRStruct('Condition', [
+//      {02} wbByteArray('Unknown 2', 4),
+//      {02} wbByteArray('Unknown 2', 4),
+//      {02} wbByteArray('Unknown 2', 4),
+//      {02} wbByteArray('Unknown 2', 4),
+//      {02} wbByteArray('Unknown 2', 4),
+//      {02} wbByteArray('Unknown 2', 4),
+//      {02} wbByteArray('Unknown 2', 4),
+//      {02} wbByteArray('Unknown 2', 4)
+//      ], []))
+  ], False, nil, cpNormal, False, wbFACTAfterLoad);
+
+//----------------------------------------------------------------------------
+// Begin Old FACT
+//----------------------------------------------------------------------------
+//  wbRecord(FACT, 'Faction', [
+//    wbEDIDReq,
+//    wbFULL,
+//    wbXNAMs,
 //    wbStruct(DATA, '', [
 //      wbInteger('Flags 1', itU8, wbFlags([
 //        'Hidden from PC',
@@ -6834,48 +7087,17 @@ begin
 //      wbByteArray('Unused', 2)
 //    ], cpNormal, True, nil, 1),
 //    wbFloat(CNAM, 'Unused'),
-    wbUnknown(CRVA),
-// Ranks Tab ------------------------------------------------------------------
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itU32),
-      wbUnknown(MNAM),
-      wbUnknown(FNAM),
-      wbString(INAM, 'Insignia Unused')
-    ], []),
+//    wbRStructsSK('Ranks', 'Rank', [0], [
+//      wbInteger(RNAM, 'Rank#', itS32),
+//      wbString(MNAM, 'Male', 0, cpTranslate),
+//      wbString(FNAM, 'Female', 0, cpTranslate),
+//      wbString(INAM, 'Insignia (Unused)')
+//    ], []),
 //    wbFormIDCk(WMI1, 'Reputation', [REPU])
-// Crime Tab ------------------------------------------------------------------
-// Ignores Crimes Against non-members ----------------------------------------
-//   Murder - Flag -----------------------------------------------------------
-//   Assult - Flag -----------------------------------------------------------
-//   Pickpocket - Flag -------------------------------------------------------
-//   Stealing - Flag ---------------------------------------------------------
-//   Trespass - Flag ---------------------------------------------------------
-//   WereWolf - Flag ---------------------------------------------------------
-//   Do not report crimes against members - Flag -----------------------------
-// Track Crime ---------------------------------------------------------------
-//   Exterior Jail Marker ----------------------------------------------------
-//   Follower Wait Marker ----------------------------------------------------
-//   Stolen Goods Container --------------------------------------------------
-//   Player Inventory Container ----------------------------------------------
-//   Shared Crime Faction List -----------------------------------------------
-//   Attack On Site - Flag ---------------------------------------------------
-//   Arrest - Flag -----------------------------------------------------------
-//     Crime Gold ------------------------------------------------------------
-//       Murder - Int --------------------------------------------------------
-//       Assult - Int --------------------------------------------------------
-//       Pickpocket - Int ----------------------------------------------------
-//       Trespass - Int ------------------------------------------------------
-//       Steal Mult. - Float -------------------------------------------------
-//       Escape - Int --------------------------------------------------------
-//       Werewolf - Int ------------------------------------------------------
-// Vendor Tab -----------------------------------------------------------------
-    wbFormID(VEND, 'Unknown'),
-    wbFormID(VENC, 'Unknown'),
-    wbUnknown(VENV),
-    wbUnknown(PLVD),
-    wbUnknown(CITC),
-    wbUnknown(CTDA)
-  ], False, nil, cpNormal, False, wbFACTAfterLoad);
+//  ], False, nil, cpNormal, False, wbFACTAfterLoad);
+//----------------------------------------------------------------------------
+// End Old FACT
+//----------------------------------------------------------------------------
 
   wbRecord(FURN, 'Furniture', [
     wbEDIDReq,
@@ -6981,9 +7203,9 @@ begin
    {21}       wbFloat('Shininess'),
               wbStruct('Parallax', [
    {25}         wbFloat('Scale'),
-   {29}         wbInteger('Passes', itU8) {This can't be higher than 30}
+   {29}         wbInteger('{Byte 29 - Value can not excede 30} Passes', itU8) {This can't be higher than 30}
               ]),
-   {30}       wbInteger('Flags', itU8, wbFlags([
+   {30}       wbInteger('{Byte 30} Flags', itU8, wbFlags([
                 {0x00000001}'Parallax',
                 {0x00000002}'Alpha - Blending',
                 {0x00000004}'Alpha - Testing',
@@ -10957,20 +11179,11 @@ begin
 //-----------------------------------------------------------------------------
 // Begin New Header
 //-----------------------------------------------------------------------------
-  wbCNAM:= wbStruct(XCLP, 'Linked Reference Color', [
-             wbStruct('Link Start Color', [
-               wbInteger('Red', itU8),
-               wbInteger('Green', itU8),
-               wbInteger('Blue', itU8),
-               wbByteArray('Unused', 1)
-             ])
-           ]);
-
   wbRecord(TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('{Byte  1-4} Version'),
       wbInteger('{Byte  5-8} Number of Records', itU32),
-      wbByteArray('{Byte 9-12} Unknown', 4)
+      wbByteArray('{Byte 9-12} Unknown Data', 4, cpIgnore)
     ], cpNormal, True),
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
