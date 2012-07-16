@@ -2058,10 +2058,8 @@ end;
 
 
 //----------------------------------------------------------------------------
-// 's': Added since GMST does contain strings originally removed by ElminsterAU
-//    : After looking at this more it may be a pointer to the localization files
-// 'b': Boolean Previously undefined does exists in Vanilla Files
-// 'r', 'h', 'c', 'u', 'a': Added to capture future Bethesda implimentation
+// 's': Added since GMST does contain strings however the strings are in the 
+//      localization files.
 //
 //----------------------------------------------------------------------------
 function wbGMSTUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
