@@ -522,6 +522,9 @@ type
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
 
+    function GetIsLocalized: Boolean;
+    procedure SetIsLocalized(Value: Boolean);
+
 
     {---IwbFileInternal---}
     procedure AddMainRecord(aRecord: IwbMainRecord);
@@ -846,6 +849,8 @@ type
 
     function GetIsESM: Boolean;
     procedure SetIsESM(aValue: Boolean);
+    function GetIsLocalized: Boolean;
+    procedure SetIsLocalized(aValue: Boolean);
     function GetIsPersistent: Boolean;
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
@@ -2319,6 +2324,16 @@ begin
   Result := Header.IsESM;
 end;
 
+function TwbFile.GetIsLocalized: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Header.IsLocalized;
+end;
+
 function TwbFile.GetIsRemoveable: Boolean;
 begin
   Result := False;
@@ -2921,6 +2936,21 @@ begin
       raise Exception.Create('File "'+GetFileName+'" is not editable');
 
     Header.IsESM := Value;
+  end;
+end;
+
+procedure TwbFile.SetIsLocalized(Value: Boolean);
+var
+  Header         : IwbMainRecord;
+begin
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Value <> Header.IsLocalized then begin
+    if not IsElementEditable(nil) then
+      raise Exception.Create('File "'+GetFileName+'" is not editable');
+
+    Header.IsLocalized := Value;
   end;
 end;
 
@@ -5888,6 +5918,11 @@ begin
   Result := GetFlags.IsESM;
 end;
 
+function TwbMainRecord.GetIsLocalized: Boolean;
+begin
+  Result := GetFlags.IsLocalized;
+end;
+
 function TwbMainRecord.GetIsInitiallyDisabled: Boolean;
 begin
   Result := GetFlags.IsInitiallyDisabled;
@@ -7206,6 +7241,14 @@ begin
   if aValue <> GetIsESM then begin
     MakeHeaderWriteable;
     GetFlagsPtr.SetESM(aValue);
+  end;
+end;
+
+procedure TwbMainRecord.SetIsLocalized(aValue: Boolean);
+begin
+  if aValue <> GetIsLocalized then begin
+    MakeHeaderWriteable;
+    GetFlagsPtr.SetLocalized(aValue);
   end;
 end;
 
