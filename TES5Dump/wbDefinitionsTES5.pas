@@ -2238,7 +2238,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..249] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..250] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2440,6 +2440,7 @@ const
     (Index: 436; Name: 'GetDialogueEmotionValue'),
     (Index: 438; Name: 'GetIsCreatureType'; ParamType1: ptCreatureType),
     (Index: 446; Name: 'GetInZone'; ParamType1: ptEncounterZone),
+{New}(Index: 448; Name: 'CanFlyHere'; ParamType1: ptEncounterZone{Correct}),
     (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger{Alt?}),
     (Index: 450; Name: 'GetFactionRelation'; ParamType1: ptActor),
     (Index: 451; Name: 'IsLastIdlePlayed'; ParamType1: ptIdleForm),
@@ -5461,6 +5462,21 @@ begin
       wbActorValue
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
+//------------------------------------------------------------------------------
+// Begin wbCTDA
+//------------------------------------------------------------------------------
+// 32 Bytes -- 8 itU32
+// Vender Conditions
+//      CTDA - Condition Flags
+//        {Byte 1-4} Comparison
+//        Float: 25.000000
+//        Unknown 3: 2F 00 00 00
+//        Unknown: ALCH - Ingestible [0010D666] <FoodGourd> "Z"
+//        Unknown 5: 00 00 00 00
+//        Unknown 6: 00 00 00 00
+//        Unknown 7: 00 00 00 00
+//        Unknown 8: FF FF FF FF
+
   wbCTDA :=
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
@@ -5628,6 +5644,9 @@ begin
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
       ])
     ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
+//------------------------------------------------------------------------------
+// End wbCTDA
+//------------------------------------------------------------------------------
   wbCTDAs := wbRArray('Conditions', wbCTDA);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
@@ -6978,7 +6997,7 @@ begin
     ]),
 //    wbUnknown(PLVD),
     wbCITC,
-	  wbCTDAs
+    wbCTDAs
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
 //----------------------------------------------------------------------------
