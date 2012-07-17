@@ -4274,9 +4274,8 @@ begin
   wbCOCT:= wbInteger(COCT, 'Count', itU32);
   wbCITC:= wbInteger(CITC, 'Count', itU32);
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
-  wbMODT:= wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
-//  wbKWDA := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
+//  wbKWDA := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
   wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
@@ -4287,7 +4286,44 @@ begin
                wbByteArray('Unused', 1)
              ])
            ]);
+// MODT - Texture Files Hashes:
+//     02 00 00 00
+//     04 00 00 00
+//     00 00 00 00
+//     87 C6 F9 12
+//     64 64 73 00 <-- In Ascii dds
+//     30 07 96 FE
+//     34 76 EC 91
+//     64 64 73 00 <-- In Ascii dds
+//     30 07 96 FE
+//     0F CC 29 04
+//     64 64 73 00 <-- In Ascii dds
+//     30 07 96 FE
+//     DA 8E 92 91
+//     64 64 73 00 <-- In Ascii dds
+//     26 2C 33 3B
 
+  wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
+              wbStruct('Possible Flags', [
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4)
+              ]),
+              // Start of Array
+              // Any way to do this better?
+              wbArrayS('Texture File Parts',
+                wbStruct('Array Parts', [
+                  wbStruct('Array Part 1', [
+                    wbByteArray('Unknown', 4)
+                  ]),
+									wbStruct('Array Part 2 - 64 64 73 00 = dds in ASCII', [
+										wbByteArray('Unknown', 4),
+										wbByteArray('Unknown', 4)
+									])
+								])
+							)
+              // End of Array
+						]);
 //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
@@ -4637,7 +4673,8 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+      wbMODT,
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files Hashes',
 //        wbByteArray('Unknown', 24, cpBenign),
 //        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
@@ -4650,7 +4687,8 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+      wbMODT,
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files Hashes',
 //        wbByteArray('Unknown', 24, cpBenign),
 //        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
@@ -4663,7 +4701,8 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+      wbMODT,
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files',
 //        wbByteArray('Unknown', 24, cpBenign),
 //        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
@@ -7298,18 +7337,31 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbMODL,
-    wbMODT,
+// wbMODT not required, part of wbMODL
     wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x00000001}'Unknown 1',
-      {0x00000002}'Unknown 2',
-      {0x00000004}'Unknown 3',
+      {0x00000001}'Playable',
+      {0x00000002}'Male',
+      {0x00000004}'Female',
       {0x00000008}'Unknown 4',
       {0x00000010}'Unknown 5',
       {0x00000020}'Unknown 6',
       {0x00000040}'Unknown 7',
       {0x00000080}'Unknown 8'
     ]), cpNormal, True),
-    wbUnknown(PNAM),
+    wbStruct(PNAM, 'Part Info', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Unknown 2',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8'
+      ], True)),
+      wbByteArray('Unused', 3)
+    ]),
+//    wbUnknown(PNAM),
     wbRArray('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
