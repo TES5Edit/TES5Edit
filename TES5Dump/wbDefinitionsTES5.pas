@@ -92,6 +92,9 @@ const
   ARMA : TwbSignature = 'ARMA';
   ARMO : TwbSignature = 'ARMO';
   ASPC : TwbSignature = 'ASPC';
+  ATKD : TwbSignature = 'ATKD'; { New to Skyrim }
+  ATKE : TwbSignature = 'ATKE'; { New to Skyrim }
+  ATKR : TwbSignature = 'ATKR'; { New to Skyrim }
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
   AVIF : TwbSignature = 'AVIF';
@@ -395,6 +398,7 @@ const
   POCA : TwbSignature = 'POCA';
   POEA : TwbSignature = 'POEA';
   PRKC : TwbSignature = 'PRKC';
+  PRKZ : TwbSignature = 'PRKZ'; { New to Skyrim }
   PRKR : TwbSignature = 'PRKR'; { New to Skyrim }
   PRKE : TwbSignature = 'PRKE';
   PRKF : TwbSignature = 'PRKF';
@@ -463,6 +467,7 @@ const
   SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN';
   SPEL : TwbSignature = 'SPEL';
+  SPCT : TwbSignature = 'SPCT'; { New to Skyrim }
   SCRL : TwbSignature = 'SCRL';
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
@@ -702,15 +707,18 @@ var
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbStructDef;
+  wbATKD: IwbSubRecordDef; {Attack Data}
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbMODT: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
+  wbCOCTReq: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbCNAM: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef;
+  wbPRKR: IwbSubRecordDef; {Perk Array Record}
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4261,6 +4269,7 @@ begin
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbMODT:= wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
   wbCOCT:= wbInteger(COCT, 'Count', itU32);
+  wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
   wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
@@ -4283,25 +4292,25 @@ begin
     {0x00000004}'Unknown 3',
     {0x00000008}'Unknown 4',
     {0x00000010}'Unknown 5',
-    {0x00000020}'Unknown 6',
+    {0x00000020}'Deleted',
     {0x00000040}'Unknown 7',
-    {0x00000080}'Unknown 8',
+    {0x00000080}'(TES4) Localized',
     {0x00000100}'Unknown 9',
-    {0x00000200}'Unknown 10',
-    {0x00000400}'Unknown 11',
-    {0x00000800}'Unknown 12',
-    {0x00001000}'Unknown 13',
+    {0x00000200}'Hidden from local map / Starts dead',
+    {0x00000400}'Quest item / Persistent reference / (LSCR) Displays in Main Menu',
+    {0x00000800}'Initialy disabled',
+    {0x00001000}'Ignored',
     {0x00002000}'Unknown 14',
     {0x00004000}'Unknown 15',
     {0x00008000}'Unknown 16',
     {0x00010000}'Unknown 17',
     {0x00020000}'Unknown 18',
     {0x00040000}'Unknown 19',
-    {0x00080000}'Unknown 20',
+    {0x00080000}'VWD',
     {0x00100000}'Unknown 21',
-    {0x00200000}'Unknown 22',
-    {0x00400000}'Unknown 23',
-    {0x00800000}'Unknown 24',
+    {0x00200000}'Dangerous / Off limits',
+    {0x00400000}'Compressed',
+    {0x00800000}'Can''t wait',
     {0x01000000}'Unknown 25',
     {0x02000000}'Unknown 26',
     {0x03000000}'Unknown 27',
@@ -4493,11 +4502,36 @@ begin
     ]), -2)
   ]);
 
-  wbVMAD := wbStruct(VMAD, 'VMAD - Papyrus Script Data', [
+  wbVMAD := wbStruct(VMAD, 'Papyrus Script Data', [
     wbInteger('version', itS16),
     wbInteger('objFormat', itS16),
-    wbInteger('scriptCount', itU16),
-    wbArray('Scripts', wbScriptEntry)
+    //wbInteger('scriptCount', itU16),
+    wbArray('Scripts', wbScriptEntry, -2)
+  ]);
+
+  wbATKD := wbStruct(ATKD, 'Attack Data', [
+    wbFloat('Damage Mult'),
+    wbFloat('Attack Chance'),
+    wbFormIDCk('Attack Spell', [SPEL, SHOU]),
+    wbInteger('Attack Flags', itU16, wbFlags([
+      {0x01} 'Ignore Weapon',
+      {0x02} 'Bash Attack',
+      {0x04} 'Power Attack',
+      {0x08} 'Left Attack',
+      {0x10} 'Rotating Attack'
+    ])),
+    wbFloat('Attack Angle'),
+    wbFloat('Strike Angle'),
+    wbFloat('Stagger'),
+    wbFormID('Attack Type'),
+    wbFloat('Knockdown'),
+    wbFloat('Recovery Time'),
+    wbFloat('Fatigue Mult')
+  ]);
+
+  wbPRKR := wbStruct(PRKR, 'Perk Record', [
+    wbFormIDCk('Perk', [PERK]),
+    wbFloat
   ]);
 
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
@@ -5468,183 +5502,181 @@ begin
 // 32 Bytes -- 8 itU32
 // Vender Conditions
 //      CTDA - Condition Flags
-//        {Byte   1-4} Flags, Include Comparison type -- 'Equal to', 'Not equal to', 'Greater than', 'Greater than or equal to', 
-//                     'Less than', 'Less than or equal to'
-//                     Also includes 'Use OR', 'Parameters - Use Aliases', 'Parameters - Use Pack Data', 'Swap Subject and Target',
-//        {Byte   5-8} Float: 25.000000
-//        {Byte  9-12} Unknown 3: 2F 00 00 00
-//        {Byte 13-16} Unknown: ALCH - Ingestible [0010D666] <FoodGourd> "Z"
-//        {Byte 17-20} Unknown 5: 00 00 00 00
-//        {Byte 21-24} Unknown 6: 00 00 00 00
-//        {Byte 25-28} Unknown 7: 00 00 00 00
-//        {Byte 29-32} Unknown 8: FF FF FF FF
-// Old routine used 28 Bytes, new routine needs to use 32.
+//        {Byte 1-4} Comparison
+//        Float: 25.000000
+//        Unknown 3: 2F 00 00 00
+//        Unknown: ALCH - Ingestible [0010D666] <FoodGourd> "Z"
+//        Unknown 5: 00 00 00 00
+//        Unknown 6: 00 00 00 00
+//        Unknown 7: 00 00 00 00
+//        Unknown 8: FF FF FF FF
 
   wbCTDA :=
     wbStruct(CTDA, 'Condition', [
-{Byte  1}	wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-{Byte  2} wbByteArray('Unknown', 3),
-{Byte  5}	wbUnion('Comparison Value', wbCTDACompValueDecider, [
-						wbFloat('Comparison Value - Float'),
-						wbFormIDCk('Comparison Value - Global', [GLOB])
-					]),
-{Byte  9}	wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-{Byte 13}	wbUnion('Parameter #1', wbCTDAParam1Decider, [
-						{00} wbByteArray('Unknown', 4),
-					  {01} wbByteArray('None', 4, cpIgnore),
-					  {02} wbInteger('Integer', itS32),
-						{03} wbInteger('Variable Name (INVALID)', itS32),
-						{04} wbInteger('Sex', itU32, wbSexEnum),
-						{05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-						{06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-						{07} wbInteger('Axis', itU32, wbAxisEnum),
-						{08} wbInteger('Quest Stage (INVALID)', itS32),
-						{09} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
-						{10} wbInteger('Alignment', itU32, wbAlignmentEnum),
-						{11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
-						{12} wbInteger('Form Type', itU32, wbFormTypeEnum),
-						{13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-						{14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, TRGT], True),
-						{16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY]),
-						{17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
-						{18} wbFormIDCkNoReach('Voice Type', [VTYP]),
-						{19} wbFormIDCkNoReach('Idle', [IDLE]),
-						{20} wbFormIDCkNoReach('Form List', [FLST]),
-						{21} wbFormIDCkNoReach('Note', [NOTE]),
-						{22} wbFormIDCkNoReach('Quest', [QUST]),
-						{23} wbFormIDCkNoReach('Faction', [FACT]),
-						{24} wbFormIDCkNoReach('Weapon', [WEAP]),
-						{25} wbFormIDCkNoReach('Cell', [CELL]),
-						{26} wbFormIDCkNoReach('Class', [CLAS]),
-						{27} wbFormIDCkNoReach('Race', [RACE]),
-						{28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
-						{29} wbFormIDCkNoReach('Global', [GLOB]),
-						{30} wbFormIDCkNoReach('Weather', [WTHR]),
-						{31} wbFormIDCkNoReach('Package', [PACK]),
-						{32} wbFormIDCkNoReach('Encounter Zone', [ECZN]),
-						{33} wbFormIDCkNoReach('Perk', [PERK]),
-						{34} wbFormIDCkNoReach('Owner', [FACT, NPC_]),
-						{35} wbFormIDCkNoReach('Furniture', [FURN, FLST]),
-						{36} wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR]),
-						{37} wbFormIDCkNoReach('Base Effect', [MGEF]),
-						{38} wbFormIDCkNoReach('Worldspace', [WRLD]),
-						{39} wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-						{40} wbInteger('VATS Value Param (INVALID)', itU32),
-						{41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
-						{42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
-						{43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
-						{44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-						{45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP], [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
-						{46} wbInteger('Quest Objective (INVALID)', itS32),
-						{47} wbFormIDCkNoReach('Reputation', [REPU]),
-						{48} wbFormIDCkNoReach('Region', [REGN]),
-						{49} wbFormIDCkNoReach('Challenge', [CHAL]),
-						{50} wbFormIDCkNoReach('Casino', [CSNO])
-					]),
-{Byte 17}	wbUnion('Parameter #2', wbCTDAParam2Decider, [
-						{00} wbByteArray('Unknown', 4),
-						{01} wbByteArray('None', 4, cpIgnore),
-						{02} wbInteger('Integer', itS32),
-						{03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
-						{04} wbInteger('Sex', itU32, wbSexEnum),
-						{05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-						{06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-						{07} wbInteger('Axis', itU32, wbAxisEnum),
-						{08} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-						{09} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
-						{10} wbInteger('Alignment', itU32, wbAlignmentEnum),
-						{11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
-						{12} wbInteger('Form Type', itU32, wbFormTypeEnum),
-						{13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-						{14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, PMIS, ACHR, ACRE, PGRE, TRGT], True),
-						{16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY]),
-						{17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
-						{18} wbFormIDCkNoReach('Voice Type', [VTYP]),
-						{19} wbFormIDCkNoReach('Idle', [IDLE]),
-						{20} wbFormIDCkNoReach('Form List', [FLST]),
-						{21} wbFormIDCkNoReach('Note', [NOTE]),
-						{22} wbFormIDCkNoReach('Quest', [QUST]),
-						{23} wbFormIDCkNoReach('Faction', [FACT]),
-						{24} wbFormIDCkNoReach('Weapon', [WEAP]),
-						{25} wbFormIDCkNoReach('Cell', [CELL]),
-						{26} wbFormIDCkNoReach('Class', [CLAS]),
-						{27} wbFormIDCkNoReach('Race', [RACE]),
-						{28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
-						{29} wbFormIDCkNoReach('Global', [GLOB]),
-						{30} wbFormIDCkNoReach('Weather', [WTHR]),
-						{31} wbFormIDCkNoReach('Package', [PACK]),
-						{32} wbFormIDCkNoReach('Encounter Zone', [ECZN]),
-						{33} wbFormIDCkNoReach('Perk', [PERK]),
-						{34} wbFormIDCkNoReach('Owner', [FACT, NPC_]),
-						{35} wbFormIDCkNoReach('Furniture', [FURN, FLST]),
-						{36} wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR]),
-						{37} wbFormIDCkNoReach('Base Effect', [MGEF]),
-						{38} wbFormIDCkNoReach('Worldspace', [WRLD]),
-						{39} wbInteger('VATS Value Function (INVALID)', itU32),
-						{40}  wbUnion('VATS Value Param', wbCTDAParam2VATSValueParam, [
-										wbFormIDCkNoReach('Weapon', [WEAP]),
-										wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
-										wbFormIDCkNoReach('Target', [NPC_, CREA]),
-										wbFormIDCkNoReach('Target List', [FLST], [NPC_, CREA]),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbInteger('Target Part', itS32, wbActorValueEnum),
-										wbInteger('VATS Action', itU32, wbEnum([
-											'Unarmed Attack',
-											'One Hand Melee Attack',
-											'Two Hand Melee Attack',
-											'Fire Pistol',
-											'Fire Rifle',
-											'Fire Handle Weapon',
-											'Fire Launcher',
-											'Throw Grenade',
-											'Place Mine',
-											'Reload',
-											'Crouch',
-											'Stand',
-											'Switch Weapon',
-											'Toggle Weapon Drawn',
-											'Heal',
-											'Player Death',
-											'Special Weapon Attack',
-											'Special Unarmed Attack',
-											'Kill Camera Shot',
-											'Throw Weapon'
-										])),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbFormIDCkNoReach('Critical Effect', [SPEL]),
-										wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
-										wbByteArray('Unused', 4, cpIgnore),
-										wbByteArray('Unused', 4, cpIgnore)
-								  ]),
-						{41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
-						{42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
-						{43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
-						{44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-						{45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP], [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
-						{46} wbInteger('Quest Objective', itS32, wbCTDAParam2QuestObjectiveToStr, wbCTDAParam2QuestObjectiveToInt),
-						{47} wbFormIDCkNoReach('Reputation', [REPU]),
-						{48} wbFormIDCkNoReach('Region', [REGN]),
-						{49} wbFormIDCkNoReach('Challenge', [CHAL]),
-						{50} wbFormIDCkNoReach('Casino', [CSNO])
-					]),
-{Byte 21}	wbInteger('Run On', itU32, wbEnum([
-						'Subject',
-						'Target',
-						'Reference',
-						'Combat Target',
-						'Linked Reference'
-					]), cpNormal, False, nil, wbCTDARunOnAfterSet),
-{Byte 25}	wbUnion('Reference', wbCTDAReferenceDecider, [
-						wbInteger('Unused', itU32, nil, cpIgnore),
-						wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
-					]),
-{Byte 29} wbByteArray('Unknown', 4)
+      wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
+      wbByteArray('Unused', 3),
+      wbUnion('Comparison Value', wbCTDACompValueDecider, [
+        wbFloat('Comparison Value - Float'),
+        wbFormIDCk('Comparison Value - Global', [GLOB])
+      ]),
+      wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+      wbUnion('Parameter #1', wbCTDAParam1Decider, [
+        {00} wbByteArray('Unknown', 4),
+        {01} wbByteArray('None', 4, cpIgnore),
+        {02} wbInteger('Integer', itS32),
+        {03} wbInteger('Variable Name (INVALID)', itS32),
+        {04} wbInteger('Sex', itU32, wbSexEnum),
+        {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
+        {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
+        {07} wbInteger('Axis', itU32, wbAxisEnum),
+        {08} wbInteger('Quest Stage (INVALID)', itS32),
+        {09} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
+        {10} wbInteger('Alignment', itU32, wbAlignmentEnum),
+        {11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
+        {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
+        {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
+        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, TRGT], True),
+        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY]),
+        {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
+        {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
+        {19} wbFormIDCkNoReach('Idle', [IDLE]),
+        {20} wbFormIDCkNoReach('Form List', [FLST]),
+        {21} wbFormIDCkNoReach('Note', [NOTE]),
+        {22} wbFormIDCkNoReach('Quest', [QUST]),
+        {23} wbFormIDCkNoReach('Faction', [FACT]),
+        {24} wbFormIDCkNoReach('Weapon', [WEAP]),
+        {25} wbFormIDCkNoReach('Cell', [CELL]),
+        {26} wbFormIDCkNoReach('Class', [CLAS]),
+        {27} wbFormIDCkNoReach('Race', [RACE]),
+        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
+        {29} wbFormIDCkNoReach('Global', [GLOB]),
+        {30} wbFormIDCkNoReach('Weather', [WTHR]),
+        {31} wbFormIDCkNoReach('Package', [PACK]),
+        {32} wbFormIDCkNoReach('Encounter Zone', [ECZN]),
+        {33} wbFormIDCkNoReach('Perk', [PERK]),
+        {34} wbFormIDCkNoReach('Owner', [FACT, NPC_]),
+        {35} wbFormIDCkNoReach('Furniture', [FURN, FLST]),
+        {36} wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR]),
+        {37} wbFormIDCkNoReach('Base Effect', [MGEF]),
+        {38} wbFormIDCkNoReach('Worldspace', [WRLD]),
+        {39} wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
+        {40} wbInteger('VATS Value Param (INVALID)', itU32),
+        {41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
+        {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
+        {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
+        {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
+        {46} wbInteger('Quest Objective (INVALID)', itS32),
+        {47} wbFormIDCkNoReach('Reputation', [REPU]),
+        {48} wbFormIDCkNoReach('Region', [REGN]),
+        {49} wbFormIDCkNoReach('Challenge', [CHAL]),
+        {50} wbFormIDCkNoReach('Casino', [CSNO])
+      ]),
+      wbUnion('Parameter #2', wbCTDAParam2Decider, [
+        {00} wbByteArray('Unknown', 4),
+        {01} wbByteArray('None', 4, cpIgnore),
+        {02} wbInteger('Integer', itS32),
+        {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
+        {04} wbInteger('Sex', itU32, wbSexEnum),
+        {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
+        {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
+        {07} wbInteger('Axis', itU32, wbAxisEnum),
+        {08} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
+        {09} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
+        {10} wbInteger('Alignment', itU32, wbAlignmentEnum),
+        {11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
+        {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
+        {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
+        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, PMIS, ACHR, ACRE, PGRE, TRGT], True),
+        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY]),
+        {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
+        {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
+        {19} wbFormIDCkNoReach('Idle', [IDLE]),
+        {20} wbFormIDCkNoReach('Form List', [FLST]),
+        {21} wbFormIDCkNoReach('Note', [NOTE]),
+        {22} wbFormIDCkNoReach('Quest', [QUST]),
+        {23} wbFormIDCkNoReach('Faction', [FACT]),
+        {24} wbFormIDCkNoReach('Weapon', [WEAP]),
+        {25} wbFormIDCkNoReach('Cell', [CELL]),
+        {26} wbFormIDCkNoReach('Class', [CLAS]),
+        {27} wbFormIDCkNoReach('Race', [RACE]),
+        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
+        {29} wbFormIDCkNoReach('Global', [GLOB]),
+        {30} wbFormIDCkNoReach('Weather', [WTHR]),
+        {31} wbFormIDCkNoReach('Package', [PACK]),
+        {32} wbFormIDCkNoReach('Encounter Zone', [ECZN]),
+        {33} wbFormIDCkNoReach('Perk', [PERK]),
+        {34} wbFormIDCkNoReach('Owner', [FACT, NPC_]),
+        {35} wbFormIDCkNoReach('Furniture', [FURN, FLST]),
+        {36} wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR]),
+        {37} wbFormIDCkNoReach('Base Effect', [MGEF]),
+        {38} wbFormIDCkNoReach('Worldspace', [WRLD]),
+        {39} wbInteger('VATS Value Function (INVALID)', itU32),
+        {40} wbUnion('VATS Value Param', wbCTDAParam2VATSValueParam, [
+               wbFormIDCkNoReach('Weapon', [WEAP]),
+               wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
+               wbFormIDCkNoReach('Target', [NPC_, CREA]),
+               wbFormIDCkNoReach('Target List', [FLST], [NPC_, CREA]),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbInteger('Target Part', itS32, wbActorValueEnum),
+               wbInteger('VATS Action', itU32, wbEnum([
+                 'Unarmed Attack',
+                 'One Hand Melee Attack',
+                 'Two Hand Melee Attack',
+                 'Fire Pistol',
+                 'Fire Rifle',
+                 'Fire Handle Weapon',
+                 'Fire Launcher',
+                 'Throw Grenade',
+                 'Place Mine',
+                 'Reload',
+                 'Crouch',
+                 'Stand',
+                 'Switch Weapon',
+                 'Toggle Weapon Drawn',
+                 'Heal',
+                 'Player Death',
+                 'Special Weapon Attack',
+                 'Special Unarmed Attack',
+                 'Kill Camera Shot',
+                 'Throw Weapon'
+               ])),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbFormIDCkNoReach('Critical Effect', [SPEL]),
+               wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
+               wbByteArray('Unused', 4, cpIgnore),
+               wbByteArray('Unused', 4, cpIgnore)
+             ]),
+        {41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
+        {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
+        {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
+        {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
+        {46} wbInteger('Quest Objective', itS32, wbCTDAParam2QuestObjectiveToStr, wbCTDAParam2QuestObjectiveToInt),
+        {47} wbFormIDCkNoReach('Reputation', [REPU]),
+        {48} wbFormIDCkNoReach('Region', [REGN]),
+        {49} wbFormIDCkNoReach('Challenge', [CHAL]),
+        {50} wbFormIDCkNoReach('Casino', [CSNO])
+      ]),
+      wbInteger('Run On', itU32, wbEnum([
+        'Subject',
+        'Target',
+        'Reference',
+        'Combat Target',
+        'Linked Reference'
+      ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
+      wbUnion('Reference', wbCTDAReferenceDecider, [
+        wbInteger('Unused', itU32, nil, cpIgnore),
+        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
+      ])
     ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
 //------------------------------------------------------------------------------
 // End wbCTDA
@@ -6183,7 +6215,12 @@ begin
             'Foolhardy'
           ])),
      {02} wbInteger('Energy Level', itU8),
-     {03} wbInteger('Responsibility', itU8),
+     {03} wbInteger('Responsibility', itU8, wbEnum([
+            'Any crime',
+            'Violence against enemies',
+            'Property crime',
+            'No crime'
+          ])),
      {04} wbInteger('Mood', itU8, wbEnum([
             'Neutral',
             'Afraid',
@@ -6194,15 +6231,15 @@ begin
             'Angry',
             'Sad'
           ])),
-          wbByteArray('Unused', 3),
-          wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-          wbInteger('Teaches', itS8, wbSkillEnum),
-          wbInteger('Maximum training level', itU8),
           wbInteger('Assistance', itS8, wbEnum([
             'Helps Nobody',
             'Helps Allies',
             'Helps Friends and Allies'
           ])),
+          wbByteArray('Unused', 3),
+          wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
+          wbInteger('Teaches', itS8, wbSkillEnum),
+          wbInteger('Maximum training level', itU8),
           wbInteger('Aggro Radius Behavior', itU8, wbFlags([
             'Aggro Radius Behavior'
           ])),
@@ -6999,7 +7036,7 @@ begin
     ]),
 //    wbUnknown(PLVD),
     wbCITC,
-    wbCTDAs // Not compatable with Skyrim at the moment
+    wbCTDAs
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
 //----------------------------------------------------------------------------
@@ -9618,15 +9655,29 @@ begin
         {0x00000040} 'Doesn''t affect stealth meter',
         {0x00000080} 'PC Level Mult',
         {0x00000100} 'Use Template?',
+        {0x00000200} '',
+        {0x00000400} '',
         {0x00000800} 'Protected',
+        {0x00001000} '',
+        {0x00002000} '',
         {0x00004000} 'Summonable',
+        {0x00008000} '',
         {0x00010000} 'Doesn''t bleed',
+        {0x00020000} '',
         {0x00040000} 'Owned',
         {0x00080000} 'Opposite Gender Anims',
         {0x00100000} 'Simple Actor',
         {0x00200000} 'looped script?',
+        {0x00400000} '',
+        {0x00800000} '',
+        {0x01000000} '',
+        {0x02000000} '',
+        {0x04000000} '',
+        {0x08000000} '',
         {0x10000000} 'looped audio?',
-        {0x20000000} 'Ghost/non-interactable'
+        {0x20000000} 'Ghost/non-interactable',
+        {0x40000000} '',
+        {0x80000000} ''
         ], [
         {0x00000001} nil,
         {0x00000002} nil,
@@ -9637,15 +9688,29 @@ begin
         {0x00000040} nil,
         {0x00000080} nil,
         {0x00000100} nil,
+        {0x00000200} nil,
+        {0x00000400} nil,
         {0x00000800} nil,
+        {0x00001000} nil,
+        {0x00002000} nil,
         {0x00004000} nil,
+        {0x00008000} nil,
         {0x00010000} nil,
+        {0x00020000} nil,
         {0x00040000} nil,
         {0x00080000} nil,
         {0x00100000} nil,
         {0x00200000} nil,
+        {0x00400000} nil,
+        {0x00800000} nil,
+        {0x01000000} nil,
+        {0x02000000} nil,
+        {0x04000000} nil,
+        {0x08000000} nil,
         {0x10000000} nil,
-        {0x20000000} nil
+        {0x20000000} nil,
+        {0x40000000} nil,
+        {0x80000000} nil
       ])),
       wbInteger('Magicka', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
       wbInteger('Stamina', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
@@ -9685,23 +9750,22 @@ begin
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
-    wbFormIDCk(WNAM, 'Worn Armor', [WNAM], False, cpNormal, False),
-    wbFormIDCk(ANAM, 'Armor', [ANAM], False, cpNormal, False),
+    wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
+    wbFormIDCk(ANAM, 'Armor', [ARMO], False, cpNormal, False),
+    wbRArray('Attack Data', wbATKD),
+    wbArray(ATKE, 'Attack Event', wbString),
+    wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
+    wbInteger(SPCT, 'Spell Count', itU16),
+    wbArray(SPLO, 'Spells', wbFormIDCk('Spell', [SPEL, SHOU])),
+    // ECOR
+    // SPOR
+    wbInteger(PRKZ, 'Perk Count', itU32),
+    wbRArray('Perks', wbPRKR),
+    wbCOCTReq,
+    wbCNTOs,
+    wbAIDT,
+    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
 
-    {wbRArray('Unknown - SNAM', wbRStruct('Unknown', [
-      wbUnknown(SNAM)
-    ], [])),}
-    wbRArray('Unknown - PKID', wbRStruct('Unknown', [
-      wbUnknown(PKID)
-    ], [])),
-    wbRArray('Unknown - PRKR', wbRStruct('Unknown', [
-      wbUnknown(PRKR)
-    ], [])),
-//  wbInteger('Count', itU8),
-    wbUnknown(COCT),
-    wbRArray('Unknown - CNTO', wbRStruct('Unknown', [
-      wbUnknown(CNTO)
-    ], [])),
     wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
       wbUnknown(PNAM)
     ], [])),
@@ -10000,6 +10064,8 @@ begin
 
   wbRecord(PACK, 'Package', [
     wbEDIDReq,
+    wbVMAD,
+    wbCTDAs,
     wbStruct(PKDT, 'General', [
       wbInteger('General Flags', itU32, wbPKDTFlags),
       wbInteger('Type', itU8, wbPKDTType),

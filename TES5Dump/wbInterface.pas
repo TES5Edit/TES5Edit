@@ -677,6 +677,7 @@ type
     _Flags: Cardinal;
     function IsESM: Boolean; inline;
     function IsDeleted: Boolean; inline;
+    function IsLocalized: Boolean; inline;
     function CastsShadows: Boolean; inline;
     function IsPersistent: Boolean; inline;
     function IsInitiallyDisabled: Boolean; inline;
@@ -688,6 +689,7 @@ type
 
     procedure SetESM(aValue: Boolean);
     procedure SetDeleted(aValue: Boolean);
+    procedure SetLocalized(aValue: Boolean);
     procedure SetPersistent(aValue: Boolean);
     procedure SetCompressed(aValue: Boolean);
     procedure SetInitiallyDisabled(aValue: Boolean);
@@ -745,6 +747,8 @@ type
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
     procedure SetIsDeleted(aValue: Boolean);
+    function GetIsLocalized: Boolean;
+    procedure SetIsLocalized(aValue: Boolean);
     function GetIsCompressed: Boolean;
     procedure SetIsCompressed(aValue: Boolean);
     function GetIsVisibleWhenDistant: Boolean;
@@ -830,6 +834,9 @@ type
     property IsCompressed: Boolean
       read GetIsCompressed
       write SetIsCompressed;
+    property IsLocalized: Boolean
+      read GetIsLocalized
+      write SetIslocalized;
     property IsVisibleWhenDistant: Boolean
       read GetIsVisibleWhenDistant
       write SetIsVisibleWhenDistant;
@@ -9559,6 +9566,11 @@ begin
   Result := (_Flags and $00000020) <> 0;
 end;
 
+function TwbMainRecordStructFlags.Islocalized: Boolean;
+begin
+  Result := (_Flags and $00000080) <> 0;
+end;
+
 function TwbMainRecordStructFlags.IsESM: Boolean;
 begin
   Result := (_Flags and $00000001) <> 0;
@@ -9606,6 +9618,14 @@ begin
     _Flags := _Flags or $00000001
   else
     _Flags := _Flags and not $00000001;
+end;
+
+procedure TwbMainRecordStructFlags.SetLocalized(aValue: Boolean);
+begin
+  if aValue then
+    _Flags := _Flags or $00000080
+  else
+    _Flags := _Flags and not $00000080
 end;
 
 procedure TwbMainRecordStructFlags.SetInitiallyDisabled(aValue: Boolean);
@@ -9681,9 +9701,10 @@ constructor TwbLenStringDef.Create(aPriority  : TwbConflictPriority;
                                    aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                                    aDontShow  : TwbDontShowCallback);
 begin
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
   Prefix := aPrefix;
-  if not Prefix in [1,2,4] then Prefix := 4;
+  if not (Prefix in [1, 2, 4]) then Prefix := 4;
+
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
 procedure TwbLenStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -9695,6 +9716,9 @@ var
 begin
   s := aValue;
   Len := Length(s);
+  if Len >= IntPower(256, Prefix) then
+    raise Exception.Create('String length overflow');
+
   NewSize := Len + Prefix;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
 
