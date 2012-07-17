@@ -4276,7 +4276,7 @@ begin
 // End New Routines
 //-----------------------------------------------------------------
 
-  wbRecordFlags := wbInteger('{Byte  9-12} Record Flags', itU32, wbFlags([
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
     {0x00000004}'Unknown 3',
@@ -6848,7 +6848,7 @@ begin
     wbFULL,
     wbXNAMs,
     wbStruct(DATA, 'Flags', [
-      wbInteger('{Byte 1-4} Flags', itU32, wbFlags([
+      wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Hidden From NPC',
         {0x00000002}'Special Combat',
         {0x00000004}'Unknown 3',
@@ -7117,9 +7117,9 @@ begin
    {21}       wbFloat('Shininess'),
               wbStruct('Parallax', [
    {25}         wbFloat('Scale'),
-   {29}         wbInteger('{Byte 29 - Value can not excede 30} Passes', itU8) {This can't be higher than 30}
+   {29}         wbInteger('Passes', itU8) {This can't be higher than 30}
               ]),
-   {30}       wbInteger('{Byte 30} Flags', itU8, wbFlags([
+   {30}       wbInteger('Flags', itU8, wbFlags([
                 {0x00000001}'Parallax',
                 {0x00000002}'Alpha - Blending',
                 {0x00000004}'Alpha - Testing',
@@ -7129,7 +7129,7 @@ begin
                 {0x00000040}'DODT Unknown 7',
                 {0x00000080}'DODT Unknown 8'
                ], True)),
-   {31}       wbByteArray('{Byte 31-32} Unknown', 2),
+   {31}       wbByteArray('Unknown', 2),
    {33}       wbStruct('Color', [
                 wbInteger('Red', itU8),
                 wbInteger('Green', itU8),
@@ -11106,7 +11106,8 @@ begin
     ], [ONAM])),
     wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot'),
-    wbUnknown(INTV)
+    wbUnknown(INTV),
+    wbUnknown(INCC)
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(TREE, 'Tree', [
