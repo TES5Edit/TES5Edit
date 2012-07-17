@@ -4470,22 +4470,22 @@ begin
   ]);
 
   wbScriptEntry := wbStruct('Script', [
-    wbWString('scriptName'),
+    wbLenString('scriptName', 2),
     wbInteger('unknown', itU8),
     //wbInteger('propertyCount', itU16),
     wbArray('Properties', wbStruct('Property', [
-      wbWString('propertyName'),
+      wbLenString('propertyName', 2),
       wbInteger('propertyType', itU8, wbPropTypeEnum),
       wbInteger('unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbStruct('Data', [wbUnknown]),
         {01} wbByteArray('Data', 8), {wbScriptObject,}
-        {02} wbWString('Data'),
+        {02} wbLenString('Data', 2),
         {03} wbInteger('Data', itU32),
         {04} wbFloat('Data'),
         {05} wbInteger('Data', itU8),
         {11} wbArray('Data', wbByteArray('Element', 8), -1),
-        {12} wbArray('Data', wbWString('Element'), -1),
+        {12} wbArray('Data', wbLenString('Element', 2), -1),
         {13} wbArray('Data', wbInteger('Element', itU32), -1),
         {14} wbArray('Data', wbFloat('Element'), -1),
         {15} wbArray('Data', wbInteger('Element', itU8), -1)

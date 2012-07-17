@@ -161,7 +161,6 @@ type
     dtSubRecordUnion,
     dtString,
     dtLenString,
-    dtWString, {New Skyrim}
     dtByteArray,
     dtInteger,
     dtIntegerFormater,
@@ -1097,10 +1096,6 @@ type
     ['{1AD7FAE2-DAA7-4651-B78D-10E138EDF48B}']
   end;
 
-  IwbWStringDef = interface(IwbValueDef)
-    ['{14EDF343-E5E9-49BC-9F91-73341F0AD671}']
-  end;
-
   IwbByteArrayDef = interface(IwbValueDef)
     ['{3069E1AC-4307-421B-93E4-797E18075EF9}']
   end;
@@ -1400,29 +1395,18 @@ function wbStringMgefCode(const aName      : string;
 
 function wbLenString(const aSignature : TwbSignature;
                      const aName      : string;
+                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbSubRecordDef; overload;
 
 function wbLenString(const aName      : string;
+                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbLenStringDef; overload;
-
-function wbWString(const aSignature : TwbSignature;
-                   const aName      : string;
-                         aPriority  : TwbConflictPriority = cpNormal;
-                         aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
-                                      : IwbSubRecordDef; overload;
-
-function wbWString(const aName      : string;
-                         aPriority  : TwbConflictPriority = cpNormal;
-                         aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
-                                    : IwbWStringDef; overload;
 
 function wbUnion(const aSignature : TwbSignature;
                  const aName      : string;
@@ -2917,34 +2901,11 @@ type
 
   TwbLenStringDef = class(TwbValueDef, IwbLenStringDef)
   protected
+    Prefix: Integer;
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
                  const aName      : string;
-                       aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                       aDontShow  : TwbDontShowCallback);
-
-    {---IwbDef---}
-    function GetDefType: TwbDefType; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
-    function CanContainFormIDs: Boolean; override;
-
-    {---IwbValueDef---}
-    function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
-    function GetIsVariableSize: Boolean; override;
-    function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
-    function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
-    procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
-    function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
-  end;
-
-  TwbWStringDef = class(TwbValueDef, IwbWStringDef)
-  protected
-    constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
-                 const aName      : string;
+                       aPrefix    : integer;
                        aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                        aDontShow  : TwbDontShowCallback);
 
@@ -3624,40 +3585,23 @@ end;
 
 function wbLenString(const aSignature : TwbSignature;
                      const aName      : string;
+                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenString('', aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbLenString('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
 function wbLenString(const aName      : string;
+                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbLenStringDef; overload;
 begin
-  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow);
-end;
-
-function wbWString(const aSignature : TwbSignature;
-                   const aName      : string;
-                         aPriority  : TwbConflictPriority = cpNormal;
-                         aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
-                                    : IwbSubRecordDef; overload;
-begin
-  Result := wbSubRecord(aSignature, aName, wbWString('', aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
-end;
-
-function wbWString(const aName      : string;
-                         aPriority  : TwbConflictPriority = cpNormal;
-                         aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
-                                    : IwbWStringDef; overload;
-begin
-  Result := TwbWStringDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow);
+  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow);
 end;
 
 function wbUnion(const aSignature : TwbSignature;
@@ -9707,13 +9651,17 @@ var
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < 4 then begin
+  if Len < Prefix then begin
     if wbCheckExpectedBytes then
-      Result := Format('Expected at least %d bytes of data, found %d', [4 , Len]);
+      Result := Format('Expected at least %d bytes of data, found %d', [Prefix , Len]);
     Exit;
   end;
 
-  Size := PCardinal(aBasePtr)^ + 4;
+  case Prefix of
+    1: Size := PByte(aBasePtr)^ + Prefix;
+    2: Size := PWord(aBasePtr)^ + Prefix;
+    4: Size := PCardinal(aBasePtr)^ + Prefix;
+  end;
   if Len < Size then begin
     if wbCheckExpectedBytes then
       Result := Format('Expected %d bytes of data, found %d', [Size , Len]);
@@ -9723,33 +9671,40 @@ end;
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbLenStringDef do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
 end;
 
 constructor TwbLenStringDef.Create(aPriority  : TwbConflictPriority;
                                    aRequired  : Boolean;
                              const aName      : string;
+                                   aPrefix    : Integer;
                                    aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                                    aDontShow  : TwbDontShowCallback);
 begin
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
+  Prefix := aPrefix;
+  if not Prefix in [1,2,4] then Prefix := 4;
 end;
 
 procedure TwbLenStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 var
   Len     : Cardinal;
   NewSize : Cardinal;
-  p       : PCardinal;
+  p       : Pointer;
   s: AnsiString;
 begin
   s := aValue;
   Len := Length(s);
-  NewSize := Len + 4;
+  NewSize := Len + Prefix;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
 
   p := aBasePtr;
-  p^ := Len;
-  Inc(p);
+  case Prefix of
+    1: PByte(p)^ := Len;
+    2: PWord(p)^ := Len;
+    4: PCardinal(p)^ := Len;
+  end;
+  p := Pointer(Cardinal(p) + Prefix);
   if Len > 1 then
     Move(s[1], p^, Len);
 end;
@@ -9780,14 +9735,19 @@ var
 begin
   if Assigned(aBasePtr) then begin
     Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-    if Result < 4 then
+    if Result < Prefix then
       Exit;
 
-    Len := PCardinal(aBasePtr)^ + 4;
+    case Prefix of
+      1: Len := PByte(aBasePtr)^ + Prefix;
+      2: Len := PWord(aBasePtr)^ + Prefix;
+      4: Len := PCardinal(aBasePtr)^ + Prefix;
+    end;
+
     if Len < Result then
       Result := Len;
   end else
-    Result := 4;
+    Result := Prefix;
 end;
 
 function TwbLenStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -9804,157 +9764,22 @@ function TwbLenStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: Iw
 var
   Size : Cardinal;
   Len  : Cardinal;
-  p    : PCardinal;
+  p    : Pointer;
   s    : AnsiString;
 begin
   s := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < 4 then
+  if Len < Prefix then
     Exit;
 
   p := aBasePtr;
-  Size := PCardinal(aBasePtr)^;
-  Inc(p);
-  Dec(Len, 4);
-
-  if Len > Size then
-    Len := Size;
-
-  SetLength(s, Len);
-  if Len > 0 then
-    Move(p^, s[1], Len);
-  Result := s;
-  Used(aElement, Result);
-end;
-
-{ TwbWStringDef }
-
-function TwbWStringDef.CanAssign(aIndex: Integer; const aDef: IwbDef) : Boolean;
-begin
-  Result := aDef.DefType in [dtString, dtLenString, dtWString];
-end;
-
-function TwbWStringDef.CanContainFormIDs: Boolean;
-begin
-  Result := False;
-end;
-
-function TwbWStringDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
-var
-  Size : Cardinal;
-  Len  : Cardinal;
-begin
-  Result := '';
-  Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < 2 then begin
-    if wbCheckExpectedBytes then
-      Result := Format('Expected at least %d bytes of data, found %d', [2 , Len]);
-    Exit;
+  case Prefix of
+    1: Size := PByte(aBasePtr)^;
+    2: Size := PWord(aBasePtr)^;
+    4: Size := PCardinal(aBasePtr)^;
   end;
-
-  Size := PWord(aBasePtr)^ + 2;
-  if Len < Size then begin
-    if wbCheckExpectedBytes then
-      Result := Format('Expected %d bytes of data, found %d', [Size , Len]);
-  end;
-end;
-
-constructor TwbWStringDef.Clone(const aSource: TwbDef);
-begin
-  with aSource as TwbWStringDef do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
-end;
-
-constructor TwbWStringDef.Create(aPriority  : TwbConflictPriority;
-                                 aRequired  : Boolean;
-                           const aName      : string;
-                                 aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                                 aDontShow  : TwbDontShowCallback);
-begin
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
-end;
-
-procedure TwbWStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
-var
-  Len     : Word;
-  NewSize : Cardinal;
-  p       : PWord;
-  s: AnsiString;
-begin
-  s := aValue;
-  Len := Length(s);
-  NewSize := Len + 2;
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
-
-  p := aBasePtr;
-  p^ := Len;
-  Inc(p);
-  if Len > 1 then
-    Move(s[1], p^, Len);
-end;
-
-procedure TwbWStringDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
-begin
-  FromEditValue(aBasePtr, aEndPtr, aElement, aValue);
-end;
-
-function TwbWStringDef.GetDefType: TwbDefType;
-begin
-  Result := dtWString;
-end;
-
-function TwbWStringDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
-begin
-  Result := True;
-end;
-
-function TwbWStringDef.GetIsVariableSize: Boolean;
-begin
-  Result := True;
-end;
-
-function TwbWStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Len : Integer;
-begin
-  if Assigned(aBasePtr) then begin
-    Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-    if Result < 2 then
-      Exit;
-
-    Len := PWord(aBasePtr)^ + 2;
-    if Len < Result then
-      Result := Len;
-  end else
-    Result := 2;
-end;
-
-function TwbWStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
-begin
-  Result := ToString(aBasePtr, aEndPtr, aElement);
-end;
-
-function TwbWStringDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
-begin
-  Result := ToString(aBasePtr, aEndPtr, aElement);
-end;
-
-function TwbWStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
-var
-  Size : Cardinal;
-  Len  : Cardinal;
-  p    : PWord;
-  s    : AnsiString;
-begin
-  s := '';
-  Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < 2 then
-    Exit;
-
-  p := aBasePtr;
-  Size := PWord(aBasePtr)^;
-  Inc(p);
-  Dec(Len, 2);
+  p := Pointer(Cardinal(p) + Prefix);
+  Dec(Len, Prefix);
 
   if Len > Size then
     Len := Size;
