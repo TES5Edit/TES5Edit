@@ -15,6 +15,25 @@ unit wbTES5ScriptDef;
 
 interface
 
-implementation
+uses
+  wbImplementation,
+  wbInterface,
+  wbBSA,
+  Types, Classes, SysUtils, Math, Variants,
+
+  // I don't know which things are not needed
+  Windows, Messages, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
+  IniFiles, TypInfo, ActiveX, Buttons, ActnList,
+  ShellAPI,
+  Direct3D9, D3DX9,
+{$IFDEF DX3D}
+  RenderUnit, Direct3D9, D3DX9, DXUT,
+{$ENDIF}
+  AppEvnts,
+  Mask,
+  ShlObj, Registry;
+
+  implementation
 
 end.

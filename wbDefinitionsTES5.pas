@@ -20,9 +20,14 @@ procedure DefineTES5;
 
 implementation
 
+//------------------------------------------------------------------------------
+// In FO3/FNV/TES4/Edit wbBSA.pas was never in the wbDefinitions Files
+//------------------------------------------------------------------------------
 uses
   Types, Classes, SysUtils, Math, Variants,
-  wbInterface;
+  wbInterface,
+  wbLocalization,
+  wbTES5ScriptDef;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -4266,9 +4271,11 @@ begin
   wbBoolU16:= wbInteger('Boolean', itU16, wbEnum(['False', 'True']));
   wbBoolU32:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
   wbLLCT:= wbInteger(LLCT, 'Count', itU8);
+  wbCOCT:= wbInteger(COCT, 'Count', itU32);
+  wbCITC:= wbInteger(CITC, 'Count', itU32);
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbMODT:= wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
-  wbCOCT:= wbInteger(COCT, 'Count', itU32);
+//  wbKWDA := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
@@ -4280,7 +4287,6 @@ begin
                wbByteArray('Unused', 1)
              ])
            ]);
-  wbCITC:= wbInteger(CITC, 'Count', itU32);
 
 //-----------------------------------------------------------------
 // End New Routines
@@ -7292,13 +7298,48 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbMODL,
+    wbMODT,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
-      'Playable'
+      {0x00000001}'Unknown 1',
+      {0x00000002}'Unknown 2',
+      {0x00000004}'Unknown 3',
+      {0x00000008}'Unknown 4',
+      {0x00000010}'Unknown 5',
+      {0x00000020}'Unknown 6',
+      {0x00000040}'Unknown 7',
+      {0x00000080}'Unknown 8'
     ]), cpNormal, True),
-    wbRArrayS('Extra Parts',
+    wbUnknown(PNAM),
+    wbRArray('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
-    )
+    ),
+    wbRArray('Parts',
+      wbRStruct('Part List', [
+        wbInteger(NAM0, 'Part Type', itU32),
+        wbString(NAM1, 'Filename', 0, cpTranslate, True)
+      ], [])
+    ),
+    wbFormIDCk(TNAM, 'Texture Set', [TXST, NULL]),
+    wbFormIDCk(RNAM, 'Form List', [FLST, NULL])
   ]);
+
+//------------------------------------------------------------------------------
+// Begin Old HDPT
+//------------------------------------------------------------------------------
+//  wbRecord(HDPT, 'Head Part', [
+//    wbEDIDReq,
+//    wbFULLReq,
+//    wbMODL,
+//    wbInteger(DATA, 'Flags', itU8, wbFlags([
+//      'Playable'
+//    ]), cpNormal, True),
+//    wbRArrayS('Extra Parts',
+//      wbFormIDCk(HNAM, 'Part', [HDPT])
+//    )
+//  ]);
+//------------------------------------------------------------------------------
+// End Old HDPT
+//------------------------------------------------------------------------------
 
   wbRecord(ASPC, 'Acoustic Space', [
     wbEDIDReq,
