@@ -9716,7 +9716,7 @@ var
 begin
   s := aValue;
   Len := Length(s);
-  if Len >= IntPower(256, Prefix) then
+  if (Prefix < 4) and (Len >= Cardinal(1) shl (Prefix*8)) then
     raise Exception.Create('String length overflow');
 
   NewSize := Len + Prefix;
