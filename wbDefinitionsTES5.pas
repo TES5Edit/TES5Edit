@@ -736,6 +736,9 @@ var
   wbCITC: IwbSubRecordDef;
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
   wbMODB: IwbSubRecordDef;
+  wbDNAMActor: IwbSubRecordStructDef;
+  wbMGEFData: IwbSubRecordStructDef;
+  wbMGEFType: IwbStructDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4337,6 +4340,72 @@ begin
 							)
               // End of Array
 						]);
+
+//-----------------------------------------------------------------------------
+//
+// DNAM - Unknown: 14 19 0F 14 Skill Values
+//                 14 0F 14 0F
+//                 0F 0F 0F 14
+//                 0F 0F 0F 0F
+//                 0F 0F
+//                       00 00 Skill Offsets
+//                 00 00 00 00
+//                 00 00 00 00
+//                 00 00 00 00
+//                 00 00 00 00
+//                 23 00 4B 00 Remaining
+//                 32 00 10 00
+//                 00 00 00 00
+//                 00 7E 54 00
+      wbDNAMActor := wbRStruct('Player Skills', [
+        wbStruct(DNAM, 'Player Skills', [
+		 {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
+						'OneHanded',
+						'TwoHanded',
+						'Marksman',
+						'Block',
+						'Smithing',
+						'HeavyArmor',
+						'LightArmor',
+						'Pickpocket',
+						'Lockpicking',
+						'Sneak',
+						'Alchemy',
+						'Speechcraft',
+						'Alteration',
+						'Conjuration',
+						'Destruction',
+						'Illusion',
+						'Restoration',
+						'Enchanting'
+					]),
+		 {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
+						'OneHanded',
+						'TwoHanded',
+						'Marksman',
+						'Block',
+						'Smithing',
+						'HeavyArmor',
+						'LightArmor',
+						'Pickpocket',
+						'Lockpicking',
+						'Sneak',
+						'Alchemy',
+						'Speechcraft',
+						'Alteration',
+						'Conjuration',
+						'Destruction',
+						'Illusion',
+						'Restoration',
+						'Enchanting'
+					]),
+					wbByteArray('Unknown', 4),
+					wbByteArray('Unknown', 4),
+					wbByteArray('Unknown', 4),
+					wbByteArray('Unknown', 4)
+				])
+			], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
+
 //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
@@ -9478,12 +9547,140 @@ begin
     )
   ]);
 
+  wbMGEFType := wbStruct('Effect Type', [
+    {64} wbInteger('Archtype', itU32, wbEnum([
+      {00} 'Value Modifier',
+      {01} 'Script',
+      {02} 'Dispel',
+      {03} 'Cure Disease',
+      {04} 'Unknown 4',
+      {05} 'Unknown 5',
+      {06} 'Unknown 6',
+      {07} 'Unknown 7',
+      {08} 'Unknown 8',
+      {09} 'Unknown 9',
+      {10} 'Unknown 10',
+      {11} 'Invisibility',
+      {12} 'Chameleon',
+      {13} 'Light',
+      {14} 'Unknown 14',
+      {15} 'Unknown 15',
+      {16} 'Lock',
+      {17} 'Open',
+      {18} 'Bound Item',
+      {19} 'Summon Creature',
+      {20} 'Unknown 20',
+      {21} 'Unknown 21',
+      {22} 'Unknown 22',
+      {23} 'Unknown 23',
+      {24} 'Paralysis',
+      {25} 'Unknown 25',
+      {26} 'Unknown 26',
+      {27} 'Unknown 27',
+      {28} 'Unknown 28',
+      {29} 'Unknown 29',
+      {30} 'Cure Paralysis',
+      {31} 'Cure Addiction',
+      {32} 'Cure Poison',
+      {33} 'Concussion',
+      {34} 'Value And Parts',
+      {35} 'Limb Condition',
+      {36} 'Turbo'
+    ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet)
+  ]);
+
+  wbMGEFData := wbRstruct('Magic Effect Data', [
+    wbStruct(DATA, 'Data', [
+      {00}  wbInteger('Flags', itU32, wbFlags([
+        {0x00000001}  'Hostile',
+        {0x00000002}  'Recover',
+        {0x00000004}  'Detrimental',
+        {0x00000008}  'Unknown 4',
+        {0x00000010}  'Self',
+				{0x00000020}  'Touch',
+				{0x00000040}  'Target',
+				{0x00000080}  'No Duration',
+				{0x00000100}  'No Magnitude',
+				{0x00000200}  'No Area',
+				{0x00000400}  'FX Persist',
+				{0x00000800}  'Unknown 12',
+				{0x00001000}  'Gory Visuals',
+				{0x00002000}  'Display Name Only',
+				{0x00004000}  'Unknown 15',
+				{0x00008000}  'Unknown 16',
+				{0x00010000}  'Unknown 17',
+				{0x00020000}  'Unknown 18',
+				{0x00040000}  'Unknown 19',
+				{0x00080000}  'Use skill',
+				{0x00100000}  'Use attribute',
+				{0x00200000}  'Unknown 22',
+				{0x00400000}  'Unknown 23',
+				{0x00800000}  'Unknown 24',
+				{0x01000000}  'Painless',
+				{0x02000000}  'Spray projectile type (or Fog if Bolt is specified as well)',
+				{0x04000000}  'Bolt projectile type (or Fog if Spray is specified as well)',
+				{0x08000000}  'No Hit Effect',
+				{0x10000000}  'No Death Dispel',
+				{0x20000000}  'Unknown 30',
+				{0x40000000}  'Unknown 31',
+				{0x80000000}  'Unknown 32'
+			])),
+      {04}  wbByteArray('Base cost ???', 4),
+      {08}  wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
+              wbFormID('Unkonwn', cpIgnore),
+              wbFormID('Assoc. Item'),
+              wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
+              wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
+              wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
+            ]),
+      {12}  wbInteger('Magic School', itS32, wbEnum([
+							], [
+							-1, 'None'
+						])),
+      {16}  wbInteger('Resistance Type', itS32, wbActorValueEnum),
+            // REFR, STAT, SPEL
+      {20}  wbFormIDCK('Needs Union Decider', [REFR, STAT, SPEL, NULL]),
+      {68}  wbFormIDCk('Light ??', [LIGH, NULL]),
+      {24}  wbByteArray('Taper Weight ??', 4),
+      {28}  wbFormIDCk('Hit Shader', [EFSH, NULL]),
+      {32}  wbFormIDCk('Enchant Shader', [EFSH, NULL]),
+      {36}  wbByteArray('Skill Level ???', 4),
+      {40}  wbByteArray('Area ???', 4),
+      {44}  wbByteArray('Casting Time ???', 4),
+      {48}  wbByteArray('Taper Curve ???', 4),
+      {52}  wbByteArray('Taper Duration ???', 4),
+      {56}  wbByteArray('Second Resistance Type ???', 4),
+      {60}  wbMGEFType,
+      {64}  wbActorValue,
+      {72}  wbFormIDCk('Projectile', [PROJ, NULL]),
+      {76}  wbFormIDCk('Explosion', [EXPL, NULL]),
+      {80}  wbByteArray('Unknown', 4),
+      {84}  wbByteArray('Unknown', 4),
+      {88}  wbInteger('Second Actor Value', itS32, wbActorValueEnum),
+      {92}  wbFormIDCk('Casting Art', [ARTO, NULL]),
+      {96}  wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
+      {100} wbFormIDCk('Impact Data', [IPDS, NULL]),
+      {104} wbByteArray('Skill Usage Mult ???', 4),
+      {108} wbFormIDCk('Dual Casting Data', [DUAL, NULL]),
+      {112} wbByteArray('Dual Casting Scale ???', 4),
+      {116} wbFormIDCk('Enchant Art', [ARTO, NULL]),
+      {120} wbByteArray('Unknown', 4),
+      {124} wbByteArray('Unknown', 4),
+      {128} wbFormIDCk('Equip Ability', [SPEL, NULL]),
+      {132} wbFormIDCk('Image Space Modifier', [IPDS, NULL]),
+      {136} wbFormIDCk('Perk', [PERK, NULL]),
+      {140} wbByteArray('Sound Volume ???', 4),
+      {144} wbByteArray('Unknown', 4),
+      {148} wbByteArray('Unknown', 4)
+    ], cpNormal, True)
+  ], []);
+
 //------------------------------------------------------------------------------
 // Begin NEW MGEF
 //------------------------------------------------------------------------------
   wbRecord(MGEF, 'Base Effect', [
     wbEDIDReq,
-    wbUnknown(VMAD),
+    wbVMAD,
     wbFULL,
 //    wbDESCReq,
 //    wbICON,
@@ -9491,108 +9688,9 @@ begin
     wbMODB,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(DATA),
-//    wbStruct(DATA, 'Data', [
-//      wbInteger('Flags', itU32, wbFlags([
-//        {0x00000001} 'Hostile',
-//        {0x00000002} 'Recover',
-//        {0x00000004} 'Detrimental',
-//        {0x00000008} '',
-//        {0x00000010} 'Self',
-//        {0x00000020} 'Touch',
-//        {0x00000040} 'Target',
-//        {0x00000080} 'No Duration',
-//        {0x00000100} 'No Magnitude',
-//        {0x00000200} 'No Area',
-//        {0x00000400} 'FX Persist',
-//        {0x00000800} '',
-//        {0x00001000} 'Gory Visuals',
-//        {0x00002000} 'Display Name Only',
-//        {0x00004000} '',
-//        {0x00008000} 'Radio Broadcast ??',
-//        {0x00010000} '',
-//        {0x00020000} '',
-//        {0x00040000} '',
-//        {0x00080000} 'Use skill',
-//        {0x00100000} 'Use attribute',
-//        {0x00200000} '',
-//        {0x00400000} '',
-//        {0x00800000} '',
-//        {0x01000000} 'Painless',
-//        {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
-//        {0x04000000} 'Bolt projectile type (or Fog if Spray is specified as well)',
-//        {0x08000000} 'No Hit Effect',
-//        {0x10000000} 'No Death Dispel',
-//        {0x20000000} '????'
-//      ])),
-//      {04} wbFloat('Base cost (Unused)'),
-//      {08} wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-//             wbFormID('Unused', cpIgnore),
-//             wbFormID('Assoc. Item'),
-//             wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
-//             wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
-//             wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
-//           ]),
-//      {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
-//      ], [
-//        -1, 'None'
-//      ])),
-//      {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-//      {20} wbInteger('Unknown', itU16),
-//      {22} wbByteArray('Unused', 2),
-//      {24} wbFormIDCk('Light', [LIGH, NULL]),
-//      {28} wbFloat('Projectile speed'),
-//      {32} wbFormIDCk('Effect Shader', [EFSH, NULL]),
-//      {36} wbFormIDCk('Object Display Shader', [EFSH, NULL]),
-//      {40} wbFormIDCk('Effect sound', [NULL, SOUN]),
-//      {44} wbFormIDCk('Bolt sound', [NULL, SOUN]),
-//      {48} wbFormIDCk('Hit sound', [NULL, SOUN]),
-//      {52} wbFormIDCk('Area sound', [NULL, SOUN]),
-//      {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
-//      {60} wbFloat('Constant Effect barter factor (Unused)'),
-//      {64} wbInteger('Archtype', itU32, wbEnum([
-//             {00} 'Value Modifier',
-//             {01} 'Script',
-//             {02} 'Dispel',
-//             {03} 'Cure Disease',
-//             {04} '',
-//             {05} '',
-//             {06} '',
-//             {07} '',
-//             {08} '',
-//             {09} '',
-//             {10} '',
-//             {11} 'Invisibility',
-//             {12} 'Chameleon',
-//             {13} 'Light',
-//             {14} '',
-//             {15} '',
-//             {16} 'Lock',
-//             {17} 'Open',
-//             {18} 'Bound Item',
-//             {19} 'Summon Creature',
-//             {20} '',
-//             {21} '',
-//             {22} '',
-//             {23} '',
-//             {24} 'Paralysis',
-//             {25} '',
-//             {26} '',
-//             {27} '',
-//             {28} '',
-//             {29} '',
-//             {30} 'Cure Paralysis',
-//             {31} 'Cure Addiction',
-//             {32} 'Cure Poison',
-//             {33} 'Concussion',
-//             {34} 'Value And Parts',
-//             {35} 'Limb Condition',
-//             {36} 'Turbo'
-//           ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
-//      {68} wbActorValue
-//    ], cpNormal, True)
+    wbMGEFData,
     wbUnknown(SNDD),
-    wbFormID(DNAM, 'Unknown'),
+    wbUnknown(DNAM),
     wbCTDAs
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
 
@@ -9932,67 +10030,7 @@ begin
     // Needs to be part of wbCNAM
     wbUnknown(SHRT),
     wbByteArray(DATA, 'Unused in Skyrim'),
-//-----------------------------------------------------------------------------
-//
-// DNAM - Unknown: 14 19 0F 14
-//                 14 0F 14 0F
-//                 0F 0F 0F 14
-//                 0F 0F 0F 0F
-//                 0F 0F 00 00
-//                 00 00 00 00
-//                 00 00 00 00
-//                 00 00 00 00
-//                 00 00 00 00
-//                 23 00 4B 00
-//                 32 00 10 00
-//                 00 00 00 00
-//                 00 7E 54 00
-    wbStruct(DNAM, '', [
-      {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
-             'OneHanded',
-             'TwoHanded',
-             'Marksman',
-             'Block',
-             'Smithing',
-             'HeavyArmor',
-             'LightArmor',
-             'Pickpocket',
-             'Lockpicking',
-             'Sneak',
-             'Alchemy',
-             'Speechcraft',
-             'Alteration',
-             'Conjuration',
-             'Destruction',
-             'Illusion',
-             'Restoration',
-             'Enchanting'
-           ]),
-      {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
-             'OneHanded',
-             'TwoHanded',
-             'Marksman',
-             'Block',
-             'Smithing',
-             'HeavyArmor',
-             'LightArmor',
-             'Pickpocket',
-             'Lockpicking',
-             'Sneak',
-             'Alchemy',
-             'Speechcraft',
-             'Alteration',
-             'Conjuration',
-             'Destruction',
-             'Illusion',
-             'Restoration',
-             'Enchanting'
-           ]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, False, wbActorTemplateUseStatsAutoCalc),
+    wbDNAMActor,
     wbRArrayS('Head Parts',
       wbFormIDCk(PNAM, 'Head Part', [HDPT]),
     cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
