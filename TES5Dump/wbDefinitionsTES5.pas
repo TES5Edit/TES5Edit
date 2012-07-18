@@ -9904,11 +9904,7 @@ begin
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
-    wbRArray('Unknown - DEST, DSTD, DSTF', wbRStruct('Unknown', [
-      wbUnknown(DEST),
-      wbUnknown(DSTD),
-      wbUnknown(DSTF)
-    ], [])),
+    wbDEST,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
@@ -9918,7 +9914,7 @@ begin
       wbInteger('Spell Count', itU16),
       wbByteArray('Unknown', 2)
       ]),
-    wbArray(SPLO, 'Spells', wbFormIDCk('Spell', [SPEL, SHOU])),
+    wbSPLOs,
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
     wbUnknown(SPOR),
@@ -10010,17 +10006,12 @@ begin
 //    wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
     wbUnknown(HCLF),
     wbUnknown(GNAM),
-    wbUnknown(ZNAM),
+    wbZNAM,
     wbUnknown(NAM5),
     wbUnknown(NAM6),
     wbUnknown(NAM7),
     wbUnknown(NAM8),
-    wbRArray('Unknown - CSDT, CSDI, CSDC', wbRStruct('Unknown', [
-      wbUnknown(CSDT),
-      wbUnknown(CSDI),
-      wbUnknown(CSDC)
-    ], [])),
-    // Not sure if this goes before or after CSDT, CSDI, CSDC
+    wbCSDTs,
     // When CSCR exists CSDT, CSDI, CSDC in not present
     wbUnknown(CSCR),
     wbUnknown(DOFT),
