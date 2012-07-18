@@ -650,7 +650,6 @@ var
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
-  wbFULLFact: IwbSubRecordDef;
   wbXNAM: IwbSubRecordDef;
   wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
@@ -719,6 +718,7 @@ var
   wbBoolU8: IwbIntegerDef;
   wbBoolU16: IwbIntegerDef;
   wbBoolU32: IwbIntegerDef;
+  wbFULLFact: IwbSubRecordDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbStructDef;
@@ -4763,7 +4763,7 @@ begin
       'Left Hand'
     ]));
 
-  wbMODB := wbByteArray(MODB, 'Unknown', 4, cpIgnore);
+  wbMODB := wbByteArray(MODB, 'Unknown', 4);
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
@@ -9685,7 +9685,7 @@ begin
 //    wbDESCReq,
 //    wbICON,
 //    wbMODL,
-    wbMODB,
+    wbFormID(MDOB, 'Menu Display Object'),
     wbKSIZ,
     wbKWDAs,
     wbMGEFData,
