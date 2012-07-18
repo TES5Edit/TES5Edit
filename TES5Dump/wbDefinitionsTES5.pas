@@ -163,7 +163,9 @@ const
   DNAM : TwbSignature = 'DNAM';
   DOBJ : TwbSignature = 'DOBJ';
   DODT : TwbSignature = 'DODT';
+  DOFT : TwbSignature = 'DOFT';
   DOOR : TwbSignature = 'DOOR';
+  DPLT : TwbSignature = 'DPLT';
   DSTD : TwbSignature = 'DSTD';
   DSTF : TwbSignature = 'DSTF';
   EAMT : TwbSignature = 'EAMT';
@@ -194,6 +196,7 @@ const
   FLST : TwbSignature = 'FLST';
   FLTV : TwbSignature = 'FLTV';
   FNAM : TwbSignature = 'FNAM';
+  FTST : TwbSignature = 'FTST';
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
   GLOB : TwbSignature = 'GLOB';
@@ -327,6 +330,7 @@ const
   NAM7 : TwbSignature = 'NAM7';
   NAM8 : TwbSignature = 'NAM8';
   NAM9 : TwbSignature = 'NAM9';
+  NAMA : TwbSignature = 'NAMA';
   NAME : TwbSignature = 'NAME';
   NAVI : TwbSignature = 'NAVI';
   NAVM : TwbSignature = 'NAVM';
@@ -469,6 +473,7 @@ const
   SNAM : TwbSignature = 'SNAM';
   SNDD : TwbSignature = 'SNDD';
   SNDX : TwbSignature = 'SNDX';
+  SOFT : TwbSignature = 'SOFT';
   SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN';
   SPEL : TwbSignature = 'SPEL';
@@ -4286,6 +4291,7 @@ begin
                wbInteger('Blue', itU8),
                wbByteArray('Unused', 1)
              ])
+//             wbFULL
            ]);
 // MODT - Texture Files Hashes:
 //     02 00 00 00
@@ -9873,41 +9879,63 @@ begin
       wbStructSK(SNAM, [0], 'Faction', [
         wbFormIDCk('Faction', [FACT]),
         wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
-      ]),
-    cpNormal, False, nil, nil, wbActorTemplateUseFactions),
+        wbByteArray('Unknown', 3)
+      ]), cpNormal, False, nil, nil, wbActorTemplateUseFactions
+    ),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Armor', [ARMO], False, cpNormal, False),
+    wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attack Data', wbATKD),
     wbArray(ATKE, 'Attack Event', wbString),
-    wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
-    wbInteger(SPCT, 'Spell Count', itU16),
+    wbStruct(SPCT, 'Spell Count', [
+      wbInteger('Spell Count', itU16),
+      wbByteArray('Unknown', 2)
+      ]),
     wbArray(SPLO, 'Spells', wbFormIDCk('Spell', [SPEL, SHOU])),
-    {wbRArray('Unknown - SNAM', wbRStruct('Unknown', [
-      wbUnknown(SNAM)
-    ], [])),}
-    // ECOR
-    // SPOR
-//    wbRArray('Unknown - PKID', wbRStruct('Unknown', [
-//      wbUnknown(PKID)
-//    ], [])),
-//  wbInteger('Count', itU8),
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
     wbCOCTReq,
     wbCNTOs,
     wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
-
-    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
-      wbUnknown(PNAM)
-    ], [])),
+   // ECOR
+   // SPOR
+  wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
+// Needs to be part of wbCNAM
+// Just a reminder to myself
+//    wbCNAM,
+    wbUnknown(FULL), // Needs to be part of wbCNAM
+// Needs to be part of wbCNAM
+//    wbUnknown(DATA),
+    wbUnknown(DNAM),
+    wbRArrayS('Head Parts',
+      wbFormIDCk(PNAM, 'Head Part', [HDPT]),
+    cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
 //-----------------------------------------------------------------------------
-//Start (NPC_) : TINI, TINC, TINV, TIAS
+// Some of the old routines
+//    wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
+//    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+//    wbFaceGenNPC,
+//    wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
+//    wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
+//    wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
+    wbUnknown(ZNAM),
+    wbUnknown(NAM5),
+    wbUnknown(NAM6),
+    wbUnknown(NAM7),
+    wbUnknown(NAM8),
+    wbUnknown(DOFT),
+    wbUnknown(DPLT),
+    wbUnknown(SOFT),
+    wbUnknown(FTST),
+    wbUnknown(QNAM),
+    wbUnknown(NAM9),
+    wbUnknown(NAMA),
+//-----------------------------------------------------------------------------
+// Array of TINI, TINC, TINV, TIAS
 //-----------------------------------------------------------------------------
     wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
       wbUnknown(TINI),

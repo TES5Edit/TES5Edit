@@ -133,3 +133,20 @@ Has only rough definition. Check later for an update.
 == CLFM ==
 
 Defined.
+
+== MODT ==
+
+Has only rough definition. Check later for an update.
+
+== HDPT ==
+
+Has only rough definition. Check later for an update.
+
+== HAIR ==
+
+Hair is an empty Top Group.  HDPT manages hair in Skyrim.
+
+== EYES ==
+
+Eyes didn't need any changes.  Needs verification for unknown flags and aditional fileds.
+
