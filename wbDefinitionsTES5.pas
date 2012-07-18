@@ -131,6 +131,7 @@ const
   CPTH : TwbSignature = 'CPTH';
   CRDT : TwbSignature = 'CRDT';
   CREA : TwbSignature = 'CREA';
+  CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
   CRGR : TwbSignature = 'CRGR'; { New to Skyrim }
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
   CSAD : TwbSignature = 'CSAD';
@@ -163,14 +164,15 @@ const
   DNAM : TwbSignature = 'DNAM';
   DOBJ : TwbSignature = 'DOBJ';
   DODT : TwbSignature = 'DODT';
-  DOFT : TwbSignature = 'DOFT';
+  DOFT : TwbSignature = 'DOFT'; { New to Skyrim }
   DOOR : TwbSignature = 'DOOR';
-  DPLT : TwbSignature = 'DPLT';
+  DPLT : TwbSignature = 'DPLT'; { New to Skyrim }
   DSTD : TwbSignature = 'DSTD';
   DSTF : TwbSignature = 'DSTF';
   EAMT : TwbSignature = 'EAMT';
   ECZN : TwbSignature = 'ECZN';
   LCTN : TwbSignature = 'LCTN';
+  ECOR : TwbSignature = 'ECOR'; { New to Skyrim }
   EDID : TwbSignature = 'EDID';
   EFID : TwbSignature = 'EFID';
   EFIT : TwbSignature = 'EFIT';
@@ -196,7 +198,7 @@ const
   FLST : TwbSignature = 'FLST';
   FLTV : TwbSignature = 'FLTV';
   FNAM : TwbSignature = 'FNAM';
-  FTST : TwbSignature = 'FTST';
+  FTST : TwbSignature = 'FTST'; { New to Skyrim }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
   GLOB : TwbSignature = 'GLOB';
@@ -210,6 +212,7 @@ const
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
   HAIR : TwbSignature = 'HAIR';
+  HCLF : TwbSignature = 'HCLF'; { New to Skyrim }
   HCLR : TwbSignature = 'HCLR';
   HDPT : TwbSignature = 'HDPT';
   HEDR : TwbSignature = 'HEDR';
@@ -330,7 +333,7 @@ const
   NAM7 : TwbSignature = 'NAM7';
   NAM8 : TwbSignature = 'NAM8';
   NAM9 : TwbSignature = 'NAM9';
-  NAMA : TwbSignature = 'NAMA';
+  NAMA : TwbSignature = 'NAMA'; { New to Skyrim }
   NAME : TwbSignature = 'NAME';
   NAVI : TwbSignature = 'NAVI';
   NAVM : TwbSignature = 'NAVM';
@@ -467,13 +470,14 @@ const
   SCRV : TwbSignature = 'SCRV';
   SCTX : TwbSignature = 'SCTX';
   SCVR : TwbSignature = 'SCVR';
+  SHRT : TwbSignature = 'SHRT'; { New to Skyrim }
   SLCP : TwbSignature = 'SLCP';
   SLPD : TwbSignature = 'SLPD';
   SLSD : TwbSignature = 'SLSD';
   SNAM : TwbSignature = 'SNAM';
   SNDD : TwbSignature = 'SNDD';
   SNDX : TwbSignature = 'SNDX';
-  SOFT : TwbSignature = 'SOFT';
+  SOFT : TwbSignature = 'SOFT'; { New to Skyrim }
   SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN';
   SPEL : TwbSignature = 'SPEL';
@@ -481,6 +485,7 @@ const
   SCRL : TwbSignature = 'SCRL';
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
+  SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
   STAT : TwbSignature = 'STAT';
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   SPGD : TwbSignature = 'SPGD';
@@ -724,6 +729,7 @@ var
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
   wbCOCTReq: IwbSubRecordDef;
+  wbKWDA: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbCNAM: IwbSubRecordDef;
@@ -4281,7 +4287,7 @@ begin
   wbCITC:= wbInteger(CITC, 'Count', itU32);
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
-//  wbKWDA := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
+  wbKWDA := wbFormID(KWDA, 'Keyword' , cpNormal, True);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
   wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
@@ -4563,11 +4569,22 @@ begin
     wbFloat('Attack Chance'),
     wbFormIDCk('Attack Spell', [SPEL, SHOU]),
     wbInteger('Attack Flags', itU16, wbFlags([
-      {0x01} 'Ignore Weapon',
-      {0x02} 'Bash Attack',
-      {0x04} 'Power Attack',
-      {0x08} 'Left Attack',
-      {0x10} 'Rotating Attack'
+      {0x00000001}'Ignore Weapon',
+      {0x00000002}'Bash Attack',
+      {0x00000004}'Power Attack',
+      {0x00000008}'Left Attack',
+      {0x00000010}'Rotating Attack',
+      {0x00000020}'Unknown 6',
+      {0x00000040}'Unknown 7',
+      {0x00000080}'Unknown 8',
+      {0x00000100}'Unknown 9',
+      {0x00000200}'Unknown 10',
+      {0x00000400}'Unknown 11',
+      {0x00000800}'Unknown 12',
+      {0x00001000}'Unknown 13',
+      {0x00002000}'Unknown 14',
+      {0x00004000}'Unknown 15',
+      {0x00008000}'Unknown 16'
     ])),
     wbFloat('Attack Angle'),
     wbFloat('Strike Angle'),
@@ -4575,7 +4592,8 @@ begin
     wbFormID('Attack Type'),
     wbFloat('Knockdown'),
     wbFloat('Recovery Time'),
-    wbFloat('Fatigue Mult')
+    wbFloat('Fatigue Mult'),
+    wbByteArray('Unknown', 2)
   ]);
 
   wbPRKR := wbStruct(PRKR, 'Perk Record', [
@@ -9886,6 +9904,11 @@ begin
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
+    wbRArray('Unknown - DEST, DSTD, DSTF', wbRStruct('Unknown', [
+      wbUnknown(DEST),
+      wbUnknown(DSTD),
+      wbUnknown(DSTF)
+    ], [])),
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
@@ -9898,19 +9921,82 @@ begin
     wbArray(SPLO, 'Spells', wbFormIDCk('Spell', [SPEL, SHOU])),
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
+    wbUnknown(SPOR),
+    wbUnknown(ECOR),
     wbCOCTReq,
     wbCNTOs,
     wbAIDT,
-   // ECOR
-   // SPOR
-  wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
-// Needs to be part of wbCNAM
-// Just a reminder to myself
-//    wbCNAM,
-    wbUnknown(FULL), // Needs to be part of wbCNAM
-// Needs to be part of wbCNAM
-//    wbUnknown(DATA),
-    wbUnknown(DNAM),
+    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
+    // Needs to be part of wbCNAM
+    // Just a reminder to myself
+    wbKSIZ,
+    wbKWDAs,
+    wbCNAM,
+    wbFULL, // Needs to be part of wbCNAM
+    // Needs to be part of wbCNAM
+    wbUnknown(SHRT),
+    wbByteArray(DATA, 'Unused in Skyrim'),
+//-----------------------------------------------------------------------------
+//
+// DNAM - Unknown: 14 19 0F 14
+//                 14 0F 14 0F
+//                 0F 0F 0F 14
+//                 0F 0F 0F 0F
+//                 0F 0F 00 00
+//                 00 00 00 00
+//                 00 00 00 00
+//                 00 00 00 00
+//                 00 00 00 00
+//                 23 00 4B 00
+//                 32 00 10 00
+//                 00 00 00 00
+//                 00 7E 54 00
+    wbStruct(DNAM, '', [
+      {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
+             'OneHanded',
+             'TwoHanded',
+             'Marksman',
+             'Block',
+             'Smithing',
+             'HeavyArmor',
+             'LightArmor',
+             'Pickpocket',
+             'Lockpicking',
+             'Sneak',
+             'Alchemy',
+             'Speechcraft',
+             'Alteration',
+             'Conjuration',
+             'Destruction',
+             'Illusion',
+             'Restoration',
+             'Enchanting'
+           ]),
+      {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
+             'OneHanded',
+             'TwoHanded',
+             'Marksman',
+             'Block',
+             'Smithing',
+             'HeavyArmor',
+             'LightArmor',
+             'Pickpocket',
+             'Lockpicking',
+             'Sneak',
+             'Alchemy',
+             'Speechcraft',
+             'Alteration',
+             'Conjuration',
+             'Destruction',
+             'Illusion',
+             'Restoration',
+             'Enchanting'
+           ]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, False, wbActorTemplateUseStatsAutoCalc),
     wbRArrayS('Head Parts',
       wbFormIDCk(PNAM, 'Head Part', [HDPT]),
     cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
@@ -9922,14 +10008,25 @@ begin
 //    wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
 //    wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
 //    wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
+    wbUnknown(HCLF),
+    wbUnknown(GNAM),
     wbUnknown(ZNAM),
     wbUnknown(NAM5),
     wbUnknown(NAM6),
     wbUnknown(NAM7),
     wbUnknown(NAM8),
+    wbRArray('Unknown - CSDT, CSDI, CSDC', wbRStruct('Unknown', [
+      wbUnknown(CSDT),
+      wbUnknown(CSDI),
+      wbUnknown(CSDC)
+    ], [])),
+    // Not sure if this goes before or after CSDT, CSDI, CSDC
+    // When CSCR exists CSDT, CSDI, CSDC in not present
+    wbUnknown(CSCR),
     wbUnknown(DOFT),
     wbUnknown(DPLT),
     wbUnknown(SOFT),
+    wbUnknown(CRIF),
     wbUnknown(FTST),
     wbUnknown(QNAM),
     wbUnknown(NAM9),
