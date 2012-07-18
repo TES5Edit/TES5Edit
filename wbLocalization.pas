@@ -19,7 +19,7 @@ uses
   wbImplementation,
   wbInterface,
   wbBSA,
-  Types, Classes, SysUtils, Math, Variants,
+  Types, Classes, SysUtils, Math, Variants;
 
 implementation
 
