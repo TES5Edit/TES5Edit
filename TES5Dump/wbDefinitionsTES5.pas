@@ -4483,9 +4483,9 @@ begin
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpBenign, True);
-  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
-  wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
-  wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
+  wbFULL := wbLString(FULL, 'Name', 0, cpTranslate);
+  wbFULLActor := wbLString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
+  wbFULLReq := wbLString(FULL, 'Name', 0, cpNormal, True);
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');

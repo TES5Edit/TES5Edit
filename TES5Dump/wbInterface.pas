@@ -601,6 +601,9 @@ type
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
 
+    function GetIsLocalized: Boolean;
+    procedure SetIsLocalized(Value: Boolean);
+
     property FileName: string
       read GetFileName;
     property UnsavedSince: TDateTime
@@ -633,6 +636,10 @@ type
     property IsESM: Boolean
       read GetIsESM
       write SetIsESM;
+
+    property IsLocalized: Boolean
+      read GetIsLocalized
+      write SetIsLocalized;
   end;
 
   IwbDataContainer = interface(IwbContainer)
@@ -1376,6 +1383,23 @@ function wbStringLC(const aSignature : TwbSignature;
                                      : IwbSubRecordDef; overload;
 
 function wbStringLC(const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+
+function wbLString(const aSignature : TwbSignature;
+                    const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbSubRecordDef; overload;
+
+function wbLString(const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -2854,7 +2878,7 @@ type
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; virtual;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 
-    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
+    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); virtual;
     procedure FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 
     function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; virtual;
@@ -2905,6 +2929,12 @@ type
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
   end;
 
+  TwbLStringDef = class(TwbStringDef)
+  protected
+    function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; override;
+    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); override;
+    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+  end;
 
   TwbLenStringDef = class(TwbValueDef, IwbLenStringDef)
   protected
@@ -3556,6 +3586,40 @@ begin
   Result := wbSubRecord(aSignature, aName, wbStringLC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
 end;
 
+function wbStringLC(const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+begin
+  Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+end;
+
+function wbLString(const  aSignature : TwbSignature;
+                    const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbLString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+end;
+
+function wbLString(const  aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+begin
+  Result := TwbLStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+end;
+
 function wbStringMgefCode(const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
@@ -3566,17 +3630,6 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                                      : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbStringMgefCode('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
-end;
-
-function wbStringLC(const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
-begin
-  Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
 end;
 
 function wbStringMgefCode(const aName      : string;
@@ -9859,6 +9912,32 @@ end;
 function TwbStringLCDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
 begin
   Result := LowerCase(s);
+end;
+
+{ TwbLString }
+
+procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
+begin
+  if aElement._File.IsLocalized then
+    raise Exception.Create('Can not assign to a localized string')
+  else
+    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
+end;
+
+function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  if aElement._File.IsLocalized then
+    Result := Length(ToString(aBasePtr, aEndPtr, aElement))
+  else
+    Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
+end;
+
+function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
+begin
+  if aElement._File.IsLocalized then
+    Result := Format('lstring ID %d', [PCardinal(aBasePtr)^])
+  else
+    Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
 end;
 
 { TwbStringScriptDef }
