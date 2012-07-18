@@ -18,6 +18,12 @@ unit wbSavedGames;
 
 interface
 
+uses
+  wbImplementation,
+  wbInterface,
+  wbBSA,
+  Types, Classes, SysUtils, Math, Variants,
+
 implementation
 
 end.

@@ -10012,7 +10012,7 @@ begin
     wbUnknown(NAM7),
     wbUnknown(NAM8),
     wbCSDTs,
-    // When CSCR exists CSDT, CSDI, CSDC in not present
+    // When CSCR exists CSDT, CSDI, CSDC are not present
     wbUnknown(CSCR),
     wbUnknown(DOFT),
     wbUnknown(DPLT),
