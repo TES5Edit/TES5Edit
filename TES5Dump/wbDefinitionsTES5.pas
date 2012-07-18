@@ -5563,14 +5563,14 @@ begin
 // Old routine used 28 Bytes, new routine needs to use 32.
   wbCTDA :=
     wbStruct(CTDA, 'Condition', [
-      wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unused', 3),
-      wbUnion('Comparison Value', wbCTDACompValueDecider, [
+{Byte  1}	wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
+{Byte  2} wbByteArray('Unused', 3),
+{Byte  5}	wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-      wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-      wbUnion('Parameter #1', wbCTDAParam1Decider, [
+{Byte  9}	wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+{Byte 13}	wbUnion('Parameter #1', wbCTDAParam1Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore),
         {02} wbInteger('Integer', itS32),
@@ -5623,7 +5623,7 @@ begin
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO])
       ]),
-      wbUnion('Parameter #2', wbCTDAParam2Decider, [
+{Byte 17}	wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore),
         {02} wbInteger('Integer', itS32),
@@ -5716,17 +5716,18 @@ begin
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO])
       ]),
-      wbInteger('Run On', itU32, wbEnum([
+{Byte 21}	wbInteger('Run On', itU32, wbEnum([
         'Subject',
         'Target',
         'Reference',
         'Combat Target',
         'Linked Reference'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
-      wbUnion('Reference', wbCTDAReferenceDecider, [
+{Byte 25}	wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
-      ])
+					]),
+{Byte 29} wbByteArray('Unknown', 4)
     ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
 //------------------------------------------------------------------------------
 // End wbCTDA
@@ -6281,6 +6282,10 @@ begin
             'Angry',
             'Sad'
           ])),
+//          wbByteArray('Unused', 3),
+//          wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
+//          wbInteger('Teaches', itS8, wbSkillEnum),
+//          wbInteger('Maximum training level', itU8),
           wbInteger('Assistance', itS8, wbEnum([
             'Helps Nobody',
             'Helps Allies',
@@ -7091,7 +7096,7 @@ begin
     ]),
 //    wbUnknown(PLVD),
     wbCITC,
-    wbCTDAs
+    wbCTDAs // Not compatable with Skyrim at the moment
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
 //----------------------------------------------------------------------------
@@ -9882,8 +9887,15 @@ begin
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbInteger(SPCT, 'Spell Count', itU16),
     wbArray(SPLO, 'Spells', wbFormIDCk('Spell', [SPEL, SHOU])),
+    {wbRArray('Unknown - SNAM', wbRStruct('Unknown', [
+      wbUnknown(SNAM)
+    ], [])),}
     // ECOR
     // SPOR
+//    wbRArray('Unknown - PKID', wbRStruct('Unknown', [
+//      wbUnknown(PKID)
+//    ], [])),
+//  wbInteger('Count', itU8),
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
     wbCOCTReq,
