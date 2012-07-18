@@ -724,6 +724,7 @@ var
   wbCNAM: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef;
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
+  wbMODB: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4669,10 +4670,12 @@ begin
       'Left Hand'
     ]));
 
+  wbMODB := wbByteArray(MODB, 'Unknown', 4, cpIgnore);
+
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbMODB,
       wbMODT,
 //      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files Hashes',
@@ -4686,7 +4689,7 @@ begin
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbMODB,
       wbMODT,
 //      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files Hashes',
@@ -4700,7 +4703,7 @@ begin
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbMODB,
       wbMODT,
 //      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files',
@@ -5547,15 +5550,17 @@ begin
 // 32 Bytes -- 8 itU32
 // Vender Conditions
 //      CTDA - Condition Flags
-//        {Byte 1-4} Comparison
-//        Float: 25.000000
-//        Unknown 3: 2F 00 00 00
-//        Unknown: ALCH - Ingestible [0010D666] <FoodGourd> "Z"
-//        Unknown 5: 00 00 00 00
-//        Unknown 6: 00 00 00 00
-//        Unknown 7: 00 00 00 00
-//        Unknown 8: FF FF FF FF
-
+//        {Byte   1-4} Flags, Include Comparison type -- 'Equal to', 'Not equal to', 'Greater than', 'Greater than or equal to',
+//                     'Less than', 'Less than or equal to'
+//                     Also includes 'Use OR', 'Parameters - Use Aliases', 'Parameters - Use Pack Data', 'Swap Subject and Target',
+//        {Byte   5-8} Float: 25.000000
+//        {Byte  9-12} Unknown 3: 2F 00 00 00
+//        {Byte 13-16} Unknown: ALCH - Ingestible [0010D666] <FoodGourd> "Z"
+//        {Byte 17-20} Unknown 5: 00 00 00 00
+//        {Byte 21-24} Unknown 6: 00 00 00 00
+//        {Byte 25-28} Unknown 7: 00 00 00 00
+//        {Byte 29-32} Unknown 8: FF FF FF FF
+// Old routine used 28 Bytes, new routine needs to use 32.
   wbCTDA :=
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
@@ -6922,9 +6927,14 @@ begin
     wbFULLReq,
     wbString(ICON, 'Texture', 0{, cpNormal, True??}),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
-      'Playable',
-      'Not Male',
-      'Not Female'
+      {0x00000001}'Playable',
+      {0x00000002}'Not Male',
+      {0x00000004}'Not Female',
+      {0x00000008}'Unknown 4',
+      {0x00000010}'Unknown 5',
+      {0x00000020}'Unknown 6',
+      {0x00000040}'Unknown 7',
+      {0x00000080}'Unknown 8'
     ]), cpNormal, True)
   ]);
 
@@ -8929,18 +8939,40 @@ begin
     ], cpNormal, True)
   ]);
 
+//------------------------------------------------------------------------------
+// HAIR is a HDPT in Skyrim
+//------------------------------------------------------------------------------
   wbRecord(HAIR, 'Hair', [
-    wbEDIDReq,
-    wbFULLReq,
-    wbMODLReq,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      'Playable',
-      'Not Male',
-      'Not Female',
-      'Fixed'
-    ]), cpNormal, True)
+    wbEDIDReq
+//    wbFULLReq,
+//    wbMODLReq,
+//    wbString(ICON, 'Texture', 0, cpNormal, True),
+//    wbInteger(DATA, 'Flags', itU8, wbFlags([
+//      'Playable',
+//      'Not Male',
+//      'Not Female',
+//      'Fixed'
+//    ]), cpNormal, True)
   ]);
+
+//------------------------------------------------------------------------------
+// Start Old Hair
+//------------------------------------------------------------------------------
+//  wbRecord(HAIR, 'Hair', [
+//    wbEDIDReq,
+//    wbFULLReq,
+//    wbMODLReq,
+//    wbString(ICON, 'Texture', 0, cpNormal, True),
+//    wbInteger(DATA, 'Flags', itU8, wbFlags([
+//      'Playable',
+//      'Not Male',
+//      'Not Female',
+//      'Fixed'
+//    ]), cpNormal, True)
+//  ]);
+//------------------------------------------------------------------------------
+// End Old Hair
+//------------------------------------------------------------------------------
 
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
@@ -9422,15 +9454,15 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(MGEF, 'Base Effect', [
     wbEDIDReq,
+    wbUnknown(VMAD),
     wbFULL,
 //    wbDESCReq,
 //    wbICON,
 //    wbMODL,
-    wbUnknown(MDOB),
+    wbMODB,
     wbKSIZ,
     wbKWDAs,
     wbUnknown(DATA),
-//    wbUnknown(VMAD),
 //    wbStruct(DATA, 'Data', [
 //      wbInteger('Flags', itU32, wbFlags([
 //        {0x00000001} 'Hostile',
