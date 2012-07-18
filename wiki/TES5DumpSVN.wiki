@@ -102,7 +102,7 @@ CTDA - Needs review not defined correctly.
 
 == NPC_ ==
 
-Rough Definition of NPC_ flags definitions incorrect. Needs Review.
+NPC is now mostly defined.  The Definition is still very rough, Needs Review.
 
 == LVLN ==
 
