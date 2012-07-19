@@ -571,6 +571,7 @@ type
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
+    function GetFullFileName: string;
     function GetUnsavedSince: TDateTime;
     function GetMaster(aIndex: Integer): IwbFile;
     function GetMasterCount: Integer;
@@ -2104,7 +2105,8 @@ uses
   Variants,
   Math,
   AnsiStrings,
-  TypInfo;
+  TypInfo,
+  wbLocalization;
 
 function StrToSignature(const s: string): TwbSignature;
 var
@@ -9935,7 +9937,7 @@ end;
 function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
 begin
   if aElement._File.IsLocalized then
-    Result := Format('lstring ID %d', [PCardinal(aBasePtr)^])
+    Result := GetLocalizedValue(PCardinal(aBasePtr)^, aElement)
   else
     Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
 end;
