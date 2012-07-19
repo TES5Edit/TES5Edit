@@ -6339,6 +6339,8 @@ begin
 //      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
 //      wbFloat('Weight')
 //    ], cpNormal, True),
+//    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
+//   wbFormIDCk(QNAM, 'Sound - Close', [SOUN]),
 //    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
 //  ], True);
 //------------------------------------------------------------------------------
@@ -9485,18 +9487,18 @@ begin
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
     wbLLCT,
-		wbRArrayS('Leveled List Entries',
-			wbRStructExSK([0], [1], 'Leveled List Entry', [
-				wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-					wbInteger('Level', itS16),
-					wbByteArray('Unused', 2),
-					wbFormIDCk('Reference', [NPC_, LVLN]),
-					wbInteger('Count', itS16),
-					wbByteArray('Unused', 2)
-				]),
+    wbRArrayS('Leveled List Entries',
+      wbRStructExSK([0], [1], 'Leveled List Entry', [
+        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+          wbInteger('Level', itS16),
+          wbByteArray('Unused', 2),
+          wbFormIDCk('Reference', [NPC_, LVLN]),
+          wbInteger('Count', itS16),
+          wbByteArray('Unused', 2)
+        ])
 				wbCOED
-			], []),
-		cpNormal, True),
+      ], []),
+    cpNormal, True)
     wbMODL
   ]);
 
@@ -9516,18 +9518,18 @@ begin
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbLLCT,
-		wbRArrayS('Leveled List Entries',
-			wbRStructExSK([0], [1], 'Leveled List Entry', [
-				wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-					wbInteger('Level', itS16),
-					wbByteArray('Unused', 2),
-					wbFormIDCk('Reference', [NPC_, LVLN]),
-					wbInteger('Count', itS16),
-					wbByteArray('Unused', 2)
-				]),
-				wbCOED
-			], []),
-		cpNormal, True)
+    wbRArrayS('Leveled List Entries',
+      wbRStructExSK([0], [1], 'Leveled List Entry', [
+        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+          wbInteger('Level', itS16),
+          wbByteArray('Unused', 2),
+          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
+          wbInteger('Count', itS16),
+          wbByteArray('Unused', 2)
+        ]),
+        wbCOED
+      ], [])
+    )
   ]);
 
 //----------------------------------------------------------------------------------
@@ -9575,18 +9577,17 @@ begin
       {0x04} 'Use All'
     ]), cpNormal, True),
     wbLLCT,
-		wbRArrayS('Leveled List Entries',
-			wbRStructExSK([0], [1], 'Leveled List Entry', [
-				wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-					wbInteger('Level', itS16),
-					wbByteArray('Unused', 2),
-					wbFormIDCk('Reference', [NPC_, LVLN]),
-					wbInteger('Count', itS16),
-					wbByteArray('Unused', 2)
-				]),
-				wbCOED
-			], []),
-		cpNormal, True)
+    wbRArrayS('Leveled Spell List Entries',
+      wbRStructExSK([0], [1], 'Leveled Spell List Entry', [
+        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+        wbInteger('Level', itS16),
+        wbByteArray('Unused', 2),
+        wbFormIDCk('Reference', [SPEL]),
+        wbInteger('Count', itS16),
+        wbByteArray('Unused', 2)
+      ])
+      ], [])
+    )
   ]);
 
   wbMGEFType := wbStruct('Effect Type', [
