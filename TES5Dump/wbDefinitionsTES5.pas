@@ -379,6 +379,7 @@ const
   OFST : TwbSignature = 'OFST';
   ONAM : TwbSignature = 'ONAM';
   PACK : TwbSignature = 'PACK';
+  PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PERK : TwbSignature = 'PERK';
   PFIG : TwbSignature = 'PFIG';
   PFPC : TwbSignature = 'PFPC';
@@ -564,6 +565,7 @@ const
   XEZN : TwbSignature = 'XEZN';
   XGLB : TwbSignature = 'XGLB';
   XHLP : TwbSignature = 'XHLP';
+  XHOR : TwbSignature = 'XHOR';
   XDCR : TwbSignature = 'XDCR';
   XHLT : TwbSignature = 'XHLT';
   XIBS : TwbSignature = 'XIBS';
@@ -573,6 +575,8 @@ const
   XLOD : TwbSignature = 'XLOD';
   XLRM : TwbSignature = 'XLRM';
   XLTW : TwbSignature = 'XLTW';
+  XLCN : TwbSignature = 'XLCN'; { New To Skyrim }
+  XLRT : TwbSignature = 'XLRT'; { New To Skyrim }
   XMBO : TwbSignature = 'XMBO';
   XMBP : TwbSignature = 'XMBP';
   XMBR : TwbSignature = 'XMBR';
@@ -4978,112 +4982,77 @@ begin
     wbSCROs
   ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad);
 
-
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
-
-//-----------------------------------------------------------------------------
-// ACHR
-//-----------------------------------------------------------------------------
-  wbRecord(ACHR, 'Placed NPC', [
-    wbUnknown(EDID)
-  ], True, wbPlacedAddInfo);
-
-//-----------------------------------------------------------------------------
-// Begin New ACHR
-//
-// Begin Old ACHR
-//-----------------------------------------------------------------------------
-//  wbRecord(ACHR, 'Placed NPC', [
-//    wbEDID,
-//    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-//    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-//
-//    {--- Ragdoll ---}
-//    wbXRGD,
-//    wbXRGB,
-//
-//    {--- Patrol Data ---}
-//    wbRStruct('Patrol Data', [
-//      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-//      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-//      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-//      wbEmbeddedScriptReq,
-//      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
-//    ], []),
-//
-//    {--- Leveled Actor ----}
-//    wbXLCM,
-//
-//    {--- Merchant Container ----}
-//    wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
-//
-//    {--- Extra ---}
-//    wbInteger(XCNT, 'Count', itS32),
-//    wbFloat(XRDS, 'Radius'),
-//    wbFloat(XHLP, 'Health'),
-//
-//    {--- Decals ---}
-//    wbRArrayS('Linked Decals',
-//      wbStructSK(XDCR, [0], 'Decal', [
-//        wbFormIDCk('Reference', [REFR]),
-//        wbUnknown
-//      ])
-//    ),
-//
-//    {--- Linked Ref ---}
-//    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-//    wbStruct(XCLP, 'Linked Reference Color', [
-//      wbStruct('Link Start Color', [
-//        wbInteger('Red', itU8),
-//        wbInteger('Green', itU8),
-//        wbInteger('Blue', itU8),
-//        wbByteArray('Unused', 1)
-//      ]),
-//      wbStruct('Link End Color', [
-//        wbInteger('Red', itU8),
-//        wbInteger('Green', itU8),
-//        wbInteger('Blue', itU8),
-//        wbByteArray('Unused', 1)
-//      ])
-//    ]),
-//
-//    {--- Activate Parents ---}
-//    wbRStruct('Activate Parents', [
-//      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-//        'Parent Activate Only'
-//      ], True)),
-//      wbRArrayS('Activate Parent Refs',
-//        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-//          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-//          wbFloat('Delay')
-//        ])
-//      )
-//    ], []),
-//
-//    wbString(XATO, 'Activation Prompt'),
-//
-//    {--- Enable Parent ---}
-//    wbXESP,
-//
-//    {--- Emittance ---}
-//    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-//
-//    {--- MultiBound ---}
-//    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-//
-//    {--- Flags ---}
-//    wbEmpty(XIBS, 'Ignored By Sandbox'),
-//
-//    {--- 3D Data ---}
-//    wbXSCL,
-//    wbDATAPosRot
-//  ], True, wbPlacedAddInfo);
-//-----------------------------------------------------------------------------
-//End OLD ACHR
-//-----------------------------------------------------------------------------
-
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
+
+//------------------------------------------------------------------------------
+// Begin ACHR
+//------------------------------------------------------------------------------
+  wbRecord(ACHR, 'Placed NPC', [
+    wbEDID,
+    wbVMAD,
+    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
+
+    {--- Patrol Data ---}
+    wbRStruct('Patrol Data', [
+      wbFloat(XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True)
+    ], []),
+
+    {--- Unknown ---}
+    wbUnknown(PDTO),
+
+    {--- Ragdoll ---}
+    wbXRGD,
+    wbXRGB,
+
+    {--- 3D Data ---}
+    wbXSCL,
+
+    {--- Leveled Actor ----}
+    wbXLCM,
+
+    {--- Activate Parents ---}
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+          wbFloat('Delay')
+        ])
+      )
+    ], []),
+
+    {--- Unknown ---}
+    wbFormIDCk(XLRT, 'Location Reference', [LCRT]),
+
+    {--- Unknown ---}
+    wbFormID(XHOR, 'Unknown'),
+
+    {--- Enable Parent ---}
+    wbXESP,
+
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+
+    {--- Unknown ---}
+    wbXOWN,
+
+    {--- Unknown ---}
+    wbFormIDCk(XLCN, 'Location Reference', [LCRT]),
+
+    {--- Linked Ref ---}
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, STAT, FURN]),
+
+    {--- 3D Data ---}
+    wbDATAPosRot
+  ], True, wbPlacedAddInfo);
+//------------------------------------------------------------------------------
+// End ACHR
+//------------------------------------------------------------------------------
 
   wbRecord(ACRE, 'Placed Creature', [
     wbEDID,
