@@ -735,10 +735,12 @@ var
   wbCNAM: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef;
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
-  wbMODB: IwbSubRecordDef;
   wbDNAMActor: IwbSubRecordStructDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbStructDef;
+  wbRNAM: IwbSubRecordDef;
+  wbSNAM: IwbSubRecordDef;
+  wbQNAM: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4293,6 +4295,9 @@ begin
   wbKWDA := wbFormID(KWDA, 'Keyword' , cpNormal, True);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
+  wbSNAM:= wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
+  wbQNAM:= wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
+
   wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
              wbStruct('Link Start Color', [
                wbInteger('Red', itU8),
@@ -4300,7 +4305,7 @@ begin
                wbInteger('Blue', itU8),
                wbByteArray('Unused', 1)
              ])
-//             wbFULL
+//           wbFULL
            ]);
 // MODT - Texture Files Hashes:
 //     02 00 00 00
@@ -4318,6 +4323,10 @@ begin
 //     DA 8E 92 91
 //     64 64 73 00 <-- In Ascii dds
 //     26 2C 33 3B
+// MODT 0C 00 02 00 <-- 14 Bytes
+//      00 00 00 00 <-- 2 Byte Length 12 Bytes and no repeating pattern
+//      00 00 00 00
+//      00 00
 
   wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
               wbStruct('Possible Flags', [
@@ -4555,8 +4564,8 @@ begin
   wbFULL := wbLString(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
   wbFULLReq := wbLString(FULL, 'Name', 0, cpNormal, True);
-  wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
-  wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
+  wbDESC := wbLString(DESC, 'Description', 0, cpTranslate);
+  wbDESCReq := wbLString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
 
   wbOBND := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
@@ -4763,12 +4772,10 @@ begin
       'Left Hand'
     ]));
 
-  wbMODB := wbByteArray(MODB, 'Unknown', 4);
-
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbMODB,
+      wbByteArray(MODB, 'Unknown', 4),
       wbMODT,
 //      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files Hashes',
@@ -4782,7 +4789,7 @@ begin
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbMODB,
+      wbByteArray(MODB, 'Unknown', 4),
       wbMODT,
 //      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files Hashes',
@@ -4796,7 +4803,7 @@ begin
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbMODB,
+      wbByteArray(MODB, 'Unknown', 4),
       wbMODT,
 //      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
 //      wbArray(MODT, 'Texture Files',
@@ -6065,22 +6072,34 @@ begin
 
   wbRecord(BOOK, 'Book', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
+    wbMODL, // MODT
     wbDESCReq,
-    wbDEST,
+    wbFormID(YNAM, 'Unknown'),
+    wbKSIZ,
+    wbKWDAs,
+    // 16 Bytes Total Unconfirmed
     wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU8, wbFlags([
-        '',
-        'Can''t be Taken'
-      ])),
-      wbInteger('Skill', itS8, wbSkillEnum),
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
-    ], cpNormal, True)
+      {01} wbInteger('Flags', itU8, wbFlags([
+             {0x00000001}'Unknown 1',
+             {0x00000002}'Unknown 2',
+             {0x00000004}'Unknown 3',
+             {0x00000008}'Unknown 4',
+             {0x00000010}'Unknown 5',
+             {0x00000020}'Unknown 6',
+             {0x00000040}'Unknown 7',
+             {0x00000080}'Unknown 8'
+           ])),
+      {02} wbInteger('Skill', itS8, wbSkillEnum),
+      {03} wbByteArray('Value ??', 4),
+      {07} wbByteArray('Weight ??', 4),
+      {11} wbByteArray('Unknown ??', 4),
+      {15} wbByteArray('Unknown ??', 2)
+    ], cpNormal, True),
+    wbFormID(INAM, 'Unknown'),
+    wbUnknown(CNAM)
   ]);
 
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
@@ -6282,7 +6301,27 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(CONT, 'Container', [
     wbEDIDReq,
-    wbFULL
+    wbVMAD,
+    wbOBNDReq,
+    wbFULL,
+    wbMODL, // MODT, MODS in wbMODL
+    wbCOCT,
+    wbCNTOs,
+    wbStruct(DATA, '', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Respawns',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8'
+      ])),
+      wbByteArray('Weight ???', 4)
+    ], cpNormal, True),
+    wbSNAM,
+    wbQNAM
   ], True);
 
 //------------------------------------------------------------------------------
@@ -6300,8 +6339,6 @@ begin
 //      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
 //      wbFloat('Weight')
 //    ], cpNormal, True),
-//    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
-//   wbFormIDCk(QNAM, 'Sound - Close', [SOUN]),
 //    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
 //  ], True);
 //------------------------------------------------------------------------------
@@ -7262,10 +7299,10 @@ begin
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbUnknown,               //Possibly String/Localization
-      wbInteger('Int', itS32), //Old Integer
-      wbFloat('Float'),        //Old Float
-      wbBoolU32                //New wbBool
+      wbLString('Name', 0, cpTranslate), //Possibly String/Localization
+      wbInteger('Int', itS32),           //Old Integer
+      wbFloat('Float'),                  //Old Float
+      wbBoolU32                          //New wbBool
     ], cpNormal, True)
   ]);
 //----------------------------------------------------------------------------
@@ -8953,8 +8990,10 @@ begin
 //----------------------------------------------------------------------------
   wbRecord(MATO, 'MATO', [
     wbEDIDReq,
-    wbUnknown(MODL),
-    wbUnknown(DNAM),
+    wbMODL,
+    wbRArray('Unknown - DNAM', wbRStruct('Unknown', [
+      wbUnknown(DNAM)
+    ], [])),
     wbUnknown(DATA)
   ]);
 
@@ -9446,17 +9485,19 @@ begin
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
     wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unused', 2),
-          wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unused', 2)
-        ])
-      ], []),
-    cpNormal, True)
+		wbRArrayS('Leveled List Entries',
+			wbRStructExSK([0], [1], 'Leveled List Entry', [
+				wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+					wbInteger('Level', itS16),
+					wbByteArray('Unused', 2),
+					wbFormIDCk('Reference', [NPC_, LVLN]),
+					wbInteger('Count', itS16),
+					wbByteArray('Unused', 2)
+				]),
+				wbCOED
+			], []),
+		cpNormal, True),
+    wbMODL
   ]);
 
 //----------------------------------------------------------------------------------
@@ -9475,18 +9516,18 @@ begin
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unused', 2),
-          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unused', 2)
-        ]),
-        wbCOED
-      ], [])
-    )
+		wbRArrayS('Leveled List Entries',
+			wbRStructExSK([0], [1], 'Leveled List Entry', [
+				wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+					wbInteger('Level', itS16),
+					wbByteArray('Unused', 2),
+					wbFormIDCk('Reference', [NPC_, LVLN]),
+					wbInteger('Count', itS16),
+					wbByteArray('Unused', 2)
+				]),
+				wbCOED
+			], []),
+		cpNormal, True)
   ]);
 
 //----------------------------------------------------------------------------------
@@ -9534,17 +9575,18 @@ begin
       {0x04} 'Use All'
     ]), cpNormal, True),
     wbLLCT,
-    wbRArrayS('Leveled Spell List Entries',
-      wbRStructExSK([0], [1], 'Leveled Spell List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [SPEL]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ])
-      ], [])
-    )
+		wbRArrayS('Leveled List Entries',
+			wbRStructExSK([0], [1], 'Leveled List Entry', [
+				wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
+					wbInteger('Level', itS16),
+					wbByteArray('Unused', 2),
+					wbFormIDCk('Reference', [NPC_, LVLN]),
+					wbInteger('Count', itS16),
+					wbByteArray('Unused', 2)
+				]),
+				wbCOED
+			], []),
+		cpNormal, True)
   ]);
 
   wbMGEFType := wbStruct('Effect Type', [
@@ -9640,7 +9682,7 @@ begin
       {16}  wbInteger('Resistance Type', itS32, wbActorValueEnum),
             // REFR, STAT, SPEL
       {20}  wbFormIDCK('Needs Union Decider', [REFR, STAT, SPEL, NULL]),
-      {68}  wbFormIDCk('Light ??', [LIGH, NULL]),
+      {24}  wbFormIDCk('Light ??', [LIGH, NULL]),
       {24}  wbByteArray('Taper Weight ??', 4),
       {28}  wbFormIDCk('Hit Shader', [EFSH, NULL]),
       {32}  wbFormIDCk('Enchant Shader', [EFSH, NULL]),
