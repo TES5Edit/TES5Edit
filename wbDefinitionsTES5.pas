@@ -9495,10 +9495,10 @@ begin
           wbFormIDCk('Reference', [NPC_, LVLN]),
           wbInteger('Count', itS16),
           wbByteArray('Unused', 2)
-        ])
+        ]),
 				wbCOED
       ], []),
-    cpNormal, True)
+    cpNormal, True),
     wbMODL
   ]);
 
@@ -9585,7 +9585,8 @@ begin
         wbFormIDCk('Reference', [SPEL]),
         wbInteger('Count', itS16),
         wbByteArray('Unused', 2)
-      ])
+      ]),
+			wbCOED
       ], [])
     )
   ]);
