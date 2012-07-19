@@ -119,6 +119,7 @@ const
   CAMS : TwbSignature = 'CAMS';
   CELL : TwbSignature = 'CELL';
   CITC : TwbSignature = 'CITC'; { New to Skyrim }
+  CIS2 : TwbSignature = 'CIS2'; { New to Skyrim }
   CLAS : TwbSignature = 'CLAS';
   CLDC : TwbSignature = 'CLDC'; { New to Skyrim }
   CLMT : TwbSignature = 'CLMT';
@@ -666,7 +667,7 @@ var
   wbMO4S: IwbSubRecordDef;
   wbMODLActor: IwbSubRecordStructDef;
   wbMODLReq: IwbSubRecordStructDef;
-  wbCTDA: IwbSubRecordDef;
+  wbCTDA: IwbSubRecordStructDef;
   wbSCHRReq: IwbSubRecordDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
@@ -741,6 +742,8 @@ var
   wbRNAM: IwbSubRecordDef;
   wbSNAM: IwbSubRecordDef;
   wbQNAM: IwbSubRecordDef;
+  wbMDOB: IwbSubRecordDef;
+  wbSPIT: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4292,11 +4295,12 @@ begin
   wbCITC:= wbInteger(CITC, 'Count', itU32);
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
-  wbKWDA := wbFormID(KWDA, 'Keyword' , cpNormal, True);
+  wbKWDA := wbFormID(KWDA, 'Keyword', cpNormal, True);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
   wbSNAM:= wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
   wbQNAM:= wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
+  wbMDOB:= wbFormID(MDOB, 'Menu Display Object', cpNormal, True);
 
   wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
              wbStruct('Link Start Color', [
@@ -5637,11 +5641,11 @@ begin
 
   wbEFIT :=
     wbStructSK(EFIT, [3, 4], '', [
-      wbInteger('Magnitude', itU32),
+      wbFloat('Magnitude', cpNormal, True),
       wbInteger('Area', itU32),
-      wbInteger('Duration', itU32),
-      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
-      wbActorValue
+      wbInteger('Duration', itU32)
+//      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
+//      wbActorValue
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
 //------------------------------------------------------------------------------
@@ -5661,7 +5665,8 @@ begin
 //        {Byte 25-28} Unknown 7: 00 00 00 00
 //        {Byte 29-32} Unknown 8: FF FF FF FF
 // Old routine used 28 Bytes, new routine needs to use 32.
-  wbCTDA :=
+  wbCTDA := wbRStruct('Conditions', [
+
     wbStruct(CTDA, 'Condition', [
 {Byte  1}	wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
 {Byte  2} wbByteArray('Unused', 3),
@@ -5828,7 +5833,9 @@ begin
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
 					]),
 {Byte 29} wbByteArray('Unknown', 4)
-    ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
+    ], cpNormal, False, nil, 6, wbCTDAAfterLoad),
+    wbUnknown(CIS2)
+    ], [], cpNormal);
 //------------------------------------------------------------------------------
 // End wbCTDA
 //------------------------------------------------------------------------------
@@ -5848,7 +5855,6 @@ begin
       wbEFIT,
       wbCTDAs
     ], [], cpNormal, True);
-
 
   wbRecord(ALCH, 'Ingestible', [
     wbEDIDReq,
@@ -11449,10 +11455,7 @@ begin
     wbInteger(HNAM, 'Priority', itS32, nil, cpNormal, False, False, wbNeverShow)
   ], False, nil, cpNormal, False, wbSOUNAfterLoad);
 
-  wbRecord(SPEL, 'Actor Effect', [
-    wbEDIDReq,
-    wbFULL,
-    wbStruct(SPIT, '', [
+  wbSPIT := wbStruct(SPIT, '', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Actor Effect',
         {1} 'Disease',
@@ -11460,16 +11463,17 @@ begin
         {3} 'Lesser Power',
         {4} 'Ability',
         {5} 'Poison',
-        {6} '',
-        {7} '',
-        {8} '',
-        {9} '',
+        {6} 'Unknown 6',
+        {7} 'Unknown 7',
+        {8} 'Unknown 8',
+        {9} 'Unknown 9',
        {10} 'Addiction'
       ])),
-      wbInteger('Cost (Unused)', itU32),
-      wbInteger('Level (Unused)', itU32, wbEnum([
-        {0} 'Unused'
-      ])),
+      wbByteArray('Cost ???', 4),
+      wbByteArray('Level ???', 4),
+//      wbInteger('Level (Unused)', itU32, wbEnum([
+//        {0} 'Unused'
+//      ])),
       wbInteger('Flags', itU8, wbFlags([
         {0x00000001} 'No Auto-Calc',
         {0x00000002} 'Immune to Silence 1?',
@@ -11480,10 +11484,66 @@ begin
         {0x00000040} 'Disable Absorb/Reflect',
         {0x00000080} 'Force Touch Explode'
       ])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True),
-    wbEffectsReq
+      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True);
+
+  wbRecord(SPEL, 'Actor Effect', [
+    wbEDIDReq,
+    wbOBNDReq,
+    wbFULLReq,
+    wbMDOB,
+    wbFormIDCk(ETYP, 'Equip Type', [EQUP, NULL]),
+    wbDESCReq,
+    wbSPIT,
+    wbEffectsReq // EFID, EFIT, CTDA
   ]);
+
+//------------------------------------------------------------------------------
+// Begin Old SPEL
+//------------------------------------------------------------------------------
+//  wbRecord(SPEL, 'Actor Effect', [
+//    wbEDIDReq,
+//    wbFULL,
+//    wbStruct(SPIT, '', [
+//      wbInteger('Type', itU32, wbEnum([
+//        {0} 'Actor Effect',
+//        {1} 'Disease',
+//        {2} 'Power',
+//        {3} 'Lesser Power',
+//        {4} 'Ability',
+//        {5} 'Poison',
+//        {6} '',
+//        {7} '',
+//        {8} '',
+//        {9} '',
+//       {10} 'Addiction'
+//      ])),
+//      wbInteger('Cost (Unused)', itU32),
+//      wbInteger('Level (Unused)', itU32, wbEnum([
+//        {0} 'Unused'
+//      ])),
+//      wbInteger('Flags', itU8, wbFlags([
+//        {0x00000001} 'No Auto-Calc',
+//        {0x00000002} 'Immune to Silence 1?',
+//        {0x00000004} 'PC Start Effect',
+//        {0x00000008} 'Immune to Silence 2?',
+//        {0x00000010} 'Area Effect Ignores LOS',
+//        {0x00000020} 'Script Effect Always Applies',
+//        {0x00000040} 'Disable Absorb/Reflect',
+//        {0x00000080} 'Force Touch Explode'
+//      ])),
+//      wbByteArray('Unused', 3)
+//    ], cpNormal, True),
+//    wbEffectsReq
+//  ]);
+//------------------------------------------------------------------------------
+// End Old SPEL
+//------------------------------------------------------------------------------
 
   wbRecord(SCRL, 'SCRL', [
     wbEDIDReq
