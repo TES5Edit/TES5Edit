@@ -144,14 +144,14 @@ begin
     'English',
     ext
   ]);
-  if not FileExists(lfile) then begin
-    Result := Format('lstring ID %d', [ID]);
-    Exit;
-  end;
 
   if not Assigned(lFiles) then lFiles := TStringList.Create;
   idx := lFiles.IndexOf(lfile);
   if idx = -1 then begin
+    if not FileExists(lfile) then begin
+      Result := Format('lstring ID %d', [ID]);
+      Exit;
+    end;
     wblf := TwbLocalizationFile.Create(lfile);
     lFiles.AddObject(lfile, wblf);
   end else
