@@ -8970,7 +8970,9 @@ begin
   ]);
 
   wbRecord(EQUP, 'EQUP', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbArray(PNAM, 'Equipped Hands Reference', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, True),
+    wbUnknown(DATA)
   ]);
 
   wbRecord(RELA, 'RELA', [
