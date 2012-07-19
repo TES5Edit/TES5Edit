@@ -491,6 +491,7 @@ type
 
     {---IwbFile---}
     function GetFileName: string;
+    function GetFullFileName: string;
     function GetUnsavedSince: TDateTime;
     function HasMaster(const aFileName: string): Boolean;
     function GetMaster(aIndex: Integer): IwbFile;
@@ -2279,6 +2280,11 @@ end;
 function TwbFile.GetFileName: string;
 begin
   Result := ExtractFileName(flFileName);
+end;
+
+function TwbFile.GetFullFileName: string;
+begin
+  Result := flFileName;
 end;
 
 function TwbFile.GetFileStates: TwbFileStates;
