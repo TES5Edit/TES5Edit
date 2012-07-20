@@ -10942,6 +10942,24 @@ begin
     wbEDIDReq,
     wbVMAD,
     wbUnknown(PKDT),
+    //--------------------------------------------------------------------------
+    // wbPKDT,
+    //--------------------------------------------------------------------------
+    // xDump will crash if wbPKDT is called
+    // It seems to be with
+    // wbUnion('Type Specific Flags', wbPKDTSpecificFlagsDecider, [
+    // So I have to make sure I have not renamed anything, and if I did
+    // I have to change it.  This error occured before I made changes
+    // to PACK. I only broke it up to find the error.
+    //--------------------------------------------------------------------------
+    // E:\TES5DumpProj\TES5Dump\wbImplementation.pas, line 10470
+    // procedure TwbElement.FreeInstance;
+    // begin
+    //  Assert(FRefCount = 1);
+    //  Assert(eExternalRefs = 1);
+    //  inherited;
+    // end;
+    //--------------------------------------------------------------------------
     wbPSDT,
     wbCTDAs,
     wbIDLF,
@@ -11798,7 +11816,7 @@ begin
     //wbFormIDCk(ZNAM, 'Drop Sound', [SNDR]),
     wbSPIT,
     wbEffectsReq // EFID, EFIT, CTDA
-  ]);
+  ], False);
 
 //------------------------------------------------------------------------------
 // Begin Old SPEL
