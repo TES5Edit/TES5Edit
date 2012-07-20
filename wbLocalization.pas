@@ -11,6 +11,7 @@
      under the License.
 
 *******************************************************************************}
+// Thanks to zilav18
 unit wbLocalization;
 
 interface
