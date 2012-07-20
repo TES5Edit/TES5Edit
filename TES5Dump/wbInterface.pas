@@ -68,6 +68,7 @@ var
   wbLODGen: Boolean;
 
   wbAllowInternalEdit: Boolean{} = True{};
+  wbAllowUnordered: Boolean{} = False{};
   wbShowInternalEdit: Boolean{ = True{};
 
   wbReportMode: Boolean{ = True{};
