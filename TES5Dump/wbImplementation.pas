@@ -11,7 +11,6 @@
      under the License.
 
 *******************************************************************************}
-
 unit wbImplementation;
 
 {$DEFINE DBGSUBREC}
