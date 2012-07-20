@@ -5829,20 +5829,35 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
+    wbKSIZ,
+    wbKWDA,
+    wbDESCReq,
     wbMODL,
-    wbICON,
-    wbSCRI,
-    wbDEST,
+    wbMODT,
     wbYNAM,
     wbZNAM,
-    wbETYPReq,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
-      wbInteger('Flags?', itU8, wbFlags([
-        'No Auto-Calc (Unused)',
-        'Food Item',
-        'Medicine'
+      wbInteger('Flags', itU8, wbFlags([
+        {0x00000001} 'No Auto-Calc (Unused)',
+        {0x00000002} 'Food Item',
+        {0x00000004} 'unknown x4',
+        {0x00000008} 'unknown x8',
+        {0x00000010} 'unknown x10',
+				{0x00000020} 'unknown x20',
+				{0x00000040} 'unknown x40',
+				{0x00000080} 'unknown x80',
+				{0x00000100} 'unknown x100',
+				{0x00000200} 'unknown x200',
+				{0x00000400} 'unknown x400',
+				{0x00000800} 'unknown x800',
+				{0x00001000} 'unknown x1000',
+				{0x00002000} 'unknown x2000',
+				{0x00004000} 'unknown x4000',
+				{0x00008000} 'unknown x8000',
+				{0x00010000} 'Medicine',
+				{0x00020000} 'Poison'
       ])),
       wbByteArray('Unused', 3),
       wbFormIDCk('Withdrawal Effect', [SPEL, NULL]),
@@ -11427,8 +11442,35 @@ begin
   ], False, nil, cpNormal, False, wbSOUNAfterLoad);
 
   wbSPIT := wbStruct(SPIT, '', [
+      wbInteger('Base Cost', itU32),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Manual Cost Calc',
+        {0x00000002} '',
+        {0x00000004} '',
+        {0x00000008} '',
+        {0x00000010} '',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} '',
+        {0x00000800} '',
+        {0x00001000} '',
+        {0x00002000} '',
+        {0x00004000} '',
+        {0x00008000} '',
+        {0x00010000} '',
+        {0x00020000} 'PC Start Spell',
+        {0x00040000} '',
+        {0x00080000} 'Area Effect Ignores LOS',
+        {0x00100000} 'Ignore Resistance',
+        {0x00200000} 'No Absorb/Reflect',
+        {0x00400000} '',
+        {0x00800000} 'No Dual Cast Modification'
+      ])),
       wbInteger('Type', itU32, wbEnum([
-        {0} 'Actor Effect',
+        {0} 'Spell',
         {1} 'Disease',
         {2} 'Power',
         {3} 'Lesser Power',
@@ -11438,38 +11480,40 @@ begin
         {7} 'Unknown 7',
         {8} 'Unknown 8',
         {9} 'Unknown 9',
-       {10} 'Addiction'
+       {10} 'Addiction',
+       {11} 'Voice'
       ])),
-      wbByteArray('Cost ???', 4),
-      wbByteArray('Level ???', 4),
-//      wbInteger('Level (Unused)', itU32, wbEnum([
-//        {0} 'Unused'
-//      ])),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x00000001} 'No Auto-Calc',
-        {0x00000002} 'Immune to Silence 1?',
-        {0x00000004} 'PC Start Effect',
-        {0x00000008} 'Immune to Silence 2?',
-        {0x00000010} 'Area Effect Ignores LOS',
-        {0x00000020} 'Script Effect Always Applies',
-        {0x00000040} 'Disable Absorb/Reflect',
-        {0x00000080} 'Force Touch Explode'
+      wbFloat('Charge Time'),
+      wbInteger('Cast Type', itU32, wbEnum([
+        {0} 'Constant Effect',
+        {1} 'Fire and Forget',
+        {2} 'Concentration'
       ])),
-      wbByteArray('Unknown', 3),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
+      wbInteger('Type', itU32, wbEnum([
+        {0} 'Self',
+        {1} 'Touch',
+        {2} 'Aimed',
+        {3} 'Target Actor',
+        {4} 'Target Location'
+      ])),
+      wbFloat('Cast Duration'),
+      wbFloat('Range'),
+      wbFormIDCk('Half-cost Perk', [PERK])
     ], cpNormal, True);
 
   wbRecord(SPEL, 'Actor Effect', [
     wbEDIDReq,
     wbOBNDReq,
-    wbFULLReq,
+    wbFULL,
+    wbKSIZ,
+    wbKWDAs,
     wbMDOB,
     wbFormIDCk(ETYP, 'Equip Type', [EQUP, NULL]),
     wbDESCReq,
+    //wbMODL,
+    //wbMODT,
+    //wbFormIDCk(YNAM, 'Pickup Sound', [SNDR]),
+    //wbFormIDCk(ZNAM, 'Drop Sound', [SNDR]),
     wbSPIT,
     wbEffectsReq // EFID, EFIT, CTDA
   ]);
