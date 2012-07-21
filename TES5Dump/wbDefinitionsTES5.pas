@@ -479,6 +479,7 @@ const
   SCRV : TwbSignature = 'SCRV';
   SCTX : TwbSignature = 'SCTX';
   SCVR : TwbSignature = 'SCVR';
+  SDSC : TwbSignature = 'SDSC'; { New to Skyrim }
   SHRT : TwbSignature = 'SHRT'; { New to Skyrim }
   SLCP : TwbSignature = 'SLCP';
   SLPD : TwbSignature = 'SLPD';
@@ -678,7 +679,7 @@ var
   wbMO4S: IwbSubRecordDef;
   wbMODLActor: IwbSubRecordStructDef;
   wbMODLReq: IwbSubRecordStructDef;
-  wbCTDA: IwbSubRecordStructDef;
+  wbCTDAOld: IwbSubRecordStructDef;
   wbSCHRReq: IwbSubRecordDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
@@ -754,6 +755,10 @@ var
   wbQNAM: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
+  wbSOPM_ONAM: IwbSubRecordStructDef;
+  wbSNDD: IwbSubRecordUnionDef;
+  wbCTDANew: IwbSubRecordStructDef;
+
 //------------------------------------------------------------------------------
 // Old Pack
 //------------------------------------------------------------------------------
@@ -5646,7 +5651,7 @@ begin
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
 //------------------------------------------------------------------------------
-// Begin wbCTDA
+// Begin wbCTDAOld
 //------------------------------------------------------------------------------
 // 32 Bytes -- 8 itU32
 // Vender Conditions
@@ -5663,7 +5668,7 @@ begin
 //        {Byte 29-32} Unknown 8: FF FF FF FF
 // Old routine used 28 Bytes, new routine needs to use 32.
 // CITC is not used here since it Can be 0
-  wbCTDA := wbRStruct('Conditions', [
+  wbCTDAOld := wbRStruct('Conditions', [
 					wbStruct(CTDA, 'Condition', [
 {Byte  1}		wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
 {Byte  2} 	wbByteArray('Unused', 3),
@@ -5671,7 +5676,8 @@ begin
 							wbFloat('Comparison Value - Float'),
 							wbFormIDCk('Comparison Value - Global', [GLOB])
 						]),
-{Byte  9}		wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+{Byte  9}		wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+{Byte  9}		wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
 {Byte 13}		wbUnion('Parameter #1', wbCTDAParam1Decider, [
 				 {00} wbByteArray('Unknown', 4),
 		  	 {01} wbByteArray('None', 4, cpIgnore),
@@ -5833,10 +5839,34 @@ begin
 				wbString(CIS2, 'Unknown')
     ], [], cpNormal);
 //------------------------------------------------------------------------------
-// End wbCTDA
+// End wbCTDAOld
 //------------------------------------------------------------------------------
-  wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
+
+  wbCTDAOld := wbRStruct('Conditions', [
+					wbStruct(CTDA, 'Condition', [
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2),
+            wbByteArray('Unknown', 2)
+					], cpNormal, False, nil, 6, wbCTDAAfterLoad),
+				wbString(CIS1, 'Unknown'),
+				wbString(CIS2, 'Unknown')
+    ], [], cpNormal);
+
+  wbCTDAs := wbRArray('Conditions', wbCTDANew, cpNormal, False);
+  wbCTDAsReq := wbRArray('Conditions', wbCTDANew, cpNormal, True);
 
   wbEffects :=
     wbRStructs('Effects','Effect', [
@@ -9023,7 +9053,37 @@ begin
   ]);
 
   wbRecord(SNDR, 'SNDR', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(CNAM),
+    wbFormID(GNAM, 'Category'),
+    wbFormIDCk(SNAM, 'String', [SNDR, NULL]),
+    wbLString(FNAM, 'String'),
+    wbRArray('Sounds',
+      wbRStruct('Sound Files', [
+        wbString(ANAM, 'File Name')
+      ],[])
+    ),
+    wbFormIDCk(ONAM, 'Output Model', [SOPM, NULL]),
+    wbCTDAs,
+    wbStruct(LNAM, 'Values', [
+      wbByteArray('Unknown', 1),
+//      wbByteArray('Looping', 1),
+      wbInteger('Looping', itU8, wbEnum([], [
+        $00 , 'None',
+        $08 , 'Loop',
+        $10 , 'Envelope Fast',
+        $20 , 'Envelope Slow'
+      ])),
+      wbByteArray('Unknown', 1),
+      wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
+    ]),
+    wbStruct(BNAM, 'Values', [
+      wbInteger('% Frequency Shift', itU8),
+      wbInteger('% Frequency Variance', itU8),
+      wbInteger('Priority', itU8),
+      wbInteger('db Variance', itU8),
+      wbInteger('Static Attentuation (db)', itU16, wbdiv(100))
+    ])
   ]);
 
   wbRecord(DUAL, 'DUAL', [
@@ -9031,11 +9091,100 @@ begin
   ]);
 
   wbRecord(SNCT, 'SNCT', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbFULL,
+    wbUnknown(FNAM),
+//    wbStruct(FNAM, 'Data', [
+//    wbInteger('Flags', itU32, wbFlags([
+//    {0x00000001}'Unknown 1',
+//    {0x00000002}'Unknown 2',
+//    {0x00000004}'Unknown 3',
+//    {0x00000008}'Unknown 4',
+//    {0x00000010}'Unknown 5',
+//    {0x00000020}'Unknown 6',
+//    {0x00000040}'Unknown 7',
+//    {0x00000080}'Unknown 8',
+//    {0x00000100}'Unknown 9',
+//    {0x00000200}'Unknown 10',
+//    {0x00000400}'Unknown 11',
+//    {0x00000800}'Unknown 12',
+//    {0x00001000}'Unknown 13',
+//    {0x00002000}'Unknown 14',
+//    {0x00004000}'Unknown 15',
+//    {0x00008000}'Unknown 16',
+//    {0x00010000}'Unknown 17',
+//    {0x00020000}'Unknown 18',
+//    {0x00040000}'Unknown 19',
+//    {0x00080000}'Unknown 20',
+//    {0x00100000}'Unknown 21',
+//    {0x00200000}'Unknown 22',
+//    {0x00400000}'Unknown 23',
+//    {0x00800000}'Unknown 24',
+//    {0x01000000}'Unknown 25',
+//    {0x02000000}'Unknown 26',
+//    {0x03000000}'Unknown 27',
+//    {0x08000000}'Unknown 28',
+//    {0x10000000}'Unknown 29',
+//    {0x20000000}'Unknown 30',
+//    {0x40000000}'Unknown 31',
+//    {0x80000000}'Unknown 32'
+//    ]))
+//    ], cpNormal, True),
+    wbFormIDCk(PNAM, 'String', [SNCT, NULL]),
+    wbUnknown(VNAM),
+    wbUnknown(UNAM)
   ]);
 
+//----------------------------------------------------------------------------
+// wbONAM Made for SOPM
+//
+//----------------------------------------------------------------------------
+  wbSOPM_ONAM := wbRStruct('An ONAM Field in SOPM', [
+    wbStruct(ONAM,'Some Values', [
+        wbInteger('Value 1', itS16),
+        wbInteger('Value 2', itS16),
+        wbInteger('Value 3', itS16),
+        wbInteger('Value 4', itS16),
+        wbInteger('Value 5', itS16),
+        wbInteger('Value 6', itS16),
+        wbInteger('Value 7', itS16),
+        wbInteger('Value 8', itS16),
+        wbInteger('Value 9', itS16),
+        wbInteger('Value 10', itS16),
+        wbInteger('Value 11', itS16),
+        wbInteger('Value 12', itS16)
+      ])
+  ], [], cpNormal, False, nil, wbAllowUnordered);
+
   wbRecord(SOPM, 'SOPM', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(NAM1),
+    wbUnknown(FNAM),
+    wbUnknown(MNAM),
+    wbUnknown(CNAM),
+    wbSOPM_ONAM,
+    wbStruct(SNAM,'Some SNAM Values', [
+        wbInteger('Value 1', itS16),
+        wbInteger('Value 2', itS16),
+        wbInteger('Value 3', itS16),
+        wbInteger('Value 4', itS16),
+        wbInteger('Value 5', itS16),
+        wbInteger('Value 6', itS16),
+        wbInteger('Value 7', itS16),
+        wbInteger('Value 8', itS16)
+      ]),
+    wbStruct(ANAM,'Some ANAM Values', [
+        wbInteger('Value 1', itS16),
+        wbInteger('Value 2', itS16),
+        wbInteger('Value 3', itS16),
+        wbInteger('Value 4', itS16),
+        wbInteger('Value 5', itS16),
+        wbInteger('Value 6', itS16),
+        wbInteger('Value 7', itS16),
+        wbInteger('Value 8', itS16),
+        wbInteger('Value 9', itS16),
+        wbInteger('Value 10', itS16)
+      ])
   ]);
 
   wbRecord(COLL, 'COLL', [
@@ -10924,7 +11073,7 @@ begin
     wbPDTOs
   ], [], cpNormal, False, nil, wbAllowUnordered);
 
-  wbPOCA :=wbRStruct('OnChange', [
+  wbPOCA := wbRStruct('OnChange', [
     wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
     wbINAM,
     wbUnknown(SCHR),
@@ -11665,72 +11814,110 @@ begin
     ], []))
   ], True);
 
+//------------------------------------------------------------------------------
+//  SNDD - Sound Data: 00 00 00 00
+//                     00 00 00 00
+//                     00 00 00 00
+//                     64 00 32 00
+//                     14 00 05 00
+//                     00 00 50 00
+//                     80 00 00 00
+//                     00 00 00 00
+//                     00 00 00 00
+
+  wbSNDD := wbRUnion('Sound Data', [
+    wbStruct(SNDD, 'Sound Data', [
+      wbInteger('Minimum Attentuation Distance', itU8, wbMul(5)),
+      wbInteger('Maximum Attentuation Distance', itU8, wbMul(100)),
+      wbInteger('Frequency Adjustment %', itS8),
+      wbByteArray('Uknown', 1),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x0001} 'Random Frequency Shift',
+        {0x0002} 'Play At Random',
+        {0x0004} 'Environment Ignored',
+        {0x0008} 'Random Location',
+        {0x0010} 'Loop',
+        {0x0020} 'Menu Sound',
+        {0x0040} '2D',
+        {0x0080} '360 LFE',
+        {0x0100} 'Dialogue Sound',
+        {0x0200} 'Envelope Fast',
+        {0x0400} 'Envelope Slow',
+        {0x0800} '2D Radius',
+        {0x1000} 'Mute When Submerged',
+        {0x2000} 'Start at Random Position'
+      ])),
+      wbInteger('Static attentuation cdB', itS16),
+      wbInteger('Stop time ', itU8),
+      wbInteger('Start time ', itU8),
+      wbArray('Attenuation Curve', wbInteger('Point', itS16), 5),
+      wbInteger('Reverb Attenuation Control', itS16),
+      wbInteger('Priority', itS32),
+//        wbByteArray('Unknown', 8)
+      wbInteger('x', itS32),
+      wbInteger('y', itS32)
+    ], cpNormal, True)
+//      wbStruct(SNDX, 'Sound Data', [
+//        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
+//        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
+//        wbInteger('Frequency adjustment %', itS8),
+//        wbByteArray('Unused', 1),
+//        wbInteger('Flags', itU32, wbFlags([
+//          {0x0001} 'Random Frequency Shift',
+//          {0x0002} 'Play At Random',
+//          {0x0004} 'Environment Ignored',
+//          {0x0008} 'Random Location',
+//          {0x0010} 'Loop',
+//          {0x0020} 'Menu Sound',
+//          {0x0040} '2D',
+//          {0x0080} '360 LFE',
+//          {0x0100} 'Dialogue Sound',
+//          {0x0200} 'Envelope Fast',
+//          {0x0400} 'Envelope Slow',
+//          {0x0800} '2D Radius',
+//          {0x1000} 'Mute When Submerged'
+//        ])),
+//        wbInteger('Static attentuation cdB', itS16),
+//        wbInteger('Stop time ', itU8),
+//        wbInteger('Start time ', itU8)
+//      ], cpNormal, True)
+//------------------------------------------------------------------------------
+// Might be Usefull for this routine
+//
+//    wbArray(ANAM, 'Attenuation Curve', wbInteger('Point', itS16), 5, nil, nil, cpNormal, False, wbNeverShow),
+//    wbInteger(GNAM, 'Reverb Attenuation Control', itS16, nil, cpNormal, False, False, wbNeverShow),
+//    wbInteger(HNAM, 'Priority', itS32, nil, cpNormal, False, False, wbNeverShow),
+//    wbInteger(RNAM, 'Random Chance %', itU8),
+//------------------------------------------------------------------------------
+    ], [], cpNormal, True);
+
   wbRecord(SOUN, 'Sound', [
     wbEDIDReq,
     wbOBNDReq,
     wbString(FNAM, 'Sound Filename'),
-    wbInteger(RNAM, 'Random Chance %', itU8),
-    wbRUnion('Sound Data', [
-      wbStruct(SNDD, 'Sound Data', [
-        wbInteger('Minimum Attentuation Distance', itU8, wbMul(5)),
-        wbInteger('Maximum Attentuation Distance', itU8, wbMul(100)),
-        wbInteger('Frequency Adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU32, wbFlags([
-          {0x0001} 'Random Frequency Shift',
-          {0x0002} 'Play At Random',
-          {0x0004} 'Environment Ignored',
-          {0x0008} 'Random Location',
-          {0x0010} 'Loop',
-          {0x0020} 'Menu Sound',
-          {0x0040} '2D',
-          {0x0080} '360 LFE',
-          {0x0100} 'Dialogue Sound',
-          {0x0200} 'Envelope Fast',
-          {0x0400} 'Envelope Slow',
-          {0x0800} '2D Radius',
-          {0x1000} 'Mute When Submerged',
-          {0x2000} 'Start at Random Position'
-        ])),
-        wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8),
-        wbArray('Attenuation Curve', wbInteger('Point', itS16), 5),
-        wbInteger('Reverb Attenuation Control', itS16),
-        wbInteger('Priority', itS32),
-//        wbByteArray('Unknown', 8)
-        wbInteger('x', itS32),
-        wbInteger('y', itS32)
-
-      ], cpNormal, True),
-      wbStruct(SNDX, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
-        wbInteger('Frequency adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU32, wbFlags([
-          {0x0001} 'Random Frequency Shift',
-          {0x0002} 'Play At Random',
-          {0x0004} 'Environment Ignored',
-          {0x0008} 'Random Location',
-          {0x0010} 'Loop',
-          {0x0020} 'Menu Sound',
-          {0x0040} '2D',
-          {0x0080} '360 LFE',
-          {0x0100} 'Dialogue Sound',
-          {0x0200} 'Envelope Fast',
-          {0x0400} 'Envelope Slow',
-          {0x0800} '2D Radius',
-          {0x1000} 'Mute When Submerged'
-        ])),
-        wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8)
-      ], cpNormal, True)
-    ], [], cpNormal, True),
-    wbArray(ANAM, 'Attenuation Curve', wbInteger('Point', itS16), 5, nil, nil, cpNormal, False, wbNeverShow),
-    wbInteger(GNAM, 'Reverb Attenuation Control', itS16, nil, cpNormal, False, False, wbNeverShow),
-    wbInteger(HNAM, 'Priority', itS32, nil, cpNormal, False, False, wbNeverShow)
+    wbStruct(SNDD,'Some Values', [
+      wbInteger('Value 1', itS16),
+      wbInteger('Value 2', itS16),
+      wbInteger('Value 3', itS16),
+      wbInteger('Value 4', itS16),
+      wbInteger('Value 5', itS16),
+      wbInteger('Value 6', itS16),
+      wbInteger('Value 7', itS16),
+      wbInteger('Value 8', itS16),
+      wbInteger('Value 9', itS16),
+      wbInteger('Value 10', itS16),
+      wbInteger('Value 11', itS16),
+      wbInteger('Value 12', itS16),
+      wbInteger('Value 13', itS16),
+      wbInteger('Value 14', itS16),
+      wbInteger('Value 15', itS16),
+      wbInteger('Value 16', itS16),
+      wbInteger('Value 17', itS16),
+      wbInteger('Value 18', itS16)
+    ]),
+//    wbUnknown(SNDD),
+//    wbSNDD,
+    wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
   ], False, nil, cpNormal, False, wbSOUNAfterLoad);
 
   wbSPIT := wbStruct(SPIT, '', [
