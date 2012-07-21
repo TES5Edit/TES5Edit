@@ -9929,7 +9929,7 @@ end;
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if aElement._File.IsLocalized then
-    Result := Length(ToString(aBasePtr, aEndPtr, aElement))
+    Result := 4
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
 end;
