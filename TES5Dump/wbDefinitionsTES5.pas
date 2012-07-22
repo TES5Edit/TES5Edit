@@ -4421,8 +4421,8 @@ begin
                   wbStruct('Array Part 1', [
                     wbByteArray('Unknown', 4)
                   ]),
-									wbStruct('Array Part 2 - 64 64 73 00 = dds in ASCII', [
-										wbByteArray('Unknown', 4),
+									wbStruct('Array Part 2', [
+										wbString('Unknown', 4),
 										wbByteArray('Unknown', 4)
 									])
 								])
@@ -4432,7 +4432,8 @@ begin
 
 //-----------------------------------------------------------------------------
 //
-// DNAM - Unknown: 14 19 0F 14 Skill Values
+// wbDNAMActor - Unknown:
+//                 14 19 0F 14 Skill Values
 //                 14 0F 14 0F
 //                 0F 0F 0F 14
 //                 0F 0F 0F 0F
@@ -6343,6 +6344,7 @@ end;
 
 procedure DefineTES5c;
 begin
+
   wbRecord(CLMT, 'Climate', [
     wbEDIDReq,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
@@ -7610,7 +7612,7 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbMODL,
-// wbMODT not required, part of wbMODL
+    // wbMODT not required, part of wbMODL
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x00000001}'Playable',
       {0x00000002}'Male',
@@ -8007,8 +8009,11 @@ begin
 
   wbRecord(SLGM, 'Soul Gem', [
     wbEDID,
+    wbOBND,
     wbFULL,
     wbMODL,
+    wbKSIZ,
+    wbKWDAs,
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -8016,7 +8021,8 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
-    wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True)
+    wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True),
+    wbFormID(NAM0, 'Unknown')
   ]);
 
   wbRecord(NAVI, 'Navigation Mesh Info Map', [
@@ -11469,29 +11475,32 @@ begin
           wbUnknown(FNAM),
           wbUnknown(ALNA),
           wbUnknown(ALNT),
+          wbUnknown(ALFI),
           wbUnknown(ALFE),
           wbUnknown(ALFD),
-          wbUnknown(ALFI),
           wbUnknown(ALUA),
           wbUnknown(ALFR),
           wbCTDAs,
           wbUnknown(ALCO),
           wbUnknown(ALCA),
           wbUnknown(ALCL),
-          wbKSIZ,
-          wbKWDAs,
           wbUnknown(ALFA),
           wbUnknown(ALRT),
+          wbKSIZ,
+          wbKWDAs,
+          wbUnknown(ALEQ), //<-- Moved From Between ALDN and ALSP
+          wbUnknown(ALEA), //<-- Moved From Between ALDN and ALSP
           wbCOCT,
           wbCNTOs,
+          wbUnknown(SPOR),
           wbUnknown(ECOR),
           wbUnknown(ALDN),
-          wbUnknown(ALEQ),
-          wbUnknown(ALEA),
+          wbRArray('Unknown - ALSP', wbRStruct('Unknown', [
+            wbUnknown(ALSP)
+          ], [])),
           wbRArray('Unknown - ALFC', wbRStruct('Unknown', [
             wbUnknown(ALFC)
           ], [])),
-          wbUnknown(ALSP),
           wbRArray('Unknown - ALPC', wbRStruct('Unknown', [
             wbUnknown(ALPC)
           ], [])),
@@ -11502,13 +11511,15 @@ begin
           wbUnknown(ALLS),
           wbString(ALID, 'Alias Name', 0, cpTranslate),
           wbUnknown(FNAM),
+          wbUnknown(ALFI),
           wbUnknown(ALFE),
           wbUnknown(ALFD),
-          wbUnknown(ALFI),
           wbCTDAs,
           wbUnknown(ALCO),
           wbUnknown(ALFL),
           wbUnknown(ALFA),
+          wbUnknown(ALEQ),
+          wbUnknown(ALEA),
           wbUnknown(KNAM),
           wbUnknown(ALED)
         ], [])
@@ -12623,6 +12634,7 @@ begin
 
   wbRecord(WEAP, 'Weapon', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
     wbMODL,
@@ -12872,7 +12884,8 @@ begin
      wbInteger('Mod Required', itU8, wbEnum(['No', 'Yes'])),
      wbByteArray('Unused', 2)
     ]),
-    wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
+    wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
+    wbFormID(CNAM, 'Unknown')
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
   wbRecord(WRLD, 'Worldspace', [
