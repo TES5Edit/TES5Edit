@@ -797,7 +797,6 @@ var
   wbSOPM_ONAM: IwbSubRecordStructDef;
   wbSNDD: IwbSubRecordUnionDef;
   wbCTDANew: IwbSubRecordStructDef;
-  wbDobjDNAMs: IwbSubRecordDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -9011,14 +9010,13 @@ begin
     wbString(ANAM, 'Death Pose')
   ]);
 
-  wbDobjDNAMs := wbArray(DNAM, 'Unknown',
-    wbStruct('Unknown', [
-      wbByteArray('Unknown', 4, cpIgnore, False, wbNeverShow),
-      wbFormID('Unknown')
-    ]), 0, nil, nil, cpNormal, True);
-
   wbRecord(DOBJ, 'Default Object Manager', [
-    wbDobjDNAMs
+    wbArray(DNAM, 'Unknown',
+      wbStruct('Unknown', [
+        wbByteArray('Unknown', 4, cpIgnore, False, wbNeverShow),
+        wbFormID('Unknown')
+      ]), 0, nil, nil, cpNormal, True
+    )
   ]);
 //    wbEDIDReq,
 //    wbArray(DATA, 'Default Objects', wbFormID('Default Object'), [

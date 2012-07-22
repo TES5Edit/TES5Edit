@@ -45,14 +45,14 @@ var
   wbSimpleLAND : Boolean = False;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
-  wbHideUnused : Boolean{ = True{};
-  wbHideIgnored : Boolean{ = True{};
+  wbHideUnused : Boolean{} = False{};
+  wbHideIgnored : Boolean{} = False{};
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
-  wbMoreInfoForUnknown: Boolean = False;
+  wbMoreInfoForUnknown: Boolean{} = True{};
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
