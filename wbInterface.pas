@@ -52,7 +52,7 @@ var
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
-  wbMoreInfoForUnknown: Boolean{} = True{};
+  wbMoreInfoForUnknown: Boolean{} = False{};
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
