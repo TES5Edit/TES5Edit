@@ -113,6 +113,7 @@ const
   ALFE : TwbSignature = 'ALFE'; { New To Skyrim }
   ALNA : TwbSignature = 'ALNA'; { New To Skyrim }
   ALNT : TwbSignature = 'ALNT'; { New To Skyrim }
+  ALSP : TwbSignature = 'ALSP'; { New To Skyrim }
   AMEF : TwbSignature = 'AMEF';
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM';
@@ -9095,7 +9096,12 @@ begin
   ]);
 
   wbRecord(SMBN, 'SMBN', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(PNAM),
+    wbUnknown(SNAM),
+    wbUnknown(CITC),
+    wbUnknown(DNAM),
+    wbUnknown(XNAM)
   ]);
 
   wbRecord(SMQN, 'SMQN', [
@@ -11390,7 +11396,10 @@ begin
     wbFULL,
     wbUnknown(DNAM),
     wbUnknown(ENAM),
-    wbUnknown(FLTR),
+    wbRArray('Unknown - QTGL', wbRStruct('Unknown', [
+      wbUnknown(QTGL)
+    ], [])),
+    wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
     wbRUnion('Union', [
       wbRStruct('Next Before CTDA', [
         wbUnknown(NEXT),
@@ -11421,19 +11430,20 @@ begin
           {0x01} 'Complete Quest',
           {0x02} 'Fail Quest'
         ])),
-        wbString(CNAM, 'Log Entry', 0, cpTranslate),
+        wbCTDAs,
+        wbLString(CNAM, 'Log Entry', 0, cpTranslate),
         wbEmbeddedScriptReq,
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
         wbUnknown(SCHR),
         wbUnknown(QNAM),
-        wbUnknown(SCTX),
-        wbCTDAs
+        wbUnknown(SCTX)
+        // CTDAs was here
       ], []))
     ], [])),
     wbRArray('Objectives', wbRStruct('Objective', [
-      wbInteger(QOBJ, 'Objective Index', itS32),
+      wbInteger(QOBJ, 'Objective Index', itU16),
       wbUnknown(FNAM),
-      wbString(NNAM, 'Description', 0, cpNormal, True),
+      wbLString(NNAM, 'Description', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, ACRE, ACHR], True),
@@ -11450,40 +11460,46 @@ begin
       wbRUnion('Union', [
         wbRStruct('ALST/ALLS', [
           wbUnknown(ALST),
-          wbUnknown(ALID),
+          wbString(ALID, 'Alias Name', 0, cpTranslate),
           wbUnknown(FNAM),
           wbUnknown(ALNA),
           wbUnknown(ALNT),
+          wbUnknown(ALFE),
+          wbUnknown(ALFD),
+          wbUnknown(ALFI),
+          wbUnknown(ALUA),
           wbCTDAs,
           wbUnknown(ALFR),
-          wbUnknown(ALUA),
           wbUnknown(ALCO),
           wbUnknown(ALCA),
           wbUnknown(ALCL),
-          wbUnknown(ALDN),
+          wbKSIZ,
+          wbKWDAs,
+          wbUnknown(ALFA),
+          wbUnknown(ALRT),
           wbCOCT,
           wbCNTOs,
           wbUnknown(ECOR),
-          wbUnknown(ALFC),
+          wbUnknown(ALDN),
           wbUnknown(ALEQ),
-          wbUnknown(ALFE),
-          wbUnknown(ALFD),
           wbUnknown(ALEA),
+          wbRArray('Unknown - ALFC', wbRStruct('Unknown', [
+            wbUnknown(ALFC)
+          ], [])),
+          wbUnknown(ALSP),
           wbRArray('Unknown - ALPC', wbRStruct('Unknown', [
             wbUnknown(ALPC)
           ], [])),
-          wbUnknown(ALFI),
-          wbUnknown(ALFA),
-          wbUnknown(ALRT),
           wbUnknown(VTCK),
           wbUnknown(ALED)
         ], []),
         wbRStruct('The ALLS', [
           wbUnknown(ALLS),
-          wbUnknown(ALID),
+          wbString(ALID, 'Alias Name', 0, cpTranslate),
           wbUnknown(FNAM),
           wbUnknown(ALFE),
           wbUnknown(ALFD),
+          wbUnknown(ALFI),
           wbCTDAs,
           wbUnknown(ALCO),
           wbUnknown(ALFL),
@@ -11509,8 +11525,7 @@ begin
     wbCNTOs,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(NAM0),
-    wbUnknown(QTGL)
+    wbUnknown(NAM0)
   ], wbAllowUnordered);
 
   wbHeadPartIndexEnum := wbEnum([
