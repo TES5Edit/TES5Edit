@@ -5223,7 +5223,7 @@ begin
     wbFormIDCk(RNAM, 'Radio Station', [TACT]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbString(XATO, 'Activation Prompt')
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbICON := wbRStruct('Icon', [
     wbString(ICON, 'Large Icon filename'),
@@ -5955,7 +5955,7 @@ begin
       wbFormIDCk('Sound - Consume', [SOUN, NULL])
     ], cpNormal, True),
     wbEffectsReq
-  ], wbAllowUnordered); // Added For Testing.
+  ]);
 
   wbRecord(AMMO, 'Ammunition', [
     wbEDIDReq,
@@ -6917,7 +6917,7 @@ begin
     wbUnknown(DATA),
     wbUnknown(SNAM),
     wbUnknown(TIFC)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ], True);
 
 //------------------------------------------------------------------------------
 // Begin Old DIAL
@@ -7162,7 +7162,7 @@ begin
 //      wbByteArray('Unused', 3)
 //    ], cpNormal, True),
     wbEffectsReq
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbRecord(EYES, 'Eyes', [
     wbEDIDReq,
@@ -7973,7 +7973,7 @@ begin
     wbOBNDReq,
     wbMODL,
     wbUnknown(DATA)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbSoulGemEnum := wbEnum([
     {0} 'None',
@@ -8856,7 +8856,7 @@ begin
       wbFormIDCk('Organic Glow', [IPCT, NULL])
     ], cpNormal, True, nil, 9),
     wbUnknown(PNAM)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbRecord(ECZN, 'Encounter Zone', [
     wbEDIDReq,
@@ -8888,7 +8888,7 @@ begin
     wbUnknown(RNAM),
     wbUnknown(NAM0),
     wbUnknown(CNAM)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
 
   wbRecord(MESG, 'Message', [
@@ -9116,7 +9116,7 @@ begin
     wbOBNDReq,
     wbMODL,
     wbUnknown(DATA)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
 //----------------------------------------------------------------------------
 // New
@@ -9166,11 +9166,11 @@ begin
       wbInteger('db Variance', itU8),
       wbInteger('Static Attentuation (db)', itU16, wbdiv(100))
     ])
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbRecord(DUAL, 'DUAL', [
     wbEDIDReq
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbRecord(SNCT, 'SNCT', [
     wbEDIDReq,
@@ -9215,7 +9215,7 @@ begin
     wbFormIDCk(PNAM, 'String', [SNCT, NULL]),
     wbUnknown(VNAM),
     wbUnknown(UNAM)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
 //----------------------------------------------------------------------------
 // wbONAM Made for SOPM
@@ -9236,7 +9236,7 @@ begin
         wbInteger('Value 11', itS16),
         wbInteger('Value 12', itS16)
       ])
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], []);
 
   wbRecord(SOPM, 'SOPM', [
     wbEDIDReq,
@@ -9407,7 +9407,7 @@ begin
     wbunknown(LNAM),
     wbunknown(ANAM),
     wbunknown(TWAT)
-  ], wbAllowUnordered, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
+  ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
 
 //------------------------------------------------------------------------------
 // Begin Old INFO
@@ -10879,7 +10879,7 @@ begin
 			], cpNormal, True, nil),
 			wbByteArray('Unused', 2)
 		])
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], []);
 
   wbPLDT := wbRStruct('Locations', [
       wbStruct(PLDT, 'Location 1', [
@@ -10928,7 +10928,7 @@ begin
         ]),
         wbInteger('Radius', itS32)
       ])
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
   wbPSDT := wbRStruct('Schedules', [
     wbStruct(PSDT, 'Schedule', [
@@ -10954,7 +10954,7 @@ begin
       wbByteArray('Unknown', 3),
       wbInteger('Duration', itS32)
     ], cpNormal, True)
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
     wbPTDT := wbRStruct('Targets', [
         wbStruct(PTDT, 'Target 1', [
@@ -10973,7 +10973,7 @@ begin
       wbInteger('Count / Distance', itS32),
       wbFloat('Unknown')
     ], cpNormal, False, nil, 3)
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
     wbPTD2 := wbRStruct('Targets', [
     wbStruct(PTD2, 'Target 2', [
@@ -10992,7 +10992,7 @@ begin
       wbInteger('Count / Distance', itS32),
       wbFloat('Unknown')
     ], cpNormal, False, nil, 3)
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
   wbIDLF := wbRStruct('Idle Animations', [
       wbInteger(IDLF, 'Flags', itU8, wbFlags([
@@ -11007,7 +11007,7 @@ begin
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True),
       wbByteArray(IDLB, 'Unused', 4, cpIgnore)
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
 
   wbPKW3 := wbRStruct('Idle Animations', [
@@ -11058,7 +11058,7 @@ begin
       ]),
       wbByteArray('Unused', 4)
     ])
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
     wbPTD2 := wbRStruct('Targets', [
     wbStruct(PTD2, 'Target 2', [
@@ -11077,7 +11077,7 @@ begin
       wbInteger('Count / Distance', itS32),
       wbFloat('Unknown')
     ], cpNormal, False, nil, 3)
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
     wbPKDD := wbRStruct('Dialogue', [
     wbStruct(PKDD, 'Dialogue Data', [
@@ -11101,7 +11101,7 @@ begin
       ])),
       wbByteArray('Unknown', 4)
     ], cpNormal, False, nil, 3)
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
   wbPLD2 := wbRStruct('Locations', [
         wbStruct(PLD2, 'Location 2 (again??)', [
@@ -11127,7 +11127,7 @@ begin
       ]),
       wbInteger('Radius', itS32)
     ])
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], []);
 
 //------------------------------------------------------------------------------
 // New Public Package Data
@@ -11137,7 +11137,7 @@ begin
     wbUnknown(UNAM),
     wbUnknown(BNAM),
     wbUnknown(PNAM)
-  ], [], cpNormal, False, nil, wbAllowUnordered));
+  ], []));
 
   wbINAM := wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True);
   wbPDTOs := wbArray(PDTO, 'Topic', wbFormIDCk('Topic', [DIAL, NULL]), 0, nil, nil, cpNormal, True);
@@ -11153,7 +11153,7 @@ begin
           wbUnknown(TPIC)
       ], [], cpNormal, False)),
       wbUNAMs
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], []);
 
   wbProdTree := wbRStruct('Procedure Tree', [
       wbRArray('Array Of ANAM', wbRStruct('ANAM Array', [
@@ -11167,7 +11167,7 @@ begin
             wbUnknown(PKC2)
           ], [], cpNormal, False))
       ], [], cpNormal, False))
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], []);
 
   wbPOBA := wbRStruct('OnBegin', [
     wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
@@ -11177,7 +11177,7 @@ begin
     wbUnknown(QNAM),
     wbUnknown(TNAM),
     wbPDTOs
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], []);
 
   wbPOEA := wbRStruct('OnEnd', [
     wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
@@ -11187,7 +11187,7 @@ begin
     wbUnknown(QNAM),
     wbUnknown(TNAM),
     wbPDTOs
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], []);
 
   wbPOCA := wbRStruct('OnChange', [
     wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
@@ -11198,7 +11198,7 @@ begin
     wbUnknown(QNAM),
     wbUnknown(TNAM),
     wbPDTOs
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], []);
 
 //------------------------------------------------------------------------------
 // Begin PACK
@@ -11397,7 +11397,7 @@ begin
     wbKWDAs,
     wbUnknown(NAM0),
     wbUnknown(QTGL)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbHeadPartIndexEnum := wbEnum([
     'Head',
@@ -12097,7 +12097,7 @@ begin
 //    wbUnknown(SNDD),
 //    wbSNDD,
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
-  ], wbAllowUnordered, nil, cpNormal, False, wbSOUNAfterLoad);
+  ], False, nil, cpNormal, False, wbSOUNAfterLoad);
 
   wbSPIT := wbStruct(SPIT, '', [
       wbInteger('Base Cost', itU32),
@@ -12183,7 +12183,7 @@ begin
     //wbFormIDCk(ENIT, 'Enchanted Item', [INGR, ALCH, ENCH, NULL]),
     wbSPIT,
     wbEffectsReq // EFID, EFIT, CTDA
-  ], wbAllowUnordered);
+  ]);
 
 //------------------------------------------------------------------------------
 // Begin Old SPEL
@@ -12241,7 +12241,7 @@ begin
     wbUnknown(SPIT),
     wbUnknown(EFID),
     wbUnknown(EFIT)
-  ], wbAllowUnordered, nil, cpNormal, False);
+  ]);
 
   wbRecord(STAT, 'Static', [
     wbEDIDReq,
