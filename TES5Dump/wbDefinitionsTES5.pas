@@ -90,6 +90,9 @@ const
   ADDN : TwbSignature = 'ADDN';
   AIDT : TwbSignature = 'AIDT';
   ALCH : TwbSignature = 'ALCH';
+  ALDN : TwbSignature = 'ALDN'; { New To Skyrim }
+  ALFC : TwbSignature = 'ALFC'; { New To Skyrim }
+  ALFI : TwbSignature = 'ALFI'; { New To Skyrim }
   ALOC : TwbSignature = 'ALOC';
   ALST : TwbSignature = 'ALST'; { New To Skyrim }
   ALLS : TwbSignature = 'ALLS'; { New To Skyrim }
@@ -104,7 +107,12 @@ const
   ALFD : TwbSignature = 'ALFD'; { New To Skyrim }
   ALED : TwbSignature = 'ALED'; { New To Skyrim }
   ALFL : TwbSignature = 'ALFL'; { New To Skyrim }
+  ALRT : TwbSignature = 'ALRT'; { New To Skyrim }
   ALUA : TwbSignature = 'ALUA'; { New To Skyrim }
+  ALEQ : TwbSignature = 'ALEQ'; { New To Skyrim }
+  ALFE : TwbSignature = 'ALFE'; { New To Skyrim }
+  ALNA : TwbSignature = 'ALNA'; { New To Skyrim }
+  ALNT : TwbSignature = 'ALNT'; { New To Skyrim }
   AMEF : TwbSignature = 'AMEF';
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM';
@@ -118,6 +126,7 @@ const
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
   AVIF : TwbSignature = 'AVIF';
+  AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
   BAMT : TwbSignature = 'BAMT'; { New to Skyrim }
   BIDS : TwbSignature = 'BIDS'; { New to Skyrim }
   BIPL : TwbSignature = 'BIPL';
@@ -8383,6 +8392,10 @@ begin
 
   wbRecord(IMGS, 'Image Space', [
     wbEDIDReq,
+    wbUnknown(ENAM),
+    wbUnknown(HNAM),
+    wbUnknown(CNAM),
+    wbUnknown(TNAM),
     wbStruct(DNAM, '', [
       wbStruct('HDR', [
         {00} wbFloat('Eye Adapt Speed'),
@@ -8751,8 +8764,21 @@ begin
     wbEDIDReq,
     wbFULL,
     wbDESCReq,
-    wbICON,
-    wbString(ANAM, 'Short Name')
+    wbUnknown(ANAM),
+    wbRArray('Unknown - CNAM', wbRStruct('Unknown', [
+      wbUnknown(CNAM),
+      wbUnknown(AVSK),
+      wbUnknown(INAM),
+      wbFormID(PNAM, 'Unknown'),
+      wbUnknown(FNAM),
+      wbUnknown(XNAM),
+      wbUnknown(YNAM),
+      wbUnknown(HNAM),
+      wbUnknown(VNAM),
+      wbFormID(SNAM, 'Unknown')
+    ], []))
+//    wbICON,
+//    wbString(ANAM, 'Short Name')
   ]);
 
   wbRecord(RADS, 'Radiation Stage', [
@@ -11365,8 +11391,16 @@ begin
     wbUnknown(DNAM),
     wbUnknown(ENAM),
     wbUnknown(FLTR),
-    wbCTDAs,
-    wbUnknown(NEXT),
+    wbRUnion('Union', [
+      wbRStruct('Next Before CTDA', [
+        wbUnknown(NEXT),
+        wbCTDAs
+      ], []),
+      wbRStruct('Next After CTDA', [
+        wbCTDAs,
+        wbUnknown(NEXT)
+      ], [])
+    ], []),
     wbICON,
     wbStruct(DATA, 'General', [
       wbInteger('Flags', itU8, wbFlags([
@@ -11399,8 +11433,6 @@ begin
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itS32),
       wbUnknown(FNAM),
-      wbUnknown(NNAM),
-      wbUnknown(QSTA),
       wbString(NNAM, 'Description', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
@@ -11408,53 +11440,70 @@ begin
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Compass Marker Ignores Locks'
           ])),
-          wbByteArray('Unused', 3)
+          wbByteArray('Unknown', 3)
         ]),
         wbCTDAs
       ], []))
     ], [])),
     wbUnknown(ANAM),
-    wbRArray('ALST/ALLS', wbRStruct('ALST/ALLS', [
-      wbRStruct('The ALST', [
-        wbUnknown(ALST),
-        wbUnknown(ALID),
-        wbUnknown(FNAM),
-        wbCTDAs,
-        wbUnknown(ALFR),
-        wbRArray('Unknown - DALC', wbRStruct('Unknown', [
-          wbUnknown(ALPC)
-        ], [])),
-        wbUnknown(ALUA),
-        wbUnknown(ALCO),
-        wbUnknown(VTCK),
-        wbUnknown(ALED)
-      ], []),
-      wbRStruct('The ALLS', [
-        wbUnknown(ALLS),
-        wbUnknown(ALID),
-        wbUnknown(FNAM),
-        wbCTDAs,
-        wbUnknown(ALCO),
-        wbUnknown(ALFL),
-        wbUnknown(ALED)
-      ], []),
-      wbCTDAs,
-      wbUnknown(ALCA),
-      wbUnknown(ALCL),
-      wbUnknown(ALEA),
-      wbUnknown(ALFA),
-      wbUnknown(ALFD),
-      wbString(NNAM, 'Description', 0, cpNormal, True),
-      wbRArray('Targets', wbRStruct('Target', [
-        wbStruct(QSTA, 'Target', [
-          wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, ACRE, ACHR], True),
-          wbInteger('Flags', itU8, wbFlags([
-            {0x01} 'Compass Marker Ignores Locks'
-          ])),
-          wbByteArray('Unused', 3)
-        ]),
-        wbCTDAs
-      ], []))
+    wbRArray('ALST/ALLS',
+      wbRUnion('Union', [
+        wbRStruct('ALST/ALLS', [
+          wbUnknown(ALST),
+          wbUnknown(ALID),
+          wbUnknown(FNAM),
+          wbUnknown(ALNA),
+          wbUnknown(ALNT),
+          wbCTDAs,
+          wbUnknown(ALFR),
+          wbUnknown(ALUA),
+          wbUnknown(ALCO),
+          wbUnknown(ALCA),
+          wbUnknown(ALCL),
+          wbUnknown(ALDN),
+          wbCOCT,
+          wbCNTOs,
+          wbUnknown(ECOR),
+          wbUnknown(ALFC),
+          wbUnknown(ALEQ),
+          wbUnknown(ALFE),
+          wbUnknown(ALFD),
+          wbUnknown(ALEA),
+          wbRArray('Unknown - ALPC', wbRStruct('Unknown', [
+            wbUnknown(ALPC)
+          ], [])),
+          wbUnknown(ALFI),
+          wbUnknown(ALFA),
+          wbUnknown(ALRT),
+          wbUnknown(VTCK),
+          wbUnknown(ALED)
+        ], []),
+        wbRStruct('The ALLS', [
+          wbUnknown(ALLS),
+          wbUnknown(ALID),
+          wbUnknown(FNAM),
+          wbUnknown(ALFE),
+          wbUnknown(ALFD),
+          wbCTDAs,
+          wbUnknown(ALCO),
+          wbUnknown(ALFL),
+          wbUnknown(ALFA),
+          wbUnknown(KNAM),
+          wbUnknown(ALED)
+        ], [])
+      ], [])
+    ),
+    wbCTDAs,
+    wbString(NNAM, 'Description', 0, cpNormal, True),
+    wbRArray('Targets', wbRStruct('Target', [
+      wbStruct(QSTA, 'Target', [
+        wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, ACRE, ACHR], True),
+        wbInteger('Flags', itU8, wbFlags([
+          {0x01} 'Compass Marker Ignores Locks'
+        ])),
+        wbByteArray('Unused', 3)
+      ]),
+      wbCTDAs
     ], [])),
     wbCOCT,
     wbCNTOs,
@@ -11462,7 +11511,7 @@ begin
     wbKWDAs,
     wbUnknown(NAM0),
     wbUnknown(QTGL)
-  ]);
+  ], wbAllowUnordered);
 
   wbHeadPartIndexEnum := wbEnum([
     'Head',
