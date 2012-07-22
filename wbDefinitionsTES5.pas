@@ -6909,14 +6909,25 @@ begin
   ]);
 
   wbRecord(DIAL, 'Dialog Topic', [
-    wbEDIDReq,
+    wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-    wbUnknown(BNAM),
-    wbUnknown(QNAM),
-    wbUnknown(DATA),
+    wbFormIDCk(BNAM, 'Branch', [DLBR, NULL]),
+    wbFormIDCk(QNAM, 'Quest', [QUST, NULL], False, cpNormal, False),
     wbUnknown(SNAM),
-    wbUnknown(TIFC)
+    wbStruct(DATA, 'Data', [
+      wbInteger('Type', itU8, wbEnum([
+        {0} 'Topic',
+        {1} 'Conversation',
+        {2} 'Combat',
+        {3} 'Persuasion',
+        {4} 'Detection',
+        {5} 'Service',
+        {6} 'Miscellaneous'
+      ]), cpNormal, True),
+      wbByteArray('Unknown', 3)
+    ]),
+    wbInteger(TIFC, 'Info Count', itU32)
   ], True);
 
 //------------------------------------------------------------------------------
@@ -9070,7 +9081,11 @@ begin
   ]);
 
   wbRecord(DLBR, 'DLBR', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbFormIDCk(QNAM, 'Reference?', [QUST], False, cpNormal, True),
+    wbInteger(TNAM, 'Unknown', itU32),
+    wbInteger(DNAM, 'Unknown', itU32),
+    wbFormIDCk(SNAM, 'Start Dialog', [DIAL], False, cpNormal, True)
   ]);
 
   wbRecord(MUST, 'MUST', [
@@ -9387,27 +9402,77 @@ begin
 
   wbRecord(INFO, 'Dialog response', [
     wbVMAD,
-    wbunknown(ENAM),
-    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
+    wbStruct(ENAM, 'Response flags', [
+      wbInteger('Flags', itU16, wbFlags([
+        {0x00000001}'Goodbye',
+        {0x00000002}'Random',
+        {0x00000004}'Say once',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Random end',
+        {0x00000040}'Invisible continue',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Force subtitle',
+        {0x00000400}'Can move while greeting',
+        {0x00000800}'Has no lip file (inverted from CK)',
+        {0x00001000}'Requires post-processing',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Spends favor points',
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ])),
+      wbInteger('Reset hours (scaled 0-24)', itU16)
+    ]),
+    wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
     wbunknown(CNAM),
-    wbRArray('Unknown - TCLT', wbRStruct('Unknown', [
-      wbunknown(TCLT)
-    ], [])),
+    wbRArray('Responses?', wbFormIDCk(TCLT, 'Response INFO', [INFO, NULL])),
     wbRArray('Unknown - TRDT', wbRStruct('Unknown', [
-      wbunknown(TRDT),
-      wbunknown(NAM1),
-      wbunknown(NAM2),
-      wbunknown(NAM3)
+      wbStruct(TRDT, 'Unknown', [
+        wbInteger('Emotion Type', itU32, wbEnum([
+          {0} 'Neutral',
+          {1} 'Anger',
+          {2} 'Disgust',
+          {3} 'Fear',
+          {4} 'Sad',
+          {5} 'Happy',
+          {6} 'Surprise',
+          {7} 'Puzzled'
+        ])),
+        wbInteger('Emotion Value', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32)
+      ]),
+      wbLString(NAM1, 'Dialog String'),
+      wbString(NAM2, 'Unknown'),
+      wbString(NAM3, 'Unknown')
     ], [])),
     wbunknown(DNAM),
-    wbunknown(SNAM),
+    wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
     wbCTDAs,
     wbunknown(RNAM),
     wbunknown(ONAM),
-    wbunknown(LNAM),
+    wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
     wbunknown(ANAM),
     wbunknown(TWAT)
-  ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
+  ], False, nil {wbINFOAddInfo}, cpNormal, False, nil {wbINFOAfterLoad});
 
 //------------------------------------------------------------------------------
 // Begin Old INFO
