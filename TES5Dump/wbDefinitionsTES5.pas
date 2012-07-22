@@ -90,6 +90,17 @@ const
   AIDT : TwbSignature = 'AIDT';
   ALCH : TwbSignature = 'ALCH';
   ALOC : TwbSignature = 'ALOC';
+  ALST : TwbSignature = 'ALST'; { New To Skyrim }
+  ALLS : TwbSignature = 'ALLS'; { New To Skyrim }
+  ALID : TwbSignature = 'ALID'; { New To Skyrim }
+  ALFR : TwbSignature = 'ALFR'; { New To Skyrim }
+  ALPC : TwbSignature = 'ALPC'; { New To Skyrim }
+  ALCO : TwbSignature = 'ALCO'; { New To Skyrim }
+  ALCA : TwbSignature = 'ALCA'; { New To Skyrim }
+  ALCL : TwbSignature = 'ALCL'; { New To Skyrim }
+  ALED : TwbSignature = 'ALED'; { New To Skyrim }
+  ALFL : TwbSignature = 'ALFL'; { New To Skyrim }
+  ALUA : TwbSignature = 'ALUA'; { New To Skyrim }
   AMEF : TwbSignature = 'AMEF';
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM';
@@ -103,6 +114,7 @@ const
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
   AVIF : TwbSignature = 'AVIF';
+  BAMT : TwbSignature = 'BAMT'; { New to Skyrim }
   BIDS : TwbSignature = 'BIDS'; { New to Skyrim }
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
@@ -138,6 +150,10 @@ const
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';
+  CSGD : TwbSignature = 'CSGD'; { New to Skyrim }
+  CSME : TwbSignature = 'CSME'; { New to Skyrim }
+  CSLR : TwbSignature = 'CSLR'; { New to Skyrim }
+  CSFL : TwbSignature = 'CSFL'; { New to Skyrim }
   CSDC : TwbSignature = 'CSDC';
   CSDI : TwbSignature = 'CSDI';
   CSDT : TwbSignature = 'CSDT';
@@ -198,6 +214,7 @@ const
   FGGS : TwbSignature = 'FGGS';
   FGTS : TwbSignature = 'FGTS';
   FLST : TwbSignature = 'FLST';
+  FLTR : TwbSignature = 'FLTR'; { New to Skyrim }
   FLTV : TwbSignature = 'FLTV';
   FNAM : TwbSignature = 'FNAM';
   FTST : TwbSignature = 'FTST'; { New to Skyrim }
@@ -438,6 +455,7 @@ const
   RCPE : TwbSignature = 'RCPE';
   RCCT : TwbSignature = 'RCCT';
   QOBJ : TwbSignature = 'QOBJ';
+  QTGL : TwbSignature = 'QTGL'; { New To Skyrim }
   QSDT : TwbSignature = 'QSDT';
   QSTA : TwbSignature = 'QSTA';
   QSTI : TwbSignature = 'QSTI';
@@ -508,6 +526,7 @@ const
   TCLT : TwbSignature = 'TCLT';
   TERM : TwbSignature = 'TERM';
   TES4 : TwbSignature = 'TES4';
+  TIFC : TwbSignature = 'TIFC';
   TIAS : TwbSignature = 'TIAS'; { New to Skyrim }
   TINI : TwbSignature = 'TINI'; { New to Skyrim }
   TINC : TwbSignature = 'TINC'; { New to Skyrim }
@@ -526,6 +545,7 @@ const
   TX06 : TwbSignature = 'TX06'; { New To Skyrim }
   TX07 : TwbSignature = 'TX07'; { New To Skyrim }
   TXST : TwbSignature = 'TXST';
+  TWAT : TwbSignature = 'TWAT'; { New To Skyrim }
   UNAM : TwbSignature = 'UNAM';
   VANM : TwbSignature = 'VANM';
   VATS : TwbSignature = 'VATS';
@@ -5180,18 +5200,21 @@ begin
 
   wbRecord(ACTI, 'Activator', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
     wbMODL,
     wbSCRI,
     wbDEST,
+    wbUnknown(PNAM),
+    wbUnknown(FNAM),
     wbFormIDCk(SNAM, 'Sound - Looping', [SOUN]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SOUN]),
     wbFormIDCk(INAM, 'Radio Template', [SOUN]),
     wbFormIDCk(RNAM, 'Radio Station', [TACT]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbString(XATO, 'Activation Prompt')
-  ]);
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbICON := wbRStruct('Icon', [
     wbString(ICON, 'Large Icon filename'),
@@ -5842,27 +5865,28 @@ begin
 // End wbCTDAOld
 //------------------------------------------------------------------------------
 
-  wbCTDAOld := wbRStruct('Conditions', [
-					wbStruct(CTDA, 'Condition', [
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2),
-            wbByteArray('Unknown', 2)
-					], cpNormal, False, nil, 6, wbCTDAAfterLoad),
-				wbString(CIS1, 'Unknown'),
-				wbString(CIS2, 'Unknown')
+  wbCTDANew :=
+    wbRStruct('Conditions', [
+			wbStruct(CTDA, 'Condition', [
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2)
+	  	], cpNormal, False, nil, 6, wbCTDAAfterLoad),
+	    wbString(CIS2, 'Unknown'),
+  		wbString(CIS1, 'Unknown')
     ], [], cpNormal);
 
   wbCTDAs := wbRArray('Conditions', wbCTDANew, cpNormal, False);
@@ -6866,45 +6890,68 @@ begin
       {52} wbFloat('Combat Radius'),
       {56} wbFloat('Semi-Auto Firing Delay Mult (min)'),
       {60} wbFloat('Semi-Auto Firing Delay Mult (max)')
-    ], cpNormal, True)
+    ], cpNormal, True),
+    wbUnknown(CSGD),
+    wbUnknown(CSME),
+    wbUnknown(CSCR),
+    wbUnknown(CSLR),
+    wbUnknown(CSFL),
+    wbUnknown(DATA)
   ]);
 
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDIDReq,
-    wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
-      wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Unknown', wbRStruct('Unknown', [
-        wbFormIDCk(INFC, 'Unknown', [INFO]),
-        wbInteger(INFX, 'Unknown', itS32)
-      ], []))
-    ], [])),
-    wbRArrayS('Removed Quests', wbRStructSK([0], 'Removed Quest', [
-      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Unknown', wbRStruct('Unknown', [
-        wbFormIDCk(INFC, 'Unknown', [INFO]),
-        wbInteger(INFX, 'Unknown', itS32)
-      ], []))
-    ], [])),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-    wbString(TDUM),
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous',
-        {7} 'Radio'
-      ])),
-      wbInteger('Flags', itU8, wbFlags([
-        'Rumors',
-        'Top-level'
-      ]))
-    ], cpNormal, True, nil, 1)
-  ], True);
+    wbUnknown(BNAM),
+    wbUnknown(QNAM),
+    wbUnknown(DATA),
+    wbUnknown(SNAM),
+    wbUnknown(TIFC)
+  ], wbAllowUnordered, nil, cpNormal, False);
+
+//------------------------------------------------------------------------------
+// Begin Old DIAL
+//------------------------------------------------------------------------------
+//  wbRecord(DIAL, 'Dialog Topic', [
+//    wbEDIDReq,
+//    wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
+//      wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
+//      wbRArray('Unknown', wbRStruct('Unknown', [
+//        wbFormIDCk(INFC, 'Unknown', [INFO]),
+//        wbInteger(INFX, 'Unknown', itS32)
+//      ], []))
+//    ], [])),
+//    wbRArrayS('Removed Quests', wbRStructSK([0], 'Removed Quest', [
+//      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign),
+//      wbRArray('Unknown', wbRStruct('Unknown', [
+//        wbFormIDCk(INFC, 'Unknown', [INFO]),
+//        wbInteger(INFX, 'Unknown', itS32)
+//      ], []))
+//    ], [])),
+//    wbFULL,
+//    wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
+//    wbString(TDUM),
+//    wbStruct(DATA, '', [
+//      wbInteger('Type', itU8, wbEnum([
+//        {0} 'Topic',
+//        {1} 'Conversation',
+//        {2} 'Combat',
+//        {3} 'Persuasion',
+//        {4} 'Detection',
+//        {5} 'Service',
+//        {6} 'Miscellaneous',
+//        {7} 'Radio'
+//      ])),
+//      wbInteger('Flags', itU8, wbFlags([
+//        'Rumors',
+//        'Top-level'
+//      ]))
+//    ], cpNormal, True, nil, 1)
+//  ], True);
+//------------------------------------------------------------------------------
+// End Old DIAL
+//------------------------------------------------------------------------------
 
   wbRecord(DOOR, 'Door', [
     wbEDIDReq,
@@ -7086,25 +7133,27 @@ begin
 
   wbRecord(ENCH, 'Object Effect', [
     wbEDIDReq,
+    wbOBNDReq,
     wbFULL,
-    wbStruct(ENIT, 'Effect Data', [
-      wbInteger('Type', itU32, wbEnum([
-        {0} '',
-        {1} '',
-        {2} 'Weapon',
-        {3} 'Apparel'
-      ])),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbInteger('Flags', itU8, wbFlags([
-        'No Auto-Calc',
-        '',
-        'Hide Effect'
-      ])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True),
+    wbUnknown(ENIT),
+//    wbStruct(ENIT, 'Effect Data', [
+//      wbInteger('Type', itU32, wbEnum([
+//        {0} '',
+//        {1} '',
+//        {2} 'Weapon',
+//        {3} 'Apparel'
+//      ])),
+//      wbByteArray('Unused', 4),
+//      wbByteArray('Unused', 4),
+//      wbInteger('Flags', itU8, wbFlags([
+//        'No Auto-Calc',
+//        '',
+//        'Hide Effect'
+//      ])),
+//      wbByteArray('Unused', 3)
+//    ], cpNormal, True),
     wbEffectsReq
-  ]);
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbRecord(EYES, 'Eyes', [
     wbEDIDReq,
@@ -7908,8 +7957,11 @@ begin
   ]);
 
   wbRecord(HAZD, 'HAZD', [
-    wbEDIDReq
-  ]);
+    wbEDIDReq,
+    wbOBNDReq,
+    wbMODL,
+    wbUnknown(DATA)
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbSoulGemEnum := wbEnum([
     {0} 'None',
@@ -8790,8 +8842,9 @@ begin
       wbFormIDCk('Hollow Metal', [IPCT, NULL]),
       wbFormIDCk('Organic Bug', [IPCT, NULL]),
       wbFormIDCk('Organic Glow', [IPCT, NULL])
-    ], cpNormal, True, nil, 9)
-  ]);
+    ], cpNormal, True, nil, 9),
+    wbUnknown(PNAM)
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbRecord(ECZN, 'Encounter Zone', [
     wbEDIDReq,
@@ -9033,8 +9086,11 @@ begin
   ]);
 
   wbRecord(ARTO, 'ARTO', [
-    wbEDIDReq
-  ]);
+    wbEDIDReq,
+    wbOBNDReq,
+    wbMODL,
+    wbUnknown(DATA)
+  ], wbAllowUnordered, nil, cpNormal, False);
 
 //----------------------------------------------------------------------------
 // New
@@ -9084,11 +9140,11 @@ begin
       wbInteger('db Variance', itU8),
       wbInteger('Static Attentuation (db)', itU16, wbdiv(100))
     ])
-  ]);
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbRecord(DUAL, 'DUAL', [
     wbEDIDReq
-  ]);
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbRecord(SNCT, 'SNCT', [
     wbEDIDReq,
@@ -9133,7 +9189,7 @@ begin
     wbFormIDCk(PNAM, 'String', [SNCT, NULL]),
     wbUnknown(VNAM),
     wbUnknown(UNAM)
-  ]);
+  ], wbAllowUnordered, nil, cpNormal, False);
 
 //----------------------------------------------------------------------------
 // wbONAM Made for SOPM
@@ -9304,96 +9360,130 @@ begin
   ]);
 
   wbRecord(INFO, 'Dialog response', [
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous',
-        {7} 'Radio'
-      ])),
-      wbInteger('Next Speaker', itU8, wbEnum([
-        {0} 'Target',
-        {1} 'Self',
-        {2} 'Either'
-      ])),
-      wbInteger('Flags 1', itU8, wbFlags([
-        {0x01} 'Goodbye',
-        {0x02} 'Random',
-        {0x04} 'Say Once',
-        {0x08} 'Run Immediately',
-        {0x10} 'Info Refusal',
-        {0x20} 'Random End',
-        {0x40} 'Run for Rumors',
-        {0x80} 'Speech Challenge'
-      ])),
-      wbInteger('Flags 2', itU8, wbFlags([
-        {0x01} 'Say Once a Day',
-        {0x02} 'Always Darken'
-      ]))
-    ], cpNormal, True, nil, 3),
-    wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpNormal, True),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
+    wbVMAD,
+    wbunknown(ENAM),
     wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
-    wbRArray('Add Topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
-    wbRArray('Responses',
-      wbRStruct('Response', [
-        wbStruct(TRDT, 'Response Data', [
-          wbInteger('Emotion Type', itU32, wbEnum([
-            {0} 'Neutral',
-            {1} 'Anger',
-            {2} 'Disgust',
-            {3} 'Fear',
-            {4} 'Sad',
-            {5} 'Happy',
-            {6} 'Surprise',
-            {7} 'Pained'
-          ])),
-          wbInteger('Emotion Value', itS32),
-          wbByteArray('Unused', 4),
-          wbInteger('Response number', itU8),
-          wbByteArray('Unused', 3),
-          wbFormIDCk('Sound', [SOUN, NULL]),
-          wbInteger('Flags', itU8, wbFlags([
-            'Use Emotion Animation'
-          ])),
-          wbByteArray('Unused', 3)
-        ], cpNormal, False, nil, 5),
-        wbString(NAM1, 'Response Text', 0, cpTranslate, True),
-        wbString(NAM2, 'Script Notes', 0, cpTranslate, True),
-        wbString(NAM3, 'Edits'),
-        wbFormIDCk(SNAM, 'Speaker Animation', [IDLE]),
-        wbFormIDCk(LNAM, 'Listener Animation', [IDLE])
-      ], [])
-    ),
+    wbunknown(CNAM),
+    wbRArray('Unknown - TCLT', wbRStruct('Unknown', [
+      wbunknown(TCLT)
+    ], [])),
+    wbRArray('Unknown - TRDT', wbRStruct('Unknown', [
+      wbunknown(TRDT),
+      wbunknown(NAM1),
+      wbunknown(NAM2),
+      wbunknown(NAM3)
+    ], [])),
+    wbunknown(DNAM),
+    wbunknown(SNAM),
     wbCTDAs,
-    wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
-    wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
-    wbRArray('Unknown', wbFormIDCk(TCFU, 'Info', [INFO] )),
-    wbRStruct('Script (Begin)', [
-      wbEmbeddedScriptReq
-    ], [], cpNormal, True),
-    wbRStruct('Script (End)', [
-      wbEmpty(NEXT, 'Marker'),
-      wbEmbeddedScriptReq
-    ], [], cpNormal, True),
-    wbFormIDCk(SNDD, 'Unused', [SOUN]),
-    wbString(RNAM, 'Prompt'),
-    wbFormIDCk(ANAM, 'Speaker', [CREA, NPC_]),
-    wbFormIDCk(KNAM, 'ActorValue/Perk', [AVIF, PERK]),
-    wbInteger(DNAM, 'Speech Challenge', itU32, wbEnum([
-      '---',
-      'Very Easy',
-      'Easy',
-      'Average',
-      'Hard',
-      'Very Hard'
-    ]))
-  ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
+    wbunknown(RNAM),
+    wbunknown(ONAM),
+    wbunknown(LNAM),
+    wbunknown(ANAM),
+    wbunknown(TWAT)
+  ], wbAllowUnordered, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
 
+//------------------------------------------------------------------------------
+// Begin Old INFO
+//------------------------------------------------------------------------------
+//  wbRecord(INFO, 'Dialog response', [
+//    wbStruct(DATA, '', [
+//      wbInteger('Type', itU8, wbEnum([
+//        {0} 'Topic',
+//        {1} 'Conversation',
+//        {2} 'Combat',
+//        {3} 'Persuasion',
+//        {4} 'Detection',
+//        {5} 'Service',
+//        {6} 'Miscellaneous',
+//        {7} 'Radio'
+//      ])),
+//      wbInteger('Next Speaker', itU8, wbEnum([
+//        {0} 'Target',
+//        {1} 'Self',
+//        {2} 'Either'
+//      ])),
+//      wbInteger('Flags 1', itU8, wbFlags([
+//        {0x01} 'Goodbye',
+//        {0x02} 'Random',
+//        {0x04} 'Say Once',
+//        {0x08} 'Run Immediately',
+//        {0x10} 'Info Refusal',
+//        {0x20} 'Random End',
+//        {0x40} 'Run for Rumors',
+//        {0x80} 'Speech Challenge'
+//      ])),
+//      wbInteger('Flags 2', itU8, wbFlags([
+//        {0x01} 'Say Once a Day',
+//        {0x02} 'Always Darken'
+//      ]))
+//    ], cpNormal, True, nil, 3),
+//    wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpNormal, True),
+//    wbFormIDCk(TPIC, 'Topic', [DIAL]),
+//    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
+//    wbRArray('Add Topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
+//    wbRArray('Responses',
+//      wbRStruct('Response', [
+//        wbStruct(TRDT, 'Response Data', [
+//          wbInteger('Emotion Type', itU32, wbEnum([
+//            {0} 'Neutral',
+//            {1} 'Anger',
+//            {2} 'Disgust',
+//            {3} 'Fear',
+//            {4} 'Sad',
+//            {5} 'Happy',
+//            {6} 'Surprise',
+//            {7} 'Pained'
+//          ])),
+//          wbInteger('Emotion Value', itS32),
+//          wbByteArray('Unused', 4),
+//          wbInteger('Response number', itU8),
+//          wbByteArray('Unused', 3),
+//          wbFormIDCk('Sound', [SOUN, NULL]),
+//          wbInteger('Flags', itU8, wbFlags([
+//            'Use Emotion Animation'
+//          ])),
+//          wbByteArray('Unused', 3)
+//        ], cpNormal, False, nil, 5),
+//        wbString(NAM1, 'Response Text', 0, cpTranslate, True),
+//        wbString(NAM2, 'Script Notes', 0, cpTranslate, True),
+//        wbString(NAM3, 'Edits'),
+//        wbFormIDCk(SNAM, 'Speaker Animation', [IDLE]),
+//        wbFormIDCk(LNAM, 'Listener Animation', [IDLE])
+//      ], [])
+//    ),
+//    wbCTDAs,
+//    wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
+//    wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
+//    wbRArray('Unknown', wbFormIDCk(TCFU, 'Info', [INFO] )),
+//    wbRStruct('Script (Begin)', [
+//      wbEmbeddedScriptReq
+//    ], [], cpNormal, True),
+//    wbRStruct('Script (End)', [
+//      wbEmpty(NEXT, 'Marker'),
+//      wbEmbeddedScriptReq
+//    ], [], cpNormal, True),
+//    wbFormIDCk(SNDD, 'Unused', [SOUN]),
+//    wbString(RNAM, 'Prompt'),
+//    wbFormIDCk(ANAM, 'Speaker', [CREA, NPC_]),
+//    wbFormIDCk(KNAM, 'ActorValue/Perk', [AVIF, PERK]),
+//    wbInteger(DNAM, 'Speech Challenge', itU32, wbEnum([
+//      '---',
+//      'Very Easy',
+//      'Easy',
+//      'Average',
+//      'Hard',
+//      'Very Hard'
+//    ]))
+//  ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
+//------------------------------------------------------------------------------
+// End Old INFO
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+// Begin Old INGR
+//------------------------------------------------------------------------------
   wbRecord(INGR, 'Ingredient', [
     wbEDIDReq,
     wbOBNDReq,
@@ -11178,8 +11268,12 @@ begin
 
   wbRecord(QUST, 'Quest', [
     wbEDIDReq,
+    wbVMAD,
     wbSCRI,
     wbFULL,
+    wbUnknown(DNAM),
+    wbUnknown(FLTR),
+    wbUnknown(NEXT),
     wbICON,
     wbStruct(DATA, 'General', [
       wbInteger('Flags', itU8, wbFlags([
@@ -11201,14 +11295,20 @@ begin
           {0x01} 'Complete Quest',
           {0x02} 'Fail Quest'
         ])),
-        wbCTDAs,
         wbString(CNAM, 'Log Entry', 0, cpTranslate),
         wbEmbeddedScriptReq,
-        wbFormIDCk(NAM0, 'Next Quest', [QUST])
+        wbFormIDCk(NAM0, 'Next Quest', [QUST]),
+        wbUnknown(SCHR),
+        wbUnknown(QNAM),
+        wbUnknown(SCTX),
+        wbCTDAs
       ], []))
     ], [])),
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itS32),
+      wbUnknown(FNAM),
+      wbUnknown(NNAM),
+      wbUnknown(QSTA),
       wbString(NNAM, 'Description', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
@@ -11220,8 +11320,51 @@ begin
         ]),
         wbCTDAs
       ], []))
-    ], []))
-  ]);
+    ], [])),
+    wbUnknown(ANAM),
+    wbRArray('ALST/ALLS', wbRStruct('ALST/ALLS', [
+      wbRStruct('The ALLS', [
+        wbUnknown(ALLS),
+        wbUnknown(ALID),
+        wbUnknown(FNAM),
+        wbUnknown(ALFL),
+        wbUnknown(ALED)
+      ], []),
+      wbRStruct('The ALST', [
+        wbUnknown(ALLS),
+        wbUnknown(ALID),
+        wbUnknown(FNAM),
+        wbUnknown(ALUA),
+        wbUnknown(ALPC),
+        wbUnknown(VTCK),
+        wbUnknown(ALED)
+      ], []),
+      wbCTDAs,
+      wbUnknown(FNAM),
+      wbUnknown(ALFR),
+      wbUnknown(ALPC),
+      wbUnknown(ALCO),
+      wbUnknown(ALCA),
+      wbUnknown(ALCL),
+      wbString(NNAM, 'Description', 0, cpNormal, True),
+      wbRArray('Targets', wbRStruct('Target', [
+        wbStruct(QSTA, 'Target', [
+          wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, ACRE, ACHR], True),
+          wbInteger('Flags', itU8, wbFlags([
+            {0x01} 'Compass Marker Ignores Locks'
+          ])),
+          wbByteArray('Unused', 3)
+        ]),
+        wbCTDAs
+      ], []))
+    ], [])),
+    wbCOCT,
+    wbCNTOs,
+    wbKSIZ,
+    wbKWDAs,
+    wbUnknown(NAM0),
+    wbUnknown(QTGL)
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbHeadPartIndexEnum := wbEnum([
     'Head',
@@ -11360,6 +11503,9 @@ begin
       ])
     ], cpIgnore),}
     wbByteArray(RCLR, 'Unused', 0, cpIgnore),
+
+    wbVMAD,
+
     wbFormIDCk(NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, CHIP,
                               MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CCRD], False, cpNormal, True),
@@ -11918,7 +12064,7 @@ begin
 //    wbUnknown(SNDD),
 //    wbSNDD,
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
-  ], False, nil, cpNormal, False, wbSOUNAfterLoad);
+  ], wbAllowUnordered, nil, cpNormal, False, wbSOUNAfterLoad);
 
   wbSPIT := wbStruct(SPIT, '', [
       wbInteger('Base Cost', itU32),
@@ -12049,8 +12195,20 @@ begin
 //------------------------------------------------------------------------------
 
   wbRecord(SCRL, 'SCRL', [
-    wbEDIDReq
-  ]);
+    wbEDIDReq,
+    wbOBNDReq,
+    wbFULL,
+    wbKSIZ,
+    wbKWDAs,
+    wbMDOB,
+    wbUnknown(ETYP),
+    wbDESC,
+    wbMODL,
+    wbUnknown(DATA),
+    wbUnknown(SPIT),
+    wbUnknown(EFID),
+    wbUnknown(EFIT)
+  ], wbAllowUnordered, nil, cpNormal, False);
 
   wbRecord(STAT, 'Static', [
     wbEDIDReq,
@@ -12302,6 +12460,11 @@ begin
     wbDEST,
     wbREPL,
     wbETYPReq,
+    wbUnknown(BIDS),
+    wbUnknown(BAMT),
+    wbKSIZ,
+    wbKWDAs,
+    wbDESC,
     wbBIPL,
     wbYNAM,
     wbZNAM,
