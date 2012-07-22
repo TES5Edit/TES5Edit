@@ -797,6 +797,7 @@ var
   wbSOPM_ONAM: IwbSubRecordStructDef;
   wbSNDD: IwbSubRecordUnionDef;
   wbCTDANew: IwbSubRecordStructDef;
+  wbDobjDNAMs: IwbSubRecordDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -9010,45 +9011,52 @@ begin
     wbString(ANAM, 'Death Pose')
   ]);
 
+  wbDobjDNAMs := wbArray(DNAM, 'Unknown',
+    wbStruct('Unknown', [
+      wbByteArray('Unknown', 4, cpIgnore, False, wbNeverShow),
+      wbFormID('Unknown')
+    ]), 0, nil, nil, cpNormal, True);
+
   wbRecord(DOBJ, 'Default Object Manager', [
-    wbEDIDReq,
-    wbArray(DATA, 'Default Objects', wbFormID('Default Object'), [
-      'Stimpack',
-      'SuperStimpack',
-      'RadX',
-      'RadAway',
-      'Morphine',
-      'Perk Paralysis',
-      'Player Faction',
-      'Mysterious Stranger NPC',
-      'Mysterious Stranger Faction',
-      'Default Music',
-      'Battle Music',
-      'Death Music',
-      'Success Music',
-      'Level Up Music',
-      'Player Voice (Male)',
-      'Player Voice (Male Child)',
-      'Player Voice (Female)',
-      'Player Voice (Female Child)',
-      'Eat Package Default Food',
-      'Every Actor Ability',
-      'Drug Wears Off Image Space',
-      'Doctor''s Bag',
-      'Miss Fortune NPC',
-      'Miss Fortune Faction',
-      'Meltdown Explosion',
-      'Unarmed Forward PA',
-      'Unarmed Backward PA',
-      'Unarmed Left PA',
-      'Unarmed Right PA',
-      'Unarmed Crouch PA',
-      'Unarmed Counter PA',
-      'Spotter Effect',
-      'Item Detected Efect',
-      'Cateye Mobile Effect (NYI)'
-    ], cpNormal, True)
+    wbDobjDNAMs
   ]);
+//    wbEDIDReq,
+//    wbArray(DATA, 'Default Objects', wbFormID('Default Object'), [
+//      'Stimpack',
+//      'SuperStimpack',
+//      'RadX',
+//      'RadAway',
+//      'Morphine',
+//      'Perk Paralysis',
+//      'Player Faction',
+//      'Mysterious Stranger NPC',
+//      'Mysterious Stranger Faction',
+//      'Default Music',
+//      'Battle Music',
+//      'Death Music',
+//      'Success Music',
+//      'Level Up Music',
+//      'Player Voice (Male)',
+//      'Player Voice (Male Child)',
+//      'Player Voice (Female)',
+//      'Player Voice (Female Child)',
+//      'Eat Package Default Food',
+//      'Every Actor Ability',
+//      'Drug Wears Off Image Space',
+//      'Doctor''s Bag',
+//      'Miss Fortune NPC',
+//      'Miss Fortune Faction',
+//      'Meltdown Explosion',
+//      'Unarmed Forward PA',
+//      'Unarmed Backward PA',
+//      'Unarmed Left PA',
+//      'Unarmed Right PA',
+//      'Unarmed Crouch PA',
+//      'Unarmed Counter PA',
+//      'Spotter Effect',
+//      'Item Detected Efect',
+//      'Cateye Mobile Effect (NYI)'
+//    ], cpNormal, True)
 
   wbRecord(LGTM, 'Lighting Template', [
     wbEDIDReq,
@@ -11400,16 +11408,15 @@ begin
       wbUnknown(QTGL)
     ], [])),
     wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
-    wbRUnion('Union', [
-      wbRStruct('Next Before CTDA', [
-        wbUnknown(NEXT),
-        wbCTDAs
-      ], []),
-      wbRStruct('Next After CTDA', [
-        wbCTDAs,
-        wbUnknown(NEXT)
-      ], [])
-    ], []),
+
+    wbRStruct('Conditions (Begin)', [
+      wbCTDAs
+    ], [], cpNormal, True),
+    wbRStruct('Conditions (End)', [
+      wbEmpty(NEXT, 'Marker'),
+      wbCTDAs
+    ], [], cpNormal, True),
+
     wbICON,
     wbStruct(DATA, 'General', [
       wbInteger('Flags', itU8, wbFlags([
@@ -11468,8 +11475,8 @@ begin
           wbUnknown(ALFD),
           wbUnknown(ALFI),
           wbUnknown(ALUA),
-          wbCTDAs,
           wbUnknown(ALFR),
+          wbCTDAs,
           wbUnknown(ALCO),
           wbUnknown(ALCA),
           wbUnknown(ALCL),
