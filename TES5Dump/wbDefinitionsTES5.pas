@@ -9013,7 +9013,7 @@ begin
   wbRecord(DOBJ, 'Default Object Manager', [
     wbArray(DNAM, 'Unknown',
       wbStruct('Unknown', [
-        wbByteArray('Unknown', 4, cpIgnore, False, wbNeverShow),
+        wbString('Unknown', 4, cpIgnore, False, wbNeverShow),
         wbFormID('Unknown')
       ]), 0, nil, nil, cpNormal, True
     )
