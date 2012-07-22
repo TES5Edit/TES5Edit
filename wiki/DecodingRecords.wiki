@@ -11,6 +11,55 @@ In xEdit, cpBenign differences are highlighted, but are otherwise ignored.
 NoReach is relevant when the determining which records can be reached by the player starting the game normally. Not every FormID everywhere is a link that should be followed for this purpose.
  
 e.g. suppose there is a DOOR that can be opened with a specific KEYM. Just because there is a way to get from the player record (and its initial location, the auto-start quests and a number of other relevant start records) to the record placing the DOOR by following FormID fields from one record to another doesn't mean that the KEYM is also reachable. NoReach simply prevents a FormID field from being followed during reachability detection.
+
+== Differences between functions with or without "R" ==
+
+The "R" in the name (wbStruct vs. wbRStruct, wbArray vs. wbRArray, wbUnion vs wbRUnion) stands for “R”ecord. Structs, Arrays, and Unions contain fields. RStructs, RArrays, and RUnion contain (sub-)records.
+
+== wbUnion and wbRUnion ==
+
+wbSCROs :=
+  wbRArray('References',
+    wbRUnion('', [
+      wbFormIDCk(SCRO, 'Global Reference',
+        [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
+        BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
+        FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
+        LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
+        WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
+        NULL]),
+      wbInteger(SCRV, 'Local Variable', itU32)
+    ], [])
+  );
+ 
+wbUnion is used if there is a field inside a subrecord which can be of different possible types, and a union decider callback is used to figure out which of the different options to take.
+ 
+wbRUnion is used if there are different possible subrecords that can occur. In this case no union decider callback is required as the different signatures already distinguish the possible subrecords.
+ 
+Assuming that you don’t have an array of just ALST and ALLS, but that an ALST is always followed by a bunch of specific subrecords, while an ALLS is always followed by a bunch of other specific subrecods, you would have an:
+ 
+wbRArray
+  wbRUnion
+    wbRStruct
+      ALST
+      …
+    wbRStruct
+      ALLS
+      …
+ 
+That is, an record array of record unions of different possible record structs.
+ 
+If on the other hand ALST and ALLS is always followed by the same other subrecords before the next ALST or ALLS, you would have:
+ 
+wbRArray
+  wbRStruct
+    wbRUnion
+      ALST
+			ALLS
+    …
+ 
+That is, an record array of record structs, the first member of which is a record union of either ALST or ALLS.
+
 = Code Examples =
 
 == Arrays of FormID ==
