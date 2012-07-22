@@ -4720,7 +4720,13 @@ begin
     wbInteger('version', itS16),
     wbInteger('objFormat', itS16),
     //wbInteger('scriptCount', itU16),
-    wbArray('Scripts', wbScriptEntry, -2)
+    wbArray('Scripts', wbScriptEntry, -2),
+      wbArray('Unknown Frag', wbUnknown)
+//    wbArray('Unknown Frag', wbByteArray('Unknown Frag Byte Array', 4))
+    // wbArray('Unknown Frag Array', wbStruct('Unknown Frag Struct', [
+    //   wbByteArray('Unknown Frag Byte Array', 4)
+    //   ])
+    // )
   ]);
 
   wbATKD := wbStruct(ATKD, 'Attack Data', [
@@ -6328,7 +6334,9 @@ begin
       wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
       wbInteger('Teaches', itS8, wbSkillEnum),
       wbInteger('Maximum training level', itU8),
-      wbByteArray('Unused', 2)
+      wbByteArray('Unknown', 2),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
     ], cpNormal, True),
     wbArray(ATTR, 'Attributes', wbInteger('Attribute', itU8), [
       'Strength',
@@ -7312,8 +7320,8 @@ begin
 // Ranks Tab ------------------------------------------------------------------
     wbRStructsSK('Ranks', 'Rank', [0], [
       wbInteger(RNAM, 'Rank#', itU32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
+      wbLString(MNAM, 'Male', 0, cpTranslate),
+      wbLString(FNAM, 'Female', 0, cpTranslate),
       wbString(INAM, 'Insignia Unused')
     ], []),
 //    wbFormIDCk(WMI1, 'Reputation', [REPU])
@@ -9167,7 +9175,8 @@ begin
   ]);
 
   wbRecord(OTFT, 'OTFT', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(INAM)
   ]);
 
   wbRecord(ARTO, 'ARTO', [
@@ -11488,8 +11497,8 @@ begin
           wbUnknown(ALRT),
           wbKSIZ,
           wbKWDAs,
-          wbUnknown(ALEQ), //<-- Moved From Between ALDN and ALSP
-          wbUnknown(ALEA), //<-- Moved From Between ALDN and ALSP
+          wbUnknown(ALEQ),
+          wbUnknown(ALEA),
           wbCOCT,
           wbCNTOs,
           wbUnknown(SPOR),
@@ -11682,6 +11691,7 @@ begin
     ], cpIgnore),}
     wbByteArray(RCLR, 'Unused', 0, cpIgnore),
 
+    {--- Unknown ---}
     wbVMAD,
 
     wbFormIDCk(NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
@@ -11850,6 +11860,9 @@ begin
       wbFloat('Static Percentage'),
       wbFormIDCkNoReach('Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, NULL])
     ]),
+
+    {--- Unknown ---}
+    wbUnknown(XLRT),
 
     {--- Ownership ---}
     wbRStruct('Ownership', [
@@ -12021,7 +12034,6 @@ begin
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
-
 
   wbRecord(REGN, 'Region', [
     wbEDID,
