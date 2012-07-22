@@ -85,6 +85,7 @@ const
   ACBS : TwbSignature = 'ACBS';
   ACHR : TwbSignature = 'ACHR';
   ACRE : TwbSignature = 'ACRE';
+  ACPR : TwbSignature = 'ACPR';
   ACTI : TwbSignature = 'ACTI';
   ADDN : TwbSignature = 'ADDN';
   AIDT : TwbSignature = 'AIDT';
@@ -98,6 +99,9 @@ const
   ALCO : TwbSignature = 'ALCO'; { New To Skyrim }
   ALCA : TwbSignature = 'ALCA'; { New To Skyrim }
   ALCL : TwbSignature = 'ALCL'; { New To Skyrim }
+  ALEA : TwbSignature = 'ALEA'; { New To Skyrim }
+  ALFA : TwbSignature = 'ALFA'; { New To Skyrim }
+  ALFD : TwbSignature = 'ALFD'; { New To Skyrim }
   ALED : TwbSignature = 'ALED'; { New To Skyrim }
   ALFL : TwbSignature = 'ALFL'; { New To Skyrim }
   ALUA : TwbSignature = 'ALUA'; { New To Skyrim }
@@ -271,6 +275,11 @@ const
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
+  LCPR : TwbSignature = 'LCPR'; { New to Skyrim }
+  LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
+  LCSR : TwbSignature = 'LCSR'; { New to Skyrim }
+  LCEC : TwbSignature = 'LCEC'; { New to Skyrim }
+  LCID : TwbSignature = 'LCID'; { New to Skyrim }
   LNAM : TwbSignature = 'LNAM';
   LSCR : TwbSignature = 'LSCR';
   LTEX : TwbSignature = 'LTEX';
@@ -5098,7 +5107,7 @@ begin
     wbFormIDCk(XLCN, 'Location Reference', [LCRT]),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, STAT, FURN]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN]),
 
     {--- 3D Data ---}
     wbDATAPosRot
@@ -7947,7 +7956,10 @@ begin
       {72}   wbFloat('Y'),
       {76}   wbFloat('Z')
            ]),
-      {80} wbFloat('Bouncy Mult')
+      {80} wbFloat('Bouncy Mult'),
+           wbByteArray('Unknown', 4),
+           wbByteArray('Unknown', 4),
+           wbByteArray('Unknown', 4)
     ], cpNormal, True),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model Filename'),
@@ -8861,8 +8873,22 @@ begin
   ]);
 
   wbRecord(LCTN, 'LCTN', [
-    wbEDIDReq
-  ]);
+    wbEDIDReq,
+    wbUnknown(ACPR),
+    wbUnknown(LCPR),
+    wbUnknown(LCUN),
+    wbUnknown(LCSR),
+    wbUnknown(LCEC),
+    wbUnknown(LCID),
+    wbFull,
+    wbKSIZ,
+    wbKWDAs,
+    wbUnknown(PNAM),
+    wbUnknown(MNAM),
+    wbUnknown(RNAM),
+    wbUnknown(NAM0),
+    wbUnknown(CNAM)
+  ], wbAllowUnordered, nil, cpNormal, False);
 
 
   wbRecord(MESG, 'Message', [
@@ -11272,7 +11298,9 @@ begin
     wbSCRI,
     wbFULL,
     wbUnknown(DNAM),
+    wbUnknown(ENAM),
     wbUnknown(FLTR),
+    wbCTDAs,
     wbUnknown(NEXT),
     wbICON,
     wbStruct(DATA, 'General', [
@@ -11287,9 +11315,8 @@ begin
       wbByteArray('Unused', 2),
       wbFloat('Quest Delay')
     ], cpNormal, True, nil, 3),
-    wbCTDAs,
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
-      wbInteger(INDX, 'Stage Index', itS16),
+      wbInteger(INDX, 'Stage Index', itS32),
       wbRArray('Log Entries', wbRStruct('Log Entry', [
         wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
           {0x01} 'Complete Quest',
@@ -11323,29 +11350,34 @@ begin
     ], [])),
     wbUnknown(ANAM),
     wbRArray('ALST/ALLS', wbRStruct('ALST/ALLS', [
+      wbRStruct('The ALST', [
+        wbUnknown(ALST),
+        wbUnknown(ALID),
+        wbUnknown(FNAM),
+        wbCTDAs,
+        wbUnknown(ALFR),
+        wbRArray('Unknown - DALC', wbRStruct('Unknown', [
+          wbUnknown(ALPC)
+        ], [])),
+        wbUnknown(ALUA),
+        wbUnknown(ALCO),
+        wbUnknown(VTCK),
+        wbUnknown(ALED)
+      ], []),
       wbRStruct('The ALLS', [
         wbUnknown(ALLS),
         wbUnknown(ALID),
         wbUnknown(FNAM),
+        wbUnknown(ALCO),
         wbUnknown(ALFL),
         wbUnknown(ALED)
       ], []),
-      wbRStruct('The ALST', [
-        wbUnknown(ALLS),
-        wbUnknown(ALID),
-        wbUnknown(FNAM),
-        wbUnknown(ALUA),
-        wbUnknown(ALPC),
-        wbUnknown(VTCK),
-        wbUnknown(ALED)
-      ], []),
       wbCTDAs,
-      wbUnknown(FNAM),
-      wbUnknown(ALFR),
-      wbUnknown(ALPC),
-      wbUnknown(ALCO),
       wbUnknown(ALCA),
       wbUnknown(ALCL),
+      wbUnknown(ALEA),
+      wbUnknown(ALFA),
+      wbUnknown(ALFD),
       wbString(NNAM, 'Description', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
@@ -12292,6 +12324,7 @@ end;
 
 procedure DefineTES5f;
 begin
+
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
@@ -12301,6 +12334,7 @@ begin
       {0}'Causes Damage',
       {1}'Reflective'
     ]), cpNormal, True),
+    wbUnknown(INAM),
     wbString(MNAM, 'Material ID', 0, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbFormIDCk(XNAM, 'Actor Effect', [SPEL]),
@@ -12444,7 +12478,12 @@ begin
       wbFormIDCk('Daytime', [WATR, NULL]),
       wbFormIDCk('Nighttime', [WATR, NULL]),
       wbFormIDCk('Underwater', [WATR, NULL])
-    ], cpNormal, True)
+    ], cpNormal, True),
+    wbUnknown(NAM0),
+    wbUnknown(NAM1),
+    wbUnknown(NAM2),
+    wbUnknown(NAM3),
+    wbUnknown(NAM4)
   ], False, nil, cpNormal, False, wbWATRAfterLoad);
 
   wbRecord(WEAP, 'Weapon', [
