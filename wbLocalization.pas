@@ -159,9 +159,9 @@ begin
   sigEl := aElement.ContainingMainRecord.Signature;
 
   if sigRec = 'DESC' then Result := lsDLString else // DESC always from dlstrings
-  if {(sigEl = 'QUST') or} (sigEl = 'BOOK') then Result := lsDLString else //journal/book
+  if (sigEl = 'QUST') and (sigRec = 'CNAM') then Result := lsDLString else // quest log entry
+  if sigEl = 'BOOK' then Result := lsDLString else //journal/book
   if sigEl = 'INFO' then Result := lsILString else // dialog
-  //if sigEl = 'DIAL' then Result := lsILString else // dialog
     Result := lsString; // others
 end;
 

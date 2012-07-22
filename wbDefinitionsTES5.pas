@@ -11438,7 +11438,7 @@ begin
           {0x02} 'Fail Quest'
         ])),
         wbCTDAs,
-        wbLString(CNAM, 'Log Entry', 0, cpTranslate),
+        wbLString(CNAM, 'Log Entry'),
         wbEmbeddedScriptReq,
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
         wbUnknown(SCHR),
