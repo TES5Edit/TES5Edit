@@ -144,7 +144,7 @@ begin
   if idx <> -1 then
     Result := fStrings[idx]
   else
-    Result := Format('Unknown lstring ID %08x', [ID]);
+    Result := 'Unknown lstring ID ' + IntToHex(ID, 8);
 end;
 
 function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
@@ -159,8 +159,9 @@ begin
   sigEl := aElement.ContainingMainRecord.Signature;
 
   if sigRec = 'DESC' then Result := lsDLString else // DESC always from dlstrings
-  if (sigEl = 'QUST') or (sigEl = 'BOOK') then Result := lsDLString else //journal/book
-  if sigEl = 'DIAL' then Result := lsILString else // dialog
+  if {(sigEl = 'QUST') or} (sigEl = 'BOOK') then Result := lsDLString else //journal/book
+  if sigEl = 'INFO' then Result := lsILString else // dialog
+  //if sigEl = 'DIAL' then Result := lsILString else // dialog
     Result := lsString; // others
 end;
 
@@ -194,7 +195,7 @@ begin
   idx := lFiles.IndexOf(lFullName);
   if idx = -1 then begin
     if not FileExists(lFullName) then begin
-      Result := Format('No localization for lstring ID %08x', [ID]);
+      Result := 'No localization for lstring ID ' + IntToHex(ID, 8);
       Exit;
     end;
     wblf := TwbLocalizationFile.Create(lFullName);
