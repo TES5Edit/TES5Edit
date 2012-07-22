@@ -11368,6 +11368,7 @@ begin
         wbUnknown(ALLS),
         wbUnknown(ALID),
         wbUnknown(FNAM),
+        wbCTDAs,
         wbUnknown(ALCO),
         wbUnknown(ALFL),
         wbUnknown(ALED)
