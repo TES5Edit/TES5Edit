@@ -88,6 +88,8 @@ const
   ACPR : TwbSignature = 'ACPR';
   ACTI : TwbSignature = 'ACTI';
   ADDN : TwbSignature = 'ADDN';
+  AHCM : TwbSignature = 'AHCM'; { New To Skyrim }
+  AHCF : TwbSignature = 'AHCF'; { New To Skyrim }
   AIDT : TwbSignature = 'AIDT';
   ALCH : TwbSignature = 'ALCH';
   ALDN : TwbSignature = 'ALDN'; { New To Skyrim }
@@ -192,6 +194,8 @@ const
   DESC : TwbSignature = 'DESC';
   DEST : TwbSignature = 'DEST';
   DIAL : TwbSignature = 'DIAL';
+  DFTM : TwbSignature = 'DFTM'; { New To Skyrim }
+  DFTF : TwbSignature = 'DFTF'; { New To Skyrim }
   DMDL : TwbSignature = 'DMDL';
   DMDT : TwbSignature = 'DMDT';
   DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
@@ -229,11 +233,16 @@ const
   FGGA : TwbSignature = 'FGGA';
   FGGS : TwbSignature = 'FGGS';
   FGTS : TwbSignature = 'FGTS';
+  FLMV : TwbSignature = 'FLMV'; { New to Skyrim }
   FLST : TwbSignature = 'FLST';
   FLTR : TwbSignature = 'FLTR'; { New to Skyrim }
   FLTV : TwbSignature = 'FLTV';
   FNAM : TwbSignature = 'FNAM';
+  FNMK : TwbSignature = 'FNMK'; { New to Skyrim }
+  FNPR : TwbSignature = 'FNPR'; { New to Skyrim }
   FTST : TwbSignature = 'FTST'; { New to Skyrim }
+  FTSM : TwbSignature = 'FTSM'; { New to Skyrim }
+  FTSF : TwbSignature = 'FTSF'; { New to Skyrim }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
   GLOB : TwbSignature = 'GLOB';
@@ -250,6 +259,7 @@ const
   HCLF : TwbSignature = 'HCLF'; { New to Skyrim }
   HCLR : TwbSignature = 'HCLR';
   HDPT : TwbSignature = 'HDPT';
+  HEAD : TwbSignature = 'HEAD'; { New to Skyrim }
   HEDR : TwbSignature = 'HEDR';
   HNAM : TwbSignature = 'HNAM';
   HUNG : TwbSignature = 'HUNG';
@@ -304,6 +314,8 @@ const
   LVSP : TwbSignature = 'LVSP';
   LVLN : TwbSignature = 'LVLN';
   LVLO : TwbSignature = 'LVLO';
+  MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
+  MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
   MAST : TwbSignature = 'MAST';
   MESG : TwbSignature = 'MESG';
   MGEF : TwbSignature = 'MGEF';
@@ -338,7 +350,9 @@ const
   MODT : TwbSignature = 'MODT';
   MOSD : TwbSignature = 'MOSD';
   MSTT : TwbSignature = 'MSTT';
+  MTNM : TwbSignature = 'MTNM'; { New to Skyrim }
   MUSC : TwbSignature = 'MUSC';
+  MTYP : TwbSignature = 'MTYP'; { New To Skyrim }
   FSTP : TwbSignature = 'FSTP';
   FSTS : TwbSignature = 'FSTS';
   SMBN : TwbSignature = 'SMBN';
@@ -361,6 +375,7 @@ const
   DUAL : TwbSignature = 'DUAL';
   SNCT : TwbSignature = 'SNCT';
   SOPM : TwbSignature = 'SOPM';
+  TINL : TwbSignature = 'TINL'; { New to Skyrim }
   COLL : TwbSignature = 'COLL';
   CLFM : TwbSignature = 'CLFM';
   REVB : TwbSignature = 'REVB';
@@ -429,6 +444,8 @@ const
   PFOR : TwbSignature = 'PFOR'; { New to Skyrim }
   PGAG : TwbSignature = 'PGAG';
   PGRE : TwbSignature = 'PGRE';
+  PHTN : TwbSignature = 'PHTN'; { New to Skyrim }
+  PHWT : TwbSignature = 'PHWT'; { New to Skyrim }
   PLCN : TwbSignature = 'PLCN'; { New to Skyrim }
   PMIS : TwbSignature = 'PMIS';
   TRGT : TwbSignature = 'TRGT';
@@ -510,8 +527,11 @@ const
   REPL : TwbSignature = 'REPL';
   RGDL : TwbSignature = 'RGDL';
   RNAM : TwbSignature = 'RNAM';
+  RNMV : TwbSignature = 'RNMV'; { New to Skyrim }
   RPLD : TwbSignature = 'RPLD';
   RPLI : TwbSignature = 'RPLI';
+  RPRM : TwbSignature = 'RPRM'; { New To Skyrim }
+  RPRF : TwbSignature = 'RPRF'; { New To Skyrim }
   SCDA : TwbSignature = 'SCDA';
   SCHR : TwbSignature = 'SCHR';
   SCOL : TwbSignature = 'SCOL';
@@ -530,9 +550,11 @@ const
   SNAM : TwbSignature = 'SNAM';
   SNDD : TwbSignature = 'SNDD';
   SNDX : TwbSignature = 'SNDX';
+  SNMV : TwbSignature = 'SNMV'; { New to Skyrim }
   SOFT : TwbSignature = 'SOFT'; { New to Skyrim }
   SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN';
+  SPED : TwbSignature = 'SPED'; { New To Skyrim }
   SPEL : TwbSignature = 'SPEL';
   SPCT : TwbSignature = 'SPCT'; { New to Skyrim }
   SCRL : TwbSignature = 'SCRL';
@@ -542,6 +564,7 @@ const
   STAT : TwbSignature = 'STAT';
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   SPGD : TwbSignature = 'SPGD';
+  SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
   RFCT : TwbSignature = 'RFCT';
   MMRK : TwbSignature = 'MMRK';
   BRUS : TwbSignature = 'BRUS';
@@ -556,6 +579,10 @@ const
   TINI : TwbSignature = 'TINI'; { New to Skyrim }
   TINC : TwbSignature = 'TINC'; { New to Skyrim }
   TINV : TwbSignature = 'TINV'; { New to Skyrim }
+  TINT : TwbSignature = 'TINT'; { New to Skyrim }
+  TIND : TwbSignature = 'TIND'; { New to Skyrim }
+  TINP : TwbSignature = 'TINP'; { New to Skyrim }
+  TIRS : TwbSignature = 'TIRS'; { New to Skyrim }
   TNAM : TwbSignature = 'TNAM';
   TPLT : TwbSignature = 'TPLT';
   TRDT : TwbSignature = 'TRDT';
@@ -572,6 +599,7 @@ const
   TXST : TwbSignature = 'TXST';
   TWAT : TwbSignature = 'TWAT'; { New To Skyrim }
   UNAM : TwbSignature = 'UNAM';
+  UNES : TwbSignature = 'UNES'; { New To Skyrim }
   VANM : TwbSignature = 'VANM';
   VATS : TwbSignature = 'VATS';
   VCLR : TwbSignature = 'VCLR';
@@ -588,7 +616,9 @@ const
   VTYP : TwbSignature = 'VTYP';
   WAIT : TwbSignature = 'WAIT'; { New To Skyrim }
   WATR : TwbSignature = 'WATR';
+  WBDT : TwbSignature = 'WBDT'; { New to Skyrim }
   WEAP : TwbSignature = 'WEAP';
+  WKMV : TwbSignature = 'WKMV'; { New to Skyrim }
   WLST : TwbSignature = 'WLST';
   WNAM : TwbSignature = 'WNAM';
   XATO : TwbSignature = 'XATO';
@@ -807,6 +837,8 @@ var
   wbDMDSs: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
   wbDMDL: IwbSubRecordDef;
+  wbSizeIndexEnum: IwbEnumDef;
+  wbSPCT: IwbSubRecordDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -4538,7 +4570,13 @@ begin
 				])
 			], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
 
-//-----------------------------------------------------------------
+
+  wbSPCT := wbStruct(SPCT, 'Spell Count', [
+    wbInteger('Spell Count', itU16),
+    wbByteArray('Unknown', 2)
+  ]);
+
+  //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
 
@@ -6084,15 +6122,18 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
+    wbDESC,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, 'Data', [
-      wbFloat('Speed'),
+      wbFormIDCk('Projectile', [PROJ, NULL]),
       wbInteger('Flags', itU8, wbFlags([
         'Ignores Normal Weapon Resistance',
         'Non-Playable'
       ])),
       wbByteArray('Unknown', 3),
-      wbInteger('Value', itS32),
-      wbInteger('Clip Rounds', itU8)
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
     ], cpNormal, True),
     wbStruct(DAT2, 'Data 2', [
       wbInteger('Proj. per Shot', itU32),
@@ -7540,7 +7581,20 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
+    wbUnknown(PNAM),
+    wbUnknown(FNAM),
+    wbFormIDCk(KNAM, 'Reputation', [KYWD, NULL]),
+    wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True),
+    wbUnknown(WBDT),
+    wbRArray('Array ENAM, NAM0, FNMK', wbRStruct('Unknown', [
+      wbUnknown(ENAM),
+      wbUnknown(NAM0),
+      wbFormIDCk(FNMK, 'Reputation', [KYWD, NULL])
+    ], [])),
+    wbRArray('Array FNPR', wbRStruct('Unknown', [
+      wbUnknown(FNPR)
+    ], [])),
+    wbString(XMRK, 'Model Filename')
   ]);
 
 //----------------------------------------------------------------------------
@@ -9310,7 +9364,13 @@ begin
   ]);
 
   wbRecord(SHOU, 'SHOU', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbFULL,
+    wbMDOB,
+    wbDESC,
+    wbRArray('Array SNAM', wbRStruct('Unknown', [
+      wbUnknown(SNAM)
+    ], []))
   ]);
 
   wbRecord(EQUP, 'EQUP', [
@@ -9356,7 +9416,10 @@ begin
   ]);
 
   wbRecord(MOVT, 'MOVT', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(MNAM),
+    wbUnknown(SPED),
+    wbUnknown(INAM)
   ]);
 
   wbRecord(SNDR, 'SNDR', [
@@ -10641,10 +10704,7 @@ begin
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attack Data', wbATKD),
     wbArray(ATKE, 'Attack Event', wbString),
-    wbStruct(SPCT, 'Spell Count', [
-      wbInteger('Spell Count', itU16),
-      wbByteArray('Unknown', 2)
-      ]),
+    wbSPCT,
     wbSPLOs,
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
@@ -11756,10 +11816,30 @@ begin
     'Upper Body Texture'
   ]);
 
+  wbBodyPartIndexEnum := wbEnum([
+    'Upper Body',
+    'Left Hand',
+    'Right Hand',
+    'Upper Body Texture'
+  ]);
+
+  wbSizeIndexEnum := wbEnum([
+    'Small',
+    'Medium',
+    'Large',
+    'Extra Large'
+  ]);
+
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
     wbDESCReq,
+    wbSPCT,
+    wbSPLOs,
+    wbUnknown(WNAM),
+    wbUnknown(BODT),
+    wbKSIZ,
+    wbKWDAs,
     wbXNAMs,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
@@ -11775,13 +11855,48 @@ begin
         'Playable',
         '',
         'Child'
-      ]))
+      ])),
+      wbFloat('Starting Health'),
+      wbFloat('Starting Magicka'),
+      wbFloat('Starting Stamina'),
+      wbFloat('Base Carry Weight'),
+      wbFloat('Base Mass'),
+      wbFloat('Accleration rate'),
+      wbFloat('Deceleration rate'),
+      wbInteger('Skill', itS8, wbSizeIndexEnum),
+      wbByteArray('Size', 3),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFloat('Injured Health'),
+      wbByteArray('Unknown', 4),
+      wbFloat('Health Regen'),
+      wbFloat('Magicka Regen'),
+      wbFloat('Fatigue Regen'),
+      wbFloat('Unarmed Damage'),
+      wbFloat('Unarmed Reach'),
+      wbByteArray('Unknown', 4),
+      wbFloat('Aim Angle Tolerance'),
+      wbFloat('Flight Radius'),
+      wbFloat('Angular Acceleration'),
+      wbFloat('Angular Tolerance'),
+      wbByteArray('Unknown', 4)
     ], cpNormal, True),
-    wbFormIDCk(ONAM, 'Older', [RACE]),
+    wbRStruct('Start Of Male', [
+      wbEmpty(MNAM, 'Marker'),
+      wbUnknown(ANAM),
+      wbMODT
+    ], [], cpNormal, True),
+    wbRStruct('Start Of Female', [
+      wbEmpty(FNAM, 'Marker'),
+      wbUnknown(ANAM),
+      wbMODT
+    ], [], cpNormal, True),
     wbFormIDCk(YNAM, 'Younger', [RACE]),
     wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
+    wbRArray('Array MTNM', wbRStruct('Unknown', [
+      wbString(MTNM, 'Unknown')
+    ], [])),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
-    wbArray(DNAM, 'Default Hair Styles', wbFormIDCk('Default Hair Style', [HAIR]), ['Male', 'Female'], cpNormal, True),
     wbArray(CNAM, 'Default Hair Colors', wbInteger('Default Hair Color', itU8, wbEnum([
       'Bleached',
       'Brown',
@@ -11800,28 +11915,16 @@ begin
       'Steel',
       'Champagne'
     ])), ['Male', 'Female'], cpNormal, True),
+    wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [ARMO]), ['Male', 'Female'], cpNormal, True),
+    wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [CLFM]), ['Male', 'Female'], cpNormal, True),
+    wbArray(TINL, 'Unknown', wbFormID('Unknown'), ['Male', 'Female'], cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
     wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
-    wbRStruct('Head Data', [
-      wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
-      wbRStruct('Male Head Data', [
-        wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-          wbMODLReq,
-          wbICON
-        ], []), cpNormal, True)
-      ], [], cpNormal, True),
-      wbRStruct('Female Head Data', [
-        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-          wbMODLReq,
-          wbICON
-        ], []), cpNormal, True)
-      ], [], cpNormal, True)
-    ], [], cpNormal, True),
+    wbRArray('Array ATKD, ATKE', wbRStruct('Unknown', [
+			wbATKD,
+			wbUnknown(ATKE)
+    ], [])),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
       wbRStruct('Male Body Data', [
@@ -11843,19 +11946,141 @@ begin
     ], [], cpNormal, True),
     wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),
     wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal, True),
-    wbRStruct('FaceGen Data', [
-      wbRStruct('Male FaceGen Data', [
+	  wbUnknown(GNAM),
+	  wbEmpty(NAM2, 'Marker 2', cpNormal, True),
+	  wbEmpty(NAM3, 'Marker 3', cpNormal, True),
+//------------------------------------------------------------------------------
+// wbMODL MODL, MODB, MODT, MODS, MODD
+//------------------------------------------------------------------------------
+    wbRStruct('Start Of Male', [
+      wbEmpty(MNAM, 'Male Data Marker'),
+      wbMODL
+    ], [], cpNormal, True),
+    wbRStruct('Start Of Female', [
+      wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
+      wbMODL
+    ], [], cpNormal, True),
+//    wbRStruct('FaceGen Data', [
+//      wbRStruct('Male FaceGen Data', [
+//        wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
+//        wbFaceGen,
+//        wbUnknown(SNAM, cpNormal, True)
+//      ], [], cpNormal, True),
+//      wbRStruct('Female FaceGen Data', [
+//        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
+//        wbFaceGen,
+//        wbUnknown(SNAM, cpNormal, True)
+//      ], [], cpNormal, True)
+//    ], [], cpNormal, True),
+		wbByteArray(NAM4, 'Marker 4', 0, cpNormal, True),
+		wbByteArray(NAM5, 'Marker 5', 0, cpNormal, True),
+		wbByteArray(NAM7, 'Marker 6', 0, cpNormal, True),
+    wbFormIDCk(ONAM, 'Older', [RACE]),
+    wbUnknown(LNAM),
+    wbRArray('Array NAME', wbRStruct('Unknown', [
+      wbString(NAME, 'Unknown')
+    ], [])),
+    wbRArray('Array MTYP, SPED', wbRStruct('Unknown', [
+      wbUnknown(MTYP),
+      wbUnknown(SPED)
+    ], [])),
+    wbUnknown(VNAM),
+    wbRArray('Array QNAM', wbRStruct('Unknown', [
+			wbUnknown(QNAM)
+    ], [])),
+    wbUnknown(UNES),
+    wbRArray('Array PHTN', wbRStruct('Unknown', [
+      wbString(PHTN, 'Unknown')
+    ], [])),
+    wbRArray('Array PHWT', wbRStruct('Unknown', [
+      wbByteArray(PHWT, 'Unknown', 0)
+    ], [])),
+    // Start Head Data
+    wbRStruct('Head Data', [
+      wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
+      wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
-        wbFaceGen,
-        wbUnknown(SNAM, cpNormal, True)
+          wbRArray('Array INDX, HEAD', wbRStruct('Unknown', [
+            wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+            wbUnknown(HEAD)
+          ], [])),
+          wbRArray('Array MPAI, MPAV', wbRStruct('Unknown', [
+            wbByteArray(MPAI, 'Unknown', 0),
+            wbByteArray(MPAV, 'Unknown', 0)
+          ], [])),
+          wbRArray('Array RPRM', wbRStruct('Unknown', [
+            wbUnknown(RPRM)
+          ], [])),
+          wbRArray('Array AHCM', wbRStruct('Unknown', [
+            wbByteArray(AHCM, 'Unknown', 4)
+          ], [])),
+          wbRArray('Array FTSM', wbRStruct('Unknown', [
+            wbByteArray(FTSM, 'Unknown', 4)
+          ], [])),
+          wbUnknown(DFTM),
+          wbRArray('All of Them', wbRStruct('Unknown', [
+            wbRArray('Array TINI, TINT, TINP, TIND', wbRStruct('Unknown', [
+              wbUnknown(TINI),
+              wbUnknown(TINT),
+              wbUnknown(TINP),
+              wbUnknown(TIND)
+            ], [])),
+            wbRArray('Array TINC, TINV, TIRS', wbRStruct('Unknown', [
+			        wbUnknown(TINC),
+			        wbUnknown(TINV),
+			        wbUnknown(TIRS)
+            ], []))
+          ], [])),
+          wbMODLReq,
+          wbICON
       ], [], cpNormal, True),
-      wbRStruct('Female FaceGen Data', [
+      wbRStruct('Female Head Data', [
+        wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbFaceGen,
-        wbUnknown(SNAM, cpNormal, True)
+          wbRArray('Array INDX, HEAD', wbRStruct('Unknown', [
+            wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+            wbUnknown(HEAD)
+          ], [])),
+          wbRArray('Array MPAI, MPAV', wbRStruct('Unknown', [
+            wbByteArray(MPAI, 'Unknown', 0),
+            wbByteArray(MPAV, 'Unknown', 0)
+          ], [])),
+          wbRArray('Array RPRF', wbRStruct('Unknown', [
+            wbUnknown(RPRF)
+          ], [])),
+          wbRArray('Array AHCF', wbRStruct('Unknown', [
+            wbByteArray(AHCF, 'Unknown', 4)
+          ], [])),
+          wbRArray('Array FTSF', wbRStruct('Unknown', [
+            wbByteArray(FTSF, 'Unknown', 4)
+          ], [])),
+          wbUnknown(DFTF),
+          wbRArray('All of Them', wbRStruct('Unknown', [
+            wbRArray('Array TINI, TINT, TINP, TIND', wbRStruct('Unknown', [
+              wbUnknown(TINI),
+              wbUnknown(TINT),
+              wbUnknown(TINP),
+              wbUnknown(TIND)
+            ], [])),
+            wbRArray('Array TINC, TINV, TIRS', wbRStruct('Unknown', [
+			        wbUnknown(TINC),
+			        wbUnknown(TINV),
+			        wbUnknown(TIRS)
+            ], []))
+          ], [])),
+          wbMODLReq,
+          wbICON
       ], [], cpNormal, True)
-    ], [], cpNormal, True)
-  ]);
+    ], [], cpNormal, True),
+    // End Head Data
+		wbByteArray(NAM8, 'Marker 8', 0, cpNormal, True),
+		wbUnknown(RNAM),
+		wbFormIDCk(WKMV, 'Movement', [MOVT, NULL]),
+		wbFormIDCk(RNMV, 'Movement', [MOVT, NULL]),
+		wbFormIDCk(SWMV, 'Movement', [MOVT, NULL]),
+		wbFormIDCk(FLMV, 'Movement', [MOVT, NULL]),
+		wbFormIDCk(SNMV, 'Movement', [MOVT, NULL])
+  ], wbAllowUnordered);
 
   wbRecord(REFR, 'Placed Object', [
     wbEDID,
