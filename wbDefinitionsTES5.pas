@@ -2295,6 +2295,17 @@ begin
   end;
 end;
 
+function wbScriptFragmentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbRecord;
+begin
+  Result := 0;
+end;
+
+function wbScriptFragmentsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+end;
 
 type
   TCTDAFunctionParamType = (
@@ -4752,12 +4763,33 @@ begin
     wbInteger('objFormat', itS16),
     //wbInteger('scriptCount', itU16),
     wbArray('Scripts', wbScriptEntry, -2),
-      wbArray('Unknown Frag', wbUnknown)
-//    wbArray('Unknown Frag', wbByteArray('Unknown Frag Byte Array', 4))
-    // wbArray('Unknown Frag Array', wbStruct('Unknown Frag Struct', [
-    //   wbByteArray('Unknown Frag Byte Array', 4)
-    //   ])
-    // )
+    wbArray('Fragments', wbUnknown)
+    {wbUnion('Fragments', wbScriptFragmentDecider, [
+      // 00 None
+      wbByteArray('Unknown'),
+      // 01 QUST Fragments
+      wbStruct('Data', [
+        wbInteger('Unknown', itS8),
+        wbInteger('fragmentCount', itU16),
+        wbLenString('fileName', 2),
+        wbArray('fragments', wbStruct('fragment', [
+          wbInteger('Quest Stage Index', itU16),
+          wbInteger('Unknown', itS16),
+          wbInteger('Unknown', itS32),
+          wbInteger('Unknown', itS8),
+          wbLenString('scriptName', 2),
+          wbLenString('fragmentName', 2)
+        ]), [], wbScriptFragmentsCounter),
+        wbArray('Aliases', wbStruct('Alias', [
+          wbInteger('Unknown', itS16),
+          wbInteger('AliasID', itU16),
+          wbInteger('Unknown', itS32),
+          wbInteger('Unknown', itS16),
+          wbInteger('objFormat', itS16),
+          wbArray('Scripts', wbScriptEntry, -2)
+        ]), -2)
+      ])
+    ])}
   ]);
 
   wbATKD := wbStruct(ATKD, 'Attack Data', [
