@@ -134,6 +134,7 @@ const
   BMCT : TwbSignature = 'BMCT';
   BMDT : TwbSignature = 'BMDT';
   BNAM : TwbSignature = 'BNAM';
+  BODT : TwbSignature = 'BODT'; { New to Skyrim }
   BOOK : TwbSignature = 'BOOK';
   BPND : TwbSignature = 'BPND';
   BPNI : TwbSignature = 'BPNI';
@@ -322,11 +323,14 @@ const
   MO3T : TwbSignature = 'MO3T';
   MO4B : TwbSignature = 'MO4B';
   MO4S : TwbSignature = 'MO4S';
+  MO5S : TwbSignature = 'MO5S'; { New to Skyrim }
   MO4T : TwbSignature = 'MO4T';
+  MO5T : TwbSignature = 'MO5T'; { New to Skyrim }
   MOD2 : TwbSignature = 'MOD2';
   MATT : TwbSignature = 'MATT';
   MOD3 : TwbSignature = 'MOD3';
   MOD4 : TwbSignature = 'MOD4';
+  MOD5 : TwbSignature = 'MOD5'; { New to Skyrim }
   MODB : TwbSignature = 'MODB';
   MODD : TwbSignature = 'MODD';
   MODL : TwbSignature = 'MODL';
@@ -483,6 +487,7 @@ const
   QSTR : TwbSignature = 'QSTR';
   INFC : TwbSignature = 'INFC';
   INFX : TwbSignature = 'INFX';
+  QUAL : TwbSignature = 'QUAL'; { New To Skyrim }
   QUST : TwbSignature = 'QUST';
   RACE : TwbSignature = 'RACE';
   FLOR : TwbSignature = 'FLOR';
@@ -799,8 +804,9 @@ var
   wbSOPM_ONAM: IwbSubRecordStructDef;
   wbSNDD: IwbSubRecordUnionDef;
   wbCTDANew: IwbSubRecordStructDef;
-  wbDMDL: IwbSubRecordDef;
   wbDMDSs: IwbSubRecordDef;
+  wbMO5S: IwbSubRecordDef;
+  wbDMDL: IwbSubRecordDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -4379,10 +4385,10 @@ begin
   wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
   wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
+  wbDMDL:= wbString(DMDL, 'Model Filename');
   wbSNAM:= wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
   wbQNAM:= wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
   wbMDOB:= wbFormID(MDOB, 'Menu Display Object', cpNormal, True);
-  wbDMDL:= wbString(DMDL, 'Model Filename');
   wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
              wbStruct('Link Start Color', [
                wbInteger('Red', itU8),
@@ -4869,6 +4875,14 @@ begin
         wbInteger('3D Index', itS32)
       ]),
     -1);
+  wbMO5S :=
+    wbArrayS(MO5S, 'Alternate Textures',
+      wbStructSK([0, 2], 'Alternate Texture', [
+        wbLenString('3D Name'),
+        wbFormIDCk('New Texture', [TXST]),
+        wbInteger('3D Index', itS32)
+      ]),
+    -1);
 
   wbMODD :=
     wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
@@ -4902,20 +4916,6 @@ begin
       wbMODD
     ], [], cpNormal, False, nil, True);
 
-  wbMODLActor :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4),
-      wbMODT,
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
-
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
@@ -4929,6 +4929,20 @@ begin
       wbMODS,
       wbMODD
     ], [], cpNormal, True, nil, True);
+
+  wbMODLActor :=
+    wbRStructSK([0], 'Model', [
+      wbString(MODL, 'Model Filename'),
+      wbByteArray(MODB, 'Unknown', 4),
+      wbMODT,
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+//      wbArray(MODT, 'Texture Files Hashes',
+//        wbByteArray('Unknown', 24, cpBenign),
+//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
+//      0, nil, nil, cpBenign),
+      wbMODS,
+      wbMODD
+    ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
 
   wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
     wbStructSK([0, 2], 'Alternate Texture', [
@@ -4967,7 +4981,7 @@ begin
           wbInteger('Debris Count', itS32)
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
-          wbDMDL,
+          wbString(DMDL, 'Model Filename'),
           wbDMDT
 //          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
 //          wbArray(DMDT, 'Unknown',
@@ -5006,7 +5020,7 @@ begin
           wbInteger('Debris Count', itS32)
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
-          wbDMDL,
+          wbString(DMDL, 'Model Filename'),
           wbDMDT
 //          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
 //          wbArray(DMDT, 'Unknown',
@@ -5969,6 +5983,9 @@ begin
   wbCTDAs := wbRArray('Conditions', wbCTDANew, cpNormal, False);
   wbCTDAsReq := wbRArray('Conditions', wbCTDANew, cpNormal, True);
 
+//------------------------------------------------------------------------------
+// wbEffects - EFID, EFIT, CTDA
+//------------------------------------------------------------------------------
   wbEffects :=
     wbRStructs('Effects','Effect', [
       wbEFID,
@@ -6103,6 +6120,7 @@ begin
 
   wbRecord(ARMO, 'Armor', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
     wbSCRI,
@@ -6132,14 +6150,24 @@ begin
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
+    wbUnknown(BODT),
     wbString(ICO2, 'Female icon filename'),
     wbString(MIC2, 'Female mico filename'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbREPL,
     wbBIPL,
     wbETYPReq,
+    wbUnknown(BIDS),
+    wbUnknown(BAMT),
     wbYNAM,
     wbZNAM,
+    wbUnknown(RNAM),
+    wbKSIZ,
+    wbKWDAs,
+    wbDESC,
+    wbRArray('Unknown - MODL', wbRStruct('Unknown', [
+      wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])
+    ], [])),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbInteger('Health', itS32),
@@ -6170,7 +6198,7 @@ begin
       ])
     ),
     wbFormIDCk(TNAM, 'Anmation Sounds Template', [ARMO])
-  ]);
+  ], wbAllowUnordered);
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDIDReq,
@@ -6183,6 +6211,15 @@ begin
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True),
+    wbUnknown(BODT),
+    wbUnknown(RNAM),
+    wbStruct(DNAM, '', [
+      wbInteger('AR', itS16, wbDiv(100)),
+      wbInteger('Flags', itU16, wbFlags([
+        'Modulates Voice'
+      ])),
+      wbUnknown
+    ], cpNormal, True),
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
@@ -6201,6 +6238,19 @@ begin
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
+    wbRStruct('Unknown world model', [
+      wbString(MOD5, 'Model Filename'),
+      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore),
+      wbMO5S
+    ], []),
+    wbFormIDCK(NAM0, 'Male', [TXST, NULL]),
+    wbFormIDCK(NAM1, 'Female', [TXST, NULL]),
+    wbFormIDCK(NAM2, 'Male 1st Person', [TXST, NULL]),
+    wbFormIDCK(NAM3, 'Female 1st Person', [TXST, NULL]),
+    wbRArray('Unknown - MODL', wbRStruct('Unknown', [
+      wbFormIDCK(MODL, 'Model Filename', [RACE, NULL])
+    ], [])),
+    wbFormIDCK(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbString(ICO2, 'Female icon filename'),
     wbString(MIC2, 'Female mico filename'),
     wbETYPReq,
@@ -6208,22 +6258,15 @@ begin
       wbInteger('Value', itS32),
       wbInteger('Max Condition', itS32),
       wbFloat('Weight')
-    ], cpNormal, True),
-    wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
-      wbInteger('Flags', itU16, wbFlags([
-        'Modulates Voice'
-      ])),
-      wbUnknown
     ], cpNormal, True)
-  ]);
+  ], wbAllowUnordered);
 
   wbRecord(BOOK, 'Book', [
     wbEDIDReq,
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL, // MODT
+    wbMODL,
     wbDESCReq,
     wbFormID(YNAM, 'Unknown'),
     wbKSIZ,
@@ -6403,6 +6446,10 @@ end;
 
 procedure DefineTES5c;
 begin
+
+  wbRecord(CLDC, 'CLDC', [
+    wbEDIDReq
+  ]);
 
   wbRecord(CLMT, 'Climate', [
     wbEDIDReq,
@@ -7046,6 +7093,7 @@ begin
 
   wbRecord(DOOR, 'Door', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
@@ -7987,6 +8035,7 @@ end;
 
 procedure DefineTES5e;
 begin
+
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
     wbOBNDReq,
@@ -9180,7 +9229,15 @@ begin
   ]);
 
   wbRecord(FSTS, 'FSTS', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbStruct(XCNT, 'Lighting', [
+      wbInteger('Count Of Walk Forward Set', itU32),
+      wbInteger('Count Of Run Forward Set', itU32),
+      wbInteger('Count Of Walk Forward Alternate Set', itU32),
+      wbInteger('Count Of Run Forward Alternate Set', itU32),
+      wbInteger('Count Of Walk Forward Alternate 2 Set', itU32)
+    ]),
+    wbArray(DATA, 'Footstep Sets', wbFormID('Footstep'), 0, nil, nil, cpNormal, True)
   ]);
 
   wbRecord(SMBN, 'SMBN', [
@@ -9700,23 +9757,35 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(INGR, 'Ingredient', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
+    wbKSIZ,
+    wbKWDAs,
+//------------------------------------------------------------------------------
+// wbMODL MODL, MODB, MODT, MODS, MODD
+//------------------------------------------------------------------------------
     wbMODL,
     wbICON,
     wbSCRI,
     wbETYPReq,
-    wbFloat(DATA, 'Weight', cpNormal, True),
+    wbYNAM,
+    wbZNAM,
+    wbByteArray(DATA, 'Weight', 8),
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
       wbInteger('Flags', itU8, wbFlags(['No auto-calculation', 'Food item'])),
       wbByteArray('Unknown', 3)
     ], cpNormal, True),
+//------------------------------------------------------------------------------
+// wbEffects - EFID, EFIT, CTDA
+//------------------------------------------------------------------------------
     wbEffectsReq
   ]);
 
   wbRecord(KEYM, 'Key', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULLReq,
     wbMODL,
@@ -9725,6 +9794,8 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -9857,7 +9928,11 @@ begin
       wbFloat('Falloff Exponent'),
       wbFloat('FOV'),
       wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbFloat('Weight'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
     ], cpNormal, True),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN])
@@ -10332,6 +10407,7 @@ begin
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
     wbMODL,
@@ -10340,6 +10416,8 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -10349,16 +10427,20 @@ begin
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
+    wbOBNDReq,
     wbFULL,
+    wbUnknown(QUAL),
+    wbDESC,
     wbMODL,
     wbICON,
     wbSCRI,
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum(['Mortar and Pestle', 'Alembic', 'Calcinator', 'Retort'])),
-      wbInteger('Value', itU32),
-      wbFloat('Weight'),
-      wbFloat('Quality')
-    ], cpNormal, True)
+    wbUnknown(DATA)
+//    wbStruct(DATA, '', [
+//      wbInteger('Type', itU8, wbEnum(['Mortar and Pestle', 'Alembic', 'Calcinator', 'Retort'])),
+//      wbInteger('Value', itU16),
+//      wbFloat('Weight'),
+//      wbFloat('Quality')
+//    ], cpNormal, True)
   ]);
 
 //-----------------------------------------------------------------------------
@@ -12494,7 +12576,8 @@ begin
       -1, 'NONE'
     ])),
     wbFormIDCk(RNAM, 'Sound - Looping/Random', [SOUN])}
-    wbUnknown(DNAM)
+    wbUnknown(DNAM),
+    wbUnknown(MNAM)
  ]);
 
   wbRecord(TES4, 'Main File Header', [
@@ -12521,8 +12604,12 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
+    wbFormIDCK(PFIG, 'Magic Effect', [INGR, ALCH, NULL]),
+    wbUnknown(PFIG),
+    wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
+    wbUnknown(PFPC),
+    wbFULL,
     wbICONReq,
-    wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32), 0, cpNormal, True),
     wbStruct(CNAM, 'Tree Data', [
       wbFloat('Leaf Curvature'),
       wbFloat('Minimum Leaf Angle'),
@@ -12531,7 +12618,11 @@ begin
       wbFloat('Leaf Dimming Value'),
       wbInteger('Shadow Radius', itS32),
       wbFloat('Rock Speed'),
-      wbFloat('Rustle Speed')
+      wbFloat('Rustle Speed'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
     ], cpNormal, True),
     wbStruct(BNAM, 'Billboard Dimensions', [
       wbFloat('Width'),
@@ -12541,10 +12632,16 @@ begin
 
   wbRecord(FLOR, 'Flora', [
     wbEDID,
+    wbVMAD,
+    wbOBND,
     wbFULL,
     wbMODL,
     wbSCRI,
-    wbFormIDCk(PFIG, 'Ingredient', [INGR]),
+    wbUnknown(PNAM),
+    wbLString(RNAM, 'Unknown'),
+    wbUnknown(FNAM),
+    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, NULL]),
+    wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
       wbInteger('Summer ', itU8),
@@ -13573,13 +13670,13 @@ begin
    wbAddGroupOrder(CLAS);
    wbAddGroupOrder(FACT);
    wbAddGroupOrder(HDPT);
-   wbAddGroupOrder(HAIR);
+   wbAddGroupOrder(HAIR); {Empty}
    wbAddGroupOrder(EYES);
    wbAddGroupOrder(RACE);
    wbAddGroupOrder(SOUN);
    wbAddGroupOrder(ASPC);
    wbAddGroupOrder(MGEF);
-   wbAddGroupOrder(SCPT);
+   wbAddGroupOrder(SCPT); {Empty}
    wbAddGroupOrder(LTEX);
    wbAddGroupOrder(ENCH);
    wbAddGroupOrder(SPEL);
@@ -13595,12 +13692,12 @@ begin
    wbAddGroupOrder(MISC);
    wbAddGroupOrder(APPA);
    wbAddGroupOrder(STAT);
-   wbAddGroupOrder(SCOL);
+   wbAddGroupOrder(SCOL); {Empty}
    wbAddGroupOrder(MSTT);
-   wbAddGroupOrder(PWAT);
+   wbAddGroupOrder(PWAT); {Empty}
    wbAddGroupOrder(GRAS);
    wbAddGroupOrder(TREE);
-   wbAddGroupOrder(CLDC);
+   wbAddGroupOrder(CLDC); {Empty}
    wbAddGroupOrder(FLOR);
    wbAddGroupOrder(FURN);
    wbAddGroupOrder(WEAP);
@@ -13652,7 +13749,7 @@ begin
    wbAddGroupOrder(ECZN);
    wbAddGroupOrder(LCTN);
    wbAddGroupOrder(MESG);
-   wbAddGroupOrder(RGDL);
+   wbAddGroupOrder(RGDL); {Empty}
    wbAddGroupOrder(DOBJ);
    wbAddGroupOrder(LGTM);
    wbAddGroupOrder(MUSC);
