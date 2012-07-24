@@ -9842,9 +9842,9 @@ begin
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4)
       ]),
-      wbLString(NAM1, 'Dialog String 1'),
-      wbLString(NAM2, 'Dialog String 2'),
-      wbLString(NAM3, 'Dialog String 3'),
+      wbLString(NAM1, 'Dialog String 1', 0),
+      wbString(NAM2, 'Dialog String 2', 0),
+      wbString(NAM3, 'Dialog String 3', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
