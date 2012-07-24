@@ -79,9 +79,41 @@ const
   _3_IAD : TwbSignature = #3'IAD';
   _4_IAD : TwbSignature = #4'IAD';
   _5_IAD : TwbSignature = #5'IAD';
+
 //----------------------------------------------------------------------
 // TES5-Team Place new entries in alphabetical order as much as possible
 //----------------------------------------------------------------------
+
+{00TX} _00_0TX: TwbSignature = #$30'0TX';
+{10TX} _10_0TX: TwbSignature = #$31'0TX';
+{20TX} _20_0TX: TwbSignature = #$32'0TX';
+{30TX} _30_0TX: TwbSignature = #$33'0TX';
+{40TX} _40_0TX: TwbSignature = #$34'0TX';
+{50TX} _50_0TX: TwbSignature = #$35'0TX';
+{60TX} _60_0TX: TwbSignature = #$36'0TX';
+{70TX} _70_0TX: TwbSignature = #$37'0TX';
+{80TX} _80_0TX: TwbSignature = #$38'0TX';
+{90TX} _90_0TX: TwbSignature = #$39'0TX';
+{:0TX} _3A_0TX: TwbSignature = #$3A'0TX';
+{;0TX} _3B_0TX: TwbSignature = #$3B'0TX';
+{<0TX} _3C_0TX: TwbSignature = #$3C'0TX';
+{=0TX} _3D_0TX: TwbSignature = #$3D'0TX';
+{>0TX} _3E_0TX: TwbSignature = #$3E'0TX';
+{?0TX} _3F_0TX: TwbSignature = #$3F'0TX';
+{@0TX} _40h_0TX: TwbSignature = #$40'0TX';
+{A0TX} A0TX: TwbSignature = 'A0TX';
+{B0TX} B0TX: TwbSignature = 'B0TX';
+{C0TX} C0TX: TwbSignature = 'C0TX';
+{D0TX} D0TX: TwbSignature = 'D0TX';
+{E0TX} E0TX: TwbSignature = 'E0TX';
+{F0TX} F0TX: TwbSignature = 'F0TX';
+{G0TX} G0TX: TwbSignature = 'G0TX';
+{H0TX} H0TX: TwbSignature = 'H0TX';
+{I0TX} I0TX: TwbSignature = 'I0TX';
+{J0TX} J0TX: TwbSignature = 'J0TX';
+{K0TX} K0TX: TwbSignature = 'K0TX';
+{L0TX} L0TX: TwbSignature = 'L0TX';
+
   ACBS : TwbSignature = 'ACBS';
   ACHR : TwbSignature = 'ACHR';
   ACRE : TwbSignature = 'ACRE';
@@ -520,6 +552,7 @@ const
   RDMP : TwbSignature = 'RDMP';
   RDGS : TwbSignature = 'RDGS';
   RDOT : TwbSignature = 'RDOT';
+  RDSA : TwbSignature = 'RDSA'; { New to Skyrim }
   RDSD : TwbSignature = 'RDSD';
   RDWT : TwbSignature = 'RDWT';
   REFR : TwbSignature = 'REFR';
@@ -839,6 +872,7 @@ var
   wbDMDL: IwbSubRecordDef;
   wbSizeIndexEnum: IwbEnumDef;
   wbSPCT: IwbSubRecordDef;
+  wbTintMasks: IwbSubRecordArrayDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -4440,6 +4474,7 @@ begin
                wbByteArray('Unnknown', 1)
              ])
            ]);
+
 // MODT - Texture Files Hashes:
 //     02 00 00 00
 //     04 00 00 00
@@ -8198,7 +8233,9 @@ begin
   wbRecord(HAZD, 'HAZD', [
     wbEDIDReq,
     wbOBNDReq,
+    wbFULL,
     wbMODL,
+    wbFormIDCk(MNAM, 'Unknown', [IMAD, NULL]),
     wbUnknown(DATA)
   ]);
 
@@ -11830,14 +11867,42 @@ begin
     'Extra Large'
   ]);
 
+//------------------------------------------------------------------------------
+// Copied here for reference
+//------------------------------------------------------------------------------
+//  wbFaceGenNPC := wbRStruct('FaceGen Data', [
+//    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
+//    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
+//    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+//  ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
+
+  wbTintMasks := wbRArray('Tint Masks', wbRStruct('Tint Assets', [
+    wbRArray('Array TINI, TINT, TINP, TIND', wbRStruct('Unknown', [
+      wbUnknown(TINI),
+      wbString(TINT, 'File Name'),
+      wbUnknown(TINP),
+      wbFormIDCk(TIND, 'Head Feature Set', [CLFM, NULL])
+    ], [])),
+    wbRArray('Array TINC, TINV, TIRS', wbRStruct('Unknown', [
+      wbStruct(TINC, 'Reference Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unnknown', 1)
+      ]),
+			wbUnknown(TINV),
+			wbUnknown(TIRS)
+    ], []))
+  ], []));
+
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
     wbDESCReq,
     wbSPCT,
     wbSPLOs,
-    wbUnknown(WNAM),
-    wbUnknown(BODT),
+    wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
+    wbArrayS(BODT, 'Body Templates', wbByteArray('Unknown', 4), 0, cpNormal, True),
     wbKSIZ,
     wbKWDAs,
     wbXNAMs,
@@ -11879,16 +11944,16 @@ begin
       wbFloat('Flight Radius'),
       wbFloat('Angular Acceleration'),
       wbFloat('Angular Tolerance'),
-      wbByteArray('Unknown', 4)
+      wbByteArray('Unknown', 0)
     ], cpNormal, True),
     wbRStruct('Start Of Male', [
       wbEmpty(MNAM, 'Marker'),
-      wbUnknown(ANAM),
+      wbString(ANAM, 'Skeletal Model'),
       wbMODT
     ], [], cpNormal, True),
     wbRStruct('Start Of Female', [
       wbEmpty(FNAM, 'Marker'),
-      wbUnknown(ANAM),
+      wbString(ANAM, 'Skeletal Model'),
       wbMODT
     ], [], cpNormal, True),
     wbFormIDCk(YNAM, 'Younger', [RACE]),
@@ -11917,13 +11982,13 @@ begin
     ])), ['Male', 'Female'], cpNormal, True),
     wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [ARMO]), ['Male', 'Female'], cpNormal, True),
     wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [CLFM]), ['Male', 'Female'], cpNormal, True),
-    wbArray(TINL, 'Unknown', wbFormID('Unknown'), ['Male', 'Female'], cpNormal, True),
+    wbArrayS(TINL, 'Body Templates', wbByteArray('Unknown', 0), 0, cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
     wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
     wbRArray('Array ATKD, ATKE', wbRStruct('Unknown', [
 			wbATKD,
-			wbUnknown(ATKE)
+			wbString(ATKE, 'Attack Event')
     ], [])),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
@@ -11946,7 +12011,7 @@ begin
     ], [], cpNormal, True),
     wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),
     wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal, True),
-	  wbUnknown(GNAM),
+    wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]),
 	  wbEmpty(NAM2, 'Marker 2', cpNormal, True),
 	  wbEmpty(NAM3, 'Marker 3', cpNormal, True),
 //------------------------------------------------------------------------------
@@ -11972,23 +12037,23 @@ begin
 //        wbUnknown(SNAM, cpNormal, True)
 //      ], [], cpNormal, True)
 //    ], [], cpNormal, True),
-		wbByteArray(NAM4, 'Marker 4', 0, cpNormal, True),
-		wbByteArray(NAM5, 'Marker 5', 0, cpNormal, True),
-		wbByteArray(NAM7, 'Marker 6', 0, cpNormal, True),
-    wbFormIDCk(ONAM, 'Older', [RACE]),
-    wbUnknown(LNAM),
+    wbFormIDCk(NAM4, 'Material Type', [MATT, NULL]),
+    wbFormIDCk(NAM5, 'Impact Data Set', [IPDS, NULL]),
+		wbFormIDCk(NAM7, 'Decapitation FX', [ARTO, NULL]),
+    wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
+    wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     wbRArray('Array NAME', wbRStruct('Unknown', [
       wbString(NAME, 'Unknown')
     ], [])),
     wbRArray('Array MTYP, SPED', wbRStruct('Unknown', [
-      wbUnknown(MTYP),
+      wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
       wbUnknown(SPED)
     ], [])),
     wbUnknown(VNAM),
     wbRArray('Array QNAM', wbRStruct('Unknown', [
-			wbUnknown(QNAM)
+			wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])
     ], [])),
-    wbUnknown(UNES),
+    wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
     wbRArray('Array PHTN', wbRStruct('Unknown', [
       wbString(PHTN, 'Unknown')
     ], [])),
@@ -12002,35 +12067,23 @@ begin
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
           wbRArray('Array INDX, HEAD', wbRStruct('Unknown', [
             wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-            wbUnknown(HEAD)
+            wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
           ], [])),
           wbRArray('Array MPAI, MPAV', wbRStruct('Unknown', [
             wbByteArray(MPAI, 'Unknown', 0),
             wbByteArray(MPAV, 'Unknown', 0)
           ], [])),
           wbRArray('Array RPRM', wbRStruct('Unknown', [
-            wbUnknown(RPRM)
+            wbFormIDCk(RPRM, 'Equip Slot', [NPC_, NULL])
           ], [])),
           wbRArray('Array AHCM', wbRStruct('Unknown', [
-            wbByteArray(AHCM, 'Unknown', 4)
+            wbFormIDCk(AHCM, 'Hair Color Male', [CLFM, NULL])
           ], [])),
           wbRArray('Array FTSM', wbRStruct('Unknown', [
-            wbByteArray(FTSM, 'Unknown', 4)
+            wbFormIDCk(FTSM, 'Hair Color Male', [TXST, NULL])
           ], [])),
-          wbUnknown(DFTM),
-          wbRArray('All of Them', wbRStruct('Unknown', [
-            wbRArray('Array TINI, TINT, TINP, TIND', wbRStruct('Unknown', [
-              wbUnknown(TINI),
-              wbUnknown(TINT),
-              wbUnknown(TINP),
-              wbUnknown(TIND)
-            ], [])),
-            wbRArray('Array TINC, TINV, TIRS', wbRStruct('Unknown', [
-			        wbUnknown(TINC),
-			        wbUnknown(TINV),
-			        wbUnknown(TIRS)
-            ], []))
-          ], [])),
+          wbFormIDCk(DFTM, 'Head Feature Set', [TXST, NULL]),
+          wbTintMasks,
           wbMODLReq,
           wbICON
       ], [], cpNormal, True),
@@ -12046,35 +12099,23 @@ begin
             wbByteArray(MPAV, 'Unknown', 0)
           ], [])),
           wbRArray('Array RPRF', wbRStruct('Unknown', [
-            wbUnknown(RPRF)
+            wbFormIDCk(RPRF, 'Equip Slot', [NPC_, NULL])
           ], [])),
           wbRArray('Array AHCF', wbRStruct('Unknown', [
-            wbByteArray(AHCF, 'Unknown', 4)
+            wbFormIDCk(AHCF, 'Hair Color Female', [CLFM, NULL])
           ], [])),
           wbRArray('Array FTSF', wbRStruct('Unknown', [
-            wbByteArray(FTSF, 'Unknown', 4)
+            wbFormIDCk(FTSF, 'Hair Color Female', [TXST, NULL])
           ], [])),
-          wbUnknown(DFTF),
-          wbRArray('All of Them', wbRStruct('Unknown', [
-            wbRArray('Array TINI, TINT, TINP, TIND', wbRStruct('Unknown', [
-              wbUnknown(TINI),
-              wbUnknown(TINT),
-              wbUnknown(TINP),
-              wbUnknown(TIND)
-            ], [])),
-            wbRArray('Array TINC, TINV, TIRS', wbRStruct('Unknown', [
-			        wbUnknown(TINC),
-			        wbUnknown(TINV),
-			        wbUnknown(TIRS)
-            ], []))
-          ], [])),
+          wbFormIDCk(DFTF, 'Head Feature Set', [TXST, NULL]),
+          wbTintMasks,
           wbMODLReq,
           wbICON
       ], [], cpNormal, True)
     ], [], cpNormal, True),
     // End Head Data
-		wbByteArray(NAM8, 'Marker 8', 0, cpNormal, True),
-		wbUnknown(RNAM),
+    wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
+    wbFormIDCk(RNAM, 'Armor race', [RACE, NULL]),
 		wbFormIDCk(WKMV, 'Movement', [MOVT, NULL]),
 		wbFormIDCk(RNMV, 'Movement', [MOVT, NULL]),
 		wbFormIDCk(SWMV, 'Movement', [MOVT, NULL]),
@@ -12447,7 +12488,7 @@ begin
 
   wbRecord(REGN, 'Region', [
     wbEDID,
-    wbICON,
+
     wbStruct(RCLR, 'Map Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -12486,6 +12527,28 @@ begin
         wbByteArray('Unknown')
       ], cpNormal, True),
 
+      {--- Icon ---}
+      wbICON,
+
+      {--- Sound ---}
+      wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
+      wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
+      wbFormIDCk(RDSI, 'Incidental MediaSet', [MSET], False, cpNormal, False, wbREGNSoundDontShow),
+      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, wbREGNSoundDontShow),
+      wbArrayS(RDSA, 'Sounds', wbStructSK([0], 'Sound', [
+        wbFormIDCk('Sound', [SOUN]),
+        wbInteger('Flags', itU32, wbFlags([
+          'Pleasant',
+          'Cloudy',
+          'Rainy',
+          'Snowy'
+        ])),
+        wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
+      ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
+
+			{--- Map ---}
+      wbLString(RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
+
       {followed by one of these: }
 
       {--- Objects ---}
@@ -12523,30 +12586,11 @@ begin
         wbByteArray('Unknown', 4)
       ]), 0, nil, nil, cpNormal, False, wbREGNObjectsDontShow),
 
-      {--- Map ---}
-      wbString(RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
-
       {--- Grass ---}
       wbArrayS(RDGS, 'Grasses', wbStructSK([0], 'Grass', [
         wbFormIDCk('Grass', [GRAS]),
         wbByteArray('Unknown',4)
       ]), 0, cpNormal, False, nil, nil, wbREGNGrassDontShow),
-
-      {--- Sound ---}
-      wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
-      wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
-      wbFormIDCk(RDSI, 'Incidental MediaSet', [MSET], False, cpNormal, False, wbREGNSoundDontShow),
-      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, wbREGNSoundDontShow),
-      wbArrayS(RDSD, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SOUN]),
-        wbInteger('Flags', itU32, wbFlags([
-          'Pleasant',
-          'Cloudy',
-          'Rainy',
-          'Snowy'
-        ])),
-        wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
-      ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
 
       {--- Weather ---}
       wbArrayS(RDWT, 'Weather Types', wbStructSK([0], 'Weather Type', [
@@ -13422,46 +13466,94 @@ begin
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
-    wbFormIDCk(_0_IAD, 'Sunrise Image Space Modifier', [IMAD]),
-    wbFormIDCk(_1_IAD, 'Day Image Space Modifier', [IMAD]),
-    wbFormIDCk(_2_IAD, 'Sunset Image Space Modifier', [IMAD]),
-    wbFormIDCk(_3_IAD, 'Night Image Space Modifier', [IMAD]),
-    wbFormIDCk(_4_IAD, 'Unknown', [IMAD]),
-    wbFormIDCk(_5_IAD, 'Unknown', [IMAD]),
+//    wbFormIDCk(_0_IAD, 'Sunrise Image Space Modifier', [IMAD]),
+//    wbFormIDCk(_1_IAD, 'Day Image Space Modifier', [IMAD]),
+//    wbFormIDCk(_2_IAD, 'Sunset Image Space Modifier', [IMAD]),
+//    wbFormIDCk(_3_IAD, 'Night Image Space Modifier', [IMAD]),
+//    wbFormIDCk(_4_IAD, 'Unknown', [IMAD]),
+//    wbFormIDCk(_5_IAD, 'Unknown', [IMAD]),
+
+    wbRUnion('Union', [
+      wbRStruct('Dynamic Cloud Textures', [
+        wbString(_00_0TX, 'Unknown'),
+        wbString(_10_0TX, 'Unknown'),
+        wbString(_20_0TX, 'Unknown'),
+        wbString(_30_0TX, 'Unknown'),
+        wbString(_40_0TX, 'Unknown'),
+        wbString(_50_0TX, 'Unknown'),
+        wbString(_60_0TX, 'Unknown'),
+        wbString(_70_0TX, 'Unknown'),
+        wbString(_80_0TX, 'Unknown'),
+        wbString(_90_0TX, 'Unknown'),
+        wbString(_3A_0TX, 'Unknown'),
+        wbString(_3B_0TX, 'Unknown'),
+        wbString(_3C_0TX, 'Unknown'),
+        wbString(_3D_0TX, 'Unknown'),
+        wbString(_3E_0TX, 'Unknown'),
+        wbString(_3F_0TX, 'Unknown'),
+        wbString(_40h_0TX, 'Unknown'),
+        wbString(A0TX, 'Unknown'),
+        wbString(B0TX, 'Unknown'),
+        wbString(C0TX, 'Unknown'),
+        wbString(D0TX, 'Unknown'),
+        wbString(E0TX, 'Unknown'),
+        wbString(F0TX, 'Unknown'),
+        wbString(G0TX, 'Unknown'),
+        wbString(H0TX, 'Unknown'),
+        wbString(I0TX, 'Unknown'),
+        wbString(J0TX, 'Unknown'),
+        wbString(K0TX, 'Unknown'),
+        wbString(L0TX, 'Unknown')
+      ], [])
+    ], []),
+
     wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
     wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
     wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
     wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
-    wbMODL,
-    wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
+    wbUnknown(LNAM),
     wbUnknown(MNAM),
     wbUnknown(NNAM),
+//    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
+    wbUnknown(ONAM),
     wbUnknown(RNAM),
     wbUnknown(QNAM),
-    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    wbByteArray(PNAM, 'Unknown', 0, cpIgnore),
+    wbUnknown(PNAM),
+//    wbByteArray(PNAM, 'Unknown', 0, cpIgnore),
+//    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
+//      wbArray(PNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
+//    ], [])),
     wbUnknown(JNAM),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
-      ),
-      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
-    , cpNormal, True),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Fower')
-    ], cpNormal, True),
-    wbByteArray(INAM, 'Unknown', 304, cpIgnore, True),
+//    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
+//      wbArray(JNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
+//    ], [])),
+    wbUnknown(NAM0),
+//    wbArray(NAM0, 'Colors by Types/Times',
+//      wbArray('Type',
+//        wbStruct('Time', [
+//          wbInteger('Red', itU8),
+//          wbInteger('Green', itU8),
+//          wbInteger('Blue', itU8),
+//          wbByteArray('Unknown', 1)
+//        ]),
+//        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
+//      ),
+//      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
+//    , cpNormal, True),
+    wbRArray('Unknown - NAM0', wbRStruct('Unknown', [
+      wbArray(NAM0, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
+    ], [])),
+//    wbStruct(FNAM, 'Fog Distance', [
+//      wbFloat('Day - Near'),
+//      wbFloat('Day - Far'),
+//      wbFloat('Night - Near'),
+//      wbFloat('Night - Far'),
+//      wbFloat('Day - Power'),
+//      wbFloat('Night - Fower')
+//    ], cpNormal, True),
+    wbUnknown(FNAM),
+//    wbByteArray(INAM, 'Unknown', 304, cpIgnore, True),
+//    wbUnknown(INAM),
     wbStruct(DATA, '', [
       wbInteger('Wind Speed', itU8),
       wbInteger('Cloud Speed (Lower)', itU8),
@@ -13479,27 +13571,23 @@ begin
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ])
+      ]),
+      wbByteArray('Unknown', 4)
     ], cpNormal, True),
     wbUnknown(NAM1),
-    wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
-      wbFormIDCk('Sound', [SOUN]),
-      wbInteger('Type', itU32, wbEnum([
-       {0}'Default',
-       {1}'Precip',
-       {2}'Wind',
-       {3}'Thunder'
-      ]))
-    ])),
+    wbRArray('Sounds', wbRStruct('Unknown', [
+      wbArray(SNAM, 'Sounds', wbFormIDCK('Sound', [SNDR, NULL]), 0, nil, nil, cpNormal, True)
+    ], [])),
     wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
       wbFormID(TNAM, 'Unknown')
     ], [])),
     wbUnknown(IMSP),
     wbRArray('Unknown - DALC', wbRStruct('Unknown', [
-      wbFormID(DALC, 'Unknown')
+      wbArray(DALC, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
     ], [])),
-    wbUnknown(MODL),
-    wbUnknown(MODT)
+    wbUnknown(NAM2),
+    wbUnknown(NAM3),
+    wbMODL
   ]);
 
   wbRecord(IMOD, 'Item Mod', [
