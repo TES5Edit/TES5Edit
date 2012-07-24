@@ -4465,7 +4465,7 @@ begin
   wbDMDL:= wbString(DMDL, 'Model Filename');
   wbSNAM:= wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
   wbQNAM:= wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
-  wbMDOB:= wbFormID(MDOB, 'Menu Display Object', cpNormal, True);
+  wbMDOB:= wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
   wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
              wbStruct('Link Start Color', [
                wbInteger('Red', itU8),
@@ -6584,11 +6584,51 @@ begin
   ]);
 
   wbRecord(SPGD, 'SPGD', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(DATA),
+    wbString(ICON, 'File Name')
   ]);
 
   wbRecord(RFCT, 'RFCT', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbStruct(DATA, 'Effect Data', [
+			wbFormIDCK('Effect Art', [ARTO, NULL]),
+      wbFormIDCK('Shader', [EFSH, NULL]),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Unknown 2',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Unknown 11',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Unknown 13',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Unknown 15',
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ]))
+    ], cpNormal, True)
   ]);
 
   wbCNTO :=
@@ -9127,8 +9167,8 @@ begin
     ], cpNormal, True),
     wbDODT,
     wbFormIDCk(DNAM, 'Texture Set', [TXST]),
-    wbFormIDCk(SNAM, 'Sound 1', [SOUN]),
-    wbFormIDCk(NAM1, 'Sound 2', [SOUN])
+    wbFormIDCk(SNAM, 'Sound 1', [SNDR, SOUN, NULL]),
+    wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL])
   ]);
 
   wbRecord(IPDS, 'Impact DataSet', [
@@ -9412,7 +9452,7 @@ begin
 
   wbRecord(EQUP, 'EQUP', [
     wbEDIDReq,
-    wbArray(PNAM, 'Equipped Hands Reference', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, True),
+    wbArray(PNAM, 'Equipped Hands Reference', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
     wbUnknown(DATA)
   ]);
 
@@ -9605,7 +9645,7 @@ begin
 //----------------------------------------------------------------------------
   wbRecord(CLFM, 'Color', [
     wbEDIDReq,
-    wbFULLReq,
+    wbFULL,
     wbStruct(CNAM, 'ColorID', [
       wbStruct('Color Name', [
         wbInteger('Red', itU8),
@@ -9713,7 +9753,40 @@ begin
   ]);
 
   wbRecord(INFO, 'Dialog response', [
+    wbEDIDReq,
     wbVMAD,
+    wbStruct(DATA, 'Info Data', [
+      wbInteger('Type', itU8, wbEnum([
+        {0} 'Topic',
+        {1} 'Conversation',
+        {2} 'Combat',
+        {3} 'Persuasion',
+        {4} 'Detection',
+        {5} 'Service',
+        {6} 'Miscellaneous',
+        {7} 'Radio'
+      ])),
+      wbInteger('Next Speaker', itU8, wbEnum([
+        {0} 'Target',
+        {1} 'Self',
+        {2} 'Either'
+      ])),
+      wbInteger('Flags 1', itU8, wbFlags([
+        {0x01} 'Goodbye',
+        {0x02} 'Random',
+        {0x04} 'Say Once',
+        {0x08} 'Run Immediately',
+        {0x10} 'Info Refusal',
+        {0x20} 'Random End',
+        {0x40} 'Run for Rumors',
+        {0x80} 'Speech Challenge'
+      ])),
+      wbInteger('Flags 2', itU8, wbFlags([
+        {0x01} 'Say Once a Day',
+        {0x02} 'Always Darken'
+      ])),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, False, nil, 3),
     wbStruct(ENAM, 'Response flags', [
       wbInteger('Flags', itU16, wbFlags([
         {0x00000001}'Goodbye',
@@ -9731,28 +9804,25 @@ begin
         {0x00001000}'Requires post-processing',
         {0x00002000}'Unknown 14',
         {0x00004000}'Spends favor points',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
+        {0x00008000}'Unknown 16'
       ])),
       wbInteger('Reset hours (scaled 0-24)', itU16)
     ]),
     wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
-    wbunknown(CNAM),
+    // 00 Except in <MQ304LostSoulB1> and <MQ202RatwayEsbernTopic>
+    // then CNAM is 02
+    wbStruct(CNAM, 'Unknown Flags', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Unknown 2',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8'
+      ]))
+    ]),
     wbRArray('Responses?', wbFormIDCk(TCLT, 'Response INFO', [INFO, NULL])),
     wbRArray('Unknown - TRDT', wbRStruct('Unknown', [
       wbStruct(TRDT, 'Unknown', [
@@ -9767,24 +9837,35 @@ begin
           {7} 'Puzzled'
         ])),
         wbInteger('Emotion Value', itU32),
-        wbInteger('Unknown', itU32),
-        wbInteger('Unknown', itU32),
-        wbInteger('Unknown', itU32),
-        wbInteger('Unknown', itU32)
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4)
       ]),
-      wbLString(NAM1, 'Dialog String'),
-      wbString(NAM2, 'Unknown'),
-      wbString(NAM3, 'Unknown')
+      wbLString(NAM1, 'Dialog String 1'),
+      wbLString(NAM2, 'Dialog String 2'),
+      wbLString(NAM3, 'Dialog String 3'),
+      wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
+      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
-    wbunknown(DNAM),
-    wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
+    wbFormID(DNAM, 'Response Data'),
     wbCTDAs,
-    wbunknown(RNAM),
-    wbunknown(ONAM),
-    wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
-    wbunknown(ANAM),
-    wbunknown(TWAT)
-  ], False, nil {wbINFOAddInfo}, cpNormal, False, nil {wbINFOAfterLoad});
+
+    wbRStruct('First SCHR', [
+      wbunknown(SCHR),
+      wbFormID(QNAM, 'Unknown')
+    ], [], cpNormal, True),
+    wbRStruct('NEXT and Second SCHR', [
+      wbEmpty(NEXT, 'Marker'),
+      wbunknown(SCHR),
+      wbFormID(QNAM, 'Unknown')
+    ], [], cpNormal, True),
+
+    wbUnknown(RNAM),
+    wbFormID(ANAM, 'Unknown'),
+    wbFormID(TWAT, 'Walk Away Topic'),
+    wbFormID(ONAM, 'Audio Output Override')
+  ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
 
 //------------------------------------------------------------------------------
 // Begin Old INFO
@@ -12509,16 +12590,22 @@ begin
       {always starts with an RDAT}
       wbStructSK(RDAT, [0], 'Data Header', [
         wbInteger('Type', itU32, wbEnum([
-          {0}'',
-          {1}'',
-          {2}'Objects',
-          {3}'Weather',
-          {4}'Map',
-          {5}'Land',
-          {6}'Grass',
-          {7}'Sound',
-          {8}'Imposter',
-          {9}''
+          {0} 'Unknown 0',
+          {1} 'Unknown 1',
+          {2} 'Objects',
+          {3} 'Weather',
+          {4} 'Map',
+          {5} 'Land',
+          {6} 'Grass',
+          {7} 'Sound',
+          {8} 'Imposter',
+          {9} 'Unknown 10',
+          {10}'Unknown 11',
+          {11}'Unknown 12',
+          {12}'Unknown 13',
+          {13}'Unknown 14',
+          {14}'Unknown 15',
+          {15}'Unknown 16'
         ])),
         wbInteger('Flags', itU8, wbFlags([
           'Override'
@@ -12538,10 +12625,38 @@ begin
       wbArrayS(RDSA, 'Sounds', wbStructSK([0], 'Sound', [
         wbFormIDCk('Sound', [SOUN]),
         wbInteger('Flags', itU32, wbFlags([
-          'Pleasant',
-          'Cloudy',
-          'Rainy',
-          'Snowy'
+          {0x00000001}'Pleasant',
+          {0x00000002}'Cloudy',
+          {0x00000004}'Rainy',
+          {0x00000008}'Snowy',
+          {0x00000010}'Unknown 5',
+          {0x00000020}'Unknown 6',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8',
+          {0x00000100}'Unknown 9',
+          {0x00000200}'Unknown 10',
+          {0x00000400}'Unknown 11',
+          {0x00000800}'Unknown 12',
+          {0x00001000}'Unknown 13',
+          {0x00002000}'Unknown 14',
+          {0x00004000}'Unknown 15',
+          {0x00008000}'Unknown 16',
+          {0x00010000}'Unknown 17',
+          {0x00020000}'Unknown 18',
+          {0x00040000}'Unknown 19',
+          {0x00080000}'Unknown 20',
+          {0x00100000}'Unknown 21',
+          {0x00200000}'Unknown 22',
+          {0x00400000}'Unknown 23',
+          {0x00800000}'Unknown 24',
+          {0x01000000}'Unknown 25',
+          {0x02000000}'Unknown 26',
+          {0x03000000}'Unknown 27',
+          {0x08000000}'Unknown 28',
+          {0x10000000}'Unknown 29',
+          {0x20000000}'Unknown 30',
+          {0x40000000}'Unknown 31',
+          {0x80000000}'Unknown 32'
         ])),
         wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
       ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
