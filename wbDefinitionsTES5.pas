@@ -785,10 +785,10 @@ var
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot : IwbSubRecordDef;
   wbPosRot : IwbStructDef;
-  wbMODD: IwbSubRecordStructDef;
+  wbMODD: IwbSubRecordDef;
   wbMOSD: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
-  wbMODS: IwbSubRecordStructDef;
+  wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
   wbMO4S: IwbSubRecordDef;
@@ -854,7 +854,6 @@ var
   wbATKD: IwbSubRecordDef; {Attack Data}
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
-  wbDMDT: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
   wbCOCTReq: IwbSubRecordDef;
@@ -881,9 +880,7 @@ var
   wbSPCT: IwbSubRecordDef;
   wbTintMasks: IwbSubRecordArrayDef;
   wbMODT: IwbSubRecordDef;
-  wbMODTStyle1: IwbSubRecordDef;
-  wbMODTStyle2: IwbSubRecordDef;
-  wbMODTStyle3: IwbSubRecordDef;
+  wbDMDT: IwbSubRecordDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -4485,6 +4482,12 @@ begin
                wbByteArray('Unnknown', 1)
              ])
            ]);
+	wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
+							wbByteArray('Not Shown', 0, cpIgnore, False, wbNeverShow)
+						], cpIgnore, False, wbNeverShow);
+	wbDMDT := wbStruct(MODT, 'Texture Files Hashes', [
+							wbByteArray('Not Shown', 0, cpIgnore, False, wbNeverShow)
+						], cpIgnore, False, wbNeverShow);
 
 //------------------------------------------------------------------------------
 // Begin New DODT
@@ -4565,97 +4568,6 @@ begin
 // End Old wbDODT
 //------------------------------------------------------------------------------
 
-// wbMODT Use this to discover the format
-wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
-            wbArray('Unknown',
-              wbByteArray('Unknown', 4)
-            )
-					]);
-
-// wbMODTStyle1
-// MODT - Texture Files Hashes:
-//     02 00 00 00
-//     04 00 00 00
-//     00 00 00 00
-//     87 C6 F9 12
-//     64 64 73 00 <-- In Ascii dds
-//     30 07 96 FE
-//     34 76 EC 91
-//     64 64 73 00 <-- In Ascii dds
-//     30 07 96 FE
-//     0F CC 29 04
-//     64 64 73 00 <-- In Ascii dds
-//     30 07 96 FE
-//     DA 8E 92 91
-//     64 64 73 00 <-- In Ascii dds
-//     26 2C 33 3B
-  wbMODTStyle1 := wbStruct(MODT, 'Texture Files Hashes', [
-              wbStruct('Unknown', [
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4)
-              ]),
-              // Start of Array
-              // Any way to do this better?
-              wbArrayS('Unknown',
-                wbStruct('Unknown', [
-                  wbStruct('Unknown', [
-                    wbByteArray('Unknown', 4)
-                  ]),
-									wbStruct('Unknown', [
-										wbString('Unknown', 4),
-										wbByteArray('Unknown', 4)
-									])
-								])
-							)
-              // End of Array
-						]);
-
-// wbMODTStyle2
-// MODT 0C 00 02 00 <-- 14 Bytes
-//      00 00 00 00 <-- 2 Byte Length 12 Bytes and no repeating pattern
-//      00 00 00 00
-//      00 00
-  wbMODTStyle2 := wbStruct(MODT, 'Texture Files Hashes', [
-              wbStruct('Unknown', [
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4)
-              ])
-						]);
-
-  wbMODTStyle3 := wbStruct(MODT, 'Texture Files Hashes', [
-              wbStruct('Unknown', [
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4)
-              ])
-						]);
-
-  wbDMDT := wbStruct(DMDT, 'Texture Files Hashes', [
-              wbStruct('Possible Flags', [
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4),
-                wbByteArray('Unknown', 4)
-              ]),
-              // Start of Array
-              // Any way to do this better?
-              wbArrayS('Texture File Parts',
-                wbStruct('Array Parts', [
-                  wbStruct('Array Part 1', [
-                    wbByteArray('Unknown', 4)
-                  ]),
-									wbStruct('Array Part 2', [
-										wbString('Unknown', 4),
-										wbByteArray('Unknown', 4)
-									])
-								])
-							)
-              // End of Array
-						]);
-
 //-----------------------------------------------------------------------------
 //
 // wbDNAMActor - Unknown:
@@ -4728,7 +4640,7 @@ wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
     wbByteArray('Unknown', 2)
   ]);
 
-  //-----------------------------------------------------------------
+//-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
 
@@ -5107,24 +5019,22 @@ wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
       'Left Hand'
     ]));
 
-  wbMODS := wbRStructSK([0], 'Model', [
+  wbMODS :=
     wbArrayS(MODS, 'Alternate Textures',
       wbStructSK([0, 2], 'Alternate Texture', [
         wbLenString('3D Name'),
         wbFormIDCk('New Texture', [TXST]),
         wbInteger('3D Index', itS32)
       ]),
-    -1)
-    ], [], cpNormal, False, nil, True);
+    -1);
 
-  wbMODD := wbRStructSK([0], 'Model', [
+  wbMODD :=
     wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
       'Head',
       'Torso',
       'Right Hand',
       'Left Hand'
-    ]))
-    ], [], cpNormal, False, nil, True);
+    ]));
 
 //------------------------------------------------------------------------------
 // wbMODL MODL, MODB, MODT, MODS, MODD
@@ -5132,20 +5042,46 @@ wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4)
+      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbMODT,
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+//      wbArray(MODT, 'Texture Files Hashes',
+//        wbByteArray('Unknown', 24, cpBenign),
+//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
+//      0, nil, nil, cpBenign),
+      wbMODS,
+      wbMODD
     ], [], cpNormal, False, nil, True);
-
-  wbMODLReq :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4)
-    ], [], cpNormal, True, nil, True);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4)
+      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+      wbMODT,
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+//      wbArray(MODT, 'Texture Files Hashes',
+//        wbByteArray('Unknown', 24, cpBenign),
+//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
+//      0, nil, nil, cpBenign),
+      wbMODS,
+      wbMODD
     ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
+
+  wbMODLReq :=
+    wbRStructSK([0], 'Model', [
+      wbString(MODL, 'Model Filename'),
+      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+      wbMODT,
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+//      wbArray(MODT, 'Texture Files Hashes',
+//        wbByteArray('Unknown', 24, cpBenign),
+//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
+//      0, nil, nil, cpBenign),
+      wbMODS,
+      wbMODD
+    ], [], cpNormal, True, nil, True);
 
   wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
     wbStructSK([0, 2], 'Alternate Texture', [
@@ -5492,7 +5428,6 @@ wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
 // wbMODL MODL, MODB, MODT, MODS, MODD
 //------------------------------------------------------------------------------
     wbMODL,
-    wbMODT,
     wbSCRI,
 //------------------------------------------------------------------------------
 // wbDEST DEST, DSTD, DMDL, DMDT, DSTF
@@ -6205,7 +6140,6 @@ begin
     wbKWDAs,
     wbDESCReq,
     wbMODL,
-    wbMODT,
     wbYNAM,
     wbZNAM,
     wbFloat(DATA, 'Weight', cpNormal, True),
@@ -6244,7 +6178,6 @@ begin
     wbOBNDReq,
     wbFULLReq,
     wbMODL,
-    wbMODT,
     wbICON,
     wbSCRI,
     wbDEST,
@@ -6280,7 +6213,6 @@ begin
   wbRecord(ANIO, 'Animated Object', [
     wbEDIDReq,
     wbMODLReq,
-    wbMODT,
     wbString(BNAM, 'Type', 0, cpNormal, True),
     wbFormIDCk(DATA, 'Animation', [IDLE], False, cpNormal, True)
   ]);
@@ -6470,7 +6402,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbDESCReq,
     wbFormID(YNAM, 'Unknown'),
     wbKSIZ,
@@ -6665,7 +6596,6 @@ begin
     wbString(FNAM, 'Sun Texture'),
     wbString(GNAM, 'Sun Glare Texture'),
     wbMODL,
-    wbMODT,
     wbStruct(TNAM, 'Timing', [
       wbStruct('Sunrise', [
         wbInteger('Begin', itU8, wbClmtTime),
@@ -6748,7 +6678,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbCOCT,
     wbCNTOs,
     wbStruct(DATA, '', [
@@ -7021,7 +6950,6 @@ begin
     wbOBNDReq,
     wbFULLActor,
     wbMODLActor,
-    wbMODT,
     wbSPLOs,
     wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
     wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
@@ -7345,7 +7273,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
-    wbMODT,
     wbSCRI,
     wbDEST,
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
@@ -7756,7 +7683,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
-    wbMODT,
     wbSCRI,
     wbDEST,
     wbKSIZ,
@@ -7909,7 +7835,6 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbMODL,
-    wbMODT,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x00000001}'Playable',
       {0x00000002}'Male',
@@ -8020,7 +7945,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
-    wbMODT,
     wbSCRI,
     wbDEST,
     wbFormIDCk(SNAM, 'Looping Sound', [SOUN]),
@@ -8050,7 +7974,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbSCRI,
     wbDEST,
     wbDESCReq,
@@ -8105,7 +8028,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbMODT,
     wbRStructsSK('Parts', 'Part', [0], [
       wbFormIDCk(ONAM, 'Static', [STAT]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
@@ -8129,7 +8051,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
-    wbMODT,
     wbDEST,
     wbByteArray(DATA, 'Unknown', 1, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN])
@@ -8139,7 +8060,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbMODT,
     wbStruct(DNAM, '', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Reflects',
@@ -8200,7 +8120,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbICON,
     wbYNAM,
     wbZNAM,
@@ -8234,7 +8153,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
-    wbMODT,
     wbDEST,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Flags', itU16, wbFlags([
@@ -8308,7 +8226,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbFormIDCk(MNAM, 'Unknown', [IMAD, NULL]),
     wbUnknown(DATA)
   ]);
@@ -8327,7 +8244,6 @@ begin
     wbOBND,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbKSIZ,
     wbKWDAs,
     wbICON,
@@ -8667,7 +8583,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(DATA, 'Data', [
@@ -8709,8 +8624,7 @@ begin
         wbInteger('Flags', itU8, wbFlags([
           'Has Collission Data'
         ]))
-      ], cpNormal, True),
-      wbMODT
+      ], cpNormal, True)
     ], [], cpNormal, True)
   ]);
 
@@ -9001,7 +8915,6 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
-    wbMODT,
     wbRStructs('Body Parts', 'Body Part', [
       wbString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
@@ -9078,7 +8991,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbMODT,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbStruct(DNAM, 'Data', [
@@ -9133,7 +9045,6 @@ begin
   wbRecord(CAMS, 'Camera Shot', [
     wbEDIDReq,
     wbMODL,
-    wbMODT,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Action', itU32, wbEnum([
         'Shoot',
@@ -9205,7 +9116,6 @@ begin
   wbRecord(IPCT, 'Impact', [
     wbEDIDReq,
     wbMODL,
-    wbMODT,
     wbStruct(DATA, '', [
       wbFloat('Effect - Duration'),
       wbInteger('Effect - Orientation', itU32, wbEnum([
@@ -9527,22 +9437,6 @@ begin
     wbEDIDReq
   ]);
 
-//        wbRStruct('Start Of Male', [
-//      wbEmpty(MNAM, 'Marker'),
-//      wbString(ANAM, 'Skeletal Model'),
-//      wbMODT
-//    ], [], cpNormal, True),
-//    wbRStruct('Start Of Female', [
-//      wbEmpty(FNAM, 'Marker'),
-//      wbString(ANAM, 'Skeletal Model'),
-//      wbMODT
-//    ], [], cpNormal, True),
-//    wbFormIDCk(YNAM, 'Younger', [RACE]),
-//    wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
-//    wbRArray('Array MTNM', wbRStruct('Unknown', [
-//      wbString(MTNM, 'Unknown')
-//    ], [])),
-//
   wbRecord(SCEN, 'SCEN', [
     wbEDIDReq,
     wbVMAD,
@@ -9648,7 +9542,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
-    wbMODT,
     wbUnknown(DATA)
   ]);
 
@@ -9658,7 +9551,6 @@ begin
   wbRecord(MATO, 'MATO', [
     wbEDIDReq,
     wbMODL,
-    wbMODT,
     wbRArray('Unknown - DNAM', wbRStruct('Unknown', [
       wbUnknown(DNAM)
     ], [])),
@@ -9916,7 +9808,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbMODT,
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -9985,7 +9876,6 @@ begin
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
     wbMODLReq,
-    wbMODT,
     wbCTDAs,
     wbString(DNAM, 'Filename'),
     wbString(ENAM, 'Animation Event'),
@@ -10229,7 +10119,6 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbMODL,
-    wbMODT,
     wbICON,
     wbSCRI,
     wbETYPReq,
@@ -10253,7 +10142,6 @@ begin
     wbOBNDReq,
     wbFULLReq,
     wbMODL,
-    wbMODT,
     wbICONReq,
     wbSCRI,
     wbDEST,
@@ -10365,7 +10253,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
-    wbMODT,
     wbSCRI,
     wbFULL,
     wbICON,
@@ -10527,8 +10414,7 @@ begin
 				wbCOED
       ], []),
     cpNormal, True),
-    wbMODL,
-    wbMODT
+    wbMODL
   ]);
 
 //----------------------------------------------------------------------------------
@@ -10890,7 +10776,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbICON,
     wbSCRI,
     wbDEST,
@@ -10912,7 +10797,6 @@ begin
     wbUnknown(QUAL),
     wbDESC,
     wbMODL,
-    wbMODT,
     wbICON,
     wbSCRI,
     wbUnknown(DATA)
@@ -12315,13 +12199,11 @@ begin
     ], cpNormal, True),
     wbRStruct('Start Of Male', [
       wbEmpty(MNAM, 'Marker'),
-      wbString(ANAM, 'Skeletal Model'),
-      wbMODT
+      wbString(ANAM, 'Skeletal Model')
     ], [], cpNormal, True),
     wbRStruct('Start Of Female', [
       wbEmpty(FNAM, 'Marker'),
-      wbString(ANAM, 'Skeletal Model'),
-      wbMODT
+      wbString(ANAM, 'Skeletal Model')
     ], [], cpNormal, True),
     wbFormIDCk(YNAM, 'Younger', [RACE]),
     wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
@@ -12364,8 +12246,7 @@ begin
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
-          wbMODLReq,
-          wbMODT
+          wbMODLReq
         ], []), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
@@ -12373,8 +12254,7 @@ begin
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
-          wbMODLReq,
-          wbMODT
+          wbMODLReq
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -12388,13 +12268,11 @@ begin
 //------------------------------------------------------------------------------
     wbRStruct('Start Of Male', [
       wbEmpty(MNAM, 'Male Data Marker'),
-      wbMODL,
-      wbMODT
+      wbMODL
     ], [], cpNormal, True),
     wbRStruct('Start Of Female', [
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-      wbMODL,
-      wbMODT
+      wbMODL
     ], [], cpNormal, True),
 //    wbRStruct('FaceGen Data', [
 //      wbRStruct('Male FaceGen Data', [
@@ -12456,7 +12334,6 @@ begin
           wbFormIDCk(DFTM, 'Head Feature Set', [TXST, NULL]),
           wbTintMasks,
           wbMODLReq,
-          wbMODT,
           wbICON
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
@@ -12482,7 +12359,6 @@ begin
           wbFormIDCk(DFTF, 'Head Feature Set', [TXST, NULL]),
           wbTintMasks,
           wbMODLReq,
-          wbMODT,
           wbICON
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -13198,7 +13074,6 @@ begin
     wbFormIDCk(ETYP, 'Equip Type', [EQUP, NULL]),
     wbDESCReq,
     //wbMODL,
-    //wbMODT,
     //wbFormIDCk(YNAM, 'Pickup Sound', [SNDR]),
     //wbFormIDCk(ZNAM, 'Drop Sound', [SNDR]),
     //wbFormIDCk(ENIT, 'Enchanted Item', [INGR, ALCH, ENCH, NULL]),
@@ -13258,7 +13133,6 @@ begin
     wbFormIDCK(ETYP, 'Equip Type', [EQUP, NULL]),
     wbDESC,
     wbMODL,
-    wbMODT,
     wbUnknown(DATA),
     wbUnknown(SPIT),
     wbRArray('Array of EFID and EFIT', wbRStruct('Unknown', [
@@ -13272,7 +13146,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
-    wbMODT,
     {Unused in this record for TES5
     wbInteger(BRUS, 'Passthrough Sound', itS8, wbEnum([
       'BushA',
@@ -13317,7 +13190,6 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbMODT,
     wbFormIDCK(PFIG, 'Magic Effect', [INGR, ALCH, NULL]),
     wbUnknown(PFIG),
     wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
@@ -13350,7 +13222,6 @@ begin
     wbOBND,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbSCRI,
     wbUnknown(PNAM),
     wbLString(RNAM, 'Unknown'),
@@ -13541,7 +13412,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbICON,
     wbSCRI,
     wbEITM,
@@ -14007,8 +13877,7 @@ begin
     ], [])),
     wbUnknown(NAM2),
     wbUnknown(NAM3),
-    wbMODL,
-    wbMODT
+    wbMODL
   ]);
 
   wbRecord(IMOD, 'Item Mod', [
@@ -14016,7 +13885,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbICON,
     wbSCRI,
     wbDESC,
@@ -14133,7 +14001,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbICON,
     wbSCRI,
     wbYNAM,
@@ -14222,7 +14089,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -14234,7 +14100,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbMODT,
     wbICON,
     wbYNAM,
     wbZNAM,
