@@ -45,8 +45,8 @@ var
   wbSimpleLAND : Boolean = False;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
-  wbHideUnused : Boolean{} = False{};
-  wbHideIgnored : Boolean{} = False{};
+  wbHideUnused : Boolean{} = False{True}{};
+  wbHideIgnored : Boolean{} = False{True}{};
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
@@ -57,21 +57,21 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  wbAllowUnordered: Boolean{} = False{};
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
-  wbDontSave: Boolean;
   wbMasterRestore: Boolean;
+  wbDontSave: Boolean;
 
   wbLODGen: Boolean;
 
   wbAllowInternalEdit: Boolean{} = True{};
-  wbAllowUnordered: Boolean{} = False{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{ = True{};
+  wbReportMode: Boolean{} = True{};
   wbReportUnused: Boolean{} = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
