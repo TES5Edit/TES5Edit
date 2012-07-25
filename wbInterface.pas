@@ -1746,9 +1746,9 @@ function wbStruct(const aSignature : TwbSignature;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                        aOptionalFromElement : Integer = -1;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbStruct(const aName      : string;
@@ -1757,8 +1757,8 @@ function wbStruct(const aName      : string;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbStructDef; overload;
 
 function wbRStruct(const aName           : string;
