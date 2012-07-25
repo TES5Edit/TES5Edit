@@ -220,6 +220,8 @@ const
   CSNO : TwbSignature = 'CSNO';
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DEHY : TwbSignature = 'DEHY';
+  DEMO : TwbSignature = 'DEMO'; { New to Skyrim }
+  DEVA : TwbSignature = 'DEVA'; { New to Skyrim }
   DATA : TwbSignature = 'DATA';
   DAT2 : TwbSignature = 'DAT2';
   DEBR : TwbSignature = 'DEBR';
@@ -232,6 +234,8 @@ const
   DMDL : TwbSignature = 'DMDL';
   DMDT : TwbSignature = 'DMDT';
   DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
+  DMAX : TwbSignature = 'DMAX'; { New to Skyrim }
+  DMIN : TwbSignature = 'DMIN'; { New to Skyrim }
   DNAM : TwbSignature = 'DNAM';
   DOBJ : TwbSignature = 'DOBJ';
   DODT : TwbSignature = 'DODT';
@@ -295,6 +299,7 @@ const
   HEAD : TwbSignature = 'HEAD'; { New to Skyrim }
   HEDR : TwbSignature = 'HEDR';
   HNAM : TwbSignature = 'HNAM';
+  HTID : TwbSignature = 'HTID'; { New to Skyrim }
   HUNG : TwbSignature = 'HUNG';
   ICO2 : TwbSignature = 'ICO2';
   ICON : TwbSignature = 'ICON';
@@ -5378,7 +5383,7 @@ wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
     wbFormIDCk(XLCN, 'Location Reference', [LCRT]),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN]),
+    wbArrayS(XLKR, 'Linked References', wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN]), 0, cpNormal, False),
 
     {--- 3D Data ---}
     wbDATAPosRot
@@ -6165,8 +6170,9 @@ begin
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4)
-	  	], cpNormal, False, nil, 6, wbCTDAAfterLoad),
+	  	], cpNormal, False, nil, 0, wbCTDAAfterLoad),
 	    wbString(CIS2, 'Unknown'),
   		wbString(CIS1, 'Unknown')
     ], [], cpNormal);
@@ -9251,7 +9257,7 @@ begin
         'Never Resets',
         'Match PC Below Minimum Level'
       ])),
-      wbByteArray('Unknown', 1)
+      wbByteArray('Unknown', 0)
     ], cpNormal, True)
   ]);
 
@@ -9488,7 +9494,13 @@ begin
   ]);
 
   wbRecord(DLVW, 'DLVW', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(QNAM),
+    wbRArray('Array BNAM', wbRStruct('Unknown', [
+      wbUnknown(BNAM)
+    ], [])),
+    wbUnknown(ENAM),
+    wbUnknown(DNAM)
   ]);
 
   wbRecord(WOOP, 'WOOP', [
@@ -9515,8 +9527,112 @@ begin
     wbEDIDReq
   ]);
 
+//        wbRStruct('Start Of Male', [
+//      wbEmpty(MNAM, 'Marker'),
+//      wbString(ANAM, 'Skeletal Model'),
+//      wbMODT
+//    ], [], cpNormal, True),
+//    wbRStruct('Start Of Female', [
+//      wbEmpty(FNAM, 'Marker'),
+//      wbString(ANAM, 'Skeletal Model'),
+//      wbMODT
+//    ], [], cpNormal, True),
+//    wbFormIDCk(YNAM, 'Younger', [RACE]),
+//    wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
+//    wbRArray('Array MTNM', wbRStruct('Unknown', [
+//      wbString(MTNM, 'Unknown')
+//    ], [])),
+//
   wbRecord(SCEN, 'SCEN', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbVMAD,
+    wbUnknown(FNAM),
+    wbEmpty(HNAM, '1st HNAM Marker'),
+    wbUnknown(NAM0),
+    wbUnknown(NEXT),
+    wbCTDAs,
+
+    {-- 1st Pattern --}
+//    wbRArray('Array SNAM, ENAM', wbRStruct('Unknown', [
+//      wbUnknown(NEXT)
+//    ], [])),
+
+    {-- 1st Pattern --}
+    wbRArray('Array ALID, LNAM', wbRStruct('Unknown', [
+      wbUnknown(NEXT),
+      wbUnknown(WNAM),
+      wbUnknown(HNAM),
+      wbUnknown(HNAM),
+      wbUnknown(NAM0),
+      wbCTDAs,
+      wbUnknown(NEXT)
+    ], [])),
+//    {-- 2nd Pattern --}
+//    wbRArray('Array ALID, LNAM', wbRStruct('Unknown', [
+//      wbUnknown(WNAM),
+//      wbUnknown(HNAM),
+//      wbUnknown(HNAM),
+//      wbUnknown(NAM0),
+//      wbUnknown(NEXT),
+//      wbUnknown(NEXT)
+//    ], [])),
+//    wbRArray('Array of HNAM', // Begin HNAM Array
+//      wbRStruct('Unknown', [ // Begin Start Struct
+//        wbEmpty(HNAM, 'HNAM Start Marker'), // Marker
+//        wbUnknown(NAM0),
+//        wbRArray('Array of CTDA and NEXT',  // Begin Array
+//          wbRStruct('Unknown', [  // Begin Struct
+//            wbCTDAs,
+//            wbEmpty(NEXT,'NEXT Marker')
+//          ], []) // End Struct
+//        ), // End Array
+//        wbUnknown(WNAM),
+//        wbEmpty(HNAM, 'HNAM End Marker') // Marker
+//      ],[]) // End Start Struct
+//    ), // End HNAM Array
+//    wbRArray('ALST/ALLS',
+//      wbRUnion('Union', [
+//    wbRUnion('Union', [
+
+    {-- 3st Pattern --}
+//      wbRArray('Array SNAM, ENAM', wbRStruct('Unknown', [
+//        wbUnknown(NEXT)
+//      ], [])),
+
+    {-- 4st Pattern --}
+      wbRArray('Array ALID, LNAM', wbRStruct('Unknown', [
+        wbUnknown(ALID),
+        wbUnknown(LNAM),
+        wbUnknown(DNAM)
+      ], [])),
+      wbUnknown(ANAM),
+      wbUnknown(NAM0),
+      wbRArray('Array ALID, INAM', wbRStruct('Unknown', [
+        wbUnknown(ALID),
+        wbUnknown(LNAM),
+        wbUnknown(INAM),
+        wbUnknown(FNAM),
+        wbRArray('Array SNAM, ENAM', wbRStruct('Unknown', [
+          wbUnknown(SNAM),
+          wbUnknown(ENAM)
+        ], [])),
+        wbRArray('Array PNAM', wbRStruct('Unknown', [
+          wbUnknown(PNAM)
+        ], [])),
+        wbUnknown(DATA),
+        wbUnknown(HTID),
+        wbUnknown(DMAX),
+        wbUnknown(DMIN),
+        wbUnknown(DEMO),
+        wbUnknown(DEVA),
+        wbEmpty(ANAM, 'ANAM Marker'),
+        wbUnknown(ANAM),
+        wbUnknown(NAM0)
+      ], [])),
+//    ], []),
+    wbUnknown(PNAM),
+    wbUnknown(INAM),
+    wbUnknown(VNAM)
   ]);
 
   wbRecord(ASTP, 'ASTP', [
@@ -10984,13 +11100,10 @@ begin
     wbCNTOs,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
-    // Needs to be part of wbCNAM
-    // Just a reminder to myself
     wbKSIZ,
     wbKWDAs,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
-    wbFULL, // Needs to be part of wbCNAM
-    // Needs to be part of wbCNAM
+    wbFULL,
     wbLString(SHRT, 'Short Alias'),
     wbByteArray(DATA, 'Marker'),
     wbDNAMActor,
@@ -12558,6 +12671,9 @@ begin
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
+    {--- Patrol Data ---}
+    wbUnknown(PDTO),
+
     {--- Radio ---}
     wbStruct(XRDO, 'Radio Data', [
       wbFloat('Range Radius'),
@@ -12627,7 +12743,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbArrayS(XLKR, 'Linked References', wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN]), 0, cpNormal, False),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
