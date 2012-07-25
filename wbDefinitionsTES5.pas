@@ -200,6 +200,7 @@ const
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';
   CSGD : TwbSignature = 'CSGD'; { New to Skyrim }
+  CSMD : TwbSignature = 'CSMD'; { New to Skyrim }
   CSME : TwbSignature = 'CSME'; { New to Skyrim }
   CSLR : TwbSignature = 'CSLR'; { New to Skyrim }
   CSFL : TwbSignature = 'CSFL'; { New to Skyrim }
@@ -330,6 +331,7 @@ const
   LIGH : TwbSignature = 'LIGH';
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
   LCPR : TwbSignature = 'LCPR'; { New to Skyrim }
+  LCEP : TwbSignature = 'LCEP'; { New to Skyrim }
   LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
   LCSR : TwbSignature = 'LCSR'; { New to Skyrim }
   LCEC : TwbSignature = 'LCEC'; { New to Skyrim }
@@ -778,10 +780,10 @@ var
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot : IwbSubRecordDef;
   wbPosRot : IwbStructDef;
-  wbMODD: IwbSubRecordDef;
+  wbMODD: IwbSubRecordStructDef;
   wbMOSD: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
-  wbMODS: IwbSubRecordDef;
+  wbMODS: IwbSubRecordStructDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
   wbMO4S: IwbSubRecordDef;
@@ -846,7 +848,6 @@ var
   wbATKD: IwbSubRecordDef; {Attack Data}
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
-  wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
@@ -873,6 +874,10 @@ var
   wbSizeIndexEnum: IwbEnumDef;
   wbSPCT: IwbSubRecordDef;
   wbTintMasks: IwbSubRecordArrayDef;
+  wbMODT: IwbSubRecordDef;
+  wbMODTStyle1: IwbSubRecordDef;
+  wbMODTStyle2: IwbSubRecordDef;
+  wbMODTStyle3: IwbSubRecordDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -4460,7 +4465,7 @@ begin
   wbCITC:= wbInteger(CITC, 'Count', itU32);
   wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
-  wbKWDAs := wbArray(KWDA, 'Keywords', wbFormID('Keyword'), 0, nil, nil, cpNormal, True);
+  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormID('Keyword'), 0, cpNormal, True);
   wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
   wbDMDL:= wbString(DMDL, 'Model Filename');
   wbSNAM:= wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
@@ -4475,6 +4480,93 @@ begin
              ])
            ]);
 
+//------------------------------------------------------------------------------
+// Begin New DODT
+//------------------------------------------------------------------------------
+// Sample DODT
+// DODT - Unknown:
+// {00}            00 00 00 41 1 Min Width
+// {05}            00 00 00 42 2 Max Width
+// {09}            00 00 00 41 3 Min Height
+// {13}            00 00 00 42 4 Max Height
+// {17}            00 00 00 42 5 Depth
+// {21}            00 00 80 40 6 Shininess
+//                 ------------Parallax-----
+// {25}            00 00 80 3F 7 Scale
+// {29}            04            Passes  {This can't be higher than 30}
+//                 -------------------------
+// {30}               00         Flags
+//                       32 30 <-- Not Sure
+// {31}            FF FF FF 00   Color
+//------------------------------------------------------------------------------
+  wbDODT := wbStruct(DODT, 'Decal Data', [
+   {00}       wbFloat('Min Width'),
+   {05}       wbFloat('Max Width'),
+   {09}       wbFloat('Min Height'),
+   {13}       wbFloat('Max Height'),
+   {17}       wbFloat('Depth'),
+   {21}       wbFloat('Shininess'),
+              wbStruct('Parallax', [
+   {25}         wbFloat('Scale'),
+   {29}         wbInteger('Passes', itU8) {This can't be higher than 30}
+              ]),
+   {30}       wbInteger('Flags', itU8, wbFlags([
+                {0x00000001}'Parallax',
+                {0x00000002}'Alpha - Blending',
+                {0x00000004}'Alpha - Testing',
+                {0x00000008}'No Subtextures',
+                {0x00000010}'DODT Unknown 5',
+                {0x00000020}'DODT Unknown 6',
+                {0x00000040}'DODT Unknown 7',
+                {0x00000080}'DODT Unknown 8'
+               ], True)),
+   {31}       wbByteArray('Unknown', 2),
+   {33}       wbStruct('Color', [
+                wbInteger('Red', itU8),
+                wbInteger('Green', itU8),
+                wbInteger('Blue', itU8),
+                wbByteArray('Unknown', 1)
+              ])
+            ]);
+//------------------------------------------------------------------------------
+// Begin Old DODT
+//------------------------------------------------------------------------------
+//  wbDODT := wbStruct(DODT, 'Decal Data', [
+//              wbFloat('Min Width'),
+//              wbFloat('Max Width'),
+//              wbFloat('Min Height'),
+//              wbFloat('Max Height'),
+//              wbFloat('Depth'),
+//              wbFloat('Shininess'),
+//              wbStruct('Parallax', [
+//                wbFloat('Scale'),
+//                wbInteger('Passes', itU8)
+//              ]),
+//              wbInteger('Flags', itU8, wbFlags([
+//                'Parallax',
+//                'Alpha - Blending',
+//                'Alpha - Testing'
+//              ], True)),
+//              wbByteArray('Unused', 2),
+//              wbStruct('Color', [
+//                wbInteger('Red', itU8),
+//                wbInteger('Green', itU8),
+//                wbInteger('Blue', itU8),
+//                wbByteArray('Unused', 1)
+//              ])
+//            ]);
+//------------------------------------------------------------------------------
+// End Old wbDODT
+//------------------------------------------------------------------------------
+
+// wbMODT Use this to discover the format
+wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
+            wbArray('Unknown',
+              wbByteArray('Unknown', 4)
+            )
+					]);
+
+// wbMODTStyle1
 // MODT - Texture Files Hashes:
 //     02 00 00 00
 //     04 00 00 00
@@ -4491,30 +4583,49 @@ begin
 //     DA 8E 92 91
 //     64 64 73 00 <-- In Ascii dds
 //     26 2C 33 3B
-// MODT 0C 00 02 00 <-- 14 Bytes
-//      00 00 00 00 <-- 2 Byte Length 12 Bytes and no repeating pattern
-//      00 00 00 00
-//      00 00
-  wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
-              wbStruct('Possible Flags', [
+  wbMODTStyle1 := wbStruct(MODT, 'Texture Files Hashes', [
+              wbStruct('Unknown', [
                 wbByteArray('Unknown', 4),
                 wbByteArray('Unknown', 4),
                 wbByteArray('Unknown', 4)
               ]),
               // Start of Array
               // Any way to do this better?
-              wbArrayS('Texture File Parts',
-                wbStruct('Array Parts', [
-                  wbStruct('Array Part 1', [
+              wbArrayS('Unknown',
+                wbStruct('Unknown', [
+                  wbStruct('Unknown', [
                     wbByteArray('Unknown', 4)
                   ]),
-									wbStruct('Array Part 2', [
+									wbStruct('Unknown', [
 										wbString('Unknown', 4),
 										wbByteArray('Unknown', 4)
 									])
 								])
 							)
               // End of Array
+						]);
+
+// wbMODTStyle2
+// MODT 0C 00 02 00 <-- 14 Bytes
+//      00 00 00 00 <-- 2 Byte Length 12 Bytes and no repeating pattern
+//      00 00 00 00
+//      00 00
+  wbMODTStyle2 := wbStruct(MODT, 'Texture Files Hashes', [
+              wbStruct('Unknown', [
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4)
+              ])
+						]);
+
+  wbMODTStyle3 := wbStruct(MODT, 'Texture Files Hashes', [
+              wbStruct('Unknown', [
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4),
+                wbByteArray('Unknown', 4)
+              ])
 						]);
 
   wbDMDT := wbStruct(DMDT, 'Texture Files Hashes', [
@@ -4947,15 +5058,6 @@ begin
       ])
     ], cpNormal, True);
 
-  wbMODS :=
-    wbArrayS(MODS, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-
   wbMO2S :=
     wbArrayS(MO2S, 'Alternate Textures',
       wbStructSK([0, 2], 'Alternate Texture', [
@@ -4989,13 +5091,6 @@ begin
       ]),
     -1);
 
-  wbMODD :=
-    wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
-      'Head',
-      'Torso',
-      'Right Hand',
-      'Left Hand'
-    ]));
   wbMOSD :=
     wbInteger(MOSD, 'FaceGen Model Flags', itU8, wbFlags([
       'Head',
@@ -5004,49 +5099,44 @@ begin
       'Left Hand'
     ]));
 
+  wbMODS := wbRStructSK([0], 'Model', [
+    wbArrayS(MODS, 'Alternate Textures',
+      wbStructSK([0, 2], 'Alternate Texture', [
+        wbLenString('3D Name'),
+        wbFormIDCk('New Texture', [TXST]),
+        wbInteger('3D Index', itS32)
+      ]),
+    -1)
+    ], [], cpNormal, False, nil, True);
+
+  wbMODD := wbRStructSK([0], 'Model', [
+    wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
+      'Head',
+      'Torso',
+      'Right Hand',
+      'Left Hand'
+    ]))
+    ], [], cpNormal, False, nil, True);
+
 //------------------------------------------------------------------------------
 // wbMODL MODL, MODB, MODT, MODS, MODD
 //------------------------------------------------------------------------------
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4),
-      wbMODT,
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
-      wbMODS,
-      wbMODD
+      wbByteArray(MODB, 'Unknown', 4)
     ], [], cpNormal, False, nil, True);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4),
-      wbMODT,
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbArray(MODT, 'Texture Files',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
-      wbMODS,
-      wbMODD
+      wbByteArray(MODB, 'Unknown', 4)
     ], [], cpNormal, True, nil, True);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4),
-      wbMODT,
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
-      wbMODS,
-      wbMODD
+      wbByteArray(MODB, 'Unknown', 4)
     ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
 
   wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
@@ -5394,6 +5484,7 @@ begin
 // wbMODL MODL, MODB, MODT, MODS, MODD
 //------------------------------------------------------------------------------
     wbMODL,
+    wbMODT,
     wbSCRI,
 //------------------------------------------------------------------------------
 // wbDEST DEST, DSTD, DMDL, DMDT, DSTF
@@ -6064,22 +6155,14 @@ begin
   wbCTDANew :=
     wbRStruct('Conditions', [
 			wbStruct(CTDA, 'Condition', [
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 2)
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4)
 	  	], cpNormal, False, nil, 6, wbCTDAAfterLoad),
 	    wbString(CIS2, 'Unknown'),
   		wbString(CIS1, 'Unknown')
@@ -6152,6 +6235,7 @@ begin
     wbOBNDReq,
     wbFULLReq,
     wbMODL,
+    wbMODT,
     wbICON,
     wbSCRI,
     wbDEST,
@@ -6187,6 +6271,8 @@ begin
   wbRecord(ANIO, 'Animated Object', [
     wbEDIDReq,
     wbMODLReq,
+    wbMODT,
+    wbString(BNAM, 'Type', 0, cpNormal, True),
     wbFormIDCk(DATA, 'Animation', [IDLE], False, cpNormal, True)
   ]);
 
@@ -6375,6 +6461,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbDESCReq,
     wbFormID(YNAM, 'Unknown'),
     wbKSIZ,
@@ -6569,6 +6656,7 @@ begin
     wbString(FNAM, 'Sun Texture'),
     wbString(GNAM, 'Sun Glare Texture'),
     wbMODL,
+    wbMODT,
     wbStruct(TNAM, 'Timing', [
       wbStruct('Sunrise', [
         wbInteger('Begin', itU8, wbClmtTime),
@@ -6650,7 +6738,8 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL, // MODT, MODS in wbMODL
+    wbMODL,
+    wbMODT,
     wbCOCT,
     wbCNTOs,
     wbStruct(DATA, '', [
@@ -6923,6 +7012,7 @@ begin
     wbOBNDReq,
     wbFULLActor,
     wbMODLActor,
+    wbMODT,
     wbSPLOs,
     wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
     wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
@@ -7167,6 +7257,7 @@ begin
       {60} wbFloat('Semi-Auto Firing Delay Mult (max)')
     ], cpNormal, True),
     wbUnknown(CSGD),
+    wbUnknown(CSMD),
     wbUnknown(CSME),
     wbUnknown(CSCR),
     wbUnknown(CSLR),
@@ -7245,6 +7336,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
+    wbMODT,
     wbSCRI,
     wbDEST,
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
@@ -7298,7 +7390,9 @@ begin
     wbEDID,
     wbString(ICON, 'Fill Texture'),
     wbString(ICO2, 'Particle Shader Texture'),
-    wbString(NAM7, 'Holes Texture'),
+    wbString(NAM7, 'Post Effect'),
+    wbString(NAM8, 'Looped Gradient'),
+    wbString(NAM9, 'End Gradient'),
     wbStruct(DATA, '', [
       wbInteger('Flags', itU8, wbFlags([
         {0} 'No Membrane Shader',
@@ -7414,8 +7508,9 @@ begin
       wbFloat('Addon Models - Scale Start'),
       wbFloat('Addon Models - Scale End'),
       wbFloat('Addon Models - Scale In Time'),
-      wbFloat('Addon Models - Scale Out Time')
-    ], cpNormal, True, nil, 57)
+      wbFloat('Addon Models - Scale Out Time'),
+      wbByteArray('Unknown', 0)
+    ], cpNormal, True, nil)
   ], False, nil, cpNormal, False, wbEFSHAfterLoad);
 
   wbRecord(ENCH, 'Object Effect', [
@@ -7652,6 +7747,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
+    wbMODT,
     wbSCRI,
     wbDEST,
     wbKSIZ,
@@ -7738,85 +7834,6 @@ begin
     wbCNAM
   ]);
 
-//------------------------------------------------------------------------------
-// Begin New DODT
-//------------------------------------------------------------------------------
-// Sample DODT
-// DODT - Unknown:
-// {00}            00 00 00 41 1 Min Width
-// {05}            00 00 00 42 2 Max Width
-// {09}            00 00 00 41 3 Min Height
-// {13}            00 00 00 42 4 Max Height
-// {17}            00 00 00 42 5 Depth
-// {21}            00 00 80 40 6 Shininess
-//                 ------------Parallax-----
-// {25}            00 00 80 3F 7 Scale
-// {29}            04            Passes  {This can't be higher than 30}
-//                 -------------------------
-// {30}               00         Flags
-//                       32 30 <-- Not Sure
-// {31}            FF FF FF 00   Color
-//------------------------------------------------------------------------------
-  wbDODT := wbStruct(DODT, 'Decal Data', [
-   {00}       wbFloat('Min Width'),
-   {05}       wbFloat('Max Width'),
-   {09}       wbFloat('Min Height'),
-   {13}       wbFloat('Max Height'),
-   {17}       wbFloat('Depth'),
-   {21}       wbFloat('Shininess'),
-              wbStruct('Parallax', [
-   {25}         wbFloat('Scale'),
-   {29}         wbInteger('Passes', itU8) {This can't be higher than 30}
-              ]),
-   {30}       wbInteger('Flags', itU8, wbFlags([
-                {0x00000001}'Parallax',
-                {0x00000002}'Alpha - Blending',
-                {0x00000004}'Alpha - Testing',
-                {0x00000008}'No Subtextures',
-                {0x00000010}'DODT Unknown 5',
-                {0x00000020}'DODT Unknown 6',
-                {0x00000040}'DODT Unknown 7',
-                {0x00000080}'DODT Unknown 8'
-               ], True)),
-   {31}       wbByteArray('Unknown', 2),
-   {33}       wbStruct('Color', [
-                wbInteger('Red', itU8),
-                wbInteger('Green', itU8),
-                wbInteger('Blue', itU8),
-                wbByteArray('Unknown', 1)
-              ])
-            ]);
-//------------------------------------------------------------------------------
-// Begin Old DODT
-//------------------------------------------------------------------------------
-//  wbDODT := wbStruct(DODT, 'Decal Data', [
-//              wbFloat('Min Width'),
-//              wbFloat('Max Width'),
-//              wbFloat('Min Height'),
-//              wbFloat('Max Height'),
-//              wbFloat('Depth'),
-//              wbFloat('Shininess'),
-//              wbStruct('Parallax', [
-//                wbFloat('Scale'),
-//                wbInteger('Passes', itU8)
-//              ]),
-//              wbInteger('Flags', itU8, wbFlags([
-//                'Parallax',
-//                'Alpha - Blending',
-//                'Alpha - Testing'
-//              ], True)),
-//              wbByteArray('Unused', 2),
-//              wbStruct('Color', [
-//                wbInteger('Red', itU8),
-//                wbInteger('Green', itU8),
-//                wbInteger('Blue', itU8),
-//                wbByteArray('Unused', 1)
-//              ])
-//            ]);
-//------------------------------------------------------------------------------
-// End Old wbDODT
-//------------------------------------------------------------------------------
-
   wbRecord(TXST, 'Texture Set', [
     wbEDIDReq,
     wbOBNDReq,
@@ -7883,7 +7900,7 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbMODL,
-    // wbMODT not required, part of wbMODL
+    wbMODT,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x00000001}'Playable',
       {0x00000002}'Male',
@@ -7994,6 +8011,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
+    wbMODT,
     wbSCRI,
     wbDEST,
     wbFormIDCk(SNAM, 'Looping Sound', [SOUN]),
@@ -8023,6 +8041,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbSCRI,
     wbDEST,
     wbDESCReq,
@@ -8077,6 +8096,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
+    wbMODT,
     wbRStructsSK('Parts', 'Part', [0], [
       wbFormIDCk(ONAM, 'Static', [STAT]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
@@ -8100,6 +8120,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
+    wbMODT,
     wbDEST,
     wbByteArray(DATA, 'Unknown', 1, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN])
@@ -8109,6 +8130,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
+    wbMODT,
     wbStruct(DNAM, '', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Reflects',
@@ -8169,6 +8191,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbICON,
     wbYNAM,
     wbZNAM,
@@ -8202,6 +8225,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
+    wbMODT,
     wbDEST,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Flags', itU16, wbFlags([
@@ -8275,6 +8299,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbFormIDCk(MNAM, 'Unknown', [IMAD, NULL]),
     wbUnknown(DATA)
   ]);
@@ -8293,6 +8318,7 @@ begin
     wbOBND,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbKSIZ,
     wbKWDAs,
     wbICON,
@@ -8632,6 +8658,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(DATA, 'Data', [
@@ -8674,7 +8701,7 @@ begin
           'Has Collission Data'
         ]))
       ], cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+      wbMODT
     ], [], cpNormal, True)
   ]);
 
@@ -8965,6 +8992,7 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
+    wbMODT,
     wbRStructs('Body Parts', 'Body Part', [
       wbString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
@@ -9041,6 +9069,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
+    wbMODT,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbStruct(DNAM, 'Data', [
@@ -9054,18 +9083,32 @@ begin
     wbFULL,
     wbDESCReq,
     wbUnknown(ANAM),
-    wbRArray('Unknown - CNAM', wbRStruct('Unknown', [
-      wbUnknown(CNAM),
-      wbUnknown(AVSK),
-      wbUnknown(INAM),
-      wbFormID(PNAM, 'Unknown'),
-      wbUnknown(FNAM),
-      wbUnknown(XNAM),
-      wbUnknown(YNAM),
-      wbUnknown(HNAM),
-      wbUnknown(VNAM),
-      wbFormID(SNAM, 'Unknown')
-    ], []))
+    wbRArray('Array of INAM or CNAM', // The Aray
+      wbRUnion('Union', [ // The Union
+        wbRStruct('Starts with CNAM', [ // The start of the CNAM
+          wbUnknown(CNAM),
+          wbUnknown(AVSK),
+          wbUnknown(INAM),
+          wbFormID(PNAM, 'Unknown'),
+          wbUnknown(FNAM),
+          wbUnknown(XNAM),
+          wbUnknown(YNAM),
+          wbUnknown(HNAM),
+          wbUnknown(VNAM),
+          wbFormID(SNAM, 'Unknown')
+        ], []), // The End of the CNAM
+        wbRStruct('Starts with INAM', [ // The start of the INAM
+          wbUnknown(INAM),
+          wbFormID(PNAM, 'Unknown'),
+          wbUnknown(FNAM),
+          wbUnknown(XNAM),
+          wbUnknown(YNAM),
+          wbUnknown(HNAM),
+          wbUnknown(VNAM),
+          wbFormID(SNAM, 'Unknown')
+        ], []) // The End of the INAM
+      ], []) // The End of Union
+    ) // The End of Array
 //    wbICON,
 //    wbString(ANAM, 'Short Name')
   ]);
@@ -9081,6 +9124,7 @@ begin
   wbRecord(CAMS, 'Camera Shot', [
     wbEDIDReq,
     wbMODL,
+    wbMODT,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Action', itU32, wbEnum([
         'Shoot',
@@ -9113,8 +9157,9 @@ begin
       ]),
       {28} wbFloat('Max Time'),
       {32} wbFloat('Min Time'),
-      {36} wbFloat('Target % Between Actors')
-    ], cpNormal, True, nil, 7),
+      {36} wbFloat('Target % Between Actors'),
+      wbByteArray('Unknown', 0)
+    ], cpNormal, True, nil),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
@@ -9140,17 +9185,18 @@ begin
 
   wbRecord(MATT, 'MATT', [
     wbEDIDReq,
-    wbString(MNAM, 'Material name'),
-    wbFormID(HNAM, 'Havok name'),
     wbFormID(PNAM, 'Material parent'),
+    wbString(MNAM, 'Material name'),
     wbunknown(CNAM),
     wbunknown(BNAM),
-    wbunknown(FNAM)
+    wbunknown(FNAM),
+    wbFormID(HNAM, 'Havok name')
   ]);
 
   wbRecord(IPCT, 'Impact', [
     wbEDIDReq,
     wbMODL,
+    wbMODT,
     wbStruct(DATA, '', [
       wbFloat('Effect - Duration'),
       wbInteger('Effect - Orientation', itU32, wbEnum([
@@ -9167,8 +9213,10 @@ begin
     ], cpNormal, True),
     wbDODT,
     wbFormIDCk(DNAM, 'Texture Set', [TXST]),
+    wbunknown(ENAM),
     wbFormIDCk(SNAM, 'Sound 1', [SNDR, SOUN, NULL]),
-    wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL])
+    wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL]),
+    wbFormIDCk(NAM2, 'Sound 3', [SNDR, SOUN, NULL])
   ]);
 
   wbRecord(IPDS, 'Impact DataSet', [
@@ -9210,18 +9258,22 @@ begin
     wbUnknown(LCPR),
     wbUnknown(LCUN),
     wbUnknown(LCSR),
-    wbUnknown(LCEC),
+    wbRArray('Unknown - LCEC', wbRStruct('Unknown', [
+      wbUnknown(LCEC)
+    ], [])),
     wbUnknown(LCID),
+    wbUnknown(LCEP),
     wbFull,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PNAM),
+    wbFormIDCk(PNAM, 'Unknown', [LCTN, NULL]),
+    wbFormIDCk(NAM1, 'Unknown', [MUSC, NULL]),
+    wbUnknown(FNAM),
     wbUnknown(MNAM),
     wbUnknown(RNAM),
     wbUnknown(NAM0),
     wbUnknown(CNAM)
   ]);
-
 
   wbRecord(MESG, 'Message', [
     wbEDIDReq,
@@ -9477,6 +9529,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
+    wbMODT,
     wbUnknown(DATA)
   ]);
 
@@ -9486,6 +9539,7 @@ begin
   wbRecord(MATO, 'MATO', [
     wbEDIDReq,
     wbMODL,
+    wbMODT,
     wbRArray('Unknown - DNAM', wbRStruct('Unknown', [
       wbUnknown(DNAM)
     ], [])),
@@ -9637,7 +9691,84 @@ begin
   ]);
 
   wbRecord(COLL, 'COLL', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbDESCReq,
+    wbFormID(BNAM, 'B Name', cpNormal, True),
+    wbStruct(FNAM, 'Unknown Flags', [
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Unknown 2',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Unknown 11',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Unknown 13',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Unknown 15',
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ]))
+    ], cpNormal, True),
+    wbStruct(GNAM, 'Unknown Flags', [
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Unknown 2',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Unknown 11',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Unknown 13',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Unknown 15',
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ]))
+    ], cpNormal, True),
+    wbString(MNAM, 'MNAM Name', 0, cpNormal, True),
+    wbByteArray(INTV, 'Interactables Count', 0, cpNormal, True),
+    wbArrayS(CNAM, 'CNAM FormID', wbFormIDCk('Forms', [COLL]), 0, cpNormal, False)
   ]);
 
 //----------------------------------------------------------------------------
@@ -9653,18 +9784,20 @@ begin
         wbInteger('Blue', itU8),
         wbByteArray('Unknown', 1)
       ])
-    ]),
-    wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']))
+    ], cpNormal, True),
+    wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']), cpNormal, True)
   ]);
 
   wbRecord(REVB, 'REVB', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbByteArray(DATA, 'Data', 0, cpNormal, True)
   ]);
 
   wbRecord(GRAS, 'Grass', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
+    wbMODT,
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -9733,6 +9866,7 @@ begin
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
     wbMODLReq,
+    wbMODT,
     wbCTDAs,
     wbString(DNAM, 'Filename'),
     wbString(ENAM, 'Animation Event'),
@@ -9975,10 +10109,8 @@ begin
     wbFULL,
     wbKSIZ,
     wbKWDAs,
-//------------------------------------------------------------------------------
-// wbMODL MODL, MODB, MODT, MODS, MODD
-//------------------------------------------------------------------------------
     wbMODL,
+    wbMODT,
     wbICON,
     wbSCRI,
     wbETYPReq,
@@ -10002,6 +10134,7 @@ begin
     wbOBNDReq,
     wbFULLReq,
     wbMODL,
+    wbMODT,
     wbICONReq,
     wbSCRI,
     wbDEST,
@@ -10113,6 +10246,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
+    wbMODT,
     wbSCRI,
     wbFULL,
     wbICON,
@@ -10155,17 +10289,29 @@ begin
     wbEDIDReq,
     wbICONReq,
     wbDESCReq,
-    wbRArrayS('Locations', wbStructSK(LNAM, [0, 1], 'Location', [
-      wbFormIDCk('Direct', [CELL, WRLD, NULL]),
-      wbStructSK([0, 1], 'Indirect', [
-        wbFormIDCk('World', [NULL, WRLD]),
-        wbStructSK([0,1], 'Grid', [
-          wbInteger('Y', itS16),
-          wbInteger('X', itS16)
-        ])
-      ])
-    ])),
-    wbFormIDCk(WMI1, 'Load Screen Type', [LSCT])
+    wbCTDAs,
+    wbUnknown(NNAM),
+//    wbFormIDCk(NNAM, 'File Name', [STAT, NULL], False, cpNormal, True),
+    wbUnknown(SNAM),
+    wbUnknown(RNAM),
+    wbUnknown(ONAM),
+    wbUnknown(XNAM),
+//    wbRArrayS('Unknown XYZ Location', wbStructSK(XNAM, [0, 1], 'Location', [
+//      wbByteArray('Unknown', 2),
+//      wbFormIDCk('World', [CELL, WRLD, NULL]),
+//      wbByteArray('Unknown', 2),
+//      wbByteArray('Unknown', 2),
+//      wbByteArray('Unknown', 2)
+//      wbStructSK([0, 1], 'Indirect', [
+//        wbFormIDCk('World', [NULL, WRLD]),
+//        wbStructSK([0,1], 'Grid', [
+//          wbInteger('Y', itS16),
+//          wbInteger('X', itS16)
+//        ])
+//      ])
+//    ], cpNormal, True)),
+    wbString(MOD2, 'Camera File', 0, cpNormal, True),
+    wbFormIDCk(WMI1, 'Load Screen Type', [LSCT], False, cpNormal, True)
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [
@@ -10262,7 +10408,8 @@ begin
 				wbCOED
       ], []),
     cpNormal, True),
-    wbMODL
+    wbMODL,
+    wbMODT
   ]);
 
 //----------------------------------------------------------------------------------
@@ -10624,6 +10771,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbICON,
     wbSCRI,
     wbDEST,
@@ -10645,6 +10793,7 @@ begin
     wbUnknown(QUAL),
     wbDESC,
     wbMODL,
+    wbMODT,
     wbICON,
     wbSCRI,
     wbUnknown(DATA)
@@ -12078,7 +12227,8 @@ begin
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
-          wbMODLReq
+          wbMODLReq,
+          wbMODT
         ], []), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
@@ -12086,7 +12236,8 @@ begin
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
-          wbMODLReq
+          wbMODLReq,
+          wbMODT
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -12100,11 +12251,13 @@ begin
 //------------------------------------------------------------------------------
     wbRStruct('Start Of Male', [
       wbEmpty(MNAM, 'Male Data Marker'),
-      wbMODL
+      wbMODL,
+      wbMODT
     ], [], cpNormal, True),
     wbRStruct('Start Of Female', [
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-      wbMODL
+      wbMODL,
+      wbMODT
     ], [], cpNormal, True),
 //    wbRStruct('FaceGen Data', [
 //      wbRStruct('Male FaceGen Data', [
@@ -12166,6 +12319,7 @@ begin
           wbFormIDCk(DFTM, 'Head Feature Set', [TXST, NULL]),
           wbTintMasks,
           wbMODLReq,
+          wbMODT,
           wbICON
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
@@ -12191,6 +12345,7 @@ begin
           wbFormIDCk(DFTF, 'Head Feature Set', [TXST, NULL]),
           wbTintMasks,
           wbMODLReq,
+          wbMODT,
           wbICON
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -12963,6 +13118,7 @@ begin
     wbFormIDCK(ETYP, 'Equip Type', [EQUP, NULL]),
     wbDESC,
     wbMODL,
+    wbMODT,
     wbUnknown(DATA),
     wbUnknown(SPIT),
     wbRArray('Array of EFID and EFIT', wbRStruct('Unknown', [
@@ -12976,6 +13132,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
+    wbMODT,
     {Unused in this record for TES5
     wbInteger(BRUS, 'Passthrough Sound', itS8, wbEnum([
       'BushA',
@@ -13020,6 +13177,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
+    wbMODT,
     wbFormIDCK(PFIG, 'Magic Effect', [INGR, ALCH, NULL]),
     wbUnknown(PFIG),
     wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
@@ -13052,6 +13210,7 @@ begin
     wbOBND,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbSCRI,
     wbUnknown(PNAM),
     wbLString(RNAM, 'Unknown'),
@@ -13073,15 +13232,18 @@ begin
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
-    wbString(NNAM, 'Noise Map', 0, cpNormal, True),
+    wbRArray('Array of Noise Maps', wbRStruct('Noise Maps', [
+      wbString(NNAM, 'Noise Map')
+    ], [])),
     wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       {0}'Causes Damage',
       {1}'Reflective'
     ]), cpNormal, True),
-    wbUnknown(INAM),
     wbString(MNAM, 'Material ID', 0, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
+    wbUnknown(TNAM),
+    wbUnknown(INAM),
     wbFormIDCk(XNAM, 'Actor Effect', [SPEL]),
     wbInteger(DATA, 'Damage', itU16, nil, cpNormal, True, True),
     wbRUnion('Visual Data', [
@@ -13149,8 +13311,10 @@ begin
         wbFloat('Noise Properties - Noise Layer Three - UV Scale'),
         wbFloat('Noise Properties - Noise Layer One - Amplitude Scale'),
         wbFloat('Noise Properties - Noise Layer Two - Amplitude Scale'),
-        wbFloat('Noise Properties - Noise Layer Three - Amplitude Scale')
-      ], cpNormal, True, nil, 46),
+        wbFloat('Noise Properties - Noise Layer Three - Amplitude Scale'),
+        wbByteArray('Unknown', 0)
+      ], cpNormal, True),
+//      ], cpNormal, True, nil, 46),
       wbStruct(DATA, 'Visual Data', [
         wbFloat('Unknown'),
         wbFloat('Unknown'),
@@ -13237,6 +13401,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbICON,
     wbSCRI,
     wbEITM,
@@ -13702,7 +13867,8 @@ begin
     ], [])),
     wbUnknown(NAM2),
     wbUnknown(NAM3),
-    wbMODL
+    wbMODL,
+    wbMODT
   ]);
 
   wbRecord(IMOD, 'Item Mod', [
@@ -13710,6 +13876,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbICON,
     wbSCRI,
     wbDESC,
@@ -13826,6 +13993,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbICON,
     wbSCRI,
     wbYNAM,
@@ -13914,6 +14082,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -13925,6 +14094,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
+    wbMODT,
     wbICON,
     wbYNAM,
     wbZNAM,
@@ -14183,7 +14353,7 @@ begin
    wbAddGroupOrder(DIAL);
    wbAddGroupOrder(QUST);
    wbAddGroupOrder(IDLE);
-   wbAddGroupOrder(PACK);
+   wbAddGroupOrder(PACK); {Original Routine Crashes Dump}
    wbAddGroupOrder(CSTY);
    wbAddGroupOrder(LSCR);
    wbAddGroupOrder(LVSP);
@@ -14195,7 +14365,7 @@ begin
    wbAddGroupOrder(IMGS);
    wbAddGroupOrder(IMAD);
    wbAddGroupOrder(FLST);
-   wbAddGroupOrder(PERK);
+   wbAddGroupOrder(PERK); {Original Routine Crashes Dump}
    wbAddGroupOrder(BPTD);
    wbAddGroupOrder(ADDN);
    wbAddGroupOrder(AVIF);
