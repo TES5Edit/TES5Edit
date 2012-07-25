@@ -845,6 +845,7 @@ var
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbStructDef;
+  wbScriptFragments: IwbUnionDef;
   wbATKD: IwbSubRecordDef; {Attack Data}
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
@@ -4457,21 +4458,21 @@ begin
 //-----------------------------------------------------------------
 // New Routines
 //-----------------------------------------------------------------
-  wbBoolU8:= wbInteger('Boolean', itU8, wbEnum(['False', 'True']));
-  wbBoolU16:= wbInteger('Boolean', itU16, wbEnum(['False', 'True']));
-  wbBoolU32:= wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
-  wbLLCT:= wbInteger(LLCT, 'Count', itU8);
-  wbCOCT:= wbInteger(COCT, 'Count', itU32);
-  wbCITC:= wbInteger(CITC, 'Count', itU32);
-  wbLVLD:= wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
-  wbCOCTReq:= wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
+  wbBoolU8 := wbInteger('Boolean', itU8, wbEnum(['False', 'True']));
+  wbBoolU16 := wbInteger('Boolean', itU16, wbEnum(['False', 'True']));
+  wbBoolU32 := wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
+  wbLLCT := wbInteger(LLCT, 'Count', itU8);
+  wbCOCT := wbInteger(COCT, 'Count', itU32);
+  wbCITC := wbInteger(CITC, 'Count', itU32);
+  wbLVLD := wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
+  wbCOCTReq := wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
   wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormID('Keyword'), 0, cpNormal, True);
-  wbKSIZ:= wbInteger(KSIZ, 'Count', itU32);
-  wbDMDL:= wbString(DMDL, 'Model Filename');
-  wbSNAM:= wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
-  wbQNAM:= wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
-  wbMDOB:= wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
-  wbCNAM:= wbStruct(CNAM, 'Linked Reference Color', [
+  wbKSIZ := wbInteger(KSIZ, 'Keywords Count', itU32);
+  wbDMDL := wbString(DMDL, 'Model Filename');
+  wbSNAM := wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
+  wbQNAM := wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
+  wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
+  wbCNAM := wbStruct(CNAM, 'Linked Reference Color', [
              wbStruct('Link Start Color', [
                wbInteger('Red', itU8),
                wbInteger('Green', itU8),
@@ -4942,38 +4943,40 @@ wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
     ]), -2)
   ]);
 
+  wbScriptFragments := wbUnion('Fragments', wbScriptFragmentDecider, [
+    // 00 None
+    wbByteArray('Unknown'),
+    // 01 QUST Fragments
+    wbStruct('Data', [
+      wbInteger('Unknown', itS8),
+      wbInteger('fragmentCount', itU16),
+      wbLenString('fileName', 2),
+      wbArray('fragments', wbStruct('fragment', [
+        wbInteger('Quest Stage Index', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS32),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsCounter),
+      wbArray('Aliases', wbStruct('Alias', [
+        wbInteger('Unknown', itS16),
+        wbInteger('AliasID', itU16),
+        wbInteger('Unknown', itS32),
+        wbInteger('Unknown', itS16),
+        wbInteger('objFormat', itS16),
+        wbArray('Scripts', wbScriptEntry, -2)
+      ]), -2)
+    ])
+  ]);
+
   wbVMAD := wbStruct(VMAD, 'Papyrus Script Data', [
     wbInteger('version', itS16),
     wbInteger('objFormat', itS16),
     //wbInteger('scriptCount', itU16),
     wbArray('Scripts', wbScriptEntry, -2),
     wbArray('Fragments', wbUnknown)
-    {wbUnion('Fragments', wbScriptFragmentDecider, [
-      // 00 None
-      wbByteArray('Unknown'),
-      // 01 QUST Fragments
-      wbStruct('Data', [
-        wbInteger('Unknown', itS8),
-        wbInteger('fragmentCount', itU16),
-        wbLenString('fileName', 2),
-        wbArray('fragments', wbStruct('fragment', [
-          wbInteger('Quest Stage Index', itU16),
-          wbInteger('Unknown', itS16),
-          wbInteger('Unknown', itS32),
-          wbInteger('Unknown', itS8),
-          wbLenString('scriptName', 2),
-          wbLenString('fragmentName', 2)
-        ]), [], wbScriptFragmentsCounter),
-        wbArray('Aliases', wbStruct('Alias', [
-          wbInteger('Unknown', itS16),
-          wbInteger('AliasID', itU16),
-          wbInteger('Unknown', itS32),
-          wbInteger('Unknown', itS16),
-          wbInteger('objFormat', itS16),
-          wbArray('Scripts', wbScriptEntry, -2)
-        ]), -2)
-      ])
-    ])}
+    //wbScriptFragments
   ]);
 
   wbATKD := wbStruct(ATKD, 'Attack Data', [
@@ -10927,8 +10930,8 @@ begin
         {0x40000000} nil,
         {0x80000000} nil
       ])),
-      wbInteger('Magicka', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      wbInteger('Stamina', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
+      wbInteger('Magicka Offset', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Stamina Offset', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
       wbUnion('Level', wbCreaLevelDecider, [
         wbInteger('Level', itS16, nil, cpNormal, True, wbActorTemplateUseStats),
         wbInteger('Level Mult', itS16, wbDiv(100), cpNormal, True, wbActorTemplateUseStats)
@@ -10951,7 +10954,7 @@ begin
         {0x0400} 'Use Def Pack List',
         {0x1000} 'Use Keywords'
       ])),
-      wbInteger('Health', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
+      wbInteger('Health Offset', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
       wbInteger('Bleedout Override', itU16, nil, cpNormal, True, wbActorTemplateUseStats)
     ], cpNormal, True),
     wbRArrayS('Factions',
@@ -10975,8 +10978,8 @@ begin
     wbSPLOs,
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
-    wbUnknown(SPOR),
-    wbUnknown(ECOR),
+    wbFormIDCk(ECOR, 'Escape combat override', [FLST], False, cpNormal, False),
+    wbFormIDCk(SPOR, 'Spell override', [FLST], False, cpNormal, False),
     wbCOCTReq,
     wbCNTOs,
     wbAIDT,
@@ -10985,41 +10988,62 @@ begin
     // Just a reminder to myself
     wbKSIZ,
     wbKWDAs,
-    wbCNAM,
+    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL, // Needs to be part of wbCNAM
     // Needs to be part of wbCNAM
-    wbUnknown(SHRT),
-    wbByteArray(DATA, 'Unused in Skyrim'),
+    wbLString(SHRT, 'Short Alias'),
+    wbByteArray(DATA, 'Marker'),
     wbDNAMActor,
     wbRArrayS('Head Parts',
       wbFormIDCk(PNAM, 'Head Part', [HDPT]),
     cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-//-----------------------------------------------------------------------------
-// Some of the old routines
-//    wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
-//    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
-//    wbFaceGenNPC,
-//    wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
-//    wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
-//    wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
-    wbUnknown(HCLF),
+    wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
     wbUnknown(GNAM),
-    wbZNAM,
-    wbUnknown(NAM5),
-    wbUnknown(NAM6),
-    wbUnknown(NAM7),
-    wbUnknown(NAM8),
+    wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
+    wbUnknown(NAM5, cpNormal, True),
+    wbFloat(NAM6, 'Scale', cpNormal, True),
+    wbFloat(NAM7, 'Weight', cpNormal, True),
+    wbUnknown(NAM8, cpNormal, True),
     wbCSDTs,
     // When CSCR exists CSDT, CSDI, CSDC are not present
-    wbUnknown(CSCR),
-    wbUnknown(DOFT),
-    wbUnknown(DPLT),
-    wbUnknown(SOFT),
-    wbUnknown(CRIF),
-    wbUnknown(FTST),
-    wbUnknown(QNAM),
-    wbUnknown(NAM9),
-    wbUnknown(NAMA),
+    wbFormIDCk(CSCR, 'Audio template Ref', [NPC_], False, cpNormal, False),
+    wbFormIDCk(DOFT, 'Default outfit', [OTFT], False, cpNormal, False),
+    wbFormIDCk(SOFT, 'Sleeping outfit', [OTFT], False, cpNormal, False),
+    wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
+    wbFormIDCk(CRIF, 'Crime faction', [FACT], False, cpNormal, False),
+    wbFormIDCk(FTST, 'Head texture', [TXST], False, cpNormal, False),
+    wbStruct(QNAM, 'Texture lightning', [
+      wbFloat('Red'),
+      wbFloat('Green'),
+      wbFloat('Blue')
+    ]),
+    wbStruct(NAM9, 'Face morph', [
+      wbFloat('Nose Long/Short'),
+      wbFloat('Nose Up/Down'),
+      wbFloat('Jaw Up/Down'),
+      wbFloat('Jaw Narrow/Wide'),
+      wbFloat('Jaw Farward/Back'),
+      wbFloat('Cheeks Up/Down'),
+      wbFloat('Cheeks Farward/Back'),
+      wbFloat('Eyes Up/Down'),
+      wbFloat('Eyes In/Out'),
+      wbFloat('Brows Up/Down'),
+      wbFloat('Brows In/Out'),
+      wbFloat('Brows Farward/Back'),
+      wbFloat('Lips Up/Down'),
+      wbFloat('Lips In/Out'),
+      wbFloat('Chin Narrow/Wide'),
+      wbFloat('Chin Up/Down'),
+      wbFloat('Chin Underbite/Overbite'),
+      wbFloat('Eyes Farward/Back'),
+      wbFloat('Unknown')
+    ], cpNormal, True),
+    wbStruct(NAMA, 'Face parts', [
+      wbInteger('Nose', itU32),
+      wbInteger('Unknown', itU32),
+      wbInteger('Eyes', itU32),
+      wbInteger('Mouth', itU32)
+    ]),
 //-----------------------------------------------------------------------------
 // Array of TINI, TINC, TINV, TIAS
 //-----------------------------------------------------------------------------
