@@ -438,6 +438,7 @@ const
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NNAM : TwbSignature = 'NNAM';
+  NVNM : TwbSignature = 'NVNM'; { New to Skyrim }
   XSRF : TwbSignature = 'XSRF';
   XSRD : TwbSignature = 'XSRD';
   MWD1 : TwbSignature = 'MWD1';
@@ -4485,7 +4486,7 @@ begin
 	wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
 							wbByteArray('Not Shown', 0, cpIgnore, False, wbNeverShow)
 						], cpIgnore, False, wbNeverShow);
-	wbDMDT := wbStruct(MODT, 'Texture Files Hashes', [
+	wbDMDT := wbStruct(DMDT, 'Texture Files Hashes', [
 							wbByteArray('Not Shown', 0, cpIgnore, False, wbNeverShow)
 						], cpIgnore, False, wbNeverShow);
 
@@ -5092,20 +5093,20 @@ begin
   -1);
 
 //------------------------------------------------------------------------------
-// wbDEST DEST, DSTD, DMDL, DMDT, DSTF
+// wbDEST DEST, DSTD, DMDL, DMDT, DMDS, DSTF
 //------------------------------------------------------------------------------
   wbDEST := wbRStruct('Destructable', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
-      wbInteger('Count', itU8),
+      wbInteger('DEST Count', itU8),
       wbInteger('Flags', itU8, wbFlags([
         'VATS Targetable'
       ], True)),
       wbByteArray('Unknown', 2)
     ]),
-    wbRArray('Stages',
-      wbRStruct('Stage', [
-        wbStruct(DSTD, 'Destruction Stage Data', [
+    wbRArray('Stages',  // Begin Stage Array
+      wbRStruct('Stage', [ // Begin Stage RStruct
+        wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
           wbInteger('Health %', itU8),
           wbInteger('Index', itU8),
           wbInteger('Damage Stage', itU8),
@@ -5118,20 +5119,16 @@ begin
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32)
-        ], cpNormal, True),
-        wbRStructSK([0], 'Model', [
+        ], cpNormal, True), // End DSTD
+        wbRStructSK([0], 'Model', [ // Begin DMDL
           wbString(DMDL, 'Model Filename'),
-          wbDMDT
-//          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
-//          0, nil, nil, cpBenign)
-        ], []),
-        wbDMDSs,
+          wbDMDT,
+          wbDMDSs
+        ], [], cpNormal, False, nil, wbAllowUnordered), // End DMDL
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], [])
-    )
-  ], []);
+      ], [], cpNormal, False, nil, wbAllowUnordered) // Begin Stage RStruct
+    ) // End Stage Array
+  ], [], cpNormal, False, nil, wbAllowUnordered);
 
   wbDESTActor := wbRStruct('Destructable', [
     wbStruct(DEST, 'Header', [
@@ -5142,9 +5139,9 @@ begin
       ])),
       wbByteArray('Unknown', 2)
     ]),
-    wbRArray('Stages',
-      wbRStruct('Stage', [
-        wbStruct(DSTD, 'Destruction Stage Data', [
+    wbRArray('Stages',  // Begin Stage Array
+      wbRStruct('Stage', [ // Begin Stage RStruct
+        wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
           wbInteger('Health %', itU8),
           wbInteger('Index', itU8),
           wbInteger('Damage Stage', itU8),
@@ -5157,18 +5154,15 @@ begin
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32)
-        ], cpNormal, True),
-        wbRStructSK([0], 'Model', [
-          wbString(DMDL, 'Model Filename'),
-          wbDMDT
-//          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
-//          0, nil, nil, cpBenign)
-        ], []),
+        ], cpNormal, True), // End DSTD
+        wbRStructSK([0], 'Model', [ // Begin DMDL
+          wbString(DMDL, 'Model Filename')
+        ], []), // End DMDL
+        wbDMDT,
+        wbDMDSs,
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], [])
-    )
+      ], []) // Begin Stage RStruct
+    ) // End Stage Array
   ], [], cpNormal, False, wbActorTemplateUseModelAnimation);
 
   wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
@@ -8301,89 +8295,102 @@ begin
     )
   ]);
 
+//------------------------------------------------------------------------------
+// New NAVM
+//------------------------------------------------------------------------------
   wbRecord(NAVM, 'Navigation Mesh', [
-    wbEDID,
-    wbInteger(NVER, 'Version', itU32),
-    wbStruct(DATA, '', [
-      wbFormIDCk('Cell', [CELL]),
-      wbInteger('Vertex Count', itU32),
-      wbInteger('Triangle Count', itU32),
-      wbInteger('External Connections Count', itU32),
-      wbInteger('NVCA Count', itU32),
-      wbInteger('Doors Count', itU32)
-    ]),
-    wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ])),
-    wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
-      wbArray('Vertices', wbInteger('Vertex', itS16), 3),
-      wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
-        '0 <-> 1',
-        '1 <-> 2',
-        '2 <-> 0'
-      ]),
-      wbInteger('Flags', itU32, wbFlags([
-        'Triangle #0 Is External',
-        'Triangle #1 Is External',
-        'Triangle #2 Is External',
-        'Unknown 4',
-        'Unknown 5',
-        'Unknown 6',
-        'Unknown 7',
-        'Unknown 8',
-        'Unknown 9',
-        'Unknown 10',
-        'Unknown 11',
-        'Unknown 12',
-        'Unknown 13',
-        'Unknown 14',
-        'Unknown 15',
-        'Unknown 16',
-        'Unknown 17',
-        'Unknown 18',
-        'Unknown 19',
-        'Unknown 20',
-        'Unknown 21',
-        'Unknown 22',
-        'Unknown 23',
-        'Unknown 24',
-        'Unknown 25',
-        'Unknown 26',
-        'Unknown 27',
-        'Unknown 28',
-        'Unknown 29',
-        'Unknown 30',
-        'Unknown 31',
-        'Unknown 32'
-      ]))
-    ])),
-    wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)),
-    wbArray(NVDP, 'Doors', wbStruct('Door', [
-      wbFormIDCk('Reference', [REFR]),
-      wbInteger('Unknown', itU16),
-      wbByteArray('Unknown', 2)
-    ])),
-    wbStruct(NVGD, 'Unknown', [
-//      wbUnknown
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbArray('Unknown', wbArray('Unknown', wbInteger('Unknown', itU16), -2))
-    ]),
-    wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-      wbByteArray('Unknown', 4),
-      wbFormIDCk('Navigation Mesh', [NAVM], False, cpBenign),
-      wbInteger('Triangle', itU16, nil, cpBenign)
-    ]))
+    wbUnknown(NVNM)
   ], False, wbNAVMAddInfo);
+//------------------------------------------------------------------------------
+// Begin Old NAVM
+//------------------------------------------------------------------------------
+//  wbRecord(NAVM, 'Navigation Mesh', [
+//    wbEDID,
+//    wbInteger(NVER, 'Version', itU32),
+//    wbStruct(DATA, '', [
+//      wbFormIDCk('Cell', [CELL]),
+//      wbInteger('Vertex Count', itU32),
+//      wbInteger('Triangle Count', itU32),
+//      wbInteger('External Connections Count', itU32),
+//      wbInteger('NVCA Count', itU32),
+//      wbInteger('Doors Count', itU32)
+//    ]),
+//    wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
+//      wbFloat('X'),
+//      wbFloat('Y'),
+//      wbFloat('Z')
+//    ])),
+//    wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
+//      wbArray('Vertices', wbInteger('Vertex', itS16), 3),
+//      wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
+//        '0 <-> 1',
+//        '1 <-> 2',
+//        '2 <-> 0'
+//      ]),
+//      wbInteger('Flags', itU32, wbFlags([
+//        'Triangle #0 Is External',
+//        'Triangle #1 Is External',
+//        'Triangle #2 Is External',
+//        'Unknown 4',
+//        'Unknown 5',
+//        'Unknown 6',
+//        'Unknown 7',
+//        'Unknown 8',
+//        'Unknown 9',
+//        'Unknown 10',
+//        'Unknown 11',
+//        'Unknown 12',
+//        'Unknown 13',
+//        'Unknown 14',
+//        'Unknown 15',
+//        'Unknown 16',
+//        'Unknown 17',
+//        'Unknown 18',
+//        'Unknown 19',
+//        'Unknown 20',
+//        'Unknown 21',
+//        'Unknown 22',
+//        'Unknown 23',
+//        'Unknown 24',
+//        'Unknown 25',
+//        'Unknown 26',
+//        'Unknown 27',
+//        'Unknown 28',
+//        'Unknown 29',
+//        'Unknown 30',
+//        'Unknown 31',
+//        'Unknown 32'
+//      ]))
+//    ])),
+//    wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)),
+//    wbArray(NVDP, 'Doors', wbStruct('Door', [
+//      wbFormIDCk('Reference', [REFR]),
+//      wbInteger('Unknown', itU16),
+//      wbByteArray('Unknown', 2)
+//    ])),
+//    wbStruct(NVGD, 'Unknown', [
+//      wbUnknown
+//      wbByteArray('Unknown', 4),
+//      wbFloat('Unknown'),
+//      wbFloat('Unknown'),
+//      wbFloat('Unknown'),
+//      wbFloat('Unknown'),
+//      wbFloat('Unknown'),
+//      wbFloat('Unknown'),
+//      wbFloat('Unknown'),
+//      wbFloat('Unknown'),
+//      wbArray('Unknown', wbArray('Unknown', wbInteger('Unknown', itU16), -2))
+//    ]),
+//    wbArray(NVEX, 'External Connections', wbStruct('Connection', [
+//      wbByteArray('Unknown', 4),
+//      wbFormIDCk('Navigation Mesh', [NAVM], False, cpBenign),
+//      wbInteger('Triangle', itU16, nil, cpBenign)
+//    ]))
+//  ], False, wbNAVMAddInfo);
+//------------------------------------------------------------------------------
+// End Old NAVM
+//------------------------------------------------------------------------------
+
 
   wbRecord(PGRE, 'Placed Grenade', [
     wbEDID,
@@ -12199,11 +12206,13 @@ begin
     ], cpNormal, True),
     wbRStruct('Start Of Male', [
       wbEmpty(MNAM, 'Marker'),
-      wbString(ANAM, 'Skeletal Model')
+      wbString(ANAM, 'Skeletal Model'),
+      wbMODT
     ], [], cpNormal, True),
     wbRStruct('Start Of Female', [
       wbEmpty(FNAM, 'Marker'),
-      wbString(ANAM, 'Skeletal Model')
+      wbString(ANAM, 'Skeletal Model'),
+      wbMODT
     ], [], cpNormal, True),
     wbFormIDCk(YNAM, 'Younger', [RACE]),
     wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
