@@ -246,17 +246,27 @@ begin
 //    RecordToSkip.Add('LAND');
 //    RecordToSkip.Add('REGN');
 //    RecordToSkip.Add('PGRD');
-//    RecordToSkip.Add('ROAD');
-//    RecordToSkip.Add('NAVM');
-//    RecordToSkip.Add('IMAD');
+      RecordToSkip.Add('SCEN');
+      RecordToSkip.Add('PACK');
+      RecordToSkip.Add('PERK');
       RecordToSkip.Add('NAVI');
       RecordToSkip.Add('CELL');
       RecordToSkip.Add('WRLD');
     end;
 
-
     if wbFindCmdLineParam('xg', s) then
-      GroupToSkip.CommaText := s;
+      GroupToSkip.CommaText := s
+    else begin
+//    GroupToSkip.Add('LAND');
+//    GroupToSkip.Add('REGN');
+//    GroupToSkip.Add('PGRD');
+      GroupToSkip.Add('SCEN');
+      GroupToSkip.Add('PACK');
+      GroupToSkip.Add('PERK');
+      GroupToSkip.Add('NAVI');
+      GroupToSkip.Add('CELL');
+      GroupToSkip.Add('WRLD');
+    end;
 
     s := ParamStr(ParamCount);
 
