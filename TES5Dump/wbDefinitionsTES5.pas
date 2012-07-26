@@ -806,8 +806,8 @@ var
   wbMODLReq: IwbSubRecordStructDef;
   wbCTDAOld: IwbSubRecordStructDef;
   wbSCHRReq: IwbSubRecordDef;
-  wbCTDAs: IwbSubRecordArrayDef;
-  wbCTDAsReq: IwbSubRecordArrayDef;
+  wbCTDAs: IwbSubRecordStructDef;
+  wbCTDAsReq: IwbSubRecordStructDef;
   wbSCROs: IwbSubRecordArrayDef;
   wbPGRP: IwbSubRecordDef;
   wbEmbeddedScript: IwbSubRecordStructDef;
@@ -870,7 +870,7 @@ var
   wbKWDAs: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbCNAM: IwbSubRecordDef;
-  wbCITC: IwbSubRecordDef; {Associated with CTDA}
+//  wbCITC: IwbSubRecordDef; {Associated with CTDA}
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
   wbDNAMActor: IwbSubRecordStructDef;
   wbMGEFData: IwbSubRecordStructDef;
@@ -4476,7 +4476,7 @@ begin
   wbBoolU32 := wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCITC := wbInteger(CITC, 'Count', itU32);
+//  wbCITC := wbInteger(CITC, 'Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbCOCTReq := wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
   wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormID('Keyword'), 0, cpNormal, True);
@@ -5320,10 +5320,10 @@ begin
     wbXOWN,
 
     {--- Unknown ---}
-    wbFormIDCk(XLCN, 'Location Reference', [LCRT]),
+    wbFormIDCk(XLCN, 'Location Reference', [LCTN, NULL]), // Old Value LCRT
 
     {--- Linked Ref ---}
-    wbArrayS(XLKR, 'Linked References', wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN]), 0, cpNormal, False),
+    wbArrayS(XLKR, 'Linked References', wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN, NULL]), 0, cpNormal, False),
 
     {--- 3D Data ---}
     wbDATAPosRot
@@ -6141,15 +6141,21 @@ begin
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4)
 	  	], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
 	    wbString(CIS2, 'Unknown'),
   		wbString(CIS1, 'Unknown')
-    ], [], cpNormal);
+    ], [], cpNormal, False, nil, wbAllowUnordered);
 
-  wbCTDAs := wbRArray('Conditions', wbCTDANew, cpNormal, False);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDANew, cpNormal, True);
+  wbCTDAs := wbRStruct('Conditions', [
+    wbInteger(CITC, 'Count', itU32),
+    wbRArray('Conditions', wbCTDANew, cpNormal, False)
+  ], []);
+
+  wbCTDAsReq := wbRStruct('Conditions', [
+    wbInteger(CITC, 'Count', itU32),
+    wbRArray('Conditions', wbCTDANew, cpNormal, True)
+  ], []);
 
 //------------------------------------------------------------------------------
 // wbEffects - EFID, EFIT, CTDA
@@ -6416,8 +6422,8 @@ begin
     ], []),
     wbFormIDCK(NAM0, 'Male', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female', [TXST, NULL]),
-    wbFormIDCK(NAM2, 'Male 1st Person', [TXST, NULL]),
-    wbFormIDCK(NAM3, 'Female 1st Person', [TXST, NULL]),
+    wbFormIDCK(NAM2, 'Male 1st Person', [FLST, NULL]),
+    wbFormIDCK(NAM3, 'Female 1st Person', [FLST, NULL]),
     wbRArray('Unknown - MODL', wbRStruct('Unknown', [
       wbFormIDCK(MODL, 'Model Filename', [RACE, NULL])
     ], [])),
@@ -7677,7 +7683,6 @@ begin
       wbByteArray('Unknown 2', 4)
     ]),
 //    wbUnknown(PLVD),
-    wbCITC, // This is called here because it Can be 0
     wbCTDAs // Not compatable with Skyrim at the moment
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
@@ -8638,8 +8643,8 @@ begin
       {00} wbFloat('Force'),
       {04} wbFloat('Damage'),
       {08} wbFloat('Radius'),
-      {12} wbFormIDCk('Light', [LIGH, NULL]),
-      {16} wbFormIDCk('Sound 1', [SOUN, NULL]),
+      {12} wbFormIDCk('Unknown 1', [IPDS, NULL]), // Light
+      {16} wbFormIDCk('Unknown 2', [EXPL, HAZD, ACTI, NULL]), // Sound 1
       {20} wbInteger('Flags', itU32, wbFlags([
              {0x00000001}'Unknown 1',
              {0x00000002}'Always Uses World Orientation',
@@ -9185,7 +9190,7 @@ begin
     wbunknown(ENAM),
     wbFormIDCk(SNAM, 'Sound 1', [SNDR, SOUN, NULL]),
     wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL]),
-    wbFormIDCk(NAM2, 'Sound 3', [SNDR, SOUN, NULL])
+    wbFormIDCk(NAM2, 'Unknown', [HAZD, NULL])
   ]);
 
   wbRecord(IPDS, 'Impact DataSet', [
@@ -9436,9 +9441,8 @@ begin
 
   wbRecord(SMBN, 'SMBN', [
     wbEDIDReq,
-    wbUnknown(PNAM),
-    wbUnknown(SNAM),
-    wbUnknown(CITC),
+    wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCTDAs,
     wbUnknown(DNAM),
     wbUnknown(XNAM)
@@ -9446,15 +9450,15 @@ begin
 
   wbRecord(SMQN, 'SMQN', [
     wbEDID,
-    wbUnknown(PNAM),
-    wbUnknown(SNAM),
-    wbUnknown(CITC),
+    wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCTDAs,
     wbUnknown(DNAM),
     wbUnknown(XNAM),
-    wbUnknown(QNAM),
-    wbRArray('Array SNAM', wbRStruct('Unknown', [
-      wbUnknown(NNAM),
+    wbUnknown(MNAM),
+    wbInteger(QNAM, 'Count', itU32),
+    wbRArray('Array NNAM, FNAM, RNAM', wbRStruct('Unknown', [
+      wbFormID(NNAM, 'Unknown'),
       wbUnknown(FNAM),
       wbUnknown(RNAM)
     ], []))
@@ -9462,13 +9466,12 @@ begin
 
   wbRecord(SMEN, 'SMEN', [
     wbEDID,
-    wbUnknown(PNAM),
-    wbUnknown(SNAM),
-    wbUnknown(CITC),
+    wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCTDAs,
     wbUnknown(DNAM),
     wbUnknown(XNAM),
-    wbUnknown(ENAM)
+    wbString(ENAM, 'Unknown', 4)
   ]);
 
   wbRecord(DLBR, 'DLBR', [
@@ -9492,7 +9495,6 @@ begin
     wbUnknown(BNAM),
     wbUnknown(DNAM),
     wbUnknown(FNAM),
-    wbUnknown(CITC),
     wbCTDAs,
     wbUnknown(SNAM)
   ]);
@@ -9512,7 +9514,7 @@ begin
 
   wbRecord(WOOP, 'WOOP', [
     wbEDIDReq,
-    wbFULLReq,
+    wbFULL,
     wbUnknown(TNAM)
   ]);
 
@@ -9985,7 +9987,7 @@ begin
     wbCTDAs,
     wbString(DNAM, 'Filename'),
     wbString(ENAM, 'Animation Event'),
-    wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
+    wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [AACT, IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
     wbStruct(DATA, '', [
       wbInteger('Animation Group Section', itU8, wbIdleAnam),
       wbStruct('Looping', [
@@ -10072,7 +10074,7 @@ begin
         {0x00000080}'Unknown 8'
       ]))
     ]),
-    wbRArray('Responses?', wbFormIDCk(TCLT, 'Response INFO', [INFO, NULL])),
+    wbRArray('Responses?', wbFormIDCk(TCLT, 'Response INFO', [DIAL, INFO, NULL])),
     wbRArray('Unknown - TRDT', wbRStruct('Unknown', [
       wbStruct(TRDT, 'Unknown', [
         wbInteger('Emotion Type', itU32, wbEnum([
@@ -10098,8 +10100,6 @@ begin
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
     wbFormID(DNAM, 'Response Data'),
-    wbCTDAs,
-
     wbRStruct('First SCHR', [
       wbunknown(SCHR),
       wbFormID(QNAM, 'Unknown')
@@ -10109,7 +10109,7 @@ begin
       wbunknown(SCHR),
       wbFormID(QNAM, 'Unknown')
     ], [], cpNormal, True),
-
+    wbCTDAs,
     wbUnknown(RNAM),
     wbFormID(ANAM, 'Unknown'),
     wbFormID(TWAT, 'Walk Away Topic'),
@@ -11915,7 +11915,6 @@ begin
   wbProdTree := wbRStruct('Procedure Tree', [
       wbRArray('Array Of ANAM', wbRStruct('ANAM Array', [
           wbUnknown(ANAM),
-          wbUnknown(CITC),
           wbCTDAs,
           wbUnknown(PRCB),
           wbUnknown(PNAM),
@@ -12105,7 +12104,7 @@ begin
       wbLString(NNAM, 'Description', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
-          wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, ACRE, ACHR], True),
+          wbFormIDCkNoReach('Target', [STAT, PLYR, DOOR, FACT, WATR, BPTD, MISC, CONT, NULL], True),
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Compass Marker Ignores Locks'
           ])),
@@ -13378,7 +13377,7 @@ begin
       {1}'Reflective'
     ]), cpNormal, True),
     wbString(MNAM, 'Material ID', 0, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
+    wbFormIDCk(SNAM, 'Sound', [SNDR, NULL]),
     wbUnknown(TNAM),
     wbUnknown(INAM),
     wbFormIDCk(XNAM, 'Actor Effect', [SPEL]),
