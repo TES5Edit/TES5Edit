@@ -5292,6 +5292,15 @@ begin
     {--- Leveled Actor ----}
     wbXLCM,
 
+    {--- Unknown ---}
+    wbFormIDCk(XLRT, 'Location Reference', [LCRT]),
+
+    {--- Unknown ---}
+    wbFormID(XHOR, 'Unknown'),
+
+    {--- Enable Parent ---}
+    wbXESP,
+
     {--- Activate Parents ---}
     wbRStruct('Activate Parents', [
       wbInteger(XAPD, 'Flags', itU8, wbFlags([
@@ -5306,18 +5315,13 @@ begin
     ], []),
 
     {--- Unknown ---}
-    wbFormIDCk(XLRT, 'Location Reference', [LCRT]),
-
-    {--- Unknown ---}
-    wbFormID(XHOR, 'Unknown'),
-
-    {--- Enable Parent ---}
-    wbXESP,
-
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- Unknown ---}
     wbXOWN,
+
+    {--- Unknown ---}
+    wbUnknown(XIS2),
 
     {--- Unknown ---}
     wbFormIDCk(XLCN, 'Location Reference', [LCTN, NULL]), // Old Value LCRT
@@ -6561,7 +6565,11 @@ begin
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   wbRecord(PHZD, 'PHZD', [
-    wbEDIDReq
+    wbVMAD,
+    wbUnknown(NAME),
+    wbUnknown(XSCL),
+    wbUnknown(XESP),
+    wbUnknown(DATA)
   ]);
 
   wbServiceFlags :=
