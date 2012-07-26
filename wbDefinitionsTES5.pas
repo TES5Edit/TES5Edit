@@ -806,8 +806,8 @@ var
   wbMODLReq: IwbSubRecordStructDef;
   wbCTDAOld: IwbSubRecordStructDef;
   wbSCHRReq: IwbSubRecordDef;
-  wbCTDAs: IwbSubRecordStructDef;
-  wbCTDAsReq: IwbSubRecordStructDef;
+  wbCTDAs: IwbSubRecordArrayDef;
+  wbCTDAsReq: IwbSubRecordArrayDef;
   wbSCROs: IwbSubRecordArrayDef;
   wbPGRP: IwbSubRecordDef;
   wbEmbeddedScript: IwbSubRecordStructDef;
@@ -870,7 +870,7 @@ var
   wbKWDAs: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbCNAM: IwbSubRecordDef;
-//  wbCITC: IwbSubRecordDef; {Associated with CTDA}
+  wbCITC: IwbSubRecordDef; {Associated with CTDA}
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
   wbDNAMActor: IwbSubRecordStructDef;
   wbMGEFData: IwbSubRecordStructDef;
@@ -4476,7 +4476,7 @@ begin
   wbBoolU32 := wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-//  wbCITC := wbInteger(CITC, 'Count', itU32);
+  wbCITC := wbInteger(CITC, 'Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbCOCTReq := wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
   wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormID('Keyword'), 0, cpNormal, True);
@@ -6141,21 +6141,15 @@ begin
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4)
 	  	], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
 	    wbString(CIS2, 'Unknown'),
   		wbString(CIS1, 'Unknown')
-    ], [], cpNormal, False, nil, wbAllowUnordered);
+    ], [], cpNormal);
 
-  wbCTDAs := wbRStruct('Conditions', [
-    wbInteger(CITC, 'Count', itU32),
-    wbRArray('Conditions', wbCTDANew, cpNormal, False)
-  ], []);
-
-  wbCTDAsReq := wbRStruct('Conditions', [
-    wbInteger(CITC, 'Count', itU32),
-    wbRArray('Conditions', wbCTDANew, cpNormal, True)
-  ], []);
+  wbCTDAs := wbRArray('Conditions', wbCTDANew, cpNormal, False);
+  wbCTDAsReq := wbRArray('Conditions', wbCTDANew, cpNormal, True);
 
 //------------------------------------------------------------------------------
 // wbEffects - EFID, EFIT, CTDA
@@ -7683,6 +7677,7 @@ begin
       wbByteArray('Unknown 2', 4)
     ]),
 //    wbUnknown(PLVD),
+    wbCITC, // This is called here because it Can be 0
     wbCTDAs // Not compatable with Skyrim at the moment
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
@@ -9443,6 +9438,7 @@ begin
     wbEDIDReq,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
+    wbUnknown(CITC),
     wbCTDAs,
     wbUnknown(DNAM),
     wbUnknown(XNAM)
@@ -9452,6 +9448,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
+    wbUnknown(CITC),
     wbCTDAs,
     wbUnknown(DNAM),
     wbUnknown(XNAM),
@@ -9468,6 +9465,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
+    wbUnknown(CITC),
     wbCTDAs,
     wbUnknown(DNAM),
     wbUnknown(XNAM),
@@ -9495,6 +9493,7 @@ begin
     wbUnknown(BNAM),
     wbUnknown(DNAM),
     wbUnknown(FNAM),
+    wbUnknown(CITC),
     wbCTDAs,
     wbUnknown(SNAM)
   ]);
@@ -10100,6 +10099,8 @@ begin
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
     wbFormID(DNAM, 'Response Data'),
+    wbCTDAs,
+
     wbRStruct('First SCHR', [
       wbunknown(SCHR),
       wbFormID(QNAM, 'Unknown')
@@ -10109,7 +10110,7 @@ begin
       wbunknown(SCHR),
       wbFormID(QNAM, 'Unknown')
     ], [], cpNormal, True),
-    wbCTDAs,
+
     wbUnknown(RNAM),
     wbFormID(ANAM, 'Unknown'),
     wbFormID(TWAT, 'Walk Away Topic'),
@@ -11915,6 +11916,7 @@ begin
   wbProdTree := wbRStruct('Procedure Tree', [
       wbRArray('Array Of ANAM', wbRStruct('ANAM Array', [
           wbUnknown(ANAM),
+          wbUnknown(CITC),
           wbCTDAs,
           wbUnknown(PRCB),
           wbUnknown(PNAM),
