@@ -114,47 +114,51 @@ const
 {K0TX} K0TX: TwbSignature = 'K0TX';
 {L0TX} L0TX: TwbSignature = 'L0TX';
 
+  AACT : TwbSignature = 'AACT';
   ACBS : TwbSignature = 'ACBS';
   ACHR : TwbSignature = 'ACHR';
+  ACPR : TwbSignature = 'ACPR'; { New To Skyrim }
   ACRE : TwbSignature = 'ACRE';
-  ACPR : TwbSignature = 'ACPR';
   ACTI : TwbSignature = 'ACTI';
   ADDN : TwbSignature = 'ADDN';
-  AHCM : TwbSignature = 'AHCM'; { New To Skyrim }
   AHCF : TwbSignature = 'AHCF'; { New To Skyrim }
+  AHCM : TwbSignature = 'AHCM'; { New To Skyrim }
   AIDT : TwbSignature = 'AIDT';
-  ALCH : TwbSignature = 'ALCH';
-  ALDN : TwbSignature = 'ALDN'; { New To Skyrim }
-  ALFC : TwbSignature = 'ALFC'; { New To Skyrim }
-  ALFI : TwbSignature = 'ALFI'; { New To Skyrim }
-  ALOC : TwbSignature = 'ALOC';
-  ALST : TwbSignature = 'ALST'; { New To Skyrim }
-  ALLS : TwbSignature = 'ALLS'; { New To Skyrim }
-  ALID : TwbSignature = 'ALID'; { New To Skyrim }
-  ALFR : TwbSignature = 'ALFR'; { New To Skyrim }
-  ALPC : TwbSignature = 'ALPC'; { New To Skyrim }
-  ALCO : TwbSignature = 'ALCO'; { New To Skyrim }
   ALCA : TwbSignature = 'ALCA'; { New To Skyrim }
+  ALCH : TwbSignature = 'ALCH';
   ALCL : TwbSignature = 'ALCL'; { New To Skyrim }
+  ALCO : TwbSignature = 'ALCO'; { New To Skyrim }
+  ALDN : TwbSignature = 'ALDN'; { New To Skyrim }
   ALEA : TwbSignature = 'ALEA'; { New To Skyrim }
-  ALFA : TwbSignature = 'ALFA'; { New To Skyrim }
-  ALFD : TwbSignature = 'ALFD'; { New To Skyrim }
   ALED : TwbSignature = 'ALED'; { New To Skyrim }
-  ALFL : TwbSignature = 'ALFL'; { New To Skyrim }
-  ALRT : TwbSignature = 'ALRT'; { New To Skyrim }
-  ALUA : TwbSignature = 'ALUA'; { New To Skyrim }
   ALEQ : TwbSignature = 'ALEQ'; { New To Skyrim }
+  ALFA : TwbSignature = 'ALFA'; { New To Skyrim }
+  ALFC : TwbSignature = 'ALFC'; { New To Skyrim }
+  ALFD : TwbSignature = 'ALFD'; { New To Skyrim }
   ALFE : TwbSignature = 'ALFE'; { New To Skyrim }
+  ALFI : TwbSignature = 'ALFI'; { New To Skyrim }
+  ALFL : TwbSignature = 'ALFL'; { New To Skyrim }
+  ALFR : TwbSignature = 'ALFR'; { New To Skyrim }
+  ALID : TwbSignature = 'ALID'; { New To Skyrim }
+  ALLS : TwbSignature = 'ALLS'; { New To Skyrim }
   ALNA : TwbSignature = 'ALNA'; { New To Skyrim }
   ALNT : TwbSignature = 'ALNT'; { New To Skyrim }
+  ALOC : TwbSignature = 'ALOC';
+  ALPC : TwbSignature = 'ALPC'; { New To Skyrim }
+  ALRT : TwbSignature = 'ALRT'; { New To Skyrim }
   ALSP : TwbSignature = 'ALSP'; { New To Skyrim }
+  ALST : TwbSignature = 'ALST'; { New To Skyrim }
+  ALUA : TwbSignature = 'ALUA'; { New To Skyrim }
   AMEF : TwbSignature = 'AMEF';
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM';
   ANIO : TwbSignature = 'ANIO';
+  APPA : TwbSignature = 'APPA';
   ARMA : TwbSignature = 'ARMA';
   ARMO : TwbSignature = 'ARMO';
+  ARTO : TwbSignature = 'ARTO';
   ASPC : TwbSignature = 'ASPC';
+  ASTP : TwbSignature = 'ASTP';
   ATKD : TwbSignature = 'ATKD'; { New to Skyrim }
   ATKE : TwbSignature = 'ATKE'; { New to Skyrim }
   ATKR : TwbSignature = 'ATKR'; { New to Skyrim }
@@ -176,65 +180,70 @@ const
   BPNT : TwbSignature = 'BPNT';
   BPTD : TwbSignature = 'BPTD';
   BPTN : TwbSignature = 'BPTN';
+  BRUS : TwbSignature = 'BRUS';
   BTXT : TwbSignature = 'BTXT';
   CAMS : TwbSignature = 'CAMS';
+  CARD : TwbSignature = 'CARD';
+  CCRD : TwbSignature = 'CCRD';
+  CDCK : TwbSignature = 'CDCK';
   CELL : TwbSignature = 'CELL';
-  CITC : TwbSignature = 'CITC'; { New to Skyrim }
+  CHAL : TwbSignature = 'CHAL';
+  CHIP : TwbSignature = 'CHIP';
   CIS1 : TwbSignature = 'CIS1'; { New to Skyrim }
   CIS2 : TwbSignature = 'CIS2'; { New to Skyrim }
+  CITC : TwbSignature = 'CITC'; { New to Skyrim }
   CLAS : TwbSignature = 'CLAS';
   CLDC : TwbSignature = 'CLDC'; { New to Skyrim }
+  CLFM : TwbSignature = 'CLFM';
   CLMT : TwbSignature = 'CLMT';
+  CMNY : TwbSignature = 'CMNY';
   CNAM : TwbSignature = 'CNAM';
   CNTO : TwbSignature = 'CNTO';
-  COCT : TwbSignature = 'COCT'; { New to Skyrim 'Count'}
   COBJ : TwbSignature = 'COBJ';
+  COCT : TwbSignature = 'COCT'; { New to Skyrim 'Count'}
   COED : TwbSignature = 'COED';
+  COLL : TwbSignature = 'COLL';
   CONT : TwbSignature = 'CONT';
   CPTH : TwbSignature = 'CPTH';
   CRDT : TwbSignature = 'CRDT';
   CREA : TwbSignature = 'CREA';
-  CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
   CRGR : TwbSignature = 'CRGR'; { New to Skyrim }
+  CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';
-  CSGD : TwbSignature = 'CSGD'; { New to Skyrim }
-  CSMD : TwbSignature = 'CSMD'; { New to Skyrim }
-  CSME : TwbSignature = 'CSME'; { New to Skyrim }
-  CSLR : TwbSignature = 'CSLR'; { New to Skyrim }
-  CSFL : TwbSignature = 'CSFL'; { New to Skyrim }
   CSDC : TwbSignature = 'CSDC';
   CSDI : TwbSignature = 'CSDI';
   CSDT : TwbSignature = 'CSDT';
+  CSFL : TwbSignature = 'CSFL'; { New to Skyrim }
+  CSGD : TwbSignature = 'CSGD'; { New to Skyrim }
+  CSLR : TwbSignature = 'CSLR'; { New to Skyrim }
+  CSMD : TwbSignature = 'CSMD'; { New to Skyrim }
+  CSME : TwbSignature = 'CSME'; { New to Skyrim }
+  CSNO : TwbSignature = 'CSNO';
   CSSD : TwbSignature = 'CSSD';
   CSTD : TwbSignature = 'CSTD';
   CSTY : TwbSignature = 'CSTY';
   CTDA : TwbSignature = 'CTDA';
-  CCRD : TwbSignature = 'CCRD';
-  CARD : TwbSignature = 'CARD';
-  CMNY : TwbSignature = 'CMNY';
-  CDCK : TwbSignature = 'CDCK';
-  CHAL : TwbSignature = 'CHAL';
-  CHIP : TwbSignature = 'CHIP';
-  CSNO : TwbSignature = 'CSNO';
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
-  DEHY : TwbSignature = 'DEHY';
-  DEMO : TwbSignature = 'DEMO'; { New to Skyrim }
-  DEVA : TwbSignature = 'DEVA'; { New to Skyrim }
-  DATA : TwbSignature = 'DATA';
   DAT2 : TwbSignature = 'DAT2';
+  DATA : TwbSignature = 'DATA';
   DEBR : TwbSignature = 'DEBR';
+  DEHY : TwbSignature = 'DEHY';
   DELE : TwbSignature = 'DELE';
+  DEMO : TwbSignature = 'DEMO'; { New to Skyrim }
   DESC : TwbSignature = 'DESC';
   DEST : TwbSignature = 'DEST';
-  DIAL : TwbSignature = 'DIAL';
-  DFTM : TwbSignature = 'DFTM'; { New To Skyrim }
+  DEVA : TwbSignature = 'DEVA'; { New to Skyrim }
   DFTF : TwbSignature = 'DFTF'; { New To Skyrim }
-  DMDL : TwbSignature = 'DMDL';
-  DMDT : TwbSignature = 'DMDT';
-  DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
+  DFTM : TwbSignature = 'DFTM'; { New To Skyrim }
+  DIAL : TwbSignature = 'DIAL';
+  DLBR : TwbSignature = 'DLBR';
+  DLVW : TwbSignature = 'DLVW';
   DMAX : TwbSignature = 'DMAX'; { New to Skyrim }
+  DMDL : TwbSignature = 'DMDL';
+  DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
+  DMDT : TwbSignature = 'DMDT';
   DMIN : TwbSignature = 'DMIN'; { New to Skyrim }
   DNAM : TwbSignature = 'DNAM';
   DOBJ : TwbSignature = 'DOBJ';
@@ -244,14 +253,13 @@ const
   DPLT : TwbSignature = 'DPLT'; { New to Skyrim }
   DSTD : TwbSignature = 'DSTD';
   DSTF : TwbSignature = 'DSTF';
+  DUAL : TwbSignature = 'DUAL';
   EAMT : TwbSignature = 'EAMT';
-  ECZN : TwbSignature = 'ECZN';
-  LCTN : TwbSignature = 'LCTN';
   ECOR : TwbSignature = 'ECOR'; { New to Skyrim }
+  ECZN : TwbSignature = 'ECZN';
   EDID : TwbSignature = 'EDID';
   EFID : TwbSignature = 'EFID';
   EFIT : TwbSignature = 'EFIT';
-  SLGM : TwbSignature = 'SLGM';
   EFSD : TwbSignature = 'EFSD';
   EFSH : TwbSignature = 'EFSH';
   EITM : TwbSignature = 'EITM';
@@ -262,37 +270,38 @@ const
   EPF3 : TwbSignature = 'EPF3';
   EPFD : TwbSignature = 'EPFD';
   EPFT : TwbSignature = 'EPFT';
+  EQUP : TwbSignature = 'EQUP';
   ESCE : TwbSignature = 'ESCE';
   ETYP : TwbSignature = 'ETYP';
   EXPL : TwbSignature = 'EXPL';
   EYES : TwbSignature = 'EYES';
   FACT : TwbSignature = 'FACT';
+  FCHT : TwbSignature = 'FCHT'; { New to Skyrim }
   FGGA : TwbSignature = 'FGGA';
   FGGS : TwbSignature = 'FGGS';
   FGTS : TwbSignature = 'FGTS';
   FLMV : TwbSignature = 'FLMV'; { New to Skyrim }
+  FLOR : TwbSignature = 'FLOR';
   FLST : TwbSignature = 'FLST';
   FLTR : TwbSignature = 'FLTR'; { New to Skyrim }
   FLTV : TwbSignature = 'FLTV';
   FNAM : TwbSignature = 'FNAM';
   FNMK : TwbSignature = 'FNMK'; { New to Skyrim }
   FNPR : TwbSignature = 'FNPR'; { New to Skyrim }
-  FTST : TwbSignature = 'FTST'; { New to Skyrim }
-  FTSM : TwbSignature = 'FTSM'; { New to Skyrim }
+  FPRT : TwbSignature = 'FPRT'; { New to Skyrim }
+  FSTP : TwbSignature = 'FSTP';
+  FSTS : TwbSignature = 'FSTS';
   FTSF : TwbSignature = 'FTSF'; { New to Skyrim }
+  FTSM : TwbSignature = 'FTSM'; { New to Skyrim }
+  FTST : TwbSignature = 'FTST'; { New to Skyrim }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
   GLOB : TwbSignature = 'GLOB';
-  RDID : TwbSignature = 'RDID';
-  RDSI : TwbSignature = 'RDSI';
-  RDSB : TwbSignature = 'RDSB';
   GMST : TwbSignature = 'GMST';
-  KYWD : TwbSignature = 'KYWD';
-  LCRT : TwbSignature = 'LCRT';
-  AACT : TwbSignature = 'AACT';
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
   HAIR : TwbSignature = 'HAIR';
+  HAZD : TwbSignature = 'HAZD';
   HCLF : TwbSignature = 'HCLF'; { New to Skyrim }
   HCLR : TwbSignature = 'HCLR';
   HDPT : TwbSignature = 'HDPT';
@@ -312,37 +321,45 @@ const
   IDLT : TwbSignature = 'IDLT';
   IMAD : TwbSignature = 'IMAD';
   IMGS : TwbSignature = 'IMGS';
+  IMOD : TwbSignature = 'IMOD';
+  IMPF : TwbSignature = 'IMPF';
+  IMPS : TwbSignature = 'IMPS';
+  IMSP : TwbSignature = 'IMSP'; { New to Skyrim }
   INAM : TwbSignature = 'INAM';
   INCC : TwbSignature = 'INCC'; { New to Skyrim }
   INDX : TwbSignature = 'INDX';
+  INFC : TwbSignature = 'INFC';
   INFO : TwbSignature = 'INFO';
+  INFX : TwbSignature = 'INFX';
   INGR : TwbSignature = 'INGR';
-  IMSP : TwbSignature = 'IMSP'; { New to Skyrim }
+  INTV : TwbSignature = 'INTV';
   IPCT : TwbSignature = 'IPCT';
   IPDS : TwbSignature = 'IPDS';
   ITXT : TwbSignature = 'ITXT';
-  IMOD : TwbSignature = 'IMOD';
   JAIL : TwbSignature = 'JAIL'; { New To Skyrim }
   JNAM : TwbSignature = 'JNAM';
   JOUT : TwbSignature = 'JOUT'; { New To Skyrim }
-  KSIZ : TwbSignature = 'KSIZ';
-  KWDA : TwbSignature = 'KWDA';
   KEYM : TwbSignature = 'KEYM';
   KFFZ : TwbSignature = 'KFFZ';
   KNAM : TwbSignature = 'KNAM';
-  LSCT : TwbSignature = 'LSCT';
+  KSIZ : TwbSignature = 'KSIZ';
+  KWDA : TwbSignature = 'KWDA';
+  KYWD : TwbSignature = 'KYWD';
   LAND : TwbSignature = 'LAND';
+  LCEC : TwbSignature = 'LCEC'; { New to Skyrim }
+  LCEP : TwbSignature = 'LCEP'; { New to Skyrim }
+  LCID : TwbSignature = 'LCID'; { New to Skyrim }
+  LCPR : TwbSignature = 'LCPR'; { New to Skyrim }
+  LCRT : TwbSignature = 'LCRT';
+  LCSR : TwbSignature = 'LCSR'; { New to Skyrim }
+  LCTN : TwbSignature = 'LCTN';
+  LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
-  LCPR : TwbSignature = 'LCPR'; { New to Skyrim }
-  LCEP : TwbSignature = 'LCEP'; { New to Skyrim }
-  LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
-  LCSR : TwbSignature = 'LCSR'; { New to Skyrim }
-  LCEC : TwbSignature = 'LCEC'; { New to Skyrim }
-  LCID : TwbSignature = 'LCID'; { New to Skyrim }
   LNAM : TwbSignature = 'LNAM';
   LSCR : TwbSignature = 'LSCR';
+  LSCT : TwbSignature = 'LSCT';
   LTEX : TwbSignature = 'LTEX';
   LTMP : TwbSignature = 'LTMP';
   LVLC : TwbSignature = 'LVLC';
@@ -350,21 +367,21 @@ const
   LVLF : TwbSignature = 'LVLF';
   LVLG : TwbSignature = 'LVLG';
   LVLI : TwbSignature = 'LVLI';
-  LVSP : TwbSignature = 'LVSP';
   LVLN : TwbSignature = 'LVLN';
   LVLO : TwbSignature = 'LVLO';
-  MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
-  MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
+  LVSP : TwbSignature = 'LVSP';
   MAST : TwbSignature = 'MAST';
+  MATO : TwbSignature = 'MATO';
+  MATT : TwbSignature = 'MATT';
+  MCHT : TwbSignature = 'MCHT'; { New to Skyrim }
+  MDOB : TwbSignature = 'MDOB';
   MESG : TwbSignature = 'MESG';
   MGEF : TwbSignature = 'MGEF';
-  MDOB : TwbSignature = 'MDOB';
-  MSET : TwbSignature = 'MSET';
+  MIC2 : TwbSignature = 'MIC2';
   MICN : TwbSignature = 'MICN';
   MICO : TwbSignature = 'MICO';
-  APPA : TwbSignature = 'APPA';
-  MIC2 : TwbSignature = 'MIC2';
   MISC : TwbSignature = 'MISC';
+  MMRK : TwbSignature = 'MMRK';
   MNAM : TwbSignature = 'MNAM';
   MO2B : TwbSignature = 'MO2B';
   MO2S : TwbSignature = 'MO2S';
@@ -374,11 +391,10 @@ const
   MO3T : TwbSignature = 'MO3T';
   MO4B : TwbSignature = 'MO4B';
   MO4S : TwbSignature = 'MO4S';
-  MO5S : TwbSignature = 'MO5S'; { New to Skyrim }
   MO4T : TwbSignature = 'MO4T';
+  MO5S : TwbSignature = 'MO5S'; { New to Skyrim }
   MO5T : TwbSignature = 'MO5T'; { New to Skyrim }
   MOD2 : TwbSignature = 'MOD2';
-  MATT : TwbSignature = 'MATT';
   MOD3 : TwbSignature = 'MOD3';
   MOD4 : TwbSignature = 'MOD4';
   MOD5 : TwbSignature = 'MOD5'; { New to Skyrim }
@@ -388,38 +404,23 @@ const
   MODS : TwbSignature = 'MODS';
   MODT : TwbSignature = 'MODT';
   MOSD : TwbSignature = 'MOSD';
+  MOVT : TwbSignature = 'MOVT';
+  MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
+  MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
+  MPRT : TwbSignature = 'MPRT'; { New to Skyrim }
+  MSET : TwbSignature = 'MSET';
   MSTT : TwbSignature = 'MSTT';
   MTNM : TwbSignature = 'MTNM'; { New to Skyrim }
-  MUSC : TwbSignature = 'MUSC';
   MTYP : TwbSignature = 'MTYP'; { New To Skyrim }
-  FSTP : TwbSignature = 'FSTP';
-  FSTS : TwbSignature = 'FSTS';
-  SMBN : TwbSignature = 'SMBN';
-  SMQN : TwbSignature = 'SMQN';
-  SMEN : TwbSignature = 'SMEN';
-  DLBR : TwbSignature = 'DLBR';
+  MUSC : TwbSignature = 'MUSC';
   MUST : TwbSignature = 'MUST';
-  DLVW : TwbSignature = 'DLVW';
-  WOOP : TwbSignature = 'WOOP';
-  SHOU : TwbSignature = 'SHOU';
-  EQUP : TwbSignature = 'EQUP';
-  RELA : TwbSignature = 'RELA';
-  SCEN : TwbSignature = 'SCEN';
-  ASTP : TwbSignature = 'ASTP';
-  OTFT : TwbSignature = 'OTFT';
-  ARTO : TwbSignature = 'ARTO';
-  MATO : TwbSignature = 'MATO';
-  MOVT : TwbSignature = 'MOVT';
-  SNDR : TwbSignature = 'SNDR';
-  DUAL : TwbSignature = 'DUAL';
-  SNCT : TwbSignature = 'SNCT';
-  SOPM : TwbSignature = 'SOPM';
-  TINL : TwbSignature = 'TINL'; { New to Skyrim }
-  COLL : TwbSignature = 'COLL';
-  CLFM : TwbSignature = 'CLFM';
-  REVB : TwbSignature = 'REVB';
-  IMPS : TwbSignature = 'IMPS';
-  IMPF : TwbSignature = 'IMPF';
+  MWD1 : TwbSignature = 'MWD1';
+  MWD2 : TwbSignature = 'MWD2';
+  MWD3 : TwbSignature = 'MWD3';
+  MWD4 : TwbSignature = 'MWD4';
+  MWD5 : TwbSignature = 'MWD5';
+  MWD6 : TwbSignature = 'MWD6';
+  MWD7 : TwbSignature = 'MWD7';
   NAM0 : TwbSignature = 'NAM0';
   NAM1 : TwbSignature = 'NAM1';
   NAM2 : TwbSignature = 'NAM2';
@@ -438,28 +439,6 @@ const
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NNAM : TwbSignature = 'NNAM';
-  NVNM : TwbSignature = 'NVNM'; { New to Skyrim }
-  XSRF : TwbSignature = 'XSRF';
-  XSRD : TwbSignature = 'XSRD';
-  MWD1 : TwbSignature = 'MWD1';
-  MWD2 : TwbSignature = 'MWD2';
-  MWD3 : TwbSignature = 'MWD3';
-  MWD4 : TwbSignature = 'MWD4';
-  MWD5 : TwbSignature = 'MWD5';
-  MWD6 : TwbSignature = 'MWD6';
-  MWD7 : TwbSignature = 'MWD7';
-  WNM1 : TwbSignature = 'WNM1';
-  WNM2 : TwbSignature = 'WNM2';
-  WNM3 : TwbSignature = 'WNM3';
-  WNM4 : TwbSignature = 'WNM4';
-  WNM5 : TwbSignature = 'WNM5';
-  WNM6 : TwbSignature = 'WNM6';
-  WNM7 : TwbSignature = 'WNM7';
-  WMI1 : TwbSignature = 'WMI1';
-  WMI2 : TwbSignature = 'WMI2';
-  WMI3 : TwbSignature = 'WMI3';
-  WMS1 : TwbSignature = 'WMS1';
-  WMS2 : TwbSignature = 'WMS2';
   NOTE : TwbSignature = 'NOTE';
   NPC_ : TwbSignature = 'NPC_';
   NULL : TwbSignature = 'NULL';
@@ -470,29 +449,28 @@ const
   NVEX : TwbSignature = 'NVEX';
   NVGD : TwbSignature = 'NVGD';
   NVMI : TwbSignature = 'NVMI';
+  NVNM : TwbSignature = 'NVNM'; { New to Skyrim }
   NVTR : TwbSignature = 'NVTR';
   NVVX : TwbSignature = 'NVVX';
   OBND : TwbSignature = 'OBND';
   OFST : TwbSignature = 'OFST';
   ONAM : TwbSignature = 'ONAM';
+  OTFT : TwbSignature = 'OTFT';
   PACK : TwbSignature = 'PACK';
   PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PERK : TwbSignature = 'PERK';
   PFIG : TwbSignature = 'PFIG';
-  PFPC : TwbSignature = 'PFPC';
   PFO2 : TwbSignature = 'PFO2'; { New to Skyrim }
   PFOR : TwbSignature = 'PFOR'; { New to Skyrim }
+  PFPC : TwbSignature = 'PFPC';
   PGAG : TwbSignature = 'PGAG';
   PGRE : TwbSignature = 'PGRE';
-  PHTN : TwbSignature = 'PHTN'; { New to Skyrim }
-  PHWT : TwbSignature = 'PHWT'; { New to Skyrim }
-  PLCN : TwbSignature = 'PLCN'; { New to Skyrim }
-  PMIS : TwbSignature = 'PMIS';
-  TRGT : TwbSignature = 'TRGT';
   PGRI : TwbSignature = 'PGRI';
   PGRL : TwbSignature = 'PGRL';
   PGRP : TwbSignature = 'PGRP';
   PGRR : TwbSignature = 'PGRR';
+  PHTN : TwbSignature = 'PHTN'; { New to Skyrim }
+  PHWT : TwbSignature = 'PHWT'; { New to Skyrim }
   PHZD : TwbSignature = 'PHZD';
   PKAM : TwbSignature = 'PKAM';
   PKC2 : TwbSignature = 'PKC2'; { New to Skyrim }
@@ -503,134 +481,146 @@ const
   PKED : TwbSignature = 'PKED';
   PKFD : TwbSignature = 'PKFD';
   PKID : TwbSignature = 'PKID';
-  PRCB : TwbSignature = 'PRCB'; { New to Skyrim }
   PKPT : TwbSignature = 'PKPT';
   PKW3 : TwbSignature = 'PKW3';
+  PLCN : TwbSignature = 'PLCN'; { New to Skyrim }
   PLD2 : TwbSignature = 'PLD2';
   PLDT : TwbSignature = 'PLDT';
-  PLYR : TwbSignature = 'PLYR';
   PLVD : TwbSignature = 'PLVD'; { New to Skyrim }
+  PLYR : TwbSignature = 'PLYR';
+  PMIS : TwbSignature = 'PMIS';
   PNAM : TwbSignature = 'PNAM';
-  TDUM : TwbSignature = 'TDUM';
   POBA : TwbSignature = 'POBA';
   POCA : TwbSignature = 'POCA';
   POEA : TwbSignature = 'POEA';
+  PRCB : TwbSignature = 'PRCB'; { New to Skyrim }
   PRKC : TwbSignature = 'PRKC';
-  PRKZ : TwbSignature = 'PRKZ'; { New to Skyrim }
-  PRKR : TwbSignature = 'PRKR'; { New to Skyrim }
   PRKE : TwbSignature = 'PRKE';
   PRKF : TwbSignature = 'PRKF';
+  PRKR : TwbSignature = 'PRKR'; { New to Skyrim }
+  PRKZ : TwbSignature = 'PRKZ'; { New to Skyrim }
   PROJ : TwbSignature = 'PROJ';
-  HAZD : TwbSignature = 'HAZD';
   PSDT : TwbSignature = 'PSDT';
   PTD2 : TwbSignature = 'PTD2';
-  PTDT : TwbSignature = 'PTDT';
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
+  PTDT : TwbSignature = 'PTDT';
   PUID : TwbSignature = 'PUID';
   PWAT : TwbSignature = 'PWAT';
   QNAM : TwbSignature = 'QNAM';
-  RCIL : TwbSignature = 'RCIL';
-  RCQY : TwbSignature = 'RCQY';
-  RCOD : TwbSignature = 'RCOD';
-  REPU : TwbSignature = 'REPU';
-  RCPE : TwbSignature = 'RCPE';
-  RCCT : TwbSignature = 'RCCT';
   QOBJ : TwbSignature = 'QOBJ';
-  QTGL : TwbSignature = 'QTGL'; { New To Skyrim }
   QSDT : TwbSignature = 'QSDT';
   QSTA : TwbSignature = 'QSTA';
   QSTI : TwbSignature = 'QSTI';
-  TPIC : TwbSignature = 'TPIC';
   QSTR : TwbSignature = 'QSTR';
-  INFC : TwbSignature = 'INFC';
-  INFX : TwbSignature = 'INFX';
+  QTGL : TwbSignature = 'QTGL'; { New To Skyrim }
   QUAL : TwbSignature = 'QUAL'; { New To Skyrim }
   QUST : TwbSignature = 'QUST';
   RACE : TwbSignature = 'RACE';
-  FLOR : TwbSignature = 'FLOR';
   RADS : TwbSignature = 'RADS';
   RAFB : TwbSignature = 'RAFB';
   RAFD : TwbSignature = 'RAFD';
   RAGA : TwbSignature = 'RAGA';
   RAPS : TwbSignature = 'RAPS';
+  RCCT : TwbSignature = 'RCCT';
+  RCIL : TwbSignature = 'RCIL';
   RCLR : TwbSignature = 'RCLR';
+  RCOD : TwbSignature = 'RCOD';
+  RCPE : TwbSignature = 'RCPE';
+  RCQY : TwbSignature = 'RCQY';
   RDAT : TwbSignature = 'RDAT';
+  RDGS : TwbSignature = 'RDGS';
+  RDID : TwbSignature = 'RDID';
   RDMD : TwbSignature = 'RDMD';
   RDMO : TwbSignature = 'RDMO';
   RDMP : TwbSignature = 'RDMP';
-  RDGS : TwbSignature = 'RDGS';
   RDOT : TwbSignature = 'RDOT';
   RDSA : TwbSignature = 'RDSA'; { New to Skyrim }
+  RDSB : TwbSignature = 'RDSB';
   RDSD : TwbSignature = 'RDSD';
+  RDSI : TwbSignature = 'RDSI';
   RDWT : TwbSignature = 'RDWT';
   REFR : TwbSignature = 'REFR';
   REGN : TwbSignature = 'REGN';
+  RELA : TwbSignature = 'RELA';
   REPL : TwbSignature = 'REPL';
+  REPU : TwbSignature = 'REPU';
+  REVB : TwbSignature = 'REVB';
+  RFCT : TwbSignature = 'RFCT';
   RGDL : TwbSignature = 'RGDL';
   RNAM : TwbSignature = 'RNAM';
   RNMV : TwbSignature = 'RNMV'; { New to Skyrim }
   RPLD : TwbSignature = 'RPLD';
   RPLI : TwbSignature = 'RPLI';
-  RPRM : TwbSignature = 'RPRM'; { New To Skyrim }
   RPRF : TwbSignature = 'RPRF'; { New To Skyrim }
+  RPRM : TwbSignature = 'RPRM'; { New To Skyrim }
   SCDA : TwbSignature = 'SCDA';
+  SCEN : TwbSignature = 'SCEN';
   SCHR : TwbSignature = 'SCHR';
   SCOL : TwbSignature = 'SCOL';
   SCPT : TwbSignature = 'SCPT';
   SCRI : TwbSignature = 'SCRI';
+  SCRL : TwbSignature = 'SCRL';
   SCRN : TwbSignature = 'SCRN';
   SCRO : TwbSignature = 'SCRO';
   SCRV : TwbSignature = 'SCRV';
   SCTX : TwbSignature = 'SCTX';
   SCVR : TwbSignature = 'SCVR';
   SDSC : TwbSignature = 'SDSC'; { New to Skyrim }
+  SHOU : TwbSignature = 'SHOU';
   SHRT : TwbSignature = 'SHRT'; { New to Skyrim }
   SLCP : TwbSignature = 'SLCP';
+  SLGM : TwbSignature = 'SLGM';
   SLPD : TwbSignature = 'SLPD';
   SLSD : TwbSignature = 'SLSD';
+  SMBN : TwbSignature = 'SMBN';
+  SMEN : TwbSignature = 'SMEN';
+  SMQN : TwbSignature = 'SMQN';
   SNAM : TwbSignature = 'SNAM';
+  SNCT : TwbSignature = 'SNCT';
   SNDD : TwbSignature = 'SNDD';
+  SNDR : TwbSignature = 'SNDR';
   SNDX : TwbSignature = 'SNDX';
   SNMV : TwbSignature = 'SNMV'; { New to Skyrim }
   SOFT : TwbSignature = 'SOFT'; { New to Skyrim }
+  SOPM : TwbSignature = 'SOPM';
   SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN';
+  SPCT : TwbSignature = 'SPCT'; { New to Skyrim }
   SPED : TwbSignature = 'SPED'; { New To Skyrim }
   SPEL : TwbSignature = 'SPEL';
-  SPCT : TwbSignature = 'SPCT'; { New to Skyrim }
-  SCRL : TwbSignature = 'SCRL';
+  SPGD : TwbSignature = 'SPGD';
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
   STAT : TwbSignature = 'STAT';
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
-  SPGD : TwbSignature = 'SPGD';
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
-  RFCT : TwbSignature = 'RFCT';
-  MMRK : TwbSignature = 'MMRK';
-  BRUS : TwbSignature = 'BRUS';
   TACT : TwbSignature = 'TACT';
-  TCLF : TwbSignature = 'TCLF';
   TCFU : TwbSignature = 'TCFU';
+  TCLF : TwbSignature = 'TCLF';
   TCLT : TwbSignature = 'TCLT';
+  TDUM : TwbSignature = 'TDUM';
   TERM : TwbSignature = 'TERM';
   TES4 : TwbSignature = 'TES4';
-  TIFC : TwbSignature = 'TIFC';
   TIAS : TwbSignature = 'TIAS'; { New to Skyrim }
-  TINI : TwbSignature = 'TINI'; { New to Skyrim }
+  TIFC : TwbSignature = 'TIFC'; { New To Skyrim }
   TINC : TwbSignature = 'TINC'; { New to Skyrim }
-  TINV : TwbSignature = 'TINV'; { New to Skyrim }
-  TINT : TwbSignature = 'TINT'; { New to Skyrim }
   TIND : TwbSignature = 'TIND'; { New to Skyrim }
+  TINI : TwbSignature = 'TINI'; { New to Skyrim }
+  TINL : TwbSignature = 'TINL'; { New to Skyrim }
   TINP : TwbSignature = 'TINP'; { New to Skyrim }
+  TINT : TwbSignature = 'TINT'; { New to Skyrim }
+  TINV : TwbSignature = 'TINV'; { New to Skyrim }
   TIRS : TwbSignature = 'TIRS'; { New to Skyrim }
   TNAM : TwbSignature = 'TNAM';
+  TPIC : TwbSignature = 'TPIC';
   TPLT : TwbSignature = 'TPLT';
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
+  TRGT : TwbSignature = 'TRGT';
+  TWAT : TwbSignature = 'TWAT'; { New To Skyrim }
   TX00 : TwbSignature = 'TX00';
   TX01 : TwbSignature = 'TX01';
-  INTV : TwbSignature = 'INTV';
   TX02 : TwbSignature = 'TX02';
   TX03 : TwbSignature = 'TX03';
   TX04 : TwbSignature = 'TX04';
@@ -638,7 +628,6 @@ const
   TX06 : TwbSignature = 'TX06'; { New To Skyrim }
   TX07 : TwbSignature = 'TX07'; { New To Skyrim }
   TXST : TwbSignature = 'TXST';
-  TWAT : TwbSignature = 'TWAT'; { New To Skyrim }
   UNAM : TwbSignature = 'UNAM';
   UNES : TwbSignature = 'UNES'; { New To Skyrim }
   VANM : TwbSignature = 'VANM';
@@ -661,15 +650,29 @@ const
   WEAP : TwbSignature = 'WEAP';
   WKMV : TwbSignature = 'WKMV'; { New to Skyrim }
   WLST : TwbSignature = 'WLST';
+  WMI1 : TwbSignature = 'WMI1';
+  WMI2 : TwbSignature = 'WMI2';
+  WMI3 : TwbSignature = 'WMI3';
+  WMS1 : TwbSignature = 'WMS1';
+  WMS2 : TwbSignature = 'WMS2';
   WNAM : TwbSignature = 'WNAM';
-  XATO : TwbSignature = 'XATO';
+  WNM1 : TwbSignature = 'WNM1';
+  WNM2 : TwbSignature = 'WNM2';
+  WNM3 : TwbSignature = 'WNM3';
+  WNM4 : TwbSignature = 'WNM4';
+  WNM5 : TwbSignature = 'WNM5';
+  WNM6 : TwbSignature = 'WNM6';
+  WNM7 : TwbSignature = 'WNM7';
+  WOOP : TwbSignature = 'WOOP';
   WRLD : TwbSignature = 'WRLD';
   WTHR : TwbSignature = 'WTHR';
   XACT : TwbSignature = 'XACT';
+  XALP : TwbSignature = 'XALP'; { New To Skyrim }
   XAMC : TwbSignature = 'XAMC';
   XAMT : TwbSignature = 'XAMT';
   XAPD : TwbSignature = 'XAPD';
   XAPR : TwbSignature = 'XAPR';
+  XATO : TwbSignature = 'XATO';
   XCAS : TwbSignature = 'XCAS';
   XCCM : TwbSignature = 'XCCM';
   XCET : TwbSignature = 'XCET';
@@ -684,23 +687,26 @@ const
   XCMT : TwbSignature = 'XCMT';
   XCNT : TwbSignature = 'XCNT';
   XCWT : TwbSignature = 'XCWT';
+  XDCR : TwbSignature = 'XDCR';
   XEMI : TwbSignature = 'XEMI';
   XESP : TwbSignature = 'XESP';
   XEZN : TwbSignature = 'XEZN';
   XGLB : TwbSignature = 'XGLB';
   XHLP : TwbSignature = 'XHLP';
-  XHOR : TwbSignature = 'XHOR'; { New To Skyrim }
-  XDCR : TwbSignature = 'XDCR';
   XHLT : TwbSignature = 'XHLT';
+  XHOR : TwbSignature = 'XHOR'; { New To Skyrim }
   XIBS : TwbSignature = 'XIBS';
+  XIS2 : TwbSignature = 'XIS2'; { New To Skyrim }
   XLCM : TwbSignature = 'XLCM';
+  XLCN : TwbSignature = 'XLCN'; { New To Skyrim }
+  XLIB : TwbSignature = 'XLIB'; { New To Skyrim }
+  XLIG : TwbSignature = 'XLIG'; { New To Skyrim }
   XLKR : TwbSignature = 'XLKR';
   XLOC : TwbSignature = 'XLOC';
   XLOD : TwbSignature = 'XLOD';
   XLRM : TwbSignature = 'XLRM';
-  XLTW : TwbSignature = 'XLTW';
-  XLCN : TwbSignature = 'XLCN'; { New To Skyrim }
   XLRT : TwbSignature = 'XLRT'; { New To Skyrim }
+  XLTW : TwbSignature = 'XLTW';
   XMBO : TwbSignature = 'XMBO';
   XMBP : TwbSignature = 'XMBP';
   XMBR : TwbSignature = 'XMBR';
@@ -712,10 +718,10 @@ const
   XORD : TwbSignature = 'XORD';
   XOWN : TwbSignature = 'XOWN';
   XPOD : TwbSignature = 'XPOD';
-  XPTL : TwbSignature = 'XPTL';
   XPPA : TwbSignature = 'XPPA';
   XPRD : TwbSignature = 'XPRD';
   XPRM : TwbSignature = 'XPRM';
+  XPTL : TwbSignature = 'XPTL';
   XPWR : TwbSignature = 'XPWR';
   XRAD : TwbSignature = 'XRAD';
   XRDO : TwbSignature = 'XRDO';
@@ -727,7 +733,10 @@ const
   XRTM : TwbSignature = 'XRTM';
   XSCL : TwbSignature = 'XSCL';
   XSED : TwbSignature = 'XSED';
+  XSRD : TwbSignature = 'XSRD';
+  XSRF : TwbSignature = 'XSRF';
   XTEL : TwbSignature = 'XTEL';
+  XTNM : TwbSignature = 'XTNM'; { New To Skyrim }
   XTRG : TwbSignature = 'XTRG';
   XTRI : TwbSignature = 'XTRI';
   XXXX : TwbSignature = 'XXXX';
@@ -8631,7 +8640,8 @@ begin
         wbInteger('Flags', itU8, wbFlags([
           'Has Collission Data'
         ]))
-      ], cpNormal, True)
+      ], cpNormal, True),
+      wbMODT
     ], [], cpNormal, True)
   ]);
 
@@ -9161,7 +9171,9 @@ begin
       wbFormIDCk('Organic Bug', [IPCT, NULL]),
       wbFormIDCk('Organic Glow', [IPCT, NULL])
     ], cpNormal, True, nil, 9),
-    wbUnknown(PNAM)
+    wbRArray('Unknown - LCEC', wbRStruct('Unknown', [
+      wbUnknown(PNAM)
+    ], []))
   ]);
 
   wbRecord(ECZN, 'Encounter Zone', [
@@ -9216,13 +9228,14 @@ begin
     wbEmpty(NAM7, 'Unknown', cpIgnore),
     wbEmpty(NAM8, 'Unknown', cpIgnore),
     wbEmpty(NAM9, 'Unknown', cpIgnore),
+    wbUnknown(QNAM),
     wbInteger(DNAM, 'Flags', itU32, wbFlags([
       'Message Box',
       'Auto Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbRStructs('Menu Buttons', 'Menu Button', [
-      wbString(ITXT, 'Button Text'),
+      wbLString(ITXT, 'Button Text'),
       wbCTDAs
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
@@ -9355,18 +9368,25 @@ begin
       wbInteger('Directional Rotation Z', itS32),
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
-      wbFloat('Fog Power')
-    ], cpNormal, True)
+      wbFloat('Fog Power'),
+      wbByteArray('Unknown', 0)
+    ], cpNormal, True),
+    wbUnknown(DALC)
   ]);
 
   wbRecord(MUSC, 'Music Type', [
     wbEDIDReq,
     wbString(FNAM, 'Filename'),
-    wbFloat(ANAM, 'dB (positive = Loop)')
+    wbFloat(ANAM, 'dB (positive = Loop)'),
+    wbUnknown(PNAM),
+    wbUnknown(WNAM),
+    wbUnknown(TNAM)
   ]);
 
   wbRecord(FSTP, 'FSTP', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(DATA),
+    wbUnknown(ANAM)
   ]);
 
   wbRecord(FSTS, 'FSTS', [
@@ -9386,16 +9406,36 @@ begin
     wbUnknown(PNAM),
     wbUnknown(SNAM),
     wbUnknown(CITC),
+    wbCTDAs,
     wbUnknown(DNAM),
     wbUnknown(XNAM)
   ]);
 
   wbRecord(SMQN, 'SMQN', [
-    wbEDIDReq
+    wbEDID,
+    wbUnknown(PNAM),
+    wbUnknown(SNAM),
+    wbUnknown(CITC),
+    wbCTDAs,
+    wbUnknown(DNAM),
+    wbUnknown(XNAM),
+    wbUnknown(QNAM),
+    wbRArray('Array SNAM', wbRStruct('Unknown', [
+      wbUnknown(NNAM),
+      wbUnknown(FNAM),
+      wbUnknown(RNAM)
+    ], []))
   ]);
 
   wbRecord(SMEN, 'SMEN', [
-    wbEDIDReq
+    wbEDID,
+    wbUnknown(PNAM),
+    wbUnknown(SNAM),
+    wbUnknown(CITC),
+    wbCTDAs,
+    wbUnknown(DNAM),
+    wbUnknown(XNAM),
+    wbUnknown(ENAM)
   ]);
 
   wbRecord(DLBR, 'DLBR', [
@@ -9407,7 +9447,16 @@ begin
   ]);
 
   wbRecord(MUST, 'MUST', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(CNAM),
+    wbUnknown(FLTV),
+    wbUnknown(ANAM),
+    wbUnknown(BNAM),
+    wbUnknown(DNAM),
+    wbUnknown(FNAM),
+    wbUnknown(CITC),
+    wbCTDAs,
+    wbUnknown(SNAM)
   ]);
 
   wbRecord(DLVW, 'DLVW', [
@@ -9416,12 +9465,17 @@ begin
     wbRArray('Array BNAM', wbRStruct('Unknown', [
       wbUnknown(BNAM)
     ], [])),
+    wbRArray('Array TNAM', wbRStruct('Unknown', [
+      wbUnknown(TNAM)
+    ], [])),
     wbUnknown(ENAM),
     wbUnknown(DNAM)
   ]);
 
   wbRecord(WOOP, 'WOOP', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbFULLReq,
+    wbUnknown(TNAM)
   ]);
 
   wbRecord(SHOU, 'SHOU', [
@@ -9441,7 +9495,8 @@ begin
   ]);
 
   wbRecord(RELA, 'RELA', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(DATA)
   ]);
 
   wbRecord(SCEN, 'SCEN', [
@@ -9537,7 +9592,12 @@ begin
   ]);
 
   wbRecord(ASTP, 'ASTP', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbUnknown(MPRT),
+    wbUnknown(FPRT),
+    wbUnknown(MCHT),
+    wbUnknown(FCHT),
+    wbUnknown(DATA)
   ]);
 
   wbRecord(OTFT, 'OTFT', [
@@ -9549,6 +9609,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
+    wbUnknown(DNAM),
     wbUnknown(DATA)
   ]);
 
@@ -9576,13 +9637,13 @@ begin
     wbUnknown(CNAM),
     wbFormID(GNAM, 'Category'),
     wbFormIDCk(SNAM, 'String', [SNDR, NULL]),
-    wbLString(FNAM, 'String'),
     wbRArray('Sounds',
       wbRStruct('Sound Files', [
         wbString(ANAM, 'File Name')
       ],[])
     ),
     wbFormIDCk(ONAM, 'Output Model', [SOPM, NULL]),
+    wbLString(FNAM, 'String'),
     wbCTDAs,
     wbStruct(LNAM, 'Values', [
       wbByteArray('Unknown', 1),
@@ -12551,13 +12612,11 @@ begin
     wbRStruct('Patrol Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+{Sk}  wbUnknown(PDTO),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
-
-    {--- Patrol Data ---}
-    wbUnknown(PDTO),
 
     {--- Radio ---}
     wbStruct(XRDO, 'Radio Data', [
@@ -12574,7 +12633,7 @@ begin
     ]),
 
     {--- Unknown ---}
-    wbUnknown(XLRT),
+    wbFormIDCkNoReach(XLRT, 'Location Ref Type', [LCRT, NULL]),
 
     {--- Ownership ---}
     wbRStruct('Ownership', [
@@ -12627,6 +12686,9 @@ begin
       ])
     ),
 
+    {--- Unknown ---}
+		wbFormIDCk(XLIB, 'Leveled Item Base', [LVLI, NULL]),
+
     {--- Linked Ref ---}
     wbArrayS(XLKR, 'Linked References', wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN]), 0, cpNormal, False),
     wbStruct(XCLP, 'Linked Reference Color', [
@@ -12659,11 +12721,25 @@ begin
 
     wbString(XATO, 'Activation Prompt'),
 
+    {--- light data ---}
+    wbStruct(XLIG, 'Light Data', [
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ]),
+
+    {--- Unknown ---}
+		wbUnknown(XTNM),
+
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+
+    {--- Unknown ---}
+    wbUnknown(XALP),
 
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
@@ -12677,6 +12753,9 @@ begin
     ])),
     wbEmpty(ONAM, 'Open by Default'),
     wbEmpty(XIBS, 'Ignored By Sandbox'),
+
+    {--- Unknown ---}
+		wbUnknown(XIS2),
 
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
