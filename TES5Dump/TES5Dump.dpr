@@ -246,12 +246,12 @@ begin
 //    RecordToSkip.Add('LAND');
 //    RecordToSkip.Add('REGN');
 //    RecordToSkip.Add('PGRD');
-      RecordToSkip.Add('SCEN');
-      RecordToSkip.Add('PACK');
-      RecordToSkip.Add('PERK');
-      RecordToSkip.Add('NAVI');
-      RecordToSkip.Add('CELL');
-      RecordToSkip.Add('WRLD');
+//      RecordToSkip.Add('SCEN');
+//      RecordToSkip.Add('PACK');
+//      RecordToSkip.Add('PERK');
+//      RecordToSkip.Add('NAVI');
+//      RecordToSkip.Add('CELL');
+//      RecordToSkip.Add('WRLD');
       RecordToSkip.Add('REFR');
     end;
 
@@ -295,7 +295,7 @@ begin
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
       WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
       WriteLn(ErrOutput, '             ', 'following default value applies:');
-      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD, REFR');
+      WriteLn(ErrOutput, '             ', 'REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
       WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
       WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');

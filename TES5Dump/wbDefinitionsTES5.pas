@@ -8341,7 +8341,10 @@ begin
 // New NAVM
 //------------------------------------------------------------------------------
   wbRecord(NAVM, 'Navigation Mesh', [
-    wbUnknown(NVNM)
+    wbUnknown(NVNM),
+    wbUnknown(ONAM),
+    wbUnknown(PNAM),
+    wbUnknown(NNAM)
   ], False, wbNAVMAddInfo);
 //------------------------------------------------------------------------------
 // Begin Old NAVM
