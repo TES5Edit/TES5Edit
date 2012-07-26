@@ -450,6 +450,7 @@ const
   NVGD : TwbSignature = 'NVGD';
   NVMI : TwbSignature = 'NVMI';
   NVNM : TwbSignature = 'NVNM'; { New to Skyrim }
+  NVPP : TwbSignature = 'NVPP'; { New to Skyrim }
   NVTR : TwbSignature = 'NVTR';
   NVVX : TwbSignature = 'NVVX';
   OBND : TwbSignature = 'OBND';
@@ -6567,8 +6568,11 @@ begin
   wbRecord(PHZD, 'PHZD', [
     wbVMAD,
     wbUnknown(NAME),
+    wbStruct(XESP, 'Unknown', [
+      wbFormIDCk('Unknown', [REFR, STAT, NULL]),
+      wbByteArray('Unknown', 4)
+    ]),
     wbUnknown(XSCL),
-    wbUnknown(XESP),
     wbUnknown(DATA)
   ]);
 
@@ -8336,7 +8340,7 @@ begin
       ])
     ),
     wbRArray('Unknown',
-      wbStruct(NVCI, 'Unknown', [
+      wbStruct(NVPP, 'Unknown', [
         wbFormIDCk('Unknown', [NAVM]),
         wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
         wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),

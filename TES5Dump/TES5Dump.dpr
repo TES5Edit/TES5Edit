@@ -246,12 +246,12 @@ begin
 //    RecordToSkip.Add('LAND');
 //    RecordToSkip.Add('REGN');
 //    RecordToSkip.Add('PGRD');
-//      RecordToSkip.Add('SCEN');
-//      RecordToSkip.Add('PACK');
-//      RecordToSkip.Add('PERK');
+      RecordToSkip.Add('SCEN');
+      RecordToSkip.Add('PACK');
+      RecordToSkip.Add('PERK');
 //      RecordToSkip.Add('NAVI');
-//      RecordToSkip.Add('CELL');
-//      RecordToSkip.Add('WRLD');
+      RecordToSkip.Add('CELL');
+      RecordToSkip.Add('WRLD');
       RecordToSkip.Add('REFR');
     end;
 
@@ -264,7 +264,7 @@ begin
       GroupToSkip.Add('SCEN');
       GroupToSkip.Add('PACK');
       GroupToSkip.Add('PERK');
-      GroupToSkip.Add('NAVI');
+//      GroupToSkip.Add('NAVI');
       GroupToSkip.Add('CELL');
       GroupToSkip.Add('WRLD');
     end;
