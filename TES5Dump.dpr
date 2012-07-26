@@ -251,7 +251,7 @@ begin
       RecordToSkip.Add('PERK');
       RecordToSkip.Add('NAVI');
       RecordToSkip.Add('CELL');
-      RecordToSkip.Add('WRLD');
+      RecordToSkip.Add('REFR');
     end;
 
     if wbFindCmdLineParam('xg', s) then
@@ -294,8 +294,10 @@ begin
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
       WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
       WriteLn(ErrOutput, '             ', 'following default value applies:');
-      WriteLn(ErrOutput, '             ', 'NAVI,CELL,WRLD');
+      WriteLn(ErrOutput, '             ', 'REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
+      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
+      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '             ', '');

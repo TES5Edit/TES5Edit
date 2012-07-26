@@ -6148,8 +6148,8 @@ begin
   		wbString(CIS1, 'Unknown')
     ], [], cpNormal);
 
-  wbCTDAs := wbRArray('Conditions', wbCTDAOld, cpNormal, False);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDAOld, cpNormal, True);
+  wbCTDAs := wbRArray('Conditions', wbCTDANew, cpNormal, False);
+  wbCTDAsReq := wbRArray('Conditions', wbCTDANew, cpNormal, True);
 
 //------------------------------------------------------------------------------
 // wbEffects - EFID, EFIT, CTDA
