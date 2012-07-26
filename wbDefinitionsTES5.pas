@@ -891,6 +891,7 @@ var
   wbTintMasks: IwbSubRecordArrayDef;
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
+  wbCTDAParm1: IwbUnionDef;
 
 //------------------------------------------------------------------------------
 // Old Pack
@@ -5927,13 +5928,12 @@ begin
   wbCTDAOld := wbRStruct('Conditions', [
 					wbStruct(CTDA, 'Condition', [
 {Byte  1}		wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-{Byte  2} 	wbByteArray('Unknown', 3),
+{Byte  2} 	wbByteArray('Unused', 3),
 {Byte  5}		wbUnion('Comparison Value', wbCTDACompValueDecider, [
-							wbFloat('Comparison Value - Float'),
-							wbFormIDCk('Comparison Value - Global', [GLOB])
-						]),
-{Byte  9}		wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-{Byte  9}		wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+              wbFloat('Comparison Value - Float'),
+              wbFormIDCk('Comparison Value - Global', [GLOB])
+            ]),
+{Byte  9}		wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
 {Byte 13}		wbUnion('Parameter #1', wbCTDAParam1Decider, [
 				 {00} wbByteArray('Unknown', 4),
 		  	 {01} wbByteArray('None', 4, cpIgnore),
@@ -6090,7 +6090,7 @@ begin
 						  wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
 						]),
 {Byte 29}   wbByteArray('Unknown', 4)
-					], cpNormal, False, nil, 6, wbCTDAAfterLoad),
+          ], cpNormal, False, nil, 6, wbCTDAAfterLoad),
 				wbString(CIS1, 'Unknown'),
 				wbString(CIS2, 'Unknown')
     ], [], cpNormal);
@@ -6101,7 +6101,40 @@ begin
   wbCTDANew :=
     wbRStruct('Conditions', [
 			wbStruct(CTDA, 'Condition', [
-        wbByteArray('Unknown', 4),
+        wbInteger('Comparison Flags', itU32, wbFlags([
+          {0x00000001}'Use OR',
+          {0x00000002}'Parameters - Use Aliases',
+          {0x00000004}'Unknown 3',
+          {0x00000008}'Parameters - Use Pack Data',
+          {0x00000010}'Swap Subject and Target',
+          {0x00000020}'Unknown 6',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8',
+          {0x00000100}'Unknown 9',
+          {0x00000200}'Unknown 10',
+          {0x00000400}'Unknown 11',
+          {0x00000800}'Unknown 12',
+          {0x00001000}'Unknown 13',
+          {0x00002000}'Unknown 14',
+          {0x00004000}'Unknown 15',
+          {0x00008000}'Unknown 16',
+          {0x00010000}'Unknown 17',
+          {0x00020000}'Unknown 18',
+          {0x00040000}'Unknown 19',
+          {0x00080000}'Unknown 20',
+          {0x00100000}'Unknown 21',
+          {0x00200000}'Unknown 22',
+          {0x00400000}'Unknown 23',
+          {0x00800000}'Unknown 24',
+          {0x01000000}'Unknown 25',
+          {0x02000000}'Unknown 26',
+          {0x04000000}'Unknown 27',
+          {0x08000000}'Unknown 28',
+          {0x10000000}'Unknown 29',
+          {0x20000000}'Unknown 30',
+          {0x40000000}'Unknown 31',
+          {0x80000000}'Unknown 32'
+        ])),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
@@ -6110,13 +6143,13 @@ begin
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4)
-	  	], cpNormal, False, nil, 0, wbCTDAAfterLoad),
+	  	], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
 	    wbString(CIS2, 'Unknown'),
   		wbString(CIS1, 'Unknown')
     ], [], cpNormal);
 
-  wbCTDAs := wbRArray('Conditions', wbCTDANew, cpNormal, False);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDANew, cpNormal, True);
+  wbCTDAs := wbRArray('Conditions', wbCTDAOld, cpNormal, False);
+  wbCTDAsReq := wbRArray('Conditions', wbCTDAOld, cpNormal, True);
 
 //------------------------------------------------------------------------------
 // wbEffects - EFID, EFIT, CTDA
@@ -9451,6 +9484,11 @@ begin
     wbUnknown(CNAM),
     wbUnknown(FLTV),
     wbUnknown(ANAM),
+    wbStruct(LNAM, 'Loop Data', [ // In <MUSSovngardeChantLP> Only
+      wbInteger('Loop Begins', itU32),
+      wbInteger('Loop Ends', itU32),
+      wbInteger('Loop Count', itU32)
+    ]),
     wbUnknown(BNAM),
     wbUnknown(DNAM),
     wbUnknown(FNAM),
