@@ -905,9 +905,9 @@ var
 //------------------------------------------------------------------------------
 // Old Pack
 //------------------------------------------------------------------------------
-  wbPKDT: IwbSubRecordStructDef; {Associated with Old PACK}
+  wbPKDT: IwbSubRecordDef; {Associated with Old PACK}
   wbPLDT: IwbSubRecordStructDef; {Associated with Old PACK}
-  wbPSDT: IwbSubRecordStructDef; {Associated with Old PACK}
+  wbPSDT: IwbSubRecordDef; {Associated with Old PACK}
   wbPTDT: IwbSubRecordStructDef; {Associated with Old PACK}
   wbIDLF: IwbSubRecordStructDef; {Associated with Old PACK}
   wbPKW3: IwbSubRecordStructDef; {Associated with Old PACK}
@@ -4651,7 +4651,8 @@ begin
 					wbByteArray('Unknown', 4),
 					//wbByteArray('Unknown', 4),
           wbFloat('Far away model distance'),
-					wbByteArray('Unknown', 4)
+          wbInteger('Geared up weapons', itU8),
+					wbByteArray('Unknown', 3)
 				])
 			], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
 
@@ -4939,14 +4940,14 @@ begin
       {0x00004000}'Unknown 15',
       {0x00008000}'Unknown 16'
     ])),
+    wbByteArray('Unknown', 2),
     wbFloat('Attack Angle'),
     wbFloat('Strike Angle'),
     wbFloat('Stagger'),
     wbFormID('Attack Type'),
     wbFloat('Knockdown'),
     wbFloat('Recovery Time'),
-    wbFloat('Fatigue Mult'),
-    wbByteArray('Unknown', 2)
+    wbFloat('Stamina Mult')
   ]);
 
   wbPRKR := wbStruct(PRKR, 'Perk Record', [
@@ -4963,7 +4964,7 @@ begin
     {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
            wbByteArray('Unknown', 4, cpIgnore),
            wbFormIDCk('Global Variable', [GLOB, NULL]),
-           wbInteger('Required Rank', itU32)
+           wbInteger('Required Rank', itS32)
          ]),
     {08} wbFloat('Item Condition')
   ]);
@@ -5129,11 +5130,12 @@ begin
         wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
           wbInteger('Health %', itU8),
           wbInteger('Index', itU8),
-          wbInteger('Damage Stage', itU8),
+          wbInteger('Model Damage Stage', itU8),
           wbInteger('Flags', itU8, wbFlags([
             'Cap Damage',
             'Disable',
-            'Destroy'
+            'Destroy',
+            'Ignore External Dmg'
           ])),
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
@@ -7000,15 +7002,14 @@ begin
 //          wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
 //          wbInteger('Teaches', itS8, wbSkillEnum),
 //          wbInteger('Maximum training level', itU8),
-          wbInteger('Assistance', itS8, wbEnum([
+          wbInteger('Assistance', itU8, wbEnum([
             'Helps Nobody',
             'Helps Allies',
             'Helps Friends and Allies'
           ])),
           wbStruct('Aggro', [
-            wbInteger('Aggro Radius Behavior', itU16, wbFlags([
-              'Aggro Radius Behavior'
-            ])),
+            wbInteger('Aggro Radius Behavior', itU8, wbEnum(['False', 'True'])),
+            wbInteger('Unknown', itU8),
             wbInteger('Warn', itU32),
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
@@ -11280,19 +11281,17 @@ begin
     wbLString(SHRT, 'Short Name'),
     wbByteArray(DATA, 'Marker'),
     wbDNAMActor,
-    wbRArrayS('Head Parts',
-      wbFormIDCk(PNAM, 'Head Part', [HDPT]),
-    cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
+    wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
     wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
     wbFormIDCk(GNAM, 'Gift Filter', [FTST], False, cpNormal, False),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
     wbUnknown(NAM5, cpNormal, True),
     wbFloat(NAM6, 'Height', cpNormal, True),
     wbFloat(NAM7, 'Weight', cpNormal, True),
-    wbUnknown(NAM8, cpNormal, True),
+    wbInteger(NAM8, 'Sound Level', itU32, wbEnum([], [1, 'Normal', 2, 'Silent', 3, 'Very Loud']), cpNormal, True),
     wbCSDTs,
     // When CSCR exists CSDT, CSDI, CSDC are not present
-    wbFormIDCk(CSCR, 'Audio template Ref', [NPC_], False, cpNormal, False),
+    wbFormIDCk(CSCR, 'Inherits Sounds From', [NPC_], False, cpNormal, False),
     wbFormIDCk(DOFT, 'Default outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Sleeping outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
@@ -11326,18 +11325,23 @@ begin
     ], cpNormal, True),
     wbStruct(NAMA, 'Face parts', [
       wbInteger('Nose', itU32),
-      wbInteger('Unknown', itU32),
+      wbInteger('Unknown', itS32),
       wbInteger('Eyes', itU32),
       wbInteger('Mouth', itU32)
     ]),
 //-----------------------------------------------------------------------------
 // Array of TINI, TINC, TINV, TIAS
 //-----------------------------------------------------------------------------
-    wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
-      wbUnknown(TINI),
-      wbUnknown(TINC),
-      wbUnknown(TINV),
-      wbUnknown(TIAS)
+    wbRArray('Tint Layers', wbRStruct('Layer', [
+      wbInteger(TINI, 'Tint Index', itU16),
+      wbStruct(TINC, 'Tint Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbInteger('Alpha', itU8)
+      ]),
+      wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
+      wbInteger(TIAS, 'Preset', itS16)
     ], []))
   ], True, nil, cpNormal, False, wbNPCAfterLoad);
 //-----------------------------------------------------------------------------
@@ -11533,36 +11537,36 @@ begin
 //-----------------------------------------------------------------------------
 
   wbPKDTFlags := wbFlags([
-          {0x00000001} 'Offers Services',
-          {0x00000002} 'Must reach location',
+          {0x00000001} 'Unknown 1',
+          {0x00000002} 'Unknown 2',
           {0x00000004} 'Must complete',
-          {0x00000008} 'Lock doors at package start',
-          {0x00000010} 'Lock doors at package end',
-          {0x00000020} 'Lock doors at location',
+          {0x00000008} 'Maintain Speed at Goal',
+          {0x00000010} 'Unknown 5',
+          {0x00000020} 'Unknown 6',
           {0x00000040} 'Unlock doors at package start',
           {0x00000080} 'Unlock doors at package end',
-          {0x00000100} 'Unlock doors at location',
-          {0x00000200} 'Continue if PC near',
+          {0x00000100} 'Unknown 9',
+          {0x00000200} 'Unknown 10',
           {0x00000400} 'Once per day',
           {0x00000800} 'Unknown 12',
-          {0x00001000} 'Skip fallout behavior',
-          {0x00002000} 'Always run',
+          {0x00001000} 'Unknown 13',
+          {0x00002000} 'Preferred Speed',
           {0x00004000} 'Unknown 15',
           {0x00008000} 'Unknown 16',
           {0x00010000} 'Unknown 17',
-          {0x00020000} 'Always sneak',
-          {0x00040000} 'Allow swimming',
-          {0x00080000} 'Allow falls',
-          {0x00100000} 'Head-Tracking off',
-          {0x00200000} 'Weapons unequipped',
-          {0x00400000} 'Defensive combat',
+          {0x00020000} 'Allow Sneak',
+          {0x00040000} 'Allow Sweeming',
+          {0x00080000} 'Unknown 20',
+          {0x00100000} 'Ignore Combat',
+          {0x00200000} 'Weapons Unequipped',
+          {0x00400000} 'Unknown 23',
           {0x00800000} 'Weapon Drawn',
-          {0x01000000} 'No idle anims',
-          {0x02000000} 'Pretend In Combat',
-          {0x04000000} 'Continue During Combat',
+          {0x01000000} 'Unknown 25',
+          {0x02000000} 'Unknown 26',
+          {0x04000000} 'Unknown 27',
           {0x08000000} 'No Combat Alert',
-          {0x10000000} 'No Warn/Attack Behaviour',
-          {0x20000000} 'Unknown 30',
+          {0x10000000} 'Unknown 29',
+          {0x20000000} 'Wear Sleep Outfit',
           {0x40000000} 'Unknown 31',
           {0x80000000} 'Unknown 32'
         ]);
@@ -11638,188 +11642,258 @@ begin
 
   wbPKDTSpecificFlagsUnused := False;
 
-  wbPKDT := wbRStruct('Pack Data', [
-		wbStruct(PKDT, 'General', [
+  wbPKDT := wbStruct(PKDT, 'Pack Data', [
 			wbInteger('General Flags', itU32, wbPKDTFlags),
 			wbInteger('Type', itU8, wbPKDTType),
-			wbByteArray('Unknown', 1),
-			wbInteger('Fallout Behavior Flags', itU16, wbFlags([
-				{0x00000001}'Hellos To Player',
-				{0x00000002}'Random Conversations',
-				{0x00000004}'Observe Combat Behavior',
-				{0x00000008}'Unknown 4',
-				{0x00000010}'Reaction To Player Actions',
-				{0x00000020}'Friendly Fire Comments',
-				{0x00000040}'Aggro Radius Behavior',
-				{0x00000080}'Allow Idle Chatter',
-				{0x00000100}'Avoid Radiation',
-        {0x00000200}'Unknown 10',
+			wbInteger('Interrupt Override', itU8, wbEnum([
+        'None',
+        'Spectator',
+        'ObserveDead',
+        'GuardWarn',
+        'Combat'
+      ])),
+			wbInteger('Preferred Speed', itU8, wbEnum([
+        'Walk',
+        'Jog',
+        'Run',
+        'Fast Walk'
+      ])),
+      wbByteArray('Unknown', 1),
+      wbInteger('Interrupt Flags', itU32, wbFlags([
+        {0x00000001}'Hellos to player',
+        {0x00000002}'Random conversations',
+        {0x00000004}'Observe combat behavior',
+        {0x00000008}'Greet corpse behavior',
+        {0x00000010}'Reaction to player actions',
+        {0x00000020}'Friendly fire comments',
+        {0x00000040}'Aggro Radius Behavior',
+        {0x00000080}'Allow Idle Chatter',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'World Interactions',
         {0x00000400}'Unknown 11',
         {0x00000800}'Unknown 12',
         {0x00001000}'Unknown 13',
         {0x00002000}'Unknown 14',
         {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16'
-			], wbPKDTSpecificFlagsUnused)),
-			wbUnion('Type Specific Flags', wbPKDTSpecificFlagsDecider, [
-				wbEmpty('Type Specific Flags (missing)', cpIgnore, False, nil, True),
-				wbInteger('Type Specific Flags - Find', itU16, wbFlags([
-          {0x00000001}'Unknown 1',
-          {0x00000002}'Unknown 2',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'Unknown 5',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-					{0x00000100}'Find - Allow Buying',
-					{0x00000200}'Find - Allow Killing',
-					{0x00000400}'Find - Allow Stealing',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Follow', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Escort', itU16, wbFlags([
-          {0x00000001}'Unknown 1',
-          {0x00000002}'Unknown 2',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Escort - Unknown 4',
-          {0x00000010}'Unknown 5',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-					{0x00000100}'Escort - Allow Buying',
-					{0x00000200}'Escort - Allow Killing',
-					{0x00000400}'Escort - Allow Stealing',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Eat', itU16, wbFlags([
-          {0x00000001}'Unknown 1',
-          {0x00000002}'Unknown 2',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'Unknown 5',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-					{0x00000100}'Eat - Allow Buying',
-					{0x00000200}'Eat - Allow Killing',
-					{0x00000400}'Eat - Allow Stealing',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Sleep', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Wander', itU16, wbFlags([
-					{0x00000001}'Wander - No Eating',
-					{0x00000002}'Wander - No Sleeping',
-					{0x00000004}'Wander - No Conversation',
-					{0x00000008}'Wander - No Idle Markers',
-					{0x00000010}'Wander - No Furniture',
-					{0x00000020}'Wander - No Wandering',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000100}'Unknown 9',
-          {0x00000200}'Unknown 10',
-          {0x00000400}'Unknown 11',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Travel', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Accompany', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Use Item At', itU16, wbFlags([
-          {0x00000001}'Unknown 1',
-					{0x00000002}'Use Item At - Sit Down',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'Unknown 5',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-					{0x00000100}'Use Item At - Allow Buying',
-					{0x00000200}'Use Item At - Allow Killing',
-					{0x00000400}'Use Item At - Allow Stealing',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Ambush', itU16, wbFlags([
-					{0x00000001}'Ambush - Hide While Ambushing',
-          {0x00000002}'Unknown 2',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'Unknown 5',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000100}'Unknown 9',
-          {0x00000200}'Unknown 10',
-          {0x00000400}'Unknown 11',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Flee Not Combat', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - ?', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Sandbox', itU16, wbFlags([
-					{0x00000001}'Sandbox - No Eating',
-					{0x00000002}'Sandbox - No Sleeping',
-					{0x00000004}'Sandbox - No Conversation',
-					{0x00000008}'Sandbox - No Idle Markers',
-					{0x00000010}'Sandbox - No Furniture',
-					{0x00000020}'Sandbox - No Wandering',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000100}'Unknown 9',
-          {0x00000200}'Unknown 10',
-          {0x00000400}'Unknown 11',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Patrol', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Guard', itU16, wbFlags([
-          {0x00000001}'Unknown 1',
-          {0x00000002}'Unknown 2',
-					{0x00000004}'Guard - Remain Near Reference to Guard',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'Unknown 5',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000100}'Unknown 9',
-          {0x00000200}'Unknown 10',
-          {0x00000400}'Unknown 11',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-				], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Dialogue', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-				wbInteger('Type Specific Flags - Use Weapon', itU16, wbFlags([], wbPKDTSpecificFlagsUnused))
-			], cpNormal, True, nil),
-			wbByteArray('Unknown', 2)
-		])
-  ], []);
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ]))
+//			wbInteger('Fallout Behavior Flags', itU16, wbFlags([
+//				{0x00000001}'Hellos To Player',
+//				{0x00000002}'Random Conversations',
+//				{0x00000004}'Observe Combat Behavior',
+//				{0x00000008}'Unknown 4',
+//				{0x00000010}'Reaction To Player Actions',
+//				{0x00000020}'Friendly Fire Comments',
+//				{0x00000040}'Aggro Radius Behavior',
+//				{0x00000080}'Allow Idle Chatter',
+//				{0x00000100}'Avoid Radiation',
+//        {0x00000200}'Unknown 10',
+//        {0x00000400}'Unknown 11',
+//        {0x00000800}'Unknown 12',
+//        {0x00001000}'Unknown 13',
+//        {0x00002000}'Unknown 14',
+//        {0x00004000}'Unknown 15',
+//        {0x00008000}'Unknown 16'
+//			], wbPKDTSpecificFlagsUnused)),
+//			wbUnion('Type Specific Flags', wbPKDTSpecificFlagsDecider, [
+//				wbEmpty('Type Specific Flags (missing)', cpIgnore, False, nil, True),
+//				wbInteger('Type Specific Flags - Find', itU16, wbFlags([
+//          {0x00000001}'Unknown 1',
+//          {0x00000002}'Unknown 2',
+//          {0x00000004}'Unknown 3',
+//          {0x00000008}'Unknown 4',
+//          {0x00000010}'Unknown 5',
+//          {0x00000020}'Unknown 6',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//					{0x00000100}'Find - Allow Buying',
+//					{0x00000200}'Find - Allow Killing',
+//					{0x00000400}'Find - Allow Stealing',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Follow', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Escort', itU16, wbFlags([
+//          {0x00000001}'Unknown 1',
+//          {0x00000002}'Unknown 2',
+//          {0x00000004}'Unknown 3',
+//          {0x00000008}'Escort - Unknown 4',
+//          {0x00000010}'Unknown 5',
+//          {0x00000020}'Unknown 6',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//					{0x00000100}'Escort - Allow Buying',
+//					{0x00000200}'Escort - Allow Killing',
+//					{0x00000400}'Escort - Allow Stealing',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Eat', itU16, wbFlags([
+//          {0x00000001}'Unknown 1',
+//          {0x00000002}'Unknown 2',
+//          {0x00000004}'Unknown 3',
+//          {0x00000008}'Unknown 4',
+//          {0x00000010}'Unknown 5',
+//          {0x00000020}'Unknown 6',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//					{0x00000100}'Eat - Allow Buying',
+//					{0x00000200}'Eat - Allow Killing',
+//					{0x00000400}'Eat - Allow Stealing',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Sleep', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Wander', itU16, wbFlags([
+//					{0x00000001}'Wander - No Eating',
+//					{0x00000002}'Wander - No Sleeping',
+//					{0x00000004}'Wander - No Conversation',
+//					{0x00000008}'Wander - No Idle Markers',
+//					{0x00000010}'Wander - No Furniture',
+//					{0x00000020}'Wander - No Wandering',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//          {0x00000100}'Unknown 9',
+//          {0x00000200}'Unknown 10',
+//          {0x00000400}'Unknown 11',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Travel', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Accompany', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Use Item At', itU16, wbFlags([
+//          {0x00000001}'Unknown 1',
+//					{0x00000002}'Use Item At - Sit Down',
+//          {0x00000004}'Unknown 3',
+//          {0x00000008}'Unknown 4',
+//          {0x00000010}'Unknown 5',
+//          {0x00000020}'Unknown 6',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//					{0x00000100}'Use Item At - Allow Buying',
+//					{0x00000200}'Use Item At - Allow Killing',
+//					{0x00000400}'Use Item At - Allow Stealing',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Ambush', itU16, wbFlags([
+//					{0x00000001}'Ambush - Hide While Ambushing',
+//          {0x00000002}'Unknown 2',
+//          {0x00000004}'Unknown 3',
+//          {0x00000008}'Unknown 4',
+//          {0x00000010}'Unknown 5',
+//          {0x00000020}'Unknown 6',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//          {0x00000100}'Unknown 9',
+//          {0x00000200}'Unknown 10',
+//          {0x00000400}'Unknown 11',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Flee Not Combat', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - ?', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Sandbox', itU16, wbFlags([
+//					{0x00000001}'Sandbox - No Eating',
+//					{0x00000002}'Sandbox - No Sleeping',
+//					{0x00000004}'Sandbox - No Conversation',
+//					{0x00000008}'Sandbox - No Idle Markers',
+//					{0x00000010}'Sandbox - No Furniture',
+//					{0x00000020}'Sandbox - No Wandering',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//          {0x00000100}'Unknown 9',
+//          {0x00000200}'Unknown 10',
+//          {0x00000400}'Unknown 11',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Patrol', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Guard', itU16, wbFlags([
+//          {0x00000001}'Unknown 1',
+//          {0x00000002}'Unknown 2',
+//					{0x00000004}'Guard - Remain Near Reference to Guard',
+//          {0x00000008}'Unknown 4',
+//          {0x00000010}'Unknown 5',
+//          {0x00000020}'Unknown 6',
+//          {0x00000040}'Unknown 7',
+//          {0x00000080}'Unknown 8',
+//          {0x00000100}'Unknown 9',
+//          {0x00000200}'Unknown 10',
+//          {0x00000400}'Unknown 11',
+//          {0x00000800}'Unknown 12',
+//          {0x00001000}'Unknown 13',
+//          {0x00002000}'Unknown 14',
+//          {0x00004000}'Unknown 15',
+//          {0x00008000}'Unknown 16'
+//				], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Dialogue', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
+//				wbInteger('Type Specific Flags - Use Weapon', itU16, wbFlags([], wbPKDTSpecificFlagsUnused))
+//			], cpNormal, True, nil),
+//			wbByteArray('Unknown', 2)
+//		])
+  ], cpNormal, True);
+
+  wbPSDT := wbStruct(PSDT, 'Schedule', [
+    wbInteger('Month', itS8),
+    wbInteger('Day of week', itS8, wbEnum([
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Weekdays',
+      'Weekends',
+      'Monday, Wednesday, Friday',
+      'Tuesday, Thursday'
+    ], [
+      -1, 'Any'
+    ])),
+    wbInteger('Date', itU8),
+    wbInteger('Hour', itS8),
+    wbInteger('Minute', itS8),
+    wbByteArray('Unknown', 3),
+    wbInteger('Duration (minutes)', itS32)
+  ], cpNormal, True);
 
   wbPLDT := wbRStruct('Locations', [
       wbStruct(PLDT, 'Location 1', [
@@ -11868,32 +11942,6 @@ begin
         ]),
         wbInteger('Radius', itS32)
       ])
-    ], []);
-
-  wbPSDT := wbRStruct('Schedules', [
-    wbStruct(PSDT, 'Schedule', [
-      wbInteger('Month', itS8),
-      wbInteger('Day of week', itS8, wbEnum([
-        'Sunday',
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
-        'Weekdays',
-        'Weekends',
-        'Monday, Wednesday, Friday',
-        'Tuesday, Thursday'
-      ], [
-        -1, 'Any'
-      ])),
-      wbInteger('Date', itU8),
-      wbInteger('Hour', itS8),
-      wbInteger('Minute', itS8),
-      wbByteArray('Unknown', 3),
-      wbInteger('Duration', itS32)
-    ], cpNormal, True)
     ], []);
 
     wbPTDT := wbRStruct('Targets', [
@@ -12084,7 +12132,7 @@ begin
 
   wbPubPack := wbRStruct('Public Package Data', [
       wbRArray('Array Of ANAM', wbRStruct('ANAM Array', [
-          wbUnknown(ANAM),
+          wbString(ANAM, 'Activity Type'),
           wbUnknown(CNAM),
           wbUnknown(BNAM),
           wbPDTOs,
@@ -12146,7 +12194,7 @@ begin
   wbRecord(PACK, 'Package', [
     wbEDIDReq,
     wbVMAD,
-    wbUnknown(PKDT),
+    wbPKDT,
     //--------------------------------------------------------------------------
     // wbPKDT,
     //--------------------------------------------------------------------------
@@ -12168,9 +12216,13 @@ begin
     wbPSDT,
     wbCTDAs,
     wbIDLF,
-    wbUnknown(CNAM),
-    wbUnknown(QNAM),
-    wbUnknown(PKCU),
+    wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
+    wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
+    wbStruct(PKCU, 'PKCU', [
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Package Template', [PACK]),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True),
     wbPubPack,
     wbUnknown(XNAM),
     wbProdTree,
@@ -12227,7 +12279,7 @@ begin
 //      wbEmbeddedScriptReq,
 //      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
 //    ], [], cpNormal, True)
-  ], False, nil, cpNormal, False, wbPACKAfterLoad);
+  ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 //------------------------------------------------------------------------------
 // End PACK
 //------------------------------------------------------------------------------
