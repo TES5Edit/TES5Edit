@@ -246,13 +246,13 @@ begin
 //    RecordToSkip.Add('LAND');
 //    RecordToSkip.Add('REGN');
 //    RecordToSkip.Add('PGRD');
-      RecordToSkip.Add('SCEN');
-      RecordToSkip.Add('PACK');
-      RecordToSkip.Add('PERK');
+//      RecordToSkip.Add('SCEN');
+//      RecordToSkip.Add('PACK');
+//      RecordToSkip.Add('PERK');
 //      RecordToSkip.Add('NAVI');
-      RecordToSkip.Add('CELL');
-      RecordToSkip.Add('WRLD');
-      RecordToSkip.Add('REFR');
+//      RecordToSkip.Add('CELL');
+//      RecordToSkip.Add('WRLD');
+//      RecordToSkip.Add('REFR');
     end;
 
     if wbFindCmdLineParam('xg', s) then
@@ -261,12 +261,12 @@ begin
 //    GroupToSkip.Add('LAND');
 //    GroupToSkip.Add('REGN');
 //    GroupToSkip.Add('PGRD');
-      GroupToSkip.Add('SCEN');
-      GroupToSkip.Add('PACK');
-      GroupToSkip.Add('PERK');
+//      GroupToSkip.Add('SCEN');
+//      GroupToSkip.Add('PACK');
+//      GroupToSkip.Add('PERK');
 //      GroupToSkip.Add('NAVI');
-      GroupToSkip.Add('CELL');
-      GroupToSkip.Add('WRLD');
+//      GroupToSkip.Add('CELL');
+//      GroupToSkip.Add('WRLD');
     end;
 
     s := ParamStr(ParamCount);
