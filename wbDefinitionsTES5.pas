@@ -377,6 +377,7 @@ const
   MDOB : TwbSignature = 'MDOB';
   MESG : TwbSignature = 'MESG';
   MGEF : TwbSignature = 'MGEF';
+  MHDT : TwbSignature = 'MHDT'; { New to Skyrim }
   MIC2 : TwbSignature = 'MIC2';
   MICN : TwbSignature = 'MICN';
   MICO : TwbSignature = 'MICO';
@@ -698,6 +699,7 @@ const
   XHLT : TwbSignature = 'XHLT';
   XHOR : TwbSignature = 'XHOR'; { New To Skyrim }
   XIBS : TwbSignature = 'XIBS';
+  XILL : TwbSignature = 'XILL'; { New To Skyrim }
   XIS2 : TwbSignature = 'XIS2'; { New To Skyrim }
   XLCM : TwbSignature = 'XLCM';
   XLCN : TwbSignature = 'XLCN'; { New To Skyrim }
@@ -741,6 +743,7 @@ const
   XTNM : TwbSignature = 'XTNM'; { New To Skyrim }
   XTRG : TwbSignature = 'XTRG';
   XTRI : TwbSignature = 'XTRI';
+  XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
   XXXX : TwbSignature = 'XXXX';
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
@@ -6496,24 +6499,42 @@ begin
 //------------------------------------------------------------------------------
 // Begin CELL
 //------------------------------------------------------------------------------
-// Pattern 1: DATA XCLC TVDT LTMP XCLW
-// Pattern 2: DATA XCLC TVDT MHDT LTMP XCLW XCLR
-// Pattern 3: EDID DATA XCLC TVDT MHDT LTMP XCLW XCLR XLCN
-//
+// Pattern  1:           DATA      XCLC           LTMP XCLW                          XCMO           XCAS
+// Pattern  2:           DATA      XCLC TVDT      LTMP XCLW
+// Pattern  3:           DATA      XCLC TVDT MHDT LTMP XCLW XCLR
+// Pattern  4:           DATA      XCLC           LTMP XCLW
+// Pattern  5: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN
+// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN           XCMO                     XEZN XCAS
+// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN           XCMO XCCM      XCAS XWEM XEZN
+// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN           XCMO           XCAS
+// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM XOWN XCMO XCCM XILL XCAS
+// Pattern 10:
 //------------------------------------------------------------------------------
   wbRecord(CELL, 'Cell', [
+// EDID
     wbEDID,
+// FULL
     wbFULL,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Is Interior Cell',
-      {0x02} 'Has water',
-      {0x04} 'Invert Fast Travel behavior',
-      {0x08} 'Force hide land (exterior cell) / Oblivion interior (interior cell)',
-      {0x10} '',
-      {0x20} 'Public place',
-      {0x40} 'Hand changed',
-      {0x80} 'Behave like exterior'
+// DATA
+    wbInteger(DATA, 'Flags', itU16, wbFlags([
+			{0x00000001}'Is Interior Cell',
+			{0x00000002}'Has water',
+			{0x00000004}'Invert Fast Travel behavior',
+			{0x00000008}'Force hide land (exterior cell) / Oblivion interior (interior cell)',
+			{0x00000010}'Unknown 5',
+			{0x00000020}'Public place',
+			{0x00000040}'Hand changed',
+			{0x00000080}'Behave like exterior',
+			{0x00000100}'Unknown 9',
+			{0x00000200}'Unknown 10',
+			{0x00000400}'Unknown 11',
+			{0x00000800}'Unknown 12',
+			{0x00001000}'Unknown 13',
+			{0x00002000}'Unknown 14',
+			{0x00004000}'Unknown 15',
+			{0x00008000}'Unknown 16'
     ]), cpNormal, True),
+// XCLC Not sure which should go first
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -6524,6 +6545,7 @@ begin
         'Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
+// XCLL Not sure which should go first
     wbStruct(XCLL, 'Lighting', [
       wbStruct('Ambient Color', [
         wbInteger('Red', itU8),
@@ -6549,8 +6571,9 @@ begin
       wbInteger('Directional Rotation Z', itS32),
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
-      wbFloat('Fog Power')
-    ], cpNormal, False, nil, 7),
+      wbFloat('Fog Power'),
+			wbByteArray('Unknown', 0)
+    ], cpNormal, False),
     wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
       'ConcSolid',
       'ConcBroken',
@@ -6563,6 +6586,11 @@ begin
       'Grass',
       'Water'
     ]),
+// TVDT
+		wbUnknown(TVDT),
+// MHDT
+		wbUnknown(MHDT),
+// LTMP
     wbRStruct('Light Template', [
       wbFormIDCk(LTMP, 'Template', [LGTM, NULL]),
       wbInteger(LNAM, 'Inherit', itU32, wbFlags([
@@ -6577,21 +6605,50 @@ begin
         {0x00000100}'Fog Power'
       ]), cpNormal, True)
     ], [], cpNormal, True ),
+// XCLW
     wbFloat(XCLW, 'Water Height'),
     wbString(XNAM, 'Water Noise Texture'),
+// XCLR
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbFormIDCk(XCIM, 'Image Space', [IMGS]),
+		wbRUnion('Union', [
+// XCIM XLCN
+      wbRStruct('XCIM XLCN', [
+        wbFormIDCk(XCIM, 'Image Space', [IMGS]), // Moved from between XCLR and XCET
+        wbUnknown(XLCN)
+      ], []),
+// XLCN XCIM
+      wbRStruct('XLCN XCIM', [
+        wbUnknown(XLCN),
+        wbFormIDCk(XCIM, 'Image Space', [IMGS]) // Moved from between XCLR and XCET
+      ], [])
+    ], []),
     wbByteArray(XCET, 'Unknown', 1, cpIgnore),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbFormIDCk(XCCM, 'Climate', [CLMT]),
     wbFormIDCk(XCWT, 'Water', [WATR]),
+// XOWN
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
     ], [XCMT, XCMO]),
-    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
     wbByteArray(XCMT, 'Unknown', 1, cpIgnore),
-    wbFormIDCk(XCMO, 'Music Type', [MUSC])
+// XCMO
+    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+// XCCM
+    wbFormIDCk(XCCM, 'Climate', [CLMT]), // Moved from between XCET and XCWT
+// XILL
+		wbUnknown(XILL),
+		wbRUnion('Union', [
+// XCAS XWEM XEZN
+      wbRStruct('XCAS XWEM XEZN', [
+        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]), // Moved from between XOWN (Ownership) and XCMT
+        wbUnknown(XWEM),
+        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]) // Moved from between XCET and XCCM
+      ], []),
+// XEZN XCAS
+      wbRStruct('XEZN XCAS', [
+        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
+        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]) // Moved from between XOWN (Ownership) and XCMT
+      ], [])
+    ], [])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 //------------------------------------------------------------------------------
 // End CELL
@@ -12542,6 +12599,7 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(REFR, 'Placed Object', [
     wbEDID,
+    wbVMAD,
     {
     wbStruct(RCLR, 'Linked Reference Color (Old Format?)', [
       wbStruct('Link Start Color', [
