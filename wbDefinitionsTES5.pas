@@ -300,6 +300,7 @@ const
   GMST : TwbSignature = 'GMST';
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
+  GWOR : TwbSignature = 'GWOR'; { New to Skyrim }
   HAIR : TwbSignature = 'HAIR';
   HAZD : TwbSignature = 'HAZD';
   HCLF : TwbSignature = 'HCLF'; { New to Skyrim }
@@ -455,6 +456,7 @@ const
   NVTR : TwbSignature = 'NVTR';
   NVVX : TwbSignature = 'NVVX';
   OBND : TwbSignature = 'OBND';
+  OCOR : TwbSignature = 'OCOR'; { New to Skyrim }
   OFST : TwbSignature = 'OFST';
   ONAM : TwbSignature = 'ONAM';
   OTFT : TwbSignature = 'OTFT';
@@ -4645,7 +4647,8 @@ begin
 					]),
 					wbByteArray('Unknown', 4),
 					wbByteArray('Unknown', 4),
-					wbByteArray('Unknown', 4),
+					//wbByteArray('Unknown', 4),
+          wbFloat('Far away model distance'),
 					wbByteArray('Unknown', 4)
 				])
 			], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
@@ -6912,7 +6915,7 @@ begin
      {03} wbInteger('Responsibility', itU8, wbEnum([
             'Any crime',
             'Violence against enemies',
-            'Property crime',
+            'Property crime only',
             'No crime'
           ])),
      {04} wbInteger('Mood', itU8, wbEnum([
@@ -6934,14 +6937,18 @@ begin
             'Helps Allies',
             'Helps Friends and Allies'
           ])),
-          wbByteArray('Unknown', 3),
-          wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-          wbInteger('Teaches', itS8, wbSkillEnum),
-          wbInteger('Maximum training level', itU8),
-          wbInteger('Aggro Radius Behavior', itU8, wbFlags([
-            'Aggro Radius Behavior'
-          ])),
-          wbInteger('Aggro Radius', itS32)
+          wbStruct('Aggro', [
+            wbInteger('Aggro Radius Behavior', itU16, wbFlags([
+              'Aggro Radius Behavior'
+            ])),
+            wbInteger('Warn', itU32),
+            wbInteger('Warn/Attack', itU32),
+            wbInteger('Attack', itU32)
+          ])
+          //wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
+          //wbInteger('Teaches', itS8, wbSkillEnum),
+          //wbInteger('Maximum training level', itU8),
+          //wbInteger('Aggro Radius', itS32)
     ], cpNormal, True, wbActorTemplateUseAIData);
 
   wbAttackAnimationEnum :=
@@ -11094,7 +11101,7 @@ begin
         {0x00008000} '',
         {0x00010000} 'Doesn''t bleed',
         {0x00020000} '',
-        {0x00040000} 'Owned',
+        {0x00040000} 'Bleedout Override',
         {0x00080000} 'Opposite Gender Anims',
         {0x00100000} 'Simple Actor',
         {0x00200000} 'looped script?',
@@ -11105,9 +11112,9 @@ begin
         {0x04000000} '',
         {0x08000000} '',
         {0x10000000} 'looped audio?',
-        {0x20000000} 'Ghost/non-interactable',
+        {0x20000000} 'Is Ghost',
         {0x40000000} '',
-        {0x80000000} ''
+        {0x80000000} 'Invulnerable'
         ], [
         {0x00000001} nil,
         {0x00000002} nil,
@@ -11146,7 +11153,7 @@ begin
       wbInteger('Stamina Offset', itU16, nil, cpNormal, False, wbActorTemplateUseAIData),
       wbUnion('Level', wbCreaLevelDecider, [
         wbInteger('Level', itS16, nil, cpNormal, True, wbActorTemplateUseStats),
-        wbInteger('Level Mult', itS16, wbDiv(100), cpNormal, True, wbActorTemplateUseStats)
+        wbInteger('Level Mult', itS16, wbDiv(1000), cpNormal, True, wbActorTemplateUseStats)
       ], cpNormal, True, wbActorTemplateUseStats),
       wbInteger('Calc min level', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
       wbInteger('Calc max level', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
@@ -11182,7 +11189,7 @@ begin
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
     wbDEST,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
-    wbFormIDCk(ANAM, 'Armor', [ARMO], False, cpNormal, False),
+    wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attack Data', wbATKD),
     wbArray(ATKE, 'Attack Event', wbString),
@@ -11190,8 +11197,10 @@ begin
     wbSPLOs,
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
-    wbFormIDCk(ECOR, 'Escape combat override', [FLST], False, cpNormal, False),
-    wbFormIDCk(SPOR, 'Spell override', [FLST], False, cpNormal, False),
+    wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
+    wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
+    wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
+    wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbCOCTReq,
     wbCNTOs,
     wbAIDT,
@@ -11200,17 +11209,17 @@ begin
     wbKWDAs,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
-    wbLString(SHRT, 'Short Alias'),
+    wbLString(SHRT, 'Short Name'),
     wbByteArray(DATA, 'Marker'),
     wbDNAMActor,
     wbRArrayS('Head Parts',
       wbFormIDCk(PNAM, 'Head Part', [HDPT]),
     cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
     wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
-    wbUnknown(GNAM),
+    wbFormIDCk(GNAM, 'Gift Filter', [FTST], False, cpNormal, False),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
     wbUnknown(NAM5, cpNormal, True),
-    wbFloat(NAM6, 'Scale', cpNormal, True),
+    wbFloat(NAM6, 'Height', cpNormal, True),
     wbFloat(NAM7, 'Weight', cpNormal, True),
     wbUnknown(NAM8, cpNormal, True),
     wbCSDTs,
