@@ -746,6 +746,8 @@ const
   XTRG : TwbSignature = 'XTRG';
   XTRI : TwbSignature = 'XTRI';
   XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
+  XWCN : TwbSignature = 'XWCN'; { New To Skyrim }
+  XWCU : TwbSignature = 'XWCU'; { New To Skyrim }
   XXXX : TwbSignature = 'XXXX';
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
@@ -5275,8 +5277,23 @@ begin
 //------------------------------------------------------------------------------
 // Begin ACHR
 //------------------------------------------------------------------------------
+// Pattern  1:           NAME XLCM XLKR                XLCN           DATA
+// Pattern  2: EDID      NAME XLCM                     XLCN           DATA
+// Pattern  3: EDID      NAME                          XLCN XLRT      DATA
+// Pattern  4:      VMAD NAME XLCM XLKR XAPD XAPR      XLCN      XESP DATA
+// Pattern  5:      VMAD NAME XLCM      XAPD XAPR XLKR XLCN           DATA
+// Pattern  6:      VMAD NAME XLCM XLKR                XLCN XLRT      DATA
+// Pattern  7:
+// Pattern  8:
+// Pattern  9:
+// Pattern 10:
+//------------------------------------------------------------------------------
   wbRecord(ACHR, 'Placed NPC', [
+// EDID
     wbEDID,
+// VMAD
+    wbVMAD,
+// NAME
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
@@ -5294,6 +5311,7 @@ begin
     ], []),
 
     {--- Leveled Actor ----}
+// XLCM
     wbXLCM,
 
     {--- Merchant Container ----}
@@ -5312,8 +5330,44 @@ begin
       ])
     ),
 
+		wbRUnion('Union', [
+// XLKR XAPD XAPR
+      wbRStruct('XLKR XAPD XAPR', [
+        wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False),  // Moved from between XDCR and XCLP
+			  {--- Activate Parents ---}
+				// XAPD XAPR
+				wbRStruct('Activate Parents', [
+					wbInteger(XAPD, 'Flags', itU8, wbFlags([
+						'Parent Activate Only'
+					], True)),
+					wbRArrayS('Activate Parent Refs',
+						wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+							wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+							wbFloat('Delay')
+						])
+					)
+				], [])
+      ], []),
+// XAPD XAPR XLKR
+      wbRStruct('XAPD XAPR XLKR', [
+			  {--- Activate Parents ---}
+				// XAPD XAPR
+				wbRStruct('Activate Parents', [
+					wbInteger(XAPD, 'Flags', itU8, wbFlags([
+						'Parent Activate Only'
+					], True)),
+					wbRArrayS('Activate Parent Refs',
+						wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+							wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+							wbFloat('Delay')
+						])
+					)
+				], []),
+        wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False)  // Moved from between XDCR and XCLP
+      ], [])
+    ], []),
+
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -5329,22 +5383,15 @@ begin
       ])
     ]),
 
-    {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
+// XLCN
+		wbUnknown(XLCN),
+// XLRT
+		wbUnknown(XLRT),
 
     wbString(XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
+// XESP
     wbXESP,
 
     {--- Emittance ---}
@@ -5358,6 +5405,7 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
+// DATA
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 //------------------------------------------------------------------------------
@@ -6502,16 +6550,16 @@ begin
 //------------------------------------------------------------------------------
 // Begin CELL
 //------------------------------------------------------------------------------
-// Pattern  1:           DATA      XCLC           LTMP XCLW                          XCMO           XCAS
+// Pattern  1:           DATA      XCLC           LTMP XCLW                               XCMO           XCAS
 // Pattern  2:           DATA      XCLC TVDT      LTMP XCLW
 // Pattern  3:           DATA      XCLC TVDT MHDT LTMP XCLW XCLR
 // Pattern  4:           DATA      XCLC           LTMP XCLW
 // Pattern  5: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN
-// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN           XCMO                     XEZN XCAS
-// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN           XCMO XCCM      XCAS XWEM XEZN
-// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN           XCMO           XCAS
-// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM XOWN XCMO XCCM XILL XCAS
-// Pattern 10:
+// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                XCMO                     XEZN XCAS
+// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                XCMO XCCM      XCAS XWEM XEZN
+// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                XCMO           XCAS
+// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM XOWN      XCMO XCCM XILL XCAS
+// Pattern 10: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM      XEZN XCMO XCCM           XWEM
 //------------------------------------------------------------------------------
   wbRecord(CELL, 'Cell', [
 // EDID
@@ -12598,16 +12646,32 @@ begin
 //------------------------------------------------------------------------------
 // Begin REFR
 //------------------------------------------------------------------------------
-// Pattern 1:      NAME XWCN XWCU                     DATA
-// Pattern 2:      NAME XWCN XWCU XSCL                DATA
-// Pattern 3:      NAME XLCM XPRD XPPA INAM PDTO XLKR DATA
-// Pattern 4:      NAME      XPRD XPPA INAM PDTO XLKR DATA
-// Pattern 5: EDID NAME XLKR XPRD XPPA INAM PDTO      DATA
-// Pattern 6: EDID NAME      XPRD XPPA INAM PDTO XLKR DATA
-// Pattern 7: EDID NAME      XPRD XPPA INAM PDTO      DATA
+// Pattern  1:           NAME XWCN XWCU                                         DATA
+// Pattern  2:           NAME XWCN XWCU                                    XSCL DATA
+// Pattern  3:           NAME XLCM      XPRD XPPA INAM PDTO XLKR                DATA
+// Pattern  4:           NAME           XPRD XPPA INAM PDTO XLKR                DATA
+// Pattern  5: EDID      NAME XLKR      XPRD XPPA INAM PDTO                     DATA
+// Pattern  6: EDID      NAME           XPRD XPPA INAM PDTO XLKR                DATA
+// Pattern  7: EDID      NAME           XPRD XPPA INAM PDTO                     DATA
+// Pattern  8:      VMAD NAME                                              XSCL DATA
+// Pattern  9:           NAME                                    XLIB           DATA
+// Pattern 10:           NAME XRDS      XLIG                                    DATA
+// Pattern 11:           NAME           XLIG                                    DATA
+// Pattern 12:           NAME                                    XALP      XSCL DATA
+// Pattern 13:           NAME XRDS XEMI XLIG                                    DATA
+// Pattern 14:           NAME                                    XLIB XESP      DATA
+// Pattern 15:           NAME                                         XLRT XOWN DATA
+// Pattern 16:           NAME XMBO XPRM XRMR LNAM                               DATA
+// Pattern 17:           NAME                                    XLIB           DATA
+// Pattern 18:
+// Pattern 19:
+// Pattern 20:
+// Pattern 21:
 //------------------------------------------------------------------------------
   wbRecord(REFR, 'Placed Object', [
+// EDID
     wbEDID,
+// VMAD
     wbVMAD,
     {
     wbStruct(RCLR, 'Linked Reference Color (Old Format?)', [
@@ -12625,35 +12689,29 @@ begin
       ])
     ], cpIgnore),}
     wbByteArray(RCLR, 'Unknown', 0, cpIgnore),
+// NAME
     wbFormIDCk(NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, CHIP,
                               MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CCRD], False, cpNormal, True),
+
+// XRDS
+    wbFloat(XRDS, 'Radius'), // Moved from between XCNT and XHLP
+
+    {--- Emittance ---}
+    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]), // Moved from between XESP and XMBR
+
+// XLIG
+		wbUnknown(XLIG),
+// XWCN
+		wbUnknown(XWCN),
+// XWCU
+		wbUnknown(XWCU),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- ?? ---}
     wbXRGD,
     wbXRGB,
 
-    {--- Primitive ---}
-    wbStruct(XPRM, 'Primitive', [
-      wbStruct('Bounds', [
-        wbFloat('X', cpNormal, True, 2, 4),
-        wbFloat('Y', cpNormal, True, 2, 4),
-        wbFloat('Z', cpNormal, True, 2, 4)
-      ]),
-      wbStruct('Color', [
-        {84} wbFloat('Red', cpNormal, False, 255, 0),
-        {88} wbFloat('Green', cpNormal, False, 255, 0),
-        {92} wbFloat('Blue', cpNormal, False, 255, 0)
-      ]),
-      wbFloat('Unknown'),
-      wbInteger('Type', itU32, wbEnum([
-        'None',
-        'Box',
-        'Sphere',
-        'Portal Box'
-      ]))
-    ]),
     wbInteger(XTRI, 'Collision Layer', itU32, wbEnum([
       'Unidentified',
       'Static',
@@ -12704,11 +12762,34 @@ begin
     {--- Bound Contents ---}
 
     {--- Bound Data ---}
+// XMBO
     wbStruct(XMBO, 'Bound Half Extents', [
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
     ]),
+
+    {--- Primitive ---}
+// XPRM
+    wbStruct(XPRM, 'Primitive', [ // Moved from between XESP and XTRI
+      wbStruct('Bounds', [
+        wbFloat('X', cpNormal, True, 2, 4),
+        wbFloat('Y', cpNormal, True, 2, 4),
+        wbFloat('Z', cpNormal, True, 2, 4)
+      ]),
+      wbStruct('Color', [
+        {84} wbFloat('Red', cpNormal, False, 255, 0),
+        {88} wbFloat('Green', cpNormal, False, 255, 0),
+        {92} wbFloat('Blue', cpNormal, False, 255, 0)
+      ]),
+      wbFloat('Unknown'),
+      wbInteger('Type', itU32, wbEnum([
+        'None',
+        'Box',
+        'Sphere',
+        'Portal Box'
+      ]))
+    ]), // Moved from between XESP and XTRI
 
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [
@@ -12767,16 +12848,37 @@ begin
     wbFormIDCk(XTRG, 'Target', [REFR, ACRE, ACHR, PGRE, PMIS], True),
 
     {--- Leveled Actor ----}
+// XVLM
     wbXLCM,
 
     {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+		wbRUnion('Union', [
+// XLKR XPRD XPPA INAM PDTO
+      wbRStruct('XLKR XPRD XPPA INAM PDTO', [
+			  wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False),  // Moved from between XDCR and XCLP
+        wbFloat(XPRD, 'Idle Time', cpNormal, True),
+        wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+        wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+        wbUnknown(PDTO)
+      ], []),
+// XPRD XPPA INAM PDTO XLKR
+      wbRStruct('XPRD XPPA INAM PDTO XLKR', [
+        wbFloat(XPRD, 'Idle Time', cpNormal, True),
+        wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+        wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+        wbUnknown(PDTO),
+        wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False)  // Moved from between XDCR and XCLP
+      ], [])
     ], []),
+
+//    wbRStruct('Patrol Data', [
+//      wbFloat(XPRD, 'Idle Time', cpNormal, True),
+//      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+//      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+//			wbUnknown(PDTO),
+//      wbEmbeddedScriptReq,
+//      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+//    ], []),
 
     {--- Radio ---}
     wbStruct(XRDO, 'Radio Data', [
@@ -12792,7 +12894,11 @@ begin
       wbFormIDCkNoReach('Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, NULL])
     ]),
 
+// XLRT
+		wbUnknown(XLRT),
+
     {--- Ownership ---}
+// XOWN
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
@@ -12810,7 +12916,6 @@ begin
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
     wbFloat(XHLP, 'Health'),
     wbFloat(XRAD, 'Radiation'),
     wbFloat(XCHG, 'Charge'),
@@ -12844,7 +12949,6 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -12874,12 +12978,6 @@ begin
     ], []),
 
     wbString(XATO, 'Activation Prompt'),
-
-    {--- Enable Parent ---}
-    wbXESP,
-
-    {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
@@ -12922,6 +13020,8 @@ begin
 
     wbInteger(XSED, 'SpeedTree Seed', itU8),
 
+// XRMR
+//  Does is have XLRM after it in Skyrim?
     wbRStruct('Room Data', [
       wbStruct(XRMR, 'Header', [
         wbInteger('Linked Rooms Count', itU16),
@@ -12931,6 +13031,9 @@ begin
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
       )
     ], []),
+
+// LNAM
+    wbUnknown(LNAM),
 
     wbStruct(XOCP, 'Occlusion Plane Data', [
       wbStruct('Size', [
@@ -12957,6 +13060,15 @@ begin
     ]),
 
     wbXLOD,
+
+// XLIB
+		wbUnknown(XLIB),
+
+    {--- Enable Parent ---}
+    wbXESP,  // Moved from between XATO and XMBR
+
+// XALP
+		wbUnknown(XALP),
 
     {--- 3D Data ---}
     wbXSCL,
