@@ -619,6 +619,7 @@ const
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
   TRGT : TwbSignature = 'TRGT';
+  TVDT : TwbSignature = 'TVDT'; { New To Skyrim }
   TWAT : TwbSignature = 'TWAT'; { New To Skyrim }
   TX00 : TwbSignature = 'TX00';
   TX01 : TwbSignature = 'TX01';
@@ -5270,37 +5271,57 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(ACHR, 'Placed NPC', [
     wbEDID,
-    wbVMAD,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-
-    {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True)
-    ], []),
-
-    {--- Unknown ---}
-    wbUnknown(PDTO),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- Ragdoll ---}
     wbXRGD,
     wbXRGB,
 
-    {--- 3D Data ---}
-    wbXSCL,
+    {--- Patrol Data ---}
+    wbRStruct('Patrol Data', [
+      wbFloat(XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+      wbEmbeddedScriptReq,
+      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+    ], []),
 
     {--- Leveled Actor ----}
     wbXLCM,
 
-    {--- Unknown ---}
-    wbFormIDCk(XLRT, 'Location Reference', [LCRT]),
+    {--- Merchant Container ----}
+    wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
 
-    {--- Unknown ---}
-    wbFormID(XHOR, 'Unknown'),
+    {--- Extra ---}
+    wbInteger(XCNT, 'Count', itS32),
+    wbFloat(XRDS, 'Radius'),
+    wbFloat(XHLP, 'Health'),
 
-    {--- Enable Parent ---}
-    wbXESP,
+    {--- Decals ---}
+    wbRArrayS('Linked Decals',
+      wbStructSK(XDCR, [0], 'Decal', [
+        wbFormIDCk('Reference', [REFR]),
+        wbUnknown
+      ])
+    ),
+
+    {--- Linked Ref ---}
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbStruct(XCLP, 'Linked Reference Color', [
+      wbStruct('Link Start Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbStruct('Link End Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ])
+    ]),
 
     {--- Activate Parents ---}
     wbRStruct('Activate Parents', [
@@ -5315,22 +5336,22 @@ begin
       )
     ], []),
 
-    {--- Unknown ---}
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbString(XATO, 'Activation Prompt'),
 
-    {--- Unknown ---}
-    wbXOWN,
+    {--- Enable Parent ---}
+    wbXESP,
 
-    {--- Unknown ---}
-    wbUnknown(XIS2),
+    {--- Emittance ---}
+    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
-    {--- Unknown ---}
-    wbFormIDCk(XLCN, 'Location Reference', [LCTN, NULL]), // Old Value LCRT
+    {--- MultiBound ---}
+    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
-    {--- Linked Ref ---}
-    wbArrayS(XLKR, 'Linked References', wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN, NULL]), 0, cpNormal, False),
+    {--- Flags ---}
+    wbEmpty(XIBS, 'Ignored By Sandbox'),
 
     {--- 3D Data ---}
+    wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 //------------------------------------------------------------------------------
@@ -5933,7 +5954,7 @@ begin
   wbCTDAOld := wbRStruct('Conditions', [
 					wbStruct(CTDA, 'Condition', [
 {Byte  1}		wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-{Byte  2} 	wbByteArray('Unused', 3),
+{Byte  2} 	wbByteArray('Unknown', 3),
 {Byte  5}		wbUnion('Comparison Value', wbCTDACompValueDecider, [
               wbFloat('Comparison Value - Float'),
               wbFormIDCk('Comparison Value - Global', [GLOB])
@@ -6472,6 +6493,14 @@ begin
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, wbActorTemplateUseActorEffectList);
 
+//------------------------------------------------------------------------------
+// Begin CELL
+//------------------------------------------------------------------------------
+// Pattern 1: DATA XCLC TVDT LTMP XCLW
+// Pattern 2: DATA XCLC TVDT MHDT LTMP XCLW XCLR
+// Pattern 3: EDID DATA XCLC TVDT MHDT LTMP XCLW XCLR XLCN
+//
+//------------------------------------------------------------------------------
   wbRecord(CELL, 'Cell', [
     wbEDID,
     wbFULL,
@@ -6564,6 +6593,10 @@ begin
     wbByteArray(XCMT, 'Unknown', 1, cpIgnore),
     wbFormIDCk(XCMO, 'Music Type', [MUSC])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
+//------------------------------------------------------------------------------
+// End CELL
+//------------------------------------------------------------------------------
+
 
   wbRecord(PHZD, 'PHZD', [
     wbVMAD,
@@ -12496,6 +12529,17 @@ begin
 		wbFormIDCk(SNMV, 'Movement', [MOVT, NULL])
   ], wbAllowUnordered);
 
+//------------------------------------------------------------------------------
+// Begin REFR
+//------------------------------------------------------------------------------
+// Pattern 1:      NAME XWCN XWCU                     DATA
+// Pattern 2:      NAME XWCN XWCU XSCL                DATA
+// Pattern 3:      NAME XLCM XPRD XPPA INAM PDTO XLKR DATA
+// Pattern 4:      NAME      XPRD XPPA INAM PDTO XLKR DATA
+// Pattern 5: EDID NAME XLKR XPRD XPPA INAM PDTO      DATA
+// Pattern 6: EDID NAME      XPRD XPPA INAM PDTO XLKR DATA
+// Pattern 7: EDID NAME      XPRD XPPA INAM PDTO      DATA
+//------------------------------------------------------------------------------
   wbRecord(REFR, 'Placed Object', [
     wbEDID,
     {
@@ -12514,10 +12558,6 @@ begin
       ])
     ], cpIgnore),}
     wbByteArray(RCLR, 'Unknown', 0, cpIgnore),
-
-    {--- Unknown ---}
-    wbVMAD,
-
     wbFormIDCk(NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, CHIP,
                               MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CCRD], False, cpNormal, True),
@@ -12666,7 +12706,6 @@ begin
     wbRStruct('Patrol Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-{Sk}  wbUnknown(PDTO),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
@@ -12685,9 +12724,6 @@ begin
       wbFloat('Static Percentage'),
       wbFormIDCkNoReach('Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, NULL])
     ]),
-
-    {--- Unknown ---}
-    wbFormIDCkNoReach(XLRT, 'Location Ref Type', [LCRT, NULL]),
 
     {--- Ownership ---}
     wbRStruct('Ownership', [
@@ -12740,11 +12776,8 @@ begin
       ])
     ),
 
-    {--- Unknown ---}
-		wbFormIDCk(XLIB, 'Leveled Item Base', [LVLI, NULL]),
-
     {--- Linked Ref ---}
-    wbArrayS(XLKR, 'Linked References', wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, KYWD, PMIS, STAT, FURN]), 0, cpNormal, False),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -12775,25 +12808,11 @@ begin
 
     wbString(XATO, 'Activation Prompt'),
 
-    {--- light data ---}
-    wbStruct(XLIG, 'Light Data', [
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ]),
-
-    {--- Unknown ---}
-		wbUnknown(XTNM),
-
     {--- Enable Parent ---}
     wbXESP,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-
-    {--- Unknown ---}
-    wbUnknown(XALP),
 
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
@@ -12807,9 +12826,6 @@ begin
     ])),
     wbEmpty(ONAM, 'Open by Default'),
     wbEmpty(XIBS, 'Ignored By Sandbox'),
-
-    {--- Unknown ---}
-		wbUnknown(XIS2),
 
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
@@ -12879,6 +12895,9 @@ begin
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
+//------------------------------------------------------------------------------
+// End REFR
+//------------------------------------------------------------------------------
 
   wbRecord(REGN, 'Region', [
     wbEDID,
@@ -13803,9 +13822,17 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
     wbFormID(CNAM, 'Unknown')
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
-
+//------------------------------------------------------------------------------
+// Begin WRLD
+//------------------------------------------------------------------------------
+// Pattern 1: EDID, Multi-RNAM, FULL CNAM NAM2 NAM3 NAM4 DNAM MNAM ONAM NAMA
+//            DATA NAM0 NAM9 ZNAM TNAM UNAM OFST
+//------------------------------------------------------------------------------
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
+    wbRArray('Array RNAM', wbRStruct('Unknown', [
+      wbUnknown(RNAM)
+    ], [])),
     wbFULL,
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
     wbRStruct('Parent', [
@@ -13853,6 +13880,7 @@ begin
       wbFloat('Cell Y Offset')
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
+    wbUnknown(NAMA),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small World',
       {0x02} 'Can''t Fast Travel',
@@ -13893,7 +13921,9 @@ begin
       'Grass',
       'Water'
     ]),
-    wbByteArray(OFST, 'Unknown')
+    wbUnknown(TNAM),
+    wbUnknown(UNAM),
+    wbByteArray(OFST, 'Unknown', 0)
   ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
