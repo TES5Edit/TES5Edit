@@ -6550,16 +6550,36 @@ begin
 //------------------------------------------------------------------------------
 // Begin CELL
 //------------------------------------------------------------------------------
-// Pattern  1:           DATA      XCLC           LTMP XCLW                               XCMO           XCAS
+// Pattern  1:           DATA      XCLC           LTMP XCLW                                    XCMO                          XCAS
 // Pattern  2:           DATA      XCLC TVDT      LTMP XCLW
 // Pattern  3:           DATA      XCLC TVDT MHDT LTMP XCLW XCLR
 // Pattern  4:           DATA      XCLC           LTMP XCLW
 // Pattern  5: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN
-// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                XCMO                     XEZN XCAS
-// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                XCMO XCCM      XCAS XWEM XEZN
-// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                XCMO           XCAS
-// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM XOWN      XCMO XCCM XILL XCAS
-// Pattern 10: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM      XEZN XCMO XCCM           XWEM
+// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO           XEZN           XCAS
+// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO XCCM      XCAS XWEM XEZN
+// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO                          XCAS
+// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM XOWN           XCMO XCCM XILL                XCAS
+// Pattern 10: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                    XEZN XWEM XCMO XCAS
+// Pattern 11: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO                XWEM XOWN
+// Pattern 12: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM      XCWT XCCM XCMO           XEZN XWEM XCAS
+// Pattern 13: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XEZN XCMO XWEM XCAS
+// Pattern 14: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XEZN XCMO XWEM XCCM XCAS
+// Pattern 15: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM                     XCCM XCWT XWEM XOWN XCAS
+// Pattern 16: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                               XEZN XWEM           [XIS2 present in CELL]
+// Pattern 17:
+// Pattern 18:
+// Pattern 19:
+// Pattern 20:
+// Pattern 21:
+// Pattern 22:
+// Pattern 23:
+// Pattern 24:
+// Pattern 25:
+// Pattern 26:
+// Pattern 27:
+// Pattern 28:
+// Pattern 29:
+// Pattern 30:
 //------------------------------------------------------------------------------
   wbRecord(CELL, 'Cell', [
 // EDID
@@ -6624,7 +6644,7 @@ begin
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
 			wbByteArray('Unknown', 0)
-    ], cpNormal, False),
+    ], cpNormal, False, nil, 7),
     wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
       'ConcSolid',
       'ConcBroken',
@@ -12646,27 +12666,36 @@ begin
 //------------------------------------------------------------------------------
 // Begin REFR
 //------------------------------------------------------------------------------
-// Pattern  1:           NAME XWCN XWCU                                         DATA
-// Pattern  2:           NAME XWCN XWCU                                    XSCL DATA
-// Pattern  3:           NAME XLCM      XPRD XPPA INAM PDTO XLKR                DATA
-// Pattern  4:           NAME           XPRD XPPA INAM PDTO XLKR                DATA
-// Pattern  5: EDID      NAME XLKR      XPRD XPPA INAM PDTO                     DATA
-// Pattern  6: EDID      NAME           XPRD XPPA INAM PDTO XLKR                DATA
-// Pattern  7: EDID      NAME           XPRD XPPA INAM PDTO                     DATA
-// Pattern  8:      VMAD NAME                                              XSCL DATA
-// Pattern  9:           NAME                                    XLIB           DATA
-// Pattern 10:           NAME XRDS      XLIG                                    DATA
-// Pattern 11:           NAME           XLIG                                    DATA
-// Pattern 12:           NAME                                    XALP      XSCL DATA
-// Pattern 13:           NAME XRDS XEMI XLIG                                    DATA
-// Pattern 14:           NAME                                    XLIB XESP      DATA
-// Pattern 15:           NAME                                         XLRT XOWN DATA
-// Pattern 16:           NAME XMBO XPRM XRMR LNAM                               DATA
-// Pattern 17:           NAME                                    XLIB           DATA
-// Pattern 18:
-// Pattern 19:
-// Pattern 20:
-// Pattern 21:
+// Pattern  1:           NAME XWCN XWCU                                              DATA
+// Pattern  2:           NAME XWCN XWCU                                    XSCL      DATA
+// Pattern  3:           NAME XLCM      XPRD XPPA INAM PDTO XLKR                     DATA
+// Pattern  4:           NAME           XPRD XPPA INAM PDTO XLKR                     DATA
+// Pattern  5: EDID      NAME XLKR      XPRD XPPA INAM PDTO                          DATA
+// Pattern  6: EDID      NAME           XPRD XPPA INAM PDTO XLKR                     DATA
+// Pattern  7: EDID      NAME           XPRD XPPA INAM PDTO                          DATA
+// Pattern  8:      VMAD NAME                                              XSCL      DATA
+// Pattern  9:           NAME                                    XLIB                DATA
+// Pattern 10:           NAME XRDS      XLIG                                         DATA
+// Pattern 11:           NAME           XLIG                                         DATA
+// Pattern 12:           NAME                                    XALP      XSCL      DATA
+// Pattern 13:           NAME XRDS XEMI XLIG                                         DATA
+// Pattern 14:           NAME                                    XLIB XESP           DATA
+// Pattern 15:           NAME                                         XLRT      XOWN DATA
+// Pattern 16:           NAME XMBO XPRM XRMR LNAM                                    DATA
+// Pattern 17:           NAME                                    XLIB                DATA
+// Pattern 18:           NAME                                    XTEL XTNM XNDP      DATA
+// Pattern 19:           NAME XMBO XPRM XRMR LNAM XLRM XLRM                          DATA
+// Pattern 20: EDID      NAME                                              XIS2      DATA
+// Pattern 21:           NAME XMBO XPRM XRMR LNAM INAM                               DATA
+// Pattern 22:
+// Pattern 23:
+// Pattern 24: 					 NAME           XPRD XPPA INAM PDTO           XESP XIS2 XOWN DATA
+// Pattern 25:           NAME           XPRD XPPA INAM PDTO                XIS2      DATA
+// Pattern 26:           NAME 																						 XIS2      DATA
+// Pattern 27:
+// Pattern 28:
+// Pattern 29:
+// Pattern 30:
 //------------------------------------------------------------------------------
   wbRecord(REFR, 'Placed Object', [
 // EDID
@@ -12791,6 +12820,7 @@ begin
       ]))
     ]), // Moved from between XESP and XTRI
 
+// XTEL
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [
       wbFormIDCk('Door', [REFR], True),
@@ -12799,6 +12829,8 @@ begin
         'No Alarm'
       ]))
     ]),
+// XTNM
+		wbUnknown(XTNM),
 
     {--- Map Data ---}
     wbRStruct('Map Data', [
@@ -12830,6 +12862,9 @@ begin
       ], cpNormal, True),
       wbFormIDCk(WMI1, 'Reputation', [REPU])
     ], []),
+
+// XIS2
+		wbUnknown(XIS2),
 
     {--- Audio Data ---}
     wbRStruct('Audio Data', [
@@ -12991,7 +13026,7 @@ begin
     ])),
     wbEmpty(ONAM, 'Open by Default'),
     wbEmpty(XIBS, 'Ignored By Sandbox'),
-
+// XNDP
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
       wbFormIDCk('Navigation Mesh', [NAVM]),
@@ -13022,18 +13057,18 @@ begin
 
 // XRMR
 //  Does is have XLRM after it in Skyrim?
+//  XRMR LNAM XLRM XLRM DATA
     wbRStruct('Room Data', [
       wbStruct(XRMR, 'Header', [
         wbInteger('Linked Rooms Count', itU16),
         wbByteArray('Unknown', 2)
       ]),
+// LNAM
+      wbUnknown(LNAM),
       wbRArrayS('Linked Rooms',
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
       )
     ], []),
-
-// LNAM
-    wbUnknown(LNAM),
 
     wbStruct(XOCP, 'Occlusion Plane Data', [
       wbStruct('Size', [
