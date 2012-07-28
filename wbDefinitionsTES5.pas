@@ -476,19 +476,11 @@ const
   PHTN : TwbSignature = 'PHTN'; { New to Skyrim }
   PHWT : TwbSignature = 'PHWT'; { New to Skyrim }
   PHZD : TwbSignature = 'PHZD';
-  PKAM : TwbSignature = 'PKAM';
   PKC2 : TwbSignature = 'PKC2'; { New to Skyrim }
   PKCU : TwbSignature = 'PKCU'; { New to Skyrim }
-  PKDD : TwbSignature = 'PKDD';
   PKDT : TwbSignature = 'PKDT';
-  PKE2 : TwbSignature = 'PKE2';
-  PKED : TwbSignature = 'PKED';
-  PKFD : TwbSignature = 'PKFD';
   PKID : TwbSignature = 'PKID';
-  PKPT : TwbSignature = 'PKPT';
-  PKW3 : TwbSignature = 'PKW3';
   PLCN : TwbSignature = 'PLCN'; { New to Skyrim }
-  PLD2 : TwbSignature = 'PLD2';
   PLDT : TwbSignature = 'PLDT';
   PLVD : TwbSignature = 'PLVD'; { New to Skyrim }
   PLYR : TwbSignature = 'PLYR';
@@ -505,10 +497,8 @@ const
   PRKZ : TwbSignature = 'PRKZ'; { New to Skyrim }
   PROJ : TwbSignature = 'PROJ';
   PSDT : TwbSignature = 'PSDT';
-  PTD2 : TwbSignature = 'PTD2';
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
   PTDT : TwbSignature = 'PTDT';
-  PUID : TwbSignature = 'PUID';
   PWAT : TwbSignature = 'PWAT';
   QNAM : TwbSignature = 'QNAM';
   QOBJ : TwbSignature = 'QOBJ';
@@ -901,31 +891,17 @@ var
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbCTDAParm1: IwbUnionDef;
-
-//------------------------------------------------------------------------------
-// Old Pack
-//------------------------------------------------------------------------------
-  wbPKDT: IwbSubRecordDef; {Associated with Old PACK}
-  wbPLDT: IwbSubRecordStructDef; {Associated with Old PACK}
-  wbPSDT: IwbSubRecordDef; {Associated with Old PACK}
-  wbPTDT: IwbSubRecordStructDef; {Associated with Old PACK}
-  wbIDLF: IwbSubRecordStructDef; {Associated with Old PACK}
-  wbPKW3: IwbSubRecordStructDef; {Associated with Old PACK}
-  wbPTD2: IwbSubRecordStructDef; {Associated with Old PACK}
-  wbPKDD: IwbSubRecordStructDef; {Associated with Old PACK}
-  wbPLD2: IwbSubRecordStructDef; {Associated with Old PACK}
-//------------------------------------------------------------------------------
-// New Pack
-//------------------------------------------------------------------------------
-  wbPubPack: IwbSubRecordStructDef; {Associated with New PACK}
-  wbProdTree: IwbSubRecordStructDef; {Associated with New PACK}
-  wbPOBA: IwbSubRecordStructDef; {Associated with New PACK}
-  wbPOEA: IwbSubRecordStructDef; {Associated with New PACK}
-  wbPOCA: IwbSubRecordStructDef; {Associated with New PACK}
-  wbINAM: IwbSubRecordDef; {Associated with New PACK}
-  wbPDTOs: IwbSubRecordDef; {Associated with New PACK}
-  wbUNAMs: IwbSubRecordArrayDef; {Associated with New PACK}
-  wbPKDTNew: IwbSubRecordStructDef; {Associated with New PACK}
+// --- Pack ---
+  wbPKDT: IwbSubRecordDef;
+  wbPLDT: IwbSubRecordDef;
+  wbPSDT: IwbSubRecordDef;
+  wbPTDA: IwbSubRecordDef;
+  wbIDLF: IwbSubRecordStructDef;
+  wbPubPack: IwbSubRecordStructDef;
+  wbProdTree: IwbSubRecordStructDef;
+  wbINAM: IwbSubRecordDef;
+  wbPDTOs: IwbSubRecordDef;
+  wbUNAMs: IwbSubRecordArrayDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -3860,6 +3836,7 @@ begin
   end;
 end;
 
+{ Not called, needs revision }
 procedure wbPACKAfterLoad(const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
@@ -4430,6 +4407,22 @@ begin
   end;
 end;
 
+function wbPubPackCNAMDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  rANAM: IwbRecord;
+  ctype: string;
+begin
+  Result := 0;
+  rANAM := aElement.Container.RecordBySignature[ANAM];
+  if Assigned(rANAM) then begin
+    ctype := rANAM.NativeValue;
+    if ctype = 'Bool' then Result := 1 else
+    if ctype = 'Int' then Result := 2 else
+    if ctype = 'Float' then Result := 3 else
+    if ctype = 'ObjectList' then Result := 3;
+  end;
+end;
+
 function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainer;
@@ -4439,40 +4432,6 @@ begin
   else
     Container := aElement as IwbContainer;
   Result := Container.ElementByName['Type'].NativeValue;
-end;
-
-function wbPKDTFalloutBehaviorFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container     : IwbContainer;
-  DataContainer : IwbDataContainer;
-begin
-  Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if Supports(Container, IwbDataContainer, DataContainer) then
-    if DataContainer.DateSize = 8 then
-      Result := 1;
-end;
-
-function wbPKDTSpecificFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container     : IwbContainer;
-  DataContainer : IwbDataContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if Supports(Container, IwbDataContainer, DataContainer) then
-    if DataContainer.DateSize = 8 then
-      Exit;
-  Result := Container.ElementByName['Type'].NativeValue + 1;
 end;
 
 procedure DefineTES5a;
@@ -11643,232 +11602,56 @@ begin
   wbPKDTSpecificFlagsUnused := False;
 
   wbPKDT := wbStruct(PKDT, 'Pack Data', [
-			wbInteger('General Flags', itU32, wbPKDTFlags),
-			wbInteger('Type', itU8, wbPKDTType),
-			wbInteger('Interrupt Override', itU8, wbEnum([
-        'None',
-        'Spectator',
-        'ObserveDead',
-        'GuardWarn',
-        'Combat'
-      ])),
-			wbInteger('Preferred Speed', itU8, wbEnum([
-        'Walk',
-        'Jog',
-        'Run',
-        'Fast Walk'
-      ])),
-      wbByteArray('Unknown', 1),
-      wbInteger('Interrupt Flags', itU32, wbFlags([
-        {0x00000001}'Hellos to player',
-        {0x00000002}'Random conversations',
-        {0x00000004}'Observe combat behavior',
-        {0x00000008}'Greet corpse behavior',
-        {0x00000010}'Reaction to player actions',
-        {0x00000020}'Friendly fire comments',
-        {0x00000040}'Aggro Radius Behavior',
-        {0x00000080}'Allow Idle Chatter',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'World Interactions',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ]))
-//			wbInteger('Fallout Behavior Flags', itU16, wbFlags([
-//				{0x00000001}'Hellos To Player',
-//				{0x00000002}'Random Conversations',
-//				{0x00000004}'Observe Combat Behavior',
-//				{0x00000008}'Unknown 4',
-//				{0x00000010}'Reaction To Player Actions',
-//				{0x00000020}'Friendly Fire Comments',
-//				{0x00000040}'Aggro Radius Behavior',
-//				{0x00000080}'Allow Idle Chatter',
-//				{0x00000100}'Avoid Radiation',
-//        {0x00000200}'Unknown 10',
-//        {0x00000400}'Unknown 11',
-//        {0x00000800}'Unknown 12',
-//        {0x00001000}'Unknown 13',
-//        {0x00002000}'Unknown 14',
-//        {0x00004000}'Unknown 15',
-//        {0x00008000}'Unknown 16'
-//			], wbPKDTSpecificFlagsUnused)),
-//			wbUnion('Type Specific Flags', wbPKDTSpecificFlagsDecider, [
-//				wbEmpty('Type Specific Flags (missing)', cpIgnore, False, nil, True),
-//				wbInteger('Type Specific Flags - Find', itU16, wbFlags([
-//          {0x00000001}'Unknown 1',
-//          {0x00000002}'Unknown 2',
-//          {0x00000004}'Unknown 3',
-//          {0x00000008}'Unknown 4',
-//          {0x00000010}'Unknown 5',
-//          {0x00000020}'Unknown 6',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//					{0x00000100}'Find - Allow Buying',
-//					{0x00000200}'Find - Allow Killing',
-//					{0x00000400}'Find - Allow Stealing',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Follow', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Escort', itU16, wbFlags([
-//          {0x00000001}'Unknown 1',
-//          {0x00000002}'Unknown 2',
-//          {0x00000004}'Unknown 3',
-//          {0x00000008}'Escort - Unknown 4',
-//          {0x00000010}'Unknown 5',
-//          {0x00000020}'Unknown 6',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//					{0x00000100}'Escort - Allow Buying',
-//					{0x00000200}'Escort - Allow Killing',
-//					{0x00000400}'Escort - Allow Stealing',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Eat', itU16, wbFlags([
-//          {0x00000001}'Unknown 1',
-//          {0x00000002}'Unknown 2',
-//          {0x00000004}'Unknown 3',
-//          {0x00000008}'Unknown 4',
-//          {0x00000010}'Unknown 5',
-//          {0x00000020}'Unknown 6',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//					{0x00000100}'Eat - Allow Buying',
-//					{0x00000200}'Eat - Allow Killing',
-//					{0x00000400}'Eat - Allow Stealing',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Sleep', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Wander', itU16, wbFlags([
-//					{0x00000001}'Wander - No Eating',
-//					{0x00000002}'Wander - No Sleeping',
-//					{0x00000004}'Wander - No Conversation',
-//					{0x00000008}'Wander - No Idle Markers',
-//					{0x00000010}'Wander - No Furniture',
-//					{0x00000020}'Wander - No Wandering',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//          {0x00000100}'Unknown 9',
-//          {0x00000200}'Unknown 10',
-//          {0x00000400}'Unknown 11',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Travel', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Accompany', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Use Item At', itU16, wbFlags([
-//          {0x00000001}'Unknown 1',
-//					{0x00000002}'Use Item At - Sit Down',
-//          {0x00000004}'Unknown 3',
-//          {0x00000008}'Unknown 4',
-//          {0x00000010}'Unknown 5',
-//          {0x00000020}'Unknown 6',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//					{0x00000100}'Use Item At - Allow Buying',
-//					{0x00000200}'Use Item At - Allow Killing',
-//					{0x00000400}'Use Item At - Allow Stealing',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Ambush', itU16, wbFlags([
-//					{0x00000001}'Ambush - Hide While Ambushing',
-//          {0x00000002}'Unknown 2',
-//          {0x00000004}'Unknown 3',
-//          {0x00000008}'Unknown 4',
-//          {0x00000010}'Unknown 5',
-//          {0x00000020}'Unknown 6',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//          {0x00000100}'Unknown 9',
-//          {0x00000200}'Unknown 10',
-//          {0x00000400}'Unknown 11',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Flee Not Combat', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - ?', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Sandbox', itU16, wbFlags([
-//					{0x00000001}'Sandbox - No Eating',
-//					{0x00000002}'Sandbox - No Sleeping',
-//					{0x00000004}'Sandbox - No Conversation',
-//					{0x00000008}'Sandbox - No Idle Markers',
-//					{0x00000010}'Sandbox - No Furniture',
-//					{0x00000020}'Sandbox - No Wandering',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//          {0x00000100}'Unknown 9',
-//          {0x00000200}'Unknown 10',
-//          {0x00000400}'Unknown 11',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Patrol', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Guard', itU16, wbFlags([
-//          {0x00000001}'Unknown 1',
-//          {0x00000002}'Unknown 2',
-//					{0x00000004}'Guard - Remain Near Reference to Guard',
-//          {0x00000008}'Unknown 4',
-//          {0x00000010}'Unknown 5',
-//          {0x00000020}'Unknown 6',
-//          {0x00000040}'Unknown 7',
-//          {0x00000080}'Unknown 8',
-//          {0x00000100}'Unknown 9',
-//          {0x00000200}'Unknown 10',
-//          {0x00000400}'Unknown 11',
-//          {0x00000800}'Unknown 12',
-//          {0x00001000}'Unknown 13',
-//          {0x00002000}'Unknown 14',
-//          {0x00004000}'Unknown 15',
-//          {0x00008000}'Unknown 16'
-//				], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Dialogue', itU16, wbFlags([], wbPKDTSpecificFlagsUnused)),
-//				wbInteger('Type Specific Flags - Use Weapon', itU16, wbFlags([], wbPKDTSpecificFlagsUnused))
-//			], cpNormal, True, nil),
-//			wbByteArray('Unknown', 2)
-//		])
+    wbInteger('General Flags', itU32, wbPKDTFlags),
+    wbInteger('Type', itU8, wbPKDTType),
+    wbInteger('Interrupt Override', itU8, wbEnum([
+      'None',
+      'Spectator',
+      'ObserveDead',
+      'GuardWarn',
+      'Combat'
+    ])),
+    wbInteger('Preferred Speed', itU8, wbEnum([
+      'Walk',
+      'Jog',
+      'Run',
+      'Fast Walk'
+    ])),
+    wbByteArray('Unknown', 1),
+    wbInteger('Interrupt Flags', itU32, wbFlags([
+      {0x00000001}'Hellos to player',
+      {0x00000002}'Random conversations',
+      {0x00000004}'Observe combat behavior',
+      {0x00000008}'Greet corpse behavior',
+      {0x00000010}'Reaction to player actions',
+      {0x00000020}'Friendly fire comments',
+      {0x00000040}'Aggro Radius Behavior',
+      {0x00000080}'Allow Idle Chatter',
+      {0x00000100}'Unknown 9',
+      {0x00000200}'World Interactions',
+      {0x00000400}'Unknown 11',
+      {0x00000800}'Unknown 12',
+      {0x00001000}'Unknown 13',
+      {0x00002000}'Unknown 14',
+      {0x00004000}'Unknown 15',
+      {0x00008000}'Unknown 16',
+      {0x00010000}'Unknown 17',
+      {0x00020000}'Unknown 18',
+      {0x00040000}'Unknown 19',
+      {0x00080000}'Unknown 20',
+      {0x00100000}'Unknown 21',
+      {0x00200000}'Unknown 22',
+      {0x00400000}'Unknown 23',
+      {0x00800000}'Unknown 24',
+      {0x01000000}'Unknown 25',
+      {0x02000000}'Unknown 26',
+      {0x03000000}'Unknown 27',
+      {0x08000000}'Unknown 28',
+      {0x10000000}'Unknown 29',
+      {0x20000000}'Unknown 30',
+      {0x40000000}'Unknown 31',
+      {0x80000000}'Unknown 32'
+    ]))
   ], cpNormal, True);
 
   wbPSDT := wbStruct(PSDT, 'Schedule', [
@@ -11895,235 +11678,80 @@ begin
     wbInteger('Duration (minutes)', itS32)
   ], cpNormal, True);
 
-  wbPLDT := wbRStruct('Locations', [
-      wbStruct(PLDT, 'Location 1', [
-        wbInteger('Type', itS32, wbEnum([
-          {0} 'Near reference',
-          {1} 'In cell',
-          {2} 'Near current location',
-          {3} 'Near editor location',
-          {4} 'Object ID',
-          {5} 'Object Type',
-          {6} 'Near linked reference',
-          {7} 'At package location'
-        ])),
-        wbUnion('Location', wbPxDTLocationDecider, [
-          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
-          wbFormIDCkNoReach('Cell', [CELL]),
-          wbByteArray('Unknown', 4, cpIgnore),
-          wbByteArray('Unknown', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
-          wbInteger('Object Type', itU32, wbObjectTypeEnum),
-          wbByteArray('Unknown', 4, cpIgnore),
-          wbByteArray('Unknown', 4, cpIgnore)
-        ]),
-        wbInteger('Radius', itS32)
-      ]),
-      wbStruct(PLD2, 'Location 2', [
-        wbInteger('Type', itS32, wbEnum([
-          {0} 'Near reference',
-          {1} 'In cell',
-          {2} 'Near current location',
-          {3} 'Near editor location',
-          {4} 'Object ID',
-          {5} 'Object Type',
-          {6} 'Near linked reference',
-          {7} 'At package location'
-        ])),
-        wbUnion('Location', wbPxDTLocationDecider, [
-          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
-          wbFormIDCkNoReach('Cell', [CELL]),
-          wbByteArray('Unknown', 4, cpIgnore),
-          wbByteArray('Unknown', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
-          wbInteger('Object Type', itU32, wbObjectTypeEnum),
-          wbByteArray('Unknown', 4, cpIgnore),
-          wbByteArray('Unknown', 4, cpIgnore)
-        ]),
-        wbInteger('Radius', itS32)
-      ])
-    ], []);
+  wbPLDT := wbStruct(PLDT, 'Location', [
+    wbInteger('Type', itS32, wbEnum([
+      {0} 'Near reference',
+      {1} 'In cell',
+      {2} 'Near package start location',
+      {3} 'Near editor location',
+      {4} 'Object ID',
+      {5} 'Object Type',
+      {6} 'Near linked reference',
+      {7} 'At package location',
+      {8} 'Alias (reference)',
+      {9} 'Alias (location)',
+     {10} 'Unknown 10',
+     {11} 'Unknown 11',
+     {12} 'Near self'
+    ])),
+    wbUnion('Location Value', wbPxDTLocationDecider, [
+      {0} wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
+      {1} wbFormIDCkNoReach('Cell', [CELL]),
+      {2} wbByteArray('Unknown', 4, cpIgnore),
+      {3} wbByteArray('Unknown', 4, cpIgnore),
+      {4} wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
+      {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
+      {6} wbFormIDCk('Keyword', [KYWD]),
+      {7} wbByteArray('Unknown', 4, cpIgnore),
+      {8} wbByteArray('Alias ID', 4),
+      {9} wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
+     {10} wbByteArray('Unknown', 4, cpIgnore),
+     {11} wbByteArray('Unknown', 4, cpIgnore),
+     {12} wbByteArray('Unknown', 4, cpIgnore)
+    ]),
+    wbInteger('Radius', itS32)
+  ]);
 
-    wbPTDT := wbRStruct('Targets', [
-        wbStruct(PTDT, 'Target 1', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Specific Reference',
-        {1} 'Object ID',
-        {2} 'Object Type',
-        {3} 'Linked Reference'
-      ]), cpNormal, False, nil, nil, 2),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP]),
-        wbInteger('Object Type', itU32, wbObjectTypeEnum),
-        wbByteArray('Unknown', 4, cpIgnore)
-      ]),
-      wbInteger('Count / Distance', itS32),
-      wbFloat('Unknown')
-    ], cpNormal, False, nil, 3)
-    ], []);
-
-    wbPTD2 := wbRStruct('Targets', [
-    wbStruct(PTD2, 'Target 2', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Specific reference',
-        {1} 'Object ID',
-        {2} 'Object Type',
-        {3} 'Linked Reference'
-      ])),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP]),
-        wbInteger('Object Type', itU32, wbObjectTypeEnum),
-        wbByteArray('Unknown', 4, cpIgnore)
-      ]),
-      wbInteger('Count / Distance', itS32),
-      wbFloat('Unknown')
-    ], cpNormal, False, nil, 3)
-    ], []);
+  wbPTDA := wbStruct(PTDA, 'Target Value', [
+    wbInteger('Type', itS32, wbEnum([
+      {0} 'Specific Reference',
+      {1} 'Object ID',
+      {2} 'Object Type',
+      {3} 'Linked Reference',
+      {4} 'Ref Alias',
+      {5} 'Unknown 5',
+      {6} 'Self'
+    ]), cpNormal, False, nil, nil, 2),
+    wbUnion('Target', wbPxDTLocationDecider, [
+      {0} wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
+      {1} wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP]),
+      {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
+      {3} wbFormID('Reference'),
+      {4} wbByteArray('Alias ID', 4),
+      {5} wbByteArray('Unknown', 4, cpIgnore),
+      {6} wbByteArray('Unknown', 4, cpIgnore)
+    ]),
+    wbInteger('Count / Distance', itS32)
+  ]);
 
   wbIDLF := wbRStruct('Idle Animations', [
-      wbInteger(IDLF, 'Flags', itU8, wbFlags([
-        'Run in Sequence',
-        '',
-        'Do Once'
-      ]), cpNormal, True),
-      wbStruct(IDLC, '', [
-        wbInteger( 'Animation Count', itU8),
-        wbByteArray('Unknown', 3)
-      ], cpNormal, True, nil, 1),
-      wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True),
-      wbByteArray(IDLB, 'Unknown', 4, cpIgnore)
-    ], []);
+    wbInteger(IDLF, 'Flags', itU8, wbFlags([
+      'Run in Sequence',
+      '',
+      'Do Once'
+    ]), cpNormal, True),
+    wbStruct(IDLC, '', [
+      wbInteger( 'Animation Count', itU8),
+      wbByteArray('Unknown', 3)
+    ], cpNormal, True, nil, 1),
+    wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
+    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True),
+    wbByteArray(IDLB, 'Unknown', 4, cpIgnore)
+  ], []);
 
-
-  wbPKW3 := wbRStruct('Idle Animations', [
-        wbStruct(PKW3, 'Use Weapon Data', [
-      wbInteger('Flags', itU32, wbFlags([
-        'Always Hit',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Do No Damage',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Crouch To Reload',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Hold Fire When Blocked'
-      ])),
-      wbInteger('Fire Rate', itU8, wbEnum([
-        'Auto Fire',
-        'Volley Fire'
-      ])),
-      wbInteger('Fire Count', itU8, wbEnum([
-        'Number of Bursts',
-        'Repeat Fire'
-      ])),
-      wbInteger('Number of Bursts', itU16),
-      wbStruct('Shoots Per Volleys', [
-        wbInteger('Min', itU16),
-        wbInteger('Max', itU16)
-      ]),
-      wbStruct('Pause Between Volleys', [
-        wbFloat('Min'),
-        wbFloat('Max')
-      ]),
-      wbByteArray('Unknown', 4)
-    ])
-    ], []);
-
-    wbPTD2 := wbRStruct('Targets', [
-    wbStruct(PTD2, 'Target 2', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Specific reference',
-        {1} 'Object ID',
-        {2} 'Object Type',
-        {3} 'Linked Reference'
-      ])),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP]),
-        wbInteger('Object Type', itU32, wbObjectTypeEnum),
-        wbByteArray('Unknown', 4, cpIgnore)
-      ]),
-      wbInteger('Count / Distance', itS32),
-      wbFloat('Unknown')
-    ], cpNormal, False, nil, 3)
-    ], []);
-
-    wbPKDD := wbRStruct('Dialogue', [
-    wbStruct(PKDD, 'Dialogue Data', [
-      wbFloat('FOV'),
-      wbFormIDCk('Topic', [DIAL, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        'No Headtracking',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Don''t Control Target Movement'
-      ])),
-      wbByteArray('Unknown', 4),
-      wbInteger('Dialogue Type', itU32, wbEnum([
-        'Conversation',
-        'Say To'
-      ])),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, False, nil, 3)
-    ], []);
-
-  wbPLD2 := wbRStruct('Locations', [
-        wbStruct(PLD2, 'Location 2 (again??)', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Near reference',
-        {1} 'In cell',
-        {2} 'Near current location',
-        {3} 'Near editor location',
-        {4} 'Object ID',
-        {5} 'Object Type',
-        {6} 'Near linked reference',
-        {7} 'At package location'
-      ])),
-      wbUnion('Location', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
-        wbFormIDCkNoReach('Cell', [CELL]),
-        wbByteArray('Unknown', 4, cpIgnore),
-        wbByteArray('Unknown', 4, cpIgnore),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
-        wbInteger('Object Type', itU32, wbObjectTypeEnum),
-        wbByteArray('Unknown', 4, cpIgnore),
-        wbByteArray('Unknown', 4, cpIgnore)
-      ]),
-      wbInteger('Radius', itS32)
-    ])
-    ], []);
-
-//------------------------------------------------------------------------------
-// New Public Package Data
-//------------------------------------------------------------------------------
-
-  wbUNAMs:= wbRArray('Array of UNAMs', wbRStruct('UNAM Array', [
-    wbUnknown(UNAM),
-    wbUnknown(BNAM),
+  wbUNAMs:= wbRArray('Activity IDs', wbRStruct('Activity', [
+    wbInteger(UNAM, 'ID', itS8),
+    wbString(BNAM, 'Name'),
     wbUnknown(PNAM)
   ], []));
 
@@ -12131,61 +11759,37 @@ begin
   wbPDTOs := wbArray(PDTO, 'Topic', wbFormIDCk('Topic', [DIAL, NULL]), 0, nil, nil, cpNormal, True);
 
   wbPubPack := wbRStruct('Public Package Data', [
-      wbRArray('Array Of ANAM', wbRStruct('ANAM Array', [
-          wbString(ANAM, 'Activity Type'),
-          wbUnknown(CNAM),
-          wbUnknown(BNAM),
-          wbPDTOs,
-          wbUnknown(PLDT),
-          wbUnknown(PTDA),
-          wbUnknown(TPIC)
-      ], [], cpNormal, False)),
-      wbUNAMs
+    wbRArray('Activities', wbRStruct('Activity', [
+      wbString(ANAM, 'Activity Type'),
+      wbUnion(CNAM, 'Activity Value', wbPubPackCNAMDecider, [
+        {0} wbByteArray('Unknown'),
+        {1} wbInteger('Value', itU8, wbEnum(['False', 'True'])),
+        {2} wbInteger('Value', itU32),
+        {3} wbFloat('Value')
+      ]),
+      wbUnknown(BNAM),
+      wbPDTOs,
+      wbPLDT,
+      wbPTDA,
+      wbUnknown(TPIC)
+    ], [], cpNormal, False)),
+    wbUNAMs
   ], []);
 
   wbProdTree := wbRStruct('Procedure Tree', [
-      wbRArray('Array Of ANAM', wbRStruct('ANAM Array', [
-          wbUnknown(ANAM),
-          wbUnknown(CITC),
-          wbCTDAs,
-          wbUnknown(PRCB),
-          wbUnknown(PNAM),
-          wbUnknown(FNAM),
-          wbRArray('Some PK C2', wbRStruct('PKC2 Array', [
-            wbUnknown(PKC2)
-          ], [], cpNormal, False))
-      ], [], cpNormal, False))
-  ], []);
-
-  wbPOBA := wbRStruct('OnBegin', [
-    wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
-    wbINAM,
-    wbUnknown(SCHR),
-    wbUnknown(SCTX),
-    wbUnknown(QNAM),
-    wbUnknown(TNAM),
-    wbPDTOs
-  ], []);
-
-  wbPOEA := wbRStruct('OnEnd', [
-    wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
-    wbINAM,
-    wbUnknown(SCHR),
-    wbUnknown(SCTX),
-    wbUnknown(QNAM),
-    wbUnknown(TNAM),
-    wbPDTOs
-  ], []);
-
-  wbPOCA := wbRStruct('OnChange', [
-    wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
-    wbINAM,
-    wbUnknown(SCHR),
-    wbUnknown(SCDA),
-    wbUnknown(SCTX),
-    wbUnknown(QNAM),
-    wbUnknown(TNAM),
-    wbPDTOs
+    wbRArray('Branches', wbRStruct('Branch', [
+      wbString(ANAM, 'Branch Type'),
+      wbInteger(CITC, 'Condition Count', itU32),
+      wbCTDAs,
+      wbUnknown(PRCB),
+      wbString(PNAM, 'Procedure Type'),
+      wbInteger(FNAM, 'Flags', itU32, wbFlags(['Success Completes Package'])),
+      wbRArray('Some PK C2', wbRStruct('PKC2 Array', [
+        wbUnknown(PKC2)
+      ], [], cpNormal, False)),
+      wbRArray('Some PFO2', wbUnknown(PFO2)),
+      wbRArray('Some PFOR', wbUnknown(PFOR))
+    ], [], cpNormal, False))
   ], []);
 
 //------------------------------------------------------------------------------
@@ -12195,24 +11799,6 @@ begin
     wbEDIDReq,
     wbVMAD,
     wbPKDT,
-    //--------------------------------------------------------------------------
-    // wbPKDT,
-    //--------------------------------------------------------------------------
-    // xDump will crash if wbPKDT is called
-    // It seems to be with
-    // wbUnion('Type Specific Flags', wbPKDTSpecificFlagsDecider, [
-    // So I have to make sure I have not renamed anything, and if I did
-    // I have to change it.  This error occured before I made changes
-    // to PACK. I only broke it up to find the error.
-    //--------------------------------------------------------------------------
-    // E:\TES5DumpProj\TES5Dump\wbImplementation.pas, line 10470
-    // procedure TwbElement.FreeInstance;
-    // begin
-    //  Assert(FRefCount = 1);
-    //  Assert(eExternalRefs = 1);
-    //  inherited;
-    // end;
-    //--------------------------------------------------------------------------
     wbPSDT,
     wbCTDAs,
     wbIDLF,
@@ -12226,59 +11812,35 @@ begin
     wbPubPack,
     wbUnknown(XNAM),
     wbProdTree,
-    wbRArray('Some PF O2', wbRStruct('PFO2 Array', [
-      wbUnknown(PFO2),
-      wbProdTree
-    ], [], cpNormal, False)),
-    wbRArray('Some PF OR', wbRStruct('PFOR Array', [
-      wbUnknown(PFOR),
-      wbProdTree
-    ], [], cpNormal, False)),
     wbUNAMs,
-    wbPOBA,
-    wbPOEA,
-    wbPOCA
-//------------------------------------------------------------------------------
-// Old Order
-//------------------------------------------------------------------------------
-//    wbVMAD,
-//    wbCTDAs,
-//    wbPLDT,
-//    wbPTDT,
-//    wbCTDAs,
-//    wbIDLF,
-//    wbEmpty(PKED, 'Eat Marker'),
-//    wbInteger(PKE2, 'Escort Distance', itU32),
-//    wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
-//    wbFloat(PKFD, 'Follow - Start Location - Trigger Radius'),
-//    wbStruct(PKPT, 'Patrol Flags', [
-//      wbInteger('Repeatable', itU8, wbEnum(['No', 'Yes']), cpNormal, False, nil, nil, 1),
-//      wbByteArray('Unused', 1)
-//    ], cpNormal, False, nil, 1),
-//    wbPKW3,
-//    wbPTD2,
-//    wbEmpty(PUID, 'Use Item Marker'),
-//    wbEmpty(PKAM, 'Ambush Marker'),
-//    wbPKDD,
-//    wbPLD2,
-//    wbRStruct('OnBegin', [
-//      wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
-//      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-//      wbEmbeddedScriptReq,
-//      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
-//    ], [], cpNormal, True),
-//    wbRStruct('OnEnd', [
-//      wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
-//      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-//      wbEmbeddedScriptReq,
-//      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
-//    ], [], cpNormal, True),
-//    wbRStruct('OnChange', [
-//      wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
-//      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-//      wbEmbeddedScriptReq,
-//      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
-//    ], [], cpNormal, True)
+    wbRStruct('OnBegin', [
+      wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
+      wbINAM,
+      wbUnknown(SCHR),
+      wbUnknown(SCTX),
+      wbUnknown(QNAM),
+      wbUnknown(TNAM),
+      wbPDTOs
+    ], []),
+    wbRStruct('OnEnd', [
+      wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
+      wbINAM,
+      wbUnknown(SCHR),
+      wbUnknown(SCTX),
+      wbUnknown(QNAM),
+      wbUnknown(TNAM),
+      wbPDTOs
+    ], []),
+    wbRStruct('OnChange', [
+      wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
+      wbINAM,
+      wbUnknown(SCHR),
+      wbUnknown(SCDA),
+      wbUnknown(SCTX),
+      wbUnknown(QNAM),
+      wbUnknown(TNAM),
+      wbPDTOs
+    ], [])
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 //------------------------------------------------------------------------------
 // End PACK
@@ -13607,7 +13169,7 @@ begin
       wbString(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [ACHR, LAND, NAVM, PGRE, PHZD, REFR]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot'),
     wbUnknown(INTV),
     wbUnknown(INCC)
