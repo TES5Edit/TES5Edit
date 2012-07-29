@@ -12381,14 +12381,13 @@ begin
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
 
-//  XRMR LNAM XLRM XLRM DATA
     wbRStruct('Room Data', [
       wbStruct(XRMR, 'Header', [
         wbInteger('Linked Rooms Count', itU16),
         wbByteArray('Unknown', 2)
       ]),
-      wbUnknown(LNAM),
-      wbUnknown(INAM),
+      wbFormIDCk(LNAM, 'Lighting Template', [LGTM]),
+      wbFormIDCk(INAM, 'Image Space', [IMGS]),
       wbRArrayS('Linked Rooms',
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
       )
@@ -12428,7 +12427,7 @@ begin
         'No Alarm'
       ]))
     ]),
-		wbUnknown(XTNM),
+    wbFormIDCk(XTNM, 'Message Box', [MESG]),
 
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
@@ -12439,7 +12438,7 @@ begin
 		wbUnknown(XCZA),
 		wbUnknown(XCZC),
     wbXSCL,
-    wbUnknown(XSPC),
+    wbFormIDCk(XSPC, 'Ref?', [REFR]),
 
     {--- Activate Parents ---}
     wbRStruct('Activate Parents', [
@@ -12456,7 +12455,7 @@ begin
 
     wbFormIDCk(XLIB, 'Leveled Item Base', [LVLI]),
     wbXLCM,
-    wbUnknown(XLCN),
+    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
     wbInteger(XTRI, 'Collision Layer', itU32, wbEnum([
       'Unidentified',
@@ -12524,7 +12523,7 @@ begin
     ]),
 
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbUnknown(XIS2),
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
 
     wbRStruct('Ownership', [
       wbXOWN,
@@ -12557,7 +12556,7 @@ begin
       'Open by Default'
     ])),
 
-    wbUnknown(XHTW),
+    wbFloat(XHTW, 'Head-Tracking Weight'),
     wbUnknown(XFVC),
 
     wbEmpty(ONAM, 'Open by Default'),
