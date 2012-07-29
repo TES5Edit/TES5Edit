@@ -1,0 +1,32 @@
+Contains a single Functions root node, which contains Enum, Block and Func nodes. Enums must contain one or more Element nodes, and Block and Func nodes may optionally contain Arg nodes.
+
+Valid attributes:
+Enum:
+name (required): The enum name. Used to match up with the enumtype attribute of Arg nodes
+
+Element:
+name (required): The name of this member of the enum
+value (required): An integer value which is emitted into the compiled code in place of the text name
+
+Block:
+name (required): The block name
+opcode (required): The opcode of the block
+Desc: Provide a human readable description of when the block gets executed
+
+Func:
+name (required): The function name
+opcode (required): The function opcode
+short: The short version of the function name
+desc: A human readable description of the function
+requiredargs: The number of arguments to the function which are required. If ommited defaults to the full number of arguments. Manually set it to lower than this if some arguments are optional
+allowref: Set to false if you want the compile to throw an error on syntax like 'player.funcname'. If ommited, defaults to true.
+ret: The type returned by this function. If it exists, must be one of float/int/ref. If ommited, the function returns no value.
+paddingbytes: A hack used to get ShowMessage working. Causes the supplied number of 0's to be tacked onto the end of the function call in the compiled code.
+fose: If it exists and is set to true, marks the function as one belonging to fallout script extender, and not usable in the vanilla game.
+skipargs: If it exists and is true, the argument list is ignored and no paramcount bytes are emitted into the compiled code. (Hack for StopCombatAlarmOnActor, which seems to have taken an actor argument at one stage)
+
+Arg:
+name (required): A human readable description of the argument
+type (required): The argument type. Must be one of float/int/ref/string/short/enum/axis for functions, and ref/short/int for blocks
+reftype: If the argument is of type ref, use this to limit which edid's are valid.
+enumtype (required if type="enum"): The name of the enum to be used
