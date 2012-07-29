@@ -11,6 +11,8 @@ using TESVSnip.Data;
 
 namespace TESVSnip
 {
+    using System.Diagnostics;
+
     [Persistable(Flags = PersistType.DeclaredOnly), Serializable]
     public sealed class Record : Rec, ISerializable, IDeserializationCallback
     {
@@ -106,41 +108,53 @@ namespace TESVSnip
             }
         }
 
-        internal Record(string name, uint Size, BinaryReader br, bool Oblivion)
+        internal Record(string name, uint dataSize, BinaryReader recordReader, bool oblivion)
         {
-            SubRecords = new AdvancedList<SubRecord>(1);
-            SubRecords.AllowSorting = false;
+            SubRecords = new AdvancedList<SubRecord>(1) { AllowSorting = false };
             Name = name;
-            Flags1 = br.ReadUInt32();
-            FormID = br.ReadUInt32();
-            Flags2 = br.ReadUInt32();
-            if (!Oblivion) Flags3 = br.ReadUInt32();
-            if ((Flags1 & 0x00040000) > 0)
-            {
-                //Flags1 ^= 0x00040000;
-                uint newSize = br.ReadUInt32();
-                br = Decompressor.Decompress(br, (int) (Size - 4), (int) newSize);
-                Size = newSize;
+            Flags1 = recordReader.ReadUInt32();
+            FormID = recordReader.ReadUInt32();
+            Flags2 = recordReader.ReadUInt32();
+            if (!oblivion) {
+                Flags3 = recordReader.ReadUInt32();
             }
-            uint AmountRead = 0;
-            while (AmountRead < Size)
-            {
-                string s = ReadRecName(br);
-                uint i = 0;
-                if (s == "XXXX")
-                {
-                    br.ReadUInt16();
-                    i = br.ReadUInt32();
-                    s = ReadRecName(br);
+
+            var compressed = (Flags1 & 0x00040000) != 0;
+            uint amountRead = 0;
+
+            var realSize = dataSize;
+            if (compressed) {
+                realSize = recordReader.ReadUInt32();
+                dataSize -= 4;
+            }
+
+            using (var stream = new MemoryStream(recordReader.ReadBytes((int)dataSize))) {
+                using (var dataReader = compressed ? Decompressor.Decompress(stream, dataSize, realSize) : new BinaryReader(stream)) {
+                    while (dataReader.BaseStream.Position < dataReader.BaseStream.Length) {
+                        var type = ReadRecName(dataReader);
+                        uint size;
+                        if (type == "XXXX") { 
+                            dataReader.ReadUInt16();
+                            size = dataReader.ReadUInt32();
+                            type = ReadRecName(dataReader);
+                            dataReader.ReadUInt16();
+                        }
+                        else {
+                            size = dataReader.ReadUInt16();
+                        }
+
+                        var record = new SubRecord(this, type, dataReader, size);
+                        SubRecords.Add(record);
+                        amountRead += (uint)record.Size2;
+                    }
                 }
-                var r = new SubRecord(this, s, br, i);
-                AmountRead += (uint) (r.Size2);
-                SubRecords.Add(r);
             }
-            if (AmountRead > Size)
-            {
-                throw new TESParserException("Subrecord block did not match the size specified in the record header");
+
+            if (amountRead > realSize) {
+                Debug.Print(" * ERROR: SUB-RECORD {0} DATA DOESN'T MATCH THE SIZE SPECIFIED IN THE HEADER: DATA-SIZE={1} REAL-SIZE={2} AMOUNT-READ={3}", name, dataSize, realSize, amountRead);
+                throw new TESParserException(string.Format("Subrecord block did not match the size specified in the record header: ExpectedSize={0} ReadSize={1} DataSize={2}", realSize, amountRead, dataSize));
             }
+
             descNameOverride = DefaultDescriptiveName;
             UpdateShortDescription();
             //br.BaseStream.Position+=Size;
