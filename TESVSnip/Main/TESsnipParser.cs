@@ -150,51 +150,28 @@ namespace TESVSnip
 
     internal static class Decompressor
     {
-        private static byte[] input;
-        private static byte[] output;
-        private static MemoryStream ms;
-        private static BinaryReader compReader;
-        private static Inflater inf;
-
-        public static BinaryReader Decompress(BinaryReader br, int size, int outsize)
+        public static BinaryReader Decompress(MemoryStream stream, uint inputSize, uint outputSize)
         {
-            if (input.Length < size)
-            {
-                input = new byte[size];
+            if (stream == null) {
+                throw new ArgumentNullException("stream");
             }
-            if (output.Length < outsize)
-            {
-                output = new byte[outsize];
+
+            var inputBuffer = new byte[inputSize];
+            var outputBuffer = new byte[outputSize];
+
+            int totalBytes;
+            if ((totalBytes = stream.Read(inputBuffer, 0, inputBuffer.Length)) != inputBuffer.Length) {
+                throw new InvalidDataException(string.Format("Failed to read the whole buffer from input. Required = {0} Read = {1}", inputBuffer.Length, totalBytes));
             }
-            br.Read(input, 0, size);
-            inf.SetInput(input, 0, size);
-            inf.Inflate(output);
-            inf.Reset();
 
-            ms.Position = 0;
-            ms.Write(output, 0, outsize);
-            ms.Position = 0;
+            var inflater = new Inflater(false);
+            inflater.SetInput(inputBuffer, 0, inputBuffer.Length);
+            if ((totalBytes = inflater.Inflate(outputBuffer, 0, outputBuffer.Length)) != outputBuffer.Length) {
+                throw new InvalidDataException(string.Format("Failed to inflate compressed data. Compressed Size = {0} Inflated = {1}", outputBuffer.Length, totalBytes));
+            }
 
-            return compReader;
-        }
-
-        public static void Init()
-        {
-            inf = new Inflater(false);
-            ms = new MemoryStream();
-            compReader = new BinaryReader(ms);
-            input = new byte[0x1000];
-            output = new byte[0x4000];
-        }
-
-        public static void Close()
-        {
-            compReader.Close();
-            compReader = null;
-            inf = null;
-            input = null;
-            output = null;
-            ms = null;
+            var memoryStream = new MemoryStream(outputBuffer, 0, outputBuffer.Length);
+            return new BinaryReader(memoryStream);
         }
     }
 

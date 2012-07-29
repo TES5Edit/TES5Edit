@@ -217,7 +217,6 @@ namespace TESVSnip
                 Filtered = (recFilter != null && recFilter.Length > 0);
 
                 HoldUpdates = true;
-                Decompressor.Init();
 
                 s = ReadRecName(br);
                 if (s != "TES4") throw new Exception("File is not a valid TES4 plugin (Missing TES4 record)");
@@ -266,7 +265,6 @@ namespace TESVSnip
             {
                 HoldUpdates = oldHoldUpdates;
                 FireRecordListUpdate(this, this);
-                Decompressor.Close();
             }
         }
 

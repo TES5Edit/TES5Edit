@@ -108,8 +108,6 @@ namespace TESVSnip
         {
             Owner = rec;
             Name = name;
-            if (size == 0) size = br.ReadUInt16();
-            else br.BaseStream.Position += 2;
             Data = new byte[size];
             br.Read(Data, 0, Data.Length);
         }
