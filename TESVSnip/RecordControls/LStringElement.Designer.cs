@@ -34,26 +34,17 @@
             ((System.ComponentModel.ISupportInitialize)(this.Error)).BeginInit();
             this.SuspendLayout();
             // 
-            // Error
-            // 
-            resources.ApplyResources(this.Error, "Error");
-            // 
             // chkUseText
             // 
             resources.ApplyResources(this.chkUseText, "chkUseText");
-            this.Error.SetError(this.chkUseText, resources.GetString("chkUseText.Error"));
-            this.Error.SetIconAlignment(this.chkUseText, ((System.Windows.Forms.ErrorIconAlignment)(resources.GetObject("chkUseText.IconAlignment"))));
-            this.Error.SetIconPadding(this.chkUseText, ((int)(resources.GetObject("chkUseText.IconPadding"))));
             this.chkUseText.Name = "chkUseText";
             this.chkUseText.UseVisualStyleBackColor = true;
             // 
             // txtString
             // 
             resources.ApplyResources(this.txtString, "txtString");
-            this.Error.SetError(this.txtString, resources.GetString("txtString.Error"));
-            this.Error.SetIconAlignment(this.txtString, ((System.Windows.Forms.ErrorIconAlignment)(resources.GetObject("txtString.IconAlignment"))));
-            this.Error.SetIconPadding(this.txtString, ((int)(resources.GetObject("txtString.IconPadding"))));
             this.txtString.Name = "txtString";
+            this.txtString.DoubleClick += new System.EventHandler(this.txtString_DoubleClick);
             this.txtString.Validated += new System.EventHandler(this.txtString_Validated);
             // 
             // LStringElement
@@ -62,9 +53,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.txtString);
             this.Controls.Add(this.chkUseText);
-            this.Error.SetError(this, resources.GetString("$this.Error"));
-            this.Error.SetIconAlignment(this, ((System.Windows.Forms.ErrorIconAlignment)(resources.GetObject("$this.IconAlignment"))));
-            this.Error.SetIconPadding(this, ((int)(resources.GetObject("$this.IconPadding"))));
             this.MinimumSize = new System.Drawing.Size(200, 48);
             this.Name = "LStringElement";
             this.Controls.SetChildIndex(this.chkUseText, 0);

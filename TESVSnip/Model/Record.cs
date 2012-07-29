@@ -617,6 +617,7 @@ namespace TESVSnip
                     }
                 case ElementValueType.Str4:
                 case ElementValueType.BString:
+                case ElementValueType.IString:
                 case ElementValueType.String:
                     {
                         var s = (string) cond.value;

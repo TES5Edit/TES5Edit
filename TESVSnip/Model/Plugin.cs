@@ -387,7 +387,7 @@ namespace TESVSnip
 
         public Plugin()
         {
-            Name = "New plugin";
+            Name = "New plugin.esp";
         }
 
         public override string GetDesc()
@@ -410,15 +410,21 @@ namespace TESVSnip
 
         internal void Save(string FilePath)
         {
+            Spells.UpdateRecordCount(this);
             bool existed = false;
+            BinaryWriter bw;
             DateTime timestamp = DateTime.Now;
             if (File.Exists(FilePath))
             {
                 timestamp = new FileInfo(FilePath).LastWriteTime;
                 existed = true;
-                File.Delete(FilePath);
+                //File.Delete(FilePath);
+                bw = new BinaryWriter(File.OpenWrite(FilePath + ".new"));
             }
-            var bw = new BinaryWriter(File.OpenWrite(FilePath));
+            else
+            {
+                bw = new BinaryWriter(File.OpenWrite(FilePath));
+            }
             try
             {
                 SaveData(bw);
@@ -432,6 +438,7 @@ namespace TESVSnip
             {
                 if (existed)
                 {
+                    File.Replace(FilePath + ".new", FilePath, FilePath + ".bak");
                     new FileInfo(FilePath).LastWriteTime = timestamp;
                 }
             }
@@ -448,7 +455,7 @@ namespace TESVSnip
                     string prefix = Path.Combine(Path.Combine(Path.GetDirectoryName(FilePath), "Strings"),
                                                  Path.GetFileNameWithoutExtension(FilePath));
                     prefix += "_" + Properties.Settings.Default.LocalizationName;
-                    SaveStrings(FilePath);
+                    SaveStrings(prefix);
                 }
             }
             StringsDirty = false;

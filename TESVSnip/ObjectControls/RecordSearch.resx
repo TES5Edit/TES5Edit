@@ -330,6 +330,12 @@
   <data name="resetToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Reset</value>
   </data>
+  <data name="reportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="reportToolStripMenuItem.Text" xml:space="preserve">
+    <value>Report</value>
+  </data>
   <data name="copyToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>152, 22</value>
   </data>
@@ -343,7 +349,7 @@
     <value>Copy &amp;To</value>
   </data>
   <data name="contextMenuStripList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>153, 158</value>
+    <value>153, 180</value>
   </data>
   <data name="&gt;&gt;contextMenuStripList.Name" xml:space="preserve">
     <value>contextMenuStripList</value>
@@ -373,7 +379,7 @@
     <value>listSearchView</value>
   </data>
   <data name="&gt;&gt;listSearchView.Type" xml:space="preserve">
-    <value>BrightIdeasSoftware.ObjectListView, TESVSnip, Version=4.0.4417.4, Culture=neutral, PublicKeyToken=null</value>
+    <value>BrightIdeasSoftware.ObjectListView, TESVSnip, Version=4.2.4450.237, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;listSearchView.Parent" xml:space="preserve">
     <value>$this</value>
@@ -498,6 +504,12 @@
   <data name="&gt;&gt;resetToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;copyToolStripMenuItem.Name" xml:space="preserve">
+    <value>copyToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;copyToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;copyToToolStripMenuItem.Name" xml:space="preserve">
     <value>copyToToolStripMenuItem</value>
   </data>
@@ -510,10 +522,10 @@
   <data name="&gt;&gt;backgroundWorker1.Type" xml:space="preserve">
     <value>System.ComponentModel.BackgroundWorker, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;copyToolStripMenuItem.Name" xml:space="preserve">
-    <value>copyToolStripMenuItem</value>
+  <data name="&gt;&gt;reportToolStripMenuItem.Name" xml:space="preserve">
+    <value>reportToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;copyToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;reportToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

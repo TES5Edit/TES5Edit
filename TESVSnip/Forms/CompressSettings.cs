@@ -65,6 +65,7 @@ namespace TESVSnip.Forms
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            Properties.Settings.Default.UseDefaultRecordCompression = rdoDefaultCompressRecords.Checked;
             Properties.Settings.Default.EnableCompressionLimit = chkEnableCompressLimit.Checked;
             Properties.Settings.Default.CompressionLimit = uint.Parse(txtCompressLimit.Text);
             Properties.Settings.Default.EnableAutoCompress = chkEnableAutoCompress.Checked;

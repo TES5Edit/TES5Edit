@@ -343,6 +343,8 @@ namespace TESVSnip.ObjectControls
         {
             if (!ValidateMakeChange())
                 return;
+            DeleteSelection();
+/*
             var rec = Selection.Record as Record;
             if (rec != null)
             {
@@ -352,6 +354,7 @@ namespace TESVSnip.ObjectControls
             }
             Selection.SubRecord = GetSelectedSubrecord();
             FireDataChanged();
+ */
         }
 
         private void toolStripMoveRecordUp_Click(object sender, EventArgs e)
@@ -365,10 +368,9 @@ namespace TESVSnip.ObjectControls
             if (rec != null)
             {
                 SubRecord sr = subrecords[idx];
+                SelectIndex(idx - 1);
                 subrecords.RemoveAt(idx);
                 subrecords.Insert(idx - 1, sr);
-
-                SelectIndex(idx - 1);
 
                 Selection.SubRecord = GetSelectedSubrecord();
                 rec.MatchRecordStructureToRecord(SubRecords.ToArray());
@@ -767,10 +769,16 @@ namespace TESVSnip.ObjectControls
 
         public void DeleteSelection()
         {
+            int idx = listSubrecord.SelectedIndices[0];
             var objects = GetSelectedSubrecords();
             if (!objects.Any()) return;
             subrecords.RemoveRange(objects);
             FireSelectionChanged();
+
+            if (idx > listSubrecord.Items.Count-1)
+                idx = listSubrecord.Items.Count-1;
+            if ( idx > 0 )
+                SelectIndex(idx);
             UpdateToolStripSelection();
             foreach (var sr in objects.Where(sr => sr.Parent is Record).Select(sr=>sr.Parent).Distinct())
                 sr.UpdateShortDescription();

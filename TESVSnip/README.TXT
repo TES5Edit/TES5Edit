@@ -9,6 +9,39 @@ Requirements:
   .NET 3.5
 
 Change Log:
+v 4.3
+- Elements with options or flags now work for the types short and byte also (was only working for int before), both signed and unsigned.
+- New string type called Istring that has an int that defines the string length. Used for MODS, MO2S, MO3S subrecords.
+- The data in the TES4 record for new plugins are more sane.
+- Create new GRUP (GroupRecord). (Had to fix some bugs in the GroudEditor also. Looks like it hasen't seen much use)
+- Creating or pasting a record/s while having a record selected, it will be pasted on the same level as that record. (In that Group or Plugin)
+- Added "Paste" to the context menu in the tree view.
+- Added "Delete" to the toolbar in the tree view.
+- Make "Reports" of multi selected records in the tree view.
+- Make "Reports" of multi selected record in the search view.
+- Fixed alot of strange tab orders in different dialogs.
+- Fixed HeaderEditor so it stores the field you are standing on when you save the changes by pressing enter. (Since you didn't leave the textbox the validation that moved the data to the local variable hadn't accoured yet).
+- Fixed both HeaderEditor and GroupEditor so you get a chance to correct any wrong info you have when pressing save, instead of the window just closes after the error message.
+- Save Plugin Dialog is prefilled with the selected plugins filename. (No more saving the wrong plugin to the last saved plugins name).
+- Saved strings files now end up in the correct place and have the right name again.
+- Corrected the spell "Make ESM".
+- Enable compression state in the CompressioSettings window is now saved. (Compression is not binary identical to Construction Kit, but both the Construction Kit and the Game can read it just fine)
+- HexEdit window is scrollable verticaly.
+- Delete subrecord now deletes all selected subrecords, not just the first one as before.
+- Update the record count in the TES4 record on save.
+- Backup old plugin files before overwriting them.
+- Use and increment the Next ObjectID in the TES4 record as the FormID for new records.
+- New spell that gives selected record new FormID and updates all references to it. The new FormID is taken from the Next Object field in the TES4 record.
+- Moving the last subrecord up no longer unselects it.
+- Merged in leihao UTF-8 changes.
+
+Things I want to implement but don't know if I'm capable of.
+
+- GroupElement for repeating elements inside a Subrecord. Usable for WMAD, MODT, MODS and a bunch of other subrecords.
+- Conditions on Element level.
+- Leveled List Merger
+
+Change Log:
 v 4.2
 - Fix null pointer exception when editing a records with no subrecords
 - Various recordstructure.xml updates
@@ -27,7 +60,7 @@ v 4.1
   - Internalize strings
   - Prune unused strings from table
   - Move Internalized strings to string table
-  
+
 v 4.0
 - Introduce "Batch Edit" on Search Window
 - Introduce "Column Selector" when using Basic Search or Search with "Type"
@@ -39,7 +72,7 @@ v 3.9
 - Introduce "Basic Search" to the find dialog drop down
 - Add basic ability to select elements to search on via Basic Search
 - Auto display columns involved in Basic Search
-  
+
 v 3.8
 - Fix subrecord parent reference when using Full Record Editor to avoid issues with report
 - Map Numpad-*,/,+,- to ExpandAll, CollapseAll, ExpandSelection, CollapseSelection
@@ -88,7 +121,7 @@ v 3.0
 - Manually sort form id list rather than using native sort which lead to inconsistencies
 - Remove check for VK_BACK during WM_CHAR as it is incorrect an interfers with VK_OEM_DOT
 - Add modeless record Editor on context menu to allow side by side edits (experimental)
- 
+
 v 2.6
 - Fix issue with the new FormID Editor not saving values
 - Fix issue with the new Repeating Element Editor not saving values
@@ -144,7 +177,7 @@ v 1.8
 - Fix QUST after change to CONDITIONAL broke it
 
 v 1.7
-- Convert Text Search to a background incremental search 
+- Convert Text Search to a background incremental search
   (Enables cancel during full text searches)
 - Add Name w/Type and Full w/Type to allow for searches limited by record type
 - Experimental short descriptions for REFR, ACHR showing location information
@@ -190,20 +223,20 @@ v 1.1
 
 v 1.0
 - Add LString data type to represent localized string
-- Import the strings directory if present 
+- Import the strings directory if present
 - Export strings to the Strings directory if strings are present for a plugin
 - Add a simple string viewer for localized strings (hard coded to English)
 - Update the LString data type for thinks like FULL subrecords
 
 Notes:
-- The check box on the LString record editor is for controlling whether to 
+- The check box on the LString record editor is for controlling whether to
   store the integer ID (which is in Hex) or to store the actual text.
 - When checked it stores the actual text.  When not checked it stores the id.
-   
+
 TODO:
 - QUST record is mess and may require a new XML format to deal with it properly
 - Substructures like MO2T and MO3T have complicated repeating structures not possible to edit currently
-- Sorry the new string editor got away from me and is rather 
+- Sorry the new string editor got away from me and is rather
   fiddly and not intuitive but that is in line with TESsnip anyway
 - Detect localization or allow selection of localization in future
 - Add/update spell to convert from ESP to ESM which also fixes LString types

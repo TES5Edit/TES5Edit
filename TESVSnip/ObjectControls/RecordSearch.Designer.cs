@@ -52,10 +52,11 @@ namespace TESVSnip.ObjectControls
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.batchEditToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.listSearchView = new BrightIdeasSoftware.ObjectListView();
-            this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripIncrFind.SuspendLayout();
             this.contextMenuStripList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.listSearchView)).BeginInit();
@@ -203,6 +204,7 @@ namespace TESVSnip.ObjectControls
             this.editToolStripMenuItem,
             this.batchEditToolStripMenuItem,
             this.resetToolStripMenuItem,
+            this.reportToolStripMenuItem,
             this.copyToolStripMenuItem,
             this.copyToToolStripMenuItem});
             this.contextMenuStripList.Name = "contextMenuStripList";
@@ -233,6 +235,12 @@ namespace TESVSnip.ObjectControls
             this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
             resources.ApplyResources(this.resetToolStripMenuItem, "resetToolStripMenuItem");
             this.resetToolStripMenuItem.Click += new System.EventHandler(this.resetToolStripMenuItem_Click);
+            // 
+            // copyToolStripMenuItem
+            // 
+            this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
+            resources.ApplyResources(this.copyToolStripMenuItem, "copyToolStripMenuItem");
+            this.copyToolStripMenuItem.Click += new System.EventHandler(this.copyToolStripMenuItem_Click);
             // 
             // copyToToolStripMenuItem
             // 
@@ -269,11 +277,11 @@ namespace TESVSnip.ObjectControls
             this.listSearchView.CellClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.listSearchView_CellClick);
             this.listSearchView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listSearchView_KeyDown);
             // 
-            // copyToolStripMenuItem
+            // reportToolStripMenuItem
             // 
-            this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            resources.ApplyResources(this.copyToolStripMenuItem, "copyToolStripMenuItem");
-            this.copyToolStripMenuItem.Click += new System.EventHandler(this.copyToolStripMenuItem_Click);
+            this.reportToolStripMenuItem.Name = "reportToolStripMenuItem";
+            resources.ApplyResources(this.reportToolStripMenuItem, "reportToolStripMenuItem");
+            this.reportToolStripMenuItem.Click += new System.EventHandler(this.reportToolStripMenuItem_Click);
             // 
             // RecordSearch
             // 
@@ -318,5 +326,6 @@ namespace TESVSnip.ObjectControls
         private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyToToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem reportToolStripMenuItem;
     }
 }

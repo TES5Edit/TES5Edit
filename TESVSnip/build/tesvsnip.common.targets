@@ -69,19 +69,7 @@
     <Error
         Text=" The THIRDPARTY_ROOT property must be set on the command line."
         Condition="'$(THIRDPARTY_ROOT)' == '' or !Exists('$(THIRDPARTY_ROOT)')" />
-           
-    <SimpleExec Command="git" Args="log -1 &quot;--pretty=format:%h&quot; &quot;$(BUILD_ROOT)\.&quot;">
-        <Output TaskParameter="StdOut" PropertyName="GitVersionNumber" />
-        <Output TaskParameter="ExitCode" PropertyName="GitSuccess" />
-    </SimpleExec>
-    <SimpleExec Command="git" Args="log -1 &quot;--pretty=format:%cd&quot; &quot;$(BUILD_ROOT)\.&quot;">
-        <Output TaskParameter="StdOut" PropertyName="GitProjectDate" />
-        <Output TaskParameter="ExitCode" PropertyName="GitSuccess" />
-    </SimpleExec>
-    
-    <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
-    <Message Text="GitInfo: $(GitProjectDate) $(GitVersionNumber)" />
-    
+
     <CreateItem Include="Major" AdditionalMetadata="ReplacementValue=$(Major)">
       <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
     </CreateItem>

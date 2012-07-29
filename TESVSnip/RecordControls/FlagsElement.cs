@@ -26,7 +26,25 @@ namespace TESVSnip.RecordControls
             base.UpdateAllControls();
             if (element.flags != null)
             {
-                uint value = TypeConverter.h2i(Data);
+                uint value;
+                switch (element.type)
+                {
+                    case ElementValueType.SByte:
+                    case ElementValueType.Byte:
+                        value = (uint)TypeConverter.h2b(Data);
+                        break;
+                    case ElementValueType.Short:
+                    case ElementValueType.UShort:
+                        value = (uint)TypeConverter.h2s(Data);
+                        break;
+                    case ElementValueType.Int:
+                    case ElementValueType.UInt:
+                        value = TypeConverter.h2i(Data);
+                        break;
+                    default:
+                        value = 0;
+                        break;
+                }
                 cboFlags.SetItems(element.flags);
                 cboFlags.SetState(value);
             }
@@ -36,10 +54,43 @@ namespace TESVSnip.RecordControls
         {
             uint value = cboFlags.GetState();
             uint oldValue = TypeConverter.h2i(Data);
+            switch (element.type)
+            {
+                case ElementValueType.SByte:
+                case ElementValueType.Byte:
+                    oldValue = (uint)TypeConverter.h2b(Data);
+                    break;
+                case ElementValueType.Short:
+                case ElementValueType.UShort:
+                    oldValue = (uint)TypeConverter.h2s(Data);
+                    break;
+                case ElementValueType.Int:
+                case ElementValueType.UInt:
+                    oldValue = TypeConverter.h2i(Data);
+                    break;
+                default:
+                    oldValue = 0;
+                    break;
+            }
             if (value != oldValue)
             {
-                byte[] data = TypeConverter.i2h(value);
-                SetCurrentData(new ArraySegment<byte>(data, 0, data.Length));
+                switch (element.type)
+                {
+                    case ElementValueType.SByte:
+                    case ElementValueType.Byte:
+                        SetCurrentData(new ArraySegment<byte>(TypeConverter.b2h((byte)value)));
+                        break;
+
+                    case ElementValueType.Short:
+                    case ElementValueType.UShort:
+                        SetCurrentData(new ArraySegment<byte>(TypeConverter.s2h((ushort)value)));
+                        break;
+
+                    case ElementValueType.Int:
+                    case ElementValueType.UInt:
+                        SetCurrentData(new ArraySegment<byte>(TypeConverter.i2h(value)));
+                        break;
+                }
                 TextBox.Text = "0x" + value.ToString("X");
                 Changed = true;
             }

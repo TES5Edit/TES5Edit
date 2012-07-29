@@ -108,12 +108,12 @@
             // toolStripInsertRecord
             // 
             this.toolStripInsertRecord.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripInsertRecord.Image = global::TESVSnip.Properties.Resources.insertcell;
+            this.toolStripInsertRecord.Image = global::TESVSnip.Properties.Resources.insertcell1;
             resources.ApplyResources(this.toolStripInsertRecord, "toolStripInsertRecord");
             this.toolStripInsertRecord.Name = "toolStripInsertRecord";
+            this.toolStripInsertRecord.Padding = new System.Windows.Forms.Padding(0, 0, 1, 0);
             this.toolStripInsertRecord.DropDownClosed += new System.EventHandler(this.toolStripInsertRecord_DropDownClosed);
             this.toolStripInsertRecord.DropDownOpening += new System.EventHandler(this.toolStripInsertRecord_DropDownOpening);
-            //this.toolStripInsertRecord.Click += new System.EventHandler(this.toolStripInsertRecord_Click);
             // 
             // toolStripDeleteRecord
             // 

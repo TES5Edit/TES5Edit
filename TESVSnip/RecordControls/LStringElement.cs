@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Forms;
+using TESVSnip.Forms;
 using TESVSnip.Properties;
 
 namespace TESVSnip.RecordControls
@@ -126,6 +127,19 @@ namespace TESVSnip.RecordControls
         private void txtString_Validated(object sender, EventArgs e)
         {
             SaveText();
+        }
+
+        private void txtString_DoubleClick(object sender, EventArgs e)
+        {
+            using (var editor = new MultilineStringEditor())
+            {
+                editor.Text = txtString.Text;
+                DialogResult result = editor.ShowDialog(this);
+                if (result == DialogResult.OK)
+                {
+                    txtString.Text = editor.Text;
+                }
+            }
         }
     }
 }

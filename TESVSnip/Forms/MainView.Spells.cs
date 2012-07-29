@@ -87,13 +87,24 @@ namespace TESVSnip
 
         private void findDuplicatedFormIDToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var p = GetPluginFromNode(PluginTree.SelectedRecord);
+            Plugin plugin = GetPluginFromNode(PluginTree.SelectedRecord);
             var ids = new Dictionary<uint, Record>();
-            foreach (BaseRecord tn2 in p.Records)
+            foreach (var record in plugin.Enumerate().OfType<Record>())
             {
-                if (findDuplicateFormIDs(tn2, ids)) return;
+                if (ids.ContainsKey(record.FormID))
+                {
+                    if (record.FormID == 0 && record.Name == "COBJ")
+                        continue; // FormID = 0 is valid for all COBJ records
+                    PluginTree.SelectedRecord = record;
+                    MessageBox.Show("Record duplicates " + (ids[record.FormID]).DescriptiveName);
+                    SendStatusText(string.Format("Record FormID duplicates {0}", (ids[record.FormID]).DescriptiveName), Color.OrangeRed);
+                    return;
+                }
+                else
+                    ids.Add(record.FormID, record);
             }
             ids.Clear();
+            SendStatusText("No duplicate FormID's found", SystemColors.ControlText);
         }
 
         private void DumpEdidsInternal(Rec r, StreamWriter sw)
@@ -102,7 +113,7 @@ namespace TESVSnip
             {
                 var r2 = (Record)r;
                 if (r2.SubRecords.Count > 0 && r2.SubRecords[0].Name == "EDID")
-                    sw.WriteLine(r2.SubRecords[0].GetStrData());
+                    sw.WriteLine(r2.FormID.ToString("x8") + " : " + r2.SubRecords[0].GetStrData());
             }
             else
             {
@@ -409,38 +420,45 @@ namespace TESVSnip
                 else
                 {
                     var r = (Record)rec;
+                    String edid = "";
+                    byte chance = 0;
+                    byte flags = 0;
                     if ((r.FormID & 0xff000000) != 0) continue;
                     switch (r.Name)
                     {
                         case "LVLI":
                             for (int i = 0; i < r.SubRecords.Count; i++)
                             {
-                                if (r.SubRecords[i].Name == "LVLO")
+                                if (r.SubRecords[i].Name == "EDID")
+                                {
+                                    edid = r.SubRecords[i].GetStrData();
+                                }
+                                else if (r.SubRecords[i].Name == "LVLD")
+                                {
+                                    byte[] data = r.SubRecords[i].GetReadonlyData();
+                                    chance = data[0];
+                                }
+                                else if (r.SubRecords[i].Name == "LVLF")
+                                {
+                                    byte[] data = r.SubRecords[i].GetReadonlyData();
+                                    flags = data[0];
+                                }
+                                else if (r.SubRecords[i].Name == "LVLO")
                                 {
                                     if (r.SubRecords[i].Size != 12) continue;
                                     byte[] data = r.SubRecords[i].GetReadonlyData();
                                     uint formid = TypeConverter.h2i(data[4], data[5], data[6], data[7]);
-                                    if ((formid & 0xff000000) != mask) continue;
-                                    sb3.Append("      <Element level=\"" + TypeConverter.h2ss(data[0], data[1]) +
-                                               "\" formid=\"" +
-                                               (formid & 0xffffff).ToString("X6") + "\" count=\"" +
-                                               TypeConverter.h2ss(data[8], data[9]) + "\" ");
-                                    if (i < r.SubRecords.Count - 1 && r.SubRecords[i + 1].Name == "COED" &&
-                                        r.SubRecords[i + 1].Size == 12)
-                                    {
-                                        i++;
-                                        data = r.SubRecords[i].GetReadonlyData();
-                                        sb3.Append(" coed1=\"" + TypeConverter.h2i(data[0], data[1], data[2], data[3]) +
-                                                   "\" coed2=\"" +
-                                                   TypeConverter.h2i(data[4], data[5], data[6], data[7]) + "\" coed3=\"" +
-                                                   TypeConverter.h2i(data[8], data[9], data[10], data[11]) + "\" ");
-                                    }
-                                    sb3.AppendLine("/>");
+                                    // if ((formid & 0xff000000) != mask) continue;
+                                    sb3.AppendLine("      <LVLO level=\"" + TypeConverter.h2ss(data[0], data[1]) +
+                                               "\" formid=\"" + (formid & 0xffffff).ToString("X6") + 
+                                               "\" count=\"" + TypeConverter.h2ss(data[8], data[9]) + "\" />");
                                 }
                             }
                             if (sb3.Length > 0)
                             {
-                                sb2.AppendLine("    <LVLI formid=\"" + r.FormID.ToString("X6") + "\">");
+                                sb2.AppendLine("    <LVLI formid=\"" + r.FormID.ToString("X6") + "\" edid=\"" + edid + "\">");
+                                sb2.AppendLine("      <LVLF flags=\"" + flags + "\"/>");
+                                sb2.AppendLine("      <LVLD chance=\"" + chance + "\"/>");
                                 sb2.Append(sb3.ToString());
                                 sb2.AppendLine("    </LVLI>");
                             }
@@ -449,44 +467,74 @@ namespace TESVSnip
                         case "LVLN":
                             for (int i = 0; i < r.SubRecords.Count; i++)
                             {
-                                if (r.SubRecords[i].Name == "LVLO")
+                                if (r.SubRecords[i].Name == "EDID")
+                                {
+                                    edid = r.SubRecords[i].GetStrData();
+                                }
+                                else if (r.SubRecords[i].Name == "LVLD")
+                                {
+                                    byte[] data = r.SubRecords[i].GetReadonlyData();
+                                    chance = data[0];
+                                }
+                                else if (r.SubRecords[i].Name == "LVLF")
+                                {
+                                    byte[] data = r.SubRecords[i].GetReadonlyData();
+                                    flags = data[0];
+                                }
+                                else if (r.SubRecords[i].Name == "LVLO")
                                 {
                                     if (r.SubRecords[i].Size != 12) continue;
                                     byte[] data = r.SubRecords[i].GetReadonlyData();
                                     uint formid = TypeConverter.h2i(data[4], data[5], data[6], data[7]);
-                                    if ((formid & 0xff000000) != mask) continue;
-                                    sb3.AppendLine("      <Element level=\"" + TypeConverter.h2ss(data[0], data[1]) +
-                                                   "\" formid=\"" +
-                                                   (formid & 0xffffff).ToString("X6") + "\" count=\"" +
-                                                   TypeConverter.h2ss(data[8], data[9]) + "\" />");
+//                                    if ((formid & 0xff000000) != mask) continue;
+                                    sb3.AppendLine("      <LVLO level=\"" + TypeConverter.h2ss(data[0], data[1]) +
+                                                   "\" formid=\"" + (formid & 0xffffff).ToString("X6") + 
+                                                   "\" count=\"" + TypeConverter.h2ss(data[8], data[9]) + "\" />");
                                 }
                             }
                             if (sb3.Length > 0)
                             {
-                                sb2.AppendLine("    <LVLN formid=\"" + r.FormID.ToString("X6") + "\">");
+                                sb2.AppendLine("    <LVLN formid=\"" + r.FormID.ToString("X6") + "\" edid=\"" + edid + "\">");
+                                sb2.AppendLine("      <LVLF flags=\"" + flags + "\"/>");
+                                sb2.AppendLine("      <LVLD chance=\"" + chance + "\"/>");
                                 sb2.Append(sb3.ToString());
                                 sb2.AppendLine("    </LVLN>");
                             }
                             sb3.Length = 0;
                             break;
-                        case "LVLC":
+                        case "LVSP":
                             for (int i = 0; i < r.SubRecords.Count; i++)
                             {
-                                if (r.SubRecords[i].Name == "LVLO")
+                                if (r.SubRecords[i].Name == "EDID")
+                                {
+                                    edid = r.SubRecords[i].GetStrData();
+                                }
+                                else if (r.SubRecords[i].Name == "LVLD")
+                                {
+                                    byte[] data = r.SubRecords[i].GetReadonlyData();
+                                    chance = data[0];
+                                }
+                                else if (r.SubRecords[i].Name == "LVLF")
+                                {
+                                    byte[] data = r.SubRecords[i].GetReadonlyData();
+                                    flags = data[0];
+                                }
+                                else if (r.SubRecords[i].Name == "LVLO")
                                 {
                                     if (r.SubRecords[i].Size != 12) continue;
                                     byte[] data = r.SubRecords[i].GetReadonlyData();
                                     uint formid = TypeConverter.h2i(data[4], data[5], data[6], data[7]);
-                                    if ((formid & 0xff000000) != mask) continue;
-                                    sb3.AppendLine("      <Element level=\"" + TypeConverter.h2ss(data[0], data[1]) +
-                                                   "\" formid=\"" +
-                                                   (formid & 0xffffff).ToString("X6") + "\" count=\"" +
-                                                   TypeConverter.h2ss(data[8], data[9]) + "\" />");
+//                                    if ((formid & 0xff000000) != mask) continue;
+                                    sb3.AppendLine("      <LVLO level=\"" + TypeConverter.h2ss(data[0], data[1]) +
+                                                   "\" formid=\"" + (formid & 0xffffff).ToString("X6") + 
+                                                   "\" count=\"" + TypeConverter.h2ss(data[8], data[9]) + "\" />");
                                 }
                             }
                             if (sb3.Length > 0)
                             {
-                                sb2.AppendLine("    <LVLC formid=\"" + r.FormID.ToString("X6") + "\">");
+                                sb2.AppendLine("    <LVSP formid=\"" + r.FormID.ToString("X6") + "\" edid=\"" + edid + "\">");
+                                sb2.AppendLine("      <LVLF flags=\"" + flags + "\"/>");
+                                sb2.AppendLine("      <LVLD chance=\"" + chance + "\"/>");
                                 sb2.Append(sb3.ToString());
                                 sb2.AppendLine("    </LVLC>");
                             }
@@ -504,7 +552,7 @@ namespace TESVSnip
                 sb1.Append(sb2);
                 sb1.AppendLine("  </MergedLists>");
                 sb1.AppendLine("</Plugin>");
-                File.WriteAllText(Path.ChangeExtension("data\\" + p.Name, ".xml"), sb1.ToString());
+                File.WriteAllText(Path.ChangeExtension(p.Name, ".xml"), sb1.ToString());
             }
             else MessageBox.Show("No compatible leveled lists found");
         }
@@ -515,7 +563,7 @@ namespace TESVSnip
 
             var p = GetPluginFromNode(PluginTree.SelectedRecord);
             var tes4 = p.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
-            if (tes4 != null)
+            if (tes4 == null)
             {
                 MessageBox.Show("Plugin has no TES4 record");
                 return;
@@ -526,8 +574,8 @@ namespace TESVSnip
                 return;
             }
             tes4.Flags1 |= 1;
-
-            SaveModDialog.FileName = Path.ChangeExtension(p.Name, ".esm");
+            p.Name = Path.ChangeExtension(p.Name, ".esm");
+            SaveModDialog.FileName = p.Name;
             if (SaveModDialog.ShowDialog() == DialogResult.OK)
             {
                 p.Save(SaveModDialog.FileName);
@@ -888,5 +936,28 @@ namespace TESVSnip
                 SendStatusText("No strings internalized", Color.OrangeRed);
 
         }
+
+        public void giveSelectionNewFormID(bool updateReference)
+        {
+            var recs = this.PluginTree.SelectedRecords;
+            uint formCount = 0, refCount = 0;
+            try
+            {
+                foreach (var rec in recs)
+                {
+                    Spells.giveBaseRecordNewFormID(rec, updateReference, ref formCount, ref refCount);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, Resources.ErrorText);
+            }
+            RebuildSelection();
+            if (formCount > 0)
+                SendStatusText(string.Format("Changed {0} FormID's and updated {1} references", formCount, refCount), SystemColors.ControlText);
+            else
+                SendStatusText("No FormID's changed", Color.OrangeRed);
+        }
+
     }
 }

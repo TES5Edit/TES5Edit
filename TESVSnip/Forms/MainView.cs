@@ -113,6 +113,7 @@ namespace TESVSnip
 
             useNewSubrecordEditorToolStripMenuItem.Checked = !Properties.Settings.Default.UseOldSubRecordEditor;
             hexModeToolStripMenuItem.Checked = Properties.Settings.Default.UseHexSubRecordEditor;
+            uTF8ModeToolStripMenuItem.Checked = Properties.Settings.Default.UseUTF8;
 
 
             Selection = new SelectionContext();
@@ -398,6 +399,8 @@ namespace TESVSnip
                     copyToolStripMenuItem.Enabled = false;
                     deleteToolStripMenuItem.Enabled = false;
                     pasteToolStripMenuItem.Enabled = hasClipboard;
+                    pasteNewToolStripMenuItem.Enabled = hasClipboard;
+                    insertGroupToolStripMenuItem.Enabled = true;
                     insertRecordToolStripMenuItem.Enabled = true;
                     insertSubrecordToolStripMenuItem.Enabled = false;
                 }
@@ -406,14 +409,16 @@ namespace TESVSnip
                     cutToolStripMenuItem.Enabled = true;
                     copyToolStripMenuItem.Enabled = true;
                     deleteToolStripMenuItem.Enabled = true;
-                    pasteToolStripMenuItem.Enabled = false;
-                    insertRecordToolStripMenuItem.Enabled = false;
+                    pasteToolStripMenuItem.Enabled = hasClipboard;
+                    pasteNewToolStripMenuItem.Enabled = hasClipboard;
+                    insertGroupToolStripMenuItem.Enabled = false;
+                    insertRecordToolStripMenuItem.Enabled = true;
                     insertSubrecordToolStripMenuItem.Enabled = true;
                     Selection.Record = rec as Rec;
                     SubrecordList.Record = Selection.Record as Record;
                     MatchRecordStructureToRecord();
                 }
-                else
+                else if (rec is GroupRecord)
                 {
                     Selection.Record = null;
                     SubrecordList.Record = null;
@@ -421,7 +426,22 @@ namespace TESVSnip
                     copyToolStripMenuItem.Enabled = true;
                     deleteToolStripMenuItem.Enabled = true;
                     pasteToolStripMenuItem.Enabled = hasClipboard;
+                    pasteNewToolStripMenuItem.Enabled = hasClipboard;
+                    insertGroupToolStripMenuItem.Enabled = true;
                     insertRecordToolStripMenuItem.Enabled = true;
+                    insertSubrecordToolStripMenuItem.Enabled = false;
+                }
+                else
+                {
+                    Selection.Record = null;
+                    SubrecordList.Record = null;
+                    cutToolStripMenuItem.Enabled = false;
+                    copyToolStripMenuItem.Enabled = false;
+                    deleteToolStripMenuItem.Enabled = false;
+                    pasteToolStripMenuItem.Enabled = false;
+                    pasteNewToolStripMenuItem.Enabled = false;
+                    insertGroupToolStripMenuItem.Enabled = false;
+                    insertRecordToolStripMenuItem.Enabled = false;
                     insertSubrecordToolStripMenuItem.Enabled = false;
                 }
                 Selection.SubRecord = GetSelectedSubrecord();
@@ -461,6 +481,7 @@ namespace TESVSnip
                     return;
             }
 
+            SaveModDialog.FileName = p.Name;
             if (SaveModDialog.ShowDialog(this) == DialogResult.OK)
             {
                 p.Save(SaveModDialog.FileName);
@@ -509,10 +530,15 @@ namespace TESVSnip
 
         private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            PasteFromClipboard(false);
+            PasteFromClipboard(false, false);
         }
 
-        private void PasteFromClipboard(bool recordOnly)
+        private void pasteNewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PasteFromClipboard(false, true);
+        }
+
+        private void PasteFromClipboard(bool recordOnly, bool asNew)
         {
             if (!HasClipboardData())
             {
@@ -522,7 +548,7 @@ namespace TESVSnip
 
             if (PluginTree.ContainsFocus)
             {
-                PluginTree.PasteFromClipboard(recordOnly);
+                PluginTree.PasteFromClipboard(recordOnly, asNew);
             }
             else if (SubrecordList.ContainsFocus)
             {
@@ -538,7 +564,7 @@ namespace TESVSnip
             r.Name = "TES4";
             var sr = new SubRecord();
             sr.Name = "HEDR";
-            sr.SetData(new byte[] {0xD7, 0xA3, 0x70, 0x3F, 0xFA, 0x56, 0x0C, 0x00, 0x19, 0xEA, 0x07, 0xFF});
+            sr.SetData(new byte[] {0xD7, 0xA3, 0x70, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1D, 0x00, 0x01});
             r.AddRecord(sr);
             sr = new SubRecord();
             sr.Name = "CNAM";
@@ -578,11 +604,31 @@ namespace TESVSnip
             return SubrecordList.GetSelectedSubrecords();
         }
 
+        private void insertGroupToolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            var node = PluginTree.SelectedRecord;
+            var p = new GroupRecord("NEW_");
+            node.AddRecord(p);
+            GetPluginFromNode(PluginTree.SelectedRecord).InvalidateCache();
+            PluginTree.RefreshObject(node);
+        }
+        
         private void insertRecordToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var node = PluginTree.SelectedRecord;
-            var p = new Record();
-            node.AddRecord(p);
+
+            if (node is Record && (node.Parent is GroupRecord || node.Parent is Plugin))
+                node = node.Parent;
+
+            var record = new Record();
+            if (node is GroupRecord)
+            {
+                GroupRecord g = (GroupRecord)node;
+                if (g.groupType == 0)
+                    record.Name = g.ContentsType;
+            }
+            node.AddRecord(record);
+            Spells.giveRecordNewFormID(record,false);
             GetPluginFromNode(PluginTree.SelectedRecord).InvalidateCache();
             PluginTree.RefreshObject(node);
         }
@@ -1083,11 +1129,17 @@ namespace TESVSnip
                 FontLangInfo defLang;
                 if (!Encoding.TryGetFontInfo(Properties.Settings.Default.LocalizationName, out defLang))
                     defLang = new FontLangInfo(1252, 1033, 0);
-
-                var rb = new RTFBuilder(RTFFont.Arial, 16, defLang.lcid, defLang.charset);
-                rec.GetFormattedHeader(rb);
-                rec.GetFormattedData(rb);
-                SelectedText.Rtf = rb.ToString();
+                try
+                {
+                    var rb = new RTFBuilder(RTFFont.Arial, 16, defLang.lcid, defLang.charset);
+                    rec.GetFormattedHeader(rb);
+                    rec.GetFormattedData(rb);
+                    SelectedText.Rtf = rb.ToString();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show( ex.Message, Resources.WarningText );
+                }
             }
         }
 
@@ -1385,11 +1437,11 @@ namespace TESVSnip
                         statusTimer = new Timer(
                             o =>
                             Invoke(new TimerCallback(o2 => { toolStripStatusLabel.Text = ""; }), new object[] { "" })
-                            , "", TimeSpan.FromSeconds(3), TimeSpan.FromMilliseconds(-1));
+                            , "", TimeSpan.FromSeconds(15), TimeSpan.FromMilliseconds(-1));
                     }
                     else
                     {
-                        statusTimer.Change(TimeSpan.FromSeconds(3), TimeSpan.FromMilliseconds(-1));
+                        statusTimer.Change(TimeSpan.FromSeconds(15), TimeSpan.FromMilliseconds(-1));
                     }                    
                 }
             }
@@ -1844,5 +1896,25 @@ namespace TESVSnip
             var search = CreateSearchWindow();
             search.ReferenceSearch(formid);
         }
+
+        private void newFormIDToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            giveSelectionNewFormID(true);
+        }
+
+        private void newFormIDNoReferenceUpdateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            giveSelectionNewFormID(false);
+        }
+
+        private void uTF8ModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.UseUTF8 = uTF8ModeToolStripMenuItem.Checked;
+            if (MessageBox.Show(Resources.RestartText, Resources.InfoText, MessageBoxButtons.YesNoCancel) == DialogResult.Yes)
+            {
+                Application.Restart();
+            }
+        }
+
     }
 }

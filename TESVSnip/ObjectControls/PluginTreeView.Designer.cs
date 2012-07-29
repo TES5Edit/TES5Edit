@@ -34,16 +34,19 @@
             this.toolStripRecord = new System.Windows.Forms.ToolStrip();
             this.toolStripRecordBack = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripRecordNext = new System.Windows.Forms.ToolStripSplitButton();
+            this.toolStripRecordPasteNew = new System.Windows.Forms.ToolStripButton();
             this.toolStripRecordPaste = new System.Windows.Forms.ToolStripButton();
             this.toolStripRecordCopy = new System.Windows.Forms.ToolStripButton();
             this.toolStripRecordText = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripRecordDelete = new System.Windows.Forms.ToolStripButton();
             this.contextMenuRecord = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuRecordAddMaster = new System.Windows.Forms.ToolStripMenuItem();
             this.browseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRecordEdit = new System.Windows.Forms.ToolStripMenuItem();
-            this.reportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuRecordReport = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRecordCopy = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRecordCopyTo = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuRecordPaste = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRecordDelete = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,6 +55,7 @@
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             this.referenceSearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.PluginTree = new TESVSnip.Controls.CustomTreeView();
+            this.contextMenuRecordPasteNew = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripRecord.SuspendLayout();
             this.contextMenuRecord.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PluginTree)).BeginInit();
@@ -69,9 +73,11 @@
             this.toolStripRecord.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripRecordBack,
             this.toolStripRecordNext,
+            this.toolStripRecordPasteNew,
             this.toolStripRecordPaste,
             this.toolStripRecordCopy,
-            this.toolStripRecordText});
+            this.toolStripRecordText,
+            this.toolStripRecordDelete});
             resources.ApplyResources(this.toolStripRecord, "toolStripRecord");
             this.toolStripRecord.Name = "toolStripRecord";
             this.toolStripRecord.TabStop = true;
@@ -90,12 +96,21 @@
             resources.ApplyResources(this.toolStripRecordNext, "toolStripRecordNext");
             this.toolStripRecordNext.Name = "toolStripRecordNext";
             // 
+            // toolStripRecordPasteNew
+            // 
+            this.toolStripRecordPasteNew.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripRecordPasteNew.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolStripRecordPasteNew, "toolStripRecordPasteNew");
+            this.toolStripRecordPasteNew.Image = global::TESVSnip.Properties.Resources.special_paste;
+            this.toolStripRecordPasteNew.Name = "toolStripRecordPasteNew";
+            this.toolStripRecordPasteNew.Click += new System.EventHandler(this.toolStripRecordPasteNew_Click);
+            // 
             // toolStripRecordPaste
             // 
             this.toolStripRecordPaste.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripRecordPaste.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripRecordPaste.Image = global::TESVSnip.Properties.Resources.Paste;
             resources.ApplyResources(this.toolStripRecordPaste, "toolStripRecordPaste");
+            this.toolStripRecordPaste.Image = global::TESVSnip.Properties.Resources.Paste;
             this.toolStripRecordPaste.Name = "toolStripRecordPaste";
             this.toolStripRecordPaste.Click += new System.EventHandler(this.toolStripRecordPaste_Click);
             // 
@@ -103,8 +118,8 @@
             // 
             this.toolStripRecordCopy.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripRecordCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripRecordCopy.Image = global::TESVSnip.Properties.Resources.Copy;
             resources.ApplyResources(this.toolStripRecordCopy, "toolStripRecordCopy");
+            this.toolStripRecordCopy.Image = global::TESVSnip.Properties.Resources.Copy;
             this.toolStripRecordCopy.Name = "toolStripRecordCopy";
             this.toolStripRecordCopy.Click += new System.EventHandler(this.toolStripRecordCopy_Click);
             // 
@@ -113,14 +128,25 @@
             this.toolStripRecordText.Name = "toolStripRecordText";
             resources.ApplyResources(this.toolStripRecordText, "toolStripRecordText");
             // 
+            // toolStripRecordDelete
+            // 
+            this.toolStripRecordDelete.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripRecordDelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolStripRecordDelete, "toolStripRecordDelete");
+            this.toolStripRecordDelete.Image = global::TESVSnip.Properties.Resources.deletecell;
+            this.toolStripRecordDelete.Name = "toolStripRecordDelete";
+            this.toolStripRecordDelete.Click += new System.EventHandler(this.toolStripRecordDelete_Click);
+            // 
             // contextMenuRecord
             // 
             this.contextMenuRecord.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.contextMenuRecordAddMaster,
             this.contextMenuRecordEdit,
-            this.reportToolStripMenuItem,
+            this.contextMenuRecordReport,
             this.contextMenuRecordCopy,
             this.contextMenuRecordCopyTo,
+            this.contextMenuRecordPaste,
+            this.contextMenuRecordPasteNew,
             this.contextMenuRecordDelete,
             this.toolStripMenuItem2,
             this.referenceSearchToolStripMenuItem});
@@ -149,11 +175,11 @@
             resources.ApplyResources(this.contextMenuRecordEdit, "contextMenuRecordEdit");
             this.contextMenuRecordEdit.Click += new System.EventHandler(this.editToolStripMenuItem_Click);
             // 
-            // reportToolStripMenuItem
+            // contextMenuRecordReport
             // 
-            this.reportToolStripMenuItem.Name = "reportToolStripMenuItem";
-            resources.ApplyResources(this.reportToolStripMenuItem, "reportToolStripMenuItem");
-            this.reportToolStripMenuItem.Click += new System.EventHandler(this.reportToolStripMenuItem_Click);
+            this.contextMenuRecordReport.Name = "contextMenuRecordReport";
+            resources.ApplyResources(this.contextMenuRecordReport, "contextMenuRecordReport");
+            this.contextMenuRecordReport.Click += new System.EventHandler(this.contextMenuRecordReport_Click);
             // 
             // contextMenuRecordCopy
             // 
@@ -167,10 +193,16 @@
             resources.ApplyResources(this.contextMenuRecordCopyTo, "contextMenuRecordCopyTo");
             this.contextMenuRecordCopyTo.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.contextMenuRecordCopyTo_DropDownItemClicked);
             // 
+            // contextMenuRecordPaste
+            // 
+            resources.ApplyResources(this.contextMenuRecordPaste, "contextMenuRecordPaste");
+            this.contextMenuRecordPaste.Name = "contextMenuRecordPaste";
+            this.contextMenuRecordPaste.Click += new System.EventHandler(this.contextMenuRecordPaste_Click);
+            // 
             // contextMenuRecordDelete
             // 
-            this.contextMenuRecordDelete.Name = "contextMenuRecordDelete";
             resources.ApplyResources(this.contextMenuRecordDelete, "contextMenuRecordDelete");
+            this.contextMenuRecordDelete.Name = "contextMenuRecordDelete";
             this.contextMenuRecordDelete.Click += new System.EventHandler(this.contextMenuRecordDelete_Click);
             // 
             // toolStripMenuItem2
@@ -258,6 +290,12 @@
             this.PluginTree.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PluginTree_KeyDown);
             this.PluginTree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.PluginTree_MouseDoubleClick);
             // 
+            // contextMenuRecordPasteNew
+            // 
+            resources.ApplyResources(this.contextMenuRecordPasteNew, "contextMenuRecordPasteNew");
+            this.contextMenuRecordPasteNew.Name = "contextMenuRecordPasteNew";
+            this.contextMenuRecordPasteNew.Click += new System.EventHandler(this.contextMenuRecordPasteNew_Click);
+            // 
             // PluginTreeView
             // 
             resources.ApplyResources(this, "$this");
@@ -296,7 +334,11 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem6;
         private System.Windows.Forms.ImageList imageSmallTreeList;
         private System.Windows.Forms.ToolStripMenuItem contextMenuRecordEdit;
-        private System.Windows.Forms.ToolStripMenuItem reportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem contextMenuRecordReport;
         private System.Windows.Forms.ToolStripMenuItem referenceSearchToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem contextMenuRecordPaste;
+        private System.Windows.Forms.ToolStripButton toolStripRecordDelete;
+        private System.Windows.Forms.ToolStripButton toolStripRecordPasteNew;
+        private System.Windows.Forms.ToolStripMenuItem contextMenuRecordPasteNew;
     }
 }

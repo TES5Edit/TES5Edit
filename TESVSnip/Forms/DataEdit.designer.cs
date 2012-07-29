@@ -55,8 +55,8 @@ namespace TESVSnip {
             // 
             // tbName
             // 
-            resources.ApplyResources(this.tbName, "tbName");
             this.tbName.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
+            resources.ApplyResources(this.tbName, "tbName");
             this.tbName.Name = "tbName";
             this.tbName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbName_KeyPress);
             this.tbName.Leave += new System.EventHandler(this.tbName_Leave);

@@ -45,7 +45,6 @@ namespace TESVSnip {
             // 
             // cmbGroupType
             // 
-            resources.ApplyResources(this.cmbGroupType, "cmbGroupType");
             this.cmbGroupType.FormattingEnabled = true;
             this.cmbGroupType.Items.AddRange(new object[] {
             resources.GetString("cmbGroupType.Items"),
@@ -59,12 +58,14 @@ namespace TESVSnip {
             resources.GetString("cmbGroupType.Items8"),
             resources.GetString("cmbGroupType.Items9"),
             resources.GetString("cmbGroupType.Items10")});
+            resources.ApplyResources(this.cmbGroupType, "cmbGroupType");
             this.cmbGroupType.Name = "cmbGroupType";
             this.cmbGroupType.SelectedIndexChanged += new System.EventHandler(this.cmbGroupType_SelectedIndexChanged);
             this.cmbGroupType.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cmbGroupType_KeyPress);
             // 
             // tbRecType
             // 
+            this.tbRecType.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             resources.ApplyResources(this.tbRecType, "tbRecType");
             this.tbRecType.Name = "tbRecType";
             this.tbRecType.Leave += new System.EventHandler(this.tbRecType_Leave);
@@ -136,8 +137,8 @@ namespace TESVSnip {
             // 
             // bCancel
             // 
-            resources.ApplyResources(this.bCancel, "bCancel");
             this.bCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            resources.ApplyResources(this.bCancel, "bCancel");
             this.bCancel.Name = "bCancel";
             this.bCancel.UseVisualStyleBackColor = true;
             this.bCancel.Click += new System.EventHandler(this.bCancel_Click);
@@ -145,7 +146,6 @@ namespace TESVSnip {
             // bSave
             // 
             resources.ApplyResources(this.bSave, "bSave");
-            this.bSave.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.bSave.Name = "bSave";
             this.bSave.UseVisualStyleBackColor = true;
             this.bSave.Click += new System.EventHandler(this.bSave_Click);

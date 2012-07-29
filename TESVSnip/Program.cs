@@ -147,6 +147,9 @@ namespace TESVSnip
     internal static class Encoding
     {
         private static readonly System.Text.Encoding s_CP1252Encoding = System.Text.Encoding.GetEncoding(1252);
+        private static readonly System.Text.Encoding s_UTF8Encoding = System.Text.Encoding.GetEncoding("utf-8");
+
+        internal static System.Text.Encoding CP1252;
 
         private static readonly Dictionary<string, FontLangInfo> defLangMap =
             new Dictionary<string, FontLangInfo>(StringComparer.InvariantCultureIgnoreCase);
@@ -161,12 +164,13 @@ namespace TESVSnip
             defLangMap.Add("Spanish", new FontLangInfo(1252, 1034, 0));
             defLangMap.Add("Russian", new FontLangInfo(1251, 1049, 204));
             defLangMap.Add("Polish", new FontLangInfo(1250, 1045, 0));
+            CP1252 = Properties.Settings.Default.UseUTF8 ? s_UTF8Encoding : s_CP1252Encoding;
         }
 
-        internal static System.Text.Encoding CP1252
-        {
-            get { return s_CP1252Encoding; }
-        }
+        //internal static System.Text.Encoding CP1252
+        //{
+        //    get { return s_CP1252Encoding; }
+        //}
 
 
         internal static bool TryGetFontInfo(string name, out FontLangInfo langInfo)

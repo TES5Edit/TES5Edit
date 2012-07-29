@@ -50,6 +50,7 @@ namespace TESVSnip
 
         private void bCancel_Click(object sender, EventArgs e)
         {
+            this.DialogResult = DialogResult.Cancel;
             Close();
         }
 
@@ -65,15 +66,38 @@ namespace TESVSnip
             }
         }
 
+        private bool checkHexValue(TextBox t)
+        {
+            uint i;
+            if (uint.TryParse(t.Text, NumberStyles.AllowHexSpecifier, null, out i))
+            {
+                if (t == tbFlags2) Flags2 = i;
+                else if (t == tbFlags3) Flags3 = i;
+                else if (t == tbFormID) FormID = i;
+            }
+            else
+            {
+                MessageBox.Show("Invalid hex value", "Error");
+                t.Focus();
+                return false;
+            }
+            return true;
+        }
+
         private void bSave_Click(object sender, EventArgs e)
         {
             Save();
-            R.Flags1 = Flags1;
-            R.Flags2 = Flags2;
-            R.Flags3 = Flags3;
-            R.FormID = FormID;
-            R.Name = tbName.Text;
-            Close();
+            if (checkHexValue(tbFlags2) && checkHexValue(tbFlags3) && checkHexValue(tbFormID))
+            {
+                R.Flags1 = Flags1;
+                R.Flags2 = Flags2;
+                R.Flags3 = Flags3;
+                R.FormID = FormID;
+                if (tbName.Text.Length < 4) tbName.Text = tbName.Text.PadRight(4, '_');
+                R.Name = tbName.Text;
+                this.DialogResult = DialogResult.OK;
+                Close();
+            }
         }
 
         private void HexOnlyKeyPress(object sender, KeyPressEventArgs e)

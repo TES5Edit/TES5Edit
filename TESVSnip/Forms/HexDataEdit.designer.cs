@@ -66,8 +66,8 @@ namespace TESVSnip {
             // 
             // tbName
             // 
-            resources.ApplyResources(this.tbName, "tbName");
             this.tbName.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
+            resources.ApplyResources(this.tbName, "tbName");
             this.tbName.Name = "tbName";
             this.tbName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbName_KeyPress);
             this.tbName.Leave += new System.EventHandler(this.tbName_Leave);
@@ -81,6 +81,7 @@ namespace TESVSnip {
             // 
             resources.ApplyResources(this.tbFloat, "tbFloat");
             this.tbFloat.Name = "tbFloat";
+            this.tbFloat.TextChanged += new System.EventHandler(this.tbFloat_TextChanged);
             // 
             // tbInt
             // 
@@ -187,6 +188,7 @@ namespace TESVSnip {
             this.hexBox1.ShadowSelectionColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(60)))), ((int)(((byte)(188)))), ((int)(((byte)(255)))));
             this.hexBox1.StringViewVisible = true;
             this.hexBox1.UseFixedBytesPerLine = true;
+            this.hexBox1.VScrollBarVisible = true;
             this.hexBox1.InsertActiveChanged += new System.EventHandler(this.hexBox1_InsertActiveChanged);
             this.hexBox1.SelectionStartChanged += new System.EventHandler(this.hexBox1_SelectionStartChanged);
             // 
