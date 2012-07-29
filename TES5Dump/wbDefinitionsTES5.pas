@@ -6511,23 +6511,23 @@ begin
 //------------------------------------------------------------------------------
 // Begin CELL
 //------------------------------------------------------------------------------
-// Pattern  1:           DATA      XCLC           LTMP XCLW                                    XCMO                          XCAS
+// Pattern  1:           DATA      XCLC           LTMP XCLW                                         XCMO                          XCAS
 // Pattern  2:           DATA      XCLC TVDT      LTMP XCLW
 // Pattern  3:           DATA      XCLC TVDT MHDT LTMP XCLW XCLR
 // Pattern  4:           DATA      XCLC           LTMP XCLW
 // Pattern  5: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN
-// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO           XEZN           XCAS
-// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO XCCM      XCAS XWEM XEZN
-// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO                          XCAS
-// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM XOWN           XCMO XCCM XILL                XCAS
-// Pattern 10: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                    XEZN XWEM XCMO XCAS
-// Pattern 11: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                     XCMO                XWEM XOWN
-// Pattern 12: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM      XCWT XCCM XCMO           XEZN XWEM XCAS
-// Pattern 13: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XEZN XCMO XWEM XCAS
-// Pattern 14: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XEZN XCMO XWEM XCCM XCAS
-// Pattern 15: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM                     XCCM XCWT XWEM XOWN XCAS
-// Pattern 16: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                               XEZN XWEM           [XIS2 present in CELL]
-// Pattern 17:
+// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO           XEZN           XCAS
+// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO XCCM      XCAS XWEM XEZN
+// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO                          XCAS
+// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM      XOWN           XCMO XCCM XILL                XCAS
+// Pattern 10: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                         XEZN XWEM XCMO XCAS
+// Pattern 11: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO                XWEM XOWN
+// Pattern 12: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM           XCWT XCCM XCMO           XEZN XWEM XCAS
+// Pattern 13: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                    XEZN XCMO XWEM XCAS
+// Pattern 14: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                    XEZN XCMO XWEM XCCM XCAS
+// Pattern 15: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM                          XCCM XCWT XWEM XOWN XCAS
+// Pattern 16: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                                    XEZN XWEM           [When XIS2 is present]
+// Pattern 17: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XCAS XEZN XCMO XWEM
 // Pattern 18:
 // Pattern 19:
 // Pattern 20:
@@ -6577,8 +6577,8 @@ begin
         'Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
-// XCLL Not sure which should go first
     wbStruct(XCLL, 'Lighting', [
+      wbByteArray('Unknown', 8),
       wbStruct('Ambient Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
@@ -6605,7 +6605,7 @@ begin
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
 			wbByteArray('Unknown', 0)
-    ], cpNormal, False, nil, 7),
+    ], cpNormal, False),
     wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
       'ConcSolid',
       'ConcBroken',
@@ -6646,34 +6646,36 @@ begin
 // XCIM XLCN
       wbRStruct('XCIM XLCN', [
         wbFormIDCk(XCIM, 'Image Space', [IMGS]), // Moved from between XCLR and XCET
-        wbUnknown(XLCN)
-      ], []),
+        wbFormID(XLCN, 'Unknown')
+      ], [XCMO]),
 // XLCN XCIM
       wbRStruct('XLCN XCIM', [
-        wbUnknown(XLCN),
+        wbFormID(XLCN, 'Unknown'),
         wbFormIDCk(XCIM, 'Image Space', [IMGS]) // Moved from between XCLR and XCET
-      ], [])
-    ], []),
-    wbByteArray(XCET, 'Unknown', 1, cpIgnore),
+      ], [XCMO])
+    ], [XCMO]),
+//    wbByteArray(XCET, 'Unknown', 1, cpIgnore), Left over from FNV
     wbFormIDCk(XCWT, 'Water', [WATR]),
 // XOWN
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
-    wbByteArray(XCMT, 'Unknown', 1, cpIgnore),
+    ], [XCMO]), // XCMT Left over
+//  wbByteArray(XCMT, 'Unknown', 1, cpIgnore), // XCMT Left over
 // XCMO
     wbFormIDCk(XCMO, 'Music Type', [MUSC]),
 // XCCM
     wbFormIDCk(XCCM, 'Climate', [CLMT]), // Moved from between XCET and XCWT
 // XILL
-		wbUnknown(XILL),
+		wbFormID(XILL, 'Unknown'),
 		wbRUnion('Union', [
 // XCAS XWEM XEZN
-      wbRStruct('XCAS XWEM XEZN', [
+      wbRStruct('XCAS XEZN XCMO XWEM', [
         wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]), // Moved from between XOWN (Ownership) and XCMT
-        wbUnknown(XWEM),
-        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]) // Moved from between XCET and XCCM
+        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
+        // XCMO
+        wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+        wbUnknown(XWEM)
       ], []),
 // XEZN XCAS
       wbRStruct('XEZN XCAS', [
