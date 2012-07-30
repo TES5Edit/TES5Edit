@@ -566,6 +566,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="RecordControls\LStringElement.resx">
       <DependentUpon>LStringElement.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="RecordControls\FormIDElement.resx">
       <DependentUpon>FormIDElement.cs</DependentUpon>
