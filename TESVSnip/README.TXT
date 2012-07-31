@@ -247,7 +247,7 @@ Credits:
                 - Tes5Lib (http://github.com/uesp/tes5lib)
 * Ails - Icons - http://ails.deviantart.com/art/420-Pixel-Art-Icons-for-RPG-129892453
 * Crystal Project - Icons released under LGPL
-* wmrojer - 
+* wmrojer - For all the 4.3 Changes listed above.
 * SLuckyD - For his work on the latest RecordStructure.xml
 
 License:
