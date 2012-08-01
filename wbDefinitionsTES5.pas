@@ -755,8 +755,6 @@ var
   wbEDIDReq: IwbSubRecordDef;
   wbSoulGemEnum: IwbEnumDef;
   wbBMDT: IwbSubRecordDef;
-  wbYNAM: IwbSubRecordDef;
-  wbZNAM: IwbSubRecordDef;
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
@@ -829,6 +827,7 @@ var
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordStructDef;
   wbICONReq: IwbSubRecordStructDef;
+  wbSounds: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
   wbModEffectEnum: IwbEnumDef;
   wbCrimeTypeEnum: IwbEnumDef;
@@ -873,8 +872,7 @@ var
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
   wbCOCTReq: IwbSubRecordDef;
-  wbKWDAs: IwbSubRecordDef;
-  wbKSIZ: IwbSubRecordDef;
+  wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef; {Associated with CTDA}
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
@@ -4454,8 +4452,10 @@ begin
   wbCITC := wbInteger(CITC, 'Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
   wbCOCTReq := wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
-  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormID('Keyword'), 0, cpNormal, True);
-  wbKSIZ := wbInteger(KSIZ, 'Keywords Count', itU32);
+  wbKeywords := wbRStruct('Keywords', [
+    wbInteger(KSIZ, 'Count', itU32),
+    wbArrayS(KWDA, '', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True)
+  ], []);
   wbDMDL := wbString(DMDL, 'Model Filename');
   wbSNAM := wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
   wbQNAM := wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
@@ -4781,23 +4781,23 @@ begin
   wbDESCReq := wbLString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
 
-  wbOBND := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
+  wbOBND := wbStruct(OBND, 'Object Bounds', [
     wbInteger('X1', itS16),
     wbInteger('Y1', itS16),
     wbInteger('Z1', itS16),
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ]));
+  ]);
 
-  wbOBNDReq := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
+  wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
     wbInteger('X1', itS16),
     wbInteger('Y1', itS16),
     wbInteger('Z1', itS16),
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ]), 1, nil, nil, cpNormal, True);
+  ], cpNormal, True);
 
   wbPropTypeEnum := wbEnum([
     {00} '',
@@ -4838,7 +4838,7 @@ begin
         {02} wbLenString('Data', 2),
         {03} wbInteger('Data', itU32),
         {04} wbFloat('Data'),
-        {05} wbInteger('Data', itU8),
+        {05} wbInteger('Data', itU8, wbEnum(['False', 'True'])),
         {11} wbArray('Data', wbByteArray('Element', 8), -1),
         {12} wbArray('Data', wbLenString('Element', 2), -1),
         {13} wbArray('Data', wbInteger('Element', itU32), -1),
@@ -4880,7 +4880,7 @@ begin
     wbInteger('objFormat', itS16),
     //wbInteger('scriptCount', itU16),
     wbArray('Scripts', wbScriptEntry, -2),
-    wbArray('Fragments', wbUnknown)
+    wbByteArray('Fragments')
     //wbScriptFragments
   ]);
 
@@ -4934,9 +4934,6 @@ begin
          ]),
     {08} wbFloat('Item Condition')
   ]);
-
-  wbYNAM := wbFormIDCk(YNAM, 'Sound - Pick Up', [SOUN]);
-  wbZNAM := wbFormIDCk(ZNAM, 'Sound - Drop', [SOUN]);
 
   wbPosRot :=
     wbStruct('Position/Rotation', [
@@ -5476,26 +5473,37 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-//------------------------------------------------------------------------------
-// wbMODL MODL, MODB, MODT, MODS, MODD
-//------------------------------------------------------------------------------
-    wbMODL,
-    wbSCRI,
-//------------------------------------------------------------------------------
-// wbDEST DEST, DSTD, DMDL, DMDT, DSTF
-//------------------------------------------------------------------------------
-    wbDEST,
-    wbKSIZ,
-    wbKWDAs,
-    wbUnknown(PNAM),
-    wbFormIDCk(SNAM, 'Sound - Looping', [SOUN]),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SOUN]),
-    wbFormIDCk(INAM, 'Radio Template', [SOUN]),
-    wbFormIDCk(RNAM, 'Radio Station', [TACT]),
+    wbMODL, // wbMODL MODL, MODB, MODT, MODS, MODD
+    wbDEST, // wbDEST DEST, DSTD, DMDL, DMDT, DSTF
+    wbKeywords,
+    wbStruct(PNAM, 'Marker Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8),
+      wbInteger('Unused', itU8)
+    ]),
+    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
+    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
+    wbLString(RNAM, 'Activate Text Override'),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbUnknown(FNAM),
-    wbFormID(KNAM),
-    wbString(XATO, 'Activation Prompt')
+    wbInteger(FNAM, 'Water Displacement', itU16, wbFlags([
+      'No Displacement',
+      'Ignored by Sandbox'
+    ])),
+    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
+  ]);
+
+  wbRecord(TACT, 'Talking Activator', [
+    wbEDIDReq,
+    wbVMAD,
+    wbOBNDReq,
+    wbFULL,
+    wbMODL, // wbMODL MODL, MODB, MODT, MODS, MODD
+    wbDEST, // wbDEST DEST, DSTD, DMDL, DMDT, DSTF
+    wbKeywords,
+    wbUnknown(PNAM, cpNormal, True),
+    wbUnknown(FNAM, cpNormal, True),
+    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR])
   ]);
 
   wbICON := wbRStruct('Icon', [
@@ -5507,6 +5515,11 @@ begin
     wbString(ICON, 'Large Icon filename'),
     wbString(MICO, 'Small Icon filename')
   ], [], cpNormal, True, nil, True);
+
+  wbSounds := wbRStruct('Sound', [
+    wbFormIDCk(YNAM, 'Pick Up', [SOUN]),
+    wbFormIDCk(ZNAM, 'Drop', [SOUN])
+  ], [], cpNormal, False, nil, True);
 
   wbVatsValueFunctionEnum :=
     wbEnum([
@@ -6220,16 +6233,16 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbDESCReq,
     wbMODL,
-    wbYNAM,
-    wbZNAM,
+    wbICON,
+    wbSounds,
+    wbETYP,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
-      wbInteger('Flags', itU8, wbFlags([
+      wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'No Auto-Calc (Unused)',
         {0x00000002} 'Food Item',
         {0x00000004} 'unknown x4',
@@ -6249,10 +6262,9 @@ begin
 				{0x00010000} 'Medicine',
 				{0x00020000} 'Poison'
       ])),
-      wbByteArray('Unknown', 3),
-      wbFormIDCk('Withdrawal Effect', [SPEL, NULL]),
+      wbFormID('Addiction'),
       wbFloat('Addiction Chance'),
-      wbFormIDCk('Sound - Consume', [SOUN, NULL])
+      wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
     wbEffectsReq
   ]);
@@ -6265,11 +6277,9 @@ begin
     wbICON,
     wbSCRI,
     wbDEST,
-    wbYNAM,
-    wbZNAM,
+    wbSounds,
     wbDESC,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
       wbInteger('Flags', itU8, wbFlags([
@@ -6378,11 +6388,9 @@ begin
     wbETYPReq,
     wbUnknown(BIDS),
     wbUnknown(BAMT),
-    wbYNAM,
-    wbZNAM,
+    wbSounds,
     wbUnknown(RNAM),
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbDESC,
     wbRArray('Unknown - MODL', wbRStruct('Unknown', [
       wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])
@@ -6488,8 +6496,7 @@ begin
     wbMODL,
     wbDESCReq,
     wbFormID(YNAM, 'Unknown'),
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     // 16 Bytes Total Unconfirmed
     wbStruct(DATA, 'Data', [
       {01} wbInteger('Flags', itU8, wbFlags([
@@ -7635,23 +7642,34 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbUnknown(ENIT),
-//    wbStruct(ENIT, 'Effect Data', [
-//      wbInteger('Type', itU32, wbEnum([
-//        {0} '',
-//        {1} '',
-//        {2} 'Weapon',
-//        {3} 'Apparel'
-//      ])),
-//      wbByteArray('Unused', 4),
-//      wbByteArray('Unused', 4),
-//      wbInteger('Flags', itU8, wbFlags([
-//        'No Auto-Calc',
-//        '',
-//        'Hide Effect'
-//      ])),
-//      wbByteArray('Unused', 3)
-//    ], cpNormal, True),
+    wbStruct(ENIT, 'Effect Data', [
+      wbInteger('Enchantment Cost', itS32),
+      wbInteger('Flags', itU32, wbFlags([
+        'No Auto-Calc',
+        '',
+        'Extend Duration On Recast'
+      ])),
+      wbInteger('Cast Type', itU32, wbEnum([
+        {0} 'Constant Effect',
+        {1} 'Fire and Forget',
+        {2} 'Concentration'
+      ])),
+      wbInteger('Enchantment Amount', itS32),
+      wbInteger('Target Type', itU32, wbEnum([
+        {0} 'Self',
+        {1} 'Touch',
+        {2} 'Aimed',
+        {3} 'Target Actor',
+        {4} 'Target Location'
+      ])),
+      wbInteger('Enchant Type', itU32, wbEnum([], [
+        $06, 'Enchantment',
+        $0C, 'Staff Enchantment'
+      ])),
+      wbFloat('Charge Time'),
+      wbFormIDCk('Base Enchantment', [ENCH, NULL]),
+      wbFormIDCk('Worn Restrictions', [FLST, NULL])
+    ], cpNormal, True),
     wbEffectsReq
   ]);
 
@@ -7867,8 +7885,7 @@ begin
     wbMODLReq,
     wbSCRI,
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbUnknown(PNAM),
     wbUnknown(FNAM),
     wbFormIDCk(KNAM, 'Reputation', [KYWD, NULL]),
@@ -8122,20 +8139,6 @@ begin
     wbInteger(INAM, 'Is Interior', itU32, wbEnum(['No', 'Yes']), cpNormal, True)
   ]);
 
-  wbRecord(TACT, 'Talking Activator', [
-    wbEDIDReq,
-    wbOBNDReq,
-    wbFULL,
-    wbMODLReq,
-    wbSCRI,
-    wbDEST,
-    wbFormIDCk(SNAM, 'Looping Sound', [SOUN]),
-    wbUnknown(PNAM),
-    wbUnknown(FNAM),
-    wbFormIDCk(VNAM, 'Voice Type', [VTYP]),
-    wbFormIDCk(INAM, 'Radio Template', [SOUN])
-  ]);
-
 //------------------------------------------------------------------------------
 // As we already know, there is nothing in this Top Group
 //------------------------------------------------------------------------------
@@ -8303,8 +8306,7 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbYNAM,
-    wbZNAM,
+    wbSounds,
     wbInteger(DATA, 'Type', itU8, wbEnum([
       'Sound',
       'Text',
@@ -8426,8 +8428,7 @@ begin
     wbOBND,
     wbFULL,
     wbMODL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -9371,7 +9372,7 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
+    //wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbByteArray('Unknown', 2)
@@ -9564,8 +9565,7 @@ begin
     wbUnknown(LCID),
     wbUnknown(LCEP),
     wbFull,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbFormIDCk(PNAM, 'Unknown', [LCTN, NULL]),
     wbFormIDCk(NAM1, 'Unknown', [MUSC, NULL]),
     wbUnknown(FNAM),
@@ -10572,32 +10572,34 @@ begin
 // End Old INFO
 //------------------------------------------------------------------------------
 
-
-//------------------------------------------------------------------------------
-// Begin Old INGR
-//------------------------------------------------------------------------------
   wbRecord(INGR, 'Ingredient', [
     wbEDIDReq,
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbMODL,
     wbICON,
-    wbSCRI,
     wbETYPReq,
-    wbYNAM,
-    wbZNAM,
-    wbByteArray(DATA, 'Weight', 8),
-    wbStruct(ENIT, 'Effect Data', [
+    wbSounds,
+    wbStruct(DATA, '', [
       wbInteger('Value', itS32),
-      wbInteger('Flags', itU8, wbFlags(['No auto-calculation', 'Food item'])),
-      wbByteArray('Unknown', 3)
+      wbFloat('Weight')
     ], cpNormal, True),
-//------------------------------------------------------------------------------
-// wbEffects - EFID, EFIT, CTDA
-//------------------------------------------------------------------------------
+    wbStruct(ENIT, 'Effect Data', [
+      wbInteger('Ingredient Value', itS32),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'No auto-calculation',
+        {0x00000002} 'Food item',
+        {0x00000004} 'Unknown 3',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Unknown 7',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'References Persist'
+      ]))
+    ], cpNormal, True),
     wbEffectsReq
   ]);
 
@@ -10610,10 +10612,8 @@ begin
     wbICONReq,
     wbSCRI,
     wbDEST,
-    wbYNAM,
-    wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbSounds,
+    wbKeywords,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -11109,9 +11109,8 @@ begin
 //    wbDESCReq,
 //    wbICON,
 //    wbMODL,
-    wbFormID(MDOB, 'Menu Display Object'),
-    wbKSIZ,
-    wbKWDAs,
+    wbMDOB,
+    wbKeywords,
     wbMGEFData,
     wbUnknown(SNDD),
     wbUnknown(DNAM),
@@ -11244,10 +11243,8 @@ begin
     wbICON,
     wbSCRI,
     wbDEST,
-    wbYNAM,
-    wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbSounds,
+    wbKeywords,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -11451,8 +11448,7 @@ begin
     wbCNTOs,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLString(SHRT, 'Short Name'),
@@ -12149,8 +12145,7 @@ begin
           wbUnknown(ALCL),
           wbUnknown(ALFA),
           wbUnknown(ALRT),
-          wbKSIZ,
-          wbKWDAs,
+          wbKeywords,
           wbUnknown(ALEQ),
           wbUnknown(ALEA),
           wbCOCT,
@@ -12202,8 +12197,7 @@ begin
     ], [])),
     wbCOCT,
     wbCNTOs,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbUnknown(NAM0)
   ], wbAllowUnordered);
 
@@ -12275,8 +12269,7 @@ begin
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbArrayS(BODT, 'Body Templates', wbByteArray('Unknown', 4), 0, cpNormal, True),
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbXNAMs,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
@@ -13283,7 +13276,8 @@ begin
       wbInteger('Cast Type', itU32, wbEnum([
         {0} 'Constant Effect',
         {1} 'Fire and Forget',
-        {2} 'Concentration'
+        {2} 'Concentration',
+        {3} 'Scroll'
       ])),
       wbInteger('Type', itU32, wbEnum([
         {0} 'Self',
@@ -13301,78 +13295,31 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbMDOB,
     wbFormIDCk(ETYP, 'Equip Type', [EQUP, NULL]),
     wbDESCReq,
-    //wbMODL,
-    //wbFormIDCk(YNAM, 'Pickup Sound', [SNDR]),
-    //wbFormIDCk(ZNAM, 'Drop Sound', [SNDR]),
-    //wbFormIDCk(ENIT, 'Enchanted Item', [INGR, ALCH, ENCH, NULL]),
     wbSPIT,
-    wbEffectsReq // EFID, EFIT, CTDA
+    wbEffectsReq
   ]);
-
-//------------------------------------------------------------------------------
-// Begin Old SPEL
-//------------------------------------------------------------------------------
-//  wbRecord(SPEL, 'Actor Effect', [
-//    wbEDIDReq,
-//    wbFULL,
-//    wbStruct(SPIT, '', [
-//      wbInteger('Type', itU32, wbEnum([
-//        {0} 'Actor Effect',
-//        {1} 'Disease',
-//        {2} 'Power',
-//        {3} 'Lesser Power',
-//        {4} 'Ability',
-//        {5} 'Poison',
-//        {6} '',
-//        {7} '',
-//        {8} '',
-//        {9} '',
-//       {10} 'Addiction'
-//      ])),
-//      wbInteger('Cost (Unused)', itU32),
-//      wbInteger('Level (Unused)', itU32, wbEnum([
-//        {0} 'Unused'
-//      ])),
-//      wbInteger('Flags', itU8, wbFlags([
-//        {0x00000001} 'No Auto-Calc',
-//        {0x00000002} 'Immune to Silence 1?',
-//        {0x00000004} 'PC Start Effect',
-//        {0x00000008} 'Immune to Silence 2?',
-//        {0x00000010} 'Area Effect Ignores LOS',
-//        {0x00000020} 'Script Effect Always Applies',
-//        {0x00000040} 'Disable Absorb/Reflect',
-//        {0x00000080} 'Force Touch Explode'
-//      ])),
-//      wbByteArray('Unused', 3)
-//    ], cpNormal, True),
-//    wbEffectsReq
-//  ]);
-//------------------------------------------------------------------------------
-// End Old SPEL
-//------------------------------------------------------------------------------
 
   wbRecord(SCRL, 'SCRL', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbMDOB,
-    wbFormIDCK(ETYP, 'Equip Type', [EQUP, NULL]),
+    wbETYP,
     wbDESC,
     wbMODL,
-    wbUnknown(DATA),
-    wbUnknown(SPIT),
-    wbRArray('Array of EFID and EFIT', wbRStruct('Unknown', [
-      wbFormIDCK(EFID, 'Magic Effect', [MGEF, NULL]),
-      wbUnknown(EFIT),
-      wbCTDAs
-    ], []))
+    wbDEST,
+    wbSounds,
+    wbStruct(DATA, 'Item', [
+      wbInteger('Value', itU32),
+      wbFloat('Weight')
+    ], cpNormal, True),
+    wbSPIT,
+    wbEffectsReq
   ]);
 
   wbRecord(STAT, 'Static', [
@@ -13655,12 +13602,10 @@ begin
     wbETYPReq,
     wbUnknown(BIDS),
     wbUnknown(BAMT),
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbDESC,
     wbBIPL,
-    wbYNAM,
-    wbZNAM,
+    wbSounds,
     wbRStruct('Shell Casing Model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
@@ -14133,8 +14078,7 @@ begin
     wbSCRI,
     wbDESC,
     wbDEST,
-    wbYNAM,
-    wbZNAM,
+    wbSounds,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -14247,8 +14191,7 @@ begin
     wbMODL,
     wbICON,
     wbSCRI,
-    wbYNAM,
-    wbZNAM,
+    wbSounds,
     wbRStruct('High Res Image', [
       wbString(TX00, 'Face'),
       wbString(TX01, 'Back')
@@ -14335,8 +14278,7 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbYNAM,
-    wbZNAM
+    wbSounds
   ]);
 
   wbRecord(CMNY, 'Caravan Money', [
@@ -14345,8 +14287,7 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbYNAM,
-    wbZNAM,
+    wbSounds,
     wbInteger(DATA, 'Absolute Value', itU32)
   ]);
 
