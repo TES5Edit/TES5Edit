@@ -312,14 +312,14 @@ namespace TESVSnip
 
         public static bool IsLikelyString(ArraySegment<byte> data)
         {
-            bool isAscii = true;
-            for (int i = 0; i < data.Count - 1 && isAscii; ++i)
+            bool isValid = true;
+            for (int i = 0; i < data.Count - 1 && isValid; ++i)
             {
                 var c = (char) data.Array[data.Offset + i];
                 //if (c == 0) return (i > 0);
-                isAscii = !Char.IsControl(c);
+                isValid = !Char.IsControl(c) || (c == 0x0D) || (c == 0x0A) || (c == 0x09) || (Properties.Settings.Default.UseUTF8 && ((c & 0x80) != 0)); // Include CR, LF and TAB as normal characters to allow multiline strings + Allow Multibyte UTF-8
             }
-            return (isAscii && data.Array[data.Count - 1] == 0);
+            return (isValid && data.Array[data.Count - 1] == 0);
         }
 
         public static string GetZString(ArraySegment<byte> data)
@@ -339,6 +339,14 @@ namespace TESVSnip
             ushort len = h2s(data);
             if (len > 0 && len <= data.Count + 2)
                 return Encoding.CP1252.GetString(data.Array, data.Offset + 2, len);
+            return "";
+        }
+
+        public static string GetIString(ArraySegment<byte> data)
+        {
+            int len = h2si(data);
+            if (len > 0 && len <= data.Count + 4)
+                return Encoding.CP1252.GetString(data.Array, data.Offset + 4, len);
             return "";
         }
 
@@ -371,7 +379,7 @@ namespace TESVSnip
         {
             int len = Encoding.CP1252.GetByteCount(str);
             var data = new byte[len + 1];
-            Encoding.CP1252.GetBytes(str, 0, len, data, 0);
+            Encoding.CP1252.GetBytes(str).CopyTo(data,0);
             data[len] = 0;
             return data;
         }
@@ -387,6 +395,20 @@ namespace TESVSnip
             var data = new byte[2 + len];
             Array.Copy(s2h((ushort) len), 0, data, 0, 2);
             Array.Copy(Encoding.CP1252.GetBytes(str), 0, data, 2, len);
+            return data;
+        }
+
+        /// <summary>
+        /// Encode int length prefixed string
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static byte[] istr2h(string str)
+        {
+            int len = Encoding.CP1252.GetByteCount(str);
+            var data = new byte[4 + len];
+            Array.Copy(si2h(len), 0, data, 0, 4);
+            Array.Copy(Encoding.CP1252.GetBytes(str), 0, data, 4, len);
             return data;
         }
 

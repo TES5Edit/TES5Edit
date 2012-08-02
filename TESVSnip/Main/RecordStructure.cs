@@ -30,7 +30,8 @@ namespace TESVSnip
         UShort,
         UInt,
         SByte,
-        Str4
+        Str4,
+        IString
     }
 
     public enum CondType
