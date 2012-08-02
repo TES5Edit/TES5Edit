@@ -59,10 +59,10 @@ namespace TESVSnip.Windows.Controls
         {
             string[] names = Enum.GetNames(t);
             Array values = Enum.GetValues(t);
-            SetItems(names, (uint[]) values);
+            SetItems(names, 4, (uint[]) values);
         }
 
-        public void SetItems(string[] names)
+        public void SetItems(string[] names, byte flagSize)
         {
             if (names == null || names.Length == 0)
             {
@@ -72,10 +72,10 @@ namespace TESVSnip.Windows.Controls
             var values = new uint[names.Length];
             for (int i = 0; i < names.Length; ++i)
                 values[i] = (uint) 1 << i;
-            SetItems(names, values);
+            SetItems(names, flagSize, values);
         }
 
-        public void SetItems(string[] names, uint[] values)
+        public void SetItems(string[] names, byte flagSize, uint[] values)
         {
             if (names == null || names.Length == 0 || values == null || values.Length == 0 ||
                 names.Length != values.Length)
@@ -97,13 +97,25 @@ namespace TESVSnip.Windows.Controls
             //bytes = ((bytes/2) + ((bytes%2 != 0) ? 1 : 0))*2;
             //string format = "X" + bytes.ToString();
             string format = "X8";
+            int numBits = 32;
+            switch (flagSize)
+            {
+                case 1:
+                    format = "X2";
+                    numBits = 8;
+                    break;
+                case 2:
+                    format = "X4";
+                    numBits = 16;
+                    break;
+            }
             for (int i = 0; i < names.Length; ++i)
             {
                 string s = names[i];
                 if (!string.IsNullOrEmpty(s)) continue;
                 items.Add(new CCBoxItem(values[i].ToString(format), values[i], true));
             }
-            for (int i = names.Length; i < 32; ++i) // add missing items
+            for (int i = names.Length; i < numBits; ++i) // add missing items
             {
                 var value = (uint) 1 << i;
                 items.Add(new CCBoxItem(value.ToString(format), value, true));
