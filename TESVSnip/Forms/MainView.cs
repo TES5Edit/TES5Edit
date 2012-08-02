@@ -257,12 +257,22 @@ namespace TESVSnip
 
         internal void LoadPlugin(string s)
         {
-            var p = new Plugin(s, false, GetRecordFilter(s));
-            PluginList.All.AddRecord(p);
-            UpdateStringEditor();
-            FixMasters();
-            PluginTree.UpdateRoots();
-            GC.Collect();
+            try
+            {
+                var p = new Plugin(s, false, GetRecordFilter(s));
+                PluginList.All.AddRecord(p);
+                UpdateStringEditor();
+                FixMasters();
+                PluginTree.UpdateRoots();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+            finally
+            {
+                GC.Collect();
+            }
         }
 
         private string[] GetRecordFilter(string s)
@@ -465,6 +475,27 @@ namespace TESVSnip
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (PluginTree.SelectedRecord == null)
+            {
+                MessageBox.Show(Resources.NoPluginSelectedToSave, Resources.ErrorText);
+                return;
+            }
+            var p = GetPluginFromNode(PluginTree.SelectedRecord);
+            if (p.Filtered)
+            {
+                DialogResult result = MessageBox.Show(this, Resources.SavePluginWithFilterAppliedInquiry,
+                                                      Resources.WarningText, MessageBoxButtons.YesNo,
+                                                      MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                if (result == DialogResult.No)
+                    return;
+            }
+
+            p.Save(p.Name);
+            FixMasters();
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (PluginTree.SelectedRecord == null)
             {
