@@ -417,7 +417,8 @@ namespace TESVSnip
         public static int ExtractInternalStrings(Plugin plugin)
         {
             int count = 0;
-            uint maxid = plugin.Masters.Max(x=>x.Strings.Count > 0 ? x.Strings.Keys.Max() : 0);
+            // uint maxid = plugin.Masters.Max(x=>x.Strings.Count > 0 ? x.Strings.Keys.Max() : 0); // No need to check the masters string since the numbers are unique for every plugin
+
             bool anyModified = false;
             foreach (var record in plugin.Enumerate().OfType<Record>())
             {
@@ -443,7 +444,8 @@ namespace TESVSnip
                                 string value = TypeConverter.GetString(data);
                                 if (!String.IsNullOrEmpty(value))
                                 {
-                                    uint nextid = Math.Max(maxid, plugin.Strings.Count == 0 ? 0 : plugin.Strings.Keys.Max()) + 1;
+                                    // uint nextid = Math.Max(maxid, plugin.Strings.Count == 0 ? 0 : plugin.Strings.Keys.Max()) + 1; // No need to check the masters strings since the numbers are unique for every plugin
+                                    uint nextid = (plugin.Strings.Count == 0 ? 0 : plugin.Strings.Keys.Max()) + 1;
                                     int idx = plugin.Strings.FindValue(value);
                                     if (idx >= 0)
                                     {

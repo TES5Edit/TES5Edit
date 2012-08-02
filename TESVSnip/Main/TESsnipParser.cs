@@ -162,18 +162,24 @@ namespace TESVSnip
             {
                 input = new byte[size];
             }
-            if (output.Length < outsize)
+            if (output.Length+16 < outsize)
             {
-                output = new byte[outsize];
+                output = new byte[outsize + 16]; // Add 16 extra bytes to be able to detect uncompression overrun.
             }
             br.Read(input, 0, size);
+            inf.Reset();
             inf.SetInput(input, 0, size);
-            inf.Inflate(output);
+            int decompressedSize = inf.Inflate(output);
             inf.Reset();
 
             ms.Position = 0;
             ms.Write(output, 0, outsize);
             ms.Position = 0;
+
+            if (decompressedSize != outsize) // Check the size of the uncompressed data against what we expected
+            {
+                throw new Exception(String.Format("Unexpected Decompressed data size! CompressedSize={2:D} DecompressedSize={0:D} Expected Size={1:D}", decompressedSize, outsize, size));
+            }
 
             return compReader;
         }
@@ -221,7 +227,7 @@ namespace TESVSnip
                                                         null,
                                                         null,
                                                         "Visible when distant",
-                                                        null,
+                                                        "Is full LOD",
                                                         "Dangerous / Off limits (Interior cell)",
                                                         "Data is compressed",
                                                         "Can't wait",
