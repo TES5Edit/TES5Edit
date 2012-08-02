@@ -755,6 +755,7 @@ var
   wbEDIDReq: IwbSubRecordDef;
   wbSoulGemEnum: IwbEnumDef;
   wbBMDT: IwbSubRecordDef;
+  wbBODT: IwbSubRecordDef;
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
@@ -827,6 +828,7 @@ var
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordStructDef;
   wbICONReq: IwbSubRecordStructDef;
+  wbICO2: IwbSubRecordStructDef;
   wbSounds: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
   wbModEffectEnum: IwbEnumDef;
@@ -5516,6 +5518,11 @@ begin
     wbString(MICO, 'Small Icon filename')
   ], [], cpNormal, True, nil, True);
 
+  wbICO2 := wbRStruct('Icon 2 (female)', [
+    wbString(ICO2, 'Large Icon filename'),
+    wbString(MIC2, 'Small Icon filename')
+  ], [], cpNormal, False, nil, True);
+
   wbSounds := wbRStruct('Sound', [
     wbFormIDCk(YNAM, 'Pick Up', [SOUN]),
     wbFormIDCk(ZNAM, 'Drop', [SOUN])
@@ -6282,33 +6289,21 @@ begin
     wbKeywords,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbInteger('Flags', itU8, wbFlags([
+      wbInteger('Flags', itU32, wbFlags([
         'Ignores Normal Weapon Resistance',
-        'Non-Playable'
+        'Non-Playable',
+        'Non-Bolt'
       ])),
-      wbByteArray('Unknown', 3),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
+      wbFloat('Damage'),
+      wbInteger('Value', itU32)
     ], cpNormal, True),
-    wbStruct(DAT2, 'Data 2', [
-      wbInteger('Proj. per Shot', itU32),
-      wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbFloat('Weight'),
-      wbFormIDCk('Consumed Ammo', [AMMO, MISC, NULL]),
-      wbFloat('Consumed Percentage')
-    ], cpNormal, False, nil, 3),
-    wbString(ONAM, 'Short Name'),
-    wbString(QNAM, 'Abbrev.'),
-    wbRArray('Ammo Effects',
-      wbFormIDCk(RCIL, 'Effect', [AMEF])
-    )
+    wbString(ONAM, 'Short Name')
   ]);
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDIDReq,
     wbMODLReq,
-    wbString(BNAM, 'Type', 0, cpNormal, True),
-    wbFormIDCk(DATA, 'Animation', [IDLE], False, cpNormal, True)
+    wbString(BNAM, 'Type')
   ]);
 
   wbBMDT := wbStruct(BMDT, 'Biped Data', [
@@ -6347,6 +6342,44 @@ begin
       wbByteArray('Unknown')
     ], cpNormal, True);
 
+  wbBODT := wbStruct(BODT, 'Body Template', [
+      wbInteger('Biped Flags', itU32, wbFlags([
+        {0x00000001} 'Head',
+        {0x00000002} 'Hair',
+        {0x00000004} 'Body',
+        {0x00000008} 'Hands',
+        {0x00000010} 'Forearms',
+        {0x00000020} 'Amulet',
+        {0x00000040} 'Ring',
+        {0x00000080} 'Feet',
+        {0x00000100} 'Calves',
+        {0x00000200} 'Shield',
+        {0x00000400} 'Tail',
+        {0x00000800} 'Long Hair',
+        {0x00001000} 'Circlet',
+        {0x00002000} 'Earrings',
+        {0x00004000} 'Dragon Head',
+        {0x00008000} 'Dragon Left Wing',
+        {0x00010000} 'Dragon Right Wing',
+        {0x00020000} 'Dragon Body',
+        {0x00040000} 'Unknown 19',
+        {0x00080000} 'Unknown 20',
+        {0x00100000} 'Decapitated Head'
+      ])),
+      wbInteger('General Flags', itU32, wbFlags([
+        'Unknown 1',
+        'Unknown 2',
+        'Unknown 3',
+        'Unknown 4',
+        'Non-Playable'
+      ], True)),
+      wbInteger('Armor Type', itU32, wbEnum([
+        'Light Armor',
+        'Heavy Armor',
+        'Clothing'
+      ]))
+    ], cpNormal, True);
+
   wbRecord(ARMO, 'Armor', [
     wbEDIDReq,
     wbVMAD,
@@ -6354,7 +6387,6 @@ begin
     wbFULL,
     wbSCRI,
     wbEITM,
-    wbBMDT,
     wbRStruct('Male biped model', [
       wbString(MODL, 'Model Filename'),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
@@ -6366,127 +6398,74 @@ begin
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
     ], []),
-    wbString(ICON, 'Male icon filename'),
-    wbString(MICO, 'Male mico filename'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO3S,
-      wbMOSD
-    ], [], cpNormal, False, nil, True),
+    wbICON,
     wbRStruct('Female world model', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbUnknown(BODT),
-    wbString(ICO2, 'Female icon filename'),
-    wbString(MIC2, 'Female mico filename'),
-    wbString(BMCT, 'Ragdoll Constraint Template'),
-    wbREPL,
-    wbBIPL,
-    wbETYPReq,
-    wbUnknown(BIDS),
-    wbUnknown(BAMT),
+    wbICO2,
+    wbBODT,
+    wbDEST,
     wbSounds,
-    wbUnknown(RNAM),
+    wbString(BMCT, 'Ragdoll Constraint Template'),
+    wbFormIDCk(ETYP, 'Equip Type', [EQUP]),
+    //wbREPL,
+    //wbBIPL,
+    wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
+    wbFormIDCk(BAMT, 'Bash Material', [MATT]),
+    wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
-    wbDESC,
-    wbRArray('Unknown - MODL', wbRStruct('Unknown', [
-      wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])
-    ], [])),
+    wbDESCReq,
+    wbRArray('Armature', wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
-      wbInteger('Health', itS32),
       wbFloat('Weight')
     ], cpNormal, True),
-    wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
-      wbInteger('Flags', itU16, wbFlags([
-        'Modulates Voice'
-      ])),
-      wbFloat('DT'),
-      wbByteArray('?', 4)
-    ], cpNormal, True, nil, 2),
-    wbInteger(BNAM, 'Overrides Animation Sounds', itU32, wbEnum(['No', 'Yes'])),
-    wbRArray('Animation Sounds',
-      wbStruct(SNAM, 'Animation Sound', [
-        wbFormIDCk('Sound', [SOUN]),
-        wbInteger('Chance', itU8),
-        wbByteArray('Unknown', 3),
-        wbInteger('Type', itU32, wbEnum([], [
-          19, 'Run',
-          21, 'Run (Armor)',
-          18, 'Sneak',
-          20, 'Sneak (Armor)',
-          17, 'Walk',
-          22, 'Walk (Armor)'
-        ]))
-      ])
-    ),
-    wbFormIDCk(TNAM, 'Anmation Sounds Template', [ARMO])
-  ], wbAllowUnordered);
+    wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
+    wbFormIDCk(TNAM, 'Template Armor', [ARMO])
+  ]{, wbAllowUnordered});
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDIDReq,
-    wbOBNDReq,
-    wbFULL,
-    wbBMDT,
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, nil, True),
-    wbUnknown(BODT),
-    wbUnknown(RNAM),
-    wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
-      wbInteger('Flags', itU16, wbFlags([
-        'Modulates Voice'
-      ])),
-      wbUnknown
+    wbBODT,
+    wbFormIDCk(RNAM, 'Race', [RACE]),
+    wbStruct(DNAM, 'Data', [
+      wbInteger('Male Priority', itU8),
+      wbInteger('Female Priority', itU8),
+      wbByteArray('Unknown', 4),
+      wbInteger('Detection Sound Value', itU8),
+      wbByteArray('Unknown', 1),
+      wbFloat('Weapon Adjust')
     ], cpNormal, True),
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
-    ], []),
-    wbString(ICON, 'Male icon filename'),
-    wbString(MICO, 'Male mico filename'),
-    wbRStruct('Female biped model', [
+    ], [], cpNormal, True),
+    wbRStruct('Female world model', [
       wbString(MOD3, 'Model Filename'),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO3S,
-      wbMOSD
-    ], [], cpNormal, False, nil, True),
-    wbRStruct('Female world model', [
+      wbMO3S
+    ], []),
+    wbRStruct('Male 1st Person', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbRStruct('Unknown world model', [
+    wbRStruct('Female 1st Person', [
       wbString(MOD5, 'Model Filename'),
       wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO5S
     ], []),
-    wbFormIDCK(NAM0, 'Male', [TXST, NULL]),
-    wbFormIDCK(NAM1, 'Female', [TXST, NULL]),
-    wbFormIDCK(NAM2, 'Male 1st Person', [FLST, NULL]),
-    wbFormIDCK(NAM3, 'Female 1st Person', [FLST, NULL]),
-    wbRArray('Unknown - MODL', wbRStruct('Unknown', [
-      wbFormIDCK(MODL, 'Model Filename', [RACE, NULL])
-    ], [])),
-    wbFormIDCK(SNDD, 'Footstep Sound', [FSTS, NULL]),
-    wbString(ICO2, 'Female icon filename'),
-    wbString(MIC2, 'Female mico filename'),
-    wbETYPReq,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Value', itS32),
-      wbInteger('Max Condition', itS32),
-      wbFloat('Weight')
-    ], cpNormal, True)
-  ], wbAllowUnordered);
+    wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
+    wbFormIDCK(NAM1, 'Female Skin texture', [TXST, NULL]),
+    wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
+    wbFormIDCK(NAM3, 'Female Skin Texture Swap List', [FLST, NULL]),
+    wbRArray('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
+    wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
+    wbFormIDCk(ONAM, 'Art Object', [ARTO])
+  ]{, wbAllowUnordered});
 
   wbRecord(BOOK, 'Book', [
     wbEDIDReq,
@@ -8092,51 +8071,9 @@ begin
   wbRecord(ASPC, 'Acoustic Space', [
     wbEDIDReq,
     wbOBNDReq,
-
-    wbFormIDCk(SNAM, 'Dawn / Default Loop', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Afternoon', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Dusk', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Night', [NULL, SOUN], False, cpNormal, True),
-    wbFormIDCk(SNAM, 'Walla', [NULL, SOUN], False, cpNormal, True),
-
-
-    wbInteger(WNAM, 'Walla Trigger Count', itU32, nil, cpNormal, True),
+    wbFormIDCk(SNAM, 'Ambient Sound', [SNDR]),
     wbFormIDCk(RDAT, 'Use Sound from Region (Interiors Only)', [REGN]),
-    wbUnknown(BNAM),
-    wbInteger(ANAM, 'Environment Type', itU32, wbEnum([
-      'None',
-      'Default',
-      'Generic',
-      'Padded Cell',
-      'Room',
-      'Bathroom',
-      'Livingroom',
-      'Stone Room',
-      'Auditorium',
-      'Concerthall',
-      'Cave',
-      'Arena',
-      'Hangar',
-      'Carpeted Hallway',
-      'Hallway',
-      'Stone Corridor',
-      'Alley',
-      'Forest',
-      'City',
-      'Mountains',
-      'Quarry',
-      'Plain',
-      'Parkinglot',
-      'Sewerpipe',
-      'Underwater',
-      'Small Room',
-      'Medium Room',
-      'Large Room',
-      'Medium Hall',
-      'Large Hall',
-      'Plate'
-    ]), cpNormal, True),
-    wbInteger(INAM, 'Is Interior', itU32, wbEnum(['No', 'Yes']), cpNormal, True)
+    wbFormIDCk(BNAM, 'Environment Type (reverb)', [REVB])
   ]);
 
 //------------------------------------------------------------------------------
@@ -9383,35 +9320,25 @@ begin
     wbEDIDReq,
     wbFULL,
     wbDESCReq,
-    wbUnknown(ANAM),
-    wbRArray('Array of INAM or CNAM', // The Aray
-      wbRUnion('Union', [ // The Union
-        wbRStruct('Starts with CNAM', [ // The start of the CNAM
-          wbUnknown(CNAM),
-          wbUnknown(AVSK),
-          wbUnknown(INAM),
-          wbFormID(PNAM, 'Unknown'),
-          wbUnknown(FNAM),
-          wbUnknown(XNAM),
-          wbUnknown(YNAM),
-          wbUnknown(HNAM),
-          wbUnknown(VNAM),
-          wbFormID(SNAM, 'Unknown')
-        ], []), // The End of the CNAM
-        wbRStruct('Starts with INAM', [ // The start of the INAM
-          wbUnknown(INAM),
-          wbFormID(PNAM, 'Unknown'),
-          wbUnknown(FNAM),
-          wbUnknown(XNAM),
-          wbUnknown(YNAM),
-          wbUnknown(HNAM),
-          wbUnknown(VNAM),
-          wbFormID(SNAM, 'Unknown')
-        ], []) // The End of the INAM
-      ], []) // The End of Union
-    ) // The End of Array
-//    wbICON,
-//    wbString(ANAM, 'Short Name')
+    wbString(ANAM, 'Abbreviation'),
+    wbUnknown(CNAM),
+    wbStruct(AVSK, '', [
+      wbFloat('XP Mult'),
+      wbUnknown
+    ]),
+    wbRArray('Perk Tree',
+      wbRStruct('Node', [
+        wbFormIDCk(PNAM, 'Perk', [PERK, NULL]),
+        wbUnknown(FNAM),
+        wbInteger(XNAM, 'Perk-Grid X', itU32),
+        wbInteger(YNAM, 'Perk-Grid Y', itU32),
+        wbFloat(HNAM, 'Horizontal Position'),
+        wbFloat(VNAM, 'Vertical Position'),
+        wbFormIDCk(SNAM, 'Skill', [AVIF, NULL]),
+        wbRArray('Connections', wbInteger(CNAM, 'Line', itU32)),
+        wbInteger(INAM, 'Index', itU32)
+      ], [])
+    )
   ]);
 
   wbRecord(RADS, 'Radiation Stage', [
@@ -9988,13 +9915,15 @@ begin
     wbCTDAs
   ]);
 
-  wbRecord(ASTP, 'ASTP', [
+  wbRecord(ASTP, 'Relationships', [
     wbEDIDReq,
-    wbUnknown(MPRT),
-    wbUnknown(FPRT),
-    wbUnknown(MCHT),
-    wbUnknown(FCHT),
-    wbUnknown(DATA)
+    wbString(MPRT, 'Male Parent Title'),
+    wbString(FPRT, 'Female Parent Title'),
+    wbString(MCHT, 'Male Child Title'),
+    wbString(FCHT, 'Female Child Title'),
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      'Related'
+    ]))
   ]);
 
   wbRecord(OTFT, 'OTFT', [
@@ -10006,8 +9935,11 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
-    wbUnknown(DNAM),
-    wbUnknown(DATA)
+    wbInteger(DNAM, 'Art Type', itU32, wbEnum([
+      'Magic Casting',
+      'Magic Hit Effect',
+      'Enchantment Effect'
+    ]))
   ]);
 
 //----------------------------------------------------------------------------
@@ -10264,9 +10196,22 @@ begin
     wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']), cpNormal, True)
   ]);
 
-  wbRecord(REVB, 'REVB', [
+  wbRecord(REVB, 'Reverb Parameters', [
     wbEDIDReq,
-    wbByteArray(DATA, 'Data', 0, cpNormal, True)
+    wbStruct(DATA, 'Data', [
+      wbInteger('Decay Time (ms)', itU16),
+      wbInteger('HF Reference (Hz)', itU16),
+      wbInteger('Room Filter', itS8),
+      wbInteger('Room HF Filter', itS8),
+      wbInteger('Reflections', itS8),
+      wbInteger('Reverb Amp', itS8),
+      wbInteger('Decay HF Ratio', itU8, wbDiv(100)),
+      wbInteger('Reflect Delay (ms), scaled', itU8),
+      wbInteger('Reverb Delay (ms)', itU8),
+      wbInteger('Diffusion %', itU8),
+      wbInteger('Density %', itU8),
+      wbInteger('Unknown', itU8)
+    ], cpNormal, True)
   ]);
 
   wbRecord(GRAS, 'Grass', [
@@ -11256,18 +11201,15 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbUnknown(QUAL),
+    wbInteger(QUAL, 'Quality', itU32, wbFlags([
+      'Novice',
+      'Apprentice',
+      'Journeyman',
+      'Expert',
+      'Master'
+    ])),
     wbDESC,
-    wbMODL,
-    wbICON,
-    wbSCRI,
     wbUnknown(DATA)
-//    wbStruct(DATA, '', [
-//      wbInteger('Type', itU8, wbEnum(['Mortar and Pestle', 'Alembic', 'Calcinator', 'Retort'])),
-//      wbInteger('Value', itU16),
-//      wbFloat('Weight'),
-//      wbFloat('Quality')
-//    ], cpNormal, True)
   ]);
 
 //-----------------------------------------------------------------------------
