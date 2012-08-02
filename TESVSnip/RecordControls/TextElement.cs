@@ -42,6 +42,14 @@ namespace TESVSnip.RecordControls
                 lblType.Text = element.type.ToString();
                 lblText.Text = element.name
                                + (!string.IsNullOrEmpty(element.desc) ? (" (" + element.desc + ")") : "");
+                if (element.multiline)
+                {
+                    textBox.AcceptsReturn = true;
+                    textBox.Multiline = true;
+                    textBox.Height = 120;
+                    textBox.ScrollBars = ScrollBars.Vertical;
+                    this.Height = 120;
+                }
             }
         }
 
