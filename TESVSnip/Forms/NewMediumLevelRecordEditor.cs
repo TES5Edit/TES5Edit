@@ -175,7 +175,8 @@ namespace TESVSnip
                     else
                     {
                         var elem = c.Data;
-                        str.Write(elem.Array, elem.Offset, elem.Count);
+                        if ( elem.Count > 0 && elem.Array != null)
+                            str.Write(elem.Array, elem.Offset, elem.Count);
                     }
                 }
                 byte[] newData = str.ToArray();
