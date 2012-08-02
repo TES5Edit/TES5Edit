@@ -157,11 +157,6 @@ namespace TESVSnip.ObjectControls
             CopySelectedRecord();
         }
 
-        private void toolStripRecordPaste_Click(object sender, EventArgs e)
-        {
-            PasteFromClipboard(true);
-        }
-
         internal void CopySelectedRecord()
         {
             IEnumerable<BaseRecord> records = PluginTree.SelectedRecords;
@@ -183,7 +178,27 @@ namespace TESVSnip.ObjectControls
             }
         }
 
-        internal void PasteFromClipboard(bool recordOnly)
+        private void toolStripRecordPaste_Click(object sender, EventArgs e)
+        {
+            PasteFromClipboard(true, false);
+        }
+
+        private void toolStripRecordPasteNew_Click(object sender, EventArgs e)
+        {
+            PasteFromClipboard(true, true);
+        }
+
+        private void contextMenuRecordPaste_Click(object sender, EventArgs e)
+        {
+            PasteFromClipboard(true, false);
+        }
+
+        private void contextMenuRecordPasteNew_Click(object sender, EventArgs e)
+        {
+            PasteFromClipboard(true, true);
+        }
+
+        internal void PasteFromClipboard(bool recordOnly, bool asNew)
         {
             if (!MainView.HasClipboardData())
             {
@@ -204,8 +219,12 @@ namespace TESVSnip.ObjectControls
                 try
                 {
                     var dstNode = PluginTree.SelectedRecord;
+                    if (dstNode is Record && (dstNode.Parent is GroupRecord || dstNode.Parent is Plugin))
+                        dstNode = dstNode.Parent;
                     var br = ((BaseRecord) clipboardObject).Clone();
-                    node.AddRecord(br);
+                    dstNode.AddRecord(br);
+                    if (asNew)
+                        Spells.giveRecordNewFormID((Record)br, false);
                     RebuildSelection();
                 }
                 catch (TESParserException ex)
@@ -215,12 +234,32 @@ namespace TESVSnip.ObjectControls
             }
             else if (isRecList)
             {
-                var gr = PluginTree.SelectedRecord as IGroupRecord;
-                if (gr != null)
+                var node = PluginTree.SelectedRecord;
+                try
                 {
-                    foreach (var rec in (BaseRecord[]) clipboardObject)
-                        gr.AddRecord(rec);
-                    RefreshObject(gr as BaseRecord);
+                    if (node is Record && (node.Parent is GroupRecord))
+                        node = node.Parent;
+
+                    foreach (var rec in (BaseRecord[])clipboardObject)
+                    {
+                        var br = rec.Clone();
+                        node.AddRecord(br);
+                        if (asNew)
+                            Spells.giveRecordNewFormID((Record)br, false);
+                    }
+                    RefreshObject(node as BaseRecord);
+
+                    /* var gr = node as IGroupRecord;
+                    if (gr != null)
+                    {
+                        foreach (var rec in (BaseRecord[]) clipboardObject)
+                            gr.AddRecord(rec);
+                        RefreshObject(gr as BaseRecord);
+                    } */
+                }
+                catch (TESParserException ex)
+                {
+                    MessageBox.Show(ex.Message);
                 }
             }
         }
@@ -233,9 +272,18 @@ namespace TESVSnip.ObjectControls
             bool isRecord = rec is Record;
             bool isGroup = rec is GroupRecord;
             bool isPlugin = rec is Plugin;
+            bool isParentPluginOrGroup = isRecord && rec.Parent != null && (rec.Parent is Plugin || rec.Parent is GroupRecord);
+            bool enablePaste = oneSel && (isPlugin || isGroup || isParentPluginOrGroup) && MainView.HasClipboardData();
 
+            toolStripRecordDelete.Enabled = isRecord || isGroup;
+            contextMenuRecordDelete.Enabled = isRecord || isGroup;
             toolStripRecordCopy.Enabled = isRecord || isGroup;
-            toolStripRecordPaste.Enabled = oneSel && (isPlugin || isGroup) && MainView.HasClipboardData();
+            contextMenuRecordCopy.Enabled = isRecord || isGroup;
+            contextMenuRecordCopyTo.Enabled = isRecord || isGroup;
+            toolStripRecordPaste.Enabled = enablePaste;
+            toolStripRecordPasteNew.Enabled = enablePaste;
+            contextMenuRecordPaste.Enabled = enablePaste;
+            contextMenuRecordPasteNew.Enabled = enablePaste;
         }
 
         #region ToolStrip Record Handlers
@@ -424,6 +472,11 @@ namespace TESVSnip.ObjectControls
             DeleteSelection();
         }
 
+        private void toolStripRecordDelete_Click(object sender, EventArgs e)
+        {
+            DeleteSelection();
+        }
+        
         public void DeleteSelection()
         {
             if (DialogResult.Yes !=
@@ -867,27 +920,26 @@ namespace TESVSnip.ObjectControls
             }
         }
 
-        private void reportToolStripMenuItem_Click(object sender, EventArgs e)
+        private void contextMenuRecordReport_Click(object sender, EventArgs e)
         {
-            var selRecord = PluginTree.SelectedRecord;
-
-            var r = selRecord as Record;
-            var form = new RichTextContent();
-            form.UpdateRecord(selRecord);
-            form.StartPosition = FormStartPosition.CenterScreen;
-
             var dockParent = FindDockContent(this);
-            if (dockParent != null)
+            foreach (BaseRecord r in PluginTree.SelectedRecords.OfType<BaseRecord>())
             {
-                var sz = form.Size;
-                form.Show(dockParent.DockHandler.DockPanel, DockState.Float);
-                form.Pane.FloatWindow.Size = sz;
-            }
-            else
-            {
-                form.Show(this);
-            }
+                var form = new RichTextContent();
+                form.UpdateRecord(r);
+                form.StartPosition = FormStartPosition.CenterScreen;
 
+                if (dockParent != null)
+                {
+                    var sz = form.Size;
+                    form.Show(dockParent.DockHandler.DockPanel, DockState.Float);
+                    form.Pane.FloatWindow.Size = sz;
+                }
+                else
+                {
+                    form.Show(this);
+                }
+            }
         }
 
         private void referenceSearchToolStripMenuItem_Click(object sender, EventArgs e)
@@ -898,5 +950,6 @@ namespace TESVSnip.ObjectControls
                 MainView.PostReferenceSearch(rec.FormID);
             }
         }
+
     }
 }
