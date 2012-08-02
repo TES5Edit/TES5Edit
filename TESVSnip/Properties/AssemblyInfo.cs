@@ -11,3 +11,5 @@ using System.Reflection;
 
 [assembly: Guid("d27c32fe-f8b5-4e6e-becf-558e5d7524bb")]
 [assembly: AssemblyDescriptionAttribute("Low level plugin editor for Skyrim")]
+[assembly: AssemblyTitleAttribute("TESVSnip (Skyrim Edition) - Version 4.3.1b")]
+[assembly: AssemblyFileVersionAttribute("4.3.1")]
