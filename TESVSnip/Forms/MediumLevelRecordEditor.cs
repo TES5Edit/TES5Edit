@@ -116,6 +116,7 @@ namespace TESVSnip
             panel1.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Left | AnchorStyles.Bottom;
             int ypos = 0;
             uint flagValue = 0; // value if flags is set
+            byte flagSize = 4;
             bool hasFlags = (es.options.Length == 0 && es.flags.Length > 1);
 
             var tb = new TextBox();
@@ -173,6 +174,7 @@ namespace TESVSnip
                         {
                             var v = TypeConverter.h2i(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
                             flagValue = v;
+                            flagSize = 4;
                             tb.Text = hasFlags || es.hexview ? "0x" + v.ToString("X8") : v.ToString();
                             offset += 4;
                         }
@@ -182,6 +184,7 @@ namespace TESVSnip
                             var v = TypeConverter.h2si(data[offset], data[offset + 1], data[offset + 2],
                                                        data[offset + 3]);
                             flagValue = (uint) v;
+                            flagSize = 4;
                             tb.Text = hasFlags || es.hexview ? "0x" + v.ToString("X8") : v.ToString();
                             offset += 4;
                         }
@@ -202,6 +205,7 @@ namespace TESVSnip
                         {
                             var v = TypeConverter.h2s(data[offset], data[offset + 1]);
                             flagValue = v;
+                            flagSize = 2;
                             tb.Text = hasFlags || es.hexview ? "0x" + v.ToString("X4") : v.ToString();
                             offset += 2;
                         }
@@ -210,6 +214,7 @@ namespace TESVSnip
                         {
                             var v = TypeConverter.h2ss(data[offset], data[offset + 1]);
                             flagValue = (uint) v;
+                            flagSize = 2;
                             tb.Text = hasFlags || es.hexview ? "0x" + v.ToString("X4") : v.ToString();
                             offset += 2;
                         }
@@ -218,6 +223,7 @@ namespace TESVSnip
                         {
                             var v = data[offset];
                             flagValue = v;
+                            flagSize = 1;
                             tb.Text = hasFlags || es.hexview ? "0x" + v.ToString("X2") : v.ToString();
                             offset++;
                         }
@@ -226,6 +232,7 @@ namespace TESVSnip
                         {
                             var v = (sbyte) data[offset];
                             flagValue = (uint) v;
+                            flagSize = 1;
                             tb.Text = hasFlags || es.hexview ? "0x" + v.ToString("X2") : v.ToString();
                             offset++;
                         }
@@ -388,7 +395,7 @@ namespace TESVSnip
             {
                 var ccb = new FlagComboBox();
                 ccb.Tag = tb;
-                ccb.SetItems(es.flags);
+                ccb.SetItems(es.flags, flagSize);
                 ccb.SetState(flagValue);
                 ccb.TextChanged += delegate
                                        {
