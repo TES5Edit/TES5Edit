@@ -174,11 +174,20 @@ namespace TESVSnip
                 uint recsize = br.ReadUInt32();
                 if (s == "GRUP")
                 {
-                    bool skip = filterAll || (recFilter != null && Array.IndexOf(recFilter, contentType) >= 0);
-                    var gr = new GroupRecord(recsize, br, Oblivion, recFilter, skip);
-                    amountRead += recsize;
-
-                    if (!filterAll) AddRecord(gr);
+                    try
+                    {
+                        bool skip = filterAll || (recFilter != null && Array.IndexOf(recFilter, contentType) >= 0);
+                        var gr = new GroupRecord(recsize, br, Oblivion, recFilter, skip);
+                        if (!filterAll) AddRecord(gr);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Windows.Forms.MessageBox.Show(e.Message);
+                    }
+                    finally
+                    {
+                        amountRead += recsize;
+                    }
                 }
                 else
                 {
@@ -192,17 +201,27 @@ namespace TESVSnip
                     }
                     else
                     {
-                        var r = new Record(s, recsize, br, Oblivion);
-                        amountRead += (uint) (recsize + (Oblivion ? 20 : 24));
-                        AddRecord(r);
+                        try
+                        {
+                            var r = new Record(s, recsize, br, Oblivion);
+                            AddRecord(r);
+                        }
+                        catch (Exception e)
+                        {
+                            System.Windows.Forms.MessageBox.Show(e.Message);
+                        }
+                        finally
+                        {
+                            amountRead += (uint)(recsize + (Oblivion ? 20 : 24));
+                        }
                     }
                 }
             }
-            if (amountRead > (Size - (Oblivion ? 20 : 24)))
-            {
-                throw new TESParserException("Record block did not match the size specified in the group header");
-            }
             UpdateShortDescription();
+            if (amountRead != (Size - (Oblivion ? 20 : 24)))
+            {
+                throw new TESParserException(String.Format("Record block did not match the size specified in the group header! Header Size={0:D} Group Size={1:D}", Size - (Oblivion ? 20 : 24), amountRead));
+            }
         }
 
         public GroupRecord(string data)
@@ -307,7 +326,7 @@ namespace TESVSnip
             var svSize = (uint) Size;
             var svSize2 = (uint) Size2;
             WriteString(bw, "GRUP");
-            bw.Write(svSize);
+            bw.Write(svSize); // Write uncompressed size for now
             bw.Write(data);
             bw.Write(groupType);
             bw.Write(dateStamp);
@@ -316,10 +335,10 @@ namespace TESVSnip
             bw.Flush();
             long curpos = bw.BaseStream.Position;
             var wrSize = (uint) (curpos - startpos);
-            if (wrSize != svSize2) // fix size probably due to compression
+            if (wrSize != svSize2) // fix size due to compression
             {
                 bw.BaseStream.Position = startpos + 4;
-                bw.Write(wrSize);
+                bw.Write(wrSize); // Write the actuall compressed group size
                 bw.BaseStream.Position = curpos;
             }
         }
