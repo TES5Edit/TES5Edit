@@ -294,8 +294,9 @@ namespace TESVSnip {
             // 
             // bCancel
             // 
-            resources.ApplyResources(this.bCancel, "bCancel");
+            this.bCancel.CausesValidation = false;
             this.bCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            resources.ApplyResources(this.bCancel, "bCancel");
             this.bCancel.Name = "bCancel";
             this.bCancel.UseVisualStyleBackColor = true;
             this.bCancel.Click += new System.EventHandler(this.bCancel_Click);
@@ -303,7 +304,6 @@ namespace TESVSnip {
             // bSave
             // 
             resources.ApplyResources(this.bSave, "bSave");
-            this.bSave.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.bSave.Name = "bSave";
             this.bSave.UseVisualStyleBackColor = true;
             this.bSave.Click += new System.EventHandler(this.bSave_Click);
@@ -346,8 +346,8 @@ namespace TESVSnip {
             // 
             // tbName
             // 
-            resources.ApplyResources(this.tbName, "tbName");
             this.tbName.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
+            resources.ApplyResources(this.tbName, "tbName");
             this.tbName.Name = "tbName";
             this.tbName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbName_KeyPress);
             this.tbName.Leave += new System.EventHandler(this.tbName_Leave);
