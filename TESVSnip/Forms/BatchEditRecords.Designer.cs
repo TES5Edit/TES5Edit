@@ -45,7 +45,7 @@
             this.bCancel.Location = new System.Drawing.Point(303, 343);
             this.bCancel.Name = "bCancel";
             this.bCancel.Size = new System.Drawing.Size(75, 23);
-            this.bCancel.TabIndex = 17;
+            this.bCancel.TabIndex = 2;
             this.bCancel.Text = "&Cancel";
             this.bCancel.UseVisualStyleBackColor = true;
             // 
@@ -68,6 +68,7 @@
             this.filterTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.filterTree.CheckBoxes = false;
             this.filterTree.CheckedAspectName = "Checked";
             this.filterTree.EmptyListMsg = "No Subrecords Found";
             this.filterTree.EmptyListMsgFont = new System.Drawing.Font("Comic Sans MS", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -89,7 +90,7 @@
             this.filterTree.ShowItemToolTips = true;
             this.filterTree.Size = new System.Drawing.Size(366, 319);
             this.filterTree.SmallImageList = this.imageListSmallTree;
-            this.filterTree.TabIndex = 19;
+            this.filterTree.TabIndex = 0;
             this.filterTree.UnfocusedHighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
             this.filterTree.UnfocusedHighlightForegroundColor = System.Drawing.SystemColors.HighlightText;
             this.filterTree.UseCompatibleStateImageBehavior = false;
@@ -107,7 +108,7 @@
             this.bApply.Location = new System.Drawing.Point(222, 343);
             this.bApply.Name = "bApply";
             this.bApply.Size = new System.Drawing.Size(75, 23);
-            this.bApply.TabIndex = 18;
+            this.bApply.TabIndex = 1;
             this.bApply.Text = "&Apply";
             this.bApply.UseVisualStyleBackColor = true;
             this.bApply.Click += new System.EventHandler(this.bApply_Click);
