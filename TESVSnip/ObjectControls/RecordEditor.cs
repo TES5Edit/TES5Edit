@@ -20,7 +20,7 @@ namespace TESVSnip.Forms
         public RecordEditor()
         {
             InitializeComponent();
-            comboBox1.SetItems(FlagDefs.RecFlags1);
+            comboBox1.SetItems(FlagDefs.RecFlags1,4);
 
             subrecordListEditor.SetContext(context);
             subrecordListEditor.OnEditSubrecord += subrecordListEditor_OnEditSubrecord;

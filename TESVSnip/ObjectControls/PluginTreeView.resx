@@ -162,7 +162,7 @@
     <value>23, 22</value>
   </data>
   <data name="toolStripRecordPasteNew.Text" xml:space="preserve">
-    <value>Paste</value>
+    <value>Paste As New</value>
   </data>
   <data name="toolStripRecordPaste.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -477,6 +477,12 @@
   <data name="&gt;&gt;contextMenuRecordPaste.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;contextMenuRecordPasteNew.Name" xml:space="preserve">
+    <value>contextMenuRecordPasteNew</value>
+  </data>
+  <data name="&gt;&gt;contextMenuRecordPasteNew.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;contextMenuRecordDelete.Name" xml:space="preserve">
     <value>contextMenuRecordDelete</value>
   </data>
@@ -517,12 +523,6 @@
     <value>referenceSearchToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;referenceSearchToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;contextMenuRecordPasteNew.Name" xml:space="preserve">
-    <value>contextMenuRecordPasteNew</value>
-  </data>
-  <data name="&gt;&gt;contextMenuRecordPasteNew.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

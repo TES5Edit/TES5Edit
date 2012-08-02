@@ -47,6 +47,7 @@
             this.contextMenuRecordCopy = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRecordCopyTo = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRecordPaste = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuRecordPasteNew = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRecordDelete = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -55,7 +56,6 @@
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             this.referenceSearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.PluginTree = new TESVSnip.Controls.CustomTreeView();
-            this.contextMenuRecordPasteNew = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripRecord.SuspendLayout();
             this.contextMenuRecord.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PluginTree)).BeginInit();
@@ -199,6 +199,12 @@
             this.contextMenuRecordPaste.Name = "contextMenuRecordPaste";
             this.contextMenuRecordPaste.Click += new System.EventHandler(this.contextMenuRecordPaste_Click);
             // 
+            // contextMenuRecordPasteNew
+            // 
+            resources.ApplyResources(this.contextMenuRecordPasteNew, "contextMenuRecordPasteNew");
+            this.contextMenuRecordPasteNew.Name = "contextMenuRecordPasteNew";
+            this.contextMenuRecordPasteNew.Click += new System.EventHandler(this.contextMenuRecordPasteNew_Click);
+            // 
             // contextMenuRecordDelete
             // 
             resources.ApplyResources(this.contextMenuRecordDelete, "contextMenuRecordDelete");
@@ -289,12 +295,6 @@
             this.PluginTree.Enter += new System.EventHandler(this.PluginTree_Enter);
             this.PluginTree.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PluginTree_KeyDown);
             this.PluginTree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.PluginTree_MouseDoubleClick);
-            // 
-            // contextMenuRecordPasteNew
-            // 
-            resources.ApplyResources(this.contextMenuRecordPasteNew, "contextMenuRecordPasteNew");
-            this.contextMenuRecordPasteNew.Name = "contextMenuRecordPasteNew";
-            this.contextMenuRecordPasteNew.Click += new System.EventHandler(this.contextMenuRecordPasteNew_Click);
             // 
             // PluginTreeView
             // 
