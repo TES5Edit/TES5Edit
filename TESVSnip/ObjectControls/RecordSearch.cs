@@ -1007,5 +1007,27 @@ namespace TESVSnip.ObjectControls
         {
             MainView.Clipboard = listSearchView.SelectedObjects.OfType<BaseRecord>().ToArray();
         }
+
+        private void reportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var dockParent = FindDockContent(this);
+
+            foreach (Record r in this.listSearchView.SelectedObjects.OfType<Record>())
+            {
+                var form = new RichTextContent();
+                form.UpdateRecord(r);
+                form.StartPosition = FormStartPosition.CenterScreen;
+                if (dockParent != null)
+                {
+                    var sz = form.Size;
+                    form.Show(dockParent.DockHandler.DockPanel, DockState.Float);
+                    form.Pane.FloatWindow.Size = sz;
+                }
+                else
+                {
+                    form.Show(this);
+                }
+            }
+        }
     }
 }
