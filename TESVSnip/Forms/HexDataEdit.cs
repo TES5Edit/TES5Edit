@@ -64,12 +64,11 @@ namespace TESVSnip
             {
                 tbFloat.Text = TypeConverter.h2f(bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]).ToString();
                 tbFloat.Enabled = true;
+                bCFloat.Enabled = true;
                 tbInt.Text = TypeConverter.h2si(bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]).ToString();
                 tbInt.Enabled = true;
-                bCFloat.Enabled = true;
                 bCInt.Enabled = true;
-                tbFormID.Text =
-                    TypeConverter.h2i(bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]).ToString("X8");
+                tbFormID.Text = TypeConverter.h2i(bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]).ToString("X8");
                 tbFormID.Enabled = true;
                 bCFormID.Enabled = true;
                 bLookup.Enabled = true;
@@ -77,8 +76,8 @@ namespace TESVSnip
             else
             {
                 tbFloat.Enabled = false;
-                tbInt.Enabled = false;
                 bCFloat.Enabled = false;
+                tbInt.Enabled = false;
                 bCInt.Enabled = false;
                 tbFormID.Enabled = false;
                 bCFormID.Enabled = false;
@@ -186,5 +185,11 @@ namespace TESVSnip
             bytes.AddRange(newdata);
             hexBox1.Refresh();
         }
+
+        private void tbFloat_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
     }
 }
