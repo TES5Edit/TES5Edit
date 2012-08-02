@@ -161,6 +161,7 @@ namespace TESVSnip.RecordControls
                     case ElementValueType.FormID:
                     case ElementValueType.UInt:
                     case ElementValueType.Int:
+                    case ElementValueType.IString:
                         bytes = new byte[4];
                         break;
                     case ElementValueType.Short:
