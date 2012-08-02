@@ -131,13 +131,14 @@ namespace TESVSnip.Model
             {
                 case ElementValueType.String:
                 case ElementValueType.BString:
+                case ElementValueType.IString:
                 case ElementValueType.Str4:
                     this.value = strvalue;
                     return true;
                 case ElementValueType.Float:
                     {
                         float v;
-                        if ( float.TryParse(strvalue, NumberStyles.Any, CultureInfo.CurrentUICulture, out v) )
+                        if ( float.TryParse(strvalue, NumberStyles.Any, CultureInfo.CurrentCulture, out v) )
                         {
                             this.value = v;
                             return true;
@@ -146,7 +147,7 @@ namespace TESVSnip.Model
                 case ElementValueType.Int:
                     {
                         int v;
-                        if (int.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (int.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
@@ -155,7 +156,7 @@ namespace TESVSnip.Model
                 case ElementValueType.Short:
                     {
                         short v;
-                        if (short.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (short.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
@@ -164,7 +165,7 @@ namespace TESVSnip.Model
                 case ElementValueType.Byte:
                     {
                         byte v;
-                        if (byte.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (byte.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
@@ -173,7 +174,7 @@ namespace TESVSnip.Model
                 case ElementValueType.FormID:
                     {
                         uint v;
-                        if (uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentUICulture, out v))
+                        if (uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
@@ -186,7 +187,7 @@ namespace TESVSnip.Model
                 case ElementValueType.LString:
                     {
                         uint v;
-                        this.value = uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentUICulture, out v)
+                        this.value = uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out v)
                                          ? (object) v
                                          : strvalue;
                         return true;
@@ -194,7 +195,7 @@ namespace TESVSnip.Model
                 case ElementValueType.UShort:
                     {
                         ushort v;
-                        if (ushort.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (ushort.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
@@ -203,7 +204,7 @@ namespace TESVSnip.Model
                 case ElementValueType.UInt:
                     {
                         uint v;
-                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
@@ -212,7 +213,7 @@ namespace TESVSnip.Model
                 case ElementValueType.SByte:
                     {
                         uint v;
-                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
