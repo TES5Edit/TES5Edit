@@ -150,57 +150,28 @@ namespace TESVSnip
 
     internal static class Decompressor
     {
-        private static byte[] input;
-        private static byte[] output;
-        private static MemoryStream ms;
-        private static BinaryReader compReader;
-        private static Inflater inf;
-
-        public static BinaryReader Decompress(BinaryReader br, int size, int outsize)
+        public static BinaryReader Decompress(MemoryStream stream, uint inputSize, uint outputSize)
         {
-            if (input.Length < size)
-            {
-                input = new byte[size];
-            }
-            if (output.Length+16 < outsize)
-            {
-                output = new byte[outsize + 16]; // Add 16 extra bytes to be able to detect uncompression overrun.
-            }
-            br.Read(input, 0, size);
-            inf.Reset();
-            inf.SetInput(input, 0, size);
-            int decompressedSize = inf.Inflate(output);
-            inf.Reset();
-
-            ms.Position = 0;
-            ms.Write(output, 0, outsize);
-            ms.Position = 0;
-
-            if (decompressedSize != outsize) // Check the size of the uncompressed data against what we expected
-            {
-                throw new Exception(String.Format("Unexpected Decompressed data size! CompressedSize={2:D} DecompressedSize={0:D} Expected Size={1:D}", decompressedSize, outsize, size));
+            if (stream == null) {
+                throw new ArgumentNullException("stream");
             }
 
-            return compReader;
-        }
+            var inputBuffer = new byte[inputSize];
+            var outputBuffer = new byte[outputSize];
 
-        public static void Init()
-        {
-            inf = new Inflater(false);
-            ms = new MemoryStream();
-            compReader = new BinaryReader(ms);
-            input = new byte[0x1000];
-            output = new byte[0x4000];
-        }
+            int totalBytes;
+            if ((totalBytes = stream.Read(inputBuffer, 0, inputBuffer.Length)) != inputBuffer.Length) {
+                throw new InvalidDataException(string.Format("Failed to read the whole buffer from input. Required = {0} Read = {1}", inputBuffer.Length, totalBytes));
+            }
 
-        public static void Close()
-        {
-            compReader.Close();
-            compReader = null;
-            inf = null;
-            input = null;
-            output = null;
-            ms = null;
+            var inflater = new Inflater(false);
+            inflater.SetInput(inputBuffer, 0, inputBuffer.Length);
+            if ((totalBytes = inflater.Inflate(outputBuffer, 0, outputBuffer.Length)) != outputBuffer.Length) {
+                throw new InvalidDataException(string.Format("Failed to inflate compressed data. Compressed Size = {0} Inflated = {1}", outputBuffer.Length, totalBytes));
+            }
+
+            var memoryStream = new MemoryStream(outputBuffer, 0, outputBuffer.Length);
+            return new BinaryReader(memoryStream);
         }
     }
 
