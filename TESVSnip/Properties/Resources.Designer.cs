@@ -568,6 +568,15 @@ namespace TESVSnip.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to To confirm the coding setting, restart Tesvsnip now?.
+        /// </summary>
+        internal static string RestartText {
+            get {
+                return ResourceManager.GetString("RestartText", resourceCulture);
+            }
+        }
+        
         internal static System.Drawing.Bitmap Revert {
             get {
                 object obj = ResourceManager.GetObject("Revert", resourceCulture);

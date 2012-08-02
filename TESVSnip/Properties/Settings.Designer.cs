@@ -403,5 +403,17 @@ namespace TESVSnip.Properties {
                 this["LastSearchType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UseUTF8 {
+            get {
+                return ((bool)(this["UseUTF8"]));
+            }
+            set {
+                this["UseUTF8"] = value;
+            }
+        }
     }
 }
