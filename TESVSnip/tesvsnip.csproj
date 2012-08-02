@@ -10,13 +10,15 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TESVSnip</RootNamespace>
     <AssemblyName>TESVSnip</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Resources\tesv_ico.ico</ApplicationIcon>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -27,15 +29,12 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <ProductName>TESVSnip %28Skyrim Edition%29</ProductName>
+    <PublisherName>TESVSnip</PublisherName>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-  </PropertyGroup>
-  <PropertyGroup>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\build\')">$(MSBuildProjectDirectory)\</BUILD_ROOT>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\build\')">$(MSBuildProjectDirectory)\..\</BUILD_ROOT>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\..\build\')">$(MSBuildProjectDirectory)\..\..\</BUILD_ROOT>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\..\..\build\')">$(MSBuildProjectDirectory)\..\..\..\</BUILD_ROOT>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -43,7 +42,6 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>build\tesvsnip.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <Import Project="$(BUILD_ROOT)\build\tesvsnip.common.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
