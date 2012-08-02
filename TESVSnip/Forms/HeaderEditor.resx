@@ -963,13 +963,13 @@
     <value>244, 38</value>
   </data>
   <data name="cb16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>85, 17</value>
+    <value>143, 17</value>
   </data>
   <data name="cb16.TabIndex" type="System.Int32, mscorlib">
     <value>19</value>
   </data>
   <data name="cb16.Text" xml:space="preserve">
-    <value>0x00010000</value>
+    <value>0x00010000 (Is full LOD)</value>
   </data>
   <data name="&gt;&gt;cb16.Name" xml:space="preserve">
     <value>cb16</value>
