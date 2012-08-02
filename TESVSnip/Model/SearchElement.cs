@@ -369,36 +369,37 @@ namespace TESVSnip.Model
             {
                 case ElementValueType.String:
                 case ElementValueType.BString:
+                case ElementValueType.IString:
                 case ElementValueType.Str4:
                     return true;
                 case ElementValueType.Float:
                     {
                         float v;
-                        if (float.TryParse(strvalue, NumberStyles.Any, CultureInfo.CurrentUICulture, out v))
+                        if (float.TryParse(strvalue, NumberStyles.Any, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
                 case ElementValueType.Int:
                     {
                         int v;
-                        if (int.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (int.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
                 case ElementValueType.Short:
                     {
                         short v;
-                        if (short.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (short.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
                 case ElementValueType.Byte:
                     {
                         byte v;
-                        if (byte.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (byte.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
                 case ElementValueType.FormID:
                     {
                         uint v;
-                        if (uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentUICulture, out v))
+                        if (uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
                 case ElementValueType.Blob:
@@ -412,19 +413,19 @@ namespace TESVSnip.Model
                 case ElementValueType.UShort:
                     {
                         ushort v;
-                        if (ushort.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (ushort.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
                 case ElementValueType.UInt:
                     {
                         uint v;
-                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
                 case ElementValueType.SByte:
                     {
                         uint v;
-                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentUICulture, out v))
+                        if (uint.TryParse(numText, numStyle, CultureInfo.CurrentCulture, out v))
                             return true;
                     } break;
             }
