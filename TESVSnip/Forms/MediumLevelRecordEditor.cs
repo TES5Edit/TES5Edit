@@ -248,6 +248,15 @@ namespace TESVSnip
                             tb.Width += 200;
                         }
                         break;
+                    case ElementValueType.IString:
+                        {
+                            int len = TypeConverter.h2si(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
+                            string s = Encoding.CP1252.GetString(data, offset + 4, len);
+                            offset = offset + (4 + len);
+                            tb.Text = s;
+                            tb.Width += 200;
+                        }
+                        break;
                     case ElementValueType.LString:
                         {
                             int left = data.Length - offset;
@@ -289,7 +298,7 @@ namespace TESVSnip
             else
             {
                 if (es.type == ElementValueType.String || es.type == ElementValueType.BString
-                    || es.type == ElementValueType.LString)
+                    || es.type == ElementValueType.LString || es.type == ElementValueType.IString)
                     tb.Width += 200;
                 if (removedStrings.ContainsKey(boxes.Count - 1)) tb.Text = removedStrings[boxes.Count - 1];
             }
@@ -651,6 +660,12 @@ namespace TESVSnip
                     case ElementValueType.BString:
                         {
                             bytes.AddRange(TypeConverter.s2h((ushort) tbText.Length));
+                            bytes.AddRange(System.Text.Encoding.Default.GetBytes(tbText));
+                            break;
+                        }
+                    case ElementValueType.IString:
+                        {
+                            bytes.AddRange(TypeConverter.si2h(tbText.Length));
                             bytes.AddRange(System.Text.Encoding.Default.GetBytes(tbText));
                             break;
                         }
