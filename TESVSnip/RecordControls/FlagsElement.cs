@@ -27,25 +27,29 @@ namespace TESVSnip.RecordControls
             if (element.flags != null)
             {
                 uint value;
+                byte flagSize = 0;
                 switch (element.type)
                 {
                     case ElementValueType.SByte:
                     case ElementValueType.Byte:
                         value = (uint)TypeConverter.h2b(Data);
+                        flagSize = 4;
                         break;
                     case ElementValueType.Short:
                     case ElementValueType.UShort:
                         value = (uint)TypeConverter.h2s(Data);
+                        flagSize = 2;
                         break;
                     case ElementValueType.Int:
                     case ElementValueType.UInt:
                         value = TypeConverter.h2i(Data);
+                        flagSize = 1;
                         break;
                     default:
                         value = 0;
                         break;
                 }
-                cboFlags.SetItems(element.flags);
+                cboFlags.SetItems(element.flags, flagSize);
                 cboFlags.SetState(value);
             }
         }

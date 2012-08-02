@@ -34,6 +34,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.Error)).BeginInit();
             this.SuspendLayout();
             // 
+            // textBox
+            // 
+            this.textBox.Enter += new System.EventHandler(this.textBox_Enter);
+            // 
             // chkUseText
             // 
             resources.ApplyResources(this.chkUseText, "chkUseText");
@@ -55,6 +59,9 @@
             this.Controls.Add(this.chkUseText);
             this.MinimumSize = new System.Drawing.Size(200, 48);
             this.Name = "LStringElement";
+            this.Controls.SetChildIndex(this.textBox, 0);
+            this.Controls.SetChildIndex(this.lblText, 0);
+            this.Controls.SetChildIndex(this.lblType, 0);
             this.Controls.SetChildIndex(this.chkUseText, 0);
             this.Controls.SetChildIndex(this.txtString, 0);
             ((System.ComponentModel.ISupportInitialize)(this.Error)).EndInit();
