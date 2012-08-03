@@ -1914,35 +1914,36 @@ begin
   end;
 end;
 
-function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
-var
-  Container: IwbContainer;
-  s: string;
-begin
-  Result := Trim(aMainRecord.ElementValues['Responses\Response\NAM1']);
-  if Result <> '' then
-    Result := '''' + Result + '''';
-
-  Container := aMainRecord.Container;
-  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
-    Container := Container.Container;
-
-  if Assigned(Container) then begin
-    s := Trim(Container.Name);
-    if s <> '' then begin
-      if Result <> '' then
-        Result := Result + ' ';
-      Result := Result + 'in ' + s;
-    end;
-  end;
-
-  s := Trim(aMainRecord.ElementValues['QSTI']);
-  if s <> '' then begin
-    if Result <> '' then
-      Result := Result + ' ';
-    Result := Result + 'for ' + s;
-  end;
-end;
+{Needs Revision for Skyrim}
+//function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
+//var
+//  Container: IwbContainer;
+//  s: string;
+//begin
+//  Result := Trim(aMainRecord.ElementValues['Responses\Response\NAM1']);
+//  if Result <> '' then
+//    Result := '''' + Result + '''';
+//
+//  Container := aMainRecord.Container;
+//  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
+//    Container := Container.Container;
+//
+//  if Assigned(Container) then begin
+//    s := Trim(Container.Name);
+//    if s <> '' then begin
+//      if Result <> '' then
+//        Result := Result + ' ';
+//      Result := Result + 'in ' + s;
+//    end;
+//  end;
+//
+//  s := Trim(aMainRecord.ElementValues['QSTI']);
+//  if s <> '' then begin
+//    if Result <> '' then
+//      Result := Result + ' ';
+//    Result := Result + 'for ' + s;
+//  end;
+//end;
 
 function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
 var
@@ -3992,35 +3993,36 @@ begin
   end;
 end;
 
-procedure wbINFOAfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    if (Integer(Container.ElementNativeValues['DATA\Flags 1']) and $80) = 0 then
-      Container.RemoveElement('DNAM');
-
-    Container.RemoveElement('SNDD');
-
-    if Container.ElementNativeValues['DATA\Type'] = 3 {Persuasion} then
-      Container.ElementNativeValues['DATA\Type'] := 0 {Topic};
-  finally
-    wbEndInternalEdit;
-  end;
-end;
+{Needs Revision for Skyrim}
+//procedure wbINFOAfterLoad(const aElement: IwbElement);
+//var
+//  Container  : IwbContainerElementRef;
+//  MainRecord : IwbMainRecord;
+//begin
+//  if wbBeginInternalEdit then try
+//    if not Supports(aElement, IwbContainerElementRef, Container) then
+//      Exit;
+//
+//    if Container.ElementCount < 1 then
+//      Exit;
+//
+//    if not Supports(aElement, IwbMainRecord, MainRecord) then
+//      Exit;
+//
+//    if MainRecord.IsDeleted then
+//      Exit;
+//
+//    if (Integer(Container.ElementNativeValues['DATA\Flags 1']) and $80) = 0 then
+//      Container.RemoveElement('DNAM');
+//
+//    Container.RemoveElement('SNDD');
+//
+//    if Container.ElementNativeValues['DATA\Type'] = 3 {Persuasion} then
+//      Container.ElementNativeValues['DATA\Type'] := 0 {Topic};
+//  finally
+//    wbEndInternalEdit;
+//  end;
+//end;
 
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
@@ -4694,7 +4696,7 @@ begin
     {0x00002000}'Unknown 14',
     {0x00004000}'Unknown 15',
     {0x00008000}'VWD',
-    {0x00010000}'Unknown 17',
+    {0x00010000}'Random Animation Start',
     {0x00020000}'Dangerous / Off limits',
     {0x00040000}'Compressed',
     {0x00080000}'Can''t wait',
@@ -4703,12 +4705,12 @@ begin
     {0x00400000}'Unknown 23',
     {0x00800000}'Unknown 24',
     {0x01000000}'Unknown 25',
-    {0x02000000}'Unknown 26',
-    {0x03000000}'Unknown 27',
-    {0x08000000}'Unknown 28',
+    {0x02000000}'Obstacle',
+    {0x03000000}'NavMesh Gen - Filter',
+    {0x08000000}'NavMesh Gen - Bounding Box',
     {0x10000000}'Unknown 29',
     {0x20000000}'Unknown 30',
-    {0x40000000}'Unknown 31',
+    {0x40000000}'NavMesh Gen - Ground',
     {0x80000000}'Unknown 32'
   ]));
 
@@ -6905,9 +6907,6 @@ begin
     ], cpNormal, True)
   ]);
 
-//------------------------------------------------------------------------------
-// Begin New CONT
-//------------------------------------------------------------------------------
   wbRecord(CONT, 'Container', [
     wbEDIDReq,
     wbVMAD,
@@ -6915,46 +6914,18 @@ begin
     wbFULL,
     wbMODL,
     wbCOCT,
+    wbDEST,
     wbStruct(DATA, '', [
       wbInteger('Flags', itU8, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Respawns',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8'
+        {0x01} 'Allow Sounds When Animation',
+        {0x02} 'Respawns',
+        {0x04} 'Show Owner'
       ])),
-      wbByteArray('Weight ???', 4)
+      wbFloat('Weight')
     ], cpNormal, True),
     wbSNAM,
     wbQNAM
   ], True);
-
-//------------------------------------------------------------------------------
-// Begin Old CONT
-//------------------------------------------------------------------------------
-//  wbRecord(CONT, 'Container', [
-//    wbEDIDReq,
-//    wbOBNDReq,
-//    wbFULL,
-//    wbMODL,
-//    wbSCRI,
-//    wbCNTOs,
-//    wbDEST,
-//    wbStruct(DATA, '', [
-//      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
-//      wbFloat('Weight')
-//    ], cpNormal, True),
-//    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
-//   wbFormIDCk(QNAM, 'Sound - Close', [SOUN]),
-//    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
-//  ], True);
-//------------------------------------------------------------------------------
-// End Old CONT
-//------------------------------------------------------------------------------
-
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
@@ -7339,105 +7310,62 @@ procedure DefineTES5d;
 begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
-    wbStruct(CSTD, 'Advanced - Standard', [
-      {000}wbInteger('Maneuver Decision - Dodge % Chance', itU8),
-      {001}wbInteger('Maneuver Decision - Left/Right % Chance', itU8),
-      {002}wbByteArray('Unknown', 2),
-      {004}wbFloat('Maneuver Decision - Dodge L/R Timer (min)'),
-      {008}wbFloat('Maneuver Decision - Dodge L/R Timer (max)'),
-      {012}wbFloat('Maneuver Decision - Dodge Forward Timer (min)'),
-      {016}wbFloat('Maneuver Decision - Dodge Forward Timer (max)'),
-      {020}wbFloat('Maneuver Decision - Dodge Back Timer Min'),
-      {024}wbFloat('Maneuver Decision - Dodge Back Timer Max'),
-      {028}wbFloat('Maneuver Decision - Idle Timer min'),
-      {032}wbFloat('Maneuver Decision - Idle Timer max'),
-      {036}wbInteger('Melee Decision - Block % Chance', itU8),
-      {037}wbInteger('Melee Decision - Attack % Chance', itU8),
-      {038}wbByteArray('Unknown', 2),
-      {040}wbFloat('Melee Decision - Recoil/Stagger Bonus to Attack'),
-      {044}wbFloat('Melee Decision - Unconscious Bonus to Attack'),
-      {048}wbFloat('Melee Decision - Hand-To-Hand Bonus to Attack'),
-      {052}wbInteger('Melee Decision - Power Attacks - Power Attack % Chance', itU8),
-      {053}wbByteArray('Unknown', 3),
-      {056}wbFloat('Melee Decision - Power Attacks - Recoil/Stagger Bonus to Power'),
-      {060}wbFloat('Melee Decision - Power Attacks - Unconscious Bonus to Power Attack'),
-      {064}wbInteger('Melee Decision - Power Attacks - Normal', itU8),
-      {065}wbInteger('Melee Decision - Power Attacks - Forward', itU8),
-      {066}wbInteger('Melee Decision - Power Attacks - Back', itU8),
-      {067}wbInteger('Melee Decision - Power Attacks - Left', itU8),
-      {068}wbInteger('Melee Decision - Power Attacks - Right', itU8),
-      {069}wbByteArray('Unknown', 3),
-      {072}wbFloat('Melee Decision - Hold Timer (min)'),
-      {076}wbFloat('Melee Decision - Hold Timer (max)'),
-      {080}wbInteger('Flags', itU16, wbFlags([
-             'Choose Attack using % Chance',
-             'Melee Alert OK',
-             'Flee Based on Personal Survival',
-             '',
-             'Ignore Threats',
-             'Ignore Damaging Self',
-             'Ignore Damaging Group',
-             'Ignore Damaging Spectators',
-             'Cannot Use Stealthboy'
-           ])),
-      {082}wbByteArray('Unknown', 2),
-      {085}wbInteger('Maneuver Decision - Acrobatic Dodge % Chance', itU8),
-      {085}wbInteger('Melee Decision - Power Attacks - Rushing Attack % Chance', itU8),
-      {086}wbByteArray('Unknown', 2),
-      {088}wbFloat('Melee Decision - Power Attacks - Rushing Attack Distance Mult')
-    ], cpNormal, True),
-    wbStruct(CSAD, 'Advanced - Advanced', [
-      wbFloat('Dodge Fatigue Mod Mult'),
-      wbFloat('Dodge Fatigue Mod Base'),
-      wbFloat('Encumb. Speed Mod Base'),
-      wbFloat('Encumb. Speed Mod Mult'),
-      wbFloat('Dodge While Under Attack Mult'),
-      wbFloat('Dodge Not Under Attack Mult'),
-      wbFloat('Dodge Back While Under Attack Mult'),
-      wbFloat('Dodge Back Not Under Attack Mult'),
-      wbFloat('Dodge Forward While Attacking Mult'),
-      wbFloat('Dodge Forward Not Attacking Mult'),
-      wbFloat('Block Skill Modifier Mult'),
-      wbFloat('Block Skill Modifier Base'),
-      wbFloat('Block While Under Attack Mult'),
-      wbFloat('Block Not Under Attack Mult'),
-      wbFloat('Attack Skill Modifier Mult'),
-      wbFloat('Attack Skill Modifier Base'),
-      wbFloat('Attack While Under Attack Mult'),
-      wbFloat('Attack Not Under Attack Mult'),
-      wbFloat('Attack During Block Mult'),
-      wbFloat('Power Att. Fatigue Mod Base'),
-      wbFloat('Power Att. Fatigue Mod Mult')
-    ], cpNormal, True),
-    wbStruct(CSSD, 'Simple', [
-      {00} wbFloat('Cover Search Radius'),
-      {04} wbFloat('Take Cover Chance'),
-      {08} wbFloat('Wait Timer (min)'),
-      {12} wbFloat('Wait Timer (max)'),
-      {16} wbFloat('Wait to Fire Timer (min)'),
-      {20} wbFloat('Wait to Fire Timer (max)'),
-      {24} wbFloat('Fire Timer (min)'),
-      {28} wbFloat('Fire Timer (max)'),
-      {32} wbFloat('Ranged Weapon Range Mult (min)'),
-      {36} wbByteArray('Unknown', 4),
-      {40} wbInteger('Weapon Restrictions', itU32, wbEnum([
-        'None',
-        'Melee Only',
-        'Ranged Only'
-      ])),
-      {44} wbFloat('Ranged Weapon Range Mult (max)'),
-      {48} wbFloat('Max Targeting FOV'),
-      {52} wbFloat('Combat Radius'),
-      {56} wbFloat('Semi-Auto Firing Delay Mult (min)'),
-      {60} wbFloat('Semi-Auto Firing Delay Mult (max)')
-    ], cpNormal, True),
-    wbUnknown(CSGD),
+    wbStruct(CSGD, 'General', [
+      wbFloat('Offensive Mult'),
+      wbFloat('Defensive Mult'),
+      wbFloat('Group Offensive Mult'),
+      // keep as separate floats, some elements can be omitted!
+      wbFloat('Equipment Score Mult - Melee'),
+      wbFloat('Equipment Score Mult - Magic'),
+      wbFloat('Equipment Score Mult - Ranged'),
+      wbFloat('Equipment Score Mult - Shout'),
+      wbFloat('Equipment Score Mult - Unarmed'),
+      wbFloat('Equipment Score Mult - Staff'),
+//      wbArray('Equipment Score Mults', wbFloat('Mult'), [
+//        'Melee',
+//        'Magic',
+//        'Ranged',
+//        'Shout',
+//        'Unarmed',
+//        'Staff'
+//      ]),
+      wbFloat('Avoid Threat Chance')
+    ], cpNormal, True, nil, 0),
     wbUnknown(CSMD),
-    wbUnknown(CSME),
-    wbUnknown(CSCR),
-    wbUnknown(CSLR),
-    wbUnknown(CSFL),
-    wbUnknown(DATA)
+    wbStruct(CSME, 'Melee', [
+      wbFloat('Attack Staggered Mult'),
+      wbFloat('Power Attack Staggered Mult'),
+      wbFloat('Power Attack Blocking Mult'),
+      wbFloat('Bash Mult'),
+      wbFloat('Bash Recoil Mult'),
+      wbFloat('Bash Attack Mult'),
+      wbFloat('Bash Power Attack Mult'),
+      wbFloat('Special Attack Mult')
+    ], cpNormal, True, nil, 0),
+    wbStruct(CSCR, 'Close Range', [
+      wbFloat('Circle Mult'),
+      wbFloat('Fallback Mult'),
+      wbFloat('Flank Distance'),
+      wbFloat('Stalk Time')
+    ], cpNormal, True, nil, 0),
+    wbStruct(CSLR, 'Long Range', [
+      wbFloat('Strafe Mult')
+    ], cpNormal, True),
+    wbStruct(CSFL, 'Flight', [
+      wbFloat('Hover Chance'),
+      wbFloat('Dive Bomb Chance'),
+      wbFloat('Ground Attack Chance'),
+      wbFloat('Hover Time'),
+      wbFloat('Ground Attack Time'),
+      wbFloat('Perch Attack Chance'),
+      wbFloat('Perch Attack Time'),
+      wbFloat('Flying Attack Chance')
+    ], cpNormal, True, nil, 0),
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      {0x01} 'Dueling',
+      {0x02} 'Flanking',
+      {0x04} 'Allow Dual Wielding'
+    ]), cpNormal, True)
   ]);
 
   wbRecord(DIAL, 'Dialog Topic', [
@@ -7446,64 +7374,103 @@ begin
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbFormIDCk(BNAM, 'Branch', [DLBR, NULL]),
     wbFormIDCk(QNAM, 'Quest', [QUST, NULL], False, cpNormal, False),
-    wbUnknown(SNAM),
+    wbString(SNAM, 'Subtype Name', 4),
     wbStruct(DATA, 'Data', [
-      wbInteger('Type', itU8, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous'
+      wbInteger('Flags', itU8, wbFlags([
+        'Do All Before Repeating'
       ]), cpNormal, True),
-      wbByteArray('Unknown', 3)
+      wbByteArray('Unknown', 1),
+      wbInteger('Subtype', itU16, wbEnum([], [
+         0, 'Custom',
+         1, 'ForceGreet',
+         2, 'Rumors',
+        14, 'Scene',
+        15, 'Show',
+        16, 'Agree',
+        17, 'Refuse',
+        18, 'ExitFavorState',
+        19, 'MoreRefusal',
+        20, 'Attack',
+        21, 'PowerAttack',
+        22, 'Bash',
+        23, 'Hit',
+        24, 'Flee',
+        25, 'Bleedout',
+        26, 'AvoidThreat',
+        27, 'Death',
+        28, 'GroupStrategy',
+        29, 'Block',
+        30, 'Taunt',
+        31, 'AllyKilled',
+        32, 'Steal',
+        33, 'Yield',
+        34, 'AcceptYield',
+        35, 'PickpocketCombat',
+        36, 'Assault',
+        37, 'Murder',
+        38, 'AssaultNC',
+        39, 'MurderNC',
+        40, 'PickpocketNC',
+        41, 'StealFromNC',
+        42, 'TrespassAgainstNC',
+        43, 'Trespass',
+        44, 'WereTransformCrime',
+        45, 'VoicePowerStartShort',
+        46, 'VoicePowerStartLong',
+        47, 'VoicePowerEndShort',
+        48, 'VoicePowerEndLong',
+        49, 'AlertIdle',
+        50, 'LostIdle',
+        51, 'NormalToAlert',
+        52, 'AlertToCombat',
+        53, 'NormalToCombat',
+        54, 'AlertToNormal',
+        55, 'CombatToNormal',
+        56, 'CombatToLost',
+        57, 'LostToNormal',
+        58, 'LostToCombat',
+        59, 'DetectFriendDie',
+        60, 'ServiceRefusal',
+        61, 'Repair',
+        62, 'Travel',
+        63, 'Training',
+        64, 'BarterExit',
+        65, 'RepairExit',
+        66, 'Recharge',
+        67, 'RechargeExit',
+        68, 'TrainingExit',
+        69, 'ObserveCombat',
+        70, 'NoticeCorpse',
+        71, 'TimeToGo',
+        72, 'GoodBye',
+        73, 'Hello',
+        74, 'SwingMeleeWeapon',
+        75, 'ShootBow',
+        76, 'ZKeyObject',
+        77, 'Jump',
+        78, 'KnockOverObject',
+        79, 'DestroyObject',
+        80, 'StandonFurniture',
+        81, 'LockedObject',
+        82, 'PickpocketTopic',
+        83, 'PursueIdleTopic',
+        84, 'SharedInfo',
+        85, 'PlayerCastProjectileSpell',
+        86, 'PlayerCastSelfSpell',
+        87, 'PlayerShout',
+        88, 'Idle',
+        89, 'EnterSprintBreath',
+        90, 'EnterBowZoomBreath',
+        91, 'ExitBowZoomBreath',
+        92, 'ActorCollidewithActor',
+        93, 'PlayerinIronSights',
+        94, 'OutofBreath',
+        95, 'CombatGrunt',
+        96, 'LeaveWaterBreath'
+      ]))
     ]),
     wbInteger(TIFC, 'Info Count', itU32)
   ], True);
-
-//------------------------------------------------------------------------------
-// Begin Old DIAL
-//------------------------------------------------------------------------------
-//  wbRecord(DIAL, 'Dialog Topic', [
-//    wbEDIDReq,
-//    wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
-//      wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
-//      wbRArray('Unknown', wbRStruct('Unknown', [
-//        wbFormIDCk(INFC, 'Unknown', [INFO]),
-//        wbInteger(INFX, 'Unknown', itS32)
-//      ], []))
-//    ], [])),
-//    wbRArrayS('Removed Quests', wbRStructSK([0], 'Removed Quest', [
-//      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign),
-//      wbRArray('Unknown', wbRStruct('Unknown', [
-//        wbFormIDCk(INFC, 'Unknown', [INFO]),
-//        wbInteger(INFX, 'Unknown', itS32)
-//      ], []))
-//    ], [])),
-//    wbFULL,
-//    wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-//    wbString(TDUM),
-//    wbStruct(DATA, '', [
-//      wbInteger('Type', itU8, wbEnum([
-//        {0} 'Topic',
-//        {1} 'Conversation',
-//        {2} 'Combat',
-//        {3} 'Persuasion',
-//        {4} 'Detection',
-//        {5} 'Service',
-//        {6} 'Miscellaneous',
-//        {7} 'Radio'
-//      ])),
-//      wbInteger('Flags', itU8, wbFlags([
-//        'Rumors',
-//        'Top-level'
-//      ]))
-//    ], cpNormal, True, nil, 1)
-//  ], True);
-//------------------------------------------------------------------------------
-// End Old DIAL
-//------------------------------------------------------------------------------
 
   wbRecord(DOOR, 'Door', [
     wbEDIDReq,
@@ -9457,10 +9424,13 @@ begin
     wbEDIDReq,
     wbCTDAs,
     wbArray(ANAM, 'Related Camera Paths', wbFormIDCk('Related Camera Path', [CPTH, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
-    wbInteger(DATA, 'Camera Zoom', itU8, wbEnum([
-      'Default',
-      'Disable',
-      'Shot List'
+    wbInteger(DATA, 'Camera Zoom', itU8, wbEnum([], [
+      0, 'Default, Must Have Camera Shots',
+      1, 'Disable, Must Have Camera Shots',
+      2, 'Shot List, Must Have Camera Shots',
+      128, 'Default',
+      129, 'Disable',
+      130, 'Shot List'
     ]), cpNormal, True),
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
@@ -9791,12 +9761,16 @@ begin
     wbString(ENAM, 'Unknown', 4)
   ]);
 
-  wbRecord(DLBR, 'DLBR', [
+  wbRecord(DLBR, 'Dialog Branch', [
     wbEDIDReq,
-    wbFormIDCk(QNAM, 'Reference?', [QUST], False, cpNormal, True),
+    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbInteger(TNAM, 'Unknown', itU32),
-    wbInteger(DNAM, 'Unknown', itU32),
-    wbFormIDCk(SNAM, 'Start Dialog', [DIAL], False, cpNormal, True)
+    wbInteger(DNAM, 'Flags', itU32, wbFlags([
+      {0x01} 'Top-Level',
+      {0x02} 'Blocking',
+      {0x04} 'Exclusive'
+    ])),
+    wbFormIDCk(SNAM, 'Starting Topic', [DIAL], False, cpNormal, True)
   ]);
 
   wbRecord(MUST, 'MUST', [
@@ -9817,12 +9791,10 @@ begin
     wbUnknown(SNAM)
   ]);
 
-  wbRecord(DLVW, 'DLVW', [
+  wbRecord(DLVW, 'Dialog View', [
     wbEDIDReq,
-    wbUnknown(QNAM),
-    wbRArray('Array BNAM', wbRStruct('Unknown', [
-      wbUnknown(BNAM)
-    ], [])),
+    wbFormIDCk(QNAM, 'Quest', [QUST], True, cpNormal, True),
+    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
     wbRArray('Array TNAM', wbRStruct('Unknown', [
       wbUnknown(TNAM)
     ], [])),
@@ -10317,77 +10289,38 @@ begin
   wbRecord(INFO, 'Dialog response', [
     wbEDIDReq,
     wbVMAD,
-    wbStruct(DATA, 'Info Data', [
-      wbInteger('Type', itU8, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous',
-        {7} 'Radio'
-      ])),
-      wbInteger('Next Speaker', itU8, wbEnum([
-        {0} 'Target',
-        {1} 'Self',
-        {2} 'Either'
-      ])),
-      wbInteger('Flags 1', itU8, wbFlags([
-        {0x01} 'Goodbye',
-        {0x02} 'Random',
-        {0x04} 'Say Once',
-        {0x08} 'Run Immediately',
-        {0x10} 'Info Refusal',
-        {0x20} 'Random End',
-        {0x40} 'Run for Rumors',
-        {0x80} 'Speech Challenge'
-      ])),
-      wbInteger('Flags 2', itU8, wbFlags([
-        {0x01} 'Say Once a Day',
-        {0x02} 'Always Darken'
-      ])),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, False, nil, 3),
+    wbUnknown(DATA),
     wbStruct(ENAM, 'Response flags', [
       wbInteger('Flags', itU16, wbFlags([
-        {0x00000001}'Goodbye',
-        {0x00000002}'Random',
-        {0x00000004}'Say once',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Random end',
-        {0x00000040}'Invisible continue',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Force subtitle',
-        {0x00000400}'Can move while greeting',
-        {0x00000800}'Has no lip file (inverted from CK)',
-        {0x00001000}'Requires post-processing',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Spends favor points',
-        {0x00008000}'Unknown 16'
+        {0x0001} 'Goodbye',
+        {0x0002} 'Random',
+        {0x0004} 'Say once',
+        {0x0008} 'Unknown 4',
+        {0x0010} 'Unknown 5',
+        {0x0020} 'Random end',
+        {0x0040} 'Invisible continue',
+        {0x0080} 'Walk Away',
+        {0x0100} 'Walk Away Invisible in Menu',
+        {0x0200} 'Force subtitle',
+        {0x0400} 'Can move while greeting',
+        {0x0800} 'No LIP File',
+        {0x1000} 'Requires post-processing',
+        {0x2000} 'Audio Output Override',
+        {0x4000} 'Spends favor points',
+        {0x8000} 'Unknown 16'
       ])),
-      wbInteger('Reset hours (scaled 0-24)', itU16)
+      wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
     wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
-    // 00 Except in <MQ304LostSoulB1> and <MQ202RatwayEsbernTopic>
-    // then CNAM is 02
-    wbStruct(CNAM, 'Unknown Flags', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Unknown 2',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8'
-      ]))
-    ]),
-    wbRArray('Responses?', wbFormIDCk(TCLT, 'Response INFO', [DIAL, INFO, NULL])),
-    wbRArray('Unknown - TRDT', wbRStruct('Unknown', [
-      wbStruct(TRDT, 'Unknown', [
+    wbInteger(CNAM, 'Favor Level', itU8, wbEnum([
+      'None',
+      'Small',
+      'Medium',
+      'Large'
+    ])),
+    wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
+    wbRArray('Responses', wbRStruct('Response', [
+      wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEnum([
           {0} 'Neutral',
           {1} 'Anger',
@@ -10401,130 +10334,38 @@ begin
         wbInteger('Emotion Value', itU32),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4)
+        wbFormIDCk('Sound', [SNDR, NULL]),
+        wbInteger('Flags', itU8, wbFlags([
+          'Use Emotion Animation'
+        ])),
+        wbByteArray('Unknown', 3)
       ]),
-      wbLString(NAM1, 'Dialog String 1', 0),
-      wbString(NAM2, 'Dialog String 2', 0),
-      wbString(NAM3, 'Dialog String 3', 0),
+      wbLString(NAM1, 'Response Text', 0),
+      wbString(NAM2, 'Script Notes', 0),
+      wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
     wbFormID(DNAM, 'Response Data'),
     wbCTDAs,
 
-    wbRStruct('First SCHR', [
-      wbunknown(SCHR),
-      wbFormID(QNAM, 'Unknown')
-    ], [], cpNormal, True),
-    wbRStruct('NEXT and Second SCHR', [
-      wbEmpty(NEXT, 'Marker'),
-      wbunknown(SCHR),
-      wbFormID(QNAM, 'Unknown')
-    ], [], cpNormal, True),
+//    wbRStruct('Unknown', [
+//      wbUnknown(SCHR),
+//      wbFormID(QNAM, 'Unknown')
+//    ], []),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(SCHR),
+        wbFormID(QNAM, 'Unknown'),
+        wbEmpty(NEXT, 'Marker')
+      ], [])
+    ),
 
-    wbUnknown(RNAM),
-    wbFormID(ANAM, 'Unknown'),
-    wbFormID(TWAT, 'Walk Away Topic'),
-    wbFormID(ONAM, 'Audio Output Override')
-  ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
-
-//------------------------------------------------------------------------------
-// Begin Old INFO
-//------------------------------------------------------------------------------
-//  wbRecord(INFO, 'Dialog response', [
-//    wbStruct(DATA, '', [
-//      wbInteger('Type', itU8, wbEnum([
-//        {0} 'Topic',
-//        {1} 'Conversation',
-//        {2} 'Combat',
-//        {3} 'Persuasion',
-//        {4} 'Detection',
-//        {5} 'Service',
-//        {6} 'Miscellaneous',
-//        {7} 'Radio'
-//      ])),
-//      wbInteger('Next Speaker', itU8, wbEnum([
-//        {0} 'Target',
-//        {1} 'Self',
-//        {2} 'Either'
-//      ])),
-//      wbInteger('Flags 1', itU8, wbFlags([
-//        {0x01} 'Goodbye',
-//        {0x02} 'Random',
-//        {0x04} 'Say Once',
-//        {0x08} 'Run Immediately',
-//        {0x10} 'Info Refusal',
-//        {0x20} 'Random End',
-//        {0x40} 'Run for Rumors',
-//        {0x80} 'Speech Challenge'
-//      ])),
-//      wbInteger('Flags 2', itU8, wbFlags([
-//        {0x01} 'Say Once a Day',
-//        {0x02} 'Always Darken'
-//      ]))
-//    ], cpNormal, True, nil, 3),
-//    wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpNormal, True),
-//    wbFormIDCk(TPIC, 'Topic', [DIAL]),
-//    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
-//    wbRArray('Add Topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
-//    wbRArray('Responses',
-//      wbRStruct('Response', [
-//        wbStruct(TRDT, 'Response Data', [
-//          wbInteger('Emotion Type', itU32, wbEnum([
-//            {0} 'Neutral',
-//            {1} 'Anger',
-//            {2} 'Disgust',
-//            {3} 'Fear',
-//            {4} 'Sad',
-//            {5} 'Happy',
-//            {6} 'Surprise',
-//            {7} 'Pained'
-//          ])),
-//          wbInteger('Emotion Value', itS32),
-//          wbByteArray('Unused', 4),
-//          wbInteger('Response number', itU8),
-//          wbByteArray('Unused', 3),
-//          wbFormIDCk('Sound', [SOUN, NULL]),
-//          wbInteger('Flags', itU8, wbFlags([
-//            'Use Emotion Animation'
-//          ])),
-//          wbByteArray('Unused', 3)
-//        ], cpNormal, False, nil, 5),
-//        wbString(NAM1, 'Response Text', 0, cpTranslate, True),
-//        wbString(NAM2, 'Script Notes', 0, cpTranslate, True),
-//        wbString(NAM3, 'Edits'),
-//        wbFormIDCk(SNAM, 'Speaker Animation', [IDLE]),
-//        wbFormIDCk(LNAM, 'Listener Animation', [IDLE])
-//      ], [])
-//    ),
-//    wbCTDAs,
-//    wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
-//    wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
-//    wbRArray('Unknown', wbFormIDCk(TCFU, 'Info', [INFO] )),
-//    wbRStruct('Script (Begin)', [
-//      wbEmbeddedScriptReq
-//    ], [], cpNormal, True),
-//    wbRStruct('Script (End)', [
-//      wbEmpty(NEXT, 'Marker'),
-//      wbEmbeddedScriptReq
-//    ], [], cpNormal, True),
-//    wbFormIDCk(SNDD, 'Unused', [SOUN]),
-//    wbString(RNAM, 'Prompt'),
-//    wbFormIDCk(ANAM, 'Speaker', [CREA, NPC_]),
-//    wbFormIDCk(KNAM, 'ActorValue/Perk', [AVIF, PERK]),
-//    wbInteger(DNAM, 'Speech Challenge', itU32, wbEnum([
-//      '---',
-//      'Very Easy',
-//      'Easy',
-//      'Average',
-//      'Hard',
-//      'Very Hard'
-//    ]))
-//  ], False, wbINFOAddInfo, cpNormal, False, wbINFOAfterLoad);
-//------------------------------------------------------------------------------
-// End Old INFO
-//------------------------------------------------------------------------------
+    wbLString(RNAM, 'Prompt'),
+    wbFormIDCk(ANAM, 'Speaker', [NPC_]),
+    wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
+    wbFormIDCk(ONAM, 'Audio Output Override', [SNDR])
+  ], False, nil{wbINFOAddInfo}, cpNormal, False, nil{wbINFOAfterLoad});
 
   wbRecord(INGR, 'Ingredient', [
     wbEDIDReq,

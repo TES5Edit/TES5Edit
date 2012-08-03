@@ -149,19 +149,19 @@ end;
 
 function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
 var
-  sigEl, sigRec: TwbSignature;
+  sigElem, sigRec: TwbSignature;
   aRecord: IwbSubRecord;
 begin
   if Supports(aElement, IwbSubRecord, aRecord) then
-    sigRec := aRecord.Signature
+    sigElem := aRecord.Signature
   else
-    sigRec := '';
-  sigEl := aElement.ContainingMainRecord.Signature;
+    sigElem := '';
+  sigRec := aElement.ContainingMainRecord.Signature;
 
-  if sigRec = 'DESC' then Result := lsDLString else // DESC always from dlstrings
-  if (sigEl = 'QUST') and (sigRec = 'CNAM') then Result := lsDLString else // quest log entry
-  if sigEl = 'BOOK' then Result := lsDLString else //journal/book
-  if sigEl = 'INFO' then Result := lsILString else // dialog
+  if sigElem = 'DESC' then Result := lsDLString else // DESC always from dlstrings
+  if (sigRec = 'QUST') and (sigElem = 'CNAM') then Result := lsDLString else // quest log entry
+  if sigRec = 'BOOK' then Result := lsDLString else //journal/book
+  if (sigRec = 'INFO') and (sigElem <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
     Result := lsString; // others
 end;
 
