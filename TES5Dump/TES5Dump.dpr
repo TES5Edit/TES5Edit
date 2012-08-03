@@ -189,6 +189,7 @@ begin
   SysUtils.DecimalSeparator := '.';
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
+  wbMoreInfoForUnknown := False;
 
   try
     if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
@@ -212,7 +213,7 @@ begin
       wbGameName := 'Oblivion';
       DefineTES4;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES% to select mode.');
+      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
       Exit;
     end;
 
@@ -239,6 +240,11 @@ begin
       DumpGroups.CommaText := s;
       DumpGroups.Sort;
     end;
+
+    if wbFindCmdLineSwitch('more') then
+      wbMoreInfoForUnknown:= True
+    else
+      wbMoreInfoForUnknown:= False;
 
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
