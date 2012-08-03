@@ -85,7 +85,7 @@ namespace TESVSnip.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"AACT;ACTI;ADDN;ALCH;AMMO;ANIO;APPA;ARMA;ARMO;ARTO;ASPC;ASTP;AVIF;BOOK;BPTD;CAMS;CLAS;CLDC;CLFM;CLMT;COBJ;COLL;CONT;CPTH;CSTY;DEBR;DIAL;DLBR;DLVW;DOBJ;DOOR;DUAL;ECZN;EFSH;ENCH;EQUP;EXPL;EYES;FACT;FLOR;FLST;FSTP;FSTS;FURN;GLOB;GMST;GRAS;HAIR;HAZD;HDPT;IDLE;IDLM;IMAD;IMGS;INGR;IPCT;IPDS;KEYM;KYWD;LCRT;LCTN;LGTM;LIGH;LSCR;LTEX;LVLI;LVLN;LVSP;MATO;MATT;MESG;MGEF;MISC;MOVT;MSTT;MUSC;MUST;NAVI;NPC_;OTFT;PACK;PERK;PROJ;PWAT;QUST;RACE;REGN;RELA;REVB;RFCT;RGDL;SCOL;SCPT;SCRL;SHOU;SLGM;SMBN;SMEN;SMQN;SNCT;SNDR;SOPM;SOUN;SPEL;SPGD;STAT;TACT;TREE;TXST;VTYP;WATR;WEAP;WOOP;WRLD;WTHR")]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"AACT;ACTI;ADDN;ALCH;AMMO;ANIO;APPA;ARMA;ARMO;ARTO;ASPC;ASTP;AVIF;BOOK;BPTD;CAMS;CELL;CLAS;CLDC;CLFM;CLMT;COBJ;COLL;CONT;CPTH;CSTY;DEBR;DIAL;DLBR;DLVW;DOBJ;DOOR;DUAL;ECZN;EFSH;ENCH;EQUP;EXPL;EYES;FACT;FLOR;FLST;FSTP;FSTS;FURN;GLOB;GMST;GRAS;HAIR;HAZD;HDPT;IDLE;IDLM;IMAD;IMGS;INGR;IPCT;IPDS;KEYM;KYWD;LCRT;LCTN;LGTM;LIGH;LSCR;LTEX;LVLI;LVLN;LVSP;MATO;MATT;MESG;MGEF;MISC;MOVT;MSTT;MUSC;MUST;NAVI;NPC_;OTFT;PACK;PERK;PROJ;PWAT;QUST;RACE;REGN;RELA;REVB;RFCT;RGDL;SCEN;SCOL;SCPT;SCRL;SHOU;SLGM;SMBN;SMEN;SMQN;SNCT;SNDR;SOPM;SOUN;SPEL;SPGD;STAT;TACT;TREE;TXST;VTYP;WATR;WEAP;WOOP;WRLD;WTHR")]
         public string AllESMRecords {
             get {
                 return ((string)(this["AllESMRecords"]));
@@ -97,7 +97,7 @@ namespace TESVSnip.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("REGN;NAVI;WRLD;DIAL;CELL;IMAD;WTHR")]
+        [global::System.Configuration.DefaultSettingValueAttribute("RGDL;CLDC;PWAT;SCOL;SCPT;HAIR")]
         public string FilteredESMRecords {
             get {
                 return ((string)(this["FilteredESMRecords"]));
