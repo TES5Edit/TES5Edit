@@ -872,8 +872,8 @@ var
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
-  wbCOCT: IwbSubRecordDef;
-  wbCOCTReq: IwbSubRecordDef;
+  wbCOCT: IwbSubRecordStructDef;
+  wbCOCTReq: IwbSubRecordStructDef;
   wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef; {Associated with CTDA}
@@ -2373,8 +2373,6 @@ begin
 end;
 
 function wbScriptFragmentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container     : IwbRecord;
 begin
   Result := 0;
 end;
@@ -2383,6 +2381,21 @@ function wbScriptFragmentsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEl
 begin
   Result := 0;
 end;
+
+function wbBOOKTeachesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container: IwbContainer;
+  i: Int64;
+begin
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  i := Container.ElementByName['Flags'].NativeValue;
+  if i and $00000004 <> 0 then Result := 1
+    else Result := 0;
+end;
+
 
 type
   TCTDAFunctionParamType = (
@@ -4450,14 +4463,44 @@ begin
   wbBoolU16 := wbInteger('Boolean', itU16, wbEnum(['False', 'True']));
   wbBoolU32 := wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
-  wbCOCT := wbInteger(COCT, 'Count', itU32);
   wbCITC := wbInteger(CITC, 'Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
-  wbCOCTReq := wbInteger(COCT, 'Count', itU32, nil, cpNormal, True);
+
   wbKeywords := wbRStruct('Keywords', [
     wbInteger(KSIZ, 'Count', itU32),
     wbArrayS(KWDA, '', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True)
   ], []);
+
+  wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
+    {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
+    {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
+           wbByteArray('Unknown', 4, cpIgnore),
+           wbFormIDCk('Global Variable', [GLOB, NULL]),
+           wbInteger('Required Rank', itS32)
+         ]),
+    {08} wbFloat('Item Condition')
+  ]);
+
+  wbCNTO :=
+    wbRStructExSK([0], [1], 'Item', [
+      wbStructExSK(CNTO, [0], [1], 'Item', [
+        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, LIGH, CHIP{, MSTT{?}{, STAT{?}]),
+        wbInteger('Count', itS32)
+      ]),
+      wbCOED
+    ], []);
+
+  wbCNTOs := wbRArrayS('Items', wbCNTO);
+
+  wbCOCT := wbRStruct('Items', [
+    wbInteger(COCT, 'Count', itU32),
+    wbCNTOs
+  ], []);
+  wbCOCTReq := wbRStruct('Items', [
+    wbInteger(COCT, 'Count', itU32, nil, cpNormal, True),
+    wbCNTOs
+  ], [], cpNormal, True);
+
   wbDMDL := wbString(DMDL, 'Model Filename');
   wbSNAM := wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
   wbQNAM := wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
@@ -4926,16 +4969,6 @@ begin
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
-
-  wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
-    {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
-    {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
-           wbByteArray('Unknown', 4, cpIgnore),
-           wbFormIDCk('Global Variable', [GLOB, NULL]),
-           wbInteger('Required Rank', itS32)
-         ]),
-    {08} wbFloat('Item Condition')
-  ]);
 
   wbPosRot :=
     wbStruct('Position/Rotation', [
@@ -5654,20 +5687,30 @@ begin
 
   wbSkillEnum :=
     wbEnum([
-      'Barter',
-      'Big Guns (obsolete)',
-      'Energy Weapons',
-      'Explosives',
-      'Lockpick',
-      'Medicine',
-      'Melee Weapons',
-      'Repair',
-      'Science',
-      'Guns',
+      'None',
+      'Unknown 1',
+      'Unknown 2',
+      'Unknown 3',
+      'Unknown 4',
+      'Unknown 5',
+      'OneHanded',
+      'TwoHanded',
+      'Marksman',
+      'Block',
+      'Smithing',
+      'HeavyArmor',
+      'LightArmor',
+      'Pickpocket',
+      'Lockpicking',
       'Sneak',
-      'Speech',
-      'Survival',
-      'Unarmed'
+      'Alchemy',
+      'Speechcraft',
+      'Alteration',
+      'Conjuration',
+      'Destruction',
+      'Illusion',
+      'Restoration',
+      'Enchanting'
     ], [
       -1, 'None'
     ]);
@@ -6473,29 +6516,35 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbDESCReq,
-    wbFormID(YNAM, 'Unknown'),
+    wbICON,
+    wbLString(DESC, 'Book Text', 0, cpNormal, True),
+    wbDEST,
+    wbSounds,
     wbKeywords,
-    // 16 Bytes Total Unconfirmed
     wbStruct(DATA, 'Data', [
-      {01} wbInteger('Flags', itU8, wbFlags([
-             {0x00000001}'Unknown 1',
-             {0x00000002}'Unknown 2',
-             {0x00000004}'Unknown 3',
-             {0x00000008}'Unknown 4',
-             {0x00000010}'Unknown 5',
-             {0x00000020}'Unknown 6',
-             {0x00000040}'Unknown 7',
-             {0x00000080}'Unknown 8'
-           ])),
-      {02} wbInteger('Skill', itS8, wbSkillEnum),
-      {03} wbByteArray('Value ??', 4),
-      {07} wbByteArray('Weight ??', 4),
-      {11} wbByteArray('Unknown ??', 4),
-      {15} wbByteArray('Unknown ??', 2)
+      wbInteger('Flags', itU8, wbFlags([
+       {0x01} 'Teaches Skill',
+       {0x02} 'Can''t be Taken',
+       {0x04} 'Teaches Spell',
+       {0x08} 'Unknown 4',
+       {0x10} 'Unknown 5',
+       {0x20} 'Unknown 6',
+       {0x40} 'Unknown 7',
+       {0x80} 'Unknown 8'
+      ])),
+      wbInteger('Type', itU8, wbEnum([], [
+        0, 'Book/Tome', 255, 'Note/Scroll'
+      ])),
+      wbByteArray('Unused', 2),
+      wbUnion('Teaches', wbBOOKTeachesDecider, [
+        wbInteger('Skill', itS32, wbSkillEnum),
+        wbFormIDCk('Spell', [SPEL])
+      ]),
+      wbInteger('Value', itU32),
+      wbFloat('Weight')
     ], cpNormal, True),
-    wbFormID(INAM, 'Unknown'),
-    wbUnknown(CNAM)
+    wbFormIDCk(INAM, 'Inventory Art', [STAT]),
+    wbString(CNAM, 'Description')
   ]);
 
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
@@ -6723,23 +6772,56 @@ begin
     wbDESCReq,
     wbICON,
     wbStruct(DATA, '', [
-      wbArray('Tag Skills', wbInteger('Tag Skill', itS32, wbActorValueEnum), 4),
-      wbInteger('Flags', itU32, wbFlags(['Playable', 'Guard'], True)),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbByteArray('Unknown', 2),
       wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, True),
-    wbArray(ATTR, 'Attributes', wbInteger('Attribute', itU8), [
-      'Strength',
-      'Perception',
-      'Endurance',
-      'Charisma',
-      'Intelligence',
-      'Agility',
-      'Luck'
+      wbInteger('Teaches', itS8, wbEnum([
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ])),
+      wbInteger('Maximum training level', itU8),
+      wbArray('Skill Weights', wbInteger('Weight', itU8), [
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ]),
+      wbFloat('Bleedout Default'),
+      wbInteger('Voice Points', itU32),
+      wbArray('Attribute Weights', wbInteger('Weight', itU8), [
+        'Health',
+        'Magicka',
+        'Stamina',
+        'Unknown'
+      ])
     ], cpNormal, True)
   ]);
 end;
@@ -6823,17 +6905,6 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbCNTO :=
-    wbRStructExSK([0], [1], 'Item', [
-      wbStructExSK(CNTO, [0], [1], 'Item', [
-        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, LIGH, CHIP{, MSTT{?}{, STAT{?}]),
-        wbInteger('Count', itS32)
-      ]),
-      wbCOED
-    ], []);
-
-  wbCNTOs := wbRArrayS('Items', wbCNTO);
-
 //------------------------------------------------------------------------------
 // Begin New CONT
 //------------------------------------------------------------------------------
@@ -6844,7 +6915,6 @@ begin
     wbFULL,
     wbMODL,
     wbCOCT,
-    wbCNTOs,
     wbStruct(DATA, '', [
       wbInteger('Flags', itU8, wbFlags([
         {0x00000001}'Unknown 1',
@@ -9233,7 +9303,7 @@ begin
     wbEDIDReq,
     wbMODLReq,
     wbRStructs('Body Parts', 'Body Part', [
-      wbString(BPTN, 'Part Name', 0, cpNormal, True),
+      wbLString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
@@ -9250,20 +9320,11 @@ begin
         ])),
         {05} wbInteger('Part Type', itU8, wbEnum([
                'Torso',
-               'Head 1',
-               'Head 2',
-               'Left Arm 1',
-               'Left Arm 2',
-               'Right Arm 1',
-               'Right Arm 2',
-               'Left Leg 1',
-               'Left Leg 2',
-               'Left Leg 3',
-               'Right Leg 1',
-               'Right Leg 2',
-               'Right Leg 3',
-               'Brain',
-               'Weapon'
+               'Head',
+               'Eye',
+               'LookAt',
+               'Fly Grab',
+               'Saddle'
              ])),
         {06} wbInteger('Health Percent', itU8),
         {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
@@ -9362,12 +9423,14 @@ begin
       {04} wbInteger('Location', itU32, wbEnum([
         'Attacker',
         'Projectile',
-        'Target'
+        'Target',
+        'Lead Actor'
       ])),
       {08} wbInteger('Target', itU32, wbEnum([
         'Attacker',
         'Projectile',
-        'Target'
+        'Target',
+        'Lead Actor'
       ])),
       {12} wbInteger('Flags', itU32, wbFlags([
         'Position Follows Location',
@@ -9385,7 +9448,7 @@ begin
       {28} wbFloat('Max Time'),
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
-      wbByteArray('Unknown', 0)
+      {40} wbFloat('Near Target Distance')
     ], cpNormal, True, nil),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
@@ -10105,85 +10168,24 @@ begin
       ])
   ]);
 
-  wbRecord(COLL, 'COLL', [
+  wbRecord(COLL, 'Collision Layer', [
     wbEDIDReq,
     wbDESCReq,
-    wbFormID(BNAM, 'B Name', cpNormal, True),
-    wbStruct(FNAM, 'Unknown Flags', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Unknown 2',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ]))
+    wbInteger(BNAM, 'ID?', itU32, nil, cpNormal, True),
+    wbStruct(FNAM, 'Debug Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8),
+      wbInteger('Unused', itU8)
     ], cpNormal, True),
-    wbStruct(GNAM, 'Unknown Flags', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Unknown 2',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ]))
-    ], cpNormal, True),
-    wbString(MNAM, 'MNAM Name', 0, cpNormal, True),
-    wbByteArray(INTV, 'Interactables Count', 0, cpNormal, True),
-    wbArrayS(CNAM, 'CNAM FormID', wbFormIDCk('Forms', [COLL]), 0, cpNormal, False)
+    wbInteger(GNAM, 'Flags', itU32, wbFlags([
+      {0x00000001} 'Trigger Volume',
+      {0x00000002} 'Sensor',
+      {0x00000004} 'Navmesh Obstacle'
+    ]), cpNormal, True),
+    wbString(MNAM, 'Name', 0, cpNormal, True),
+    wbInteger(INTV, 'Interactables Count', itU32, nil, cpNormal, True),
+    wbArrayS(CNAM, 'Collides With', wbFormIDCk('Forms', [COLL]), 0, cpNormal, False)
   ]);
 
 //----------------------------------------------------------------------------
@@ -11219,40 +11221,14 @@ begin
     wbUnknown(DATA)
   ]);
 
-//-----------------------------------------------------------------------------
-// Begin New COBJ
-//-----------------------------------------------------------------------------
   wbRecord(COBJ, 'Constructible Object', [
-    wbEDID,
+    wbEDIDReq,
     wbCOCT,
-    wbCNTOs,
     wbCTDAs,
-    wbFormID(CNAM, 'Unknown'),
-    wbFormID(BNAM, 'Unknown'),
-    wbUnknown(NAM1)
+    wbFormID(CNAM, 'Created Object'),
+    wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
+    wbInteger(NAM1, 'Created Object Count', itU16)
   ]);
-//-----------------------------------------------------------------------------
-// End New COBJ
-//
-// Begin Old COBJ
-//-----------------------------------------------------------------------------
-//  wbRecord(COBJ, 'Constructible Object', [
-//    wbEDID,
-//    wbOBND,
-//    wbFULL,
-//    wbMODL,
-//    wbICON,
-//    wbSCRI,
-//    wbYNAM,
-//    wbZNAM,
-//    wbStruct(DATA, '', [
-//      wbInteger('Value', itS32),
-//      wbFloat('Weight')
-//    ], cpNormal, True)
-//  ]);
-//-----------------------------------------------------------------------------
-// End Old COBJ
-//-----------------------------------------------------------------------------
 
   wbFaceGen := wbRStruct('FaceGen Data', [
     wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
@@ -11394,7 +11370,6 @@ begin
     wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbCOCTReq,
-    wbCNTOs,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
     wbKeywords,
@@ -12098,7 +12073,6 @@ begin
           wbUnknown(ALEQ),
           wbUnknown(ALEA),
           wbCOCT,
-          wbCNTOs,
           wbUnknown(SPOR),
           wbUnknown(ECOR),
           wbUnknown(ALDN),
@@ -12145,7 +12119,6 @@ begin
       wbCTDAs
     ], [])),
     wbCOCT,
-    wbCNTOs,
     wbKeywords,
     wbUnknown(NAM0)
   ], wbAllowUnordered);
