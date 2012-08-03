@@ -9998,7 +9998,14 @@ begin
   wbRecord(DUAL, 'DUAL', [
     wbEDIDReq,
     wbOBNDReq,
-    wbUnknown(DATA)
+    wbStruct(DATA, 'Values', [
+      wbFormIDCk('Projectile', [PROJ, NULL]),
+      wbFormIDCk('Explosion', [EXPL, NULL]),
+      wbFormIDCk('Effect Shader', [EFSH, NULL]),
+      wbFormIDCk('Art Object', [ARTO, NULL]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ])
   ]);
 
   wbRecord(SNCT, 'SNCT', [
