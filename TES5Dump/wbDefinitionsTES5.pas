@@ -642,7 +642,6 @@ const
   WAIT : TwbSignature = 'WAIT'; { New To Skyrim }
   WATR : TwbSignature = 'WATR';
   WBDT : TwbSignature = 'WBDT'; { New to Skyrim }
-  WCTR : TwbSignature = 'WCTR'; { New To Skyrim }
   WEAP : TwbSignature = 'WEAP';
   WKMV : TwbSignature = 'WKMV'; { New to Skyrim }
   WLST : TwbSignature = 'WLST';
@@ -767,7 +766,7 @@ var
   wbDEST: IwbSubRecordStructDef;
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
-//  wbXOWN: IwbSubRecordDef;
+  wbXOWN: IwbSubRecordDef;
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
@@ -899,7 +898,6 @@ var
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbCTDAParm1: IwbUnionDef;
-  wbOwnership: IwbSubRecordStructDef;
 // --- Pack ---
   wbPKDT: IwbSubRecordDef;
   wbPLDT: IwbSubRecordDef;
@@ -4267,46 +4265,48 @@ begin
 end;
 
 
-procedure wbEFSHAfterLoad(const aElement: IwbElement);
-var
-  Container: IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-  FullParticleBirthRatio : Extended;
-  PersistantParticleBirthRatio : Extended;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    if not Container.ElementExists['DATA'] then
-      Exit;
-
-    FullParticleBirthRatio := Container.ElementNativeValues['DATA\Particle Shader - Full Particle Birth Ratio'];
-    PersistantParticleBirthRatio := Container.ElementNativeValues['DATA\Particle Shader - Persistant Particle Birth Ratio'];
-
-    if ((FullParticleBirthRatio <> 0) and (FullParticleBirthRatio <= 1)) then begin
-      FullParticleBirthRatio := FullParticleBirthRatio * 78.0;
-      Container.ElementNativeValues['DATA\Particle Shader - Full Particle Birth Ratio'] := FullParticleBirthRatio;
-    end;
-
-    if ((PersistantParticleBirthRatio <> 0) and (PersistantParticleBirthRatio <= 1)) then begin
-      PersistantParticleBirthRatio := PersistantParticleBirthRatio * 78.0;
-      Container.ElementNativeValues['DATA\Particle Shader - Persistant Particle Birth Ratio'] := PersistantParticleBirthRatio;
-    end;
-
-  finally
-    wbEndInternalEdit;
-  end;
-end;
+{ Updated, but not called for Skyrim }
+{ Why is it required to fix particle counts? Because 1 pass = 79 particles?}
+//procedure wbEFSHAfterLoad(const aElement: IwbElement);
+//var
+//  Container: IwbContainerElementRef;
+//  MainRecord   : IwbMainRecord;
+//  FullParticleBirthRatio : Extended;
+//  PersistantParticleCount : Extended;
+//begin
+//  if wbBeginInternalEdit then try
+//    if not Supports(aElement, IwbContainerElementRef, Container) then
+//      Exit;
+//
+//    if Container.ElementCount < 1 then
+//      Exit;
+//
+//    if not Supports(aElement, IwbMainRecord, MainRecord) then
+//      Exit;
+//
+//    if MainRecord.IsDeleted then
+//      Exit;
+//
+//    if not Container.ElementExists['DATA'] then
+//      Exit;
+//
+//    FullParticleBirthRatio := Container.ElementNativeValues['DATA\Particle Shader - Full Particle Birth Ratio'];
+//    PersistantParticleCount := Container.ElementNativeValues['DATA\Particle Shader - Persistant Particle Count'];
+//
+//    if ((FullParticleBirthRatio <> 0) and (FullParticleBirthRatio <= 1)) then begin
+//      FullParticleBirthRatio := FullParticleBirthRatio * 78.0;
+//      Container.ElementNativeValues['DATA\Particle Shader - Full Particle Birth Ratio'] := FullParticleBirthRatio;
+//    end;
+//
+//    if ((PersistantParticleCount <> 0) and (PersistantParticleCount <= 1)) then begin
+//      PersistantParticleCount := PersistantParticleCount * 78.0;
+//      Container.ElementNativeValues['DATA\Particle Shader - Persistant Particle Count'] := PersistantParticleCount;
+//    end;
+//
+//  finally
+//    wbEndInternalEdit;
+//  end;
+//end;
 
 procedure wbFACTAfterLoad(const aElement: IwbElement);
 var
@@ -5275,13 +5275,7 @@ begin
   ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad);
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
-//  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
-
-  wbOwnership := wbRStruct('Ownership', [
-    wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
-    wbInteger(XRNK, 'Faction rank', itS32)
-  ], []);
-
+  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
 //------------------------------------------------------------------------------
@@ -5404,10 +5398,6 @@ begin
 // XESP
     wbXESP,
 
-// XOWN
-    {--- Ownership ---}
-    wbOwnership,
-
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
@@ -5447,7 +5437,10 @@ begin
     wbXLCM,
 
     {--- Ownership ---}
-    wbOwnership,
+    wbRStruct('Ownership', [
+      wbXOWN,
+      wbInteger(XRNK, 'Faction rank', itS32)
+    ], [XCMT, XCMO]),
 
     {--- Merchant Container ----}
     wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
@@ -6582,8 +6575,8 @@ begin
 // Pattern 16: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                                    XEZN XWEM           [When XIS2 is present]
 // Pattern 17: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XCAS XEZN XCMO XWEM
 // Pattern 18: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO XEZN XCAS XCCM XWEM
-// Pattern 19: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                               XCMO XOWN XWEM XCAS
-// Pattern 20: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM XCCM XEZN XCAS
+// Pattern 19:
+// Pattern 20:
 // Pattern 21:
 // Pattern 22:
 // Pattern 23:
@@ -6695,39 +6688,32 @@ begin
     wbString(XNAM, 'Water Noise Texture'),
 // XCLR
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbFormID(XLCN, 'Unknown'),
 		wbRUnion('Union', [
 // XCIM XLCN
-      wbRStruct('XCIM XCMO', [
+      wbRStruct('XCIM XLCN', [
         wbFormIDCk(XCIM, 'Image Space', [IMGS]), // Moved from between XCLR and XCET
-        wbFormIDCk(XCMO, 'Music Type', [MUSC])
-      ], []),
+        wbFormID(XLCN, 'Unknown')
+      ], [XCMO]),
 // XLCN XCIM
-      wbRStruct('XCMO XCIM', [
-        // XCMO
-        wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+      wbRStruct('XLCN XCIM', [
+        wbFormID(XLCN, 'Unknown'),
         wbFormIDCk(XCIM, 'Image Space', [IMGS]) // Moved from between XCLR and XCET
-      ], [])
-    ], []),
+      ], [XCMO])
+    ], [XCMO]),
 //    wbByteArray(XCET, 'Unknown', 1, cpIgnore), Left over from FNV
     wbFormIDCk(XCWT, 'Water', [WATR]),
-
-    {--- Ownership ---}
-    wbOwnership,
-
-    wbRStruct('XEZN XCMO XCAS', [
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
-      wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]) // Moved from between XOWN (Ownership) and XCMT
-    ], []),
-
+// XOWN
+    wbRStruct('Ownership', [
+      wbXOWN,
+      wbInteger(XRNK, 'Faction rank', itS32)
+    ], [XCMO]), // XCMT Left over
 //  wbByteArray(XCMT, 'Unknown', 1, cpIgnore), // XCMT Left over
+// XCMO
+    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
 // XCCM
     wbFormIDCk(XCCM, 'Climate', [CLMT]), // Moved from between XCET and XCWT
 // XILL
 		wbFormID(XILL, 'Unknown'),
-// EDID FULL DATA XCLL LTMP XCLW XLCN XCMO XCIM      XCCM XEZN XCAS
-// EDID FULL DATA XCLL LTMP XCLW XLCN      XCIM XCMO      XEZN XCAS
 		wbRUnion('Union', [
 // XCAS XWEM XEZN
       wbRStruct('XCAS XEZN XCMO XWEM', [
@@ -6738,8 +6724,7 @@ begin
         wbUnknown(XWEM)
       ], []),
 // XEZN XCAS
-      wbRStruct('XWEM XEZN XCAS', [
-        wbUnknown(XWEM),
+      wbRStruct('XEZN XCAS', [
         wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
         wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]) // Moved from between XOWN (Ownership) and XCMT
       ], [])
@@ -7534,6 +7519,7 @@ begin
     'Minimum',
     'Maximum'
   ]);
+
   wbZTestFuncEnum := wbEnum([
     '',
     '',
@@ -7542,7 +7528,7 @@ begin
     'Normal',
     'Greater Than',
     '',
-    'Greater Than or Equal Than',
+    'Greater Than or Equal To',
     'Always Show'
   ]);
 
@@ -7550,23 +7536,15 @@ begin
     wbEDID,
     wbString(ICON, 'Fill Texture'),
     wbString(ICO2, 'Particle Shader Texture'),
-    wbString(NAM7, 'Post Effect'),
-    wbString(NAM8, 'Looped Gradient'),
-    wbString(NAM9, 'End Gradient'),
+    wbString(NAM7, 'Holes Texture'),
+    wbString(NAM8, 'Membrane Palette Texture'),
+    wbString(NAM9, 'Particle Palette Texture'),
     wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0} 'No Membrane Shader',
-        {1} '',
-        {2} '',
-        {3} 'No Particle Shader',
-        {4} 'Edge Effect - Inverse',
-        {5} 'Membrane Shader - Affect Skin Only'
-      ])),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 4),
       wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
       wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
       wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color', [
+      wbStruct('Fill/Texture Effect - Color Key 1', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
@@ -7604,7 +7582,7 @@ begin
       wbFloat('Particle Shader - Full Particle Birth Time'),
       wbFloat('Particle Shader - Particle Birth Ramp Down Time'),
       wbFloat('Particle Shader - Full Particle Birth Ratio'),
-      wbFloat('Particle Shader - Persistant Particle Birth Ratio'),
+      wbFloat('Particle Shader - Persistant Particle Count'),
       wbFloat('Particle Shader - Particle Lifetime'),
       wbFloat('Particle Shader - Particle Lifetime +/-'),
       wbFloat('Particle Shader - Initial Speed Along Normal'),
@@ -7670,9 +7648,70 @@ begin
       wbFloat('Addon Models - Scale In Time'),
       wbFloat('Addon Models - Scale Out Time'),
       wbFormIDCk('Ambient Sound', [SNDR, NULL]),
-      wbByteArray('Unknown', 0)
-    ], cpNormal, True, nil)
-  ], False, nil, cpNormal, False, wbEFSHAfterLoad);
+      wbStruct('Fill/Texture Effect - Color Key 2', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbStruct('Fill/Texture Effect - Color Key 3', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
+        wbFloat('Color Key 1 - Scale'),
+        wbFloat('Color Key 2 - Scale'),
+        wbFloat('Color Key 3 - Scale'),
+        wbFloat('Color Key 1 - Time'),
+        wbFloat('Color Key 2 - Time'),
+        wbFloat('Color Key 3 - Time')
+      ]),
+      wbFloat('Color Scale'),
+      wbFloat('Birth Position Offset'),
+      wbFloat('Birth Position Offset Range +/-'),
+      wbStruct('Particle Shader Animated', [
+        wbInteger('Start Frame', itU32),
+        wbInteger('Start Frame Variation', itU32),
+        wbInteger('End Frame', itU32),
+        wbInteger('Loop Start Frame', itU32),
+        wbInteger('Loop Start Variation', itU32),
+        wbInteger('Frame Count', itU32),
+        wbInteger('Frame Count Variation', itU32)
+      ]),
+      wbInteger('Flags', itU32, wbFlags([
+        'No Membrane Shader',
+        'Membrane Grayscale Color',
+        'Membrane Grayscale Alpha',
+        'No Particle Shader',
+        'Edge Effect Inverse',
+        'Affect Skin Only',
+        'Ignore Alpha',
+        'Project UVs',
+        'Ignore Base Geometry Alpha',
+        'Lighting',
+        'No Weapons',
+        'Unknown 11',
+        'Unknown 12',
+        'Unknown 13',
+        'Unknown 14',
+        'Particle Animated',
+        'Particle Grayscale Color',
+        'Particle Grayscale Alpha',
+        'Unknown 18',
+        'Unknown 19',
+        'Unknown 20',
+        'Unknown 21',
+        'Unknown 22',
+        'Unknown 23',
+        'Use Blood Geometry'
+      ])),
+      wbFloat('Fill/Texture Effect - Texture Scale (U)'),
+      wbFloat('Fill/Texture Effect - Texture Scale (V)'),
+      wbInteger('Scene Graph Emit Depth Limit', itU32)
+    ], cpNormal, True, nil, 0)
+  ], False, nil, cpNormal, False, nil {wbEFSHAfterLoad});
 
   wbRecord(ENCH, 'Object Effect', [
     wbEDIDReq,
@@ -8597,7 +8636,10 @@ begin
     ], []),
 
     {--- Ownership ---}
-    wbOwnership,
+    wbRStruct('Ownership', [
+      wbXOWN,
+      wbInteger(XRNK, 'Faction rank', itS32)
+    ], [XCMT, XCMO]),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -8690,7 +8732,10 @@ begin
     ], []),
 
     {--- Ownership ---}
-    wbOwnership,
+    wbRStruct('Ownership', [
+      wbXOWN,
+      wbInteger(XRNK, 'Faction rank', itS32)
+    ], [XCMT, XCMO]),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -8765,7 +8810,6 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-
    wbRecord(EXPL, 'Explosion', [
     wbEDIDReq,
     wbOBNDReq,
@@ -8774,33 +8818,30 @@ begin
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(DATA, 'Data', [
-      {00} wbFloat('Force'),
-      {04} wbFloat('Damage'),
-      {08} wbFloat('Radius'),
-      {12} wbFormIDCk('Unknown 1', [IPDS, NULL]), // Light
-      {16} wbFormIDCk('Unknown 2', [EXPL, HAZD, ACTI, NULL]), // Sound 1
-      {20} wbInteger('Flags', itU32, wbFlags([
-             {0x00000001}'Unknown 1',
-             {0x00000002}'Always Uses World Orientation',
-             {0x00000004}'Knock Down - Always',
-             {0x00000008}'Knock Down - By Formular',
-             {0x00000010}'Ignore LOS Check',
-             {0x00000020}'Push Explosion Source Ref Only',
-             {0x00000040}'Ignore Image Space Swap'
-           ])),
-      {24} wbFloat('IS Radius'),
-      {28} wbFormIDCk('Impact DataSet', [IPDS, NULL]),
-      {32} wbFormIDCk('Sound 2', [SOUN, NULL]),
-           wbStruct('Radiation', [
-             {36} wbFloat('Level'),
-             {40} wbFloat('Dissipation Time'),
-             {44} wbFloat('Radius')
-           ]),
-      {48} wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
-    ], cpNormal, True),
-    wbFormIDCk(INAM, 'Placed Impact Object', [TREE, SOUN, ACTI, DOOR, STAT, FURN,
-          CONT, ARMO, AMMO, LVLN, LVLC, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS,
-          ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CHIP])
+      wbFormIDCk('Light', [LIGH, NULL]),
+      wbFormIDCk('Sound 1', [SNDR, NULL]),
+      wbFormIDCk('Sound 2', [SNDR, NULL]),
+      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      wbFormID('Placed Object'),
+      wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
+      wbFloat('Force'),
+      wbFloat('Damage'),
+      wbFloat('Radius'),
+      wbFloat('IS Radius'),
+      wbFloat('Vertical Offset Mult'),
+      wbInteger('Flags', itU32, wbFlags([
+        'Unknown 0',
+        'Always Uses World Orientation',
+        'Knock Down - Always',
+        'Knock Down - By Formula',
+        'Ignore LOS Check',
+        'Push Explosion Source Ref Only',
+        'Ignore Image Space Swap',
+        'Chain',
+        'No Controller Vibration'
+      ])),
+      wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
+    ])
   ]);
 
   wbRecord(DEBR, 'Debris', [
@@ -9803,8 +9844,10 @@ begin
 
   wbRecord(EQUP, 'EQUP', [
     wbEDIDReq,
-    wbArray(PNAM, 'Equipped Hands Reference', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbUnknown(DATA)
+    wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      'Use All Parents'
+    ]), cpNormal, True)
   ]);
 
   wbRecord(RELA, 'RELA', [
@@ -12382,31 +12425,11 @@ begin
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
- 		wbRstruct('Water Velocity', [
-			wbUnknown(XWCN),
-			wbStruct(XWCU, 'Water Velocity', [
-				wbFloat('X Offset'),
-				wbFloat('Y Offset'),
-				wbFloat('Z Offset'),
-				wbByteArray('Unknown', 4),
-				wbFloat('X Angle'),
-				wbFloat('Y Angle'),
-				wbFloat('Z Angle'),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4)
-			])
-		], []),
-
-    wbStruct(XCVL, 'Unknown', [
-			wbByteArray('Unknown', 4),
-			wbFloat('X Angle'),
-			wbByteArray('Unknown', 4)
-    ]),
+		wbUnknown(XWCN),
+		wbUnknown(XWCU),
+		wbUnknown(XCVL),
 		wbUnknown(XCZA),
-    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
+		wbUnknown(XCZC),
     wbXSCL,
     wbFormIDCk(XSPC, 'Ref?', [REFR]),
 
@@ -12495,11 +12518,13 @@ begin
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
-    {--- Ownership ---}
-    wbOwnership,
+    wbRStruct('Ownership', [
+      wbXOWN,
+      wbInteger(XRNK, 'Faction rank', itS32)
+    ], []),
 
     wbInteger(XCNT, 'Item Count', itS32),
-    wbFormIDCk(XLRL, 'Location Ref Type', [LCRT, NULL]),
+    wbUnknown(XLRL),
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
@@ -12511,18 +12536,9 @@ begin
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbStruct(SCHR, 'Unknown', [
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4)
-      ]),
+      wbUnknown(SCHR),
       wbUnknown(SCTX),
-      wbStruct(PDTO, 'Unknown', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Unknown', [DIAL, NULL])
-      ])
+      wbUnknown(PDTO)
     ], [])),
 
     {--- Flags ---}
@@ -12534,7 +12550,7 @@ begin
     ])),
 
     wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Unknown'),
+    wbUnknown(XFVC),
 
     wbEmpty(ONAM, 'Open by Default'),
 
@@ -12569,6 +12585,8 @@ begin
     ], [])),
 
     wbDataPosRot
+
+
 
 //
 //    {--- Audio Data ---}
@@ -13622,10 +13640,10 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
+    wbUnknown(MHDT),
     wbRArray('Array RNAM', wbRStruct('Unknown', [
       wbUnknown(RNAM)
     ], [])),
-    wbUnknown(MHDT),
     wbFULL,
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -13725,10 +13743,6 @@ begin
       'Grass',
       'Water'
     ]),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbUnknown(WCTR),
-      wbUnknown(LTMP)
-    ], [])),
     wbUnknown(TNAM),
     wbUnknown(UNAM),
     wbByteArray(OFST, 'Unknown', 0)
