@@ -5396,6 +5396,9 @@ begin
 // XESP
     wbXESP,
 
+// XOWN
+    wbXOWN,
+
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
@@ -12370,11 +12373,31 @@ begin
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
-		wbUnknown(XWCN),
-		wbUnknown(XWCU),
-		wbUnknown(XCVL),
+ 		wbRstruct('Water Velocity', [
+			wbUnknown(XWCN),
+			wbStruct(XWCU, 'Water Velocity', [
+				wbFloat('X Offset'),
+				wbFloat('Y Offset'),
+				wbFloat('Z Offset'),
+				wbByteArray('Unknown', 4),
+				wbFloat('X Angle'),
+				wbFloat('Y Angle'),
+				wbFloat('Z Angle'),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4)
+			])
+		], []),
+
+    wbStruct(XCVL, 'Unknown', [
+			wbByteArray('Unknown', 4),
+			wbFloat('X Angle'),
+			wbByteArray('Unknown', 4)
+    ]),
 		wbUnknown(XCZA),
-		wbUnknown(XCZC),
+    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
     wbXSCL,
     wbFormIDCk(XSPC, 'Ref?', [REFR]),
 
@@ -12469,7 +12492,7 @@ begin
     ], []),
 
     wbInteger(XCNT, 'Item Count', itS32),
-    wbUnknown(XLRL),
+    wbFormIDCk(XLRL, 'Location Ref Type', [LCRT, NULL]),
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
@@ -12481,9 +12504,18 @@ begin
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbUnknown(SCHR),
+      wbStruct(SCHR, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4)
+      ]),
       wbUnknown(SCTX),
-      wbUnknown(PDTO)
+      wbStruct(PDTO, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [DIAL, NULL])
+      ])
     ], [])),
 
     {--- Flags ---}
@@ -12495,7 +12527,7 @@ begin
     ])),
 
     wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbUnknown(XFVC),
+    wbFloat(XFVC, 'Unknown'),
 
     wbEmpty(ONAM, 'Open by Default'),
 
@@ -12530,8 +12562,6 @@ begin
     ], [])),
 
     wbDataPosRot
-
-
 
 //
 //    {--- Audio Data ---}
