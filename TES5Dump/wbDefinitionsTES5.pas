@@ -642,6 +642,7 @@ const
   WAIT : TwbSignature = 'WAIT'; { New To Skyrim }
   WATR : TwbSignature = 'WATR';
   WBDT : TwbSignature = 'WBDT'; { New to Skyrim }
+  WCTR : TwbSignature = 'WCTR'; { New To Skyrim }
   WEAP : TwbSignature = 'WEAP';
   WKMV : TwbSignature = 'WKMV'; { New to Skyrim }
   WLST : TwbSignature = 'WLST';
@@ -766,7 +767,7 @@ var
   wbDEST: IwbSubRecordStructDef;
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
-  wbXOWN: IwbSubRecordDef;
+//  wbXOWN: IwbSubRecordDef;
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
@@ -898,6 +899,7 @@ var
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbCTDAParm1: IwbUnionDef;
+  wbOwnership: IwbSubRecordStructDef;
 // --- Pack ---
   wbPKDT: IwbSubRecordDef;
   wbPLDT: IwbSubRecordDef;
@@ -5275,7 +5277,13 @@ begin
   ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad);
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
-  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
+//  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
+
+  wbOwnership := wbRStruct('Ownership', [
+    wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
+    wbInteger(XRNK, 'Faction rank', itS32)
+  ], []);
+
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
 //------------------------------------------------------------------------------
@@ -5311,6 +5319,7 @@ begin
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
+			wbunknown(PDTO),
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
@@ -5387,16 +5396,27 @@ begin
       ])
     ]),
 
+
+// XIS2
+		wbUnknown(XIS2),
+
 // XLCN
 		wbUnknown(XLCN),
+
 // XLRT
 		wbUnknown(XLRT),
+
+		wbUnknown(XHOR),
 
     wbString(XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
 // XESP
     wbXESP,
+
+// XOWN
+    {--- Ownership ---}
+    wbOwnership,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
@@ -5437,10 +5457,7 @@ begin
     wbXLCM,
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    wbOwnership,
 
     {--- Merchant Container ----}
     wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
@@ -6575,8 +6592,8 @@ begin
 // Pattern 16: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                                    XEZN XWEM           [When XIS2 is present]
 // Pattern 17: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XCAS XEZN XCMO XWEM
 // Pattern 18: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO XEZN XCAS XCCM XWEM
-// Pattern 19:
-// Pattern 20:
+// Pattern 19: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                               XCMO XOWN XWEM XCAS
+// Pattern 20: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM XCCM XEZN XCAS
 // Pattern 21:
 // Pattern 22:
 // Pattern 23:
@@ -6688,32 +6705,39 @@ begin
     wbString(XNAM, 'Water Noise Texture'),
 // XCLR
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
+    wbFormID(XLCN, 'Unknown'),
 		wbRUnion('Union', [
 // XCIM XLCN
-      wbRStruct('XCIM XLCN', [
+      wbRStruct('XCIM XCMO', [
         wbFormIDCk(XCIM, 'Image Space', [IMGS]), // Moved from between XCLR and XCET
-        wbFormID(XLCN, 'Unknown')
-      ], [XCMO]),
+        wbFormIDCk(XCMO, 'Music Type', [MUSC])
+      ], []),
 // XLCN XCIM
-      wbRStruct('XLCN XCIM', [
-        wbFormID(XLCN, 'Unknown'),
+      wbRStruct('XCMO XCIM', [
+        // XCMO
+        wbFormIDCk(XCMO, 'Music Type', [MUSC]),
         wbFormIDCk(XCIM, 'Image Space', [IMGS]) // Moved from between XCLR and XCET
-      ], [XCMO])
-    ], [XCMO]),
+      ], [])
+    ], []),
 //    wbByteArray(XCET, 'Unknown', 1, cpIgnore), Left over from FNV
     wbFormIDCk(XCWT, 'Water', [WATR]),
-// XOWN
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMO]), // XCMT Left over
+
+    {--- Ownership ---}
+    wbOwnership,
+
+    wbRStruct('XEZN XCMO XCAS', [
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
+      wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]) // Moved from between XOWN (Ownership) and XCMT
+    ], []),
+
 //  wbByteArray(XCMT, 'Unknown', 1, cpIgnore), // XCMT Left over
-// XCMO
-    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
 // XCCM
     wbFormIDCk(XCCM, 'Climate', [CLMT]), // Moved from between XCET and XCWT
 // XILL
 		wbFormID(XILL, 'Unknown'),
+// EDID FULL DATA XCLL LTMP XCLW XLCN XCMO XCIM      XCCM XEZN XCAS
+// EDID FULL DATA XCLL LTMP XCLW XLCN      XCIM XCMO      XEZN XCAS
 		wbRUnion('Union', [
 // XCAS XWEM XEZN
       wbRStruct('XCAS XEZN XCMO XWEM', [
@@ -6724,7 +6748,8 @@ begin
         wbUnknown(XWEM)
       ], []),
 // XEZN XCAS
-      wbRStruct('XEZN XCAS', [
+      wbRStruct('XWEM XEZN XCAS', [
+        wbUnknown(XWEM),
         wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
         wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]) // Moved from between XOWN (Ownership) and XCMT
       ], [])
@@ -8636,10 +8661,7 @@ begin
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    wbOwnership,
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -8732,10 +8754,7 @@ begin
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    wbOwnership,
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -12425,11 +12444,31 @@ begin
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
-		wbUnknown(XWCN),
-		wbUnknown(XWCU),
-		wbUnknown(XCVL),
+ 		wbRstruct('Water Velocity', [
+			wbUnknown(XWCN),
+			wbStruct(XWCU, 'Water Velocity', [
+				wbFloat('X Offset'),
+				wbFloat('Y Offset'),
+				wbFloat('Z Offset'),
+				wbByteArray('Unknown', 4),
+				wbFloat('X Angle'),
+				wbFloat('Y Angle'),
+				wbFloat('Z Angle'),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4),
+				wbByteArray('Unknown', 4)
+			])
+		], []),
+
+    wbStruct(XCVL, 'Unknown', [
+			wbByteArray('Unknown', 4),
+			wbFloat('X Angle'),
+			wbByteArray('Unknown', 4)
+    ]),
 		wbUnknown(XCZA),
-		wbUnknown(XCZC),
+    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
     wbXSCL,
     wbFormIDCk(XSPC, 'Ref?', [REFR]),
 
@@ -12518,13 +12557,11 @@ begin
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], []),
+    {--- Ownership ---}
+    wbOwnership,
 
     wbInteger(XCNT, 'Item Count', itS32),
-    wbUnknown(XLRL),
+    wbFormIDCk(XLRL, 'Location Ref Type', [LCRT, NULL]),
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
@@ -12536,9 +12573,18 @@ begin
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbUnknown(SCHR),
+      wbStruct(SCHR, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4)
+      ]),
       wbUnknown(SCTX),
-      wbUnknown(PDTO)
+      wbStruct(PDTO, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [DIAL, NULL])
+      ])
     ], [])),
 
     {--- Flags ---}
@@ -12550,7 +12596,7 @@ begin
     ])),
 
     wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbUnknown(XFVC),
+    wbFloat(XFVC, 'Unknown'),
 
     wbEmpty(ONAM, 'Open by Default'),
 
@@ -12585,8 +12631,6 @@ begin
     ], [])),
 
     wbDataPosRot
-
-
 
 //
 //    {--- Audio Data ---}
@@ -13640,10 +13684,10 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
-    wbUnknown(MHDT),
     wbRArray('Array RNAM', wbRStruct('Unknown', [
       wbUnknown(RNAM)
     ], [])),
+    wbUnknown(MHDT),
     wbFULL,
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -13743,6 +13787,10 @@ begin
       'Grass',
       'Water'
     ]),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbUnknown(WCTR),
+      wbUnknown(LTMP)
+    ], [])),
     wbUnknown(TNAM),
     wbUnknown(UNAM),
     wbByteArray(OFST, 'Unknown', 0)
