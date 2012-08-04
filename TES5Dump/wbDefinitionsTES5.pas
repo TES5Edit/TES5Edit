@@ -745,6 +745,7 @@ const
   XTRI : TwbSignature = 'XTRI';
   XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
   XWCN : TwbSignature = 'XWCN'; { New To Skyrim }
+  XWCS : TwbSignature = 'XWCS'; { New To Skyrim }
   XWCU : TwbSignature = 'XWCU'; { New To Skyrim }
   XXXX : TwbSignature = 'XXXX';
   YNAM : TwbSignature = 'YNAM';
@@ -900,6 +901,7 @@ var
   wbDMDT: IwbSubRecordDef;
   wbCTDAParm1: IwbUnionDef;
   wbOwnership: IwbSubRecordStructDef;
+  wbCELLDATAFlags: IwbFlagsDef;
 // --- Pack ---
   wbPKDT: IwbSubRecordDef;
   wbPLDT: IwbSubRecordDef;
@@ -909,7 +911,8 @@ var
   wbPubPack: IwbSubRecordStructDef;
   wbProdTree: IwbSubRecordStructDef;
   wbINAM: IwbSubRecordDef;
-  wbPDTOs: IwbSubRecordDef;
+  wbPDTO: IwbSubRecordDef;
+  wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -2280,6 +2283,19 @@ begin
         'b': Result := 3; {Boolean}
       end;
   end;
+end;
+
+function wbCELLDATADecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container: IwbContainer;
+begin
+  Result := 1;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if Container.DateSize = 2 then
+    Result := 0;
 end;
 
 function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
@@ -5265,6 +5281,15 @@ begin
     wbSCROs
   ], [], cpNormal, False, wbEPF2DontShow, False, wbEmbeddedScriptAfterLoad);
 
+
+  wbPDTO :=
+    wbStruct(PDTO, 'Unknown', [
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Unknown', [DIAL, NULL])
+    ]);
+
+  wbPDTOs := wbRArray('Topic', wbPDTO, cpNormal, False, nil);
+
   wbEmbeddedScriptReq := wbRStruct('Embedded Script', [
     wbSCHRReq,
     wbByteArray(SCDA, 'Compiled Embedded Script', 0, cpNormal{, True}),
@@ -5319,7 +5344,7 @@ begin
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbEmbeddedScriptReq,
-			wbunknown(PDTO),
+      wbPDTOs,
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
     ], []),
 
@@ -6571,6 +6596,41 @@ begin
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, wbActorTemplateUseActorEffectList);
 
+  wbCELLDATAFlags := wbFlags([
+	  {0x00000001} 'Is Interior Cell',
+		{0x00000002} 'Has water',
+		{0x00000004} 'Invert Fast Travel behavior',
+		{0x00000008} 'Force hide land (exterior cell) / Oblivion interior (interior cell)',
+		{0x00000010} 'Unknown 5',
+		{0x00000020} 'Public place',
+		{0x00000040} 'Hand changed',
+		{0x00000080} 'Behave like exterior',
+		{0x00000100} 'Unknown 9',
+		{0x00000200} 'Unknown 10',
+		{0x00000400} 'Unknown 11',
+		{0x00000800} 'Unknown 12',
+		{0x00001000} 'Unknown 13',
+		{0x00002000} 'Unknown 14',
+		{0x00004000} 'Unknown 15',
+    {0x00008000} 'Unknown 16',
+    {0x00010000} 'Unknown 17',
+    {0x00020000} 'Unknown 18',
+    {0x00040000} 'Unknown 19',
+    {0x00080000} 'Unknown 20',
+    {0x00100000} 'Unknown 21',
+    {0x00200000} 'Unknown 22',
+    {0x00400000} 'Unknown 23',
+    {0x00800000} 'Unknown 24',
+    {0x01000000} 'Unknown 25',
+    {0x02000000} 'Unknown 26',
+    {0x04000000} 'Unknown 27',
+    {0x08000000} 'Unknown 28',
+    {0x10000000} 'Unknown 29',
+    {0x20000000} 'Unknown 30',
+    {0x40000000} 'Unknown 31',
+    {0x80000000} 'Unknown 32'
+  ]);
+
 //------------------------------------------------------------------------------
 // Begin CELL
 //------------------------------------------------------------------------------
@@ -6594,8 +6654,8 @@ begin
 // Pattern 18: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO XEZN XCAS XCCM XWEM
 // Pattern 19: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                               XCMO XOWN XWEM XCAS
 // Pattern 20: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM XCCM XEZN XCAS
-// Pattern 21:
-// Pattern 22:
+// Pattern 21: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN           XWCN XWCU
+// Pattern 22:           DATA      XCLC           LTMP XCLW XWCS XWCU XCIM
 // Pattern 23:
 // Pattern 24:
 // Pattern 25:
@@ -6611,24 +6671,15 @@ begin
 // FULL
     wbFULL,
 // DATA
-    wbInteger(DATA, 'Flags', itU16, wbFlags([
-			{0x00000001}'Is Interior Cell',
-			{0x00000002}'Has water',
-			{0x00000004}'Invert Fast Travel behavior',
-			{0x00000008}'Force hide land (exterior cell) / Oblivion interior (interior cell)',
-			{0x00000010}'Unknown 5',
-			{0x00000020}'Public place',
-			{0x00000040}'Hand changed',
-			{0x00000080}'Behave like exterior',
-			{0x00000100}'Unknown 9',
-			{0x00000200}'Unknown 10',
-			{0x00000400}'Unknown 11',
-			{0x00000800}'Unknown 12',
-			{0x00001000}'Unknown 13',
-			{0x00002000}'Unknown 14',
-			{0x00004000}'Unknown 15',
-			{0x00008000}'Unknown 16'
-    ]), cpNormal, True),
+    wbUnion(PKDT, 'General', wbCELLDATADecider, [
+      wbStruct('General', [
+        wbInteger('Flags', itU16, wbCELLDATAFlags)
+      ]),
+      wbByteArray('Cell Data Flags', 0)
+//      wbStruct('General', [
+//        wbInteger('Flags', itU16, wbCELLDATAFlags)
+//      ])
+    ]),
 // XCLC Not sure which should go first
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
@@ -6706,15 +6757,18 @@ begin
 // XCLR
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormID(XLCN, 'Unknown'),
+//    wbRStruct('XWCS XWCU', [
+    wbUnknown(XWCS),
+    wbUnknown(XWCU),
+//    ], []),
 		wbRUnion('Union', [
-// XCIM XLCN
+// XCIM XCMO
       wbRStruct('XCIM XCMO', [
         wbFormIDCk(XCIM, 'Image Space', [IMGS]), // Moved from between XCLR and XCET
         wbFormIDCk(XCMO, 'Music Type', [MUSC])
       ], []),
-// XLCN XCIM
+// XCMO XCIM
       wbRStruct('XCMO XCIM', [
-        // XCMO
         wbFormIDCk(XCMO, 'Music Type', [MUSC]),
         wbFormIDCk(XCIM, 'Image Space', [IMGS]) // Moved from between XCLR and XCET
       ], [])
@@ -6739,7 +6793,7 @@ begin
 // EDID FULL DATA XCLL LTMP XCLW XLCN XCMO XCIM      XCCM XEZN XCAS
 // EDID FULL DATA XCLL LTMP XCLW XLCN      XCIM XCMO      XEZN XCAS
 		wbRUnion('Union', [
-// XCAS XWEM XEZN
+// XCAS XEZN XCMO XWEM
       wbRStruct('XCAS XEZN XCMO XWEM', [
         wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]), // Moved from between XOWN (Ownership) and XCMT
         wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
@@ -6747,7 +6801,7 @@ begin
         wbFormIDCk(XCMO, 'Music Type', [MUSC]),
         wbUnknown(XWEM)
       ], []),
-// XEZN XCAS
+// XWEM XEZN XCAS
       wbRStruct('XWEM XEZN XCAS', [
         wbUnknown(XWEM),
         wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
@@ -11784,7 +11838,6 @@ begin
   ], []));
 
   wbINAM := wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True);
-  wbPDTOs := wbArray(PDTO, 'Topic', wbFormIDCk('Topic', [DIAL, NULL]), 0, nil, nil, cpNormal, True);
 
   wbPubPack := wbRStruct('Public Package Data', [
     wbRArray('Activities', wbRStruct('Activity', [
@@ -12581,10 +12634,7 @@ begin
         wbByteArray('Unknown', 4)
       ]),
       wbUnknown(SCTX),
-      wbStruct(PDTO, 'Unknown', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Unknown', [DIAL, NULL])
-      ])
+      wbPDTOs
     ], [])),
 
     {--- Flags ---}
@@ -13681,6 +13731,12 @@ begin
 //------------------------------------------------------------------------------
 // Pattern 1: EDID, Multi-RNAM, FULL CNAM NAM2 NAM3 NAM4 DNAM MNAM ONAM NAMA
 //            DATA NAM0 NAM9 ZNAM TNAM UNAM OFST
+// Pattern 2: EDID, Multi-RNAM, FULL WCTR LTMP XEZN XLCN WNAM PNAM CNAM
+//            NAM2 NAM3 NAM4 DNAM ONAM NAMA DATA NAM0 NAM9 ZNAM OFST
+// Pattern 3: EDID, Multi-RNAM,
+//            MHDT FULL XEZN XLCN WNAM PNAM CNAM NAM2 NAM3 NAM4 DNAM ONAM NAMA
+//            DATA NAM0 NAM9 TNAM UNAM OFST
+//
 //------------------------------------------------------------------------------
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
@@ -13689,8 +13745,18 @@ begin
     ], [])),
     wbUnknown(MHDT),
     wbFULL,
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbRStruct('Unknonw', [
+      wbUnknown(WCTR),
+      wbUnknown(LTMP)
+    ], []),
+    wbRStruct('XLCN XEZN', [
+      wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN])
+    ], []),
+    wbRStruct('XEZN XLCN', [
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+      wbFormIDCk(XLCN, 'Location', [LCTN, NULL])
+    ], []),
     wbRStruct('Parent', [
       wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
       wbStruct(PNAM, '', [
@@ -13787,10 +13853,6 @@ begin
       'Grass',
       'Water'
     ]),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbUnknown(WCTR),
-      wbUnknown(LTMP)
-    ], [])),
     wbUnknown(TNAM),
     wbUnknown(UNAM),
     wbByteArray(OFST, 'Unknown', 0)
