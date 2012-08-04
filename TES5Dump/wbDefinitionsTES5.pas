@@ -8473,7 +8473,8 @@ begin
         wbFormIDCk('Unknown', [NAVM]),
         wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
         wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
-        wbArray('Doors', wbFormIDCk('Door', [REFR]), -1)
+        wbArray('Doors', wbFormIDCk('Door', [REFR]), -1),
+        wbByteArray('Unknown')
       ])
     )
   ]);
