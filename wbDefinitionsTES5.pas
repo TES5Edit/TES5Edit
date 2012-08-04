@@ -2294,7 +2294,7 @@ begin
     Container := aElement.Container
   else
     Container := aElement as IwbContainer;
-  if Container.DateSize = 2 then
+  if Container.DateSize = 1 then
     Result := 0;
 end;
 
@@ -6656,7 +6656,7 @@ begin
 // Pattern 20: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM XCCM XEZN XCAS
 // Pattern 21: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN           XWCN XWCU
 // Pattern 22:           DATA      XCLC           LTMP XCLW XWCS XWCU XCIM
-// Pattern 23:
+// Pattern 23: EDID DATA XCLC TVDT MHDT LTMP XCLW XCLR XLCN XWCN XWCU
 // Pattern 24:
 // Pattern 25:
 // Pattern 26:
@@ -6672,13 +6672,12 @@ begin
     wbFULL,
 // DATA
     wbUnion(DATA, 'General', wbCELLDATADecider, [
-      wbStruct('General', [
-        wbInteger('Flags', itU16, wbCELLDATAFlags)
+      wbStruct('General itU8', [
+        wbInteger('Flags', itU8, wbCELLDATAFlags)
       ]),
-      wbByteArray('Cell Data Flags', 0)
-//      wbStruct('General', [
-//        wbInteger('Flags', itU16, wbCELLDATAFlags)
-//      ])
+      wbStruct('General itU16', [
+        wbInteger('Flags', itU16, wbCELLDATAFlags)
+      ])
     ]),
 // XCLC Not sure which should go first
     wbStruct(XCLC, 'Grid', [
@@ -6759,6 +6758,7 @@ begin
     wbFormID(XLCN, 'Unknown'),
 //    wbRStruct('XWCS XWCU', [
     wbUnknown(XWCS),
+    wbUnknown(XWCN),
     wbUnknown(XWCU),
 //    ], []),
 		wbRUnion('Union', [
