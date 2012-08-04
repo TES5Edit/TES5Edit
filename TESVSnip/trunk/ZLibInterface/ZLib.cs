@@ -22,7 +22,7 @@ namespace TESVSnip.ZLibInterface
             }
 
             var buffer = new byte[size];
-            var inflater = new Inflater(input.)
+            //var inflater = new Inflater(input.)
         }
     }
 }
