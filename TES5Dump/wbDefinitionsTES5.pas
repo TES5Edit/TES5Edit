@@ -6671,7 +6671,7 @@ begin
 // FULL
     wbFULL,
 // DATA
-    wbUnion(PKDT, 'General', wbCELLDATADecider, [
+    wbUnion(DATA, 'General', wbCELLDATADecider, [
       wbStruct('General', [
         wbInteger('Flags', itU16, wbCELLDATAFlags)
       ]),
