@@ -4703,7 +4703,7 @@ begin
     {0x00100000}'Unknown 21',
     {0x00200000}'Unknown 22',
     {0x00400000}'Unknown 23',
-    {0x00800000}'Unknown 24',
+    {0x00800000}'Is Marker',
     {0x01000000}'Unknown 25',
     {0x02000000}'Obstacle',
     {0x03000000}'NavMesh Gen - Filter',
@@ -5510,8 +5510,8 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL, // wbMODL MODL, MODB, MODT, MODS, MODD
-    wbDEST, // wbDEST DEST, DSTD, DMDL, DMDT, DSTF
+    wbMODL,
+    wbDEST,
     wbKeywords,
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
@@ -7478,17 +7478,19 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
-    wbSCRI,
     wbDEST,
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
-    wbFormIDCk(ANAM, 'Sound - Close', [SOUN]),
-    wbFormIDCk(BNAM, 'Sound - Looping', [SOUN]),
+    wbRStruct('Sound', [
+      wbFormIDCk(SNAM, 'Open', [SOUN]),
+      wbFormIDCk(ANAM, 'Close', [SOUN]),
+      wbFormIDCk(BNAM, 'Loop', [SOUN])
+    ], [], cpNormal, False, nil, True),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       '',
-      'Automatic Door',
+      'Automatic',
       'Hidden',
       'Minimal Use',
-      'Sliding Door'
+      'Sliding',
+      'Do Not Open in Combat Search'
     ]), cpNormal, True)
   ]);
 
@@ -7650,6 +7652,7 @@ begin
       wbFloat('Addon Models - Scale End'),
       wbFloat('Addon Models - Scale In Time'),
       wbFloat('Addon Models - Scale Out Time'),
+      wbFormIDCk('Ambient Sound', [SNDR, NULL]),
       wbByteArray('Unknown', 0)
     ], cpNormal, True, nil)
   ], False, nil, cpNormal, False, wbEFSHAfterLoad);
@@ -9337,10 +9340,13 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    //wbFormIDCk(SNAM, 'Sound', [SOUN]),
+    wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
-      wbByteArray('Unknown', 2)
+      wbInteger('Flags', itU16, wbFlags([
+        'Unknown 0',
+        'Always Loaded'
+      ]))
     ], cpNormal, True)
   ]);
 
@@ -9503,14 +9509,16 @@ begin
     wbEDIDReq,
     wbStruct(DATA, '', [
       wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
+      wbFormIDCk('Location', [LCTN, NULL]),
       wbInteger('Rank', itS8),
-      wbInteger('Minimum Level', itS8),
+      wbInteger('Min Level', itS8),
       wbInteger('Flags', itU8, wbFlags([
         'Never Resets',
-        'Match PC Below Minimum Level'
+        'Match PC Below Minimum Level',
+        'Disable Combat Boundary'
       ])),
-      wbByteArray('Unknown', 0)
-    ], cpNormal, True)
+      wbInteger('Max Level', itS8)
+    ], cpNormal, True, nil, 2)
   ]);
 
   wbRecord(LCTN, 'LCTN', [
@@ -9618,50 +9626,13 @@ begin
   ]);
 
   wbRecord(DOBJ, 'Default Object Manager', [
-    wbArray(DNAM, 'Unknown',
-      wbStruct('Unknown', [
-        wbString('Unknown', 4, cpIgnore, False, wbNeverShow),
-        wbFormID('Unknown')
+    wbArray(DNAM, 'Objects',
+      wbStruct('Object', [
+        wbString('Use', 4),
+        wbFormID('Object ID')
       ]), 0, nil, nil, cpNormal, True
     )
   ]);
-//    wbEDIDReq,
-//    wbArray(DATA, 'Default Objects', wbFormID('Default Object'), [
-//      'Stimpack',
-//      'SuperStimpack',
-//      'RadX',
-//      'RadAway',
-//      'Morphine',
-//      'Perk Paralysis',
-//      'Player Faction',
-//      'Mysterious Stranger NPC',
-//      'Mysterious Stranger Faction',
-//      'Default Music',
-//      'Battle Music',
-//      'Death Music',
-//      'Success Music',
-//      'Level Up Music',
-//      'Player Voice (Male)',
-//      'Player Voice (Male Child)',
-//      'Player Voice (Female)',
-//      'Player Voice (Female Child)',
-//      'Eat Package Default Food',
-//      'Every Actor Ability',
-//      'Drug Wears Off Image Space',
-//      'Doctor''s Bag',
-//      'Miss Fortune NPC',
-//      'Miss Fortune Faction',
-//      'Meltdown Explosion',
-//      'Unarmed Forward PA',
-//      'Unarmed Backward PA',
-//      'Unarmed Left PA',
-//      'Unarmed Right PA',
-//      'Unarmed Crouch PA',
-//      'Unarmed Counter PA',
-//      'Spotter Effect',
-//      'Item Detected Efect',
-//      'Cateye Mobile Effect (NYI)'
-//    ], cpNormal, True)
 
   wbRecord(LGTM, 'Lighting Template', [
     wbEDIDReq,
@@ -10033,14 +10004,18 @@ begin
   wbRecord(DUAL, 'DUAL', [
     wbEDIDReq,
     wbOBNDReq,
-    wbStruct(DATA, 'Values', [
+    wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
       wbFormIDCk('Explosion', [EXPL, NULL]),
       wbFormIDCk('Effect Shader', [EFSH, NULL]),
-      wbFormIDCk('Art Object', [ARTO, NULL]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ])
+      wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
+      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      wbInteger('Inherit Scale', itU32, wbFlags([
+        'Hit Effect Art',
+        'Projectile',
+        'Explosion'
+      ]))
+    ], cpNormal, True)
   ]);
 
   wbRecord(SNCT, 'SNCT', [
