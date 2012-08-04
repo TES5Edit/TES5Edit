@@ -13610,23 +13610,34 @@ begin
 //------------------------------------------------------------------------------
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
+    wbUnknown(MHDT),
     wbRArray('Array RNAM', wbRStruct('Unknown', [
       wbUnknown(RNAM)
     ], [])),
     wbFULL,
+    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
     wbRStruct('Parent', [
       wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
       wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
+        wbInteger('Flags', itU16, wbFlags([
           {0x00000001}'Use Land Data',
           {0x00000002}'Use LOD Data',
           {0x00000004}'Use Map Data',
           {0x00000008}'Use Water Data',
           {0x00000010}'Use Climate Data',
-          {0x00000020}'Use Image Space Data'
-        ], True)),
-        wbByteArray('Unknown', 1)
+          {0x00000020}'Use Image Space Data',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8',
+          {0x00000100}'Unknown 9',
+          {0x00000200}'Unknown 10',
+          {0x00000400}'Unknown 11',
+          {0x00000800}'Unknown 12',
+          {0x00001000}'Unknown 13',
+          {0x00002000}'Unknown 14',
+          {0x00004000}'Unknown 15',
+          {0x00008000}'Unknown 16'
+        ], True))
       ], cpNormal, True)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
@@ -13655,17 +13666,18 @@ begin
       ])
     ]),
     wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset')
+      wbFloat('World Map Scale'), // 'World Map Scale'
+      wbFloat('Cell X Offset'), // 'Cell X Offset'
+      wbFloat('Cell Y Offset'), // 'Cell Y Offset'
+      wbFloat('Unknown')
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbUnknown(NAMA),
+    wbFloat(NAMA, 'Unknown'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small World',
       {0x02} 'Can''t Fast Travel',
-      {0x04} '',
-      {0x08} '',
+      {0x04} 'Unknown 3',
+      {0x08} 'Unknown 4',
       {0x10} 'No LOD Water',
       {0x20} 'No LOD Noise',
       {0x40} 'Don''t Allow NPC Fall Damage',
