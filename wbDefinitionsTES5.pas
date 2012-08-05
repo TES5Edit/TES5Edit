@@ -870,6 +870,7 @@ var
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbStructDef;
   wbScriptFragments: IwbUnionDef;
+  wbLocationEnum: IwbEnumDef;
   wbATKD: IwbSubRecordDef; {Attack Data}
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
@@ -2316,23 +2317,23 @@ begin
     if SameText(s, OrderedList) then
       Result := False;
   end;
-  if Result then begin
-    MainRecord := aContainer.ContainingMainRecord;
-    if not Assigned(MainRecord) then
-      Exit;
-    MainRecord := MainRecord.MasterOrSelf;
-    if not Assigned(MainRecord) then
-      Exit;
-    _File := MainRecord._File;
-    if not Assigned(_File) then
-      Exit;
-    if not SameText(_File.FileName, 'WeaponModKits.esp') then
-      Exit;
-    case (MainRecord.FormID and $FFFFFF) of
-      $0130EB, $0130ED, $01522D, $01522E, $0158D5, $0158D6, $0158D7, $0158D8, $0158D9, $0158DA, $0158DC, $0158DD, $018E20:
-        Result := False;
-    end;
-  end;
+//  if Result then begin
+//    MainRecord := aContainer.ContainingMainRecord;
+//    if not Assigned(MainRecord) then
+//      Exit;
+//    MainRecord := MainRecord.MasterOrSelf;
+//    if not Assigned(MainRecord) then
+//      Exit;
+//    _File := MainRecord._File;
+//    if not Assigned(_File) then
+//      Exit;
+//    if not SameText(_File.FileName, 'WeaponModKits.esp') then
+//      Exit;
+//    case (MainRecord.FormID and $FFFFFF) of
+//      $0130EB, $0130ED, $01522D, $01522E, $0158D5, $0158D6, $0158D7, $0158D8, $0158D9, $0158DA, $0158DC, $0158DD, $018E20:
+//        Result := False;
+//    end;
+//  end;
 end;
 
 function wbPerkDATADecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -4326,32 +4327,33 @@ end;
 //  end;
 //end;
 
-procedure wbFACTAfterLoad(const aElement: IwbElement);
-var
-  Container: IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Container.ElementExists['CNAM'] then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    Container.RemoveElement('CNAM');
-  finally
-    wbEndInternalEdit;
-  end;
-end;
+{ Not used is Skyrim }
+//procedure wbFACTAfterLoad(const aElement: IwbElement);
+//var
+//  Container: IwbContainerElementRef;
+//  MainRecord   : IwbMainRecord;
+//begin
+//  if wbBeginInternalEdit then try
+//    if not Supports(aElement, IwbContainerElementRef, Container) then
+//      Exit;
+//
+//    if Container.ElementCount < 1 then
+//      Exit;
+//
+//    if not Container.ElementExists['CNAM'] then
+//      Exit;
+//
+//    if not Supports(aElement, IwbMainRecord, MainRecord) then
+//      Exit;
+//
+//    if MainRecord.IsDeleted then
+//      Exit;
+//
+//    Container.RemoveElement('CNAM');
+//  finally
+//    wbEndInternalEdit;
+//  end;
+//end;
 
 procedure wbLIGHAfterLoad(const aElement: IwbElement);
 var
@@ -4792,6 +4794,23 @@ begin
      'Normal',
      'Silent'
     ]);
+
+  wbLocationEnum := wbEnum([
+      {0} 'Near reference',
+      {1} 'In cell',
+      {2} 'Near package start location',
+      {3} 'Near editor location',
+      {4} 'Object ID',
+      {5} 'Object Type',
+      {6} 'Near linked reference',
+      {7} 'At package location',
+      {8} 'Alias (reference)',
+      {9} 'Alias (location)',
+     {10} 'Unknown 10',
+     {11} 'Unknown 11',
+     {12} 'Near self'
+    ]);
+
 
   wbWeaponAnimTypeEnum := wbEnum([
     {00} 'Hand to Hand',
@@ -7830,7 +7849,7 @@ begin
   wbRecord(EYES, 'Eyes', [
     wbEDIDReq,
     wbFULLReq,
-    wbString(ICON, 'Texture', 0{, cpNormal, True??}),
+    wbString(ICON, 'Texture', 0, cpNormal, True),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x00000001}'Playable',
       {0x00000002}'Not Male',
@@ -7848,21 +7867,16 @@ begin
       wbFormIDCkNoReach('Faction', [FACT, RACE]),
       wbInteger('Modifier', itS32),
       wbInteger('Group Combat Reaction', itU32, wbEnum([
-      {0x00000001}'Ally',
-      {0x00000002}'Friend',
-      {0x00000004}'Neutral',
-      {0x00000008}'Enemy',
-      {0x00000010}'Unknown 5',
-      {0x00000020}'Unknown 6',
-      {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8'
+      {0x00000001}'Neutral',
+      {0x00000002}'Enemy',
+      {0x00000004}'Ally',
+      {0x00000008}'Friend'
     ]))
   ]);
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
   wbRecord(FACT, 'Faction', [
     wbEDIDReq,
-// General Tab ---------------------------------------------------------------
     wbFULL,
     wbXNAMs,
     wbStruct(DATA, 'Flags', [
@@ -7873,26 +7887,17 @@ begin
         {0x00000008}'Unknown 4',
         {0x00000010}'Unknown 5',
         {0x00000020}'Unknown 6',
-// Track Crime ---------------------------------------------------------------
         {0x00000040}'Track Crime',
-// Ignores Crimes Against non-members ----------------------------------------
-//   Murder - Flag -----------------------------------------------------------
-//   Assult - Flag -----------------------------------------------------------
-//   Stealing - Flag ---------------------------------------------------------
-//   Trespass - Flag ---------------------------------------------------------
-//   Do not report crimes against members - Flag -----------------------------
-//   Pickpocket - Flag -------------------------------------------------------
-//   WereWolf - Flag ---------------------------------------------------------
-        {0x00000080}'Murder',
-        {0x00000100}'Assult',
-        {0x00000200}'Stealing',
-        {0x00000400}'Trespass',
+        {0x00000080}'Ignore Crimes: Murder',
+        {0x00000100}'Ignore Crimes: Assult',
+        {0x00000200}'Ignore Crimes: Stealing',
+        {0x00000400}'Ignore Crimes: Trespass',
         {0x00000800}'Do Not Report Crimes Against Members',
         {0x00001000}'Crime Gold - Use Defaults',
-        {0x00002000}'Pickpocket',
+        {0x00002000}'Ignore Crimes: Pickpocket',
         {0x00004000}'Vendor',
         {0x00008000}'Can Be Owner',
-        {0x00010000}'Werewolf',
+        {0x00010000}'Ignore Crimes: Werewolf',
         {0x00020000}'Unknown 18',
         {0x00040000}'Unknown 19',
         {0x00080000}'Unknown 20',
@@ -7910,33 +7915,12 @@ begin
         {0x80000000}'Unknown 32'
       ]))
     ], cpNormal, True, nil, 1),
-//    wbStruct(DATA, '', [
-//      wbInteger('Flags 1', itU8, wbFlags([
-//        'Hidden from PC',
-//        'Evil',
-//        'Special Combat'
-//      ])),
-//      wbInteger('Flags 2', itU8, wbFlags([
-//        'Track Crime',
-//        'Allow Sell'
-//      ])),
-//      wbByteArray('Unused', 2)
-//    ], cpNormal, True, nil, 1),
-    wbFormID(JAIL, 'Unknown'),
-    wbFormID(WAIT, 'Unknown'),
-    wbFormID(STOL, 'Unknown'),
-    wbFormID(PLCN, 'Unknown'),
-    wbFormID(CRGR, 'Unknown'),
-    wbFormID(JOUT, 'Unknown'),
-//    wbFloat(CNAM, 'Unused'),
-//     Crime Gold ------------------------------------------------------------
-//       Murder - Int --------------------------------------------------------
-//       Assult - Int --------------------------------------------------------
-//       Pickpocket - Int ----------------------------------------------------
-//       Trespass - Int ------------------------------------------------------
-//       Steal Mult. - Float -------------------------------------------------
-//       Escape - Int --------------------------------------------------------
-//       Werewolf - Int ------------------------------------------------------
+    wbFormIDCk(JAIL, 'Exterior Jail Marker', [REFR]),
+    wbFormIDCk(WAIT, 'Follower Wait Marker', [REFR]),
+    wbFormIDCk(STOL, 'Stolen Goods Container', [REFR]),
+    wbFormIDCk(PLCN, 'Player Inventory Container', [REFR]),
+    wbFormIDCk(CRGR, 'Shared Crime Faction List', [FLST]),
+    wbFormIDCk(JOUT, 'Jail Outfit', [OTFT]),
     wbStruct(CRVA, 'Grime Gold', [
       {01} wbInteger('Arrest', itU8, wbEnum(['False', 'True'])),
       {02} wbInteger('Attack On Sight', itU8, wbEnum(['False', 'True'])),
@@ -7948,30 +7932,15 @@ begin
       {02} wbFloat('Steal Multiplier'),
       {02} wbInteger('Escape', itU16),
       {02} wbInteger('Werewolf', itU16)
-      ]),
-// Ranks Tab ------------------------------------------------------------------
+      ], cpNormal, True, nil, 7),
     wbRStructsSK('Ranks', 'Rank', [0], [
       wbInteger(RNAM, 'Rank#', itU32),
-      wbLString(MNAM, 'Male', 0, cpTranslate),
-      wbLString(FNAM, 'Female', 0, cpTranslate),
+      wbLString(MNAM, 'Male Title'),
+      wbLString(FNAM, 'Female Title'),
       wbString(INAM, 'Insignia Unused')
     ], []),
-//    wbFormIDCk(WMI1, 'Reputation', [REPU])
-// Crime Tab ------------------------------------------------------------------
-// Track Crime ---------------------------------------------------------------
-//   Exterior Jail Marker ----------------------------------------------------
-//   Follower Wait Marker ----------------------------------------------------
-//   Stolen Goods Container --------------------------------------------------
-//   Player Inventory Container ----------------------------------------------
-//   Shared Crime Faction List -----------------------------------------------
-//   Attack On Site - Flag ---------------------------------------------------
-//   Arrest - Flag -----------------------------------------------------------
-// Vendor Tab -----------------------------------------------------------------
-    wbFormID(VEND, 'Vendor Buy/Sell List'),
-    wbFormID(VENC, 'Merchant Container'),
-// VENV - Unknown: 01 00 02 00 00 00 00 00 00 01 00 00
-// 12 bytes or six intU16
-//    wbUnknown(VENV),
+    wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
+    wbFormIDCk(VENC, 'Merchant Container', [REFR]),
     wbStruct(VENV, 'Grime Gold', [
       {01} wbInteger('Start Hour', itU16),
       {02} wbInteger('End Hour', itU16),
@@ -7982,54 +7951,14 @@ begin
       {02} wbByteArray('Unknown 2', 2)
       ]),
     wbStruct(PLVD, 'Location', [
-      wbInteger('Location Type', itU8, wbEnum([], [
-          0, 'Near Reference',
-          1, 'In Cell',
-          2, 'Near Packafe Start Location',
-          3, 'Near Editor Location',
-          6, 'KYWD Reference',
-          12, 'Near Self'
-        ])),
-      wbByteArray('Unknown 1', 3),
+      wbInteger('Location Type', itU8, wbLocationEnum),
+      wbByteArray('Unknown', 3),
       wbFormID('Location Reference'),
-      wbByteArray('Unknown 2', 4)
+      wbByteArray('Unknown', 4)
     ]),
-//    wbUnknown(PLVD),
-    wbCITC, // This is called here because it Can be 0
-    wbCTDAs // Not compatable with Skyrim at the moment
-  ], False, nil, cpNormal, False, wbFACTAfterLoad);
-
-//----------------------------------------------------------------------------
-// Begin Old FACT
-//----------------------------------------------------------------------------
-//  wbRecord(FACT, 'Faction', [
-//    wbEDIDReq,
-//    wbFULL,
-//    wbXNAMs,
-//    wbStruct(DATA, '', [
-//      wbInteger('Flags 1', itU8, wbFlags([
-//        'Hidden from PC',
-//        'Evil',
-//        'Special Combat'
-//      ])),
-//      wbInteger('Flags 2', itU8, wbFlags([
-//        'Track Crime',
-//        'Allow Sell'
-//      ])),
-//      wbByteArray('Unused', 2)
-//    ], cpNormal, True, nil, 1),
-//    wbFloat(CNAM, 'Unused'),
-//    wbRStructsSK('Ranks', 'Rank', [0], [
-//      wbInteger(RNAM, 'Rank#', itS32),
-//      wbString(MNAM, 'Male', 0, cpTranslate),
-//      wbString(FNAM, 'Female', 0, cpTranslate),
-//      wbString(INAM, 'Insignia (Unused)')
-//    ], []),
-//    wbFormIDCk(WMI1, 'Reputation', [REPU])
-//  ], False, nil, cpNormal, False, wbFACTAfterLoad);
-//----------------------------------------------------------------------------
-// End Old FACT
-//----------------------------------------------------------------------------
+    wbCITC,
+    wbCTDAs
+  ], False, nil, cpNormal, False, nil {wbFACTAfterLoad});
 
   wbRecord(FURN, 'Furniture', [
     wbEDIDReq,
@@ -8037,7 +7966,6 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODLReq,
-    wbSCRI,
     wbDEST,
     wbKeywords,
     wbUnknown(PNAM),
@@ -9802,22 +9730,22 @@ begin
     wbUnknown(TNAM)
   ]);
 
-  wbRecord(FSTP, 'FSTP', [
+  wbRecord(FSTP, 'Footstep', [
     wbEDIDReq,
-    wbUnknown(DATA),
-    wbUnknown(ANAM)
+    wbFormIDCk(DATA, 'Impact Data Set', [IPDS, NULL], False, cpNormal, True),
+    wbString(ANAM, 'Tag', 0, cpNormal, True)
   ]);
 
-  wbRecord(FSTS, 'FSTS', [
+  wbRecord(FSTS, 'Footstep Set', [
     wbEDIDReq,
-    wbStruct(XCNT, 'Lighting', [
-      wbInteger('Count Of Walk Forward Set', itU32),
-      wbInteger('Count Of Run Forward Set', itU32),
-      wbInteger('Count Of Walk Forward Alternate Set', itU32),
-      wbInteger('Count Of Run Forward Alternate Set', itU32),
-      wbInteger('Count Of Walk Forward Alternate 2 Set', itU32)
-    ]),
-    wbArray(DATA, 'Footstep Sets', wbFormID('Footstep'), 0, nil, nil, cpNormal, True)
+    wbStruct(XCNT, 'Count', [
+      wbInteger('Walk Forward Sets', itU32),
+      wbInteger('Run Forward Sets', itU32),
+      wbInteger('Walk Forward Alternate Sets', itU32),
+      wbInteger('Run Forward Alternate Sets', itU32),
+      wbInteger('Walk Forward Alternate 2 Sets', itU32)
+    ], cpNormal, True),
+    wbArray(DATA, 'Footstep Sets', wbFormIDCk('Footstep', [FSTP]), 0, nil, nil, cpNormal, True)
   ]);
 
   wbRecord(SMBN, 'SMBN', [
@@ -11761,21 +11689,7 @@ begin
   ], cpNormal, True);
 
   wbPLDT := wbStruct(PLDT, 'Location', [
-    wbInteger('Type', itS32, wbEnum([
-      {0} 'Near reference',
-      {1} 'In cell',
-      {2} 'Near package start location',
-      {3} 'Near editor location',
-      {4} 'Object ID',
-      {5} 'Object Type',
-      {6} 'Near linked reference',
-      {7} 'At package location',
-      {8} 'Alias (reference)',
-      {9} 'Alias (location)',
-     {10} 'Unknown 10',
-     {11} 'Unknown 11',
-     {12} 'Near self'
-    ])),
+    wbInteger('Type', itS32, wbLocationEnum),
     wbUnion('Location Value', wbPxDTLocationDecider, [
       {0} wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
       {1} wbFormIDCkNoReach('Cell', [CELL]),
@@ -13284,14 +13198,15 @@ begin
   ]);
 
   wbRecord(FLOR, 'Flora', [
-    wbEDID,
+    wbEDIDReq,
     wbVMAD,
-    wbOBND,
-    wbFULL,
+    wbOBNDReq,
+    wbFULLReq,
     wbMODL,
-    wbSCRI,
+    wbDEST,
+    wbKeywords,
     wbUnknown(PNAM),
-    wbLString(RNAM, 'Unknown'),
+    wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
