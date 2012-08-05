@@ -106,7 +106,14 @@ namespace DotZLib
         #region DLL imports
 
         [DllImport("ZLIB1.dll", CallingConvention=CallingConvention.Cdecl)]
-        private static extern uint crc32(uint crc, int data, uint length);
+        [return: MarshalAs(UnmanagedType.U4)]
+        private static extern uint crc32(
+            [MarshalAs(UnmanagedType.U4)]
+            uint crc,
+            [MarshalAs(UnmanagedType.I4)]
+            int data,
+            [MarshalAs(UnmanagedType.U4)]
+            uint length);
 
         #endregion
 

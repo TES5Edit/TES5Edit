@@ -216,10 +216,12 @@ namespace DotZLib
     public class Info
     {
         #region DLL imports
-        [DllImport("ZLIB1.dll", CallingConvention=CallingConvention.Cdecl)]
+        [DllImport("ZLIB1.dll", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.U4)]
         private static extern uint zlibCompileFlags();
 
-        [DllImport("ZLIB1.dll", CallingConvention=CallingConvention.Cdecl)]
+        [DllImport("ZLIB1.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [return: MarshalAs(UnmanagedType.LPStr)]
         private static extern string zlibVersion();
         #endregion
 

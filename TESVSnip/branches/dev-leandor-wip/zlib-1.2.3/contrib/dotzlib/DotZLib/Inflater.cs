@@ -18,17 +18,35 @@ namespace DotZLib
     public class Inflater : CodecBase
 	{
         #region Dll imports
-        [DllImport("ZLIB1.dll", CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-        private static extern int inflateInit_(ref ZStream sz, string vs, int size);
+        [DllImport("ZLIB1.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [return: MarshalAs(UnmanagedType.I4)]
+        private static extern int inflateInit_(
+            [MarshalAs(UnmanagedType.Struct)]
+            ref ZStream sz,
+            [MarshalAs(UnmanagedType.LPStr)]
+            string vs,
+            [MarshalAs(UnmanagedType.I4)]
+            int size);
 
-        [DllImport("ZLIB1.dll", CallingConvention=CallingConvention.Cdecl)]
-        private static extern int inflate(ref ZStream sz, int flush);
+        [DllImport("ZLIB1.dll", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.I4)]
+        private static extern int inflate(
+            [MarshalAs(UnmanagedType.Struct)]
+            ref ZStream sz,
+            [MarshalAs(UnmanagedType.I4)]
+            int flush);
 
-        [DllImport("ZLIB1.dll", CallingConvention=CallingConvention.Cdecl)]
-        private static extern int inflateReset(ref ZStream sz);
+        [DllImport("ZLIB1.dll", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.I4)]
+        private static extern int inflateReset(
+            [MarshalAs(UnmanagedType.Struct)]
+            ref ZStream sz);
 
-        [DllImport("ZLIB1.dll", CallingConvention=CallingConvention.Cdecl)]
-        private static extern int inflateEnd(ref ZStream sz);
+        [DllImport("ZLIB1.dll", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.I4)]
+        private static extern int inflateEnd(
+            [MarshalAs(UnmanagedType.Struct)]
+            ref ZStream sz);
         #endregion
 
         /// <summary>
