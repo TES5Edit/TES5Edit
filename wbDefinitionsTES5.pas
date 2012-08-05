@@ -4520,6 +4520,7 @@ begin
     wbInteger(COCT, 'Count', itU32),
     wbCNTOs
   ], []);
+
   wbCOCTReq := wbRStruct('Items', [
     wbInteger(COCT, 'Count', itU32, nil, cpNormal, True),
     wbCNTOs
@@ -11909,7 +11910,7 @@ begin
     wbUnknown(ANAM),
     wbRArray('ALST/ALLS',
       wbRUnion('Union', [
-        wbRStruct('ALST/ALLS', [
+        wbRStruct('ALST Struct', [
           wbUnknown(ALST),
           wbString(ALID, 'Alias Name', 0, cpTranslate),
           wbUnknown(FNAM),
@@ -11927,9 +11928,12 @@ begin
           wbUnknown(ALFA),
           wbUnknown(ALRT),
           wbKeywords,
+          // When there is no COCT, CNTO comes right after Keywords and produces an error
+          // Error: record QUST contains unexpected (or out of order) subrecord CNTO 4F544E43
           wbUnknown(ALEQ),
           wbUnknown(ALEA),
-          wbCOCT,
+          wbInteger(COCT, 'Count', itU32),
+          wbCNTOs,
           wbUnknown(SPOR),
           wbUnknown(ECOR),
           wbUnknown(ALDN),
@@ -11945,7 +11949,7 @@ begin
           wbUnknown(VTCK),
           wbUnknown(ALED)
         ], []),
-        wbRStruct('The ALLS', [
+        wbRStruct('ALLS Struct', [
           wbUnknown(ALLS),
           wbString(ALID, 'Alias Name', 0, cpTranslate),
           wbUnknown(FNAM),
