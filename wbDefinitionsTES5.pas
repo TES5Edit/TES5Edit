@@ -11229,19 +11229,19 @@ begin
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, wbActorTemplateUseTraits),
     wbDEST,
+    wbSPCT,
+    wbSPLOs,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attack Data', wbATKD),
     wbArray(ATKE, 'Attack Event', wbString),
-    wbSPCT,
-    wbSPLOs,
+    wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
+    wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
-    wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
-    wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbCOCTReq,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
@@ -11253,8 +11253,8 @@ begin
     wbDNAMActor,
     wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
     wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
-    wbFormIDCk(GNAM, 'Gift Filter', [FTST], False, cpNormal, False),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
+    wbFormIDCk(GNAM, 'Gift Filter', [FTST], False, cpNormal, False),
     wbUnknown(NAM5, cpNormal, True),
     wbFloat(NAM6, 'Height', cpNormal, True),
     wbFloat(NAM7, 'Weight', cpNormal, True),
@@ -11313,7 +11313,7 @@ begin
       wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
       wbInteger(TIAS, 'Preset', itS16)
     ], []))
-  ], True, nil, cpNormal, False, wbNPCAfterLoad);
+  ], wbAllowUnordered, nil, cpNormal, False, wbNPCAfterLoad);
 //-----------------------------------------------------------------------------
 //End New NPC_
 //
