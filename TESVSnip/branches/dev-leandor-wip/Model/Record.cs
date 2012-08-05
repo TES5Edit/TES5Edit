@@ -12,6 +12,7 @@ using TESVSnip.Data;
 namespace TESVSnip
 {
     using System.Diagnostics;
+    using ZLibInterface;
 
     [Persistable(Flags = PersistType.DeclaredOnly), Serializable]
     public sealed class Record : Rec, ISerializable, IDeserializationCallback
@@ -129,7 +130,7 @@ namespace TESVSnip
             }
 
             using (var stream = new MemoryStream(recordReader.ReadBytes((int)dataSize))) {
-                using (var dataReader = compressed ? Decompressor.Decompress(stream, dataSize, realSize) : new BinaryReader(stream)) {
+                using (var dataReader = compressed ? ZLib.Decompress(stream, (int)realSize) : new BinaryReader(stream)) {
                     while (dataReader.BaseStream.Position < dataReader.BaseStream.Length) {
                         var type = ReadRecName(dataReader);
                         uint size;
