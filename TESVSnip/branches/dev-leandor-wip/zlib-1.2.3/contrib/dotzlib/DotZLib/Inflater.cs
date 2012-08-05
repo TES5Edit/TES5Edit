@@ -82,13 +82,12 @@ namespace DotZLib
             while (err >= 0 && inputIndex < total)
             {
                 copyInput(data, inputIndex, Math.Min(total - inputIndex, kBufferSize));
-                err = inflate(ref _ztream, (int)FlushTypes.None);
-                if (err == 0)
-                    while (_ztream.avail_out == 0)
-                    {
-                        OnDataAvailable();
-                        err = inflate(ref _ztream, (int)FlushTypes.None);
-                    }
+                while (_ztream.avail_in > 0) {
+                    err = inflate(ref _ztream, (int)FlushTypes.None);
+                    OnDataAvailable();
+                    if (err != 0)
+                        break;
+                }
 
                 inputIndex += (int)_ztream.total_in;
             }
