@@ -432,6 +432,7 @@
     <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\Deflater.cs" />
     <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\DotZLib.cs" />
     <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\Inflater.cs" />
+    <Compile Include="ZLibInterface\ZLib.cs" />
     <EmbeddedResource Include="Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
     </EmbeddedResource>
