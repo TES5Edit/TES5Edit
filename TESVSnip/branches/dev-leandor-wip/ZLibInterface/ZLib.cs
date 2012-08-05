@@ -5,6 +5,13 @@ namespace TESVSnip.ZLibInterface
 
     public static class ZLib
     {
+        public static string Version { get; private set; }
+
+        public static void Initialize()
+        {
+            Version = DotZLib.Info.Version;
+        }
+
         public static BinaryReader Decompress(byte[] buffer, int expectedSize = 0)
         {
             if (buffer == null) {
