@@ -8991,25 +8991,24 @@ begin
         {0x00000020}'Unknown 6',
         {0x00000040}'Unknown 7',
         {0x00000080}'Unknown 8',
-        {0x00000100}'Mode: Front',
-        {0x00000200}'Mode: Back',
+        {0x00000100}'Mode - Front',
+        {0x00000200}'Mode - Back',
         {0x00000400}'No Sky',
         {0x00000800}'Blur Radius Bit 0',
         {0x00001000}'Blur Radius Bit 1',
         {0x00002000}'Blur Radius Bit 2'
       ])),
-      wbArray('Unknown', wbByteArray('Unknown', 4), 4)
+      wbUnknown
     ]),
     wbStruct(BNAM, 'Blur', [
       wbFloat('Unknown'),
       wbFloat('Radius'),
-      wbArray('Unknown', wbFloat('Unknown'))
+      wbUnknown
     ]),
     wbStruct(VNAM, 'Double Vision', [
       wbFloat('Unknown'),
       wbFloat('Strength'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbUnknown
     ]),
     wbRStruct('Cinematic Colors', [
       wbStruct(TNAM, 'Tint', [
@@ -9020,7 +9019,7 @@ begin
           wbFloat('Blue', cpNormal, True, 255, 0),
           wbFloat('Alpha', cpNormal, True, 255, 0)
         ]),
-        wbArray('Unknown', wbFloat('Unknown'))
+        wbUnknown
       ]),
       wbStruct(NAM3, 'Fade', [
         wbFloat('Unknown'),
@@ -9030,160 +9029,138 @@ begin
           wbFloat('Blue', cpNormal, True, 255, 0),
           wbFloat('Alpha', cpNormal, True, 255, 0)
         ]),
-        wbArray('Unknown', wbFloat('Unknown'))
+        wbUnknown
       ])
     ], []),
     wbRStruct('Radial Blur', [
       wbStruct(RNAM, '', [
         wbFloat('Unknown'),
         wbFloat('Strength'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(SNAM, '', [
         wbFloat('Unknown'),
         wbFloat('Rampup'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(UNAM, '', [
         wbFloat('Unknown'),
         wbFloat('Start'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(NAM1, '', [
         wbFloat('Unknown'),
         wbFloat('Rampdown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(NAM2, '', [
         wbFloat('Unknown'),
         wbFloat('Downstart'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ])
     ], []),
     wbRStruct('Depth of Field', [
       wbStruct(WNAM, 'Depth of Field', [
         wbFloat('Unknown'),
         wbFloat('Strength'),
-        wbArray('Unknown', wbFloat('Unknown'))
+        wbUnknown
       ]),
       wbStruct(XNAM, 'Depth of Field', [
         wbFloat('Unknown'),
         wbFloat('Distance'),
-        wbArray('Unknown', wbFloat('Unknown'))
+        wbUnknown
       ]),
       wbStruct(YNAM, 'Depth of Field', [
         wbFloat('Unknown'),
         wbFloat('Range'),
-        wbArray('Unknown', wbFloat('Unknown'))
+        wbUnknown
       ])
     ], []),
     wbStruct(NAM4, 'FullScreen Motion Blur', [
       wbFloat('Unknown'),
       wbFloat('Strength'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbUnknown
     ]),
     wbRStruct('HDR', [
       wbStruct(_00_IAD, 'Eye Adapt Speed', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_40_IAD, 'Eye Adapt Speed', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_01_IAD, 'Bloom Blur Radius', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_41_IAD, 'Bloom Blur Radius', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_02_IAD, 'Bloom Threshold', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_42_IAD, 'Bloom Threshold', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_03_IAD, 'Bloom Scale', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_43_IAD, 'Bloom Scale', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_04_IAD, 'Target Lum Min', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_44_IAD, 'Target Lum Min', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_05_IAD, 'Target Lum Max', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_45_IAD, 'Target Lum Max', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_06_IAD, 'Sunlight Scale', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_46_IAD, 'Sunlight Scale', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_07_IAD, 'Sky Scale', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_47_IAD, 'Sky Scale', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ])
     ], []),
     wbUnknown(_08_IAD),
@@ -9208,46 +9185,36 @@ begin
       wbStruct(_11_IAD, 'Saturation', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_51_IAD, 'Saturation', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_12_IAD, 'Brightness', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_52_IAD, 'Brightness', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_13_IAD, 'Contrast', [
         wbFloat('Unknown'),
         wbFloat('Multiply'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ]),
       wbStruct(_53_IAD, 'Contrast', [
         wbFloat('Unknown'),
         wbFloat('Add'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbUnknown
       ])
     ], []),
     wbUnknown(_14_IAD),
-    wbUnknown(_54_IAD),
-    wbFormIDCk(RDSD, 'Sound - Intro', [SOUN]),
-    wbFormIDCk(RDSI, 'Sound - Outro', [SOUN])
+    wbUnknown(_54_IAD)
   ]);
 
   wbRecord(FLST, 'FormID List', [
