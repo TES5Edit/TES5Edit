@@ -584,6 +584,7 @@ const
   SPGD : TwbSignature = 'SPGD';
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
+  SPMV : TwbSignature = 'SPMV'; { New To Skyrim }
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
   STAT : TwbSignature = 'STAT';
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
@@ -868,7 +869,7 @@ var
   wbScriptObject: IwbStructDef;
   wbScriptFragments: IwbUnionDef;
   wbLocationEnum: IwbEnumDef;
-  wbATKD: IwbSubRecordDef; {Attack Data}
+  wbAttackData: IwbSubRecordStructDef; {Attack Data}
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
@@ -900,6 +901,7 @@ var
   wbCTDAParm1: IwbUnionDef;
   wbOwnership: IwbSubRecordStructDef;
   wbCELLDATAFlags: IwbFlagsDef;
+  wbBipedObjectEnum: IwbEnumDef;
 // --- Pack ---
   wbPKDT: IwbSubRecordDef;
   wbPLDT: IwbSubRecordDef;
@@ -4968,37 +4970,40 @@ begin
     //wbScriptFragments
   ]);
 
-  wbATKD := wbStruct(ATKD, 'Attack Data', [
-    wbFloat('Damage Mult'),
-    wbFloat('Attack Chance'),
-    wbFormIDCk('Attack Spell', [SPEL, SHOU]),
-    wbInteger('Attack Flags', itU16, wbFlags([
-      {0x00000001}'Ignore Weapon',
-      {0x00000002}'Bash Attack',
-      {0x00000004}'Power Attack',
-      {0x00000008}'Left Attack',
-      {0x00000010}'Rotating Attack',
-      {0x00000020}'Unknown 6',
-      {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8',
-      {0x00000100}'Unknown 9',
-      {0x00000200}'Unknown 10',
-      {0x00000400}'Unknown 11',
-      {0x00000800}'Unknown 12',
-      {0x00001000}'Unknown 13',
-      {0x00002000}'Unknown 14',
-      {0x00004000}'Unknown 15',
-      {0x00008000}'Unknown 16'
-    ])),
-    wbByteArray('Unknown', 2),
-    wbFloat('Attack Angle'),
-    wbFloat('Strike Angle'),
-    wbFloat('Stagger'),
-    wbFormID('Attack Type'),
-    wbFloat('Knockdown'),
-    wbFloat('Recovery Time'),
-    wbFloat('Stamina Mult')
-  ]);
+  wbAttackData := wbRStruct('Attack Data', [
+    wbStruct(ATKD, 'Attack Data', [
+      wbFloat('Damage Mult'),
+      wbFloat('Attack Chance'),
+      wbFormIDCk('Attack Spell', [SPEL, SHOU, NULL]),
+      wbInteger('Attack Flags', itU16, wbFlags([
+        {0x00000001}'Ignore Weapon',
+        {0x00000002}'Bash Attack',
+        {0x00000004}'Power Attack',
+        {0x00000008}'Left Attack',
+        {0x00000010}'Rotating Attack',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Unknown 11',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Unknown 13',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Unknown 15',
+        {0x00008000}'Unknown 16'
+      ])),
+      wbByteArray('Unknown', 2),
+      wbFloat('Attack Angle'),
+      wbFloat('Strike Angle'),
+      wbFloat('Stagger'),
+      wbFormIDCk('Attack Type', [KYWD, NULL]),
+      wbFloat('Knockdown'),
+      wbFloat('Recovery Time'),
+      wbFloat('Stamina Mult')
+    ]),
+    wbString(ATKE, 'Attack Event')
+  ], []);
 
   wbPRKR := wbStruct(PRKR, 'Perk Record', [
     wbFormIDCk('Perk', [PERK]),
@@ -11301,8 +11306,7 @@ begin
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
-    wbRArray('Attack Data', wbATKD),
-    wbArray(ATKE, 'Attack Event', wbString),
+    wbRArray('Attack Data', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbInteger(PRKZ, 'Perk Count', itU32),
@@ -12063,17 +12067,44 @@ begin
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
-    'Upper Body',
-    'Left Hand',
-    'Right Hand',
-    'Upper Body Texture'
+    'Body Texture'
   ]);
 
-  wbBodyPartIndexEnum := wbEnum([
-    'Upper Body',
-    'Left Hand',
-    'Right Hand',
-    'Upper Body Texture'
+  wbBipedObjectEnum := wbEnum([
+    'Head',
+    'Hair',
+    'Body',
+    'Hands',
+    'Forearms',
+    'Amulet',
+    'Ring',
+    'Feet',
+    'Calves',
+    'Shield',
+    'Body AddOn 1',
+    'Long Hair',
+    'Circlet',
+    'Body AddOn 2',
+    'Body AddOn 3',
+    'Body AddOn 4',
+    'Body AddOn 5',
+    'Body AddOn 6',
+    'Body AddOn 7',
+    'Body AddOn 8',
+    'Decapate Head',
+    'Decapate',
+    'Body AddOn 9',
+    'Body AddOn 10',
+    'Body AddOn 11',
+    'Body AddOn 12',
+    'Body AddOn 13',
+    'Body AddOn 14',
+    'Body AddOn 15',
+    'Body AddOn 16',
+    'Body AddOn 17',
+    'FX01'
+    ], [
+    -1, 'None'
   ]);
 
   wbSizeIndexEnum := wbEnum([
@@ -12145,8 +12176,8 @@ begin
         {0x00000400}'Not Pushable',
         {0x00000800}'Unknown 12',
         {0x00001000}'No Rotating to Head-Track',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
+        {0x00002000}'Don''t Show Blood Spray',
+        {0x00004000}'Don''t Show Blood Decal',
         {0x00008000}'Uses Head Track Anims',
         {0x00010000}'Spells Align w/Magic Node',
         {0x00020000}'Use World Raycasts For FootIK',
@@ -12157,7 +12188,7 @@ begin
         {0x00400000}'No Knockdowns',
         {0x00800000}'Allow Pickpocket',
         {0x01000000}'Always Use Proxy Controller',
-        {0x02000000}'Unknown 26',
+        {0x02000000}'Don''t Show Weapon Blood',
         {0x03000000}'Unknown 27',
         {0x08000000}'Unknown 28',
         {0x10000000}'Unknown 29',
@@ -12177,17 +12208,19 @@ begin
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Injured Health', 4),
+      // When Set to None this Equals FF FF FF FF
+      wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
       wbByteArray('Unknown', 4),
       wbFloat('Health Regen'),
       wbFloat('Magicka Regen'),
       wbFloat('Fatigue Regen'),
       wbFloat('Unarmed Damage'),
-      wbFloat('Unarmed Reach'),
+      wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
       wbByteArray('Unknown', 4),
       wbFloat('Aim Angle Tolerance'),
-      wbFloat('Flight Radius'),
-      wbFloat('Angular Acceleration'),
+      wbFloat('Angular Acceleration Rate'),
       wbFloat('Angular Tolerance'),
+      wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
@@ -12240,10 +12273,7 @@ begin
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
     wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
-    wbRArray('Array ATKD, ATKE', wbRStruct('Unknown', [
-			wbATKD,
-			wbString(ATKE, 'Attack Event')
-    ], [])),
+    wbRArray('Attacks', wbAttackData),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
       wbRStruct('Male Body Data', [
@@ -12271,11 +12301,11 @@ begin
 //------------------------------------------------------------------------------
 // wbMODL MODL, MODB, MODT, MODS, MODD
 //------------------------------------------------------------------------------
-    wbRStruct('Start Of Male', [
+    wbRStruct('Male Behavoir Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
       wbMODL
     ], [], cpNormal, True),
-    wbRStruct('Start Of Female', [
+    wbRStruct('Female Behavoir Graph', [
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
       wbMODL
     ], [], cpNormal, True),
@@ -12332,6 +12362,15 @@ begin
         wbByteArray('Unknown', 0)
       ])
     ], [])),
+    // Start Movement Data
+    wbRStruct('Base Movement Defaults', [
+		  wbFormIDCk(WKMV, 'Walk', [MOVT, NULL]),
+		  wbFormIDCk(RNMV, 'Run', [MOVT, NULL]),
+		  wbFormIDCk(SWMV, 'Swim', [MOVT, NULL]),
+		  wbFormIDCk(FLMV, 'Fly', [MOVT, NULL]),
+		  wbFormIDCk(SNMV, 'Sneak', [MOVT, NULL]),
+		  wbFormIDCk(SPMV, 'Sprint', [MOVT, NULL])
+    ], []),
     // Start Head Data
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
@@ -12387,12 +12426,7 @@ begin
     ], [], cpNormal, True),
     // End Head Data
     wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
-    wbFormIDCk(RNAM, 'Armor race', [RACE, NULL]),
-		wbFormIDCk(WKMV, 'Movement', [MOVT, NULL]),
-		wbFormIDCk(RNMV, 'Movement', [MOVT, NULL]),
-		wbFormIDCk(SWMV, 'Movement', [MOVT, NULL]),
-		wbFormIDCk(FLMV, 'Movement', [MOVT, NULL]),
-		wbFormIDCk(SNMV, 'Movement', [MOVT, NULL])
+    wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
   ], wbAllowUnordered);
 
 //------------------------------------------------------------------------------
