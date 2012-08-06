@@ -170,7 +170,6 @@ const
   BIDS : TwbSignature = 'BIDS'; { New to Skyrim }
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
-  BMDT : TwbSignature = 'BMDT';
   BNAM : TwbSignature = 'BNAM';
   BODT : TwbSignature = 'BODT'; { New to Skyrim }
   BOOK : TwbSignature = 'BOOK';
@@ -756,7 +755,6 @@ var
   wbEDID: IwbSubRecordDef;
   wbEDIDReq: IwbSubRecordDef;
   wbSoulGemEnum: IwbEnumDef;
-  wbBMDT: IwbSubRecordDef;
   wbBODT: IwbSubRecordDef;
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
@@ -768,7 +766,6 @@ var
   wbDEST: IwbSubRecordStructDef;
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
-//  wbXOWN: IwbSubRecordDef;
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
@@ -5322,7 +5319,6 @@ begin
   ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad);
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
-//  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
 
   wbOwnership := wbRStruct('Ownership', [
     wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
@@ -6415,72 +6411,74 @@ begin
     wbString(BNAM, 'Type')
   ]);
 
-  wbBMDT := wbStruct(BMDT, 'Biped Data', [
-      wbInteger('Biped Flags', itU32, wbFlags([
-        {0x00000001} 'Head',
-        {0x00000002} 'Hair',
-        {0x00000004} 'Upper Body',
-        {0x00000008} 'Left Hand',
-        {0x00000010} 'Right Hand',
-        {0x00000020} 'Weapon',
-        {0x00000040} 'PipBoy',
-        {0x00000080} 'Backpack',
-        {0x00000100} 'Necklace',
-        {0x00000200} 'Headband',
-        {0x00000400} 'Hat',
-        {0x00000800} 'Eye Glasses',
-        {0x00001000} 'Nose Ring',
-        {0x00002000} 'Earrings',
-        {0x00004000} 'Mask',
-        {0x00008000} 'Choker',
-        {0x00010000} 'Mouth Object',
-        {0x00020000} 'Body AddOn 1',
-        {0x00040000} 'Body AddOn 2',
-        {0x00080000} 'Body AddOn 3'
-      ])),
-      wbInteger('General Flags', itU8, wbFlags([
-        {0x0001} '1',
-        {0x0002} '2',
-        {0x0004} 'Has Backpack',
-        {0x0008} 'Medium',
-        {0x0010} '5',
-        {0x0020} 'Power Armor',
-        {0x0040} 'Non-Playable',
-        {0x0080} 'Heavy'
-      ], True)),
-      wbByteArray('Unknown')
-    ], cpNormal, True);
-
   wbBODT := wbStruct(BODT, 'Body Template', [
-      wbInteger('Biped Flags', itU32, wbFlags([
-        {0x00000001} 'Head',
-        {0x00000002} 'Hair',
-        {0x00000004} 'Body',
-        {0x00000008} 'Hands',
-        {0x00000010} 'Forearms',
-        {0x00000020} 'Amulet',
-        {0x00000040} 'Ring',
-        {0x00000080} 'Feet',
-        {0x00000100} 'Calves',
-        {0x00000200} 'Shield',
-        {0x00000400} 'Tail',
-        {0x00000800} 'Long Hair',
-        {0x00001000} 'Circlet',
-        {0x00002000} 'Earrings',
-        {0x00004000} 'Dragon Head',
-        {0x00008000} 'Dragon Left Wing',
-        {0x00010000} 'Dragon Right Wing',
-        {0x00020000} 'Dragon Body',
-        {0x00040000} 'Unknown 19',
-        {0x00080000} 'Unknown 20',
-        {0x00100000} 'Decapitated Head'
-      ])),
+      wbInteger('First Person', itU32, wbFlags([
+          {0x00000001} 'Head',
+          {0x00000002} 'Hair',
+          {0x00000004} 'Body',
+          {0x00000008} 'Hands',
+          {0x00000010} 'Forearms',
+          {0x00000020} 'Amulet',
+          {0x00000040} 'Ring',
+          {0x00000080} 'Feet',
+          {0x00000100} 'Calves',
+          {0x00000200} 'Shield',
+          {0x00000400} 'Body AddOn 1',
+          {0x00000800} 'Long Hair',
+          {0x00001000} 'Circlet',
+          {0x00002000} 'Body AddOn 2',
+          {0x00004000} 'Body AddOn 3',
+          {0x00008000} 'Body AddOn 4',
+          {0x00010000} 'Body AddOn 5',
+          {0x00020000} 'Body AddOn 6',
+          {0x00040000} 'Body AddOn 7',
+          {0x00080000} 'Body AddOn 8',
+          {0x00100000} 'Decapate Head',
+          {0x00200000} 'Decapate',
+          {0x00400000} 'Body AddOn 9',
+          {0x00800000} 'Body AddOn 10',
+          {0x01000000} 'Body AddOn 11',
+          {0x02000000} 'Body AddOn 12',
+          {0x03000000} 'Body AddOn 13',
+          {0x08000000} 'Body AddOn 14',
+          {0x10000000} 'Body AddOn 15',
+          {0x20000000} 'Body AddOn 16',
+          {0x40000000} 'Body AddOn 17',
+          {0x80000000} 'FX01'
+      ], True)),
       wbInteger('General Flags', itU32, wbFlags([
-        'Unknown 1',
-        'Unknown 2',
-        'Unknown 3',
-        'Unknown 4',
-        'Non-Playable'
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Unknown 2',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Unknown 11',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Unknown 13',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Unknown 15',
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
       ], True)),
       wbInteger('Armor Type', itU32, wbEnum([
         'Light Armor',
@@ -12051,7 +12049,7 @@ begin
     wbSPCT,
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-    wbArrayS(BODT, 'Body Templates', wbByteArray('Unknown', 4), 0, cpNormal, True),
+    wbBODT,
     wbKeywords,
     wbXNAMs,
     wbStruct(DATA, '', [
