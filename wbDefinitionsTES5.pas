@@ -4707,7 +4707,7 @@ begin
     {0x00000010}'Unknown 5',
     {0x00000020}'Deleted',
     {0x00000040}'Unknown 7',
-    {0x00000080}'(TES4) Localized',
+    {0x00000080}'(TES4)Localized / Is Perch',
     {0x00000100}'Unknown 9',
     {0x00000200}'Hidden from local map / Starts dead',
     {0x00000400}'Quest item / Persistent reference / (LSCR) Displays in Main Menu',
@@ -4728,8 +4728,8 @@ begin
     {0x02000000}'Obstacle',
     {0x03000000}'NavMesh Gen - Filter',
     {0x08000000}'NavMesh Gen - Bounding Box',
-    {0x10000000}'Unknown 29',
-    {0x20000000}'Unknown 30',
+    {0x10000000}'Must Exit to Talk',
+    {0x20000000}'Child Can Use',
     {0x40000000}'NavMesh Gen - Ground',
     {0x80000000}'Unknown 32'
   ]));
@@ -7968,18 +7968,87 @@ begin
     wbDEST,
     wbKeywords,
     wbUnknown(PNAM),
-    wbUnknown(FNAM),
-    wbFormIDCk(KNAM, 'Reputation', [KYWD, NULL]),
-    wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True),
-    wbUnknown(WBDT),
-    wbRArray('Array ENAM, NAM0, FNMK', wbRStruct('Unknown', [
-      wbUnknown(ENAM),
-      wbUnknown(NAM0),
-      wbFormIDCk(FNMK, 'Reputation', [KYWD, NULL])
+    wbInteger(FNAM, 'Flags', itU16, wbFlags([
+      {0x0001} 'Unknown 0',
+      {0x0002} 'Ignored By Sandbox'
+    ])),
+    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD, NULL]),
+    wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
+      {0x00000001} 'Sit 0',
+      {0x00000002} 'Sit 1',
+      {0x00000004} 'Sit 2',
+      {0x00000008} 'Sit 3',
+      {0x00000010} 'Sit 4',
+      {0x00000020} 'Sit 5',
+      {0x00000040} 'Sit 6',
+      {0x00000080} 'Sit 7',
+      {0x00000100} 'Sit 8',
+      {0x00000200} 'Sit 9',
+      {0x00000400} 'Sit 10',
+      {0x00000800} 'Sit 11',
+      {0x00001000} 'Sit 12',
+      {0x00002000} 'Sit 13',
+      {0x00004000} 'Sit 14',
+      {0x00008000} 'Sit 15',
+      {0x00010000} 'Sit 16',
+      {0x00020000} 'Sit 17',
+      {0x00040000} 'Sit 18',
+      {0x00080000} 'Sit 19',
+      {0x00100000} 'Sit 20',
+      {0x00200000} 'Sit 21',
+      {0x00400000} 'Sit 22',
+      {0x00800000} 'Sit 23',
+      {0x01000000} 'Unknown 25',
+      {0x02000000} 'Disables Activation',
+      {0x03000000} 'Is Perch',
+      {0x08000000} 'Must Exit to Talk',
+      {0x10000000} 'Unknown 29',
+      {0x20000000} 'Unknown 30',
+      {0x40000000} 'Unknown 31',
+      {0x80000000} 'Unknown 32'
+    ])),
+    wbStruct(WBDT, 'Workbench Data', [
+      wbInteger('Bench Type', itU8, wbEnum([
+        {0} 'None',
+        {1} 'Create object',
+        {2} 'Smithing Weapon',
+        {3} 'Enchanting',
+        {4} 'Enchanting Experiment',
+        {5} 'Alchemy',
+        {6} 'Alchemy Experiment',
+        {7} 'Smithing Armor'
+      ])),
+      wbInteger('Uses Skill', itS8, wbSkillEnum)
+    ]),
+    wbFormIDCk(NAM1, 'Associated Spell', [SPEL]),
+    wbRArray('Markers', wbRStruct('Marker', [
+      wbInteger(ENAM, 'Marker Index', itU32),
+      wbStruct(NAM0, 'Disabled Entry Points', [
+        wbByteArray('Unknown', 2),
+        wbInteger('Disabled Points', itU16, wbFlags([
+          {0x0001} 'Front',
+          {0x0002} 'Behind',
+          {0x0004} 'Right',
+          {0x0008} 'Left',
+          {0x0010} 'Up'
+        ]))
+      ]),
+      wbFormIDCk(FNMK, 'Marker Keyword', [KYWD, NULL])
     ], [])),
-    wbRArray('Array FNPR', wbRStruct('Unknown', [
-      wbUnknown(FNPR)
-    ], [])),
+    wbRArray('Marker Entry Points', wbStruct(FNPR, 'Marker', [
+        wbInteger('Type', itU16, wbEnum([
+          {0} 'Unused',
+          {1} 'Sit',
+          {2} 'Lay'
+        ])),
+        wbInteger('Entry Points', itU16, wbFlags([
+          {0x0001} 'Front',
+          {0x0002} 'Behind',
+          {0x0004} 'Right',
+          {0x0008} 'Left',
+          {0x0010} 'Up'
+        ]))
+    ])),
     wbString(XMRK, 'Model Filename')
   ]);
 
