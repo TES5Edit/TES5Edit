@@ -1775,43 +1775,44 @@ begin
   end;
 end;
 
-
+{ Needs revision for Skyrim }
 function wbIdleAnam(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
-  Result := '';
-  case aType of
-    ctToStr: begin
-      case aInt and not $C0 of
-        0: Result := 'Idle';
-        1: Result := 'Movement';
-        2: Result := 'Left Arm';
-        3: Result := 'Left Hand';
-        4: Result := 'Weapon';
-        5: Result := 'Weapon Up';
-        6: Result := 'Weapon Down';
-        7: Result := 'Special Idle';
-       20: Result := 'Whole Body';
-       21: Result := 'Upper Body';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not $C0)+'>';
-      end;
-
-      if (aInt and $80) = 0 then
-        Result := Result + ', Must return a file';
-      if (aInt and $40) = 1 then
-        Result := Result + ', Unknown Flag';
-    end;
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 2);
-    end;
-    ctCheck: begin
-      case aInt and not $C0 of
-        0..7, 20, 21: Result := '';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not $C0)+'>';
-      end;
-    end;
-  end;
+  Result := '<Unknown: '+IntToStr(aInt)+'>';
+//  Result := '';
+//  case aType of
+//    ctToStr: begin
+//      case aInt and not $C0 of
+//        0: Result := 'Idle';
+//        1: Result := 'Movement';
+//        2: Result := 'Left Arm';
+//        3: Result := 'Left Hand';
+//        4: Result := 'Weapon';
+//        5: Result := 'Weapon Up';
+//        6: Result := 'Weapon Down';
+//        7: Result := 'Special Idle';
+//       20: Result := 'Whole Body';
+//       21: Result := 'Upper Body';
+//      else
+//        Result := '<Unknown: '+IntToStr(aInt and not $C0)+'>';
+//      end;
+//
+//      if (aInt and $80) = 0 then
+//        Result := Result + ', Must return a file';
+//      if (aInt and $40) = 1 then
+//        Result := Result + ', Unknown Flag';
+//    end;
+//    ctToSortKey: begin
+//      Result := IntToHex64(aInt, 2);
+//    end;
+//    ctCheck: begin
+//      case aInt and not $C0 of
+//        0..7, 20, 21: Result := '';
+//      else
+//        Result := '<Unknown: '+IntToStr(aInt and not $C0)+'>';
+//      end;
+//    end;
+//  end;
 end;
 
 function wbScaledInt4ToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -4708,7 +4709,7 @@ begin
     {0x00000008}'Unknown 4',
     {0x00000010}'Unknown 5',
     {0x00000020}'Deleted',
-    {0x00000040}'Unknown 7',
+    {0x00000040}'Constant',
     {0x00000080}'(TES4)Localized / Is Perch',
     {0x00000100}'Unknown 9',
     {0x00000200}'Hidden from local map / Starts dead',
@@ -8058,7 +8059,6 @@ begin
   ]);
 
 //----------------------------------------------------------------------------
-// Begin New GLOB
 // For expansion to use wbGLOBUnionDecider to display Short, Long, Float
 // correctly without making a signed float by default
 //----------------------------------------------------------------------------
@@ -8067,46 +8067,16 @@ begin
     wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
-//----------------------------------------------------------------------------
-// End New GLOB
-//
-// Begin Old GLOB
-//----------------------------------------------------------------------------
-//  wbRecord(GLOB, 'Global', [
-//    wbEDIDReq,
-//    wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
-//    wbFloat(FLTV, 'Value', cpNormal, True)
-//  ]);
-// End Old GLOB
 
-//----------------------------------------------------------------------------
-// New GMST
-//----------------------------------------------------------------------------
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbLString('Name', 0, cpTranslate), //Possibly String/Localization
-      wbInteger('Int', itS32),           //Old Integer
-      wbFloat('Float'),                  //Old Float
-      wbBoolU32                          //New wbBool
+      wbLString('Name'),
+      wbInteger('Int', itS32),
+      wbFloat('Float'),
+      wbBoolU32
     ], cpNormal, True)
   ]);
-//----------------------------------------------------------------------------
-// End New GMST
-//
-// Begin Old GMST
-//----------------------------------------------------------------------------
-// wbRecord(GMST, 'Game Setting', [
-//   wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
-//   wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-//     wbUnknown,
-//     wbInteger('', itS32),
-//     wbFloat('')
-//   ], cpNormal, True)
-// ]);
-//----------------------------------------------------------------------------
-// End Old GMST
-//----------------------------------------------------------------------------
 
   wbRecord(KYWD, 'KYWD', [
     wbEDIDReq,
@@ -8187,62 +8157,39 @@ begin
 
   wbRecord(HDPT, 'Head Part', [
     wbEDIDReq,
-    wbFULLReq,
+    wbFULL,
     wbMODL,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x00000001}'Playable',
-      {0x00000002}'Male',
-      {0x00000004}'Female',
-      {0x00000008}'Unknown 4',
-      {0x00000010}'Unknown 5',
-      {0x00000020}'Unknown 6',
-      {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8'
+      {0x01} 'Playable',
+      {0x02} 'Male',
+      {0x04} 'Female',
+      {0x10} 'Is Extra Part',
+      {0x20} 'Use Solid Tint'
     ]), cpNormal, True),
-    wbStruct(PNAM, 'Part Info', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Unknown 2',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8'
-      ], True)),
-      wbByteArray('Unknown', 3)
-    ]),
-//    wbUnknown(PNAM),
+    wbInteger(PNAM, 'Type', itU32, wbEnum([
+      'Misc',
+      'Face',
+      'Eyes',
+      'Hair',
+      'Facial Hair',
+      'Scar',
+      'Eyebrows'
+    ])),
     wbRArray('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
-    wbRArray('Parts',
-      wbRStruct('Part List', [
-        wbInteger(NAM0, 'Part Type', itU32),
-        wbString(NAM1, 'Filename', 0, cpTranslate, True)
-      ], [])
-    ),
+    wbRStructs('Parts', 'Part', [
+      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
+        'Race Morph',
+        'Tri',
+        'Chargen Morph'
+      ])),
+      wbString(NAM1, 'Filename', 0, cpTranslate, True)
+    ], []),
     wbFormIDCk(TNAM, 'Texture Set', [TXST, NULL]),
-    wbFormIDCk(RNAM, 'Form List', [FLST, NULL])
+    wbFormIDCk(CNAM, 'Color', [CLFM, NULL]),
+    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL])
   ]);
-
-//------------------------------------------------------------------------------
-// Begin Old HDPT
-//------------------------------------------------------------------------------
-//  wbRecord(HDPT, 'Head Part', [
-//    wbEDIDReq,
-//    wbFULLReq,
-//    wbMODL,
-//    wbInteger(DATA, 'Flags', itU8, wbFlags([
-//      'Playable'
-//    ]), cpNormal, True),
-//    wbRArrayS('Extra Parts',
-//      wbFormIDCk(HNAM, 'Part', [HDPT])
-//    )
-//  ]);
-//------------------------------------------------------------------------------
-// End Old HDPT
-//------------------------------------------------------------------------------
 
   wbRecord(ASPC, 'Acoustic Space', [
     wbEDIDReq,
@@ -8400,15 +8347,15 @@ begin
   wbRecord(IDLM, 'Idle Marker', [
     wbEDIDReq,
     wbOBNDReq,
+    wbMODL,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
       '',
-      'Do Once'
+      'Do Once',
+      '',
+      'Ignored by Sandbox'
     ]), cpNormal, True),
-    wbStruct(IDLC, '', [
-      wbInteger('Animation Count', itU8),
-      wbByteArray('Unknown', 3)
-    ], cpNormal, True, nil, 1),
+    wbInteger(IDLC, 'Animation Count', itU8),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
     wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True)
   ]);
@@ -8523,8 +8470,25 @@ begin
     wbOBNDReq,
     wbFULL,
     wbMODL,
-    wbFormIDCk(MNAM, 'Unknown', [IMAD, NULL]),
-    wbUnknown(DATA)
+    wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
+    wbStruct(DATA, 'Data', [
+      wbInteger('Limit', itU32),
+      wbFloat('Radius'),
+      wbFloat('Lifetime'),
+      wbFloat('Image Space Radius'),
+      wbFloat('Target Interval'),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x01} 'Affects Player Only',
+        {0x02} 'Inherit Duration from Spawn Spell',
+        {0x04} 'Align to Impact Normal',
+        {0x08} 'Inherit Radius from Spawn Spell',
+        {0x10} 'Drop to Ground'
+      ])),
+      wbFormIDCk('Spell', [ENCH, NULL]),
+      wbFormIDCk('Light', [LIGH, NULL]),
+      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      wbFormIDCk('Sound', [SNDR, NULL])
+    ])
   ]);
 
   wbSoulGemEnum := wbEnum([
@@ -9007,38 +8971,221 @@ begin
     ], cpNormal, True, nil, 5)
   ]);
 
-  wbRecord(IMAD, 'Image Space Modifier', [
+  wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
-    wbUnknown(DNAM),
-    wbUnknown(BNAM),
-    wbUnknown(VNAM),
-    wbUnknown(TNAM),
-    wbUnknown(NAM3),
-    wbUnknown(RNAM),
-    wbUnknown(SNAM),
-    wbUnknown(UNAM),
-    wbUnknown(NAM1),
-    wbUnknown(NAM2),
-    wbUnknown(WNAM),
-    wbUnknown(XNAM),
-    wbUnknown(YNAM),
-    wbUnknown(NAM4),
-    wbUnknown(_00_IAD),
-    wbUnknown(_40_IAD),
-    wbUnknown(_01_IAD),
-    wbUnknown(_41_IAD),
-    wbUnknown(_02_IAD),
-    wbUnknown(_42_IAD),
-    wbUnknown(_03_IAD),
-    wbUnknown(_43_IAD),
-    wbUnknown(_04_IAD),
-    wbUnknown(_44_IAD),
-    wbUnknown(_05_IAD),
-    wbUnknown(_45_IAD),
-    wbUnknown(_06_IAD),
-    wbUnknown(_46_IAD),
-    wbUnknown(_07_IAD),
-    wbUnknown(_47_IAD),
+    wbStruct(DNAM, 'Data', [
+      wbInteger('Flags', itU32, wbFlags(['Animatable'])),
+      wbFloat('Duration'),
+      //wbArray('Unknown', wbByteArray('Unknown', 4), 48),
+      wbByteArray('Unknown', 4*48),
+      wbInteger('Radial Blur Flags', itU32, wbFlags(['Use Target'])),
+      wbFloat('Radial Blue Center X'),
+      wbFloat('Radial Blue Center Y'),
+      wbArray('Unknown', wbByteArray('Unknown', 4), 3),
+      wbInteger('DoF Flags', itU32, wbFlags([
+        {0x00000001}'Use Target',
+        {0x00000002}'Unknown 2',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Mode: Front',
+        {0x00000200}'Mode: Back',
+        {0x00000400}'No Sky',
+        {0x00000800}'Blur Radius Bit 0',
+        {0x00001000}'Blur Radius Bit 1',
+        {0x00002000}'Blur Radius Bit 2'
+      ])),
+      wbArray('Unknown', wbByteArray('Unknown', 4), 4)
+    ]),
+    wbStruct(BNAM, 'Blur', [
+      wbFloat('Unknown'),
+      wbFloat('Radius'),
+      wbArray('Unknown', wbFloat('Unknown'))
+    ]),
+    wbStruct(VNAM, 'Double Vision', [
+      wbFloat('Unknown'),
+      wbFloat('Strength'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ]),
+    wbRStruct('Cinematic Colors', [
+      wbStruct(TNAM, 'Tint', [
+        wbFloat('Unknown'),
+        wbStruct('Tint', [
+          wbFloat('Red', cpNormal, True, 255, 0),
+          wbFloat('Green', cpNormal, True, 255, 0),
+          wbFloat('Blue', cpNormal, True, 255, 0),
+          wbFloat('Alpha', cpNormal, True, 255, 0)
+        ]),
+        wbArray('Unknown', wbFloat('Unknown'))
+      ]),
+      wbStruct(NAM3, 'Fade', [
+        wbFloat('Unknown'),
+        wbStruct('Fade', [
+          wbFloat('Red', cpNormal, True, 255, 0),
+          wbFloat('Green', cpNormal, True, 255, 0),
+          wbFloat('Blue', cpNormal, True, 255, 0),
+          wbFloat('Alpha', cpNormal, True, 255, 0)
+        ]),
+        wbArray('Unknown', wbFloat('Unknown'))
+      ])
+    ], []),
+    wbRStruct('Radial Blur', [
+      wbStruct(RNAM, '', [
+        wbFloat('Unknown'),
+        wbFloat('Strength'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(SNAM, '', [
+        wbFloat('Unknown'),
+        wbFloat('Rampup'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(UNAM, '', [
+        wbFloat('Unknown'),
+        wbFloat('Start'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(NAM1, '', [
+        wbFloat('Unknown'),
+        wbFloat('Rampdown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(NAM2, '', [
+        wbFloat('Unknown'),
+        wbFloat('Downstart'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ])
+    ], []),
+    wbRStruct('Depth of Field', [
+      wbStruct(WNAM, 'Depth of Field', [
+        wbFloat('Unknown'),
+        wbFloat('Strength'),
+        wbArray('Unknown', wbFloat('Unknown'))
+      ]),
+      wbStruct(XNAM, 'Depth of Field', [
+        wbFloat('Unknown'),
+        wbFloat('Distance'),
+        wbArray('Unknown', wbFloat('Unknown'))
+      ]),
+      wbStruct(YNAM, 'Depth of Field', [
+        wbFloat('Unknown'),
+        wbFloat('Range'),
+        wbArray('Unknown', wbFloat('Unknown'))
+      ])
+    ], []),
+    wbStruct(NAM4, 'FullScreen Motion Blur', [
+      wbFloat('Unknown'),
+      wbFloat('Strength'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ]),
+    wbRStruct('HDR', [
+      wbStruct(_00_IAD, 'Eye Adapt Speed', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_40_IAD, 'Eye Adapt Speed', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_01_IAD, 'Bloom Blur Radius', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_41_IAD, 'Bloom Blur Radius', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_02_IAD, 'Bloom Threshold', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_42_IAD, 'Bloom Threshold', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_03_IAD, 'Bloom Scale', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_43_IAD, 'Bloom Scale', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_04_IAD, 'Target Lum Min', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_44_IAD, 'Target Lum Min', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_05_IAD, 'Target Lum Max', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_45_IAD, 'Target Lum Max', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_06_IAD, 'Sunlight Scale', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_46_IAD, 'Sunlight Scale', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_07_IAD, 'Sky Scale', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_47_IAD, 'Sky Scale', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ])
+    ], []),
     wbUnknown(_08_IAD),
     wbUnknown(_48_IAD),
     wbUnknown(_09_IAD),
@@ -9057,12 +9204,46 @@ begin
     wbUnknown(_4F_IAD),
     wbUnknown(_10_IAD),
     wbUnknown(_50_IAD),
-    wbUnknown(_11_IAD),
-    wbUnknown(_51_IAD),
-    wbUnknown(_12_IAD),
-    wbUnknown(_52_IAD),
-    wbUnknown(_13_IAD),
-    wbUnknown(_53_IAD),
+    wbRStruct('Cinematic', [
+      wbStruct(_11_IAD, 'Saturation', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_51_IAD, 'Saturation', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_12_IAD, 'Brightness', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_52_IAD, 'Brightness', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_13_IAD, 'Contrast', [
+        wbFloat('Unknown'),
+        wbFloat('Multiply'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbStruct(_53_IAD, 'Contrast', [
+        wbFloat('Unknown'),
+        wbFloat('Add'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ])
+    ], []),
     wbUnknown(_14_IAD),
     wbUnknown(_54_IAD),
     wbFormIDCk(RDSD, 'Sound - Intro', [SOUN]),
@@ -10264,9 +10445,6 @@ begin
     wbArrayS(CNAM, 'Collides With', wbFormIDCk('Forms', [COLL]), 0, cpNormal, False)
   ]);
 
-//----------------------------------------------------------------------------
-// New
-//----------------------------------------------------------------------------
   wbRecord(CLFM, 'Color', [
     wbEDIDReq,
     wbFULL,
@@ -10308,9 +10486,9 @@ begin
       wbInteger('Min Slope', itU8),
       wbInteger('Max Slope', itU8),
       wbByteArray('Unknown', 1),
-      wbInteger('Unit from water amount', itU16),
+      wbInteger('Units From Water', itU16),
       wbByteArray('Unknown', 2),
-      wbInteger('Unit from water type', itU32, wbEnum([
+      wbInteger('Units From Water Type', itU32, wbEnum([
         'Above - At Least',
         'Above - At Most',
         'Below - At Least',
@@ -10370,24 +10548,24 @@ begin
 
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
-    wbMODLReq,
     wbCTDAs,
     wbString(DNAM, 'Filename'),
     wbString(ENAM, 'Animation Event'),
     wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [AACT, IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
-    wbStruct(DATA, '', [
-      wbInteger('Animation Group Section', itU8, wbIdleAnam),
-      wbStruct('Looping', [
+    wbStruct(DATA, 'Unused Data', [
+      wbStruct('Looping seconds (both 255 forever)', [
         wbInteger('Min', itU8),
         wbInteger('Max', itU8)
       ]),
-      wbByteArray('Unknown', 1),
-      wbInteger('Replay Delay', itS16),
       wbInteger('Flags', itU8, wbFlags([
-        'No attacking'
-      ])),
-      wbByteArray('Unknown', 1)
-    ], cpNormal, True, nil, 4)
+        {0x01} 'Parent',
+        {0x02} 'Sequence',
+        {0x04} 'No Attacking',
+        {0x04} 'Blocking'
+      ], True)),
+      wbInteger('Animation Group Section', itU8, wbIdleAnam),
+      wbInteger('Replay Delay', itU16)
+    ], cpIgnore, True)
   ]);
 
   wbRecord(INFO, 'Dialog response', [
