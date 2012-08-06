@@ -17,5 +17,4 @@ These are the planed features for TES5Edit in addition to what it does already:
  * Add Oblivion Support.
  * Add Fallout 3 Support.
  * Add Fallout New Vegas Support.
- # Unless there is a built in utility for one of these games that would make adding that feature pointless.
- * Clean Skyrim's save game files.
+  # Unless there is a built in utility for one of these games that would make adding that feature pointless.
