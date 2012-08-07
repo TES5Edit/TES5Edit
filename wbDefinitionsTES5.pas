@@ -4500,7 +4500,7 @@ begin
   wbLVLD := wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
 
   wbKeywords := wbRStruct('Keywords', [
-    wbInteger(KSIZ, 'Count', itU32),
+    wbInteger(KSIZ, 'Count', itU32), {>>> Needs Count Updated <<<}
     wbArrayS(KWDA, '', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True)
   ], []);
 
@@ -5198,11 +5198,11 @@ begin
           wbString(DMDL, 'Model Filename'),
           wbDMDT,
           wbDMDSs
-        ], [], cpNormal, False, nil, wbAllowUnordered), // End DMDL
+        ], [], cpNormal, False, nil), // End DMDL
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], [], cpNormal, False, nil, wbAllowUnordered) // Begin Stage RStruct
+      ], [], cpNormal, False, nil) // Begin Stage RStruct
     ) // End Stage Array
-  ], [], cpNormal, False, nil, wbAllowUnordered);
+  ], [], cpNormal, False, nil);
 
   wbDESTActor := wbRStruct('Destructable', [
     wbStruct(DEST, 'Header', [
@@ -6547,7 +6547,7 @@ begin
     ], cpNormal, True),
     wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO])
-  ]{, wbAllowUnordered});
+  ]);
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDIDReq,
@@ -6588,7 +6588,7 @@ begin
     wbRArray('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO])
-  ]{, wbAllowUnordered});
+  ]);
 
   wbRecord(BOOK, 'Book', [
     wbEDIDReq,
@@ -11562,7 +11562,7 @@ begin
       wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
       wbInteger(TIAS, 'Preset', itS16)
     ], []))
-  ], wbAllowUnordered, nil, cpNormal, False, wbNPCAfterLoad);
+  ], False, nil, cpNormal, False, wbNPCAfterLoad);
 //-----------------------------------------------------------------------------
 //End New NPC_
 //
@@ -12234,17 +12234,6 @@ begin
     wbCOCT,
     wbKeywords,
     wbUnknown(NAM0)
-  ], wbAllowUnordered);
-
-  wbHeadPartIndexEnum := wbEnum([
-    'Head',
-    'Ears',
-    'Mouth',
-    'Teeth Lower',
-    'Teeth Upper',
-    'Tongue',
-    'Left Eye',
-    'Right Eye'
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
@@ -12628,10 +12617,9 @@ begin
       wbFloat('Base Mass'),
       wbFloat('Accleration rate'),
       wbFloat('Deceleration rate'),
-      wbInteger('Size', itU8, wbSizeIndexEnum),
-      wbByteArray('Unknown', 3),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
+      wbInteger('Size', itU32, wbSizeIndexEnum),
+      wbInteger('Head Biped Object', itS32, wbBipedObjectEnum),
+      wbInteger('Hair Biped Object', itS32, wbBipedObjectEnum),
       wbFloat('Injured Health Pct'),
       // When Set to None this Equals FF FF FF FF
       wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
@@ -12768,21 +12756,19 @@ begin
       wbString(PHTN, 'Unknown')
     ], [])),
     // Start Movement Data
-    wbRStruct('Base Movement Defaults', [
-		  wbFormIDCk(WKMV, 'Walk', [MOVT, NULL]),
-		  wbFormIDCk(RNMV, 'Run', [MOVT, NULL]),
-		  wbFormIDCk(SWMV, 'Swim', [MOVT, NULL]),
-		  wbFormIDCk(FLMV, 'Fly', [MOVT, NULL]),
-		  wbFormIDCk(SNMV, 'Sneak', [MOVT, NULL]),
-		  wbFormIDCk(SPMV, 'Sprint', [MOVT, NULL])
-    ], []),
+    wbFormIDCk(WKMV, 'Walk', [MOVT, NULL]),
+		wbFormIDCk(RNMV, 'Run', [MOVT, NULL]),
+		wbFormIDCk(SWMV, 'Swim', [MOVT, NULL]),
+		wbFormIDCk(FLMV, 'Fly', [MOVT, NULL]),
+		wbFormIDCk(SNMV, 'Sneak', [MOVT, NULL]),
+		wbFormIDCk(SPMV, 'Sprint', [MOVT, NULL]),
     // Start Head Data
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
           wbRArray('Array INDX, HEAD', wbRStruct('Unknown', [
-            wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+            wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
             wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
           ], [])),
           wbMorphs,
@@ -12804,8 +12790,8 @@ begin
         wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
           wbRArray('Array INDX, HEAD', wbRStruct('Unknown', [
-            wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-            wbUnknown(HEAD)
+            wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
+            wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
           ], [])),
           wbMorphs,
           wbRArray('Race Presets Female', wbRStruct('Preset NPCS', [
@@ -12826,7 +12812,7 @@ begin
     // End Head Data
     wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
     wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
-  ], wbAllowUnordered);
+  ]);
 
 //------------------------------------------------------------------------------
 // Begin REFR
@@ -13321,7 +13307,7 @@ begin
 //    {--- 3D Data ---}
 //    wbXSCL,
 //    wbDATAPosRot
-  ], True{wbAllowUnordered}, nil{wbPlacedAddInfo}, cpNormal, False, nil{wbREFRAfterLoad});
+  ], True, nil{wbPlacedAddInfo}, cpNormal, False, nil{wbREFRAfterLoad});
 //------------------------------------------------------------------------------
 // End REFR
 //------------------------------------------------------------------------------

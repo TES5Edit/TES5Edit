@@ -57,7 +57,6 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
-  wbAllowUnordered: Boolean{} = False{};
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;
