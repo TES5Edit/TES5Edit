@@ -8102,8 +8102,7 @@ begin
   ]);
 
   wbRecord(AACT, 'AACT', [
-    wbEDIDReq,
-    wbCNAM
+    wbEDIDReq
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -8914,76 +8913,54 @@ begin
   wbRecord(IMGS, 'Image Space', [
     wbEDIDReq,
     wbUnknown(ENAM),
-    wbUnknown(HNAM),
-    wbUnknown(CNAM),
-    wbUnknown(TNAM),
-    wbStruct(DNAM, '', [
-      wbStruct('HDR', [
-        {00} wbFloat('Eye Adapt Speed'),
-        {04} wbFloat('Blur Radius'),
-        {08} wbFloat('Blur Passes'),
-        {12} wbFloat('Emissive Mult'),
-        {16} wbFloat('Target LUM'),
-        {20} wbFloat('Upper LUM Clamp'),
-        {24} wbFloat('Bright Scale'),
-        {28} wbFloat('Bright Clamp'),
-        {32} wbFloat('LUM Ramp No Tex'),
-        {36} wbFloat('LUM Ramp Min'),
-        {40} wbFloat('LUM Ramp Max'),
-        {44} wbFloat('Sunlight Dimmer'),
-        {48} wbFloat('Grass Dimmer'),
-        {52} wbFloat('Tree Dimmer'),
-        {56} wbUnion('Skin Dimmer', wbIMGSSkinDimmerDecider, [
-               wbFloat('Skin Dimmer'),
-               wbEmpty('Skin Dimmer', cpIgnore)
-             ])
-      ], cpNormal, False, nil, 14),
-      wbStruct('Bloom', [
-        {60} wbFloat('Blur Radius'),
-        {64} wbFloat('Alpha Mult Interior'),
-        {68} wbFloat('Alpha Mult Exterior')
-      ]),
-      wbStruct('Get Hit', [
-        {72} wbFloat('Blur Radius'),
-        {76} wbFloat('Blur Damping Constant'),
-        {80} wbFloat('Damping Constant')
-      ]),
-      wbStruct('Night Eye', [
-        wbStruct('Tint Color', [
-          {84} wbFloat('Red', cpNormal, False, 255, 0),
-          {88} wbFloat('Green', cpNormal, False, 255, 0),
-          {92} wbFloat('Blue', cpNormal, False, 255, 0)
-        ]),
-      {96} wbFloat('Brightness')
-      ]),
-      wbStruct('Cinematic', [
-        {100} wbFloat('Saturation'),
-        wbStruct('Contrast', [
-          {104} wbFloat('Avg Lum Value'),
-          {108} wbFloat('Value')
-        ]),
-        {112} wbFloat('Cinematic - Brightness - Value'),
-        wbStruct('Tint', [
-          wbStruct('Color', [
-            {116} wbFloat('Red', cpNormal, False, 255, 0),
-            {120} wbFloat('Green', cpNormal, False, 255, 0),
-            {124} wbFloat('Blue', cpNormal, False, 255, 0)
-          ]),
-        {128} wbFloat('Value')
-        ])
-      ]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbInteger('Flags', itU8, wbFlags([
-        'Saturation',
-        'Contrast',
-        'Tint',
-        'Brightness'
-      ], True)),
-      wbByteArray('Unknown', 3)
-    ], cpNormal, True, nil, 5)
+    wbStruct(HNAM, 'HDR', [
+      wbFloat('Eye Adapt Speed'),
+      wbFloat('Bloom Blur Radius'),
+      wbFloat('Bloom Threshold'),
+      wbFloat('Bloom Scale'),
+      wbFloat('Receive Bloom Threshold'),
+      wbFloat('White'),
+      wbFloat('Sunlight Scale'),
+      wbFloat('Sky Scale'),
+      wbFloat('Eye Adapt Strength')
+    ]),
+    wbStruct(CNAM, 'Cinematic', [
+      wbFloat('Saturation'),
+      wbFloat('Brightness'),
+      wbFloat('Contrast')
+    ]),
+    wbStruct(TNAM, 'Tint', [
+      wbFloat('Amount'),
+      wbStruct('Color', [
+        wbFloat('Red', cpNormal, True, 255, 0),
+        wbFloat('Green', cpNormal, True, 255, 0),
+        wbFloat('Blue', cpNormal, True, 255, 0)
+      ])
+    ]),
+    wbStruct(DNAM, 'Depth of Field', [
+      wbFloat('Strength'),
+      wbFloat('Distance'),
+      wbFloat('Range'),
+      wbByteArray('Unknown', 2),
+      wbInteger('Sky / Blur Radius', itU16, wbEnum([], [
+        16384, 'Radius 0',
+        16672, 'Radius 1',
+        16784, 'Radius 2',
+        16848, 'Radius 3',
+        16904, 'Radius 4',
+        16936, 'Radius 5',
+        16968, 'Radius 6',
+        17000, 'Radius 7',
+        16576, 'No Sky, Radius 0',
+        16736, 'No Sky, Radius 1',
+        16816, 'No Sky, Radius 2',
+        16880, 'No Sky, Radius 3',
+        16920, 'No Sky, Radius 4',
+        16952, 'No Sky, Radius 5',
+        16984, 'No Sky, Radius 6',
+        17016, 'No Sky, Radius 7'
+      ]))
+    ], cpNormal, False, nil, 3)
   ]);
 
   wbRecord(IMAD, 'Image Space Adapter', [
@@ -8994,8 +8971,8 @@ begin
       //wbArray('Unknown', wbByteArray('Unknown', 4), 48),
       wbByteArray('Unknown', 4*48),
       wbInteger('Radial Blur Flags', itU32, wbFlags(['Use Target'])),
-      wbFloat('Radial Blue Center X'),
-      wbFloat('Radial Blue Center Y'),
+      wbFloat('Radial Blur Center X'),
+      wbFloat('Radial Blur Center Y'),
       wbArray('Unknown', wbByteArray('Unknown', 4), 3),
       wbInteger('DoF Flags', itU32, wbFlags([
         {0x00000001}'Use Target',
@@ -9765,37 +9742,32 @@ begin
       wbFloat('Angle Threshold'),
       wbFloat('Placement Radius'),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbInteger('Flags', itU32, wbFlags([
-        'No Decal Data'
-      ]))
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'No Decal Data'
+      ])),
+      wbInteger('Impact Result', itU8, wbEnum([
+         {0} 'Default',
+         {1} 'Destroy',
+         {2} 'Bounce',
+         {3} 'Impale',
+         {4} 'Stick'
+      ])),
+      wbByteArray('Unknown', 2)
     ], cpNormal, True),
     wbDODT,
     wbFormIDCk(DNAM, 'Texture Set', [TXST]),
-    wbunknown(ENAM),
-    wbFormIDCk(SNAM, 'Sound 1', [SNDR, SOUN, NULL]),
-    wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL]),
-    wbFormIDCk(NAM2, 'Unknown', [HAZD, NULL])
+    wbFormIDCk(ENAM, 'Secondary Texture Set', [TXST]),
+    wbFormIDCk(SNAM, 'Sound 1', [SNDR, NULL]),
+    wbFormIDCk(NAM1, 'Sound 2', [SNDR, NULL]),
+    wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL])
   ]);
 
   wbRecord(IPDS, 'Impact DataSet', [
     wbEDIDReq,
-    wbStruct(DATA, 'Impacts', [
-      wbFormIDCk('Stone', [IPCT, NULL]),
-      wbFormIDCk('Dirt', [IPCT, NULL]),
-      wbFormIDCk('Grass', [IPCT, NULL]),
-      wbFormIDCk('Glass', [IPCT, NULL]),
-      wbFormIDCk('Metal', [IPCT, NULL]),
-      wbFormIDCk('Wood', [IPCT, NULL]),
-      wbFormIDCk('Organic', [IPCT, NULL]),
-      wbFormIDCk('Cloth', [IPCT, NULL]),
-      wbFormIDCk('Water', [IPCT, NULL]),
-      wbFormIDCk('Hollow Metal', [IPCT, NULL]),
-      wbFormIDCk('Organic Bug', [IPCT, NULL]),
-      wbFormIDCk('Organic Glow', [IPCT, NULL])
-    ], cpNormal, True, nil, 9),
-    wbRArray('Unknown - LCEC', wbRStruct('Unknown', [
-      wbUnknown(PNAM)
-    ], []))
+    wbRArray('Data', wbStruct(PNAM, '', [
+      wbFormIDCk('Material', [MATT]),
+      wbFormIDCk('Impact', [IPCT])
+    ]))
   ]);
 
   wbRecord(ECZN, 'Encounter Zone', [
@@ -10683,16 +10655,14 @@ begin
     wbOBNDReq,
     wbFULLReq,
     wbMODL,
-    wbICONReq,
-    wbSCRI,
+    wbICON,
     wbDEST,
     wbSounds,
     wbKeywords,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
-    ], cpNormal, True),
-    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
+    ], cpNormal, True)
   ]);
 
   wbQuadrantEnum := wbEnum([
