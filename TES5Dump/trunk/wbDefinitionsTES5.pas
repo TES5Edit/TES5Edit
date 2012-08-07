@@ -12548,7 +12548,6 @@ begin
         wbFloat('W')
       ]);
 
-// Happens 43 Times
   wbPHWT := wbRStruct('FaceFX Phonemes', [
     wbRStruct('FaceFX - IY', [wbPhonemeTargets], []),
     wbRStruct('FaceFX - IH', [wbPhonemeTargets], []),
@@ -12688,8 +12687,6 @@ begin
       wbFloat('Angular Acceleration Rate'),
       wbFloat('Angular Tolerance'),
       wbRACE_DATAFlags02,
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
