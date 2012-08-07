@@ -71,7 +71,7 @@ var
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{ = True{};
+  wbReportMode: Boolean{} = True{};
   wbReportUnused: Boolean{} = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
