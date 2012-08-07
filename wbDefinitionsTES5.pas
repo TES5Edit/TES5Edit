@@ -903,12 +903,15 @@ var
   wbCELLDATAFlags: IwbFlagsDef;
   wbBipedObjectEnum: IwbEnumDef;
   wbRACE_VNAMFlags: IwbIntegerDef;
+  wbRACE_DATAFlags01: IwbIntegerDef;
+  wbRACE_DATAFlags02: IwbIntegerDef;
+  wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
   wbBrowMorphFlags: IwbIntegerDef;
   wbEyesMorphFlags01: IwbIntegerDef;
   wbEyesMorphFlags02: IwbIntegerDef;
   wbLipMorphFlags: IwbIntegerDef;
-  wbPHWT: IwbSubRecordArrayDef;
+  wbPHWT: IwbSubRecordStructDef;
   wbMorphs: IwbSubRecordStructDef;
 // --- Pack ---
   wbPKDT: IwbSubRecordDef;
@@ -12456,27 +12459,141 @@ begin
         {0x80000000}'Unknown 32'
       ]));
 
-  wbPHWT := wbRArray('Array PHWT', wbRStruct('Unknown', [
-      wbStruct(PHWT, 'Unknown', [
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 0)
-      ])
-    ], []));
+  wbRACE_DATAFlags01 := wbInteger('Flags', itU32, wbFlags([
+        {0x00000001}'Playable',
+        {0x00000002}'FaceGen Head',
+        {0x00000004}'Child',
+        {0x00000008}'Tilt Front/Back',
+        {0x00000010}'Tilt Left/Right',
+        {0x00000020}'No Shadow',
+        {0x00000040}'Swims',
+        {0x00000080}'Flies',
+        {0x00000100}'Walks',
+        {0x00000200}'Immobile',
+        {0x00000400}'Not Pushable',
+        {0x00000800}'No Combat In Water',
+        {0x00001000}'No Rotating to Head-Track',
+        {0x00002000}'Don''t Show Blood Spray',
+        {0x00004000}'Don''t Show Blood Decal',
+        {0x00008000}'Uses Head Track Anims',
+        {0x00010000}'Spells Align w/Magic Node',
+        {0x00020000}'Use World Raycasts For FootIK',
+        {0x00040000}'Allow Ragdoll Collision',
+        {0x00080000}'Regen HP In Combat',
+        {0x00100000}'Can''t Open Doors',
+        {0x00200000}'Allow PC Dialogue',
+        {0x00400000}'No Knockdowns',
+        {0x00800000}'Allow Pickpocket',
+        {0x01000000}'Always Use Proxy Controller',
+        {0x02000000}'Don''t Show Weapon Blood',
+        {0x03000000}'Overlay Head Part List', {>>>Only one can be active<<<}
+        {0x08000000}'Override Head Part List', {>>>Only one can be active<<<}
+        {0x10000000}'Can Pickup Items',
+        {0x20000000}'Allow Multiple Membrane Shaders',
+        {0x40000000}'Can Dual Wield',
+        {0x80000000}'Avoids Roads'
+      ]));
+
+  wbRACE_DATAFlags02 := wbInteger('Flags 2', itU32, wbFlags([
+        {0x00000001}'Unknown 1',
+        {0x00000002}'Non-Hostile',
+        {0x00000004}'Unknown 3',
+        {0x00000008}'Unknown 4',
+        {0x00000010}'Unknown 5',
+        {0x00000020}'Unknown 6',
+        {0x00000040}'Unknown 7',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Unknown 11',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Unknown 13',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Unknown 15',
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ]));
+
+  wbPhonemeTargets := wbStruct(PHWT, 'Phoneme Targets', [
+        wbFloat('Aah'),
+        wbFloat('BigAah'),
+        wbFloat('BMP'),
+        wbFloat('ChJsh'),
+        wbFloat('DST'),
+        wbFloat('Eee'),
+        wbFloat('Eh'),
+        wbFloat('FV'),
+        wbFloat('I'),
+        wbFloat('K'),
+        wbFloat('N'),
+        wbFloat('Oh'),
+        wbFloat('OohQ'),
+        wbFloat('R'),
+        wbFloat('TH'),
+        wbFloat('W')
+      ]);
+
+// Happens 43 Times
+  wbPHWT := wbRStruct('FaceFX Phonemes', [
+    wbRStruct('FaceFX - IY', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - IH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - EH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - EY', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - AE', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - AA', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - AW', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - AY', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - AH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - AO', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - OY', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - OW', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - UH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - UW', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - ER', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - AX', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - S', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - SH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - Z', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - ZH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - F', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - TH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - V', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - DH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - M', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - N', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - NG', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - L', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - R', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - W', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - Y', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - HH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - B', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - D', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - JH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - G', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - P', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - T', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - K', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - CH', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - SIL', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - SHOTSIL', [wbPhonemeTargets], []),
+    wbRStruct('FaceFX - FLAP', [wbPhonemeTargets], [])
+  ], []);
 
   wbMorphs := wbRStruct('Available Morphs', [
       wbByteArray(MPAI, 'Unknown', 0),
@@ -12546,40 +12663,7 @@ begin
       wbFloat('Female Height'),
       wbFloat('Male Weight'),
       wbFloat('Female Weight'),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001}'Playable',
-        {0x00000002}'FaceGen Head',
-        {0x00000004}'Child',
-        {0x00000008}'Tilt Front/Back',
-        {0x00000010}'Tilt Left/Right',
-        {0x00000020}'No Shadow',
-        {0x00000040}'Swims',
-        {0x00000080}'Flies',
-        {0x00000100}'Walks',
-        {0x00000200}'Immobile',
-        {0x00000400}'Not Pushable',
-        {0x00000800}'No Combat In Water',
-        {0x00001000}'No Rotating to Head-Track',
-        {0x00002000}'Don''t Show Blood Spray',
-        {0x00004000}'Don''t Show Blood Decal',
-        {0x00008000}'Uses Head Track Anims',
-        {0x00010000}'Spells Align w/Magic Node',
-        {0x00020000}'Use World Raycasts For FootIK',
-        {0x00040000}'Allow Ragdoll Collision',
-        {0x00080000}'Regen HP In Combat',
-        {0x00100000}'Can''t Open Doors',
-        {0x00200000}'Allow PC Dialogue',
-        {0x00400000}'No Knockdowns',
-        {0x00800000}'Allow Pickpocket',
-        {0x01000000}'Always Use Proxy Controller',
-        {0x02000000}'Don''t Show Weapon Blood',
-        {0x03000000}'Overlay Head Part List', {>>>Only one can be active<<<}
-        {0x08000000}'Override Head Part List', {>>>Only one can be active<<<}
-        {0x10000000}'Can Pickup Items',
-        {0x20000000}'Allow Multiple Membrane Shaders',
-        {0x40000000}'Can Dual Wield',
-        {0x80000000}'Avoids Roads'
-      ])),
+      wbRACE_DATAFlags01,
       wbFloat('Starting Health'),
       wbFloat('Starting Magicka'),
       wbFloat('Starting Stamina'),
@@ -12603,40 +12687,7 @@ begin
       wbByteArray('Unknown', 4),
       wbFloat('Angular Acceleration Rate'),
       wbFloat('Angular Tolerance'),
-      wbInteger('Flags 2', itU32, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Non-Hostile',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ])),
+      wbRACE_DATAFlags02,
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
