@@ -8593,7 +8593,7 @@ begin
               SetLength(FloatsAtOffSet, Succ(Offset));
 
             try
-              f2 := RoundToEx(f, -3);
+              f2 := RoundToEx(f, -3); {>>> Floating Point Violation <<<}
               if (f2 <> 0) and (Abs(f-f2) < 0.0002) then begin
                 if (f2 > -1000000) and (f2 < 1000000) then begin
                   Inc(FoundFloatAtOffSet[Offset]);
