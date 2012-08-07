@@ -902,6 +902,8 @@ var
   wbOwnership: IwbSubRecordStructDef;
   wbCELLDATAFlags: IwbFlagsDef;
   wbBipedObjectEnum: IwbEnumDef;
+  wbRACEVNAMFlags: IwbIntegerDef;
+  wbPHWT: IwbSubRecordArrayDef;
 // --- Pack ---
   wbPKDT: IwbSubRecordDef;
   wbPLDT: IwbSubRecordDef;
@@ -4478,6 +4480,7 @@ begin
   Result := Container.ElementByName['Type'].NativeValue;
 end;
 
+
 procedure DefineTES5a;
 begin
 //-----------------------------------------------------------------
@@ -5347,6 +5350,10 @@ begin
 // Pattern  9:
 // Pattern 10:
 //------------------------------------------------------------------------------
+end;
+
+procedure DefineTES5b;
+begin
   wbRecord(ACHR, 'Placed NPC', [
 // EDID
     wbEDID,
@@ -5965,11 +5972,8 @@ begin
       1059, 'Specific: Tutorial',
       1060, 'Specific: You''re SPECIAL book'
     ]);
-end;
 
-procedure DefineTES5b;
-begin
-  wbMiscStatEnum :=
+		wbMiscStatEnum :=
     wbEnum([
       'Quests Completed',
       'Locations Discovered',
@@ -6654,7 +6658,10 @@ begin
     {0x40000000} 'Unknown 31',
     {0x80000000} 'Unknown 32'
   ]);
+end;
 
+procedure DefineTES5c;
+begin
 //------------------------------------------------------------------------------
 // Begin CELL
 //------------------------------------------------------------------------------
@@ -6931,11 +6938,8 @@ begin
       ])
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineTES5c;
-begin
-
+	
   wbRecord(CLDC, 'CLDC', [
     wbEDIDReq
   ]);
@@ -7409,10 +7413,7 @@ begin
     wbFormIDCk(LNAM, 'Melee Weapon List', [FLST], False, cpNormal, False, wbActorTemplateUseTraits)
   ], True);
 
-end;
 
-procedure DefineTES5d;
-begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
     wbStruct(CSGD, 'General', [
@@ -7472,7 +7473,10 @@ begin
       {0x04} 'Allow Dual Wielding'
     ]), cpNormal, True)
   ]);
+end;
 
+procedure DefineTES5d;
+begin
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
     wbFULL,
@@ -8082,7 +8086,10 @@ begin
     wbEDIDReq,
     wbCNAM
   ]);
+end;
 
+procedure DefineTES5e;
+begin
   wbRecord(LCRT, 'LCRT', [
     wbEDIDReq,
     wbCNAM
@@ -8300,7 +8307,10 @@ begin
     wbByteArray(DATA, 'Unknown', 1, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ]);
+end;
 
+procedure DefineTES5f;
+begin
   wbRecord(PWAT, 'Placeable Water', [
     wbEDIDReq,
     wbOBNDReq,
@@ -8387,10 +8397,6 @@ begin
     ])
   ]);
 
-end;
-
-procedure DefineTES5e;
-begin
 
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
@@ -8754,7 +8760,10 @@ begin
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
+end;
 
+procedure DefineTES5g;
+begin
   wbRecord(PMIS, 'Placed Missile', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
@@ -9624,7 +9633,10 @@ begin
       ]))
     ], cpNormal, True)
   ]);
+end;
 
+procedure DefineTES5h;
+begin
   wbRecord(AVIF, 'ActorValue Information', [
     wbEDIDReq,
     wbFULL,
@@ -9817,7 +9829,10 @@ begin
     wbUnknown(NAM0),
     wbUnknown(CNAM)
   ]);
+end;
 
+procedure DefineTES5i;
+begin
   wbRecord(MESG, 'Message', [
     wbEDIDReq,
     wbDESCReq,
@@ -10006,7 +10021,10 @@ begin
     wbUnknown(XNAM),
     wbString(ENAM, 'Unknown', 4)
   ]);
+end;
 
+procedure DefineTES5j;
+begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDIDReq,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
@@ -10208,7 +10226,10 @@ begin
       'Related'
     ]))
   ]);
+end;
 
+procedure DefineTES5k;
+begin
   wbRecord(OTFT, 'OTFT', [
     wbEDIDReq,
     wbUnknown(INAM)
@@ -10425,7 +10446,10 @@ begin
     ], cpNormal, True),
     wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']), cpNormal, True)
   ]);
+end;
 
+procedure DefineTES5l;
+begin
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDIDReq,
     wbStruct(DATA, 'Data', [
@@ -10799,7 +10823,10 @@ begin
     wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
+end;
 
+procedure DefineTES5m;
+begin
   wbRecord(LSCR, 'Load Screen', [
     wbEDIDReq,
     wbICONReq,
@@ -12003,7 +12030,10 @@ begin
       wbRArray('Some PFOR', wbUnknown(PFOR))
     ], [], cpNormal, False))
   ], []);
+end;
 
+procedure DefineTES5n;
+begin
 //------------------------------------------------------------------------------
 // Begin PACK
 //------------------------------------------------------------------------------
@@ -12287,6 +12317,64 @@ begin
     ], []))
   ], []));
 
+  wbRACEVNAMFlags := wbInteger('Flags 3', itU16, wbFlags([
+        {0x00000001}'Hand To Hand Melee',
+        {0x00000002}'One Hand Sword',
+        {0x00000004}'One Hand Dagger',
+        {0x00000008}'One Hand Axe',
+        {0x00000010}'One Hand Mace',
+        {0x00000020}'Two Hand Sword',
+        {0x00000040}'Two Hand Axe',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Unknown 9',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Unknown 11',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Unknown 13',
+        {0x00002000}'Unknown 14',
+        {0x00004000}'Unknown 15',
+        {0x00008000}'Unknown 16',
+        {0x00010000}'Unknown 17',
+        {0x00020000}'Unknown 18',
+        {0x00040000}'Unknown 19',
+        {0x00080000}'Unknown 20',
+        {0x00100000}'Unknown 21',
+        {0x00200000}'Unknown 22',
+        {0x00400000}'Unknown 23',
+        {0x00800000}'Unknown 24',
+        {0x01000000}'Unknown 25',
+        {0x02000000}'Unknown 26',
+        {0x03000000}'Unknown 27',
+        {0x08000000}'Unknown 28',
+        {0x10000000}'Unknown 29',
+        {0x20000000}'Unknown 30',
+        {0x40000000}'Unknown 31',
+        {0x80000000}'Unknown 32'
+      ]));
+
+  wbPHWT := wbRArray('Array PHWT', wbRStruct('Unknown', [
+      wbStruct(PHWT, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 0)
+      ])
+    ], []));
+
+
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
@@ -12512,41 +12600,8 @@ begin
       wbUnknown(SPED)
     ], [])),
     wbStruct(VNAM, 'Unknown', [
-      wbInteger('Flags 3', itU8, wbFlags([
-        {0x00000001}'Hand To Hand Melee',
-        {0x00000002}'One Hand Sword',
-        {0x00000004}'One Hand Dagger',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ])),
-      wbByteArray('Unknown', 3)
+      wbRACEVNAMFlags,
+      wbByteArray('Unknown', 2)
     ]),
     wbRArray('', wbRStruct('Equip Slots', [
 			wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])
@@ -12554,27 +12609,6 @@ begin
     wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
     wbRArray('Array PHTN', wbRStruct('Unknown', [
       wbString(PHTN, 'Unknown')
-    ], [])),
-    wbRArray('Array PHWT', wbRStruct('Unknown', [
-      wbStruct(PHWT, 'Unknown', [
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 0)
-      ])
     ], [])),
     // Start Movement Data
     wbRStruct('Base Movement Defaults', [
@@ -13542,7 +13576,10 @@ begin
     wbUnknown(INTV),
     wbUnknown(INCC)
   ], True, nil, cpNormal, True, wbRemoveOFST);
+end;
 
+procedure DefineTES5o;
+begin
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,
@@ -13593,10 +13630,6 @@ begin
       wbInteger('Winter', itU8)
     ], cpNormal, True)
   ]);
-end;
-
-procedure DefineTES5f;
-begin
 
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
@@ -14389,7 +14422,10 @@ begin
       wbFloat('Value')
     ])
   ]);
+end;
 
+procedure DefineTES5p;
+begin
   wbRecord(CCRD, 'Caravan Card', [
     wbEDIDReq,
     wbOBNDReq,
@@ -14636,7 +14672,10 @@ begin
       ])
     ])
   ]);
+end;
 
+procedure DefineTES5q;
+begin
   wbRecord(RCCT, 'Recipe Category', [
     wbEDIDReq,
     wbFULL,
@@ -14815,6 +14854,17 @@ begin
   DefineTES5d;
   DefineTES5e;
   DefineTES5f;
+  DefineTES5g;
+  DefineTES5h;
+  DefineTES5i;
+  DefineTES5j;
+  DefineTES5k;
+  DefineTES5l;
+  DefineTES5m;
+  DefineTES5n;
+  DefineTES5o;
+  DefineTES5p;
+  DefineTES5q;
 end;
 
 initialization
