@@ -12374,7 +12374,6 @@ begin
       ])
     ], []));
 
-
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
@@ -12607,6 +12606,7 @@ begin
 			wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])
     ], [])),
     wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
+    wbPHWT,
     wbRArray('Array PHTN', wbRStruct('Unknown', [
       wbString(PHTN, 'Unknown')
     ], [])),
