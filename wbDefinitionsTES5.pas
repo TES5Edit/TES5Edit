@@ -4519,7 +4519,7 @@ begin
   wbBoolU32 := wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
   wbCITC := wbInteger(CITC, 'Count', itU32);
-  wbLVLD := wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True);
+  wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
   wbKeywords := wbRStruct('Keywords', [
     wbInteger(KSIZ, 'Count', itU32), {>>> Needs Count Updated <<<}
@@ -9036,7 +9036,6 @@ begin
     wbStruct(DNAM, 'Data', [
       wbInteger('Flags', itU32, wbFlags(['Animatable'])),
       wbFloat('Duration'),
-      //wbArray('Unknown', wbByteArray('Unknown', 4), 48),
       wbByteArray('Unknown', 4*48),
       wbInteger('Radial Blur Flags', itU32, wbFlags(['Use Target'])),
       wbFloat('Radial Blur Center X'),
@@ -9054,9 +9053,9 @@ begin
         {0x00000100}'Mode - Front',
         {0x00000200}'Mode - Back',
         {0x00000400}'No Sky',
-        {0x00000800}'Blur Radius Bit 0',
+        {0x00000800}'Blur Radius Bit 2',
         {0x00001000}'Blur Radius Bit 1',
-        {0x00002000}'Blur Radius Bit 2'
+        {0x00002000}'Blur Radius Bit 0'
       ])),
       wbUnknown
     ]),
@@ -9787,14 +9786,21 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(MATT, 'MATT', [
+  wbRecord(MATT, 'Material Type', [
     wbEDIDReq,
-    wbFormID(PNAM, 'Material parent'),
-    wbString(MNAM, 'Material name'),
-    wbunknown(CNAM),
-    wbunknown(BNAM),
-    wbunknown(FNAM),
-    wbFormID(HNAM, 'Havok name')
+    wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
+    wbString(MNAM, 'Material Name'),
+    wbStruct(CNAM, 'Havok Display Color', [
+      wbFloat('Red', cpNormal, True, 255, 0),
+      wbFloat('Green', cpNormal, True, 255, 0),
+      wbFloat('Blue', cpNormal, True, 255, 0)
+    ]),
+    wbFloat(BNAM, 'Buoyancy'),
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      'Stair Material',
+      'Arrows Stick'
+    ], False)),
+    wbFormIDCk(HNAM, 'Havok Impact Data Set', [IPDS, NULL])
   ]);
 
   wbRecord(IPCT, 'Impact', [
@@ -9854,26 +9860,45 @@ begin
     ], cpNormal, True, nil, 2)
   ]);
 
-  wbRecord(LCTN, 'LCTN', [
+  wbRecord(LCTN, 'Location', [
     wbEDIDReq,
-    wbUnknown(ACPR),
-    wbUnknown(LCPR),
-    wbUnknown(LCUN),
-    wbUnknown(LCSR),
-    wbRArray('Unknown - LCEC', wbRStruct('Unknown', [
-      wbUnknown(LCEC)
-    ], [])),
-    wbUnknown(LCID),
-    wbUnknown(LCEP),
+    wbArray(LCPR, 'Actors', wbStruct('', [
+      wbFormIDCk('Actor', [ACHR]),
+      wbFormIDCk('Location', [WRLD, CELL]),
+      wbByteArray('Unknown', 4)
+    ])),
+    wbArray(LCUN, 'Unique Refs', wbStruct('', [
+      wbFormIDCk('Actor', [NPC_]),
+      wbFormIDCk('Ref', [ACHR]),
+      wbFormIDCk('Location', [LCTN])
+    ])),
+    wbArray(LCSR, 'Location Ref Types', wbStruct('', [
+      wbFormIDCk('Loc Ref Type', [LCRT]),
+      wbFormIDCk('Marker', [REFR, ACHR]),
+      wbFormIDCk('Location', [WRLD, CELL]),
+      wbByteArray('Unknown', 4)
+    ])),
+    wbRArray('Unknown',
+      wbStruct(LCEC, 'Unknown', [
+        wbFormIDCk('Location', [WRLD, CELL]),
+        wbArray('Unknown', wbByteArray('Unknown', 4))
+      ])
+    ),
+    wbArray(LCID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
+    wbArray(LCEP, 'Unknown', wbStruct('', [
+      wbFormIDCk('Actor', [ACHR]),
+      wbFormIDCk('Ref', [REFR]),
+      wbByteArray('Unknown', 4)
+    ])),
     wbFull,
     wbKeywords,
-    wbFormIDCk(PNAM, 'Unknown', [LCTN, NULL]),
-    wbFormIDCk(NAM1, 'Unknown', [MUSC, NULL]),
-    wbUnknown(FNAM),
-    wbUnknown(MNAM),
-    wbUnknown(RNAM),
-    wbUnknown(NAM0),
-    wbUnknown(CNAM)
+    wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
+    wbFormIDCk(NAM1, 'Music', [MUSC, NULL]),
+    wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
+    wbFormIDCk(MNAM, 'World Location Marker Ref', [REFR]),
+    wbFloat(RNAM, 'World Location Radius'),
+    wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
+    wbCNAM
   ]);
 end;
 
@@ -9985,7 +10010,7 @@ begin
         wbInteger('Blue', itU8),
         wbByteArray('Unknown', 1)
       ]),
-      wbStruct('Fog Color', [
+      wbStruct('Fog Color Near', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
@@ -9998,9 +10023,40 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbByteArray('Unknown', 0)
-    ], cpNormal, True),
-    wbUnknown(DALC)
+      wbByteArray('Unknown', 32),
+      wbStruct('Fog Color Far', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbFloat('Fog Max'),
+      wbStruct('Light Fade Distances', [
+        wbFloat('Start'),
+        wbFloat('End')
+      ]),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True, nil, 11),
+    wbStruct(DALC, 'Directional Ambient Values', [
+      wbArray('Colors',
+        wbStruct('Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-']
+      ),
+      wbStruct('Specular (unused)', [
+        wbStruct('Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbFloat('Fresnel Power')
+      ], cpNormal, True, nil, 1)
+    ])
   ]);
 
   wbRecord(MUSC, 'Music Type', [
@@ -10281,7 +10337,7 @@ begin
     wbUnknown(INAM)
   ]);
 
-  wbRecord(ARTO, 'ARTO', [
+  wbRecord(ARTO, 'Art object', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
@@ -10292,16 +10348,30 @@ begin
     ]))
   ]);
 
-//----------------------------------------------------------------------------
-// New
-//----------------------------------------------------------------------------
-  wbRecord(MATO, 'MATO', [
+  wbRecord(MATO, 'Material Object', [
     wbEDIDReq,
     wbMODL,
-    wbRArray('Unknown - DNAM', wbRStruct('Unknown', [
-      wbUnknown(DNAM)
-    ], [])),
-    wbUnknown(DATA)
+    wbRArray('Property Data',
+      wbByteArray(DNAM, 'Data', 0, cpIgnore, False, False, wbNeverShow)
+    ),
+    wbStruct(DATA, 'Directional Material Data', [
+      wbFloat('Falloff Scale'),
+      wbFloat('Falloff Bias'),
+      wbFloat('Noise UV Scale'),
+      wbFloat('Material UV Scale'),
+      wbStruct('Projection Vector', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]),
+      wbFloat('Normal Dampener'),
+      wbStruct('Single Pass Color', [
+        wbFloat('Red', cpNormal, True, 255, 0),
+        wbFloat('Green', cpNormal, True, 255, 0),
+        wbFloat('Blue', cpNormal, True, 255, 0)
+      ]),
+      wbInteger('Flags', itU32, wbFlags(['Single Pass']))
+    ], cpNormal, True, nil, 5)
   ]);
 
   wbRecord(MOVT, 'MOVT', [
@@ -10828,9 +10898,10 @@ begin
 
   wbRecord(LIGH, 'Light', [
     wbEDIDReq,
+    wbVMAD,
     wbOBNDReq,
     wbMODL,
-    wbSCRI,
+    wbDEST,
     wbFULL,
     wbICON,
     wbStruct(DATA, '', [
@@ -10853,19 +10924,24 @@ begin
         {0x00000080} 'Pulse',
         {0x00000100} 'Pulse Slow',
         {0x00000200} 'Spot Light',
-        {0x00000400} 'Spot Shadow'
+        {0x00000400} 'Shadow Spotlight',
+        {0x00000800} 'Shadow Hemisphere',
+        {0x00001000} 'Shadow Omnidirectional',
+        {0x00002000} 'Portal-strict'
       ])),
       wbFloat('Falloff Exponent'),
       wbFloat('FOV'),
+      wbFloat('Near Clip'),
+      wbStruct('Flicker Effect', [
+        wbFloat('Period', cpNormal, False, 0.01),
+        wbFloat('Intensity Amplitude'),
+        wbFloat('Movement Amplitude')
+      ]),
       wbInteger('Value', itU32),
-      wbFloat('Weight'),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
+      wbFloat('Weight')
     ], cpNormal, True),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
+    wbFormIDCk(SNAM, 'Sound', [SNDR])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
@@ -10876,102 +10952,37 @@ begin
     wbICONReq,
     wbDESCReq,
     wbCTDAs,
-    wbUnknown(NNAM),
-//    wbFormIDCk(NNAM, 'File Name', [STAT, NULL], False, cpNormal, True),
-    wbUnknown(SNAM),
-    wbUnknown(RNAM),
-    wbUnknown(ONAM),
-    wbUnknown(XNAM),
-//    wbRArrayS('Unknown XYZ Location', wbStructSK(XNAM, [0, 1], 'Location', [
-//      wbByteArray('Unknown', 2),
-//      wbFormIDCk('World', [CELL, WRLD, NULL]),
-//      wbByteArray('Unknown', 2),
-//      wbByteArray('Unknown', 2),
-//      wbByteArray('Unknown', 2)
-//      wbStructSK([0, 1], 'Indirect', [
-//        wbFormIDCk('World', [NULL, WRLD]),
-//        wbStructSK([0,1], 'Grid', [
-//          wbInteger('Y', itS16),
-//          wbInteger('X', itS16)
-//        ])
-//      ])
-//    ], cpNormal, True)),
-    wbString(MOD2, 'Camera File', 0, cpNormal, True),
+    wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, NULL], False, cpNormal, True),
+    wbFloat(SNAM, 'Initial Scale'),
+    wbStruct(RNAM, 'Initial Rotation', [
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16),
+      wbInteger('Z', itS16)
+    ]),
+    wbStruct(ONAM, 'Rotation Offset Constraints', [
+      wbInteger('Min', itS16),
+      wbInteger('Max', itS16)
+    ]),
+    wbStruct(XNAM, 'Initial Translation Offset', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
+    ]),
+    wbString(MOD2, 'Camera Path', 0, cpNormal, True),
     wbFormIDCk(WMI1, 'Load Screen Type', [LSCT], False, cpNormal, True)
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [
     wbEDIDReq,
-    wbICON,
-    wbFormIDCk(TNAM, 'Texture', [TXST], False, cpNormal, True),
-    wbFormIDCk(MNAM, 'Texture', [MATT, NULL], False, cpNormal, True),
+    wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, True),
+    wbFormIDCk(MNAM, 'Material Type', [MATT, NULL], False, cpNormal, True),
     wbStruct(HNAM, 'Havok Data', [
-      wbInteger('Material Type', itU8, wbEnum([
-        {00} 'STONE',
-        {01} 'CLOTH',
-        {02} 'DIRT',
-        {03} 'GLASS',
-        {04} 'GRASS',
-        {05} 'METAL',
-        {06} 'ORGANIC',
-        {07} 'SKIN',
-        {08} 'WATER',
-        {09} 'WOOD',
-        {10} 'HEAVY STONE',
-        {11} 'HEAVY METAL',
-        {12} 'HEAVY WOOD',
-        {13} 'CHAIN',
-        {14} 'SNOW',
-        {15} 'ELEVATOR',
-        {16} 'HOLLOW METAL',
-        {17} 'SHEET METAL',
-        {18} 'SAND',
-        {19} 'BRIKEN CONCRETE',
-        {20} 'VEHILCE BODY',
-        {21} 'VEHILCE PART SOLID',
-        {22} 'VEHILCE PART HOLLOW',
-        {23} 'BARREL',
-        {24} 'BOTTLE',
-        {25} 'SODA CAN',
-        {26} 'PISTOL',
-        {27} 'RIFLE',
-        {28} 'SHOPPING CART',
-        {29} 'LUNCHBOX',
-        {30} 'BABY RATTLE',
-        {31} 'RUBER BALL'
-      ])),
       wbInteger('Friction', itU8),
       wbInteger('Restitution', itU8)
     ], cpNormal, True),
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]);
-
-//-----------------------------------------------------------------------------
-// LVLC, 'Leveled Creature' unused in Skyrim
-//-----------------------------------------------------------------------------
-//  wbRecord(LVLC, 'Leveled Creature', [
-//    wbEDIDReq,
-//    wbOBNDReq,
-//    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-//    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-//      {0x01} 'Calculate from all levels <= player''s level',
-//      {0x02} 'Calculate for each item in count'
-//    ]), cpNormal, True),
-//    wbRArrayS('Leveled List Entries',
-//      wbRStructExSK([0], [1], 'Leveled List Entry', [
-//        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-//          wbInteger('Level', itS16),
-//          wbByteArray('Unused', 2),
-//          wbFormIDCk('Reference', [CREA, LVLC]),
-//          wbInteger('Count', itS16),
-//          wbByteArray('Unused', 2)
-//        ]),
-//        wbCOED
-//      ], []),
-//    cpNormal, True),
-//    wbMODL
-//  ]);
 
   wbRecord(LVLN, 'Leveled NPC', [
     wbEDIDReq,
@@ -10997,10 +11008,6 @@ begin
     wbMODL
   ]);
 
-//----------------------------------------------------------------------------------
-// Begin New LVLI----------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------
-
   wbRecord(LVLI, 'Leveled Item', [
     wbEDIDReq,
     wbOBNDReq,
@@ -11018,7 +11025,7 @@ begin
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itS16),
           wbByteArray('Unknown', 2),
-          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
+          wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH]),
           wbInteger('Count', itS16),
           wbByteArray('Unknown', 2)
         ]),
@@ -11027,61 +11034,24 @@ begin
     )
   ]);
 
-//----------------------------------------------------------------------------------
-// End New LVLI
-//
-// Begin Old LVLI
-//----------------------------------------------------------------------------------
-//   wbRecord(LVLI, 'Leveled Item', [
-//    wbEDIDReq,
-//    wbOBNDReq,
-//    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-//    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-//      {0x01} 'Calculate from all levels <= player''s level',
-//      {0x02} 'Calculate for each item in count',
-//      {0x04} 'Use All'
-//    ]), cpNormal, True),
-//    wbFormIDCk(LVLG, 'Global', [GLOB]),
-//    wbRArrayS('Leveled List Entries',
-//      wbRStructExSK([0], [1], 'Leveled List Entry', [
-//        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-//          wbInteger('Level', itS16),
-//          wbByteArray('Unused', 2),
-//         wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP]),
-//          wbInteger('Count', itS16),
-//          wbByteArray('Unused', 2)
-//        ]),
-//        wbCOED
-//      ], [])
-//    )
-//  ]);
-//----------------------------------------------------------------------------------
-// End Old LVLI
-//----------------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------------
-// New LVSP
-//----------------------------------------------------------------------------------
    wbRecord(LVSP, 'Leveled Spell', [
     wbEDIDReq,
     wbOBNDReq,
     wbLVLD,
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Use All'
+      {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
     wbLLCT,
-    wbRArrayS('Leveled Spell List Entries',
-      wbRStructExSK([0], [1], 'Leveled Spell List Entry', [
+    wbRArrayS('Leveled List Entries',
+      wbRStructSK([0], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
         wbInteger('Level', itS16),
         wbByteArray('Unknown', 2),
         wbFormIDCk('Reference', [SPEL]),
         wbInteger('Count', itS16),
         wbByteArray('Unknown', 2)
-      ]),
-			wbCOED
+      ])
       ], [])
     )
   ]);
