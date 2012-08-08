@@ -6,7 +6,8 @@
 			<Config Condition="'$(Config)'==''">Debug</Config>
 			<TargetedPlatforms>1</TargetedPlatforms>
 			<AppType>Console</AppType>
-			<FrameworkType>VCL</FrameworkType>
+			<FrameworkType>FMX</FrameworkType>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<ProjectVersion>13.4</ProjectVersion>
 			<Platform Condition="'$(Platform)'==''">Win32</Platform>
 		</PropertyGroup>
@@ -29,29 +30,38 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;$(DCC_Namespace)</DCC_Namespace>
 			<DCC_E>false</DCC_E>
-			<DCC_N>false</DCC_N>
-			<DCC_S>false</DCC_S>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_F>false</DCC_F>
+			<DCC_S>false</DCC_S>
+			<DCC_N>false</DCC_N>
 			<DCC_K>false</DCC_K>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
+			<Debugger_RunParams>-fnv &quot;D:\Program Files (x86)\Steam\steamapps\common\fallout new vegas\Data\FalloutNV.esm&quot;</Debugger_RunParams>
 			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_Locale>1033</VerInfo_Locale>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-			<DCC_DebugInformation>false</DCC_DebugInformation>
-			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_DebugInfoInTds>true</DCC_DebugInfoInTds>
+			<DCC_ConsoleTarget>true</DCC_ConsoleTarget>
+			<ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 		</PropertyGroup>
@@ -82,9 +92,11 @@
 				<CfgParent>Base</CfgParent>
 			</BuildConfiguration>
 		</ItemGroup>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
-			<Borland.ProjectType/>
+			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
 			<BorlandProject>
 				<Delphi.Personality>
 					<Source>
@@ -117,6 +129,9 @@
 						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
+					<Parameters>
+						<Parameters Name="RunParams">-fnv &quot;D:\Program Files (x86)\Steam\steamapps\common\fallout new vegas\Data\FalloutNV.esm&quot;</Parameters>
+					</Parameters>
 				</Delphi.Personality>
 				<Platforms>
 					<Platform value="Win64">False</Platform>
@@ -126,6 +141,4 @@
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
-		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
-		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
 	</Project>
