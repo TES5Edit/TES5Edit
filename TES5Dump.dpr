@@ -22,6 +22,8 @@ program TES5Dump;
 {$APPTYPE CONSOLE}
 
 uses
+//  nxReplacementMemoryManager,
+//  nxExceptionHook,
   Classes,
   SysUtils,
   Windows,
