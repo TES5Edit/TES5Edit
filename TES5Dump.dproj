@@ -36,8 +36,9 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_ConsoleTarget>true</DCC_ConsoleTarget>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<ImageDebugInfo>true</ImageDebugInfo>
+			<DCC_ConsoleTarget>true</DCC_ConsoleTarget>
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_RemoteDebug>true</DCC_RemoteDebug>
 			<VerInfo_Locale>1033</VerInfo_Locale>
