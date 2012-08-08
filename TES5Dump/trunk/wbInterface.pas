@@ -3494,7 +3494,8 @@ function wbRecord(const aSignature       : TwbSignature;
                         aAddInfoCallback : TwbAddInfoCallback = nil;
                         aPriority        : TwbConflictPriority = cpNormal;
                         aRequired        : Boolean = False;
-                        aAfterLoad       : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil)
+                        aAfterLoad       : TwbAfterLoadCallback = nil;
+                        aAfterSet        : TwbAfterSetCallback = nil)
                                          : IwbRecordDef;
 begin
 //  if aSignature <> 'WATR' then
