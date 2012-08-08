@@ -29,7 +29,17 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+			<Cfg_2_Win32>true</Cfg_2_Win32>
+			<CfgParent>Cfg_2</CfgParent>
+			<Cfg_2>true</Cfg_2>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ConsoleTarget>true</DCC_ConsoleTarget>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_RemoteDebug>true</DCC_RemoteDebug>
 			<VerInfo_Locale>1033</VerInfo_Locale>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;$(DCC_Namespace)</DCC_Namespace>
@@ -41,6 +51,11 @@
 			<DCC_K>false</DCC_K>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
+			<DCC_ConsoleTarget>true</DCC_ConsoleTarget>
+			<DCC_RemoteDebug>true</DCC_RemoteDebug>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_DebugInfoInTds>true</DCC_DebugInfoInTds>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 			<Debugger_RunParams>-fnv &quot;D:\Program Files (x86)\Steam\steamapps\common\fallout new vegas\Data\FalloutNV.esm&quot;</Debugger_RunParams>
 			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
 			<VerInfo_Locale>1033</VerInfo_Locale>
@@ -53,6 +68,7 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 			<DCC_DebugInfoInTds>true</DCC_DebugInfoInTds>
 			<DCC_ConsoleTarget>true</DCC_ConsoleTarget>
 			<ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
@@ -64,6 +80,15 @@
 			<DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+			<DCC_RemoteDebug>true</DCC_RemoteDebug>
+			<VerInfo_AutoGenVersion>true</VerInfo_AutoGenVersion>
+			<Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
+			<VerInfo_Debug>true</VerInfo_Debug>
+			<Debugger_LoadAllSymbols>false</Debugger_LoadAllSymbols>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<Manifest_File>None</Manifest_File>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="$(MainSource)">
@@ -132,6 +157,12 @@
 					<Parameters>
 						<Parameters Name="RunParams">-fnv &quot;D:\Program Files (x86)\Steam\steamapps\common\fallout new vegas\Data\FalloutNV.esm&quot;</Parameters>
 					</Parameters>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k160.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dclofficexp160.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\bcboffice2k160.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\bcbofficexp160.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+					</Excluded_Packages>
 				</Delphi.Personality>
 				<Platforms>
 					<Platform value="Win64">False</Platform>
