@@ -239,13 +239,13 @@ begin
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
     else begin
-      RecordToSkip.Add('LAND');
+//      RecordToSkip.Add('LAND');
 //      RecordToSkip.Add('REGN');
-      RecordToSkip.Add('PGRD');
-      RecordToSkip.Add('ROAD');
-      RecordToSkip.Add('NAVI');
-      RecordToSkip.Add('NAVM');
-      RecordToSkip.Add('IMAD');
+//      RecordToSkip.Add('PGRD');
+//      RecordToSkip.Add('ROAD');
+//      RecordToSkip.Add('NAVI');
+//      RecordToSkip.Add('NAVM');
+//      RecordToSkip.Add('IMAD');
     end;
 
     if wbFindCmdLineParam('xg', s) then
@@ -275,9 +275,10 @@ begin
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
-      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-      WriteLn(ErrOutput, '             ', 'following default value applies:');
-      WriteLn(ErrOutput, '             ', 'LAND,PGRD,ROAD,NAVI,NAVM,IMAD');
+      WriteLn(ErrOutput, '             ', 'decompressed and processed.');
+//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
+//      WriteLn(ErrOutput, '             ', 'following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'LAND,PGRD,ROAD,NAVI,NAVM,IMAD');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');

@@ -5796,7 +5796,7 @@ begin
 
   wbRecord(PHZD, 'PHZD', [
     wbEDIDReq
-  ]);
+  ], True);
 
   wbServiceFlags :=
     wbFlags([
@@ -10810,7 +10810,7 @@ begin
       'Water'
     ]),
     wbByteArray(OFST, 'Unknown')
-  ], False, nil, cpNormal, False, wbRemoveOFST);
+  ], True, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,

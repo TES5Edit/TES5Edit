@@ -46,8 +46,8 @@ var
   wbSimpleLAND : Boolean = False;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
-  wbHideUnused : Boolean{} = True;{}
-  wbHideIgnored : Boolean{} = True;{}
+  wbHideUnused : Boolean{} = False;{}
+  wbHideIgnored : Boolean{} = False;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
@@ -71,8 +71,8 @@ var
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{ = True{};
-  wbReportUnused: Boolean{ = True{};
+  wbReportMode: Boolean{} = True{};
+  wbReportUnused: Boolean{} = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
   wbReportUnknownFormIDs: Boolean{} = True{};
