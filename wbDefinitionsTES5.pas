@@ -913,6 +913,9 @@ var
   wbLipMorphFlags: IwbIntegerDef;
   wbPHWT: IwbSubRecordStructDef;
   wbMorphs: IwbSubRecordStructDef;
+  wbSpells: IwbSubRecordStructDef;
+  wbHeadPart: IwbSubRecordStructDef;
+  wbTintMaskTypeEnum: IwbEnumDef;
 // --- Pack ---
   wbPKDT: IwbSubRecordDef;
   wbPLDT: IwbSubRecordDef;
@@ -4703,13 +4706,6 @@ begin
 					wbByteArray('Unknown', 3)
 				])
 			], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
-
-
-  wbSPCT := wbStruct(SPCT, 'Spell Count', [
-    wbInteger('Spell Count', itU16),
-    wbByteArray('Unknown', 2)
-  ]);
-
 //-----------------------------------------------------------------
 // End New Routines
 //-----------------------------------------------------------------
@@ -6630,8 +6626,14 @@ begin
     wbString(CNAM, 'Description')
   ]);
 
+  wbSPCT := wbInteger(SPCT, 'Spell Count', itU32);
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, wbActorTemplateUseActorEffectList);
+
+  wbSpells := wbRstruct('Spells', [
+    wbSPCT,
+    wbSPLOs
+  ], []);
 
   wbCELLDATAFlags := wbFlags([
 	  {0x00000001} 'Is Interior Cell',
@@ -12213,6 +12215,8 @@ begin
     'Body Texture'
   ]);
 
+  {>>> When Set to None this Equals FF FF FF FF <<<}
+  {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
     'Head',
     'Hair',
@@ -12247,7 +12251,7 @@ begin
     'Body AddOn 17',
     'FX01'
     ], [
-    -1, 'None'
+    -1, 'None'{>>> itS32 and -1 was used instead of $FFFFFFFF and itU32 <<<}
   ]);
 
   wbNoseMorphFlags := wbInteger('Nose Morph Flags', itU32, wbFlags([
@@ -12396,6 +12400,25 @@ begin
     'Extra Large'
   ]);
 
+  wbTintMaskTypeEnum := wbEnum([
+    'None',
+    'Lip Color',
+    'Cheek Color',
+    'Eyeliner',
+    'EyeSocket Upper',
+    'EyeSocket Lower',
+    'Skin Tone',
+    'Paint',
+    'Laugh Lines',
+    'Cheek Color Lower',
+    'Nose',
+    'Chin',
+    'Neck',
+    'Forehead',
+    'Dirt',
+    'Unknown 16'
+  ]);
+
 //------------------------------------------------------------------------------
 // Copied here for reference
 //------------------------------------------------------------------------------
@@ -12406,25 +12429,22 @@ begin
 //  ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
 
   wbTintMasks := wbRArray('Tint Masks', wbRStruct('Tint Assets', [
-    wbRArray('Array TINI, TINT, TINP, TIND', wbRStruct('Unknown', [
-      wbUnknown(TINI),
+    wbRArray('Tint Layer', wbRStruct('Texture', [
+      wbInteger(TINI, 'Unknown', itU16),
       wbString(TINT, 'File Name'),
-      wbUnknown(TINP),
-      wbFormIDCk(TIND, 'Head Feature Set', [CLFM, NULL])
+      {>>> When set to None TINP does not exist Needs routine to add when
+      changing the Mask Type <<<}
+      wbInteger(TINP, 'Mask Type', itU16, wbTintMaskTypeEnum),
+      wbFormIDCk(TIND, 'Preset Default', [CLFM, NULL])
     ], [])),
     wbRArray('Array TINC, TINV, TIRS', wbRStruct('Unknown', [
-      wbStruct(TINC, 'Reference Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unnknown', 1)
-      ]),
-			wbUnknown(TINV),
-			wbUnknown(TIRS)
+      wbFormIDCk(TINC, 'Preset', [CLFM, NULL]),
+			wbFloat(TINV, 'Default Value for this Preset'),
+      wbInteger(TIRS, 'Unknown', itU16)
     ], []))
   ], []));
 
-  wbRACE_VNAMFlags := wbInteger('Flags 3', itU16, wbFlags([
+  wbRACE_VNAMFlags := wbInteger('Flags 3', itU32, wbFlags([
         {0x00000001}'Hand To Hand Melee',
         {0x00000002}'One Hand Sword',
         {0x00000004}'One Hand Dagger',
@@ -12437,27 +12457,8 @@ begin
         {0x00000200}'Spell',
         {0x00000400}'Shield',
         {0x00000800}'Torch',
-        {0x00001000}'Crossbow',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ]));
+        {0x00001000}'Crossbow'
+      ], True));
 
   wbRACE_DATAFlags01 := wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Playable',
@@ -12642,12 +12643,16 @@ begin
       ])
     ], []);
 
+  wbHeadPart := wbRStruct('Head Part', [
+    wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
+    wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
+  ], []);
+
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
     wbDESCReq,
-    wbSPCT,
-    wbSPLOs,
+    wbSpells,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbBODT,
     wbKeywords,
@@ -12674,11 +12679,11 @@ begin
       wbInteger('Head Biped Object', itS32, wbBipedObjectEnum),
       wbInteger('Hair Biped Object', itS32, wbBipedObjectEnum),
       wbFloat('Injured Health Pct'),
-      // When Set to None this Equals FF FF FF FF
+      {>>> When Set to None this Equals FF FF FF FF <<<}
       wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
-      wbByteArray('Unknown', 4),
       wbFloat('Health Regen'),
       wbFloat('Magicka Regen'),
+      wbFloat('Stamina Regen'),
       wbFloat('Unarmed Damage'),
       wbFloat('Unarmed Reach'),
       wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
@@ -12687,15 +12692,15 @@ begin
       wbFloat('Angular Acceleration Rate'),
       wbFloat('Angular Tolerance'),
       wbRACE_DATAFlags02,
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 0)
+      wbByteArray('Unknown 1', 4),
+      wbByteArray('Unknown 2', 4),
+      wbByteArray('Unknown 3', 4),
+      wbByteArray('Unknown 4', 4),
+      wbByteArray('Unknown 5', 4),
+      wbByteArray('Unknown 6', 4),
+      wbByteArray('Unknown 7', 4),
+      wbByteArray('Unknown 8', 4),
+      wbByteArray('Unknown 9', 0)
     ], cpNormal, True),
     wbRStruct('Start Of Male', [
       wbEmpty(MNAM, 'Marker'),
@@ -12708,17 +12713,18 @@ begin
       wbMODT
     ], [], cpNormal, True),
     wbFormIDCk(YNAM, 'Younger', [RACE]),
-    wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
+    wbEmpty(NAM2, 'Marker NAM2'),
     wbRArray('Array MTNM', wbRStruct('Unknown', [
       wbString(MTNM, 'Unknown')
     ], [])),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
     wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [ARMO]), ['Male', 'Female'], cpNormal, True),
     wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [CLFM]), ['Male', 'Female'], cpNormal, True),
-    wbArrayS(TINL, 'Body Templates', wbByteArray('Unknown', 0), 0, cpNormal, True),
+//    wbArrayS(TINL, 'Body Templates', wbInteger('Unknown', itU16), 0, cpNormal, True),
+    wbInteger(TINL, 'Total Number of Tints in List', itU16), {>>> Needs Count Updated <<<}
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
+    wbByteArray(ATTR, 'Unknown ATTR', 0, cpNormal),
     wbRArray('Attacks', wbAttackData),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
@@ -12739,10 +12745,10 @@ begin
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
-    wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),
-    wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal, True),
+    wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal),
+    wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal),
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]),
-	  wbEmpty(NAM2, 'Marker 2', cpNormal, True),
+	  wbEmpty(NAM2, 'Marker 2', cpNormal),
 	  wbEmpty(NAM3, 'Marker 3', cpNormal, True),
     wbRStruct('Male Behavoir Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
@@ -12757,22 +12763,17 @@ begin
 		wbFormIDCk(NAM7, 'Decapitation FX', [ARTO, NULL]),
     wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
-    wbRArray('Array NAME', wbRStruct('Unknown', [
-      wbString(NAME, 'Unknown')
-    ], [])),
+    {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
+    wbRArrayS('Biped Object Names', wbString(NAME, 'Name')),
     wbRArray('Array MTYP, SPED', wbRStruct('Unknown', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
       wbUnknown(SPED)
     ], [])),
     wbStruct(VNAM, 'Equipment Flags', [wbRACE_VNAMFlags]),
-    wbRArray('', wbRStruct('Equip Slots', [
-			wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])
-    ], [])),
+    wbRArrayS('Equip Slots', wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])),
     wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
     wbPHWT,
-    wbRArray('Array PHTN', wbRStruct('Unknown', [
-      wbString(PHTN, 'Unknown')
-    ], [])),
+    wbRArrayS('Array PHTN', wbString(PHTN, 'Unknown')),
     // Start Movement Data
     wbFormIDCk(WKMV, 'Walk', [MOVT, NULL]),
 		wbFormIDCk(RNMV, 'Run', [MOVT, NULL]),
@@ -12785,46 +12786,26 @@ begin
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
-          wbRArray('Array INDX, HEAD', wbRStruct('Unknown', [
-            wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
-            wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
-          ], [])),
+          wbRArrayS('Head Parts', wbHeadPart),
           wbMorphs,
-          wbRArray('Race Presets Male', wbRStruct('Preset NPCS', [
-            wbFormIDCk(RPRM, 'Preset', [NPC_, NULL])
-          ], [])),
-          wbRArray('Available Hair Colors Male', wbRStruct('Hair Color Male', [
-            wbFormIDCk(AHCM, 'Color', [CLFM, NULL])
-          ], [])),
-          wbRArray('Array FTSM', wbRStruct('Unknown', [
-            wbFormIDCk(FTSM, 'Hair Color Male', [TXST, NULL])
-          ], [])),
-          wbFormIDCk(DFTM, 'Head Feature Set', [TXST, NULL]),
+          wbRArrayS('Race Presets Male', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
+          wbRArrayS('Available Hair Colors Male', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
+          wbRArrayS('Face Details Testure Set List Male', wbFormIDCk(FTSM, 'Testure Set', [TXST, NULL])),
+          wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
           wbTintMasks,
-          wbMODLReq,
-          wbICON
+          wbMODLReq
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-          wbRArray('Array INDX, HEAD', wbRStruct('Unknown', [
-            wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
-            wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
-          ], [])),
+          wbRArrayS('Head Parts', wbHeadPart),
           wbMorphs,
-          wbRArray('Race Presets Female', wbRStruct('Preset NPCS', [
-            wbFormIDCk(RPRF, 'Preset', [NPC_, NULL])
-          ], [])),
-          wbRArray('Available Hair Colors Female', wbRStruct('Hair Color Female', [
-            wbFormIDCk(AHCF, 'Color', [CLFM, NULL])
-          ], [])),
-          wbRArray('Array FTSF', wbRStruct('Unknown', [
-            wbFormIDCk(FTSF, 'Hair Color Female', [TXST, NULL])
-          ], [])),
-          wbFormIDCk(DFTF, 'Head Feature Set', [TXST, NULL]),
+          wbRArrayS('Race Presets Female', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
+          wbRArrayS('Available Hair Colors Female', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
+          wbRArrayS('Face Details Testure Set List Female', wbFormIDCk(FTSF, 'Testure Set', [TXST, NULL])),
+          wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
           wbTintMasks,
-          wbMODLReq,
-          wbICON
+          wbMODLReq
       ], [], cpNormal, True)
     ], [], cpNormal, True),
     // End Head Data
