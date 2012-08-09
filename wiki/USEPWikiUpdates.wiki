@@ -1,0 +1,5 @@
+#summary Records updated on the UESPWiki
+
+= Currently updated on the UESPWiki =
+
+APPA, ANIO, ADDN, AMMO, AACT, ACTI, CLFM, DEST Updated
