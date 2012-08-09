@@ -12696,7 +12696,6 @@ begin
     wbInteger(TINL, 'Total Number of Tints in List', itU16, nil, nil, cpNormal, True), {>>> Needs Count Updated <<<}
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbByteArray(ATTR, 'Unknown ATTR', 0, cpNormal),
     wbRArray('Attacks', wbAttackData),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
@@ -12737,7 +12736,19 @@ begin
     wbRArrayS('Biped Object Names', wbString(NAME, 'Name')),
     wbRArray('Movement Types', wbRStruct('Movement Types', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
-      wbByteArray(SPED, 'Unknown', 0)
+      wbStruct(SPED, 'Override Values', [
+        wbFloat('Left - Walk'),
+        wbFloat('Left - Run'),
+        wbFloat('Right - Walk'),
+        wbFloat('Right - Run'),
+        wbFloat('Forward - Walk'),
+        wbFloat('Forward - Run'),
+        wbFloat('Back - Walk'),
+        wbFloat('Back - Run'),
+        wbFloat('Rotate - Walk'),
+        wbFloat('Rotate - Walk'),
+        wbFloat('Unknown')
+      ])
     ], [])),
     wbStruct(VNAM, 'Equipment Flags', [wbRACE_VNAMFlags]),
     wbRArrayS('Equip Slots', wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])),
