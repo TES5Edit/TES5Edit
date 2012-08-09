@@ -2,18 +2,20 @@
 
 = New Decoding Method =
 
-1: Make a small plugin for the Record you will be working on.
-2: Save it with any name, but with the sufix _Chg. Example: TES5DumpRACE_Chg.esp
-3: Make a copy of that exact file. Windows will call it: TES5DumpRACE_Chg - Copy.esp
-4: Now rename that file to TES5DumpRACE_Org.esp
-5: Make a batch file that Dumps both files.
+Follow These Steps
+ #Make a small plugin for the Record you will be working on.
+ #Save it with any name, but with the sufix _Chg. Example: TES5DumpRACE_Chg.esp
+ #Make a copy of that exact file. Windows will call it: TES5DumpRACE_Chg - Copy.esp
+ #Now rename that file to TES5DumpRACE_Org.esp
+ #Make a batch file that Dumps both files.
+ #Run the batch file.
+ #Open both file using a Diff program like BeyondCompare.
+
 <code>
 Example:
 TES5Dump "TES5Dump_Everything_Org.esp" > "TES5Dump_Everything_Org.txt" 2> "TES5CONlog_Everything_Org.txt"
 TES5Dump "TES5Dump_Everything_Chg.esp" > "TES5Dump_Everything_Chg.txt" 2> "TES5CONlog_Everything_Chg.txt"
 </code>
-6: Run the batch file.
-7: Open both file using a Diff program like BeyondCompare.
 
 Now when you make changes to the file the changes are more obvious because the Diff program shows you the differences.  It will also highlight all the other locations that changes occured.
 
