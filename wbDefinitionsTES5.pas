@@ -20,9 +20,6 @@ procedure DefineTES5;
 
 implementation
 
-//------------------------------------------------------------------------------
-// In FO3/FNV/TES4/Edit wbBSA.pas was never in the wbDefinitions Files
-//------------------------------------------------------------------------------
 uses
   Types, Classes, SysUtils, Math, Variants,
   wbInterface,
@@ -1940,7 +1937,7 @@ begin
   end;
 end;
 
-{Needs Revision for Skyrim}
+{>>>Needs Revision for Skyrim<<<}
 //function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
 //var
 //  Container: IwbContainer;
@@ -4064,7 +4061,7 @@ begin
   end;
 end;
 
-{Needs Revision for Skyrim}
+{>>>Needs Revision for Skyrim<<<}
 //procedure wbINFOAfterLoad(const aElement: IwbElement);
 //var
 //  Container  : IwbContainerElementRef;
