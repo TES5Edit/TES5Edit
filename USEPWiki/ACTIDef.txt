@@ -40,44 +40,14 @@ Flags not related to the NavMesh
 |-
 | - || FULL || ingame name || lstring || Full (in-game) name 
 |-
-|-{{ThickLine}}
 | - || MODL || model || zstring || Path to .nif
 |-
 | - || MODT || model data || [[Tes5Mod:Mod_File_Format/Model_Textures_Field|MODT]] || series of 12-byte structs (assume xyz)
 |-
 | - || MODS || unknown || struct || unknown model struct
 |-
-|-{{ThickLine}}
-| - || DEST || destruction data || struct || 8 - byte struct, 1 per record
-:uint32  health  
-:unit8   count   Number of destruction sections that follow
-:unit8   flag    0x01 = VATs enabled
-:unit8   ?       No known use
-:unit8   ?       No known use
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes optionl fields DSTD, DMDL, DMDT, DMDS
 |-
-| * || DSTD || stage data|| struct || 20 byte struct
-: word   HealthPercent
-: byte   DamageStage  (0-8)
-: byte   Flags?  0x01=Cap Damage, 0x02=Disable Object,  0x04=Destroy Object,  0x08=Ignore External Damage
-: dword  SelfDamageRate
-: formid ExplosionID
-: formid DebrisID
-: dword  DebrisCount
-|-
-| * || DMDL || destroyed model || zstring || Path to .nif
-|-
-| * || DMDT || destroyed model data || struct[] || series of 12-byte structs (assume xyz)
-|-
-| * || DMDS || unknown || struct || (=MODS)
-:: dword TextureIndex (offset by 1?)
-:: dword StringLength
-:: char  3DName[StringLength]  nul terminator not included or present
-:: dword TextureID   (TXST)
-: dword Padding?
-|-
-| * || DSTF || marker || 0 bytes || marks the end of a DSTD/DMDL/DMDT/DMDS structure
-|-
-|-{{ThickLine}}
 | - || KSIZ || count || dword || Number of formids in the following KWDA subrecord
 |-
 | - || KWDA || keywords || formid || Formid array of keywords
