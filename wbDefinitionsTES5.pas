@@ -2510,6 +2510,7 @@ type
   end;
 
 const
+  {>> N means New, V means verified that the name has not changed <<<}
   wbCTDAFunctions : array[0..250] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -2712,7 +2713,7 @@ const
     (Index: 436; Name: 'GetDialogueEmotionValue'),
     (Index: 438; Name: 'GetIsCreatureType'; ParamType1: ptCreatureType),
     (Index: 446; Name: 'GetInZone'; ParamType1: ptEncounterZone),
-{New}(Index: 448; Name: 'CanFlyHere'; ParamType1: ptEncounterZone{Correct}),
+{N} (Index: 448; Name: 'CanFlyHere'; ParamType1: ptEncounterZone), {>>> Is the syntax correct? <<<}
     (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger{Alt?}),
     (Index: 450; Name: 'GetFactionRelation'; ParamType1: ptActor),
     (Index: 451; Name: 'IsLastIdlePlayed'; ParamType1: ptIdleForm),
@@ -5123,7 +5124,7 @@ begin
       wbFloat('Damage Mult'),
       wbFloat('Attack Chance'),
       wbFormIDCk('Attack Spell', [SPEL, SHOU, NULL]),
-      wbInteger('Attack Flags', itU16, wbFlags([
+      wbInteger('Attack Flags', itU32, wbFlags([
         {0x00000001}'Ignore Weapon',
         {0x00000002}'Bash Attack',
         {0x00000004}'Power Attack',
@@ -5140,8 +5141,7 @@ begin
         {0x00002000}'Unknown 14',
         {0x00004000}'Unknown 15',
         {0x00008000}'Unknown 16'
-      ])),
-      wbByteArray('Unknown', 2),
+      ], True)),
       wbFloat('Attack Angle'),
       wbFloat('Strike Angle'),
       wbFloat('Stagger'),
@@ -5801,7 +5801,7 @@ begin
       'Is Stranger',
       'Is Paralyzing Palm'
     ]);
-
+  {>>> V means Verified for Skyrim <<<}
   wbActorValueEnum :=
     wbEnum([
         {00} 'Aggresion',
@@ -5812,22 +5812,22 @@ begin
         {05} 'Strength',
         {06} 'One-Handed',
         {07} 'Two-Handed',
-        {08} 'Charisma',
-        {09} 'Block',
+    {V} {08} 'Archery',
+    {V} {09} 'Block',
         {10} 'Smithing',
         {11} 'Luck',
         {12} 'Light Armor',
         {13} 'Carry Weight',
         {14} 'Critical Chance',
         {15} 'Heal Rate',
-        {16} 'Health',
+    {V} {16} 'Alchemy',
         {17} 'Speech',
-        {18} 'Damage Resistance',
-        {19} 'Poison Resistance',
-        {20} 'Rad Resistance',
+    {V} {18} 'Alteration',
+    {V} {19} 'Conjuration',
+    {V} {20} 'Destruction',
         {21} 'Speed Multiplier',
         {22} 'Fatigue',
-        {23} 'Karma',
+    {V} {23} 'Enchanting',
         {24} 'XP',
         {25} 'Perception Condition',
         {26} 'Endurance Condition',
@@ -12490,39 +12490,9 @@ begin
       ]));
 
   wbRACE_DATAFlags02 := wbInteger('Flags 2', itU32, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Non-Hostile',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ]));
+        {0x00000001}'',
+        {0x00000002}'Non-Hostile'
+      ], True));
 
   wbPhonemeTargets := wbUnion(PHWT, 'Union', wbPHWTDecider, [
     wbStruct('Phoneme Targets', [
@@ -12658,12 +12628,12 @@ begin
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
-    wbDESCReq,
+    wbUnknown(DESC),
+//    wbDESCReq,
     wbSpells,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbBODT,
     wbKeywords,
-    wbXNAMs, { I don't think there are XNAM fields. }
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
         wbInteger('Skill', itS8, wbActorValueEnum),
@@ -12680,7 +12650,7 @@ begin
       wbFloat('Starting Stamina'),
       wbFloat('Base Carry Weight'),
       wbFloat('Base Mass'),
-      wbFloat('Accleration rate'),
+      wbFloat('Acceleration rate'),
       wbFloat('Deceleration rate'),
       wbInteger('Size', itU32, wbSizeIndexEnum),
       wbInteger('Head Biped Object', itS32, wbBipedObjectEnum),
@@ -12719,16 +12689,12 @@ begin
       wbString(ANAM, 'Skeletal Model'),
       wbMODT
     ], [], cpNormal, True),
-    wbFormIDCk(YNAM, 'Younger', [RACE]),
-    wbEmpty(NAM2, 'Marker NAM2'),
-    wbRArray('Array MTNM', wbRStruct('Unknown', [
-      wbString(MTNM, 'Unknown')
-    ], [])),
+    wbEmpty(NAM2, 'Marker NAM2 #1'),
+    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
     wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [ARMO]), ['Male', 'Female'], cpNormal, True),
     wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [CLFM]), ['Male', 'Female'], cpNormal, True),
-//    wbArrayS(TINL, 'Body Templates', wbInteger('Unknown', itU16), 0, cpNormal, True),
-    wbInteger(TINL, 'Total Number of Tints in List', itU16), {>>> Needs Count Updated <<<}
+    wbInteger(TINL, 'Total Number of Tints in List', itU16, nil, nil, cpNormal, True), {>>> Needs Count Updated <<<}
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
     wbByteArray(ATTR, 'Unknown ATTR', 0, cpNormal),
@@ -12739,7 +12705,6 @@ begin
         wbEmpty(MNAM, 'Male Data Marker'),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbICON,
           wbMODLReq
         ], []), cpNormal, True)
       ], [], cpNormal, True),
@@ -12747,16 +12712,15 @@ begin
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbICON,
           wbMODLReq
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
-    wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal),
-    wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal),
+    wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HDPT, NULL]), 0, cpNormal),
+    wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES, NULL]),  0,  cpNormal),
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]),
-	  wbEmpty(NAM2, 'Marker 2', cpNormal),
-	  wbEmpty(NAM3, 'Marker 3', cpNormal, True),
+	  wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
+	  wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
     wbRStruct('Male Behavoir Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
       wbMODL
@@ -12772,9 +12736,9 @@ begin
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
     wbRArrayS('Biped Object Names', wbString(NAME, 'Name')),
-    wbRArray('Array MTYP, SPED', wbRStruct('Unknown', [
+    wbRArray('Movement Types', wbRStruct('Movement Types', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
-      wbUnknown(SPED)
+      wbByteArray(SPED, 'Unknown', 0)
     ], [])),
     wbStruct(VNAM, 'Equipment Flags', [wbRACE_VNAMFlags]),
     wbRArrayS('Equip Slots', wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])),
@@ -12809,7 +12773,7 @@ begin
           wbMorphs,
           wbRArrayS('Race Presets Female', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
           wbRArrayS('Available Hair Colors Female', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
-          wbRArrayS('Face Details Testure Set List Female', wbFormIDCk(FTSF, 'Testure Set', [TXST, NULL])),
+          wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
           wbTintMasks,
           wbMODLReq
