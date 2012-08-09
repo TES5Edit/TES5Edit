@@ -11393,15 +11393,16 @@ begin
     wbICON,
     wbDEST,
     wbSounds,
-    wbInteger(QUAL, 'Quality', itU32, wbFlags([
-      'Novice',
-      'Apprentice',
-      'Journeyman',
-      'Expert',
-      'Master'
+    wbInteger(QUAL, 'Quality', itS32, wbEnum([
+      ], [
+      0, 'Novice',
+      1, 'Apprentice',
+      2, 'Journeyman',
+      3, 'Expert',
+      4, 'Master'
     ])),
     wbDESC,
-    wbStruct(DATA, 'Unknown', [
+    wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
     ])
