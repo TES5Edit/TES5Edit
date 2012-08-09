@@ -5334,9 +5334,7 @@ begin
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('DEST Count', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        'VATS Targetable'
-      ], True)),
+      wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
       wbByteArray('Unknown', 2)
     ]),
     wbRArray('Stages',  // Begin Stage Array
@@ -5370,9 +5368,7 @@ begin
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('Count', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        'VATS Targetable'
-      ])),
+      wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
       wbByteArray('Unknown', 2)
     ]),
     wbRArray('Stages',  // Begin Stage Array
@@ -11358,8 +11354,13 @@ begin
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
+    wbMODL,
+    wbICON,
+    wbDEST,
+    wbSounds,
     wbInteger(QUAL, 'Quality', itU32, wbFlags([
       'Novice',
       'Apprentice',
@@ -11368,7 +11369,10 @@ begin
       'Master'
     ])),
     wbDESC,
-    wbUnknown(DATA)
+    wbStruct(DATA, 'Unknown', [
+      wbInteger('Value', itU32),
+      wbFloat('Weight')
+    ])
   ]);
 
   wbRecord(COBJ, 'Constructible Object', [

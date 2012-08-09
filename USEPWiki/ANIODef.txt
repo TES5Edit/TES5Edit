@@ -1,0 +1,21 @@
+{{Trail|File Formats|Mod File Format}}
+ANIO records contain information on animated objects.
+
+These records are extremely simple, containing only an editorID and model information.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || MODL || model || zstring || Path to .nif
+|-
+| - || MODT || model data || struct[] || ''only 1 with this and almost no data in it''
+|-
+| - || BNAM || Unload Event || zstring || Always 'AnimObjectUnequip', only 1 record without (0x000B18F2, AnimObjectLog)
+|-
+|}
