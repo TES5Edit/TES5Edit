@@ -12,7 +12,7 @@ Example:
 TES5Dump "TES5Dump_Everything_Org.esp" > "TES5Dump_Everything_Org.txt" 2> "TES5CONlog_Everything_Org.txt"
 TES5Dump "TES5Dump_Everything_Chg.esp" > "TES5Dump_Everything_Chg.txt" 2> "TES5CONlog_Everything_Chg.txt"
 </code>
-6: Run the batch file
+6: Run the batch file.
 7: Open both file using a Diff program like BeyondCompare.
 
 Now when you make changes to the file the changes are more obvious because the Diff program shows you the differences.  It will also highlight all the other locations that changes occured.
