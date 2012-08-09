@@ -9700,12 +9700,12 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
+    wbFormIDCk(SNAM, 'Sound', [SOUN, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbFlags([
-        'Unknown 0',
-        'Always Loaded'
+        {0x00000001}'Unknown 0',
+        {0x00000002}'Always Loaded'
       ]))
     ], cpNormal, True)
   ]);
