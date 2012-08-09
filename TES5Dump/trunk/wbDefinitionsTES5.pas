@@ -883,6 +883,8 @@ var
   wbDNAMActor: IwbSubRecordStructDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbStructDef;
+  wbCastEnum: IwbEnumDef;
+  wbTargetEnum: IwbEnumDef;
   wbRNAM: IwbSubRecordDef;
   wbSNAM: IwbSubRecordDef;
   wbQNAM: IwbSubRecordDef;
@@ -2170,31 +2172,49 @@ begin
   if VarIsEmpty(ArchType) then
     Result := 1
   else
+(*
+    1  wbFormIDCk('Assoc. Item', [LIGH]),
+    2  wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
+    3  wbFormIDCk('Assoc. Item', [NPC_]),
+    4  wbFormIDCk('Assoc. Item', [HAZD]),
+    5  wbFormIDCk('Assoc. Item', [SPEL]),
+    6  wbFormIDCk('Assoc. Item', [RACE]),
+    7  wbFormIDCk('Assoc. Item', [ENCH])
+    8  wbFormIDCk('Assoc. Item', [KYWD, NULL])
+*)
     case Integer(ArchType) of
-      01: Result := 2;//Script
-      18: Result := 3;//Bound Item
-      19: Result := 4;//Summon Creature
+      12: Result := 1; // Light
+      17: Result := 2; // Bound Item
+      18: Result := 3; // Summon Creature
+      25: Result := 4; // Guide
+      34: Result := 8; // Peak Mod
+      35: Result := 5; // Cloak
+      36: Result := 6; // Werewolf
+      39: Result := 7; // Enhance Weapon
+      40: Result := 4; // Spawn Hazard
+      46: Result := 6; // Vampire Lord
     end;
 end;
 
-procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Container: IwbContainerElementRef;
-begin
-  if VarSameValue(aOldValue, aNewValue) then
-    Exit;
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-  Container.ElementNativeValues['..\Assoc. Item'] := 0;
-  case Integer(aNewValue) of
-    11: Container.ElementNativeValues['..\Actor Value'] := 48;//Invisibility
-    12: Container.ElementNativeValues['..\Actor Value'] := 49;//Chameleon
-    24: Container.ElementNativeValues['..\Actor Value'] := 47;//Paralysis
-    36: Container.ElementNativeValues['..\Actor Value'] := 51;//Turbo
-  else
-    Container.ElementNativeValues['..\Actor Value'] := -1;
-  end;
-end;
+{ Nees revision for Skyrim }
+//procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+//var
+//  Container: IwbContainerElementRef;
+//begin
+//  if VarSameValue(aOldValue, aNewValue) then
+//    Exit;
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    Exit;
+//  Container.ElementNativeValues['..\Assoc. Item'] := 0;
+//  case Integer(aNewValue) of
+//    11: Container.ElementNativeValues['..\Actor Value'] := 48;//Invisibility
+//    12: Container.ElementNativeValues['..\Actor Value'] := 49;//Chameleon
+//    24: Container.ElementNativeValues['..\Actor Value'] := 47;//Paralysis
+//    36: Container.ElementNativeValues['..\Actor Value'] := 51;//Turbo
+//  else
+//    Container.ElementNativeValues['..\Actor Value'] := -1;
+//  end;
+//end;
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -5822,86 +5842,173 @@ begin
       'Is Stranger',
       'Is Paralyzing Palm'
     ]);
-  {>>> V means Verified for Skyrim <<<}
+
   wbActorValueEnum :=
     wbEnum([
-        {00} 'Aggresion',
-        {01} 'Confidence',
-        {02} 'Energy',
-        {03} 'Responsibility',
-        {04} 'Mood',
-        {05} 'Strength',
-        {06} 'One-Handed',
-        {07} 'Two-Handed',
-    {V} {08} 'Archery',
-    {V} {09} 'Block',
-        {10} 'Smithing',
-        {11} 'Luck',
-        {12} 'Light Armor',
-        {13} 'Carry Weight',
-        {14} 'Critical Chance',
-        {15} 'Heal Rate',
-    {V} {16} 'Alchemy',
-        {17} 'Speech',
-    {V} {18} 'Alteration',
-    {V} {19} 'Conjuration',
-    {V} {20} 'Destruction',
-        {21} 'Speed Multiplier',
-        {22} 'Fatigue',
-    {V} {23} 'Enchanting',
-        {24} 'XP',
-        {25} 'Perception Condition',
-        {26} 'Endurance Condition',
-        {27} 'Left Attack Condition',
-        {28} 'Right Attack Condition',
-        {29} 'Left Mobility Condition',
-        {30} 'Right Mobility Condition',
-        {31} 'Brain Condition',
-        {32} 'Barter',
-        {33} 'Big Guns (obsolete)',
-        {34} 'Energy Weapons',
-        {35} 'Explosives',
-        {36} 'Lockpick',
-        {37} 'Medicine',
-        {38} 'Melee Weapons',
-        {39} 'Repair',
-        {40} 'Science',
-        {41} 'Guns',
-        {42} 'Sneak',
-        {43} 'Speech',
-        {44} 'Survival',
-        {45} 'Unarmed',
-        {46} 'Inventory Weight',
-        {47} 'Paralysis',
-        {48} 'Invisibility',
-        {49} 'Chameleon',
-        {50} 'Night Eye',
-        {51} 'Turbo',
-        {52} 'Fire Resistance',
-        {53} 'Water Breathing',
-        {54} 'Rad Level',
-        {55} 'Bloody Mess',
-        {56} 'Unarmed Damage',
-        {57} 'Assistance',
-        {58} 'Electric Resistance',
-        {59} 'Frost Resistance',
-        {60} 'Energy Resistance',
-        {61} 'EMP Resistance',
-        {62} 'Variable01',
-        {63} 'Variable02',
-        {64} 'Variable03',
-        {65} 'Variable04',
-        {66} 'Variable05',
-        {67} 'Variable06',
-        {68} 'Variable07',
-        {79} 'Variable08',
-        {70} 'Variable09',
-        {71} 'Variable10',
-        {72} 'Ignore Crippled Limbs',
-        {73} 'Dehydration',
-        {74} 'Hunger',
-        {75} 'Sleep Deprivation',
-        {76} 'Damage Threshold'
+    {00} 'Aggresion',
+    {01} 'Confidence',
+    {02} 'Energy',
+    {03} 'Morality',
+    {04} 'Mood',
+    {05} 'Assistance',
+    {06} 'One-Handed',
+    {07} 'Two-Handed',
+    {08} 'Archery',
+    {09} 'Block',
+    {10} 'Smithing',
+    {11} 'Heavy Armor',
+    {12} 'Light Armor',
+    {13} 'Pickpocket',
+    {14} 'Lockpicking',
+    {15} 'Sneak',
+    {16} 'Alchemy',
+    {17} 'Speech',
+    {18} 'Alteration',
+    {19} 'Conjuration',
+    {20} 'Destruction',
+    {21} 'Illusion',
+    {22} 'Restoration',
+    {23} 'Enchanting',
+    {24} 'Health',
+    {25} 'Magicka',
+    {26} 'Stamina',
+    {27} 'Heal Rate',
+    {28} 'Magicka Rate',
+    {29} 'Stamina Rate',
+    {30} 'Speed Mult',
+    {31} 'Inventory Weight',
+    {32} 'Carry Weight',
+    {33} 'Critical Chance',
+    {34} 'Melee Damage',
+    {35} 'Unarmed Damage',
+    {36} 'Mass',
+    {37} 'Voice Points',
+    {38} 'Voice Rate',
+    {39} 'Damage Resist',
+    {40} 'Poison Resist',
+    {41} 'Resist Fire',
+    {42} 'Resist Shock',
+    {43} 'Resist Frost',
+    {44} 'Resist Magic',
+    {45} 'Resist Disease',
+    {46} 'Unknown 46',
+    {47} 'Unknown 47',
+    {48} 'Unknown 48',
+    {49} 'Unknown 49',
+    {50} 'Unknown 50',
+    {51} 'Unknown 51',
+    {52} 'Unknown 52',
+    {53} 'Paralysis',
+    {54} 'Invisibility',
+    {55} 'Night Eye',
+    {56} 'Detect Life Range',
+    {57} 'Water Breathing',
+    {58} 'Water Walking',
+    {59} 'Unknown 59',
+    {60} 'Fame',
+    {61} 'Infamy',
+    {62} 'Jumping Bonus',
+    {63} 'Ward Power',
+    {64} 'Right Item Charge',
+    {65} 'Armor Perks',
+    {66} 'Shield Perks',
+    {67} 'Ward Deflection',
+    {68} 'Variable01',
+    {69} 'Variable02',
+    {70} 'Variable03',
+    {71} 'Variable04',
+    {72} 'Variable05',
+    {73} 'Variable06',
+    {74} 'Variable07',
+    {75} 'Variable08',
+    {76} 'Variable09',
+    {77} 'Variable10',
+    {78} 'Bow Speed Bonus',
+    {79} 'Favor Active',
+    {80} 'Favors Per Day',
+    {81} 'Favors Per Day Timer',
+    {82} 'Left Item Charge',
+    {83} 'Absorb Chance',
+    {84} 'Blindness',
+    {85} 'Weapon Speed Mult',
+    {86} 'Shout Recovery Mult',
+    {87} 'Bow Stagger Bonus',
+    {88} 'Telekinesis',
+    {89} 'Favor Points Bonus',
+    {90} 'Last Bribed Intimidated',
+    {91} 'Last Flattered',
+    {92} 'Movement Noise Mult',
+    {93} 'Bypass Vendor Stolen Check',
+    {94} 'Bypass Vendor Keyword Check',
+    {95} 'Waiting For Player',
+    {96} 'One-Handed Modifier',
+    {97} 'Two-Handed Modifier',
+    {98} 'Marksman Modifier',
+    {99} 'Block Modifier',
+   {100} 'Smithing Modifier',
+   {101} 'Heavy Armor Modifier',
+   {102} 'Light Armor Modifier',
+   {103} 'Pickpocket Modifier',
+   {104} 'Lockpicking Modifier',
+   {105} 'Sneaking Modifier',
+   {106} 'Alchemy Modifier',
+   {107} 'Speechcraft Modifier',
+   {108} 'Alteration Modifier',
+   {109} 'Conjuration Modifier',
+   {110} 'Destruction Modifier',
+   {111} 'Illusion Modifier',
+   {112} 'Restoration Modifier',
+   {113} 'Enchanting Modifier',
+   {114} 'One-Handed Skill Advance',
+   {115} 'Two-Handed Skill Advance',
+   {116} 'Marksman Skill Advance',
+   {117} 'Block Skill Advance',
+   {118} 'Smithing Skill Advance',
+   {119} 'Heavy Armor Skill Advance',
+   {120} 'Light Armor Skill Advance',
+   {121} 'Pickpocket Skill Advance',
+   {122} 'Lockpicking Skill Advance',
+   {123} 'Sneaking Skill Advance',
+   {124} 'Alchemy Skill Advance',
+   {125} 'Speechcraft Skill Advance',
+   {126} 'Alteration Skill Advance',
+   {127} 'Conjuration Skill Advance',
+   {128} 'Destruction Skill Advance',
+   {129} 'Illusion Skill Advance',
+   {130} 'Restoration Skill Advance',
+   {131} 'Enchanting Skill Advance',
+   {132} 'Left Weapon Speed Multiply',
+   {133} 'Dragon Souls',
+   {134} 'Combat Health Regen Multiply',
+   {135} 'One-Handed Power Modifier',
+   {136} 'Two-Handed Power Modifier',
+   {137} 'Marksman Power Modifier',
+   {138} 'Block Power Modifier',
+   {139} 'Smithing Power Modifier',
+   {140} 'Heavy Armor Power Modifier',
+   {141} 'Light Armor Power Modifier',
+   {142} 'Pickpocket Power Modifier',
+   {143} 'Lockpicking Power Modifier',
+   {144} 'Sneaking Power Modifier',
+   {145} 'Alchemy Power Modifier',
+   {146} 'Speechcraft Power Modifier',
+   {147} 'Alteration Power Modifier',
+   {148} 'Conjuration Power Modifier',
+   {149} 'Destruction Power Modifier',
+   {150} 'Illusion Power Modifier',
+   {151} 'Restoration Power Modifier',
+   {152} 'Enchanting Power Modifier',
+   {153} 'Dragon Rend',
+   {154} 'Attack Damage Mult',
+   {155} 'Heal Rate Mult',
+   {156} 'Magicka Rate Mult',
+   {157} 'Stamina Rate Mult',
+   {158} 'Werewolf Perks',
+   {159} 'Vampire Perks',
+   {160} 'Grab Actor Offset',
+   {161} 'Grabbed',
+   {162} 'Unknown 162',
+   {163} 'Reflect Damage'
       ], [
         -1, 'None'
       ]);
@@ -5954,6 +6061,21 @@ begin
     ], [
       -1, 'None'
     ]);
+
+  wbCastEnum := wbEnum([
+    {0} 'Constant Effect',
+    {1} 'Fire and Forget',
+    {2} 'Concentration',
+    {3} 'Scroll'
+  ]);
+
+  wbTargetEnum := wbEnum([
+    {0} 'Self',
+    {1} 'Touch',
+    {2} 'Aimed',
+    {3} 'Target Actor',
+    {4} 'Target Location'
+  ]);
 
   wbCrimeTypeEnum :=
     wbEnum([
@@ -7926,19 +8048,9 @@ begin
         '',
         'Extend Duration On Recast'
       ])),
-      wbInteger('Cast Type', itU32, wbEnum([
-        {0} 'Constant Effect',
-        {1} 'Fire and Forget',
-        {2} 'Concentration'
-      ])),
+      wbInteger('Cast Type', itU32, wbCastEnum),
       wbInteger('Enchantment Amount', itS32),
-      wbInteger('Target Type', itU32, wbEnum([
-        {0} 'Self',
-        {1} 'Touch',
-        {2} 'Aimed',
-        {3} 'Target Actor',
-        {4} 'Target Location'
-      ])),
+      wbInteger('Target Type', itU32, wbTargetEnum),
       wbInteger('Enchant Type', itU32, wbEnum([], [
         $06, 'Enchantment',
         $0C, 'Staff Enchantment'
@@ -8399,8 +8511,10 @@ begin
     wbFULL,
     wbMODLReq,
     wbDEST,
-    wbByteArray(DATA, 'Unknown', 1, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      'On Local Map'
+    ]), cpNormal, True),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
   ]);
 end;
 
@@ -9931,17 +10045,7 @@ begin
     wbDESCReq,
     wbFULL,
     wbFormIDCk(INAM, 'Icon', [MICN, NULL], False, cpNormal, True),
-    wbEmpty(NAM0, 'Unknown', cpIgnore),
-    wbEmpty(NAM1, 'Unknown', cpIgnore),
-    wbEmpty(NAM2, 'Unknown', cpIgnore),
-    wbEmpty(NAM3, 'Unknown', cpIgnore),
-    wbEmpty(NAM4, 'Unknown', cpIgnore),
-    wbEmpty(NAM5, 'Unknown', cpIgnore),
-    wbEmpty(NAM6, 'Unknown', cpIgnore),
-    wbEmpty(NAM7, 'Unknown', cpIgnore),
-    wbEmpty(NAM8, 'Unknown', cpIgnore),
-    wbEmpty(NAM9, 'Unknown', cpIgnore),
-    wbUnknown(QNAM),
+    wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
     wbInteger(DNAM, 'Flags', itU32, wbFlags([
       'Message Box',
       'Auto Display'
@@ -10083,11 +10187,20 @@ begin
 
   wbRecord(MUSC, 'Music Type', [
     wbEDIDReq,
-    wbString(FNAM, 'Filename'),
-    wbFloat(ANAM, 'dB (positive = Loop)'),
-    wbUnknown(PNAM),
-    wbUnknown(WNAM),
-    wbUnknown(TNAM)
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      {0x01} 'Plays One Selection',
+      {0x02} 'Abrupt Transition',
+      {0x04} 'Cycle Tracks',
+      {0x08} 'Maintain Track Order',
+      {0x10} 'Unknown 5',
+      {0x20} 'Ducks Current Track'
+    ]), cpNormal, True),
+    wbStruct(PNAM, 'Data', [
+      wbInteger('Priority', itU16),
+      wbInteger('Ducking (dB)', itU16, wbDiv(100))
+    ]),
+    wbFloat(WNAM, 'Fade Duration'),
+    wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
   wbRecord(FSTP, 'Footstep', [
@@ -10163,20 +10276,24 @@ begin
 
   wbRecord(MUST, 'MUST', [
     wbEDIDReq,
-    wbUnknown(CNAM),
-    wbUnknown(FLTV),
-    wbUnknown(ANAM),
-    wbStruct(LNAM, 'Loop Data', [ // In <MUSSovngardeChantLP> Only
-      wbInteger('Loop Begins', itU32),
-      wbInteger('Loop Ends', itU32),
+    wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
+      $23F678C3, 'Palette',
+      $6ED7E048, 'Single Track',
+      $A1A9C4D5, 'Silent Track' {>>> BUG this value is not recognized <<<}
+    ]), cpNormal, True),
+    wbFloat(FLTV, 'Duration'),
+    wbFloat(DNAM, 'Fade-Out'),
+    wbString(ANAM, 'Track Filename'),
+    wbString(BNAM, 'Finale Filename'),
+    wbArray(FNAM, 'Cue Points', wbFloat('Point')),
+    wbStruct(LNAM, 'Loop Data', [
+      wbFloat('Loop Begins'),
+      wbFloat('Loop Ends'),
       wbInteger('Loop Count', itU32)
     ]),
-    wbUnknown(BNAM),
-    wbUnknown(DNAM),
-    wbUnknown(FNAM),
-    wbUnknown(CITC),
+    wbCITC,
     wbCTDAs,
-    wbUnknown(SNAM)
+    wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
   wbRecord(DLVW, 'Dialog View', [
@@ -10398,9 +10515,25 @@ begin
 
   wbRecord(MOVT, 'MOVT', [
     wbEDIDReq,
-    wbUnknown(MNAM),
-    wbUnknown(SPED),
-    wbUnknown(INAM)
+    wbString(MNAM, 'Name'),
+    wbStruct(SPED, 'Default Data', [
+      wbFloat('Left Walk'),
+      wbFloat('Left Run'),
+      wbFloat('Right Walk'),
+      wbFloat('Right Run'),
+      wbFloat('Forward Walk'),
+      wbFloat('Forward Run'),
+      wbFloat('Back Walk'),
+      wbFloat('Back Run'),
+      wbFloat('Rotate in Place Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Rotate in Place Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Rotate while Moving Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True, nil, 10),
+    wbStruct(INAM, 'Anim Change Thresholds', [
+      wbFloat('Directional', cpNormal, True, 57.296),
+      wbFloat('Movement Speed'),
+      wbFloat('Rotation Speed', cpNormal, True, 57.296)
+    ])
   ]);
 
   wbRecord(SNDR, 'SNDR', [
@@ -11077,262 +11210,166 @@ begin
       {01} 'Script',
       {02} 'Dispel',
       {03} 'Cure Disease',
-      {04} 'Unknown 4',
-      {05} 'Unknown 5',
-      {06} 'Unknown 6',
-      {07} 'Unknown 7',
-      {08} 'Unknown 8',
-      {09} 'Unknown 9',
-      {10} 'Unknown 10',
+      {04} 'Absorb',
+      {05} 'Dual Value Modifier',
+      {06} 'Calm',
+      {07} 'Demoralize',
+      {08} 'Frenzy',
+      {09} 'Disarm',
+      {10} 'Command Summoned',
       {11} 'Invisibility',
-      {12} 'Chameleon',
-      {13} 'Light',
+      {12} 'Light',
+      {13} 'Unknown 13',
       {14} 'Unknown 14',
-      {15} 'Unknown 15',
-      {16} 'Lock',
-      {17} 'Open',
-      {18} 'Bound Item',
-      {19} 'Summon Creature',
-      {20} 'Unknown 20',
-      {21} 'Unknown 21',
-      {22} 'Unknown 22',
-      {23} 'Unknown 23',
-      {24} 'Paralysis',
-      {25} 'Unknown 25',
-      {26} 'Unknown 26',
-      {27} 'Unknown 27',
-      {28} 'Unknown 28',
-      {29} 'Unknown 29',
-      {30} 'Cure Paralysis',
-      {31} 'Cure Addiction',
-      {32} 'Cure Poison',
-      {33} 'Concussion',
-      {34} 'Value And Parts',
-      {35} 'Limb Condition',
-      {36} 'Turbo'
-    ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet)
+      {15} 'Lock',
+      {16} 'Open',
+      {17} 'Bound Weapon',
+      {18} 'Summon Creature',
+      {19} 'Detect Life',
+      {20} 'Telekinesis',
+      {21} 'Paralysis',
+      {22} 'Reanimate',
+      {23} 'Soul Trap',
+      {24} 'Turn Undead',
+      {25} 'Guide',
+      {26} 'Werewolf Feed',
+      {27} 'Cure Paralysis',
+      {28} 'Cure Addiction',
+      {29} 'Cure Poison',
+      {30} 'Concussion',
+      {31} 'Value and Parts',
+      {32} 'Accumulate Magnitude',
+      {33} 'Stagger',
+      {34} 'Peak Value Modifier',
+      {35} 'Cloak',
+      {36} 'Werewolf',
+      {37} 'Slow Time',
+      {38} 'Rally',
+      {39} 'Enhance Weapon',
+      {40} 'Spawn Hazard',
+      {41} 'Etherealize',
+      {42} 'Banish',
+      {43} 'Spawn Scripted Ref',
+      {44} 'Disguise',
+      {45} 'Grab Actor',
+      {46} 'Vampire Lord'
+    ]), cpNormal, False, nil{, wbMGEFArchtypeAfterSet})
   ]);
 
   wbMGEFData := wbRstruct('Magic Effect Data', [
     wbStruct(DATA, 'Data', [
-      {00}  wbInteger('Flags', itU32, wbFlags([
+      wbInteger('Flags', itU32, wbFlags([
         {0x00000001}  'Hostile',
         {0x00000002}  'Recover',
         {0x00000004}  'Detrimental',
-        {0x00000008}  'Unknown 4',
-        {0x00000010}  'Self',
-				{0x00000020}  'Touch',
-				{0x00000040}  'Target',
-				{0x00000080}  'No Duration',
-				{0x00000100}  'No Magnitude',
-				{0x00000200}  'No Area',
-				{0x00000400}  'FX Persist',
-				{0x00000800}  'Unknown 12',
-				{0x00001000}  'Gory Visuals',
-				{0x00002000}  'Display Name Only',
-				{0x00004000}  'Unknown 15',
-				{0x00008000}  'Unknown 16',
+        {0x00000008}  'Snap to Navmesh',
+        {0x00000010}  'No Hit Event',
+				{0x00000020}  'Unknown 6',
+				{0x00000040}  'Unknown 7',
+				{0x00000080}  'Unknown 8',
+				{0x00000100}  'Dispell with Keywords',
+				{0x00000200}  'No Duration',
+				{0x00000400}  'No Magnitude',
+				{0x00000800}  'No Area',
+				{0x00001000}  'FX Persist',
+				{0x00002000}  'Unknown 14',
+				{0x00004000}  'Gory Visuals',
+				{0x00008000}  'Hide in UI',
 				{0x00010000}  'Unknown 17',
-				{0x00020000}  'Unknown 18',
+				{0x00020000}  'No Recast',
 				{0x00040000}  'Unknown 19',
-				{0x00080000}  'Use skill',
-				{0x00100000}  'Use attribute',
-				{0x00200000}  'Unknown 22',
-				{0x00400000}  'Unknown 23',
+				{0x00080000}  'Unknown 20',
+				{0x00100000}  'Unknown 21',
+				{0x00200000}  'Power Affects Magnitude',
+				{0x00400000}  'Power Affects Duration',
 				{0x00800000}  'Unknown 24',
-				{0x01000000}  'Painless',
-				{0x02000000}  'Spray projectile type (or Fog if Bolt is specified as well)',
-				{0x04000000}  'Bolt projectile type (or Fog if Spray is specified as well)',
+				{0x01000000}  'Unknown 25',
+				{0x02000000}  'Unknown 26',
+				{0x04000000}  'Painless',
 				{0x08000000}  'No Hit Effect',
 				{0x10000000}  'No Death Dispel',
 				{0x20000000}  'Unknown 30',
 				{0x40000000}  'Unknown 31',
 				{0x80000000}  'Unknown 32'
 			])),
-      {04}  wbByteArray('Base cost ???', 4),
-      {08}  wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-              wbFormID('Unkonwn', cpIgnore),
-              wbFormID('Assoc. Item'),
-              wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
-              wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
-              wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
-            ]),
-      {12}  wbInteger('Magic School', itS32, wbEnum([
-							], [
-							-1, 'None'
-						])),
-      {16}  wbInteger('Resistance Type', itS32, wbActorValueEnum),
-            // REFR, STAT, SPEL
-      {20}  wbFormIDCK('Needs Union Decider', [REFR, STAT, SPEL, NULL]),
-      {24}  wbFormIDCk('Light ??', [LIGH, NULL]),
-      {24}  wbByteArray('Taper Weight ??', 4),
-      {28}  wbFormIDCk('Hit Shader', [EFSH, NULL]),
-      {32}  wbFormIDCk('Enchant Shader', [EFSH, NULL]),
-      {36}  wbByteArray('Skill Level ???', 4),
-      {40}  wbByteArray('Area ???', 4),
-      {44}  wbByteArray('Casting Time ???', 4),
-      {48}  wbByteArray('Taper Curve ???', 4),
-      {52}  wbByteArray('Taper Duration ???', 4),
-      {56}  wbByteArray('Second Resistance Type ???', 4),
-      {60}  wbMGEFType,
-      {64}  wbActorValue,
-      {72}  wbFormIDCk('Projectile', [PROJ, NULL]),
-      {76}  wbFormIDCk('Explosion', [EXPL, NULL]),
-      {80}  wbByteArray('Unknown', 4),
-      {84}  wbByteArray('Unknown', 4),
-      {88}  wbInteger('Second Actor Value', itS32, wbActorValueEnum),
-      {92}  wbFormIDCk('Casting Art', [ARTO, NULL]),
-      {96}  wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
-      {100} wbFormIDCk('Impact Data', [IPDS, NULL]),
-      {104} wbByteArray('Skill Usage Mult ???', 4),
-      {108} wbFormIDCk('Dual Casting Data', [DUAL, NULL]),
-      {112} wbByteArray('Dual Casting Scale ???', 4),
-      {116} wbFormIDCk('Enchant Art', [ARTO, NULL]),
-      {120} wbByteArray('Unknown', 4),
-      {124} wbByteArray('Unknown', 4),
-      {128} wbFormIDCk('Equip Ability', [SPEL, NULL]),
-      {132} wbFormIDCk('Image Space Modifier', [IPDS, NULL]),
-      {136} wbFormIDCk('Perk', [PERK, NULL]),
-      {140} wbByteArray('Sound Volume ???', 4),
-      {144} wbByteArray('Unknown', 4),
-      {148} wbByteArray('Unknown', 4)
+      wbFloat('Base Cost'),
+      wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
+        wbFormID('Unknown', cpIgnore),
+        wbFormIDCk('Assoc. Item', [LIGH, NULL]),
+        wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
+        wbFormIDCk('Assoc. Item', [NPC_, NULL]),
+        wbFormIDCk('Assoc. Item', [HAZD, NULL]),
+        wbFormIDCk('Assoc. Item', [SPEL, NULL]),
+        wbFormIDCk('Assoc. Item', [RACE, NULL]),
+        wbFormIDCk('Assoc. Item', [ENCH, NULL]),
+        wbFormIDCk('Assoc. Item', [KYWD, NULL])
+      ]),
+      wbInteger('Magic Skill', itS32, wbActorValueEnum),
+      wbInteger('Resist Value', itS32, wbActorValueEnum),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Casting Light', [LIGH, NULL]),
+      wbFloat('Taper Weight'),
+      wbFormIDCk('Hit Shader', [EFSH, NULL]),
+      wbFormIDCk('Enchant Shader', [EFSH, NULL]),
+      wbInteger('Minimum Skill Level', itU32),
+      wbStruct('Spellmaking', [
+        wbInteger('Area', itU32),
+        wbFloat('Casting Time')
+      ]),
+      wbFloat('Taper Curve'),
+      wbFloat('Taper Duration'),
+      wbFloat('Second AV Weight'),
+      wbMGEFType,
+      wbActorValue,
+      wbFormIDCk('Projectile', [PROJ, NULL]),
+      wbFormIDCk('Explosion', [EXPL, NULL]),
+      wbInteger('Casting Type', itU32, wbCastEnum),
+      wbInteger('Delivery', itU32, wbTargetEnum),
+      wbInteger('Second Actor Value', itS32, wbActorValueEnum),
+      wbFormIDCk('Casting Art', [ARTO, NULL]),
+      wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
+      wbFormIDCk('Impact Data', [IPDS, NULL]),
+      wbFloat('Skill Usage Multiplier'),
+      wbStruct('Dual Casting', [
+        wbFormIDCk('Art', [DUAL, NULL]),
+        wbFloat('Scale')
+      ]),
+      wbFormIDCk('Enchant Art', [ARTO, NULL]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Equip Ability', [SPEL, NULL]),
+      wbFormIDCk('Image Space Modifier', [IPDS, NULL]),
+      wbFormIDCk('Perk to Apply', [PERK, NULL]),
+      wbInteger('Casting Sound Level', itU32, wbSoundLevelEnum),
+      wbStruct('Script Effect AI', [
+        wbFloat('Score'),
+        wbFloat('Delay Time')
+      ])
     ], cpNormal, True)
   ], []);
 
-//------------------------------------------------------------------------------
-// Begin NEW MGEF
-//------------------------------------------------------------------------------
-  wbRecord(MGEF, 'Base Effect', [
+  wbRecord(MGEF, 'Magic Effect', [
     wbEDIDReq,
     wbVMAD,
     wbFULL,
-//    wbDESCReq,
-//    wbICON,
-//    wbMODL,
     wbMDOB,
     wbKeywords,
     wbMGEFData,
-    wbUnknown(SNDD),
-    wbUnknown(DNAM),
+    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF])),
+    wbArray(SNDD, 'Sounds', wbStruct('', [
+      wbInteger('Type', itU32, wbEnum([
+        'Sheathe/Draw',
+        'Charge',
+        'Ready',
+        'Release',
+        'Concentration Cast Loop',
+        'On Hit'
+      ])),
+      wbFormIDCk('Sound', [SNDR])
+    ])),
+    wbLString(DNAM, 'Magic Item Description'),
     wbCTDAs
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
-
-//------------------------------------------------------------------------------
-// Begin Old MGEF
-//------------------------------------------------------------------------------
-//  wbRecord(MGEF, 'Base Effect', [
-//    wbEDIDReq,
-//    wbFULL,
-//    wbDESCReq,
-//    wbICON,
-//    wbMODL,
-//    wbUnknown(MDOB),
-//    wbUnknown(KSIZ),
-//    wbUnknown(KWDA),
-//    wbUnknown(VMAD),
-//    wbStruct(DATA, 'Data', [
-//      wbInteger('Flags', itU32, wbFlags([
-//        {0x00000001} 'Hostile',
-//        {0x00000002} 'Recover',
-//        {0x00000004} 'Detrimental',
-//        {0x00000008} '',
-//        {0x00000010} 'Self',
-//        {0x00000020} 'Touch',
-//        {0x00000040} 'Target',
-//        {0x00000080} 'No Duration',
-//        {0x00000100} 'No Magnitude',
-//        {0x00000200} 'No Area',
-//        {0x00000400} 'FX Persist',
-//        {0x00000800} '',
-//        {0x00001000} 'Gory Visuals',
-//        {0x00002000} 'Display Name Only',
-//        {0x00004000} '',
-//        {0x00008000} 'Radio Broadcast ??',
-//        {0x00010000} '',
-//        {0x00020000} '',
-//        {0x00040000} '',
-//        {0x00080000} 'Use skill',
-//        {0x00100000} 'Use attribute',
-//        {0x00200000} '',
-//        {0x00400000} '',
-//        {0x00800000} '',
-//        {0x01000000} 'Painless',
-//        {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
-//        {0x04000000} 'Bolt projectile type (or Fog if Spray is specified as well)',
-//        {0x08000000} 'No Hit Effect',
-//        {0x10000000} 'No Death Dispel',
-//        {0x20000000} '????'
-//      ])),
-//      {04} wbFloat('Base cost (Unused)'),
-//      {08} wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-//             wbFormID('Unused', cpIgnore),
-//             wbFormID('Assoc. Item'),
-//             wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
-//             wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
-//             wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
-//           ]),
-//      {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
-//      ], [
-//        -1, 'None'
-//      ])),
-//      {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-//      {20} wbInteger('Unknown', itU16),
-//      {22} wbByteArray('Unused', 2),
-//      {24} wbFormIDCk('Light', [LIGH, NULL]),
-//      {28} wbFloat('Projectile speed'),
-//      {32} wbFormIDCk('Effect Shader', [EFSH, NULL]),
-//      {36} wbFormIDCk('Object Display Shader', [EFSH, NULL]),
-//      {40} wbFormIDCk('Effect sound', [NULL, SOUN]),
-//      {44} wbFormIDCk('Bolt sound', [NULL, SOUN]),
-//      {48} wbFormIDCk('Hit sound', [NULL, SOUN]),
-//      {52} wbFormIDCk('Area sound', [NULL, SOUN]),
-//      {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
-//      {60} wbFloat('Constant Effect barter factor (Unused)'),
-//      {64} wbInteger('Archtype', itU32, wbEnum([
-//             {00} 'Value Modifier',
-//             {01} 'Script',
-//             {02} 'Dispel',
-//             {03} 'Cure Disease',
-//             {04} '',
-//             {05} '',
-//             {06} '',
-//             {07} '',
-//             {08} '',
-//             {09} '',
-//             {10} '',
-//             {11} 'Invisibility',
-//             {12} 'Chameleon',
-//             {13} 'Light',
-//             {14} '',
-//             {15} '',
-//             {16} 'Lock',
-//             {17} 'Open',
-//             {18} 'Bound Item',
-//             {19} 'Summon Creature',
-//             {20} '',
-//             {21} '',
-//             {22} '',
-//             {23} '',
-//             {24} 'Paralysis',
-//             {25} '',
-//             {26} '',
-//             {27} '',
-//             {28} '',
-//             {29} '',
-//             {30} 'Cure Paralysis',
-//             {31} 'Cure Addiction',
-//             {32} 'Cure Poison',
-//             {33} 'Concussion',
-//             {34} 'Value And Parts',
-//             {35} 'Limb Condition',
-//             {36} 'Turbo'
-//           ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
-//      {68} wbActorValue
-//    ], cpNormal, True)
-//  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
-//------------------------------------------------------------------------------
-// End Old MGEF
-//------------------------------------------------------------------------------
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDIDReq,
@@ -11341,15 +11378,13 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbSCRI,
     wbDEST,
     wbSounds,
     wbKeywords,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
-    ], cpNormal, True),
-    wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
+    ], cpNormal, True)
   ]);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
@@ -13624,19 +13659,8 @@ begin
        {11} 'Voice'
       ])),
       wbFloat('Charge Time'),
-      wbInteger('Cast Type', itU32, wbEnum([
-        {0} 'Constant Effect',
-        {1} 'Fire and Forget',
-        {2} 'Concentration',
-        {3} 'Scroll'
-      ])),
-      wbInteger('Type', itU32, wbEnum([
-        {0} 'Self',
-        {1} 'Touch',
-        {2} 'Aimed',
-        {3} 'Target Actor',
-        {4} 'Target Location'
-      ])),
+      wbInteger('Cast Type', itU32, wbCastEnum),
+      wbInteger('Type', itU32, wbTargetEnum),
       wbFloat('Cast Duration'),
       wbFloat('Range'),
       wbFormIDCk('Half-cost Perk', [PERK])
