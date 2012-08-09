@@ -1,0 +1,28 @@
+{{Trail|File Formats|Mod File Format}}
+ADDN records contain information on "addon nodes".  These appear to be generic visual attachments that can be attached to any object.
+
+NOTE: All fields marked required since all records have them but they may not all be required.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Always 12 bytes, even if all 0s
+|-
+| + || MODL || model || zstring || Path to .nif
+|-
+| + || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+|-
+| + || DATA || unique id? || uint32 || Unique integer (within ADDN), may be used instead of formID for reference.
+|-
+| + || SNAM || Ambient Sound || FormID || [[Tes5Mod:Mod File Format/SOUN|SOUN]]
+|-
+| + || DNAM || flags || uint32 || Flags
+:0x00000001 : "all" (Unknown)
+:0x00000002 : Always Loaded - Camera?  dust spray//blood spray//fire impact (but not frost)
+|}
