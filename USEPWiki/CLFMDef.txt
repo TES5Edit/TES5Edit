@@ -1,0 +1,24 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+CLFM records contain Color (Form?) data.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || || EDID || editorID || zstring || 
+|-
+| - || || FULL || full name || lstring || Full name
+|-
+| + || || CNAM || RGB color || ubyte[4] || RGB hex color codes
+:Red
+:Green
+:Blue
+:Unused - always 0x00
+|-
+| + || || FNAM || Boolean || uint32 || Playable
+|-
+|}

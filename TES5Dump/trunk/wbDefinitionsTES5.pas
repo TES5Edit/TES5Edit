@@ -877,6 +877,7 @@ var
   wbCOCTReq: IwbSubRecordStructDef;
   wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
+  wbCNAMReq: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef; {Associated with CTDA}
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
   wbDNAMActor: IwbSubRecordStructDef;
@@ -4685,14 +4686,24 @@ begin
   wbSNAM := wbFormIDCk(SNAM, 'Sound - Open', [SOUN]);
   wbQNAM := wbFormIDCk(QNAM, 'Sound - Close', [SOUN]);
   wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
-  wbCNAM := wbStruct(CNAM, 'Linked Reference Color', [
-             wbStruct('Link Start Color', [
-               wbInteger('Red', itU8),
-               wbInteger('Green', itU8),
-               wbInteger('Blue', itU8),
-               wbByteArray('Unnknown', 1)
-             ])
-           ]);
+  wbCNAM := wbStruct(CNAM, 'ColorID', [
+              wbStruct('Color Name', [
+                wbInteger('Red', itU8),
+                wbInteger('Green', itU8),
+                wbInteger('Blue', itU8),
+                wbByteArray('Unknown', 1)
+              ])
+            ]);
+
+  wbCNAMReq := wbStruct(CNAM, 'ColorID', [
+              wbStruct('Color Name', [
+                wbInteger('Red', itU8),
+                wbInteger('Green', itU8),
+                wbInteger('Blue', itU8),
+                wbByteArray('Unknown', 1)
+              ])
+            ]);
+
 	wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
 							wbByteArray('Not Shown', 0, cpIgnore, False, wbNeverShow)
 						], cpIgnore, False, wbNeverShow);
@@ -4851,15 +4862,19 @@ begin
 //-----------------------------------------------------------------
 
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+    {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
     {0x00000004}'Unknown 3',
     {0x00000008}'Unknown 4',
     {0x00000010}'Unknown 5',
     {0x00000020}'Deleted',
+    {>>> 0x00000040 ACTI: Has Tree LOD <<<}
     {0x00000040}'Constant',
     {0x00000080}'(TES4)Localized / Is Perch',
-    {0x00000100}'Unknown 9',
+    {>>> 0x00000100 ACTI: Must Update Anims <<<}
+    {0x00000100}'Must Update Anims',
+    {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
     {0x00000200}'Hidden from local map / Starts dead',
     {0x00000400}'Quest item / Persistent reference / (LSCR) Displays in Main Menu',
     {0x00000800}'Initialy disabled',
@@ -4867,20 +4882,29 @@ begin
     {0x00002000}'Unknown 14',
     {0x00004000}'Unknown 15',
     {0x00008000}'VWD',
+    {>>> 0x00010000 ACTI: Random Animation Start <<<}
     {0x00010000}'Random Animation Start',
+    {>>> 0x00020000 ACTI: Dangerous <<<}
     {0x00020000}'Dangerous / Off limits',
     {0x00040000}'Compressed',
     {0x00080000}'Can''t wait',
-    {0x00100000}'Unknown 21',
+    {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
+    {0x00100000}'Ignore Object Interaction',
     {0x00200000}'Unknown 22',
     {0x00400000}'Unknown 23',
+    {>>> 0x00800000 ACTI: Is Marker <<<}
     {0x00800000}'Is Marker',
     {0x01000000}'Unknown 25',
+    {>>> 0x02000000 ACTI: Obstacle <<<}
     {0x02000000}'Obstacle',
+    {>>> 0x03000000 ACTI: Filter <<<}
     {0x03000000}'NavMesh Gen - Filter',
+    {>>> 0x08000000 ACTI: Bounding Box <<<}
     {0x08000000}'NavMesh Gen - Bounding Box',
     {0x10000000}'Must Exit to Talk',
+    {>>> 0x20000000 ACTI: Child Can Use <<<}
     {0x20000000}'Child Can Use',
+    {>>> 0x40000000 ACTI: GROUND <<<}
     {0x40000000}'NavMesh Gen - Ground',
     {0x80000000}'Unknown 32'
   ]));
@@ -5722,6 +5746,7 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
+  {>>> wbRecordFlags: 0x00000000 ACTI: Collision Geometry (default) <<<}
   wbRecord(ACTI, 'Activator', [
     wbEDIDReq,
     wbVMAD,
@@ -5738,9 +5763,9 @@ begin
     ]),
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
-    wbLString(RNAM, 'Activate Text Override'),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbInteger(FNAM, 'Water Displacement', itU16, wbFlags([
+    wbLString(RNAM, 'Activate Text Override'),
+    wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
       'Ignored by Sandbox'
     ])),
@@ -8170,7 +8195,8 @@ begin
   ]);
 
   wbRecord(AACT, 'AACT', [
-    wbEDIDReq
+    wbEDIDReq,
+    wbCNAMReq
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -10552,14 +10578,7 @@ begin
   wbRecord(CLFM, 'Color', [
     wbEDIDReq,
     wbFULL,
-    wbStruct(CNAM, 'ColorID', [
-      wbStruct('Color Name', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ])
-    ], cpNormal, True),
+    wbCNAMReq,
     wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']), cpNormal, True)
   ]);
 end;
