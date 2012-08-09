@@ -3,13 +3,13 @@
 = New Decoding Method =
 
 Follow These Steps
- #Make a small plugin for the Record you will be working on.
- #Save it with any name, but with the sufix _Chg. Example: TES5DumpRACE_Chg.esp
- #Make a copy of that exact file. Windows will call it: TES5DumpRACE_Chg - Copy.esp
- #Now rename that file to TES5DumpRACE_Org.esp
- #Make a batch file that Dumps both files.
- #Run the batch file.
- #Open both file using a Diff program like BeyondCompare.
+ # Make a small plugin for the Record you will be working on.
+ # Save it with any name, but with the sufix _Chg. Example: TES5DumpRACE_Chg.esp
+ # Make a copy of that exact file. Windows will call it: TES5DumpRACE_Chg - Copy.esp
+ # Now rename that file to TES5DumpRACE_Org.esp
+ # Make a batch file that Dumps both files.
+ # Run the batch file.
+ # Open both file using a Diff program like BeyondCompare.
 
 <code>
 Example:
