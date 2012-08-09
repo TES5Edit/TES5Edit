@@ -17,20 +17,24 @@
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 program TES5Dump;
 
+{$I Compilers.inc}
+
 {$APPTYPE CONSOLE}
 
 uses
-//  nxReplacementMemoryManager,
-//  nxExceptionHook,
   Classes,
   SysUtils,
   Windows,
-  wbDefinitionsTES4,
-  wbDefinitionsFO3,
-  wbDefinitionsFNV,
-  wbDefinitionsTES5,
+  wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
+  wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
+  wbImplementation in 'wbImplementation.pas',
   wbInterface in 'wbInterface.pas',
-  wbImplementation in 'wbImplementation.pas';
+  wbLocalization in 'wbLocalization.pas',
+  wbSavedGames in 'wbSavedGames.pas',
+  wbTES5ScriptDef in 'wbTES5ScriptDef.pas',
+  wbBSA in 'wbBSA.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -236,20 +240,39 @@ begin
       DumpGroups.Sort;
     end;
 
+    if wbFindCmdLineSwitch('more') then
+      wbMoreInfoForUnknown:= True
+    else
+      wbMoreInfoForUnknown:= False;
+
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
     else begin
-      RecordToSkip.Add('LAND');
-//      RecordToSkip.Add('REGN');
-      RecordToSkip.Add('PGRD');
-      RecordToSkip.Add('ROAD');
-      RecordToSkip.Add('NAVI');
-      RecordToSkip.Add('NAVM');
-      RecordToSkip.Add('IMAD');
+//    RecordToSkip.Add('LAND');
+//    RecordToSkip.Add('REGN');
+//    RecordToSkip.Add('PGRD');
+//      RecordToSkip.Add('SCEN');
+//      RecordToSkip.Add('PACK');
+//      RecordToSkip.Add('PERK');
+//      RecordToSkip.Add('NAVI');
+//      RecordToSkip.Add('CELL');
+//      RecordToSkip.Add('WRLD');
+//      RecordToSkip.Add('REFR');
     end;
 
     if wbFindCmdLineParam('xg', s) then
-      GroupToSkip.CommaText := s;
+      GroupToSkip.CommaText := s
+    else begin
+//    GroupToSkip.Add('LAND');
+//    GroupToSkip.Add('REGN');
+//    GroupToSkip.Add('PGRD');
+//      GroupToSkip.Add('SCEN');
+//      GroupToSkip.Add('PACK');
+//      GroupToSkip.Add('PERK');
+//      GroupToSkip.Add('NAVI');
+//      GroupToSkip.Add('CELL');
+//      GroupToSkip.Add('WRLD');
+    end;
 
     s := ParamStr(ParamCount);
 
@@ -275,12 +298,16 @@ begin
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
-      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-      WriteLn(ErrOutput, '             ', 'following default value applies:');
-      WriteLn(ErrOutput, '             ', 'LAND,PGRD,ROAD,NAVI,NAVM,IMAD');
+      WriteLn(ErrOutput, '             ', 'decompressed and processed.');
+//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
+//      WriteLn(ErrOutput, '             ', 'following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
+//      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
+      WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;

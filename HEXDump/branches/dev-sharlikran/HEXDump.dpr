@@ -189,14 +189,10 @@ begin
   SysUtils.DecimalSeparator := '.';
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
+  wbMoreInfoForUnknown := False;
 
   try
     if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
-      wbGameMode := gmTES5;
-      wbAppName := 'TES5';
-      wbGameName := 'Skyrim';
-      DefineTES5;
-    end else if wbFindCmdLineSwitch('HEX') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'HEX') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
@@ -217,7 +213,7 @@ begin
       wbGameName := 'Oblivion';
       DefineTES4;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5, HEX to select mode.');
+      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
       Exit;
     end;
 
@@ -244,6 +240,11 @@ begin
       DumpGroups.CommaText := s;
       DumpGroups.Sort;
     end;
+
+    if wbFindCmdLineSwitch('more') then
+      wbMoreInfoForUnknown:= True
+    else
+      wbMoreInfoForUnknown:= False;
 
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
@@ -298,14 +299,16 @@ begin
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
-      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-      WriteLn(ErrOutput, '             ', 'following default value applies:');
-      WriteLn(ErrOutput, '             ', 'REFR');
+      WriteLn(ErrOutput, '             ', 'decompressed and processed.');
+//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
+//      WriteLn(ErrOutput, '             ', 'following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
-      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
+//      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
+      WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
