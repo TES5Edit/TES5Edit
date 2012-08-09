@@ -12628,8 +12628,7 @@ begin
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
-    wbUnknown(DESC),
-//    wbDESCReq,
+    wbDESCReq,
     wbSpells,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbBODT,
