@@ -2,4 +2,10 @@
 
 = Currently updated on the UESPWiki =
 
-APPA, ANIO, ADDN, AMMO, AACT, ACTI, CLFM, DEST, RACE Updated
+== Top Groups ==
+
+AACT, ACTI, ADDN, AMMO, ANIO, APPA, BOOK, CLFM, GMST, MISC, RACE
+
+== Common Fields ==
+
+DEST, MODL, OBND

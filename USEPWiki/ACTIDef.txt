@@ -40,13 +40,9 @@ Flags not related to the NavMesh
 |-
 | - || FULL || ingame name || lstring || Full (in-game) name 
 |-
-| - || MODL || model || zstring || Path to .nif
+| - || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
 |-
-| - || MODT || model data || [[Tes5Mod:Mod_File_Format/Model_Textures_Field|MODT]] || series of 12-byte structs (assume xyz)
-|-
-| - || MODS || unknown || struct || unknown model struct
-|-
-| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes optionl fields DSTD, DMDL, DMDT, DMDS
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
 |-
 | - || KSIZ || count || dword || Number of formids in the following KWDA subrecord
 |-

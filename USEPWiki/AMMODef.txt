@@ -21,7 +21,6 @@ An AMMO record contains data for an arrow.
 | - || ICON || Inventory Image || zstring || Inventory Image Filename
 |-
 | - || MICO || Message Immage || zstring || Message Immage Filename
-
 |-
 | - || YNAM || pickupSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when picked up
 |-

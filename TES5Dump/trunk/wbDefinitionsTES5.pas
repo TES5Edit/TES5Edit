@@ -6031,24 +6031,24 @@ begin
 
   wbSkillEnum :=
     wbEnum([
-      'None',
       'Unknown 1',
       'Unknown 2',
       'Unknown 3',
       'Unknown 4',
       'Unknown 5',
-      'OneHanded',
-      'TwoHanded',
-      'Marksman',
+      'Unknown 6',
+      'One Handed',
+      'Two Handed',
+      'Archery',
       'Block',
       'Smithing',
-      'HeavyArmor',
-      'LightArmor',
+      'Heavy Armor',
+      'Light Armor',
       'Pickpocket',
       'Lockpicking',
       'Sneak',
       'Alchemy',
-      'Speechcraft',
+      'Speech',
       'Alteration',
       'Conjuration',
       'Destruction',
@@ -6056,7 +6056,7 @@ begin
       'Restoration',
       'Enchanting'
     ], [
-      -1, 'None'
+    -1, 'None'
     ]);
 
   wbCastEnum := wbEnum([
@@ -11378,7 +11378,7 @@ begin
     wbDEST,
     wbSounds,
     wbKeywords,
-    wbStruct(DATA, '', [
+    wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)

@@ -1,6 +1,5 @@
 <noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
 
-== Base ==
 {| class="wikitable" width="100%" 
 ! width="3%" | [[Tes5Mod:File Format Conventions|C]]
 ! width="10%" | Field
@@ -8,84 +7,71 @@
 ! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
 ! | Info
 |- 
-| + || OBND || objectBounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]] ||  Seems to always be 12 zeroes
-|- 
-| + || DESC || description || lstring || Ingame description or 0 if none.
-|- 
-| + || MODT || model data || [[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]] || model struct
-|-
 | + || EDID || editorID || zstring || Max 0x200 bytes, including null terminator. 
 |-
-| rowspan="2" | +
-| rowspan="2" | DATA
-| Flags
-| FormID
-| rowspan="2" | Values
+| - || VMAD || script data || [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] || Script Data
 |-
-| SkillID or SpellFormID
-| ubyte
+| + || OBND || objectBounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]] ||  Seems to always be 12 zeroes
 |- 
-| + || INAM || STAT model || formID ||
+| - || FULL || ingame name || lstring || Full (in-game) name 
 |- 
-| + || CNAM || Some alternate text || lstring || Book description may be as a tooltip, found in the dunTreasMapRiverwood book, string id 72543
+| - || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
+|-
+| - || ICON || Inventory Image || zstring || Inventory Image Filename
+|-
+| - || MICO || Message Immage || zstring || Message Immage Filename
+|-
+| + || DESC || description || lstring || Ingame description or 0 if none.
 |- 
-| + || YNAM || pickup sound || formid || Pickup [[Tes5Mod:Mod_File_Format/SNDR|SNDR]]
-|- 
-| + || VMAD || Script data ||  ||
-|- 
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
+|-
+| - || YNAM || pickupSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when picked up
+|-
+| - || ZNAM || dropSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when dropped
+|-
 | + || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || KYWD count
 |- 
 | + || KWDA || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KWDA]] || formid[KSIZ] || Array of KYWD formids
 |- 
-| + || Full || Item name || lstring ||
-|}
-
-== Value ==
-
-{| class="wikitable" width="100%" 
-! width="10%" | Id
-! width="10%" | Tag
-! width="15%" | Name
-! width="15%" | [[Tes5Mod:File Format Conventions|Type/Size]]
-! | Info
+| + || DATA || Book Data || struct || 16 Byte Struct
+:Flags
+::Flags
+::0x00000001 - Teaches Skill
+::0x00000002 - Can't be Taken
+::0x00000004 - Teaches Spell
+:Type
+::0 - Book/Tome
+::255 - Note/Scroll
+:Teaches - Depends on the Flag Set
+::IF 0x00000001 Lookup - Skills
+::IF 0x00000004 FormID - [[Tes5Mod:Mod_File_Format/SPEL|SPEL]]			 
+:uint32 - Value (In Gold)
+:float - Weight
 |-
-| rowspan="2" | DATA
-| rowspan="2" | ?
-| Flags
-| rowspan="2" | 16 bytes
-| 
-:dword Flags
-::0x0001 = Skill Book
-::0x0004 = Spell Tome
-::0xFF00 = Note/Scroll Type
+|   ||   ||   ||   || Skills
+:sint32 - SkillIDs 
+::6 - One Handed
+::7 - Two Handed
+::8 - Archery
+::9 - Block
+::10 - Smithing
+::11 - Heavy Armor
+::12 - Light Armor
+::13 - Pickpocket
+::14 - Lockpicking
+::15 - Sneak
+::16 - Alchemy
+::17 - Speech
+::18 - Alteration
+::19 - Conjuration
+::20 - Destruction
+::21 - Illusion
+::22 - Restoration
+::23 - Enchanting
+::-1 - None
 |-
-| SkillID or SpellFormID
-|
-:dword SkillID or SpellFormID  depending on if Spell Tome or SkillBook is set
-::SkillIDs (0x06 to 0x17)
-:::ONEHAND 	6 
-:::TWOHAND 	7 
-:::MARKSMAN 	8 
-:::BLOCK 	9 
-:::SMITHING 	10
-:::HEAVYARMOR 	11
-:::LIGHTARMOR 	12
-:::PICKPOCKET 	13
-:::LOCKPICKING	14
-:::SNEAK 	15
-:::ALCHEMY 	16
-:::SPEECHCRAFT 	17
-:::ALTERATION 	18
-:::CONJURATION 	19
-:::DESTRUCTION 	20
-:::ILLUSION 	21
-:::RESTORATION	22
-:::ENCHANTING 	23
-::dword Value
-::float Weight
+| - || INAM || Inventory Art || formid || Sound([[Tes5Mod:Mod File Format/STAT|STAT]]) played when picked up
+|-
+| - || CNAM || Description || string || Book Text
 |-
 |}
-
-== Changes ==
-
-Skyrim Plugin Decoding Project
