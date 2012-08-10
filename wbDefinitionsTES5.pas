@@ -14392,46 +14392,54 @@ begin
     wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
     wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
     wbUnknown(LNAM),
-    wbUnknown(MNAM),
+    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbUnknown(NNAM),
 //    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
     wbUnknown(ONAM),
-    wbUnknown(RNAM),
-    wbUnknown(QNAM),
-    wbUnknown(PNAM),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbArray(RNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
+    ], [])),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbArray(QNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
+    ], [])),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbArray(PNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
+    ], [])),
 //    wbByteArray(PNAM, 'Unknown', 0, cpIgnore),
 //    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
 //      wbArray(PNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
 //    ], [])),
-    wbUnknown(JNAM),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbArray(JNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
+    ], [])),
 //    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
 //      wbArray(JNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
 //    ], [])),
-    wbUnknown(NAM0),
-//    wbArray(NAM0, 'Colors by Types/Times',
-//      wbArray('Type',
-//        wbStruct('Time', [
-//          wbInteger('Red', itU8),
-//          wbInteger('Green', itU8),
-//          wbInteger('Blue', itU8),
-//          wbByteArray('Unknown', 1)
-//        ]),
-//        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
-//      ),
-//      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
-//    , cpNormal, True),
-    wbRArray('Unknown - NAM0', wbRStruct('Unknown', [
-      wbArray(NAM0, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
-    ], [])),
-//    wbStruct(FNAM, 'Fog Distance', [
-//      wbFloat('Day - Near'),
-//      wbFloat('Day - Far'),
-//      wbFloat('Night - Near'),
-//      wbFloat('Night - Far'),
-//      wbFloat('Day - Power'),
-//      wbFloat('Night - Fower')
-//    ], cpNormal, True),
-    wbUnknown(FNAM),
+//    wbUnknown(NAM0),
+    wbArray(NAM0, 'Colors by Types/Times',
+      wbArray('Type',
+        wbStruct('Time', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        ['Sunrise', 'Day', 'Sunset', 'Night']
+      ),
+      ['Unknown 1','Unknown 2','Unknown 3','Ambient','Unknown 5','Unknown 6',
+      'Unknown 7','Unknown 8','Unknown 9','Unknown 10', 'Unknown 11', 'Unknown 12',
+      'Unknown 13','Unknown 14','Unknown 15','Unknown 16','Unknown 17']
+    , cpNormal, True),
+    wbStruct(FNAM, 'Fog Distance', [
+      wbFloat('Day - Near'),
+      wbFloat('Day - Far'),
+      wbFloat('Night - Near'),
+      wbFloat('Night - Far'),
+      wbFloat('Day - Power'),
+      wbFloat('Night - Power'),
+      wbFloat('Day - Max'),
+      wbFloat('Night - Max')
+    ], cpNormal, True),
 //    wbByteArray(INAM, 'Unknown', 304, cpIgnore, True),
 //    wbUnknown(INAM),
     wbStruct(DATA, '', [
@@ -14455,16 +14463,43 @@ begin
       wbByteArray('Unknown', 4)
     ], cpNormal, True),
     wbUnknown(NAM1),
-    wbRArray('Sounds', wbRStruct('Unknown', [
-      wbArray(SNAM, 'Sounds', wbFormIDCK('Sound', [SNDR, NULL]), 0, nil, nil, cpNormal, True)
-    ], [])),
-    wbRArray('Unknown - TNAM', wbRStruct('Unknown', [
-      wbFormID(TNAM, 'Unknown')
-    ], [])),
-    wbUnknown(IMSP),
-    wbRArray('Unknown - DALC', wbRStruct('Unknown', [
-      wbArray(DALC, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
+    wbRArray('Sounds',
+      wbStruct(SNAM, 'Sound', [
+        wbFormIDCK('Sound', [SNDR, NULL]),
+        wbInteger('Type', itU32, wbEnum([
+          {0x01} 'Default',
+          {0x02} 'Precipitation',
+          {0x04} 'Wind',
+          {0x08} 'Thunder'
+        ]))
+      ])
+    ),
+    wbRArrayS('Texture Names', wbFormIDCk(TNAM, 'Texture Name', [STAT, NULL])),
+    wbStruct(IMSP, 'Image Spaces', [
+      wbFormIDCK('Sunrise', [IMGS, NULL]),
+      wbFormIDCK('Day', [IMGS, NULL]),
+      wbFormIDCK('Sunset', [IMGS, NULL]),
+      wbFormIDCK('Night', [IMGS, NULL])
+    ]),
+//------------------------------------------------------------------------------
+  wbRArray('Directional Ambient Lightning Colors',
+      wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
+{-->}   wbArray('Time of Day',
+{-->}     wbStruct('Values For', [
+{-->}       wbInteger('Red', itU8),
+{-->}       wbInteger('Green', itU8),
+{-->}       wbInteger('Blue', itU8),
+{-->}       wbByteArray('Unknown', 1)
+{-->}     ]), ['X+','X-','Y+','Y-','Z+',
+{-->}          'Z-', 'Specular']),
+{-->}   wbFloat('Fresnel Power')
+      ])//,
+//     ['Unknown 1','Unknown 2','Unknown 3','Unknown 4']
+    ),
+//------------------------------------------------------------------------------
+//    wbRArray('Unknown - DALC', wbRStruct('Unknown', [
+//      wbArray(DALC, 'Directional Ambient Lightning Color', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
+//    ], [])),
     wbUnknown(NAM2),
     wbUnknown(NAM3),
     wbMODL
