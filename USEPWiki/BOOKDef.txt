@@ -25,9 +25,9 @@
 |- 
 | - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
 |-
-| - || YNAM || pickupSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when picked up
+| - || YNAM || pickupSound || formid || Sound [[Tes5Mod:Mod File Format/SNDR|SNDR]] played when picked up
 |-
-| - || ZNAM || dropSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when dropped
+| - || ZNAM || dropSound || formid || Sound [[Tes5Mod:Mod File Format/SNDR|SNDR]] played when dropped
 |-
 | + || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || KYWD count
 |- 
@@ -70,7 +70,7 @@
 ::23 - Enchanting
 ::-1 - None
 |-
-| - || INAM || Inventory Art || formid || Sound([[Tes5Mod:Mod File Format/STAT|STAT]]) played when picked up
+| - || INAM || Inventory Art || formid || Inventory Art [[Tes5Mod:Mod File Format/STAT|STAT]]
 |-
 | - || CNAM || Description || string || Book Text
 |-
