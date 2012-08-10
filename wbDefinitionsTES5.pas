@@ -113,8 +113,8 @@ const
 
   AACT : TwbSignature = 'AACT';
   ACBS : TwbSignature = 'ACBS';
-  ACEC : TwbSignature = 'ACBS'; { New To Dawnguard }
-  ACEP : TwbSignature = 'ACBS'; { New To Dawnguard }
+  ACEC : TwbSignature = 'ACEC'; { New To Dawnguard }
+  ACEP : TwbSignature = 'ACEP'; { New To Dawnguard }
   ACHR : TwbSignature = 'ACHR';
   ACID : TwbSignature = 'ACID'; { New To Dawnguard }
   ACPR : TwbSignature = 'ACPR'; { New To Skyrim }
@@ -522,6 +522,7 @@ const
   RCLR : TwbSignature = 'RCLR';
   RCOD : TwbSignature = 'RCOD';
   RCPE : TwbSignature = 'RCPE';
+  RCPR : TwbSignature = 'RCPR'; { New to Dawnguard }
   RCQY : TwbSignature = 'RCQY';
   RDAT : TwbSignature = 'RDAT';
   RDGS : TwbSignature = 'RDGS';
@@ -10001,20 +10002,31 @@ begin
     ], cpNormal, True, nil, 2)
   ]);
 
+//    EDID           ACSR ACEC      FULL KSIZ KWDA PNAM MNAM RNAM
+//    EDID                ACEC      FULL KSIZ KWDA PNAM MNAM RNAM
+//    EDID ACPR ACUN ACSR ACEC ACEP FULL KSIZ KWDA PNAM MNAM RNAM
+//    EDID           ACSR ACEC ACEP FULL KSIZ KWDA PNAM MNAM RNAM
+//    EDID ACPR ACUN ACSR ACEC      FULL PNAM MNAM RNAM NAM0
+//    EDID           ACSR ACEC ACEP FULL PNAM MNAM RNAM
+//    EDID ACPR ACUN ACSR      ACEP FULL PNAM
+//    EDID           ACSR      ACEP FULL KSIZ KWDA PNAM MNAM RNAM
   wbRecord(LCTN, 'Location', [
     wbEDIDReq,
+
     wbUnknown(ACPR),
     wbArray(LCPR, 'Actors', wbStruct('', [
       wbFormIDCk('Actor', [ACHR]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbByteArray('Unknown', 4)
     ])),
+
     wbUnknown(ACUN),
     wbArray(LCUN, 'Unique Refs', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN])
     ])),
+
     wbUnknown(ACSR),
     wbArray(LCSR, 'Location Ref Types', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
@@ -10022,6 +10034,7 @@ begin
       wbFormIDCk('Location', [WRLD, CELL]),
       wbByteArray('Unknown', 4)
     ])),
+
     wbUnknown(ACEC),
     wbRArray('Unknown',
       wbStruct(LCEC, 'Unknown', [
@@ -10029,14 +10042,18 @@ begin
         wbArray('Unknown', wbByteArray('Unknown', 4))
       ])
     ),
+
     wbArray(ACID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
     wbArray(LCID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
+
     wbUnknown(ACEP),
     wbArray(LCEP, 'Unknown', wbStruct('', [
       wbFormIDCk('Actor', [ACHR]),
       wbFormIDCk('Ref', [REFR]),
       wbByteArray('Unknown', 4)
     ])),
+
+    wbUnknown(RCPR),
     wbFull,
     wbKeywords,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
@@ -10047,6 +10064,7 @@ begin
     wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbCNAM
   ]);
+
 end;
 
 procedure DefineTES5i;
