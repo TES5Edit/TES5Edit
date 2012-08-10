@@ -114,9 +114,12 @@ const
   AACT : TwbSignature = 'AACT';
   ACBS : TwbSignature = 'ACBS';
   ACHR : TwbSignature = 'ACHR';
+  ACID : TwbSignature = 'ACID'; { New To Dawnguard }
   ACPR : TwbSignature = 'ACPR'; { New To Skyrim }
   ACRE : TwbSignature = 'ACRE';
+  ACSR : TwbSignature = 'ACSR'; { New To Dawnguard }
   ACTI : TwbSignature = 'ACTI';
+  ACUN : TwbSignature = 'ACUN'; { New To Dawnguard }
   ADDN : TwbSignature = 'ADDN';
   AHCF : TwbSignature = 'AHCF'; { New To Skyrim }
   AHCM : TwbSignature = 'AHCM'; { New To Skyrim }
@@ -449,6 +452,7 @@ const
   NVMI : TwbSignature = 'NVMI';
   NVNM : TwbSignature = 'NVNM'; { New to Skyrim }
   NVPP : TwbSignature = 'NVPP'; { New to Skyrim }
+  NVSI : TwbSignature = 'NVSI'; { New to Dawnguard }
   NVTR : TwbSignature = 'NVTR';
   NVVX : TwbSignature = 'NVVX';
   OBND : TwbSignature = 'OBND';
@@ -666,6 +670,7 @@ const
   XAPD : TwbSignature = 'XAPD';
   XAPR : TwbSignature = 'XAPR';
   XATO : TwbSignature = 'XATO';
+  XATR : TwbSignature = 'XATR'; { New To Dawnguard }
   XCAS : TwbSignature = 'XCAS';
   XCCM : TwbSignature = 'XCCM';
   XCET : TwbSignature = 'XCET';
@@ -8771,7 +8776,8 @@ begin
         wbArray('Doors', wbFormIDCk('Door', [REFR]), -1),
         wbByteArray('Unknown')
       ])
-    )
+    ),
+		wbByteArray(NVSI, 'Unknown')
   ]);
 
 //------------------------------------------------------------------------------
@@ -9995,16 +10001,19 @@ begin
 
   wbRecord(LCTN, 'Location', [
     wbEDIDReq,
+    wbUnknown(ACPR),
     wbArray(LCPR, 'Actors', wbStruct('', [
       wbFormIDCk('Actor', [ACHR]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbByteArray('Unknown', 4)
     ])),
+    wbUnknown(ACUN),
     wbArray(LCUN, 'Unique Refs', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN])
     ])),
+    wbUnknown(ACSR),
     wbArray(LCSR, 'Location Ref Types', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [REFR, ACHR]),
@@ -10017,6 +10026,7 @@ begin
         wbArray('Unknown', wbByteArray('Unknown', 4))
       ])
     ),
+    wbArray(ACID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
     wbArray(LCID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
     wbArray(LCEP, 'Unknown', wbStruct('', [
       wbFormIDCk('Actor', [ACHR]),
@@ -10852,6 +10862,8 @@ begin
       'Medium',
       'Large'
     ])),
+    wbUnknown(DNAM),
+    wbUnknown(TRDT),
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDT, 'Response Data', [
@@ -11547,6 +11559,8 @@ begin
     wbSPLOs,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, wbActorTemplateUseTraits),
+    wbByteArray(PNAM, 'Unknown', 4),
+    wbByteArray(UNAM, 'Unknown', 4),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attacks', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
@@ -12177,7 +12191,6 @@ begin
       wbEmpty(NEXT, 'Marker'),
       wbCTDAs
     ], [], cpNormal, True),
-
     wbICON,
     wbStruct(DATA, 'General', [
       wbInteger('Flags', itU8, wbFlags([
@@ -12237,15 +12250,15 @@ begin
           wbUnknown(ALFD),
           wbUnknown(ALUA),
           wbUnknown(ALFR),
-          wbCTDAs,
           wbUnknown(ALCO),
           wbUnknown(ALCA),
           wbUnknown(ALCL),
+          wbCTDAs,
           wbUnknown(ALFA),
           wbUnknown(ALRT),
           wbKeywords,
-          // When there is no COCT, CNTO comes right after Keywords and produces an error
-          // Error: record QUST contains unexpected (or out of order) subrecord CNTO 4F544E43
+          {>>> When there is no COCT, CNTO comes right after Keywords and produces an error <<<}
+          {>>> Error: record QUST contains unexpected (or out of order) subrecord CNTO 4F544E43  <<<}
           wbUnknown(ALEQ),
           wbUnknown(ALEA),
           wbInteger(COCT, 'Count', itU32),
@@ -13176,6 +13189,9 @@ begin
         wbByteArray('Unknown', 1)
       ], cpNormal, True)
     ], [])),
+
+    {--- Unknown ---}
+    wbUnknown(XATR),
 
     wbDataPosRot
 
@@ -14222,6 +14238,8 @@ begin
 // Pattern 3: EDID, Multi-RNAM,
 //            MHDT FULL XEZN XLCN WNAM PNAM CNAM NAM2 NAM3 NAM4 DNAM ONAM NAMA
 //            DATA NAM0 NAM9 TNAM UNAM OFST
+// Pattern 4: EDID Multi-RNAM,
+// Dawnguard  FULL WCTR LTMP XEZN XLCN WNAM PNAM NAM2 NAM3 NAM4 DNAM ONAM NAMA DATA NAM0 NAM9 ZNAM XWEM OFST
 //
 //------------------------------------------------------------------------------
   wbRecord(WRLD, 'Worldspace', [
@@ -14341,6 +14359,7 @@ begin
     ]),
     wbUnknown(TNAM),
     wbUnknown(UNAM),
+    wbUnknown(XWEM),
     wbByteArray(OFST, 'Unknown', 0)
   ], False, nil, cpNormal, False, wbRemoveOFST);
 
