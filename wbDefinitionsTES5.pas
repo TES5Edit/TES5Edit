@@ -850,8 +850,6 @@ var
   wbCriticalStageEnum: IwbEnumDef;
   wbSexEnum: IwbEnumDef;
   wbServiceFlags: IwbFlagsDef;
-  wbPKDTType: IwbEnumDef;
-  wbPKDTFlags: IwbFlagsDef;
   wbObjectTypeEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
   wbBlendModeEnum: IwbEnumDef;
@@ -874,6 +872,8 @@ var
   wbScriptObject: IwbStructDef;
   wbScriptFragments: IwbUnionDef;
   wbLocationEnum: IwbEnumDef;
+  wbLocationData: IwbStructDef;
+  wbTargetData: IwbStructDef;
   wbAttackData: IwbSubRecordStructDef; {Attack Data}
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
@@ -927,13 +927,11 @@ var
   wbTintMaskTypeEnum: IwbEnumDef;
   wbBODTOld: IwbSubRecordDef;
 // --- Pack ---
+  wbPKDTFlags: IwbFlagsDef;
+  wbPKDTInterruptFlags: IwbFlagsDef;
   wbPKDT: IwbSubRecordDef;
-  wbPLDT: IwbSubRecordDef;
   wbPSDT: IwbSubRecordDef;
-  wbPTDA: IwbSubRecordDef;
   wbIDLF: IwbSubRecordStructDef;
-  wbPubPack: IwbSubRecordStructDef;
-  wbProdTree: IwbSubRecordStructDef;
   wbINAM: IwbSubRecordDef;
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
@@ -3880,137 +3878,138 @@ begin
   end;
 end;
 
-procedure wbMGEFAfterLoad(const aElement: IwbElement);
-var
-  Container     : IwbContainerElementRef;
-  MainRecord    : IwbMainRecord;
-  OldActorValue : Integer;
-  NewActorValue : Integer;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
+{ Needs revision for Skyrim }
+//procedure wbMGEFAfterLoad(const aElement: IwbElement);
+//var
+//  Container     : IwbContainerElementRef;
+//  MainRecord    : IwbMainRecord;
+//  OldActorValue : Integer;
+//  NewActorValue : Integer;
+//begin
+//  if wbBeginInternalEdit then try
+//    if not Supports(aElement, IwbContainerElementRef, Container) then
+//      Exit;
+//
+//    if Container.ElementCount < 1 then
+//      Exit;
+//
+//    if not Supports(aElement, IwbMainRecord, MainRecord) then
+//      Exit;
+//
+//    if MainRecord.IsDeleted then
+//      Exit;
+//
+//    OldActorValue := Container.ElementNativeValues['DATA - Data\Actor Value'];
+//    NewActorValue := OldActorValue;
+//    case Integer(Container.ElementNativeValues['DATA - Data\Archtype']) of
+//      01, //Script
+//      02, //Dispel
+//      03, //Cure Disease
+//      13, //Light
+//      16, //Lock
+//      17, //Open
+//      18, //Bound Item
+//      19, //Summon Creature
+//      30, //Cure Paralysis
+//      31, //Cure Addiction
+//      32, //Cure Poison
+//      33, //Concussion
+//      35: //Limb Condition
+//        NewActorValue := -1;
+//      11: //Invisibility
+//        NewActorValue := 48; //Invisibility
+//      12: //Chameleon
+//        NewActorValue := 49; //Chameleon
+//      24: //Paralysis
+//        NewActorValue := 47; //Paralysis
+//      36: //Turbo
+//        NewActorValue := 51; //Turbo
+//    end;
+//    if OldActorValue <> NewActorValue then
+//      Container.ElementNativeValues['DATA - Data\Actor Value'] := NewActorValue;
+//  finally
+//    wbEndInternalEdit;
+//  end;
+//end;
 
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    OldActorValue := Container.ElementNativeValues['DATA - Data\Actor Value'];
-    NewActorValue := OldActorValue;
-    case Integer(Container.ElementNativeValues['DATA - Data\Archtype']) of
-      01, //Script
-      02, //Dispel
-      03, //Cure Disease
-      13, //Light
-      16, //Lock
-      17, //Open
-      18, //Bound Item
-      19, //Summon Creature
-      30, //Cure Paralysis
-      31, //Cure Addiction
-      32, //Cure Poison
-      33, //Concussion
-      35: //Limb Condition
-        NewActorValue := -1;
-      11: //Invisibility
-        NewActorValue := 48; //Invisibility
-      12: //Chameleon
-        NewActorValue := 49; //Chameleon
-      24: //Paralysis
-        NewActorValue := 47; //Paralysis
-      36: //Turbo
-        NewActorValue := 51; //Turbo
-    end;
-    if OldActorValue <> NewActorValue then
-      Container.ElementNativeValues['DATA - Data\Actor Value'] := NewActorValue;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-{ Not called, needs revision }
-procedure wbPACKAfterLoad(const aElement: IwbElement);
-var
-  Container     : IwbContainerElementRef;
-  MainRecord    : IwbMainRecord;
-  OldContainer  : IwbContainerElementRef;
-  NewContainer  : IwbContainerElementRef;
-  //NewContainer2 : IwbContainerElementRef;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    case Integer(Container.ElementNativeValues['PKDT - General\Type']) of
-       0: begin {Find}
-         Container.Add('PTDT');
-       end;
-       1: begin {Follow}
-         Container.Add('PKFD');
-       end;
-       2: begin {Escort}
-       end;
-       3: begin {Eat}
-         Container.Add('PTDT');
-         Container.Add('PKED');
-       end;
-       4: begin {Sleep}
-         if not Container.ElementExists['Locations'] then
-           if Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-             NewContainer.ElementEditValues['PLDT - Location 1\Type'] := 'Near editor location';
-       end;
-       5: begin {Wander}
-       end;
-       6: begin {Travel}
-       end;
-       7: begin {Accompany}
-       end;
-       8: begin {Use Item At}
-       end;
-       9: begin {Ambush}
-       end;
-      10: begin {Flee Not Combat}
-      end;
-      12: begin {Sandbox}
-      end;
-      13: begin {Patrol}
-         if not Container.ElementExists['Locations'] then
-           if Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-             NewContainer.ElementEditValues['PLDT - Location 1\Type'] := 'Near linked reference';
-        Container.Add('PKPT');
-      end;
-      14: begin {Guard}
-      end;
-      15: begin {Dialogue}
-      end;
-      16: begin {Use Weapon}
-      end;
-    end;
-
-    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
-      if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-        Assert(False);
-      NewContainer.RemoveElement('PLD2');
-      NewContainer.AddElement(OldContainer);
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
+{ Needs revision for Skyrim }
+//procedure wbPACKAfterLoad(const aElement: IwbElement);
+//var
+//  Container     : IwbContainerElementRef;
+//  MainRecord    : IwbMainRecord;
+//  OldContainer  : IwbContainerElementRef;
+//  NewContainer  : IwbContainerElementRef;
+//  //NewContainer2 : IwbContainerElementRef;
+//begin
+//  if wbBeginInternalEdit then try
+//    if not Supports(aElement, IwbContainerElementRef, Container) then
+//      Exit;
+//
+//    if Container.ElementCount < 1 then
+//      Exit;
+//
+//    if not Supports(aElement, IwbMainRecord, MainRecord) then
+//      Exit;
+//
+//    if MainRecord.IsDeleted then
+//      Exit;
+//
+//    case Integer(Container.ElementNativeValues['PKDT - General\Type']) of
+//       0: begin {Find}
+//         Container.Add('PTDT');
+//       end;
+//       1: begin {Follow}
+//         Container.Add('PKFD');
+//       end;
+//       2: begin {Escort}
+//       end;
+//       3: begin {Eat}
+//         Container.Add('PTDT');
+//         Container.Add('PKED');
+//       end;
+//       4: begin {Sleep}
+//         if not Container.ElementExists['Locations'] then
+//           if Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
+//             NewContainer.ElementEditValues['PLDT - Location 1\Type'] := 'Near editor location';
+//       end;
+//       5: begin {Wander}
+//       end;
+//       6: begin {Travel}
+//       end;
+//       7: begin {Accompany}
+//       end;
+//       8: begin {Use Item At}
+//       end;
+//       9: begin {Ambush}
+//       end;
+//      10: begin {Flee Not Combat}
+//      end;
+//      12: begin {Sandbox}
+//      end;
+//      13: begin {Patrol}
+//         if not Container.ElementExists['Locations'] then
+//           if Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
+//             NewContainer.ElementEditValues['PLDT - Location 1\Type'] := 'Near linked reference';
+//        Container.Add('PKPT');
+//      end;
+//      14: begin {Guard}
+//      end;
+//      15: begin {Dialogue}
+//      end;
+//      16: begin {Use Weapon}
+//      end;
+//    end;
+//
+//    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
+//      if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
+//        Assert(False);
+//      NewContainer.RemoveElement('PLD2');
+//      NewContainer.AddElement(OldContainer);
+//    end;
+//  finally
+//    wbEndInternalEdit;
+//  end;
+//end;
 
 procedure wbNPCAfterLoad(const aElement: IwbElement);
 var
@@ -4524,7 +4523,7 @@ begin
   end;
 end;
 
-function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainer;
 begin
@@ -5202,6 +5201,48 @@ begin
     wbString(ATKE, 'Attack Event')
   ], []);
 
+  wbLocationData := wbStruct('Location Data', [
+    wbInteger('Type', itS32, wbLocationEnum),
+    wbUnion('Location Value', wbTypeDecider, [
+      {0} wbFormIDCkNoReach('Reference', [REFR, PGRE, ACHR], True),
+      {1} wbFormIDCkNoReach('Cell', [CELL]),
+      {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
+      {3} wbByteArray('Near Editor Location', 4, cpIgnore),
+      {4} wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH]),
+      {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
+      {6} wbFormIDCk('Keyword', [KYWD]),
+      {7} wbByteArray('Unknown', 4, cpIgnore),
+      {8} wbByteArray('Alias ID', 4),
+      {9} wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
+     {10} wbByteArray('Unknown', 4, cpIgnore),
+     {11} wbByteArray('Unknown', 4, cpIgnore),
+     {12} wbByteArray('Unknown', 4, cpIgnore)
+    ]),
+    wbInteger('Radius', itS32)
+  ]);
+
+  wbTargetData := wbStruct('Target Data', [
+    wbInteger('Type', itS32, wbEnum([
+      {0} 'Specific Reference',
+      {1} 'Object ID',
+      {2} 'Object Type',
+      {3} 'Linked Reference',
+      {4} 'Ref Alias',
+      {5} 'Unknown 5',
+      {6} 'Self'
+    ]), cpNormal, False, nil, nil, 2),
+    wbUnion('Target', wbTypeDecider, [
+      {0} wbFormIDCkNoReach('Reference', [ACHR, REFR, PGRE], True),
+      {1} wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM]),
+      {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
+      {3} wbFormID('Reference'),
+      {4} wbByteArray('Alias ID', 4),
+      {5} wbByteArray('Unknown', 4, cpIgnore),
+      {6} wbByteArray('Unknown', 4, cpIgnore)
+    ]),
+    wbInteger('Count / Distance', itS32)
+  ]);
+
   wbPRKR := wbStruct(PRKR, 'Perk Record', [
     wbFormIDCk('Perk', [PERK]),
     wbFloat
@@ -5496,11 +5537,16 @@ begin
     wbSCROs
   ], [], cpNormal, False, wbEPF2DontShow, False, wbEmbeddedScriptAfterLoad);
 
-
   wbPDTO :=
-    wbStruct(PDTO, 'Unknown', [
-      wbByteArray('Unknown', 4),
-      wbFormIDCk('Unknown', [DIAL, NULL])
+    wbStruct(PDTO, 'Topic Data', [
+      wbInteger('Type', itU32, wbEnum([
+        'Topic Ref',
+        'Topic Subtype'
+      ])),
+      wbUnion('Data', wbTypeDecider, [
+        wbFormIDCk('Topic', [DIAL, NULL]),
+        wbString('Subtype', 4)
+      ])
     ]);
 
   wbPDTOs := wbRArray('Topic', wbPDTO, cpNormal, False, nil);
@@ -8172,10 +8218,7 @@ begin
       {02} wbByteArray('Unknown 2', 2)
       ]),
     wbStruct(PLVD, 'Location', [
-      wbInteger('Location Type', itU8, wbLocationEnum),
-      wbByteArray('Unknown', 3),
-      wbFormID('Location Reference'),
-      wbByteArray('Unknown', 4)
+      wbLocationData
     ]),
     wbCITC,
     wbCTDAs
@@ -10502,7 +10545,7 @@ procedure DefineTES5k;
 begin
   wbRecord(OTFT, 'OTFT', [
     wbEDIDReq,
-    wbUnknown(INAM)
+    wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO]))
   ]);
 
   wbRecord(ARTO, 'Art object', [
@@ -11401,7 +11444,7 @@ begin
     ])),
     wbLString(DNAM, 'Magic Item Description'),
     wbCTDAs
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+  ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad});
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDIDReq,
@@ -11856,77 +11899,6 @@ begin
 //End NPC_
 //-----------------------------------------------------------------------------
 
-  wbPKDTFlags := wbFlags([
-          {0x00000001} 'Unknown 1',
-          {0x00000002} 'Unknown 2',
-          {0x00000004} 'Must complete',
-          {0x00000008} 'Maintain Speed at Goal',
-          {0x00000010} 'Unknown 5',
-          {0x00000020} 'Unknown 6',
-          {0x00000040} 'Unlock doors at package start',
-          {0x00000080} 'Unlock doors at package end',
-          {0x00000100} 'Unknown 9',
-          {0x00000200} 'Unknown 10',
-          {0x00000400} 'Once per day',
-          {0x00000800} 'Unknown 12',
-          {0x00001000} 'Unknown 13',
-          {0x00002000} 'Preferred Speed',
-          {0x00004000} 'Unknown 15',
-          {0x00008000} 'Unknown 16',
-          {0x00010000} 'Unknown 17',
-          {0x00020000} 'Allow Sneak',
-          {0x00040000} 'Allow Sweeming',
-          {0x00080000} 'Unknown 20',
-          {0x00100000} 'Ignore Combat',
-          {0x00200000} 'Weapons Unequipped',
-          {0x00400000} 'Unknown 23',
-          {0x00800000} 'Weapon Drawn',
-          {0x01000000} 'Unknown 25',
-          {0x02000000} 'Unknown 26',
-          {0x04000000} 'Unknown 27',
-          {0x08000000} 'No Combat Alert',
-          {0x10000000} 'Unknown 29',
-          {0x20000000} 'Wear Sleep Outfit',
-          {0x40000000} 'Unknown 31',
-          {0x80000000} 'Unknown 32'
-        ]);
-
-  wbPKDTType := wbEnum([
-           {0} 'Find',
-           {1} 'Follow',
-           {2} 'Escort',
-           {3} 'Eat',
-           {4} 'Sleep',
-           {5} 'Wander',
-           {6} 'Travel',
-           {7} 'Accompany',
-           {8} 'Use Item At',
-           {9} 'Ambush',
-          {10} 'Flee Not Combat',
-          {11} 'Unknown 11',
-          {12} 'Sandbox',
-          {13} 'Patrol',
-          {14} 'Guard',
-          {15} 'Dialogue',
-          {16} 'Use Weapon',
-          {17} 'Unknown 17',
-          {18} 'Unknown 18',
-          {19} 'Unknown 19',
-          {20} 'Unknown 20',
-          {21} 'Unknown 21',
-          {22} 'Unknown 22',
-          {23} 'Unknown 23',
-          {24} 'Unknown 24',
-          {25} 'Unknown 25',
-          {26} 'Unknown 26',
-          {27} 'Unknown 27',
-          {28} 'Unknown 28',
-          {29} 'Unknown 29',
-          {30} 'Unknown 30',
-          {31} 'Unknown 31',
-          {32} 'Unknown 32'
-        ]);
-
   wbObjectTypeEnum := wbEnum([
           ' NONE',
           'Activators',
@@ -11962,9 +11934,66 @@ begin
 
   wbPKDTSpecificFlagsUnused := False;
 
+  wbPKDTFlags := wbFlags([
+    {0x00000001} 'Offers Services',
+    {0x00000002} 'Unknown 2',
+    {0x00000004} 'Must complete',
+    {0x00000008} 'Maintain Speed at Goal',
+    {0x00000010} 'Unknown 5',
+    {0x00000020} 'Unknown 6',
+    {0x00000040} 'Unlock doors at package start',
+    {0x00000080} 'Unlock doors at package end',
+    {0x00000100} 'Unknown 9',
+    {0x00000200} 'Continue if PC Near',
+    {0x00000400} 'Once per day',
+    {0x00000800} 'Unknown 12',
+    {0x00001000} 'Unknown 13',
+    {0x00002000} 'Preferred Speed',
+    {0x00004000} 'Unknown 15',
+    {0x00008000} 'Unknown 16',
+    {0x00010000} 'Unknown 17',
+    {0x00020000} 'Always Sneak',
+    {0x00040000} 'Allow Swimming',
+    {0x00080000} 'Unknown 20',
+    {0x00100000} 'Ignore Combat',
+    {0x00200000} 'Weapons Unequipped',
+    {0x00400000} 'Unknown 23',
+    {0x00800000} 'Weapon Drawn',
+    {0x01000000} 'Unknown 25',
+    {0x02000000} 'Unknown 26',
+    {0x04000000} 'Unknown 27',
+    {0x08000000} 'No Combat Alert',
+    {0x10000000} 'Unknown 29',
+    {0x20000000} 'Wear Sleep Outfit (unused)',
+    {0x40000000} 'Unknown 31',
+    {0x80000000} 'Unknown 32'
+  ]);
+
+  wbPKDTInterruptFlags := wbFlags([
+    {0x0001}'Hellos to player',
+    {0x0002}'Random conversations',
+    {0x0004}'Observe combat behavior',
+    {0x0008}'Greet corpse behavior',
+    {0x0010}'Reaction to player actions',
+    {0x0020}'Friendly fire comments',
+    {0x0040}'Aggro Radius Behavior',
+    {0x0080}'Allow Idle Chatter',
+    {0x0100}'Unknown 9',
+    {0x0200}'World Interactions',
+    {0x0400}'Unknown 11',
+    {0x0800}'Unknown 12',
+    {0x1000}'Unknown 13',
+    {0x2000}'Unknown 14',
+    {0x4000}'Unknown 15',
+    {0x8000}'Unknown 16'
+  ]);
+
   wbPKDT := wbStruct(PKDT, 'Pack Data', [
     wbInteger('General Flags', itU32, wbPKDTFlags),
-    wbInteger('Type', itU8, wbPKDTType),
+    wbInteger('Type', itU8, wbEnum ([], [
+      18, 'Package',
+      19, 'Package Template'
+    ])),
     wbInteger('Interrupt Override', itU8, wbEnum([
       'None',
       'Spectator',
@@ -11979,40 +12008,8 @@ begin
       'Fast Walk'
     ])),
     wbByteArray('Unknown', 1),
-    wbInteger('Interrupt Flags', itU32, wbFlags([
-      {0x00000001}'Hellos to player',
-      {0x00000002}'Random conversations',
-      {0x00000004}'Observe combat behavior',
-      {0x00000008}'Greet corpse behavior',
-      {0x00000010}'Reaction to player actions',
-      {0x00000020}'Friendly fire comments',
-      {0x00000040}'Aggro Radius Behavior',
-      {0x00000080}'Allow Idle Chatter',
-      {0x00000100}'Unknown 9',
-      {0x00000200}'World Interactions',
-      {0x00000400}'Unknown 11',
-      {0x00000800}'Unknown 12',
-      {0x00001000}'Unknown 13',
-      {0x00002000}'Unknown 14',
-      {0x00004000}'Unknown 15',
-      {0x00008000}'Unknown 16',
-      {0x00010000}'Unknown 17',
-      {0x00020000}'Unknown 18',
-      {0x00040000}'Unknown 19',
-      {0x00080000}'Unknown 20',
-      {0x00100000}'Unknown 21',
-      {0x00200000}'Unknown 22',
-      {0x00400000}'Unknown 23',
-      {0x00800000}'Unknown 24',
-      {0x01000000}'Unknown 25',
-      {0x02000000}'Unknown 26',
-      {0x03000000}'Unknown 27',
-      {0x08000000}'Unknown 28',
-      {0x10000000}'Unknown 29',
-      {0x20000000}'Unknown 30',
-      {0x40000000}'Unknown 31',
-      {0x80000000}'Unknown 32'
-    ]))
+    wbInteger('Interrupt Flags', itU16, wbPKDTInterruptFlags),
+    wbByteArray('Unknown', 2)
   ], cpNormal, True);
 
   wbPSDT := wbStruct(PSDT, 'Schedule', [
@@ -12039,53 +12036,12 @@ begin
     wbInteger('Duration (minutes)', itS32)
   ], cpNormal, True);
 
-  wbPLDT := wbStruct(PLDT, 'Location', [
-    wbInteger('Type', itS32, wbLocationEnum),
-    wbUnion('Location Value', wbPxDTLocationDecider, [
-      {0} wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
-      {1} wbFormIDCkNoReach('Cell', [CELL]),
-      {2} wbByteArray('Unknown', 4, cpIgnore),
-      {3} wbByteArray('Unknown', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
-      {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
-      {6} wbFormIDCk('Keyword', [KYWD]),
-      {7} wbByteArray('Unknown', 4, cpIgnore),
-      {8} wbByteArray('Alias ID', 4),
-      {9} wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
-     {10} wbByteArray('Unknown', 4, cpIgnore),
-     {11} wbByteArray('Unknown', 4, cpIgnore),
-     {12} wbByteArray('Unknown', 4, cpIgnore)
-    ]),
-    wbInteger('Radius', itS32)
-  ]);
-
-  wbPTDA := wbStruct(PTDA, 'Target Value', [
-    wbInteger('Type', itS32, wbEnum([
-      {0} 'Specific Reference',
-      {1} 'Object ID',
-      {2} 'Object Type',
-      {3} 'Linked Reference',
-      {4} 'Ref Alias',
-      {5} 'Unknown 5',
-      {6} 'Self'
-    ]), cpNormal, False, nil, nil, 2),
-    wbUnion('Target', wbPxDTLocationDecider, [
-      {0} wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-      {1} wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP]),
-      {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
-      {3} wbFormID('Reference'),
-      {4} wbByteArray('Alias ID', 4),
-      {5} wbByteArray('Unknown', 4, cpIgnore),
-      {6} wbByteArray('Unknown', 4, cpIgnore)
-    ]),
-    wbInteger('Count / Distance', itS32)
-  ]);
-
   wbIDLF := wbRStruct('Idle Animations', [
-    wbInteger(IDLF, 'Flags', itU8, wbFlags([
-      'Run in Sequence',
-      '',
-      'Do Once'
+    wbInteger(IDLF, 'Flags', itU8, wbEnum([], [
+       8, 'Random',
+       9, 'Run in Sequence',
+      12, 'Random, Do Once',
+      13, 'Run in Sequence, Do Once'
     ]), cpNormal, True),
     wbStruct(IDLC, '', [
       wbInteger( 'Animation Count', itU8),
@@ -12096,54 +12052,20 @@ begin
     wbByteArray(IDLB, 'Unknown', 4, cpIgnore)
   ], []);
 
-  wbUNAMs:= wbRArray('Activity IDs', wbRStruct('Activity', [
-    wbInteger(UNAM, 'ID', itS8),
-    wbString(BNAM, 'Name'),
-    wbUnknown(PNAM)
-  ], []));
-
   wbINAM := wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True);
-
-  wbPubPack := wbRStruct('Public Package Data', [
-    wbRArray('Activities', wbRStruct('Activity', [
-      wbString(ANAM, 'Activity Type'),
-      wbUnion(CNAM, 'Activity Value', wbPubPackCNAMDecider, [
-        {0} wbByteArray('Unknown'),
-        {1} wbInteger('Value', itU8, wbEnum(['False', 'True'])),
-        {2} wbInteger('Value', itU32),
-        {3} wbFloat('Value')
-      ]),
-      wbUnknown(BNAM),
-      wbPDTOs,
-      wbPLDT,
-      wbPTDA,
-      wbUnknown(TPIC)
-    ], [], cpNormal, False)),
-    wbUNAMs
-  ], []);
-
-  wbProdTree := wbRStruct('Procedure Tree', [
-    wbRArray('Branches', wbRStruct('Branch', [
-      wbString(ANAM, 'Branch Type'),
-      wbInteger(CITC, 'Condition Count', itU32),
-      wbCTDAs,
-      wbUnknown(PRCB),
-      wbString(PNAM, 'Procedure Type'),
-      wbInteger(FNAM, 'Flags', itU32, wbFlags(['Success Completes Package'])),
-      wbRArray('Some PK C2', wbRStruct('PKC2 Array', [
-        wbUnknown(PKC2)
-      ], [], cpNormal, False)),
-      wbRArray('Some PFO2', wbUnknown(PFO2)),
-      wbRArray('Some PFOR', wbUnknown(PFOR))
-    ], [], cpNormal, False))
-  ], []);
 end;
 
 procedure DefineTES5n;
 begin
-//------------------------------------------------------------------------------
-// Begin PACK
-//------------------------------------------------------------------------------
+
+  wbUNAMs:= wbRArray('Data Inputs', wbRStruct('Data Input', [
+    wbInteger(UNAM, 'Index', itS8),
+    wbString(BNAM, 'Name'),
+    wbInteger(PNAM, 'Flags', itU32, wbFlags([
+      'Public'
+    ]))
+  ], []));
+
   wbRecord(PACK, 'Package', [
     wbEDIDReq,
     wbVMAD,
@@ -12153,14 +12075,62 @@ begin
     wbIDLF,
     wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
-    wbStruct(PKCU, 'PKCU', [
-      wbByteArray('Unknown', 4),
+    wbStruct(PKCU, 'Counter', [
+      wbInteger('Data Input Count', itU32),
       wbFormIDCk('Package Template', [PACK]),
-      wbByteArray('Unknown', 4)
+      wbInteger('Version Counter (autoincremented)', itU32)
     ], cpNormal, True),
-    wbPubPack,
-    wbUnknown(XNAM),
-    wbProdTree,
+    wbRStruct('Package Data', [
+      wbRArray('Data Input Values', wbRStruct('Value', [
+        wbString(ANAM, 'Type'),
+        wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
+          {0} wbByteArray('Unknown'),
+          {1} wbInteger('Value', itU8, wbEnum(['False', 'True'])),
+          {2} wbInteger('Value', itU32),
+          {3} wbFloat('Value')
+        ]),
+        wbUnknown(BNAM),
+        wbPDTOs,
+        wbStruct(PLDT, 'Location', [wbLocationData]),
+        wbStruct(PTDA, 'Target', [wbTargetData]),
+        wbUnknown(TPIC)
+      ], [], cpNormal, False)),
+      wbUNAMs
+    ], []),
+    wbByteArray(XNAM, 'Marker'),
+    wbRStruct('Procedure Tree', [
+      wbRArray('Branches', wbRStruct('Branch', [
+        wbString(ANAM, 'Branch Type'),
+        wbInteger(CITC, 'Condition Count', itU32),
+        wbCTDAs,
+        wbStruct(PRCB, 'Root', [
+          wbInteger('Branch Count', itU32),
+          wbInteger('Flags', itU32, wbFlags([
+            'Repeat when Complete'
+          ]))
+        ]),
+        wbString(PNAM, 'Procedure Type'),
+        wbInteger(FNAM, 'Flags', itU32, wbFlags(['Success Completes Package'])),
+        wbRArray('Data Input Indexes', wbInteger(PKC2, 'Index', itU8)),
+        {>>> PFO2 should be single, there is only 1 PACK [00095F46] <PatrolAndHunt> in Skyrim.esm with 2xPFO2 <<<}
+        wbRArray('Flags Override',
+          wbStruct(PFO2, 'Data', [
+            wbInteger('Set General Flags', itU32, wbPKDTFlags),
+            wbInteger('Clear General Flags', itU32, wbPKDTFlags),
+            wbInteger('Set Interrupt Flags', itU16, wbPKDTInterruptFlags),
+            wbInteger('Clear Interrupt Flags', itU16, wbPKDTInterruptFlags),
+            wbInteger('Preferred Speed Override', itU8, wbEnum([
+              'Walk',
+              'Jog',
+              'Run',
+              'Fast Walk'
+            ])),
+            wbByteArray('Unknown', 3)
+          ])
+        ),
+        wbRArray('Unknown', wbUnknown(PFOR))
+      ], [], cpNormal, False))
+    ], []),
     wbUNAMs,
     wbRStruct('OnBegin', [
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
@@ -12191,9 +12161,6 @@ begin
       wbPDTOs
     ], [])
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
-//------------------------------------------------------------------------------
-// End PACK
-//------------------------------------------------------------------------------
 
   wbRecord(QUST, 'Quest', [
     wbEDIDReq,
