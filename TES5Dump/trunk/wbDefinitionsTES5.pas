@@ -113,6 +113,8 @@ const
 
   AACT : TwbSignature = 'AACT';
   ACBS : TwbSignature = 'ACBS';
+  ACEC : TwbSignature = 'ACBS'; { New To Dawnguard }
+  ACEP : TwbSignature = 'ACBS'; { New To Dawnguard }
   ACHR : TwbSignature = 'ACHR';
   ACID : TwbSignature = 'ACID'; { New To Dawnguard }
   ACPR : TwbSignature = 'ACPR'; { New To Skyrim }
@@ -10020,6 +10022,7 @@ begin
       wbFormIDCk('Location', [WRLD, CELL]),
       wbByteArray('Unknown', 4)
     ])),
+    wbUnknown(ACEC),
     wbRArray('Unknown',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
@@ -10028,6 +10031,7 @@ begin
     ),
     wbArray(ACID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
     wbArray(LCID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
+    wbUnknown(ACEP),
     wbArray(LCEP, 'Unknown', wbStruct('', [
       wbFormIDCk('Actor', [ACHR]),
       wbFormIDCk('Ref', [REFR]),
@@ -10862,10 +10866,12 @@ begin
       'Medium',
       'Large'
     ])),
-    wbUnknown(DNAM),
-    wbUnknown(TRDT),
+
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
-    wbRArray('Responses', wbRStruct('Response', [
+    wbFormID(DNAM, 'Response Data'),
+    wbCTDAs,
+
+    wbRArray('Responses', wbRStruct('Response', [ // Begin Array
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEnum([
           {0} 'Neutral',
@@ -10890,10 +10896,9 @@ begin
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
+      wbCTDAs,
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
-    ], [])),
-    wbFormID(DNAM, 'Response Data'),
-    wbCTDAs,
+    ], [])), // End Array
 
 //    wbRStruct('Unknown', [
 //      wbUnknown(SCHR),
@@ -11559,8 +11564,8 @@ begin
     wbSPLOs,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbByteArray(PNAM, 'Unknown', 4),
-    wbByteArray(UNAM, 'Unknown', 4),
+//    wbByteArray(PNAM, 'Unknown', 4),
+//    wbByteArray(UNAM, 'Unknown', 4),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attacks', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
@@ -12765,6 +12770,7 @@ begin
     wbInteger(TINL, 'Total Number of Tints in List', itU16, nil, nil, cpNormal, True), {>>> Needs Count Updated <<<}
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
+    wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attacks', wbAttackData),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
