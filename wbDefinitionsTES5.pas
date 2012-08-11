@@ -2316,11 +2316,6 @@ begin
 end;
 
 
-//----------------------------------------------------------------------------
-// 's': Added since GMST does contain strings however the strings are in the 
-//      localization files.
-//
-//----------------------------------------------------------------------------
 function wbGMSTUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   rEDID: IwbRecord;
@@ -2332,7 +2327,7 @@ begin
     s := rEDID.Value;
     if Length(s) > 0 then
       case s[1] of
-        's': Result := 0; {String}
+        's': Result := 0; {String} {>>> Localization Strings <<<}
         'i': Result := 1; {intS32}
         'f': Result := 2; {Float}
         'b': Result := 3; {Boolean}
@@ -5346,11 +5341,6 @@ begin
       wbString(MODL, 'Model Filename'),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True);
@@ -5361,11 +5351,6 @@ begin
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
       wbMODT,
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
       wbMODS,
       wbMODD
     ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
@@ -5376,11 +5361,6 @@ begin
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
       wbMODT,
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
       wbMODS,
       wbMODD
     ], [], cpNormal, True, nil, True);
@@ -5571,30 +5551,14 @@ begin
 
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
-//------------------------------------------------------------------------------
-// Begin ACHR
-//------------------------------------------------------------------------------
-// Pattern  1:           NAME XLCM XLKR                XLCN           DATA
-// Pattern  2: EDID      NAME XLCM                     XLCN           DATA
-// Pattern  3: EDID      NAME                          XLCN XLRT      DATA
-// Pattern  4:      VMAD NAME XLCM XLKR XAPD XAPR      XLCN      XESP DATA
-// Pattern  5:      VMAD NAME XLCM      XAPD XAPR XLKR XLCN           DATA
-// Pattern  6:      VMAD NAME XLCM XLKR                XLCN XLRT      DATA
-// Pattern  7:
-// Pattern  8:
-// Pattern  9:
-// Pattern 10:
-//------------------------------------------------------------------------------
 end;
 
 procedure DefineTES5b;
 begin
+
   wbRecord(ACHR, 'Placed NPC', [
-// EDID
     wbEDID,
-// VMAD
     wbVMAD,
-// NAME
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
@@ -5613,7 +5577,6 @@ begin
     ], []),
 
     {--- Leveled Actor ----}
-// XLCM
     wbXLCM,
 
     {--- Merchant Container ----}
@@ -5633,11 +5596,9 @@ begin
     ),
 
 		wbRUnion('Union', [
-// XLKR XAPD XAPR
       wbRStruct('XLKR XAPD XAPR', [
         wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False),  // Moved from between XDCR and XCLP
 			  {--- Activate Parents ---}
-				// XAPD XAPR
 				wbRStruct('Activate Parents', [
 					wbInteger(XAPD, 'Flags', itU8, wbFlags([
 						'Parent Activate Only'
@@ -5650,10 +5611,8 @@ begin
 					)
 				], [])
       ], []),
-// XAPD XAPR XLKR
       wbRStruct('XAPD XAPR XLKR', [
 			  {--- Activate Parents ---}
-				// XAPD XAPR
 				wbRStruct('Activate Parents', [
 					wbInteger(XAPD, 'Flags', itU8, wbFlags([
 						'Parent Activate Only'
@@ -5685,14 +5644,10 @@ begin
       ])
     ]),
 
-
-// XIS2
 		wbUnknown(XIS2),
 
-// XLCN
 		wbUnknown(XLCN),
 
-// XLRT
 		wbUnknown(XLRT),
 
 		wbUnknown(XHOR),
@@ -5700,10 +5655,8 @@ begin
     wbString(XATO, 'Activation Prompt'),
 
     {--- Enable Parent ---}
-// XESP
     wbXESP,
 
-// XOWN
     {--- Ownership ---}
     wbOwnership,
 
@@ -5718,7 +5671,6 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-// DATA
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 //------------------------------------------------------------------------------
@@ -6930,46 +6882,10 @@ end;
 
 procedure DefineTES5c;
 begin
-//------------------------------------------------------------------------------
-// Begin CELL
-//------------------------------------------------------------------------------
-// Pattern  1:           DATA      XCLC           LTMP XCLW                                         XCMO                          XCAS
-// Pattern  2:           DATA      XCLC TVDT      LTMP XCLW
-// Pattern  3:           DATA      XCLC TVDT MHDT LTMP XCLW XCLR
-// Pattern  4:           DATA      XCLC           LTMP XCLW
-// Pattern  5: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN
-// Pattern  6: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO           XEZN           XCAS
-// Pattern  7: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO XCCM      XCAS XWEM XEZN
-// Pattern  8: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO                          XCAS
-// Pattern  9: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM      XOWN           XCMO XCCM XILL                XCAS
-// Pattern 10: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                         XEZN XWEM XCMO XCAS
-// Pattern 11: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO                XWEM XOWN
-// Pattern 12: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM           XCWT XCCM XCMO           XEZN XWEM XCAS
-// Pattern 13: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                    XEZN XCMO XWEM XCAS
-// Pattern 14: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                                    XEZN XCMO XWEM XCCM XCAS
-// Pattern 15: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM                          XCCM XCWT XWEM XOWN XCAS
-// Pattern 16: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                                    XEZN XWEM           [When XIS2 is present]
-// Pattern 17: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                               XCAS XEZN XCMO XWEM
-// Pattern 18: EDID FULL DATA XCLL                LTMP XCLW      XCIM XLCN                          XCMO XEZN XCAS XCCM XWEM
-// Pattern 19: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCIM                               XCMO XOWN XWEM XCAS
-// Pattern 20: EDID FULL DATA XCLL                LTMP XCLW           XLCN XCMO XCIM XCCM XEZN XCAS
-// Pattern 21: EDID      DATA      XCLC TVDT MHDT LTMP XCLW XCLR      XLCN           XWCN XWCU
-// Pattern 22:           DATA      XCLC           LTMP XCLW XWCS XWCU XCIM
-// Pattern 23: EDID DATA XCLC TVDT MHDT LTMP XCLW XCLR XLCN XWCN XWCU
-// Pattern 24:
-// Pattern 25:
-// Pattern 26:
-// Pattern 27:
-// Pattern 28:
-// Pattern 29:
-// Pattern 30:
-//------------------------------------------------------------------------------
+
   wbRecord(CELL, 'Cell', [
-// EDID
     wbEDID,
-// FULL
     wbFULL,
-// DATA
     wbUnion(DATA, 'General', wbCELLDATADecider, [
       wbStruct('General itU8', [
         wbInteger('Flags', itU8, wbCELLDATAFlags)
@@ -6978,7 +6894,6 @@ begin
         wbInteger('Flags', itU16, wbCELLDATAFlags)
       ])
     ]),
-// XCLC Not sure which should go first
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -7030,11 +6945,8 @@ begin
       'Grass',
       'Water'
     ]),
-// TVDT
 		wbUnknown(TVDT),
-// MHDT
 		wbUnknown(MHDT),
-// LTMP
     wbRStruct('Light Template', [
       wbFormIDCk(LTMP, 'Template', [LGTM, NULL]),
       wbInteger(LNAM, 'Inherit', itU32, wbFlags([
@@ -7049,62 +6961,47 @@ begin
         {0x00000100}'Fog Power'
       ]), cpNormal, True)
     ], [], cpNormal, True ),
-// XCLW
     wbFloat(XCLW, 'Water Height'),
     wbString(XNAM, 'Water Noise Texture'),
-// XCLR
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormID(XLCN, 'Unknown'),
-//    wbRStruct('XWCS XWCU', [
     wbUnknown(XWCS),
     wbUnknown(XWCN),
     wbUnknown(XWCU),
-//    ], []),
 		wbRUnion('Union', [
-// XCIM XCMO
       wbRStruct('XCIM XCMO', [
-        wbFormIDCk(XCIM, 'Image Space', [IMGS]), // Moved from between XCLR and XCET
+        wbFormIDCk(XCIM, 'Image Space', [IMGS]),
         wbFormIDCk(XCMO, 'Music Type', [MUSC])
       ], []),
-// XCMO XCIM
       wbRStruct('XCMO XCIM', [
         wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-        wbFormIDCk(XCIM, 'Image Space', [IMGS]) // Moved from between XCLR and XCET
+        wbFormIDCk(XCIM, 'Image Space', [IMGS])
       ], [])
     ], []),
-//    wbByteArray(XCET, 'Unknown', 1, cpIgnore), Left over from FNV
     wbFormIDCk(XCWT, 'Water', [WATR]),
 
     {--- Ownership ---}
     wbOwnership,
 
     wbRStruct('XEZN XCMO XCAS', [
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
       wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]) // Moved from between XOWN (Ownership) and XCMT
+      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC])
     ], []),
 
-//  wbByteArray(XCMT, 'Unknown', 1, cpIgnore), // XCMT Left over
-// XCCM
-    wbFormIDCk(XCCM, 'Climate', [CLMT]), // Moved from between XCET and XCWT
-// XILL
+    wbFormIDCk(XCCM, 'Climate', [CLMT]),
 		wbFormID(XILL, 'Unknown'),
-// EDID FULL DATA XCLL LTMP XCLW XLCN XCMO XCIM      XCCM XEZN XCAS
-// EDID FULL DATA XCLL LTMP XCLW XLCN      XCIM XCMO      XEZN XCAS
 		wbRUnion('Union', [
-// XCAS XEZN XCMO XWEM
       wbRStruct('XCAS XEZN XCMO XWEM', [
-        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]), // Moved from between XOWN (Ownership) and XCMT
-        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
-        // XCMO
+        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
+        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
         wbFormIDCk(XCMO, 'Music Type', [MUSC]),
         wbUnknown(XWEM)
       ], []),
-// XWEM XEZN XCAS
       wbRStruct('XWEM XEZN XCAS', [
         wbUnknown(XWEM),
-        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]), // Moved from between XCET and XCCM
-        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]) // Moved from between XOWN (Ownership) and XCMT
+        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC])
       ], [])
     ], [])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
@@ -8389,29 +8286,6 @@ begin
     ]))
   ]);
 
-//------------------------------------------------------------------------------
-// Begin Old TXST
-//------------------------------------------------------------------------------
-//  wbRecord(TXST, 'Texture Set', [
-//    wbEDIDReq,
-//    wbOBNDReq,
-//    wbRStruct('Textures (RGB/A)', [
-//      wbString(TX00,'Base Image / Transparency'),
-//      wbString(TX01,'Normal Map / Specular'),
-//      wbString(TX02,'Environment Map Mask / ?'),
-//      wbString(TX03,'Glow Map / Unused'),
-//      wbString(TX04,'Parallax Map / Unused'),
-//      wbString(TX05,'Environment Map / Unused')
-//    ], []),
-//    wbDODT,
-//    wbInteger(DNAM, 'Flags', itU16, wbFlags([
-//      'No Specular Map'
-//    ]), cpNormal, True)
-//  ]);
-//------------------------------------------------------------------------------
-// End Old TXST
-//------------------------------------------------------------------------------
-
   wbRecord(MICN, 'Menu Icon', [
     wbEDIDReq,
     wbICONReq
@@ -9467,30 +9341,6 @@ begin
   ]);
 
 //------------------------------------------------------------------------------
-// EDID      FULL DESC CTDA CTDA DATA NNAM
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA           PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA CTDA CTDA PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA           PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA CTDA      PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA CTDA      PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA CTDA      PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA           PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA PRKC CTDA CTDA           PRKC CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//
-// EDID VMAD FULL DESC DATA
-//                        / PRKE DATA PRKC CTDA CTDA PRKC CTDA CTDA CTDA EPFT EPF2 EPF3 PRKF
-//
-// EDID VMAD FULL DESC DATA
-//                        / PRKE DATA PRKC CTDA CTDA CTDA PRKC CTDA CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA CTDA CTDA PRKC CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA CTDA CTDA CTDA CTDA EPFT EPFD PRKF
-//                        / PRKE DATA PRKC CTDA CTDA CTDA PRKC CTDA CTDA EPFT EPF3 EPFD PRKF
-//                        / PRKE DATA PRKC CTDA CTDA CTDA EPFT EPFD PRKF
-
-
-
-//------------------------------------------------------------------------------
 // Begin New Perk
 //------------------------------------------------------------------------------
   wbRecord(PERK, 'Perk', [
@@ -10045,14 +9895,6 @@ begin
     ], cpNormal, True, nil, 2)
   ]);
 
-//    EDID           ACSR ACEC      FULL KSIZ KWDA PNAM MNAM RNAM
-//    EDID                ACEC      FULL KSIZ KWDA PNAM MNAM RNAM
-//    EDID ACPR ACUN ACSR ACEC ACEP FULL KSIZ KWDA PNAM MNAM RNAM
-//    EDID           ACSR ACEC ACEP FULL KSIZ KWDA PNAM MNAM RNAM
-//    EDID ACPR ACUN ACSR ACEC      FULL PNAM MNAM RNAM NAM0
-//    EDID           ACSR ACEC ACEP FULL PNAM MNAM RNAM
-//    EDID ACPR ACUN ACSR      ACEP FULL PNAM
-//    EDID           ACSR      ACEP FULL KSIZ KWDA PNAM MNAM RNAM
   wbRecord(LCTN, 'Location', [
     wbEDIDReq,
 
@@ -10408,29 +10250,6 @@ begin
     wbUnknown(DATA)
   ]);
 
-//------------------------------------------------------------------------------
-//
-// Pattern  1: EDID VMAD FNAM / HNAM NAM0           NEXT                                    NEXT           WNAM HNAM / HNAM NAM0           NEXT                NEXT           WNAM HNAM / HNAM NAM0           NEXT CTDA CTDA           NEXT           WNAM HNAM / HNAM NAM0      NEXT CTDA           NEXT           WNAM HNAM / HNAM NAM0 NEXT           / NEXT WNAM HNAM
-// Pattern  2: EDID VMAD FNAM / HNAM NAM0           NEXT CTDA CTDA                          NEXT           WNAM HNAM / HNAM NAM0           NEXT                NEXT           WNAM HNAM / HNAM NAM0 CTDA      NEXT                     NEXT           WNAM HNAM / HNAM NAM0      NEXT                NEXT           WNAM HNAM / HNAM NAM0 NEXT CTDA CTDA / NEXT WNAM HNAM
-// Pattern  3: EDID VMAD FNAM / HNAM NAM0           NEXT CTDA CTDA                          NEXT           WNAM HNAM / HNAM NAM0      CTDA NEXT                NEXT           WNAM HNAM / HNAM NAM0 CTDA      NEXT                     NEXT           WNAM HNAM / HNAM NAM0 CTDA NEXT                NEXT           WNAM HNAM / HNAM NAM0 CTDA NEXT      / NEXT WNAM HNAM / HNAM NAM0 CTDA NEXT CTDA / NEXT WNAM HNAM / HNAM NAM0 CTDA NEXT CTDA NEXT WNAM HNAM
-// Pattern  4: EDID      FNAM / HNAM NAM0 CTDA CTDA NEXT CTDA      SCHR           QNAM      NEXT SCHR QNAM WNAM HNAM / HNAM NAM0 CTDA CTDA NEXT [CD] SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0 CTDA CTDA NEXT           SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0      NEXT      SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM
-// Pattern  5: EDID      FNAM / HNAM NAM0           NEXT           SCHR           QNAM      NEXT SCHR QNAM WNAM HNAM / HNAM NAM0           NEXT [CD] SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0           NEXT           SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0      NEXT      SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM
-// Pattern  6: EDID      FNAM / HNAM NAM0           NEXT           SCHR SCDA SCTX QNAM SCRO NEXT SCHR QNAM WNAM HNAM / HNAM NAM0           NEXT      SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0           NEXT           SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0      NEXT      SCHR QNAM NEXT SCHR QNAM WNAM HNAM / HNAM NAM0 NEXT CTDA CTDA SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM
-// Pattern  7: EDID FNAM HNAM NAM0 CTDA CTDA NEXT CTDA SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 CTDA CTDA NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 CTDA CTDA NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM HNAM NAM0 NEXT SCHR QNAM NEXT SCHR QNAM WNAM HNAM
-//
-// P1 Block 2: ALID LNAM DNAM ALID LNAM DNAM
-// P1 Block 3: ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM / ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM ANAM ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM PNAM INAM VNAM
-// P2 Block 2: ALID LNAM DNAM ALID LNAM DNAM
-// P2 Block 3: ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM / ANAM NAM0 ALID INAM SNAM ENAM SNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM ANAM ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM PNAM INAM VNAM
-// P3 Block 2: ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ALID LNAM DNAM ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM
-//                                                                                                            / ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM FNAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0
-//           : ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 / ALID INAM SNAM ENAM PNAM ANAM                          / ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM PNAM INAM VNAM
-// P4 Block 2: ALID LNAM DNAM ALID LNAM DNAM ANAM NAM0 / ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM / ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM SCHR QNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM SCHR QNAM NEXT SCHR QNAM PNAM INAM VNAM
-// P5 Block 2: ALID ALID ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM / ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM SCHR QNAM NEXT SCHR QNAM PNAM INAM
-// P6 Block 2: ALID ALID ALID ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM                          / ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM SCHR SCTX QNAM NEXT SCHR SCTX QNAM PNAM INAM
-// P7 Block 2: ALID LNAM DNAM ALID LNAM DNAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM / ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM SNAM ENAM DATA HTID DMAX DMIN DEMO DEVA ANAM ANAM NAM0 ALID INAM SNAM ENAM SNAM SCHR QNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM ANAM NAM0 ALID INAM SNAM ENAM PNAM ANAM SCHR QNAM NEXT SCHR QNAM PNAM INAM VNAM
-//
-//------------------------------------------------------------------------------
   wbRecord(SCEN, 'SCEN', [
     wbEDIDReq,
     wbVMAD,
@@ -11625,8 +11444,6 @@ begin
     wbSPLOs,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, wbActorTemplateUseTraits),
-//    wbByteArray(PNAM, 'Unknown', 4),
-//    wbByteArray(UNAM, 'Unknown', 4),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArray('Attacks', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
@@ -12854,40 +12671,6 @@ begin
     wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
   ]);
 
-//------------------------------------------------------------------------------
-// Begin REFR
-//------------------------------------------------------------------------------
-// Pattern  1:           NAME XWCN XWCU                                              DATA
-// Pattern  2:           NAME XWCN XWCU                                    XSCL      DATA
-// Pattern  3:           NAME XLCM      XPRD XPPA INAM PDTO XLKR                     DATA
-// Pattern  4:           NAME           XPRD XPPA INAM PDTO XLKR                     DATA
-// Pattern  5: EDID      NAME XLKR      XPRD XPPA INAM PDTO                          DATA
-// Pattern  6: EDID      NAME           XPRD XPPA INAM PDTO XLKR                     DATA
-// Pattern  7: EDID      NAME           XPRD XPPA INAM PDTO                          DATA
-// Pattern  8:      VMAD NAME                                              XSCL      DATA
-// Pattern  9:           NAME                                    XLIB                DATA
-// Pattern 10:           NAME XRDS      XLIG                                         DATA
-// Pattern 11:           NAME           XLIG                                         DATA
-// Pattern 12:           NAME                                    XALP      XSCL      DATA
-// Pattern 13:           NAME XRDS XEMI XLIG                                         DATA
-// Pattern 14:           NAME                                    XLIB XESP           DATA
-// Pattern 15:           NAME                                         XLRT      XOWN DATA
-// Pattern 16:           NAME XMBO XPRM XRMR LNAM                                    DATA
-// Pattern 17:           NAME                                    XLIB                DATA
-// Pattern 18:           NAME                                    XTEL XTNM XNDP      DATA
-// Pattern 19:           NAME XMBO XPRM XRMR LNAM XLRM XLRM                          DATA
-// Pattern 20: EDID      NAME                                              XIS2      DATA
-// Pattern 21:           NAME XMBO XPRM XRMR LNAM INAM                               DATA
-// Pattern 22:
-// Pattern 23:
-// Pattern 24: 					 NAME           XPRD XPPA INAM PDTO           XESP XIS2 XOWN DATA
-// Pattern 25:           NAME           XPRD XPPA INAM PDTO                XIS2      DATA
-// Pattern 26:           NAME 																						 XIS2      DATA
-// Pattern 27:
-// Pattern 28:
-// Pattern 29:
-// Pattern 30:
-//------------------------------------------------------------------------------
   wbRecord(REFR, 'Placed Object', [
     wbEDID,
     wbVMAD,
@@ -14219,20 +14002,7 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
     wbFormID(CNAM, 'Unknown')
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
-//------------------------------------------------------------------------------
-// Begin WRLD
-//------------------------------------------------------------------------------
-// Pattern 1: EDID, Multi-RNAM, FULL CNAM NAM2 NAM3 NAM4 DNAM MNAM ONAM NAMA
-//            DATA NAM0 NAM9 ZNAM TNAM UNAM OFST
-// Pattern 2: EDID, Multi-RNAM, FULL WCTR LTMP XEZN XLCN WNAM PNAM CNAM
-//            NAM2 NAM3 NAM4 DNAM ONAM NAMA DATA NAM0 NAM9 ZNAM OFST
-// Pattern 3: EDID, Multi-RNAM,
-//            MHDT FULL XEZN XLCN WNAM PNAM CNAM NAM2 NAM3 NAM4 DNAM ONAM NAMA
-//            DATA NAM0 NAM9 TNAM UNAM OFST
-// Pattern 4: EDID Multi-RNAM,
-// Dawnguard  FULL WCTR LTMP XEZN XLCN WNAM PNAM NAM2 NAM3 NAM4 DNAM ONAM NAMA DATA NAM0 NAM9 ZNAM XWEM OFST
-//
-//------------------------------------------------------------------------------
+
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
     wbRArray('Array RNAM', wbRStruct('Unknown', [
@@ -14491,25 +14261,20 @@ begin
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
-//------------------------------------------------------------------------------
+
   wbRArray('Directional Ambient Lightning Colors',
-      wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
-{-->}   wbArray('Time of Day',
-{-->}     wbStruct('Values For', [
-{-->}       wbInteger('Red', itU8),
-{-->}       wbInteger('Green', itU8),
-{-->}       wbInteger('Blue', itU8),
-{-->}       wbByteArray('Unknown', 1)
-{-->}     ]), ['X+','X-','Y+','Y-','Z+',
-{-->}          'Z-', 'Specular']),
-{-->}   wbFloat('Fresnel Power')
-      ])//,
-//     ['Unknown 1','Unknown 2','Unknown 3','Unknown 4']
-    ),
-//------------------------------------------------------------------------------
-//    wbRArray('Unknown - DALC', wbRStruct('Unknown', [
-//      wbArray(DALC, 'Directional Ambient Lightning Color', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-//    ], [])),
+    wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
+      wbArray('Time of Day',
+        wbStruct('Values For', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]), ['X+','X-','Y+','Y-','Z+', 'Z-', 'Specular']),
+      wbFloat('Fresnel Power')
+    ])
+  ),
+
     wbUnknown(NAM2),
     wbUnknown(NAM3),
     wbMODL
