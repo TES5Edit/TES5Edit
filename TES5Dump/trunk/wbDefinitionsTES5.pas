@@ -12554,16 +12554,12 @@ begin
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 0)
     ], cpNormal, True),
-    wbRStruct('Start Of Male', [
-      wbEmpty(MNAM, 'Marker'),
-      wbString(ANAM, 'Skeletal Model'),
-      wbMODT
-    ], [], cpNormal, True),
-    wbRStruct('Start Of Female', [
-      wbEmpty(FNAM, 'Marker'),
-      wbString(ANAM, 'Skeletal Model'),
-      wbMODT
-    ], [], cpNormal, True),
+    wbEmpty(MNAM, 'Marker'),
+    wbString(ANAM, 'Skeletal Model'),
+    wbMODT,
+    wbEmpty(FNAM, 'Marker'),
+    wbString(ANAM, 'Skeletal Model'),
+    wbMODT,
     wbEmpty(NAM2, 'Marker NAM2 #1'),
     wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
@@ -12669,7 +12665,8 @@ begin
     // End Head Data
     wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
     wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
-  ]);
+  ], False, nil, cpNormal, False, wbRemoveOFST);
+
 
   wbRecord(REFR, 'Placed Object', [
     wbEDID,
@@ -14122,7 +14119,7 @@ begin
     wbUnknown(UNAM),
     wbUnknown(XWEM),
     wbByteArray(OFST, 'Unknown', 0)
-  ], False, nil, cpNormal, False, wbRemoveOFST);
+  ]);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,

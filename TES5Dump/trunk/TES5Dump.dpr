@@ -332,9 +332,6 @@ begin
     else
       WriteContainer(_File);
 
-    if (wbReportMode or wbUserDefinedDebug) then
-      ReportDefs;
-
     ReportProgress('All Done.');
   except
     on e: Exception do
