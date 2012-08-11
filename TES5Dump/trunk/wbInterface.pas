@@ -57,6 +57,7 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  wbUserDefinedDebug: Boolean{ = True{};
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;
@@ -4228,7 +4229,7 @@ var
 
 function wbFormID: IwbFormID;
 begin
-  if wbReportMode then
+  if (wbReportMode or wbUserDefinedDebug) then
     Result := TwbFormID.Create(cpNormal, False)
   else begin
     if not Assigned(_FormID) then
@@ -4572,7 +4573,7 @@ var
   i: Integer;
   NamedDef: IwbNamedDef;
 begin
-  if not wbReportMode then
+  if not (wbReportMode or wbUserDefinedDebug) then
     Exit;
 
   defUsed := True;
@@ -4745,7 +4746,7 @@ var
   i, j      : Integer;
 begin
   inherited;
-  if wbReportMode and wbReportRequired and Supports(aElement, IwbContainerElementRef, Container) then begin
+  if (wbReportMode or wbUserDefinedDebug) and wbReportRequired and Supports(aElement, IwbContainerElementRef, Container) then begin
     for i := Low(recMembers) to High(recMembers) do if not recMembers[i].IsNotRequired then begin
       Found := False;
       for j := 0 to Pred(Container.ElementCount) do begin
@@ -5025,7 +5026,7 @@ var
   Container: IwbContainerElementRef;
 begin
   inherited;
-  if wbReportMode and wbReportRequired and Supports(aElement, IwbContainerElementRef, Container) then begin
+  if (wbReportMode or wbUserDefinedDebug) and wbReportRequired and Supports(aElement, IwbContainerElementRef, Container) then begin
     sraElement.PossiblyRequired;
     if Container.ElementCount < 1 then
       sraElement.NotRequired;
@@ -5147,7 +5148,7 @@ var
   i, j      : Integer;
 begin
   inherited;
-  if wbReportMode and wbReportRequired and  Supports(aElement, IwbContainerElementRef, Container) then begin
+  if (wbReportMode or wbUserDefinedDebug) and wbReportRequired and  Supports(aElement, IwbContainerElementRef, Container) then begin
     for i := 1 to High(srsMembers) do  if not srsMembers[i].IsNotRequired then begin
       Found := False;
       for j := 0 to Pred(Container.ElementCount) do begin
@@ -6645,7 +6646,7 @@ begin
     Exit;
 
   inherited;
-  if wbReportMode and wbReportUnknownFlags and HasUnknownFlags then begin
+  if (wbReportMode or wbUserDefinedDebug) and wbReportUnknownFlags and HasUnknownFlags then begin
     WriteLn('Unknown Flags in: ', wbDefsToPath(aParents), wbDefToName(Self));
     for i := 0 to 63 do
       if UnknownFlags[i] > 0 then
@@ -6698,7 +6699,7 @@ begin
         s := flgNames[i];
       if s = '' then begin
         s := '<Unknown: '+IntToStr(i)+'>';
-        if wbReportMode and wbReportUnknownFlags then begin
+        if (wbReportMode or wbUserDefinedDebug) and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
         end;
@@ -6974,7 +6975,7 @@ begin
     Exit;
 
   inherited;
-  if wbReportMode and wbReportUnknownEnums and Assigned(UnknownEnums) then begin
+  if (wbReportMode or wbUserDefinedDebug) and wbReportUnknownEnums and Assigned(UnknownEnums) then begin
     WriteLn('Unknown Enums in: ', wbDefsToPath(aParents), wbDefToName(Self));
     for i := 0 to Pred(UnknownEnums.Count) do begin
       sl := UnknownEnums.Objects[i] as TStringList;
@@ -7024,7 +7025,7 @@ begin
       Result := enSparseNamesMap[i].snName
     else begin
       Result := '<Unknown: '+IntToStr(aInt)+'>';
-      if wbReportMode and wbReportUnknownEnums then begin
+      if (wbReportMode or wbUserDefinedDebug) and wbReportUnknownEnums then begin
         if not Assigned(UnknownEnums) then
           UnknownEnums := TwbFastStringListIC.CreateSorted;
         if not UnknownEnums.Find(Result, i) then
@@ -8048,7 +8049,7 @@ begin
     Exit;
 
   inherited;
-  if wbReportMode then
+  if (wbReportMode or wbUserDefinedDebug) then
     if wbReportFormIDs then begin
       if Assigned(FoundSignatures) then
         if ClassType = TwbFormID then begin
@@ -8139,7 +8140,7 @@ begin
   if aInt = 0 then begin
     if IsValid('TRGT') and not IsValid('NULL') then begin
       Result := 'TARGET - Target Reference ['+IntToHex64(aInt,8)+']';
-      if wbReportMode then
+      if (wbReportMode or wbUserDefinedDebug) then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
             FoundSignatures := TwbFastStringListCS.CreateSorted;
@@ -8149,7 +8150,7 @@ begin
         end;
     end else begin
       Result := 'NULL - Null Reference ['+IntToHex64(aInt,8)+']';
-      if wbReportMode then
+      if (wbReportMode or wbUserDefinedDebug) then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
             FoundSignatures := TwbFastStringListCS.CreateSorted;
@@ -8161,7 +8162,7 @@ begin
     Used(aElement, Result);
     Exit;
   end else if aInt = $14 then begin
-    if wbReportMode then
+    if (wbReportMode or wbUserDefinedDebug) then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
           FoundSignatures := TwbFastStringListCS.CreateSorted;
@@ -8182,7 +8183,7 @@ begin
         MainRecord := _File.RecordByFormID[aInt, True];
         if Assigned(MainRecord) then begin
           Result := MainRecord.Name;
-          if wbReportMode then
+          if (wbReportMode or wbUserDefinedDebug) then
             if wbReportFormIDs then begin
               if not Assigned(FoundSignatures) then
                 FoundSignatures := TwbFastStringListCS.CreateSorted;
@@ -8207,7 +8208,7 @@ begin
       except
         on E: Exception do begin
           Result := '['+IntToHex64(aInt,8)+'] <Error: '+E.Message+'>';
-          if wbReportMode then
+          if (wbReportMode or wbUserDefinedDebug) then
             if wbReportFormIDs then begin
               if not Assigned(FoundSignatures) then
                 FoundSignatures := TwbFastStringListCS.CreateSorted;
@@ -8225,7 +8226,7 @@ begin
   if aInt < $800 then begin
     s := IntToHex64(aInt,8);
     Result := '['+s+'] <Warning: Could not be resolved, but is possibly hardcoded in the engine>';
-    if wbReportMode then
+    if (wbReportMode or wbUserDefinedDebug) then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
           FoundSignatures := TwbFastStringListCS.CreateSorted;
@@ -8244,7 +8245,7 @@ begin
   end else begin
     s := IntToHex64(aInt,8);
     Result := '['+s+'] <Error: Could not be resolved>';
-    if wbReportMode then
+    if (wbReportMode or wbUserDefinedDebug) then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
           FoundSignatures := TwbFastStringListCS.CreateSorted;
@@ -8523,7 +8524,7 @@ begin
   end;
   SetLength(Result, Length(Result) - 1);
 
-  if wbReportMode then begin
+  if (wbReportMode or wbUserDefinedDebug) then begin
     if Assigned(aElement) and (Self.noName <> 'Unused') then begin
       _File := aElement._File;
 
@@ -9239,7 +9240,7 @@ begin
     Exit;
 
   inherited;
-  if wbReportMode then
+  if (wbReportMode or wbUserDefinedDebug) then
     if wbReportFormIDs and Assigned(FoundSignatures) and (FoundSignatures.Count > 0) then begin
       s := '';
 
