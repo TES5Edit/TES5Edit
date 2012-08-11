@@ -13634,17 +13634,21 @@ procedure WriteSubRecordOrderList;
 var
   i: Integer;
 begin
-
   if not wbUserDefinedDebug then
     if not wbReportMode then
       Exit;
+
+  wbProgressCallback( 'Writing ReportDefs' );
+
+  if (wbReportMode or wbUserDefinedDebug) then
+    ReportDefs;
 
   wbProgressCallback( 'Writing SubRecordOrderList.txt' );
 
   SubRecordOrderList.Sorted := False;
 
   for i := 0 to Pred(SubRecordOrderList.Count) do
-    SubRecordOrderList[i] := SubRecordOrderList[i] + ' (' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
+    SubRecordOrderList[i] := SubRecordOrderList[i] + '(' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
 
   SubRecordOrderList.SaveToFile('SubRecordOrderList.txt');
 end;
