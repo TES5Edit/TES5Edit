@@ -11,7 +11,6 @@
      under the License.
 
 *******************************************************************************}
-
 unit wbImplementation;
 
 {$DEFINE DBGSUBREC}
@@ -24,11 +23,11 @@ uses
   Classes,
   SysUtils,
   Contnrs,
-  ZLIBEX,
   Direct3D9,
   D3DX9,
+  Math,
   wbInterface,
-  Math;
+  Zlibex;
 
 var
   RecordToSkip : TStringList;
@@ -491,6 +490,7 @@ type
 
     {---IwbFile---}
     function GetFileName: string;
+    function GetFullFileName: string;
     function GetUnsavedSince: TDateTime;
     function HasMaster(const aFileName: string): Boolean;
     function GetMaster(aIndex: Integer): IwbFile;
@@ -521,6 +521,9 @@ type
 
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
+
+    function GetIsLocalized: Boolean;
+    procedure SetIsLocalized(Value: Boolean);
 
 
     {---IwbFileInternal---}
@@ -846,6 +849,8 @@ type
 
     function GetIsESM: Boolean;
     procedure SetIsESM(aValue: Boolean);
+    function GetIsLocalized: Boolean;
+    procedure SetIsLocalized(aValue: Boolean);
     function GetIsPersistent: Boolean;
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
@@ -1983,8 +1988,12 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.32'
   else if wbGameMode = gmFO3 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94'
-  else
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0';
+  else if wbGameMode = gmTES3 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
+  else if wbGameMode = gmTES4 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
+  else if wbGameMode = gmTES5 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.85';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '2048';
   flLoadFinished := True;
 end;
@@ -2272,6 +2281,11 @@ begin
   Result := ExtractFileName(flFileName);
 end;
 
+function TwbFile.GetFullFileName: string;
+begin
+  Result := flFileName;
+end;
+
 function TwbFile.GetFileStates: TwbFileStates;
 begin
   Result := flStates;
@@ -2313,6 +2327,16 @@ begin
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
   Result := Header.IsESM;
+end;
+
+function TwbFile.GetIsLocalized: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Header.IsLocalized;
 end;
 
 function TwbFile.GetIsRemoveable: Boolean;
@@ -2920,6 +2944,21 @@ begin
   end;
 end;
 
+procedure TwbFile.SetIsLocalized(Value: Boolean);
+var
+  Header         : IwbMainRecord;
+begin
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Value <> Header.IsLocalized then begin
+    if not IsElementEditable(nil) then
+      raise Exception.Create('File "'+GetFileName+'" is not editable');
+
+    Header.IsLocalized := Value;
+  end;
+end;
+
 procedure TwbFile.SetLoadOrder(aValue: Integer);
 begin
   flLoadOrder := aValue;
@@ -3086,7 +3125,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  
+
   DoInit;
   for i := Low(cntElements) to High(cntElements) do
     cntElements[i].InformStorage(aBasePtr, aEndPtr);
@@ -4227,7 +4266,9 @@ begin
 end;
 {$D+}
 
-{ TwbRecord }
+//------------------------------------------------------------------------------
+// TwbRecord
+//------------------------------------------------------------------------------
 
 constructor TwbRecord.Create(const aContainer      : IwbContainer;
                                var aBasePtr        : Pointer;
@@ -4254,7 +4295,7 @@ begin
     if PwbSignature(aPtr)^ = 'GRUP' then
       Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
     else
-      Result := TwbMainRecord.Create(aContainer,aPtr, aEndPtr, aPrevMainRecord);
+      Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
 end;
 
 function TwbRecord.GetName: string;
@@ -4731,7 +4772,7 @@ begin
     else if SubRecord.Signature = 'FULL' then
       mrFullName := SubRecord.Value
     else if SubRecord.Signature = 'NAME' then
-      Exclude(mrStates, mrsBaseRecordChecked);     
+      Exclude(mrStates, mrsBaseRecordChecked);
   end;
   inherited;
   UpdateRefs;
@@ -4826,7 +4867,7 @@ begin
     (Sig = 'PGRE') or
     (Sig = 'ACRE') or
     (Sig = 'ACHR');
-  if not Result then 
+  if not Result then
     Exit;
   if not Supports(GetContainer, IwbGroupRecord, Group1) then
     raise Exception.Create(GetName + ' is not contained in a group.');
@@ -5882,6 +5923,11 @@ begin
   Result := GetFlags.IsESM;
 end;
 
+function TwbMainRecord.GetIsLocalized: Boolean;
+begin
+  Result := GetFlags.IsLocalized;
+end;
+
 function TwbMainRecord.GetIsInitiallyDisabled: Boolean;
 begin
   Result := GetFlags.IsInitiallyDisabled;
@@ -6283,7 +6329,7 @@ function TwbMainRecord.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if wbReportMode then begin 
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -7200,6 +7246,14 @@ begin
   if aValue <> GetIsESM then begin
     MakeHeaderWriteable;
     GetFlagsPtr.SetESM(aValue);
+  end;
+end;
+
+procedure TwbMainRecord.SetIsLocalized(aValue: Boolean);
+begin
+  if aValue <> GetIsLocalized then begin
+    MakeHeaderWriteable;
+    GetFlagsPtr.SetLocalized(aValue);
   end;
 end;
 
@@ -10256,7 +10310,7 @@ begin
   Result := wbIsInternalEdit;
   if Result then
     Exit;
-    
+
   if not wbEditAllowed then
     Exit;
 
@@ -12573,7 +12627,7 @@ begin
   Result := nil;
   if not Assigned(aFormList) or (aFormList.Signature <> 'FLST') then
     Exit;
-  if not Supports(aFormList.ElementByName['FormIDs'], IwbContainerElementRef, Container) then
+  if not Supports(aFormList.ElementByName['wbFormListToArray FormIDs'], IwbContainerElementRef, Container) then
     Exit;
   if Container.ElementCount < 1 then
     Exit;

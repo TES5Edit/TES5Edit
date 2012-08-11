@@ -41,7 +41,7 @@
 *    burak kalayci  informing me about the zlib 1.1.4 update                 *
 *****************************************************************************}
 
-unit ZLibEx;
+unit Zlibex;
 
 interface
 
@@ -192,7 +192,7 @@ function inflateInit_(var strm: TZStreamRec; version: PChar; recsize: Integer): 
 function inflateInit2_(var strm: TZStreamRec; windowBits: integer;  version: PChar; recsize: integer): integer;
 function inflate(var strm: TZStreamRec; flush: Integer): Integer;
 function inflateEnd(var strm: TZStreamRec): Integer;
-function inflateReset(var strm: TZStreamRec): Integer; 
+function inflateReset(var strm: TZStreamRec): Integer;
 
 type
   EZCompressionError = class(EZLibError);
@@ -951,4 +951,3 @@ begin
 end;
 
 end.
-
