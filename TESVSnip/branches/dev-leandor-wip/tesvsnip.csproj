@@ -426,12 +426,12 @@
     <Compile Include="RecordControls\HexElement.Designer.cs">
       <DependentUpon>HexElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\ChecksumImpl.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\CircularBuffer.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\CodecBase.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\Deflater.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\DotZLib.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\Inflater.cs" />
+    <Compile Include="ZLibInterface\DotZLib\ChecksumImpl.cs" />
+    <Compile Include="ZLibInterface\DotZLib\CircularBuffer.cs" />
+    <Compile Include="ZLibInterface\DotZLib\CodecBase.cs" />
+    <Compile Include="ZLibInterface\DotZLib\Deflater.cs" />
+    <Compile Include="ZLibInterface\DotZLib\DotZLib.cs" />
+    <Compile Include="ZLibInterface\DotZLib\Inflater.cs" />
     <Compile Include="ZLibInterface\ZLib.cs" />
     <EmbeddedResource Include="Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
@@ -705,7 +705,7 @@
     </Compile>
     <Compile Include="Main\TESsnipParser.cs" />
     <Compile Include="Main\TypeConverter.cs" />
-    <None Include="zlib-1.2.3\contrib\dotzlib\DotZLib.chm" />
+    <None Include="ZLibInterface\DotZLib\DotZLib.chm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tesv_ico.ico" />
@@ -716,8 +716,8 @@
   <ItemGroup>
     <Content Include="build\buildver.txt" />
     <Content Include="Controls\ObjectListView\CustomDictionary.xml" />
-    <Content Include="zlib-1.2.3\contrib\dotzlib\LICENSE_1_0.txt" />
-    <Content Include="zlib-1.2.3\contrib\dotzlib\readme.txt" />
+    <Content Include="ZLibInterface\DotZLib\LICENSE_1_0.txt" />
+    <Content Include="ZLibInterface\DotZLib\readme.txt" />
     <Content Include="ZLibInterface\zlib1.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
