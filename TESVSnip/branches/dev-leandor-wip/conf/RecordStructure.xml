@@ -6,16 +6,16 @@
 		<Subrecord name="CTDA" desc="Conditional" optional="1" repeat="1">
 			<Element name="Comparison Type" type="byte"
 			options="Equal and;0;Equal or;1;useAlias Equal and;2;useAlias Equal or;3;useGlobal Equal and;4;useGlobal Equal or;5;usePackData Equal and;8;usePackData Equal or;9;swapSubTarg Equal and;10;swapSubTarg Equal or;11;NOT Equal and;32;NOT Equal or;33;useAlias NOT Equal and;34;useAlias NOT Equal or;35;usePackData NOT Equal and;40;usePackData NOT Equal or;41;GreaterThan and;64;GreaterThan or;65;useAlias GreaterThan and;66;useAlias GreaterThan or;67;usePack GreaterThan and;72;usePack GreaterThan or;73;Greater/Equal and;96;Greater/Equal or;97;usePack Greater/Equal and;104;usePack Greater/Equal or;105;LessThan and;128;LessThan or;129;usePackData LessThan and;136;usePackData LessThan or;137;Less/Equal and;160;Less/Equal or;161"/>
-			<Element name="(buffer)" type="short" hexview="1" notininfo="1"/>
-			<Element name="(buffer)" type="byte" hexview="1" notininfo="1"/>
+			<Element name="(buffer)" type="short" hexview="1"/>
+			<Element name="(buffer)" type="byte" hexview="1"/>
 			<Element name="Value to Compare Against" type="float" hexview="1"/>
 			<Element name="Function Name" type="short" options="GetLocked;5;GetItemCount;47;GetSleeping;49;GetStage;58;GetStageDone;59;GetIsRace;69;GetIsSex;70;GetIsID;72;GetIsReference;136;IsTrespassing;145;IsSwimming;185;GetPCExpelled;193;GetUnconscious;242;HasSpell;264;IsOwner;278;IsSneaking;286;IsInCombat;289;HasPerk;448;GetQuestCompleted;543;HasLoaded3D;555;HasKeyword;560;GetMovementDirection;589;GetIsInjured;645;IsPoison;721"/>
-			<Element name="(buffer)" type="short" notininfo="1"/>
+			<Element name="(buffer)" type="short"/>
 			<Element name="Function Info" type="formid" hexview="1" desc="int/float/formID"/>
-			<Element name="(buffer)" type="int" hexview="1" notininfo="1"/>
+			<Element name="(buffer)" type="int" hexview="1"/>
 			<Element name="Run on" type="int" options="Subject;0;Target;1;Reference;2;Combat Target;3;Linked Reference;4;Quest Alias;5;Package Data;6;Event Data;7"/>
 			<Element name="Run on Player" type="int" options="No;0;Yes;20"/>
-			<Element name="(always FFs)" type="int" hexview="1" notininfo="1"/>
+			<Element name="(always FFs)" type="int" hexview="1"/>
 		</Subrecord>
 	<!-- subrecords below here I haven't seen in Skyrim yet -->
 		<Subrecord name="CIS1" desc="CIS1" optional="1">
@@ -59,8 +59,8 @@
 			<Element name="Health" type="int"/>
 			<Element name="Total # of Stages" type="byte"/>
 			<Element name="VATS Targetable" type="byte" options="No;0;Yes;1"/>
-			<Element name="(always 10)" type="byte" notininfo="1"/>
-			<Element name="(always 2D)" type="byte" notininfo="1"/>
+			<Element name="(always 10)" type="byte"/>
+			<Element name="(always 2D)" type="byte"/>
 		</Subrecord>
 		<Group optional="1" repeat="1"> <!-- replacement model data -->
 			<Subrecord name="DSTD" desc="Destructible Object Stage Data" size="20">
@@ -96,7 +96,7 @@
 				<Element name="Object Nr" type="int" optional="1"/>
 				<Element name="(rest of data)" type="blob"/>
 			</Subrecord>
-			<Subrecord name="DSTF" desc="(buffer)" optional="1" size="0" notininfo="1"/>
+			<Subrecord name="DSTF" desc="(buffer)" optional="1" size="0"/>
 			<Group id="MODS" optional="1"/>
 		</Group>
 	</Group>
@@ -132,7 +132,7 @@
 			<Element name="Red" type="byte"/>
 			<Element name="Green" type="byte"/>
 			<Element name="Blue" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 		</Subrecord>
 	</Group>
 	<Group id="DESC" optional="1">
@@ -217,27 +217,27 @@
 			<Element name="Script Total Count" type="ushort"/>
 			<!-- <ElementGroup> -->
 			<Element name="Script Name" type="bstring"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Property Total Count" type="ushort"/>
 				<!-- <ElementGroup> -->
 			<Element name="Property Name" type="bstring"/>
 			<Element name="PropertyType" type="byte" options="Object Reference (8byte);1;String;2;Int (4byte);3;Float (4byte);4;Bool (1byte);5;Array of Object References (8byte);11;Array of Strings;12;Array of Int (4byte);13;Array of Float (4byte);14;Array of Bool (1byte);15"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
-			<Element name="(buffer)" type="int" hexview="1" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
+			<Element name="(buffer)" type="int" hexview="1"/>
 			<Element name="FormID" type="formid"/>
 				<!--  </ElementGroup> -->
 			<!-- </ElementGroup> -->
 			<Element name="Property Name" type="bstring" optional="1"/>
-			<Element name="(standard buffer)" type="short" hexview="1" notininfo="1" optional="1"/>
-			<Element name="(standard buffer)" type="int" hexview="1" notininfo="1" optional="1"/>
+			<Element name="(standard buffer)" type="short" hexview="1" optional="1"/>
+			<Element name="(standard buffer)" type="int" hexview="1" optional="1"/>
 			<Element name="FormID" type="formid" optional="1"/>
 			<Element name="Property Name" type="bstring" optional="1"/>
-			<Element name="(standard buffer)" type="short" hexview="1" notininfo="1" optional="1"/>
-			<Element name="(standard buffer)" type="int" hexview="1" notininfo="1" optional="1"/>
+			<Element name="(standard buffer)" type="short" hexview="1" optional="1"/>
+			<Element name="(standard buffer)" type="int" hexview="1" optional="1"/>
 			<Element name="FormID" type="formid" optional="1"/>
 			<Element name="Property Name" type="bstring" optional="1"/>
-			<Element name="(standard buffer)" type="short" hexview="1" notininfo="1" optional="1"/>
-			<Element name="(standard buffer)" type="int" hexview="1" notininfo="1" optional="1"/>
+			<Element name="(standard buffer)" type="short" hexview="1" optional="1"/>
+			<Element name="(standard buffer)" type="int" hexview="1" optional="1"/>
 			<Element name="FormID" type="formid" optional="1"/>
 			<Element name="(additional prop data)" type="blob"/> <!-- Snip can't repeat element data yet -->
 		</Subrecord>
@@ -295,19 +295,19 @@
 			<Element name="Bounds from Origin X" type="float"/>
 			<Element name="Bounds from Origin Y" type="float"/>
 			<Element name="Bounds from Origin Z" type="float"/>
-			<Element name="(red+1)" type="byte" notininfo="1"/>
+			<Element name="(red+1)" type="byte"/>
 			<Element name="Red" type="byte" desc="divide this by multiplier"/>
 			<Element name="(0/0,63/128=0x)" type="byte"/>
 			<Element name="(59/128=128x;60/0-64=64x)" type="byte"/>
-			<Element name="(green+1)" type="byte" notininfo="1"/>
+			<Element name="(green+1)" type="byte"/>
 			<Element name="Green" type="byte" desc="multiplier is calc'd by"/>
 			<Element name="(60/128-224=32x)" type="byte"/>
 			<Element name="(61/0-112=16x)" type="byte"/>
-			<Element name="(blue+1)" type="byte" notininfo="1"/>
+			<Element name="(blue+1)" type="byte"/>
 			<Element name="Blue" type="byte" desc="2 #s under the color"/>
 			<Element name="(61/128-248=8x;62/0-124=4x)" type="byte"/>
 			<Element name="(62/128-254=2x;63/0-126=1x)" type="byte"/>
-			<Element name="(always same) float" type="float" notininfo="1"/>
+			<Element name="(always same) float" type="float"/>
 			<Element name="Primitive Type" type="int" options="Box;1;Sphere;2"/>
 		</Subrecord>
 	</Group>
@@ -332,7 +332,7 @@
 		</Subrecord>
 	</Group>
 	<Group id="OBND" optional="1"> 
-		<Subrecord name="OBND" desc="Object Bounds" optional="1" notininfo="1">
+		<Subrecord name="OBND" desc="Object Bounds" optional="1">
 			<Element name="X1" type="short"/>
 			<Element name="Y1" type="short"/>
 			<Element name="Z1" type="short"/>
@@ -384,7 +384,7 @@
 			<Subrecord name="MODL" desc="Model" optional="1">
 				<Element name="Path\Filename" type="string"/>
 			</Subrecord>
-			<Subrecord name="MODT" desc="Model Data" optional="1" notininfo="1">
+			<Subrecord name="MODT" desc="Model Data" optional="1">
 				<Element name="Unknown int 1" type="int"/>
 				<Element name="Unknown int 2" type="int"/>
 				<Element name="Unknown int 3" type="int"/>
@@ -401,7 +401,7 @@
 			<Subrecord name="MODL" desc="Model" optional="1">
 				<Element name="Name" type="string"/>
 			</Subrecord>
-			<Subrecord name="MODT" desc="Model Data" optional="1" notininfo="1">
+			<Subrecord name="MODT" desc="Model Data" optional="1">
 				<Element name="Unknown int 1" type="int"/>
 				<Element name="Unknown int 2" type="int"/>
 				<Element name="Unknown int 3" type="int"/>
@@ -515,10 +515,10 @@
       <Element name="FormID" type="formid" reftype="QUST" />
     </Subrecord>
     <Subrecord name="NEXT" desc="NEXT" optional="1" size="0" />
-    <Subrecord name="SCDA" desc="SCDA" optional="1" notininfo="1">
+    <Subrecord name="SCDA" desc="SCDA" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="SCTX" desc="SCTX" optional="1"  notininfo="1">
+    <Subrecord name="SCTX" desc="SCTX" optional="1" >
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="SCRO" desc="? Quest (QUST)" optional="1" size="4">
@@ -552,17 +552,17 @@ non-indent is being worked on
 			<Subrecord name="SCRN" desc="Screenshot" optional="1">
 				<Element name="Screenshot" type="blob"/>
 			</Subrecord>
-			<Subrecord name="DATA" desc="(always zeroes)" optional="1" notininfo="1">
+			<Subrecord name="DATA" desc="(always zeroes)" optional="1">
 				<Element name="(buffer)" type="blob"/>
 			</Subrecord>
 		</Group>
 		<Subrecord name="ONAM" desc="List of Records Existing in Multiple ESMs" optional="1">
 			<Element name="Dupe FormID" type="formid" repeat="1" desc="only ACHR and REFR"/>
 		</Subrecord>
-		<Subrecord name="INTV" desc="Internal Version #" optional="1" size="4" notininfo="1">
+		<Subrecord name="INTV" desc="Internal Version #" optional="1" size="4">
 			<Element name="Version #" type="uint"/>
 		</Subrecord>
-		<Subrecord name="INCC" desc="(always 00000010)" optional="1" size="4" notininfo="1">
+		<Subrecord name="INCC" desc="(always 00000010)" optional="1" size="4">
 			<Element name="(buffer)" type="uint" hexview="1"/>
 		</Subrecord>
 	</Record>
@@ -630,15 +630,15 @@ non-indent is being worked on
 				<Element name="Parallax Scale" type="float"/>
 				<Element name="Parallax Passes" type="byte"/>
 				<Element name="Alpha Blend/Test/4subTex" type="byte" options="(none);0;4subTextures;1;Blending/4subTex;3;Testing/4subTex;5;Blend/Test;7;Blending;11;Testing;13;Blend/Test/4subTex;15"/>
-				<Element name="(buffer)" type="short" notininfo="1"/>
+				<Element name="(buffer)" type="short"/>
 				<Element name="Red" type="byte"/>
 				<Element name="Green" type="byte"/>
 				<Element name="Blue" type="byte"/>
-				<Element name="(buffer)" type="byte" notininfo="1"/>
+				<Element name="(buffer)" type="byte"/>
 			</Subrecord>
 			<Subrecord name="DNAM" desc="Check-Boxes" size="2">
 				<Element name="Facegen/Specular/ModelNormal" type="byte" options="Has Specular;0;(none);1;HasSpec/Facegen;2;Facegen Textures;3;Specular/HasModelNormal;4;Has Model Space Normal Map;5;Facegen/Spec/ModelNorm;6;Facegen/ModelNormal;7"/>
-				<Element name="(buffer)" type="byte" notininfo="1"/>
+				<Element name="(buffer)" type="byte"/>
 			</Subrecord>
 	</Record>
 	<Record name="GLOB" desc="Global Variable">
@@ -655,8 +655,8 @@ non-indent is being worked on
 		<Group id="FULL" optional="1"/>
 		<Group id="DESC" optional="1"/>
 		<Subrecord name="DATA" desc="Class Data" optional="1">
-			<Element name="(buffer)" type="int" notininfo="1"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="int"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="AutoCalc Training 0-100" type="byte" desc="reopening record nullifies this"/>
 			<Element name="One-Handed" type="byte" desc="between 0 and 10"/>
 			<Element name="Two-Handed" type="byte" desc="between 0 and 10"/>
@@ -681,7 +681,7 @@ non-indent is being worked on
 			<Element name="Health" type="byte" desc="between 0 and 10"/>
 			<Element name="Magicka" type="byte" desc="between 0 and 10"/>
 			<Element name="Stamina" type="byte" desc="between 0 and 10"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 		</Subrecord>
 	</Record>
 	<Record name="FACT" desc="Faction"> <!-- XNAM, PLVD, and flags need finishing -->
@@ -716,7 +716,7 @@ non-indent is being worked on
 			<Subrecord name="JOUT" desc="Jail Outfit (OTFT)" optional="1" size="4">
 				<Element name="OTFT FormID" type="formid" reftype="OTFT"/>
 			</Subrecord>
-			<Subrecord name="CRVA" desc="Crime Gold Values" notininfo="1">
+			<Subrecord name="CRVA" desc="Crime Gold Values">
 				<Element name="Arrest" type="byte" options="Off;0;On;1"/>
 				<Element name="Attack on Sight" type="byte" options="Off;0;On;1"/>
 				<Element name="Murder" type="short"/>
@@ -749,10 +749,10 @@ non-indent is being worked on
 				<Element name="Start Hour" type="short"/>
 				<Element name="End Hour" type="short"/>
 				<Element name="Radius" type="short"/>
-				<Element name="(buffer)" type="short" notininfo="1"/>
+				<Element name="(buffer)" type="short"/>
 				<Element name="Only Buys Stolen Items" type="byte" options="Off;0;On;1"/>
 				<Element name="Not Sell/Buy" type="byte" options="Off;0;On;1"/>
-				<Element name="(buffer)" type="short" notininfo="1"/>
+				<Element name="(buffer)" type="short"/>
 			</Subrecord>
 			<Subrecord name="PLVD" desc="Service-Related" optional="1" size="12">
 				<Element name="Unknown int 1" type="int"/>
@@ -976,7 +976,7 @@ non-indent is being worked on
     <Subrecord name="PHTN" desc="PHTN" optional="1" repeat="1">
       <Element name="Name" type="string" />
     </Subrecord>
-    <Subrecord name="PHWT" desc="PHWT" optional="1" repeat="1" notininfo="1">
+    <Subrecord name="PHWT" desc="PHWT" optional="1" repeat="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="WKMV" desc="? Movement Type (MOVT)" optional="1" size="4">
@@ -1109,7 +1109,7 @@ non-indent is being worked on
 			<Element name="Assoc Item 1 SPEL FormID" type="formid" reftype="SPEL"/>
 			<Element name="Magic Skill" type="int" options="OneHanded;6;TwoHanded;7;Marksman;8;Block;9;Smithing;10;HeavyArmor;11;LightArmor;12;Pickpocket;13;Lockpicking;14;Sneak;15;Alchemy;16;Speechcraft;17;Alteration;18;Conjuration;19;Destruction;20;Illusion;21;Restoration;22;Enchanting;23;Fame;60;Infamy;61"/>
 			<Element name="Resistance" type="int" options="DamageResist;39;PoisonResist;40;FireResist;41;ElectricResist;42;FrostResist;43;MagicResist;44;DiseaseResist;45;NormalWeaponsResist;164;None;-1;Zero;0;"/>
-			<Element name="(buffer)" type="uint" hexview="1" desc="(always 72 73 00 00)" notininfo="1"/>
+			<Element name="(buffer)" type="uint" hexview="1" desc="(always 72 73 00 00)"/>
 			<Element name="CastingLight LIGH FormID" type="formid" reftype="LIGH"/>
 			<Element name="Taper Weight" type="float" desc="Somehow controls the tapering of the spell over time, 0-1 typically"/>
 			<Element name="HitShader EFSH FormID" type="formid" reftype="EFSH"/>
@@ -1134,8 +1134,8 @@ non-indent is being worked on
 			<Element name="DualCastArt DUAL FormID" type="formid" reftype="DUAL"/>
 			<Element name="DualCast Scale" type="float" desc="0-3"/>
 			<Element name="EnchantArt ARTO FormID" type="formid" reftype="ARTO"/>
-			<Element name="(buffer)" type="int" notininfo="1"/>
-			<Element name="(buffer)" type="int" notininfo="1"/>
+			<Element name="(buffer)" type="int"/>
+			<Element name="(buffer)" type="int"/>
 			<Element name="EquipAbility SPEL FormID" type="formid" reftype="SPEL"/>
 			<Element name="ImageSpaceMod IMAD FormID" type="formid" reftype="IMAD"/>
 			<Element name="PERK to Apply FormID" type="formid" reftype="PERK" />
@@ -1236,7 +1236,7 @@ non-indent is being worked on
 				<Element name="Red" type="byte"/>
 				<Element name="Green" type="byte"/>
 				<Element name="Blue" type="byte"/>
-				<Element name="(buffer)" type="byte" notininfo="1"/>
+				<Element name="(buffer)" type="byte"/>
 			</Subrecord>
 			<Group id="SNAM" optional="1"/>
 			<Subrecord name="VNAM" desc="Activate Sound (SNDR)" optional="1" size="4">
@@ -1285,10 +1285,10 @@ non-indent is being worked on
     <Subrecord name="MOD2" desc="Male Ground Model Path" optional="1">
       <Element name="Model Path 2" type="string" />
     </Subrecord>
-    <Subrecord name="MO2T" desc="Model Data 2" optional="1" notininfo="1">
+    <Subrecord name="MO2T" desc="Model Data 2" optional="1">
       <Element name="Model Data 2" type="blob" />
     </Subrecord>
-	<Subrecord name="MO2S" desc="Model Data 2S" optional="1" notininfo="1">
+	<Subrecord name="MO2S" desc="Model Data 2S" optional="1">
 		<Element name="Num Textures" type="int"/>
 		<Element name="Object Name" type="istring" optional="1"/>
 		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
@@ -1307,10 +1307,10 @@ non-indent is being worked on
     <Subrecord name="MOD4" desc="Female Ground Model Path" optional="1">
       <Element name="Model Path 4" type="string" />
     </Subrecord>
-    <Subrecord name="MO4T" desc="Model Data 4" optional="1" notininfo="1">
+    <Subrecord name="MO4T" desc="Model Data 4" optional="1">
       <Element name="Model Data 4" type="blob" />
     </Subrecord>
-	<Subrecord name="MO4S" desc="Model Data 4S" optional="1" notininfo="1">
+	<Subrecord name="MO4S" desc="Model Data 4S" optional="1">
 		<Element name="Num Textures" type="int"/>
 		<Element name="Object Name" type="istring" optional="1"/>
 		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
@@ -1546,7 +1546,7 @@ non-indent is being worked on
 	<Group id="DESTRUCT" optional="1"/>
     <Group id="YNAM" optional="1"/>
 	<Group id="ZNAM" optional="1"/>
-    <Subrecord name="MODS" desc="MODS" optional="1" notininfo="1">
+    <Subrecord name="MODS" desc="MODS" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Group id="KEYWORDS" optional="1"/>
@@ -1760,9 +1760,9 @@ non-indent is being worked on
     </Subrecord>
     <Subrecord name="DNAM" desc="Damage Data" optional="1" size="100">
      <Element name="Weapon Type" type="byte" options="Projectile;0;1HSword;1;Dagger;2;1HAxe;3;1HBlunt;4;2HSword;5;2HBlunt/Axe;6;Bow;7;Staff;8"/>
-      <Element name="unknown form byte 1" type="byte" notininfo="1"/>
-      <Element name="unknown form byte 2" type="byte" notininfo="1"/>
-      <Element name="unknown form byte 3" type="byte" notininfo="1"/>
+      <Element name="unknown form byte 1" type="byte"/>
+      <Element name="unknown form byte 2" type="byte"/>
+      <Element name="unknown form byte 3" type="byte"/>
       <Element name="Animation timescale" type="float" />
       <Element name="Zoom animation float?" type="float" />
       <Element name="Fire trigger" type="short" desc="MeleeAttack?;64;BowAttack?;136;"/>
@@ -2225,7 +2225,7 @@ non-indent is being worked on
     <Subrecord name="NAM1" desc="Effect Model" optional="1">
       <Element name="Path\Filename" type="string" />
     </Subrecord>
-    <Subrecord name="NAM2" desc="Effect Data" optional="1" notininfo="1">
+    <Subrecord name="NAM2" desc="Effect Data" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="VNAM" desc="Silenced yes/no" optional="1" size="4">
@@ -2452,13 +2452,13 @@ non-indent is being worked on
       <Element name="Unknown 6" type="int" />
       <Element name="Unknown 7" type="int" />
     </Subrecord>
-    <Subrecord name="PNAM" desc="PNAM" optional="1" notininfo="1">
+    <Subrecord name="PNAM" desc="PNAM" optional="1">
       <Element name="Unknown blob" type="blob" />
     </Subrecord>
-    <Subrecord name="JNAM" desc="JNAM" optional="1" notininfo="1">
+    <Subrecord name="JNAM" desc="JNAM" optional="1">
       <Element name="Unknown blob" type="blob" />
     </Subrecord>
-    <Subrecord name="NAM0" desc="Type-Time of Light" optional="1" notininfo="1">
+    <Subrecord name="NAM0" desc="Type-Time of Light" optional="1">
 		<Element name="Sky Upper, Sunrise R" type="byte" />
 		<Element name="Sky Upper, Sunrise G" type="byte" />
 		<Element name="Sky Upper, Sunrise B" type="short" />
@@ -2484,9 +2484,9 @@ non-indent is being worked on
 		<Element name="Fog Near, Night G" type="byte" />
 		<Element name="Fog Near, Night B" type="short" />
 		<Element name="Cloud Layer (are ALWAYS zeroes)" type="int" hexview="1" />
-		<Element name="" type="float" notininfo="1" />
-		<Element name="" type="float" notininfo="1" />
-		<Element name="" type="float" notininfo="1" />
+		<Element name="" type="float" />
+		<Element name="" type="float" />
+		<Element name="" type="float" />
 		<Element name="Ambient, Sunrise R" type="byte" />
 		<Element name="Ambient, Sunrise G" type="byte" />
 		<Element name="Ambient, Sunrise B" type="short" />
@@ -2690,7 +2690,7 @@ non-indent is being worked on
       <Element name="Sunset FormID" type="formid" reftype="IMGS" />
       <Element name="Night FormID" type="formid" reftype="IMGS" />
     </Subrecord>
-    <Subrecord name="DALC" desc="DALC" optional="1" repeat="1" notininfo="1">
+    <Subrecord name="DALC" desc="DALC" optional="1" repeat="1">
       <Element name="Unknown blob" type="blob" />
     </Subrecord>
     <Subrecord name="NAM2" desc="NAM2" optional="1" size="16">
@@ -2714,10 +2714,10 @@ non-indent is being worked on
       <Element name="Unknown 1" type="int" />
       <Element name="Unknown 2" type="int" />
     </Subrecord>
-    <Subrecord name="FNAM" desc="FNAM" optional="1" notininfo="1">
+    <Subrecord name="FNAM" desc="FNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="GNAM" desc="GNAM" optional="1" notininfo="1">
+    <Subrecord name="GNAM" desc="GNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
 	<Group id="MODEL" optional="1"/>
@@ -2728,7 +2728,7 @@ non-indent is being worked on
   </Record>
   <Record name="SPGD" desc="Shader Particle Geometry">
     <Group id="EDID" optional="1"/>
-    <Subrecord name="DATA" desc="DATA" optional="1" notininfo="1">
+    <Subrecord name="DATA" desc="DATA" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="ICON" desc="ICON" optional="1">
@@ -2755,7 +2755,7 @@ non-indent is being worked on
       <Subrecord name="RPLI" desc="RPLI" optional="1" repeat="1" size="4">
         <Element name="Name" type="int"/>
       </Subrecord>
-      <Subrecord name="RPLD" desc="RPLD" optional="1" repeat="1" notininfo="1">
+      <Subrecord name="RPLD" desc="RPLD" optional="1" repeat="1">
         <Element name="Unknown" type="blob" />
       </Subrecord>
     </Group>
@@ -2940,7 +2940,7 @@ non-indent is being worked on
           <Element name="Unknown 3" type="int" />
           <Element name="Unknown 4" type="int" />
         </Subrecord>
-        <Subrecord name="SCTX" desc="SCTX" optional="1" notininfo="1">
+        <Subrecord name="SCTX" desc="SCTX" optional="1">
           <Element name="Unknown" type="blob" />
         </Subrecord>
         <Subrecord name="QNAM" desc="Quest (QUST)" optional="1" repeat="1" size="4">
@@ -3054,7 +3054,7 @@ non-indent is being worked on
       <Subrecord name="TPIC" desc="Dialog (DIAL)" optional="1" size="4">
         <Element name="FormID" type="formid" reftype="DIAL" />
       </Subrecord>
-      <Subrecord name="CNAM" desc="CNAM" optional="1" repeat="1" notininfo="1">
+      <Subrecord name="CNAM" desc="CNAM" optional="1" repeat="1">
         <Element name="Unknown" type="blob" />
       </Subrecord>
       <Subrecord name="PLDT" desc="PLDT" optional="1" repeat="1" size="12">
@@ -3088,7 +3088,7 @@ non-indent is being worked on
         <Element name="Unknown 4bytes 1" type="int" />
         <Element name="Unknown 4bytes 2" type="int" />
       </Subrecord>
-      <Subrecord name="PNAM" desc="PNAM" optional="1" repeat="1" notininfo="1">
+      <Subrecord name="PNAM" desc="PNAM" optional="1" repeat="1">
         <Element name="Unknown" type="blob" />
       </Subrecord>
       <Subrecord name="FNAM" desc="FNAM" optional="1" repeat="1" size="4">
@@ -3140,7 +3140,7 @@ non-indent is being worked on
       <Subrecord name="SCDA" desc="SCDA" optional="1" size="17">
         <Element name="Unknown" type="blob" />
       </Subrecord>
-      <Subrecord name="SCTX" desc="SCTX" optional="1" repeat="1" notininfo="1">
+      <Subrecord name="SCTX" desc="SCTX" optional="1" repeat="1">
         <Element name="Unknown" type="blob" />
       </Subrecord>
       <Subrecord name="QNAM" desc="Quest (QUST)" optional="1" repeat="1" size="4">
@@ -3155,23 +3155,23 @@ non-indent is being worked on
   </Record>
   <Record name="CSTY" desc="Combat Style">
     <Group id="EDID" optional="1"/>
-    <Subrecord name="CSGD" desc="CSGD" optional="1" notininfo="1">
+    <Subrecord name="CSGD" desc="CSGD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="CSMD" desc="CSMD" optional="1" size="8">
       <Element name="Unknown float 1" type="float" />
       <Element name="Unknown float 2" type="float" />
     </Subrecord>
-    <Subrecord name="CSME" desc="CSME" optional="1" notininfo="1">
+    <Subrecord name="CSME" desc="CSME" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="CSCR" desc="CSCR" optional="1" notininfo="1">
+    <Subrecord name="CSCR" desc="CSCR" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="CSLR" desc="CSLR" optional="1" size="4">
       <Element name="Unknown" type="float" />
     </Subrecord>
-    <Subrecord name="CSFL" desc="CSFL" optional="1" notininfo="1">
+    <Subrecord name="CSFL" desc="CSFL" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="DATA" desc="DATA" optional="1" size="4">
@@ -3244,7 +3244,7 @@ non-indent is being worked on
 		<Subrecord name="TNAM" desc="Assigned Material (MATT)" optional="1" size="4">
 			<Element name="MATT FormID" type="formid" reftype="MATT"/>
 		</Subrecord>
-		<Subrecord name="MNAM" desc="(Unknown flag? always 0)" optional="1" size="1" notininfo="1">
+		<Subrecord name="MNAM" desc="(Unknown flag? always 0)" optional="1" size="1">
 			<Element name="Unknown" type="int"/>
 		</Subrecord>
 		<Subrecord name="SNAM" desc="Open Sound (SNDR)" size="4">
@@ -3327,7 +3327,7 @@ non-indent is being worked on
 		  <Element name="Depth Specular Light (0-1)" type="float"/>
 		  <Element name="Sun Sparkle Power (0-10000)" type="float"/>
 		</Subrecord>
-		<Subrecord name="GNAM" desc="(buffer? always 0s)" size="12" notininfo="1">
+		<Subrecord name="GNAM" desc="(buffer? always 0s)" size="12">
 		  <Element name="Unknown int 1" type="int"/>
 		  <Element name="Unknown int 2" type="int"/>
 		  <Element name="Unknown int 3" type="int"/>
@@ -3369,7 +3369,7 @@ non-indent is being worked on
     <Subrecord name="NAM9" desc="NAM9" optional="1">
       <Element name="Name" type="string" />
     </Subrecord>
-    <Subrecord name="DATA" desc="DATA" optional="1" notininfo="1">
+    <Subrecord name="DATA" desc="DATA" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
   </Record>
@@ -3391,7 +3391,7 @@ non-indent is being worked on
   <Record name="DEBR" desc="Debris">
     <Group id="EDID" optional="1"/>
     <Group optional="1" repeat="1">
-      <Subrecord name="DATA" desc="DATA" optional="1" repeat="1" notininfo="1">
+      <Subrecord name="DATA" desc="DATA" optional="1" repeat="1">
         <Element name="Unknown" type="blob" />
       </Subrecord>
       <Subrecord name="MODT" desc="Model Data" optional="1" repeat="1" size="72">
@@ -3456,13 +3456,13 @@ non-indent is being worked on
       <Element name="Unknown 2" type="float" />
       <Element name="Unknown 3" type="float" />
     </Subrecord>
-    <Subrecord name="DNAM" desc="DNAM" optional="1" notininfo="1">
+    <Subrecord name="DNAM" desc="DNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
   </Record>
   <Record name="IMAD" desc="Image Space Modifier">
     <Group id="EDID" optional="1"/>
-    <Subrecord name="DNAM" desc="DNAM" optional="1" size="244" notininfo="1">
+    <Subrecord name="DNAM" desc="DNAM" optional="1" size="244">
       <Element name="Unknown" type="int" />
       <Element name="Unknown 1" type="float" />
       <Element name="Unknown 2" type="int" />
@@ -3525,94 +3525,94 @@ non-indent is being worked on
       <Element name="Unknown 59" type="int" />
       <Element name="Unknown 60" type="int" />
     </Subrecord>
-    <Subrecord name="BNAM" desc="BNAM" optional="1" notininfo="1">
+    <Subrecord name="BNAM" desc="BNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="VNAM" desc="VNAM" optional="1" notininfo="1">
+    <Subrecord name="VNAM" desc="VNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="TNAM" desc="TNAM" optional="1" notininfo="1">
+    <Subrecord name="TNAM" desc="TNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="NAM3" desc="NAM3" optional="1" notininfo="1">
+    <Subrecord name="NAM3" desc="NAM3" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="RNAM" desc="RNAM" optional="1" notininfo="1">
+    <Subrecord name="RNAM" desc="RNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="SNAM" desc="SNAM" optional="1" notininfo="1">
+    <Subrecord name="SNAM" desc="SNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="UNAM" desc="UNAM" optional="1" notininfo="1">
+    <Subrecord name="UNAM" desc="UNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="NAM1" desc="NAM1" optional="1" notininfo="1">
+    <Subrecord name="NAM1" desc="NAM1" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="NAM2" desc="NAM2" optional="1" notininfo="1">
+    <Subrecord name="NAM2" desc="NAM2" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="WNAM" desc="WNAM" optional="1" notininfo="1">
+    <Subrecord name="WNAM" desc="WNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="XNAM" desc="XNAM" optional="1" notininfo="1">
+    <Subrecord name="XNAM" desc="XNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="YNAM" desc="YNAM" optional="1" notininfo="1">
+    <Subrecord name="YNAM" desc="YNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="ZNAM" desc="ZNAM" optional="1" notininfo="1">
+    <Subrecord name="ZNAM" desc="ZNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="NAM4" desc="NAM4" optional="1" notininfo="1">
+    <Subrecord name="NAM4" desc="NAM4" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x0;IAD" desc="&amp;#x0;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x0;IAD" desc="&amp;#x0;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="@IAD" desc="@IAD" optional="1" notininfo="1">
+    <Subrecord name="@IAD" desc="@IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x1;IAD" desc="&amp;#x1;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x1;IAD" desc="&amp;#x1;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="AIAD" desc="AIAD" optional="1" notininfo="1">
+    <Subrecord name="AIAD" desc="AIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x2;IAD" desc="&amp;#x2;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x2;IAD" desc="&amp;#x2;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="BIAD" desc="BIAD" optional="1" notininfo="1">
+    <Subrecord name="BIAD" desc="BIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x3;IAD" desc="&amp;#x3;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x3;IAD" desc="&amp;#x3;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="CIAD" desc="CIAD" optional="1" notininfo="1">
+    <Subrecord name="CIAD" desc="CIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x4;IAD" desc="&amp;#x4;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x4;IAD" desc="&amp;#x4;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="DIAD" desc="DIAD" optional="1" notininfo="1">
+    <Subrecord name="DIAD" desc="DIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x5;IAD" desc="&amp;#x5;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x5;IAD" desc="&amp;#x5;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="EIAD" desc="EIAD" optional="1" notininfo="1">
+    <Subrecord name="EIAD" desc="EIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x6;IAD" desc="&amp;#x6;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x6;IAD" desc="&amp;#x6;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="FIAD" desc="FIAD" optional="1" notininfo="1">
+    <Subrecord name="FIAD" desc="FIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x7;IAD" desc="&amp;#x7;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x7;IAD" desc="&amp;#x7;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="GIAD" desc="GIAD" optional="1" notininfo="1">
+    <Subrecord name="GIAD" desc="GIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="&amp;#x8;IAD" desc="&amp;#x8;IAD" optional="1" size="16">
@@ -3723,31 +3723,31 @@ non-indent is being worked on
       <Element name="Unknown 2" type="float" />
       <Element name="Unknown 3" type="int" />
     </Subrecord>
-    <Subrecord name="&amp;#x11;IAD" desc="&amp;#x11;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x11;IAD" desc="&amp;#x11;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="QIAD" desc="QIAD" optional="1" notininfo="1">
+    <Subrecord name="QIAD" desc="QIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x12;IAD" desc="&amp;#x12;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x12;IAD" desc="&amp;#x12;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="RIAD" desc="RIAD" optional="1" notininfo="1">
+    <Subrecord name="RIAD" desc="RIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x13;IAD" desc="&amp;#x13;IAD" optional="1" notininfo="1">
+    <Subrecord name="&amp;#x13;IAD" desc="&amp;#x13;IAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="SIAD" desc="SIAD" optional="1" notininfo="1">
+    <Subrecord name="SIAD" desc="SIAD" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="&amp;#x14;IAD" desc="&amp;#x14;IAD" optional="1" size="16" notininfo="1">
+    <Subrecord name="&amp;#x14;IAD" desc="&amp;#x14;IAD" optional="1" size="16">
       <Element name="Unknown" type="int" />
       <Element name="Unknown 1" type="float" />
       <Element name="Unknown 2" type="float" />
       <Element name="Unknown 3" type="float" />
     </Subrecord>
-    <Subrecord name="TIAD" desc="TIAD" optional="1" size="16" notininfo="1">
+    <Subrecord name="TIAD" desc="TIAD" optional="1" size="16">
       <Element name="Unknown" type="int" />
       <Element name="Unknown 1" type="float" />
       <Element name="Unknown 2" type="float" />
@@ -3785,9 +3785,9 @@ non-indent is being worked on
       <Subrecord name="DATA" desc="Perk Effect Data" optional="1" size="8" condid="1" condition="equal" condvalue="0" >
         <Element name="QUST FormID" type="formid" reftype="QUST" />
         <Element name="Stage" type="byte" />
-        <Element name="unused" type="byte" notininfo="1" />
-        <Element name="unused" type="byte" notininfo="1" />
-        <Element name="unused" type="byte" notininfo="1" />
+        <Element name="unused" type="byte" />
+        <Element name="unused" type="byte" />
+        <Element name="unused" type="byte" />
       </Subrecord>
       <Subrecord name="DATA" desc="Perk Effect (SPEL)" optional="1" size="4" condid="1" condition="equal" condvalue="1" >
         <Element name="SPEL FormID" type="formid" reftype="SPEL" />
@@ -4085,10 +4085,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
     <Subrecord name="MOD2" desc="Male Model NIF" optional="1">
       <Element name="Path\Filename" type="string" />
     </Subrecord>
-    <Subrecord name="MO2T" desc="Male Model Texture" optional="1" notininfo="1">
+    <Subrecord name="MO2T" desc="Male Model Texture" optional="1">
       <Element name="Model Data 2" type="blob" />
     </Subrecord>
-    <Subrecord name="MO2S" desc="Male Model Alternate Textures" optional="1" notininfo="1"> <!-- Snip needs repeating element-groups -->
+    <Subrecord name="MO2S" desc="Male Model Alternate Textures" optional="1"> <!-- Snip needs repeating element-groups -->
 		<Element name="Num Textures" type="int"/>
 		<Element name="Object Name" type="istring" optional="1"/>
 		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
@@ -4107,10 +4107,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
     <Subrecord name="MOD3" desc="Female Model NIF" optional="1">
       <Element name="Path\Filename" type="string"/>
     </Subrecord>
-    <Subrecord name="MO3T" desc="Female Model Texture" optional="1" notininfo="1">
+    <Subrecord name="MO3T" desc="Female Model Texture" optional="1">
       <Element name="Model Data 3" type="blob" />
     </Subrecord>
-    <Subrecord name="MO3S" desc="Female Model Alternate Textures" optional="1" notininfo="1"> <!-- Snip needs repeating element-groups -->
+    <Subrecord name="MO3S" desc="Female Model Alternate Textures" optional="1"> <!-- Snip needs repeating element-groups -->
 		<Element name="Num Textures" type="int"/>
 		<Element name="Object Name" type="istring" optional="1"/>
 		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
@@ -4134,7 +4134,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
       <Element name="Unknown 2" type="int" />
       <Element name="Unknown 3" type="int" />
     </Subrecord>
-    <Subrecord name="MO4S" desc="Male 1stPerson Alternate Textures" optional="1" notininfo="1">
+    <Subrecord name="MO4S" desc="Male 1stPerson Alternate Textures" optional="1">
 		<Element name="Num Textures" type="int"/>
 		<Element name="Object Name" type="istring" optional="1"/>
 		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
@@ -4158,7 +4158,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
       <Element name="Unknown 2" type="int" />
       <Element name="Unknown 3" type="int" />
     </Subrecord>
-    <Subrecord name="MO5S" desc="Female 1stPerson Alternate Textures" optional="1" notininfo="1">
+    <Subrecord name="MO5S" desc="Female 1stPerson Alternate Textures" optional="1">
 		<Element name="Num Textures" type="int"/>
 		<Element name="Object Name" type="istring" optional="1"/>
 		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
@@ -4573,16 +4573,16 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
     </Group>
   </Record>
 <Record name="DOBJ" desc="Dynamic Object"> <!-- cannot properly be created by the CK -->
-	<Subrecord name="DNAM" desc="DNAM" optional="1" notininfo="1">
+	<Subrecord name="DNAM" desc="DNAM" optional="1">
 		<Element name="Unknown" type="blob"/>
 	</Subrecord>
   </Record>
 <Record name="LGTM" desc="Light Template">
     <Group id="EDID" optional="1"/>
-    <Subrecord name="DATA" desc="DATA" optional="1" notininfo="1">
+    <Subrecord name="DATA" desc="DATA" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="DALC" desc="DALC" optional="1" notininfo="1">
+    <Subrecord name="DALC" desc="DALC" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
   </Record>
@@ -4733,10 +4733,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
       <Element name="Unknown 1" type="float" />
       <Element name="Unknown 2" type="int" />
     </Subrecord>
-    <Subrecord name="BNAM" desc="BNAM" optional="1" notininfo="1">
+    <Subrecord name="BNAM" desc="BNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-    <Subrecord name="FNAM" desc="FNAM" optional="1" notininfo="1">
+    <Subrecord name="FNAM" desc="FNAM" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
     <Subrecord name="CITC" desc="CITC" optional="1" size="4">
@@ -4869,7 +4869,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
       <Subrecord name="DEVA" desc="DEVA" optional="1" size="4">
         <Element name="Unknown 4bytes" type="int" />
       </Subrecord>
-      <Subrecord name="ANAM" desc="ANAM" optional="1" repeat="1" notininfo="1">
+      <Subrecord name="ANAM" desc="ANAM" optional="1" repeat="1">
         <Element name="Unknown" type="blob" />
       </Subrecord>
       <Subrecord name="PNAM" desc="PNAM" optional="1" size="4">
@@ -4920,10 +4920,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 <Record name="MATO" desc="Material Object">
    <Group id="EDID" optional="1"/>
 	<Group id="MODEL" optional="1"/>
-    <Subrecord name="DNAM" desc="DNAM" optional="1" repeat="1" notininfo="1">
+    <Subrecord name="DNAM" desc="DNAM" optional="1" repeat="1">
       <Element name="Unknown" type="blob"/>
     </Subrecord>
-    <Subrecord name="DATA" desc="DATA" optional="1" notininfo="1">
+    <Subrecord name="DATA" desc="DATA" optional="1">
       <Element name="Unknown" type="blob"/>
     </Subrecord>
   </Record>
@@ -4947,9 +4947,9 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		</Subrecord>
 		<Group id="CONDITIONAL" optional="1" repeat="1"/>
 		<Subrecord name="LNAM" desc="Sliders" optional="1" size="4"> <!-- finish rumble flags -->
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Looping" type="byte" options="None;0;Loop;8;Envelope Fast;16;Envelope Slow;32"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Rumble Send" type="byte" options="None;0;Small7;1;Small14;2;Big7;10;Small98;14;Small100;15;Big14;20;Big21;30;Big21 Small21;51;Big28;64;Big35;80;Big42;96;Big42 Small91;109;Big91;208;Big98;224;Big98 Small7;225;Big100;240"/>
 		</Subrecord>
 		<Subrecord name="BNAM" desc="Options" optional="1" size="6">
@@ -4995,8 +4995,8 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		</Subrecord>
 		<Subrecord name="NAM1" desc="Check-Boxes" optional="1" size="4">
 			<Element name="AttenDist/AllowRumble" type="byte" options="None;0;Attenuate wDistance;1;Allows Rumble;2;Attenuate/Rumble;3"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Reverb Send %" type="byte"/>
 		</Subrecord>
 		<Subrecord name="MNAM" desc="Defined Speaker Output" optional="1" size="4">
@@ -5004,8 +5004,8 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		</Subrecord>
 		<Subrecord name="CNAM" desc="Alt Check-Boxes" optional="1" size="4">
 			<Element name="AttenDist/AllowRumble" type="byte" options="None;0;Attenuate wDistance;2;Allows Rumble;1;Attenuate/Rumble;3"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Reverb Send %" type="byte"/>
 		</Subrecord>
 		<Subrecord name="SNAM" desc="Alt Input Channel Data" optional="1" size="16 ">
@@ -5045,7 +5045,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="InputChannel1 BR" type="byte"/>
 		</Subrecord>
 		<Subrecord name="ANAM" desc="Attenuate wDistance Data" optional="1" size="20">
-			<Element name="(buffer)" type="int" desc="always A8 04 00 01" notininfo="1"/>
+			<Element name="(buffer)" type="int" desc="always A8 04 00 01"/>
 			<Element name="Min Distance" type="float"/>
 			<Element name="Max Distance" type="float"/>
 			<Element name="Curve 1" type="byte"/>
@@ -5053,8 +5053,8 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="Curve 3" type="byte"/>
 			<Element name="Curve 4" type="byte"/>
 			<Element name="Curve 5" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
-			<Element name="(buffer)" type="short" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
+			<Element name="(buffer)" type="short"/>
 		</Subrecord>
 	</Record>
   <Record name="COLL" desc="Collision Layer">
@@ -5101,14 +5101,14 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="Reverb Delay (ms)" type="byte"/>
 			<Element name="Diffusion %" type="byte"/>
 			<Element name="Density %" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 		</Subrecord>
 	</Record>
 <Record name="NAVI" desc="NavMesh Data"> <!-- Snip doesn't fully support arranging this yet, NVPP -->
 		<Subrecord name="NVER" desc="Standard Flag" optional="1" size="4">
 			<Element name="(always 0C 00 00 00)" type="int" hexview="1"/>
 		</Subrecord>
-		<Subrecord name="NVMI" desc="NavMesh Data (if UNSORTED DATA exists, below Zpos will be inaccurate)" optional="1" repeat="1" notininfo="1">
+		<Subrecord name="NVMI" desc="NavMesh Data (if UNSORTED DATA exists, below Zpos will be inaccurate)" optional="1" repeat="1">
 			<Element name="Actual NAVM FormID" type="formid" reftype="NAVM"/>
 			<Element name="(all are 00 20 or 40)" type="int" hexview="1"/>
 			<Element name="NAVM Xpos" type="float"/>
@@ -5120,12 +5120,12 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="# of Preferred Merges" type="uint"/>
 			<Element name="Linked Doors" type="uint"/>
 			<Element name="Island Flag" type="byte" options="Non-Island;0;Island;1"/>
-			<Element name="(always A5E9A03C)" type="uint" hexview="1" notininfo="1"/>
+			<Element name="(always A5E9A03C)" type="uint" hexview="1"/>
 			<Element name="Linked-To NAVM or CELL FormID" type="formid"/>
 			<Element name="Cell-Grid or CELL FormID" type="uint" hexview="1"/>
 			<Element name="(unsorted data)" type="blob"/>
 		</Subrecord>
-		<Subrecord name="NVPP" desc="Cumulative NavMesh Data" optional="1" notininfo="1">
+		<Subrecord name="NVPP" desc="Cumulative NavMesh Data" optional="1">
 			<Element name="Unknown" type="blob"/>
 		</Subrecord>
 	</Record>
@@ -5134,32 +5134,32 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		<Group id="FULL" optional="1"/>
 		<Subrecord name="DATA" desc="Check-boxes" size="2">
 			<Element name="Check-boxes" type="byte" hexview="1" options="Can't Travel;1;(none);5;Has Water;7;No LOD Water;13;Public;37;Hand Changed;69;Show Sky;133;Has Water, Can't Travel;3;Has Water, No LOD Water;15;Can'tTrav, ShowSky;129;HasWater, Can'tTrav, ShowSky;131;    unknown;66;Can't Travel;129;Public, No Water;161;Public, Has Water;163;Can't Trav, Use Sky, UseSkyLight;181;Has Water, Can't Trav, ShowSky, UseSky;183;"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 		</Subrecord>
 		<Subrecord name="XCLC" desc="Cell-Grid Location in WRLD" optional="1" size="12">
 			<Element name="X" type="int"/>
 			<Element name="Y" type="int"/>
 			<Element name="unknown int" type="int"/>
 		</Subrecord>
-		<Subrecord name="TVDT" desc="TVDT" optional="1" notininfo="1">
+		<Subrecord name="TVDT" desc="TVDT" optional="1">
 			<Element name="Unknown blob" type="blob"/>
 		</Subrecord>
-		<Subrecord name="MHDT" desc="MHDT" optional="1" notininfo="1">
+		<Subrecord name="MHDT" desc="MHDT" optional="1">
 			<Element name="Unknown blob" type="blob"/>
 		</Subrecord>
 		<Subrecord name="XCLL" desc="Interior Cell Lighting" optional="1"> <!-- 2 unknown floats -->
 			<Element name="Ambient Red" type="byte"/>
 			<Element name="Ambient Green" type="byte"/>
 			<Element name="Ambient Blue" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Directional Red" type="byte"/>
 			<Element name="Directional Green" type="byte"/>
 			<Element name="Directional Blue" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Fog Near Red" type="byte"/>
 			<Element name="Fog Near Green" type="byte"/>
 			<Element name="Fog Near Blue" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Fog Near Distance" type="float"/>
 			<Element name="Far" type="float"/>
 			<Element name="DirecRotation XY" type="float"/>
@@ -5170,39 +5170,39 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="DirecAmbient X+ R" type="byte"/>
 			<Element name="DirecAmbient X+ G" type="byte"/>
 			<Element name="DirecAmbient X+ B" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="DirecAmbient X- R" type="byte"/>
 			<Element name="DirecAmbient X- G" type="byte"/>
 			<Element name="DirecAmbient X- B" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="DirecAmbient Y+ R" type="byte"/>
 			<Element name="DirecAmbient Y+ G" type="byte"/>
 			<Element name="DirecAmbient Y+ B" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="DirecAmbient Y- R" type="byte"/>
 			<Element name="DirecAmbient Y- G" type="byte"/>
 			<Element name="DirecAmbient Y- B" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="DirecAmbient Z+ R" type="byte"/>
 			<Element name="DirecAmbient Z+ G" type="byte"/>
 			<Element name="DirecAmbient Z+ B" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="DirecAmbient Z- R" type="byte"/>
 			<Element name="DirecAmbient Z- G" type="byte"/>
 			<Element name="DirecAmbient Z- B" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
-			<Element name="unknown float 1" type="float" notininfo="1"/>
-			<Element name="unknown float 2" type="float" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
+			<Element name="unknown float 1" type="float"/>
+			<Element name="unknown float 2" type="float"/>
 			<Element name="Fog Far Red" type="byte"/>
 			<Element name="Fog Far Green" type="byte"/>
 			<Element name="Fog Far Blue" type="byte"/>
-			<Element name="(buffer)" type="byte" notininfo="1"/>
+			<Element name="(buffer)" type="byte"/>
 			<Element name="Max" type="float"/>
 			<Element name="LightFadeDist Start" type="float"/>
 			<Element name="LightFadeDist Far" type="float"/>
 			<Element name="Check-boxes 1" type="byte" hexview="1" options="Ambient Color;01;Directional Color;02;Fog Color;04;Fog Near;08;Directional Rotation;20;Directional Fade;40;Clip Distance;80;Fog Far;10;AmbColor, DirColor;03;AmbCol, DirCol, FogCol;07;"/>
 			<Element name="Check-boxes 2" type="byte" hexview="1" options="Light Fade Distances;4;Fog Power;1;Fog Max;2;LightFade, FogPower;5;LightFade, FogMax;6;FogPower, FogMax;3;LightFade, FogPower, FogMax;7;"/>
-			<Element name="(buffer)" type="short" notininfo="1"/>
+			<Element name="(buffer)" type="short"/>
 		</Subrecord>
 		<Subrecord name="LTMP" desc="Lighting Template (LGTM)" size="4" optional="1">
 			<Element name="LGTM FormID" type="formid" reftype="LGTM"/>
@@ -5238,18 +5238,18 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="WATR FormID" type="formid" reftype="WATR"/>
 		</Subrecord>      
 		<Group optional="1"> <!-- water velocity -->
-			<Subrecord name="XWCN" desc="(always 3?)" size="4" notininfo="1">
+			<Subrecord name="XWCN" desc="(always 3?)" size="4">
 				<Element name="Unknown int" type="int"/>
 			</Subrecord>
 			<Subrecord name="XWCU" desc="Water Velocity" size="48">
 				<Element name="Linear X" type="float" desc="reset to 0 if cell is reopened"/>
 				<Element name="Linear Y" type="float" desc="reset to 0 if cell is reopened"/>
 				<Element name="Linear Z" type="float" desc="reset to 0 if cell is reopened"/>
-				<Element name="(always 0s)" type="float" notininfo="1"/>
+				<Element name="(always 0s)" type="float"/>
 				<Element name="Angular X" type="float"/>
 				<Element name="Angular Y" type="float"/>
 				<Element name="Angular Z" type="float"/>
-				<Element name="(always 0s)" type="blob" notininfo="1"/>
+				<Element name="(always 0s)" type="blob"/>
 			</Subrecord>
 		</Group>
 
@@ -5399,7 +5399,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 	  <Subrecord name="XLTW" desc="? (REFR)" optional="1" size="4">
 		<Element name="FormID" type="formid" reftype="REFR" />
 	  </Subrecord>
-	  <Subrecord name="XRGD" desc="XRGD" optional="1"  notininfo="1">
+	  <Subrecord name="XRGD" desc="XRGD" optional="1" >
 		<Element name="Unknown" type="blob" />
 	  </Subrecord>
 	  <Subrecord name="XLIB" desc="Leveled Item Base (LVLI)" optional="1" size="4">
@@ -5474,10 +5474,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 <Record name="WRLD" desc="World Space">
 		<Group id="EDID" optional="1"/>
 
-	<Subrecord name="RNAM" desc="RNAM" optional="1" repeat="1" notininfo="1">
+	<Subrecord name="RNAM" desc="RNAM" optional="1" repeat="1">
 		<Element name="Unknown blob" type="blob"/>
 	</Subrecord>
-	<Subrecord name="MHDT" desc="MHDT" optional="1" notininfo="1">
+	<Subrecord name="MHDT" desc="MHDT" optional="1">
 		<Element name="Unknown blob" type="blob"/>
 	</Subrecord>
 	<Group id="FULL" optional="1"/>
@@ -5499,7 +5499,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		</Subrecord>
 		<Subrecord name="PNAM" desc="Check-boxes" size="2">
 			<Element name="Check-boxes" type="byte" hexview="1" options="(none);00;Use Land Data;1;Use LOD Data ;2;Use Map Data;4;Use Water Data;8;Use Climate Data;16;Use Sky Cell;64;Land/LOD;3;Land/Map;5;LOD/Map;6;Land/Water;9;Land/Climate;17;Land/SkyCell;65;LOD/Map;6;LOD/Water;10;LOD/Climate;18;LOD/SkyCell;66;Map/Water;12;Map/Climate;20;Map/SkyCell;68;Water/Climate;24;Water/SkyCell;72;Climate/SkyCell;80;Land/LOD/Map;7;Land/LOD/Water;11;Land/LOD/Climate;19;Land/LOD/SkyCell;67;Land/Map/Water;13;Land/Map/Climate;21;Land/Map/SkyCell;69;Land/Water/Climate;25;Land/Water/SkyCell;73;Land/Climate/SkyCell;81;Land/LOD/Map/Water;15;Land/LOD/Map/Climate;23;Land/LOD/Map/Sky;71;Land/LOD/Water/Climate;27;Land/LOD/Water/Sky;75;Land/LOD/Climate/Sky;83;Land/Map/Water/Climate;29;Land/Map/Water/Sky;77;Land/Water/Clim/Sky;89;Land/LOD/Map/Water/Climate;31;Land/LOD/Map/Water/Sky;79;Land/LOD/Water/Clim/Sky;91;Land/LOD/Map/Water/Clim/Sky;95;LOD/Map;6;LOD/Water;10;LOD/Climate;18;LOD/SkyCell;66;LOD/Map/Water;14;LOD/Map/Climate;22;LOD/Map/SkyCell;70;LOD/Water/Climate;26;LOD/Water/SkyCell;74;LOD/Climate/SkyCell;82;LOD/Map/Water/Climate;30;LOD/Map/Water/Sky;78;LOD/Water/Climate/Sky;90;LOD/Map/Water/Clim/Sky;94;Map/Water;12;Map/Climate;20;Map/SkyCell;68;Map/Water/Climate;28;Map/Water/SkyCell;76;Map/Climate/SkyCell;84;Water/Climate;24;Water/SkyCell;72;Climate/SkyCell;80;Water/Climate/SkyCell;88"/>
-			<Element name="(always 0)" type="byte" notininfo="1"/>
+			<Element name="(always 0)" type="byte"/>
 		</Subrecord>
 	</Group>
 	<Subrecord name="CNAM" desc="Climate Data (CLMT)" optional="1" size="4">
@@ -5562,7 +5562,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
     <Subrecord name="UNAM" desc="texture" optional="1" size="55">
       <Element name="Path\Filename" type="string"/>
     </Subrecord>
-    <Subrecord name="OFST" desc="OFST" optional="1" notininfo="1">
+    <Subrecord name="OFST" desc="OFST" optional="1">
       <Element name="Unknown blob" type="blob"/>
     </Subrecord>
 </Record>
@@ -5570,13 +5570,13 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 	<Subrecord name="DATA" desc="DATA" optional="1" size="4">
 		<Element name="Unknown int" type="int"/>
 	</Subrecord>
-	<Subrecord name="VNML" desc="Vertex Normals" optional="1" notininfo="1">
+	<Subrecord name="VNML" desc="Vertex Normals" optional="1">
 		<Element name="(different for each)" type="blob"/>
 	</Subrecord>
-	<Subrecord name="VHGT" desc="Vertex Height" optional="1" notininfo="1">
+	<Subrecord name="VHGT" desc="Vertex Height" optional="1">
 		<Element name="(different for each)" type="blob"/>
 	</Subrecord>
-	<Subrecord name="VCLR" desc="Vertex Color-Shading" optional="1"  notininfo="1">
+	<Subrecord name="VCLR" desc="Vertex Color-Shading" optional="1" >
 		<Element name="(different for each)" type="blob"/>
 	</Subrecord>
 	<Group optional="1" repeat="1"> <!-- texture data -->
@@ -5590,7 +5590,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 				<Element name="LTEX FormID" type="formid" reftype="LTEX"/>
 				<Element name="Unknown 4bytes" type="int"/>
 			</Subrecord>
-			<Subrecord name="VTXT" desc="VTXT" notininfo="1">
+			<Subrecord name="VTXT" desc="VTXT">
 				<Element name="Unknown" type="blob"/>
 			</Subrecord>
 		</Group>
@@ -5650,7 +5650,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 	</Group>
 
 	<Group optional="1" repeat="1"> <!-- misc not seen yet -->
-       <Subrecord name="XRGD" desc="Rag Doll Data" optional="1" notininfo="1">
+       <Subrecord name="XRGD" desc="Rag Doll Data" optional="1">
         <Element name="Unknown" type="blob"/>
       </Subrecord>
       <Subrecord name="XRGB" desc="XRGB" optional="1" size="12">
@@ -5683,8 +5683,8 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
   </Record>
 <Record name="NAVM" desc="NavMesh Reference"> <!-- Snip doesn't fully support arranging this yet -->
 	<Subrecord name="NVNM" desc="NavMesh Geometry (after FFs are FormIDs of linked NAVMs)" optional="1">
-		<Element name="(buffer)" type="uint" notininfo="1"/>
-		<Element name="(buffer)" type="uint" notininfo="1"/>
+		<Element name="(buffer)" type="uint"/>
+		<Element name="(buffer)" type="uint"/>
 		<Element name="Parent WRLD FormID" type="formid" reftype="WRLD"/>
 		<Element name="Cell-Grid or CELL FormID" type="uint" hexview="1"/>
 		<Element name="# of Vertices" type="int"/>
@@ -5696,10 +5696,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 	<Subrecord name="ONAM" desc="? (STAT)" optional="1">
 		<Element name="FormID" type="formid" reftype="STAT" repeat="1" optional="1"/>
 	</Subrecord>
-	<Subrecord name="PNAM" desc="PNAM" optional="1" notininfo="1">
+	<Subrecord name="PNAM" desc="PNAM" optional="1">
 		<Element name="Unknown" type="blob"/>
 	</Subrecord>
-	<Subrecord name="NNAM" desc="NNAM" optional="1" notininfo="1">
+	<Subrecord name="NNAM" desc="NNAM" optional="1">
 		<Element name="Unknown" type="blob"/>
 	</Subrecord>
 </Record>
