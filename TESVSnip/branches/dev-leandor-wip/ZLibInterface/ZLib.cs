@@ -39,7 +39,7 @@ namespace TESVSnip.ZLibInterface
         public static byte[] Compress(byte[] input)
         {
             using (var output = new MemoryStream()) {
-                using (var deflater = new DotZLib.Deflater(DotZLib.CompressLevel.Default)) {
+                using (var deflater = new DotZLib.Deflater(DotZLib.CompressLevel.Best)) {
                     deflater.DataAvailable += output.Write;
                     deflater.Add(input, 0, input.Length);
                 }
