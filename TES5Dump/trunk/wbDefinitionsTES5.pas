@@ -14119,7 +14119,7 @@ begin
     wbUnknown(UNAM),
     wbUnknown(XWEM),
     wbByteArray(OFST, 'Unknown', 0)
-  ]);
+  ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,

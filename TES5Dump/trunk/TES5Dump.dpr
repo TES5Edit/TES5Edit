@@ -68,7 +68,7 @@ begin
       end;
 
   if aContainer.Skipped then begin
-    if not (wbReportMode or wbUserDefinedDebug) then WriteLn(aIndent, '<contents skipped>');
+    if not wbReportMode then WriteLn(aIndent, '<contents skipped>');
   end else begin
     Supports(aContainer, IwbContainerElementRef, ContainerRef);
     for i := 0 to Pred(aContainer.ElementCount) do
@@ -95,14 +95,14 @@ begin
   Value := aElement.Value;
 
   if (Name <> '') or (Value <> '') then begin
-    if not (wbReportMode or wbUserDefinedDebug) then
+    if not wbReportMode then
       Write(aIndent, Name);
     aIndent := aIndent + '  ';
     if Value <> '' then begin
-      if not (wbReportMode or wbUserDefinedDebug) then
+      if not wbReportMode then
         WriteLn(': ', Value);
     end else begin
-      if not (wbReportMode or wbUserDefinedDebug) then
+      if not wbReportMode then
         WriteLn;
     end;
   end;
@@ -217,7 +217,7 @@ begin
       Exit;
     end;
 
-    if not wbFindCmdLineSwitch('q') and not (wbReportMode or wbUserDefinedDebug) then begin
+    if not wbFindCmdLineSwitch('q') and not wbReportMode then begin
       WriteLn(ErrOutput, wbAppName, 'Dump ', VersionString);
       WriteLn(ErrOutput);
 
@@ -245,11 +245,6 @@ begin
       wbMoreInfoForUnknown:= True
     else
       wbMoreInfoForUnknown:= False;
-
-    if wbFindCmdLineSwitch('debug') then
-      wbUserDefinedDebug:= True
-    else
-      wbUserDefinedDebug:= False;
 
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
@@ -305,18 +300,15 @@ begin
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
       WriteLn(ErrOutput, '             ', 'decompressed and processed.');
-//    WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-//    WriteLn(ErrOutput, '             ', 'following default value applies:');
-//    WriteLn(ErrOutput, '             ', 'REFR');
+//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
+//      WriteLn(ErrOutput, '             ', 'following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-//    WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
-//    WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
+//      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
-      WriteLn(ErrOutput, '-more        ', 'Displays additional information on Unknowns');
-      WriteLn(ErrOutput, '-debug       ', 'SubRecordOrderList.txt written to disk. Record information');
-      WriteLn(ErrOutput, '             ', 'written horizontally separated by ''\''s and displays extra');
-      WriteLn(ErrOutput, '             ', 'information for debugging subrecord order.');
+      WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
@@ -327,10 +319,13 @@ begin
 
     ReportProgress('Finished loading record. Starting Dump.');
 
-    if wbFindCmdLineSwitch('check') and not (wbReportMode or wbUserDefinedDebug) then
+    if wbFindCmdLineSwitch('check') and not wbReportMode then
       CheckForErrors(0, _File)
     else
       WriteContainer(_File);
+
+    if wbReportMode then
+      ReportDefs;
 
     ReportProgress('All Done.');
   except

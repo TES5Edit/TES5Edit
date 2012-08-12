@@ -57,6 +57,9 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  wbUserDefinedDebug: Boolean{ = True{}; {>>> Not Implemented- Writes SubRecordOrderList.txt only with default format for Dump <<<}
+  wbUserDefinedDebugLvl2: Boolean{} = False{}; {>>> Not Implemented- Updates ReportDefs <<<}
+  wbUserDefinedDebugLvl3: Boolean{} = False{}; {>>> aditional Console Log <<<}
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;
@@ -70,7 +73,7 @@ var
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{} = True{};
+  wbReportMode: Boolean{ = True{};
   wbReportUnused: Boolean{} = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
@@ -6701,7 +6704,9 @@ begin
         if wbReportMode and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
-        end;
+        end else if (not wbReportMode) and wbReportUnknownFlags then
+          wbProgressCallback('Debugmode: wbReportMode was false and wbReportUnknownFlags was true.  Increment of UnknownFlags[i]' + sLineBreak +
+            'Debugmode: in ( function TwbFlagsDef.ToString(aInt: Int64; const aElement: IwbElement): string; ) did not occur.');
       end;
       if not GetFlagDontShow(aElement, i) then
         Result := Result + s + ', ';
@@ -10242,7 +10247,8 @@ initialization
   TwoPi := 2 * OnePi;
 
   if (DebugHook = 0) then
-    wbReportMode := False;
+    wbReportMode := False
+  else wbReportMode := wbUserDefinedDebug;
 
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;
