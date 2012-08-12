@@ -684,7 +684,6 @@
     <Content Include="ZLibInterface\zlib1.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="ZLibInterface\zpipe.c" />
     <None Include="Resources\bookmark_add.png" />
     <None Include="Resources\14_layer_deletelayer.png" />
     <Content Include="Resources\clear-filter.png" />
