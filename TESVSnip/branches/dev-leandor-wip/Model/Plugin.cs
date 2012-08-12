@@ -506,9 +506,7 @@ namespace TESVSnip
 
         internal override void SaveData(BinaryWriter writer)
         {
-            Compressor.Init();
             foreach (Rec r in Records) r.SaveData(writer);
-            Compressor.Close();
         }
 
         internal override List<string> GetIDs(bool lower)
