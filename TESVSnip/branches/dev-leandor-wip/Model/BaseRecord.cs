@@ -116,7 +116,7 @@ namespace TESVSnip
         }
 
         internal abstract List<string> GetIDs(bool lower);
-        internal abstract void SaveData(BinaryWriter bw);
+        internal abstract void SaveData(BinaryWriter writer);
 
         private static readonly byte[] RecByte = new byte[4];
 

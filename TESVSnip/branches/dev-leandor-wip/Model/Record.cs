@@ -399,7 +399,7 @@ namespace TESVSnip
 
         #endregion
 
-        internal override void SaveData(BinaryWriter bw)
+        internal override void SaveData(BinaryWriter writer)
         {
             WriteString(bw, Name);
             var srSize = (uint) Size;

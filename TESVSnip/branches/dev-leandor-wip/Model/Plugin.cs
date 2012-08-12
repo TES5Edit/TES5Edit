@@ -504,10 +504,10 @@ namespace TESVSnip
             SavePluginStrings(enc, LocalizedStringFormat.DL, DLStrings, FilePath + ".DLSTRINGS");
         }
 
-        internal override void SaveData(BinaryWriter bw)
+        internal override void SaveData(BinaryWriter writer)
         {
             Compressor.Init();
-            foreach (Rec r in Records) r.SaveData(bw);
+            foreach (Rec r in Records) r.SaveData(writer);
             Compressor.Close();
         }
 
