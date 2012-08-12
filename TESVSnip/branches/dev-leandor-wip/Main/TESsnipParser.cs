@@ -148,33 +148,6 @@ namespace TESVSnip
         }
     }
 
-    internal static class Decompressor
-    {
-        public static BinaryReader Decompress(MemoryStream stream, uint inputSize, uint outputSize)
-        {
-            if (stream == null) {
-                throw new ArgumentNullException("stream");
-            }
-
-            var inputBuffer = new byte[inputSize];
-            var outputBuffer = new byte[outputSize];
-
-            int totalBytes;
-            if ((totalBytes = stream.Read(inputBuffer, 0, inputBuffer.Length)) != inputBuffer.Length) {
-                throw new InvalidDataException(string.Format("Failed to read the whole buffer from input. Required = {0} Read = {1}", inputBuffer.Length, totalBytes));
-            }
-
-            var inflater = new Inflater(false);
-            inflater.SetInput(inputBuffer, 0, inputBuffer.Length);
-            if ((totalBytes = inflater.Inflate(outputBuffer, 0, outputBuffer.Length)) != outputBuffer.Length) {
-                throw new InvalidDataException(string.Format("Failed to inflate compressed data. Compressed Size = {0} Inflated = {1}", outputBuffer.Length, totalBytes));
-            }
-
-            var memoryStream = new MemoryStream(outputBuffer, 0, outputBuffer.Length);
-            return new BinaryReader(memoryStream);
-        }
-    }
-
     #endregion
 
     #region Misc Flag Defs
