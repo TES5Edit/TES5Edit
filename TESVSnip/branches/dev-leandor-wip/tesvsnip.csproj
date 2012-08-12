@@ -737,6 +737,10 @@
     <Content Include="Controls\ObjectListView\CustomDictionary.xml" />
     <Content Include="zlib-1.2.3\contrib\dotzlib\LICENSE_1_0.txt" />
     <Content Include="zlib-1.2.3\contrib\dotzlib\readme.txt" />
+    <Content Include="ZLibInterface\zlib1.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ZLibInterface\zpipe.c" />
     <None Include="Resources\bookmark_add.png" />
     <None Include="Resources\14_layer_deletelayer.png" />
     <Content Include="Resources\clear-filter.png" />
