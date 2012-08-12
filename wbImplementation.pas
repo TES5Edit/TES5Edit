@@ -5156,7 +5156,7 @@ begin
       Continue;
     end;
 
-    if (mrDef.AllowUnordered or wbUserDefinedDebug) then begin
+    if mrDef.AllowUnordered then begin
       CurrentDefPos := mrDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
       if CurrentDefPos < 0 then begin
         if Assigned(wbProgressCallback) then
@@ -5271,7 +5271,7 @@ begin
 {$ENDIF}
     end;
 
-  if wbSortSubRecords and ((mrDef.AllowUnordered or wbUserDefinedDebug) or (esModified in eStates)) and (Length(cntElements) > 1) then
+  if wbSortSubRecords and (mrDef.AllowUnordered or (esModified in eStates)) and (Length(cntElements) > 1) then
     QuickSort(@cntElements[0], Low(cntElements), High(cntElements), CompareSubRecords);
 
   mrDef.AfterLoad(Self);
@@ -5293,19 +5293,18 @@ begin
     end;
   end;
 
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode {and mrDef.AllowUnordered} then begin
     s := GetSignature + ' -> ' + s;
     CurrentRecPos := SubRecordOrderList.Add(s);
     SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
   end;
 
 {
-  if (wbReportMode or wbUserDefinedDebug) then
-    if GetSignature = 'SCPT' then begin
-      s := (GetRecordBySignature('DATA') as IwbContainer).Elements[0].EditValue + s;
-      CurrentRecPos := SubRecordOrderList.Add(s);
-      SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
-    end;
+  if GetSignature = 'SCPT' then begin
+//    s :=  (GetRecordBySignature('DATA') as IwbContainer).Elements[0].EditValue + s;
+    CurrentRecPos := SubRecordOrderList.Add(s);
+    SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
+  end;
 }
 
   Include(cntStates, csInitOnce);
@@ -6330,7 +6329,7 @@ function TwbMainRecord.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -8422,7 +8421,7 @@ begin
       end;
     end;
     if HasUnusedData then begin
-      if (wbReportMode or wbUserDefinedDebug) then
+      if wbReportMode then
         srDef.HasUnusedData;
       {$IFDEF DBGSUBREC}
       if Assigned(wbProgressCallback) then
@@ -8640,7 +8639,7 @@ var
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -10663,7 +10662,7 @@ function TwbElement.GetName: string;
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -10745,7 +10744,7 @@ function TwbElement.GetShortName: string;
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetDef;
     if Assigned(Def) then
       Def.Used;
@@ -10794,7 +10793,7 @@ function TwbElement.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -12451,7 +12450,7 @@ function TwbValue.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -12752,7 +12751,7 @@ function TwbFlag.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -13384,7 +13383,7 @@ var
 var
   Def: IwbDef;
 begin
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -13634,21 +13633,13 @@ procedure WriteSubRecordOrderList;
 var
   i: Integer;
 begin
-  if not wbUserDefinedDebug then
-    if not wbReportMode then
-      Exit;
-
-  wbProgressCallback( 'Writing ReportDefs' );
-
-  if (wbReportMode or wbUserDefinedDebug) then
-    ReportDefs;
-
-  wbProgressCallback( 'Writing SubRecordOrderList.txt' );
+  if not wbReportMode then
+    Exit;
 
   SubRecordOrderList.Sorted := False;
 
   for i := 0 to Pred(SubRecordOrderList.Count) do
-    SubRecordOrderList[i] := SubRecordOrderList[i] + '(' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
+    SubRecordOrderList[i] := SubRecordOrderList[i] + ' (' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
 
   SubRecordOrderList.SaveToFile('SubRecordOrderList.txt');
 end;
