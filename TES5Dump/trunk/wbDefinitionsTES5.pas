@@ -8474,56 +8474,70 @@ begin
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
     wbRArray('Unknown',
-      wbStruct(NVMI, 'Unknown', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Navigation Mesh', [NAVM]),
-        wbFormIDCk('Location', [CELL, WRLD]),
-        wbStruct('Grid', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbUnknown
-{        wbUnion('Data', wbNAVINVMIDecider, [
-          wbStruct('Data', [
-            wbUnknown
-          ]),
-          wbStruct('Data', [
-            wbArray('Unknown', wbFloat('Unknown'), 3),
-            wbByteArray('Unknown', 4)
-          ]),
-          wbStruct('Data', [
-            wbArray('Unknown', wbArray('Unknown', wbFloat('Unknown'), 3), 3),
-            wbInteger('Count 1', itU16),
-            wbInteger('Count 2', itU16),
-            wbArray('Unknown', wbArray('Unknown', wbFloat('Unknown'), 3), [], wbNAVINAVMGetCount1),
-            wbUnknown
-          ]),
-          wbStruct('Data', [
-            wbUnknown
-          ])
-        ])}
-      ])
+      wbArrayS(NVMI, 'Unknown', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL]))
     ),
-    wbRArray('Unknown',
-      wbStruct(NVPP, 'Unknown', [
-        wbFormIDCk('Unknown', [NAVM]),
-        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
-        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
-        wbArray('Doors', wbFormIDCk('Door', [REFR]), -1),
-        wbByteArray('Unknown')
-      ])
-    ),
-		wbByteArray(NVSI, 'Unknown')
+    wbArrayS(NVPP, 'Unknown', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL])),
+    wbArrayS(NVSI, 'Unknown', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL]))
   ]);
+
+//------------------------------------------------------------------------------
+// Begin Old NAVI
+//------------------------------------------------------------------------------
+//  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+//    wbEDID,
+//    wbInteger(NVER, 'Version', itU32),
+//    wbRArray('Unknown',
+//      wbStruct(NVMI, 'Unknown', [
+//        wbByteArray('Unknown', 4),
+//        wbFormIDCk('Navigation Mesh', [NAVM]),
+//        wbFormIDCk('Location', [CELL, WRLD]),
+//        wbStruct('Grid', [
+//          wbInteger('X', itS16),
+//          wbInteger('Y', itS16)
+//        ]),
+//        wbUnknown
+//{        wbUnion('Data', wbNAVINVMIDecider, [
+//          wbStruct('Data', [
+//            wbUnknown
+//          ]),
+//          wbStruct('Data', [
+//            wbArray('Unknown', wbFloat('Unknown'), 3),
+//            wbByteArray('Unknown', 4)
+//          ]),
+//          wbStruct('Data', [
+//            wbArray('Unknown', wbArray('Unknown', wbFloat('Unknown'), 3), 3),
+//            wbInteger('Count 1', itU16),
+//            wbInteger('Count 2', itU16),
+//            wbArray('Unknown', wbArray('Unknown', wbFloat('Unknown'), 3), [], wbNAVINAVMGetCount1),
+//            wbUnknown
+//          ]),
+//          wbStruct('Data', [
+//            wbUnknown
+//          ])
+//        ])}
+//      ])
+//    ),
+//    wbRArray('Unknown',
+//      wbStruct(NVCI, 'Unknown', [
+//        wbFormIDCk('Unknown', [NAVM]),
+//        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
+//        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
+//        wbArray('Doors', wbFormIDCk('Door', [REFR]), -1)
+//      ])
+//    )
+//  ]);
+//------------------------------------------------------------------------------
+// End Old NAVI
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // New NAVM
 //------------------------------------------------------------------------------
   wbRecord(NAVM, 'Navigation Mesh', [
-    wbUnknown(NVNM),
-    wbUnknown(ONAM),
-    wbUnknown(PNAM),
-    wbUnknown(NNAM)
+    wbArrayS(NVNM, 'Unknown NAVM-NVNM', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL])),
+    wbArrayS(ONAM, 'Unknown NAVM-ONAM', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL])),
+    wbArrayS(PNAM, 'Unknown NAVM-PNAM', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL])),
+    wbArrayS(NNAM, 'Unknown NAVM-NNAM', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL]))
   ], False, wbNAVMAddInfo);
 //------------------------------------------------------------------------------
 // Begin Old NAVM
@@ -8614,7 +8628,6 @@ begin
 //------------------------------------------------------------------------------
 // End Old NAVM
 //------------------------------------------------------------------------------
-
 
   wbRecord(PGRE, 'Placed Grenade', [
     wbEDID,
