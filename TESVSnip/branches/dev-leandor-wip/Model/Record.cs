@@ -431,7 +431,7 @@ namespace TESVSnip
             }
 
             var dataSize = (uint)data.Length;
-            var flags = this.Flags1 & ~0x00040000;
+            var flags = this.Flags1 & ~0x00040000U;
             if (compressed) {
                 dataSize += 4;
                 flags |= 0x00040000;
