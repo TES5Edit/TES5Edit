@@ -715,22 +715,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="build\buildver.txt" />
-    <Content Include="conf\RecordStructure.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="conf\RecordStructureFormat.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\ScriptFunctions.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\ScriptFunctionsFormat.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\settings.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Controls\ObjectListView\CustomDictionary.xml" />
     <Content Include="zlib-1.2.3\contrib\dotzlib\LICENSE_1_0.txt" />
     <Content Include="zlib-1.2.3\contrib\dotzlib\readme.txt" />
