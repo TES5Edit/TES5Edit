@@ -12,7 +12,43 @@ namespace TESVSnip.ZLibInterface
             Version = DotZLib.Info.Version;
         }
 
-        public static BinaryReader Decompress(byte[] buffer, int expectedSize = 0)
+        public static BinaryReader Decompress(Stream input, int expectedSize = 0)
+        {
+            if (input == null) {
+                throw new ArgumentNullException("input");
+            }
+
+            var buffer = new byte[input.Length];
+            input.Read(buffer, 0, (int)input.Length);
+
+            return Decompress(buffer, expectedSize);
+        }
+
+        public static byte[] Compress(Stream input)
+        {
+            if (input == null) {
+                throw new ArgumentNullException("input");
+            }
+
+            var buffer = new byte[input.Length];
+            input.Read(buffer, 0, (int)input.Length);
+
+            return Compress(buffer);
+        }
+
+        public static byte[] Compress(byte[] input)
+        {
+            using (var output = new MemoryStream()) {
+                using (var deflater = new DotZLib.Deflater(DotZLib.CompressLevel.Default)) {
+                    deflater.DataAvailable += output.Write;
+                    deflater.Add(input, 0, input.Length);
+                }
+
+                return output.ToArray();
+            }
+        }
+
+        private static BinaryReader Decompress(byte[] buffer, int expectedSize = 0)
         {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
@@ -32,18 +68,6 @@ namespace TESVSnip.ZLibInterface
                 output.Dispose();
                 throw;
             }
-        }
-
-        public static BinaryReader Decompress(Stream input, int expectedSize = 0)
-        {
-            if (input == null) {
-                throw new ArgumentNullException("input");
-            }
-
-            var buffer = new byte[input.Length];
-            input.Read(buffer, 0, (int)input.Length);
-
-            return Decompress(buffer, expectedSize);
         }
     }
 }
