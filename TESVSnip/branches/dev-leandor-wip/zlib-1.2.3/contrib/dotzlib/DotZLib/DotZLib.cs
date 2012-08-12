@@ -38,7 +38,7 @@ namespace DotZLib
         public uint total_out;
 
         [MarshalAs(UnmanagedType.LPStr)]
-        string msg; 
+        public string msg; 
         uint state;
 
         uint zalloc;
