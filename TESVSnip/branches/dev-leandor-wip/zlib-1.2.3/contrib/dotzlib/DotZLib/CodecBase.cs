@@ -130,6 +130,7 @@ namespace DotZLib
         /// </summary>
         public void Dispose()
         {
+            Finish();
             CleanUp(true);
         }
 
