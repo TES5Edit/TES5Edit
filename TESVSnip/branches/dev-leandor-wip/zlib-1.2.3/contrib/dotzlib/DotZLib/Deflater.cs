@@ -76,27 +76,19 @@ namespace DotZLib
             if (data == null) throw new ArgumentNullException();
             if (offset < 0 || count < 0) throw new ArgumentOutOfRangeException();
             if ((offset+count) > data.Length) throw new ArgumentException();
-            
-            int total = count;
-            int inputIndex = offset;
-            int err = 0;
 
-            while (err >= 0 && inputIndex < total)
-            {
-                copyInput(data, inputIndex, Math.Min(total - inputIndex, kBufferSize));
-                while (err >= 0 && _ztream.avail_in > 0)
-                {
-                    err = deflate(ref _ztream, (int)FlushTypes.None);
-                    if (err == 0)
-                        while (_ztream.avail_out == 0)
-                        {
-                            OnDataAvailable();
-                            err = deflate(ref _ztream, (int)FlushTypes.None);
-                        }
-                    inputIndex += (int)_ztream.total_in;
+
+            copyInput(data, offset, Math.Min(count - offset, kBufferSize));
+            while (_ztream.avail_in > 0) {
+                var err = deflate(ref _ztream, (int)FlushTypes.None);
+                if (err < 0) {
+                    throw new ZLibException(err, _ztream.msg ?? "deflate failed");
                 }
+
+                OnDataAvailable();
             }
-            setChecksum( _ztream.adler );
+
+            setChecksum(_ztream.adler);
         }
 
 
