@@ -12,13 +12,17 @@
 
 *******************************************************************************}
 // Thanks to zilav18
+
+// Anything written here is a temp hack for dump to show lstrings
+// needs complete rewrite for TES5Edit
+
 unit wbLocalization;
 
 interface
 
 uses
   Classes, SysUtils, StrUtils,
-  wbInterface;
+  wbInterface, wbBSA;
 
 type
   TwbLocalizationString = (
@@ -39,7 +43,8 @@ type
     procedure ReadDirectory;
   protected
   public
-    constructor Create(const aFileName: string);
+    constructor Create(const aFileName: string); overload;
+    constructor Create(const aFileName: string; aData: TBytes); overload;
     destructor Destroy; override;
     function ResolveString(ID: Cardinal): string;
   end;
@@ -50,6 +55,7 @@ implementation
 
 var
   lFiles: TStringList;
+  ContainerHandler: IwbContainerHandler;
 
 constructor TwbLocalizationFile.Create(const aFileName: string);
 var
@@ -72,6 +78,24 @@ begin
   finally
     FreeMem(Buffer);
     FreeAndNil(fs);
+  end;
+  fStrings := TStringList.Create;
+  ReadDirectory;
+end;
+
+constructor TwbLocalizationFile.Create(const aFileName: string; aData: TBytes);
+var
+  ext: string;
+begin
+  ext := LowerCase(ExtractFileExt(aFileName));
+  if ext = '.dlstrings' then fFileType := lsDLString else
+  if ext = '.ilstrings' then fFileType := lsILString else
+    fFileType := lsString;
+  fStream := TMemoryStream.Create;
+  try
+    fStream.WriteBuffer(aData[0], length(aData));
+    fStream.Position := 0;
+  finally
   end;
   fStrings := TStringList.Create;
   ReadDirectory;
@@ -167,9 +191,11 @@ end;
 
 function GetLocalizedValue(ID: Cardinal; aElement: IwbElement): string;
 var
-  lFileName, lFullName, Extension: string;
+  lFileName, lFullName, Extension, BSAName: string;
   idx: integer;
   wblf: TwbLocalizationFile;
+  res: TDynResources;
+  bFailed: boolean;
 begin
   Result := '';
   if ID = 0 then Exit;
@@ -185,21 +211,39 @@ begin
   lFileName := aElement._File.FileName;
   lFullName := aElement._File.GetFullFileName;
 
-  lFullName := Format('%sStrings\%s_%s.%s', [
-    ExtractFilePath(lFullName),
+  lFileName := Format('%s_%s.%s', [
     ChangeFileExt(lFileName, ''),
     'English',
     Extension
   ]);
+  lFullName := ExtractFilePath(lFullName) + 'Strings\' +  lFileName;
 
-  idx := lFiles.IndexOf(lFullName);
+  idx := lFiles.IndexOf(lFileName);
   if idx = -1 then begin
-    if not FileExists(lFullName) then begin
+    bFailed := false;
+    // checking for file on disk
+    if FileExists(lFullName) then begin
+      wblf := TwbLocalizationFile.Create(lFullName);
+      lFiles.AddObject(lFileName, wblf);
+    end else
+    // checking for file in bsa
+    begin
+      if not Assigned(ContainerHandler) then begin
+        ContainerHandler := wbCreateContainerHandler;
+        BSAName := ChangeFileExt(aElement._File.GetFullFileName, '.bsa');
+        ContainerHandler.AddBSA(BSAName);
+      end;
+      res := ContainerHandler.OpenResource('Strings\' +  lFileName);
+      if length(res) > 0 then begin
+        wblf := TwbLocalizationFile.Create(lFullName, res[low(res)].GetData);
+        lFiles.AddObject(lFileName, wblf);
+      end else
+        bFailed := true;
+    end;
+    if bFailed then begin
       Result := 'No localization for lstring ID ' + IntToHex(ID, 8);
       Exit;
     end;
-    wblf := TwbLocalizationFile.Create(lFullName);
-    lFiles.AddObject(lFullName, wblf);
   end else
     wblf := TwbLocalizationFile(lFiles.Objects[idx]);
 
