@@ -39,11 +39,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\src\uesp\Skyrim\tes5lib\common;D:\src\uesp\Skyrim\tes5lib\;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\tes5lib\common;..\..\tes5lib\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\src\uesp\Skyrim\tes5lib\common;D:\src\uesp\Skyrim\tes5lib\;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\tes5lib\common;..\..\tes5lib\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
