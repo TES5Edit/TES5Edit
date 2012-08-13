@@ -868,7 +868,7 @@ var
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbStructDef;
-  wbScriptFragments: IwbUnionDef;
+  wbScriptFragments: IwbStructDef;
   wbLocationEnum: IwbEnumDef;
   wbLocationData: IwbStructDef;
   wbTargetData: IwbStructDef;
@@ -2416,8 +2416,17 @@ begin
 end;
 
 function wbScriptFragmentsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
 begin
-  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+
+  if not Assigned(Container) then Exit;
+
+  Result := Integer(Container.ElementNativeValues['fragmentCount']);
 end;
 
 function wbBOOKTeachesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5151,63 +5160,64 @@ begin
 
   wbScriptEntry := wbStruct('Script', [
     wbLenString('scriptName', 2),
-    wbInteger('unknown', itU8),
+    wbInteger('Unknown', itU8),
     //wbInteger('propertyCount', itU16),
     wbArray('Properties', wbStruct('Property', [
       wbLenString('propertyName', 2),
       wbInteger('propertyType', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
-        {00} wbStruct('Data', [wbUnknown]),
-        {01} wbByteArray('Data', 8), {wbScriptObject,}
-        {02} wbLenString('Data', 2),
-        {03} wbInteger('Data', itU32),
-        {04} wbFloat('Data'),
-        {05} wbInteger('Data', itU8, wbEnum(['False', 'True'])),
-        {11} wbArray('Data', wbByteArray('Element', 8), -1),
-        {12} wbArray('Data', wbLenString('Element', 2), -1),
-        {13} wbArray('Data', wbInteger('Element', itU32), -1),
-        {14} wbArray('Data', wbFloat('Element'), -1),
-        {15} wbArray('Data', wbInteger('Element', itU8), -1)
+        {00} wbByteArray('Unknown', 0, cpIgnore),
+        {01} wbByteArray('Object', 8), {wbScriptObject,}
+        {02} wbLenString('String', 2),
+        {03} wbInteger('Int32', itU32),
+        {04} wbFloat('Float'),
+        {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
+        {11} wbArray('Array of Object', wbByteArray('Element', 8), -1),
+        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
+        {13} wbArray('Array of Int32', wbInteger('Element', itU32), -1),
+        {14} wbArray('Array of Float', wbFloat('Element'), -1),
+        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
     ]), -2)
   ]);
 
-  wbScriptFragments := wbUnion('Fragments', wbScriptFragmentDecider, [
-    // 00 None
-    wbByteArray('Unknown'),
-    // 01 QUST Fragments
-    wbStruct('Data', [
-      wbInteger('Unknown', itS8),
-      wbInteger('fragmentCount', itU16),
-      wbLenString('fileName', 2),
-      wbArray('fragments', wbStruct('fragment', [
-        wbInteger('Quest Stage Index', itU16),
-        wbInteger('Unknown', itS16),
-        wbInteger('Unknown', itS32),
-        wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
-      ]), [], wbScriptFragmentsCounter),
-      wbArray('Aliases', wbStruct('Alias', [
-        wbInteger('Unknown', itS16),
-        wbInteger('AliasID', itU16),
-        wbInteger('Unknown', itS32),
-        wbInteger('Unknown', itS16),
-        wbInteger('objFormat', itS16),
-        wbArray('Scripts', wbScriptEntry, -2)
-      ]), -2)
-    ])
+  wbScriptFragments := wbStruct('Script Fragments', [
+    wbUnknown
+// records have different fragments format, needs union
+//    wbInteger('Unknown', itS8),
+//    wbInteger('fragmentCount', itU16),
+//    wbLenString('fileName', 2),
+//    wbArray('Fragments', wbStruct('fragment', [
+//      wbInteger('Quest Stage Index', itU16),
+//      wbInteger('Unknown', itS16),
+//      wbInteger('Unknown', itS32),
+//      wbInteger('Unknown', itS8),
+//      wbLenString('scriptName', 2),
+//      wbLenString('fragmentName', 2)
+//    ]), [], wbScriptFragmentsCounter),
+//    wbArray('Aliases', wbStruct('Alias', [
+//      wbInteger('Unknown', itS16),
+//      wbInteger('AliasID', itU16),
+//      wbInteger('Unknown', itS32),
+//      wbInteger('Unknown', itS16),
+//      wbInteger('objFormat', itS16),
+//      wbArray('Scripts', wbScriptEntry, -2)
+//    ]), -2)
   ]);
 
   wbVMAD := wbStruct(VMAD, 'Papyrus Script Data', [
     wbInteger('version', itS16),
     wbInteger('objFormat', itS16),
-    //wbInteger('scriptCount', itU16),
-    wbArray('Scripts', wbScriptEntry, -2),
-    wbByteArray('Fragments')
+    wbInteger('scriptCount', itU16),
+    {>>> For some reason in rare cases when one of the properties type is String <<<}
+    {>>> and VMAD has fragments section, wbScriptEntry gets bugged on that property <<<}
+    {>>> Example: Quest [00091F1A] <dunLabyrinthian> "Labyrinthian" <<< }
+    {>>> Scripts parsing replaced with bytearray for better times <<<}
+    wbByteArray('Scripts')
+    //wbArray('Scripts', wbScriptEntry, -2), // comment out scriptCount when -2
     //wbScriptFragments
-  ]);
+  ], cpNormal, False, nil, -1);
 
   wbAttackData := wbRStruct('Attack Data', [
     wbStruct(ATKD, 'Attack Data', [
@@ -11811,37 +11821,59 @@ begin
   wbRecord(QUST, 'Quest', [
     wbEDIDReq,
     wbVMAD,
-    wbSCRI,
     wbFULL,
-    wbUnknown(DNAM),
-    wbUnknown(ENAM),
-    wbRArray('Unknown - QTGL', wbRStruct('Unknown', [
-      wbUnknown(QTGL)
-    ], [])),
-    wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
 
-    wbRStruct('Conditions (Begin)', [
-      wbCTDAs
-    ], [], cpNormal, True),
-    wbRStruct('Conditions (End)', [
-      wbEmpty(NEXT, 'Marker'),
-      wbCTDAs
-    ], [], cpNormal, True),
-    wbICON,
-    wbStruct(DATA, 'General', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Start game enabled',
-        {0x02} '',
-        {0x04} 'Allow repeated conversation topics',
-        {0x08} 'Allow repeated stages',
-        {0x10} 'Unknown 4'
+    wbStruct(DNAM, 'Quest Data', [
+      wbInteger('Flags', itU16, wbFlags([
+        {0x0001} 'Start Game Enabled',
+        {0x0002} 'Unknown 2',
+        {0x0004} 'Unknown 3',
+        {0x0008} 'Unknown 4',
+        {0x0010} 'Allow repeated stages',
+        {0x0020} 'Unknown 6',
+        {0x0040} 'Unknown 7',
+        {0x0080} 'Unknown 8',
+        {0x0100} 'Run Once',
+        {0x0200} 'Exclude from dialogue export',
+        {0x0400} 'Warn on alias fill failure',
+        {0x0800} 'Unknown 12'
       ])),
       wbInteger('Priority', itU8),
-      wbByteArray('Unknown', 2),
-      wbFloat('Quest Delay')
-    ], cpNormal, True, nil, 3),
+      wbByteArray('Unknown', 5),
+      wbInteger('Type', itU32, wbEnum([
+        {0} 'None',
+        {1} 'Main Quest',
+        {2} 'Mages'' Guild',
+        {3} 'Thieves'' Guild',
+        {4} 'Dark Brotherhood',
+        {5} 'Companion Quests',
+        {6} 'Miscellaneous',
+        {7} 'Daedric',
+        {8} 'Side Quest',
+        {9} 'Civil War',
+       {10} 'DLC01 - Vampire',
+       {11} 'DLC02'
+      ]))
+    ]),
+
+    wbString(ENAM, 'Event'),
+    wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
+    wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
+    wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, True),
+    wbEmpty(NEXT, 'Marker'),
+    wbCTDAs, // Unknown
+
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
-      wbInteger(INDX, 'Stage Index', itS32),
+      wbStruct(INDX, 'Stage Index', [
+        wbInteger('Stage Index', itU16),
+        wbInteger('Flags', itU8, wbFlags([
+          {0x01} 'Unknown 1',
+          {0x02} 'Start Up Stage',
+          {0x04} 'Shut Down Stage',
+          {0x08} 'Keep Instance Data From Here On'
+        ])),
+        wbByteArray('Unknown', 1)
+      ]),
       wbRArray('Log Entries', wbRStruct('Log Entry', [
         wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
           {0x01} 'Complete Quest',
@@ -11849,21 +11881,20 @@ begin
         ])),
         wbCTDAs,
         wbLString(CNAM, 'Log Entry'),
-        wbEmbeddedScriptReq,
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
         wbUnknown(SCHR),
-        wbUnknown(QNAM),
-        wbUnknown(SCTX)
-        // CTDAs was here
+        wbUnknown(SCTX),
+        wbUnknown(QNAM)
       ], []))
     ], [])),
+
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
-      wbUnknown(FNAM),
-      wbLString(NNAM, 'Description', 0, cpNormal, True),
+      wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
+      wbLString(NNAM, 'Display Text', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
-          wbFormIDCkNoReach('Target', [STAT, DOOR, FACT, WATR, BPTD, MISC, CONT, NULL], True),
+          wbInteger('Alias', itU32),
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Compass Marker Ignores Locks'
           ])),
@@ -11872,67 +11903,95 @@ begin
         wbCTDAs
       ], []))
     ], [])),
-    wbUnknown(ANAM),
-    wbRArray('ALST/ALLS',
-      wbRUnion('Union', [
-        wbRStruct('ALST Struct', [
-          wbUnknown(ALST),
-          wbString(ALID, 'Alias Name', 0, cpTranslate),
-          wbUnknown(FNAM),
-          wbUnknown(ALNA),
-          wbUnknown(ALNT),
-          wbUnknown(ALFI),
-          wbUnknown(ALFE),
-          wbUnknown(ALFD),
-          wbUnknown(ALUA),
-          wbUnknown(ALFR),
-          wbUnknown(ALCO),
-          wbUnknown(ALCA),
-          wbUnknown(ALCL),
-          wbCTDAs,
-          wbUnknown(ALFA),
-          wbUnknown(ALRT),
-          wbKeywords,
-          {>>> When there is no COCT, CNTO comes right after Keywords and produces an error <<<}
-          {>>> Error: record QUST contains unexpected (or out of order) subrecord CNTO 4F544E43  <<<}
-          wbUnknown(ALEQ),
-          wbUnknown(ALEA),
-          wbInteger(COCT, 'Count', itU32),
-          wbCNTOs,
-          wbUnknown(SPOR),
-          wbUnknown(ECOR),
-          wbUnknown(ALDN),
-          wbRArray('Unknown - ALSP', wbRStruct('Unknown', [
-            wbUnknown(ALSP)
-          ], [])),
-          wbRArray('Unknown - ALFC', wbRStruct('Unknown', [
-            wbUnknown(ALFC)
-          ], [])),
-          wbRArray('Unknown - ALPC', wbRStruct('Unknown', [
-            wbUnknown(ALPC)
-          ], [])),
-          wbUnknown(VTCK),
-          wbUnknown(ALED)
+
+    wbByteArray(ANAM, 'Aliases Marker', 4),
+
+    wbRArray('Aliases',
+      wbRStruct('Alias', [
+        wbRUnion('Alias Type / ID', [
+          wbInteger(ALST, 'Reference Alias ID', itU32),
+          wbInteger(ALLS, 'Location Alias ID', itU32)
         ], []),
-        wbRStruct('ALLS Struct', [
-          wbUnknown(ALLS),
-          wbString(ALID, 'Alias Name', 0, cpTranslate),
-          wbUnknown(FNAM),
-          wbUnknown(ALFI),
-          wbUnknown(ALFE),
-          wbUnknown(ALFD),
-          wbCTDAs,
-          wbUnknown(ALCO),
-          wbUnknown(ALFL),
-          wbUnknown(ALFA),
-          wbUnknown(ALEQ),
-          wbUnknown(ALEA),
-          wbUnknown(KNAM),
-          wbUnknown(ALED)
-        ], [])
+        wbString(ALID, 'Alias Name', 0, cpTranslate),
+        wbInteger(FNAM, 'Flags', itU32, wbFlags([
+          {0x00000001}'Reserves Location/Reference',
+          {0x00000002}'Optional',
+          {0x00000004}'Quest Object',
+          {0x00000008}'Allow Reuse in Quest',
+          {0x00000010}'Allow Dead',
+          {0x00000020}'Matching Ref - In Loaded Area',
+          {0x00000040}'Essential',
+          {0x00000080}'Allow Disabled',
+          {0x00000100}'Stores Text',
+          {0x00000200}'Allow Reserved',
+          {0x00000400}'Protected',
+          {0x00000800}'Forced by Aliases?',
+          {0x00001000}'Allow Destroyed',
+          {0x00002000}'Matching Ref - Closest',
+          {0x00004000}'Uses Stored Text',
+          {0x00008000}'Initially Disabled',
+          {0x00010000}'Allow Cleared',
+          {0x00020000}'Clear Names When Removed'
+        ])),
+        wbInteger(ALFI, 'Force Into Alias When Filled', itU32),
+        wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
+        wbFormID(ALFR, 'Forced Reference'),
+        wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
+        wbRStruct('Location Alias Reference', [
+          wbInteger(ALFA, 'Alias', itU32),
+          wbFormIDCk(KNAM, 'Keyword', [KYWD]),
+          wbFormIDCk(ALRT, 'Ref Type', [LCRT])
+        ], []),
+        wbRStruct('External Alias Reference', [
+          wbFormIDCk(ALEQ, 'Quest', [QUST]),
+          wbInteger(ALEA, 'Alias', itU32)
+        ], []),
+        wbRStruct('Create Reference to Object', [
+          wbFormID(ALCO, 'Object'),
+          wbStruct(ALCA, 'Alias', [
+            wbInteger('Alias', itU16),
+            wbInteger('Create', itU16, wbEnum([] ,[
+              $0000, 'At',
+              $8000, 'In'
+            ]))
+          ]),
+          wbInteger(ALCL, 'Level', itU32, wbEnum([
+            'Easy',
+            'Medium',
+            'Hard',
+            'Very Hard',
+            'None'
+          ]))
+        ], []),
+        wbRStruct('Find Matching Reference', [
+          wbInteger(ALNA, 'Near Alias', itU32),
+          wbInteger(ALNT, 'Near Type', itU32, wbEnum([
+            'Linked Ref Child'
+          ]))
+        ], []),
+        wbRStruct('Find Matching Reference', [
+          wbString(ALFE, 'From Event', 4),
+          wbByteArray(ALFD, 'Event Data')
+        ], []),
+        wbCTDAs,
+        wbKeywords,
+        {>>> When there is no COCT, CNTO comes right after Keywords and produces an error <<<}
+        {>>> Error: record QUST contains unexpected (or out of order) subrecord CNTO 4F544E43  <<<}
+        wbInteger(COCT, 'Count', itU32),
+        wbCNTOs,
+        wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
+        wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
+        wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
+        wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
+        wbFormIDCk(ALDN, 'Display Name', [MESG]),
+        wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
+        wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
+        wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
+        wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
+        wbEmpty(ALED, 'Alias End', cpNormal, True)
       ], [])
     ),
-    wbCTDAs,
+
     wbString(NNAM, 'Description', 0, cpNormal, True),
     wbRArray('Targets', wbRStruct('Target', [
       wbStruct(QSTA, 'Target', [
@@ -11943,10 +12002,10 @@ begin
         wbByteArray('Unknown', 3)
       ]),
       wbCTDAs
-    ], [])),
-    wbCOCT,
-    wbKeywords,
-    wbUnknown(NAM0)
+    ], []))
+    //wbCOCT,
+    //wbKeywords,
+    //wbUnknown(NAM0)
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
