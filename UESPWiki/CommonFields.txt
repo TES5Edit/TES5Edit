@@ -2,10 +2,12 @@
 ===Definitions===
 Definitions for more complex fields used across various types of records:
     
+* [[Tes5Mod:Mod File Format/BODT_Field|BODT]] (Body Template)
 * [[Tes5Mod:Mod File Format/COED_Field|COED]] 
 * [[Tes5Mod:Mod_File_Format/CTDA_Field|CTDA]] (Condition Data)
 * [[Tes5Mod:Mod File Format/DEST_Field|DEST]] (Destruction Data)
 * [[Tes5Mod:Mod File Format/MODL_Field|MODL]] (Model Data)
+* [[Tes5Mod:Mod File Format/MODL_Field|MODS]] (Model Texture Sets) Includes MODS, MO2S, MO3S, MO4S, MO3S
 * [[Tes5Mod:Mod File Format/OBND_Field|OBND]] (Object Bounds)
 * [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] (VM Data / Scripting)
 * [[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]] (Model textures)
