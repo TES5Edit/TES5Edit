@@ -54,6 +54,26 @@
 			<Element name="Faction Rank" type="int" desc="actual rank is # plus 1"/>
 		</Subrecord>
 	</Group>
+	<Group id="wbMO2S" optional="1">
+		<Subrecord name="MO2S" desc="Male Model Alternate Textures" optional="1"> <!-- Snip needs repeating element-groups -->
+			<Element name="Object Name" type="istring" optional="1"/>
+			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
+			<Element name="Num Textures" type="int"/>
+			<Element name="Object Name" type="istring" optional="1"/>
+			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
+			<Element name="Num Textures" type="int"/>
+			<Element name="Object Name" type="istring" optional="1"/>
+			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
+			<Element name="Num Textures" type="int"/>
+			<Element name="Object Name" type="istring" optional="1"/>
+			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
+			<Element name="Num Textures" type="int"/>
+			<Element name="Object Name" type="istring" optional="1"/>
+			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
+			<Element name="Num Textures" type="int"/>
+			<Element name="(rest of data)" type="blob"/>
+    </Subrecord>
+	</Group>
 <Group id="DESTRUCT" optional="1"> <!-- Snip doesn't support arranging this yet, -->
 		<Subrecord name="DEST" desc="Destruction Data" optional="1" size="8">
 			<Element name="Health" type="int"/>
@@ -268,6 +288,13 @@
 		<Subrecord name="XLKR" desc="Linked Ref" optional="1">
 			<Element name="KYWD FormID" type="formid" reftype="KYWD" optional="1"/>
 			<Element name="FormID" type="formid"/>
+		</Subrecord>
+	</Group>
+	<Group id="BODYDATA" optional="1">
+		<Subrecord name="BODT" desc="Body Template" optional="1">
+      <Element name="BodyParts" type="uint" flags="Head;Hair;Chest;Hands;Forearms;Amulet;Ring;Feet;Calves;Shield;Tail;Long Hair;Forehead (Circlet);Ears;Dragon Head;Dragon Left Wing;Dragon Right Wing;Dragon Body;;;Decapitated Head"/>
+      <Element name="Flags" type="uint" hexview="1" flags=";;;;NonPlayable;;;;"/>
+      <Element name="Armor type?" type="uint" options="Light Armor;0;Heavy Armor;1;Clothing;2"/>
 		</Subrecord>
 	</Group>
 	<Group id="XLCN" optional="1">
@@ -1554,15 +1581,22 @@ non-indent is being worked on
   </Record>
   <Record name="APPA" desc="Apparatus">
     <Group id="EDID" optional="1"/>
+    <Group id="VMAD" optional="1"/>
     <Group id="OBND" optional="1"/>
     <Group id="FULL" optional="1"/>
+		<Group id="MODEL" optional="1"/>
+		<Group id="ICON" optional="1"/> <!-- inventory image -->
+		<Group id="MICO" optional="1"/> <!-- message image -->
+		<Group id="DESTRUCT" optional="1"/>
+    <Group id="YNAM" optional="1"/>
+		<Group id="ZNAM" optional="1"/>
     <Subrecord name="QUAL" desc="Quality" optional="1" size="4">
       <Element name="Quality" type="int" options="Novice;0;Aprrentice;1;Journeyman;2;Expert;3;Master;4"/>
     </Subrecord>
     <Group id="DESC" optional="1"/>
     <Subrecord name="DATA" desc="DATA" optional="1" size="8">
-      <Element name="Unknown 4bytes 1" type="int" />
-      <Element name="Unknown 4bytes 2" type="int" />
+      <Element name="Value" type="int" />
+      <Element name="Weight" type="float" />
     </Subrecord>
   </Record>
 	<Record name="STAT" desc="Static"> <!-- Snip doesn't support arranging this yet (LOD) -->
@@ -3224,7 +3258,7 @@ non-indent is being worked on
   </Record>
   <Record name="ANIO" desc="Animated Object">
     <Group id="EDID" optional="1"/>
-	<Group id="MODEL" optional="1"/>
+		<Group id="MODEL" optional="1"/>
     <Subrecord name="BNAM" desc="BNAM" optional="1">
       <Element name="Name" type="string" />
     </Subrecord>
@@ -3907,8 +3941,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
     <Group id="OBND" optional="1"/>
     <Group id="MODEL" optional="1"/>
     <Subrecord name="DATA" desc="Unique ID?" optional="1" size="4">
-      <Element name="ID Number?" type="int" />
+      <Element name="Master Particle System Cap" type="short" />
+			<Element name="Check-Boxes" type="short" flags="Unknown 0;Always Loaded"/>
     </Subrecord>
+		<Group id="SNAM" optional="1"/>
     <Subrecord name="DNAM" desc="Type??" optional="1">
       <Element name="Unknown" type="int" />
     </Subrecord>
@@ -4069,18 +4105,17 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
   </Record>
   <Record name="ARMA" desc="Armature">
     <Group id="EDID" optional="1"/>
-    <Subrecord name="BODT" desc="Unknown" optional="1" size="12">
-      <Element name="Unknown 4bytes 1" type="int" />
-      <Element name="Unknown 4bytes 2" type="int" />
-      <Element name="Unknown 4bytes 3" type="int" />
-    </Subrecord>
+		<Group id="BODYDATA" optional="1">
     <Subrecord name="RNAM" desc="RNAM" optional="1" size="4">
       <Element name="unknown 4bytes" type="int" />
     </Subrecord>
     <Subrecord name="DNAM" desc="Type??" optional="1" size="12">
-      <Element name="Unknown 4bytes 1" type="int" />
-      <Element name="Unknown 4bytes 2" type="int" />
-      <Element name="Unknown 4bytes 3" type="float" />
+      <Element name="Male Priority" type="byte" />
+      <Element name="Female Priority" type="byte" />
+      <Element name="Unknown" type="int" />
+      <Element name="Detection Sound Value" type="byte" />
+      <Element name="Unknown" type="byte" />
+      <Element name="Weapon Adjust" type="float" />
     </Subrecord>
     <Subrecord name="MOD2" desc="Male Model NIF" optional="1">
       <Element name="Path\Filename" type="string" />

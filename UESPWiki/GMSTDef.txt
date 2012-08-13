@@ -1,0 +1,44 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+GMST records contain Game Settings.
+__TOC__
+This record is a bit special. Within the Skyrim.esm there is one GMST records with [[Tes4Mod:FormId|formID]] 0123C00E.  All others appear to be valid formID's.  It is unclear if this has any effect on how the game reads this record.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorID || zstring || 
+|-
+| + || DATA || value || [[#Value|Value]] || 
+|}
+
+== Value ==
+Value type depends on the first character of the editorID.
+
+{| class="wikitable" width="100%" 
+! width="10%" | Tag
+! width="15%" | Name
+! width="15%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| b || boolean || uint32 || Boolean
+|-
+| i || int || uint32 ||  Value for the game setting
+|-
+| f || float || float || Value for the game setting
+|-
+| s || string || lstring || Localization String
+|-
+|}
+
+== Values ==
+
+Game Setting entries that do not exist in Skyrim.esm are not recognized by the CK.  See the [[Tes5Mod:Mod_File_Format/GMST/Defaults|default GMST list]] for more.
+
+== Default Settings ==
+There are a large number of hard-coded default settings which don't actually exist within Skyrim.esm. Their values can still be overwritten by creating a new entry in a plugin using the same editor ID.
+
+This needs verification.  Currently the CK does not behave this way.

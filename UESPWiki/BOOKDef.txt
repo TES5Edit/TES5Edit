@@ -1,0 +1,77 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorID || zstring || Max 0x200 bytes, including null terminator. 
+|-
+| - || VMAD || script data || [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] || Script Data
+|-
+| + || OBND || objectBounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]] ||  Seems to always be 12 zeroes
+|- 
+| - || FULL || ingame name || lstring || Full (in-game) name 
+|- 
+| - || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
+|-
+| - || ICON || Inventory Image || zstring || Inventory Image Filename
+|-
+| - || MICO || Message Immage || zstring || Message Immage Filename
+|-
+| + || DESC || description || lstring || Ingame description or 0 if none.
+|- 
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
+|-
+| - || YNAM || pickupSound || formid || Sound [[Tes5Mod:Mod File Format/SNDR|SNDR]] played when picked up
+|-
+| - || ZNAM || dropSound || formid || Sound [[Tes5Mod:Mod File Format/SNDR|SNDR]] played when dropped
+|-
+| + || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || KYWD count
+|- 
+| + || KWDA || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KWDA]] || formid[KSIZ] || Array of KYWD formids
+|- 
+| + || DATA || Book Data || struct || 16 Byte Struct
+:Flags
+::Flags
+::0x00000001 - Teaches Skill
+::0x00000002 - Can't be Taken
+::0x00000004 - Teaches Spell
+:Type
+::0 - Book/Tome
+::255 - Note/Scroll
+:Teaches - Depends on the Flag Set
+::IF 0x00000001 Lookup - Skills
+::IF 0x00000004 FormID - [[Tes5Mod:Mod_File_Format/SPEL|SPEL]]			 
+:uint32 - Value (In Gold)
+:float - Weight
+|-
+|   ||   ||   ||   || Skills
+:sint32 - SkillIDs 
+::6 - One Handed
+::7 - Two Handed
+::8 - Archery
+::9 - Block
+::10 - Smithing
+::11 - Heavy Armor
+::12 - Light Armor
+::13 - Pickpocket
+::14 - Lockpicking
+::15 - Sneak
+::16 - Alchemy
+::17 - Speech
+::18 - Alteration
+::19 - Conjuration
+::20 - Destruction
+::21 - Illusion
+::22 - Restoration
+::23 - Enchanting
+::-1 - None
+|-
+| - || INAM || Inventory Art || formid || Inventory Art [[Tes5Mod:Mod File Format/STAT|STAT]]
+|-
+| - || CNAM || Description || string || Book Text
+|-
+|}

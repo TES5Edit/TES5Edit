@@ -1,0 +1,15 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+===Definitions===
+Definitions for more complex fields used across various types of records:
+    
+* [[Tes5Mod:Mod File Format/COED_Field|COED]] 
+* [[Tes5Mod:Mod_File_Format/CTDA_Field|CTDA]] (Condition Data)
+* [[Tes5Mod:Mod File Format/DEST_Field|DEST]] (Destruction Data)
+* [[Tes5Mod:Mod File Format/MODL_Field|MODL]] (Model Data)
+* [[Tes5Mod:Mod File Format/OBND_Field|OBND]] (Object Bounds)
+* [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] (VM Data / Scripting)
+* [[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]] (Model textures)
+* [[Tes5Mod:Fields/Keywords|Keywords]] (KYWD, KSIZ, KWDA, KNAM)
+
+===Notes===
+* EDID (Editor ID): If present, it will always exist at the beginning of the record data.

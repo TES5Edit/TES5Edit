@@ -1,0 +1,484 @@
+{{Trail|File Formats|Mod File Format}}
+RACE records contain information on character and creature races.
+
+There are a lot of fields here, many in repeating sets, and a lot of markers.  Generally all sets of data are preceded by a gender specifying marker, MNAM for male, FNAM for female.  There are also markers indicating the presence of certain sets (or not).
+
+General record structure (in order of appearance):
+*General Data 
+*Male then female skeletal model separated by MNAM/FNAM
+*General Data
+*Repeating pairs of ATKD/ATKE (attack data)
+*Male then female egt model separated by MNAM/FNAM, preceded by NAM1
+*Male then female havok model separated by MNAM/FNAM, preceded by NAM3
+*General Data
+*32x Body Part Strings - User defined Biped Object Names stord in each NAME Subrecord
+*EQUP info
+*Repeating pairs of PHTN/PHWT (facial expression data)
+*Male then female head data separated by MNAM/FNAM (and NAM0) in the following order:
+**Default headparts
+**MPAI/MPAV - Morph and Morph Values
+**Racial presets
+**Hair colors
+**Featuresets 
+**Repeating tint fieldsets (TINI/TINC/TINV/TIRS) optionally with 2nd set (TINT/TINP/TIND)
+
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || FULL || full name || lstring || Full (in-game) name 
+|-
+| + || DESC || description || lstring || Description shown in-game when selecting the player's race (or 0)
+|-
+| - || SPCT || spellCount || uint32 || number of SPLO records that follow. If the race has no bonus spells, SPCT and SPLO are not present.
+|-
+| * || SPLO || spell || formID || Racial [[Tes5Mod:Mod_File_Format/SPEL|SPEL]] or [[Tes5Mod:Mod_File_Format/SHOU|SHOU]]
+|-
+| - || WNAM || skin || formid || [[Tes5Mod:Mod_File_Format/ARMO|ARMO]] record
+|-
+| + || BODT || body template || struct || 12-byte struct (same as [[Tes5Mod:Mod_File_Format/ARMO|ARMO]])
+: uint32 Biped Object Flags
+: uint32 General Flags (Undetermined)
+: uint32 Armor Type - Clothing is default if not given
+|-
+| - || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || keyword count
+|-
+| - || KWDA || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KWDA]] || formID || KYWD array of KSIZ
+|-
+| + || DATA || General race stats || struct || 128-byte struct
+:uint8 - Skill 1 (Actor list value)
+:uint8 - Racial bonus for skill 1
+:uint8 - Skill 2 (Actor list value)
+:uint8 - Racial bonus for skill 2
+:uint8 - Skill 3 (Actor list value)
+:uint8 - Racial bonus for skill 3
+:uint8 - Skill 4 (Actor list value)
+:uint8 - Racial bonus for skill 4
+:uint8 - Skill 5 (Actor list value)
+:uint8 - Racial bonus for skill 5
+:uint8 - Skill 6 (Actor list value)
+:uint8 - Racial bonus for skill 6
+:uint8 - Skill 7 (Actor list value)
+:uint8 - Racial bonus for skill 7
+:uint16 - "Unused (padding)"
+:float - Height (male)
+:float - Height (female)
+:float - Weight (male)
+:float - Weight (female)
+:uint32 - Flags.  Only identified values are listed, but many other bits are also used
+::0x00000001 - Playable
+::0x00000002 - FaceGen Head
+::0x00000004 - Child
+::0x00000008 - Tilt Front/Back
+::0x00000010 - Tilt Left/Right
+::0x00000020 - No Shadow
+::0x00000040 - Swims
+::0x00000080 - Flies
+::0x00000100 - Walks
+::0x00000200 - Immobile
+::0x00000400 - Not Pushable
+::0x00000800 - No Combat In Water
+::0x00001000 - No Rotating to Head-Track
+::0x00002000 - Don't Show Blood Spray
+::0x00004000 - Don't Show Blood Decal
+::0x00008000 - Uses Head Track Anims
+::0x00010000 - Spells Align w/Magic Node
+::0x00020000 - Use World Raycasts For FootIK
+::0x00040000 - Allow Ragdoll Collision
+::0x00080000 - Regen HP In Combat
+::0x00100000 - Can't Open Doors
+::0x00200000 - Allow PC Dialogue
+::0x00400000 - No Knockdowns
+::0x00800000 - Allow Pickpocket
+::0x01000000 - Always Use Proxy Controller
+::0x02000000 - Don't Show Weapon Blood
+::0x03000000 - Overlay Head Part List {> Only one can be active <}
+::0x08000000 - Override Head Part List {> Only one can be active <}
+::0x10000000 - Can Pickup Items
+::0x20000000 - Allow Multiple Membrane Shaders
+::0x40000000 - Can Dual Wield
+::0x80000000 - Avoids Roads
+:float - Starting Health
+:float - Starting Magicka
+:float - Starting Stamina
+:float - Base Carry Weight
+:float - Base Mass
+:float - Acceleration rate
+:float - Deceleration rate
+:uint32 - Size (lookup: 0=Small, 1=Medium, 2=Large, 3=Extra Large)
+:uint32 - Head Biped Object ( lookup: Biped Object Names)
+:uint32 - Hair Biped Object ( lookup: Biped Object Names)
+:float - Injured Health (CK calls it "Injured Health Pct" but it's a value ranging from 0 to 1, not a percentage)
+:uint32 - Shield Biped Object ( lookup: Biped Object Names)
+:float - Health Regen
+:float - Magicka Regen
+:float - Stamina Regen
+:float - Unarmed Damage
+:float - Unarmed Reach
+:uint32 - Body Biped Object ( lookup: Biped Object Names)
+:float - Aim Angle Tolerance
+:uint32 - "Unknown"
+:float - Angular Acceleration Rate
+:float - Angular Tolerance
+:uint32 - Flags.  Only identified value is listed
+::0x00000002 - Non-Hostile
+:uint32 - "Unknown" x9
+|-{{ThickLine}}
+| + || MNAM || male marker || 0-length || marker for male model info
+|-
+| + || ANAM || skeletal model || zstring || path to .nif
+|-
+| + || MODT || model data || [[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]] || 
+|-{{ThickLine}}
+| + || FNAM || female marker || 0-length || marker for female model info
+|-
+| + || ANAM || skeletal model || zstring || path to .nif
+|-
+| + || MODT || model data ||  [[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]] || unknown
+|-{{ThickLine}}
+| + || NAM2 || marker || 0-length || marker
+|-
+| * || MTNM || movement type name || char[4] || 4-letter code for movement types (WALK, RUN1, SNEK, BLD0, SWIM)
+|-
+| + || VTCK || default voice types || formid[2] || [[Tes5Mod:Mod File Format/VTYP|VTYP]] male/female
+|-
+| - || DNAM || Decapitate armor || formid[2] || [[Tes5Mod:Mod File Format/ARMO|ARMO]] male/female
+|-
+| - || HCLF || default hair color || formid[2] || [[Tes5Mod:Mod File Format/CLFM|CLFM]] male/female
+|-
+| - || TINL || Tint Index Number || uint16 || This is the total number of Tints available to this race
+|-
+| + || PNAM || FaceGen || float || FaceGen - Main clamp
+|-
+| + || UNAM || FaceGen || float || FaceGen - Face clamp
+|-{{ThickLine}}
+| * || ATKD || Attack Data|| struct || 44-byte struct, providing data for one mode of attack
+:float - Damage Mult
+:float - Attack Chance
+:formid - Attack Spell
+:uint32 - flags:
+::0x01 - Ignore Weapon
+::0x02 - Bash Attack
+::0x04 - Power Attack
+::0x08 - Left Attack
+::0x10 - Rotating Attack
+:float - Attack Angle
+:float - Strike Angle
+:float - Stagger
+:formid - Attack Type
+:float - Knockdown
+:float - Recovery Time
+:float - Fatigue Mult
+|-
+| * || ATKE || attack event|| zstring || event name but does not translate to AACT or SMEN/ENAM ex "attackStart_Attack2"
+|-{{ThickLine}}
+| + || NAM1 || marker || 0-length || marker for start of egt models
+|-
+| + || MNAM || marker || 0-length|| start of male model 
+|-
+| + || FNAM || marker || 0-length|| start of female model
+|-{ThickLine}}
+| + || INDX || marker || uint32 || always 0, precedes both .egt models
+|-
+| + || MODL || lighting model || zstring || path to .egt, seems to always use UpperBodyHumanMale(1st)/Female(2nd) regardless of race
+|-
+| + || MODT || model texture data || ubyte[12] || always 0x02 11-0x00
+|-{{ThickLine}}
+| + || GNAM || body part data || formid || [[Tes5Mod:Mod_File_Format/BPTD|BPTD]], only after 2nd model
+|-
+| + || NAM2 || marker || 0-length || marker
+|-
+| + || NAM3 || marker || 0-length || marker for start of hkx models
+|--
+| + || MNAM || marker || 0-length|| start of male model
+|-
+| + || MODL || physics model || zstring || path to .hkx, points to same for both
+|-
+| + || MODT || model texture data || ubyte[12] || always 0x02 11-0x00
+|--
+| + || FNAM || marker || 0-length|| start of female model
+|-
+| + || MODL || physics model || zstring || path to .hkx, points to same for both
+|-
+| + || MODT || model texture data || ubyte[12] || always 0x02 11-0x00
+|-{{ThickLine}}
+| - || NAM4 || material type || formid || [[Tes5Mod:Mod_File_Format/MATT|MATT]] "only 1 record without"
+|-
+| - || NAM5 || impact data set || formid || Unarmed [[Tes5Mod:Mod_File_Format/IPDS|IPDS]] 
+|-
+| - || NAM7 || decapitation fx || formid || Blood FX [[Tes5Mod:Mod_File_Format/ARTO|ARTO]] (only if can be decapitated)
+|-
+| - || ONAM || open loot sound || formid || Sound [[Tes5Mod:Mod_File_Format/SNDR|SNDR]] 
+|-
+| - || LNAM || close loot sound || formid || Sound [[Tes5Mod:Mod_File_Format/SNDR|SNDR]] 
+|-
+| * || NAME || Biped Object Names || zstring || repeats exactly 32 times.  these are body part names as seen in BPTD, for most/humanoids:
+:HEAD,Hair,BODY,Hands,Forearms,Amulet,Ring,Feet,Calves,
+:SHIELD,TAIL/Spit,LongHair,Circlet,Ears,unknownx6,
+:DecapitateHead,Decapitate,unknownx9,FX01
+Probably vestigial - it doesn't appear to matter if these are filled in, Witchlight have no body parts here but have BPTD parts, WerewolfBeastRace has BODY but BPTD refers to "Torso" and so on.
+
+8/8/2012 NOTE: These Values are user defined by clicking in the "Biped Object Names" column and giving it a name.  You could clik 43 and call it Cape to assign that location for capes on Humanoids after also selecting it under First Person.  These values are saved in the Plugin.
+|-
+|-{{ThickLine}}
+| * || MTYP || Movement Override || formid || Default Movement Override
+|-
+| * || SPED || Override Values || struct || Float x 11
+::Left - Walk
+::Left - Run
+::Right - Walk
+::Right - Run
+::Forward - Walk
+::Forward - Run
+::Back - Walk
+::Back - Run
+::Rotate - Walk
+::Rotate - Walk
+::Unknown
+|-
+|-{{ThickLine}}
+| - || VNAM || Equipment Type Flags || uint32 || Equipment Flags, Other values are set but not used.  If all are flagged then 4 0xFF
+:uint32 - Flags.  Only identified values are listed
+::0x00000001 - Hand To Hand Melee
+::0x00000002 - One Hand Sword
+::0x00000004 - One Hand Dagger
+::0x00000008 - One Hand Axe
+::0x00000010 - One Hand Mace
+::0x00000020 - Two Hand Sword
+::0x00000040 - Two Hand Axe
+::0x00000080 - Bow
+::0x00000100 - Staff
+::0x00000200 - Spell
+::0x00000400 - Shield
+::0x00000800 - Torch
+::0x00001000 - Crossbow
+|-
+| * || QNAM || Equip slot || formid || [[Tes5Mod:Mod_File_Format/EQUP|EQUP]] 
+|-
+| + || UNES || Unarmed equip slot || formid || [[Tes5Mod:Mod_File_Format/EQUP|EQUP]]
+|-
+| * || PHTN || Phoneme Target Names || zstring || These are listed when used in PHWT.  Dragons for example, have different names than humanoids.  Can be listed in .tri files as well.
+|-
+| * || PHWT || facial expression weight || struct || Usually in .tri files, 16xfloat presumably for 16 points on the face 
+:Dragons for example, have only have 8xfloat the names are saved in PHTN
+|-
+|-{{ThickLine}}
+| + || WKMV || Walk || formid || A MOVT
+|-
+| + || RNMV || Run || formid || A MOVT
+|-
+| + || SWMV|| Swim || formid || A MOVT
+|-
+| + || FLMV || Fly || formid || A MOVT
+|-
+| + || SNMV || Sneak || formid || A MOVT
+|-
+| + || SPMV || Sprint || formid || A MOVT
+|-{{ThickLine}}
+| - || NAM0 || marker || 0-length || marker for start of head data
+|-
+| - || MNAM || marker || 0-length || start of male default/preset data
+|-{{ThickLine}}
+| - || INDX || index(ascending) || uint32 || index (in this list)
+|-
+| - || HEAD || default headpart || uint32 || Default headpart [[Tes5Mod:Mod_File_Format/HDPT|HDPT]] 
+|-{{ThickLine}}
+| - || MPAI || index(ascending) || uint32 || Available Morph Index, Appears 4 times.
+|-
+| - || MPAV || values || struct ||  Available Morph Index Flags, Appears after each MAPI.  These are selected from the "Face Data" tab in the CK
+:MAPI
+:uint32 - Nose Morph Flags.  Only identified values are listed
+::0x00000001 - NoseType0
+::0x00000002 - NoseType1
+::0x00000004 - NoseType2
+::0x00000008 - NoseType3
+::0x00000010 - NoseType4
+::0x00000020 - NoseType5
+::0x00000040 - NoseType6
+::0x00000080 - NoseType7
+::0x00000100 - NoseType8
+::0x00000200 - NoseType9
+::0x00000400 - NoseType10
+::0x00000800 - NoseType11
+::0x00001000 - NoseType12
+::0x00002000 - NoseType13
+::0x00004000 - NoseType14
+::0x00008000 - NoseType15
+::0x00010000 - NoseType16
+::0x00020000 - NoseType17
+::0x00040000 - NoseType18
+::0x00080000 - NoseType19
+::0x00100000 - NoseType20
+::0x00200000 - NoseType21
+::0x00400000 - NoseType22
+::0x00800000 - NoseType23
+::0x01000000 - NoseType24
+::0x02000000 - NoseType25
+::0x03000000 - NoseType26
+::0x08000000 - NoseType27
+::0x10000000 - NoseType28
+::0x20000000 - NoseType29
+::0x40000000 - NoseType30
+::0x80000000 - NoseType31
+:uint32 - "Unknown" x7
+:MAPI
+:uint32 - Brow Morph Flags.  Only identified values are listed
+::0x00000001 - BrowType0
+::0x00000002 - BrowType1
+::0x00000004 - BrowType2
+::0x00000008 - BrowType3
+::0x00000010 - BrowType4
+::0x00000020 - BrowType5
+::0x00000040 - BrowType6
+::0x00000080 - BrowType7
+::0x00000100 - BrowType8
+::0x00000200 - BrowType9
+::0x00000400 - BrowType10
+::0x00000800 - BrowType11
+::0x00001000 - BrowType12
+::0x00002000 - BrowType13
+::0x00004000 - BrowType14
+::0x00008000 - BrowType15
+::0x00010000 - BrowType16
+::0x00020000 - BrowType17
+::0x00040000 - BrowType18
+::0x00080000 - BrowType19
+::0x00100000 - BrowType20
+:uint32 - "Unknown" x7
+:MAPI
+:uint32 - Eye Morph Flags.  Only identified values are listed
+::0x00000001 - EyesType0
+::0x00000002 - EyesType1
+::0x00000004 - EyesType2
+::0x00000008 - EyesType3
+::0x00000010 - EyesType4
+::0x00000020 - EyesType5
+::0x00000040 - EyesType6
+::0x00000080 - EyesType7
+::0x00000100 - EyesType8
+::0x00000200 - EyesType9
+::0x00000400 - EyesType10
+::0x00000800 - EyesType11
+::0x00001000 - EyesType12
+::0x00002000 - EyesType13
+::0x00004000 - EyesType14
+::0x00008000 - EyesType15
+::0x00010000 - EyesType16
+::0x00020000 - EyesType17
+::0x00040000 - EyesType18
+::0x00080000 - EyesType19
+::0x00100000 - EyesType20
+::0x00200000 - EyesType21
+::0x00400000 - EyesType22
+::0x00800000 - EyesType23
+::0x01000000 - EyesType24
+::0x02000000 - EyesType25
+::0x03000000 - EyesType26
+::0x08000000 - EyesType27
+::0x10000000 - EyesType28
+::0x20000000 - EyesType29
+::0x40000000 - EyesType30
+::0x80000000 - EyesType31
+:uint32 - Eye Morph Flags.  Only identified values are listed
+::0x00000001 - EyesType32
+::0x00000002 - EyesType33
+::0x00000004 - EyesType34
+::0x00000008 - EyesType35
+::0x00000010 - EyesType36
+::0x00000020 - EyesType37
+::0x00000040 - EyesType38
+:uint32 - "Unknown" x6
+:MAPI
+:uint32 - Lip Morph Flags.  Only identified values are listed
+::0x00000001 - LipType0
+::0x00000002 - LipType1
+::0x00000004 - LipType2
+::0x00000008 - LipType3
+::0x00000010 - LipType4
+::0x00000020 - LipType5
+::0x00000040 - LipType6
+::0x00000080 - LipType7
+::0x00000100 - LipType8
+::0x00000200 - LipType9
+::0x00000400 - LipType10
+::0x00000800 - LipType11
+::0x00001000 - LipType12
+::0x00002000 - LipType13
+::0x00004000 - LipType14
+::0x00008000 - LipType15
+::0x00010000 - LipType16
+::0x00020000 - LipType17
+::0x00040000 - LipType18
+::0x00080000 - LipType19
+::0x00100000 - LipType20
+::0x00200000 - LipType21
+::0x00400000 - LipType22
+::0x00800000 - LipType23
+::0x01000000 - LipType24
+::0x02000000 - LipType25
+::0x03000000 - LipType26
+::0x08000000 - LipType27
+::0x10000000 - LipType28
+::0x20000000 - LipType29
+::0x40000000 - LipType30
+::0x80000000 - LipType31
+|-{{ThickLine}}
+| * || RPRM || Race Presets Male || formid|| Racial preset [[Tes5Mod:Mod_File_Format/NPC_|NPC_]] 
+|-
+| * || AHCM || Available Hair Colors Male || formid || Hair color [[Tes5Mod:Mod_File_Format/CLFM|CLFM]] 
+|-
+| * || FTSM || Face Details Texture Set List Male || formid || Feature set [[Tes5Mod:Mod_File_Format/TXST|TXST]] 
+|-
+| - || DFTM || Default Face Texture Male || formid || Head Feature set [[Tes5Mod:Mod_File_Format/TXST|TXST]] 
+|-{{ThickLine}}
+| + || TINI || tint index || short || ascending record index
+|-
+| - || TINT || tint mask || zstring || Path to .dds
+|-
+| - || TINP || Mask Type || uint16 || lookup. There is no TINP entry if set to none.
+:1 = Lip Color
+:2 = Cheek Color
+:3 = Eyeliner
+:4 = EyeSocket Upper
+:5 = EyeSocket Lower
+:6 = Skin Tone
+:7 = Paint
+:8 = Laugh Lines
+:9 = Cheek Color Lower
+:10= Nose
+:11= Chin
+:12= Neck
+:13= Forehead
+:14= Dirt
+|-
+| - || TIND|| Preset Default || formid || [[Tes5Mod:Mod_File_Format/CLFM|CLFM]] Preset Default.  There is no TIND if a default isn't selected in the CK.
+|-
+| + || TINC || Preset || formid || The Preset followed by TINV
+|-
+| + || TINV || Default Value || float || Default Value of the preceding TINC
+|-
+| + || TIRS || unknown || uint16 || This is the number of the Tint.  The total number of Tints is stored in TINL.
+|-{{ThickLine}}
+| - || NAM0 || marker || 0-length || marker for start of head data
+|-
+| - || FNAM || marker || 0-length || start of female head data
+|-
+| - ||colspan="4"| Repeat from NAM0/MNAM For Female
+:Available Morphs
+: RPRF, AHCF, FTSF, DFTF
+: Tints and Tint Values
+|-{{ThickLine}}
+| + || NAM8 || Morph race || formid || RACE record 
+|-
+| + || RNAM || Armor race || formid || RACE record
+|}
+
+
+== Raw Data Examples ==
+:* [[Tes5Mod:Mod File Format/Race/Breton|Breton]]

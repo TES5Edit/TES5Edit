@@ -1,0 +1,71 @@
+{{Trail|File Formats|Mod File Format}}
+ACTI records contain information on "activators", which seem to be of 2 main types:
+*Actual objects with models (and/or destruction information)
+*Simple triggers with nothing more than a name and [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] information.
+
+This seems to be an older alternative to FLOR/TREE as most of the harvestables are in those 2 record types but there are several functional types here as well such as Nirnroot.
+
+ACTI flags are held in the record header.
+
+NavMesh Import Options (the following are mutually exclusive)
+*0x00000000 : Collision Geometry. (Dafault) When selected there is no independent flag for it.
+*0x03000000 : Filter
+*0x08000000 : Bounding Box
+*0x40000000 : Ground
+
+Flags not related to the NavMesh
+*0x00000040 : Has Tree LOD
+*0x00000100 : Must Update Anims
+*0x00000200 : Hidden from Local Map. When selected in the CK it turns the flag Off in the headder.  Therefore it is Hidden
+*0x00010000 : Random Animation Start
+*0x00020000 : Dangerous. Automatically set when Ignore Object Interaction.  Otherwise it can not be set independently.
+*0x00100000 : Ignore Object Interaction. Sets Dangerous Automatically.
+*0x00800000 : Is Marker
+*0x02000000 : Obstacle
+*0x20000000 : Child Can Use
+*?x???????? : Has Platform/Language Specific Textures. I have never seen this set in Skyrim or Update.esm in the English version.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || VMAD || script data || [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] || Script Data
+|-
+| + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Always 12 bytes, even if all 0s
+|-
+| - || FULL || ingame name || lstring || Full (in-game) name 
+|-
+| - || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
+|-
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
+|-
+| - || KSIZ || count || dword || Number of formids in the following KWDA subrecord
+|-
+| - || KWDA || keywords || formid || Formid array of keywords
+|-
+| - || PNAM || Marker Color || struct || Default Marker Color
+:Red
+:Green
+:Blue
+:Unused - always 0x00
+|-
+| - || SNAM || Sound - Looping || formid || Formid of [[Tes5Mod:Mod File Format/SNDR|SNDR]] ''nirnroot has the wow-wow sound here''
+|-
+| - || VNAM || Sound - Activation || formid || Formid of [[Tes5Mod:Mod File Format/SNDR|SNDR]] when activated
+|-
+| - || WNAM || water || formid || [[Tes5Mod:Mod File Format/WATR|WATR]] ''rare, no indicators of presence i can see other than edid starting with Water''
+|-
+| - || RNAM|| verb string || lstring || Custom "verb" seen ingame, eg 'Mine', 'Place'
+|-
+| - || FNAM || flags || uint16 || There are only two flags here.  The rest appear in the header.
+: 0x01 = No Displacement (Associated with Water Type)
+: 0x02 = Ignored by Sandbox
+|-
+| - || KNAM || keyword || formid || [[Tes5Mod:Mod File Format/KYWD|KYWD]] formid for interaction purposes
+|-
+|}

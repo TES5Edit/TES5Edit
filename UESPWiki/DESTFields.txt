@@ -1,0 +1,37 @@
+<noinclude>{{Trail|File Formats|Mod File Format|Fields}}</noinclude>
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| * || DEST || destruction data || struct || 8 - byte struct, 1 per record
+:uint32  health  
+:unit8   count   Number of destruction sections that follow
+:unit8   flag    0x01 = VATs enabled
+:unit8   ?       No known use
+:unit8   ?       No known use
+|-
+| * || DSTD || stage data|| struct || 20 byte struct
+: word   HealthPercent
+: byte   DamageStage  (0-8)
+: byte   Flags?  0x01=Cap Damage, 0x02=Disable Object,  0x04=Destroy Object,  0x08=Ignore External Damage
+: dword  SelfDamageRate
+: formid ExplosionID
+: formid DebrisID
+: dword  DebrisCount
+|-
+| * || DMDL || destroyed model || zstring || Path to .nif
+|-
+| * || DMDT || destroyed model data || struct[] || series of 12-byte structs (assume xyz)
+|-
+| * || DMDS || unknown || struct || (=MODS)
+:: dword TextureIndex (offset by 1?)
+:: dword StringLength
+:: char  3DName[StringLength]  nul terminator not included or present
+:: dword TextureID   (TXST)
+: dword Padding?
+|-
+|}
