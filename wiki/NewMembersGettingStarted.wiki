@@ -26,7 +26,7 @@ https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step4.jp
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step5.jpg
 
-4. To commit your changes (ie. upload them for everyone else to see), right-click the file you want to commit, or a parent directory (eg. you can commit either the wbDefinitionsTES5.pas, TES5Dump, wiki or USEPWiki to have the changes applied), and click 'SVN Commit..'. 
+4. To commit your changes (ie. upload them for everyone else to see), right-click the file you want to commit, or a parent directory (eg. you can commit either the wbDefinitionsTES5.pas, TES5Dump, wiki or UESPWiki to have the changes applied), and click 'SVN Commit..'. 
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/Step6.jpg
 

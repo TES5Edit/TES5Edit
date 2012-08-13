@@ -7,11 +7,21 @@ Threads:
 [topic='1388475']Thread 1[/topic]
 [/spoiler]
 
-
 [size="3"][url=http://forums.nexusmods.com/index.php?/topic/713668-wipz-tes5dumpfuture-tes5edit/]Fo3 Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
 [url=http://forums.nexusmods.com/index.php?/topic/713672-wipz-tes5dumpfuture-tes5edit/]FNV Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
 [url=http://forums.nexusmods.com/index.php?/topic/713028-wipz-tes5dumpfuture-tes5edit/]Skyrim Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
 [url=http://forums.nexusmods.com/index.php?/topic/715413-fnvedit-issue-depot-bug-reports/]FNVEdit Issue Depot (Bug Reports)[/url][/size]
+
+[color="#FF8C00"][size="4"][b]Current Progress:[/b][/size][/color]
+
+About 60% of the records are decoded at this time.  I have started to update the UESPWiki and I keep a current list on our site in the [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/UESPWikiUpdates]UESPWikiUpdates[/url].
+
+[color="#FF8C00"][size="4"][b]Current Contributors:[/b][/size][/color]
+
+[url=http://skyrim.nexusmods.com/users/4147439]Sharlikran[/url]
+Zilav
+
+We would love to have more people helping out on the project.
 
 [color="#FF8C00"][size="4"][b]Name:[/color][/size][/b] Skyrim Plugin Decoding Project
 
@@ -21,7 +31,7 @@ Threads:
 
 Skyrim's record structure has not yet been fully decoded, and the Skyrim modding community suffers from the lack of a working TES5Edit.  This project's aim is to help the decoding effort by providing TES5Dump and allowing many people to update its definitions using Subversion, and to provide the TES5Edit utility. 
 
-Its predecessors FNVEdit, FO3Edit, and TES4Edit by ElminsterAU are the best tools to use for exploring overlaps between mods and cleaning mods.  TES5Edit will have the same functionality since the compiled release will be made with the same TES4 back engine using the definitions as a result of this project.  He would work on it himself, but unfortunately suffers from a severe lack of spare time.  He has offered to compile TES5Edit after the necessary supporting files are changed for Skirim's file format.   
+Its predecessors FNVEdit, FO3Edit, and TES4Edit by ElminsterAU are the best tools to use for exploring overlaps between mods and cleaning mods.  TES5Edit will have the same functionality since the compiled release will be made with the same TES4 back engine using the definitions as a result of this project.  He would work on it himself, but unfortunately suffers from a severe lack of spare time.  He has offered to compile TES5Edit after the necessary supporting files are changed for Skyrim's file format.   
 
 This utility will let you easily see how multiple mods interact and override each other, as well as giving you a quick view of the changes that a plugin makes. It lets you browse a graphical record tree of your active plugins, revealing the values set by most record types and comparing overlapping changes from each active plugin.
 
@@ -63,44 +73,27 @@ Repeat steps 2-4 until all possible record types and all possible fields are cov
 
 [color="#FF8C00"][size="4"][b]What we need for this project:[/b][/size][/color]
 
-We are looking for volunteers and TES enthusiasts who are willing to contribute their time in decoding Skyrim's files, and making updates to the USEP Wiki.  Currently the file for TES5Edit is just a copy of the definitions file from FNVEdit.
+We are looking for volunteers and TES enthusiasts who are willing to contribute their time in decoding Skyrim's files, and making updates to the UESP Wiki.  Currently the file for TES5Edit is just a copy of the definitions file from FNVEdit.
 
 If you would like to participate in this project please send me a PM.
 
 [color="#FF8C00"][size="3"][b]Wiki Updaters:[/b][/size][/color]
 
-Any general knowledge of how to edit html and possibly xml.
-There is a [url=https://code.google.com/p/skyrim-plugin-decoding-project/issues/list]bug tracker[/url] where you will find the records that need to be commited to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]USEP Wiki[/url] site.
+Any general knowledge of how to edit html and possibly xml.  After you have checked out the files the folder you will work with is UESPWiki.  It will contain templates of each record posted on UESPWiki.  To make changes to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]UESP Wiki[/url] site you need to register first.  Registration is free and hardly any information is required.
 
-[color="#FF8C00"][size="3"][b]Record Decoders:[/b][/size][/color]
-
-The source is written in Delphi but you only need a basic knowledge with C++ or Java to interpret the Delphi code and figure out the references.
-Having knowledge of or, experience in decoding the records in plugins would be extremely helpful as well.
-
-[color="#FF8C00"][size="4"][b]Getting Set Up:[/b][/size][/color]
-
-Either team will need an [url=http://tortoisesvn.net/downloads.html]SVN client[/url] program to submit your changes.  Instructions are listed [url=https://code.google.com/p/skyrim-plugin-decoding-project/wiki/NewMembersGettingStarted]here on Google Code.[/url]
+Please refer to the on site wiki: [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/DecodingRecords]PostingToTheUESPWiki[/url] 
 
 [color="#FF8C00"][size="3"][b]Record Decoders:[/b][/size][/color]
 
 After you have checked out the files the folder you will work with is TES5Dump.  The only file you need to edit will be wbDefinitionsTES5.pas.
-To compile the source you need a trial version of Delphi found here.  [url=https://downloads.embarcadero.com/free/delphi]embarcadero.com[/url]
+To compile the source you need a trial version of Delphi found here.  [url=https://downloads.embarcadero.com/free/delphi]embarcadero.com[/url]  The source is written in Delphi but you only need a basic knowledge with C++ or Java to interpret the Delphi code and figure out the references.
+Having knowledge of or, experience in decoding the records in plugins would be extremely helpful as well.  The decoding is not programming intensive because all you are really doing is updating the pre existing routines for Skyrim's format.
 
-[color="#FF8C00"][size="3"][b]Wiki Updaters:[/b][/size][/color]
+Please refer to the on site wiki: [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/DecodingRecords]DecodingRecords[/url]
 
-After you have checked out the files the folder you will work with is USEPWiki.  It will contain templets of each record posted on USEPWiki.
-To make changes to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]USEP Wiki[/url] site you need to register first.  Registration is free and hardly any information is required.
+[color="#FF8C00"][size="4"][b]Getting Set Up:[/b][/size][/color]
 
-[color="#FF8C00"][size="4"][b]Workflow:[/b][/size][/color]
-
-[color="#FF8C00"][size="3"][b]Decoding: [/b][/size][/color]
-
-1. The decoders will create an entry in the bug tracker and assign it to themselves, marking it completed once the record definitions are determined.
-2. The decoders will create a 'Wiki Update' entry in the bug tracker with the record definitions once determined.
-
-[color="#FF8C00"][size="3"][b]Wiki Updates: [/b][/size][/color]
-
-Those making updates to the WIki will assign themself an update from the bug tracker.  Once the wiki update is completed the entry in the bug tracker is marked as resolved.
+You will need an SVN client like [url=http://tortoisesvn.net/downloads.html]TortoiseSVN[/url] to submit your changes.  Instructions are listed [url=https://code.google.com/p/skyrim-plugin-decoding-project/wiki/NewMembersGettingStarted]here on Google Code.[/url]
 
 [color="#FF8C00"][size="4"][b]Special Thanks:[/b][/size][/color]
 
@@ -109,3 +102,4 @@ Those making updates to the WIki will assign themself an update from the bug tra
 AndalayBay: Without her help getting me in touch with Elminster we would all still be waiting for confirmed record definitions, and even longer for a working TES5Edit.
 Bethesda: For their awesome program, and for this forum so we can accomplish this task.
 ElminsterAU: For all his hard work and agreeing to compile TES5Edit once we have made the necessary changes.
+Zilav: For all his hard work helping with the project.

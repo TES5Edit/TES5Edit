@@ -169,7 +169,7 @@ From what I can tell entries like wbFULL, are called to properly define a field 
     wbUnknown(DNAM).
     wbUnknown(CTDA).[/code][/spoiler]
 
-The pascal code was put in the same order shown in the text file.  However, doing what I show above will just dump a bunch of hex to the text file.  By looking at the code you notice things like wbFull, wbICON, and wbMODL.  The name of the pre defined routine is simply wb[Signature] and Signature is the name of the record on the USEP Wiki, and shown in the text file that xDump made.
+The pascal code was put in the same order shown in the text file.  However, doing what I show above will just dump a bunch of hex to the text file.  By looking at the code you notice things like wbFull, wbICON, and wbMODL.  The name of the pre defined routine is simply wb[Signature] and Signature is the name of the record on the UESP Wiki, and shown in the text file that xDump made.
 
 So you would search for just the signature to start with.  Search for CTDA and you will find this entry.
 
@@ -187,7 +187,7 @@ And
 
 wbCTDA is for one entry, wbCTDAs is for multiple entries one after the other of wbCTDA, and wbCTDAsReq is also an array for multiple entries.  The difference between wbCTDAs and wbCTDAsReq has to do with conflict resolution.  From what I can tell 'Req' = "is it required."  I don't fully understand the 'Required' part but we can always go back and edit entries like these once we know more about the conflict resolution.
 
-For the other fields you need to define the constant, and refer to the USEP wiki to see what type of value that record has.  If it's a string you would use WbString([Signature], and formating information).  For an integer you would use wbInteger([Signature], and formating information).  For flags you have to set that up as shown.  What I'm asking us to do for flags to start with is simply put an '*' in front of the flag name until we verify whether or not it's still a valid flag name.  A flag of 'Gun Ammo' probably isn't valid for example.
+For the other fields you need to define the constant, and refer to the UESP wiki to see what type of value that record has.  If it's a string you would use WbString([Signature], and formating information).  For an integer you would use wbInteger([Signature], and formating information).  For flags you have to set that up as shown.  What I'm asking us to do for flags to start with is simply put an '*' in front of the flag name until we verify whether or not it's still a valid flag name.  A flag of 'Gun Ammo' probably isn't valid for example.
 
 [spoiler][code]
     wbUnknown(FULL).
@@ -199,4 +199,4 @@ For the other fields you need to define the constant, and refer to the USEP wiki
     wbUnknown(DNAM).
     wbCTDAReq.[code][/spoiler]
 
-As you continue all the wbUnknown entries will be replaced by a special formater like wbCTDA, or by wbString(), or wbInteger() and so on.  Properly defined MGEF will show all the information correctly.  A properly defined wbDefinitionsTES5.pas will then be used for TES5Edit and, properly defined records will be updated on the USEP Wiki for the rest of the modding community to refer to.
+As you continue all the wbUnknown entries will be replaced by a special formater like wbCTDA, or by wbString(), or wbInteger() and so on.  Properly defined MGEF will show all the information correctly.  A properly defined wbDefinitionsTES5.pas will then be used for TES5Edit and, properly defined records will be updated on the UESP Wiki for the rest of the modding community to refer to.

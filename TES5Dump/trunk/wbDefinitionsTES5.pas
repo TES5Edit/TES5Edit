@@ -6754,11 +6754,12 @@ begin
     wbKeywords,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        'Ignores Normal Weapon Resistance',
-        'Non-Playable',
-        'Non-Bolt'
-      ])),
+      wbByteArray('Flags', 4),
+//      wbInteger('Flags', itU32, wbFlags([
+//        'Ignores Normal Weapon Resistance',
+//        'Non-Playable',
+//        'Non-Bolt'
+//      ])),
       wbFloat('Damage'),
       wbInteger('Value', itU32)
     ], cpNormal, True),

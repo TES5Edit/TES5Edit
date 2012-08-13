@@ -151,7 +151,7 @@ In which you use one of the array functions to deal with them.  Other records co
 
 Start by searching for the WTHR record by using "wbRecords(WTHR" and that will take you to the beginning of the record.  In it's current state like many of the records its simply a copy of FNV information for now.
 
-You also need to open the USEPWiki to refer to if some of the records follow a pattern, such as this in this example of the NPC_ record.  These are listed in this exact order several times.
+You also need to open the UESPWiki to refer to if some of the records follow a pattern, such as this in this example of the NPC_ record.  These are listed in this exact order several times.
 <code>    
   wbRArray('Unknown - TINI, TINC, TINV, TIAS', wbRStruct('Unknown', [
       wbUnknown(TINI),
@@ -311,7 +311,7 @@ So something like this.
 </code>}
 Those are new so they need to be entered as a constant at the top of the file.  Also add them in alphabetical order and with a comment that they are new. :D  
 
-After all that and you re compile it, then xDump will give you different results.  Once you rinse and repeat, the record is defined and a decoder makes a ticket for the wiki team (Or just does it themselves) and then the USEPWiki has valid information for the community to refer to.
+After all that and you re compile it, then xDump will give you different results.  Once you rinse and repeat, the record is defined and a decoder makes a ticket for the wiki team (Or just does it themselves) and then the UESPWiki has valid information for the community to refer to.
 
 <code>
 wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),

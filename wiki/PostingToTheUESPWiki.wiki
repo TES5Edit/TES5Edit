@@ -1,38 +1,38 @@
-#summary How to post to the USEPWiki
+#summary How to post to the UESPWiki
 
 http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format
 
-= The USEPWiki =
+= The UESPWiki =
 
 Those updating the wiki can navigate to this page and click on one of the records.  
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki1.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki1.jpg
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki2.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki2.jpg
 
 For this example I'm going to use MISC since it isn't really formated properly and contains the same information you will receive in a ticket from one of the decoders. To get started click the edit tab.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki3.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki3.jpg
 
 For what our project is doing we only need to use the 'edit' tab at the top.  All the changes are shown under the history tab.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki5.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki5.jpg
 
 Copy the text from the white text box to an editor of choice.  I suggest Notepad++ with the Aspell dictionary plugin installed.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki9.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki9.jpg
 
-Save the information to a txt file in the USEPWiki folder for our SVN.  Chose the name of the record, followed by Def.   For the above example I called it MISCDef.txt.
+Save the information to a txt file in the UESPWiki folder for our SVN.  Chose the name of the record, followed by Def.   For the above example I called it MISCDef.txt.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki6.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki6.jpg
 
 The first time I tried to edit a record I chose to just cut and paste from other records to start with and then start making changes.  I chose to cut and paste the formatting from the DOOR record for now but changes need to be made.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki7.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki7.jpg
 
-After you make corrections to the fields they should start to reflect the values of the actual record you are submitting to the wiki.  In this case I am editing the MISC record.  When you are done making changes save all the text you are submitting to the file you made for it in the USEPWiki folder.
+After you make corrections to the fields they should start to reflect the values of the actual record you are submitting to the wiki.  In this case I am editing the MISC record.  When you are done making changes save all the text you are submitting to the file you made for it in the UESPWiki folder.
 
-https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/USEPWiki8.jpg
+https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/UESPWiki8.jpg
 
 You can preview your changes before submitting them.
 
