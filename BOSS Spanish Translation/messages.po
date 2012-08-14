@@ -1033,47 +1033,51 @@ msgstr ""
 
 #: ..\boss-cli\BOSS-CLI.cpp:356
 msgid "Do you want to download and install the update? (y/n)"
-msgstr ""
+msgstr "¿Quiere descargar e instalar la actualización? (Si/no)"
 
 #: ..\boss-cli\BOSS-CLI.cpp:362
 msgid "No update has been downloaded or installed."
-msgstr ""
+msgstr "No actualización se ha descargado o instalado." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:369
 msgid "New installer successfully downloaded!"
-msgstr ""
+msgstr "¡Nuevo instalador descargado correctamente!" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:370
 msgid ""
 "BOSS will now launch the downloaded installer and exit. Complete the "
 "installer to complete the update."
 msgstr ""
+"BOSS ahora se iniciará el instalador de descargo y salir. Completa el "
+"Instalador para completar la actualización." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:384 MainWindow.cpp:965
 msgid "Update cancelled."
-msgstr ""
+msgstr "Actualización cancelada." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:401
 msgid "BOSS Update check failed. No Internet connection detected."
-msgstr ""
+msgstr "Error en la actualización de BOSS. Conexión al Internet no era detectado." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:428 MainWindow.cpp:203
 msgid "Please pick which game to run BOSS for:"
-msgstr ""
+msgstr "Por favor, elegir qué juego se ejecute de BOSS para:" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:434
 msgid "Invalid selection."
-msgstr ""
+msgstr "Selección Inválida." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:471 MainWindow.cpp:468 UserRuleEditor.cpp:97
 msgid "Updating to the latest masterlist from the Google Code repository..."
-msgstr ""
+msgstr "Actualizando a la última masterlist desde el repositorio de Google Code ..."
 
 #: ..\boss-cli\BOSS-CLI.cpp:478 MainWindow.cpp:476
 msgid ""
 "Your masterlist is already at the latest revision (r%1%; %2%). No update "
 "necessary."
 msgstr ""
+"Su masterlist ya se encuentra en la última revisión (r% 1%,% 2%). Actualización " 
+"no es necesario." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:481 MainWindow.cpp:480
 msgid "Your masterlist has been updated to revision %1% (%2%)."
