@@ -2121,6 +2121,19 @@ begin
   else if Container.DateSize = 32 then Result := 1
 end;
 
+function wbQUSTFNAMDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container: IwbContainer;
+begin
+  Result := 2;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if Container.DateSize = 4 then Result := 0
+  else if Container.DateSize = 2 then Result := 1
+end;
+
 function wbMGEFFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -11927,26 +11940,47 @@ begin
           wbInteger(ALLS, 'Location Alias ID', itU32)
         ], []),
         wbString(ALID, 'Alias Name', 0, cpTranslate),
-        wbInteger(FNAM, 'Flags', itU32, wbFlags([
-          {0x00000001}'Reserves Location/Reference',
-          {0x00000002}'Optional',
-          {0x00000004}'Quest Object',
-          {0x00000008}'Allow Reuse in Quest',
-          {0x00000010}'Allow Dead',
-          {0x00000020}'Matching Ref - In Loaded Area',
-          {0x00000040}'Essential',
-          {0x00000080}'Allow Disabled',
-          {0x00000100}'Stores Text',
-          {0x00000200}'Allow Reserved',
-          {0x00000400}'Protected',
-          {0x00000800}'Forced by Aliases?',
-          {0x00001000}'Allow Destroyed',
-          {0x00002000}'Matching Ref - Closest',
-          {0x00004000}'Uses Stored Text',
-          {0x00008000}'Initially Disabled',
-          {0x00010000}'Allow Cleared',
-          {0x00020000}'Clear Names When Removed'
-        ])),
+        wbUnion(FNAM, 'Union Aliases', wbQUSTFNAMDecider, [
+          wbInteger('Alias Flags itU32', itU32, wbFlags([
+            {0x00000001}'Reserves Location/Reference',
+            {0x00000002}'Optional',
+            {0x00000004}'Quest Object',
+            {0x00000008}'Allow Reuse in Quest',
+            {0x00000010}'Allow Dead',
+            {0x00000020}'Matching Ref - In Loaded Area',
+            {0x00000040}'Essential',
+            {0x00000080}'Allow Disabled',
+            {0x00000100}'Stores Text',
+            {0x00000200}'Allow Reserved',
+            {0x00000400}'Protected',
+            {0x00000800}'Forced by Aliases?',
+            {0x00001000}'Allow Destroyed',
+            {0x00002000}'Matching Ref - Closest',
+            {0x00004000}'Uses Stored Text',
+            {0x00008000}'Initially Disabled',
+            {0x00010000}'Allow Cleared',
+            {0x00020000}'Clear Names When Removed'
+          ])),
+          wbInteger('Alias Flags itU16', itU16, wbFlags([
+            {0x00000001}'Unknown 1',
+            {0x00000002}'Unknown 2',
+            {0x00000004}'Unknown 3',
+            {0x00000008}'Unknown 4',
+            {0x00000010}'Unknown 5',
+            {0x00000020}'Unknown 6',
+            {0x00000040}'Unknown 7',
+            {0x00000080}'Unknown 8',
+            {0x00000100}'Unknown 9',
+            {0x00000200}'Unknown 10',
+            {0x00000400}'Unknown 11',
+            {0x00000800}'Unknown 12',
+            {0x00001000}'Unknown 13',
+            {0x00002000}'Unknown 14',
+            {0x00004000}'Unknown 15',
+            {0x00008000}'Unknown 16'
+          ])),
+          wbByteArray('Unknown Alias Flags', 0)
+        ]),
         wbInteger(ALFI, 'Force Into Alias When Filled', itU32),
         wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
         wbFormID(ALFR, 'Forced Reference'),
