@@ -1068,23 +1068,25 @@ msgstr ""
 
 #: ..\boss-cli\BOSS-CLI.cpp:481 MainWindow.cpp:480
 msgid "Your masterlist has been updated to revision %1% (%2%)."
-msgstr ""
+msgstr "Su masterlist ha sido actualizado para la revisión %1% (%2%)."
 
 #: ..\boss-cli\BOSS-CLI.cpp:487 ..\boss-cli\BOSS-CLI.cpp:496
 #: MainWindow.cpp:486 MainWindow.cpp:495
 msgid "Error: masterlist update failed."
-msgstr ""
+msgstr "Error: masterlist actualización errónea." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:488 ..\boss-cli\BOSS-CLI.cpp:497
 #: MainWindow.cpp:487 MainWindow.cpp:496
 msgid "Details: %1%"
-msgstr ""
+msgstr ""Detalles: %1%"
 
 #: ..\boss-cli\BOSS-CLI.cpp:493 MainWindow.cpp:492
 msgid ""
 "No internet connection detected. Masterlist auto-updater could not check for "
 "updates."
 msgstr ""
+"Sin conexión a Internet detectada Masterlist actualizador automatico no pudo buscar "
+actualizaciones." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:520 MainWindow.cpp:443 MainWindow.cpp:517
 msgid "BOSS working..."
@@ -1094,23 +1096,23 @@ msgstr ""
 #: ..\boss-cli\BOSS-CLI.cpp:612 MainWindow.cpp:536 MainWindow.cpp:591
 #: MainWindow.cpp:641
 msgid "Critical Error: %1%"
-msgstr ""
+msgstr "Error crítico: %1%"
 
 #: ElementIDs.cpp:55 ElementIDs.cpp:70
 msgid "Downloading: %1%"
-msgstr ""
+msgstr "Descargaando: %1%"
 
 #: ElementIDs.cpp:57 ElementIDs.cpp:72
 msgid "Are you sure you want to cancel?"
-msgstr ""
+msgstr "¿Está seguro que desea cancelar?"
 
 #: ElementIDs.cpp:57 ElementIDs.cpp:72
 msgid "BOSS: Updater"
-msgstr ""
+msgstr "BOSS: Updater"
 
 #: MainWindow.cpp:107
 msgid "Error: %1% Details: %2%"
-msgstr ""
+msgstr "Detalles: %2% del Error: %1%"
 
 #: MainWindow.cpp:108 MainWindow.cpp:159 MainWindow.cpp:174 MainWindow.cpp:423
 #: MainWindow.cpp:682 MainWindow.cpp:698 MainWindow.cpp:722
@@ -1119,177 +1121,179 @@ msgstr ""
 #: UserRuleEditor.cpp:753 UserRuleEditor.cpp:761 UserRuleEditor.cpp:771
 #: UserRuleEditor.cpp:779 UserRuleEditor.cpp:903
 msgid "BOSS: Error"
-msgstr ""
+msgstr "Error de BOSS:"
 
 #: MainWindow.cpp:158
 msgid "Error: could not apply translation: %1%"
-msgstr ""
+msgstr "Error: No se podría aplicar la traducción: %1%"
 
 #: MainWindow.cpp:173
 msgid "Error: The BOSS GUI is already running. This instance will now quit."
-msgstr ""
+msgstr "Error: La interfaz gráfica de usuario de BOSS ya se está ejecutando esta instancia ahora dejar de fumar.".
 
 #: MainWindow.cpp:199
 msgid " (not detected)"
-msgstr ""
+msgstr " (no detectado)"
 
 #: MainWindow.cpp:204
 msgid "BOSS: Select Game"
-msgstr ""
+msgstr "BOSS: Selecionar Juego"
 
 #: MainWindow.cpp:245
 msgid "Plain Text"
-msgstr ""
+msgstr "Text Plain"
 
 #: MainWindow.cpp:249
 msgid "Last Run"
-msgstr ""
+msgstr "Paso Final"
 
 #: MainWindow.cpp:250
 msgid "2nd Last Run"
-msgstr ""
+msgstr "El segundo paso"
 
 #: MainWindow.cpp:257
 msgid "&View BOSS Log"
-msgstr ""
+msgstr "&Ver registro BOSS"
 
 #: MainWindow.cpp:257
 msgid "Opens your BOSSlog."
-msgstr ""
+msgstr "Se Abre el BOSSlog."
 
 #: MainWindow.cpp:258
 msgid "&Run BOSS"
-msgstr ""
+msgstr "&Ejecutar BOSS"
 
 #: MainWindow.cpp:258
 msgid "Runs BOSS with the options you have chosen."
-msgstr ""
+msgstr "Ejecutar BOSS con las opciones que han elegido."
 
 #: MainWindow.cpp:260
 msgid "&Quit"
-msgstr ""
+msgstr "&Cerrar"
 
 #: MainWindow.cpp:260
 msgid "Quit BOSS."
-msgstr ""
+msgstr "Cerrar BOSS."
 
 #: MainWindow.cpp:261
 msgid "&File"
-msgstr ""
+msgstr "&Archivo"
 
 #: MainWindow.cpp:264
 msgid "&User Rules..."
-msgstr ""
+msgstr "&Reglas de Usuario..."
 
 #: MainWindow.cpp:264
 msgid "Opens your userlist in your default text editor."
-msgstr ""
+msgstr "Abre tu lista de usuarios en tu editor de texto predeterminado."
 
 #: MainWindow.cpp:265
 msgid "&Settings..."
-msgstr ""
+msgstr "&Configuración..."
 
 #: MainWindow.cpp:265
 msgid "Opens the Settings window."
-msgstr ""
+msgstr "Abre la ventana de Configuración." 
 
 #: MainWindow.cpp:266
 msgid "&Edit"
-msgstr ""
+msgstr "&Editar"
 
 #: MainWindow.cpp:269
 msgid "&Oblivion"
-msgstr ""
+msgstr "&Oblivion"
 
 #: MainWindow.cpp:269
 msgid "Switch to running BOSS for Oblivion."
-msgstr ""
+msgstr "Cambiar a la ejecución de BOSS para Oblivion" 
 
 #: MainWindow.cpp:270
 msgid "&Nehrim"
-msgstr ""
+msgstr "&Nehrim"
 
 #: MainWindow.cpp:270
 msgid "Switch to running BOSS for Nehrim."
-msgstr ""
+msgstr "Cambiar a la ejecución de BOSS para Nehrim."
 
 #: MainWindow.cpp:271
 msgid "&Skyrim"
-msgstr ""
+msgstr "&Skyrim"
 
 #: MainWindow.cpp:271
 msgid "Switch to running BOSS for Skyrim."
-msgstr ""
+msgstr "Cambiar a la ejecución de BOSS para Skyrim." 
 
 #: MainWindow.cpp:272
 msgid "&Fallout 3"
-msgstr ""
+msgstr "&Fallout 3"
 
 #: MainWindow.cpp:272
 msgid "Switch to running BOSS for Fallout 3."
-msgstr ""
+msgstr "Cambiar a correr de BOSS para Fallout 3." 
 
 #: MainWindow.cpp:273
 msgid "&Fallout: New Vegas"
-msgstr ""
+msgstr "&Fallout: New Vegas"
 
 #: MainWindow.cpp:273
 msgid "Switch to running BOSS for Fallout: New Vegas."
-msgstr ""
+msgstr "Cambiar a la ejecución de BOSS para Fallout: New Vegas."
 
 #: MainWindow.cpp:274
 msgid "&Morrowind"
-msgstr ""
+msgstr "& Morrowind"
 
 #: MainWindow.cpp:274
 msgid "Switch to running BOSS for Morrowind."
-msgstr ""
+msgstr "Cambiar a la ejecución de BOSS para Morrowind."
 
 #: MainWindow.cpp:275
 msgid "&Active Game"
-msgstr ""
+msgstr "&Activar Juego"
 
 #: MainWindow.cpp:278
 msgid "Open &Main Readme"
-msgstr ""
+msgstr "Open &Main Léame"
 
 #: MainWindow.cpp:278
 msgid "Opens the main BOSS readme in your default web browser."
-msgstr ""
+msgstr "Abre el archivo léame de BOSS en su principal navegador web por defecto."
 
 #: MainWindow.cpp:279
 msgid "Open &Userlist Syntax Doc"
-msgstr ""
+msgstr "Abre &Lista de usuarios Documento de Sintaxis"
 
 #: MainWindow.cpp:279
 msgid ""
 "Opens the BOSS userlist syntax documentation in your default web browser."
 msgstr ""
+ "Abre la lista de usuarios BOSS documentación de la sintaxis en su navegador web por defecto."
 
 #: MainWindow.cpp:280
 msgid "Open &Masterlist Syntax Doc"
-msgstr ""
+msgstr "Abre &Masterlist Documento de Sintaxis"
 
 #: MainWindow.cpp:280
 msgid ""
 "Opens the BOSS masterlist syntax documentation in your default web browser."
 msgstr ""
+"Abre el masterlist BOSS documentación de la sintaxis en su navegador web por defecto."
 
 #: MainWindow.cpp:281
 msgid "&Open API Readme"
-msgstr ""
+msgstr "&Abre API Léame"
 
 #: MainWindow.cpp:281
 msgid "Opens the BOSS API readme in your default web browser."
-msgstr ""
+msgstr "Abre el BOSS API readme en su navegador web por defecto."
 
 #: MainWindow.cpp:282
 msgid "Open &Version History"
-msgstr ""
+msgstr "Abrir historial y la versión"
 
 #: MainWindow.cpp:282
 msgid "Opens the BOSS version history in your default web browser."
-msgstr ""
+msgstr "Abre el historial de versiones BOSS en su navegador web por defecto."
 
 #: MainWindow.cpp:283
 msgid "View &Copyright Licenses"
