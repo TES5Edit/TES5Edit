@@ -20,21 +20,21 @@ msgstr ""
 #: Error.h:121
 msgid "Masterlist Parsing Error: Expected a %1% at:"
 msgstr "Error en lectura del archivo de reglas 'master': "
-"Se esperaba un %1% en la posición:"
+"Se esperaba un %1% en la posiciÃ³n:"
 
 #: Error.h:122
 msgid "Ini Parsing Error: Expected a %1% at:"
-msgstr "Error en lectura del archivo de configuración: "
-"Se esperaba un %1% en la posición:"
+msgstr "Error en lectura del archivo de configuraciÃ³n: "
+"Se esperaba un %1% en la posiciÃ³n:"
 
 #: Error.h:123
 msgid "Userlist Parsing Error: Expected a %1% at:"
 msgstr "Error en lectura del archivo de reglas de usuario: "
-"Se esperaba un %1% en la posición:"
+"Se esperaba un %1% en la posiciÃ³n:"
 
 #: Error.h:124
 msgid "Userlist Syntax Error: The rule beginning \"%1%: %2%\" %3%"
-msgstr "Error de sintáxis en el archivo de reglas de usuario: "
+msgstr "Error de sintÃ¡xis en el archivo de reglas de usuario: "
 "La regla que empieza \"%1%: %2%\" %3%"
 
 #: Error.h:125
@@ -99,11 +99,11 @@ msgstr "intenta asociar un mensaje a un grupo."
 
 #: Error.h:140
 msgid "has more than one sort line."
-msgstr "tiene más de una linea de ordenamiento (SORT)."
+msgstr "tiene mÃ¡s de una linea de ordenamiento (SORT)."
 
 #: Error.h:141
 msgid "has more than one REPLACE-using message line."
-msgstr "tiene más de una linea de reemplazo de mensaje (REPLACE)"
+msgstr "tiene mÃ¡s de una linea de reemplazo de mensaje (REPLACE)"
 
 #: Error.h:142
 msgid "has a REPLACE-using message line that is not the first message line."
@@ -115,7 +115,7 @@ msgstr ""
 
 #: Error.h:144
 msgid "tries to sort a mod or group relative to itself."
-msgstr "intenta ordenar un mod (o un grupo) respecto de sí mismo."
+msgstr "intenta ordenar un mod (o un grupo) respecto de sÃ­ mismo."
 
 #: Error.h:145
 msgid "tries to attach an malformatted message."
@@ -135,31 +135,31 @@ msgstr "Sin errores."
 
 #: Error.cpp:124
 msgid "No game master .esm file found!"
-msgstr "¡No se detectó ningun archivo master (ESM)!"
+msgstr "Â¡No se detectÃ³ ningun archivo master (ESM)!"
 
 #: Error.cpp:126
 msgid "\"%1%\" cannot be read!"
-msgstr "¡No se puede leer de \"%1%\"!"
+msgstr "Â¡No se puede leer de \"%1%\"!"
 
 #: Error.cpp:128
 msgid "\"%1%\" cannot be written to!"
-msgstr "¡No se puede escribir en \"%1%\"!"
+msgstr "Â¡No se puede escribir en \"%1%\"!"
 
 #: Error.cpp:130
 msgid "\"%1%\" is not encoded in valid UTF-8!"
-msgstr "¡\"%1%\" no está codificado en UTF-8 válido!"
+msgstr "Â¡\"%1%\" no estÃ¡ codificado en UTF-8 vÃ¡lido!"
 
 #: Error.cpp:132
 msgid "\"%1%\" cannot be found!"
-msgstr "¡\"%1%\" no existe!"
+msgstr "Â¡\"%1%\" no existe!"
 
 #: Error.cpp:134
 msgid "Evaluation of conditional \"%1%\" for item \"%2%\" failed!"
-msgstr "¡Falló la evaluación del condicional \"%1%\" para el elemento \"%2%\"!"
+msgstr "Â¡FallÃ³ la evaluaciÃ³n del condicional \"%1%\" para el elemento \"%2%\"!"
 
 #: Error.cpp:136
 msgid "\"%1%\" is not a valid regular expression. Item skipped."
-msgstr "\"%1%\" no es una expresión regular válida. Elemento ignorado."
+msgstr "\"%1%\" no es una expresiÃ³n regular vÃ¡lida. Elemento ignorado."
 
 #: Error.cpp:138
 msgid "No game detected!"
@@ -171,78 +171,78 @@ msgstr "No se puede convertir \"%1%\" de UTF-8 a \"%2%\"."
 
 #: Error.cpp:142
 msgid "Master file \"%1%\" loading after non-master plugins!"
-msgstr "¡El archivo master \"%1%\" esta siendo cargado despues de los archivos no-master!"
+msgstr "Â¡El archivo master \"%1%\" esta siendo cargado despues de los archivos no-master!"
 
 #: Error.cpp:146
 msgid "Cannot find online masterlist revision number!"
-msgstr "¡No se pudo encontrar el número de revisión en el archivo de reglas 'master' obtenido del repositorio!"
+msgstr "Â¡No se pudo encontrar el nÃºmero de revisiÃ³n en el archivo de reglas 'master' obtenido del repositorio!"
 
 #: Error.cpp:148
 msgid "Cannot find online masterlist revision date!"
-msgstr "¡No se pudo encontrar la fecha en el archivo de reglas 'master' obtenido del repositorio!"
+msgstr "Â¡No se pudo encontrar la fecha en el archivo de reglas 'master' obtenido del repositorio!"
 
 #: Error.cpp:150
 msgid "Cannot read list of files to be updated!"
-msgstr "¡No se pudo leer la lista de archivos a actualizar!"
+msgstr "Â¡No se pudo leer la lista de archivos a actualizar!"
 
 #: Error.cpp:152
 msgid "Downloaded file \"%1%\" failed verification test!"
-msgstr "¡El archivo \"%1%\" recibido no pasó la prueba de verificación!"
+msgstr "Â¡El archivo \"%1%\" recibido no pasÃ³ la prueba de verificaciÃ³n!"
 
 #: Error.cpp:154
 msgid ""
 "The modification date of \"%1%\" cannot be read! Filesystem response: \"%2%"
 "\"."
-msgstr "¡No se pudo leer la fecha de modificación de \"%1%\"! Respuesta devuelta por el sistema: \"%2%\"."
+msgstr "Â¡No se pudo leer la fecha de modificaciÃ³n de \"%1%\"! Respuesta devuelta por el sistema: \"%2%\"."
 
 #: Error.cpp:156
 msgid "\"%1%\" cannot be renamed! Filesystem response: \"%2%\"."
-msgstr "¡No se pudo renombrar \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "Â¡No se pudo renombrar \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:158
 msgid "\"%1%\" cannot be deleted! Filesystem response: \"%2%\"."
-msgstr "¡No se pudo borrar \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "Â¡No se pudo borrar \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:160
 msgid "\"%1%\" cannot be created! Filesystem response: \"%2%\"."
-msgstr "¡No se puede crear \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "Â¡No se puede crear \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:162
 msgid "\"%1%\" cannot be scanned! Filesystem response: \"%2%\"."
-msgstr "¡No se pudo explorar \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "Â¡No se pudo explorar \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:164
 msgid "cURL cannot be initialised!"
-msgstr "¡No se pudo inicializar cURL!"
+msgstr "Â¡No se pudo inicializar cURL!"
 
 #: Error.cpp:166
 msgid "cURL's error buffer could not be set! cURL response: \"%1%\"."
-msgstr "¡No se pudo asignar el buffer de errores de cURL! Respuesta: \"%1%\"."
+msgstr "Â¡No se pudo asignar el buffer de errores de cURL! Respuesta: \"%1%\"."
 
 #: Error.cpp:168
 msgid "A cURL option could not be set! cURL response: \"%1%\"."
-msgstr "¡No se pudo asignar una opcion de cURL! Respuesta: \"%1%\"."
+msgstr "Â¡No se pudo asignar una opcion de cURL! Respuesta: \"%1%\"."
 
 #: Error.cpp:170
 msgid "Proxy hostname or port invalid! cURL response: \"%1%\"."
-msgstr "¡Nombre o puerto de proxy inválidos! Respuesta: \"%1%\"."
+msgstr "Â¡Nombre o puerto de proxy invÃ¡lidos! Respuesta: \"%1%\"."
 
 #: Error.cpp:172
 msgid "Failed to set proxy type! cURL response: \"%1%\"."
-msgstr "¡No se pudo configurar el tipo de proxy! Respuesta: \"%1%\"."
+msgstr "Â¡No se pudo configurar el tipo de proxy! Respuesta: \"%1%\"."
 
 #: Error.cpp:174
 msgid ""
 "Proxy authentication username or password invalid! cURL response: \"%1%\"."
-msgstr "¡Autenticacion de usuario con el proxy incorrecta! Respuesta: \"%1%\"."
+msgstr "Â¡Autenticacion de usuario con el proxy incorrecta! Respuesta: \"%1%\"."
 
 #: Error.cpp:176
 msgid "Failed to set proxy authentication type! cURL response: \"%1%\"."
-msgstr "¡No se puede configurar el tipo de autenticación con el proxy! Respuesta: \"%1%\"."
+msgstr "Â¡No se puede configurar el tipo de autenticaciÃ³n con el proxy! Respuesta: \"%1%\"."
 
 #: Error.cpp:178
 msgid "cURL could not perform task! cURL response: \"%1%\"."
-msgstr "¡cURL falló en ejecutar una tarea! Respuesta: \"%1%\"."
+msgstr "Â¡cURL fallÃ³ en ejecutar una tarea! Respuesta: \"%1%\"."
 
 #: Error.cpp:180
 msgid "Cancelled by user."
@@ -250,18 +250,18 @@ msgstr "Cancelado por el usuario."
 
 #: Error.cpp:182
 msgid "Parsing of \"%1%\" failed!"
-msgstr "¡Ha fallado la lectura de \"%1%\"!"
+msgstr "Â¡Ha fallado la lectura de \"%1%\"!"
 
 #: Error.cpp:184
 msgid ""
 "The modification date of \"%1%\" cannot be written! Filesystem response: "
 "\"%2%\"."
-msgstr "¡La fecha de modificacion de \"%1%\" no puede ser asignada. "
+msgstr "Â¡La fecha de modificacion de \"%1%\" no puede ser asignada. "
 "Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:186
 msgid "The window \"%1%\" failed to initialise. Details: \"%2%\"."
-msgstr "La ventana \"%1%\" falló en inicializarse. Detalles: \"%2%\"."
+msgstr "La ventana \"%1%\" fallÃ³ en inicializarse. Detalles: \"%2%\"."
 
 #: Error.cpp:188
 msgid "Memory allocation failed."
@@ -287,7 +287,7 @@ msgstr "La regla esta deshabilitada."
 
 #: Game.cpp:519 Game.cpp:557 Game.cpp:596
 msgid " is not installed or in the masterlist."
-msgstr " no está instalado o no está en el archivo 'master'."
+msgstr " no estÃ¡ instalado o no estÃ¡ en el archivo 'master'."
 
 #: Game.cpp:523 Game.cpp:562
 msgid " is already in the masterlist."
@@ -295,11 +295,11 @@ msgstr " ya esta agregado al archivo 'master'."
 
 #: Game.cpp:527 Game.cpp:566
 msgid " is not in the masterlist, cannot override."
-msgstr " no está en el archivo 'master'. No se puede re-definir."
+msgstr " no estÃ¡ en el archivo 'master'. No se puede re-definir."
 
 #: Game.cpp:535
 msgid " is not installed, and is not in the masterlist."
-msgstr " no está instalado, ni está en el archivo 'master'."
+msgstr " no estÃ¡ instalado, ni estÃ¡ en el archivo 'master'."
 
 #: Game.cpp:539
 msgid " is not in the masterlist and has not been sorted by a rule."
@@ -1033,50 +1033,50 @@ msgstr ""
 
 #: ..\boss-cli\BOSS-CLI.cpp:356
 msgid "Do you want to download and install the update? (y/n)"
-msgstr "�Quiere descargar e instalar la actualizaci�n? (Si/no)"
+msgstr "¿Quiere descargar e instalar la actualización? (Si/no)"
 
 #: ..\boss-cli\BOSS-CLI.cpp:362
 msgid "No update has been downloaded or installed."
-msgstr "No actualizaci�n se ha descargado o instalado." 
+msgstr "No actualización se ha descargado o instalado." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:369
 msgid "New installer successfully downloaded!"
-msgstr "�Nuevo instalador descargado correctamente!" 
+msgstr "¡Nuevo instalador descargado correctamente!" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:370
 msgid ""
 "BOSS will now launch the downloaded installer and exit. Complete the "
 "installer to complete the update."
 msgstr ""
-"BOSS ahora se iniciar� el instalador de descargo y salir. Completa el "
-"Instalador para completar la actualizaci�n." 
+"BOSS ahora se iniciará el instalador de descargo y salir. Completa el "
+"Instalador para completar la actualización." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:384 MainWindow.cpp:965
 msgid "Update cancelled."
-msgstr "Actualizaci�n cancelada." 
+msgstr "Actualización cancelada." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:401
 msgid "BOSS Update check failed. No Internet connection detected."
-msgstr "Error en la actualizaci�n de BOSS. Conexi�n al Internet no era detectado." 
+msgstr "Error en la actualización de BOSS. Conexión al Internet no era detectado." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:428 MainWindow.cpp:203
 msgid "Please pick which game to run BOSS for:"
-msgstr "Por favor, elegir qu� juego se ejecute de BOSS para:" 
+msgstr "Por favor, elegir qué juego se ejecute de BOSS para:" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:434
 msgid "Invalid selection."
-msgstr "Selecci�n Inv�lida." 
+msgstr "Selección Inválida." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:471 MainWindow.cpp:468 UserRuleEditor.cpp:97
 msgid "Updating to the latest masterlist from the Google Code repository..."
-msgstr "Actualizando a la �ltima masterlist desde el repositorio de Google Code ..."
+msgstr "Actualizando a la última masterlist desde el repositorio de Google Code ..."
 
 #: ..\boss-cli\BOSS-CLI.cpp:478 MainWindow.cpp:476
 msgid ""
 "Your masterlist is already at the latest revision (r%1%; %2%). No update "
 "necessary."
 msgstr ""
-"Su masterlist ya se encuentra en la �ltima revisi�n (r% 1%,% 2%). Actualizaci�n " 
+"Su masterlist ya se encuentra en la última revisión (r% 1%,% 2%). Actualización " 
 "no es necesario." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:481 MainWindow.cpp:480
