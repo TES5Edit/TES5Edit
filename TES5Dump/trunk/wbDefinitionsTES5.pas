@@ -869,6 +869,7 @@ var
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbStructDef;
   wbScriptFragments: IwbStructDef;
+  wbEntryPointsEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
   wbLocationData: IwbStructDef;
   wbTargetData: IwbStructDef;
@@ -1297,101 +1298,102 @@ begin
   end;
 end;
 
-function wbPerkDATAQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Container  : IwbContainerElementRef;
-  Param1     : IwbElement;
-  MainRecord : IwbMainRecord;
-  EditInfos  : TStringList;
-  Stages     : IwbContainerElementRef;
-  Stage      : IwbContainerElementRef;
-  i, j       : Integer;
-  s, t       : string;
-begin
-  case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Quest>';
-    ctToEditValue: Result := IntToStr(aInt);
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 8);
-      Exit;
-    end;
-    ctCheck: Result := '<Warning: Could not resolve Quest>';
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
-
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
-
-  Param1 := Container.ElementByName['Quest'];
-
-  if not Assigned(Param1) then
-    Exit;
-
-  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-    Exit;
-
-  if MainRecord.Signature <> QUST then begin
-    case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-    end;
-    Exit;
-  end;
-
-  case aType of
-    ctEditType: begin
-      Result := 'ComboBox';
-      Exit;
-    end;
-    ctEditInfo:
-      EditInfos := TStringList.Create;
-  else
-    EditInfos := nil;
-  end;
-  try
-    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
-      for i := 0 to Pred(Stages.ElementCount) do
-        if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
-          j := Stage.ElementNativeValues['INDX'];
-          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
-          t := IntToStr(j);
-          while Length(t) < 3 do
-            t := '0' + t;
-          if s <> '' then
-            t := t + ' ' + s;
-          if Assigned(EditInfos) then
-            EditInfos.AddObject(t, TObject(j))
-          else if j = aInt then begin
-            case aType of
-              ctToStr, ctToEditValue: Result := t;
-              ctCheck: Result := '';
-            end;
-            Exit;
-          end;
-        end;
-    end;
-
-    case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-      ctEditInfo: begin
-        EditInfos.Sort;
-        Result := EditInfos.CommaText;
-      end;
-    end;
-  finally
-    FreeAndNil(EditInfos);
-  end;
-end;
+{>>> Needs revision for Skyrim <<<}
+//function wbPerkDATAQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+//var
+//  Container  : IwbContainerElementRef;
+//  Param1     : IwbElement;
+//  MainRecord : IwbMainRecord;
+//  EditInfos  : TStringList;
+//  Stages     : IwbContainerElementRef;
+//  Stage      : IwbContainerElementRef;
+//  i, j       : Integer;
+//  s, t       : string;
+//begin
+//  case aType of
+//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Quest>';
+//    ctToEditValue: Result := IntToStr(aInt);
+//    ctToSortKey: begin
+//      Result := IntToHex64(aInt, 8);
+//      Exit;
+//    end;
+//    ctCheck: Result := '<Warning: Could not resolve Quest>';
+//    ctEditType: Result := '';
+//    ctEditInfo: Result := '';
+//  end;
+//
+//  if not Assigned(aElement) then
+//    Exit;
+//
+//  if aElement.ElementType = etValue then
+//    Supports(aElement.Container, IwbContainerElementRef, Container)
+//  else
+//    Supports(aElement, IwbContainerElementRef, Container);
+//
+//  if not Assigned(Container) then
+//    Exit;
+//
+//  Param1 := Container.ElementByName['Quest'];
+//
+//  if not Assigned(Param1) then
+//    Exit;
+//
+//  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
+//    Exit;
+//
+//  if MainRecord.Signature <> QUST then begin
+//    case aType of
+//      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+//      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+//    end;
+//    Exit;
+//  end;
+//
+//  case aType of
+//    ctEditType: begin
+//      Result := 'ComboBox';
+//      Exit;
+//    end;
+//    ctEditInfo:
+//      EditInfos := TStringList.Create;
+//  else
+//    EditInfos := nil;
+//  end;
+//  try
+//    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
+//      for i := 0 to Pred(Stages.ElementCount) do
+//        if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
+//          j := Stage.ElementNativeValues['INDX\Stage Index'];
+//          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
+//          t := IntToStr(j);
+//          while Length(t) < 3 do
+//            t := '0' + t;
+//          if s <> '' then
+//            t := t + ' ' + s;
+//          if Assigned(EditInfos) then
+//            EditInfos.AddObject(t, TObject(j))
+//          else if j = aInt then begin
+//            case aType of
+//              ctToStr, ctToEditValue: Result := t;
+//              ctCheck: Result := '';
+//            end;
+//            Exit;
+//          end;
+//        end;
+//    end;
+//
+//    case aType of
+//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+//      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+//      ctEditInfo: begin
+//        EditInfos.Sort;
+//        Result := EditInfos.CommaText;
+//      end;
+//    end;
+//  finally
+//    FreeAndNil(EditInfos);
+//  end;
+//end;
 
 function wbCTDAParam2QuestObjectiveToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -2380,8 +2382,9 @@ begin
     Exit;
   Result := Container.ElementNativeValues['EPFT'];
   if Result = 2 then
-    if Integer(Container.ElementNativeValues['..\DATA\Entry Point\Function']) = 5 then
-      Result := 5;
+    case Integer(Container.ElementNativeValues['..\DATA\Entry Point\Function']) of
+      5, 12, 13, 14: Result := 8;
+    end;
 end;
 
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3007,330 +3010,331 @@ begin
   Result := StrToInt64(aString);
 end;
 
-type
-  TPERKEntryPointConditionType = (
-    epcDefault,
-    epcItem,
-    epcWeapon,
-    epcWeaponTarget,
-    epcTarget,
-    epcAttacker,
-    epcAttackerAttackee,
-    epcAttackerAttackerWeapon
-  );
-
-  TPERKEntryPointFunctionType = (
-    epfFloat,
-    epfLeveledItem,
-    epfScript,
-    epfUnknown
-  );
-
-  TPERKEntryPointFunctionParamType = (
-    epfpNone,
-    epfpFloat,
-    epfpFloatFloat,
-    epfpLeveledItem,
-    epfpScript
-  );
-
-  PPERKEntryPoint = ^TPERKEntryPoint;
-  TPERKEntryPoint = record
-    Name         : string;
-    Condition   : TPERKEntryPointConditionType;
-    FunctionType : TPERKEntryPointFunctionType;
-  end;
-
-  PPERKCondition = ^TPERKCondition;
-  TPERKCondition = record
-    Count    : Integer;
-    Caption1 : string;
-    Caption2 : string;
-    Caption3 : string;
-  end;
-
-  PPERKFunction = ^TPERKFunction;
-  TPERKFunction = record
-    Name         : string;
-    FunctionType : TPERKEntryPointFunctionType;
-    ParamType    : TPERKEntryPointFunctionParamType;
-  end;
-
-const
-  wbPERKCondition : array[TPERKEntryPointConditionType] of TPERKCondition = (
-    (Count: 1; Caption1: 'Perk Owner'),
-    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Item'),
-    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Weapon'),
-    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Weapon'; Caption3: 'Target'),
-    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Target'),
-    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Attacker'),
-    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Attacker'; Caption3: 'Attackee'),
-    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Attacker'; Caption3: 'Attacker Weapon')
-  );
-
-  wbPERKFunctions : array[0..9] of TPERKFunction = (
-    (Name: ''; FunctionType: epfUnknown; ParamType: epfpNone),
-    (Name: 'Set Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-    (Name: 'Add Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-    (Name: 'Multiply Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-    (Name: 'Add Range To Value'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
-    (Name: 'Add Actor Value Mult'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
-    (Name: 'Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
-    (Name: 'Negative Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
-    (Name: 'Add Leveled List'; FunctionType: epfLeveledItem; ParamType: epfpLeveledItem),
-    (Name: 'Add Activate Choice'; FunctionType: epfScript; ParamType: epfpScript)
-  );
-
-  wbPERKEntryPoints : array[0..73] of TPERKEntryPoint = (
-    (Name: 'Calculate Weapon Damage'; Condition: epcWeaponTarget),
-    (Name: 'Calculate My Critical Hit Chance'; Condition: epcWeaponTarget),
-    (Name: 'Calculate My Critical Hit Damage'; Condition: epcWeaponTarget),
-    (Name: 'Calculate Weapon Attack AP Cost'; Condition: epcWeapon),
-    (Name: 'Calculate Mine Explode Chance'; Condition: epcItem),
-    (Name: 'Adjust Range Penalty'; Condition: epcWeapon),
-    (Name: 'Adjust Limb Damage'; Condition: epcAttackerAttackerWeapon),
-    (Name: 'Calculate Weapon Range'; Condition: epcWeapon),
-    (Name: 'Calculate To Hit Chance'; Condition: epcWeaponTarget),
-    (Name: 'Adjust Experience Points'),
-    (Name: 'Adjust Gained Skill Points'),
-    (Name: 'Adjust Book Skill Points'),
-    (Name: 'Modify Recovered Health'),
-    (Name: 'Calculate Inventory AP Cost'),
-    (Name: 'Get Disposition'; Condition: epcTarget),
-    (Name: 'Get Should Attack'; Condition: epcAttacker),
-    (Name: 'Get Should Assist'; Condition: epcAttackerAttackee),
-    (Name: 'Calculate Buy Price'; Condition: epcItem),
-    (Name: 'Get Bad Karma'),
-    (Name: 'Get Good Karma'),
-    (Name: 'Ignore Locked Terminal'),
-    (Name: 'Add Leveled List On Death'; Condition: epcTarget; FunctionType: epfLeveledItem),
-    (Name: 'Get Max Carry Weight'),
-    (Name: 'Modify Addiction Chance'),
-    (Name: 'Modify Addiction Duration'),
-    (Name: 'Modify Positive Chem Duration'),
-    (Name: 'Adjust Drinking Radiation'),
-    (Name: 'Activate'; Condition: epcTarget; FunctionType: epfScript),
-    (Name: 'Mysterious Stranger'),
-    (Name: 'Has Paralyzing Palm'),
-    (Name: 'Hacking Science Bonus'),
-    (Name: 'Ignore Running During Detection'),
-    (Name: 'Ignore Broken Lock'),
-    (Name: 'Has Concentrated Fire'),
-    (Name: 'Calculate Gun Spread'; Condition: epcWeapon),
-    (Name: 'Player Kill AP Reward'; Condition: epcWeaponTarget),
-{36}(Name: 'Modify Enemy Critical Hit Chance'; Condition: epcWeaponTarget),
-{37}(Name: 'Reload Speed'; Condition: epcWeapon),
-{38}(Name: 'Equip Speed'; Condition: epcWeapon),
-{39}(Name: 'Action Point Regen'; Condition: epcWeapon),
-{40}(Name: 'Action Point Cost'; Condition: epcWeapon),
-{41}(Name: 'Miss Fortune'; Condition: epcDefault),
-{42}(Name: 'Modify Run Speed'; Condition: epcDefault),
-{43}(Name: 'Modify Attack Speed'; Condition: epcWeapon),
-{44}(Name: 'Modify Radiation Consumed'; Condition: epcDefault),
-{45}(Name: 'Has Pip Hacker'; Condition: epcDefault),
-{46}(Name: 'Has Meltdown'; Condition: epcDefault),
-{47}(Name: 'See Enemy Health'; Condition: epcDefault),
-{48}(Name: 'Has Jury Rigging'; Condition: epcDefault),
-{49}(Name: 'Modify Threat Range'; Condition: epcWeapon),
-{50}(Name: 'Modify Thread'; Condition: epcWeapon),
-{51}(Name: 'Has Fast Travel Always'; Condition: epcDefault),
-{52}(Name: 'Knockdown Chance'; Condition: epcWeapon),
-{53}(Name: 'Modify Weapon Strength Req'; Condition: epcWeapon),
-{54}(Name: 'Modify Aiming Move Speed'; Condition: epcWeapon),
-{55}(Name: 'Modify Light Items'; Condition: epcDefault),
-{56}(Name: 'Modify Damage Threshold (defender)'; Condition: epcWeaponTarget),
-{57}(Name: 'Modify Chance for Ammo Item'; Condition: epcWeapon),
-{58}(Name: 'Modify Damage Threshold (attacker)'; Condition: epcWeaponTarget),
-{59}(Name: 'Modify Throwing Velocity'; Condition: epcWeapon),
-{60}(Name: 'Chance for Item on Fire'; Condition: epcWeapon),
-{61}(Name: 'Has Unarmed Forward Power Attack'; Condition: epcDefault),
-{62}(Name: 'Has Unarmed Back Power Attack'; Condition: epcWeaponTarget),
-{63}(Name: 'Has Unarmed Crouched Power Attack'; Condition: epcDefault),
-{64}(Name: 'Has Unarmed Counter Attack'; Condition: epcWeaponTarget),
-{65}(Name: 'Has Unarmed Left Power Attack'; Condition: epcDefault),
-{66}(Name: 'Has Unarmed Right Power Attack'; Condition: epcDefault),
-{67}(Name: 'VATS HelperChance'; Condition: epcDefault),
-{68}(Name: 'Modify Item Damage'; Condition: epcDefault),
-{69}(Name: 'Has Improved Detection'; Condition: epcDefault),
-{70}(Name: 'Has Improved Spotting'; Condition: epcDefault),
-{71}(Name: 'Has Improved Item Detection'; Condition: epcDefault),
-{72}(Name: 'Adjust Explosion Radius'; Condition: epcWeapon),
-{73}(Name: 'Reserved'; Condition: epcWeapon)
-  );
-
-  wbPERKFunctionParams: array[TPERKEntryPointFunctionParamType] of string = (
-    'None',
-    'Float',
-    'Float, Float',
-    'Leveled Item',
-    'Script'
-  );
-
-procedure wbPERKEntryPointAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  OldEntryPoint   : PPERKEntryPoint;
-  NewEntryPoint   : PPERKEntryPoint;
-  OldCondition    : PPERKCondition;
-  NewCondition    : PPERKCondition;
-  OldFunction     : PPERKFunction;
-  EntryPoint      : IwbContainerElementRef;
-  Effect          : IwbContainerElementRef;
-  PerkConditions  : IwbContainerElementRef;
-  PerkCondition   : IwbContainerElementRef;
-  Container       : IwbContainerElementRef;
-  i               : Integer;
-begin
-  if aOldValue <> aNewValue then begin
-    OldEntryPoint := @wbPERKEntryPoints[Integer(aOldValue)];
-    NewEntryPoint := @wbPERKEntryPoints[Integer(aNewValue)];
-    OldCondition := @wbPERKCondition[OldEntryPoint.Condition];
-    NewCondition := @wbPERKCondition[NewEntryPoint.Condition];
-    if not Assigned(aElement) then
-      Exit;
-    if not Supports(aElement.Container, IwbContainerElementRef, EntryPoint) then
-      Exit;
-    i := EntryPoint.ElementNativeValues['Function'];
-    if (i >= Low(wbPERKFunctions)) and (i <= High(wbPERKFunctions)) then
-      OldFunction := @wbPERKFunctions[i]
-    else
-      OldFunction := nil;
-    if not Assigned(OldFunction) or (OldFunction.FunctionType <> NewEntryPoint.FunctionType) then
-      for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
-        with wbPERKFunctions[i] do
-          if FunctionType = NewEntryPoint.FunctionType then begin
-            EntryPoint.ElementNativeValues['Function'] := i;
-            Break;
-          end;
-    EntryPoint.ElementNativeValues['Perk Condition Tab Count'] := NewCondition.Count;
-
-    if not Supports(EntryPoint.Container, IwbContainerElementRef, Container) then
-      Exit;
-    if not Supports(Container.Container, IwbContainerElementRef, Effect) then
-      Exit;
-
-    if not Supports(Effect.ElementByName['Perk Conditions'], IwbContainerElementRef, PerkConditions) then
-      Exit;
-
-    for i := Pred(PerkConditions.ElementCount) downto 0 do
-      if Supports(PerkConditions.Elements[i], IwbContainerElementRef, PerkCondition) then
-        if Integer(PerkCondition.ElementNativeValues['PRKC']) >= NewCondition.Count then
-          PerkCondition.Remove
-        else
-          case Integer(PerkCondition.ElementNativeValues['PRKC']) of
-            2: if OldCondition.Caption2 <> NewCondition.Caption2 then
-                 PerkCondition.Remove;
-            3: if OldCondition.Caption3 <> NewCondition.Caption3 then
-                 PerkCondition.Remove;
-          end;
-  end;
-end;
-
-function wbPRKCToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Container     : IwbContainerElementRef;
-  EntryPointVar : Variant;
-  EntryPoint    : Integer;
-begin
-  case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
-    ctToEditValue: Result := IntToStr(aInt);
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 2);
-      Exit;
-    end;
-    ctCheck: Result := '<Warning: Could not resolve Entry Point>';
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-  EntryPointVar := Container.ElementNativeValues['..\..\..\DATA\Entry Point\Entry Point'];
-  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-    Exit;
-  EntryPoint := EntryPointVar;
-  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
-    case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-      ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-    end;
-    Exit;
-  end;
-
-  with wbPERKEntryPoints[EntryPoint] do begin
-    with wbPERKCondition[Condition] do begin
-      case aType of
-        ctEditType: Result := 'ComboBox';
-        ctEditInfo: with TStringList.Create do try
-          if Caption1 <> '' then
-            Add(Caption1);
-          if Caption2 <> '' then
-            Add(Caption2);
-          if Caption3 <> '' then
-            Add(Caption3);
-          Sort;
-          Result := CommaText;
-        finally
-          Free;
-        end;
-      else
-        if (aInt < 0) or (aInt >= Count) then
-          case aType of
-            ctToStr: Result := IntToStr(aInt) + ' <Warning: Value out of Bounds for this Entry Point>';
-            ctCheck: Result := '<Warning: Value out of Bounds for this Entry Point>';
-          end
-        else
-          case aType of
-            ctToStr, ctToEditValue: case Integer(aInt) of
-              0: Result := Caption1;
-              1: Result := Caption2;
-              2: Result := Caption3;
-            end;
-            ctCheck: Result := '';
-          end;
-      end;
-    end;
-  end;
-end;
-
-function wbPRKCToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  Container     : IwbContainerElementRef;
-  EntryPointVar : Variant;
-  EntryPoint    : Integer;
-  s             : string;
-begin
-  s := Trim(aString);
-
-  Result := StrToInt64Def(s, Low(Integer));
-  if Result <> Low(Integer) then
-    Exit;
-  if s = '' then begin
-    Result := 0;
-    Exit;
-  end;
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    raise Exception.Create('Could not resolve Entry Point');
-  EntryPointVar := Container.ElementNativeValues['..\..\..\DATA\Entry Point\Entry Point'];
-  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-    raise Exception.Create('Could not resolve Entry Point');
-
-  EntryPoint := EntryPointVar;
-  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then
-    raise Exception.Create('Unknown Entry Point #'+IntToStr(EntryPoint));
-
-  with wbPERKEntryPoints[EntryPoint] do
-    with wbPERKCondition[Condition] do
-      if SameText(aString, Caption1) then
-        Result := 0
-      else if SameText(aString, Caption2) then
-        Result := 1
-      else if SameText(aString, Caption3) then
-        Result := 2
-      else
-        raise Exception.Create('"'+s+'" is not valid for this Entry Point');
-end;
+{>>> Needs revision for Skyrim <<<}
+//type
+//  TPERKEntryPointConditionType = (
+//    epcDefault,
+//    epcItem,
+//    epcWeapon,
+//    epcWeaponTarget,
+//    epcTarget,
+//    epcAttacker,
+//    epcAttackerAttackee,
+//    epcAttackerAttackerWeapon
+//  );
+//
+//  TPERKEntryPointFunctionType = (
+//    epfFloat,
+//    epfLeveledItem,
+//    epfScript,
+//    epfUnknown
+//  );
+//
+//  TPERKEntryPointFunctionParamType = (
+//    epfpNone,
+//    epfpFloat,
+//    epfpFloatFloat,
+//    epfpLeveledItem,
+//    epfpScript
+//  );
+//
+//  PPERKEntryPoint = ^TPERKEntryPoint;
+//  TPERKEntryPoint = record
+//    Name         : string;
+//    Condition   : TPERKEntryPointConditionType;
+//    FunctionType : TPERKEntryPointFunctionType;
+//  end;
+//
+//  PPERKCondition = ^TPERKCondition;
+//  TPERKCondition = record
+//    Count    : Integer;
+//    Caption1 : string;
+//    Caption2 : string;
+//    Caption3 : string;
+//  end;
+//
+//  PPERKFunction = ^TPERKFunction;
+//  TPERKFunction = record
+//    Name         : string;
+//    FunctionType : TPERKEntryPointFunctionType;
+//    ParamType    : TPERKEntryPointFunctionParamType;
+//  end;
+//
+//const
+//  wbPERKCondition : array[TPERKEntryPointConditionType] of TPERKCondition = (
+//    (Count: 1; Caption1: 'Perk Owner'),
+//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Item'),
+//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Weapon'),
+//    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Weapon'; Caption3: 'Target'),
+//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Target'),
+//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Attacker'),
+//    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Attacker'; Caption3: 'Attackee'),
+//    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Attacker'; Caption3: 'Attacker Weapon')
+//  );
+//
+//  wbPERKFunctions : array[0..9] of TPERKFunction = (
+//    (Name: ''; FunctionType: epfUnknown; ParamType: epfpNone),
+//    (Name: 'Set Value'; FunctionType: epfFloat; ParamType: epfpFloat),
+//    (Name: 'Add Value'; FunctionType: epfFloat; ParamType: epfpFloat),
+//    (Name: 'Multiply Value'; FunctionType: epfFloat; ParamType: epfpFloat),
+//    (Name: 'Add Range To Value'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
+//    (Name: 'Add Actor Value Mult'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
+//    (Name: 'Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
+//    (Name: 'Negative Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
+//    (Name: 'Add Leveled List'; FunctionType: epfLeveledItem; ParamType: epfpLeveledItem),
+//    (Name: 'Add Activate Choice'; FunctionType: epfScript; ParamType: epfpScript)
+//  );
+//
+//  wbPERKEntryPoints : array[0..73] of TPERKEntryPoint = (
+//    (Name: 'Calculate Weapon Damage'; Condition: epcWeaponTarget),
+//    (Name: 'Calculate My Critical Hit Chance'; Condition: epcWeaponTarget),
+//    (Name: 'Calculate My Critical Hit Damage'; Condition: epcWeaponTarget),
+//    (Name: 'Calculate Weapon Attack AP Cost'; Condition: epcWeapon),
+//    (Name: 'Calculate Mine Explode Chance'; Condition: epcItem),
+//    (Name: 'Adjust Range Penalty'; Condition: epcWeapon),
+//    (Name: 'Adjust Limb Damage'; Condition: epcAttackerAttackerWeapon),
+//    (Name: 'Calculate Weapon Range'; Condition: epcWeapon),
+//    (Name: 'Calculate To Hit Chance'; Condition: epcWeaponTarget),
+//    (Name: 'Adjust Experience Points'),
+//    (Name: 'Adjust Gained Skill Points'),
+//    (Name: 'Adjust Book Skill Points'),
+//    (Name: 'Modify Recovered Health'),
+//    (Name: 'Calculate Inventory AP Cost'),
+//    (Name: 'Get Disposition'; Condition: epcTarget),
+//    (Name: 'Get Should Attack'; Condition: epcAttacker),
+//    (Name: 'Get Should Assist'; Condition: epcAttackerAttackee),
+//    (Name: 'Calculate Buy Price'; Condition: epcItem),
+//    (Name: 'Get Bad Karma'),
+//    (Name: 'Get Good Karma'),
+//    (Name: 'Ignore Locked Terminal'),
+//    (Name: 'Add Leveled List On Death'; Condition: epcTarget; FunctionType: epfLeveledItem),
+//    (Name: 'Get Max Carry Weight'),
+//    (Name: 'Modify Addiction Chance'),
+//    (Name: 'Modify Addiction Duration'),
+//    (Name: 'Modify Positive Chem Duration'),
+//    (Name: 'Adjust Drinking Radiation'),
+//    (Name: 'Activate'; Condition: epcTarget; FunctionType: epfScript),
+//    (Name: 'Mysterious Stranger'),
+//    (Name: 'Has Paralyzing Palm'),
+//    (Name: 'Hacking Science Bonus'),
+//    (Name: 'Ignore Running During Detection'),
+//    (Name: 'Ignore Broken Lock'),
+//    (Name: 'Has Concentrated Fire'),
+//    (Name: 'Calculate Gun Spread'; Condition: epcWeapon),
+//    (Name: 'Player Kill AP Reward'; Condition: epcWeaponTarget),
+//{36}(Name: 'Modify Enemy Critical Hit Chance'; Condition: epcWeaponTarget),
+//{37}(Name: 'Reload Speed'; Condition: epcWeapon),
+//{38}(Name: 'Equip Speed'; Condition: epcWeapon),
+//{39}(Name: 'Action Point Regen'; Condition: epcWeapon),
+//{40}(Name: 'Action Point Cost'; Condition: epcWeapon),
+//{41}(Name: 'Miss Fortune'; Condition: epcDefault),
+//{42}(Name: 'Modify Run Speed'; Condition: epcDefault),
+//{43}(Name: 'Modify Attack Speed'; Condition: epcWeapon),
+//{44}(Name: 'Modify Radiation Consumed'; Condition: epcDefault),
+//{45}(Name: 'Has Pip Hacker'; Condition: epcDefault),
+//{46}(Name: 'Has Meltdown'; Condition: epcDefault),
+//{47}(Name: 'See Enemy Health'; Condition: epcDefault),
+//{48}(Name: 'Has Jury Rigging'; Condition: epcDefault),
+//{49}(Name: 'Modify Threat Range'; Condition: epcWeapon),
+//{50}(Name: 'Modify Thread'; Condition: epcWeapon),
+//{51}(Name: 'Has Fast Travel Always'; Condition: epcDefault),
+//{52}(Name: 'Knockdown Chance'; Condition: epcWeapon),
+//{53}(Name: 'Modify Weapon Strength Req'; Condition: epcWeapon),
+//{54}(Name: 'Modify Aiming Move Speed'; Condition: epcWeapon),
+//{55}(Name: 'Modify Light Items'; Condition: epcDefault),
+//{56}(Name: 'Modify Damage Threshold (defender)'; Condition: epcWeaponTarget),
+//{57}(Name: 'Modify Chance for Ammo Item'; Condition: epcWeapon),
+//{58}(Name: 'Modify Damage Threshold (attacker)'; Condition: epcWeaponTarget),
+//{59}(Name: 'Modify Throwing Velocity'; Condition: epcWeapon),
+//{60}(Name: 'Chance for Item on Fire'; Condition: epcWeapon),
+//{61}(Name: 'Has Unarmed Forward Power Attack'; Condition: epcDefault),
+//{62}(Name: 'Has Unarmed Back Power Attack'; Condition: epcWeaponTarget),
+//{63}(Name: 'Has Unarmed Crouched Power Attack'; Condition: epcDefault),
+//{64}(Name: 'Has Unarmed Counter Attack'; Condition: epcWeaponTarget),
+//{65}(Name: 'Has Unarmed Left Power Attack'; Condition: epcDefault),
+//{66}(Name: 'Has Unarmed Right Power Attack'; Condition: epcDefault),
+//{67}(Name: 'VATS HelperChance'; Condition: epcDefault),
+//{68}(Name: 'Modify Item Damage'; Condition: epcDefault),
+//{69}(Name: 'Has Improved Detection'; Condition: epcDefault),
+//{70}(Name: 'Has Improved Spotting'; Condition: epcDefault),
+//{71}(Name: 'Has Improved Item Detection'; Condition: epcDefault),
+//{72}(Name: 'Adjust Explosion Radius'; Condition: epcWeapon),
+//{73}(Name: 'Reserved'; Condition: epcWeapon)
+//  );
+//
+//  wbPERKFunctionParams: array[TPERKEntryPointFunctionParamType] of string = (
+//    'None',
+//    'Float',
+//    'Float, Float',
+//    'Leveled Item',
+//    'Script'
+//  );
+//
+//procedure wbPERKEntryPointAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+//var
+//  OldEntryPoint   : PPERKEntryPoint;
+//  NewEntryPoint   : PPERKEntryPoint;
+//  OldCondition    : PPERKCondition;
+//  NewCondition    : PPERKCondition;
+//  OldFunction     : PPERKFunction;
+//  EntryPoint      : IwbContainerElementRef;
+//  Effect          : IwbContainerElementRef;
+//  PerkConditions  : IwbContainerElementRef;
+//  PerkCondition   : IwbContainerElementRef;
+//  Container       : IwbContainerElementRef;
+//  i               : Integer;
+//begin
+//  if aOldValue <> aNewValue then begin
+//    OldEntryPoint := @wbPERKEntryPoints[Integer(aOldValue)];
+//    NewEntryPoint := @wbPERKEntryPoints[Integer(aNewValue)];
+//    OldCondition := @wbPERKCondition[OldEntryPoint.Condition];
+//    NewCondition := @wbPERKCondition[NewEntryPoint.Condition];
+//    if not Assigned(aElement) then
+//      Exit;
+//    if not Supports(aElement.Container, IwbContainerElementRef, EntryPoint) then
+//      Exit;
+//    i := EntryPoint.ElementNativeValues['Function'];
+//    if (i >= Low(wbPERKFunctions)) and (i <= High(wbPERKFunctions)) then
+//      OldFunction := @wbPERKFunctions[i]
+//    else
+//      OldFunction := nil;
+//    if not Assigned(OldFunction) or (OldFunction.FunctionType <> NewEntryPoint.FunctionType) then
+//      for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
+//        with wbPERKFunctions[i] do
+//          if FunctionType = NewEntryPoint.FunctionType then begin
+//            EntryPoint.ElementNativeValues['Function'] := i;
+//            Break;
+//          end;
+//    EntryPoint.ElementNativeValues['Perk Condition Tab Count'] := NewCondition.Count;
+//
+//    if not Supports(EntryPoint.Container, IwbContainerElementRef, Container) then
+//      Exit;
+//    if not Supports(Container.Container, IwbContainerElementRef, Effect) then
+//      Exit;
+//
+//    if not Supports(Effect.ElementByName['Perk Conditions'], IwbContainerElementRef, PerkConditions) then
+//      Exit;
+//
+//    for i := Pred(PerkConditions.ElementCount) downto 0 do
+//      if Supports(PerkConditions.Elements[i], IwbContainerElementRef, PerkCondition) then
+//        if Integer(PerkCondition.ElementNativeValues['PRKC']) >= NewCondition.Count then
+//          PerkCondition.Remove
+//        else
+//          case Integer(PerkCondition.ElementNativeValues['PRKC']) of
+//            2: if OldCondition.Caption2 <> NewCondition.Caption2 then
+//                 PerkCondition.Remove;
+//            3: if OldCondition.Caption3 <> NewCondition.Caption3 then
+//                 PerkCondition.Remove;
+//          end;
+//  end;
+//end;
+//
+//function wbPRKCToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+//var
+//  Container     : IwbContainerElementRef;
+//  EntryPointVar : Variant;
+//  EntryPoint    : Integer;
+//begin
+//  case aType of
+//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
+//    ctToEditValue: Result := IntToStr(aInt);
+//    ctToSortKey: begin
+//      Result := IntToHex64(aInt, 2);
+//      Exit;
+//    end;
+//    ctCheck: Result := '<Warning: Could not resolve Entry Point>';
+//    ctEditType: Result := '';
+//    ctEditInfo: Result := '';
+//  end;
+//
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    Exit;
+//  EntryPointVar := Container.ElementNativeValues['..\..\..\DATA\Entry Point\Entry Point'];
+//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
+//    Exit;
+//  EntryPoint := EntryPointVar;
+//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
+//    case aType of
+//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+//      ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+//    end;
+//    Exit;
+//  end;
+//
+//  with wbPERKEntryPoints[EntryPoint] do begin
+//    with wbPERKCondition[Condition] do begin
+//      case aType of
+//        ctEditType: Result := 'ComboBox';
+//        ctEditInfo: with TStringList.Create do try
+//          if Caption1 <> '' then
+//            Add(Caption1);
+//          if Caption2 <> '' then
+//            Add(Caption2);
+//          if Caption3 <> '' then
+//            Add(Caption3);
+//          Sort;
+//          Result := CommaText;
+//        finally
+//          Free;
+//        end;
+//      else
+//        if (aInt < 0) or (aInt >= Count) then
+//          case aType of
+//            ctToStr: Result := IntToStr(aInt) + ' <Warning: Value out of Bounds for this Entry Point>';
+//            ctCheck: Result := '<Warning: Value out of Bounds for this Entry Point>';
+//          end
+//        else
+//          case aType of
+//            ctToStr, ctToEditValue: case Integer(aInt) of
+//              0: Result := Caption1;
+//              1: Result := Caption2;
+//              2: Result := Caption3;
+//            end;
+//            ctCheck: Result := '';
+//          end;
+//      end;
+//    end;
+//  end;
+//end;
+//
+//function wbPRKCToInt(const aString: string; const aElement: IwbElement): Int64;
+//var
+//  Container     : IwbContainerElementRef;
+//  EntryPointVar : Variant;
+//  EntryPoint    : Integer;
+//  s             : string;
+//begin
+//  s := Trim(aString);
+//
+//  Result := StrToInt64Def(s, Low(Integer));
+//  if Result <> Low(Integer) then
+//    Exit;
+//  if s = '' then begin
+//    Result := 0;
+//    Exit;
+//  end;
+//
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    raise Exception.Create('Could not resolve Entry Point');
+//  EntryPointVar := Container.ElementNativeValues['..\..\..\DATA\Entry Point\Entry Point'];
+//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
+//    raise Exception.Create('Could not resolve Entry Point');
+//
+//  EntryPoint := EntryPointVar;
+//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then
+//    raise Exception.Create('Unknown Entry Point #'+IntToStr(EntryPoint));
+//
+//  with wbPERKEntryPoints[EntryPoint] do
+//    with wbPERKCondition[Condition] do
+//      if SameText(aString, Caption1) then
+//        Result := 0
+//      else if SameText(aString, Caption2) then
+//        Result := 1
+//      else if SameText(aString, Caption3) then
+//        Result := 2
+//      else
+//        raise Exception.Create('"'+s+'" is not valid for this Entry Point');
+//end;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
@@ -3444,270 +3448,276 @@ begin
     Result := True;
 end;
 
-function wbPERKPRKCDontShow(const aElement: IwbElement): Boolean;
-var
-  Container: IwbContainerElementRef;
-begin
-  Result := False;
-  if aElement.Name <> 'Effect' then
-    Exit;
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-  if Integer(Container.ElementNativeValues['PRKE\Type']) <> 2 then
-    Result := True;
-end;
+{>>> Needs revision for Skyrim <<<}
+//function wbPERKPRKCDontShow(const aElement: IwbElement): Boolean;
+//var
+//  Container: IwbContainerElementRef;
+//begin
+//  Result := False;
+//  if aElement.Name <> 'Effect' then
+//    Exit;
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    Exit;
+//  if Integer(Container.ElementNativeValues['PRKE\Type']) <> 2 then
+//    Result := True;
+//end;
 
-function wbPerkDATAFunctionToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Container     : IwbContainerElementRef;
-  EntryPointVar : Variant;
-  EntryPoint    : Integer;
-  i             : Integer;
-begin
-  case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
-    ctToEditValue: Result := IntToStr(aInt);
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 2);
-      Exit;
-    end;
-    ctCheck: Result := '<Warning: Could not resolve Entry Point>';
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
+{>>> Needs revision for Skyrim <<<}
+//function wbPerkDATAFunctionToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+//var
+//  Container     : IwbContainerElementRef;
+//  EntryPointVar : Variant;
+//  EntryPoint    : Integer;
+//  i             : Integer;
+//begin
+//  case aType of
+//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
+//    ctToEditValue: Result := IntToStr(aInt);
+//    ctToSortKey: begin
+//      Result := IntToHex64(aInt, 2);
+//      Exit;
+//    end;
+//    ctCheck: Result := '<Warning: Could not resolve Entry Point>';
+//    ctEditType: Result := '';
+//    ctEditInfo: Result := '';
+//  end;
+//
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    Exit;
+//  EntryPointVar := Container.ElementNativeValues['..\Entry Point'];
+//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
+//    Exit;
+//  EntryPoint := EntryPointVar;
+//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
+//    case aType of
+//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+//      ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+//    end;
+//    Exit;
+//  end;
+//
+//  with wbPERKEntryPoints[EntryPoint] do begin
+//    case aType of
+//      ctEditType: Result := 'ComboBox';
+//      ctEditInfo: with TStringList.Create do try
+//        for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
+//          if wbPERKFunctions[i].FunctionType = FunctionType then
+//            if (wbPERKFunctions[i].Name <> '') then
+//              Add(wbPERKFunctions[i].Name);
+//        Sort;
+//        Result := CommaText;
+//      finally
+//        Free;
+//      end;
+//    else
+//      if (aInt < Low(wbPERKFunctions)) or (aInt > High(wbPERKFunctions)) then
+//        case aType of
+//          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function>';
+//          ctCheck: Result := '<Warning: Unknown Function>';
+//        end
+//      else
+//        case aType of
+//          ctToStr, ctToEditValue: begin
+//            Result := wbPERKFunctions[Integer(aInt)].Name;
+//            if (aType = ctToStr) and (wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType) then
+//              Result := Result + ' <Warning: Value out of Bounds for this Entry Point>';
+//          end;
+//          ctCheck:
+//            if wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType then
+//              Result := '<Warning: Value out of Bounds for this Entry Point>'
+//            else
+//              Result := '';
+//        end;
+//    end;
+//  end;
+//end;
 
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-  EntryPointVar := Container.ElementNativeValues['..\Entry Point'];
-  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-    Exit;
-  EntryPoint := EntryPointVar;
-  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
-    case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-      ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-    end;
-    Exit;
-  end;
+{>>> Needs revision for Skyrim <<<}
+//function wbPerkDATAFunctionToInt(const aString: string; const aElement: IwbElement): Int64;
+//var
+//  Container     : IwbContainerElementRef;
+//  EntryPointVar : Variant;
+//  EntryPoint    : Integer;
+//  s             : string;
+//  i             : Integer;
+//begin
+//  s := Trim(aString);
+//
+//  Result := StrToInt64Def(s, Low(Integer));
+//  if Result <> Low(Integer) then
+//    Exit;
+//  if s = '' then
+//    raise Exception.Create('"" is not a valid value for this field');
+//
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    raise Exception.Create('Could not resolve Entry Point');
+//  EntryPointVar := Container.ElementNativeValues['..\Entry Point'];
+//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
+//    raise Exception.Create('Could not resolve Entry Point');
+//
+//  EntryPoint := EntryPointVar;
+//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then
+//    raise Exception.Create('Unknown Entry Point #'+IntToStr(EntryPoint));
+//
+//  with wbPERKEntryPoints[EntryPoint] do
+//    for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
+//      if wbPERKFunctions[i].FunctionType = FunctionType then
+//        if SameText(s, wbPERKFunctions[i].Name) then begin
+//          Result := i;
+//          Exit;
+//        end;
+//
+//  raise Exception.Create('"'+s+'" is not valid for this Entry Point');
+//end;
 
-  with wbPERKEntryPoints[EntryPoint] do begin
-    case aType of
-      ctEditType: Result := 'ComboBox';
-      ctEditInfo: with TStringList.Create do try
-        for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
-          if wbPERKFunctions[i].FunctionType = FunctionType then
-            if (wbPERKFunctions[i].Name <> '') then
-              Add(wbPERKFunctions[i].Name);
-        Sort;
-        Result := CommaText;
-      finally
-        Free;
-      end;
-    else
-      if (aInt < Low(wbPERKFunctions)) or (aInt > High(wbPERKFunctions)) then
-        case aType of
-          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function>';
-          ctCheck: Result := '<Warning: Unknown Function>';
-        end
-      else
-        case aType of
-          ctToStr, ctToEditValue: begin
-            Result := wbPERKFunctions[Integer(aInt)].Name;
-            if (aType = ctToStr) and (wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType) then
-              Result := Result + ' <Warning: Value out of Bounds for this Entry Point>';
-          end;
-          ctCheck:
-            if wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType then
-              Result := '<Warning: Value out of Bounds for this Entry Point>'
-            else
-              Result := '';
-        end;
-    end;
-  end;
-end;
+{>>> Needs revision for Skyrim <<<}
+//procedure wbPerkDATAFunctionAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+//var
+//  NewFunction : Integer;
+//  Container   : IwbContainerElementRef;
+//  OldParamType: Integer;
+//  NewParamType: Integer;
+//begin
+//  NewFunction := aNewValue;
+//  if (NewFunction < Low(wbPERKFunctions)) or (NewFunction > High(wbPERKFunctions)) then
+//    Exit;
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    Exit;
+//  OldParamType := Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'];
+//  NewParamType := Ord(wbPERKFunctions[NewFunction].ParamType);
+//  if (OldParamType = NewParamType) and not VarSameValue(aOldValue, aNewValue) and (NewFunction in [4,5]) then
+//    Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'] := 0;
+//  Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'] := NewParamType;
+//end;
+//
+//function wbPerkEPFTToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+//var
+//  Container       : IwbContainerElementRef;
+//  FunctionTypeVar : Variant;
+//  FunctionType    : Integer;
+////  i               : Integer;
+//begin
+//  case aType of
+//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Function>';
+//    ctToEditValue: Result := IntToStr(aInt);
+//    ctToSortKey: begin
+//      Result := IntToHex64(aInt, 2);
+//      Exit;
+//    end;
+//    ctCheck: Result := '<Warning: Could not resolve Function>';
+//    ctEditType: Result := '';
+//    ctEditInfo: Result := '';
+//  end;
+//
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    Exit;
+//  FunctionTypeVar := Container.ElementNativeValues['..\..\DATA\Entry Point\Function'];
+//  if VarIsNull(FunctionTypeVar) or VarIsClear(FunctionTypeVar) then
+//    Exit;
+//  FunctionType := FunctionTypeVar;
+//  if (FunctionType < Low(wbPERKFunctions)) or (FunctionType > High(wbPERKFunctions)) then begin
+//    case aType of
+//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
+//      ctCheck: Result := '<Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
+//    end;
+//    Exit;
+//  end;
+//
+//  with wbPERKFunctions[FunctionType] do begin
+//    case aType of
+//      ctEditType: Result := 'ComboBox';
+//      ctEditInfo: Result := '"' + wbPERKFunctionParams[ParamType] + '"';
+//    else
+//      if (aInt < Ord(Low(wbPERKFunctionParams))) or (aInt > Ord(High(wbPERKFunctionParams))) then
+//        case aType of
+//          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function Param Type>';
+//          ctCheck: Result := '<Warning: Unknown Function Param Type>';
+//        end
+//      else
+//        case aType of
+//          ctToStr, ctToEditValue: begin
+//            Result := wbPERKFunctionParams[TPERKEntryPointFunctionParamType(aInt)];
+//            if (aType = ctToStr) and (TPERKEntryPointFunctionParamType(aInt) <> ParamType) then
+//              Result := Result + ' <Warning: Value out of Bounds for this Function>';
+//          end;
+//          ctCheck:
+//            if TPERKEntryPointFunctionParamType(aInt) <> ParamType then
+//              Result := Result + ' <Warning: Value out of Bounds for this Function>'
+//            else
+//              Result := '';
+//        end;
+//    end;
+//  end;
+//end;
 
-function wbPerkDATAFunctionToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  Container     : IwbContainerElementRef;
-  EntryPointVar : Variant;
-  EntryPoint    : Integer;
-  s             : string;
-  i             : Integer;
-begin
-  s := Trim(aString);
+{>>> Needs revision for Skyrim <<<}
+//function wbPerkEPFTToInt(const aString: string; const aElement: IwbElement): Int64;
+//var
+//  Container       : IwbContainerElementRef;
+//  FunctionTypeVar : Variant;
+//  FunctionType    : Integer;
+//  s               : string;
+////  i               : Integer;
+//  j               : TPERKEntryPointFunctionParamType;
+//begin
+//  s := Trim(aString);
+//
+//  Result := StrToInt64Def(s, Low(Integer));
+//  if Result <> Low(Integer) then
+//    Exit;
+//  if s = '' then
+//    raise Exception.Create('"" is not a valid value for this field');
+//
+//  if not Supports(aElement, IwbContainerElementRef, Container) then
+//    raise Exception.Create('Could not resolve Function');
+//  FunctionTypeVar := Container.ElementNativeValues['..\..\DATA\Entry Point\Function'];
+//  if VarIsNull(FunctionTypeVar) or VarIsClear(FunctionTypeVar) then
+//    raise Exception.Create('Could not resolve Function');
+//
+//  FunctionType := FunctionTypeVar;
+//  if (FunctionType < Low(wbPERKFunctions)) or (FunctionType > High(wbPERKFunctions)) then
+//    raise Exception.Create('Unknown Function #'+IntToStr(FunctionType));
+//
+//  with wbPERKFunctions[FunctionType] do begin
+//    for j := Low(wbPERKFunctionParams) to High(wbPERKFunctionParams) do
+//      if SameText(s, wbPERKFunctionParams[j]) then begin
+//        if j <> ParamType then
+//          raise Exception.Create('"'+s+'" is not a valid Parameter Type for Function "'+Name+'"');
+//        Result := Ord(j);
+//        Exit;
+//      end;
+//  end;
+//
+//  raise Exception.Create('"'+s+'" is not a valid Parameter Type');
+//end;
 
-  Result := StrToInt64Def(s, Low(Integer));
-  if Result <> Low(Integer) then
-    Exit;
-  if s = '' then
-    raise Exception.Create('"" is not a valid value for this field');
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    raise Exception.Create('Could not resolve Entry Point');
-  EntryPointVar := Container.ElementNativeValues['..\Entry Point'];
-  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-    raise Exception.Create('Could not resolve Entry Point');
-
-  EntryPoint := EntryPointVar;
-  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then
-    raise Exception.Create('Unknown Entry Point #'+IntToStr(EntryPoint));
-
-  with wbPERKEntryPoints[EntryPoint] do
-    for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
-      if wbPERKFunctions[i].FunctionType = FunctionType then
-        if SameText(s, wbPERKFunctions[i].Name) then begin
-          Result := i;
-          Exit;
-        end;
-
-  raise Exception.Create('"'+s+'" is not valid for this Entry Point');
-end;
-
-procedure wbPerkDATAFunctionAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  NewFunction : Integer;
-  Container   : IwbContainerElementRef;
-  OldParamType: Integer;
-  NewParamType: Integer;
-begin
-  NewFunction := aNewValue;
-  if (NewFunction < Low(wbPERKFunctions)) or (NewFunction > High(wbPERKFunctions)) then
-    Exit;
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-  OldParamType := Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'];
-  NewParamType := Ord(wbPERKFunctions[NewFunction].ParamType);
-  if (OldParamType = NewParamType) and not VarSameValue(aOldValue, aNewValue) and (NewFunction in [4,5]) then
-    Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'] := 0;
-  Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'] := NewParamType;
-end;
-
-function wbPerkEPFTToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Container       : IwbContainerElementRef;
-  FunctionTypeVar : Variant;
-  FunctionType    : Integer;
-//  i               : Integer;
-begin
-  case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Function>';
-    ctToEditValue: Result := IntToStr(aInt);
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 2);
-      Exit;
-    end;
-    ctCheck: Result := '<Warning: Could not resolve Function>';
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-  FunctionTypeVar := Container.ElementNativeValues['..\..\DATA\Entry Point\Function'];
-  if VarIsNull(FunctionTypeVar) or VarIsClear(FunctionTypeVar) then
-    Exit;
-  FunctionType := FunctionTypeVar;
-  if (FunctionType < Low(wbPERKFunctions)) or (FunctionType > High(wbPERKFunctions)) then begin
-    case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
-      ctCheck: Result := '<Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
-    end;
-    Exit;
-  end;
-
-  with wbPERKFunctions[FunctionType] do begin
-    case aType of
-      ctEditType: Result := 'ComboBox';
-      ctEditInfo: Result := '"' + wbPERKFunctionParams[ParamType] + '"';
-    else
-      if (aInt < Ord(Low(wbPERKFunctionParams))) or (aInt > Ord(High(wbPERKFunctionParams))) then
-        case aType of
-          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function Param Type>';
-          ctCheck: Result := '<Warning: Unknown Function Param Type>';
-        end
-      else
-        case aType of
-          ctToStr, ctToEditValue: begin
-            Result := wbPERKFunctionParams[TPERKEntryPointFunctionParamType(aInt)];
-            if (aType = ctToStr) and (TPERKEntryPointFunctionParamType(aInt) <> ParamType) then
-              Result := Result + ' <Warning: Value out of Bounds for this Function>';
-          end;
-          ctCheck:
-            if TPERKEntryPointFunctionParamType(aInt) <> ParamType then
-              Result := Result + ' <Warning: Value out of Bounds for this Function>'
-            else
-              Result := '';
-        end;
-    end;
-  end;
-end;
-
-function wbPerkEPFTToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  Container       : IwbContainerElementRef;
-  FunctionTypeVar : Variant;
-  FunctionType    : Integer;
-  s               : string;
-//  i               : Integer;
-  j               : TPERKEntryPointFunctionParamType;
-begin
-  s := Trim(aString);
-
-  Result := StrToInt64Def(s, Low(Integer));
-  if Result <> Low(Integer) then
-    Exit;
-  if s = '' then
-    raise Exception.Create('"" is not a valid value for this field');
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    raise Exception.Create('Could not resolve Function');
-  FunctionTypeVar := Container.ElementNativeValues['..\..\DATA\Entry Point\Function'];
-  if VarIsNull(FunctionTypeVar) or VarIsClear(FunctionTypeVar) then
-    raise Exception.Create('Could not resolve Function');
-
-  FunctionType := FunctionTypeVar;
-  if (FunctionType < Low(wbPERKFunctions)) or (FunctionType > High(wbPERKFunctions)) then
-    raise Exception.Create('Unknown Function #'+IntToStr(FunctionType));
-
-  with wbPERKFunctions[FunctionType] do begin
-    for j := Low(wbPERKFunctionParams) to High(wbPERKFunctionParams) do
-      if SameText(s, wbPERKFunctionParams[j]) then begin
-        if j <> ParamType then
-          raise Exception.Create('"'+s+'" is not a valid Parameter Type for Function "'+Name+'"');
-        Result := Ord(j);
-        Exit;
-      end;
-  end;
-
-  raise Exception.Create('"'+s+'" is not a valid Parameter Type');
-end;
-
-procedure wbPerkEPFTAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  i: Integer;
-  Container: IwbContainerElementRef;
-begin
-  if VarSameValue(aOldValue, aNewValue) then
-    Exit;
-  i := aNewValue;
-  if (i < Ord(Low(wbPERKFunctionParams))) or (i> Ord(High(wbPERKFunctionParams))) then
-    Exit;
-  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
-    Exit;
-  Container.RemoveElement('EPFD');
-  Container.RemoveElement('EPF2');
-  Container.RemoveElement('EPF3');
-  Container.RemoveElement('Embedded Script');
-  case TPERKEntryPointFunctionParamType(i) of
-    epfpFloat, epfpFloatFloat, epfpLeveledItem:
-      Container.Add('EPFD', True);
-    epfpScript: begin
-      Container.Add('EPF2', True);
-      Container.Add('EPF3', True);
-      Container.Add('SCHR', True);
-    end;
-  end;
-end;
+{>>> Needs revision for Skyrim <<<}
+//procedure wbPerkEPFTAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+//var
+//  i: Integer;
+//  Container: IwbContainerElementRef;
+//begin
+//  if VarSameValue(aOldValue, aNewValue) then
+//    Exit;
+//  i := aNewValue;
+//  if (i < Ord(Low(wbPERKFunctionParams))) or (i> Ord(High(wbPERKFunctionParams))) then
+//    Exit;
+//  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+//    Exit;
+//  Container.RemoveElement('EPFD');
+//  Container.RemoveElement('EPF2');
+//  Container.RemoveElement('EPF3');
+//  Container.RemoveElement('Embedded Script');
+//  case TPERKEntryPointFunctionParamType(i) of
+//    epfpFloat, epfpFloatFloat, epfpLeveledItem:
+//      Container.Add('EPFD', True);
+//    epfpScript: begin
+//      Container.Add('EPF2', True);
+//      Container.Add('EPF3', True);
+//      Container.Add('SCHR', True);
+//    end;
+//  end;
+//end;
 
 procedure wbRemoveOFST(const aElement: IwbElement);
 var
@@ -4663,77 +4673,77 @@ begin
     -1, 'None'{>>> itS32 and -1 was used instead of $FFFFFFFF and itU32 <<<}
   ]);
 
-    wbBODT := wbStruct(BODT, 'Body Template', [
-      wbInteger('First Person Flags', itU32, wbFlags([
-          {0x00000001} 'Head',
-          {0x00000002} 'Hair',
-          {0x00000004} 'Body',
-          {0x00000008} 'Hands',
-          {0x00000010} 'Forearms',
-          {0x00000020} 'Amulet',
-          {0x00000040} 'Ring',
-          {0x00000080} 'Feet',
-          {0x00000100} 'Calves',
-          {0x00000200} 'Shield',
-          {0x00000400} 'Body AddOn 1',
-          {0x00000800} 'Long Hair',
-          {0x00001000} 'Circlet',
-          {0x00002000} 'Body AddOn 2',
-          {0x00004000} 'Body AddOn 3',
-          {0x00008000} 'Body AddOn 4',
-          {0x00010000} 'Body AddOn 5',
-          {0x00020000} 'Body AddOn 6',
-          {0x00040000} 'Body AddOn 7',
-          {0x00080000} 'Body AddOn 8',
-          {0x00100000} 'Decapate Head',
-          {0x00200000} 'Decapate',
-          {0x00400000} 'Body AddOn 9',
-          {0x00800000} 'Body AddOn 10',
-          {0x01000000} 'Body AddOn 11',
-          {0x02000000} 'Body AddOn 12',
-          {0x03000000} 'Body AddOn 13',
-          {0x08000000} 'Body AddOn 14',
-          {0x10000000} 'Body AddOn 15',
-          {0x20000000} 'Body AddOn 16',
-          {0x40000000} 'Body AddOn 17',
-          {0x80000000} 'FX01'
-      ], True)),
-      wbInteger('General Flags', itU32, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Unknown 2',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
-      ], True)),
-      wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-    ], cpNormal, True);
+  wbBODT := wbStruct(BODT, 'Body Template', [
+    wbInteger('First Person Flags', itU32, wbFlags([
+        {0x00000001} 'Head',
+        {0x00000002} 'Hair',
+        {0x00000004} 'Body',
+        {0x00000008} 'Hands',
+        {0x00000010} 'Forearms',
+        {0x00000020} 'Amulet',
+        {0x00000040} 'Ring',
+        {0x00000080} 'Feet',
+        {0x00000100} 'Calves',
+        {0x00000200} 'Shield',
+        {0x00000400} 'Body AddOn 1',
+        {0x00000800} 'Long Hair',
+        {0x00001000} 'Circlet',
+        {0x00002000} 'Body AddOn 2',
+        {0x00004000} 'Body AddOn 3',
+        {0x00008000} 'Body AddOn 4',
+        {0x00010000} 'Body AddOn 5',
+        {0x00020000} 'Body AddOn 6',
+        {0x00040000} 'Body AddOn 7',
+        {0x00080000} 'Body AddOn 8',
+        {0x00100000} 'Decapate Head',
+        {0x00200000} 'Decapate',
+        {0x00400000} 'Body AddOn 9',
+        {0x00800000} 'Body AddOn 10',
+        {0x01000000} 'Body AddOn 11',
+        {0x02000000} 'Body AddOn 12',
+        {0x03000000} 'Body AddOn 13',
+        {0x08000000} 'Body AddOn 14',
+        {0x10000000} 'Body AddOn 15',
+        {0x20000000} 'Body AddOn 16',
+        {0x40000000} 'Body AddOn 17',
+        {0x80000000} 'FX01'
+    ], True)),
+    wbInteger('General Flags', itU32, wbFlags([
+      {0x00000001}'Unknown 1',
+      {0x00000002}'Unknown 2',
+      {0x00000004}'Unknown 3',
+      {0x00000008}'Unknown 4',
+      {0x00000010}'Unknown 5',
+      {0x00000020}'Unknown 6',
+      {0x00000040}'Unknown 7',
+      {0x00000080}'Unknown 8',
+      {0x00000100}'Unknown 9',
+      {0x00000200}'Unknown 10',
+      {0x00000400}'Unknown 11',
+      {0x00000800}'Unknown 12',
+      {0x00001000}'Unknown 13',
+      {0x00002000}'Unknown 14',
+      {0x00004000}'Unknown 15',
+      {0x00008000}'Unknown 16',
+      {0x00010000}'Unknown 17',
+      {0x00020000}'Unknown 18',
+      {0x00040000}'Unknown 19',
+      {0x00080000}'Unknown 20',
+      {0x00100000}'Unknown 21',
+      {0x00200000}'Unknown 22',
+      {0x00400000}'Unknown 23',
+      {0x00800000}'Unknown 24',
+      {0x01000000}'Unknown 25',
+      {0x02000000}'Unknown 26',
+      {0x03000000}'Unknown 27',
+      {0x08000000}'Unknown 28',
+      {0x10000000}'Unknown 29',
+      {0x20000000}'Unknown 30',
+      {0x40000000}'Unknown 31',
+      {0x80000000}'Unknown 32'
+    ], True)),
+    wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+  ], cpNormal, True);
 
   wbBODTOld := wbStruct(BODT, 'Unknown', [
     wbbyteArray('Unknown', 4),
@@ -5058,22 +5068,115 @@ begin
      'Silent'
     ]);
 
-  wbLocationEnum := wbEnum([
-      {0} 'Near reference',
-      {1} 'In cell',
-      {2} 'Near package start location',
-      {3} 'Near editor location',
-      {4} 'Object ID',
-      {5} 'Object Type',
-      {6} 'Near linked reference',
-      {7} 'At package location',
-      {8} 'Alias (reference)',
-      {9} 'Alias (location)',
-     {10} 'Unknown 10',
-     {11} 'Unknown 11',
-     {12} 'Near self'
-    ]);
+  wbEntryPointsEnum := wbEnum([
+    { 0} 'Calculate Weapon Damage',
+    { 1} 'Calculate My Critical Hit Chance',
+    { 2} 'Calculate My Critical Hit Damage',
+    { 3} 'Calculate Mine Explode Chance',
+    { 4} 'Adjust Limb Damage',
+    { 5} 'Adjust Book Skill Points',
+    { 6} 'Mod Recovered Health',
+    { 7} 'Get Should Attack',
+    { 8} 'Mod Buy Prices',
+    { 9} 'Add Leveled List On Death',
+    {10} 'Get Max Carry Weight',
+    {11} 'Mod Addiction Chance',
+    {12} 'Mod Addiction Duration',
+    {13} 'Mod Positive Chem Duration',
+    {14} 'Activate',
+    {15} 'Ignore Running During Detection',
+    {16} 'Ignore Broken Lock',
+    {17} 'Mod Enemy Critical Hit Chance',
+    {18} 'Mod Sneak Attack Mult',
+    {19} 'Mod Max Placeable Mines',
+    {20} 'Mod Bow Zoom',
+    {21} 'Mod Recover Arrow Chance',
+    {22} 'Mod Skill Use',
+    {23} 'Mod Telekinesis Distance',
+    {24} 'Mod Telekinesis Damage Mult',
+    {25} 'Mod Telekinesis Damage',
+    {26} 'Mod Bashing Damage',
+    {27} 'Mod Power Attack Stamina',
+    {28} 'Mod Power Attack Damage',
+    {29} 'Mod Spell Magnitude',
+    {30} 'Mod Spell Duration',
+    {31} 'Mod Secondary Value Weight',
+    {32} 'Mod Armor Weight',
+    {33} 'Mod Incoming Stagger',
+    {34} 'Mod Target Stagger',
+    {35} 'Mod Attack Damage',
+    {36} 'Mod Incoming Damage',
+    {37} 'Mod Target Damage Resistance',
+    {38} 'Mod Spell Cost',
+    {39} 'Mod Percent Blocked',
+    {40} 'Mod Shield Deflect Arrow Chance',
+    {41} 'Mod Incoming Spell Magnitude',
+    {42} 'Mod Incoming Spell Duration',
+    {43} 'Mod Player Intimidation',
+    {44} 'Mod Player Reputation',
+    {45} 'Mod Favor Points',
+    {46} 'Mod Bribe Amount',
+    {47} 'Mod Detection Light',
+    {48} 'Mod Detection Movement',
+    {49} 'Mod Soul Gem Recharge',
+    {50} 'Set Sweep Attack',
+    {51} 'Apply Combat Hit Spell',
+    {52} 'Apply Bashing Spell',
+    {53} 'Apply Reanimate Spell',
+    {54} 'Set Boolean Graph Variable',
+    {55} 'Mod Spell Casting Sound Event',
+    {56} 'Mod Pickpocket Chance',
+    {57} 'Mod Detection Sneak Skill',
+    {58} 'Mod Falling Damage',
+    {59} 'Mod Lockpick Sweet Spot',
+    {60} 'Mod Sell Prices',
+    {61} 'Can Pickpocket Equipped Item',
+    {62} 'Mod Lockpick Level Allowed',
+    {63} 'Set Lockpick Starting Arc',
+    {64} 'Set Progression Picking',
+    {65} 'Make Lockpicks Unbreakable',
+    {66} 'Mod Alchemy Effectiveness',
+    {67} 'Apply Weapon Swing Spell',
+    {68} 'Mod Commanded Actor Limit',
+    {69} 'Apply Sneaking Spell',
+    {70} 'Mod Player Magic Slowdown',
+    {71} 'Mod Ward Magicka Absorption Pct',
+    {72} 'Mod Initial Ingredient Effects Learned',
+    {73} 'Purify Alchemy Ingredients',
+    {74} 'Filter Activation',
+    {75} 'Can Dual Cast Spell',
+    {76} 'Mod Tempering Health',
+    {77} 'Mod Enchantment Power',
+    {78} 'Mod Soul Pct Captured to Weapon',
+    {79} 'Mod Soul Gem Enchanting',
+    {80} 'Mod # Applied Enchantments Allowed',
+    {81} 'Set Activate Label',
+    {82} 'Mod Shout OK',
+    {83} 'Mod Poison Dose Count',
+    {84} 'Should Apply Placed Item',
+    {85} 'Mod Armor Rating',
+    {86} 'Mod Lockpicking Crime Chance',
+    {87} 'Mod Ingredients Harvested',
+    {88} 'Mod Spell Range (Target Loc.)',
+    {89} 'Mod Potions Created',
+    {90} 'Mod Lockpicking Key Reward Chance'
+  ]);
 
+  wbLocationEnum := wbEnum([
+    {0} 'Near reference',
+    {1} 'In cell',
+    {2} 'Near package start location',
+    {3} 'Near editor location',
+    {4} 'Object ID',
+    {5} 'Object Type',
+    {6} 'Near linked reference',
+    {7} 'At package location',
+    {8} 'Alias (reference)',
+    {9} 'Alias (location)',
+   {10} 'Unknown 10',
+   {11} 'Unknown 11',
+   {12} 'Near self'
+  ]);
 
   wbWeaponAnimTypeEnum := wbEnum([
     {00} 'Hand to Hand',
@@ -9273,9 +9376,6 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-//------------------------------------------------------------------------------
-// Begin New Perk
-//------------------------------------------------------------------------------
   wbRecord(PERK, 'Perk', [
     wbEDIDReq,
     wbVMAD,
@@ -9284,14 +9384,15 @@ begin
     wbICON,
     wbCTDAs,
     wbStruct(DATA, 'Data', [
-      wbByteArray('IsTrait', 1),
-      wbByteArray('Level', 1),
-      wbInteger('NumRanks', itU8),
-      wbInteger('IsPlayable', itU8, wbEnum(['False', 'True'])),
-      wbInteger('IsHidden', itU8, wbEnum(['False', 'True']))
+      wbInteger('Trait', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Level', itU8),
+      wbInteger('Num Ranks', itU8),
+      wbInteger('Playable', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Hidden', itU8, wbEnum(['False', 'True']))
     ], cpNormal, True{, nil, 4}),
-    wbFormIDCK(NNAM, 'Next Perk', [PERK,NULL]),
-    wbRArray('The Array', wbRStruct('Unknown', [ // Array PRKE to PRKF
+    wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
+
+    wbRArray('Perk Entries', wbRStruct('Perk Entry', [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
@@ -9304,272 +9405,78 @@ begin
       wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
           wbFormIDCk('Quest', [QUST]),
-          wbInteger('Quest Stage', itS8, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
+          wbInteger('Quest Stage', itS8{, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt}),
           wbByteArray('Unused', 3)
         ]),
         wbFormIDCk('Ability', [SPEL]),
         wbStructSK([0, 1], 'Entry Point', [
-          wbInteger('Entry Point', itU8, wbEnum([
-           {00} 'Calculate Weapon Damage',
-           {01} 'Calculate My Critical Hit Chance',
-           {02} 'Calculate My Critical Hit Damage',
-           {03} 'Calculate Weapon Attack AP Cost',
-           {04} 'Calculate Mine Explode Chance',
-           {05} 'Adjust Range Penalty',
-           {06} 'Adjust Limb Damage',
-           {07} 'Calculate Weapon Range',
-           {08} 'Calculate To Hit Chance',
-           {09} 'Adjust Experience Points',
-           {10} 'Adjust Gained Skill Points',
-           {11} 'Adjust Book Skill Points',
-           {12} 'Modify Recovered Health',
-           {13} 'Calculate Inventory AP Cost',
-           {14} 'Get Disposition',
-           {15} 'Get Should Attack',
-           {16} 'Get Should Assist',
-           {17} 'Calculate Buy Price',
-           {18} 'Get Bad Karma',
-           {19} 'Get Good Karma',
-           {20} 'Ignore Locked Terminal',
-           {21} 'Add Leveled List On Death',
-           {22} 'Get Max Carry Weight',
-           {23} 'Modify Addiction Chance',
-           {24} 'Modify Addiction Duration',
-           {25} 'Modify Positive Chem Duration',
-           {26} 'Adjust Drinking Radiation',
-           {27} 'Activate',
-           {28} 'Mysterious Stranger',
-           {29} 'Has Paralyzing Palm',
-           {30} 'Hacking Science Bonus',
-           {31} 'Ignore Running During Detection',
-           {32} 'Ignore Broken Lock',
-           {33} 'Has Concentrated Fire',
-           {34} 'Calculate Gun Spread',
-           {35} 'Player Kill AP Reward',
-           {36} 'Modify Enemy Critical Hit Chance',
-           {37} 'Reload Speed',
-           {38} 'Equip Speed',
-           {39} 'Action Point Regen',
-           {40} 'Action Point Cost',
-           {41} 'Miss Fortune',
-           {42} 'Modify Run Speed',
-           {43} 'Modify Attack Speed',
-           {44} 'Modify Radiation Consumed',
-           {45} 'Has Pip Hacker',
-           {46} 'Has Meltdown',
-           {47} 'See Enemy Health',
-           {48} 'Has Jury Rigging',
-           {49} 'Modify Threat Range',
-           {50} 'Modify Thread',
-           {51} 'Has Fast Travel Always',
-           {52} 'Knockdown Chance',
-           {53} 'Modify Weapon Strength Req',
-           {54} 'Modify Aiming Move Speed',
-           {55} 'Modify Light Items',
-           {56} 'Modify Damage Threshold (defender)',
-           {57} 'Modify Chance for Ammo Item',
-           {58} 'Modify Damage Threshold (attacker)',
-           {59} 'Modify Throwing Velocity',
-           {60} 'Chance for Item on Fire',
-           {61} 'Has Unarmed Forward Power Attack',
-           {62} 'Has Unarmed Back Power Attack',
-           {63} 'Has Unarmed Crouched Power Attack',
-           {64} 'Has Unarmed Counter Attack',
-           {65} 'Has Unarmed Left Power Attack',
-           {66} 'Has Unarmed Right Power Attack',
-           {67} 'VATS HelperChance',
-           {68} 'Modify Item Damage',
-           {69} 'Has Improved Detection',
-           {70} 'Has Improved Spotting',
-           {71} 'Has Improved Item Detection',
-           {72} 'Adjust Explosion Radius',
-           {73} 'Reserved'
-          ]), cpNormal, True, nil, wbPERKEntryPointAfterSet),
-          wbInteger('Function', itU8, wbPerkDATAFunctionToStr, wbPerkDATAFunctionToInt, cpNormal, False, nil, wbPerkDATAFunctionAfterSet),
+          wbInteger('Entry Point', itU8, wbEntryPointsEnum, cpNormal, True, nil{, wbPERKEntryPointAfterSet}),
+          wbInteger('Function', itU8, wbEnum([
+            {0} 'Unknown 0',
+            {1} 'Set Value', // EPFT=1
+            {2} 'Add Value', // EPFT=1
+            {3} 'Multiply Value', // EPFT=1
+            {4} 'Add Range To Value', // EPFT=2
+            {5} 'Add Actor Value Mult', // EPFT=2
+            {6} 'Absolute Value', // no params
+            {7} 'Negative Absolute Value', // no params
+            {8} 'Add Leveled List', // EPFT=3
+            {9} 'Add Activate Choice', // EPFT=4
+           {10} 'Select Spell', // EPFT=5
+           {11} 'Select Text', // EPFT=6
+           {12} 'Set to Actor Value Mult', // EPFT=2
+           {13} 'Multiply Actor Value Mult', // EPFT=2
+           {14} 'Multiply 1 + Actor Value Mult', // EPFT=2
+           {15} 'Set Text' // EPFT=7
+          ])),
           wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
         ])
       ], cpNormal, True),
-      wbRArray('The Array', wbRStruct('Unknown', [ // Array PRKC and CTDA
-        // This was originally not part of an array
-        wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-          wbInteger(PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
-          wbCTDAsReq
-        ], [], cpNormal, False, nil, nil, wbPERKPRKCDontShow)
-      ], [])),
-      wbRStruct('Entry Point Function Parameters', [
-        wbUnknown(EPFT),
-//        wbInteger(EPFT, 'Type', itU8, wbPerkEPFTToStr, wbPerkEPFTToInt, cpIgnore, False, nil, wbPerkEPFTAfterSet),
-//        wbUnknown(EPF2),
-        wbLString(EPF2, 'Unknown'{, 0, cpNormal, False, wbEPF2DontShow}),
-        wbUnknown(EPF3),
-//        wbInteger(EPF3, 'Script Flags', itU32, wbFlags([
-//          'Run Immediately'
-//        ]), cpNormal, False, False, wbEPF2DontShow),
-//        wbUnion(EPFD, 'Data', wbEPFDDecider, [
-//          wbByteArray('Unknown'),
-//          wbFloat('Float'),
-//          wbStruct('Float, Float', [
-//            wbFloat('Float 1'),
-//            wbFloat('Float 2')
-//          ]),
-//          wbFormIDCk('Leveled Item', [LVLI]),
-//          wbEmpty('None (Script)'),
-//          wbStruct('Actor Value, Float', [
-//            wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
-//            wbFloat('Float')
-//          ])
-//        ], cpNormal, False, wbEPFDDontShow)
-        wbUnknown(EPFD)
-      ], [], cpNormal, False, wbPERKPRKCDontShow),
+
+      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
+        wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
+        wbCTDAsReq
+      ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow}),
+
+      wbRStruct('Function Parameters', [
+        wbInteger(EPFT, 'Type', itU8),
+        // case(EPFT) of
+        // 1: EPFD=float
+        // 2: EPFD=float,float
+        // 3: EPFD=LVLI
+        // 4: EPFD=SPEL, EPF2=lstring, EPFT3=int32 flags
+        // 5: EPFD=SPEL
+        // 6: EPFD=string
+        // 7: EPFD=lstring
+        wbLString(EPF2, 'Button Label'),
+        wbStruct(EPF3, 'Script Flags', [
+          wbInteger('Script Flags', itU8, wbFlags([
+            'Run Immediately',
+            'Replace Default'
+          ])),
+          wbByteArray('Unknown', 3)
+        ]),
+        wbUnion(EPFD, 'Data', wbEPFDDecider, [
+          {0} wbByteArray('Unknown'),
+          {1} wbFloat('Float'),
+          {2} wbStruct('Float, Float', [
+                wbFloat('Float 1'),
+                wbFloat('Float 2')
+              ]),
+          {3} wbFormIDCk('Leveled Item', [LVLI]),
+          {4} wbFormIDCk('Spell', [SPEL]),
+          {5} wbFormIDCk('Spell', [SPEL]),
+          {6} wbString('Text'),
+          {7} wbLString('Text'),
+          {8} wbStruct('Actor Value, Float', [
+                wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
+                wbFloat('Float')
+              ])
+        ], cpNormal, False{, wbEPFDDontShow})
+      ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
     ], []))
   ]);
-//------------------------------------------------------------------------------
-// Begin Old Perk
-//------------------------------------------------------------------------------
-//  wbRecord(PERK, 'Perk', [
-//    wbEDIDReq,
-//    wbFULL,
-//    wbDESCReq,
-//    wbICON,
-//    wbCTDAs,
-//    wbStruct(DATA, 'Data', [
-//      wbInteger('Trait', itU8, wbEnum(['No', 'Yes'])),
-//      wbInteger('Min Level', itU8),
-//      wbInteger('Ranks', itU8),
-//      wbInteger('Playable', itU8, wbEnum(['No', 'Yes'])),
-//      wbInteger('Hidden', itU8, wbEnum(['No', 'Yes']))
-//    ], cpNormal, True, nil, 4),
-//    wbRStructsSK('Effects', 'Effect', [0, 1], [
-//      wbStructSK(PRKE, [1, 2, 0], 'Header', [
-//        wbInteger('Type', itU8, wbEnum([
-//          'Quest + Stage',
-//          'Ability',
-//          'Entry Point'
-//        ]), cpNormal, False, nil, wbPERKPRKETypeAfterSet),
-//        wbInteger('Rank', itU8),
-//        wbInteger('Priority', itU8)
-//      ]),
-//      wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
-//        wbStructSK([0, 1], 'Quest + Stage', [
-//          wbFormIDCk('Quest', [QUST]),
-//          wbInteger('Quest Stage', itS8, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
-//          wbByteArray('Unused', 3)
-//        ]),
-//        wbFormIDCk('Ability', [SPEL]),
-//        wbStructSK([0, 1], 'Entry Point', [
-//          wbInteger('Entry Point', itU8, wbEnum([
-//           {00} 'Calculate Weapon Damage',
-//           {01} 'Calculate My Critical Hit Chance',
-//           {02} 'Calculate My Critical Hit Damage',
-//           {03} 'Calculate Weapon Attack AP Cost',
-//           {04} 'Calculate Mine Explode Chance',
-//           {05} 'Adjust Range Penalty',
-//           {06} 'Adjust Limb Damage',
-//           {07} 'Calculate Weapon Range',
-//           {08} 'Calculate To Hit Chance',
-//           {09} 'Adjust Experience Points',
-//           {10} 'Adjust Gained Skill Points',
-//           {11} 'Adjust Book Skill Points',
-//           {12} 'Modify Recovered Health',
-//           {13} 'Calculate Inventory AP Cost',
-//           {14} 'Get Disposition',
-//           {15} 'Get Should Attack',
-//           {16} 'Get Should Assist',
-//           {17} 'Calculate Buy Price',
-//           {18} 'Get Bad Karma',
-//           {19} 'Get Good Karma',
-//           {20} 'Ignore Locked Terminal',
-//           {21} 'Add Leveled List On Death',
-//           {22} 'Get Max Carry Weight',
-//           {23} 'Modify Addiction Chance',
-//           {24} 'Modify Addiction Duration',
-//           {25} 'Modify Positive Chem Duration',
-//           {26} 'Adjust Drinking Radiation',
-//           {27} 'Activate',
-//           {28} 'Mysterious Stranger',
-//           {29} 'Has Paralyzing Palm',
-//           {30} 'Hacking Science Bonus',
-//           {31} 'Ignore Running During Detection',
-//           {32} 'Ignore Broken Lock',
-//           {33} 'Has Concentrated Fire',
-//           {34} 'Calculate Gun Spread',
-//           {35} 'Player Kill AP Reward',
-//           {36} 'Modify Enemy Critical Hit Chance',
-//           {37} 'Reload Speed',
-//           {38} 'Equip Speed',
-//           {39} 'Action Point Regen',
-//           {40} 'Action Point Cost',
-//           {41} 'Miss Fortune',
-//           {42} 'Modify Run Speed',
-//           {43} 'Modify Attack Speed',
-//           {44} 'Modify Radiation Consumed',
-//           {45} 'Has Pip Hacker',
-//           {46} 'Has Meltdown',
-//           {47} 'See Enemy Health',
-//           {48} 'Has Jury Rigging',
-//           {49} 'Modify Threat Range',
-//           {50} 'Modify Thread',
-//           {51} 'Has Fast Travel Always',
-//           {52} 'Knockdown Chance',
-//           {53} 'Modify Weapon Strength Req',
-//           {54} 'Modify Aiming Move Speed',
-//           {55} 'Modify Light Items',
-//           {56} 'Modify Damage Threshold (defender)',
-//           {57} 'Modify Chance for Ammo Item',
-//           {58} 'Modify Damage Threshold (attacker)',
-//           {59} 'Modify Throwing Velocity',
-//           {60} 'Chance for Item on Fire',
-//           {61} 'Has Unarmed Forward Power Attack',
-//           {62} 'Has Unarmed Back Power Attack',
-//           {63} 'Has Unarmed Crouched Power Attack',
-//           {64} 'Has Unarmed Counter Attack',
-//           {65} 'Has Unarmed Left Power Attack',
-//           {66} 'Has Unarmed Right Power Attack',
-//           {67} 'VATS HelperChance',
-//           {68} 'Modify Item Damage',
-//           {69} 'Has Improved Detection',
-//           {70} 'Has Improved Spotting',
-//           {71} 'Has Improved Item Detection',
-//           {72} 'Adjust Explosion Radius',
-//           {73} 'Reserved'
-//          ]), cpNormal, True, nil, wbPERKEntryPointAfterSet),
-//          wbInteger('Function', itU8, wbPerkDATAFunctionToStr, wbPerkDATAFunctionToInt, cpNormal, False, nil, wbPerkDATAFunctionAfterSet),
-//          wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
-//        ])
-//      ], cpNormal, True),
-//      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-//        wbInteger(PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
-//        wbCTDAsReq
-//      ], [], cpNormal, False, nil, nil, wbPERKPRKCDontShow),
-//      wbRStruct('Entry Point Function Parameters', [
-//        wbInteger(EPFT, 'Type', itU8, wbPerkEPFTToStr, wbPerkEPFTToInt, cpIgnore, False, nil, wbPerkEPFTAfterSet),
-//        wbUnion(EPFD, 'Data', wbEPFDDecider, [
-//          wbByteArray('Unknown'),
-//          wbFloat('Float'),
-//          wbStruct('Float, Float', [
-//            wbFloat('Float 1'),
-//            wbFloat('Float 2')
-//          ]),
-//          wbFormIDCk('Leveled Item', [LVLI]),
-//          wbEmpty('None (Script)'),
-//          wbStruct('Actor Value, Float', [
-//            wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
-//            wbFloat('Float')
-//          ])
-//        ], cpNormal, False, wbEPFDDontShow),
-//        wbString(EPF2, 'Button Label', 0, cpNormal, False, wbEPF2DontShow),
-//        wbInteger(EPF3, 'Script Flags', itU16, wbFlags([
-//          'Run Immediately'
-//        ]), cpNormal, False, False, wbEPF2DontShow),
-//        wbEmbeddedScriptPerk
-//      ], [], cpNormal, False, wbPERKPRKCDontShow),
-//      wbEmpty(PRKF, 'End Marker', cpIgnore, True)
-//    ], [])
-//  ]);
-//------------------------------------------------------------------------------
-// End Old Perk
-//------------------------------------------------------------------------------
 
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
