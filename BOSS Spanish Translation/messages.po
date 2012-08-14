@@ -20,21 +20,21 @@ msgstr ""
 #: Error.h:121
 msgid "Masterlist Parsing Error: Expected a %1% at:"
 msgstr "Error en lectura del archivo de reglas 'master': "
-"Se esperaba un %1% en la posiciÃ³n:"
+"Se esperaba un %1% en la posición:"
 
 #: Error.h:122
 msgid "Ini Parsing Error: Expected a %1% at:"
-msgstr "Error en lectura del archivo de configuraciÃ³n: "
-"Se esperaba un %1% en la posiciÃ³n:"
+msgstr "Error en lectura del archivo de configuración: "
+"Se esperaba un %1% en la posición:"
 
 #: Error.h:123
 msgid "Userlist Parsing Error: Expected a %1% at:"
 msgstr "Error en lectura del archivo de reglas de usuario: "
-"Se esperaba un %1% en la posiciÃ³n:"
+"Se esperaba un %1% en la posición:"
 
 #: Error.h:124
 msgid "Userlist Syntax Error: The rule beginning \"%1%: %2%\" %3%"
-msgstr "Error de sintÃ¡xis en el archivo de reglas de usuario: "
+msgstr "Error de sintaxis en el archivo de reglas de usuario: "
 "La regla que empieza \"%1%: %2%\" %3%"
 
 #: Error.h:125
@@ -99,11 +99,11 @@ msgstr "intenta asociar un mensaje a un grupo."
 
 #: Error.h:140
 msgid "has more than one sort line."
-msgstr "tiene mÃ¡s de una linea de ordenamiento (SORT)."
+msgstr "tiene más de una linea de ordenamiento (SORT)."
 
 #: Error.h:141
 msgid "has more than one REPLACE-using message line."
-msgstr "tiene mÃ¡s de una linea de reemplazo de mensaje (REPLACE)"
+msgstr "tiene más de una linea de reemplazo de mensaje (REPLACE)"
 
 #: Error.h:142
 msgid "has a REPLACE-using message line that is not the first message line."
@@ -115,7 +115,7 @@ msgstr ""
 
 #: Error.h:144
 msgid "tries to sort a mod or group relative to itself."
-msgstr "intenta ordenar un mod (o un grupo) respecto de sÃ­ mismo."
+msgstr "Intenta ordenar un mod (o un grupo) respecto de su mismo."
 
 #: Error.h:145
 msgid "tries to attach an malformatted message."
@@ -135,31 +135,31 @@ msgstr "Sin errores."
 
 #: Error.cpp:124
 msgid "No game master .esm file found!"
-msgstr "Â¡No se detectÃ³ ningun archivo master (ESM)!"
+msgstr "¡No se detecta ningún archivo master (ESM)!"
 
 #: Error.cpp:126
 msgid "\"%1%\" cannot be read!"
-msgstr "Â¡No se puede leer de \"%1%\"!"
+msgstr "¡No se puede leer de \"%1%\"!"
 
 #: Error.cpp:128
 msgid "\"%1%\" cannot be written to!"
-msgstr "Â¡No se puede escribir en \"%1%\"!"
+msgstr "¡No se puede escribir en \"%1%\"!"
 
 #: Error.cpp:130
 msgid "\"%1%\" is not encoded in valid UTF-8!"
-msgstr "Â¡\"%1%\" no estÃ¡ codificado en UTF-8 vÃ¡lido!"
+msgstr "¡\"%1%\" no está codificado en UTF-8 válido!"
 
 #: Error.cpp:132
 msgid "\"%1%\" cannot be found!"
-msgstr "Â¡\"%1%\" no existe!"
+msgstr "¡\"%1%\" no existe!"
 
 #: Error.cpp:134
 msgid "Evaluation of conditional \"%1%\" for item \"%2%\" failed!"
-msgstr "Â¡FallÃ³ la evaluaciÃ³n del condicional \"%1%\" para el elemento \"%2%\"!"
+msgstr "¡Falló la evaluación del condicional \"%1%\" para el elemento \"%2%\"!"
 
 #: Error.cpp:136
 msgid "\"%1%\" is not a valid regular expression. Item skipped."
-msgstr "\"%1%\" no es una expresiÃ³n regular vÃ¡lida. Elemento ignorado."
+msgstr "\"%1%\" no es una expresión regular válida. Elemento ignorado."
 
 #: Error.cpp:138
 msgid "No game detected!"
@@ -171,78 +171,80 @@ msgstr "No se puede convertir \"%1%\" de UTF-8 a \"%2%\"."
 
 #: Error.cpp:142
 msgid "Master file \"%1%\" loading after non-master plugins!"
-msgstr "Â¡El archivo master \"%1%\" esta siendo cargado despues de los archivos no-master!"
+msgstr "¡El archivo master \"%1%\" esta siendo cargado despues de los archivos no-master!"
 
 #: Error.cpp:146
 msgid "Cannot find online masterlist revision number!"
-msgstr "Â¡No se pudo encontrar el nÃºmero de revisiÃ³n en el archivo de reglas 'master' obtenido del repositorio!"
+msgstr "¡No se pudo encontrar el número de revisión en el archivo de reglas 'master' obtenido del repositorio!"
 
 #: Error.cpp:148
 msgid "Cannot find online masterlist revision date!"
-msgstr "Â¡No se pudo encontrar la fecha en el archivo de reglas 'master' obtenido del repositorio!"
+msgstr "¡No se pudo encontrar la fecha en el archivo de reglas 'master' obtenido del repositorio!"
 
 #: Error.cpp:150
 msgid "Cannot read list of files to be updated!"
-msgstr "Â¡No se pudo leer la lista de archivos a actualizar!"
+msgstr "¡No se pudo leer la lista de archivos a actualizar!"
 
 #: Error.cpp:152
 msgid "Downloaded file \"%1%\" failed verification test!"
-msgstr "Â¡El archivo \"%1%\" recibido no pasÃ³ la prueba de verificaciÃ³n!"
+msgstr "¡El archivo \"%1%\" recibido no pasó la prueba de verificación!"
 
 #: Error.cpp:154
 msgid ""
 "The modification date of \"%1%\" cannot be read! Filesystem response: \"%2%"
 "\"."
-msgstr "Â¡No se pudo leer la fecha de modificaciÃ³n de \"%1%\"! Respuesta devuelta por el sistema: \"%2%\"."
+msgstr ""
+"¡No se pudo leer la fecha de modificación de \"%1%\"! Respuesta devuelta "
+"por el sistema: \"%2%\"."
 
 #: Error.cpp:156
 msgid "\"%1%\" cannot be renamed! Filesystem response: \"%2%\"."
-msgstr "Â¡No se pudo renombrar \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "¡No se pudo renombrar \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:158
 msgid "\"%1%\" cannot be deleted! Filesystem response: \"%2%\"."
-msgstr "Â¡No se pudo borrar \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "¡No se pudo borrar \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:160
 msgid "\"%1%\" cannot be created! Filesystem response: \"%2%\"."
-msgstr "Â¡No se puede crear \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "¡No se puede crear \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:162
 msgid "\"%1%\" cannot be scanned! Filesystem response: \"%2%\"."
-msgstr "Â¡No se pudo explorar \"%1%\"! Respuesta del sistema: \"%2%\"."
+msgstr "¡No se pudo explorar \"%1%\"! Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:164
 msgid "cURL cannot be initialised!"
-msgstr "Â¡No se pudo inicializar cURL!"
+msgstr "¡No se pudo inicializar cURL!"
 
 #: Error.cpp:166
 msgid "cURL's error buffer could not be set! cURL response: \"%1%\"."
-msgstr "Â¡No se pudo asignar el buffer de errores de cURL! Respuesta: \"%1%\"."
+msgstr "¡No se pudo asignar el buffer de errores de cURL! Respuesta: \"%1%\"."
 
 #: Error.cpp:168
 msgid "A cURL option could not be set! cURL response: \"%1%\"."
-msgstr "Â¡No se pudo asignar una opcion de cURL! Respuesta: \"%1%\"."
+msgstr "¡No se pudo asignar una opcion de cURL! Respuesta: \"%1%\"."
 
 #: Error.cpp:170
 msgid "Proxy hostname or port invalid! cURL response: \"%1%\"."
-msgstr "Â¡Nombre o puerto de proxy invÃ¡lidos! Respuesta: \"%1%\"."
+msgstr "¡Nombre o puerto de proxy inválidos! Respuesta: \"%1%\"."
 
 #: Error.cpp:172
 msgid "Failed to set proxy type! cURL response: \"%1%\"."
-msgstr "Â¡No se pudo configurar el tipo de proxy! Respuesta: \"%1%\"."
+msgstr "¡No se pudo configurar el tipo de proxy! Respuesta: \"%1%\"."
 
 #: Error.cpp:174
 msgid ""
 "Proxy authentication username or password invalid! cURL response: \"%1%\"."
-msgstr "Â¡Autenticacion de usuario con el proxy incorrecta! Respuesta: \"%1%\"."
+msgstr "¡Autenticacion de usuario con el proxy incorrecta! Respuesta: \"%1%\"."
 
 #: Error.cpp:176
 msgid "Failed to set proxy authentication type! cURL response: \"%1%\"."
-msgstr "Â¡No se puede configurar el tipo de autenticaciÃ³n con el proxy! Respuesta: \"%1%\"."
+msgstr "¡No se puede configurar el tipo de autenticación con el proxy! Respuesta: \"%1%\"."
 
 #: Error.cpp:178
 msgid "cURL could not perform task! cURL response: \"%1%\"."
-msgstr "Â¡cURL fallÃ³ en ejecutar una tarea! Respuesta: \"%1%\"."
+msgstr "¡cURL falló en ejecutar una tarea! Respuesta: \"%1%\"."
 
 #: Error.cpp:180
 msgid "Cancelled by user."
@@ -250,18 +252,18 @@ msgstr "Cancelado por el usuario."
 
 #: Error.cpp:182
 msgid "Parsing of \"%1%\" failed!"
-msgstr "Â¡Ha fallado la lectura de \"%1%\"!"
+msgstr "¡Ha fallado la lectura de \"%1%\"!"
 
 #: Error.cpp:184
 msgid ""
 "The modification date of \"%1%\" cannot be written! Filesystem response: "
 "\"%2%\"."
-msgstr "Â¡La fecha de modificacion de \"%1%\" no puede ser asignada. "
+msgstr "¡La fecha de modificacion de \"%1%\" no puede ser asignada. "
 "Respuesta del sistema: \"%2%\"."
 
 #: Error.cpp:186
 msgid "The window \"%1%\" failed to initialise. Details: \"%2%\"."
-msgstr "La ventana \"%1%\" fallÃ³ en inicializarse. Detalles: \"%2%\"."
+msgstr "La ventana \"%1%\" falló en inicializarse. Detalles: \"%2%\"."
 
 #: Error.cpp:188
 msgid "Memory allocation failed."
@@ -287,7 +289,7 @@ msgstr "La regla esta deshabilitada."
 
 #: Game.cpp:519 Game.cpp:557 Game.cpp:596
 msgid " is not installed or in the masterlist."
-msgstr " no estÃ¡ instalado o no estÃ¡ en el archivo 'master'."
+msgstr " no está instalado o no está en el archivo 'master'."
 
 #: Game.cpp:523 Game.cpp:562
 msgid " is already in the masterlist."
@@ -295,11 +297,11 @@ msgstr " ya esta agregado al archivo 'master'."
 
 #: Game.cpp:527 Game.cpp:566
 msgid " is not in the masterlist, cannot override."
-msgstr " no estÃ¡ en el archivo 'master'. No se puede re-definir."
+msgstr " no está en el archivo 'master'. No se puede re-definir."
 
 #: Game.cpp:535
 msgid " is not installed, and is not in the masterlist."
-msgstr " no estÃ¡ instalado, ni estÃ¡ en el archivo 'master'."
+msgstr " no está instalado, ni está en el archivo 'master'."
 
 #: Game.cpp:539
 msgid " is not in the masterlist and has not been sorted by a rule."
@@ -307,19 +309,19 @@ msgstr " no esta en el archivo 'master' y no ha sido ordenado por alguna regla."
 
 #: Game.cpp:577 Game.cpp:615 Game.cpp:633
 msgid "The group "
-msgstr ""
+msgstr "El grupo"
 
 #: Game.cpp:577 Game.cpp:615 Game.cpp:633
 msgid " is not in the masterlist or is malformatted."
-msgstr ""
+msgstr " no está en la masterlist o es mal es formada" 
 
 #: Game.cpp:682 Game.cpp:699
 msgid "Version: "
-msgstr ""
+msgstr "Version:" 
 
 #: Game.cpp:684 Game.cpp:701 Game.cpp:782 Game.cpp:784
 msgid "Checksum: "
-msgstr ""
+msgstr "Suma de verificación: " 
 
 #: Game.cpp:754
 msgid ""
@@ -328,27 +330,32 @@ msgid ""
 "information, see \"file:../Docs/BOSS%20Readme.html#appendix-c False-Flagged "
 "Plugins\"."
 msgstr ""
+"El orden de los plugins creado por BOSS difiere de su orden en su masterlist, " 
+"como uno o más de los plugins instalados es de bandera falsa.  Para más "
+"información, consulte \"file:../Docs/BOSS%20Readme.html#appendix-c False-Flagged "
+"Plugins\"."
+
 
 #: Game.cpp:757
 msgid "Could not enforce load order master/plugin partition. Details: "
-msgstr ""
+msgstr "No se puede exigir la carga principal para la partición/plug-in Details: "
 
 #: Game.cpp:776 ..\boss-common\Output\Output.cpp:1084
 #: ..\boss-cli\BOSS-CLI.cpp:75
 msgid "Version "
-msgstr ""
+msgstr "Version"
 
 #: Game.cpp:778
 msgid "Active"
-msgstr ""
+msgstr "Active" 
 
 #: Game.cpp:797
 msgid "Error: "
-msgstr ""
+msgstr "Error: "
 
 #: Game.cpp:832 ..\boss-cli\BOSS-CLI.cpp:446
 msgid "Critical Error: "
-msgstr ""
+msgstr "Error Crítico: "
 
 #: Game.cpp:833 ..\boss-cli\BOSS-CLI.cpp:447 ..\boss-cli\BOSS-CLI.cpp:489
 #: ..\boss-cli\BOSS-CLI.cpp:498 ..\boss-cli\BOSS-CLI.cpp:530
@@ -359,99 +366,103 @@ msgid ""
 "Check the Troubleshooting section of the ReadMe for more information and "
 "possible solutions."
 msgstr ""
+"Revise la sección de solución de problemas de la Léame para obtener más información y " 
+"soluciones posibles."
+
 
 #: Game.cpp:834 ..\boss-cli\BOSS-CLI.cpp:448 ..\boss-cli\BOSS-CLI.cpp:531
 #: ..\boss-cli\BOSS-CLI.cpp:575 ..\boss-cli\BOSS-CLI.cpp:614
 #: MainWindow.cpp:538 MainWindow.cpp:593 MainWindow.cpp:643
 msgid "Utility will end now."
-msgstr ""
+msgstr "Utilidad terminará ahora." 
 
 #: ..\boss-common\Output\Output.cpp:492 ..\boss-common\Output\Output.cpp:494
 #: ..\boss-common\Output\Output.cpp:527 ..\boss-common\Output\Output.cpp:529
 msgid "Note"
-msgstr ""
+msgstr "Nota"
 
 #: ..\boss-common\Output\Output.cpp:497 ..\boss-common\Output\Output.cpp:499
 msgid "Bash Tag suggestion(s)"
-msgstr ""
+msgstr "Bash sugerencia de Tag(s)" 
 
 #: ..\boss-common\Output\Output.cpp:502 ..\boss-common\Output\Output.cpp:504
 msgid "Requires"
-msgstr ""
+msgstr "Requiere"
 
 #: ..\boss-common\Output\Output.cpp:507 ..\boss-common\Output\Output.cpp:509
 msgid "Incompatible with"
-msgstr ""
+msgstr "Incompatible con"
 
 #: ..\boss-common\Output\Output.cpp:512 ..\boss-common\Output\Output.cpp:514
 #: ..\boss-common\Output\Output.cpp:1906 ..\boss-common\Output\Output.cpp:1908
 msgid "Warning"
-msgstr ""
+msgstr "Warning" 
 
 #: ..\boss-common\Output\Output.cpp:517 ..\boss-common\Output\Output.cpp:519
 #: ..\boss-common\Output\Output.cpp:1910 ..\boss-common\Output\Output.cpp:1912
 msgid "Error"
-msgstr ""
+msgstr "Error" 
 
 #: ..\boss-common\Output\Output.cpp:522 ..\boss-common\Output\Output.cpp:524
 msgid "Contains dirty edits"
-msgstr ""
+msgstr "Contiene ediciones sucia" 
 
 #: ..\boss-common\Output\Output.cpp:567
 msgid "Sort %1% before %2%"
-msgstr ""
+msgstr "Ordanar %1% antes de %2%"
 
 #: ..\boss-common\Output\Output.cpp:569
 msgid "Sort %1% after %2%"
-msgstr ""
+msgstr "Ordanar %1% después de %2%"
 
 #: ..\boss-common\Output\Output.cpp:571
 msgid "Insert %1% at the top of %2%"
-msgstr ""
+msgstr "Insertar %1% en la parte superior de %2%"
 
 #: ..\boss-common\Output\Output.cpp:573
 msgid "Insert %1% at the bottom of %2%"
-msgstr ""
+msgstr "Insertar %1% en la parte inferior de %2%"
 
 #: ..\boss-common\Output\Output.cpp:577
 msgid "Add the following messages to %1%:"
-msgstr ""
+msgstr "Añadir los siguientes mensajes de %1%:"
 
 #: ..\boss-common\Output\Output.cpp:579 UserRuleEditor.cpp:217
 msgid "Add the following messages:"
-msgstr ""
+msgstr "Añadir los siguientes mensajes:" 
 
 #: ..\boss-common\Output\Output.cpp:586
 msgid "Replace the messages attached to %1% with:"
-msgstr ""
+msgstr "Vuelva a colocar los mensajes que acompañan a %1% con:"
 
 #: ..\boss-common\Output\Output.cpp:588
 msgid "Replace the attached messages with:"
-msgstr ""
+msgstr "Vuelva a colocar los mensajes adjuntos con:" 
 
 #: ..\boss-common\Output\Output.cpp:1080
 msgid "\tVersion "
-msgstr ""
+msgstr "\tVersion " 
 
 #: ..\boss-common\Output\Output.cpp:1092
 msgid "Log Feature Support"
-msgstr ""
+msgstr "Apoyo a la función de registro de" 
 
 #: ..\boss-common\Output\Output.cpp:1093
 msgid "Display Settings"
-msgstr ""
+msgstr "Configuración de pantalla" 
 
 #: ..\boss-common\Output\Output.cpp:1094
 msgid "Filters"
-msgstr ""
+msgstr "Filtros"
 
 #: ..\boss-common\Output\Output.cpp:1098
 msgid "The BOSS Log requires Javascript to be enabled in order to function."
-msgstr ""
+msgstr "El registro de BOSS requiere que Javascript esté habilitado para funcionar."
+
 
 #: ..\boss-common\Output\Output.cpp:1105
 msgid "Colours must be specified using lowercase hex codes."
-msgstr ""
+msgstr "Colores se debe especificar el uso de códigos hexadecimales en minúsculas."
 
 #: ..\boss-common\Output\Output.cpp:1109
 msgid ""
@@ -461,104 +472,111 @@ msgid ""
 "displayed as the placeholder for its text box, and this value is used if the "
 "text box is left empty."
 msgstr ""
+"El registro de BOSS puede visualizarse mediante un esquema de color alternativo, que puede " 
+"estar habilitado y personalizar usando las opciones. Colores se debe especificar "
+"por medio de sus códigos hexadecimales en minúsculas. El valor predeterminado para cada elemento es "
+"muestra como el marcador de posición para el cuadro de texto, y este valor se utiliza si el "
+"cuadro de texto se deja en blanco."
 
 #: ..\boss-common\Output\Output.cpp:1110
 msgid ""
 " Some examples of colour codes that can be used may be found <a href='http://"
 "en.wikipedia.org/wiki/Web_colors#Color_table'>here</a>."
 msgstr ""
+" Algunos ejemplos de códigos de colores que se pueden utilizar se puede encontrar <a href='http://"
+"en.wikipedia.org/wiki/Web_colors#Color_table'>aquí</a>."
 
 #: ..\boss-common\Output\Output.cpp:1112
 msgid "Use Alternative Colour Scheme"
-msgstr ""
+msgstr "Plan de Uso del color alternativo" 
 
 #: ..\boss-common\Output\Output.cpp:1114
 msgid "Element"
-msgstr ""
+msgstr "Elemento" 
 
 #: ..\boss-common\Output\Output.cpp:1114
 msgid "Colour"
-msgstr ""
+msgstr "Color" 
 
 #: ..\boss-common\Output\Output.cpp:1116
 msgid "General Text"
-msgstr ""
+msgstr "Texto General" 
 
 #: ..\boss-common\Output\Output.cpp:1117
 msgid "Window Backgrounds"
-msgstr ""
+msgstr "Fondos de la ventana" 
 
 #: ..\boss-common\Output\Output.cpp:1118
 msgid "Menu Background"
-msgstr ""
+msgstr "Menú de fondo" 
 
 #: ..\boss-common\Output\Output.cpp:1119
 msgid "Menu Button Hover"
-msgstr ""
+msgstr "Botón de Menu activable" 
 
 #: ..\boss-common\Output\Output.cpp:1120
 msgid "Active Menu Button"
-msgstr ""
+msgstr "Botón de Menú de activo" 
 
 #: ..\boss-common\Output\Output.cpp:1121
 msgid "Links"
-msgstr ""
+msgstr "Enlaces"
 
 #: ..\boss-common\Output\Output.cpp:1122
 msgid "Visited Links"
-msgstr ""
+msgstr "Enlaces visitados" 
 
 #: ..\boss-common\Output\Output.cpp:1123
 msgid "CRC Labels"
-msgstr ""
+msgstr "Las etiquetas de CRC" 
 
 #: ..\boss-common\Output\Output.cpp:1124
 msgid "Active Labels"
-msgstr ""
+msgstr "Las etiquetas activas" 
 
 #: ..\boss-common\Output\Output.cpp:1125
 msgid "Version Labels"
-msgstr ""
+msgstr "Version etiquetas" 
 
 #: ..\boss-common\Output\Output.cpp:1126
 msgid "Errors"
-msgstr ""
+msgstr "Errores" 
 
 #: ..\boss-common\Output\Output.cpp:1127
 msgid "Warnings"
-msgstr ""
+msgstr "Advertencias" 
 
 #: ..\boss-common\Output\Output.cpp:1128
 msgid "Dirty Messages"
-msgstr ""
+msgstr "Mensajes Erróneos" 
 
 #: ..\boss-common\Output\Output.cpp:1129
 msgid "Bash Tag Suggestion Prefixes"
-msgstr ""
+msgstr "Sugerencia de etiqueta Prefijos de Bash" 
 
 #: ..\boss-common\Output\Output.cpp:1130
 msgid "CSS Settings Panel File Drag Highlight"
-msgstr ""
+msgstr "CSS, Panel de Configuración de archivos Arrastrar Resaltar" 
 
 #: ..\boss-common\Output\Output.cpp:1131
 msgid "Filters Background"
-msgstr ""
+msgstr "Filtros de Fondo" 
 
 #: ..\boss-common\Output\Output.cpp:1132
 msgid "Success Messages"
-msgstr ""
+msgstr "Mensajes de éxito" 
 
 #: ..\boss-common\Output\Output.cpp:1133
 msgid "Quoted Userlist Messages"
-msgstr ""
+msgstr "Mensajes Citados del Lista de usuarios" 
 
 #: ..\boss-common\Output\Output.cpp:1134
 msgid "Summary Messages Default Background"
-msgstr ""
+msgstr "Resumen de mensajes por defecto de fondo" 
 
 #: ..\boss-common\Output\Output.cpp:1135
 msgid "Table Headings"
-msgstr ""
+msgstr "Tabla de títulos" 
 
 #: ..\boss-common\Output\Output.cpp:1137
 msgid ""
@@ -567,6 +585,10 @@ msgid ""
 "id='loseSettingsClose'>close the BOSS Log</span><span "
 "id='loseSettingsCacheClear'>clear your browser's cache</span>."
 msgstr ""
+"Puede <span class='button' id='cssButtonBackup'>copiar</span> su "
+"configuración de la pantalla para evitar de perderlos cuando usted <span "
+"id='loseSettingsClose'>cerrar el registro de BOSS</span><span "
+"id='loseSettingsCacheClear'>borrar la memoria caché de su navegador</span>."
 
 #: ..\boss-common\Output\Output.cpp:1137
 msgid ""
@@ -574,42 +596,49 @@ msgid ""
 "them to whatever you want. Drag and drop a backup file into this panel to "
 "restore the settings it contains."
 msgstr ""
+"Los archivos de copia de seguridad se les dan nombres sin sentido en su navegador, "
+"pero usted puede cambiar el nombre a lo que quieras. Arrastre y suelte un archivo "
+"de copia de seguridad en este panel para restaurar los valores que contiene."
 
 #: ..\boss-common\Output\Output.cpp:1138
 msgid "Apply"
-msgstr ""
+msgstr "Aplicar"
 
 #: ..\boss-common\Output\Output.cpp:1143
 msgid ""
 "Support for the BOSS Log's more advanced features varies. Here's what your "
 "browser supports:"
 msgstr ""
+"Apoyo a la sesión de BOSS características más avanzadas varía. Esto es lo que tu "
+"Explorador admite:"
 
 #: ..\boss-common\Output\Output.cpp:1144
 msgid "Functionality"
-msgstr ""
+msgstr "Funcionalidad"
 
 #: ..\boss-common\Output\Output.cpp:1147
 msgid "In-Log Plugin Submission"
-msgstr ""
+msgstr "En-Log Plugin de Presentación" 
 
 #: ..\boss-common\Output\Output.cpp:1147
 msgid ""
 "Allows unrecognised plugins to be anonymously submitted to the BOSS team "
 "directly from the BOSS Log."
 msgstr ""
+"Permite presentar a los plugins desconocidos de forma anónima al equipo de BOSS " 
+"directamente desde el registro de BOSS."
 
 #: ..\boss-common\Output\Output.cpp:1148
 msgid "Backup/Restore of Display Settings"
-msgstr ""
+msgstr "Guardar/Restaurar la configuración de la pantalla" 
 
 #: ..\boss-common\Output\Output.cpp:1148
 msgid "Allows the backup and restore of custom display settings."
-msgstr ""
+msgstr "Permite guardar y restaurar la configuración de pantalla personalizados."
 
 #: ..\boss-common\Output\Output.cpp:1149
 msgid "Settings Memory"
-msgstr ""
+msgstr "Opciones de la memoria" 
 
 #: ..\boss-common\Output\Output.cpp:1149
 msgid ""
@@ -617,112 +646,117 @@ msgid ""
 "configuration last used, and to hide this panel, whenever the BOSS Log is "
 "opened."
 msgstr ""
+"Permite el registro de BOSS para restaurar automáticamente la configuración de pantalla y filtro " 
+"la última configuración utilizada, y para ocultar este panel, cada vez que el registro de BOSS es "
+"generado."
 
 #: ..\boss-common\Output\Output.cpp:1151
 msgid "Appearance"
-msgstr ""
+msgstr "Apariencia" 
 
 #: ..\boss-common\Output\Output.cpp:1154
 msgid "Opacity"
-msgstr ""
+msgstr "Opacidad" 
 
 #: ..\boss-common\Output\Output.cpp:1155
 msgid "Shadows"
-msgstr ""
+msgstr "Sombras/Opacidad" 
 
 #: ..\boss-common\Output\Output.cpp:1156
 msgid "Transitions"
-msgstr ""
+msgstr "Transiciones" 
 
 #: ..\boss-common\Output\Output.cpp:1157
 msgid "Transforms"
-msgstr ""
+msgstr "Transformas" 
 
 #: ..\boss-common\Output\Output.cpp:1158
 msgid "Input Placeholders"
-msgstr ""
+msgstr "Marcadores de posición dispositivos" 
 
 #: ..\boss-common\Output\Output.cpp:1159
 msgid "Form Validation"
-msgstr ""
+msgstr "Formulario de Validación" 
 
 #: ..\boss-common\Output\Output.cpp:1161
 msgid ""
 "Do not display this panel again for this browser. If this checkbox is left "
 "unchecked, this panel will be displayed every time you open the BOSS Log."
 msgstr ""
+"No muestra este panel de nuevo para este navegador. Si esta casilla la izquierda"
+"se queda deseleccionada, este panel se mostrará cada vez que abra el registro de BOSS"
 
 #: ..\boss-common\Output\Output.cpp:1166
 msgid "Hide Version Numbers"
-msgstr ""
+msgstr "Ocultar los números de versión" 
 
 #: ..\boss-common\Output\Output.cpp:1167
 msgid "Hide 'Active' Label"
-msgstr ""
+msgstr "Ocultar Label 'Activado'" 
 
 #: ..\boss-common\Output\Output.cpp:1168
 msgid "Hide Checksums"
-msgstr ""
+msgstr "Ocultar las sumas de comprobación" 
 
 #: ..\boss-common\Output\Output.cpp:1169
 msgid "Hide Notes"
-msgstr ""
+msgstr "Ocultar Notas" 
 
 #: ..\boss-common\Output\Output.cpp:1170
 msgid "Hide Bash Tag Suggestions"
-msgstr ""
+msgstr "Ocultar Sugerencias Bash Tag(s)" 
 
 #: ..\boss-common\Output\Output.cpp:1171
 msgid "Hide Requirements"
-msgstr ""
+msgstr "Ocultar Requisitos" 
 
 #: ..\boss-common\Output\Output.cpp:1172
 msgid "Hide Incompatibilities"
-msgstr ""
+msgstr "Ocultar Incompatibilidades" 
 
 #: ..\boss-common\Output\Output.cpp:1173
 msgid "Hide 'Do Not Clean' Messages"
-msgstr ""
+msgstr "Ocultar mensajes 'No Se Limpia'"
 
 #: ..\boss-common\Output\Output.cpp:1174
 msgid "Hide All Plugin Messages"
-msgstr ""
+msgstr "Ocultar todos los mensajes de los Plugins" 
 
 #: ..\boss-common\Output\Output.cpp:1175
 msgid "Hide Inactive Plugins"
-msgstr ""
+msgstr "Ocultar Plugins Inactivados" 
 
 #: ..\boss-common\Output\Output.cpp:1176
 msgid "Hide Messageless Plugins"
-msgstr ""
+msgstr "Ocultar Plugins sin mensajes" 
 
 #: ..\boss-common\Output\Output.cpp:1177
 msgid "Hide Clean Plugins"
-msgstr ""
+msgstr "Ocultar Plugins Limpios" 
 
 #: ..\boss-common\Output\Output.cpp:1179
 msgid "%1% of %2% recognised plugins hidden."
-msgstr ""
+msgstr "%1% de %2% los reconocidos plugins ocultos."
 
 #: ..\boss-common\Output\Output.cpp:1180
 msgid "%1% of %2% messages hidden."
-msgstr ""
+msgstr "%1% de  %2% los mensajes ocultos."
 
 #: ..\boss-common\Output\Output.cpp:1186
 msgid "Submit Plugin"
-msgstr ""
+msgstr "Enviar Plugin" 
 
 #: ..\boss-common\Output\Output.cpp:1187
 msgid "Plugin"
-msgstr ""
+msgstr "Plugin" 
 
 #: ..\boss-common\Output\Output.cpp:1189
 msgid "Download Location"
-msgstr ""
+msgstr "Ubicación de la descarga" 
 
 #: ..\boss-common\Output\Output.cpp:1190
 msgid "Additional Notes"
-msgstr ""
+msgstr "Notas Adicionales" 
 
 #: ..\boss-common\Output\Output.cpp:1190
 msgid ""
@@ -730,145 +764,151 @@ msgid ""
 "suggestions, ITM/UDR counts and dirty CRCs, can be supplied here. If no "
 "download link is available, this information is crucial."
 msgstr ""
+"Cualquier información adicional, como Bash Etiquetas recomendadas, sugerencias "
+"de carga de pedidos, recuentos de ITM/UDR y CRCs erróneo, puede ser suministrada "
+"aquí. Si no hay enlace de descarga que está disponible, esta información es crucial."
 
 #: ..\boss-common\Output\Output.cpp:1192
 msgid "Submit"
-msgstr ""
+msgstr "Enviar" 
 
 #: ..\boss-common\Output\Output.cpp:1193
 msgid "Close"
-msgstr ""
+msgstr "Cerrar" 
 
 #: ..\boss-common\Output\Output.cpp:1213
 msgid "Checking for existing submission..."
-msgstr ""
+msgstr "Verificando si presentación existente ..." 
 
 #: ..\boss-common\Output\Output.cpp:1227
 msgid "Error: Existing submission check failed!"
-msgstr ""
+msgstr "Error: Era falla Verificando si la presentación existente!" 
 
 #: ..\boss-common\Output\Output.cpp:1243
 msgid "Previous submission found, updating with supplied details..."
-msgstr ""
+msgstr "Presentación anterior encontrado, actualizacando los datos facilitados..."
 
 #: ..\boss-common\Output\Output.cpp:1249
 msgid "Plugin submission updated!"
-msgstr ""
+msgstr "Actualizacacion de Plugin ha sido terminada!"
 
 #: ..\boss-common\Output\Output.cpp:1251
 msgid "Error: Plugin submission could not be updated."
-msgstr ""
+msgstr "Error: Actualizacacion de Plugin no ha sido terminada!" 
 
 #: ..\boss-common\Output\Output.cpp:1274
 msgid "No previous submission found, creating new submission..."
-msgstr ""
+msgstr "Actualizacacion anterior encontrado, creando nueva presentación..." 
 
 #: ..\boss-common\Output\Output.cpp:1280
 msgid "Plugin submitted!"
-msgstr ""
+msgstr "Plugin Actualicado!" 
 
 #: ..\boss-common\Output\Output.cpp:1282
 msgid "Error: Plugin could not be submitted."
-msgstr ""
+msgstr "Error: Plugin no ha sido Actualicado!" 
 
 #: ..\boss-common\Output\Output.cpp:1288
 msgid "Error: Data transfer failed."
-msgstr ""
+msgstr "Error: La transferencia de datos ha fallado." 
 
 #: ..\boss-common\Output\Output.cpp:1320
 msgid ""
 "Web storage quota for this document has been exceeded. Please empty your "
 "browser\\'s cache. Note that this will delete all locally stored data."
 msgstr ""
+"La Cuota de web de almacenamiento de este documento se ha excedido. Por favor, "
+vaciar el caché de su navegador. Tenga en cuenta que esto borrará todos los "
+"de datos almacenados localmente."
 
 #: ..\boss-common\Output\Output.cpp:1507
 msgid "Please supply at least a link or some notes."
-msgstr ""
+msgstr "Por favor, proveer al menos un enlace al plugin o algunas notas"
 
 #: ..\boss-common\Output\Output.cpp:1521
 msgid "Exception occurred:"
-msgstr ""
+msgstr "Excepción se ocurrio:" 
 
 #: ..\boss-common\Output\Output.cpp:1859 ..\boss-common\Output\Output.cpp:1890
 msgid "Summary"
-msgstr ""
+msgstr "Resumen" 
 
 #: ..\boss-common\Output\Output.cpp:1862 ..\boss-common\Output\Output.cpp:1953
 #: UserRuleEditor.cpp:883
 msgid "User Rules"
-msgstr ""
+msgstr "Reglas del usuario" 
 
 #: ..\boss-common\Output\Output.cpp:1865
 msgid "%1% Plugins"
-msgstr ""
+msgstr "%1% Plugins"
 
 #: ..\boss-common\Output\Output.cpp:1869 ..\boss-common\Output\Output.cpp:1985
 msgid "Recognised Plugins"
-msgstr ""
+msgstr "Plugins Reconocidos" 
 
 #: ..\boss-common\Output\Output.cpp:1871
 msgid "Restored Load Order"
-msgstr ""
+msgstr "Antiguo la orden de archivos" 
 
 #: ..\boss-common\Output\Output.cpp:1875 ..\boss-common\Output\Output.cpp:2008
 msgid "Unrecognised Plugins"
-msgstr ""
+msgstr "Plugins Desconocidos" 
 
 #: ..\boss-common\Output\Output.cpp:1893
 msgid "Plugin Type"
-msgstr ""
+msgstr "Tipo de Plugin" 
 
 #: ..\boss-common\Output\Output.cpp:1893 ..\boss-common\Output\Output.cpp:1903
 msgid "Count"
-msgstr ""
+msgstr "Cantidad" 
 
 #: ..\boss-common\Output\Output.cpp:1894
 msgid "Recognised (or sorted by user rules)"
-msgstr ""
+msgstr "Reconocido (u ordenados por las reglas del usuarios)"
 
 #: ..\boss-common\Output\Output.cpp:1896 ..\boss-common\Output\Output.cpp:1898
 msgid "Unrecognised"
-msgstr ""
+msgstr "Desconocida"
 
 #: ..\boss-common\Output\Output.cpp:1899
 msgid "Inactive"
-msgstr ""
+msgstr "Desactivado" 
 
 #: ..\boss-common\Output\Output.cpp:1900 ..\boss-common\Output\Output.cpp:1913
 msgid "All"
-msgstr ""
+msgstr "Todo" 
 
 #: ..\boss-common\Output\Output.cpp:1903
 msgid "Plugin Message Type"
-msgstr ""
+msgstr "Tipo de mensaje de Plugin" 
 
 #: ..\boss-common\Output\Output.cpp:1922
 msgid "No change in recognised plugin list since last run."
-msgstr ""
+msgstr "Ningún cambio reconocido en la lista desde la última ejecución."
 
 #: ..\boss-common\Output\Output.cpp:1954
 msgid "Rule"
-msgstr ""
+msgstr "Regla" 
 
 #: ..\boss-common\Output\Output.cpp:1954
 msgid "Applied"
-msgstr ""
+msgstr "Solicitado" 
 
 #: ..\boss-common\Output\Output.cpp:1954
 msgid "Details (if applicable)"
-msgstr ""
+msgstr "Detalles (si procede)" 
 
 #: ..\boss-common\Output\Output.cpp:1968
 msgid " Plugins"
-msgstr ""
+msgstr " Plugins" 
 
 #: ..\boss-common\Output\Output.cpp:1987
 msgid "Restored Load Order (Using modlist.txt)"
-msgstr ""
+msgstr "Orden restaurado (Con modlist.txt)" 
 
 #: ..\boss-common\Output\Output.cpp:1989
 msgid "Restored Load Order (Using modlist.old)"
-msgstr ""
+msgstr "Orden restaurado (Con modlist.old)" 
 
 #: ..\boss-common\Output\Output.cpp:1992
 msgid ""
@@ -876,6 +916,9 @@ msgid ""
 "masterlist. Please read any attached messages and act on any that require "
 "action."
 msgstr ""
+"Estos plugins son ordanados por BOSS y han sido ordenados de acuerdo a su " 
+"masterlist.  Por favor lea los mensajes adjuntos y se pronunciará quales que requieren " 
+"atención."
 
 #: ..\boss-common\Output\Output.cpp:2010
 msgid ""
@@ -883,6 +926,10 @@ msgid ""
 "positioned manually, using your favourite mod manager or by using BOSS's "
 "user rules functionality."
 msgstr ""
+"Los siguientes plugins no fueron encontrados en el masterlist, y debe ser "
+"posicionados de forma manual, utilizando el gestor favorito o "
+"mediante creando sus propias reglas del usuario usando la funcionalidad "
+"de BOSS."
 
 #: ..\boss-common\Output\Output.cpp:2011
 msgid ""
@@ -890,14 +937,18 @@ msgid ""
 "from this log by clicking on a plugin and supplying a link and/or "
 "description of its contents in the panel that is displayed."
 msgstr ""
+"Puede enviar los plugins desconocidos para la adición a la masterlist directamente "
+"de este registro haciendo clic en un plugin y el suministro de un enlace y/o" 
+"descripción de su contenido en el panel que se muestra." 
 
 #: ..\boss-common\Output\Output.cpp:2088
 msgid "Please read any attached messages and act on any that require action."
-msgstr ""
+msgstr "Por favor, lea los mensajes adjuntos y toma cualquier acción que "
+"les requieren." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:88
 msgid "Description:"
-msgstr ""
+msgstr "Descripción:" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:89
 msgid ""
@@ -905,55 +956,65 @@ msgid ""
 "Nehrim,  Fallout 3, Fallout: New Vegas and TESV: Skyrim according to a "
 "frequently updated  masterlist to minimise incompatibilities between mods."
 msgstr ""
+"  BOSS es una utilidad que esta de carga de ordenar modificaciones de TESIV: Oblivion, "
+"Nehrim, Fallout 3, Fallout: New Vegas y TESV: Skyrim de acuerdo con una "
+"lista actualizada con frecuencia para minimizar las incompatibilidades entre "
+"modificaciones al Skyrim." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:93
 msgid "Examples:"
-msgstr ""
+msgstr "Ejemplos:" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:95
 msgid "    updates the masterlist, sorts your mods, and shows the log"
-msgstr ""
+msgstr "    actualiza el masterlist, ordena a sus mods, y muestra el registro" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:97
 msgid "    reverts your load order 1 level and skips showing the log"
-msgstr ""
+msgstr "    vuelve a su orden de carga de un nivel y salte que mostrar el registro"
 
 #: ..\boss-cli\BOSS-CLI.cpp:99
 msgid "    reverts your load order 2 levels and shows the log"
-msgstr ""
+msgstr "    vuelve a su orden de carga de un nivel y mostrar el registro"
 
 #: ..\boss-cli\BOSS-CLI.cpp:113 ..\boss-cli\BOSS-CLI.cpp:122
 #, c-format
 msgid "Downloading: %s; %3.0f%% of %3.0f KB"
-msgstr ""
+msgstr "Descargando: %s; %3.0f%% of %3.0f KB"
 
 #: ..\boss-cli\BOSS-CLI.cpp:195
 msgid "produces this help message"
-msgstr ""
+msgstr "produce este mensaje de ayuda" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:196
 msgid "prints the version banner"
-msgstr ""
+msgstr "imprime la bandera de la versión" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:198
 msgid ""
 "automatically update the local copy of the masterlist to the latest version "
 "available on the web before sorting"
 msgstr ""
+"automáticamente actualizar la copia local de la masterlist a la última versión" 
+"disponible en la web antes de ordenar los plugins." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:201
 msgid "inhibit the automatic masterlist updater"
-msgstr ""
+msgstr "Restringir la actualización automática del master list" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:203
 msgid ""
 "automatically update the local copy of the masterlist to the latest version "
 "available on the web but don't sort right now"
 msgstr ""
+"automáticamente actualizar la copia local de la masterlist a la última versión" 
+"disponible en la web, sin ordenando los plugins."
+
 
 #: ..\boss-cli\BOSS-CLI.cpp:208
 msgid "don't launch a browser to show the HTML log at program completion"
-msgstr ""
+msgstr "no lanzar un navegador para mostrar el registro de HTML despues que termine "
+"el programa." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:211
 msgid ""
@@ -961,6 +1022,10 @@ msgid ""
 "of 1 or 2, indicating how many undo steps to apply.  if no option value is "
 "specified, it defaults to 1"
 msgstr ""
+"volver a una orden de carga previa. Este parámetro opcional acepta valores " 
+"de 1 o 2, indica la cantidad de pasos atrás que se aplican. Si no hay valor, "
+"el opción defecto es 1."
+
 
 #: ..\boss-cli\BOSS-CLI.cpp:217
 msgid ""
@@ -969,67 +1034,85 @@ msgid ""
 "option is specified without an argument.  higher values increase the "
 "verbosity further"
 msgstr ""
+"Especificar el nivel de detalle (0-3) de depuración de la salida. 0 es el valor "
+"predeterminado, mostrando sólo WARN y mesnajes de ERROR. 1 (INFO y por encima) "
+"es implícito si especifica este opción sin ningún otro argumento. Los valores "
+"más altos aumentan el nivel de detalle mayor."
 
 #: ..\boss-cli\BOSS-CLI.cpp:223
 msgid ""
 "override game autodetection.  valid values are: 'Oblivion', 'Nehrim', "
 "'Fallout3', 'FalloutNV', and 'Skyrim'"
 msgstr ""
+"Autodetección de juego de anulación de los valores válidos son: 'Oblivion', "
+"'Nehrim', 'Fallout3', 'FalloutNV' y 'Skyrim'"
 
 #: ..\boss-cli\BOSS-CLI.cpp:227
 msgid "add source file references to debug statements"
-msgstr ""
+msgstr "agregar referencias al archivo para depurar las declaraciones" 
+
 
 #: ..\boss-cli\BOSS-CLI.cpp:229
 msgid ""
 "show mod file CRCs, so that a file's CRC can be added to the masterlist in a "
 "conditional"
 msgstr ""
+"mostrar el CRC de ficheros MOD, que el CRC de un archivo puede ser añadido a "
+"la masterlist en un condicional"
 
 #: ..\boss-cli\BOSS-CLI.cpp:232
 msgid "select output format. valid values are: 'html', 'text'"
-msgstr ""
+msgstr "Seleccione el formato de salida,  los valores válidos son: 'html', 'text'"
 
 #: ..\boss-cli\BOSS-CLI.cpp:235
 msgid "run BOSS without actually making any changes to load order"
-msgstr ""
+msgstr "ejecutar BOSS sin tener que realizar ningún cambio del orden de "
+"ficheros MOD"
 
 #: ..\boss-cli\BOSS-CLI.cpp:237
 msgid "sets the proxy hostname for the masterlist updater"
 msgstr ""
+"establece el nombre de host del servidor proxy para la actualización "
+"del masterlist" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:239
 msgid "sets the proxy port number for the masterlist updater"
 msgstr ""
+"establece el número de puerto del servidor proxy para la actualización "
+"del masterlist" 
 
 #: ..\boss-cli\BOSS-CLI.cpp:241
 msgid ""
 "logs the debug output to the BOSSDebugLog.txt file instead of the command "
 "line."
 msgstr ""
+"registra el resultado de la depuración en el archivo de BOSSDebugLog.txt "
+"en lugar del comando línea." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:330
 msgid "Checking for BOSS updates..."
-msgstr ""
+msgstr "Verificando si hay actualizaciones a BOSS ..." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:335 MainWindow.cpp:1026
 msgid "You are already using the latest version of BOSS."
-msgstr ""
+msgstr  "Usted ya está usando la versión más reciente de BOSS."
 
 #: ..\boss-cli\BOSS-CLI.cpp:341 ..\boss-cli\BOSS-CLI.cpp:346
 #, c-format
 msgid "Update available! New version: %s"
-msgstr ""
+msgstr "Actualización disponible Nueva versión: %s"
 
 #: ..\boss-cli\BOSS-CLI.cpp:342
 msgid ""
 "The update may be downloaded from any of the locations listed in the BOSS "
 "Log."
 msgstr ""
+"La actualización puede ser descargada desde cualquiera de los lugares "
+"indicados en el registro de BOSS." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:355
 msgid "Release notes:"
-msgstr ""
+msgstr "Notas de Version:"
 
 #: ..\boss-cli\BOSS-CLI.cpp:356
 msgid "Do you want to download and install the update? (y/n)"
@@ -1598,7 +1681,7 @@ msgstr "Juego por defecto:"
 
 #: SettingsWindow.cpp:90
 msgid "Language:"
-msgstr "Language:"
+msgstr "Lengua:"
 
 #: SettingsWindow.cpp:93
 msgid "Check for BOSS updates on startup"
