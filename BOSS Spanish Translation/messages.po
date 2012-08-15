@@ -1769,7 +1769,7 @@ msgid ""
 "downloaded, but it cannot be detected. Do you wish to download the latest "
 "masterlist now?"
 msgstr ""
-"El Administrador de Reglas dec Usuario requiere que el masterlist de BOSS "
+"El Administrador de Reglas de Usuario requiere que el masterlist de BOSS "
 "haya sido descargado para '%1%', pero no se puede detectar ¿Desea descargar la última versión del " 
 "masterlist ahora?" 
 
