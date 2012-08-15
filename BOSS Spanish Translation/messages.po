@@ -1159,17 +1159,17 @@ msgid ""
 "Your masterlist is already at the latest revision (r%1%; %2%). No update "
 "necessary."
 msgstr ""
-"Su masterlist ya se encuentra en la última revisión (r% 1%,% 2%). Actualización " 
-"no es necesario." 
+"Su masterlist ya se encuentra en la última revisión (r% 1%,% 2%). "
+"No se requiere actualización." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:481 MainWindow.cpp:480
 msgid "Your masterlist has been updated to revision %1% (%2%)."
-msgstr "Su masterlist ha sido actualizado para la revisión %1% (%2%)."
+msgstr "Su masterlist ha sido actualizado a la revisión %1% (%2%)."
 
 #: ..\boss-cli\BOSS-CLI.cpp:487 ..\boss-cli\BOSS-CLI.cpp:496
 #: MainWindow.cpp:486 MainWindow.cpp:495
 msgid "Error: masterlist update failed."
-msgstr "Error: masterlist actualización errónea." 
+msgstr "Error: falló actualización del masterlist." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:488 ..\boss-cli\BOSS-CLI.cpp:497
 #: MainWindow.cpp:487 MainWindow.cpp:496
@@ -1181,12 +1181,12 @@ msgid ""
 "No internet connection detected. Masterlist auto-updater could not check for "
 "updates."
 msgstr ""
-"Sin conexión a Internet detectada Masterlist actualizador automatico no pudo buscar "
+"Sin conexión a Internet detectada. Actualizador automático de Masterlist no pudo buscar "
 actualizaciones." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:520 MainWindow.cpp:443 MainWindow.cpp:517
 msgid "BOSS working..."
-msgstr ""
+msgstr "BOSS trabajando..."
 
 #: ..\boss-cli\BOSS-CLI.cpp:529 ..\boss-cli\BOSS-CLI.cpp:573
 #: ..\boss-cli\BOSS-CLI.cpp:612 MainWindow.cpp:536 MainWindow.cpp:591
@@ -1204,11 +1204,11 @@ msgstr "¿Está seguro que desea cancelar?"
 
 #: ElementIDs.cpp:57 ElementIDs.cpp:72
 msgid "BOSS: Updater"
-msgstr "BOSS: Updater"
+msgstr "BOSS: Actualizador"
 
 #: MainWindow.cpp:107
 msgid "Error: %1% Details: %2%"
-msgstr "Detalles: %2% del Error: %1%"
+msgstr "Error: %1% Detalles: %2%"
 
 #: MainWindow.cpp:108 MainWindow.cpp:159 MainWindow.cpp:174 MainWindow.cpp:423
 #: MainWindow.cpp:682 MainWindow.cpp:698 MainWindow.cpp:722
@@ -1221,11 +1221,11 @@ msgstr "Error de BOSS:"
 
 #: MainWindow.cpp:158
 msgid "Error: could not apply translation: %1%"
-msgstr "Error: No se podría aplicar la traducción: %1%"
+msgstr "Error: No se pudo aplicar la traducción: %1%"
 
 #: MainWindow.cpp:173
 msgid "Error: The BOSS GUI is already running. This instance will now quit."
-msgstr "Error: La interfaz gráfica de usuario de BOSS ya se está ejecutando esta instancia ahora dejar de fumar.".
+msgstr "Error: La interfaz gráfica de usuario de BOSS ya se está ejecutando. Esta instancia ahora se cerrará.".
 
 #: MainWindow.cpp:199
 msgid " (not detected)"
@@ -1237,11 +1237,11 @@ msgstr "BOSS: Selecionar Juego"
 
 #: MainWindow.cpp:245
 msgid "Plain Text"
-msgstr "Text Plain"
+msgstr "Textp Plano"
 
 #: MainWindow.cpp:249
 msgid "Last Run"
-msgstr "Paso Final"
+msgstr "Última ejecución"
 
 #: MainWindow.cpp:250
 msgid "2nd Last Run"
@@ -1261,7 +1261,7 @@ msgstr "&Ejecutar BOSS"
 
 #: MainWindow.cpp:258
 msgid "Runs BOSS with the options you have chosen."
-msgstr "Ejecutar BOSS con las opciones que han elegido."
+msgstr "Ejecutar BOSS con las opciones que ha elegido."
 
 #: MainWindow.cpp:260
 msgid "&Quit"
@@ -1301,7 +1301,7 @@ msgstr "&Oblivion"
 
 #: MainWindow.cpp:269
 msgid "Switch to running BOSS for Oblivion."
-msgstr "Cambiar a la ejecución de BOSS para Oblivion" 
+msgstr "Cambiar a la ejecución de BOSS a Oblivion" 
 
 #: MainWindow.cpp:270
 msgid "&Nehrim"
@@ -1309,7 +1309,7 @@ msgstr "&Nehrim"
 
 #: MainWindow.cpp:270
 msgid "Switch to running BOSS for Nehrim."
-msgstr "Cambiar a la ejecución de BOSS para Nehrim."
+msgstr "Cambiar a la ejecución de BOSS a Nehrim."
 
 #: MainWindow.cpp:271
 msgid "&Skyrim"
@@ -1317,7 +1317,7 @@ msgstr "&Skyrim"
 
 #: MainWindow.cpp:271
 msgid "Switch to running BOSS for Skyrim."
-msgstr "Cambiar a la ejecución de BOSS para Skyrim." 
+msgstr "Cambiar a la ejecución de BOSS a Skyrim." 
 
 #: MainWindow.cpp:272
 msgid "&Fallout 3"
@@ -1325,7 +1325,7 @@ msgstr "&Fallout 3"
 
 #: MainWindow.cpp:272
 msgid "Switch to running BOSS for Fallout 3."
-msgstr "Cambiar a correr de BOSS para Fallout 3." 
+msgstr "Cambiar a correr de BOSS a Fallout 3." 
 
 #: MainWindow.cpp:273
 msgid "&Fallout: New Vegas"
@@ -1333,15 +1333,15 @@ msgstr "&Fallout: New Vegas"
 
 #: MainWindow.cpp:273
 msgid "Switch to running BOSS for Fallout: New Vegas."
-msgstr "Cambiar a la ejecución de BOSS para Fallout: New Vegas."
+msgstr "Cambiar a la ejecución de BOSS a Fallout: New Vegas."
 
 #: MainWindow.cpp:274
 msgid "&Morrowind"
-msgstr "& Morrowind"
+msgstr "&Morrowind"
 
 #: MainWindow.cpp:274
 msgid "Switch to running BOSS for Morrowind."
-msgstr "Cambiar a la ejecución de BOSS para Morrowind."
+msgstr "Cambiar a la ejecución de BOSS a Morrowind."
 
 #: MainWindow.cpp:275
 msgid "&Active Game"
@@ -1349,7 +1349,7 @@ msgstr "&Activar Juego"
 
 #: MainWindow.cpp:278
 msgid "Open &Main Readme"
-msgstr "Open &Main Léame"
+msgstr "Open &Léame Principal"
 
 #: MainWindow.cpp:278
 msgid "Opens the main BOSS readme in your default web browser."
@@ -1357,13 +1357,13 @@ msgstr "Abre el archivo léame de BOSS en su principal navegador web por defecto
 
 #: MainWindow.cpp:279
 msgid "Open &Userlist Syntax Doc"
-msgstr "Abre &Lista de usuarios Documento de Sintaxis"
+msgstr "Abre Doc s/Sintaxis &Reglas de usuario"
 
 #: MainWindow.cpp:279
 msgid ""
 "Opens the BOSS userlist syntax documentation in your default web browser."
 msgstr ""
- "Abre la lista de usuarios BOSS documentación de la sintaxis en su navegador web por defecto."
+ "Abre documentación de la sintaxis de las reglas de usuario BOSS en su navegador web por defecto."
 
 #: MainWindow.cpp:280
 msgid "Open &Masterlist Syntax Doc"
@@ -1373,7 +1373,7 @@ msgstr "Abre &Masterlist Documento de Sintaxis"
 msgid ""
 "Opens the BOSS masterlist syntax documentation in your default web browser."
 msgstr ""
-"Abre el masterlist BOSS documentación de la sintaxis en su navegador web por defecto."
+"Abre la documentación de la sintaxis del masterlist BOSS en su navegador web por defecto."
 
 #: MainWindow.cpp:281
 msgid "&Open API Readme"
@@ -1381,11 +1381,11 @@ msgstr "&Abre API Léame"
 
 #: MainWindow.cpp:281
 msgid "Opens the BOSS API readme in your default web browser."
-msgstr "Abre el BOSS API readme en su navegador web por defecto."
+msgstr "Abre el 'BOSS API readme' en su navegador web por defecto."
 
 #: MainWindow.cpp:282
 msgid "Open &Version History"
-msgstr "Abrir historial y la versión"
+msgstr "Abrir historial de versión"
 
 #: MainWindow.cpp:282
 msgid "Opens the BOSS version history in your default web browser."
@@ -1393,14 +1393,14 @@ msgstr "Abre el historial de versiones BOSS en su navegador web por defecto."
 
 #: MainWindow.cpp:283
 msgid "View &Copyright Licenses"
-msgstr "Ver Licencias &derechos de autor"
+msgstr "Ver Licencias de &derechos de autor"
 
 #: MainWindow.cpp:283
 msgid ""
 "View the GNU General Public License v3.0 and GNU Free Documentation License "
 "v1.3."
 msgstr ""
-"Ver la versión 3.0 Licencia Pública General GNU y la Licencia de Documentación Libre GNU " 
+"Ver la versión 3.0 de Licencia Pública General GNU y la Licencia de Documentación Libre GNU " 
 "v1.3."
 
 #: MainWindow.cpp:285
@@ -1429,7 +1429,7 @@ msgstr "Opciones de salida"
 
 #: MainWindow.cpp:302
 msgid "Show BOSS Log On Completion"
-msgstr "Mostrar BOSS Log en el Finalización"
+msgstr "Mostrar BOSS Log al terminar"
 
 #: MainWindow.cpp:303
 msgid "Display File CRCs"
@@ -1465,7 +1465,7 @@ msgstr "Actualizar Masterlist"
 
 #: MainWindow.cpp:331
 msgid "Perform Trial Run"
-msgstr "Realizar prueba Ejecutar"
+msgstr "Realizar Ejecución de prueba"
 
 #: MainWindow.cpp:336
 msgid "Update Masterlist Only"
@@ -1485,25 +1485,25 @@ msgid ""
 "BOSS\" button and the BOSSlog format opened when you click the \"View BOSSlog"
 "\" button."
 msgstr ""
-"Este decide el formato que BOSSlog genera cuando se haga clic en el \"Ejecutar "
-"BOSS\" botón y el formato BOSSlog abre al hacer clic en la carpeta \"Ver BOSSlog"
-"\" botón."
+"Este decide el formato de BOSSlog que se genera cuando se haga clic en el "
+"botón \"Ejecutar BOSS\" y el formato de BOSSlog que se abre al hacer clic "
+"en el botón \"Ver BOSSlog\"."
 
 #: MainWindow.cpp:351
 msgid ""
 "The format of BOSSlog this opens is decided by the setting of the \"BOSSlog "
 "Format\" Output Option above."
 msgstr ""
-"El formato de BOSSlog que se abre se decide por el valor de la \"BOSSlog "
-"Format\" opción de salida por encima."
+"El formato de BOSSlog que se abre se decide por el valor de la opción "
+"\"Formato de registro BOSS\" que está más arriba."
 
 #: MainWindow.cpp:352
 msgid ""
 "Runs BOSS, simulating its changes to your load order, but doesn't actually "
 "reorder your mods."
 msgstr ""
-"Ejecuta BOSS, la simulación de sus cambios en el orden de carga, pero en realidad no "
-"cambia el orden de los mods". 
+"Ejecuta BOSS, simulando sus cambios en el orden de carga, pero en realidad no "
+"aplica el nuevo orden a los mods". 
 
 #: MainWindow.cpp:404
 msgid "Ready"
@@ -1516,7 +1516,7 @@ msgstr "Error: %1%"
 
 #: MainWindow.cpp:443 UserRuleEditor.cpp:92 UserRuleEditor.cpp:127
 msgid "BOSS: Working..."
-msgstr "BOSS: Trabajo ..." 
+msgstr "BOSS: Trabajando..." 
 
 #: MainWindow.cpp:477
 msgid "Masterlist already up-to-date."
@@ -1529,7 +1529,7 @@ msgstr "Masterlist actualizado con éxito."
 #: MainWindow.cpp:668 UserRuleEditor.cpp:86 UserRuleEditor.cpp:473
 #: UserRuleEditor.cpp:495
 msgid "BOSS: User Rules Manager"
-msgid "BOSS: Usuario Administrador de reglas"
+msgid "BOSS: Administrador de Reglas de Usuario"
 
 #: MainWindow.cpp:697 MainWindow.cpp:721
 msgid "Error: \"%1%\" cannot be found."
@@ -1542,10 +1542,10 @@ msgid ""
 "TES IV: Oblivion, Nehrim - At Fate's Edge, TES V: Skyrim, Fallout 3 and "
 "Fallout: New Vegas mod load orders."
 msgstr ""
-"Un \"con un solo clic\" programa para los usuarios que rápidamente se optimiza y evita los conflictos "
-"perjudiciales en su\n"
+"Un programa \"de un solo clic\" para usuarios, que rápidamente optimiza, ordena, y evita los conflictos "
+"perjudiciales en sus listas de mods para sus:\n"
 "TES IV: Oblivion, Nehrim - At Fate's Edge, TES V: Skyrim, Fallout 3 y "
-"Fallout: New Vegas Nuevos modificacion de archivos." 
+"Fallout: New Vegas." 
 
 #: MainWindow.cpp:939
 msgid ""
@@ -1553,8 +1553,8 @@ msgid ""
 "this BOSS folder.\n"
 "\n"
 msgstr ""
-"El programa de actualización automática se descarga el instalador de la "
-"nueva versión de esta carpeta BOSS.\n"
+"El programa de actualización automática descargará el instalador "
+"de la nueva versión a esta carpeta de BOSS.\n"
 "\n"
 
 #: MainWindow.cpp:940
@@ -1563,17 +1563,17 @@ msgid ""
 "complete the update."
 msgstr ""
 "A continuación, se iniciará el instalador antes de salir.  Completar el programa de instalación " 
-"por completar la actualización." 
+"para completar la actualización." 
 
 #: MainWindow.cpp:942 MainWindow.cpp:944 MainWindow.cpp:948 MainWindow.cpp:956
 #: MainWindow.cpp:966 MainWindow.cpp:972 MainWindow.cpp:981
 #: MainWindow.cpp:1085
 msgid "BOSS: Automatic Updater"
-msgstr "BOSS: actualizador automático "
+msgstr "BOSS: Actualizador automático "
 
 #: MainWindow.cpp:944
 msgid "Automatic updater cancelled."
-msgstr "actualizador automático cancelado".
+msgstr "Actualizador automático cancelado".
 
 #: MainWindow.cpp:948
 msgid "Initialising download..."
@@ -1585,9 +1585,9 @@ msgid ""
 "the downloaded installer and exit. Complete the installer to complete the "
 "update."
 msgstr ""
-"Nuevo instalador descargó correctamente! Al hacer clic en 'Aceptar' y BOSS pondrá iniciar "
-"el archivo descargada y cerrar. Completar el programa de instalación para completar el " 
-"actualizacion."
+"¡El nuevo instalador se descargó correctamente! Al hacer clic en 'Aceptar', BOSS iniciará "
+"el archivo instalador obtenido y se cerrará. Para completar la actualizacion se "
+"debe ejecutar por completo el programa de instalación."
 
 #: MainWindow.cpp:971
 msgid ""
@@ -1595,7 +1595,7 @@ msgid ""
 "\n"
 "Update cancelled."
 msgstr ""
-"Actualización se Fallo.  Información: %1%\n"
+"Actualización Fallida.  Información: %1%\n"
 "\n"
 "Actualización cancelada." 
 
@@ -1605,21 +1605,21 @@ msgid ""
 "\n"
 "Update cancelled."
 msgstr ""
-"Actualización se Fallo.  Información: %1%; %2%\n"
+"Actualización fallida.  Información: %1%; %2%\n"
 "\n"
 "Actualización cancelada." 
 
 #: MainWindow.cpp:991
 msgid "BOSS: Settings"
-msgstr "BOSS: Configuracions"
+msgstr "BOSS: Configuracion"
 
 #: MainWindow.cpp:1037 MainWindow.cpp:1049
 msgid "Update check failed. Details: %1%"
-msgstr "Update comprobar los detalles fallidas: %1%"
+msgstr "Update Fallido. Detalles: %1%"
 
 #: MainWindow.cpp:1043
 msgid "Update check failed. No Internet connection detected."
-msgstr "Error en la comprobación de actualización no detecta conexión a Internet."
+msgstr "Error en la comprobación de actualización. No detecta conexión a Internet."
 
 #: MainWindow.cpp:1060 MainWindow.cpp:1066 MainWindow.cpp:1074
 #: MainWindow.cpp:1091
@@ -1648,7 +1648,7 @@ msgid ""
 "\n"
 "Do you want to download and install the update?"
 msgstr ""
-"Actualización disponible Nueva versión: %1%\n"
+"Actualización a Nueva versión disponible: %1%\n"
 "Notas de la versión:\n"
 "\n"
 "%2%\n"
@@ -1657,7 +1657,7 @@ msgstr ""
 
 #: SettingsWindow.cpp:41
 msgid "Standard (0)"
-msgstr "Standard (0)"
+msgstr "Estándar (0)"
 
 #: SettingsWindow.cpp:42
 msgid "Level 1"
@@ -1681,7 +1681,7 @@ msgstr "Juego por defecto:"
 
 #: SettingsWindow.cpp:90
 msgid "Language:"
-msgstr "Lengua:"
+msgstr "Idioma:"
 
 #: SettingsWindow.cpp:93
 msgid "Check for BOSS updates on startup"
@@ -1689,19 +1689,19 @@ msgid "Check for BOSS updates on startup"
 
 #: SettingsWindow.cpp:94
 msgid "Use User Rules Manager"
-msgstr "Usar el Administrador de reglas"
+msgstr "Usar el Administrador de Reglas de Usuario"
 
 #: SettingsWindow.cpp:95
 msgid "Close the GUI after running BOSS"
-msgstr "Cierre la interfaz gráfica de usuario después de ejecutar BOSS"
+msgstr "Cierrar la interfaz gráfica de usuario después de ejecutar BOSS"
 
 #: SettingsWindow.cpp:97
 msgid "Language settings will be applied after the BOSS GUI is restarted."
-msgstr "Configuración de idioma se aplica después de la interfaz gráfica de usuario de BOSS se reinicia."
+msgstr "La configuración de idioma se aplicará después de que la interfaz gráfica de BOSS se reinicie."
 
 #: SettingsWindow.cpp:106
 msgid "Proxy Hostname:"
-msgstr "Proxy Hostname:"
+msgstr "Nombre del Host Proxy:"
 
 #: SettingsWindow.cpp:109
 msgid "Proxy Port Number:"
@@ -1717,11 +1717,11 @@ msgstr "Contraseña de proxy:"
 
 #: SettingsWindow.cpp:127
 msgid "Debug Output Verbosity:"
-msgstr "Nivel de detalle la salida de depuración:"
+msgstr "Nivel de detalle de la salida de depuración:"
 
 #: SettingsWindow.cpp:130
 msgid "Include Source Code References"
-msgstr "incluyen referencias de código fuente"
+msgstr "incluir referencias de código fuente"
 
 #: SettingsWindow.cpp:131
 msgid "Log Debug Output"
@@ -1753,14 +1753,14 @@ msgstr "La salida se registra en el archivo BOSSDebugLog.txt"
 
 #: SettingsWindow.cpp:155
 msgid "Adds source code references to command line output."
-msgstr "Añade las referencias de código fuente a la salida de línea de comandos."
+msgstr "Añade las referencias al código fuente de BOSS a la salida de línea de comandos."
 
 #: SettingsWindow.cpp:156
 msgid ""
 "The higher the verbosity level, the more information is outputted to the "
 "command line."
 msgstr ""
-"Cuanto más alto sea el nivel de detalle, cuanta más información se emite a la"
+"Cuanto más alto sea el nivel de detalle, cuanta más información se emite a la "
 "línea de comandos."
 
 #: UserRuleEditor.cpp:85
@@ -1769,19 +1769,19 @@ msgid ""
 "downloaded, but it cannot be detected. Do you wish to download the latest "
 "masterlist now?"
 msgstr ""
-"El Administrador de usuarios Reglas requiere la masterlist de BOSS por %1% haber sido" 
-"descargado, pero no se puede detectar ¿Desea descargar la última versión del" 
+"El Administrador de Reglas dec Usuario requiere que el masterlist de BOSS "
+"haya sido descargado para '%1%', pero no se puede detectar ¿Desea descargar la última versión del " 
 "masterlist ahora?" 
 
 #: UserRuleEditor.cpp:92 UserRuleEditor.cpp:127
 msgid "Initialising User Rules Manager..."
-msgstr "Iniciando usuario Administrador de reglas ..."
+msgstr "Iniciando Administrador de Reglas de Usuario..."
 
 #: UserRuleEditor.cpp:108
 msgid ""
 "Error: No internet connection detected. Masterlist could not be downloaded."
 msgstr ""
-"Error: Sin conexión a Internet detectada Masterlist no podía ser descargado."
+"Error: Sin conexión a Internet detectada. No se pudo descargar Masterlist."
 
 #: UserRuleEditor.cpp:150
 msgid "before"
@@ -1793,11 +1793,11 @@ msgstr "después de"
 
 #: UserRuleEditor.cpp:155
 msgid "top"
-msgstr "Inferiors de"
+msgstr "Superior de"
 
 #: UserRuleEditor.cpp:156
 msgid "bottom"
-msgstr "Superiror de"
+msgstr "Inferior de"
 
 #: UserRuleEditor.cpp:195
 msgid "Rule Editor"
@@ -1809,7 +1809,7 @@ msgstr "Para"
 
 #: UserRuleEditor.cpp:202
 msgid "Sort Item"
-msgstr "Artículo de Ordenar"
+msgstr "Ordenar Elemento"
 
 #: UserRuleEditor.cpp:205
 msgid "Sort"
@@ -1825,11 +1825,11 @@ msgstr "de"
 
 #: UserRuleEditor.cpp:221
 msgid "Replace existing messages"
-msgstr "Vuelva a colocar los mensajes existentes"
+msgstr "Reemplazar los mensajes existentes"
 
 #: UserRuleEditor.cpp:225
 msgid "Default Plugin Messages"
-msgstr "Plugin de mensajes por defecto"
+msgstr "Mensajes por defecto para Plugin"
 
 #: UserRuleEditor.cpp:245
 msgid "Installed Plugins"
@@ -1841,23 +1841,23 @@ msgstr "Masterlist"
 
 #: UserRuleEditor.cpp:253
 msgid "Create New Rule"
-msgstr "Crear nueva regla de"
+msgstr "Crear Nueva Regla"
 
 #: UserRuleEditor.cpp:254
 msgid "Save Edited Rule"
-msgstr "Guardar Regla Editado"
+msgstr "Guardar Regla Editada"
 
 #: UserRuleEditor.cpp:255
 msgid "Delete Rule"
-msgstr "Borar La Regla"
+msgstr "Borrar Regla"
 
 #: UserRuleEditor.cpp:257
 msgid "Move Rule Up"
-msgstr "Mueva la Regla pa ariba"
+msgstr "Mover Regla hacia arriba"
 
 #: UserRuleEditor.cpp:258
 msgid "Move Rule Down"
-msgstr "Mueva la Regla pa bajo"
+msgstr "Mover Regla hacia abajo"
 
 #: UserRuleEditor.cpp:260
 msgid "Save and Exit"
@@ -1868,12 +1868,12 @@ msgid ""
 "Messages must be entered in the correct format. See the User Rules Readme "
 "for more information."
 msgstr ""
-"Los mensajes se deben introducir en el formato correcto Consulte las Reglas del Usuario Léame "
-"Para obtener más información." 
+"Los mensajes se deben introducir en el formato correcto. Consulte el 'Léame' de las Reglas del Usuario "
+"(en Docs\\BOSS Userlist Syntax.html) para obtener más información." 
 
 #: UserRuleEditor.cpp:456 UserRuleEditor.cpp:483
 msgid "Rule Syntax Error: %1% Please correct the mistake before continuing."
-msgstr "Error de sintaxis Regla: %1% Por favor, corrija el error antes de continuar."
+msgstr "Error de sintáxis de Regla: %1%. Por favor, corrija el error antes de continuar."
 
 #: UserRuleEditor.cpp:472
 msgid "Are you sure you want to save your changes to the selected rule?"
@@ -1885,11 +1885,11 @@ msgstr "¿Está seguro que desea eliminar la regla seleccionada?"
 
 #: UserRuleEditor.cpp:572 UserRuleEditor.cpp:591 UserRuleEditor.cpp:860
 msgid "User Rules Manager"
-msgstr "Usuario Administrador de reglas"
+msgstr "Administrador de Reglas de Usuario"
 
 #: UserRuleEditor.cpp:607
 msgid "No mod is specified to sort relative to."
-msgstr "No se especifica mod para ordenar en relación con".
+msgstr "No has especificado un 'mod' para poder ordenar en relación a él".
 
 #: UserRuleEditor.cpp:609
 msgid "Cannot sort a plugin relative to a group."
@@ -1897,7 +1897,7 @@ msgstr "No se puede ordenar un plugin en relación con un grupo."
 
 #: UserRuleEditor.cpp:612
 msgid "No group is specified to insert into."
-msgstr "Ningún grupo se ha especificado para insertar en."
+msgstr "No has especificado ningún grupo en el que insertar."
 
 #: UserRuleEditor.cpp:614
 msgid "Cannot insert into a plugin."
@@ -1931,23 +1931,23 @@ msgstr "No se puede añadir mensajes a los grupos".
 msgid ""
 "The rule mod is not being sorted nor having its attached messages altered."
 msgstr ""
-"El mod regla no se ordenan ni tener sus mensajes adjuntos alterado."
+"La regla 'mod' no será ordenada ni tendrá sus mensajes adjuntos alterados."
 
 #: UserRuleEditor.cpp:752
 msgid "Rule Syntax Error: Cannot sort a plugin relative to a group."
-msgstr "Error de sintaxis Regla: No se puede ordenar un plugin en relación con un grupo."
+msgstr "Error de sintaxis de Regla: No se puede ordenar un plugin en relación con un grupo."
 
 #: UserRuleEditor.cpp:760
 msgid "Rule Syntax Error: Cannot insert into a plugin."
-msgstr "Error de sintaxis Regla: No se puede insertar en un plug-in".
+msgstr "Error de sintaxis de Regla: No se puede insertar en un plug-in".
 
 #: UserRuleEditor.cpp:770
 msgid "Rule Syntax Error: Cannot sort a group relative to a plugin."
-msgstr "Error de sintaxis Regla: No se puede ordenar a un grupo en relación con un plug-in".
+msgstr "Error de sintaxis de Regla: No se puede ordenar a un grupo en relación con un plug-in".
 
 #: UserRuleEditor.cpp:778
 msgid "Rule Syntax Error: Cannot insert groups."
-msgstr "Error de sintaxis Regla: No se puede insertar grupos".
+msgstr "Error de sintaxis de Regla: No se puede insertar grupos".
 
 #: UserRuleEditor.cpp:871
 msgid ""
@@ -1956,9 +1956,9 @@ msgid ""
 "masterlist, re-enable the rule."
 msgstr ""
 "La regla de clasificación del plugin no reconocido \"%1%\" ha sido inhabilitado como el "
-"plug-in es ahora reconocida. Si quieres cambiar su posición en el " 
-"masterlist, re-activar la regla."
+"plug-in es ahora reconocido. Si quieres cambiar su posición en el " 
+"masterlist, re-activa la regla."
 
 #: UserRuleEditor.cpp:872
 msgid "BOSS: Rule Disabled"
-msgstr "BOSS: Regla Disabled"
+msgstr "BOSS: Regla Desabilitada"
