@@ -8881,14 +8881,14 @@ begin
     wbFormID(NAM0, 'Unknown')
   ]);
 
-  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+	wbRecord(NAVI, 'Navigation Mesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
     wbRArray('Unknown',
-      wbArrayS(NVMI, 'Unknown', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL]))
+      wbArrayS(NVMI, 'Unknown', wbByteArray('Unknown' ,4))
     ),
-    wbArrayS(NVPP, 'Unknown', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL])),
-    wbArrayS(NVSI, 'Unknown', wbFormIDCk('Unknown', [NAVM, CELL, REFR, NULL]))
+    wbArrayS(NVPP, 'Unknown', wbByteArray('Unknown' ,4)),
+    wbArrayS(NVSI, 'Unknown', wbByteArray('Unknown' ,4))
   ]);
 
 //------------------------------------------------------------------------------
