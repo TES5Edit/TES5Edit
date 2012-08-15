@@ -120,15 +120,20 @@
 			<Group id="MODS" optional="1"/>
 		</Group>
 	</Group>
-	<Group id="MODEL" optional="1"> <!-- Snip doesn't support arranging this yet -->
-		<Subrecord name="MODL" desc="Model (NIF)" optional="1">
+	<Group id="MODEL" optional="1">
+		<Subrecord name="MODL" desc="Model (NIF)">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MODT" desc="Alternate Texture Data" optional="1"> <!-- Snip doesn't support arranging this yet -->
-			<Element name="(buffer)" type="int"/>
-			<Element name="Localized names of DDSs" type="blob"/>
+		<Subrecord name="MODB" desc="Unknown" optional="1">
+			<Element name="Unknown" type="uint"/>
+		</Subrecord>
+		<Subrecord name="MODT" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="blob"/>
 		</Subrecord>
 		<Group id="MODS" optional="1"/>
+		<Subrecord name="MODD" desc="FaceGen Model Flags" optional="1">
+			<Element name="Flags" type="byte" flags="Head;Torso;Right Hand;Left Hand"/>
+		</Subrecord>
 	</Group>
 	<Group id="POSDATA" optional="1"> <!-- zPos uses an unknown formula to calc -->
 		<Subrecord name="DATA" desc="Position/Origin and Rotation" optional="1" size="24">
@@ -192,19 +197,101 @@
 	</Group>
 	<Group id="MODS" optional="1"> <!-- Snip doesn't support repeating element-groups yet -->
 		<Subrecord name="MODS" desc="Alternate Texture Data" optional="1">
-			<Element name="# of Textures" type="int"/>
-			<Element name="Object Name" type="istring" optional="1"/>
-			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-			<Element name="Object Nr" type="int" optional="1"/>
-			<Element name="Object Name" type="istring" optional="1"/>
-			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-			<Element name="Object Nr" type="int" optional="1"/>
-			<Element name="Object Name" type="istring" optional="1"/>
-			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-			<Element name="Object Nr" type="int" optional="1"/>
-			<Element name="Object Name" type="istring" optional="1"/>
-			<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-			<Element name="Object Nr" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="(rest of data)" type="blob"/>
+		</Subrecord>
+	</Group>
+	<Group id="Model2S" optional="1"> <!-- Snip doesn't support repeating element-groups yet -->
+		<Subrecord name="MO2S" desc="Alternate Texture Data" optional="1">
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="(rest of data)" type="blob"/>
+		</Subrecord>
+	</Group>
+	<Group id="Model3S" optional="1"> <!-- Snip doesn't support repeating element-groups yet -->
+		<Subrecord name="MO3S" desc="Alternate Texture Data" optional="1">
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="(rest of data)" type="blob"/>
+		</Subrecord>
+	</Group>
+	<Group id="Model4S" optional="1"> <!-- Snip doesn't support repeating element-groups yet -->
+		<Subrecord name="MO4S" desc="Model Data 4S" optional="1">
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="(rest of data)" type="blob"/>
+		</Subrecord>
+	</Group>
+	<Group id="Model5S" optional="1"> <!-- Snip doesn't support repeating element-groups yet -->
+		<Subrecord name="MO5S" desc="Model Data 4S" optional="1">
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
+			<Element name="3D Name" type="istring" optional="1"/>
+			<Element name="New Texture" type="formid" reftype="TXST" optional="1"/>
+			<Element name="3D Index" type="int" optional="1"/>
 			<Element name="(rest of data)" type="blob"/>
 		</Subrecord>
 	</Group>
@@ -1301,6 +1388,7 @@ non-indent is being worked on
 			<Element name="VTYP FormID" type="formid" reftype="VTYP"/>
 		</Subrecord>
 	</Record>
+
   <Record name="ARMO" desc="Armor">
     <Group id="EDID" optional="1"/>
     <Group id="VMAD" optional="1" />
@@ -1309,66 +1397,39 @@ non-indent is being worked on
     <Subrecord name="EITM" desc="Enchantment ID (ENCH)" optional="1" size="4">
       <Element name="FormID" type="formid" reftype="ENCH" />
     </Subrecord>
-    <Subrecord name="MOD2" desc="Male Ground Model Path" optional="1">
-      <Element name="Model Path 2" type="string" />
+		<Group id="MODEL" optional="1">
+    <Subrecord name="MOD2" desc="Male world model" optional="1">
+      <Element name="Model Filename" type="string" />
     </Subrecord>
-    <Subrecord name="MO2T" desc="Model Data 2" optional="1">
-      <Element name="Model Data 2" type="blob" />
+    <Subrecord name="MO2T" desc="Texture Files Hashes" optional="1">
+      <Element name="Unknown" type="blob" />
     </Subrecord>
-	<Subrecord name="MO2S" desc="Model Data 2S" optional="1">
-		<Element name="Num Textures" type="int"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="(rest of data)" type="blob"/>
-    </Subrecord>
+		<Group id="Model2S" optional="1">
     <Subrecord name="MOD4" desc="Female Ground Model Path" optional="1">
       <Element name="Model Path 4" type="string" />
     </Subrecord>
     <Subrecord name="MO4T" desc="Model Data 4" optional="1">
       <Element name="Model Data 4" type="blob" />
     </Subrecord>
-	<Subrecord name="MO4S" desc="Model Data 4S" optional="1">
-		<Element name="Num Textures" type="int"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="Object Name" type="istring" optional="1"/>
-		<Element name="TextureSet" type="formid" reftype="TXST" optional="1"/>
-		<Element name="Object Nr" type="int" optional="1"/>
-		<Element name="(rest of data)" type="blob"/>
-	</Subrecord>
+		<Group id="Model4S" optional="1">
     <Subrecord name="BODT" desc="Body Template" optional="1" >
       <Element name="BodyParts" type="uint" flags="Head;Hair;Chest;Hands;Forearms;Amulet;Ring;Feet;Calves;Shield;Tail;Long Hair;Forehead (Circlet);Ears;Dragon Head;Dragon Left Wing;Dragon Right Wing;Dragon Body;;;Decapitated Head"/>
       <Element name="Flags" type="uint" hexview="1" flags=";;;;NonPlayable;;;;"/>
       <Element name="Armor type?" type="uint" optional="1" options="Light Armor;0;Heavy Armor;1;Clothing;2"/>
     </Subrecord>
-	<Group id="DESTRUCT" optional="1"/>
-
-	<Group id="ETYP" optional="1"/>
+		<Group id="DESTRUCT" optional="1"/>
+		<Group id="YNAM" optional="1"/>
+		<Group id="ZNAM" optional="1"/>
+    <Subrecord name="BMCT" desc="Ragdoll Constraint Template" optional="1">
+      <Element name="File Name" type="string" />
+    </Subrecord>
+		<Group id="ETYP" optional="1"/>
     <Subrecord name="BIDS" desc="Bash Impact Data Set (IPDS)" optional="1" size="4">
       <Element name="FormID" type="formid" reftype="IPDS" />
     </Subrecord>
     <Subrecord name="BAMT" desc="Bash Material (MATT)" optional="1" size="4">
       <Element name="FormID" type="formid" reftype="MATT" />
     </Subrecord>
-    <Group id="YNAM" optional="1"/>
-	<Group id="ZNAM" optional="1"/>
     <Subrecord name="RNAM" desc="Race Type (RACE)" optional="1" size="4">
       <Element name="FormID" type="formid" reftype="RACE" />
     </Subrecord>
@@ -1385,7 +1446,9 @@ non-indent is being worked on
       <Element name="FormID" type="formid" reftype="ARMO" />
     </Subrecord>
   </Record>
-  <Record name="BOOK" desc="Book">
+ <!-- End of ARMO -->
+  
+	<Record name="BOOK" desc="Book">
     <Group id="EDID" optional="1"/>
     <Group id="VMAD" optional="1"/>
     <Group id="OBND" optional="1"/>
