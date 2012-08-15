@@ -4105,7 +4105,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
   </Record>
   <Record name="ARMA" desc="Armature">
     <Group id="EDID" optional="1"/>
-		<Group id="BODYDATA" optional="1">
+		<Group id="BODYDATA" optional="1" />
     <Subrecord name="RNAM" desc="RNAM" optional="1" size="4">
       <Element name="unknown 4bytes" type="int" />
     </Subrecord>
