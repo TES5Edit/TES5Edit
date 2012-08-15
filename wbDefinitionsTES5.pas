@@ -461,6 +461,8 @@ const
   ONAM : TwbSignature = 'ONAM';
   OTFT : TwbSignature = 'OTFT';
   PACK : TwbSignature = 'PACK';
+  PARW : TwbSignature = 'PARW'; { New to Skyrim }
+  PCON : TwbSignature = 'PCON'; { New to Skyrim }
   PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PERK : TwbSignature = 'PERK';
   PFIG : TwbSignature = 'PFIG';
@@ -4981,12 +4983,14 @@ begin
     {0x00000010}'Unknown 5',
     {0x00000020}'Deleted',
     {>>> 0x00000040 ACTI: Has Tree LOD <<<}
-    {0x00000040}'Constant',
-    {0x00000080}'(TES4)Localized / Is Perch',
+    {0x00000040}'Constant / (REFR) Hidden From Local Map',
+    {>>> 0x00000080 PHZD: Turn Off Fire <<<}
+    {0x00000080}'(TES4)Localized / Is Perch / (PHZD) Turn off fire',
     {>>> 0x00000100 ACTI: Must Update Anims <<<}
-    {0x00000100}'Must Update Anims',
+    {>>> 0x00020000 REFR light: Doesn't light water <<<}
+    {0x00000100}'Must Update Anims / (REFR) Inaccessible',
     {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
-    {0x00000200}'Hidden from local map / Starts dead',
+    {0x00000200}'Hidden from local map / Starts dead /(REFR) MotionBlurCastsShadows',
     {0x00000400}'Quest item / Persistent reference / (LSCR) Displays in Main Menu',
     {0x00000800}'Initialy disabled',
     {0x00001000}'Ignored',
@@ -4994,8 +4998,10 @@ begin
     {0x00004000}'Unknown 15',
     {0x00008000}'VWD',
     {>>> 0x00010000 ACTI: Random Animation Start <<<}
+    {>>> 0x00020000 REFR light: Never fades <<<}
     {0x00010000}'Random Animation Start',
     {>>> 0x00020000 ACTI: Dangerous <<<}
+    {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
     {0x00020000}'Dangerous / Off limits',
     {0x00040000}'Compressed',
     {0x00080000}'Can''t wait',
@@ -5007,17 +5013,17 @@ begin
     {0x00800000}'Is Marker',
     {0x01000000}'Unknown 25',
     {>>> 0x02000000 ACTI: Obstacle <<<}
-    {0x02000000}'Obstacle',
+    {0x02000000}'Obstacle / (REFR) No AI Acquire',
     {>>> 0x03000000 ACTI: Filter <<<}
     {0x03000000}'NavMesh Gen - Filter',
     {>>> 0x08000000 ACTI: Bounding Box <<<}
     {0x08000000}'NavMesh Gen - Bounding Box',
     {0x10000000}'Must Exit to Talk',
     {>>> 0x20000000 ACTI: Child Can Use <<<}
-    {0x20000000}'Child Can Use',
+    {0x20000000}'Child Can Use / (REFR) Don''t Havok Settle',
     {>>> 0x40000000 ACTI: GROUND <<<}
-    {0x40000000}'NavMesh Gen - Ground',
-    {0x80000000}'Unknown 32'
+    {0x40000000}'NavMesh Gen - Ground / (REFR) NoRespawn',
+    {0x80000000}'(REFR) MultiBound'
   ]));
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
@@ -5728,7 +5734,12 @@ begin
     wbSCROs
   ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad);
 
-  wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
+  wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32, wbEnum([
+    'Easy',
+    'Medium',
+    'Hard',
+    'Very Hard'
+  ]));
 
   wbOwnership := wbRStruct('Ownership', [
     wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
@@ -5781,37 +5792,22 @@ begin
       ])
     ),
 
-		wbRUnion('Union', [
-      wbRStruct('XLKR XAPD XAPR', [
-        wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False),  // Moved from between XDCR and XCLP
-			  {--- Activate Parents ---}
-				wbRStruct('Activate Parents', [
-					wbInteger(XAPD, 'Flags', itU8, wbFlags([
-						'Parent Activate Only'
-					], True)),
-					wbRArrayS('Activate Parent Refs',
-						wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-							wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-							wbFloat('Delay')
-						])
-					)
-				], [])
-      ], []),
-      wbRStruct('XAPD XAPR XLKR', [
-			  {--- Activate Parents ---}
-				wbRStruct('Activate Parents', [
-					wbInteger(XAPD, 'Flags', itU8, wbFlags([
-						'Parent Activate Only'
-					], True)),
-					wbRArrayS('Activate Parent Refs',
-						wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-							wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-							wbFloat('Delay')
-						])
-					)
-				], []),
-        wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False)  // Moved from between XDCR and XCLP
-      ], [])
+    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbFormIDCk('Ref', [REFR, ACRE, ACHR, PGRE])
+    ])),
+
+    {--- Activate Parents ---}
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE]),
+          wbFloat('Delay')
+        ])
+      )
     ], []),
 
     {--- Linked Ref ---}
@@ -5830,15 +5826,13 @@ begin
       ])
     ]),
 
-		wbUnknown(XIS2),
-
-		wbUnknown(XLCN),
-
-		wbUnknown(XLRT),
-
-		wbUnknown(XHOR),
-
-    wbString(XATO, 'Activation Prompt'),
+    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, NULL]),
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+		wbFormIDCk(XHOR, 'Horse', [ACHR]),
+    wbFloat(XHTW, 'Head-Tracking Weight'),
+    wbFloat(XFVC, 'Favor Cost'),
 
     {--- Enable Parent ---}
     wbXESP,
@@ -5859,9 +5853,7 @@ begin
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
-//------------------------------------------------------------------------------
-// End ACHR
-//------------------------------------------------------------------------------
+
 
   {>>> wbRecordFlags: 0x00000000 ACTI: Collision Geometry (default) <<<}
   wbRecord(ACTI, 'Activator', [
@@ -7279,17 +7271,173 @@ begin
 // End CELL
 //------------------------------------------------------------------------------
 
-
-  wbRecord(PHZD, 'PHZD', [
+  {>>> Used for arrows <<<}
+  wbRecord(PARW, 'Placed Projectile', [
     wbVMAD,
-    wbUnknown(NAME),
-    wbStruct(XESP, 'Unknown', [
-      wbFormIDCk('Unknown', [REFR, STAT, NULL]),
-      wbByteArray('Unknown', 4)
-    ]),
-    wbUnknown(XSCL),
-    wbUnknown(DATA)
-  ]);
+    wbFormIDCk(NAME, 'Arrow', [PROJ]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbOwnership,
+    wbFloat(XHTW, 'Head-Tracking Weight'),
+    wbFloat(XFVC, 'Favor Cost'),
+    wbRArrayS('Reflected/Refracted By',
+      wbStructSK(XPWR, [0], 'Water', [
+        wbFormIDCk('Reference', [REFR]),
+        wbInteger('Type', itU32, wbFlags([
+          'Reflection',
+          'Refraction'
+        ]))
+      ], cpNormal, False, nil, 1)
+    ),
+    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbFormIDCk('Ref', [REFR, ACHR, PARW, PHZD, PGRE])
+    ])),
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', [REFR, ACHR, PARW, PHZD, PGRE]),
+          wbFloat('Delay')
+        ])
+      )
+    ], []),
+    wbXESP,
+    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, NULL]),
+    wbXSCL,
+    wbDataPosRot
+  ], True, wbPlacedAddInfo);
+
+  {>>> Used for voice <<<}
+  wbRecord(PCON, 'Placed Projectile', [
+    wbVMAD,
+    wbFormIDCk(NAME, 'Arrow', [PROJ]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbOwnership,
+    wbFloat(XHTW, 'Head-Tracking Weight'),
+    wbFloat(XFVC, 'Favor Cost'),
+    wbRArrayS('Reflected/Refracted By',
+      wbStructSK(XPWR, [0], 'Water', [
+        wbFormIDCk('Reference', [REFR]),
+        wbInteger('Type', itU32, wbFlags([
+          'Reflection',
+          'Refraction'
+        ]))
+      ], cpNormal, False, nil, 1)
+    ),
+    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbFormIDCk('Ref', [REFR, ACHR, PARW, PHZD, PGRE])
+    ])),
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', [REFR, ACHR, PARW, PHZD, PGRE]),
+          wbFloat('Delay')
+        ])
+      )
+    ], []),
+    wbXESP,
+    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, NULL]),
+    wbXSCL,
+    wbDataPosRot
+  ], True, wbPlacedAddInfo);
+
+  {>>> Used for traps <<<}
+  wbRecord(PGRE, 'Placed Projectile', [
+    wbVMAD,
+    wbFormIDCk(NAME, 'Projectile', [PROJ]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbOwnership,
+    wbFloat(XHTW, 'Head-Tracking Weight'),
+    wbFloat(XFVC, 'Favor Cost'),
+    wbRArrayS('Reflected/Refracted By',
+      wbStructSK(XPWR, [0], 'Water', [
+        wbFormIDCk('Reference', [REFR]),
+        wbInteger('Type', itU32, wbFlags([
+          'Reflection',
+          'Refraction'
+        ]))
+      ], cpNormal, False, nil, 1)
+    ),
+    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbFormIDCk('Ref', [REFR, ACRE, ACHR, PGRE, PHZD])
+    ])),
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE]),
+          wbFloat('Delay')
+        ])
+      )
+    ], []),
+    wbXESP,
+    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, NULL]),
+    wbXSCL,
+    wbDataPosRot
+  ], True, wbPlacedAddInfo);
+
+  {>>> Used for hazards <<<}
+  wbRecord(PHZD, 'Placed Hazard', [
+    wbVMAD,
+    wbFormIDCk(NAME, 'Hazard', [HAZD]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbOwnership,
+    wbFloat(XHTW, 'Head-Tracking Weight'),
+    wbFloat(XFVC, 'Favor Cost'),
+    wbRArrayS('Reflected/Refracted By',
+      wbStructSK(XPWR, [0], 'Water', [
+        wbFormIDCk('Reference', [REFR]),
+        wbInteger('Type', itU32, wbFlags([
+          'Reflection',
+          'Refraction'
+        ]))
+      ], cpNormal, False, nil, 1)
+    ),
+    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbFormIDCk('Ref', [REFR, ACRE, ACHR, PGRE, PHZD])
+    ])),
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE]),
+          wbFloat('Delay')
+        ])
+      )
+    ], []),
+    wbXESP,
+    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, NULL]),
+    wbXSCL,
+    wbDataPosRot
+  ], True, wbPlacedAddInfo);
 
   wbServiceFlags :=
     wbFlags([
@@ -8849,194 +8997,10 @@ begin
 // End Old NAVM
 //------------------------------------------------------------------------------
 
-  wbRecord(PGRE, 'Placed Grenade', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-
-    wbXRGD,
-    wbXRGB,
-
-    {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
-    ], []),
-
-    {--- Ownership ---}
-    wbOwnership,
-
-    {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
-
-    {--- Reflected By / Refracted By ---}
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ])
-    ),
-
-    {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
-      ])
-    ),
-
-    {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ])
-    ]),
-
-    {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-
-    wbString(XATO, 'Activation Prompt'),
-
-    {--- Enable Parent ---}
-    wbXESP,
-
-    {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-
-    {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-
-    {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
-
-    {--- 3D Data ---}
-    wbXSCL,
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo);
 end;
 
 procedure DefineTES5g;
 begin
-  wbRecord(PMIS, 'Placed Missile', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-
-    wbXRGD,
-    wbXRGB,
-
-    {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbEmbeddedScriptReq,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
-    ], []),
-
-    {--- Ownership ---}
-    wbOwnership,
-
-    {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
-
-    {--- Reflected By / Refracted By ---}
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ])
-    ),
-
-    {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
-      ])
-    ),
-
-    {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ])
-    ]),
-
-    {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-
-    wbString(XATO, 'Activation Prompt'),
-
-    {--- Enable Parent ---}
-    wbXESP,
-
-    {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-
-    {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-
-    {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
-
-    {--- 3D Data ---}
-    wbXSCL,
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo);
 
    wbRecord(EXPL, 'Explosion', [
     wbEDIDReq,
@@ -9758,6 +9722,8 @@ begin
       wbByteArray('Unknown', 4)
     ])),
 
+    wbUnknown(RCPR),
+
     wbUnknown(ACUN),
     wbArray(LCUN, 'Unique Refs', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
@@ -9791,7 +9757,6 @@ begin
       wbByteArray('Unknown', 4)
     ])),
 
-    wbUnknown(RCPR),
     wbFull,
     wbKeywords,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
@@ -12633,9 +12598,20 @@ begin
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
 
-    wbRStruct('Room Data', [
+    wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
-        wbInteger('Linked Rooms Count', itU16),
+        //wbInteger('Linked Rooms Count', itU16),
+        wbByteArray('Unknown', 1),
+        wbInteger('Flags', itU8, wbFlags([
+          'Unknown 1',
+          'Unknown 2',
+          'Unknown 3',
+          'Unknown 4',
+          'Unknown 5',
+          'Unknown 6',
+          'Has Image Space',
+          'Has Lighting Template'
+        ])),
         wbByteArray('Unknown', 2)
       ]),
       wbFormIDCk(LNAM, 'Lighting Template', [LGTM]),
@@ -12658,7 +12634,7 @@ begin
           'Reflection',
           'Refraction'
         ]))
-      ])
+      ], cpNormal, False, nil, 1)
     ),
 
     {--- Lit Water ---}
@@ -12668,8 +12644,17 @@ begin
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-		wbUnknown(XLIG),
-		wbUnknown(XALP),
+		wbStruct(XLIG, 'Light Data', [
+      wbFloat('FOV 90+/-'),
+      wbFloat('Fade 1.35+/-'),
+      wbByteArray('Unknown', 4),
+      wbFloat('Shadow Depth Bias'),
+      wbByteArray('Unknown', 4)
+    ]),
+		wbStruct(XALP, 'Alpha', [
+      wbInteger('Cutoff', itU8),
+      wbInteger('Base', itU8)
+    ]),
 
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [
@@ -12710,7 +12695,7 @@ begin
 		wbUnknown(XCZA),
     wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
     wbXSCL,
-    wbFormIDCk(XSPC, 'Ref?', [REFR]),
+    wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
 
     {--- Activate Parents ---}
     wbRStruct('Activate Parents', [
@@ -12725,7 +12710,7 @@ begin
       )
     ], []),
 
-    wbFormIDCk(XLIB, 'Leveled Item Base', [LVLI]),
+    wbFormIDCk(XLIB, 'Leveled Item Base Object', [LVLI]),
     wbXLCM,
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
@@ -12801,7 +12786,8 @@ begin
     wbOwnership,
 
     wbInteger(XCNT, 'Item Count', itS32),
-    wbFormIDCk(XLRL, 'Location Ref Type', [LCRT, NULL]),
+    wbFloat(XCHG, 'Charge'),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, NULL]),
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
@@ -12833,7 +12819,7 @@ begin
     ])),
 
     wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Unknown'),
+    wbFloat(XFVC, 'Favor Cost'),
 
     wbEmpty(ONAM, 'Open by Default'),
 
@@ -12867,179 +12853,11 @@ begin
       ], cpNormal, True)
     ], [])),
 
-    {--- Unknown ---}
-    wbUnknown(XATR),
-
+    {--- Attach reference ---}
+    wbFormIDCk(XATR, 'Attach Ref', [REFR]),
     wbDataPosRot
+  ], True, wbPlacedAddInfo, cpNormal, False, nil{wbREFRAfterLoad});
 
-//
-//    {--- Audio Data ---}
-//    wbRStruct('Audio Data', [
-//      wbEmpty(MMRK, 'Audio Marker'),
-//      wbUnknown(FULL),
-//      wbFormIDCk(CNAM, 'Audio Location', [ALOC]),
-//      wbUnknown(BNAM),
-//      wbFloat(MNAM),
-//      wbFloat(NNAM)
-//    ], []),
-//
-//    wbUnknown(XSRF),
-//    wbUnknown(XSRD),
-//
-//    {--- X Target Data ---}
-//    wbFormIDCk(XTRG, 'Target', [REFR, ACRE, ACHR, PGRE, PMIS], True),
-//
-//    {--- Leveled Actor ----}
-//// XVLM
-//    wbXLCM,
-//
-//    {--- Patrol Data ---}
-//		wbRUnion('Union', [
-//// XLKR XPRD XPPA INAM PDTO
-//      wbRStruct('XLKR XPRD XPPA INAM PDTO', [
-//			  wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False),  // Moved from between XDCR and XCLP
-//        wbFloat(XPRD, 'Idle Time', cpNormal, True),
-//        wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-//        wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-//        wbUnknown(PDTO)
-//      ], []),
-//// XPRD XPPA INAM PDTO XLKR
-//      wbRStruct('XPRD XPPA INAM PDTO XLKR', [
-//        wbFloat(XPRD, 'Idle Time', cpNormal, True),
-//        wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-//        wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-//        wbUnknown(PDTO),
-//        wbArrayS(XLKR, 'Linked References', wbFormIDCk('Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]), 0, cpNormal, False)  // Moved from between XDCR and XCLP
-//      ], [])
-//    ], []),
-//
-//
-//    {--- Radio ---}
-//    wbStruct(XRDO, 'Radio Data', [
-//      wbFloat('Range Radius'),
-//      wbInteger('Broadcast Range Type', itU32, wbEnum([
-//        'Radius',
-//        'Everywhere',
-//        'Worldspace and Linked Interiors',
-//        'Linked Interiors',
-//        'Current Cell Only'
-//      ])),
-//      wbFloat('Static Percentage'),
-//      wbFormIDCkNoReach('Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, NULL])
-//    ]),
-//
-//    {--- Extra ---}
-//    wbInteger(XCNT, 'Count', itS32),
-//    wbFloat(XHLP, 'Health'),
-//    wbFloat(XRAD, 'Radiation'),
-//    wbFloat(XCHG, 'Charge'),
-//    wbRStruct('Ammo', [
-//      wbFormIDCk(XAMT, 'Type', [AMMO], False, cpNormal, True),
-//      wbInteger(XAMC, 'Count', itS32, nil, cpNormal, True)
-//    ], []),
-//
-//    {--- Reflected By / Refracted By ---}
-//    wbRArrayS('Reflected/Refracted By',
-//      wbStructSK(XPWR, [0], 'Water', [
-//        wbFormIDCk('Reference', [REFR]),
-//        wbInteger('Type', itU32, wbFlags([
-//          'Reflection',
-//          'Refraction'
-//        ]))
-//      ])
-//    ),
-//
-//    {--- Decals ---}
-//    wbRArrayS('Linked Decals',
-//      wbStructSK(XDCR, [0], 'Decal', [
-//        wbFormIDCk('Reference', [REFR]),
-//        wbUnknown
-//      ])
-//    ),
-//
-//    {--- Linked Ref ---}
-//    wbStruct(XCLP, 'Linked Reference Color', [
-//      wbStruct('Link Start Color', [
-//        wbInteger('Red', itU8),
-//        wbInteger('Green', itU8),
-//        wbInteger('Blue', itU8),
-//        wbByteArray('Unknown', 1)
-//      ]),
-//      wbStruct('Link End Color', [
-//        wbInteger('Red', itU8),
-//        wbInteger('Green', itU8),
-//        wbInteger('Blue', itU8),
-//        wbByteArray('Unknown', 1)
-//      ])
-//    ]),
-//
-//    wbString(XATO, 'Activation Prompt'),
-//
-//    wbEmpty(XIBS, 'Ignored By Sandbox'),
-//// XNDP
-//    {--- Generated Data ---}
-//    wbStruct(XNDP, 'Navigation Door Link', [
-//      wbFormIDCk('Navigation Mesh', [NAVM]),
-//      wbInteger('Unknown', itU16),
-//      wbByteArray('Unknown', 2)
-//    ]),
-//
-//    wbStruct(XPTL, 'Portal Data', [
-//      wbStruct('Size', [
-//        wbFloat('Width', cpNormal, False, 2),
-//        wbFloat('Height', cpNormal, False, 2)
-//      ]),
-//      wbStruct('Position', [
-//        wbFloat('X'),
-//        wbFloat('Y'),
-//        wbFloat('Z')
-//      ]),
-//      wbStruct('Rotation (Quaternion?)', [
-//        wbFloat('q1'),
-//        wbFloat('q2'),
-//        wbFloat('q3'),
-//        wbFloat('q4')
-//      ])
-//    ]),
-//
-//    wbInteger(XSED, 'SpeedTree Seed', itU8),
-//
-//    wbStruct(XOCP, 'Occlusion Plane Data', [
-//      wbStruct('Size', [
-//        wbFloat('Width', cpNormal, False, 2),
-//        wbFloat('Height', cpNormal, False, 2)
-//      ]),
-//      wbStruct('Position', [
-//        wbFloat('X'),
-//        wbFloat('Y'),
-//        wbFloat('Z')
-//      ]),
-//      wbStruct('Rotation (Quaternion?)', [
-//        wbFloat('q1'),
-//        wbFloat('q2'),
-//        wbFloat('q3'),
-//        wbFloat('q4')
-//      ])
-//    ]),
-//    wbArray(XORD, 'Linked Occlusion Planes', wbFormIDCk('Plane', [REFR, NULL]), [
-//      'Right',
-//      'Left',
-//      'Bottom',
-//      'Top'
-//    ]),
-//
-//    wbXLOD,
-//
-//// XALP
-//		wbUnknown(XALP),
-//
-//    {--- 3D Data ---}
-//    wbXSCL,
-//    wbDATAPosRot
-  ], True, nil{wbPlacedAddInfo}, cpNormal, False, nil{wbREFRAfterLoad});
-//------------------------------------------------------------------------------
-// End REFR
-//------------------------------------------------------------------------------
 
   wbRecord(REGN, 'Region', [
     wbEDID,
