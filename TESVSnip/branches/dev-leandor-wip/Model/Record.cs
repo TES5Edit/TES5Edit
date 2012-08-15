@@ -405,6 +405,7 @@ namespace TESVSnip
 
         internal override void SaveData(BinaryWriter writer)
         {
+            var position = writer.BaseStream.Position;
             WriteString(writer, Name);
 
             uint realSize;
@@ -436,7 +437,7 @@ namespace TESVSnip
                 dataSize += 4;
                 flags |= 0x00040000;
 
-                Debug.WriteLineIf(this.dataSize != dataSize, string.Format("COMPRESSED RECORD SIZE DIFFERS FROM ORIGINAL: ORIGINAL={0} ACTUAL={1}", this.dataSize, dataSize));
+                Debug.WriteLineIf(this.dataSize != dataSize, string.Format("COMPRESSED RECORD [NAME={0} AT POSITION={1}] SIZE DIFFERS FROM ORIGINAL: ORIGINAL={2} ACTUAL={3}, RAW RECORD SIZE={4}", this.Name, position, this.dataSize, dataSize, realSize));
             }
 
             writer.Write(dataSize); // Size of compressed section + length
@@ -447,6 +448,7 @@ namespace TESVSnip
             if (compressed) {
                 writer.Write(realSize);
             }
+
             writer.Write(data, 0, data.Length);
         }
 
