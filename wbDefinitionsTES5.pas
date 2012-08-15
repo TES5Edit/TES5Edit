@@ -2507,7 +2507,9 @@ type
     ptShout,              //SHOU
     ptLocation,           //LCTN
     ptRefType,            //LCRT
-    ptAlias               // ??
+    ptAlias,              // ??
+    ptFloat,              // float
+    ptRelationship        // ASTP
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2521,8 +2523,8 @@ type
 
 const
   {>> N means New, V means verified that the name has not changed <<<}
-  // last checked GetVampireFeed
-  wbCTDAFunctions : array[0..329] of TCTDAFunction = (
+  // last checked HasAssociationType
+  wbCTDAFunctions : array[0..336] of TCTDAFunction = (
 {N} (Index:   0; Name: 'GetWantBlocking'),
 {V} (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
 {V} (Index:   5; Name: 'GetLocked'),
@@ -2586,7 +2588,7 @@ const
     (Index: 103; Name: 'IsShieldOut'),
     (Index: 106; Name: 'IsFacingUp'),
 {V} (Index: 107; Name: 'GetKnockedState'),
-    (Index: 108; Name: 'GetWeaponAnimType'),
+{V} (Index: 108; Name: 'GetWeaponAnimType'),
     (Index: 109; Name: 'IsWeaponSkillType'; ParamType1: ptActorValue),
 {V} (Index: 110; Name: 'GetCurrentAIPackage'),
     (Index: 111; Name: 'IsWaiting'),
@@ -2608,12 +2610,12 @@ const
     (Index: 135; Name: 'SameSexAsPC'),
 {V} (Index: 136; Name: 'GetIsReference'; ParamType1: ptObjectReference),
     (Index: 141; Name: 'IsTalking'),
-    (Index: 142; Name: 'GetWalkSpeed'),
+{V} (Index: 142; Name: 'GetWalkSpeed'),
 {V} (Index: 143; Name: 'GetCurrentAIProcedure'),
 {V} (Index: 144; Name: 'GetTrespassWarningLevel'),
     (Index: 145; Name: 'IsTrespassing'),
     (Index: 146; Name: 'IsInMyOwnedCell'),
-    (Index: 147; Name: 'GetWindSpeed'),
+{V} (Index: 147; Name: 'GetWindSpeed'),
 {V} (Index: 148; Name: 'GetCurrentWeatherPercent'),
 {V} (Index: 149; Name: 'GetIsCurrentWeather'; ParamType1: ptWeather),
     (Index: 150; Name: 'IsContinuingPackagePCNear'),
@@ -2644,14 +2646,14 @@ const
 {V} (Index: 215; Name: 'GetDefaultOpen'),
 {V} (Index: 219; Name: 'GetAnimAction'),
     (Index: 223; Name: 'IsSpellTarget'; ParamType1: ptMagicItem),
-    (Index: 224; Name: 'GetVATSMode'),
+{V} (Index: 224; Name: 'GetVATSMode'),
 {V} (Index: 225; Name: 'GetPersuasionNumber'),
 {V} (Index: 226; Name: 'GetVampireFeed'),
 {V} (Index: 227; Name: 'GetCannibal'),
 {V} (Index: 228; Name: 'GetIsClassDefault'; ParamType1: ptClass),
 {V} (Index: 229; Name: 'GetClassDefaultMatch'),
 {V} (Index: 230; Name: 'GetInCellParam'; ParamType1: ptCell; ParamType2: ptObjectReference),
-    (Index: 235; Name: 'GetVatsTargetHeight'),
+{V} (Index: 235; Name: 'GetVatsTargetHeight'),
 {V} (Index: 237; Name: 'GetIsGhost'),
 {V} (Index: 242; Name: 'GetUnconscious'),
 {V} (Index: 244; Name: 'GetRestrained'),
@@ -2660,7 +2662,7 @@ const
 {N} (Index: 250; Name: 'GetLocationCleared'; ParamType1: ptLocation),
 {V} (Index: 254; Name: 'GetIsPlayableRace'),
 {V} (Index: 255; Name: 'GetOffersServicesNow'),
-    (Index: 258; Name: 'GetUsedItemLevel'),
+{N} (Index: 258; Name: 'HasAssociationType'; ParamType1: ptActor; ParamType2: ptRelationship),
     (Index: 259; Name: 'GetUsedItemActivate'),
     (Index: 264; Name: 'GetBarterGold'),
     (Index: 265; Name: 'IsTimePassing'),
@@ -2689,6 +2691,7 @@ const
 {V} (Index: 318; Name: 'GetIdleDoneOnce'),
 {V} (Index: 320; Name: 'GetNoRumors'),
 {N} (Index: 323; Name: 'GetCombatState'),
+{N} (Index: 325; Name: 'GetWithinPackageLocation'; ParamType1: ptPackage),
     (Index: 327; Name: 'IsRidingHorse'),
     (Index: 332; Name: 'IsInDangerousWater'),
 {V} (Index: 338; Name: 'GetIgnoreFriendlyHits'),
@@ -2716,7 +2719,7 @@ const
     (Index: 398; Name: 'IsLimbGone'; ParamType1: ptBodyLocation),
     (Index: 399; Name: 'IsWeaponInList'; ParamType1: ptFormList),
 {V} (Index: 403; Name: 'GetRelationshipRank'; ParamType1: ptObjectReference),
-    (Index: 408; Name: 'GetVATSValue'; ParamType1: ptVATSValueFunction; ParamType2: ptVATSValueParam),
+{V} (Index: 407; Name: 'GetVATSValue'; ParamType1: ptVATSValueFunction; ParamType2: ptVATSValueParam),
     (Index: 409; Name: 'IsKiller'; ParamType1: ptActor),
 //    (Index: 410; Name: 'IsKillerObject'; ParamType1: ptFormList),
 {V} (Index: 410; Name: 'GetFactionCombatReaction'; ParamType1: ptFaction; ParamType2: ptFaction),
@@ -2735,6 +2738,7 @@ const
 {V} (Index: 437; Name: 'GetIsCreatureType'; ParamType1: ptInteger),
 {N} (Index: 444; Name: 'GetInCurrentLocFormList'; ParamType1: ptFormList),
 {V} (Index: 445; Name: 'GetInZone'; ParamType1: ptEncounterZone),
+{N} (Index: 446; Name: 'GetVelocity'; ParamType1: ptAxis),
 {N} (Index: 447; Name: 'GetGraphVariableFloat'; ParamType1: ptVariableName),
     (Index: 448; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger{Alt?}),
 {V} (Index: 449; Name: 'GetFactionRelation'; ParamType1: ptActor),
@@ -2761,18 +2765,20 @@ const
 {N} (Index: 501; Name: 'EPAlchemyEffectHasKeyword'; ParamType1: ptKeyword),
 {N} (Index: 503; Name: 'GetAllowWorldInteractions'),
 {V} (Index: 508; Name: 'GetLastHitCritical'),
-    (Index: 515; Name: 'IsCombatTarget'; ParamType1: ptActor),
-    (Index: 518; Name: 'GetVATSRightAreaFree'; ParamType1: ptObjectReference),
+{V} (Index: 515; Name: 'GetVATSRightAreaFree'; ParamType1: ptObjectReference),
+{V} (Index: 516; Name: 'GetVATSLeftAreaFree'; ParamType1: ptObjectReference),
+{V} (Index: 517; Name: 'GetVATSBackAreaFree'; ParamType1: ptObjectReference),
+{V} (Index: 518; Name: 'GetVATSFrontAreaFree'; ParamType1: ptObjectReference),
 {N} (Index: 519; Name: 'GetLockIsBroken'),
-    (Index: 520; Name: 'GetVATSBackAreaFree'; ParamType1: ptObjectReference),
-    (Index: 521; Name: 'GetVATSFrontAreaFree'; ParamType1: ptObjectReference),
-    (Index: 522; Name: 'GetIsLockBroken'),
-    (Index: 523; Name: 'IsPS3'),
-    (Index: 524; Name: 'IsWin32'),
-    (Index: 525; Name: 'GetVATSRightTargetVisible'; ParamType1: ptObjectReference),
-    (Index: 526; Name: 'GetVATSLeftTargetVisible'; ParamType1: ptObjectReference),
-    (Index: 527; Name: 'GetVATSBackTargetVisible'; ParamType1: ptObjectReference),
-    (Index: 528; Name: 'GetVATSFrontTargetVisible'; ParamType1: ptObjectReference),
+    (Index: 521; Name: 'IsCombatTarget'; ParamType1: ptActor),
+{V} (Index: 522; Name: 'GetVATSRightTargetVisible'; ParamType1: ptObjectReference),
+{V} (Index: 523; Name: 'GetVATSLeftTargetVisible'; ParamType1: ptObjectReference),
+{V} (Index: 524; Name: 'GetVATSBackTargetVisible'; ParamType1: ptObjectReference),
+{V} (Index: 525; Name: 'GetVATSFrontTargetVisible'; ParamType1: ptObjectReference),
+    (Index: 526; Name: 'IsPS3'),
+    (Index: 527; Name: 'CTDA1'; ParamType1: ptObjectReference),
+    (Index: 528; Name: 'GetIsLockBroken'),
+{N} (Index: 530; Name: 'GetXPForNextLevel'),
     (Index: 531; Name: 'IsInCriticalStage'; ParamType1: ptCriticalStage),
 {N} (Index: 533; Name: 'GetInfamy'),
 {N} (Index: 534; Name: 'GetInfamyViolent'),
@@ -2817,7 +2823,10 @@ const
 {N} (Index: 622; Name: 'GetPathingTargetSpeedAngle'; ParamType1: ptAxis),
 {N} (Index: 623; Name: 'GetMovementSpeed'),
 {N} (Index: 624; Name: 'GetInContainer'; ParamType1: ptInventoryObject),
+{N} (Index: 629; Name: 'GetVMQuestVariable'; ParamType1: ptQuest; ParamType2: ptVariableName),
+{N} (Index: 630; Name: 'GetVMScriptVariable'; ParamType1: ptObjectReference; ParamType2: ptVariableName),
 {N} (Index: 633; Name: 'GetFlyingState'),
+{N} (Index: 639; Name: 'GetWithinDistance'; ParamType1: ptObjectReference; ParamType2: ptFloat),
 {N} (Index: 640; Name: 'GetActorValuePercent'; ParamType1: ptActorValue),
 {N} (Index: 642; Name: 'GetLastBumpDirection'),
 {N} (Index: 645; Name: 'GetIsInjured'),
@@ -5082,7 +5091,8 @@ begin
   wbSoundLevelEnum := wbEnum([
      'Loud',
      'Normal',
-     'Silent'
+     'Silent',
+     'Very Loud'
     ]);
 
   wbEntryPointsEnum := wbEnum([
@@ -5196,20 +5206,16 @@ begin
   ]);
 
   wbWeaponAnimTypeEnum := wbEnum([
-    {00} 'Hand to Hand',
-    {01} 'Melee (1 Hand)',
-    {02} 'Melee (2 Hand)',
-    {03} 'Pistol - Balistic (1 Hand)',
-    {04} 'Pistol - Energy (1 Hand)',
-    {05} 'Rifle - Balistic (2 Hand)',
-    {06} 'Rifle - Automatic (2 Hand)',
-    {07} 'Rifle - Energy (2 Hand)',
-    {08} 'Handle (2 Hand)',
-    {09} 'Launcher (2 Hand)',
-    {10} 'Grenade Throw (1 Hand)',
-    {11} 'Land Mine (1 Hand)',
-    {12} 'Mine Drop (1 Hand)',
-    {13} 'Thrown (1 Hand)'
+    {0} 'HandToHandMelee',
+    {1} 'OneHandSword',
+    {2} 'OneHandDagger',
+    {3} 'OneHandAxe',
+    {4} 'OneHandMace',
+    {5} 'TwoHandSword',
+    {6} 'TwoHandAxe',
+    {7} 'Bow',
+    {8} 'Staff',
+    {9} 'Crossbow'
   ]);
 
   wbReloadAnimEnum := wbEnum([
@@ -5916,24 +5922,27 @@ begin
 
   wbVatsValueFunctionEnum :=
     wbEnum([
-      'Weapon Is',
-      'Weapon In List',
-      'Target Is',
-      'Target In List',
-      'Target Distance',
-      'Target Part',
-      'VATS Action',
-      'Is Success',
-      'Is Critical',
-      'Critical Effect Is',
-      'Critical Effect In List',
-      'Is Fatal',
-      'Explode Part',
-      'Dismember Part',
-      'Cripple Part',
-      'Weapon Type Is',
-      'Is Stranger',
-      'Is Paralyzing Palm'
+      { 0} 'Weapon Is',
+      { 1} 'Weapon In List',
+      { 2} 'Target Is',
+      { 3} 'Target In List',
+      { 4} 'Target Distance',
+      { 5} 'Target Part',
+      { 6} 'VATS Action',
+      { 7} 'Is Success',
+      { 8} 'Is Critical',
+      { 9} 'Critical Effect Is',
+      {10} 'Critical Effect In List',
+      {11} 'Is Fatal',
+      {12} 'Explode Part',
+      {13} 'Dismember Part',
+      {14} 'Cripple Part',
+      {15} 'Weapon Type Is',
+      {16} 'Is Stranger',
+      {17} 'Is Paralyzing Palm',
+      {18} 'Projectile Type Is',
+      {19} 'Delivery Type Is',
+      {20} 'Casting Type Is'
     ]);
 
   wbActorValueEnum :=
@@ -6611,7 +6620,9 @@ begin
         {54} wbFormIDCkNoReach('Shout', [SHOU]),
         {55} wbFormIDCkNoReach('Location', [LCTN]),
         {56} wbFormIDCkNoReach('Ref Type', [LCRT]),
-        {57} wbInteger('Alias ID', itU32)
+        {57} wbInteger('Alias ID', itU32),
+        {58} wbFloat('Float'),
+        {59} wbFormIDCk('Relationship', [ASTP])
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -6653,7 +6664,50 @@ begin
         {37} wbFormIDCkNoReach('Base Effect', [MGEF]),
         {38} wbFormIDCkNoReach('Worldspace', [WRLD]),
         {39} wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        {40} wbInteger('VATS Value Param (INVALID)', itU32),
+        {40} wbUnion('VATS Value Param', wbCTDAParam2VATSValueParam, [
+             { 0} wbFormIDCkNoReach('Weapon', [WEAP]),
+             { 1} wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
+             { 2} wbFormIDCkNoReach('Target', [NPC_]),
+             { 3} wbFormIDCkNoReach('Target List', [FLST], [NPC_]),
+             { 4} wbByteArray('Unknown', 4, cpIgnore),
+             { 5} wbInteger('Target Part', itS32, wbActorValueEnum),
+             { 6} wbInteger('VATS Action', itU32, wbEnum([
+                'Unarmed Attack',
+                'One Hand Melee Attack',
+                'Two Hand Melee Attack',
+                'Magic Attack',
+                'Ranged Attack',
+                'Reload',
+                'Crouch',
+                'Stand',
+                'Switch Weapon',
+                'Toggle Weapon Drawn',
+                'Heal',
+                'Player Death'
+              ])),
+             { 7} wbByteArray('Unknown', 4, cpIgnore),
+             { 8} wbByteArray('Unknown', 4, cpIgnore),
+             { 9} wbFormIDCkNoReach('Critical Effect', [SPEL]),
+             {10} wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
+             {11} wbByteArray('Unknown', 4, cpIgnore),
+             {12} wbByteArray('Unknown', 4, cpIgnore),
+             {13} wbByteArray('Unknown', 4, cpIgnore),
+             {14} wbByteArray('Unknown', 4, cpIgnore),
+             {15} wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
+             {16} wbByteArray('Unknown', 4, cpIgnore),
+             {17} wbByteArray('Unknown', 4, cpIgnore),
+             {18} wbInteger('Projectile Type', itU32, wbEnum([
+                'Missile',
+                'Lobber',
+                'Beam',
+                'Flame',
+                'Cone',
+                'Barrier',
+                'Arrow'
+                  ])),
+             {19} wbInteger('Delivery Type', itU32, wbTargetEnum),
+             {20} wbInteger('Casting Type', itU32, wbCastEnum)
+            ]),
         {41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
@@ -6670,7 +6724,9 @@ begin
         {54} wbFormIDCkNoReach('Shout', [SHOU]),
         {55} wbFormIDCkNoReach('Location', [LCTN]),
         {56} wbFormIDCkNoReach('Ref Type', [LCRT]),
-        {57} wbInteger('Alias ID', itU32)
+        {57} wbInteger('Alias ID', itU32),
+        {58} wbFloat('Float'),
+        {59} wbFormIDCk('Relationship', [ASTP])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',
@@ -8731,27 +8787,17 @@ begin
         'Supersonic',
         'Pins Limbs',
         'Pass Through Small Transparent',
-        'Detonates',
+        'Disable Combat Aim Correction',
         'Rotation'
       ])),
-      {02} wbInteger('Type', itU16, wbEnum([
-        {00} '',
-        {01} 'Missile',
-        {02} 'Lobber',
-        {03} '',
-        {04} 'Beam',
-        {05} '',
-        {06} '',
-        {07} '',
-        {08} 'Flame',
-        {09} '',
-        {10} '',
-        {11} '',
-        {12} '',
-        {13} '',
-        {14} '',
-        {15} '',
-        {16} 'Continuous Beam'
+      {02} wbInteger('Type', itU16, wbEnum([], [
+        $01, 'Missile',
+        $02, 'Lobber',
+        $04, 'Beam',
+        $08, 'Flame',
+        $10, 'Cone',
+        $20, 'Barrier',
+        $40, 'Arrow'
       ])),
       {04} wbFloat('Gravity'),
       {08} wbFloat('Speed'),
@@ -8769,16 +8815,13 @@ begin
       {56} wbFormIDCk('Sound - Countdown', [SOUN, NULL]),
       {60} wbFormIDCk('Sound - Disable', [SOUN, NULL]),
       {64} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
-      {68} wbStruct('Rotation', [
-      {68}   wbFloat('X'),
-      {72}   wbFloat('Y'),
-      {76}   wbFloat('Z')
-           ]),
-      {80} wbFloat('Bouncy Mult'),
-           wbByteArray('Unknown', 4),
-           wbByteArray('Unknown', 4),
-           wbByteArray('Unknown', 4)
-    ], cpNormal, True),
+      {68} wbFloat('Cone Spread'),
+      {72} wbFloat('Collision Radius'),
+      {76} wbFloat('Lifetime'),
+      {80} wbFloat('Relaunch Interval'),
+           wbFormIDCk('Decal Data', [TXST, NULL]),
+           wbFormIDCk('Collision Layer', [COLL, NULL])
+    ], cpNormal, True, nil, 22),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model Filename'),
       wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
