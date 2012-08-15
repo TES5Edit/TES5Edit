@@ -1225,7 +1225,7 @@ msgstr "Error: No se pudo aplicar la traducción: %1%"
 
 #: MainWindow.cpp:173
 msgid "Error: The BOSS GUI is already running. This instance will now quit."
-msgstr "Error: La interfaz gráfica de usuario de BOSS ya se está ejecutando. Esta instancia ahora se cerrará.".
+msgstr "Error: La interfaz gráfica de usuario de BOSS ya se está ejecutando. Esta instancia ahora se cerrará."
 
 #: MainWindow.cpp:199
 msgid " (not detected)"
@@ -1503,7 +1503,7 @@ msgid ""
 "reorder your mods."
 msgstr ""
 "Ejecuta BOSS, simulando sus cambios en el orden de carga, pero en realidad no "
-"aplica el nuevo orden a los mods". 
+"aplica el nuevo orden a los mods." 
 
 #: MainWindow.cpp:404
 msgid "Ready"
@@ -1573,7 +1573,7 @@ msgstr "BOSS: Actualizador automático "
 
 #: MainWindow.cpp:944
 msgid "Automatic updater cancelled."
-msgstr "Actualizador automático cancelado".
+msgstr "Actualizador automático cancelado."
 
 #: MainWindow.cpp:948
 msgid "Initialising download..."
@@ -1889,7 +1889,7 @@ msgstr "Administrador de Reglas de Usuario"
 
 #: UserRuleEditor.cpp:607
 msgid "No mod is specified to sort relative to."
-msgstr "No has especificado un 'mod' para poder ordenar en relación a él".
+msgstr "No has especificado un 'mod' para poder ordenar en relación a él."
 
 #: UserRuleEditor.cpp:609
 msgid "Cannot sort a plugin relative to a group."
@@ -1901,7 +1901,7 @@ msgstr "No has especificado ningún grupo en el que insertar."
 
 #: UserRuleEditor.cpp:614
 msgid "Cannot insert into a plugin."
-msgstr "No se puede insertar en un plug-in".
+msgstr "No se puede insertar en un plug-in."
 
 #: UserRuleEditor.cpp:618
 msgid "Cannot add messages when none are given."
@@ -1913,19 +1913,19 @@ msgstr "No se especifica la regla mod."
 
 #: UserRuleEditor.cpp:625
 msgid "No group is specified to sort relative to."
-msgstr "Ningún grupo se ha especificado para ordenar en relación con".
+msgstr "Ningún grupo se ha especificado para ordenar en relación con."
 
 #: UserRuleEditor.cpp:627
 msgid "Cannot sort a group relative to a plugin."
-msgstr "No se puede ordenar a un grupo en relación con un plug-in".
+msgstr "No se puede ordenar a un grupo en relación con un plug-in."
 
 #: UserRuleEditor.cpp:629
 msgid "Cannot insert groups."
-msgstr "No se puede insertar grupos".
+msgstr "No se puede insertar grupos."
 
 #: UserRuleEditor.cpp:632
 msgid "Cannot add messages to groups."
-msgstr "No se puede añadir mensajes a los grupos".
+msgstr "No se puede añadir mensajes a los grupos."
 
 #: UserRuleEditor.cpp:635
 msgid ""
@@ -1939,15 +1939,15 @@ msgstr "Error de sintaxis de Regla: No se puede ordenar un plugin en relación c
 
 #: UserRuleEditor.cpp:760
 msgid "Rule Syntax Error: Cannot insert into a plugin."
-msgstr "Error de sintaxis de Regla: No se puede insertar en un plug-in".
+msgstr "Error de sintaxis de Regla: No se puede insertar en un plug-in."
 
 #: UserRuleEditor.cpp:770
 msgid "Rule Syntax Error: Cannot sort a group relative to a plugin."
-msgstr "Error de sintaxis de Regla: No se puede ordenar a un grupo en relación con un plug-in".
+msgstr "Error de sintaxis de Regla: No se puede ordenar a un grupo en relación con un plug-in."
 
 #: UserRuleEditor.cpp:778
 msgid "Rule Syntax Error: Cannot insert groups."
-msgstr "Error de sintaxis de Regla: No se puede insertar grupos".
+msgstr "Error de sintaxis de Regla: No se puede insertar grupos."
 
 #: UserRuleEditor.cpp:871
 msgid ""
