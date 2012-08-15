@@ -43,8 +43,8 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
-  StartTime  : TDateTime;
-  DumpGroups : TStringList;
+  StartTime       : TDateTime;
+  DumpGroups      : TStringList;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -68,7 +68,7 @@ begin
       end;
 
   if aContainer.Skipped then begin
-    if not (wbReportMode or wbUserDefinedDebug) then WriteLn(aIndent, '<contents skipped>');
+    if not wbReportMode then WriteLn(aIndent, '<contents skipped>');
   end else begin
     Supports(aContainer, IwbContainerElementRef, ContainerRef);
     for i := 0 to Pred(aContainer.ElementCount) do
@@ -95,14 +95,14 @@ begin
   Value := aElement.Value;
 
   if (Name <> '') or (Value <> '') then begin
-    if not (wbReportMode or wbUserDefinedDebug) then
+    if not wbReportMode then
       Write(aIndent, Name);
     aIndent := aIndent + '  ';
     if Value <> '' then begin
-      if not (wbReportMode or wbUserDefinedDebug) then
+      if not wbReportMode then
         WriteLn(': ', Value);
     end else begin
-      if not (wbReportMode or wbUserDefinedDebug) then
+      if not wbReportMode then
         WriteLn;
     end;
   end;
@@ -217,7 +217,7 @@ begin
       Exit;
     end;
 
-    if not wbFindCmdLineSwitch('q') and not (wbReportMode or wbUserDefinedDebug) then begin
+    if not wbFindCmdLineSwitch('q') and not wbReportMode then begin
       WriteLn(ErrOutput, wbAppName, 'Dump ', VersionString);
       WriteLn(ErrOutput);
 
@@ -245,6 +245,15 @@ begin
       wbReportMode:= False;
       wbUserDefinedDebug:= False;
     end;
+
+    if wbFindCmdLineSwitch('debug4') then Begin
+        wbUserDefinedDebugLvl4:= True;
+        wbReportMode:= True;
+        wbUserDefinedDebug:= True;
+      End
+      else Begin
+        wbUserDefinedDebugLvl4:= False;
+      End;
 
     if wbFindCmdLineParam('dg', s) then begin
       DumpGroups := TStringList.Create;
@@ -284,6 +293,7 @@ begin
     end;
 
     s := ParamStr(ParamCount);
+    AppendInputFile := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
     if (ParamCount >= 1) and not FileExists(s) then begin
@@ -320,6 +330,8 @@ begin
       WriteLn(ErrOutput, '-debug       ', 'SubRecordOrderList.txt written to disk. Record information');
       WriteLn(ErrOutput, '             ', 'written horizontally separated by ''\''s and displays extra');
       WriteLn(ErrOutput, '             ', 'information for debugging subrecord order.');
+      WriteLn(ErrOutput, '-debug4      ', 'Dumps all Assigned(wbProgressCallback) to the Console. Use');
+      WriteLn(ErrOutput, '             ', 'with -dg, it is extremely verbose.');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
@@ -335,7 +347,8 @@ begin
     else
       WriteContainer(_File);
 
-    if (wbReportMode or wbUserDefinedDebug) then Begin
+//    if wbReportMode and wbUserDefinedDebug then Begin
+    if wbReportMode then Begin
       ReportProgress('Writing ReportDefs');
       ReportDefs;
     End;
@@ -345,6 +358,8 @@ begin
     on e: Exception do
       WriteLn(ErrOutput, 'Unexpected Error: <',e.ClassName, ': ', e.Message,'>');
   end;
-  if wbReportMode or (DebugHook <> 0) then
-    ReadLn;
+  if wbReportMode or (DebugHook <> 0) then Begin
+    ReportDefs;
+      ReportProgress('Writing ReportDefs After Error in ' + AppendInputFile +'.');
+  End;
 end.

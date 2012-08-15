@@ -32,7 +32,7 @@ uses
 var
   RecordToSkip : TStringList;
   GroupToSkip  : TStringList;
-  SubRecordOrderList     : TStringList;
+  SubRecordOrderList : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
@@ -5087,6 +5087,8 @@ var
   s: string;
   RequiredRecords, PresentRecords: set of byte;
   i : Integer;
+  FoundVMAD: Boolean;
+
 begin
   RequiredRecords := [];
   PresentRecords := [];
@@ -5150,7 +5152,14 @@ begin
       Continue;
     end;
 
-    if mrDef.AllowUnordered then begin
+    CurrentRec := cntElements[CurrentRecPos] as IwbSubRecord;
+    if wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
+      Inc(CurrentRecPos);
+      Continue;
+    end;
+    FoundVMAD := FoundVMAD or (CurrentRec.Signature = 'VMAD');
+
+    if (mrDef.AllowUnordered or wbUserDefinedDebug) then begin
       CurrentDefPos := mrDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
       if CurrentDefPos < 0 then begin
         if Assigned(wbProgressCallback) then
@@ -5254,17 +5263,32 @@ begin
     Inc(CurrentRecPos);
   end;
 
-//  if GetSignature = 'DIAL' then
-//    FoundError := True;
+//  {>>> Add Signature and Filename to Display Error Without wbUserDefinedDebugLvl4 <<<}
+//  if (wbUserDefinedDebug and (not wbUserDefinedDebugLvl4)) then
+//    if ((GetSignature = 'DIAL') and (AppendInputFile = 'Update.esm')) or
+//       ((GetSignature = 'WRLD') and (AppendInputFile = 'Dawnguard.esm'))
+//    then FoundError := True;
 
-  if FoundError then
+  {>>> When debug Mode 4 is On <<<}
+  if wbUserDefinedDebugLvl4 then
+    FoundError:= True;
+
+  if wbUserDefinedDebugLvl4 then
     if Assigned(wbProgressCallback) then begin
-      wbProgressCallback('Errors were found in: ' + GetName);
-    if wbUserDefinedDebug then
-      wbProgressCallback('Contained subrecords: ' + s);
+      wbProgressCallback('Callback Routine in: ' + GetName);
+      if (wbUserDefinedDebug or wbUserDefinedDebugLvl4) then
+        wbProgressCallback('Contained subrecords: ' + s);
     end;
 
-  if wbSortSubRecords and (mrDef.AllowUnordered or (esModified in eStates)) and (Length(cntElements) > 1) then
+  {>>> When debug Mode is Off Follow Elimnster Default Routine <<<}
+  if (FoundError and (not wbUserDefinedDebugLvl4)) then
+    if Assigned(wbProgressCallback) then begin
+      wbProgressCallback('Errors were found in: ' + GetName);
+      if (wbUserDefinedDebug or wbUserDefinedDebugLvl4) then
+        wbProgressCallback('Contained subrecords: ' + s);
+    end;
+
+  if wbSortSubRecords and ((mrDef.AllowUnordered or wbUserDefinedDebug) or (esModified in eStates)) and (Length(cntElements) > 1) then
     QuickSort(@cntElements[0], Low(cntElements), High(cntElements), CompareSubRecords);
 
   mrDef.AfterLoad(Self);
@@ -5286,8 +5310,14 @@ begin
     end;
   end;
 
-  if (wbReportMode or wbUserDefinedDebug) then begin
+  if wbReportMode and (not FoundVMAD) and (mrDef.AllowUnordered or wbUserDefinedDebug) then begin
     s := GetSignature + ' -> ' + s;
+    CurrentRecPos := SubRecordOrderList.Add(s);
+    SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
+  end;
+
+  if FoundVMAD then begin
+    s := GetSignature + ' (VMAD) -> ' + s;
     CurrentRecPos := SubRecordOrderList.Add(s);
     SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
   end;
@@ -13689,9 +13719,9 @@ begin
   for i := 0 to Pred(SubRecordOrderList.Count) do
     SubRecordOrderList[i] := SubRecordOrderList[i] + '(' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
 
-  SubRecordOrderList.SaveToFile('SubRecordOrderList.txt');
+  SubRecordOrderList.SaveToFile('SubRecordOrderList_' + AppendInputFile + '.txt');
 
-  wbProgressCallback( 'Save SubRecordOrderList.txt Finished' );
+  wbProgressCallback( 'SubRecordOrderList_' + AppendInputFile + '.txt Finished' );
 end;
 
 var
