@@ -7761,6 +7761,7 @@ end;
 
 procedure DefineTES5d;
 begin
+
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
     wbFULL,

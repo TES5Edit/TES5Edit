@@ -5316,11 +5316,11 @@ begin
     SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
   end;
 
-  if FoundVMAD then begin
-    s := GetSignature + ' (VMAD) -> ' + s;
-    CurrentRecPos := SubRecordOrderList.Add(s);
-    SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
-  end;
+//  if FoundVMAD then begin
+//    s := GetSignature + ' (VMAD) -> ' + s;
+//    CurrentRecPos := SubRecordOrderList.Add(s);
+//    SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
+//  end;
 
 {
   if GetSignature = 'SCPT' then begin
