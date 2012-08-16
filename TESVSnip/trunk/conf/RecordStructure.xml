@@ -20,13 +20,11 @@
 			<Element name="(always FFs)" type="int" hexview="1"/>
 		</Subrecord>
 	<!-- I haven't seen CIS1/CIS2 in Skyrim yet -->
-		<Subrecord name="CIS1" desc="CIS1" optional="1">
-			<Element name="Unknown" type="int"/>
-			<Element name="Unknown 1" type="int"/>
-			<Element name="Unknown 2" type="int"/>
+		<Subrecord name="CIS1" desc="Parameter #1" optional="1">
+			<Element name="Value" type="string"/>
 		</Subrecord>
-		<Subrecord name="CIS2" desc="VM Quest Variable" optional="1">
-			<Element name="VM Quest Variable" type="string"/>
+		<Subrecord name="CIS2" desc="Parameter #2" optional="1">
+			<Element name="Value" type="string"/>
 		</Subrecord>
 	</Group>
 	<Group id="CALCVAL" optional="1">
