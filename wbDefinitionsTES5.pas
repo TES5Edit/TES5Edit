@@ -774,6 +774,8 @@ var
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
   wbSpecializationEnum: IwbEnumDef;
+  wbEquipType: IwbFlagsDef;
+  wbEmotionTypeEnum: IwbEnumDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
   wbReloadAnimEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
@@ -896,23 +898,20 @@ var
   wbQNAM: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
-  wbSOPM_ONAM: IwbSubRecordStructDef;
-  wbSNDD: IwbSubRecordUnionDef;
   wbDMDSs: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
   wbDMDL: IwbSubRecordDef;
   wbSizeIndexEnum: IwbEnumDef;
   wbSPCT: IwbSubRecordDef;
-  wbTintMasks: IwbSubRecordArrayDef;
+  wbTints: IwbSubRecordArrayDef;
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbOwnership: IwbSubRecordStructDef;
+  wbSMNodeFlags: IwbFlagsDef;
   wbCELLDATAFlags: IwbFlagsDef;
   wbBipedObjectEnum: IwbEnumDef;
   wbArmorTypeEnum: IwbEnumDef;
-  wbRACE_VNAMFlags: IwbIntegerDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
-  wbRACE_DATAFlags02: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
   wbBrowMorphFlags: IwbIntegerDef;
@@ -924,7 +923,6 @@ var
   wbSpells: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
   wbTintMaskTypeEnum: IwbEnumDef;
-  wbBODTOld: IwbSubRecordDef;
 // --- Pack ---
   wbPKDTFlags: IwbFlagsDef;
   wbPKDTInterruptFlags: IwbFlagsDef;
@@ -2509,7 +2507,7 @@ type
     ptRefType,            //LCRT
     ptAlias,              // ??
     ptFloat,              // float
-    ptRelationship        // ASTP
+    ptAssociationType     // ASTP
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2662,7 +2660,7 @@ const
 {N} (Index: 250; Name: 'GetLocationCleared'; ParamType1: ptLocation),
 {V} (Index: 254; Name: 'GetIsPlayableRace'),
 {V} (Index: 255; Name: 'GetOffersServicesNow'),
-{N} (Index: 258; Name: 'HasAssociationType'; ParamType1: ptActor; ParamType2: ptRelationship),
+{N} (Index: 258; Name: 'HasAssociationType'; ParamType1: ptActor; ParamType2: ptAssociationType),
     (Index: 259; Name: 'GetUsedItemActivate'),
     (Index: 264; Name: 'GetBarterGold'),
     (Index: 265; Name: 'IsTimePassing'),
@@ -4255,76 +4253,6 @@ begin
   end;
 end;
 
-
-procedure wbSOUNAfterLoad(const aElement: IwbElement);
-var
-  Container: IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-  OldCntr: IwbContainerElementRef;
-  NewCntr: IwbContainerElementRef;
-  NewCntr2: IwbContainerElementRef;
-  i: Integer;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    if Container.ElementExists['SNDD'] then
-      Exit;
-
-    if not Supports(Container.RemoveElement('SNDX - Sound Data'), IwbContainerElementRef, OldCntr) then
-      Exit;
-    if not Supports(Container.Add('SNDD', True), IwbContainerElementRef, NewCntr) then
-      Exit;
-    for i := 0 to Pred(Min(OldCntr.ElementCount, NewCntr.ElementCount)) do
-      NewCntr.Elements[i].Assign(Low(Integer), OldCntr.Elements[i], False);
-
-    if not Supports(NewCntr.ElementByName['Attenuation Curve'], IwbContainerElementRef, NewCntr2) then
-      Assert(False);
-    Assert(NewCntr2.ElementCount = 5);
-
-    if Supports(Container.RemoveElement('ANAM'), IwbContainerElementRef, OldCntr) then begin
-      Assert(OldCntr.ElementCount = 5);
-      for i := 0 to Pred(Min(OldCntr.ElementCount, NewCntr2.ElementCount)) do
-        NewCntr2.Elements[i].Assign(Low(Integer), OldCntr.Elements[i], False);
-    end else begin
-      NewCntr2.Elements[0].NativeValue := 100;
-      NewCntr2.Elements[1].NativeValue := 50;
-      NewCntr2.Elements[2].NativeValue := 20;
-      NewCntr2.Elements[3].NativeValue := 5;
-      NewCntr2.Elements[4].NativeValue := 0;
-    end;
-
-    if not Supports(NewCntr.ElementByName['Reverb Attenuation Control'], IwbContainerElementRef, NewCntr2) then
-      Assert(False);
-
-    if Supports(Container.RemoveElement('GNAM'), IwbContainerElementRef, OldCntr) then
-      NewCntr2.Assign(Low(Integer), OldCntr, False)
-    else
-      NewCntr2.NativeValue := 80;
-
-    if not Supports(NewCntr.ElementByName['Priority'], IwbContainerElementRef, NewCntr2) then
-      Assert(False);
-
-    if Supports(Container.RemoveElement('HNAM'), IwbContainerElementRef, OldCntr) then
-      NewCntr2.Assign(Low(Integer), OldCntr, False)
-    else
-      NewCntr2.NativeValue := 128;
-
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbWATRAfterLoad(const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
@@ -4642,7 +4570,7 @@ begin
   wbBoolU16 := wbInteger('Boolean', itU16, wbEnum(['False', 'True']));
   wbBoolU32 := wbInteger('Boolean', itU32, wbEnum(['False', 'True']));
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
-  wbCITC := wbInteger(CITC, 'Count', itU32);
+  wbCITC := wbInteger(CITC, 'Condition Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
   wbKeywords := wbRStruct('Keywords', [
@@ -4669,7 +4597,7 @@ begin
     'Feet',
     'Calves',
     'Shield',
-    'Body AddOn 1',
+    'Body AddOn 1 / Tail',
     'Long Hair',
     'Circlet',
     'Body AddOn 2',
@@ -4697,38 +4625,38 @@ begin
 
   wbBODT := wbStruct(BODT, 'Body Template', [
     wbInteger('First Person Flags', itU32, wbFlags([
-        {0x00000001} 'Head',
-        {0x00000002} 'Hair',
-        {0x00000004} 'Body',
-        {0x00000008} 'Hands',
-        {0x00000010} 'Forearms',
-        {0x00000020} 'Amulet',
-        {0x00000040} 'Ring',
-        {0x00000080} 'Feet',
-        {0x00000100} 'Calves',
-        {0x00000200} 'Shield',
-        {0x00000400} 'Body AddOn 1',
-        {0x00000800} 'Long Hair',
-        {0x00001000} 'Circlet',
-        {0x00002000} 'Body AddOn 2',
-        {0x00004000} 'Body AddOn 3',
-        {0x00008000} 'Body AddOn 4',
-        {0x00010000} 'Body AddOn 5',
-        {0x00020000} 'Body AddOn 6',
-        {0x00040000} 'Body AddOn 7',
-        {0x00080000} 'Body AddOn 8',
-        {0x00100000} 'Decapate Head',
-        {0x00200000} 'Decapate',
-        {0x00400000} 'Body AddOn 9',
-        {0x00800000} 'Body AddOn 10',
-        {0x01000000} 'Body AddOn 11',
-        {0x02000000} 'Body AddOn 12',
-        {0x03000000} 'Body AddOn 13',
-        {0x08000000} 'Body AddOn 14',
-        {0x10000000} 'Body AddOn 15',
-        {0x20000000} 'Body AddOn 16',
-        {0x40000000} 'Body AddOn 17',
-        {0x80000000} 'FX01'
+      {0x00000001} 'Head',
+      {0x00000002} 'Hair',
+      {0x00000004} 'Body',
+      {0x00000008} 'Hands',
+      {0x00000010} 'Forearms',
+      {0x00000020} 'Amulet',
+      {0x00000040} 'Ring',
+      {0x00000080} 'Feet',
+      {0x00000100} 'Calves',
+      {0x00000200} 'Shield',
+      {0x00000400} 'Body AddOn 1 / Tail',
+      {0x00000800} 'Long Hair',
+      {0x00001000} 'Circlet',
+      {0x00002000} 'Body AddOn 2',
+      {0x00004000} 'Body AddOn 3',
+      {0x00008000} 'Body AddOn 4',
+      {0x00010000} 'Body AddOn 5',
+      {0x00020000} 'Body AddOn 6',
+      {0x00040000} 'Body AddOn 7',
+      {0x00080000} 'Body AddOn 8',
+      {0x00100000} 'Decapate Head',
+      {0x00200000} 'Decapate',
+      {0x00400000} 'Body AddOn 9',
+      {0x00800000} 'Body AddOn 10',
+      {0x01000000} 'Body AddOn 11',
+      {0x02000000} 'Body AddOn 12',
+      {0x03000000} 'Body AddOn 13',
+      {0x08000000} 'Body AddOn 14',
+      {0x10000000} 'Body AddOn 15',
+      {0x20000000} 'Body AddOn 16',
+      {0x40000000} 'Body AddOn 17',
+      {0x80000000} 'FX01'
     ], True)),
     wbInteger('General Flags', itU32, wbFlags([
       {0x00000001}'Modulates Voice', {>>> From ARMA <<<}
@@ -4766,12 +4694,6 @@ begin
     ], True)),
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, True);
-
-  wbBODTOld := wbStruct(BODT, 'Unknown', [
-    wbbyteArray('Unknown', 4),
-    wbbyteArray('Unknown', 4),
-    wbbyteArray('Unknown', 4)
-  ]);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -4992,15 +4914,17 @@ begin
     {0x00000010}'Unknown 5',
     {0x00000020}'Deleted',
     {>>> 0x00000040 ACTI: Has Tree LOD <<<}
-    {0x00000040}'Constant / (REFR) Hidden From Local Map',
+    {>>> 0x00000040 REGN: Border Region <<<}
+    {0x00000040}'Constant/(REFR)Hidden From Local Map/(REGN)Border Region',
     {>>> 0x00000080 PHZD: Turn Off Fire <<<}
-    {0x00000080}'(TES4)Localized / Is Perch / (PHZD) Turn off fire',
+    {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
+    {0x00000080}'(TES4)Localized/Is Perch/(PHZD)Turn off fire/(SHOU)Treat spells as powers',
     {>>> 0x00000100 ACTI: Must Update Anims <<<}
     {>>> 0x00020000 REFR light: Doesn't light water <<<}
-    {0x00000100}'Must Update Anims / (REFR) Inaccessible',
+    {0x00000100}'Must Update Anims/(REFR) Inaccessible',
     {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
-    {0x00000200}'Hidden from local map / Starts dead /(REFR) MotionBlurCastsShadows',
-    {0x00000400}'Quest item / Persistent reference / (LSCR) Displays in Main Menu',
+    {0x00000200}'Hidden from local map/Starts dead/(REFR)MotionBlurCastsShadows',
+    {0x00000400}'Quest item/Persistent reference/(LSCR)Displays in Main Menu',
     {0x00000800}'Initialy disabled',
     {0x00001000}'Ignored',
     {0x00002000}'Unknown 14',
@@ -5011,7 +4935,8 @@ begin
     {0x00010000}'Random Animation Start',
     {>>> 0x00020000 ACTI: Dangerous <<<}
     {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
-    {0x00020000}'Dangerous / Off limits',
+    {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
+    {0x00020000}'Dangerous/Off limits/(SLGM)Can Hold NPC',
     {0x00040000}'Compressed',
     {0x00080000}'Can''t wait',
     {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
@@ -5022,17 +4947,17 @@ begin
     {0x00800000}'Is Marker',
     {0x01000000}'Unknown 25',
     {>>> 0x02000000 ACTI: Obstacle <<<}
-    {0x02000000}'Obstacle / (REFR) No AI Acquire',
+    {0x02000000}'Obstacle/(REFR)No AI Acquire',
     {>>> 0x03000000 ACTI: Filter <<<}
     {0x03000000}'NavMesh Gen - Filter',
     {>>> 0x08000000 ACTI: Bounding Box <<<}
     {0x08000000}'NavMesh Gen - Bounding Box',
     {0x10000000}'Must Exit to Talk',
     {>>> 0x20000000 ACTI: Child Can Use <<<}
-    {0x20000000}'Child Can Use / (REFR) Don''t Havok Settle',
+    {0x20000000}'Child Can Use/(REFR)Don''t Havok Settle',
     {>>> 0x40000000 ACTI: GROUND <<<}
-    {0x40000000}'NavMesh Gen - Ground / (REFR) NoRespawn',
-    {0x80000000}'(REFR) MultiBound'
+    {0x40000000}'NavMesh Gen - Ground/(REFR) NoRespawn',
+    {0x80000000}'(REFR)MultiBound'
   ]));
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
@@ -5203,6 +5128,33 @@ begin
    {10} 'Unknown 10',
    {11} 'Unknown 11',
    {12} 'Near self'
+  ]);
+
+  wbEquipType := wbFlags([
+    {0x00000001}'Hand To Hand Melee',
+    {0x00000002}'One Hand Sword',
+    {0x00000004}'One Hand Dagger',
+    {0x00000008}'One Hand Axe',
+    {0x00000010}'One Hand Mace',
+    {0x00000020}'Two Hand Sword',
+    {0x00000040}'Two Hand Axe',
+    {0x00000080}'Bow',
+    {0x00000100}'Staff',
+    {0x00000200}'Spell',
+    {0x00000400}'Shield',
+    {0x00000800}'Torch',
+    {0x00001000}'Crossbow'
+  ], True);
+
+  wbEmotionTypeEnum := wbEnum([
+    {0} 'Neutral',
+    {1} 'Anger',
+    {2} 'Disgust',
+    {3} 'Fear',
+    {4} 'Sad',
+    {5} 'Happy',
+    {6} 'Surprise',
+    {7} 'Puzzled'
   ]);
 
   wbWeaponAnimTypeEnum := wbEnum([
@@ -6622,7 +6574,7 @@ begin
         {56} wbFormIDCkNoReach('Ref Type', [LCRT]),
         {57} wbInteger('Alias ID', itU32),
         {58} wbFloat('Float'),
-        {59} wbFormIDCk('Relationship', [ASTP])
+        {59} wbFormIDCk('Association Type', [ASTP])
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -6726,7 +6678,7 @@ begin
         {56} wbFormIDCkNoReach('Ref Type', [LCRT]),
         {57} wbInteger('Alias ID', itU32),
         {58} wbFloat('Float'),
-        {59} wbFormIDCk('Relationship', [ASTP])
+        {59} wbFormIDCk('Association Type', [ASTP])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',
@@ -7613,44 +7565,15 @@ begin
     wbString(ICON, 'File Name')
   ]);
 
-  wbRecord(RFCT, 'RFCT', [
+  wbRecord(RFCT, 'Visual Effect', [
     wbEDIDReq,
     wbStruct(DATA, 'Effect Data', [
 			wbFormIDCK('Effect Art', [ARTO, NULL]),
       wbFormIDCK('Shader', [EFSH, NULL]),
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001}'Unknown 1',
-        {0x00000002}'Unknown 2',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Unknown 9',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Unknown 11',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Unknown 13',
-        {0x00002000}'Unknown 14',
-        {0x00004000}'Unknown 15',
-        {0x00008000}'Unknown 16',
-        {0x00010000}'Unknown 17',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x03000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
+        {0x00000001}'Rotate to Face Target',
+        {0x00000002}'Attach to Camera',
+        {0x00000004}'Inherit Rotation'
       ]))
     ], cpNormal, True)
   ]);
@@ -8869,16 +8792,18 @@ begin
     wbOBND,
     wbFULL,
     wbMODL,
+    wbICON,
+    wbDEST,
+    wbSounds,
     wbKeywords,
     wbICON,
-    wbSCRI,
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
     ], cpNormal, True),
     wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True),
-    wbFormID(NAM0, 'Unknown')
+    wbFormIDCk(NAM0, 'Linked To', [SLGM])
   ]);
 
 	wbRecord(NAVI, 'Navigation Mesh Info Map', [
@@ -9996,42 +9921,54 @@ begin
     wbArray(DATA, 'Footstep Sets', wbFormIDCk('Footstep', [FSTP]), 0, nil, nil, cpNormal, True)
   ]);
 
-  wbRecord(SMBN, 'SMBN', [
+  wbSMNodeFlags := wbFlags([
+    'Random',
+    'Warn if no child quest started'
+  ]);
+
+  wbRecord(SMBN, 'Story Manager Branch Node', [
     wbEDIDReq,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
-    wbUnknown(CITC),
+    wbCITC,
     wbCTDAs,
-    wbUnknown(DNAM),
+    wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM)
   ]);
 
-  wbRecord(SMQN, 'SMQN', [
+  wbRecord(SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
-    wbUnknown(CITC),
+    wbCITC,
     wbCTDAs,
-    wbUnknown(DNAM),
-    wbUnknown(XNAM),
-    wbUnknown(MNAM),
-    wbInteger(QNAM, 'Count', itU32),
-    wbRArray('Array NNAM, FNAM, RNAM', wbRStruct('Unknown', [
-      wbFormID(NNAM, 'Unknown'),
+    wbStruct(DNAM, 'Flags', [
+      wbInteger('Node Flags', itU16, wbSMNodeFlags),
+      wbInteger('Quest Flags', itU16, wbFlags([
+        'Do all before repeating',
+        'Shares event',
+        'Num quests to run'
+      ]))
+    ]),
+    wbInteger(XNAM, 'Max concurrent quests', itU32),
+    wbInteger(MNAM, 'Num quests to run', itU32),
+    wbInteger(QNAM, 'Quest Count', itU32),
+    wbRArray('Quests', wbRStruct('Quest', [
+      wbFormIDCk(NNAM, 'Quest', [QUST]),
       wbUnknown(FNAM),
-      wbUnknown(RNAM)
+      wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
     ], []))
   ]);
 
-  wbRecord(SMEN, 'SMEN', [
+  wbRecord(SMEN, 'Story Manager Event Node', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
-    wbUnknown(CITC),
+    wbCITC,
     wbCTDAs,
-    wbUnknown(DNAM),
+    wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
-    wbString(ENAM, 'Unknown', 4)
+    wbString(ENAM, 'Type', 4)
   ]);
 end;
 
@@ -10093,9 +10030,14 @@ begin
     wbFULL,
     wbMDOB,
     wbDESC,
-    wbRArray('Array SNAM', wbRStruct('Unknown', [
-      wbUnknown(SNAM)
-    ], []))
+    {>>> Don't sort <<<}
+    wbRArray('Words of Power',
+      wbStruct(SNAM, '', [
+        wbFormIDCk('Word', [WOOP, NULL]),
+        wbFormIDCk('Spell', [SPEL, NULL]),
+        wbFloat('Recovery Time')
+      ])
+    )
   ]);
 
   wbRecord(EQUP, 'EQUP', [
@@ -10106,110 +10048,169 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbRecord(RELA, 'RELA', [
+  wbRecord(RELA, 'Relationship', [
     wbEDIDReq,
-    wbUnknown(DATA)
+    wbStruct(DATA, 'Data', [
+      wbFormIDCk('Parent', [NPC_, NULL]),
+      wbFormIDCk('Child', [NPC_, NULL]),
+      wbInteger('Rank', itU16, wbEnum([
+        'Lover',
+        'Ally',
+        'Confidant',
+        'Friend',
+        'Acquaitance',
+        'Rival',
+        'Foe',
+        'Enemy',
+        'Archnemesis'
+      ])),
+      wbByteArray('Unknown', 1),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Unknown 1',
+        {0x02} 'Unknown 2',
+        {0x04} 'Unknown 3',
+        {0x08} 'Unknown 4',
+        {0x10} 'Unknown 5',
+        {0x20} 'Unknown 6',
+        {0x40} 'Unknown 7',
+        {0x80} 'Secret'
+      ])),
+      wbFormIDCk('Association Type', [ASTP, NULL])
+    ])
   ]);
 
-  wbRecord(SCEN, 'SCEN', [
+  wbRecord(SCEN, 'Scene', [
     wbEDIDReq,
     wbVMAD,
-    wbUnknown(FNAM),
-
-    {-- 1st Block --}
-    // Start array HNAM NAM0
-    wbRArray('Array Start',
-      wbRStruct('The Array', [
-        wbEmpty(HNAM, 'HNAM Marker - Start'),
-        wbUnknown(NAM0),
-        wbEmpty(NEXT, 'NEXT Marker'),
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      'Begin on Quest Start',
+      'Stop on Quest End',
+      'Unknown 3',
+      'Repeat Conditions While True',
+      'Interruptible'
+    ])),
+    wbRArray('Phases',
+      wbRStruct('Phase', [
+        wbEmpty(HNAM, 'Marker Phase Start'),
+        wbString(NAM0, 'Name'),
         // CTDA before or after next
-        wbRStruct('CTDA Only', [
-          wbCTDAs
-        ], []),
-        wbRStruct('NEXT CTDA', [
-          wbEmpty(NEXT, 'NEXT Marker'),
-          wbCTDAs
-        ], []),
-        // SCHR SCDA SCTX QNAM before or after next
-        wbRStruct('SCHR SCDA SCTX QNAM SCRO Before NEXT', [
+        //wbEmpty(NEXT, 'Marker'),
+        wbRStruct('Start Conditions', [wbCTDAs], []),
+        wbEmpty(NEXT, 'Marker'),
+        wbRStruct('Completion Conditions', [wbCTDAs], []),
+        {>>> BEGIN leftover from earlier CK versions <<<}
+        wbRStruct('Unknown', [
           wbUnknown(SCHR),
           wbUnknown(SCDA),
           wbUnknown(SCTX),
           wbUnknown(QNAM),
-          wbSCROs
+          wbUnknown(SCRO)
         ], []),
-        wbRStruct('NEXT SCHR SCDA SCTX QNAM SCRO', [
-          wbEmpty(NEXT, 'NEXT Marker'),
+        wbEmpty(NEXT, 'Marker'),
+        wbRStruct('Unknown', [
           wbUnknown(SCHR),
           wbUnknown(SCDA),
           wbUnknown(SCTX),
           wbUnknown(QNAM),
-          wbSCROs
+          wbUnknown(SCRO)
         ], []),
-        wbRStruct('WNAM', [
-          wbUnknown(WNAM)
-        ], []),
-      wbEmpty(HNAM, 'HNAM Marker - End')
-      ], []) // <-- End Array Struct
-    ), // <-- End Array
-
-    {-- 2nd Block --}
-      wbRArray('Array ALID, LNAM, DNAM No Ending marker', wbRStruct('ALID Start', [
-        wbUnknown(ALID),
-        wbUnknown(LNAM),
-        wbUnknown(DNAM)
-      ], [])),
-
-    {-- 3rd Block --}
-      wbRArray('Array ANAM NAM0 followed by ALID INAM SNAM ENAM PNAM Ending in ANAM', wbRStruct('Unknown', [
-        wbUnknown(ANAM),
-        wbUnknown(NAM0),
-        wbUnknown(ALID),
-        wbUnknown(LNAM),
-        wbUnknown(INAM),
-        wbUnknown(FNAM),
-        wbRArray('Array SNAM, ENAM', wbRStruct('Unknown', [
-          wbUnknown(SNAM),
-          wbUnknown(ENAM)
-        ], [])),
-        wbRStruct('SCHR QNAM Only After the SNAM before PNAM and Final ANAM', [
-         wbUnknown(SCHR),
-         wbUnknown(QNAM)
-        ], []),
-        wbRArray('Array PNAM followed by DATA - DEVA', wbRStruct('Unknown', [
-          wbUnknown(PNAM)
-        ], [])),
-        wbUnknown(DATA),
-        wbUnknown(HTID),
-        wbUnknown(DMAX),
-        wbUnknown(DMIN),
-        wbUnknown(DEMO),
-        wbUnknown(DEVA),
-        wbByteArray(ANAM, 'ANAM End Marker')
-      ], [])),
-    wbRStruct('Final SCHR SCTX QNAM Only', [
-      wbUnknown(SCHR),
-      wbUnknown(SCDA),
-      wbUnknown(SCTX),
-      wbUnknown(QNAM),
-      wbSCROs
-    ], []),
-    wbRStruct('Final NEXT SCHR SCTX QNAM', [
-      wbEmpty(NEXT, 'NEXT Marker'),
+        {>>> END leftover from earlier CK versions begin <<<}
+        wbInteger(WNAM, 'Editor Width', itU32),
+        wbEmpty(HNAM, 'Marker Phase End')
+      ], [])
+    ),
+    wbRArray('Actors', wbRStruct('Actor', [
+      wbInteger(ALID, 'Actor ID', itU32),
+      wbInteger(LNAM, 'Flags', itU32, wbFlags([
+        'No Player Activation',
+        'Optional'
+      ])),
+      wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
+        'Death Pause (unsused)',
+        'Death End',
+        'Combat Pause',
+        'Combat End',
+        'Dialogue Pause',
+        'Dialogue End',
+        'OBS_COM Pause',
+        'OBS_COM End'
+      ]))
+    ], [])),
+    wbRArray('Actions', wbRStruct('Action', [
+      wbInteger(ANAM, 'Type', itU16, wbEnum([
+        'Dialogue',
+        'Package',
+        'Timer'
+      ])),
+      wbString(NAM0, 'Name'),
+      wbInteger(ALID, 'Actor ID', itS32),
+      wbUnknown(LNAM),
+      wbInteger(INAM, 'Index', itU32),
+      wbInteger(FNAM, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Unknown 1',
+        {0x00000002} 'Unknown 2',
+        {0x00000004} 'Unknown 3',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Unknown 7',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Unknown 9',
+        {0x00000200} 'Unknown 10',
+        {0x00000400} 'Unknown 11',
+        {0x00000800} 'Unknown 12',
+        {0x00001000} 'Unknown 13',
+        {0x00002000} 'Unknown 14',
+        {0x00003000} 'Unknown 15',
+        {0x00004000} 'Face Target',
+        {0x00010000} 'Looping',
+        {0x00020000} 'Headtrack Player'
+      ])),
+      wbInteger(SNAM, 'Start Phase', itU32),
+      wbInteger(ENAM, 'End Phase', itU32),
+      wbFloat(SNAM, 'Timer Seconds'),
+      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
+      wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
+      wbInteger(HTID, 'Headtrack Actor ID', itS32),
+      wbFloat(DMAX, 'Looping - Max'),
+      wbFloat(DMIN, 'Looping - Min'),
+      wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
+      wbInteger(DEVA, 'Emotion Value', itU32),
+      {>>> BEGIN leftover from earlier CK versions <<<}
+      wbRStruct('Unknown', [
         wbUnknown(SCHR),
         wbUnknown(SCDA),
         wbUnknown(SCTX),
         wbUnknown(QNAM),
-        wbSCROs
+        wbUnknown(SCRO)
+      ], []),
+      {>>> END leftover from earlier CK versions <<<}
+      wbEmpty(ANAM, 'End Marker')
+    ], [])),
+    {>>> BEGIN leftover from earlier CK versions <<<}
+    wbRStruct('Unknown', [
+      wbUnknown(SCHR),
+      wbUnknown(SCDA),
+      wbUnknown(SCTX),
+      wbUnknown(QNAM),
+      wbUnknown(SCRO)
     ], []),
-    wbUnknown(PNAM),
-    wbUnknown(INAM),
+    wbEmpty(NEXT, 'Marker'),
+    wbRStruct('Unknown', [
+      wbUnknown(SCHR),
+      wbUnknown(SCDA),
+      wbUnknown(SCTX),
+      wbUnknown(QNAM),
+      wbUnknown(SCRO)
+    ], []),
+    {>>> END leftover from earlier CK versions <<<}
+    wbFormIDCk(PNAM, 'Quest', [QUST]),
+    wbInteger(INAM, 'Action Count', itU32),
     wbUnknown(VNAM),
     wbCTDAs
   ]);
 
-  wbRecord(ASTP, 'Relationships', [
+  wbRecord(ASTP, 'Association Type', [
     wbEDIDReq,
     wbString(MPRT, 'Male Parent Title'),
     wbString(FPRT, 'Female Parent Title'),
@@ -10288,7 +10289,7 @@ begin
     ])
   ]);
 
-  wbRecord(SNDR, 'SNDR', [
+  wbRecord(SNDR, 'Sound Descriptor', [
     wbEDIDReq,
     wbUnknown(CNAM),
     wbFormID(GNAM, 'Category'),
@@ -10303,7 +10304,6 @@ begin
     wbCTDAs,
     wbStruct(LNAM, 'Values', [
       wbByteArray('Unknown', 1),
-//      wbByteArray('Looping', 1),
       wbInteger('Looping', itU8, wbEnum([], [
         $00 , 'None',
         $08 , 'Loop',
@@ -10322,7 +10322,7 @@ begin
     ])
   ]);
 
-  wbRecord(DUAL, 'DUAL', [
+  wbRecord(DUAL, 'Dual Cast Data', [
     wbEDIDReq,
     wbOBNDReq,
     wbStruct(DATA, 'Data', [
@@ -10339,101 +10339,58 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SNCT, 'SNCT', [
+  wbRecord(SNCT, 'Sound Category', [
     wbEDIDReq,
     wbFULL,
-    wbUnknown(FNAM),
-//    wbStruct(FNAM, 'Data', [
-//    wbInteger('Flags', itU32, wbFlags([
-//    {0x00000001}'Unknown 1',
-//    {0x00000002}'Unknown 2',
-//    {0x00000004}'Unknown 3',
-//    {0x00000008}'Unknown 4',
-//    {0x00000010}'Unknown 5',
-//    {0x00000020}'Unknown 6',
-//    {0x00000040}'Unknown 7',
-//    {0x00000080}'Unknown 8',
-//    {0x00000100}'Unknown 9',
-//    {0x00000200}'Unknown 10',
-//    {0x00000400}'Unknown 11',
-//    {0x00000800}'Unknown 12',
-//    {0x00001000}'Unknown 13',
-//    {0x00002000}'Unknown 14',
-//    {0x00004000}'Unknown 15',
-//    {0x00008000}'Unknown 16',
-//    {0x00010000}'Unknown 17',
-//    {0x00020000}'Unknown 18',
-//    {0x00040000}'Unknown 19',
-//    {0x00080000}'Unknown 20',
-//    {0x00100000}'Unknown 21',
-//    {0x00200000}'Unknown 22',
-//    {0x00400000}'Unknown 23',
-//    {0x00800000}'Unknown 24',
-//    {0x01000000}'Unknown 25',
-//    {0x02000000}'Unknown 26',
-//    {0x03000000}'Unknown 27',
-//    {0x08000000}'Unknown 28',
-//    {0x10000000}'Unknown 29',
-//    {0x20000000}'Unknown 30',
-//    {0x40000000}'Unknown 31',
-//    {0x80000000}'Unknown 32'
-//    ]))
-//    ], cpNormal, True),
-    wbFormIDCk(PNAM, 'String', [SNCT, NULL]),
-    wbUnknown(VNAM),
-    wbUnknown(UNAM)
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      'Mute When Submerged',
+      'Should Appear on Menu'
+    ]), cpNormal, True),
+    wbFormIDCk(PNAM, 'Parent', [SNCT]),
+    wbInteger(VNAM, 'Static Volume Multiplier', itU16, wbDiv(65535)),
+    wbInteger(UNAM, 'Default Menu Value', itU16, wbDiv(65535))
   ]);
 
-//----------------------------------------------------------------------------
-// wbONAM Made for SOPM
-//
-//----------------------------------------------------------------------------
-  wbSOPM_ONAM := wbRStruct('An ONAM Field in SOPM', [
-    wbStruct(ONAM,'Some Values', [
-        wbInteger('Value 1', itS16),
-        wbInteger('Value 2', itS16),
-        wbInteger('Value 3', itS16),
-        wbInteger('Value 4', itS16),
-        wbInteger('Value 5', itS16),
-        wbInteger('Value 6', itS16),
-        wbInteger('Value 7', itS16),
-        wbInteger('Value 8', itS16),
-        wbInteger('Value 9', itS16),
-        wbInteger('Value 10', itS16),
-        wbInteger('Value 11', itS16),
-        wbInteger('Value 12', itS16)
-      ])
-  ], []);
-
-  wbRecord(SOPM, 'SOPM', [
+  wbRecord(SOPM, 'Sound Output Model', [
     wbEDIDReq,
-    wbUnknown(NAM1),
-    wbUnknown(FNAM),
-    wbUnknown(MNAM),
-    wbUnknown(CNAM),
-    wbSOPM_ONAM,
-    wbStruct(SNAM,'Some SNAM Values', [
-        wbInteger('Value 1', itS16),
-        wbInteger('Value 2', itS16),
-        wbInteger('Value 3', itS16),
-        wbInteger('Value 4', itS16),
-        wbInteger('Value 5', itS16),
-        wbInteger('Value 6', itS16),
-        wbInteger('Value 7', itS16),
-        wbInteger('Value 8', itS16)
-      ]),
-    wbStruct(ANAM,'Some ANAM Values', [
-        wbInteger('Value 1', itS16),
-        wbInteger('Value 2', itS16),
-        wbInteger('Value 3', itS16),
-        wbInteger('Value 4', itS16),
-        wbInteger('Value 5', itS16),
-        wbInteger('Value 6', itS16),
-        wbInteger('Value 7', itS16),
-        wbInteger('Value 8', itS16),
-        wbInteger('Value 9', itS16),
-        wbInteger('Value 10', itS16)
+    wbStruct(NAM1, 'Data', [
+      wbInteger('Flags', itU8, wbFlags([
+        'Attenuates With Distance',
+        'Allows Rumble'
+      ])),
+      wbByteArray('Unknown', 2),
+      wbInteger('Reverb Send %', itU8)
+    ]),
+    wbUnknown(FNAM), // leftover, unused
+    wbInteger(MNAM, 'Type', itU32, wbEnum([
+      'Uses HRTF',
+      'Defined Speaker Output'
+    ])),
+    wbUnknown(CNAM), // leftover, unused
+    wbUnknown(SNAM), // leftover, unused
+    wbStruct(ONAM, 'Output Values', [
+      wbArray('Channels', wbStruct('', [
+        wbInteger('L', itU8),
+        wbInteger('R', itU8),
+        wbInteger('C', itU8),
+        wbInteger('LFE', itU8),
+        wbInteger('RL', itU8),
+        wbInteger('RR', itU8),
+        wbInteger('BL', itU8),
+        wbInteger('BR', itU8)
+      ]), [
+        'Channel 0',
+        'Channel 1',
+        'Channel 2? (unused)'
       ])
+    ]),
+    wbStruct(ANAM, 'Attenuation Values', [
+      wbByteArray('Unknown', 4),
+      wbFloat('Min Distance'),
+      wbFloat('Max Distance'),
+      wbArray('Curve', wbInteger('Value', itU8), 5),
+      wbByteArray('Unknown')
+    ])
   ]);
 
   wbRecord(COLL, 'Collision Layer', [
@@ -10614,16 +10571,7 @@ begin
 
     wbRArray('Responses', wbRStruct('Response', [ // Begin Array
       wbStruct(TRDT, 'Response Data', [
-        wbInteger('Emotion Type', itU32, wbEnum([
-          {0} 'Neutral',
-          {1} 'Anger',
-          {2} 'Disgust',
-          {3} 'Fear',
-          {4} 'Sad',
-          {5} 'Happy',
-          {6} 'Surprise',
-          {7} 'Puzzled'
-        ])),
+        wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
         wbInteger('Emotion Value', itU32),
         wbByteArray('Unknown', 4),
         wbByteArray('Unknown', 4),
@@ -10639,12 +10587,8 @@ begin
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
       wbCTDAs,
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
-    ], [])), // End Array
-
-//    wbRStruct('Unknown', [
-//      wbUnknown(SCHR),
-//      wbFormID(QNAM, 'Unknown')
-//    ], []),
+    ], [])),
+    {>>> BEGIN leftover from earlier CK versions <<<}
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbUnknown(SCHR),
@@ -10652,7 +10596,7 @@ begin
         wbEmpty(NEXT, 'Marker')
       ], [])
     ),
-
+    {>>> END leftover from earlier CK versions <<<}
     wbLString(RNAM, 'Prompt'),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
@@ -11370,9 +11314,6 @@ begin
       wbInteger('Eyes', itU32),
       wbInteger('Mouth', itU32)
     ]),
-//-----------------------------------------------------------------------------
-// Array of TINI, TINC, TINV, TIAS
-//-----------------------------------------------------------------------------
     wbRArray('Tint Layers', wbRStruct('Layer', [
       wbInteger(TINI, 'Tint Index', itU16),
       wbStruct(TINC, 'Tint Color', [
@@ -11385,6 +11326,7 @@ begin
       wbInteger(TIAS, 'Preset', itS16)
     ], []))
   ], False, nil, cpNormal, False, wbNPCAfterLoad);
+
 //-----------------------------------------------------------------------------
 //End New NPC_
 //
@@ -11813,29 +11755,35 @@ begin
     wbRStruct('OnBegin', [
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
       wbINAM,
+      {>>> BEGIN leftover from earlier CK versions <<<}
       wbUnknown(SCHR),
       wbUnknown(SCTX),
       wbUnknown(QNAM),
       wbUnknown(TNAM),
+      {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], []),
     wbRStruct('OnEnd', [
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbINAM,
+      {>>> BEGIN leftover from earlier CK versions <<<}
       wbUnknown(SCHR),
       wbUnknown(SCTX),
       wbUnknown(QNAM),
       wbUnknown(TNAM),
+      {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], []),
     wbRStruct('OnChange', [
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbINAM,
+      {>>> BEGIN leftover from earlier CK versions <<<}
       wbUnknown(SCHR),
       wbUnknown(SCDA),
       wbUnknown(SCTX),
       wbUnknown(QNAM),
       wbUnknown(TNAM),
+      {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], [])
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
@@ -11844,7 +11792,6 @@ begin
     wbEDIDReq,
     wbVMAD,
     wbFULL,
-
     wbStruct(DNAM, 'Quest Data', [
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Start Game Enabled',
@@ -11877,14 +11824,12 @@ begin
        {11} 'DLC02'
       ]))
     ]),
-
     wbString(ENAM, 'Event'),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, True),
     wbEmpty(NEXT, 'Marker'),
-    wbCTDAs, // Unknown
-
+    wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStruct(INDX, 'Stage Index', [
         wbInteger('Stage Index', itU16),
@@ -11904,12 +11849,13 @@ begin
         wbCTDAs,
         wbLString(CNAM, 'Log Entry'),
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
+        {>>> BEGIN leftover from earlier CK versions <<<}
         wbUnknown(SCHR),
         wbUnknown(SCTX),
         wbUnknown(QNAM)
+        {>>> END leftover from earlier CK versions <<<}
       ], []))
     ], [])),
-
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
       wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
@@ -11925,9 +11871,7 @@ begin
         wbCTDAs
       ], []))
     ], [])),
-
     wbByteArray(ANAM, 'Aliases Marker', 4),
-
     wbRArray('Aliases',
       wbRStruct('Alias', [
         wbRUnion('Alias Type / ID', [
@@ -12001,8 +11945,6 @@ begin
         ], []),
         wbCTDAs,
         wbKeywords,
-        {>>> When there is no COCT, CNTO comes right after Keywords and produces an error <<<}
-        {>>> Error: record QUST contains unexpected (or out of order) subrecord CNTO 4F544E43  <<<}
         wbInteger(COCT, 'Count', itU32),
         wbCNTOs,
         wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
@@ -12017,7 +11959,6 @@ begin
         wbEmpty(ALED, 'Alias End', cpNormal, True)
       ], [])
     ),
-
     wbString(NNAM, 'Description', 0, cpNormal, True),
     wbRArray('Targets', wbRStruct('Target', [
       wbStruct(QSTA, 'Target', [
@@ -12029,9 +11970,6 @@ begin
       ]),
       wbCTDAs
     ], []))
-    //wbCOCT,
-    //wbKeywords,
-    //wbUnknown(NAM0)
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
@@ -12212,7 +12150,7 @@ begin
 //    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
 //  ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
 
-  wbTintMasks := wbRArray('Tint Masks', wbRStruct('Tint Assets', [
+  wbTints := wbRArray('Tint Masks', wbRStruct('Tint Assets', [
     wbRArray('Tint Layer', wbRStruct('Texture', [
       wbInteger(TINI, 'Unknown', itU16),
       wbString(TINT, 'File Name'),
@@ -12221,99 +12159,78 @@ begin
       wbInteger(TINP, 'Mask Type', itU16, wbTintMaskTypeEnum),
       wbFormIDCk(TIND, 'Preset Default', [CLFM, NULL])
     ], [])),
-    wbRArray('Array TINC, TINV, TIRS', wbRStruct('Unknown', [
-      wbFormIDCk(TINC, 'Preset', [CLFM, NULL]),
-			wbFloat(TINV, 'Default Value for this Preset'),
+    wbRArray('Presets', wbRStruct('Preset', [
+      wbFormIDCk(TINC, 'Color', [CLFM, NULL]),
+			wbFloat(TINV, 'Default Value'),
       wbInteger(TIRS, 'Unknown', itU16)
     ], []))
   ], []));
 
-  wbRACE_VNAMFlags := wbInteger('Flags 3', itU32, wbFlags([
-        {0x00000001}'Hand To Hand Melee',
-        {0x00000002}'One Hand Sword',
-        {0x00000004}'One Hand Dagger',
-        {0x00000008}'One Hand Axe',
-        {0x00000010}'One Hand Mace',
-        {0x00000020}'Two Hand Sword',
-        {0x00000040}'Two Hand Axe',
-        {0x00000080}'Bow',
-        {0x00000100}'Staff',
-        {0x00000200}'Spell',
-        {0x00000400}'Shield',
-        {0x00000800}'Torch',
-        {0x00001000}'Crossbow'
-      ], True));
-
   wbRACE_DATAFlags01 := wbInteger('Flags', itU32, wbFlags([
-        {0x00000001}'Playable',
-        {0x00000002}'FaceGen Head',
-        {0x00000004}'Child',
-        {0x00000008}'Tilt Front/Back',
-        {0x00000010}'Tilt Left/Right',
-        {0x00000020}'No Shadow',
-        {0x00000040}'Swims',
-        {0x00000080}'Flies',
-        {0x00000100}'Walks',
-        {0x00000200}'Immobile',
-        {0x00000400}'Not Pushable',
-        {0x00000800}'No Combat In Water',
-        {0x00001000}'No Rotating to Head-Track',
-        {0x00002000}'Don''t Show Blood Spray',
-        {0x00004000}'Don''t Show Blood Decal',
-        {0x00008000}'Uses Head Track Anims',
-        {0x00010000}'Spells Align w/Magic Node',
-        {0x00020000}'Use World Raycasts For FootIK',
-        {0x00040000}'Allow Ragdoll Collision',
-        {0x00080000}'Regen HP In Combat',
-        {0x00100000}'Can''t Open Doors',
-        {0x00200000}'Allow PC Dialogue',
-        {0x00400000}'No Knockdowns',
-        {0x00800000}'Allow Pickpocket',
-        {0x01000000}'Always Use Proxy Controller',
-        {0x02000000}'Don''t Show Weapon Blood',
-        {0x03000000}'Overlay Head Part List', {>>>Only one can be active<<<}
-        {0x08000000}'Override Head Part List', {>>>Only one can be active<<<}
-        {0x10000000}'Can Pickup Items',
-        {0x20000000}'Allow Multiple Membrane Shaders',
-        {0x40000000}'Can Dual Wield',
-        {0x80000000}'Avoids Roads'
-      ]));
+    {0x00000001}'Playable',
+    {0x00000002}'FaceGen Head',
+    {0x00000004}'Child',
+    {0x00000008}'Tilt Front/Back',
+    {0x00000010}'Tilt Left/Right',
+    {0x00000020}'No Shadow',
+    {0x00000040}'Swims',
+    {0x00000080}'Flies',
+    {0x00000100}'Walks',
+    {0x00000200}'Immobile',
+    {0x00000400}'Not Pushable',
+    {0x00000800}'No Combat In Water',
+    {0x00001000}'No Rotating to Head-Track',
+    {0x00002000}'Don''t Show Blood Spray',
+    {0x00004000}'Don''t Show Blood Decal',
+    {0x00008000}'Uses Head Track Anims',
+    {0x00010000}'Spells Align w/Magic Node',
+    {0x00020000}'Use World Raycasts For FootIK',
+    {0x00040000}'Allow Ragdoll Collision',
+    {0x00080000}'Regen HP In Combat',
+    {0x00100000}'Can''t Open Doors',
+    {0x00200000}'Allow PC Dialogue',
+    {0x00400000}'No Knockdowns',
+    {0x00800000}'Allow Pickpocket',
+    {0x01000000}'Always Use Proxy Controller',
+    {0x02000000}'Don''t Show Weapon Blood',
+    {0x04000000}'Overlay Head Part List', {>>>Only one can be active<<<}
+    {0x08000000}'Override Head Part List', {>>>Only one can be active<<<}
+    {0x10000000}'Can Pickup Items',
+    {0x20000000}'Allow Multiple Membrane Shaders',
+    {0x40000000}'Can Dual Wield',
+    {0x80000000}'Avoids Roads'
+  ]));
 
-  wbRACE_DATAFlags02 := wbInteger('Flags 2', itU32, wbFlags([
-        {0x00000001}'',
-        {0x00000002}'Non-Hostile'
-      ], True));
-
-  wbPhonemeTargets := wbUnion(PHWT, 'Union', wbPHWTDecider, [
-    wbStruct('Phoneme Targets', [
-        wbFloat('Aah'),
-        wbFloat('BigAah'),
-        wbFloat('BMP'),
-        wbFloat('ChJsh'),
-        wbFloat('DST'),
-        wbFloat('Eee'),
-        wbFloat('Eh'),
-        wbFloat('FV'),
-        wbFloat('I'),
-        wbFloat('K'),
-        wbFloat('N'),
-        wbFloat('Oh'),
-        wbFloat('OohQ'),
-        wbFloat('R'),
-        wbFloat('TH'),
-        wbFloat('W')
-      ]),
-    wbStruct('Phoneme Targets', [
-        wbFloat('Aah'),
-        wbFloat('BigAah'),
-        wbFloat('BMP'),
-        wbFloat('ChJsh'),
-        wbFloat('DST'),
-        wbFloat('Eee'),
-        wbFloat('Eh'),
-        wbFloat('FV')
-      ]),
-      wbbyteArray('Unknown', 0)
+  wbPhonemeTargets := wbUnion(PHWT, 'Phoneme Target', wbPHWTDecider, [
+    wbStruct('Weight', [
+      wbFloat('Aah'),
+      wbFloat('BigAah'),
+      wbFloat('BMP'),
+      wbFloat('ChJsh'),
+      wbFloat('DST'),
+      wbFloat('Eee'),
+      wbFloat('Eh'),
+      wbFloat('FV'),
+      wbFloat('I'),
+      wbFloat('K'),
+      wbFloat('N'),
+      wbFloat('Oh'),
+      wbFloat('OohQ'),
+      wbFloat('R'),
+      wbFloat('TH'),
+      wbFloat('W')
+    ]),
+    wbStruct('Weight', [
+      wbFloat('Aah'),
+      wbFloat('BigAah'),
+      wbFloat('BMP'),
+      wbFloat('ChJsh'),
+      wbFloat('DST'),
+      wbFloat('Eee'),
+      wbFloat('Eh'),
+      wbFloat('FV')
+    ]),
+    wbbyteArray('Unknown', 0)
   ]);
 
   wbPHWT := wbRStruct('FaceFX Phonemes', [
@@ -12363,52 +12280,52 @@ begin
   ], []);
 
   wbMorphs := wbRStruct('Available Morphs', [
-      wbByteArray(MPAI, 'Unknown', 0),
-      wbStruct(MPAV, 'Nose Variants', [
-        wbNoseMorphFlags,
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4)
-      ]),
-      wbByteArray(MPAI, 'Unknown', 0),
-      wbStruct(MPAV, 'Brow Variants', [
-        wbBrowMorphFlags,
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4)
-      ]),
-      wbByteArray(MPAI, 'Unknown', 0),
-      wbStruct(MPAV, 'Eye Variants', [
-        wbEyesMorphFlags01,
-        wbEyesMorphFlags02,
-        wbByteArray('Unknown', 3),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4)
-      ]),
-      wbByteArray(MPAI, 'Unknown', 0),
-      wbStruct(MPAV, 'Lip Variants', [
-        wbLipMorphFlags,
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4)
-      ])
-    ], []);
+    wbByteArray(MPAI, 'Unknown', 0),
+    wbStruct(MPAV, 'Nose Variants', [
+      wbNoseMorphFlags,
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ]),
+    wbByteArray(MPAI, 'Unknown', 0),
+    wbStruct(MPAV, 'Brow Variants', [
+      wbBrowMorphFlags,
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ]),
+    wbByteArray(MPAI, 'Unknown', 0),
+    wbStruct(MPAV, 'Eye Variants', [
+      wbEyesMorphFlags01,
+      wbEyesMorphFlags02,
+      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ]),
+    wbByteArray(MPAI, 'Unknown', 0),
+    wbStruct(MPAV, 'Lip Variants', [
+      wbLipMorphFlags,
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ])
+  ], []);
 
   wbHeadPart := wbRStruct('Head Part', [
     wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
@@ -12454,10 +12371,13 @@ begin
       wbFloat('Unarmed Reach'),
       wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
       wbFloat('Aim Angle Tolerance'),
-      wbByteArray('Unknown', 4),
+      wbFloat('Flight Radius'),
       wbFloat('Angular Acceleration Rate'),
       wbFloat('Angular Tolerance'),
-      wbRACE_DATAFlags02,
+      wbInteger('Flags 2', itU32, wbFlags([
+        {0x00000001}'Use Advanced Avoidance',
+        {0x00000002}'Non-Hostile'
+      ])),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
@@ -12537,18 +12457,17 @@ begin
         wbFloat('Unknown')
       ])
     ], [])),
-    wbStruct(VNAM, 'Equipment Flags', [wbRACE_VNAMFlags]),
+    wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType),
     wbRArrayS('Equip Slots', wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])),
     wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
     wbRArrayS('Phoneme Target Names', wbString(PHTN, 'Name')),
     wbPHWT,
-    // Start Movement Data
-    wbFormIDCk(WKMV, 'Walk', [MOVT, NULL]),
-		wbFormIDCk(RNMV, 'Run', [MOVT, NULL]),
-		wbFormIDCk(SWMV, 'Swim', [MOVT, NULL]),
-		wbFormIDCk(FLMV, 'Fly', [MOVT, NULL]),
-		wbFormIDCk(SNMV, 'Sneak', [MOVT, NULL]),
-		wbFormIDCk(SPMV, 'Sprint', [MOVT, NULL]),
+    wbFormIDCk(WKMV, 'Base Movement Default - Walk', [MOVT, NULL]),
+    wbFormIDCk(RNMV, 'Base Movement Default - Run', [MOVT, NULL]),
+    wbFormIDCk(SWMV, 'Base Movement Default - Swim', [MOVT, NULL]),
+    wbFormIDCk(FLMV, 'Base Movement Default - Fly', [MOVT, NULL]),
+    wbFormIDCk(SNMV, 'Base Movement Default - Sneak', [MOVT, NULL]),
+    wbFormIDCk(SPMV, 'Base Movement Default - Sprint', [MOVT, NULL]),
     // Start Head Data
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
@@ -12560,7 +12479,7 @@ begin
           wbRArrayS('Available Hair Colors Male', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
           wbRArrayS('Face Details Testure Set List Male', wbFormIDCk(FTSM, 'Testure Set', [TXST, NULL])),
           wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
-          wbTintMasks,
+          wbTints,
           wbMODLReq
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
@@ -12572,7 +12491,7 @@ begin
           wbRArrayS('Available Hair Colors Female', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
           wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
-          wbTintMasks,
+          wbTints,
           wbMODLReq
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -12902,6 +12821,7 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, nil{wbREFRAfterLoad});
 
 
+  {>>> Almost no changes here, seems to be working as is <<<}
   wbRecord(REGN, 'Region', [
     wbEDID,
 
@@ -12911,6 +12831,7 @@ begin
       wbInteger('Blue', itU8),
       wbByteArray('Unknown', 1)
     ], cpNormal, True),
+    {>>> Skyrim.esm has some incorrect FormIDs here, probably leftover <<<}
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
 
     wbRArray('Region Areas', wbRStruct('Region Area', [
@@ -12953,47 +12874,16 @@ begin
       wbICON,
 
       {--- Sound ---}
-      wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
-      wbFormIDCk(RDSI, 'Incidental MediaSet', [MSET], False, cpNormal, False, wbREGNSoundDontShow),
-      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, wbREGNSoundDontShow),
       wbArrayS(RDSA, 'Sounds', wbStructSK([0], 'Sound', [
         wbFormIDCk('Sound', [SOUN]),
         wbInteger('Flags', itU32, wbFlags([
           {0x00000001}'Pleasant',
           {0x00000002}'Cloudy',
           {0x00000004}'Rainy',
-          {0x00000008}'Snowy',
-          {0x00000010}'Unknown 5',
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000100}'Unknown 9',
-          {0x00000200}'Unknown 10',
-          {0x00000400}'Unknown 11',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16',
-          {0x00010000}'Unknown 17',
-          {0x00020000}'Unknown 18',
-          {0x00040000}'Unknown 19',
-          {0x00080000}'Unknown 20',
-          {0x00100000}'Unknown 21',
-          {0x00200000}'Unknown 22',
-          {0x00400000}'Unknown 23',
-          {0x00800000}'Unknown 24',
-          {0x01000000}'Unknown 25',
-          {0x02000000}'Unknown 26',
-          {0x03000000}'Unknown 27',
-          {0x08000000}'Unknown 28',
-          {0x10000000}'Unknown 29',
-          {0x20000000}'Unknown 30',
-          {0x40000000}'Unknown 31',
-          {0x80000000}'Unknown 32'
+          {0x00000008}'Snowy'
         ])),
-        wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
+        wbFloat('Chance')
       ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
 
 			{--- Map ---}
@@ -13047,176 +12937,76 @@ begin
         wbFormIDCk('Weather', [WTHR]),
         wbInteger('Chance', itU32),
         wbFormIDCk('Global', [GLOB, NULL])
-      ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow),
+      ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow)
 
-      {--- Imposter ---}
-      wbArrayS(RDID, 'Imposters', wbFormIDCk('Imposter', [REFR]), 0, cpNormal, False, nil, nil, wbREGNImposterDontShow)
     ], []))
   ], True);
 
-//------------------------------------------------------------------------------
-//  SNDD - Sound Data: 00 00 00 00
-//                     00 00 00 00
-//                     00 00 00 00
-//                     64 00 32 00
-//                     14 00 05 00
-//                     00 00 50 00
-//                     80 00 00 00
-//                     00 00 00 00
-//                     00 00 00 00
-
-  wbSNDD := wbRUnion('Sound Data', [
-    wbStruct(SNDD, 'Sound Data', [
-      wbInteger('Minimum Attentuation Distance', itU8, wbMul(5)),
-      wbInteger('Maximum Attentuation Distance', itU8, wbMul(100)),
-      wbInteger('Frequency Adjustment %', itS8),
-      wbByteArray('Uknown', 1),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x0001} 'Random Frequency Shift',
-        {0x0002} 'Play At Random',
-        {0x0004} 'Environment Ignored',
-        {0x0008} 'Random Location',
-        {0x0010} 'Loop',
-        {0x0020} 'Menu Sound',
-        {0x0040} '2D',
-        {0x0080} '360 LFE',
-        {0x0100} 'Dialogue Sound',
-        {0x0200} 'Envelope Fast',
-        {0x0400} 'Envelope Slow',
-        {0x0800} '2D Radius',
-        {0x1000} 'Mute When Submerged',
-        {0x2000} 'Start at Random Position'
-      ])),
-      wbInteger('Static attentuation cdB', itS16),
-      wbInteger('Stop time ', itU8),
-      wbInteger('Start time ', itU8),
-      wbArray('Attenuation Curve', wbInteger('Point', itS16), 5),
-      wbInteger('Reverb Attenuation Control', itS16),
-      wbInteger('Priority', itS32),
-//        wbByteArray('Unknown', 8)
-      wbInteger('x', itS32),
-      wbInteger('y', itS32)
-    ], cpNormal, True)
-//      wbStruct(SNDX, 'Sound Data', [
-//        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-//        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
-//        wbInteger('Frequency adjustment %', itS8),
-//        wbByteArray('Unused', 1),
-//        wbInteger('Flags', itU32, wbFlags([
-//          {0x0001} 'Random Frequency Shift',
-//          {0x0002} 'Play At Random',
-//          {0x0004} 'Environment Ignored',
-//          {0x0008} 'Random Location',
-//          {0x0010} 'Loop',
-//          {0x0020} 'Menu Sound',
-//          {0x0040} '2D',
-//          {0x0080} '360 LFE',
-//          {0x0100} 'Dialogue Sound',
-//          {0x0200} 'Envelope Fast',
-//          {0x0400} 'Envelope Slow',
-//          {0x0800} '2D Radius',
-//          {0x1000} 'Mute When Submerged'
-//        ])),
-//        wbInteger('Static attentuation cdB', itS16),
-//        wbInteger('Stop time ', itU8),
-//        wbInteger('Start time ', itU8)
-//      ], cpNormal, True)
-//------------------------------------------------------------------------------
-// Might be Usefull for this routine
-//
-//    wbArray(ANAM, 'Attenuation Curve', wbInteger('Point', itS16), 5, nil, nil, cpNormal, False, wbNeverShow),
-//    wbInteger(GNAM, 'Reverb Attenuation Control', itS16, nil, cpNormal, False, False, wbNeverShow),
-//    wbInteger(HNAM, 'Priority', itS32, nil, cpNormal, False, False, wbNeverShow),
-//    wbInteger(RNAM, 'Random Chance %', itU8),
-//------------------------------------------------------------------------------
-    ], [], cpNormal, True);
-
-  wbRecord(SOUN, 'Sound', [
+  wbRecord(SOUN, 'Sound Marker', [
     wbEDIDReq,
     wbOBNDReq,
-    wbString(FNAM, 'Sound Filename'),
-    wbStruct(SNDD,'Some Values', [
-      wbInteger('Value 1', itS16),
-      wbInteger('Value 2', itS16),
-      wbInteger('Value 3', itS16),
-      wbInteger('Value 4', itS16),
-      wbInteger('Value 5', itS16),
-      wbInteger('Value 6', itS16),
-      wbInteger('Value 7', itS16),
-      wbInteger('Value 8', itS16),
-      wbInteger('Value 9', itS16),
-      wbInteger('Value 10', itS16),
-      wbInteger('Value 11', itS16),
-      wbInteger('Value 12', itS16),
-      wbInteger('Value 13', itS16),
-      wbInteger('Value 14', itS16),
-      wbInteger('Value 15', itS16),
-      wbInteger('Value 16', itS16),
-      wbInteger('Value 17', itS16),
-      wbInteger('Value 18', itS16)
-    ]),
-//    wbUnknown(SNDD),
-//    wbSNDD,
+    wbUnknown(FNAM), // leftover, unused
+    wbUnknown(SNDD), // leftover, unused
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
-  ], False, nil, cpNormal, False, wbSOUNAfterLoad);
+  ]);
 
   wbSPIT := wbStruct(SPIT, '', [
-      wbInteger('Base Cost', itU32),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Manual Cost Calc',
-        {0x00000002} 'Unknown 2',
-        {0x00000004} 'Unknown 3',
-        {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} 'Unknown 6',
-        {0x00000040} 'Unknown 7',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'Unknown 9',
-        {0x00000200} 'Unknown 10',
-        {0x00000400} 'Unknown 11',
-        {0x00000800} 'Unknown 12',
-        {0x00001000} 'Unknown 13',
-        {0x00002000} 'Unknown 14',
-        {0x00004000} 'Unknown 15',
-        {0x00008000} 'Unknown 16',
-        {0x00010000} 'Unknown 17',
-        {0x00020000} 'PC Start Spell',
-        {0x00040000} 'Unknown 19',
-        {0x00080000} 'Area Effect Ignores LOS',
-        {0x00100000} 'Ignore Resistance',
-        {0x00200000} 'No Absorb/Reflect',
-        {0x00400000} 'Unknown 23',
-        {0x00800000} 'No Dual Cast Modification',
-        {0x01000000} 'Unknown 25',
-        {0x02000000} 'Unknown 26',
-        {0x04000000} 'Unknown 27',
-        {0x08000000} 'Unknown 28',
-        {0x10000000} 'Unknown 29',
-        {0x20000000} 'Unknown 30',
-        {0x40000000} 'Unknown 31',
-        {0x80000000} 'Unknown 32'
-      ])),
-      wbInteger('Type', itU32, wbEnum([
-        {0} 'Spell',
-        {1} 'Disease',
-        {2} 'Power',
-        {3} 'Lesser Power',
-        {4} 'Ability',
-        {5} 'Poison',
-        {6} 'Unknown 6',
-        {7} 'Unknown 7',
-        {8} 'Unknown 8',
-        {9} 'Unknown 9',
-       {10} 'Addiction',
-       {11} 'Voice'
-      ])),
-      wbFloat('Charge Time'),
-      wbInteger('Cast Type', itU32, wbCastEnum),
-      wbInteger('Type', itU32, wbTargetEnum),
-      wbFloat('Cast Duration'),
-      wbFloat('Range'),
-      wbFormIDCk('Half-cost Perk', [PERK])
-    ], cpNormal, True);
+    wbInteger('Base Cost', itU32),
+    wbInteger('Flags', itU32, wbFlags([
+      {0x00000001} 'Manual Cost Calc',
+      {0x00000002} 'Unknown 2',
+      {0x00000004} 'Unknown 3',
+      {0x00000008} 'Unknown 4',
+      {0x00000010} 'Unknown 5',
+      {0x00000020} 'Unknown 6',
+      {0x00000040} 'Unknown 7',
+      {0x00000080} 'Unknown 8',
+      {0x00000100} 'Unknown 9',
+      {0x00000200} 'Unknown 10',
+      {0x00000400} 'Unknown 11',
+      {0x00000800} 'Unknown 12',
+      {0x00001000} 'Unknown 13',
+      {0x00002000} 'Unknown 14',
+      {0x00004000} 'Unknown 15',
+      {0x00008000} 'Unknown 16',
+      {0x00010000} 'Unknown 17',
+      {0x00020000} 'PC Start Spell',
+      {0x00040000} 'Unknown 19',
+      {0x00080000} 'Area Effect Ignores LOS',
+      {0x00100000} 'Ignore Resistance',
+      {0x00200000} 'No Absorb/Reflect',
+      {0x00400000} 'Unknown 23',
+      {0x00800000} 'No Dual Cast Modification',
+      {0x01000000} 'Unknown 25',
+      {0x02000000} 'Unknown 26',
+      {0x04000000} 'Unknown 27',
+      {0x08000000} 'Unknown 28',
+      {0x10000000} 'Unknown 29',
+      {0x20000000} 'Unknown 30',
+      {0x40000000} 'Unknown 31',
+      {0x80000000} 'Unknown 32'
+    ])),
+    wbInteger('Type', itU32, wbEnum([
+      {0} 'Spell',
+      {1} 'Disease',
+      {2} 'Power',
+      {3} 'Lesser Power',
+      {4} 'Ability',
+      {5} 'Poison',
+      {6} 'Unknown 6',
+      {7} 'Unknown 7',
+      {8} 'Unknown 8',
+      {9} 'Unknown 9',
+     {10} 'Addiction',
+     {11} 'Voice'
+    ])),
+    wbFloat('Charge Time'),
+    wbInteger('Cast Type', itU32, wbCastEnum),
+    wbInteger('Type', itU32, wbTargetEnum),
+    wbFloat('Cast Duration'),
+    wbFloat('Range'),
+    wbFormIDCk('Half-cost Perk', [PERK])
+  ], cpNormal, True);
 
   wbRecord(SPEL, 'Actor Effect', [
     wbEDIDReq,
