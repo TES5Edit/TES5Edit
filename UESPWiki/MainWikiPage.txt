@@ -1,0 +1,488 @@
+{{Trail|File Formats}}
+{{TOCright}}'''Mod files''' ('''Plugin files''') are collections of [[#Records|records]], which are further divided into [[#Fields|fields]].
+
+[[#Records|Records]] generally correspond to objects (e.g., a creature, a game setting, a dialog entry), with the fine details of the object (e.g., health of a creature, a dialog entry test) being handled by the [[#Fields|fields]] of the record. Records themselves are organized into [[#Groups|groups]].
+
+At the highest grouping level, a plugin file is generally:
+* A single [[Tes5Mod:Mod File Format/TES4|TES4 record]] (plugin information).
+* A collection of top [[#Groups|groups]].
+
+==Dawnguard==
+
+The following had sub-record order changes and updates.  Also pre-existing or new records were added.
+*LCTN, INFO, NPC_, RACE, NAVI, QUST, REFR, WRLD
+
+New SubRecords:
+*LCTN added: ACID, ACSR, ACUN, ACEC, ACEP, RCPR
+*NAVI added: NVSI
+*REFR added: XATR
+
+{{NewRight}}
+==Record Types==
+{| class="vtop" width="100%"
+|width="25%" | 
+{| class="wikitable" width="100%" style="margin:0;"
+! Type
+! Data Object
+|-
+| [[Tes5Mod:Mod File Format/AACT|AACT]] || Action
+|-
+| [[Tes5Mod:Mod File Format/ACHR|ACHR]] || Actor Reference
+|-
+| [[Tes5Mod:Mod File Format/ACTI|ACTI]] || Activator
+|-
+| [[Tes5Mod:Mod File Format/ADDN|ADDN]] || Addon Node
+|-
+| [[Tes5Mod:Mod File Format/ALCH|ALCH]] || Potion
+|-
+| [[Tes5Mod:Mod File Format/AMMO|AMMO]] || Ammo
+|-
+| [[Tes5Mod:Mod File Format/ANIO|ANIO]] || Animated Object
+|-
+| [[Tes5Mod:Mod File Format/APPA|APPA]] || Apparatus ''(probably unused)''
+|-
+| [[Tes5Mod:Mod File Format/ARMA|ARMA]] || Armature (Model)
+|-
+| [[Tes5Mod:Mod File Format/ARMO|ARMO]] || Armor
+|-
+| [[Tes5Mod:Mod File Format/ARTO|ARTO]] || Art Object
+|-
+| [[Tes5Mod:Mod File Format/ASPC|ASPC]] || Acoustic Space
+|-
+| [[Tes5Mod:Mod File Format/ASTP|ASTP]] || Association Type
+|-
+| [[Tes5Mod:Mod File Format/AVIF|AVIF]] || [[Tes5Mod:Actor_Value_Indices#Actor_Value_Codes|Actor Values]]/Perk Tree Graphics
+|-
+| [[Tes5Mod:Mod File Format/BOOK|BOOK]] || Book
+|-
+| [[Tes5Mod:Mod File Format/BPTD|BPTD]] || Body Part Data
+|-
+| [[Tes5Mod:Mod File Format/CAMS|CAMS]] || Camera Shot
+|-
+| [[Tes5Mod:Mod File Format/CELL|CELL]] || Cell
+|-
+| [[Tes5Mod:Mod File Format/CLAS|CLAS]] || Class
+|-
+| [[Tes5Mod:Mod File Format/CLFM|CLFM]] || Color
+|-
+| [[Tes5Mod:Mod File Format/CLMT|CLMT]] || Climate
+|-
+| [[Tes5Mod:Mod File Format/COBJ|COBJ]] || Constructible Object (recipes)
+|-
+| [[Tes5Mod:Mod File Format/COLL|COLL]] || Collision Layer
+|-
+| [[Tes5Mod:Mod File Format/CONT|CONT]] || Container
+|-
+| [[Tes5Mod:Mod File Format/CPTH|CPTH]] || Camera Path
+|-
+| [[Tes5Mod:Mod File Format/CSTY|CSTY]] || Combat Style
+|-
+| [[Tes5Mod:Mod File Format/DEBR|DEBR]] || Debris
+|-
+| [[Tes5Mod:Mod File Format/DIAL|DIAL]] || Dialog Topic
+|-
+| [[Tes5Mod:Mod File Format/DLBR|DLBR]] || Dialog Branch
+|-
+| [[Tes5Mod:Mod File Format/DLVW|DLVW]] || Dialog View
+|}
+|width="25%" |
+{| class="wikitable" width="100%" style="margin:0;"
+! Type
+! Data Object
+|-
+| [[Tes5Mod:Mod File Format/DOBJ|DOBJ]] || Default Object Manager
+|-
+| [[Tes5Mod:Mod File Format/DOOR|DOOR]] || Door
+|-
+| [[Tes5Mod:Mod File Format/DUAL|DUAL]] || Dual Cast Data (''possibly unused'')
+|-
+| [[Tes5Mod:Mod File Format/ECZN|ECZN]] || Encounter Zone
+|-
+| [[Tes5Mod:Mod File Format/EFSH|EFSH]] || Effect Shader
+|-
+| [[Tes5Mod:Mod File Format/ENCH|ENCH]] || Enchantment
+|-
+| [[Tes5Mod:Mod File Format/EQUP|EQUP]] || Equip Slot (flag-type values)
+|-
+| [[Tes5Mod:Mod File Format/EXPL|EXPL]] || Explosion
+|-
+| [[Tes5Mod:Mod File Format/EYES|EYES]] || Eyes
+|-
+| [[Tes5Mod:Mod File Format/FACT|FACT]] || Faction
+|-
+| [[Tes5Mod:Mod File Format/FLOR|FLOR]] || Flora
+|-
+| [[Tes5Mod:Mod File Format/FLST|FLST]] || Form List (non-leveled list)
+|-
+| [[Tes5Mod:Mod File Format/FSTP|FSTP]] || Footstep
+|-
+| [[Tes5Mod:Mod File Format/FSTS|FSTS]] || Footstep Set
+|-
+| [[Tes5Mod:Mod File Format/FURN|FURN]] || Furniture
+|-
+| [[Tes5Mod:Mod File Format/GLOB|GLOB]] || Global Variable
+|-
+| [[Tes5Mod:Mod File Format/GMST|GMST]] || Game Setting
+|-
+| [[Tes5Mod:Mod File Format/GRAS|GRAS]] || Grass
+|-
+| [[#Groups|GRUP]] || Form Group
+|-
+| [[Tes5Mod:Mod File Format/HAZD|HAZD]] || Hazard
+|-
+| [[Tes5Mod:Mod File Format/HDPT|HDPT]] || Head Part
+|-
+| [[Tes5Mod:Mod File Format/IDLE|IDLE]] || Idle Animation
+|-
+| [[Tes5Mod:Mod File Format/IDLM|IDLM]] || Idle Marker
+|-
+| [[Tes5Mod:Mod File Format/IMAD|IMAD]] || Image Space Modifier
+|-
+| [[Tes5Mod:Mod File Format/IMGS|IMGS]] || Image Space
+|-
+| [[Tes5Mod:Mod File Format/INFO|INFO]] || Dialog Topic Info
+|-
+| [[Tes5Mod:Mod File Format/INGR|INGR]] || Ingredient
+|-
+| [[Tes5Mod:Mod File Format/IPCT|IPCT]] || Impact Data
+|-
+| [[Tes5Mod:Mod File Format/IPDS|IPDS]] || Impact Data Set
+|-
+| [[Tes5Mod:Mod File Format/KEYM|KEYM]] || Key
+|}
+|width="25%" |
+{| class="wikitable" width="100%" style="margin:0;"
+! Type
+! Data Object
+|-
+| [[Tes5Mod:Mod File Format/KYWD|KYWD]] || Keyword
+|-
+| [[Tes5Mod:Mod File Format/LAND|LAND]] || Landscape
+|-
+| [[Tes5Mod:Mod File Format/LCRT|LCRT]] || Location Reference Type
+|-
+| [[Tes5Mod:Mod File Format/LCTN|LCTN]] || Location
+|-
+| [[Tes5Mod:Mod File Format/LGTM|LGTM]] || Lighting Template
+|-
+| [[Tes5Mod:Mod File Format/LIGH|LIGH]] || Light
+|-
+| [[Tes5Mod:Mod File Format/LSCR|LSCR]] || Load Screen
+|-
+| [[Tes5Mod:Mod File Format/LTEX|LTEX]] || Land Texture
+|-
+| [[Tes5Mod:Mod File Format/LVLI|LVLI]] || Leveled Item
+|-
+| [[Tes5Mod:Mod File Format/LVLN|LVLN]] || Leveled Actor
+|-
+| [[Tes5Mod:Mod File Format/LVSP|LVSP]] || Leveled Spell
+|-
+| [[Tes5Mod:Mod File Format/MATO|MATO]] || Material Object
+|-
+| [[Tes5Mod:Mod File Format/MATT|MATT]] || Material Type
+|-
+| [[Tes5Mod:Mod File Format/MESG|MESG]] || Message
+|-
+| [[Tes5Mod:Mod File Format/MGEF|MGEF]] || Magic Effect
+|-
+| [[Tes5Mod:Mod File Format/MISC|MISC]] || Misc. Object
+|-
+| [[Tes5Mod:Mod File Format/MOVT|MOVT]] || Movement Type
+|-
+| [[Tes5Mod:Mod File Format/MSTT|MSTT]] || Movable Static
+|-
+| [[Tes5Mod:Mod File Format/MUSC|MUSC]] || Music Type
+|-
+| [[Tes5Mod:Mod File Format/MUST|MUST]] || Music Track
+|-
+| [[Tes5Mod:Mod File Format/NAVI|NAVI]] || Navigation (master data)
+|-
+| [[Tes5Mod:Mod File Format/NAVM|NAVM]] || Nav Mesh
+|-
+| [[Tes5Mod:Mod File Format/NPC_|NPC_]] || Actor (NPC, Creature)
+|-
+| [[Tes5Mod:Mod File Format/OTFT|OTFT]] || Outfit
+|-
+| [[Tes5Mod:Mod File Format/PACK|PACK]] || AI Package
+|-
+| [[Tes5Mod:Mod File Format/PERK|PERK]] || Perk
+|-
+| [[Tes5Mod:Mod File Format/PGRE|PGRE]] || Placed grenade
+|-
+| [[Tes5Mod:Mod File Format/PHZD|PHZD]] || Placed hazard
+|-
+| [[Tes5Mod:Mod File Format/PROJ|PROJ]] || Projectile
+|-
+| [[Tes5Mod:Mod File Format/QUST|QUST]] || Quest
+|}
+|width="25%" |
+{| class="wikitable" width="100%" style="margin:0;"
+! Type
+! Data Object
+|-
+| [[Tes5Mod:Mod File Format/RACE|RACE]] || Race / Creature type
+|-
+| [[Tes5Mod:Mod File Format/REFR|REFR]] || Object Reference
+|-
+| [[Tes5Mod:Mod File Format/REGN|REGN]] || Region (Audio/Weather)
+|-
+| [[Tes5Mod:Mod File Format/RELA|RELA]] || Relationship
+|-
+| [[Tes5Mod:Mod File Format/REVB|REVB]] || Reverb Parameters
+|-
+| [[Tes5Mod:Mod File Format/RFCT|RFCT]] || Visual Effect
+|-
+| [[Tes5Mod:Mod File Format/SCEN|SCEN]] || Scene
+|-
+| [[Tes5Mod:Mod File Format/SCRL|SCRL]] || Scroll
+|-
+| [[Tes5Mod:Mod File Format/SHOU|SHOU]] || Shout
+|-
+| [[Tes5Mod:Mod File Format/SLGM|SLGM]] || Soul Gem
+|-
+| [[Tes5Mod:Mod File Format/SMBN|SMBN]] || Story Manager Branch Node
+|-
+| [[Tes5Mod:Mod File Format/SMEN|SMEN]] || Story Manager Event Node
+|-
+| [[Tes5Mod:Mod File Format/SMQN|SMQN]] || Story Manager Quest Node
+|-
+| [[Tes5Mod:Mod File Format/SNCT|SNCT]] || Sound Category
+|-
+| [[Tes5Mod:Mod File Format/SNDR|SNDR]] || Sound Reference
+|-
+| [[Tes5Mod:Mod File Format/SOPM|SOPM]] || Sound Output Marker
+|-
+| [[Tes5Mod:Mod File Format/SOUN|SOUN]] || Sound
+|-
+| [[Tes5Mod:Mod File Format/SPEL|SPEL]] || Spell
+|-
+| [[Tes5Mod:Mod File Format/SPGD|SPGD]] || Shader Particle Geometry
+|-
+| [[Tes5Mod:Mod File Format/STAT|STAT]] || Static
+|-
+| [[Tes5Mod:Mod File Format/TACT|TACT]] || Talking Activator
+|-
+| [[Tes5Mod:Mod File Format/TES4|TES4]] || Plugin info
+|-
+| [[Tes5Mod:Mod File Format/TREE|TREE]] || Tree
+|-
+| [[Tes5Mod:Mod File Format/TXST|TXST]] || Texture Set
+|-
+| [[Tes5Mod:Mod File Format/VTYP|VTYP]] || Voice Type
+|-
+| [[Tes5Mod:Mod File Format/WATR|WATR]] || Water Type
+|-
+| [[Tes5Mod:Mod File Format/WEAP|WEAP]] || Weapon
+|-
+| [[Tes5Mod:Mod File Format/WOOP|WOOP]] || Word Of Power
+|-
+| [[Tes5Mod:Mod File Format/WRLD|WRLD]] || World Space
+|-
+| [[Tes5Mod:Mod File Format/WTHR|WTHR]] || Weather
+|}
+|}
+
+==Groups==
+GRUPs are collections of [[#Records|records]], and are used to improve scanning of files to make it easier to skip over records that the reading program is not interested in. In addition to this, subgroups for WRLD and CELLS provide some useful structural information (e.g., the division of cell data into persistent and non-persistent references.)
+
+===File Format===
+{| class="wikitable" width="100%" 
+! width="20%" | Name
+! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! width="60%" | Info
+|-
+| type
+| char[4]
+| Always "GRUP"
+|-
+| groupSize
+| uint32
+| Size of the entire group, ''including'' the group header (24 bytes).
+* This is in contrast to [[#Records|records]] and [[#Fields|fields]], whose sizes does ''not'' include their header sizes.
+|-
+| label
+| uint8[4]
+| Format depends on group type.
+|-
+| groupType
+| int32
+| Group type...
+  {| class="wikitable" width="100%" 
+  ! | Type
+  ! | Info
+  ! | Label 
+  ! | Label 
+  |-
+  | 0 || Top (Type) || char[4] || Record type
+  |-
+  | 1 || World Children || formid || Parent
+  |-
+  | 2 || Interior Cell Block || long|| Block number
+  |-
+  | 3 || Interior Cell Sub-Block || long || Sub-block number
+  |-
+  | 4 || Exterior Cell Block || short[2] || Grid Y, X (Note the reverse order)
+  |-
+  | 5 || Exterior Cell Sub-Block || short[2] || Grid Y, X (Note the reverse order)
+  |-
+  | 6 || Cell Children || formid || Parent
+  |-
+  | 7 || Topic Children || formid || Parent
+  |-
+  | 8 || Cell Persistent Childen || formid || Parent
+  |-
+  | 9 || Cell Temporary Children || formid || Parent
+  |-
+  | 10 || Cell Visible Distant Children || formid || Parent
+  |}
+
+|-
+| stamp
+| uint16
+| Date stamp, presumably of the last file modification. Low byte = day; high byte = number of months since December 2002 (i.e., 1 = January 2003).
+|-
+| unknown
+| uint16
+| 
+|-
+| version
+| uint16
+| 
+|-
+| unknown
+| uint16
+| 
+|-
+| data
+| uint8[groupSize]
+| Records and subgroups.
+|}
+
+===Top Groups===
+In Skyrim.esm, the top, or highest level groups are stored in the following order:
+
+:GMST, KYWD, LCRT, AACT, TXST, GLOB, CLAS, FACT, HDPT, HAIR, EYES, RACE, SOUN, ASPC, MGEF, SCPT, LTEX, ENCH, SPEL, SCRL, ACTI, TACT, ARMO, BOOK, CONT, DOOR, INGR, LIGH, MISC, APPA, STAT, SCOL, MSTT, PWAT, GRAS,  TREE, CLDC, FLOR, FURN, WEAP, AMMO, NPC_, LVLN, KEYM, ALCH, IDLM, COBJ, PROJ, HAZD, SLGM, LVLI, WTHR, CLMT, SPGD, RFCT, REGN, NAVI, CELL, WRLD, DIAL, QUST, IDLE, PACK, CSTY, LSCR, LVSP, ANIO, WATR, EFSH, EXPL,  DEBR, IMGS, IMAD, FLST, PERK, BPTD, ADDN, AVIF, CAMS, CPTH, VTYP, MATT, IPCT, IPDS, ARMA, ECZN, LCTN, MESG, RGDL, DOBJ, LGTM, MUSC, FSTP, FSTS, SMBN, SMQN, SMEN, DLBR, MUST, DLVW, WOOP, SHOU, EQUP, RELA, SCEN, ASTP, OTFT, ARTO, MATO, MOVT, ''HAZD'', SNDR, DUAL, SNCT, SOPM, COLL, CLFM, REVB
+
+Whether the game engine expects this order is unknown, but it's probably safer to use this order than not.
+
+All top groups contain records matching their label (e.g., the GMST top group contains GMST records). For most top groups, ''only'' the matching record types are present. However, in the CELL, WRLD and DIAL top groups, each main record can be followed by one or more child groups which contain additional records of a different type. Unlike Oblivion, WRLD groups in Skyrim no longer contain ROAD records.
+
+The following groups are only found in subgroups of other records:
+:REFR, ACHR, NAVM, PGRE, PHZD, LAND, INFO
+
+Notes:
+*6 record types have a GRUP but have no records:[[Tes5Mod:Mod File Format/CLDC|CLDC]], [[Tes5Mod:Mod File Format/HAIR|HAIR]], RGDL, SCPT, SCOL, PWAT.  
+*There are 2 HAZD groups, the second one has no records.
+
+==Records==
+{| class="wikitable" width="100%" 
+! width="20%" | Name
+! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! width="60%" | Info
+|-
+| type || char[4] || Type
+|-
+| dataSize || uint32 || Size of data field.
+|-
+| flags || uint32 || Flags...
+{| class="wikitable" width="100%" 
+! | Flag
+! | Meaning
+|-
+| 0x00000001 || ''(TES4 record only)'' Master (ESM) file.
+|-
+| 0x00000020 || Deleted
+|-
+| 0x00000040 || Constant / (REFR) Hidden From Local Map (Needs Confirmation: Related to shields)
+|-
+| 0x00000080 || (TES4) Localized / Is Perch / (PHZD) Turn off fire
+:(TES4 record only) Is localized. This will make Skyrim load the .STRINGS, .DLSTRINGS, and .ILSTRINGS files associated with the mod. If this flag  is not set, lstrings are treated as zstrings.
+|-
+| 0x00000100 || Must Update Anims / (REFR) Inaccessible
+|-
+| 0x00000200 || (REFR) Hidden from local map / (ACHR) Starts dead /(REFR) MotionBlurCastsShadows
+|-
+| 0x00000400 || Quest item / Persistent reference / (LSCR) Displays in Main Menu
+|-
+| 0x00000800 || Initially disabled
+|-
+| 0x00001000 || Ignored
+|-
+| 0x00008000 || Visible when distant
+|-
+| 0x00008000 || (ACTI) Random Animation Start
+|-
+| 0x00020000 || (ACTI) Dangerous / Off limits (Interior cell)
+:Dangerous Can't be set withough Ignore Object Interaction
+|-
+| 0x00040000 || Data is compressed
+|-
+| 0x00080000 || Can't wait
+|-
+| 0x00100000 || (ACTI) Ignore Object Interaction 
+:Ignore Object Interaction Sets Dangerous Automatically
+|-
+| 0x00800000 || (ACTI) Is Marker
+|-
+| 0x02000000 || (ACTI) Obstacle / (REFR) No AI Acquire
+|-
+| 0x04000000 || (ACTI) NavMesh Gen - Filter
+|-
+| 0x08000000 || (ACTI) NavMesh Gen - Bounding Box
+|-
+| 0x10000000 || Must Exit to Talk
+|-
+| 0x20000000 || (ACTI) Child Can Use / (REFR) Don't Havok Settle
+|-
+| 0x20000000 || (ACTI) NavMesh Gen - Ground / (REFR) NoRespawn
+|-
+| 0x80000000 || (REFR) MultiBound
+|}
+
+|-
+| id || uint32 || Record (form) identifier.
+* TES4 and GRUP (group) records have FormIds of 0.
+|-
+| revision || uint32 || Used for revision control by the CS (only if enabled)
+* Probably the same format as Oblivion's
+|-
+| version || uint16 || 
+|-
+| unknown || uint16 || unknown
+|-
+| data || uint8[dataSize] || Data
+* For uncompressed records, this is a sequence of fields. 
+* Compressed data is the same, except that the fields are compressed using [http://zlib.net ZLIB], and stored into the data field like so...
+{| class="wikitable" width="100%" 
+! | Name
+! | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| decompSize || uint32 || Size of decompressed data.
+|-
+| compData || uint8[dataSize-4] || Compressed collection of fields.
+|}
+
+|}
+
+==Fields==
+{| class="wikitable" width="100%" 
+! width="20%" | Name
+! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! width="60%" | Info
+|-
+| type || char[4] || Field type.
+|-
+| dataSize || uint16 || Size of data field. <sup>†</sup>
+|-
+| data|| uint8[dataSize] || Data.
+* Format depends on record and field type.
+|}
+
+<sup>†</sup>If the preceding field has the type XXXX, then dataSize will be 0 and the size of the data is in fact the 32 bit quantity stored in the XXXX field.
+
+Commonly used fields and their definitions can be found [[Tes5Mod:Fields|here]]
+
+== Notes ==
+:* See [[Tes5Mod:Mod_File_Format/Raw_Data|Raw Data]] for a dump of all records/subrecords in Skyrim.esm and their associated counts/sizes.
+:* See [[Tes5Mod:Mod_File_Format/Raw_Function_Data|Raw Function Data]] for a dump of all script/console functions and events in TESV.exe.
