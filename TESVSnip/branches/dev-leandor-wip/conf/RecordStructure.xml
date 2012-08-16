@@ -189,10 +189,10 @@
 		</Subrecord>
 	</Group>
 	<Group id="SOUNDS" optional="1">
-		<Subrecord name="YNAM" desc="Pick Up Sound (SNDR)" optional="1" size="4">
+		<Subrecord name="YNAM" desc="Pick Up Sound (SNDR)" optional="1">
 			<Element name="SNDR FormID" type="formid" reftype="SNDR"/>
 		</Subrecord>
-		<Subrecord name="ZNAM" desc="Drop Sound (SNDR)" optional="1" size="4">
+		<Subrecord name="ZNAM" desc="Drop Sound (SNDR)" optional="1">
 			<Element name="SNDR FormID" type="formid" reftype="SNDR"/>
 		</Subrecord>
 	</Group>
@@ -1436,35 +1436,32 @@ non-indent is being worked on
 	</Record>
   <Record name="ARMO" desc="Armor">
     <Group id="EDID" optional="1"/>
-    <Group id="VMAD" optional="1" />
+    <Group id="VMAD" optional="1"/>
     <Group id="OBND" optional="1"/>
     <Group id="FULL" optional="1"/>
     <Subrecord name="EITM" desc="Enchantment ID (ENCH)" optional="1" size="4">
       <Element name="FormID" type="formid" reftype="ENCH" />
     </Subrecord>
-		<Group id="MODEL" optional="1">
+		<!-- insert -->
+		<Group id="MODEL" optional="1"/>
     <Subrecord name="MOD2" desc="Male world model" optional="1">
       <Element name="Model Filename" type="string" />
     </Subrecord>
     <Subrecord name="MO2T" desc="Texture Files Hashes" optional="1">
       <Element name="Unknown" type="blob" />
     </Subrecord>
-		<Group id="Model2S" optional="1">
+		<Group id="Model2S" optional="1"/>
     <Subrecord name="MOD4" desc="Female Ground Model Path" optional="1">
       <Element name="Model Path 4" type="string" />
     </Subrecord>
     <Subrecord name="MO4T" desc="Model Data 4" optional="1">
       <Element name="Model Data 4" type="blob" />
     </Subrecord>
-		<Group id="Model4S" optional="1">
-    <Subrecord name="BODT" desc="Body Template" optional="1" >
-      <Element name="BodyParts" type="uint" flags="Head;Hair;Chest;Hands;Forearms;Amulet;Ring;Feet;Calves;Shield;Tail;Long Hair;Forehead (Circlet);Ears;Dragon Head;Dragon Left Wing;Dragon Right Wing;Dragon Body;;;Decapitated Head"/>
-      <Element name="Flags" type="uint" hexview="1" flags=";;;;NonPlayable;;;;"/>
-      <Element name="Armor type?" type="uint" optional="1" options="Light Armor;0;Heavy Armor;1;Clothing;2"/>
-    </Subrecord>
+		<Group id="Model4S" optional="1"/>
+		<Group id="BODYDATA" optional="1"/>
 		<Group id="DESTRUCT" optional="1"/>
-		<Group id="YNAM" optional="1"/>
-		<Group id="ZNAM" optional="1"/>
+		<Group id="SOUNDS" optional="1"/>
+		<!-- insert -->
     <Subrecord name="BMCT" desc="Ragdoll Constraint Template" optional="1">
       <Element name="File Name" type="string" />
     </Subrecord>
@@ -1491,8 +1488,6 @@ non-indent is being worked on
       <Element name="FormID" type="formid" reftype="ARMO" />
     </Subrecord>
   </Record>
- <!-- End of ARMO -->
-  
  <Record name="BOOK" desc="Book"> <!-- conditional not implemented -->
 		<Group id="EDID" optional="1"/>
 		<Group id="VMAD" optional="1"/>
