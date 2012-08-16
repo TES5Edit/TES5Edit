@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- TESvSnip RecordStructure XML File v1.1 modified by SLuckyD, based on Snip v4.2's XML -->
+<!-- 2012-08-17 Beryllium-9 test SVN update -->
 <Records xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 <!-- Repetitive Groupings -->
 <Group id="CONDITIONAL" optional="1" repeat="1"> <!-- needs rest of functionNames, CIS1/CIS2 -->
