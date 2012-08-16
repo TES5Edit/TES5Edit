@@ -189,10 +189,10 @@
 		</Subrecord>
 	</Group>
 	<Group id="SOUNDS" optional="1">
-		<Subrecord name="YNAM" desc="Pick Up Sound (SNDR)" optional="1">
+		<Subrecord name="YNAM" desc="Pick Up Sound (SNDR)" optional="1" size="4">
 			<Element name="SNDR FormID" type="formid" reftype="SNDR"/>
 		</Subrecord>
-		<Subrecord name="ZNAM" desc="Drop Sound (SNDR)" optional="1">
+		<Subrecord name="ZNAM" desc="Drop Sound (SNDR)" optional="1" size="4">
 			<Element name="SNDR FormID" type="formid" reftype="SNDR"/>
 		</Subrecord>
 	</Group>
