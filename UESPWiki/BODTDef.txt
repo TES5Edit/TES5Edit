@@ -46,7 +46,8 @@ The name of each body part is dependent upon the wearer's race.  I am not sure h
 ::0x40000000 - Body AddOn 17
 ::0x80000000 - FX01
 :uint32 - unknown ?Flags?
-::0x10 - nonplayable
+::0x00000001 - Modulates Voice {>>> From ARMA <<<}
+::0x00000010 - Non-Playable  {>>> From ARMO <<<}
 :uint32 Armor type. 
 ::0 - Light Armor
 ::1 - Heavy Armor

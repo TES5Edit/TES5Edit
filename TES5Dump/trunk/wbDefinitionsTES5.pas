@@ -4731,11 +4731,11 @@ begin
         {0x80000000} 'FX01'
     ], True)),
     wbInteger('General Flags', itU32, wbFlags([
-      {0x00000001}'Unknown 1',
+      {0x00000001}'Modulates Voice', {>>> From ARMA <<<}
       {0x00000002}'Unknown 2',
       {0x00000004}'Unknown 3',
       {0x00000008}'Unknown 4',
-      {0x00000010}'Unknown 5',
+      {0x00000010}'Non-Playable', {>>> From ARMO <<<}
       {0x00000020}'Unknown 6',
       {0x00000040}'Unknown 7',
       {0x00000080}'Unknown 8',
