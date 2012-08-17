@@ -184,7 +184,6 @@ begin
 
   if sigElem = 'DESC' then Result := lsDLString else // DESC always from dlstrings
   if (sigRec = 'QUST') and (sigElem = 'CNAM') then Result := lsDLString else // quest log entry
-  if sigRec = 'BOOK' then Result := lsDLString else //journal/book
   if (sigRec = 'INFO') and (sigElem <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
     Result := lsString; // others
 end;
