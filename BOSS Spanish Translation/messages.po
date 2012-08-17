@@ -347,7 +347,7 @@ msgstr "Version"
 
 #: Game.cpp:778
 msgid "Active"
-msgstr "Active" 
+msgstr "Activo" 
 
 #: Game.cpp:797
 msgid "Error: "
