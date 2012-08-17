@@ -1856,6 +1856,24 @@ begin
   Result := Round(f);
 end;
 
+function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := '';
+  case aType of
+    ctToStr, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
+    ctCheck: Result := '';
+  end;
+end;
+
+function wbCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  f: Extended;
+begin
+  f := StrToFloat(aString);
+  f := f*10*127 + 127;
+  Result := Min(Round(f), 254);
+end;
+
 function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -2011,34 +2029,6 @@ begin
       if Result <> '' then
         s := s + ' ';
       Result := 'in ' + s + Result;
-    end;
-  end;
-end;
-
-function wbWthrDataClassification(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  case aType of
-    ctToStr: begin
-      case aInt and not 192 of
-        0: Result := 'None';
-        1: Result := 'Pleasant';
-        2: Result := 'Cloudy';
-        4: Result := 'Rainy';
-        8: Result := 'Snow';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
-      end;
-    end;
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 2)
-    end;
-    ctCheck: begin
-      case aInt and not 192 of
-        0, 1, 2, 4, 8: Result := '';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
-      end;
     end;
   end;
 end;
@@ -9851,9 +9841,9 @@ begin
   wbRecord(MUST, 'MUST', [
     wbEDIDReq,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
-      $23F678C3, 'Palette',
-      $6ED7E048, 'Single Track',
-      $A1A9C4D5, 'Silent Track' {>>> BUG this value is not recognized <<<}
+      Int64($23F678C3), 'Palette',
+      Int64($6ED7E048), 'Single Track',
+      Int64($A1A9C4D5), 'Silent Track'
     ]), cpNormal, True),
     wbFloat(FLTV, 'Duration'),
     wbFloat(DNAM, 'Fade-Out'),
@@ -9881,13 +9871,13 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(WOOP, 'WOOP', [
+  wbRecord(WOOP, 'Word of Power', [
     wbEDIDReq,
     wbFULL,
-    wbUnknown(TNAM)
+    wbLString(TNAM, 'Translation', 0, cpNormal, True)
   ]);
 
-  wbRecord(SHOU, 'SHOU', [
+  wbRecord(SHOU, 'Shout', [
     wbEDIDReq,
     wbFULL,
     wbMDOB,
@@ -13195,46 +13185,38 @@ begin
 
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
-    wbRArray('Array RNAM', wbRStruct('Unknown', [
-      wbUnknown(RNAM)
-    ], [])),
-    wbUnknown(MHDT),
+    {>>> BEGIN leftover from earlier CK versions <<<}
+    {>>> There are A LOT of those in skyrim.esm, should be probably removed like OSFT <<<}
+    wbRArray('Unused', wbUnknown(RNAM), cpIgnore),
+    wbByteArray(MHDT, 'Unused', 0, cpIgnore),
+    {>>> END leftover from earlier CK versions <<<}
     wbFULL,
-    wbRStruct('Unknonw', [
-      wbUnknown(WCTR),
-      wbUnknown(LTMP)
-    ], []),
-    wbRStruct('XLCN XEZN', [
-      wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN])
-    ], []),
-    wbRStruct('XEZN XLCN', [
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbFormIDCk(XLCN, 'Location', [LCTN, NULL])
-    ], []),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU16, wbFlags([
-          {0x00000001}'Use Land Data',
-          {0x00000002}'Use LOD Data',
-          {0x00000004}'Use Map Data',
-          {0x00000008}'Use Water Data',
-          {0x00000010}'Use Climate Data',
-          {0x00000020}'Use Image Space Data',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000100}'Unknown 9',
-          {0x00000200}'Unknown 10',
-          {0x00000400}'Unknown 11',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-        ], True))
-      ], cpNormal, True)
-    ], []),
+    wbStruct(WCTR, 'Fixed Dimesions Center Cell', [
+      wbInteger('X', itU16),
+      wbInteger('Y', itU16)
+    ]),
+    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
+    wbInteger(PNAM, 'Use Flags', itU16, wbFlags([
+      {0x0001}'Use Land Data',
+      {0x0002}'Use LOD Data',
+      {0x0004}'Don''t Use Map Data',
+      {0x0008}'Use Water Data',
+      {0x0010}'Use Climate Data',
+      {0x0020}'Unknown 6',
+      {0x0040}'Use Sky Cell',
+      {0x0080}'Unknown 8',
+      {0x0100}'Unknown 9',
+      {0x0200}'Unknown 10',
+      {0x0400}'Unknown 11',
+      {0x0800}'Unknown 12',
+      {0x1000}'Unknown 13',
+      {0x2000}'Unknown 14',
+      {0x4000}'Unknown 15',
+      {0x8000}'Unknown 16'
+    ], True)),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
@@ -13243,9 +13225,9 @@ begin
       wbFloat('Default Land Height'),
       wbFloat('Default Water Height')
     ]),
-    wbICON,
+    wbString(ICON, 'Map Image'),
     wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
+      wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
@@ -13261,133 +13243,87 @@ begin
       ])
     ]),
     wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'), // 'World Map Scale'
-      wbFloat('Cell X Offset'), // 'Cell X Offset'
-      wbFloat('Cell Y Offset'), // 'Cell Y Offset'
-      wbFloat('Unknown')
+      wbFloat('World Map Scale'),
+      wbFloat('Cell X Offset', cpNormal, False, 1/4096),
+      wbFloat('Cell Y Offset', cpNormal, False, 1/4096),
+      wbFloat('Cell Z Offset', cpNormal, False, 1/4096)
     ], cpNormal, True),
-    wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbFloat(NAMA, 'Unknown'),
+    wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small World',
       {0x02} 'Can''t Fast Travel',
       {0x04} 'Unknown 3',
-      {0x08} 'Unknown 4',
-      {0x10} 'No LOD Water',
-      {0x20} 'No LOD Noise',
-      {0x40} 'Don''t Allow NPC Fall Damage',
-      {0x80} 'Needs Water Adjustment'
+      {0x08} 'No LOD Water',
+      {0x10} 'No Landscape',
+      {0x20} 'Unknown 6',
+      {0x40} 'Fixed Dimensions',
+      {0x80} 'No Grass'
     ]), cpNormal, True),
+    {>>> Object Bounds doesn't show up in CK <<<}
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True)
-    ], [], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-    wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-    wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-      wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-      wbFormIDCkNoReach('Old', [IPCT]),
-      wbFormIDCk('New', [IPCT, NULL])
-    ])),
-    wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
-      'ConcSolid',
-      'ConcBroken',
-      'MetalSolid',
-      'MetalHollow',
-      'MetalSheet',
-      'Wood',
-      'Sand',
-      'Dirt',
-      'Grass',
-      'Water'
-    ]),
-    wbUnknown(TNAM),
-    wbUnknown(UNAM),
-    wbUnknown(XWEM),
-    wbByteArray(OFST, 'Unknown', 0)
+    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+    wbString(XNAM, 'Water Noise Texture'),
+    wbString(TNAM, 'HD LOD Diffuse Texture'),
+    wbString(UNAM, 'HD LOD Normal Texture'),
+    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
+    wbByteArray(OFST, 'Unknown')
   ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
-//    wbFormIDCk(_0_IAD, 'Sunrise Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_1_IAD, 'Day Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_2_IAD, 'Sunset Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_3_IAD, 'Night Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_4_IAD, 'Unknown', [IMAD]),
-//    wbFormIDCk(_5_IAD, 'Unknown', [IMAD]),
-
-    wbRUnion('Union', [
-      wbRStruct('Dynamic Cloud Textures', [
-        wbString(_00_0TX, 'Unknown'),
-        wbString(_10_0TX, 'Unknown'),
-        wbString(_20_0TX, 'Unknown'),
-        wbString(_30_0TX, 'Unknown'),
-        wbString(_40_0TX, 'Unknown'),
-        wbString(_50_0TX, 'Unknown'),
-        wbString(_60_0TX, 'Unknown'),
-        wbString(_70_0TX, 'Unknown'),
-        wbString(_80_0TX, 'Unknown'),
-        wbString(_90_0TX, 'Unknown'),
-        wbString(_3A_0TX, 'Unknown'),
-        wbString(_3B_0TX, 'Unknown'),
-        wbString(_3C_0TX, 'Unknown'),
-        wbString(_3D_0TX, 'Unknown'),
-        wbString(_3E_0TX, 'Unknown'),
-        wbString(_3F_0TX, 'Unknown'),
-        wbString(_40h_0TX, 'Unknown'),
-        wbString(A0TX, 'Unknown'),
-        wbString(B0TX, 'Unknown'),
-        wbString(C0TX, 'Unknown'),
-        wbString(D0TX, 'Unknown'),
-        wbString(E0TX, 'Unknown'),
-        wbString(F0TX, 'Unknown'),
-        wbString(G0TX, 'Unknown'),
-        wbString(H0TX, 'Unknown'),
-        wbString(I0TX, 'Unknown'),
-        wbString(J0TX, 'Unknown'),
-        wbString(K0TX, 'Unknown'),
-        wbString(L0TX, 'Unknown')
-      ], [])
-    ], []),
-
-    wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
-    wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
-    wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
-    wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
+    wbString(_00_0TX, 'Cloud Texture Layer #0'),
+    wbString(_10_0TX, 'Cloud Texture Layer #1'),
+    wbString(_20_0TX, 'Cloud Texture Layer #2'),
+    wbString(_30_0TX, 'Cloud Texture Layer #3'),
+    wbString(_40_0TX, 'Cloud Texture Layer #4'),
+    wbString(_50_0TX, 'Cloud Texture Layer #5'),
+    wbString(_60_0TX, 'Cloud Texture Layer #6'),
+    wbString(_70_0TX, 'Cloud Texture Layer #7'),
+    wbString(_80_0TX, 'Cloud Texture Layer #8'),
+    wbString(_90_0TX, 'Cloud Texture Layer #9'),
+    wbString(_3A_0TX, 'Cloud Texture Layer #10'),
+    wbString(_3B_0TX, 'Cloud Texture Layer #11'),
+    wbString(_3C_0TX, 'Cloud Texture Layer #12'),
+    wbString(_3D_0TX, 'Cloud Texture Layer #13'),
+    wbString(_3E_0TX, 'Cloud Texture Layer #14'),
+    wbString(_3F_0TX, 'Cloud Texture Layer #15'),
+    wbString(_40h_0TX, 'Cloud Texture Layer #16'),
+    wbString(A0TX, 'Cloud Texture Layer #17'),
+    wbString(B0TX, 'Cloud Texture Layer #18'),
+    wbString(C0TX, 'Cloud Texture Layer #19'),
+    wbString(D0TX, 'Cloud Texture Layer #20'),
+    wbString(E0TX, 'Cloud Texture Layer #21'),
+    wbString(F0TX, 'Cloud Texture Layer #22'),
+    wbString(G0TX, 'Cloud Texture Layer #23'),
+    wbString(H0TX, 'Cloud Texture Layer #24'),
+    wbString(I0TX, 'Cloud Texture Layer #25'),
+    wbString(J0TX, 'Cloud Texture Layer #26'),
+    wbString(K0TX, 'Cloud Texture Layer #27'),
+    wbString(L0TX, 'Cloud Texture Layer #28'),
+    wbByteArray(DNAM, 'Unused', 0, cpIgnore),
+    wbByteArray(CNAM, 'Unused', 0, cpIgnore),
+    wbByteArray(ANAM, 'Unused', 0, cpIgnore),
+    wbByteArray(BNAM, 'Unused', 0, cpIgnore),
     wbUnknown(LNAM),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbUnknown(NNAM),
-//    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    wbUnknown(ONAM),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(RNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(QNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(PNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-//    wbByteArray(PNAM, 'Unknown', 0, cpIgnore),
-//    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
-//      wbArray(PNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
-//    ], [])),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(JNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-//    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
-//      wbArray(JNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
-//    ], [])),
-//    wbUnknown(NAM0),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
+    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], True, cpNormal, True),
+    wbByteArray(ONAM, 'Unused', 0, cpIgnore),
+    wbRStruct('Cloud Speed', [
+      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)),
+      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
+    ], []),
+    wbStruct(PNAM, 'Cloud Layer', [
+      wbArray('Colors',
         wbStruct('Time', [
           wbInteger('Red', itU8),
           wbInteger('Green', itU8),
@@ -13396,10 +13332,33 @@ begin
         ]),
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
-      ['Unknown 1','Unknown 2','Unknown 3','Ambient','Unknown 5','Unknown 6',
-      'Unknown 7','Unknown 8','Unknown 9','Unknown 10', 'Unknown 11', 'Unknown 12',
-      'Unknown 13','Unknown 14','Unknown 15','Unknown 16','Unknown 17']
-    , cpNormal, True),
+      wbArray('Unknown', wbByteArray('Unknown', 4))
+    ]),
+    wbArray(JNAM, 'Clouds', wbStruct('Layer', [
+      wbFloat('Alpha'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ])),
+    wbStruct(NAM0, 'Weather Colors', [
+      wbArray('Sky-Upper', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Fog Near', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Unknown', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Ambient', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sunlight', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sun', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Stars', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sky-Lower', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Horizon', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Effect Lighting', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Cloud LOD Diffuse', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Cloud LOD Ambient', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Fog Far', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sky Statics', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Water Multiplier', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sun Glare', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Moon Glare', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night'])
+    ], cpNormal, True, nil, 13),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
       wbFloat('Day - Far'),
@@ -13410,29 +13369,36 @@ begin
       wbFloat('Day - Max'),
       wbFloat('Night - Max')
     ], cpNormal, True),
-//    wbByteArray(INAM, 'Unknown', 304, cpIgnore, True),
-//    wbUnknown(INAM),
-    wbStruct(DATA, '', [
-      wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
-      wbInteger('Trans Delta', itU8),
-      wbInteger('Sun Glare', itU8),
-      wbInteger('Sun Damage', itU8),
-      wbInteger('Precipitation - Begin Fade In', itU8),
-      wbInteger('Precipitation - End Fade Out', itU8),
+    wbStruct(DATA, 'Data', [
+      wbInteger('Wind Speed', itU8), // scaled 0..1
+      wbByteArray('Unknown', 2),
+      wbInteger('Trans Delta', itU8), // scaled 0..0,25
+      wbInteger('Sun Glare', itU8), // scaled 0..1
+      wbInteger('Sun Damage', itU8), // scaled 0..1
+      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
+      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Weather - Pleasant',
+        {0x02} 'Weather - Cloudy',
+        {0x04} 'Weather - Rainy',
+        {0x08} 'Weather - Snow',
+        {0x10} 'Sky Statics - Always Visible',
+        {0x20} 'Sky Statics - Follows Sun Position'
+      ])),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
       ]),
-      wbByteArray('Unknown', 4)
+      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
+      wbInteger('Visual Effect - End', itU8), // scaled 0..1
+      wbInteger('Wind Direction', itU8), // scaled 0..360
+      wbInteger('Wind Direction Range', itU8) // scaled 0..180
     ], cpNormal, True),
-    wbUnknown(NAM1),
+    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbRArray('Sounds',
       wbStruct(SNAM, 'Sound', [
         wbFormIDCK('Sound', [SNDR, NULL]),
@@ -13444,30 +13410,28 @@ begin
         ]))
       ])
     ),
-    wbRArrayS('Texture Names', wbFormIDCk(TNAM, 'Texture Name', [STAT, NULL])),
+    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbStruct(IMSP, 'Image Spaces', [
       wbFormIDCK('Sunrise', [IMGS, NULL]),
       wbFormIDCK('Day', [IMGS, NULL]),
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
-
-  wbRArray('Directional Ambient Lightning Colors',
-    wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
-      wbArray('Time of Day',
-        wbStruct('Values For', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]), ['X+','X-','Y+','Y-','Z+', 'Z-', 'Specular']),
-      wbFloat('Fresnel Power')
-    ])
-  ),
-
-    wbUnknown(NAM2),
-    wbUnknown(NAM3),
-    wbMODL
+    wbRArray('Directional Ambient Lighting Colors',
+      wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
+        wbStruct('X+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('X-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Y+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Y-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Z+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Z-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Specular', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbFloat('Fresnel Power')
+      ], cpNormal, True, nil, 6)
+    ),
+    wbByteArray(NAM2, 'Unused', 0, cpIgnore),
+    wbByteArray(NAM3, 'Unused', 0, cpIgnore),
+    wbRStruct('Aurora', [wbMODL], [])
   ]);
 
   wbRecord(IMOD, 'Item Mod', [
