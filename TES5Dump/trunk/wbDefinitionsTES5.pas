@@ -4755,155 +4755,82 @@ begin
 							wbByteArray('Not Shown', 0, cpIgnore, False, wbNeverShow)
 						], cpIgnore, False, wbNeverShow);
 
-//------------------------------------------------------------------------------
-// Begin New DODT
-//------------------------------------------------------------------------------
-// Sample DODT
-// DODT - Unknown:
-// {00}            00 00 00 41 1 Min Width
-// {05}            00 00 00 42 2 Max Width
-// {09}            00 00 00 41 3 Min Height
-// {13}            00 00 00 42 4 Max Height
-// {17}            00 00 00 42 5 Depth
-// {21}            00 00 80 40 6 Shininess
-//                 ------------Parallax-----
-// {25}            00 00 80 3F 7 Scale
-// {29}            04            Passes  {This can't be higher than 30}
-//                 -------------------------
-// {30}               00         Flags
-//                       32 30 <-- Not Sure
-// {31}            FF FF FF 00   Color
-//------------------------------------------------------------------------------
   wbDODT := wbStruct(DODT, 'Decal Data', [
-   {00}       wbFloat('Min Width'),
-   {05}       wbFloat('Max Width'),
-   {09}       wbFloat('Min Height'),
-   {13}       wbFloat('Max Height'),
-   {17}       wbFloat('Depth'),
-   {21}       wbFloat('Shininess'),
-              wbStruct('Parallax', [
-   {25}         wbFloat('Scale'),
-   {29}         wbInteger('Passes', itU8) {This can't be higher than 30}
-              ]),
-   {30}       wbInteger('Flags', itU8, wbFlags([
-                {0x00000001}'Parallax',
-                {0x00000002}'Alpha - Blending',
-                {0x00000004}'Alpha - Testing',
-                {0x00000008}'No Subtextures',
-                {0x00000010}'DODT Unknown 5',
-                {0x00000020}'DODT Unknown 6',
-                {0x00000040}'DODT Unknown 7',
-                {0x00000080}'DODT Unknown 8'
-               ], True)),
-   {31}       wbByteArray('Unknown', 2),
-   {33}       wbStruct('Color', [
-                wbInteger('Red', itU8),
-                wbInteger('Green', itU8),
-                wbInteger('Blue', itU8),
-                wbByteArray('Unknown', 1)
-              ])
-            ]);
-//------------------------------------------------------------------------------
-// Begin Old DODT
-//------------------------------------------------------------------------------
-//  wbDODT := wbStruct(DODT, 'Decal Data', [
-//              wbFloat('Min Width'),
-//              wbFloat('Max Width'),
-//              wbFloat('Min Height'),
-//              wbFloat('Max Height'),
-//              wbFloat('Depth'),
-//              wbFloat('Shininess'),
-//              wbStruct('Parallax', [
-//                wbFloat('Scale'),
-//                wbInteger('Passes', itU8)
-//              ]),
-//              wbInteger('Flags', itU8, wbFlags([
-//                'Parallax',
-//                'Alpha - Blending',
-//                'Alpha - Testing'
-//              ], True)),
-//              wbByteArray('Unused', 2),
-//              wbStruct('Color', [
-//                wbInteger('Red', itU8),
-//                wbInteger('Green', itU8),
-//                wbInteger('Blue', itU8),
-//                wbByteArray('Unused', 1)
-//              ])
-//            ]);
-//------------------------------------------------------------------------------
-// End Old wbDODT
-//------------------------------------------------------------------------------
+    wbFloat('Min Width'),
+    wbFloat('Max Width'),
+    wbFloat('Min Height'),
+    wbFloat('Max Height'),
+    wbFloat('Depth'),
+    wbFloat('Shininess'),
+    wbStruct('Parallax', [
+      wbFloat('Scale'),
+      wbInteger('Passes', itU8) {This can't be higher than 30}
+    ]),
+    wbInteger('Flags', itU8, wbFlags([
+      {0x01}'Parallax',
+      {0x02}'Alpha - Blending',
+      {0x04}'Alpha - Testing',
+      {0x08}'No Subtextures'
+    ], True)),
+    wbByteArray('Unknown', 2),
+    wbStruct('Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8),
+      wbByteArray('Unknown', 1)
+    ])
+  ]);
 
-//-----------------------------------------------------------------------------
-//
-// wbDNAMActor - Unknown:
-//                 14 19 0F 14 Skill Values
-//                 14 0F 14 0F
-//                 0F 0F 0F 14
-//                 0F 0F 0F 0F
-//                 0F 0F
-//                       00 00 Skill Offsets
-//                 00 00 00 00
-//                 00 00 00 00
-//                 00 00 00 00
-//                 00 00 00 00
-//                 23 00 4B 00 Remaining
-//                 32 00 10 00
-//                 00 00 00 00
-//                 00 7E 54 00
-      wbDNAMActor := wbRStruct('Player Skills', [
-        wbStruct(DNAM, 'Player Skills', [
-		 {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
-						'OneHanded',
-						'TwoHanded',
-						'Marksman',
-						'Block',
-						'Smithing',
-						'HeavyArmor',
-						'LightArmor',
-						'Pickpocket',
-						'Lockpicking',
-						'Sneak',
-						'Alchemy',
-						'Speechcraft',
-						'Alteration',
-						'Conjuration',
-						'Destruction',
-						'Illusion',
-						'Restoration',
-						'Enchanting'
-					]),
-		 {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
-						'OneHanded',
-						'TwoHanded',
-						'Marksman',
-						'Block',
-						'Smithing',
-						'HeavyArmor',
-						'LightArmor',
-						'Pickpocket',
-						'Lockpicking',
-						'Sneak',
-						'Alchemy',
-						'Speechcraft',
-						'Alteration',
-						'Conjuration',
-						'Destruction',
-						'Illusion',
-						'Restoration',
-						'Enchanting'
-					]),
-					wbByteArray('Unknown', 4),
-					wbByteArray('Unknown', 4),
-					//wbByteArray('Unknown', 4),
-          wbFloat('Far away model distance'),
-          wbInteger('Geared up weapons', itU8),
-					wbByteArray('Unknown', 3)
-				])
-			], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
-//-----------------------------------------------------------------
-// End New Routines
-//-----------------------------------------------------------------
+  wbDNAMActor := wbRStruct('Player Skills', [
+    wbStruct(DNAM, 'Player Skills', [
+      wbArray('Skill Values', wbInteger('Skill', itU8), [
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ]),
+      wbArray('Skill Offsets', wbInteger('Skill', itU8), [
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      //wbByteArray('Unknown', 4),
+      wbFloat('Far away model distance'),
+      wbInteger('Geared up weapons', itU8),
+      wbByteArray('Unknown', 3)
+    ])
+  ], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
 
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
@@ -4922,8 +4849,8 @@ begin
     {>>> 0x00000080 STAT: Add-on LOD Object <<<}
     {0x00000080}'(TES4)Localized/Is Perch/(PHZD)Turn off fire/(SHOU)Treat spells as powers',
     {>>> 0x00000100 ACTI: Must Update Anims <<<}
-    {>>> 0x00020000 REFR light: Doesn't light water <<<}
-    {0x00000100}'Must Update Anims/(REFR) Inaccessible',
+    {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
+    {0x00000100}'Must Update Anims/(REFR)Inaccessible',
     {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
     {0x00000200}'Hidden from local map/Starts dead/(REFR)MotionBlurCastsShadows',
     {0x00000400}'Quest item/Persistent reference/(LSCR)Displays in Main Menu',
@@ -8527,32 +8454,19 @@ begin
     wbRStruct('Textures (RGB/A)', [
       wbString(TX00,'Difuse'),
       wbString(TX01,'Normal/Gloss'),
-      wbString(TX02,'Environment Mask'),
-      wbString(TX03,'Glow/SubSurface Tint'),
+      wbString(TX02,'Environment Mask/Subsurface Tint'),
+      wbString(TX03,'Glow/Detail Map'),
       wbString(TX04,'Height'),
       wbString(TX05,'Environment'),
       wbString(TX06,'Multilayer'),
-      wbString(TX07,'Backlight Mask')
+      wbString(TX07,'Backlight Mask/Specular')
     ], []),
     wbDODT,
-    wbInteger(DNAM, 'DNAM Record Flags', itU16, wbFlags([
-      {0x00000001}'No Specular Map',
-      {0x00000002}'Facegen Textures',
-      {0x00000004}'Has Model Space Normal Map',
-      {0x00000008}'DNAM Unknown 4',
-      {0x00000010}'DNAM Unknown 5',
-      {0x00000020}'DNAM Unknown 6',
-      {0x00000040}'DNAM Unknown 7',
-      {0x00000080}'DNAM Unknown 8',
-      {0x00000100}'DNAM Unknown 9',
-      {0x00000200}'DNAM Unknown 10',
-      {0x00000400}'DNAM Unknown 11',
-      {0x00000800}'DNAM Unknown 12',
-      {0x00001000}'DNAM Unknown 13',
-      {0x00002000}'DNAM Unknown 14',
-      {0x00004000}'DNAM Unknown 15',
-      {0x00008000}'DNAM Unknown 16'
-    ]))
+    wbInteger(DNAM, 'Flags', itU16, wbFlags([
+      {0x0001}'No Specular Map',
+      {0x0002}'Facegen Textures',
+      {0x0004}'Has Model Space Normal Map'
+    ]), cpNormal, True)
   ]);
 
   wbRecord(MICN, 'Menu Icon', [
