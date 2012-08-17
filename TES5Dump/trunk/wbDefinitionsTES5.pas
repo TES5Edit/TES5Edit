@@ -201,7 +201,7 @@ const
   CNAM : TwbSignature = 'CNAM';
   CNTO : TwbSignature = 'CNTO';
   COBJ : TwbSignature = 'COBJ';
-  COCT : TwbSignature = 'COCT'; { New to Skyrim 'Count' }
+  COCT : TwbSignature = 'COCT'; { New to Skyrim 'Count'}
   COED : TwbSignature = 'COED';
   COLL : TwbSignature = 'COLL';
   CONT : TwbSignature = 'CONT';
@@ -296,13 +296,10 @@ const
   FTST : TwbSignature = 'FTST'; { New to Skyrim }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
-  FUZE : TwbSignature = 'FUZE'; { New? }
   GLOB : TwbSignature = 'GLOB';
   GMST : TwbSignature = 'GMST';
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
-  GRGB : TwbSignature = 'GRGB'; { New? }
-  GRUP : TwbSignature = 'GRUP';
   GWOR : TwbSignature = 'GWOR'; { New to Skyrim }
   HAIR : TwbSignature = 'HAIR';
   HAZD : TwbSignature = 'HAZD';
@@ -322,7 +319,6 @@ const
   IDLE : TwbSignature = 'IDLE';
   IDLF : TwbSignature = 'IDLF';
   IDLM : TwbSignature = 'IDLM';
-  IDLN : TwbSignature = 'IDLN'; { New? }
   IDLT : TwbSignature = 'IDLT';
   IMAD : TwbSignature = 'IMAD';
   IMGS : TwbSignature = 'IMGS';
@@ -361,7 +357,7 @@ const
   LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
-  LLCT : TwbSignature = 'LLCT'; { New to Skyrim, part of LVLI 'Count' }
+  LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
   LNAM : TwbSignature = 'LNAM';
   LSCR : TwbSignature = 'LSCR';
   LSCT : TwbSignature = 'LSCT';
@@ -413,7 +409,6 @@ const
   MOVT : TwbSignature = 'MOVT';
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
-  MPCD : TwbSignature = 'MPCD'; { New? }
   MPRT : TwbSignature = 'MPRT'; { New to Skyrim }
   MSET : TwbSignature = 'MSET';
   MSTT : TwbSignature = 'MSTT';
@@ -446,8 +441,6 @@ const
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NNAM : TwbSignature = 'NNAM';
-  NONE : TwbSignature = 'NONE';
-  NOTE : TwbSignature = 'NOTE';
   NPC_ : TwbSignature = 'NPC_';
   NULL : TwbSignature = 'NULL';
   NVCA : TwbSignature = 'NVCA';
@@ -468,14 +461,11 @@ const
   ONAM : TwbSignature = 'ONAM';
   OTFT : TwbSignature = 'OTFT';
   PACK : TwbSignature = 'PACK';
-  PARW : TwbSignature = 'PARW';
-  PBAR : TwbSignature = 'PBAR';
-  PBEA : TwbSignature = 'PBEA';
-  PCON : TwbSignature = 'PCON';
+  PARW : TwbSignature = 'PARW'; { New to Skyrim }
+  PCON : TwbSignature = 'PCON'; { New to Skyrim }
   PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PERK : TwbSignature = 'PERK';
   PFIG : TwbSignature = 'PFIG';
-  PFLA : TwbSignature = 'PFLA';
   PFO2 : TwbSignature = 'PFO2'; { New to Skyrim }
   PFOR : TwbSignature = 'PFOR'; { New to Skyrim }
   PFPC : TwbSignature = 'PFPC';
@@ -490,11 +480,8 @@ const
   PHZD : TwbSignature = 'PHZD';
   PKC2 : TwbSignature = 'PKC2'; { New to Skyrim }
   PKCU : TwbSignature = 'PKCU'; { New to Skyrim }
-  PKDD : TwbSignature = 'PKDD'; { New? }
   PKDT : TwbSignature = 'PKDT';
-  PKFD : TwbSignature = 'PKFD'; { New? }
   PKID : TwbSignature = 'PKID';
-  PKPT : TwbSignature = 'PKPT'; { New? }
   PLCN : TwbSignature = 'PLCN'; { New to Skyrim }
   PLDT : TwbSignature = 'PLDT';
   PLVD : TwbSignature = 'PLVD'; { New to Skyrim }
@@ -531,24 +518,18 @@ const
   RAGA : TwbSignature = 'RAGA';
   RAPS : TwbSignature = 'RAPS';
   RCCT : TwbSignature = 'RCCT';
-  RCEC : TwbSignature = 'RCEC'; { New? }
   RCIL : TwbSignature = 'RCIL';
   RCLR : TwbSignature = 'RCLR';
   RCOD : TwbSignature = 'RCOD';
   RCPE : TwbSignature = 'RCPE';
   RCPR : TwbSignature = 'RCPR'; { New to Dawnguard }
   RCQY : TwbSignature = 'RCQY';
-  RCSR : TwbSignature = 'RCSR'; { New? }
-  RCUN : TwbSignature = 'RCUN'; { New? }
   RDAT : TwbSignature = 'RDAT';
   RDGS : TwbSignature = 'RDGS';
   RDID : TwbSignature = 'RDID';
-  RDLN : TwbSignature = 'RDLN'; { New? }
   RDMD : TwbSignature = 'RDMD';
   RDMO : TwbSignature = 'RDMO';
   RDMP : TwbSignature = 'RDMP';
-  RDOB : TwbSignature = 'RDOB'; { New? }
-  RDOJ : TwbSignature = 'RDOJ'; { New? }
   RDOT : TwbSignature = 'RDOT';
   RDSA : TwbSignature = 'RDSA'; { New to Skyrim }
   RDSB : TwbSignature = 'RDSB';
@@ -562,7 +543,6 @@ const
   REPU : TwbSignature = 'REPU';
   REVB : TwbSignature = 'REVB';
   RFCT : TwbSignature = 'RFCT';
-  RGBG : TwbSignature = 'RGBG'; { New? }
   RGDL : TwbSignature = 'RGDL';
   RNAM : TwbSignature = 'RNAM';
   RNMV : TwbSignature = 'RNMV'; { New to Skyrim }
@@ -585,7 +565,6 @@ const
   SDSC : TwbSignature = 'SDSC'; { New to Skyrim }
   SHOU : TwbSignature = 'SHOU';
   SHRT : TwbSignature = 'SHRT'; { New to Skyrim }
-  SKIL : TwbSignature = 'SKIL';
   SLCP : TwbSignature = 'SLCP';
   SLGM : TwbSignature = 'SLGM';
   SLPD : TwbSignature = 'SLPD';
@@ -630,9 +609,7 @@ const
   TINT : TwbSignature = 'TINT'; { New to Skyrim }
   TINV : TwbSignature = 'TINV'; { New to Skyrim }
   TIRS : TwbSignature = 'TIRS'; { New to Skyrim }
-  TLOD : TwbSignature = 'TLOD';
   TNAM : TwbSignature = 'TNAM';
-  TOFT : TwbSignature = 'TOFT';
   TPIC : TwbSignature = 'TPIC';
   TPLT : TwbSignature = 'TPLT';
   TRDT : TwbSignature = 'TRDT';
@@ -651,7 +628,6 @@ const
   TXST : TwbSignature = 'TXST';
   UNAM : TwbSignature = 'UNAM';
   UNES : TwbSignature = 'UNES'; { New To Skyrim }
-  UYVY : TwbSignature = 'UYVY'; { New? }
   VANM : TwbSignature = 'VANM';
   VATS : TwbSignature = 'VATS';
   VCLR : TwbSignature = 'VCLR';
@@ -689,7 +665,6 @@ const
   WOOP : TwbSignature = 'WOOP';
   WRLD : TwbSignature = 'WRLD';
   WTHR : TwbSignature = 'WTHR';
-  XACR : TwbSignature = 'XACR'; { New? }
   XACT : TwbSignature = 'XACT';
   XALP : TwbSignature = 'XALP'; { New To Skyrim }
   XAMC : TwbSignature = 'XAMC';
@@ -701,7 +676,6 @@ const
   XCAS : TwbSignature = 'XCAS';
   XCCM : TwbSignature = 'XCCM';
   XCET : TwbSignature = 'XCET';
-  XCGD : TwbSignature = 'XCGD'; { New? }
   XCHG : TwbSignature = 'XCHG';
   XCIM : TwbSignature = 'XCIM';
   XCLC : TwbSignature = 'XCLC';
@@ -713,15 +687,11 @@ const
   XCMT : TwbSignature = 'XCMT';
   XCNT : TwbSignature = 'XCNT';
   XCVL : TwbSignature = 'XCVL'; { New To Skyrim }
-  XCVR : TwbSignature = 'XCVR'; { New? }
   XCWT : TwbSignature = 'XCWT';
   XCZA : TwbSignature = 'XCZA'; { New To Skyrim }
   XCZC : TwbSignature = 'XCZC'; { New To Skyrim }
-  XCZR : TwbSignature = 'XCZR'; { New? }
   XDCR : TwbSignature = 'XDCR';
-  XEDL : TwbSignature = 'XEDL'; { New? }
   XEMI : TwbSignature = 'XEMI';
-  XENC : TwbSignature = 'XENC'; { New? }
   XESP : TwbSignature = 'XESP';
   XEZN : TwbSignature = 'XEZN';
   XFVC : TwbSignature = 'XFVC'; { New To Skyrim }
@@ -729,7 +699,6 @@ const
   XHLP : TwbSignature = 'XHLP';
   XHLT : TwbSignature = 'XHLT';
   XHOR : TwbSignature = 'XHOR'; { New To Skyrim }
-  XHRS : TwbSignature = 'XHRS'; { New? }
   XHTW : TwbSignature = 'XHTW'; { New To Skyrim }
   XIBS : TwbSignature = 'XIBS';
   XILL : TwbSignature = 'XILL'; { New To Skyrim }
@@ -739,7 +708,6 @@ const
   XLIB : TwbSignature = 'XLIB'; { New To Skyrim }
   XLIG : TwbSignature = 'XLIG'; { New To Skyrim }
   XLKR : TwbSignature = 'XLKR';
-  XLMB : TwbSignature = 'XLMB'; { New? }
   XLOC : TwbSignature = 'XLOC';
   XLOD : TwbSignature = 'XLOD';
   XLRL : TwbSignature = 'XLRL'; { New To Skyrim }
@@ -753,18 +721,13 @@ const
   XMRK : TwbSignature = 'XMRK';
   XNAM : TwbSignature = 'XNAM';
   XNDP : TwbSignature = 'XNDP';
-  XNVP : TwbSignature = 'XNVP'; { New? }
   XOCP : TwbSignature = 'XOCP';
   XORD : TwbSignature = 'XORD';
   XOWN : TwbSignature = 'XOWN';
-  XPCI : TwbSignature = 'XPCI'; { New? }
   XPOD : TwbSignature = 'XPOD';
   XPPA : TwbSignature = 'XPPA';
   XPRD : TwbSignature = 'XPRD';
   XPRM : TwbSignature = 'XPRM';
-  XPSC : TwbSignature = 'XPSC'; { New? }
-  XPSL : TwbSignature = 'XPSL'; { New? }
-  XPSN : TwbSignature = 'XPSN'; { New? }
   XPTL : TwbSignature = 'XPTL';
   XPWR : TwbSignature = 'XPWR';
   XRAD : TwbSignature = 'XRAD';
@@ -774,27 +737,20 @@ const
   XRGD : TwbSignature = 'XRGD';
   XRMR : TwbSignature = 'XRMR';
   XRNK : TwbSignature = 'XRNK';
-  XROO : TwbSignature = 'XROO'; { New? }
   XRTM : TwbSignature = 'XRTM';
   XSCL : TwbSignature = 'XSCL';
   XSED : TwbSignature = 'XSED';
-  XSOL : TwbSignature = 'XSOL'; { New? }
   XSPC : TwbSignature = 'XSPC'; { New To Skyrim }
   XSRD : TwbSignature = 'XSRD';
   XSRF : TwbSignature = 'XSRF';
   XTEL : TwbSignature = 'XTEL';
-  XTIM : TwbSignature = 'XTIM'; { New? }
   XTNM : TwbSignature = 'XTNM'; { New To Skyrim }
   XTRG : TwbSignature = 'XTRG';
   XTRI : TwbSignature = 'XTRI';
-  XUSE : TwbSignature = 'XUSE'; { New? }
+  XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
   XWCN : TwbSignature = 'XWCN'; { New To Skyrim }
   XWCS : TwbSignature = 'XWCS'; { New To Skyrim }
   XWCU : TwbSignature = 'XWCU'; { New To Skyrim }
-  XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
-  XWLT : TwbSignature = 'XWLT'; { New? }
-  XWMA : TwbSignature = 'XWMA'; { New? }
-  XWNT : TwbSignature = 'XWNT'; { New? }
   XXXX : TwbSignature = 'XXXX';
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
@@ -4959,9 +4915,11 @@ begin
     {0x00000020}'Deleted',
     {>>> 0x00000040 ACTI: Has Tree LOD <<<}
     {>>> 0x00000040 REGN: Border Region <<<}
+    {>>> 0x00000040 STAT: Has Tree LOD <<<}
     {0x00000040}'Constant/(REFR)Hidden From Local Map/(REGN)Border Region',
     {>>> 0x00000080 PHZD: Turn Off Fire <<<}
     {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
+    {>>> 0x00000080 STAT: Add-on LOD Object <<<}
     {0x00000080}'(TES4)Localized/Is Perch/(PHZD)Turn off fire/(SHOU)Treat spells as powers',
     {>>> 0x00000100 ACTI: Must Update Anims <<<}
     {>>> 0x00020000 REFR light: Doesn't light water <<<}
@@ -4973,6 +4931,7 @@ begin
     {0x00001000}'Ignored',
     {0x00002000}'Unknown 14',
     {0x00004000}'Unknown 15',
+    {>>> 0x00008000 STAT: Has Distant LOD <<<}
     {0x00008000}'VWD',
     {>>> 0x00010000 ACTI: Random Animation Start <<<}
     {>>> 0x00020000 REFR light: Never fades <<<}
@@ -4980,8 +4939,10 @@ begin
     {>>> 0x00020000 ACTI: Dangerous <<<}
     {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
     {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
+    {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
     {0x00020000}'Dangerous/Off limits/(SLGM)Can Hold NPC',
     {0x00040000}'Compressed',
+    {>>> 0x00080000 STAT: Has Currents <<<}
     {0x00080000}'Can''t wait',
     {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
     {0x00100000}'Ignore Object Interaction',
@@ -4993,14 +4954,15 @@ begin
     {>>> 0x02000000 ACTI: Obstacle <<<}
     {0x02000000}'Obstacle/(REFR)No AI Acquire',
     {>>> 0x03000000 ACTI: Filter <<<}
-    {0x03000000}'NavMesh Gen - Filter',
+    {0x03000000}'NavMesh Filter',
     {>>> 0x08000000 ACTI: Bounding Box <<<}
-    {0x08000000}'NavMesh Gen - Bounding Box',
+    {0x08000000}'NavMesh Bounding Box',
+    {>>> 0x10000000 STAT: Show in World Map <<<}
     {0x10000000}'Must Exit to Talk',
     {>>> 0x20000000 ACTI: Child Can Use <<<}
     {0x20000000}'Child Can Use/(REFR)Don''t Havok Settle',
     {>>> 0x40000000 ACTI: GROUND <<<}
-    {0x40000000}'NavMesh Gen - Ground/(REFR) NoRespawn',
+    {0x40000000}'NavMesh Ground/(REFR) NoRespawn',
     {0x80000000}'(REFR)MultiBound'
   ]));
 
@@ -5888,12 +5850,13 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL, // wbMODL MODL, MODB, MODT, MODS, MODD
-    wbDEST, // wbDEST DEST, DSTD, DMDL, DMDT, DSTF
+    wbMODLReq,
+    wbDEST,
     wbKeywords,
-    wbUnknown(PNAM, cpNormal, True),
-    wbUnknown(FNAM, cpNormal, True),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR])
+    wbUnknown(PNAM, cpIgnore, True),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
+    wbUnknown(FNAM, cpIgnore, True),
+    wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ]);
 
   wbICON := wbRStruct('Icon', [
@@ -7603,10 +7566,26 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SPGD, 'SPGD', [
+  wbRecord(SPGD, 'Shader Particle Geometry', [
     wbEDIDReq,
-    wbUnknown(DATA),
-    wbString(ICON, 'File Name')
+    wbStruct(DATA, 'Data', [
+      wbFloat('Gravity Velocity'),
+      wbFloat('Rotation Velocity'),
+      wbFloat('Particle Size X'),
+      wbFloat('Particle Size Y'),
+      wbFloat('Center Offset Min'),
+      wbFloat('Center Offset Max'),
+      wbFloat('Initial Rotation Range'),
+      wbInteger('# of Subtextures X', itU32),
+      wbInteger('# of Subtextures Y', itU32),
+      wbInteger('Type', itU32, wbEnum([
+        'Rain',
+        'Snow'
+      ])),
+      wbInteger('Box Size', itU32),
+      wbFloat('Particle Density')
+    ], cpNormal, True, nil, 10),
+    wbString(ICON, 'Particle Texture')
   ]);
 
   wbRecord(RFCT, 'Visual Effect', [
@@ -12994,7 +12973,7 @@ begin
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
   ]);
 
-  wbSPIT := wbStruct(SPIT, '', [
+  wbSPIT := wbStruct(SPIT, 'Data', [
     wbInteger('Base Cost', itU32),
     wbInteger('Flags', itU32, wbFlags([
       {0x00000001} 'Manual Cost Calc',
@@ -13052,7 +13031,7 @@ begin
     wbFormIDCk('Half-cost Perk', [PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Actor Effect', [
+  wbRecord(SPEL, 'Spell', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -13064,7 +13043,7 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(SCRL, 'SCRL', [
+  wbRecord(SCRL, 'Scroll', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -13087,25 +13066,23 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
-    {Unused in this record for TES5
-    wbInteger(BRUS, 'Passthrough Sound', itS8, wbEnum([
-      'BushA',
-      'BushB',
-      'BushC',
-      'BushD',
-      'BushE',
-      'BushF',
-      'BushG',
-      'BushH',
-      'BushI',
-      'BushJ'
-    ], [
-      -1, 'NONE'
-    ])),
-    wbFormIDCk(RNAM, 'Sound - Looping/Random', [SOUN])}
-    wbUnknown(DNAM),
-    wbUnknown(MNAM)
- ]);
+    wbStruct(DNAM, 'Direction Material', [
+      wbFloat('Max Angle (30-120)'),
+      wbFormIDCk('Material', [MATO, NULL])
+    ], cpNormal, True),
+    wbArray(MNAM, 'Distant LOD',
+      wbStruct('LOD', [
+        {>>> Contains null-terminated mesh filename followed by random data up to 260 bytes <<<}
+        wbByteArray('Unknown', 260, cpIgnore)
+      ]), [
+        'Level 0',
+        'Level 1',
+        'Level 2',
+        'Level 3'
+      ],
+      cpNormal, False
+    )
+  ]);
 
   wbRecord(TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
@@ -13134,29 +13111,21 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbFormIDCK(PFIG, 'Magic Effect', [INGR, ALCH, NULL]),
-    wbUnknown(PFIG),
-    wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
-    wbUnknown(PFPC),
+    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, NULL]),
+    wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
+    wbStruct(PFPC, 'Ingredient Production', [
+      wbInteger('Spring', itU8),
+      wbInteger('Summer', itU8),
+      wbInteger('Fall', itU8),
+      wbInteger('Winter', itU8)
+    ]),
     wbFULL,
-    wbICONReq,
     wbStruct(CNAM, 'Tree Data', [
-      wbFloat('Leaf Curvature'),
-      wbFloat('Minimum Leaf Angle'),
-      wbFloat('Maximum Leaf Angle'),
-      wbFloat('Branch Dimming Value'),
-      wbFloat('Leaf Dimming Value'),
-      wbInteger('Shadow Radius', itS32),
-      wbFloat('Rock Speed'),
-      wbFloat('Rustle Speed'),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, True),
-    wbStruct(BNAM, 'Billboard Dimensions', [
-      wbFloat('Width'),
-      wbFloat('Height')
+      wbFloat('Trunk Flexibility'),
+      wbFloat('Branch Flexibility'),
+      wbByteArray('Unknown', 32),
+      wbFloat('Leaf Amplitude'),
+      wbFloat('Leaf Frequency')
     ], cpNormal, True)
   ]);
 
