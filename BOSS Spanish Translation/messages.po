@@ -6,15 +6,15 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: BOSS 2.1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-08-13 14:23-0700\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2012-08-16 22:15-300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: Error.h:121
@@ -818,7 +818,7 @@ msgid ""
 "browser\\'s cache. Note that this will delete all locally stored data."
 msgstr ""
 "La Cuota de web de almacenamiento de este documento se ha excedido. Por favor, "
-vaciar el caché de su navegador. Tenga en cuenta que esto borrará todos los "
+"vaciar el caché de su navegador. Tenga en cuenta que esto borrará todos los "
 "de datos almacenados localmente."
 
 #: ..\boss-common\Output\Output.cpp:1507
@@ -1174,7 +1174,7 @@ msgstr "Error: falló actualización del masterlist."
 #: ..\boss-cli\BOSS-CLI.cpp:488 ..\boss-cli\BOSS-CLI.cpp:497
 #: MainWindow.cpp:487 MainWindow.cpp:496
 msgid "Details: %1%"
-msgstr ""Detalles: %1%"
+msgstr "Detalles: %1%"
 
 #: ..\boss-cli\BOSS-CLI.cpp:493 MainWindow.cpp:492
 msgid ""
@@ -1182,7 +1182,7 @@ msgid ""
 "updates."
 msgstr ""
 "Sin conexión a Internet detectada. Actualizador automático de Masterlist no pudo buscar "
-actualizaciones." 
+"actualizaciones." 
 
 #: ..\boss-cli\BOSS-CLI.cpp:520 MainWindow.cpp:443 MainWindow.cpp:517
 msgid "BOSS working..."
@@ -1529,7 +1529,7 @@ msgstr "Masterlist actualizado con éxito."
 #: MainWindow.cpp:668 UserRuleEditor.cpp:86 UserRuleEditor.cpp:473
 #: UserRuleEditor.cpp:495
 msgid "BOSS: User Rules Manager"
-msgid "BOSS: Administrador de Reglas de Usuario"
+msgstr "BOSS: Administrador de Reglas de Usuario"
 
 #: MainWindow.cpp:697 MainWindow.cpp:721
 msgid "Error: \"%1%\" cannot be found."
