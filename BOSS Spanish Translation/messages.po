@@ -111,7 +111,7 @@ msgstr "tiene una linea de reemplazo que no es la primera linea de la regla."
 
 #: Error.h:143
 msgid "has a sort line that is not the second line of the rule."
-msgstr ""
+msgstr "tiene una línea de ordenar que no es la segunda línea de la regla."
 
 #: Error.h:144
 msgid "tries to sort a mod or group relative to itself."
@@ -267,21 +267,21 @@ msgstr "La ventana \"%1%\" falló en inicializarse. Detalles: \"%2%\"."
 
 #: Error.cpp:188
 msgid "Memory allocation failed."
-msgstr ""
+msgstr "La Asignación de memoria falló."
 
 #: Error.cpp:190
 msgid "No Internet connection detected."
-msgstr ""
+msgstr "No se ha detectado la conexión de Internet."
 
 #: Error.cpp:192
 msgid "No tag map has yet been initialised."
-msgstr ""
+msgstr "Todovia no se ha inicializado la mapa de etiqueta."
 
 #: Error.cpp:194
 msgid ""
 "The requested change to the active plugins list would result in over 255 "
 "plugins being active."
-msgstr ""
+msgstr "El cambio solicitado a la lista de plugins activos se traduciría en más de 255 plugins activos."
 
 #: Game.cpp:503
 msgid "Rule is disabled."
