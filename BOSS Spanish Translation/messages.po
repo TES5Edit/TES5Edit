@@ -1236,7 +1236,7 @@ msgstr "BOSS: Selecionar Juego"
 
 #: MainWindow.cpp:245
 msgid "Plain Text"
-msgstr "Textp Plano"
+msgstr "Texto Plano"
 
 #: MainWindow.cpp:249
 msgid "Last Run"
@@ -1244,7 +1244,7 @@ msgstr "Última ejecución"
 
 #: MainWindow.cpp:250
 msgid "2nd Last Run"
-msgstr "El segundo paso"
+msgstr "La ante-última ejecución"
 
 #: MainWindow.cpp:257
 msgid "&View BOSS Log"
