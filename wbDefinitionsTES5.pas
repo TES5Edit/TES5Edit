@@ -8811,11 +8811,15 @@ begin
     wbStruct(BNAM, 'Blur', [
       wbFloat('Unknown'),
       wbFloat('Radius'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
       wbUnknown
     ]),
     wbStruct(VNAM, 'Double Vision', [
       wbFloat('Unknown'),
       wbFloat('Strength'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
       wbUnknown
     ]),
     wbRStruct('Cinematic Colors', [
@@ -8827,6 +8831,11 @@ begin
           wbFloat('Blue', cpNormal, True, 255, 0),
           wbFloat('Alpha', cpNormal, True, 255, 0)
         ]),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
         wbUnknown
       ]),
       wbStruct(NAM3, 'Fade', [
@@ -8837,6 +8846,11 @@ begin
           wbFloat('Blue', cpNormal, True, 255, 0),
           wbFloat('Alpha', cpNormal, True, 255, 0)
         ]),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
         wbUnknown
       ])
     ], []),
@@ -13193,11 +13207,13 @@ begin
    wbAddGroupOrder(CLAS);
    wbAddGroupOrder(FACT);
    wbAddGroupOrder(HDPT);
+   wbAddGroupOrder(HAIR);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(EYES);
    wbAddGroupOrder(RACE);
    wbAddGroupOrder(SOUN);
    wbAddGroupOrder(ASPC);
    wbAddGroupOrder(MGEF);
+   wbAddGroupOrder(SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(LTEX);
    wbAddGroupOrder(ENCH);
    wbAddGroupOrder(SPEL);
@@ -13213,9 +13229,12 @@ begin
    wbAddGroupOrder(MISC);
    wbAddGroupOrder(APPA);
    wbAddGroupOrder(STAT);
+   wbAddGroupOrder(SCOL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(MSTT);
+   wbAddGroupOrder(PWAT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(GRAS);
    wbAddGroupOrder(TREE);
+   wbAddGroupOrder(CLDC);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(FLOR);
    wbAddGroupOrder(FURN);
    wbAddGroupOrder(WEAP);
@@ -13267,6 +13286,7 @@ begin
    wbAddGroupOrder(ECZN);
    wbAddGroupOrder(LCTN);
    wbAddGroupOrder(MESG);
+   wbAddGroupOrder(RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(DOBJ);
    wbAddGroupOrder(LGTM);
    wbAddGroupOrder(MUSC);
@@ -13295,13 +13315,6 @@ begin
    wbAddGroupOrder(COLL);
    wbAddGroupOrder(CLFM);
    wbAddGroupOrder(REVB);
-   {>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(CLDC);
-   wbAddGroupOrder(HAIR);
-   wbAddGroupOrder(PWAT);
-   wbAddGroupOrder(RGDL);
-   wbAddGroupOrder(SCOL);
-   wbAddGroupOrder(SCPT);
 end;
 
 procedure DefineTES5;
