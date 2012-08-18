@@ -1856,6 +1856,24 @@ begin
   Result := Round(f);
 end;
 
+function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := '';
+  case aType of
+    ctToStr, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
+    ctCheck: Result := '';
+  end;
+end;
+
+function wbCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  f: Extended;
+begin
+  f := StrToFloat(aString);
+  f := f*10*127 + 127;
+  Result := Min(Round(f), 254);
+end;
+
 function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -2011,34 +2029,6 @@ begin
       if Result <> '' then
         s := s + ' ';
       Result := 'in ' + s + Result;
-    end;
-  end;
-end;
-
-function wbWthrDataClassification(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  case aType of
-    ctToStr: begin
-      case aInt and not 192 of
-        0: Result := 'None';
-        1: Result := 'Pleasant';
-        2: Result := 'Cloudy';
-        4: Result := 'Rainy';
-        8: Result := 'Snow';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
-      end;
-    end;
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 2)
-    end;
-    ctCheck: begin
-      case aInt and not 192 of
-        0, 1, 2, 4, 8: Result := '';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
-      end;
     end;
   end;
 end;
@@ -4253,81 +4243,6 @@ begin
   end;
 end;
 
-procedure wbWATRAfterLoad(const aElement: IwbElement);
-var
-  Container: IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-//  AnimationMultiplier : Extended;
-//  AnimationAttackMultiplier : Extended;
-  OldCntr: IwbContainerElementRef;
-  NewCntr: IwbContainerElementRef;
-  i: Integer;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    if Container.ElementExists['DNAM'] then
-      Exit;
-
-    if not Supports(Container.RemoveElement('DATA - Visual Data'), IwbContainerElementRef, OldCntr) then
-      Exit;
-    if not Supports(Container.Add('DNAM', True), IwbContainerElementRef, NewCntr) then
-      Exit;
-    for i := 0 to Pred(Min(OldCntr.ElementCount, NewCntr.ElementCount)) do
-      if OldCntr.Elements[i].Name = 'Damage (Old Format)' then
-        Container.ElementNativeValues['DATA - Damage'] := OldCntr.Elements[i].NativeValue
-      else
-        NewCntr.Elements[i].Assign(Low(Integer), OldCntr.Elements[i], False);
-
-    NewCntr.ElementNativeValues['Noise Properties - Noise Layer One - Amplitude Scale'] := 1.0;
-    NewCntr.ElementNativeValues['Noise Properties - Noise Layer Two - Amplitude Scale'] := 0.5;
-    NewCntr.ElementNativeValues['Noise Properties - Noise Layer Three - Amplitude Scale'] := 0.25;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-
-procedure wbWEAPAfterLoad(const aElement: IwbElement);
-var
-  Container: IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    if not Container.ElementExists['DNAM'] then
-      Exit;
-
-    if Container.ElementNativeValues['DNAM\Animation Multiplier'] = 0.0 then
-      Container.ElementNativeValues['DNAM\Animation Multiplier'] := 1.0;
-    if Container.ElementNativeValues['DNAM\Animation Attack Multiplier'] = 0.0 then
-      Container.ElementNativeValues['DNAM\Animation Attack Multiplier'] := 1.0;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbMESGAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
@@ -4755,155 +4670,82 @@ begin
 							wbByteArray('Not Shown', 0, cpIgnore, False, wbNeverShow)
 						], cpIgnore, False, wbNeverShow);
 
-//------------------------------------------------------------------------------
-// Begin New DODT
-//------------------------------------------------------------------------------
-// Sample DODT
-// DODT - Unknown:
-// {00}            00 00 00 41 1 Min Width
-// {05}            00 00 00 42 2 Max Width
-// {09}            00 00 00 41 3 Min Height
-// {13}            00 00 00 42 4 Max Height
-// {17}            00 00 00 42 5 Depth
-// {21}            00 00 80 40 6 Shininess
-//                 ------------Parallax-----
-// {25}            00 00 80 3F 7 Scale
-// {29}            04            Passes  {This can't be higher than 30}
-//                 -------------------------
-// {30}               00         Flags
-//                       32 30 <-- Not Sure
-// {31}            FF FF FF 00   Color
-//------------------------------------------------------------------------------
   wbDODT := wbStruct(DODT, 'Decal Data', [
-   {00}       wbFloat('Min Width'),
-   {05}       wbFloat('Max Width'),
-   {09}       wbFloat('Min Height'),
-   {13}       wbFloat('Max Height'),
-   {17}       wbFloat('Depth'),
-   {21}       wbFloat('Shininess'),
-              wbStruct('Parallax', [
-   {25}         wbFloat('Scale'),
-   {29}         wbInteger('Passes', itU8) {This can't be higher than 30}
-              ]),
-   {30}       wbInteger('Flags', itU8, wbFlags([
-                {0x00000001}'Parallax',
-                {0x00000002}'Alpha - Blending',
-                {0x00000004}'Alpha - Testing',
-                {0x00000008}'No Subtextures',
-                {0x00000010}'DODT Unknown 5',
-                {0x00000020}'DODT Unknown 6',
-                {0x00000040}'DODT Unknown 7',
-                {0x00000080}'DODT Unknown 8'
-               ], True)),
-   {31}       wbByteArray('Unknown', 2),
-   {33}       wbStruct('Color', [
-                wbInteger('Red', itU8),
-                wbInteger('Green', itU8),
-                wbInteger('Blue', itU8),
-                wbByteArray('Unknown', 1)
-              ])
-            ]);
-//------------------------------------------------------------------------------
-// Begin Old DODT
-//------------------------------------------------------------------------------
-//  wbDODT := wbStruct(DODT, 'Decal Data', [
-//              wbFloat('Min Width'),
-//              wbFloat('Max Width'),
-//              wbFloat('Min Height'),
-//              wbFloat('Max Height'),
-//              wbFloat('Depth'),
-//              wbFloat('Shininess'),
-//              wbStruct('Parallax', [
-//                wbFloat('Scale'),
-//                wbInteger('Passes', itU8)
-//              ]),
-//              wbInteger('Flags', itU8, wbFlags([
-//                'Parallax',
-//                'Alpha - Blending',
-//                'Alpha - Testing'
-//              ], True)),
-//              wbByteArray('Unused', 2),
-//              wbStruct('Color', [
-//                wbInteger('Red', itU8),
-//                wbInteger('Green', itU8),
-//                wbInteger('Blue', itU8),
-//                wbByteArray('Unused', 1)
-//              ])
-//            ]);
-//------------------------------------------------------------------------------
-// End Old wbDODT
-//------------------------------------------------------------------------------
+    wbFloat('Min Width'),
+    wbFloat('Max Width'),
+    wbFloat('Min Height'),
+    wbFloat('Max Height'),
+    wbFloat('Depth'),
+    wbFloat('Shininess'),
+    wbStruct('Parallax', [
+      wbFloat('Scale'),
+      wbInteger('Passes', itU8) {This can't be higher than 30}
+    ]),
+    wbInteger('Flags', itU8, wbFlags([
+      {0x01}'Parallax',
+      {0x02}'Alpha - Blending',
+      {0x04}'Alpha - Testing',
+      {0x08}'No Subtextures'
+    ], True)),
+    wbByteArray('Unknown', 2),
+    wbStruct('Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8),
+      wbByteArray('Unknown', 1)
+    ])
+  ]);
 
-//-----------------------------------------------------------------------------
-//
-// wbDNAMActor - Unknown:
-//                 14 19 0F 14 Skill Values
-//                 14 0F 14 0F
-//                 0F 0F 0F 14
-//                 0F 0F 0F 0F
-//                 0F 0F
-//                       00 00 Skill Offsets
-//                 00 00 00 00
-//                 00 00 00 00
-//                 00 00 00 00
-//                 00 00 00 00
-//                 23 00 4B 00 Remaining
-//                 32 00 10 00
-//                 00 00 00 00
-//                 00 7E 54 00
-      wbDNAMActor := wbRStruct('Player Skills', [
-        wbStruct(DNAM, 'Player Skills', [
-		 {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
-						'OneHanded',
-						'TwoHanded',
-						'Marksman',
-						'Block',
-						'Smithing',
-						'HeavyArmor',
-						'LightArmor',
-						'Pickpocket',
-						'Lockpicking',
-						'Sneak',
-						'Alchemy',
-						'Speechcraft',
-						'Alteration',
-						'Conjuration',
-						'Destruction',
-						'Illusion',
-						'Restoration',
-						'Enchanting'
-					]),
-		 {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
-						'OneHanded',
-						'TwoHanded',
-						'Marksman',
-						'Block',
-						'Smithing',
-						'HeavyArmor',
-						'LightArmor',
-						'Pickpocket',
-						'Lockpicking',
-						'Sneak',
-						'Alchemy',
-						'Speechcraft',
-						'Alteration',
-						'Conjuration',
-						'Destruction',
-						'Illusion',
-						'Restoration',
-						'Enchanting'
-					]),
-					wbByteArray('Unknown', 4),
-					wbByteArray('Unknown', 4),
-					//wbByteArray('Unknown', 4),
-          wbFloat('Far away model distance'),
-          wbInteger('Geared up weapons', itU8),
-					wbByteArray('Unknown', 3)
-				])
-			], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
-//-----------------------------------------------------------------
-// End New Routines
-//-----------------------------------------------------------------
+  wbDNAMActor := wbRStruct('Player Skills', [
+    wbStruct(DNAM, 'Player Skills', [
+      wbArray('Skill Values', wbInteger('Skill', itU8), [
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ]),
+      wbArray('Skill Offsets', wbInteger('Skill', itU8), [
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      //wbByteArray('Unknown', 4),
+      wbFloat('Far away model distance'),
+      wbInteger('Geared up weapons', itU8),
+      wbByteArray('Unknown', 3)
+    ])
+  ], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
 
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
@@ -4915,13 +4757,15 @@ begin
     {0x00000020}'Deleted',
     {>>> 0x00000040 ACTI: Has Tree LOD <<<}
     {>>> 0x00000040 REGN: Border Region <<<}
+    {>>> 0x00000040 STAT: Has Tree LOD <<<}
     {0x00000040}'Constant/(REFR)Hidden From Local Map/(REGN)Border Region',
     {>>> 0x00000080 PHZD: Turn Off Fire <<<}
     {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
+    {>>> 0x00000080 STAT: Add-on LOD Object <<<}
     {0x00000080}'(TES4)Localized/Is Perch/(PHZD)Turn off fire/(SHOU)Treat spells as powers',
     {>>> 0x00000100 ACTI: Must Update Anims <<<}
-    {>>> 0x00020000 REFR light: Doesn't light water <<<}
-    {0x00000100}'Must Update Anims/(REFR) Inaccessible',
+    {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
+    {0x00000100}'Must Update Anims/(REFR)Inaccessible',
     {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
     {0x00000200}'Hidden from local map/Starts dead/(REFR)MotionBlurCastsShadows',
     {0x00000400}'Quest item/Persistent reference/(LSCR)Displays in Main Menu',
@@ -4929,6 +4773,7 @@ begin
     {0x00001000}'Ignored',
     {0x00002000}'Unknown 14',
     {0x00004000}'Unknown 15',
+    {>>> 0x00008000 STAT: Has Distant LOD <<<}
     {0x00008000}'VWD',
     {>>> 0x00010000 ACTI: Random Animation Start <<<}
     {>>> 0x00020000 REFR light: Never fades <<<}
@@ -4936,8 +4781,10 @@ begin
     {>>> 0x00020000 ACTI: Dangerous <<<}
     {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
     {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
+    {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
     {0x00020000}'Dangerous/Off limits/(SLGM)Can Hold NPC',
     {0x00040000}'Compressed',
+    {>>> 0x00080000 STAT: Has Currents <<<}
     {0x00080000}'Can''t wait',
     {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
     {0x00100000}'Ignore Object Interaction',
@@ -4949,14 +4796,15 @@ begin
     {>>> 0x02000000 ACTI: Obstacle <<<}
     {0x02000000}'Obstacle/(REFR)No AI Acquire',
     {>>> 0x03000000 ACTI: Filter <<<}
-    {0x03000000}'NavMesh Gen - Filter',
+    {0x03000000}'NavMesh Filter',
     {>>> 0x08000000 ACTI: Bounding Box <<<}
-    {0x08000000}'NavMesh Gen - Bounding Box',
+    {0x08000000}'NavMesh Bounding Box',
+    {>>> 0x10000000 STAT: Show in World Map <<<}
     {0x10000000}'Must Exit to Talk',
     {>>> 0x20000000 ACTI: Child Can Use <<<}
     {0x20000000}'Child Can Use/(REFR)Don''t Havok Settle',
     {>>> 0x40000000 ACTI: GROUND <<<}
-    {0x40000000}'NavMesh Gen - Ground/(REFR) NoRespawn',
+    {0x40000000}'NavMesh Ground/(REFR) NoRespawn',
     {0x80000000}'(REFR)MultiBound'
   ]));
 
@@ -5844,12 +5692,13 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL, // wbMODL MODL, MODB, MODT, MODS, MODD
-    wbDEST, // wbDEST DEST, DSTD, DMDL, DMDT, DSTF
+    wbMODLReq,
+    wbDEST,
     wbKeywords,
-    wbUnknown(PNAM, cpNormal, True),
-    wbUnknown(FNAM, cpNormal, True),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR])
+    wbUnknown(PNAM, cpIgnore, True),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
+    wbUnknown(FNAM, cpIgnore, True),
+    wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ]);
 
   wbICON := wbRStruct('Icon', [
@@ -7559,10 +7408,26 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SPGD, 'SPGD', [
+  wbRecord(SPGD, 'Shader Particle Geometry', [
     wbEDIDReq,
-    wbUnknown(DATA),
-    wbString(ICON, 'File Name')
+    wbStruct(DATA, 'Data', [
+      wbFloat('Gravity Velocity'),
+      wbFloat('Rotation Velocity'),
+      wbFloat('Particle Size X'),
+      wbFloat('Particle Size Y'),
+      wbFloat('Center Offset Min'),
+      wbFloat('Center Offset Max'),
+      wbFloat('Initial Rotation Range'),
+      wbInteger('# of Subtextures X', itU32),
+      wbInteger('# of Subtextures Y', itU32),
+      wbInteger('Type', itU32, wbEnum([
+        'Rain',
+        'Snow'
+      ])),
+      wbInteger('Box Size', itU32),
+      wbFloat('Particle Density')
+    ], cpNormal, True, nil, 10),
+    wbString(ICON, 'Particle Texture')
   ]);
 
   wbRecord(RFCT, 'Visual Effect', [
@@ -8504,32 +8369,19 @@ begin
     wbRStruct('Textures (RGB/A)', [
       wbString(TX00,'Difuse'),
       wbString(TX01,'Normal/Gloss'),
-      wbString(TX02,'Environment Mask'),
-      wbString(TX03,'Glow/SubSurface Tint'),
+      wbString(TX02,'Environment Mask/Subsurface Tint'),
+      wbString(TX03,'Glow/Detail Map'),
       wbString(TX04,'Height'),
       wbString(TX05,'Environment'),
       wbString(TX06,'Multilayer'),
-      wbString(TX07,'Backlight Mask')
+      wbString(TX07,'Backlight Mask/Specular')
     ], []),
     wbDODT,
-    wbInteger(DNAM, 'DNAM Record Flags', itU16, wbFlags([
-      {0x00000001}'No Specular Map',
-      {0x00000002}'Facegen Textures',
-      {0x00000004}'Has Model Space Normal Map',
-      {0x00000008}'DNAM Unknown 4',
-      {0x00000010}'DNAM Unknown 5',
-      {0x00000020}'DNAM Unknown 6',
-      {0x00000040}'DNAM Unknown 7',
-      {0x00000080}'DNAM Unknown 8',
-      {0x00000100}'DNAM Unknown 9',
-      {0x00000200}'DNAM Unknown 10',
-      {0x00000400}'DNAM Unknown 11',
-      {0x00000800}'DNAM Unknown 12',
-      {0x00001000}'DNAM Unknown 13',
-      {0x00002000}'DNAM Unknown 14',
-      {0x00004000}'DNAM Unknown 15',
-      {0x00008000}'DNAM Unknown 16'
-    ]))
+    wbInteger(DNAM, 'Flags', itU16, wbFlags([
+      {0x0001}'No Specular Map',
+      {0x0002}'Facegen Textures',
+      {0x0004}'Has Model Space Normal Map'
+    ]), cpNormal, True)
   ]);
 
   wbRecord(MICN, 'Menu Icon', [
@@ -9989,9 +9841,9 @@ begin
   wbRecord(MUST, 'MUST', [
     wbEDIDReq,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
-      $23F678C3, 'Palette',
-      $6ED7E048, 'Single Track',
-      $A1A9C4D5, 'Silent Track' {>>> BUG this value is not recognized <<<}
+      Int64($23F678C3), 'Palette',
+      Int64($6ED7E048), 'Single Track',
+      Int64($A1A9C4D5), 'Silent Track'
     ]), cpNormal, True),
     wbFloat(FLTV, 'Duration'),
     wbFloat(DNAM, 'Fade-Out'),
@@ -10019,13 +9871,13 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(WOOP, 'WOOP', [
+  wbRecord(WOOP, 'Word of Power', [
     wbEDIDReq,
     wbFULL,
-    wbUnknown(TNAM)
+    wbLString(TNAM, 'Translation', 0, cpNormal, True)
   ]);
 
-  wbRecord(SHOU, 'SHOU', [
+  wbRecord(SHOU, 'Shout', [
     wbEDIDReq,
     wbFULL,
     wbMDOB,
@@ -12950,7 +12802,7 @@ begin
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
   ]);
 
-  wbSPIT := wbStruct(SPIT, '', [
+  wbSPIT := wbStruct(SPIT, 'Data', [
     wbInteger('Base Cost', itU32),
     wbInteger('Flags', itU32, wbFlags([
       {0x00000001} 'Manual Cost Calc',
@@ -13008,7 +12860,7 @@ begin
     wbFormIDCk('Half-cost Perk', [PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Actor Effect', [
+  wbRecord(SPEL, 'Spell', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -13020,7 +12872,7 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(SCRL, 'SCRL', [
+  wbRecord(SCRL, 'Scroll', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
@@ -13043,25 +12895,23 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODL,
-    {Unused in this record for TES5
-    wbInteger(BRUS, 'Passthrough Sound', itS8, wbEnum([
-      'BushA',
-      'BushB',
-      'BushC',
-      'BushD',
-      'BushE',
-      'BushF',
-      'BushG',
-      'BushH',
-      'BushI',
-      'BushJ'
-    ], [
-      -1, 'NONE'
-    ])),
-    wbFormIDCk(RNAM, 'Sound - Looping/Random', [SOUN])}
-    wbUnknown(DNAM),
-    wbUnknown(MNAM)
- ]);
+    wbStruct(DNAM, 'Direction Material', [
+      wbFloat('Max Angle (30-120)'),
+      wbFormIDCk('Material', [MATO, NULL])
+    ], cpNormal, True),
+    wbArray(MNAM, 'Distant LOD',
+      wbStruct('LOD', [
+        {>>> Contains null-terminated mesh filename followed by random data up to 260 bytes <<<}
+        wbByteArray('Unknown', 260, cpIgnore)
+      ]), [
+        'Level 0',
+        'Level 1',
+        'Level 2',
+        'Level 3'
+      ],
+      cpNormal, False
+    )
+  ]);
 
   wbRecord(TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
@@ -13090,29 +12940,21 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbFormIDCK(PFIG, 'Magic Effect', [INGR, ALCH, NULL]),
-    wbUnknown(PFIG),
-    wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
-    wbUnknown(PFPC),
+    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, NULL]),
+    wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
+    wbStruct(PFPC, 'Ingredient Production', [
+      wbInteger('Spring', itU8),
+      wbInteger('Summer', itU8),
+      wbInteger('Fall', itU8),
+      wbInteger('Winter', itU8)
+    ]),
     wbFULL,
-    wbICONReq,
     wbStruct(CNAM, 'Tree Data', [
-      wbFloat('Leaf Curvature'),
-      wbFloat('Minimum Leaf Angle'),
-      wbFloat('Maximum Leaf Angle'),
-      wbFloat('Branch Dimming Value'),
-      wbFloat('Leaf Dimming Value'),
-      wbInteger('Shadow Radius', itS32),
-      wbFloat('Rock Speed'),
-      wbFloat('Rustle Speed'),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, True),
-    wbStruct(BNAM, 'Billboard Dimensions', [
-      wbFloat('Width'),
-      wbFloat('Height')
+      wbFloat('Trunk Flexibility'),
+      wbFloat('Branch Flexibility'),
+      wbByteArray('Unknown', 32),
+      wbFloat('Leaf Amplitude'),
+      wbFloat('Leaf Frequency')
     ], cpNormal, True)
   ]);
 
@@ -13140,168 +12982,104 @@ begin
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
-    wbRArray('Array of Noise Maps', wbRStruct('Noise Maps', [
-      wbString(NNAM, 'Noise Map')
-    ], [])),
+    wbRArray('Unused', wbByteArray(NNAM, 'Unused', 0, cpIgnore, True)), // leftover
     wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0}'Causes Damage',
-      {1}'Reflective'
-    ]), cpNormal, True),
-    wbString(MNAM, 'Material ID', 0, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SNDR, NULL]),
-    wbUnknown(TNAM),
-    wbUnknown(INAM),
-    wbFormIDCk(XNAM, 'Actor Effect', [SPEL]),
-    wbInteger(DATA, 'Damage', itU16, nil, cpNormal, True, True),
-    wbRUnion('Visual Data', [
-      wbStruct(DNAM, 'Visual Data', [
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Water Properties - Sun Power'),
-        wbFloat('Water Properties - Reflectivity Amount'),
-        wbFloat('Water Properties - Fresnel Amount'),
-        wbByteArray('Unknown', 4),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-        wbStruct('Shallow Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Deep Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Reflection Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbByteArray('Unknown', 4),
-        wbFloat('Rain Simulator - Force'),
-        wbFloat('Rain Simulator - Velocity'),
-        wbFloat('Rain Simulator - Falloff'),
-        wbFloat('Rain Simulator - Dampner'),
-        wbFloat('Displacement Simulator - Starting Size'),
-        wbFloat('Displacement Simulator - Force'),
-        wbFloat('Displacement Simulator - Velocity'),
-        wbFloat('Displacement Simulator - Falloff'),
-        wbFloat('Displacement Simulator - Dampner'),
-        wbFloat('Rain Simulator - Starting Size'),
-        wbFloat('Noise Properties - Normals - Noise Scale'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Speed'),
-        wbFloat('Noise Properties - Normals - Depth Falloff Start'),
-        wbFloat('Noise Properties - Normals - Depth Falloff End'),
-        wbFloat('Fog Properties - Above Water - Fog Amount'),
-        wbFloat('Noise Properties - Normals - UV Scale'),
-        wbFloat('Fog Properties - Under Water - Fog Amount'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
-        wbFloat('Water Properties - Distortion Amount'),
-        wbFloat('Water Properties - Shininess'),
-        wbFloat('Water Properties - Reflection HDR Multiplier'),
-        wbFloat('Water Properties - Light Radius'),
-        wbFloat('Water Properties - Light Brightness'),
-        wbFloat('Noise Properties - Noise Layer One - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Two - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Three - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer One - Amplitude Scale'),
-        wbFloat('Noise Properties - Noise Layer Two - Amplitude Scale'),
-        wbFloat('Noise Properties - Noise Layer Three - Amplitude Scale'),
-        wbByteArray('Unknown', 0)
-      ], cpNormal, True),
-//      ], cpNormal, True, nil, 46),
-      wbStruct(DATA, 'Visual Data', [
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Water Properties - Sun Power'),
-        wbFloat('Water Properties - Reflectivity Amount'),
-        wbFloat('Water Properties - Fresnel Amount'),
-        wbByteArray('Unknown', 4),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-        wbStruct('Shallow Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Deep Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Reflection Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbByteArray('Unknown', 4),
-        wbFloat('Rain Simulator - Force'),
-        wbFloat('Rain Simulator - Velocity'),
-        wbFloat('Rain Simulator - Falloff'),
-        wbFloat('Rain Simulator - Dampner'),
-        wbFloat('Displacement Simulator - Starting Size'),
-        wbFloat('Displacement Simulator - Force'),
-        wbFloat('Displacement Simulator - Velocity'),
-        wbFloat('Displacement Simulator - Falloff'),
-        wbFloat('Displacement Simulator - Dampner'),
-        wbFloat('Rain Simulator - Starting Size'),
-        wbFloat('Noise Properties - Normals - Noise Scale'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Direction'),
-        wbFloat('Noise Properties - Noise Layer One - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Two - Wind Speed'),
-        wbFloat('Noise Properties - Noise Layer Three - Wind Speed'),
-        wbFloat('Noise Properties - Normals - Depth Falloff Start'),
-        wbFloat('Noise Properties - Normals - Depth Falloff End'),
-        wbFloat('Fog Properties - Above Water - Fog Amount'),
-        wbFloat('Noise Properties - Normals - UV Scale'),
-        wbFloat('Fog Properties - Under Water - Fog Amount'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
-        wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
-        wbFloat('Water Properties - Distortion Amount'),
-        wbFloat('Water Properties - Shininess'),
-        wbFloat('Water Properties - Reflection HDR Multiplier'),
-        wbFloat('Water Properties - Light Radius'),
-        wbFloat('Water Properties - Light Brightness'),
-        wbFloat('Noise Properties - Noise Layer One - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Two - UV Scale'),
-        wbFloat('Noise Properties - Noise Layer Three - UV Scale'),
-        wbEmpty('Noise Properties - Noise Layer One - Amplitude Scale'),
-        wbEmpty('Noise Properties - Noise Layer Two - Amplitude Scale'),
-        wbEmpty('Noise Properties - Noise Layer Three - Amplitude Scale'),
-        wbInteger('Damage (Old Format)', itU16)
-      ], cpNormal, True)
-    ], [], cpNormal, True),
-    wbStruct(GNAM, 'Related Waters (Unused)', [
-      wbFormIDCk('Daytime', [WATR, NULL]),
-      wbFormIDCk('Nighttime', [WATR, NULL]),
-      wbFormIDCk('Underwater', [WATR, NULL])
+    wbInteger(FNAM, 'Flags', itU8, wbFlags(['Causes Damage']), cpNormal, True),
+    wbByteArray(MNAM, 'Unused', 0, cpIgnore, True),  // leftover
+    wbFormIDCk(TNAM, 'Material', [MATO]),
+    wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
+    wbFormIDCk(XNAM, 'Spell', [SPEL]),
+    wbFormIDCk(INAM, 'Image Space', [IMGS]),
+    wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True),
+    wbStruct(DNAM, 'Visual Data', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Specular Properties - Sun Specular Power'),
+      wbFloat('Water Properties - Reflectivity Amount'),
+      wbFloat('Water Properties - Fresnel Amount'),
+      wbByteArray('Unknown', 4),
+      wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
+      wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
+      wbStruct('Shallow Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbStruct('Deep Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbStruct('Reflection Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Displacement Simulator - Starting Size'),
+      wbFloat('Displacement Simulator - Force'),
+      wbFloat('Displacement Simulator - Velocity'),
+      wbFloat('Displacement Simulator - Falloff'),
+      wbFloat('Displacement Simulator - Dampner'),
+      wbFloat('Unknown'),
+      wbFloat('Noise Properties - Noise Falloff'),
+      wbFloat('Noise Properties - Layer One - Wind Direction'),
+      wbFloat('Noise Properties - Layer Two - Wind Direction'),
+      wbFloat('Noise Properties - Layer Three - Wind Direction'),
+      wbFloat('Noise Properties - Layer One - Wind Speed'),
+      wbFloat('Noise Properties - Layer Two - Wind Speed'),
+      wbFloat('Noise Properties - Layer Three - Wind Speed'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Fog Properties - Above Water - Fog Amount'),
+      wbFloat('Unknown'),
+      wbFloat('Fog Properties - Under Water - Fog Amount'),
+      wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
+      wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
+      wbFloat('Water Properties - Refraction Magnitude'),
+      wbFloat('Specular Properties - Specular Power'),
+      wbFloat('Unknown'),
+      wbFloat('Specular Properties - Specular Radius'),
+      wbFloat('Specular Properties - Specular Brightness'),
+      wbFloat('Noise Properties - Layer One - UV Scale'),
+      wbFloat('Noise Properties - Layer Two - UV Scale'),
+      wbFloat('Noise Properties - Layer Three - UV Scale'),
+      wbFloat('Noise Properties - Layer One - Amplitude Scale'),
+      wbFloat('Noise Properties - Layer Two - Amplitude Scale'),
+      wbFloat('Noise Properties - Layer Three - Amplitude Scale'),
+      wbFloat('Water Properties - Reflection Magnitude'),
+      wbFloat('Specular Properties - Sun Sparkle Magnitude'),
+      wbFloat('Specular Properties - Sun Specular Magnitude'),
+      wbFloat('Depth Properties - Reflections'),
+      wbFloat('Depth Properties - Refraction'),
+      wbFloat('Depth Properties - Normals'),
+      wbFloat('Depth Properties - Specular Lighting'),
+      wbFloat('Specular Properties - Sun Sparkle Power')
+    ]),
+    wbByteArray(GNAM, 'Unused', 0, cpIgnore, True),  // leftover
+    wbStruct(NAM0, 'Linear Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
     ], cpNormal, True),
-    wbUnknown(NAM0),
-    wbUnknown(NAM1),
-    wbUnknown(NAM2),
-    wbUnknown(NAM3),
-    wbUnknown(NAM4)
-  ], False, nil, cpNormal, False, wbWATRAfterLoad);
+    wbStruct(NAM1, 'Angular Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
+    ], cpNormal, True),
+    wbString(NAM2, 'Noise Texture', 0, cpNormal, True),
+    wbString(NAM3, 'Unused', 0, cpIgnore),  // leftover
+    wbString(NAM4, 'Unused', 0, cpIgnore)  // leftover
+  ], False, nil, cpNormal, False);
 
   wbRecord(WEAP, 'Weapon', [
     wbEDIDReq,
@@ -13310,295 +13088,135 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbSCRI,
     wbEITM,
-    wbInteger(EAMT, 'Enchantment Charge Amount', itS16),
-    wbFormIDCkNoReach(NAM0, 'Ammo', [AMMO, FLST]),
+    wbInteger(EAMT, 'Enchantment Amount', itU16),
     wbDEST,
-    wbREPL,
-    wbETYPReq,
-    wbUnknown(BIDS),
-    wbUnknown(BAMT),
+    wbETYP,
+    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
+    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
+    wbSounds,
     wbKeywords,
     wbDESC,
-    wbBIPL,
-    wbSounds,
-    wbRStruct('Shell Casing Model', [
-      wbString(MOD2, 'Model Filename'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO2S
-    ], []),
-    wbRStruct('Scope Model', [
-      wbString(MOD3, 'Model Filename'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO3S
-    ], []),
-    wbFormIDCK(EFSD, 'Scope Effect', [EFSH]),
-    wbRStruct('World Model', [
-      wbString(MOD4, 'Model Filename'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO4S
-    ], []),
-    wbRStruct('Model with Mods', [
-      wbString(MWD1, 'Mod 1'),
-      wbString(MWD2, 'Mod 2'),
-      wbString(MWD3, 'Mod 1 and 2'),
-      wbString(MWD4, 'Mod 3'),
-      wbString(MWD5, 'Mod 1 and 3'),
-      wbString(MWD6, 'Mod 2 and 3'),
-      wbString(MWD7, 'Mod 1, 2 and 3')
-    ], [], cpNormal, False, nil, True),
-
-    wbString(VANM, 'VATS Attack Name'),
-    wbString(NNAM, 'Embedded Weapon Node'),
-
-    wbFormIDCk(INAM, 'Impact DataSet', [IPDS]),
-    wbFormIDCk(WNAM, '1st Person Model', [STAT]),
-    wbRStruct('1st Person Models with Mods', [
-      wbFormIDCk(WNM1, 'Mod 1', [STAT]),
-      wbFormIDCk(WNM2, 'Mod 2', [STAT]),
-      wbFormIDCk(WNM3, 'Mod 1 and 2', [STAT]),
-      wbFormIDCk(WNM4, 'Mod 3', [STAT]),
-      wbFormIDCk(WNM5, 'Mod 1 and 3', [STAT]),
-      wbFormIDCk(WNM6, 'Mod 2 and 3', [STAT]),
-      wbFormIDCk(WNM7, 'Mod 1, 2 and 3', [STAT])
-    ], [], cpNormal, False, nil, True),
-    wbRStruct('Weapon Mods', [
-      wbFormIDCk(WMI1, 'Mod 1', [IMOD]),
-      wbFormIDCk(WMI2, 'Mod 2', [IMOD]),
-      wbFormIDCk(WMI3, 'Mod 3', [IMOD])
-    ], [], cpNormal, False, nil, True),
-    wbFormIDCk(SNAM, 'Sound - Gun - Shoot 3D', [SOUN]),
-    wbFormIDCk(SNAM, 'Sound - Gun - Shoot Dist', [SOUN]),
-    wbFormIDCk(XNAM, 'Sound - Gun - Shoot 2D', [SOUN]),
-    wbFormIDCk(NAM7, 'Sound - Gun - Shoot 3D Looping', [SOUN]),
-    wbFormIDCk(TNAM, 'Sound - Melee - Swing / Gun - No Ammo', [SOUN]),
-    wbFormIDCk(NAM6, 'Sound - Block', [SOUN]),
-    wbFormIDCk(UNAM, 'Sound - Idle', [SOUN]),
-    wbFormIDCk(NAM9, 'Sound - Equip', [SOUN]),
-    wbFormIDCk(NAM8, 'Sound - Unequip', [SOUN]),
-    wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot 3D', [SOUN]),
-    wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot Dist', [SOUN]),
-    wbFormIDCk(WMS2, 'Sound - Mod 1 - Shoot 2D', [SOUN]),
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbInteger('Health', itS32),
+    wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
+    wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
+    wbFormIDCk(WNAM, '1st Person Model Object', [STAT, NULL]),
+    wbFormIDCk(SNAM, 'Attack Sound', [SNDR]),
+    wbFormIDCk(XNAM, 'Attack Sound 2D', [SNDR]),
+    wbFormIDCk(NAM7, 'Attack Loop Sound', [SNDR]),
+    wbFormIDCk(TNAM, 'Attack Fail Sound', [SNDR]),
+    wbFormIDCk(UNAM, 'Idle Sound', [SNDR]),
+    wbFormIDCk(NAM9, 'Equip Sound', [SNDR]),
+    wbFormIDCk(NAM8, 'Unequip Sound', [SNDR]),
+    wbStruct(DATA, 'Game Data', [
+      wbInteger('Value', itU32),
       wbFloat('Weight'),
-      wbInteger('Base Damage', itS16),
-      wbInteger('Clip Size', itU8)
-    ], cpNormal, True),
-    wbStruct(DNAM, '', [
-      {00} wbInteger('Animation Type', itU32, wbWeaponAnimTypeEnum),
-      {04} wbFloat('Animation Multiplier'),
-      {08} wbFloat('Reach'),
-      {12} wbInteger('Flags 1', itU8, wbFlags([
-        'Ignores Normal Weapon Resistance',
-        'Is Automatic',
-        'Has Scope',
-        'Can''t Drop',
-        'Hide Backpack',
-        'Embedded Weapon',
-        'Don''t Use 1st Person IS Animations',
-        'Non-Playable'
+      wbInteger('Damage', itU16)
+    ]),
+    wbStruct(DNAM, 'Data', [
+      wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
+      wbByteArray('Unknown', 3),
+      wbFloat('Speed'),
+      wbFloat('Reach'),
+      wbInteger('Flags', itU16, wbFlags([
+        {0x0001}'Ignores Normal Weapon Resistance',
+        {0x0002}'Automatic (unused)',
+        {0x0004}'Has Scope (unused)',
+        {0x0008}'Can''t Drop',
+        {0x0010}'Hide Backpack (unused)',
+        {0x0020}'Embedded Weapon (unused)',
+        {0x0040}'Don''t Use 1st Person IS Anim (unused)',
+        {0x0080}'Non-playable'
       ])),
-      {13} wbInteger('Grip Animation', itU8, wbEnum([
-      ], [
-        230, 'HandGrip1',
-        231, 'HandGrip2',
-        232, 'HandGrip3',
-        233, 'HandGrip4',
-        234, 'HandGrip5',
-        235, 'HandGrip6',
-        255, ' DEFAULT'
+      wbByteArray('Unknown', 2),
+      wbFloat('Sight FOV'),
+      wbByteArray('Unknown', 4),
+      wbInteger('Base VATS To-Hit Chance', itU8),
+      wbInteger('Attack Animation', itU8, wbAttackAnimationEnum),
+      wbInteger('# Projectiles', itU8),
+      wbInteger('Embedded Weapon AV (unused)', itU8),
+      wbFloat('Range Min'),
+      wbFloat('Range Max'),
+      wbInteger('On Hit', itU32, wbEnum([
+        'No formula behaviour',
+        'Dismember only',
+        'Explode only',
+        'No dismember/explode'
       ])),
-      {14} wbInteger('Ammo Use', itU8),
-      {15} wbInteger('Reload Animation', itU8, wbReloadAnimEnum),
-      {16} wbFloat('Min Spread'),
-      {20} wbFloat('Spread'),
-      {24} wbFloat('Unknown'),
-      {28} wbFloat('Sight FOV'),
-      {32} wbFloat,
-      {36} wbFormIDCk('Projectile', [PROJ, NULL]),
-      {40} wbInteger('Base VATS To-Hit Chance', itU8),
-      {41} wbInteger('Attack Animation', itU8, wbEnum([
-           ], [
-             26, 'AttackLeft',
-             32, 'AttackRight',
-             38, 'Attack3',
-             44, 'Attack4',
-             50, 'Attack5',
-             56, 'Attack6',
-             62, 'Attack7',
-             68, 'Attack8',
-            144, 'Attack9',
-             74, 'AttackLoop',
-             80, 'AttackSpin',
-             86, 'AttackSpin2',
-            114, 'AttackThrow',
-            120, 'AttackThrow2',
-            126, 'AttackThrow3',
-            132, 'AttackThrow4',
-            138, 'AttackThrow5',
-            150, 'AttackThrow6',
-            156, 'AttackThrow7',
-            162, 'AttackThrow8',
-            102, 'PlaceMine',
-            108, 'PlaceMine2',
-            255, ' DEFAULT'
-           ])),
-      {42} wbInteger('Projectile Count', itU8),
-      {43} wbInteger('Embedded Weapon - Actor Value', itU8, wbEnum([
-        {00} 'Perception',
-        {01} 'Endurance',
-        {02} 'Left Attack',
-        {03} 'Right Attack',
-        {04} 'Left Mobility',
-        {05} 'Right Mobilty',
-        {06} 'Brain'
-      ])),
-      {44} wbFloat('Min Range'),
-      {48} wbFloat('Max Range'),
-      {52} wbInteger('On Hit', itU32, wbEnum([
-        'Normal formula behavior',
-        'Dismember Only',
-        'Explode Only',
-        'No Dismember/Explode'
-      ])),
-      {56} wbInteger('Flags 2', itU32, wbFlags([
+      wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Player Only',
         {0x00000002}'NPCs Use Ammo',
-        {0x00000004}'No Jam After Reload',
-        {0x00000008}'Override - Action Points',
+        {0x00000004}'No Jam After Reload (unused)',
+        {0x00000008}'Unknown 4',
         {0x00000010}'Minor Crime',
-        {0x00000020}'Range - Fixed',
-        {0x00000040}'Not Used In Normal Combat',
-        {0x00000080}'Override - Damage to Weapon Mult',
-        {0x00000100}'Don''t Use 3rd Person IS Animations',
-        {0x00000200}'Short Burst',
-        {0x00000400}'Rumble Alternate',
-        {0x00000800}'Long Burst',
-        {0x00001000}'Scope has NightVision',
-        {0x00002000}'Scope from Mod'
+        {0x00000020}'Range Fixed',
+        {0x00000040}'Not Used in Normal Combat',
+        {0x00000080}'Unknown 8',
+        {0x00000100}'Don''t Use 3rd Person IS Anim (unused)',
+        {0x00000200}'Unknown 10',
+        {0x00000400}'Rumble - Alternate',
+        {0x00000800}'Unknown 12',
+        {0x00001000}'Non-hostile',
+        {0x00002000}'Bound Weapon'
       ])),
-      {60} wbFloat('Animation Attack Multiplier'),
-      {64} wbFloat('Fire Rate'),
-      {68} wbFloat('Override - Action Points'),
-      {72} wbFloat('Rumble - Left Motor Strength'),
-      {76} wbFloat('Rumble - Right Motor Strength'),
-      {80} wbFloat('Rumble - Duration'),
-      {84} wbFloat('Override - Damage to Weapon Mult'),
-      {88} wbFloat('Attack Shots/Sec'),
-      {92} wbFloat('Reload Time'),
-      {96} wbFloat('Jam Time'),
-     {100} wbFloat('Aim Arc'),
-     {104} wbInteger('Skill', itS32, wbActorValueEnum),
-     {108} wbInteger('Rumble - Pattern', itU32, wbEnum([
-       'Constant',
-       'Square',
-       'Triangle',
-       'Sawtooth'
-     ])),
-     {112} wbFloat('Rumble - Wavelength'),
-     {116} wbFloat('Limb Dmg Mult'),
-     {120} wbInteger('Resist Type', itS32, wbActorValueEnum),
-     {124} wbFloat('Sight Usage'),
-     {128} wbFloat('Semi-Automatic Fire Delay Min'),
-     {132} wbFloat('Semi-Automatic Fire Delay Max'),
-     wbFloat,
-     wbInteger('Effect - Mod 1', itU32, wbModEffectEnum),
-     wbInteger('Effect - Mod 2', itU32, wbModEffectEnum),
-     wbInteger('Effect - Mod 3', itU32, wbModEffectEnum),
-     wbFloat('Value A - Mod 1'),
-     wbFloat('Value A - Mod 2'),
-     wbFloat('Value A - Mod 3'),
-     wbInteger('Power Attack Animation Override', itU32, wbEnum([
-     ], [
-        0, '0?',
-       97, 'AttackCustom1Power',
-       98, 'AttackCustom2Power',
-       99, 'AttackCustom3Power',
-      100, 'AttackCustom4Power',
-      101, 'AttackCustom5Power',
-      255, ' DEFAULT'
-     ])),
-     wbInteger('Strength Req', itU32),
-     wbByteArray('Unknown', 1),
-     wbInteger('Reload Animation - Mod', itU8, wbReloadAnimEnum),
-     wbByteArray('Unknown', 2),
-     wbFloat('Regen Rate'),
-     wbFloat('Kill Impulse'),
-     wbFloat('Value B - Mod 1'),
-     wbFloat('Value B - Mod 2'),
-     wbFloat('Value B - Mod 3'),
-     wbFloat('Impulse Dist'),
-     wbInteger('Skill Req', itU32)
-    ], cpNormal, True, nil, 36),
-
-   wbStruct(CRDT, 'Critical Data', [
-      {00} wbInteger('Critical Damage', itU16),
-      {09} wbByteArray('Unknown', 2),
-      {04} wbFloat('Crit % Mult'),
-      {08} wbInteger('Flags', itU8, wbFlags([
+      wbFloat('Animation Attack Mult'),
+      wbByteArray('Unknown', 4),
+      wbFloat('Rumble - Left Motor Strength'),
+      wbFloat('Rumble - Right Motor Strength'),
+      wbFloat('Rumble - Duration'),
+      wbByteArray('Unknown', 12),
+      wbInteger('Skill', itS32, wbSkillEnum),
+      wbByteArray('Unknown', 8),
+      wbInteger('Resist', itS32, wbActorValueEnum),
+      wbByteArray('Unknown', 4),
+      wbFloat('Stagger')
+    ]),
+    wbStruct(CRDT, 'Critical Data', [
+      wbInteger('Damage', itU32),
+      wbFloat('% Mult'),
+      wbInteger('Flags', itU8, wbFlags([
         'On Death'
       ])),
-      {09} wbByteArray('Unknown', 3),
-      {12} wbFormIDCk('Effect', [SPEL, NULL])
-    ], cpNormal, True),
-    wbStruct(VATS, 'VATS', [
-     wbFormIDCk('Effect',[SPEL, NULL]),
-     wbFloat('Skill'),
-     wbFloat('Dam. Mult'),
-     wbFloat('AP'),
-     wbInteger('Silent', itU8, wbEnum(['No', 'Yes'])),
-     wbInteger('Mod Required', itU8, wbEnum(['No', 'Yes'])),
-     wbByteArray('Unknown', 2)
+      wbByteArray('Unknown', 3),
+      wbFormIDCk('Effect', [SPEL])
     ]),
-    wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
-    wbFormID(CNAM, 'Unknown')
-  ], False, nil, cpNormal, False, wbWEAPAfterLoad);
+    wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
+    wbFormIDCk(CNAM, 'Template', [WEAP])
+  ], False, nil, cpNormal, False);
 
   wbRecord(WRLD, 'Worldspace', [
     wbEDIDReq,
-    wbRArray('Array RNAM', wbRStruct('Unknown', [
-      wbUnknown(RNAM)
-    ], [])),
-    wbUnknown(MHDT),
+    {>>> BEGIN leftover from earlier CK versions <<<}
+    {>>> There are A LOT of those in skyrim.esm, should be probably removed like OSFT <<<}
+    wbRArray('Unused', wbUnknown(RNAM), cpIgnore),
+    wbByteArray(MHDT, 'Unused', 0, cpIgnore),
+    {>>> END leftover from earlier CK versions <<<}
     wbFULL,
-    wbRStruct('Unknonw', [
-      wbUnknown(WCTR),
-      wbUnknown(LTMP)
-    ], []),
-    wbRStruct('XLCN XEZN', [
-      wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN])
-    ], []),
-    wbRStruct('XEZN XLCN', [
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbFormIDCk(XLCN, 'Location', [LCTN, NULL])
-    ], []),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU16, wbFlags([
-          {0x00000001}'Use Land Data',
-          {0x00000002}'Use LOD Data',
-          {0x00000004}'Use Map Data',
-          {0x00000008}'Use Water Data',
-          {0x00000010}'Use Climate Data',
-          {0x00000020}'Use Image Space Data',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8',
-          {0x00000100}'Unknown 9',
-          {0x00000200}'Unknown 10',
-          {0x00000400}'Unknown 11',
-          {0x00000800}'Unknown 12',
-          {0x00001000}'Unknown 13',
-          {0x00002000}'Unknown 14',
-          {0x00004000}'Unknown 15',
-          {0x00008000}'Unknown 16'
-        ], True))
-      ], cpNormal, True)
-    ], []),
+    wbStruct(WCTR, 'Fixed Dimesions Center Cell', [
+      wbInteger('X', itU16),
+      wbInteger('Y', itU16)
+    ]),
+    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
+    wbInteger(PNAM, 'Use Flags', itU16, wbFlags([
+      {0x0001}'Use Land Data',
+      {0x0002}'Use LOD Data',
+      {0x0004}'Don''t Use Map Data',
+      {0x0008}'Use Water Data',
+      {0x0010}'Use Climate Data',
+      {0x0020}'Unknown 6',
+      {0x0040}'Use Sky Cell',
+      {0x0080}'Unknown 8',
+      {0x0100}'Unknown 9',
+      {0x0200}'Unknown 10',
+      {0x0400}'Unknown 11',
+      {0x0800}'Unknown 12',
+      {0x1000}'Unknown 13',
+      {0x2000}'Unknown 14',
+      {0x4000}'Unknown 15',
+      {0x8000}'Unknown 16'
+    ], True)),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
@@ -13607,9 +13225,9 @@ begin
       wbFloat('Default Land Height'),
       wbFloat('Default Water Height')
     ]),
-    wbICON,
+    wbString(ICON, 'Map Image'),
     wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
+      wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
@@ -13625,133 +13243,87 @@ begin
       ])
     ]),
     wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'), // 'World Map Scale'
-      wbFloat('Cell X Offset'), // 'Cell X Offset'
-      wbFloat('Cell Y Offset'), // 'Cell Y Offset'
-      wbFloat('Unknown')
+      wbFloat('World Map Scale'),
+      wbFloat('Cell X Offset', cpNormal, False, 1/4096),
+      wbFloat('Cell Y Offset', cpNormal, False, 1/4096),
+      wbFloat('Cell Z Offset', cpNormal, False, 1/4096)
     ], cpNormal, True),
-    wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbFloat(NAMA, 'Unknown'),
+    wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small World',
       {0x02} 'Can''t Fast Travel',
       {0x04} 'Unknown 3',
-      {0x08} 'Unknown 4',
-      {0x10} 'No LOD Water',
-      {0x20} 'No LOD Noise',
-      {0x40} 'Don''t Allow NPC Fall Damage',
-      {0x80} 'Needs Water Adjustment'
+      {0x08} 'No LOD Water',
+      {0x10} 'No Landscape',
+      {0x20} 'Unknown 6',
+      {0x40} 'Fixed Dimensions',
+      {0x80} 'No Grass'
     ]), cpNormal, True),
+    {>>> Object Bounds doesn't show up in CK <<<}
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True)
-    ], [], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-    wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-    wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-      wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-      wbFormIDCkNoReach('Old', [IPCT]),
-      wbFormIDCk('New', [IPCT, NULL])
-    ])),
-    wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
-      'ConcSolid',
-      'ConcBroken',
-      'MetalSolid',
-      'MetalHollow',
-      'MetalSheet',
-      'Wood',
-      'Sand',
-      'Dirt',
-      'Grass',
-      'Water'
-    ]),
-    wbUnknown(TNAM),
-    wbUnknown(UNAM),
-    wbUnknown(XWEM),
-    wbByteArray(OFST, 'Unknown', 0)
+    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+    wbString(XNAM, 'Water Noise Texture'),
+    wbString(TNAM, 'HD LOD Diffuse Texture'),
+    wbString(UNAM, 'HD LOD Normal Texture'),
+    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
+    wbByteArray(OFST, 'Unknown')
   ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
-//    wbFormIDCk(_0_IAD, 'Sunrise Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_1_IAD, 'Day Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_2_IAD, 'Sunset Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_3_IAD, 'Night Image Space Modifier', [IMAD]),
-//    wbFormIDCk(_4_IAD, 'Unknown', [IMAD]),
-//    wbFormIDCk(_5_IAD, 'Unknown', [IMAD]),
-
-    wbRUnion('Union', [
-      wbRStruct('Dynamic Cloud Textures', [
-        wbString(_00_0TX, 'Unknown'),
-        wbString(_10_0TX, 'Unknown'),
-        wbString(_20_0TX, 'Unknown'),
-        wbString(_30_0TX, 'Unknown'),
-        wbString(_40_0TX, 'Unknown'),
-        wbString(_50_0TX, 'Unknown'),
-        wbString(_60_0TX, 'Unknown'),
-        wbString(_70_0TX, 'Unknown'),
-        wbString(_80_0TX, 'Unknown'),
-        wbString(_90_0TX, 'Unknown'),
-        wbString(_3A_0TX, 'Unknown'),
-        wbString(_3B_0TX, 'Unknown'),
-        wbString(_3C_0TX, 'Unknown'),
-        wbString(_3D_0TX, 'Unknown'),
-        wbString(_3E_0TX, 'Unknown'),
-        wbString(_3F_0TX, 'Unknown'),
-        wbString(_40h_0TX, 'Unknown'),
-        wbString(A0TX, 'Unknown'),
-        wbString(B0TX, 'Unknown'),
-        wbString(C0TX, 'Unknown'),
-        wbString(D0TX, 'Unknown'),
-        wbString(E0TX, 'Unknown'),
-        wbString(F0TX, 'Unknown'),
-        wbString(G0TX, 'Unknown'),
-        wbString(H0TX, 'Unknown'),
-        wbString(I0TX, 'Unknown'),
-        wbString(J0TX, 'Unknown'),
-        wbString(K0TX, 'Unknown'),
-        wbString(L0TX, 'Unknown')
-      ], [])
-    ], []),
-
-    wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
-    wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
-    wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
-    wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
+    wbString(_00_0TX, 'Cloud Texture Layer #0'),
+    wbString(_10_0TX, 'Cloud Texture Layer #1'),
+    wbString(_20_0TX, 'Cloud Texture Layer #2'),
+    wbString(_30_0TX, 'Cloud Texture Layer #3'),
+    wbString(_40_0TX, 'Cloud Texture Layer #4'),
+    wbString(_50_0TX, 'Cloud Texture Layer #5'),
+    wbString(_60_0TX, 'Cloud Texture Layer #6'),
+    wbString(_70_0TX, 'Cloud Texture Layer #7'),
+    wbString(_80_0TX, 'Cloud Texture Layer #8'),
+    wbString(_90_0TX, 'Cloud Texture Layer #9'),
+    wbString(_3A_0TX, 'Cloud Texture Layer #10'),
+    wbString(_3B_0TX, 'Cloud Texture Layer #11'),
+    wbString(_3C_0TX, 'Cloud Texture Layer #12'),
+    wbString(_3D_0TX, 'Cloud Texture Layer #13'),
+    wbString(_3E_0TX, 'Cloud Texture Layer #14'),
+    wbString(_3F_0TX, 'Cloud Texture Layer #15'),
+    wbString(_40h_0TX, 'Cloud Texture Layer #16'),
+    wbString(A0TX, 'Cloud Texture Layer #17'),
+    wbString(B0TX, 'Cloud Texture Layer #18'),
+    wbString(C0TX, 'Cloud Texture Layer #19'),
+    wbString(D0TX, 'Cloud Texture Layer #20'),
+    wbString(E0TX, 'Cloud Texture Layer #21'),
+    wbString(F0TX, 'Cloud Texture Layer #22'),
+    wbString(G0TX, 'Cloud Texture Layer #23'),
+    wbString(H0TX, 'Cloud Texture Layer #24'),
+    wbString(I0TX, 'Cloud Texture Layer #25'),
+    wbString(J0TX, 'Cloud Texture Layer #26'),
+    wbString(K0TX, 'Cloud Texture Layer #27'),
+    wbString(L0TX, 'Cloud Texture Layer #28'),
+    wbByteArray(DNAM, 'Unused', 0, cpIgnore),
+    wbByteArray(CNAM, 'Unused', 0, cpIgnore),
+    wbByteArray(ANAM, 'Unused', 0, cpIgnore),
+    wbByteArray(BNAM, 'Unused', 0, cpIgnore),
     wbUnknown(LNAM),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbUnknown(NNAM),
-//    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    wbUnknown(ONAM),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(RNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(QNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(PNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-//    wbByteArray(PNAM, 'Unknown', 0, cpIgnore),
-//    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
-//      wbArray(PNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
-//    ], [])),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbArray(JNAM, 'Unknown', wbByteArray('Unknown', 4), 0, nil, nil, cpNormal, True)
-    ], [])),
-//    wbRArray('Unknown - PNAM', wbRStruct('Unknown', [
-//      wbArray(JNAM, 'Unknown', wbFormID('Unknown'), 0, nil, nil, cpNormal, True)
-//    ], [])),
-//    wbUnknown(NAM0),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
+    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], True, cpNormal, True),
+    wbByteArray(ONAM, 'Unused', 0, cpIgnore),
+    wbRStruct('Cloud Speed', [
+      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)),
+      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
+    ], []),
+    wbStruct(PNAM, 'Cloud Layer', [
+      wbArray('Colors',
         wbStruct('Time', [
           wbInteger('Red', itU8),
           wbInteger('Green', itU8),
@@ -13760,10 +13332,33 @@ begin
         ]),
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
-      ['Unknown 1','Unknown 2','Unknown 3','Ambient','Unknown 5','Unknown 6',
-      'Unknown 7','Unknown 8','Unknown 9','Unknown 10', 'Unknown 11', 'Unknown 12',
-      'Unknown 13','Unknown 14','Unknown 15','Unknown 16','Unknown 17']
-    , cpNormal, True),
+      wbArray('Unknown', wbByteArray('Unknown', 4))
+    ]),
+    wbArray(JNAM, 'Clouds', wbStruct('Layer', [
+      wbFloat('Alpha'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ])),
+    wbStruct(NAM0, 'Weather Colors', [
+      wbArray('Sky-Upper', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Fog Near', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Unknown', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Ambient', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sunlight', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sun', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Stars', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sky-Lower', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Horizon', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Effect Lighting', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Cloud LOD Diffuse', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Cloud LOD Ambient', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Fog Far', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sky Statics', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Water Multiplier', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sun Glare', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Moon Glare', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night'])
+    ], cpNormal, True, nil, 13),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
       wbFloat('Day - Far'),
@@ -13774,29 +13369,36 @@ begin
       wbFloat('Day - Max'),
       wbFloat('Night - Max')
     ], cpNormal, True),
-//    wbByteArray(INAM, 'Unknown', 304, cpIgnore, True),
-//    wbUnknown(INAM),
-    wbStruct(DATA, '', [
-      wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
-      wbInteger('Trans Delta', itU8),
-      wbInteger('Sun Glare', itU8),
-      wbInteger('Sun Damage', itU8),
-      wbInteger('Precipitation - Begin Fade In', itU8),
-      wbInteger('Precipitation - End Fade Out', itU8),
+    wbStruct(DATA, 'Data', [
+      wbInteger('Wind Speed', itU8), // scaled 0..1
+      wbByteArray('Unknown', 2),
+      wbInteger('Trans Delta', itU8), // scaled 0..0,25
+      wbInteger('Sun Glare', itU8), // scaled 0..1
+      wbInteger('Sun Damage', itU8), // scaled 0..1
+      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
+      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Weather - Pleasant',
+        {0x02} 'Weather - Cloudy',
+        {0x04} 'Weather - Rainy',
+        {0x08} 'Weather - Snow',
+        {0x10} 'Sky Statics - Always Visible',
+        {0x20} 'Sky Statics - Follows Sun Position'
+      ])),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
       ]),
-      wbByteArray('Unknown', 4)
+      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
+      wbInteger('Visual Effect - End', itU8), // scaled 0..1
+      wbInteger('Wind Direction', itU8), // scaled 0..360
+      wbInteger('Wind Direction Range', itU8) // scaled 0..180
     ], cpNormal, True),
-    wbUnknown(NAM1),
+    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbRArray('Sounds',
       wbStruct(SNAM, 'Sound', [
         wbFormIDCK('Sound', [SNDR, NULL]),
@@ -13808,30 +13410,28 @@ begin
         ]))
       ])
     ),
-    wbRArrayS('Texture Names', wbFormIDCk(TNAM, 'Texture Name', [STAT, NULL])),
+    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbStruct(IMSP, 'Image Spaces', [
       wbFormIDCK('Sunrise', [IMGS, NULL]),
       wbFormIDCK('Day', [IMGS, NULL]),
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
-
-  wbRArray('Directional Ambient Lightning Colors',
-    wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
-      wbArray('Time of Day',
-        wbStruct('Values For', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]), ['X+','X-','Y+','Y-','Z+', 'Z-', 'Specular']),
-      wbFloat('Fresnel Power')
-    ])
-  ),
-
-    wbUnknown(NAM2),
-    wbUnknown(NAM3),
-    wbMODL
+    wbRArray('Directional Ambient Lighting Colors',
+      wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
+        wbStruct('X+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('X-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Y+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Y-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Z+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Z-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbStruct('Specular', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
+        wbFloat('Fresnel Power')
+      ], cpNormal, True, nil, 6)
+    ),
+    wbByteArray(NAM2, 'Unused', 0, cpIgnore),
+    wbByteArray(NAM3, 'Unused', 0, cpIgnore),
+    wbRStruct('Aurora', [wbMODL], [])
   ]);
 
   wbRecord(IMOD, 'Item Mod', [
