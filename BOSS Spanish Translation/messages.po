@@ -1468,7 +1468,7 @@ msgstr "Realizar Ejecución de prueba"
 
 #: MainWindow.cpp:336
 msgid "Update Masterlist Only"
-msgstr "Actualizar Masterlist Solo"
+msgstr "Solo actualizar Masterlist"
 
 #: MainWindow.cpp:340
 msgid "Undo Changes"
@@ -1684,7 +1684,7 @@ msgstr "Idioma:"
 
 #: SettingsWindow.cpp:93
 msgid "Check for BOSS updates on startup"
- msgstr "Buscar actualizaciones en el inicio de BOSS"
+ msgstr "Buscar actualizaciones de BOSS al arrancar"
 
 #: SettingsWindow.cpp:94
 msgid "Use User Rules Manager"
@@ -1700,19 +1700,19 @@ msgstr "La configuración de idioma se aplicará después de que la interfaz gr�
 
 #: SettingsWindow.cpp:106
 msgid "Proxy Hostname:"
-msgstr "Nombre del Host Proxy:"
+msgstr "(Proxy) Nombre del host:"
 
 #: SettingsWindow.cpp:109
 msgid "Proxy Port Number:"
-msgstr "Número de puerto proxy:"
+msgstr "(Proxy) Número de puerto:"
 
 #: SettingsWindow.cpp:112
 msgid "Proxy Username:"
-msgstr "Nombre de usuario Proxy:"
+msgstr "(Proxy) Nombre de usuario:"
 
 #: SettingsWindow.cpp:115
 msgid "Proxy Password:"
-msgstr "Contraseña de proxy:"
+msgstr "(Proxy) Contraseña:"
 
 #: SettingsWindow.cpp:127
 msgid "Debug Output Verbosity:"
@@ -1792,11 +1792,11 @@ msgstr "después de"
 
 #: UserRuleEditor.cpp:155
 msgid "top"
-msgstr "Superior"
+msgstr "Arriba"
 
 #: UserRuleEditor.cpp:156
 msgid "bottom"
-msgstr "Inferior"
+msgstr "Abajo"
 
 #: UserRuleEditor.cpp:195
 msgid "Rule Editor"
@@ -1816,7 +1816,7 @@ msgstr "Ordenar"
 
 #: UserRuleEditor.cpp:211
 msgid "Insert at the"
-msgstr "Insertar en el"
+msgstr "Insertar"
 
 #: UserRuleEditor.cpp:213
 msgid "of"
