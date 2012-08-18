@@ -35,6 +35,62 @@
 ::0x00001000 - Blur Radius Bit 1
 ::0x00002000 - Blur Radius Bit 0
 |-
+| + || BNAM || Blur || struct || 
+:Float - Unknown
+:Float - Radius
+:Float - Unknown
+:Float - Unknown
+|- 
+| + || VNAM || Double Vision || struct || 
+:Float - Unknown
+:Float - Radius
+:Float - Unknown
+:Float - Unknown
+|-
+|}
+= Cinematic Colors =
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || TNAM || Tints || struct || 
+:Tint
+::Float - Unknown
+:Tint
+::Float - Red
+::Float - Green
+::Float - Blue
+::Float - Alpha
+:Unknown Data
+|- 
+| + || NAM3 || Fade || struct || 
+:Fade
+::Float - Unknown
+:Fade
+::Float - Red
+::Float - Green
+::Float - Blue
+::Float - Alpha
+:Unknown Data
+|- 
+|}
+= Radial Blur =
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || RNAM || Data || struct || 
+:Float - Unknown
+:Float - Strength
+:Float - Unknown
+:Float - Unknown
+|- 
 |}
 
 
