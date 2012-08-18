@@ -168,7 +168,7 @@ begin
   if idx <> -1 then
     Result := fStrings[idx]
   else
-    Result := 'Unknown lstring ID ' + IntToHex(ID, 8);
+    Result := '<Error: Unknown lstring ID ' + IntToHex(ID, 8) + '>';
 end;
 
 function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
@@ -240,7 +240,7 @@ begin
         bFailed := true;
     end;
     if bFailed then begin
-      Result := 'No localization for lstring ID ' + IntToHex(ID, 8);
+      Result := '<Error: No localization for lstring ID ' + IntToHex(ID, 8) +'>';
       Exit;
     end;
   end else
