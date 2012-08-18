@@ -408,11 +408,11 @@ msgstr "Contiene ediciones sucia"
 
 #: ..\boss-common\Output\Output.cpp:567
 msgid "Sort %1% before %2%"
-msgstr "Ordanar %1% antes de %2%"
+msgstr "Ordenar %1% antes de %2%"
 
 #: ..\boss-common\Output\Output.cpp:569
 msgid "Sort %1% after %2%"
-msgstr "Ordanar %1% después de %2%"
+msgstr "Ordenar %1% después de %2%"
 
 #: ..\boss-common\Output\Output.cpp:571
 msgid "Insert %1% at the top of %2%"
