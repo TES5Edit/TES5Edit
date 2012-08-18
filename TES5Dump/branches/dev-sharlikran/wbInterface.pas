@@ -57,6 +57,15 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  {>>> Writes SubRecordOrderList +AppendInputFile+ .txt ReportDefs <<<}
+  wbUserDefinedDebug: Boolean{ = True{}; {>>> Command Line Switch <<<}
+  {>>> Aditional Console Loging - Possibly Useless I Might Remove It <<<}
+  wbUserDefinedDebugLvl3: Boolean{} = False{};
+  {>>> Dump All Assigned(wbProgressCallback) in wbImplementation to Comsole Log <<<}
+  wbUserDefinedDebugLvl4: Boolean{} = False{};
+  AppendInputFile : string;
+
+  wbUserDefinedDebugLvl2: Boolean{} = False{}; {>>> Not Implemented - Updates ReportDefs <<<}
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;
@@ -70,7 +79,7 @@ var
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{} = True{};
+  wbReportMode: Boolean{ = True{};
   wbReportUnused: Boolean{} = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
@@ -6701,7 +6710,11 @@ begin
         if wbReportMode and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
-        end;
+        end else
+          if wbUserDefinedDebugLvl3 then
+            if (not wbReportMode) and wbReportUnknownFlags then
+              wbProgressCallback('Debugmode: wbReportMode was false and wbReportUnknownFlags was true.  Increment of UnknownFlags[i]' + sLineBreak +
+                                 'Debugmode: in ( function TwbFlagsDef.ToString(aInt: Int64; const aElement: IwbElement): string; ) did not occur.');
       end;
       if not GetFlagDontShow(aElement, i) then
         Result := Result + s + ', ';
@@ -10243,6 +10256,7 @@ initialization
 
   if (DebugHook = 0) then
     wbReportMode := False;
+//  else wbReportMode := wbUserDefinedDebug;
 
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;

@@ -233,6 +233,28 @@ begin
       WriteLn(ErrOutput);
     end;
 
+    if wbFindCmdLineSwitch('more') then
+      wbMoreInfoForUnknown:= True
+    else
+      wbMoreInfoForUnknown:= False;
+
+    if wbFindCmdLineSwitch('debug') and (not wbMoreInfoForUnknown) then Begin
+      wbReportMode:= True;
+      wbUserDefinedDebug:= True;
+    end else Begin
+      wbReportMode:= False;
+      wbUserDefinedDebug:= False;
+    end;
+
+    if wbFindCmdLineSwitch('debug4') then Begin
+        wbUserDefinedDebugLvl4:= True;
+        wbReportMode:= True;
+        wbUserDefinedDebug:= True;
+      End
+      else Begin
+        wbUserDefinedDebugLvl4:= False;
+      End;
+
     if wbFindCmdLineParam('dg', s) then begin
       DumpGroups := TStringList.Create;
       DumpGroups.Sorted := True;
@@ -240,11 +262,6 @@ begin
       DumpGroups.CommaText := s;
       DumpGroups.Sort;
     end;
-
-    if wbFindCmdLineSwitch('more') then
-      wbMoreInfoForUnknown:= True
-    else
-      wbMoreInfoForUnknown:= False;
 
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
@@ -276,6 +293,7 @@ begin
     end;
 
     s := ParamStr(ParamCount);
+    AppendInputFile := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
     if (ParamCount >= 1) and not FileExists(s) then begin
@@ -300,15 +318,20 @@ begin
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
       WriteLn(ErrOutput, '             ', 'decompressed and processed.');
-//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-//      WriteLn(ErrOutput, '             ', 'following default value applies:');
-//      WriteLn(ErrOutput, '             ', 'REFR');
+//    WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
+//    WriteLn(ErrOutput, '             ', 'following default value applies:');
+//    WriteLn(ErrOutput, '             ', 'REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-//      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
-//      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
+//    WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
+//    WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
-      WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
+      WriteLn(ErrOutput, '-more        ', 'Displays additional information on Unknowns');
+      WriteLn(ErrOutput, '-debug       ', 'SubRecordOrderList.txt written to disk. Record information');
+      WriteLn(ErrOutput, '             ', 'written horizontally separated by ''\''s and displays extra');
+      WriteLn(ErrOutput, '             ', 'information for debugging subrecord order.');
+      WriteLn(ErrOutput, '-debug4      ', 'Dumps all Assigned(wbProgressCallback) to the Console. Use');
+      WriteLn(ErrOutput, '             ', 'with -dg, it is extremely verbose.');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
@@ -319,19 +342,24 @@ begin
 
     ReportProgress('Finished loading record. Starting Dump.');
 
-    if wbFindCmdLineSwitch('check') and not wbReportMode then
+    if wbFindCmdLineSwitch('check') and (not wbReportMode) then
       CheckForErrors(0, _File)
     else
       WriteContainer(_File);
 
-    if wbReportMode then
+//    if wbReportMode and wbUserDefinedDebug then Begin
+    if wbReportMode then Begin
+      ReportProgress('Writing ReportDefs');
       ReportDefs;
+    End;
 
     ReportProgress('All Done.');
   except
     on e: Exception do
       WriteLn(ErrOutput, 'Unexpected Error: <',e.ClassName, ': ', e.Message,'>');
   end;
-  if wbReportMode or (DebugHook <> 0) then
-    ReadLn;
+  if wbReportMode or (DebugHook <> 0) then Begin
+    ReportDefs;
+      ReportProgress('Writing ReportDefs After Error in ' + AppendInputFile +'.');
+  End;
 end.
