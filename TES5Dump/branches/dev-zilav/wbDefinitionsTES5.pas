@@ -907,8 +907,8 @@ var
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbOwnership: IwbSubRecordStructDef;
+  wbAmbientColors: IwbStructDef;
   wbSMNodeFlags: IwbFlagsDef;
-  wbCELLDATAFlags: IwbFlagsDef;
   wbBipedObjectEnum: IwbEnumDef;
   wbArmorTypeEnum: IwbEnumDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
@@ -5552,6 +5552,27 @@ begin
     wbInteger(XRNK, 'Faction rank', itS32)
   ], []);
 
+  wbAmbientColors := wbStruct('Directional Ambient', [
+    wbArray('Colors',
+      wbStruct('Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-']
+    ),
+    wbStruct('Specular', [
+      wbStruct('Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbFloat('Fresnel Power')
+    ])
+  ], cpNormal, False, nil, 1);
+
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
 end;
@@ -6963,40 +6984,6 @@ begin
     wbSPLOs
   ], []);
 
-  wbCELLDATAFlags := wbFlags([
-	  {0x00000001} 'Is Interior Cell',
-		{0x00000002} 'Has water',
-		{0x00000004} 'Invert Fast Travel behavior',
-		{0x00000008} 'Force hide land (exterior cell) / Oblivion interior (interior cell)',
-		{0x00000010} 'Unknown 5',
-		{0x00000020} 'Public place',
-		{0x00000040} 'Hand changed',
-		{0x00000080} 'Behave like exterior',
-		{0x00000100} 'Unknown 9',
-		{0x00000200} 'Unknown 10',
-		{0x00000400} 'Unknown 11',
-		{0x00000800} 'Unknown 12',
-		{0x00001000} 'Unknown 13',
-		{0x00002000} 'Unknown 14',
-		{0x00004000} 'Unknown 15',
-    {0x00008000} 'Unknown 16',
-    {0x00010000} 'Unknown 17',
-    {0x00020000} 'Unknown 18',
-    {0x00040000} 'Unknown 19',
-    {0x00080000} 'Unknown 20',
-    {0x00100000} 'Unknown 21',
-    {0x00200000} 'Unknown 22',
-    {0x00400000} 'Unknown 23',
-    {0x00800000} 'Unknown 24',
-    {0x01000000} 'Unknown 25',
-    {0x02000000} 'Unknown 26',
-    {0x04000000} 'Unknown 27',
-    {0x08000000} 'Unknown 28',
-    {0x10000000} 'Unknown 29',
-    {0x20000000} 'Unknown 30',
-    {0x40000000} 'Unknown 31',
-    {0x80000000} 'Unknown 32'
-  ]);
 end;
 
 procedure DefineTES5c;
@@ -7005,14 +6992,21 @@ begin
   wbRecord(CELL, 'Cell', [
     wbEDID,
     wbFULL,
-    wbUnion(DATA, 'General', wbCELLDATADecider, [
-      wbStruct('General itU8', [
-        wbInteger('Flags', itU8, wbCELLDATAFlags)
-      ]),
-      wbStruct('General itU16', [
-        wbInteger('Flags', itU16, wbCELLDATAFlags)
-      ])
-    ]),
+    wbStruct(DATA, 'General', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Is Interior Cell',
+        {0x02} 'Has Water',
+        {0x04} 'Can''t Travel From Here',
+        {0x08} 'No LOD Water',
+        {0x10} 'Unknown 5',
+        {0x20} 'Public Area',
+        {0x40} 'Hand Changed',
+        {0x80} 'Show Sky'
+      ])),
+      wbInteger('Flags2', itU8, wbFlags([
+        'Use Sky Lighting'
+      ]))
+    ], cpNormal, True, nil, 1),
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -7024,7 +7018,6 @@ begin
       ], True))
     ], cpNormal, False, nil, 2),
     wbStruct(XCLL, 'Lighting', [
-      wbByteArray('Unknown', 8),
       wbStruct('Ambient Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
@@ -7037,7 +7030,7 @@ begin
         wbInteger('Blue', itU8),
         wbByteArray('Unknown', 1)
       ]),
-      wbStruct('Fog Color', [
+      wbStruct('Fog Color Near', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
@@ -7048,27 +7041,19 @@ begin
       wbInteger('Directional Rotation XY', itS32),
       wbInteger('Directional Rotation Z', itS32),
       wbFloat('Directional Fade'),
-      wbFloat('Fog Clip Dist'),
+      wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-			wbByteArray('Unknown', 0)
-    ], cpNormal, False),
-    wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
-      'ConcSolid',
-      'ConcBroken',
-      'MetalSolid',
-      'MetalHollow',
-      'MetalSheet',
-      'Wood',
-      'Sand',
-      'Dirt',
-      'Grass',
-      'Water'
-    ]),
-		wbUnknown(TVDT),
-		wbUnknown(MHDT),
-    wbRStruct('Light Template', [
-      wbFormIDCk(LTMP, 'Template', [LGTM, NULL]),
-      wbInteger(LNAM, 'Inherit', itU32, wbFlags([
+      wbAmbientColors,
+      wbStruct('Fog Color Far', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbFloat('Fog Max'),
+      wbFloat('Light Fade Begin'),
+      wbFloat('Light Fade End'),
+      wbInteger('Inherits', itU32, wbFlags([
         {0x00000001}'Ambient Color',
         {0x00000002}'Directional Color',
         {0x00000004}'Fog Color',
@@ -7077,56 +7062,50 @@ begin
         {0x00000020}'Directional Rotation',
         {0x00000040}'Directional Fade',
         {0x00000080}'Clip Distance',
-        {0x00000100}'Fog Power'
-      ]), cpNormal, True)
-    ], [], cpNormal, True ),
+        {0x00000100}'Fog Power',
+        {0x00000200}'Fog Max',
+        {0x00000400}'Light Fade Distances'
+      ]))
+    ], cpNormal, False, nil, 11),
+
+    {>>> BEGIN leftover from earlier CK versions <<<}
+		wbByteArray(TVDT, 'Unknown', 0, cpIgnore),
+		wbByteArray(MHDT, 'Unknown', 0, cpIgnore),
+    {>>> END leftover from earlier CK versions <<<}
+
+    wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], True, cpNormal, True),
+    wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
+
+    {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height'),
     wbString(XNAM, 'Water Noise Texture'),
-    wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbFormID(XLCN, 'Unknown'),
-    wbUnknown(XWCS),
-    wbUnknown(XWCN),
-    wbUnknown(XWCU),
-		wbRUnion('Union', [
-      wbRStruct('XCIM XCMO', [
-        wbFormIDCk(XCIM, 'Image Space', [IMGS]),
-        wbFormIDCk(XCMO, 'Music Type', [MUSC])
-      ], []),
-      wbRStruct('XCMO XCIM', [
-        wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-        wbFormIDCk(XCIM, 'Image Space', [IMGS])
-      ], [])
-    ], []),
+    wbArrayS(XCLR, 'Regions (unused?)', wbFormID('Region', cpIgnore, False)), // probably leftover, not seen in CK
+    wbFormIDCk(XLCN, 'Location', [LCTN]),
+    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
+    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+    wbStruct(XWCU, 'Water Velocity', [
+      wbFloat('X Offset'),
+      wbFloat('Y Offset'),
+      wbFloat('Z Offset'),
+      wbByteArray('Unknown', 4),
+      wbFloat('X Angle'),
+      wbFloat('Y Angle'),
+      wbFloat('Z Angle'),
+      wbByteArray('Unknown', 0)
+    ]),
     wbFormIDCk(XCWT, 'Water', [WATR]),
 
     {--- Ownership ---}
     wbOwnership,
+		wbFormIDCk(XILL, 'Lock List', [FLST]),
 
-    wbRStruct('XEZN XCMO XCAS', [
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC])
-    ], []),
-
-    wbFormIDCk(XCCM, 'Climate', [CLMT]),
-		wbFormID(XILL, 'Unknown'),
-		wbRUnion('Union', [
-      wbRStruct('XCAS XEZN XCMO XWEM', [
-        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-        wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-        wbUnknown(XWEM)
-      ], []),
-      wbRStruct('XWEM XEZN XCAS', [
-        wbUnknown(XWEM),
-        wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-        wbFormIDCk(XCAS, 'Acoustic Space', [ASPC])
-      ], [])
-    ], [])
+    wbString(XWEM, 'Water Environment Map'),
+    wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
+    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+    wbFormIDCk(XCIM, 'Image Space', [IMGS])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
-//------------------------------------------------------------------------------
-// End CELL
-//------------------------------------------------------------------------------
 
   {>>> Used for arrows <<<}
   wbRecord(PARW, 'Placed Projectile', [
@@ -9715,26 +9694,7 @@ begin
       ]),
       wbByteArray('Unknown', 4)
     ], cpNormal, True, nil, 11),
-    wbStruct(DALC, 'Directional Ambient Values', [
-      wbArray('Colors',
-        wbStruct('Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-']
-      ),
-      wbStruct('Specular (unused)', [
-        wbStruct('Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbFloat('Fresnel Power')
-      ], cpNormal, True, nil, 1)
-    ])
+    wbStruct(DALC, 'Directional Ambient Lighting Colors', [wbAmbientColors], cpNormal, True)
   ]);
 
   wbRecord(MUSC, 'Music Type', [
@@ -12483,23 +12443,18 @@ begin
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
- 		wbRstruct('Water Velocity', [
-			wbUnknown(XWCN),
-			wbStruct(XWCU, 'Water Velocity', [
-				wbFloat('X Offset'),
-				wbFloat('Y Offset'),
-				wbFloat('Z Offset'),
-				wbByteArray('Unknown', 4),
-				wbFloat('X Angle'),
-				wbFloat('Y Angle'),
-				wbFloat('Z Angle'),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4),
-				wbByteArray('Unknown', 4)
-			])
-		], []),
+    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
+    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+    wbStruct(XWCU, 'Water Velocity', [
+      wbFloat('X Offset'),
+      wbFloat('Y Offset'),
+      wbFloat('Z Offset'),
+      wbByteArray('Unknown', 4),
+      wbFloat('X Angle'),
+      wbFloat('Y Angle'),
+      wbFloat('Z Angle'),
+      wbByteArray('Unknown', 0)
+    ]),
 
     wbStruct(XCVL, 'Unknown', [
 			wbByteArray('Unknown', 4),
@@ -12528,6 +12483,7 @@ begin
     wbXLCM,
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
+    {>>> No clue how to change that in CK, left as is, but seems to be working <<<}
     wbInteger(XTRI, 'Collision Layer', itU32, wbEnum([
       'Unidentified',
       'Static',
@@ -13341,23 +13297,23 @@ begin
       wbFloat('Unknown')
     ])),
     wbStruct(NAM0, 'Weather Colors', [
-      wbArray('Sky-Upper', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Fog Near', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Unknown', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Ambient', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sunlight', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sun', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Stars', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sky-Lower', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Horizon', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Effect Lighting', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Cloud LOD Diffuse', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Cloud LOD Ambient', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Fog Far', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sky Statics', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Water Multiplier', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sun Glare', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Moon Glare', wbStruct('Time', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night'])
+      wbArray('Sky-Upper',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Fog Near',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Unknown',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Ambient',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sunlight',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sun',               wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Stars',             wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sky-Lower',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Horizon',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Effect Lighting',   wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Cloud LOD Diffuse', wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Cloud LOD Ambient', wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Fog Far',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sky Statics',       wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Water Multiplier',  wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Sun Glare',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
+      wbArray('Moon Glare',        wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night'])
     ], cpNormal, True, nil, 13),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
@@ -13418,16 +13374,7 @@ begin
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
     wbRArray('Directional Ambient Lighting Colors',
-      wbStruct(DALC, 'In order by Day/Night/Sunrise/Sunset', [
-        wbStruct('X+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
-        wbStruct('X-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
-        wbStruct('Y+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
-        wbStruct('Y-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
-        wbStruct('Z+', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
-        wbStruct('Z-', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
-        wbStruct('Specular', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]),
-        wbFloat('Fresnel Power')
-      ], cpNormal, True, nil, 6)
+      wbStruct(DALC, 'Day/Night/Sunrise/Sunset Order', [wbAmbientColors], cpNormal, True)
     ),
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),

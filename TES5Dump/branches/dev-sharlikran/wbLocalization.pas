@@ -168,7 +168,7 @@ begin
   if idx <> -1 then
     Result := fStrings[idx]
   else
-    Result := 'Unknown lstring ID ' + IntToHex(ID, 8);
+    Result := '<Error: Unknown lstring ID ' + IntToHex(ID, 8) + '>';
 end;
 
 function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
@@ -184,7 +184,6 @@ begin
 
   if sigElem = 'DESC' then Result := lsDLString else // DESC always from dlstrings
   if (sigRec = 'QUST') and (sigElem = 'CNAM') then Result := lsDLString else // quest log entry
-  if sigRec = 'BOOK' then Result := lsDLString else //journal/book
   if (sigRec = 'INFO') and (sigElem <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
     Result := lsString; // others
 end;
@@ -241,7 +240,7 @@ begin
         bFailed := true;
     end;
     if bFailed then begin
-      Result := 'No localization for lstring ID ' + IntToHex(ID, 8);
+      Result := '<Error: No localization for lstring ID ' + IntToHex(ID, 8) +'>';
       Exit;
     end;
   end else

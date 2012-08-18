@@ -32,7 +32,7 @@ uses
 var
   RecordToSkip : TStringList;
   GroupToSkip  : TStringList;
-  SubRecordOrderList : TStringList;
+  SubRecordOrderList     : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
@@ -5084,11 +5084,12 @@ var
   LastElementForMember : array of IwbElement;
   GroupRecord          : IwbGroupRecord;
   GroupRecordInternal  : IwbGroupRecordInternal;
+{$IFDEF DBGSUBREC}
+//  MainRecord             : IwbMainRecord;
   s: string;
+{$ENDIF}
   RequiredRecords, PresentRecords: set of byte;
   i : Integer;
-  FoundVMAD: Boolean;
-
 begin
   RequiredRecords := [];
   PresentRecords := [];
@@ -5121,13 +5122,16 @@ begin
     end;
   end;
 
+{$IFDEF DBGSUBREC}
   s := '';
+{$ENDIF}
   CurrentPtr := GetDataBasePtr;
   while Cardinal(CurrentPtr) < Cardinal(dcDataEndPtr) do begin
     Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
-    if wbUserDefinedDebug then
-      if Supports(Element, IwbSubRecord, CurrentRec) then
-        s := s + String(CurrentRec.Signature) + ' ';
+{$IFDEF DBGSUBREC}
+    if Supports(Element, IwbSubRecord, CurrentRec) then
+      s := s + CurrentRec.Signature + ' ';
+{$ENDIF}
   end;
   Element := nil;
 
@@ -5152,14 +5156,7 @@ begin
       Continue;
     end;
 
-    CurrentRec := cntElements[CurrentRecPos] as IwbSubRecord;
-    if wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
-      Inc(CurrentRecPos);
-      Continue;
-    end;
-    FoundVMAD := FoundVMAD or (CurrentRec.Signature = 'VMAD');
-
-    if (mrDef.AllowUnordered or wbUserDefinedDebug) then begin
+    if mrDef.AllowUnordered then begin
       CurrentDefPos := mrDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
       if CurrentDefPos < 0 then begin
         if Assigned(wbProgressCallback) then
@@ -5263,32 +5260,18 @@ begin
     Inc(CurrentRecPos);
   end;
 
-//  {>>> Add Signature and Filename to Display Error Without wbUserDefinedDebugLvl4 <<<}
-//  if (wbUserDefinedDebug and (not wbUserDefinedDebugLvl4)) then
-//    if ((GetSignature = 'DIAL') and (AppendInputFile = 'Update.esm')) or
-//       ((GetSignature = 'WRLD') and (AppendInputFile = 'Dawnguard.esm'))
-//    then FoundError := True;
+//  if GetSignature = 'DIAL' then
+//    FoundError := True;
 
-  {>>> When debug Mode 4 is On <<<}
-  if wbUserDefinedDebugLvl4 then
-    FoundError:= True;
-
-  if wbUserDefinedDebugLvl4 then
-    if Assigned(wbProgressCallback) then begin
-      wbProgressCallback('Callback Routine in: ' + GetName);
-      if (wbUserDefinedDebug or wbUserDefinedDebugLvl4) then
-        wbProgressCallback('Contained subrecords: ' + s);
-    end;
-
-  {>>> When debug Mode is Off Follow Elimnster Default Routine <<<}
-  if (FoundError and (not wbUserDefinedDebugLvl4)) then
+  if FoundError then
     if Assigned(wbProgressCallback) then begin
       wbProgressCallback('Errors were found in: ' + GetName);
-      if (wbUserDefinedDebug or wbUserDefinedDebugLvl4) then
-        wbProgressCallback('Contained subrecords: ' + s);
+{$IFDEF DBGSUBREC}
+      wbProgressCallback('Contained subrecords: ' + s);
+{$ENDIF}
     end;
 
-  if wbSortSubRecords and ((mrDef.AllowUnordered or wbUserDefinedDebug) or (esModified in eStates)) and (Length(cntElements) > 1) then
+  if wbSortSubRecords and (mrDef.AllowUnordered or (esModified in eStates)) and (Length(cntElements) > 1) then
     QuickSort(@cntElements[0], Low(cntElements), High(cntElements), CompareSubRecords);
 
   mrDef.AfterLoad(Self);
@@ -5310,17 +5293,11 @@ begin
     end;
   end;
 
-  if wbReportMode and (not FoundVMAD) and (mrDef.AllowUnordered or wbUserDefinedDebug) then begin
+  if wbReportMode {and mrDef.AllowUnordered} then begin
     s := GetSignature + ' -> ' + s;
     CurrentRecPos := SubRecordOrderList.Add(s);
     SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
   end;
-
-//  if FoundVMAD then begin
-//    s := GetSignature + ' (VMAD) -> ' + s;
-//    CurrentRecPos := SubRecordOrderList.Add(s);
-//    SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
-//  end;
 
 {
   if GetSignature = 'SCPT' then begin
@@ -6361,11 +6338,6 @@ begin
       Def.Used;
   end;
   Result := '';
-
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode: wbReportMode False in TwbMainRecord.GetValue.');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ') Signature: (' + String(GetSignature) + ')' );
-  end;
 end;
 
 function TwbMainRecord.GetWinningOverride: IwbMainRecord;
@@ -8448,19 +8420,13 @@ begin
         Inc(Cardinal(BasePtr));
       end;
     end;
-
     if HasUnusedData then begin
-
       if wbReportMode then
-        srDef.HasUnusedData
-      else if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-        wbProgressCallback('Debugmode HasUnusedData in TwbSubRecord.Init but wbReportMode is False' );
-        wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ') Signature: (' + String(GetSignature) + ')' );
-      end;
-
-      if Assigned(wbProgressCallback) and wbUserDefinedDebug then
-        wbProgressCallback('<Warning: Unused data in: ' + String(GetPath) + '>');
-
+        srDef.HasUnusedData;
+      {$IFDEF DBGSUBREC}
+      if Assigned(wbProgressCallback) then
+        wbProgressCallback('<Warning: Unused data in: ' + GetPath + '>');
+      {$ENDIF}
     end;
   end;
 
@@ -8685,23 +8651,12 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   Result := '';
 
-  if not Assigned(srDef) then Begin
-    if wbUserDefinedDebugLvl3 then Begin
-      wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ') Signature: (' + String(GetSignature) + ')' );
-      wbProgressCallback('Debugmode Assigned(srDef) is False, Exiting' );
-    End;
+  if not Assigned(srDef) then
     Exit;
-  end;
-
   DoInit;
 
   if Assigned(srValueDef) then
     Result := srValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
-
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode wbReportMode False in TwbMainRecord.GetValue with Result: (' + String(Result) + ')');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ') Signature: (' + String(GetSignature) + ')' );
-  end;
 end;
 
 function TwbSubRecord.GetValueDef: IwbValueDef;
@@ -10716,11 +10671,6 @@ begin
       Def.Used;
   end;
   Result := '';
-
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode: wbReportMode False in TwbElement.GetName with Result: (' + String(Result) + ')');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ')');
-  end;
 end;
 
 function TwbElement.GetNativeValue: Variant;
@@ -10800,11 +10750,6 @@ begin
       Def.Used;
   end;
   Result := GetName;
-
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode: wbReportMode False in TwbElement.GetShortName with Result: (' + String(Result) + ')');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ')' );
-  end;
 end;
 
 function TwbElement.GetSkipped: Boolean;
@@ -10857,11 +10802,6 @@ begin
       Def.Used;
   end;
   Result := '';
-
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode: wbReportMode False in TwbElement.GetValue with Result: (' + String(Result) + ')');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ')' );
-  end;
 end;
 
 function TwbElement.GetValueDef: IwbValueDef;
@@ -12530,12 +12470,7 @@ begin
    end;
    SetLength(Result, Length(Result) - 2);
  end else}
-  Result := inherited GetValue;
-
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode: wbReportMode False in TwbValue.GetValue with Result: (' + String(Result) + ')');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ')' );
-  end;
+   Result := inherited GetValue;
 end;
 
 procedure TwbValue.Reset;
@@ -12824,7 +12759,6 @@ begin
     if Assigned(Def) then
       Def.Used;
   end;
-
   Result := fFlagsDef.Flags[fIndex];
 {
   i := fIntegerDef.ToInt(fBasePtr, fEndPtr, Self);
@@ -12833,10 +12767,6 @@ begin
   else
     Result := '';
 }
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode: wbReportMode False in TwbFlag.GetValue with Result: (' + String(Result) + ')');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ')' );
-  end;
 end;
 
 procedure TwbFlag.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -13465,11 +13395,6 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
   Result := vbValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
-
-  if (not wbReportMode) and wbUserDefinedDebugLvl3 then Begin
-    wbProgressCallback('Debugmode: wbReportMode False in TwbValueBase.GetValue with Result: (' + String(Result) + ')');
-    wbProgressCallback('Debugmode Path: (' + String(GetPath) + ') Name: (' + String(GetName) + ')' );
-  end;
 end;
 
 function TwbValueBase.GetValueDef: IwbValueDef;
@@ -13708,20 +13633,15 @@ procedure WriteSubRecordOrderList;
 var
   i: Integer;
 begin
-  if not wbUserDefinedDebug then
-    if not wbReportMode then
-      Exit;
-
-  wbProgressCallback( 'Writing SubRecordOrderList.txt' );
+  if not wbReportMode then
+    Exit;
 
   SubRecordOrderList.Sorted := False;
 
   for i := 0 to Pred(SubRecordOrderList.Count) do
-    SubRecordOrderList[i] := SubRecordOrderList[i] + '(' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
+    SubRecordOrderList[i] := SubRecordOrderList[i] + ' (' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
 
-  SubRecordOrderList.SaveToFile('SubRecordOrderList_' + AppendInputFile + '.txt');
-
-  wbProgressCallback( 'SubRecordOrderList_' + AppendInputFile + '.txt Finished' );
+  SubRecordOrderList.SaveToFile('SubRecordOrderList.txt');
 end;
 
 var
@@ -14032,7 +13952,6 @@ initialization
   FilesMap := TStringList.Create;
   FilesMap.Sorted := True;
   FilesMap.Duplicates := dupError;
-
 finalization
   WriteSubRecordOrderList;
 end.
