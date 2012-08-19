@@ -451,11 +451,11 @@
     <Compile Include="UI\ObjectControls\RecordSearch.Designer.cs">
       <DependentUpon>RecordSearch.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ObjectControls\SubrecordElementEditor.cs">
+    <Compile Include="UI\ObjectControls\SubrecordEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ObjectControls\SubrecordElementEditor.Designer.cs">
-      <DependentUpon>SubrecordElementEditor.cs</DependentUpon>
+    <Compile Include="UI\ObjectControls\SubrecordEditor.Designer.cs">
+      <DependentUpon>SubrecordEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\ObjectControls\SubrecordListEditor.cs">
       <SubType>UserControl</SubType>
@@ -592,8 +592,8 @@
     <EmbeddedResource Include="UI\ObjectControls\RecordSearch.resx">
       <DependentUpon>RecordSearch.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ObjectControls\SubrecordElementEditor.resx">
-      <DependentUpon>SubrecordElementEditor.cs</DependentUpon>
+    <EmbeddedResource Include="UI\ObjectControls\SubrecordEditor.resx">
+      <DependentUpon>SubrecordEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ObjectControls\SubrecordListEditor.resx">
       <DependentUpon>SubrecordListEditor.cs</DependentUpon>
