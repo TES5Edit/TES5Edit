@@ -1,4 +1,4 @@
-namespace TESVSnip.Collections
+namespace TESVSnip.Data
 {
     /// <summary>
     /// The localized string format.

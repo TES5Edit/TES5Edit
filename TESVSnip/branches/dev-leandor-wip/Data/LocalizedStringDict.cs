@@ -1,5 +1,7 @@
-namespace TESVSnip.Collections
+namespace TESVSnip.Data
 {
+    using TESVSnip.Collections;
+
     /// <summary>
     /// The localized string dict.
     /// </summary>

@@ -86,12 +86,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\AdvancedList.cs" />
-    <Compile Include="Collections\LocalizedStringDict.cs" />
-    <Compile Include="Collections\LocalizedStringFormat.cs" />
-    <Compile Include="Collections\LocalizedStrings.cs" />
     <Compile Include="Collections\PropertyComparer.cs" />
     <Compile Include="Collections\PropertyComparerCollection.cs" />
     <Compile Include="Collections\ValueComparer.cs" />
+    <Compile Include="Data\LocalizedString.cs" />
+    <Compile Include="Data\LocalizedStringDict.cs" />
+    <Compile Include="Data\LocalizedStringFormat.cs" />
+    <Compile Include="Data\LocalizedStrings.cs" />
     <Compile Include="Framework\Persistence\PersistableAttribute.cs" />
     <Compile Include="Framework\Persistence\PersistAssist.cs" />
     <Compile Include="Framework\Persistence\PersistContext.cs" />
@@ -438,7 +439,6 @@
     <Compile Include="UI\Forms\HexDataEdit.designer.cs">
       <DependentUpon>HexDataEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="Collections\LocalizedString.cs" />
     <Compile Include="Collections\ordereddictionary.cs" />
     <Compile Include="UI\ObjectControls\PluginTreeView.cs">
       <SubType>UserControl</SubType>

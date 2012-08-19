@@ -1,4 +1,4 @@
-﻿namespace TESVSnip.Collections
+namespace TESVSnip.Data
 {
     using System.ComponentModel;
     using System.Xml.Serialization;
