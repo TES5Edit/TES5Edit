@@ -4,6 +4,7 @@
     using System.Globalization;
     using System.Windows.Forms;
 
+    using TESVSnip.Framework.Services;
     using TESVSnip.Main;
 
     internal partial class TextElement : BaseElement, ITextElementControl
@@ -312,7 +313,7 @@
                         break;
                     case ElementValueType.Str4:
                         {
-                            tb.Text = (data.Count >= 4) ? Encoding.CP1252.GetString(data.Array, data.Offset, 4) : string.Empty;
+                            tb.Text = (data.Count >= 4) ? Encoding.Instance.GetString(data.Array, data.Offset, 4) : string.Empty;
                             tb.MaxLength = 4;
                         }
 

@@ -6,6 +6,7 @@ namespace TESVSnip.UI.Forms
     using System.Globalization;
     using System.Windows.Forms;
 
+    using TESVSnip.Framework.Services;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
@@ -257,7 +258,7 @@ namespace TESVSnip.UI.Forms
                     case ElementValueType.BString:
                         {
                             int len = TypeConverter.h2s(data[offset], data[offset + 1]);
-                            string s = Encoding.CP1252.GetString(data, offset + 2, len);
+                            string s = Encoding.Instance.GetString(data, offset + 2, len);
                             offset = offset + (2 + len);
                             tb.Text = s;
                             tb.Width += 200;
@@ -267,7 +268,7 @@ namespace TESVSnip.UI.Forms
                     case ElementValueType.IString:
                         {
                             int len = TypeConverter.h2si(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
-                            string s = Encoding.CP1252.GetString(data, offset + 4, len);
+                            string s = Encoding.Instance.GetString(data, offset + 4, len);
                             offset = offset + (4 + len);
                             tb.Text = s;
                             tb.Width += 200;
@@ -303,7 +304,7 @@ namespace TESVSnip.UI.Forms
                         break;
                     case ElementValueType.Str4:
                         {
-                            string s = Encoding.CP1252.GetString(data, offset, 4);
+                            string s = Encoding.Instance.GetString(data, offset, 4);
                             offset += 4;
                             tb.MaxLength = 4;
                             tb.Text = s;

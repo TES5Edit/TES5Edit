@@ -6,7 +6,7 @@ namespace TESVSnip.Main
 
     using TESVSnip.Framework;
 
-    using Encoding = TESVSnip.Encoding;
+    using Encoding = TESVSnip.Framework.Services.Encoding;
 
     [StructLayout(LayoutKind.Explicit)]
     internal struct TypeConverter
@@ -450,7 +450,7 @@ namespace TESVSnip.Main
             ushort len = h2s(data);
             if (len > 0 && len <= data.Count + 2)
             {
-                return Encoding.CP1252.GetString(data.Array, data.Offset + 2, len);
+                return Encoding.Instance.GetString(data.Array, data.Offset + 2, len);
             }
 
             return string.Empty;
@@ -461,7 +461,7 @@ namespace TESVSnip.Main
             int len = h2si(data);
             if (len > 0 && len <= data.Count + 4)
             {
-                return Encoding.CP1252.GetString(data.Array, data.Offset + 4, len);
+                return Encoding.Instance.GetString(data.Array, data.Offset + 4, len);
             }
 
             return string.Empty;
@@ -471,7 +471,7 @@ namespace TESVSnip.Main
         {
             // remove the tailing null
             int len = data.Count > 0 && data.Array[data.Count - 1] == 0 ? data.Count - 1 : data.Count;
-            return Encoding.CP1252.GetString(data.Array, data.Offset, len);
+            return Encoding.Instance.GetString(data.Array, data.Offset, len);
         }
 
         public static string GetHexData(byte[] data, int offset, int count)
@@ -500,9 +500,9 @@ namespace TESVSnip.Main
         /// </returns>
         public static byte[] str2h(string str)
         {
-            int len = Encoding.CP1252.GetByteCount(str);
+            int len = Encoding.Instance.GetByteCount(str);
             var data = new byte[len + 1];
-            Encoding.CP1252.GetBytes(str).CopyTo(data, 0);
+            Encoding.Instance.GetBytes(str).CopyTo(data, 0);
             data[len] = 0;
             return data;
         }
@@ -517,10 +517,10 @@ namespace TESVSnip.Main
         /// </returns>
         public static byte[] bstr2h(string str)
         {
-            int len = Encoding.CP1252.GetByteCount(str);
+            int len = Encoding.Instance.GetByteCount(str);
             var data = new byte[2 + len];
             Array.Copy(s2h((ushort)len), 0, data, 0, 2);
-            Array.Copy(Encoding.CP1252.GetBytes(str), 0, data, 2, len);
+            Array.Copy(Encoding.Instance.GetBytes(str), 0, data, 2, len);
             return data;
         }
 
@@ -534,10 +534,10 @@ namespace TESVSnip.Main
         /// </returns>
         public static byte[] istr2h(string str)
         {
-            int len = Encoding.CP1252.GetByteCount(str);
+            int len = Encoding.Instance.GetByteCount(str);
             var data = new byte[4 + len];
             Array.Copy(si2h(len), 0, data, 0, 4);
-            Array.Copy(Encoding.CP1252.GetBytes(str), 0, data, 4, len);
+            Array.Copy(Encoding.Instance.GetBytes(str), 0, data, 4, len);
             return data;
         }
 

@@ -11,11 +11,12 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using Be.Windows.Forms.Design;
-using TESVSnip;
+
 using Timer = System.Windows.Forms.Timer;
 
 namespace Be.Windows.Forms
 {
+    using TESVSnip.Framework.Services;
 
     #region HexCasing enumeration
 
@@ -2119,7 +2120,7 @@ namespace Be.Windows.Forms
             var da = new DataObject();
 
             // set string buffer clipbard data
-            string sBuffer = Encoding.CP1252.GetString(buffer, 0, buffer.Length);
+            string sBuffer = Encoding.Instance.GetString(buffer, 0, buffer.Length);
             da.SetData(typeof (string), sBuffer);
 
             //set memorystream (BinaryData) clipboard data
@@ -2197,7 +2198,7 @@ namespace Be.Windows.Forms
             else if (da.GetDataPresent(typeof (string)))
             {
                 var sBuffer = (string) da.GetData(typeof (string));
-                buffer = Encoding.CP1252.GetBytes(sBuffer);
+                buffer = Encoding.Instance.GetBytes(sBuffer);
             }
             else
             {

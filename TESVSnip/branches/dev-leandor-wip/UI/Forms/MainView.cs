@@ -19,6 +19,7 @@ namespace TESVSnip.UI.Forms
 
     using TESVSnip.Data;
     using TESVSnip.Framework;
+    using TESVSnip.Framework.Services;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
@@ -1589,7 +1590,7 @@ namespace TESVSnip.UI.Forms
             r.AddRecord(sr);
             sr = new SubRecord();
             sr.Name = "CNAM";
-            sr.SetData(Encoding.CP1252.GetBytes("Default\0"));
+            sr.SetData(Encoding.Instance.GetBytes("Default\0"));
             r.AddRecord(sr);
             p.AddRecord(r);
 

@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Windows.Forms;
 
+    using TESVSnip.Framework.Services;
     using TESVSnip.Properties;
 
     public partial class LoadSettings : Form
@@ -28,7 +29,7 @@
             // this.rtfWarning = TESsnip.Properties.Resources.
             using (var s = new MemoryStream())
             {
-                byte[] bytes = Encoding.CP1252.GetBytes(Resources.LoadWarning);
+                byte[] bytes = Encoding.Instance.GetBytes(Resources.LoadWarning);
                 s.Write(bytes, 0, bytes.Length);
                 s.Position = 0;
                 this.rtfWarning.LoadFile(s, RichTextBoxStreamType.RichText);

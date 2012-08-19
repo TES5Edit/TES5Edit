@@ -4,6 +4,7 @@ namespace TESVSnip.UI.Forms
     using System.Globalization;
     using System.Windows.Forms;
 
+    using TESVSnip.Framework.Services;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
@@ -71,7 +72,7 @@ namespace TESVSnip.UI.Forms
                     }
 
                     data = new byte[4];
-                    Encoding.CP1252.GetBytes(this.tbRecType.Text, 0, 4, data, 0);
+                    Encoding.Instance.GetBytes(this.tbRecType.Text, 0, 4, data, 0);
                     break;
                 case 2:
                 case 3:

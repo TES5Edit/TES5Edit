@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml;
-using TESVSnip;
 
 //TODO: ret value and paramter validation
 //TODO: ref.local needs to emit 66 if the var type is float/ref?
@@ -16,6 +15,7 @@ using TESVSnip;
 namespace ScriptCompiler
 {
     using TESVSnip.Framework;
+    using TESVSnip.Framework.Services;
     using TESVSnip.Main;
     using TESVSnip.Model;
 
@@ -140,7 +140,7 @@ namespace ScriptCompiler
                 this.end = end;
                 this.precedence = precedence;
                 //this.rtl=rtl;
-                this.opcode = Encoding.CP1252.GetBytes(opcode);
+                this.opcode = Encoding.Instance.GetBytes(opcode);
             }
         }
 
@@ -746,7 +746,7 @@ namespace ScriptCompiler
                 case TokenType.Integer:
                     if (type == ExpressionType.Ref && t.token != "0")
                         AddError("A reference assignment must consist of a single edid or function");
-                    bw.Write(Encoding.CP1252.GetBytes(t.token));
+                    bw.Write(Encoding.Instance.GetBytes(t.token));
                     break;
                 case TokenType.Function:
                     //FunctionSig fs=functionList[t.token];

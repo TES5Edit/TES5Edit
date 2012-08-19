@@ -9,8 +9,8 @@
     using System.Runtime.Serialization;
     using System.Windows.Forms;
 
-    using TESVSnip.Data;
     using TESVSnip.Framework.Persistence;
+    using TESVSnip.Framework.Services;
     using TESVSnip.Main;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
@@ -50,7 +50,7 @@
             this.data = br.ReadBytes(4);
             this.groupType = br.ReadUInt32();
             this.dateStamp = br.ReadUInt32();
-            string contentType = this.groupType == 0 ? Encoding.CP1252.GetString(this.data) : string.Empty;
+            string contentType = this.groupType == 0 ? Encoding.Instance.GetString(this.data) : string.Empty;
             if (!Oblivion)
             {
                 this.flags = br.ReadUInt32();
@@ -148,7 +148,7 @@
         {
             get
             {
-                return this.groupType == 0 ? Encoding.CP1252.GetString(this.data, 0, 4) : string.Empty;
+                return this.groupType == 0 ? Encoding.Instance.GetString(this.data, 0, 4) : string.Empty;
             }
         }
 
@@ -409,7 +409,7 @@
         {
             if (this.groupType == 0)
             {
-                string data = Encoding.CP1252.GetString(this.data);
+                string data = Encoding.Instance.GetString(this.data);
                 string desc = string.Format(" ({0})", data);
                 if (this.groupType == 0)
                 {

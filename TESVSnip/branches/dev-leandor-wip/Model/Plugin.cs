@@ -12,6 +12,7 @@
     using TESVSnip.Data;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Persistence;
+    using TESVSnip.Framework.Services;
     using TESVSnip.Main;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
@@ -195,9 +196,9 @@
 
             sbrMaster = new SubRecord();
             sbrMaster.Name = "MAST";
-            int intCount = Encoding.CP1252.GetByteCount(masterName);
+            int intCount = Encoding.Instance.GetByteCount(masterName);
             var bteData = new byte[intCount + 1];
-            Array.Copy(Encoding.CP1252.GetBytes(masterName), bteData, intCount);
+            Array.Copy(Encoding.Instance.GetBytes(masterName), bteData, intCount);
             sbrMaster.SetData(bteData);
             brcTES4.InsertRecord(idx, sbrMaster);
 
@@ -399,7 +400,7 @@
             string prefix = Path.Combine(this.StringsFolder, this.FileName);
             prefix += "_" + Properties.Settings.Default.LocalizationName;
 
-            System.Text.Encoding enc = Encoding.CP1252;
+            System.Text.Encoding enc = Encoding.Instance;
             FontLangInfo fontInfo;
             if (Encoding.TryGetFontInfo(locName, out fontInfo))
             {
@@ -792,7 +793,7 @@
 
         internal void SaveStrings(string FilePath)
         {
-            System.Text.Encoding enc = Encoding.CP1252;
+            System.Text.Encoding enc = Encoding.Instance;
             FontLangInfo fontInfo;
             if (Encoding.TryGetFontInfo(Properties.Settings.Default.LocalizationName, out fontInfo))
             {
@@ -928,7 +929,7 @@
         {
             if (encoding == null)
             {
-                encoding = Encoding.CP1252;
+                encoding = Encoding.Instance;
             }
 
             var dict = new LocalizedStringDict();
@@ -1030,7 +1031,7 @@
         {
             if (enc == null)
             {
-                enc = Encoding.CP1252;
+                enc = Encoding.Instance;
             }
 
             var list = new List<Pair<uint, uint>>();

@@ -12,12 +12,11 @@
 
     using RTF;
 
-    using TESVSnip.Data;
     using TESVSnip.Framework.Persistence;
     using TESVSnip.Main;
     using TESVSnip.UI;
 
-    using Encoding = TESVSnip.Encoding;
+    using Encoding = TESVSnip.Framework.Services.Encoding;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
     [Serializable]
@@ -618,7 +617,7 @@
                                         int len = TypeConverter.h2s(this.Data[offset], this.Data[offset + 1]);
                                         if (!sselem.notininfo)
                                         {
-                                            s.Append(Encoding.CP1252.GetString(this.Data, offset + 2, len));
+                                            s.Append(Encoding.Instance.GetString(this.Data, offset + 2, len));
                                         }
 
                                         offset += 2 + len;
@@ -630,7 +629,7 @@
                                         int len = TypeConverter.h2si(this.Data[offset], this.Data[offset + 1], this.Data[offset + 2], this.Data[offset + 3]);
                                         if (!sselem.notininfo)
                                         {
-                                            s.Append(Encoding.CP1252.GetString(this.Data, offset + 4, len));
+                                            s.Append(Encoding.Instance.GetString(this.Data, offset + 4, len));
                                         }
 
                                         offset += 4 + len;
@@ -685,7 +684,7 @@
                                     {
                                         if (!sselem.notininfo)
                                         {
-                                            s.Append(Encoding.CP1252.GetString(this.Data, offset, 4));
+                                            s.Append(Encoding.Instance.GetString(this.Data, offset, 4));
                                         }
 
                                         offset += 4;

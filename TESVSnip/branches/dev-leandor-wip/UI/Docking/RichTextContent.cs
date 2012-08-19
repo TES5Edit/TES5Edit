@@ -4,6 +4,7 @@
 
     using RTF;
 
+    using TESVSnip.Framework.Services;
     using TESVSnip.Model;
     using TESVSnip.Properties;
 
