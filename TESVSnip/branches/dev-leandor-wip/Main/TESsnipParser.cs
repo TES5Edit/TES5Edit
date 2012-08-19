@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace TESVSnip
 {
+    using TESVSnip.Model;
+
     public class TESParserException : Exception
     {
         public TESParserException(string msg) : base(msg)

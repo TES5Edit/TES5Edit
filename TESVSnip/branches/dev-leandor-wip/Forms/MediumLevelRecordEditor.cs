@@ -8,6 +8,8 @@ using TESVSnip.Windows.Controls;
 
 namespace TESVSnip
 {
+    using TESVSnip.Model;
+
     internal partial class MediumLevelRecordEditor : Form
     {
         private readonly SubRecord sr;

@@ -15,6 +15,8 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace TESVSnip.ObjectControls
 {
+    using TESVSnip.Model;
+
     public partial class PluginTreeView : UserControl, ISupportInitialize
     {
         private History<BaseRecord> _historyHandler;

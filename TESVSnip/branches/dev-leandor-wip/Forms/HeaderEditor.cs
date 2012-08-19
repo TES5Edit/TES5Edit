@@ -5,6 +5,8 @@ using TESVSnip.Properties;
 
 namespace TESVSnip
 {
+    using TESVSnip.Model;
+
     internal partial class HeaderEditor : Form
     {
         private uint Flags1;

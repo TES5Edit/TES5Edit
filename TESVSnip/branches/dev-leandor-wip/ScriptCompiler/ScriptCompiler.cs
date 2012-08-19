@@ -15,6 +15,8 @@ using TESVSnip;
 
 namespace ScriptCompiler
 {
+    using TESVSnip.Model;
+
     internal static class ScriptCompiler
     {
         #region Setup

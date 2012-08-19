@@ -10,6 +10,8 @@ using System.Windows.Forms;
 
 namespace TESVSnip
 {
+    using TESVSnip.Model;
+
     /// <summary>
     /// This file contains the incremental search related functionality for the main form
     /// </summary>

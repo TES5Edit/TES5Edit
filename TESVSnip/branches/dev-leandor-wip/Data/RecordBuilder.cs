@@ -4,6 +4,8 @@ using System.Linq;
 
 namespace TESVSnip.Data
 {
+    using TESVSnip.Model;
+
     internal class RecordBuilder
     {
         private readonly Dictionary<string, RecordsRecord> rdict = new Dictionary<string, RecordsRecord>();

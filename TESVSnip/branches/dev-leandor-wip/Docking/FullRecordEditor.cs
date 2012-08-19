@@ -3,6 +3,8 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace TESVSnip.Docking
 {
+    using TESVSnip.Model;
+
     public partial class FullRecordEditor : BaseDockContent
     {
         public FullRecordEditor()

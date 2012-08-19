@@ -14,6 +14,7 @@ using System.Drawing;
 namespace TESVSnip
 {
     using TESVSnip.Collections;
+    using TESVSnip.Model;
 
     /// <summary>
     /// This file contains the miscellaneous spells for the main form

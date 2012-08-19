@@ -7,6 +7,8 @@ using BrightIdeasSoftware;
 
 namespace TESVSnip.Controls
 {
+    using TESVSnip.Model;
+
     internal class CustomTreeView : TreeListView
     {
         private int _contextMenuSet = -1;

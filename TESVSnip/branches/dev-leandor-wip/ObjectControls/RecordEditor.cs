@@ -7,6 +7,7 @@ using System.Windows.Forms;
 namespace TESVSnip.Forms
 {
     using TESVSnip.Collections;
+    using TESVSnip.Model;
 
     public partial class RecordEditor : UserControl
     {

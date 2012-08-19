@@ -3,6 +3,8 @@ using RTF;
 
 namespace TESVSnip.Docking
 {
+    using TESVSnip.Model;
+
     public partial class RichTextContent : BaseDockContent
     {
         public RichTextContent()
