@@ -490,7 +490,7 @@
             return sr.EnumerateElements(conditions);
         }
 
-        internal string GetDesc(SelectionContext context)
+        internal string GetDesc(ISelectionContext context)
         {
             string start = "[Record]" + Environment.NewLine + this.GetBaseDesc();
             string end;
@@ -750,7 +750,7 @@
                    + " bytes (excluding header)";
         }
 
-        private string GetExtendedDesc(SelectionContext selectContext)
+        private string GetExtendedDesc(ISelectionContext selectContext)
         {
             var context = selectContext.Clone();
             try
@@ -789,9 +789,7 @@
             }
             finally
             {
-                context.Record = null;
-                context.SubRecord = null;
-                context.Conditions.Clear();
+                context.Reset();
             }
         }
 

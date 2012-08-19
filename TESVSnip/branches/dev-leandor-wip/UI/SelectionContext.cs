@@ -1,18 +1,17 @@
-namespace TESVSnip.Main
+namespace TESVSnip.UI
 {
     using System;
     using System.Collections.Generic;
 
+    using TESVSnip.Framework;
+    using TESVSnip.Main;
     using TESVSnip.Model;
-    using TESVSnip.UI;
 
     /// <summary>
     /// External state for holding single selection for use with evaluating descriptions and intelligent editors.
     /// </summary>
-    public class SelectionContext
+    public class SelectionContext : ISelectionContext
     {
-        internal Dictionary<int, Conditional> Conditions = new Dictionary<int, Conditional>();
-
         internal dFormIDLookupI formIDLookup;
 
         internal dFormIDLookupR formIDLookupR;
@@ -23,9 +22,16 @@ namespace TESVSnip.Main
 
         private SubRecord subRecord;
 
+        public SelectionContext()
+        {
+            this.Conditions = new Dictionary<int, Conditional>();
+        }
+
         public event EventHandler RecordChanged;
 
         public event EventHandler SubRecordChanged;
+
+        public Dictionary<int, Conditional> Conditions { get; private set; }
 
         public Rec Record
         {
@@ -77,6 +83,16 @@ namespace TESVSnip.Main
             }
         }
 
+        object ICloneable.Clone()
+        {
+            return this.Clone();
+        }
+
+        ISelectionContext ICloneable<ISelectionContext>.Clone()
+        {
+            return this.Clone();
+        }
+
         public SelectionContext Clone()
         {
             var result = (SelectionContext)MemberwiseClone();
@@ -87,6 +103,8 @@ namespace TESVSnip.Main
 
         public void Reset()
         {
+            this.Conditions.Clear();
+            this.SubRecord = null;
             this.Record = null;
         }
     }

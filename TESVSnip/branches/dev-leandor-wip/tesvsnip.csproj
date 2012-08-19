@@ -118,6 +118,7 @@
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
     <Compile Include="UI\RecordControls\ITextElementControl.cs" />
+    <Compile Include="UI\SelectionContext.cs" />
     <Compile Include="Vendor\Controls\ballontooltip.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -389,7 +390,6 @@
     <Compile Include="Main\ElementValueType.cs" />
     <Compile Include="Main\FlagDefs.cs" />
     <Compile Include="Main\RecordXmlException.cs" />
-    <Compile Include="Main\SelectionContext.cs" />
     <Compile Include="Main\Spells.cs" />
     <Compile Include="Main\SubrecordBase.cs" />
     <Compile Include="Main\SubrecordGroup.cs" />
