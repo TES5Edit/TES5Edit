@@ -118,6 +118,15 @@
     </Compile>
     <Compile Include="Controls\History.cs" />
     <Compile Include="Controls\nativemethods.cs" />
+    <Compile Include="Vendor\HexBox\ByteCollection.cs" />
+    <Compile Include="Vendor\HexBox\DataBlock.cs" />
+    <Compile Include="Vendor\HexBox\DataMap.cs" />
+    <Compile Include="Vendor\HexBox\Design\HexFontEditor.cs" />
+    <Compile Include="Vendor\HexBox\DynamicByteProvider.cs" />
+    <Compile Include="Vendor\HexBox\FileByteProvider.cs" />
+    <Compile Include="Vendor\HexBox\HexBox.cs" />
+    <Compile Include="Vendor\HexBox\IByteProvider.cs" />
+    <Compile Include="Vendor\HexBox\NativeMethods.cs" />
     <Compile Include="Vendor\ObjectListView\CellEditing\CellEditKeyEngine.cs" />
     <Compile Include="Vendor\ObjectListView\CellEditing\CellEditors.cs">
       <SubType>Component</SubType>
@@ -417,17 +426,6 @@
     <Compile Include="Forms\HeaderEditor.designer.cs">
       <DependentUpon>HeaderEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\HexBox\ByteCollection.cs" />
-    <Compile Include="Controls\HexBox\DataBlock.cs" />
-    <Compile Include="Controls\HexBox\DataMap.cs" />
-    <Compile Include="Controls\HexBox\Design\HexFontEditor.cs" />
-    <Compile Include="Controls\HexBox\DynamicByteProvider.cs" />
-    <Compile Include="Controls\HexBox\FileByteProvider.cs" />
-    <Compile Include="Controls\HexBox\HexBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\HexBox\IByteProvider.cs" />
-    <Compile Include="Controls\HexBox\NativeMethods.cs" />
     <Compile Include="Forms\HexDataEdit.cs">
       <SubType>Form</SubType>
     </Compile>
