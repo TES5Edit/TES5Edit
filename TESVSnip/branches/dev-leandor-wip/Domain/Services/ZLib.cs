@@ -1,4 +1,4 @@
-namespace TESVSnip.ZLibInterface
+namespace TESVSnip.Domain.Services
 {
     using System;
     using System.IO;

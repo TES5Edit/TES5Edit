@@ -85,6 +85,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domain\Services\ZLib.cs" />
     <Compile Include="Framework\Collections\AdvancedList.cs" />
     <Compile Include="Framework\Collections\PropertyComparer.cs" />
     <Compile Include="Framework\Collections\PropertyComparerCollection.cs" />
@@ -493,7 +494,6 @@
     <Compile Include="UI\RecordControls\HexElement.Designer.cs">
       <DependentUpon>HexElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="ZLibInterface\ZLib.cs" />
     <EmbeddedResource Include="Vendor\Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
     </EmbeddedResource>
