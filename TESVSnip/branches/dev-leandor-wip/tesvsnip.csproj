@@ -97,6 +97,7 @@
     <Compile Include="Data\LocalizedStrings.cs" />
     <Compile Include="Framework\EnumerableExtensions.cs" />
     <Compile Include="Framework\Extensions.cs" />
+    <Compile Include="Framework\ICloneable.cs" />
     <Compile Include="Framework\Pair.cs" />
     <Compile Include="Framework\Persistence\IPostSerializationCallback.cs" />
     <Compile Include="Framework\Persistence\PersistableAttribute.cs" />
