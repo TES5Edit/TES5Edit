@@ -1,12 +1,12 @@
-﻿namespace TESVSnip.Data
+namespace TESVSnip.UI
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
 
+    using TESVSnip.Data;
     using TESVSnip.Framework;
     using TESVSnip.Model;
-    using TESVSnip.UI;
 
     internal class RecordBuilder
     {
@@ -285,7 +285,7 @@
                     {
                         if (maxSize >= 2)
                         {
-                            var elem = CreateType(index++, "short");
+                            var elem = this.CreateType(index++, "short");
                             elem.size = 2;
                             sr.Elements.Add(elem);
                             elemSize = 2;
@@ -293,7 +293,7 @@
                         }
                         else
                         {
-                            var elem = CreateType(index++, "byte");
+                            var elem = this.CreateType(index++, "byte");
                             elem.size = 1;
                             sr.Elements.Add(elem);
                             elemSize = 1;
@@ -358,13 +358,13 @@
 
                         if (numFloat > 0 && floatPct > 0.5f)
                         {
-                            var elem = CreateType(index++, "float");
+                            var elem = this.CreateType(index++, "float");
                             elem.size = 4;
                             sr.Elements.Add(elem);
                         }
                         else if (num2Short > 0 && shortPct > 0.5f)
                         {
-                            var elem = CreateType(index++, "short");
+                            var elem = this.CreateType(index++, "short");
                             elem.size = 2;
                             sr.Elements.Add(elem);
                             sr.Elements.Add(elem);
@@ -372,20 +372,20 @@
                         }
                         else if (isFormID > 0 && formPct > 0.5f)
                         {
-                            var elem = CreateType(index++, "formid");
+                            var elem = this.CreateType(index++, "formid");
                             elem.reftype = reftype;
                             elem.size = 4;
                             sr.Elements.Add(elem);
                         }
                         else if (isLString > 0 && lstrPct > 0.5f)
                         {
-                            var elem = CreateType(index++, "lstring");
+                            var elem = this.CreateType(index++, "lstring");
                             elem.size = 4;
                             sr.Elements.Add(elem);
                         }
                         else
                         {
-                            var elem = CreateType(index++, "int");
+                            var elem = this.CreateType(index++, "int");
                             elem.size = 4;
                             sr.Elements.Add(elem);
                         }
@@ -848,7 +848,7 @@
         {
             foreach (var r in updateRecords)
             {
-                MergeRecord(baseRecords.FirstOrDefault(a => a.name == r.name), r);
+                this.MergeRecord(baseRecords.FirstOrDefault(a => a.name == r.name), r);
             }
         }
 
@@ -875,7 +875,7 @@
 
             foreach (var sr in updateRecord.AllSubrecords)
             {
-                MergeRecord(baseRecord.AllSubrecords.FirstOrDefault(a => a.name == sr.name), sr);
+                this.MergeRecord(baseRecord.AllSubrecords.FirstOrDefault(a => a.name == sr.name), sr);
             }
         }
 

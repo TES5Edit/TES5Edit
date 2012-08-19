@@ -112,6 +112,7 @@
     <Compile Include="Framework\Services\FontLangInfo.cs" />
     <Compile Include="Framework\TypeConverter.cs" />
     <Compile Include="UI\Delegates.cs" />
+    <Compile Include="UI\RecordBuilder.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
     <Compile Include="UI\RecordControls\ITextElementControl.cs" />
@@ -264,7 +265,6 @@
     <Compile Include="Vendor\Controls\virtuallistview.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Data\RecordBuilder.cs" />
     <Compile Include="Data\Records.cs" />
     <Compile Include="Data\RecordsRecord.cs" />
     <Compile Include="Data\Group.cs">
