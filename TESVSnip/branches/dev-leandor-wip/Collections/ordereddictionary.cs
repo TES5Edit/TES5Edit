@@ -50,7 +50,7 @@ namespace TESVSnip.Collections
         /// Initializes a new instance of the <see cref="OrderedDictionary{TKey,TItem}"/> class.
         /// </summary>
         /// <param name="KeyComparer">
-        /// The key comparer.
+        /// The key comparer. 
         /// </param>
         public OrderedDictionary(IEqualityComparer<TKey> KeyComparer)
         {
@@ -63,7 +63,7 @@ namespace TESVSnip.Collections
         /// Initializes a new instance of the <see cref="OrderedDictionary{TKey,TItem}"/> class.
         /// </summary>
         /// <param name="other">
-        /// The other.
+        /// The other. 
         /// </param>
         public OrderedDictionary(OrderedDictionary<TKey, TItem> other)
         {
@@ -76,7 +76,7 @@ namespace TESVSnip.Collections
         /// Gets the count.
         /// </summary>
         /// <value>
-        /// The count.
+        /// The count. 
         /// </value>
         public int Count
         {
@@ -90,7 +90,7 @@ namespace TESVSnip.Collections
         /// Gets the keys.
         /// </summary>
         /// <value>
-        /// The keys.
+        /// The keys. 
         /// </value>
         public ICollection<TKey> Keys
         {
@@ -104,7 +104,7 @@ namespace TESVSnip.Collections
         /// Gets the values.
         /// </summary>
         /// <value>
-        /// The values.
+        /// The values. 
         /// </value>
         public ICollection<TItem> Values
         {
@@ -118,7 +118,7 @@ namespace TESVSnip.Collections
         /// Gets the count.
         /// </summary>
         /// <value>
-        /// The count.
+        /// The count. 
         /// </value>
         int ICollection.Count
         {
@@ -132,7 +132,7 @@ namespace TESVSnip.Collections
         /// Gets a value indicating whether is fixed size.
         /// </summary>
         /// <value>
-        /// The is fixed size.
+        /// The is fixed size. 
         /// </value>
         /// <exception cref="Exception">
         /// </exception>
@@ -148,7 +148,7 @@ namespace TESVSnip.Collections
         /// Gets a value indicating whether is read only.
         /// </summary>
         /// <value>
-        /// The is read only.
+        /// The is read only. 
         /// </value>
         bool IDictionary.IsReadOnly
         {
@@ -162,7 +162,7 @@ namespace TESVSnip.Collections
         /// Gets a value indicating whether is synchronized.
         /// </summary>
         /// <value>
-        /// The is synchronized.
+        /// The is synchronized. 
         /// </value>
         bool ICollection.IsSynchronized
         {
@@ -176,7 +176,7 @@ namespace TESVSnip.Collections
         /// Gets the keys.
         /// </summary>
         /// <value>
-        /// The keys.
+        /// The keys. 
         /// </value>
         ICollection IDictionary.Keys
         {
@@ -190,7 +190,7 @@ namespace TESVSnip.Collections
         /// Gets the sync root.
         /// </summary>
         /// <value>
-        /// The sync root.
+        /// The sync root. 
         /// </value>
         object ICollection.SyncRoot
         {
@@ -204,7 +204,7 @@ namespace TESVSnip.Collections
         /// Gets the values.
         /// </summary>
         /// <value>
-        /// The values.
+        /// The values. 
         /// </value>
         ICollection IDictionary.Values
         {
@@ -218,7 +218,7 @@ namespace TESVSnip.Collections
         /// Gets the count.
         /// </summary>
         /// <value>
-        /// The count.
+        /// The count. 
         /// </value>
         int ICollection<KeyValuePair<TKey, TItem>>.Count
         {
@@ -232,7 +232,7 @@ namespace TESVSnip.Collections
         /// Gets a value indicating whether is read only.
         /// </summary>
         /// <value>
-        /// The is read only.
+        /// The is read only. 
         /// </value>
         bool ICollection<KeyValuePair<TKey, TItem>>.IsReadOnly
         {
@@ -246,7 +246,7 @@ namespace TESVSnip.Collections
         /// Gets the keys.
         /// </summary>
         /// <value>
-        /// The keys.
+        /// The keys. 
         /// </value>
         ICollection<TKey> IDictionary<TKey, TItem>.Keys
         {
@@ -260,7 +260,7 @@ namespace TESVSnip.Collections
         /// Gets the values.
         /// </summary>
         /// <value>
-        /// The values.
+        /// The values. 
         /// </value>
         ICollection<TItem> IDictionary<TKey, TItem>.Values
         {
@@ -274,19 +274,20 @@ namespace TESVSnip.Collections
         /// The this.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
         /// <returns>
-        /// The TItem.
+        /// The TItem. 
         /// </returns>
         public TItem this[TKey key]
         {
             get
             {
                 KeyValuePair<TKey, TItem> kvp;
-                if (this.FindKVP(key, out kvp)) {
+                if (this.FindKVP(key, out kvp))
+                {
                     return kvp.Value;
                 }
 
@@ -303,10 +304,10 @@ namespace TESVSnip.Collections
         /// The i dictionary.this.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The System.Object.
+        /// The System.Object. 
         /// </returns>
         object IDictionary.this[object key]
         {
@@ -325,10 +326,10 @@ namespace TESVSnip.Collections
         /// The i dictionary&lt; t key, t item&gt;.this.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The TItem.
+        /// The TItem. 
         /// </returns>
         TItem IDictionary<TKey, TItem>.this[TKey key]
         {
@@ -347,28 +348,33 @@ namespace TESVSnip.Collections
         /// The add.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         public void Add(TKey key, TItem value)
         {
             KeyValuePair<TKey, TItem> kvp;
-            if (this.FindKVP(key, out kvp)) {
-                if (kvp.Value == null || !kvp.Value.Equals(value)) {
+            if (this.FindKVP(key, out kvp))
+            {
+                if (kvp.Value == null || !kvp.Value.Equals(value))
+                {
                     kvp = new KeyValuePair<TKey, TItem>(key, value);
                     this._hash[key] = kvp;
                     int idx = this.FindKey(key);
-                    if (idx >= 0) {
+                    if (idx >= 0)
+                    {
                         this._kvp[idx] = kvp;
                     }
-                    else {
+                    else
+                    {
                         this._kvp.Add(new KeyValuePair<TKey, TItem>(key, value)); // ???? error condition
                     }
                 }
             }
-            else {
+            else
+            {
                 kvp = new KeyValuePair<TKey, TItem>(key, value);
                 this._hash[key] = kvp;
                 this._kvp.Add(new KeyValuePair<TKey, TItem>(key, value));
@@ -399,21 +405,23 @@ namespace TESVSnip.Collections
         /// The contains key.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public bool ContainsKey(TKey key)
         {
-            if (key == null) {
+            if (key == null)
+            {
                 throw new ArgumentNullException("key");
             }
 
             KeyValuePair<TKey, TItem> kvp;
-            if (this._hash.TryGetValue(key, out kvp)) {
+            if (this._hash.TryGetValue(key, out kvp))
+            {
                 return true;
             }
 
@@ -424,16 +432,17 @@ namespace TESVSnip.Collections
         /// The contains value.
         /// </summary>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public bool ContainsValue(TItem value)
         {
-            if (value == null) {
+            if (value == null)
+            {
                 throw new ArgumentNullException("key");
             }
 
@@ -484,10 +493,10 @@ namespace TESVSnip.Collections
         /// The find index.
         /// </summary>
         /// <param name="match">
-        /// The match.
+        /// The match. 
         /// </param>
         /// <returns>
-        /// The System.Int32.
+        /// The System.Int32. 
         /// </returns>
         public int FindIndex(TKey match)
         {
@@ -498,15 +507,17 @@ namespace TESVSnip.Collections
         /// The find value.
         /// </summary>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         /// <returns>
-        /// The System.Int32.
+        /// The System.Int32. 
         /// </returns>
         public int FindValue(TItem value)
         {
-            for (int idx = 0; idx < this._kvp.Count; ++idx) {
-                if (this._kvp[idx].Value.Equals(value)) {
+            for (int idx = 0; idx < this._kvp.Count; ++idx)
+            {
+                if (this._kvp[idx].Value.Equals(value))
+                {
                     return idx;
                 }
             }
@@ -518,7 +529,7 @@ namespace TESVSnip.Collections
         /// The get enumerator.
         /// </summary>
         /// <returns>
-        /// The TESVSnip.Collections.Generic.OrderedDictionary`2+Enumerator.
+        /// The TESVSnip.Collections.Generic.OrderedDictionary`2+Enumerator. 
         /// </returns>
         public Enumerator GetEnumerator()
         {
@@ -529,10 +540,10 @@ namespace TESVSnip.Collections
         /// The get key.
         /// </summary>
         /// <param name="index">
-        /// The index.
+        /// The index. 
         /// </param>
         /// <returns>
-        /// The TKey.
+        /// The TKey. 
         /// </returns>
         public TKey GetKey(int index)
         {
@@ -543,20 +554,21 @@ namespace TESVSnip.Collections
         /// The insert.
         /// </summary>
         /// <param name="index">
-        /// The index.
+        /// The index. 
         /// </param>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
         public void Insert(int index, TKey key, TItem value)
         {
             KeyValuePair<TKey, TItem> kvp;
-            if (!this.FindKVP(key, out kvp)) {
+            if (!this.FindKVP(key, out kvp))
+            {
                 kvp = new KeyValuePair<TKey, TItem>(key, value);
                 this._kvp.Insert(index, kvp);
                 this._hash[key] = kvp;
@@ -570,23 +582,25 @@ namespace TESVSnip.Collections
         /// The remove.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public bool Remove(TKey key)
         {
-            if (key == null) {
+            if (key == null)
+            {
                 throw new ArgumentNullException("key");
             }
 
             this._hash.Remove(key);
 
             int idx = this.FindKey(key);
-            if (idx >= 0) {
+            if (idx >= 0)
+            {
                 this._kvp.RemoveAt(idx);
                 return true;
             }
@@ -598,24 +612,26 @@ namespace TESVSnip.Collections
         /// The try get value.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public bool TryGetValue(TKey key, out TItem value)
         {
-            if (key == null) {
+            if (key == null)
+            {
                 throw new ArgumentNullException("key");
             }
 
             KeyValuePair<TKey, TItem> kvp;
-            if (this.FindKVP(key, out kvp)) {
+            if (this.FindKVP(key, out kvp))
+            {
                 value = kvp.Value;
                 return true;
             }
@@ -628,10 +644,10 @@ namespace TESVSnip.Collections
         /// The add.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         void IDictionary.Add(object key, object value)
         {
@@ -650,10 +666,10 @@ namespace TESVSnip.Collections
         /// The contains.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         bool IDictionary.Contains(object key)
         {
@@ -664,10 +680,10 @@ namespace TESVSnip.Collections
         /// The copy to.
         /// </summary>
         /// <param name="array">
-        /// The array.
+        /// The array. 
         /// </param>
         /// <param name="index">
-        /// The index.
+        /// The index. 
         /// </param>
         void ICollection.CopyTo(Array array, int index)
         {
@@ -678,7 +694,7 @@ namespace TESVSnip.Collections
         /// The get enumerator.
         /// </summary>
         /// <returns>
-        /// The System.Collections.IDictionaryEnumerator.
+        /// The System.Collections.IDictionaryEnumerator. 
         /// </returns>
         IDictionaryEnumerator IDictionary.GetEnumerator()
         {
@@ -689,7 +705,7 @@ namespace TESVSnip.Collections
         /// The remove.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         void IDictionary.Remove(object key)
         {
@@ -700,13 +716,14 @@ namespace TESVSnip.Collections
         /// The add.
         /// </summary>
         /// <param name="item">
-        /// The item.
+        /// The item. 
         /// </param>
         /// <exception cref="ArgumentException">
         /// </exception>
         void ICollection<KeyValuePair<TKey, TItem>>.Add(KeyValuePair<TKey, TItem> item)
         {
-            if (this.ContainsKey(item.Key)) {
+            if (this.ContainsKey(item.Key))
+            {
                 throw new ArgumentException();
             }
 
@@ -717,10 +734,10 @@ namespace TESVSnip.Collections
         /// The add.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         void IDictionary<TKey, TItem>.Add(TKey key, TItem value)
         {
@@ -739,15 +756,17 @@ namespace TESVSnip.Collections
         /// The contains.
         /// </summary>
         /// <param name="item">
-        /// The item.
+        /// The item. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         bool ICollection<KeyValuePair<TKey, TItem>>.Contains(KeyValuePair<TKey, TItem> item)
         {
-            foreach (var kvp in this._kvp) {
-                if (kvp.Key.Equals(item.Key) && kvp.Value.Equals(item.Value)) {
+            foreach (var kvp in this._kvp)
+            {
+                if (kvp.Key.Equals(item.Key) && kvp.Value.Equals(item.Value))
+                {
                     return true;
                 }
             }
@@ -759,10 +778,10 @@ namespace TESVSnip.Collections
         /// The contains key.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         bool IDictionary<TKey, TItem>.ContainsKey(TKey key)
         {
@@ -773,10 +792,10 @@ namespace TESVSnip.Collections
         /// The copy to.
         /// </summary>
         /// <param name="array">
-        /// The array.
+        /// The array. 
         /// </param>
         /// <param name="arrayIndex">
-        /// The array index.
+        /// The array index. 
         /// </param>
         void ICollection<KeyValuePair<TKey, TItem>>.CopyTo(KeyValuePair<TKey, TItem>[] array, int arrayIndex)
         {
@@ -787,7 +806,7 @@ namespace TESVSnip.Collections
         /// The get enumerator.
         /// </summary>
         /// <returns>
-        /// The System.Collections.Generic.IEnumerator`1[T -&gt; System.Collections.Generic.KeyValuePair`2[TKey -&gt; TKey, TValue -&gt; TItem]].
+        /// The System.Collections.Generic.IEnumerator`1[T - &gt; System.Collections.Generic.KeyValuePair`2[TKey - &gt; TKey, TValue - &gt; TItem]]. 
         /// </returns>
         IEnumerator<KeyValuePair<TKey, TItem>> IEnumerable<KeyValuePair<TKey, TItem>>.GetEnumerator()
         {
@@ -798,7 +817,7 @@ namespace TESVSnip.Collections
         /// The get enumerator.
         /// </summary>
         /// <returns>
-        /// The System.Collections.IEnumerator.
+        /// The System.Collections.IEnumerator. 
         /// </returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -809,10 +828,10 @@ namespace TESVSnip.Collections
         /// The remove.
         /// </summary>
         /// <param name="item">
-        /// The item.
+        /// The item. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         bool ICollection<KeyValuePair<TKey, TItem>>.Remove(KeyValuePair<TKey, TItem> item)
         {
@@ -823,10 +842,10 @@ namespace TESVSnip.Collections
         /// The remove.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         bool IDictionary<TKey, TItem>.Remove(TKey key)
         {
@@ -837,13 +856,13 @@ namespace TESVSnip.Collections
         /// The try get value.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <param name="value">
-        /// The value.
+        /// The value. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         bool IDictionary<TKey, TItem>.TryGetValue(TKey key, out TItem value)
         {
@@ -854,17 +873,18 @@ namespace TESVSnip.Collections
         /// The find kvp.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <param name="kvp">
-        /// The kvp.
+        /// The kvp. 
         /// </param>
         /// <returns>
-        /// The System.Boolean.
+        /// The System.Boolean. 
         /// </returns>
         private bool FindKVP(TKey key, out KeyValuePair<TKey, TItem> kvp)
         {
-            if (this._hash.TryGetValue(key, out kvp)) {
+            if (this._hash.TryGetValue(key, out kvp))
+            {
                 return true;
             }
 
@@ -876,15 +896,17 @@ namespace TESVSnip.Collections
         /// The find key.
         /// </summary>
         /// <param name="key">
-        /// The key.
+        /// The key. 
         /// </param>
         /// <returns>
-        /// The System.Int32.
+        /// The System.Int32. 
         /// </returns>
         private int FindKey(TKey key)
         {
-            for (int idx = 0; idx < this._kvp.Count; ++idx) {
-                if (this._TKeyComparer.Equals(this._kvp[idx].Key, key)) {
+            for (int idx = 0; idx < this._kvp.Count; ++idx)
+            {
+                if (this._TKeyComparer.Equals(this._kvp[idx].Key, key))
+                {
                     return idx;
                 }
             }
@@ -916,7 +938,7 @@ namespace TESVSnip.Collections
             /// Initializes a new instance of the <see cref="Enumerator"/> struct.
             /// </summary>
             /// <param name="list">
-            /// The list.
+            /// The list. 
             /// </param>
             internal Enumerator(OrderedDictionary<TKey, TItem> list)
             {
@@ -929,7 +951,7 @@ namespace TESVSnip.Collections
             /// Gets the current.
             /// </summary>
             /// <value>
-            /// The current.
+            /// The current. 
             /// </value>
             public KeyValuePair<TKey, TItem> Current
             {
@@ -943,7 +965,7 @@ namespace TESVSnip.Collections
             /// Gets the current.
             /// </summary>
             /// <value>
-            /// The current.
+            /// The current. 
             /// </value>
             object IEnumerator.Current
             {
@@ -957,7 +979,7 @@ namespace TESVSnip.Collections
             /// Gets the entry.
             /// </summary>
             /// <value>
-            /// The entry.
+            /// The entry. 
             /// </value>
             DictionaryEntry IDictionaryEnumerator.Entry
             {
@@ -971,7 +993,7 @@ namespace TESVSnip.Collections
             /// Gets the key.
             /// </summary>
             /// <value>
-            /// The key.
+            /// The key. 
             /// </value>
             object IDictionaryEnumerator.Key
             {
@@ -985,7 +1007,7 @@ namespace TESVSnip.Collections
             /// Gets the value.
             /// </summary>
             /// <value>
-            /// The value.
+            /// The value. 
             /// </value>
             object IDictionaryEnumerator.Value
             {
@@ -999,11 +1021,12 @@ namespace TESVSnip.Collections
             /// The move next.
             /// </summary>
             /// <returns>
-            /// The System.Boolean.
+            /// The System.Boolean. 
             /// </returns>
             public bool MoveNext()
             {
-                if (this.index < this.list.Count) {
+                if (this.index < this.list.Count)
+                {
                     this.current = this.list._kvp[this.index];
                     this.index++;
                     return true;
@@ -1018,7 +1041,7 @@ namespace TESVSnip.Collections
             /// The move next.
             /// </summary>
             /// <returns>
-            /// The System.Boolean.
+            /// The System.Boolean. 
             /// </returns>
             bool IEnumerator.MoveNext()
             {
@@ -1056,7 +1079,7 @@ namespace TESVSnip.Collections
             /// Initializes a new instance of the <see cref="OrderedKeyCollection"/> class.
             /// </summary>
             /// <param name="list">
-            /// The list.
+            /// The list. 
             /// </param>
             internal OrderedKeyCollection(OrderedDictionary<TKey, TItem> list)
             {
@@ -1067,7 +1090,7 @@ namespace TESVSnip.Collections
             /// Gets the count.
             /// </summary>
             /// <value>
-            /// The count.
+            /// The count. 
             /// </value>
             public int Count
             {
@@ -1081,7 +1104,7 @@ namespace TESVSnip.Collections
             /// Gets a value indicating whether is read only.
             /// </summary>
             /// <value>
-            /// The is read only.
+            /// The is read only. 
             /// </value>
             public bool IsReadOnly
             {
@@ -1095,7 +1118,7 @@ namespace TESVSnip.Collections
             /// Gets the count.
             /// </summary>
             /// <value>
-            /// The count.
+            /// The count. 
             /// </value>
             int ICollection.Count
             {
@@ -1109,7 +1132,7 @@ namespace TESVSnip.Collections
             /// Gets a value indicating whether is synchronized.
             /// </summary>
             /// <value>
-            /// The is synchronized.
+            /// The is synchronized. 
             /// </value>
             bool ICollection.IsSynchronized
             {
@@ -1123,7 +1146,7 @@ namespace TESVSnip.Collections
             /// Gets the sync root.
             /// </summary>
             /// <value>
-            /// The sync root.
+            /// The sync root. 
             /// </value>
             object ICollection.SyncRoot
             {
@@ -1137,7 +1160,7 @@ namespace TESVSnip.Collections
             /// The add.
             /// </summary>
             /// <param name="item">
-            /// The item.
+            /// The item. 
             /// </param>
             /// <exception cref="Exception">
             /// </exception>
@@ -1160,10 +1183,10 @@ namespace TESVSnip.Collections
             /// The contains.
             /// </summary>
             /// <param name="item">
-            /// The item.
+            /// The item. 
             /// </param>
             /// <returns>
-            /// The System.Boolean.
+            /// The System.Boolean. 
             /// </returns>
             public bool Contains(TKey item)
             {
@@ -1174,10 +1197,10 @@ namespace TESVSnip.Collections
             /// The copy to.
             /// </summary>
             /// <param name="array">
-            /// The array.
+            /// The array. 
             /// </param>
             /// <param name="arrayIndex">
-            /// The array index.
+            /// The array index. 
             /// </param>
             /// <exception cref="Exception">
             /// </exception>
@@ -1190,7 +1213,7 @@ namespace TESVSnip.Collections
             /// The get enumerator.
             /// </summary>
             /// <returns>
-            /// The System.Collections.Generic.IEnumerator`1[T -&gt; TKey].
+            /// The System.Collections.Generic.IEnumerator`1[T - &gt; TKey]. 
             /// </returns>
             public IEnumerator<TKey> GetEnumerator()
             {
@@ -1201,10 +1224,10 @@ namespace TESVSnip.Collections
             /// The remove.
             /// </summary>
             /// <param name="item">
-            /// The item.
+            /// The item. 
             /// </param>
             /// <returns>
-            /// The System.Boolean.
+            /// The System.Boolean. 
             /// </returns>
             /// <exception cref="Exception">
             /// </exception>
@@ -1217,10 +1240,10 @@ namespace TESVSnip.Collections
             /// The copy to.
             /// </summary>
             /// <param name="array">
-            /// The array.
+            /// The array. 
             /// </param>
             /// <param name="index">
-            /// The index.
+            /// The index. 
             /// </param>
             void ICollection.CopyTo(Array array, int index)
             {
@@ -1231,7 +1254,7 @@ namespace TESVSnip.Collections
             /// The get enumerator.
             /// </summary>
             /// <returns>
-            /// The System.Collections.IEnumerator.
+            /// The System.Collections.IEnumerator. 
             /// </returns>
             IEnumerator IEnumerable.GetEnumerator()
             {
@@ -1262,7 +1285,7 @@ namespace TESVSnip.Collections
                 /// Initializes a new instance of the <see cref="Enumerator"/> struct.
                 /// </summary>
                 /// <param name="list">
-                /// The list.
+                /// The list. 
                 /// </param>
                 internal Enumerator(OrderedDictionary<TKey, TItem> list)
                 {
@@ -1275,7 +1298,7 @@ namespace TESVSnip.Collections
                 /// Gets the current.
                 /// </summary>
                 /// <value>
-                /// The current.
+                /// The current. 
                 /// </value>
                 public TKey Current
                 {
@@ -1289,7 +1312,7 @@ namespace TESVSnip.Collections
                 /// Gets the current.
                 /// </summary>
                 /// <value>
-                /// The current.
+                /// The current. 
                 /// </value>
                 object IEnumerator.Current
                 {
@@ -1303,11 +1326,12 @@ namespace TESVSnip.Collections
                 /// The move next.
                 /// </summary>
                 /// <returns>
-                /// The System.Boolean.
+                /// The System.Boolean. 
                 /// </returns>
                 public bool MoveNext()
                 {
-                    if (this.index < this.list.Count) {
+                    if (this.index < this.list.Count)
+                    {
                         this.current = this.list._kvp[this.index].Key;
                         this.index++;
                         return true;
@@ -1350,7 +1374,7 @@ namespace TESVSnip.Collections
             /// Initializes a new instance of the <see cref="OrderedValueCollection"/> class.
             /// </summary>
             /// <param name="list">
-            /// The list.
+            /// The list. 
             /// </param>
             internal OrderedValueCollection(OrderedDictionary<TKey, TItem> list)
             {
@@ -1361,7 +1385,7 @@ namespace TESVSnip.Collections
             /// Gets the count.
             /// </summary>
             /// <value>
-            /// The count.
+            /// The count. 
             /// </value>
             public int Count
             {
@@ -1375,7 +1399,7 @@ namespace TESVSnip.Collections
             /// Gets a value indicating whether is read only.
             /// </summary>
             /// <value>
-            /// The is read only.
+            /// The is read only. 
             /// </value>
             public bool IsReadOnly
             {
@@ -1389,7 +1413,7 @@ namespace TESVSnip.Collections
             /// Gets the count.
             /// </summary>
             /// <value>
-            /// The count.
+            /// The count. 
             /// </value>
             int ICollection.Count
             {
@@ -1403,7 +1427,7 @@ namespace TESVSnip.Collections
             /// Gets a value indicating whether is synchronized.
             /// </summary>
             /// <value>
-            /// The is synchronized.
+            /// The is synchronized. 
             /// </value>
             bool ICollection.IsSynchronized
             {
@@ -1417,7 +1441,7 @@ namespace TESVSnip.Collections
             /// Gets the sync root.
             /// </summary>
             /// <value>
-            /// The sync root.
+            /// The sync root. 
             /// </value>
             object ICollection.SyncRoot
             {
@@ -1431,7 +1455,7 @@ namespace TESVSnip.Collections
             /// The add.
             /// </summary>
             /// <param name="item">
-            /// The item.
+            /// The item. 
             /// </param>
             /// <exception cref="Exception">
             /// </exception>
@@ -1454,10 +1478,10 @@ namespace TESVSnip.Collections
             /// The contains.
             /// </summary>
             /// <param name="item">
-            /// The item.
+            /// The item. 
             /// </param>
             /// <returns>
-            /// The System.Boolean.
+            /// The System.Boolean. 
             /// </returns>
             public bool Contains(TItem item)
             {
@@ -1468,10 +1492,10 @@ namespace TESVSnip.Collections
             /// The copy to.
             /// </summary>
             /// <param name="array">
-            /// The array.
+            /// The array. 
             /// </param>
             /// <param name="arrayIndex">
-            /// The array index.
+            /// The array index. 
             /// </param>
             /// <exception cref="Exception">
             /// </exception>
@@ -1484,7 +1508,7 @@ namespace TESVSnip.Collections
             /// The get enumerator.
             /// </summary>
             /// <returns>
-            /// The System.Collections.Generic.IEnumerator`1[T -&gt; TItem].
+            /// The System.Collections.Generic.IEnumerator`1[T - &gt; TItem]. 
             /// </returns>
             public IEnumerator<TItem> GetEnumerator()
             {
@@ -1495,10 +1519,10 @@ namespace TESVSnip.Collections
             /// The remove.
             /// </summary>
             /// <param name="item">
-            /// The item.
+            /// The item. 
             /// </param>
             /// <returns>
-            /// The System.Boolean.
+            /// The System.Boolean. 
             /// </returns>
             /// <exception cref="Exception">
             /// </exception>
@@ -1511,10 +1535,10 @@ namespace TESVSnip.Collections
             /// The copy to.
             /// </summary>
             /// <param name="array">
-            /// The array.
+            /// The array. 
             /// </param>
             /// <param name="index">
-            /// The index.
+            /// The index. 
             /// </param>
             void ICollection.CopyTo(Array array, int index)
             {
@@ -1525,7 +1549,7 @@ namespace TESVSnip.Collections
             /// The get enumerator.
             /// </summary>
             /// <returns>
-            /// The System.Collections.IEnumerator.
+            /// The System.Collections.IEnumerator. 
             /// </returns>
             IEnumerator IEnumerable.GetEnumerator()
             {
@@ -1556,7 +1580,7 @@ namespace TESVSnip.Collections
                 /// Initializes a new instance of the <see cref="Enumerator"/> struct.
                 /// </summary>
                 /// <param name="list">
-                /// The list.
+                /// The list. 
                 /// </param>
                 internal Enumerator(OrderedDictionary<TKey, TItem> list)
                 {
@@ -1569,7 +1593,7 @@ namespace TESVSnip.Collections
                 /// Gets the current.
                 /// </summary>
                 /// <value>
-                /// The current.
+                /// The current. 
                 /// </value>
                 public TItem Current
                 {
@@ -1583,7 +1607,7 @@ namespace TESVSnip.Collections
                 /// Gets the current.
                 /// </summary>
                 /// <value>
-                /// The current.
+                /// The current. 
                 /// </value>
                 object IEnumerator.Current
                 {
@@ -1597,11 +1621,12 @@ namespace TESVSnip.Collections
                 /// The move next.
                 /// </summary>
                 /// <returns>
-                /// The System.Boolean.
+                /// The System.Boolean. 
                 /// </returns>
                 public bool MoveNext()
                 {
-                    if (this.index < this.list.Count) {
+                    if (this.index < this.list.Count)
+                    {
                         this.current = this.list._kvp[this.index].Value;
                         this.index++;
                         return true;

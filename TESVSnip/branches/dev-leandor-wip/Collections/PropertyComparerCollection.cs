@@ -25,19 +25,21 @@ namespace TESVSnip.Collections
         /// Initializes a new instance of the <see cref="PropertyComparerCollection{T}"/> class.
         /// </summary>
         /// <param name="sorts">
-        /// The sorts.
+        /// The sorts. 
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public PropertyComparerCollection(ListSortDescriptionCollection sorts)
         {
-            if (sorts == null) {
+            if (sorts == null)
+            {
                 throw new ArgumentNullException("sorts");
             }
 
             this.sorts = sorts;
             var list = new List<PropertyComparer<T>>();
-            foreach (ListSortDescription item in sorts) {
+            foreach (ListSortDescription item in sorts)
+            {
                 list.Add(new PropertyComparer<T>(item.PropertyDescriptor, item.SortDirection == ListSortDirection.Descending));
             }
 
@@ -48,7 +50,7 @@ namespace TESVSnip.Collections
         /// Gets the primary direction.
         /// </summary>
         /// <value>
-        /// The primary direction.
+        /// The primary direction. 
         /// </value>
         public ListSortDirection PrimaryDirection
         {
@@ -62,7 +64,7 @@ namespace TESVSnip.Collections
         /// Gets the primary property.
         /// </summary>
         /// <value>
-        /// The primary property.
+        /// The primary property. 
         /// </value>
         public PropertyDescriptor PrimaryProperty
         {
@@ -76,7 +78,7 @@ namespace TESVSnip.Collections
         /// Gets the sorts.
         /// </summary>
         /// <value>
-        /// The sorts.
+        /// The sorts. 
         /// </value>
         public ListSortDescriptionCollection Sorts
         {
@@ -90,20 +92,22 @@ namespace TESVSnip.Collections
         /// The compare.
         /// </summary>
         /// <param name="x">
-        /// The x.
+        /// The x. 
         /// </param>
         /// <param name="y">
-        /// The y.
+        /// The y. 
         /// </param>
         /// <returns>
-        /// The System.Int32.
+        /// The System.Int32. 
         /// </returns>
         int IComparer<T>.Compare(T x, T y)
         {
             int result = 0;
-            for (int i = 0; i < this.comparers.Length; i++) {
+            for (int i = 0; i < this.comparers.Length; i++)
+            {
                 result = this.comparers[i].Compare(x, y);
-                if (result != 0) {
+                if (result != 0)
+                {
                     break;
                 }
             }

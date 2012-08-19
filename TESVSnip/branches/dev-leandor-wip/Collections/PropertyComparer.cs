@@ -26,16 +26,17 @@ namespace TESVSnip.Collections
         /// Initializes a new instance of the <see cref="PropertyComparer{T}"/> class.
         /// </summary>
         /// <param name="property">
-        /// The property.
+        /// The property. 
         /// </param>
         /// <param name="descending">
-        /// The descending.
+        /// The descending. 
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public PropertyComparer(PropertyDescriptor property, bool descending)
         {
-            if (property == null) {
+            if (property == null)
+            {
                 throw new ArgumentNullException("property");
             }
 
@@ -47,7 +48,7 @@ namespace TESVSnip.Collections
         /// Gets a value indicating whether descending.
         /// </summary>
         /// <value>
-        /// The descending.
+        /// The descending. 
         /// </value>
         public bool Descending
         {
@@ -61,7 +62,7 @@ namespace TESVSnip.Collections
         /// Gets the property.
         /// </summary>
         /// <value>
-        /// The property.
+        /// The property. 
         /// </value>
         public PropertyDescriptor Property
         {
@@ -75,13 +76,13 @@ namespace TESVSnip.Collections
         /// The compare.
         /// </summary>
         /// <param name="x">
-        /// The x.
+        /// The x. 
         /// </param>
         /// <param name="y">
-        /// The y.
+        /// The y. 
         /// </param>
         /// <returns>
-        /// The System.Int32.
+        /// The System.Int32. 
         /// </returns>
         public int Compare(T x, T y)
         {
