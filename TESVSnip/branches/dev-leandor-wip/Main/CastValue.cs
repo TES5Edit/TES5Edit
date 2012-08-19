@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace TESVSnip
+﻿namespace TESVSnip
 {
+    using System;
+
     internal static partial class Extensions
     {
-        #region CastValue
-
         internal static T CastValue<T>(object value)
         {
             return CastValue<T>(value, default(T));
@@ -20,27 +15,39 @@ namespace TESVSnip
             {
                 try
                 {
-                    Type t0 = typeof (T);
+                    Type t0 = typeof(T);
                     Type t = value.GetType();
-                    if (t0 == t) return (T) value;
+                    if (t0 == t)
+                    {
+                        return (T)value;
+                    }
 
                     if (t0.IsEnum && !t.IsEnum)
+                    {
                         value = Enum.Parse(t0, value.ToString());
-                    else if (t0 == typeof (bool) && value is string)
+                    }
+                    else if (t0 == typeof(bool) && value is string)
                     {
                         bool boolResult;
                         if (bool.TryParse(value.ToString(), out boolResult))
-                            return (T) (object) boolResult;
+                        {
+                            return (T)(object)boolResult;
+                        }
+
                         float floatResult;
                         if (float.TryParse(value.ToString(), out floatResult))
-                            return (T) (object) (floatResult != default(float));
+                        {
+                            return (T)(object)(floatResult != default(float));
+                        }
                     }
-                    return (T) System.Convert.ChangeType(value, t0);
+
+                    return (T)Convert.ChangeType(value, t0);
                 }
                 catch
                 {
                 }
             }
+
             return default(T);
         }
 
@@ -50,29 +57,39 @@ namespace TESVSnip
             {
                 try
                 {
-                    bool isNullable = (type.IsGenericType && type.GetGenericTypeDefinition() == typeof (Nullable<>));
+                    bool isNullable = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
                     if (isNullable)
+                    {
                         type = Nullable.GetUnderlyingType(type);
+                    }
+
                     if (type.IsEnum && !value.GetType().IsEnum)
+                    {
                         value = Enum.Parse(type, value.ToString());
-                    else if (type == typeof (bool) && value is string)
+                    }
+                    else if (type == typeof(bool) && value is string)
                     {
                         bool boolResult;
                         if (bool.TryParse(value.ToString(), out boolResult))
+                        {
                             return boolResult;
+                        }
+
                         float floatResult;
                         if (float.TryParse(value.ToString(), out floatResult))
-                            return (floatResult != default(float));
+                        {
+                            return floatResult != default(float);
+                        }
                     }
-                    return System.Convert.ChangeType(value, type);
+
+                    return Convert.ChangeType(value, type);
                 }
                 catch
                 {
                 }
             }
+
             return null;
         }
-
-        #endregion
     }
 }

@@ -1,75 +1,291 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.Xml.Serialization;
-using TESVSnip.Data;
-using TESVSnip.Properties;
-
-namespace TESVSnip
+﻿namespace TESVSnip
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Windows.Forms;
+
     using TESVSnip.Collections;
     using TESVSnip.Model;
+    using TESVSnip.Properties;
 
     /// <summary>
-    /// This file contains the miscellaneous spells for the main form
+    /// This file contains the miscellaneous spells for the main form.
     /// </summary>
     internal static class Spells
     {
+        private static readonly string[] LooseGroups = new[] { "CELL", "WRLD", "REFR", "ACRE", "ACHR", "NAVM", "DIAL", "INFO" };
+
+        /// <summary>
+        /// The sanitize order.
+        /// </summary>
         /// HAZD appears twice in Skyrim.esm.  2nd entry is empty.
-        private static readonly string[] SanitizeOrder = new string[] {
-            "GMST", "KYWD", "LCRT", "AACT", "TXST", "GLOB", "CLAS", "FACT", "HDPT", "HAIR", "EYES", "RACE", "SOUN", "ASPC", "MGEF", 
-            "SCPT", "LTEX", "ENCH", "SPEL", "SCRL", "ACTI", "TACT", "ARMO", "BOOK", "CONT", "DOOR", "INGR", "LIGH", "MISC", "APPA", 
-            "STAT", "SCOL", "MSTT", "PWAT", "GRAS", "TREE", "CLDC", "FLOR", "FURN", "WEAP", "AMMO", "NPC_", "LVLN", "KEYM", "ALCH", 
-            "IDLM", "COBJ", "PROJ", "HAZD", "SLGM", "LVLI", "WTHR", "CLMT", "SPGD", "RFCT", "REGN", "NAVI", "CELL", "WRLD", "DIAL", 
-            "QUST", "IDLE", "PACK", "CSTY", "LSCR", "LVSP", "ANIO", "WATR", "EFSH", "EXPL", "DEBR", "IMGS", "IMAD", "FLST", "PERK", 
-            "BPTD", "ADDN", "AVIF", "CAMS", "CPTH", "VTYP", "MATT", "IPCT", "IPDS", "ARMA", "ECZN", "LCTN", "MESG", "RGDL", "DOBJ", 
-            "LGTM", "MUSC", "FSTP", "FSTS", "SMBN", "SMQN", "SMEN", "DLBR", "MUST", "DLVW", "WOOP", "SHOU", "EQUP", "RELA", "SCEN", 
-            "ASTP", "OTFT", "ARTO", "MATO", "MOVT", "HAZD", "SNDR", "DUAL", "SNCT", "SOPM", "COLL", "CLFM", "REVB"
-                                                      };
+        private static readonly string[] SanitizeOrder = new[]
+            {
+                "GMST", "KYWD", "LCRT", "AACT", "TXST", "GLOB", "CLAS", "FACT", "HDPT", "HAIR", "EYES", "RACE", "SOUN", "ASPC", "MGEF", "SCPT", "LTEX", "ENCH", "SPEL", "SCRL", "ACTI", "TACT", "ARMO", 
+                "BOOK", "CONT", "DOOR", "INGR", "LIGH", "MISC", "APPA", "STAT", "SCOL", "MSTT", "PWAT", "GRAS", "TREE", "CLDC", "FLOR", "FURN", "WEAP", "AMMO", "NPC_", "LVLN", "KEYM", "ALCH", "IDLM", 
+                "COBJ", "PROJ", "HAZD", "SLGM", "LVLI", "WTHR", "CLMT", "SPGD", "RFCT", "REGN", "NAVI", "CELL", "WRLD", "DIAL", "QUST", "IDLE", "PACK", "CSTY", "LSCR", "LVSP", "ANIO", "WATR", "EFSH", 
+                "EXPL", "DEBR", "IMGS", "IMAD", "FLST", "PERK", "BPTD", "ADDN", "AVIF", "CAMS", "CPTH", "VTYP", "MATT", "IPCT", "IPDS", "ARMA", "ECZN", "LCTN", "MESG", "RGDL", "DOBJ", "LGTM", "MUSC", 
+                "FSTP", "FSTS", "SMBN", "SMQN", "SMEN", "DLBR", "MUST", "DLVW", "WOOP", "SHOU", "EQUP", "RELA", "SCEN", "ASTP", "OTFT", "ARTO", "MATO", "MOVT", "HAZD", "SNDR", "DUAL", "SNCT", "SOPM", 
+                "COLL", "CLFM", "REVB"
+            };
 
-        private static readonly string[] LooseGroups = new string[] {
-            "CELL", "WRLD", "REFR", "ACRE", "ACHR", "NAVM", "DIAL", "INFO"
-        };
+        public static int CopyRecordsTo(BaseRecord[] src, IGroupRecord dst)
+        {
+            int count = 0;
+            if (src != null && dst != null)
+            {
+                if (dst is Plugin)
+                {
+                    var dstRec = src.Where(x => !LooseGroups.Contains(x.Name)).Select(x => x.Clone()).ToArray();
+                    if (dstRec.All(x => x is Record))
+                    {
+                        // put records into appropriate groups
+                        var groups = dst.Records.OfType<GroupRecord>();
+                        var lookup = dstRec.GroupBy(r => r.Name).Select(g => new { key = g.Key, value = g.ToArray() }).ToLookup(k => k.key, v => v.value);
+                        foreach (var kvp in lookup)
+                        {
+                            if (LooseGroups.Contains(kvp.Key))
+                            {
+                                dst.AddRecords(dstRec);
+                            }
+                            else
+                            {
+                                var gr = groups.FirstOrDefault(x => x.ContentsType == kvp.Key);
+                                if (gr == null)
+                                {
+                                    gr = new GroupRecord(kvp.Key);
+                                    dst.AddRecord(gr);
+                                }
 
+                                foreach (var list in kvp)
+                                {
+                                    gr.AddRecords(list);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        dst.AddRecords(dstRec);
+                    }
+
+                    // handle loose groups by creating copy of parent groups
+                    foreach (var srcRec in src.Where(x => LooseGroups.Contains(x.Name)))
+                    {
+                        var dstnodes = new Stack<BaseRecord>();
+                        dstnodes.Push(srcRec.Clone(recursive: true));
+                        for (var n = srcRec.Parent; n is GroupRecord; n = n.Parent)
+                        {
+                            dstnodes.Push(n.Clone(recursive: false));
+                        }
+
+                        var par = dst as IGroupRecord;
+                        foreach (var baseRecord in dstnodes)
+                        {
+                            if (par == null)
+                            {
+                                break;
+                            }
+
+                            if (baseRecord is GroupRecord)
+                            {
+                                var gr = baseRecord as GroupRecord;
+                                var pargr = par.Records.OfType<GroupRecord>().FirstOrDefault(x => x.IsEquivalent(gr));
+                                if (pargr != null)
+                                {
+                                    par = pargr;
+                                    continue;
+                                }
+                            }
+
+                            par.AddRecord(baseRecord);
+                            par = baseRecord as IGroupRecord;
+                        }
+
+                        count += dstnodes.Count;
+                    }
+                }
+                else
+                {
+                    var dstRec = src.Select(x => x.Clone()).ToArray();
+                    dst.AddRecords(dstRec);
+                    count += dstRec.Count();
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// Extract any internalized strings and put in string table.
+        /// </summary>
+        /// <param name="plugin">
+        /// </param>
+        /// <returns>
+        /// The System.Int32.
+        /// </returns>
+        public static int ExtractInternalStrings(Plugin plugin)
+        {
+            int count = 0;
+
+            // uint maxid = plugin.Masters.Max(x=>x.Strings.Count > 0 ? x.Strings.Keys.Max() : 0); // No need to check the masters string since the numbers are unique for every plugin
+            bool anyModified = false;
+            foreach (var record in plugin.Enumerate().OfType<Record>())
+            {
+                record.MatchRecordStructureToRecord();
+                foreach (var sr in record.SubRecords)
+                {
+                    var elements = record.EnumerateElements(sr, rawData: true).ToList();
+                    foreach (var elem in elements)
+                    {
+                        if (elem.Structure != null && elem.Structure.type == ElementValueType.LString)
+                        {
+                            var data = elem.Data;
+                            uint id = TypeConverter.h2i(data);
+                            if (id == 0)
+                            {
+                                continue;
+                            }
+
+                            if (data.Count == 4 && TypeConverter.IsLikelyString(data))
+                            {
+                                string str;
+                                if (plugin.Strings.TryGetValue(id, out str))
+                                {
+                                    continue;
+                                }
+                            }
+
+                            if (data.Count != 4 || TypeConverter.IsLikelyString(data))
+                            {
+                                string value = TypeConverter.GetString(data);
+                                if (!string.IsNullOrEmpty(value))
+                                {
+                                    // uint nextid = Math.Max(maxid, plugin.Strings.Count == 0 ? 0 : plugin.Strings.Keys.Max()) + 1; // No need to check the masters strings since the numbers are unique for every plugin
+                                    uint nextid = (plugin.Strings.Count == 0 ? 0 : plugin.Strings.Keys.Max()) + 1;
+                                    int idx = plugin.Strings.FindValue(value);
+                                    if (idx >= 0)
+                                    {
+                                        nextid = plugin.Strings.ElementAt(idx).Key;
+                                    }
+                                    else
+                                    {
+                                        plugin.Strings[nextid] = value;
+                                    }
+
+                                    elem.AssignValue<ArraySegment<byte>>(new ArraySegment<byte>((byte[])TypeConverter.i2h(nextid).Clone()));
+                                    ++count;
+                                }
+                            }
+                        }
+                    }
+
+                    if (elements.Any(x => x.Changed))
+                    {
+                        // need to repack the structure
+                        using (var ms = new MemoryStream(sr.GetReadonlyData().Length))
+                        {
+                            foreach (var seg in elements.Select(elem => elem.Data))
+                            {
+                                ms.Write(seg.Array, seg.Offset, seg.Count);
+                            }
+
+                            sr.SetData(ms.ToArray());
+                        }
+
+                        anyModified = true;
+                    }
+                }
+            }
+
+            if (anyModified)
+            {
+                var tes4 = plugin.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
+                if (tes4 != null)
+                {
+                    tes4.Flags1 |= 0x00000080U;
+                }
+            }
+
+            return count;
+        }
 
         public static Plugin GetPluginFromNode(BaseRecord node)
         {
             BaseRecord tn = node;
-            if (tn is Plugin) return (Plugin)tn;
-            while (!(tn is Plugin) && tn != null) tn = tn.Parent;
-            if (tn != null) return tn as Plugin;
+            if (tn is Plugin)
+            {
+                return (Plugin)tn;
+            }
+
+            while (!(tn is Plugin) && tn != null)
+            {
+                tn = tn.Parent;
+            }
+
+            if (tn != null)
+            {
+                return tn as Plugin;
+            }
+
             return null;
         }
 
-
-        static int sanitizeCountRecords(Rec r)
+        public static void ReorderSubrecords(Record rec)
         {
-            if (r is Record) return 1;
-            else
+            if (rec == null || RecordStructure.Records == null)
             {
-                int i = 1;
-                foreach (Rec r2 in (r).Records) i += sanitizeCountRecords(r2);
-                return i;
+                return;
             }
-        }
 
-        public static void UpdateRecordCount(Plugin plugin)
-        {
-            int reccount = -1 + plugin.Records.Cast<Rec>().Sum(r => sanitizeCountRecords(r));
-            var tes4 = plugin.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
-            if (tes4 != null)
+            if (!RecordStructure.Records.ContainsKey(rec.Name))
             {
-                if (tes4.SubRecords.Count > 0 && tes4.SubRecords[0].Name == "HEDR" && tes4.SubRecords[0].Size >= 8)
+                return;
+            }
+
+            SubrecordStructure[] sss = RecordStructure.Records[rec.Name].subrecords;
+
+            var subs = new List<SubRecord>(rec.SubRecords);
+            foreach (var sub in subs)
+            {
+                sub.DetachStructure();
+            }
+
+            var newsubs = new List<SubRecord>();
+            for (int ssidx = 0, sslen = 0; ssidx < sss.Length; ssidx += sslen)
+            {
+                SubrecordStructure ss = sss[ssidx];
+                bool repeat = ss.repeat > 0;
+                sslen = Math.Max(1, ss.repeat);
+
+                bool found = false;
+                do
                 {
-                    byte[] data = tes4.SubRecords[0].GetData();
-                    byte[] reccountbytes = TypeConverter.si2h(reccount);
-                    for (int i = 0; i < 4; i++) data[4 + i] = reccountbytes[i];
-                    tes4.SubRecords[0].SetData(data);
+                    found = false;
+                    for (int ssoff = 0; ssoff < sslen; ++ssoff)
+                    {
+                        ss = sss[ssidx + ssoff];
+                        for (int i = 0; i < subs.Count; ++i)
+                        {
+                            var sr = subs[i];
+                            if (sr.Name == ss.name)
+                            {
+                                newsubs.Add(sr);
+                                subs.RemoveAt(i);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
                 }
+                while (found && repeat);
             }
+
+            newsubs.AddRange(subs);
+            rec.SubRecords.Clear();
+            rec.SubRecords.AddRange(newsubs);
         }
 
         public static void SanitizePlugin(Plugin plugin)
@@ -80,7 +296,9 @@ namespace TESVSnip
             {
                 BaseRecord.HoldUpdates = true;
                 if (plugin == null)
+                {
                     throw new ApplicationException("Cannot select plugin");
+                }
 
                 var hdr = plugin.Records.OfType<Rec>().FirstOrDefault(x => x.Name == "TES4");
                 if (hdr == null)
@@ -112,12 +330,20 @@ namespace TESVSnip
                         if (gr.ContentsType == "CELL" || gr.ContentsType == "WRLD" || gr.ContentsType == "DIAL")
                         {
                             var gr2 = groups[gr.ContentsType];
-                            foreach (BaseRecord r2 in gr.Records) gr2.AddRecord(r2);
+                            foreach (BaseRecord r2 in gr.Records)
+                            {
+                                gr2.AddRecord(r2);
+                            }
+
                             gr.Clear();
                         }
                         else
                         {
-                            foreach (BaseRecord r2 in gr.Records) toParse.Enqueue(r2);
+                            foreach (BaseRecord r2 in gr.Records)
+                            {
+                                toParse.Enqueue(r2);
+                            }
+
                             gr.Clear();
                         }
                     }
@@ -131,8 +357,10 @@ namespace TESVSnip
                         }
                         else
                         {
-                            if (groups.ContainsKey(r2.Name)) 
+                            if (groups.ContainsKey(r2.Name))
+                            {
                                 groups[r2.Name].AddRecord(r2);
+                            }
                             else
                             {
                                 unknownRecordsWarning = true;
@@ -144,12 +372,17 @@ namespace TESVSnip
 
                 foreach (GroupRecord gr2 in groups.Values)
                 {
-                    if (gr2.Records.Count == 0) plugin.DeleteRecord(gr2);
+                    if (gr2.Records.Count == 0)
+                    {
+                        plugin.DeleteRecord(gr2);
+                    }
                 }
+
                 if (looseGroupsWarning)
                 {
                     MessageBox.Show(Resources.CannotSanitizeLooseGroups, Resources.WarningText);
                 }
+
                 if (unknownRecordsWarning)
                 {
                     MessageBox.Show(Resources.CannotSanitizeUnknownRecords, Resources.WarningText);
@@ -178,150 +411,33 @@ namespace TESVSnip
             }
         }
 
-        static void StripEDIDsInternal(Rec r)
-        {
-            if (r is Record)
-            {
-                var r2 = (Record)r;
-                if (r2.Name != "GMST" && r2.SubRecords.Count > 0 && r2.SubRecords[0].Name == "EDID")
-                    r2.DeleteRecord(r2.SubRecords[0]);
-                for (int i = 0; i < r2.SubRecords.Count; i++)
-                {
-                    if (r2.SubRecords[i].Name == "SCTX") r2.SubRecords.RemoveAt(i--);
-                }
-            }
-            else
-            {
-                foreach (Rec r2 in (r).Records) StripEDIDsInternal(r2);
-            }
-        }
-
         public static void StripEDIDs(Plugin p)
         {
-            foreach (Rec r in p.Records) StripEDIDsInternal(r);
-        }
-
-
-        public static void ReorderSubrecords(Record rec)
-        {
-            if (rec == null || RecordStructure.Records == null) return;
-            if (!RecordStructure.Records.ContainsKey(rec.Name)) return;
-
-            SubrecordStructure[] sss = RecordStructure.Records[rec.Name].subrecords;
-
-            var subs = new List<SubRecord>(rec.SubRecords);
-            foreach (var sub in subs) sub.DetachStructure();
-
-            var newsubs = new List<SubRecord>();
-            for (int ssidx = 0, sslen = 0; ssidx < sss.Length; ssidx += sslen)
+            foreach (Rec r in p.Records)
             {
-                SubrecordStructure ss = sss[ssidx];
-                bool repeat = ss.repeat > 0;
-                sslen = Math.Max(1, ss.repeat);
-
-                bool found = false;
-                do
-                {
-                    found = false;
-                    for (int ssoff = 0; ssoff < sslen; ++ssoff)
-                    {
-                        ss = sss[ssidx + ssoff];
-                        for (int i = 0; i < subs.Count; ++i)
-                        {
-                            var sr = subs[i];
-                            if (sr.Name == ss.name)
-                            {
-                                newsubs.Add(sr);
-                                subs.RemoveAt(i);
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                } while (found && repeat);
+                StripEDIDsInternal(r);
             }
-            newsubs.AddRange(subs);
-            rec.SubRecords.Clear();
-            rec.SubRecords.AddRange(newsubs);
         }
 
-
-        public static int CopyRecordsTo(BaseRecord[] src, IGroupRecord dst)
+        public static void UpdateRecordCount(Plugin plugin)
         {
-            int count = 0;
-            if (src != null && dst != null)
+            int reccount = -1 + plugin.Records.Cast<Rec>().Sum(r => sanitizeCountRecords(r));
+            var tes4 = plugin.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
+            if (tes4 != null)
             {
-                if (dst is Plugin)
+                if (tes4.SubRecords.Count > 0 && tes4.SubRecords[0].Name == "HEDR" && tes4.SubRecords[0].Size >= 8)
                 {
-                    var dstRec = src.Where(x => !LooseGroups.Contains(x.Name)).Select(x => x.Clone()).ToArray();
-                    if (dstRec.All(x => x is Record))
+                    byte[] data = tes4.SubRecords[0].GetData();
+                    byte[] reccountbytes = TypeConverter.si2h(reccount);
+                    for (int i = 0; i < 4; i++)
                     {
-                        // put records into appropriate groups
-                        var groups = dst.Records.OfType<GroupRecord>();
-                        var lookup = dstRec.GroupBy(r => r.Name).Select(g => new {key = g.Key, value = g.ToArray()})
-                                .ToLookup(k => k.key, v => v.value);
-                        foreach (var kvp in lookup)
-                        {
-                            if (LooseGroups.Contains(kvp.Key))
-                            {
-                                dst.AddRecords(dstRec);
-                            }
-                            else
-                            {
-                                var gr = groups.FirstOrDefault(x => x.ContentsType == kvp.Key);
-                                if (gr == null)
-                                {
-                                    gr = new GroupRecord(kvp.Key);
-                                    dst.AddRecord(gr);
-                                }
-                                foreach (var list in kvp)
-                                    gr.AddRecords(list);
-                            }
-                        }
+                        data[4 + i] = reccountbytes[i];
                     }
-                    else
-                    {
-                        dst.AddRecords(dstRec);
-                    }
-                    // handle loose groups by creating copy of parent groups
-                    foreach (var srcRec in src.Where(x => LooseGroups.Contains(x.Name)))
-                    {
-                        var dstnodes = new Stack<BaseRecord>();
-                        dstnodes.Push(srcRec.Clone(recursive: true));
-                        for (var n = srcRec.Parent; n is GroupRecord; n = n.Parent)
-                            dstnodes.Push(n.Clone(recursive: false));
-                        var par = dst as IGroupRecord;
-                        foreach (var baseRecord in dstnodes)
-                        {
-                            if (par == null) break;
-                            if (baseRecord is GroupRecord)
-                            {
-                                var gr = baseRecord as GroupRecord;
-                                var pargr = par.Records.OfType<GroupRecord>().FirstOrDefault(x => x.IsEquivalent(gr));
-                                if (pargr != null)
-                                {
-                                    par = pargr;
-                                    continue;
-                                }
-                            }
-                            par.AddRecord(baseRecord);
-                            par = baseRecord as IGroupRecord;
-                        }
-                        count += dstnodes.Count;
-                    }
-                }
-                else
-                {
-                    var dstRec = src.Select(x => x.Clone()).ToArray();
-                    dst.AddRecords(dstRec);
-                    count += dstRec.Count();
+
+                    tes4.SubRecords[0].SetData(data);
                 }
             }
-            return count;
         }
-
-
-        #region NewFormID
 
         public static uint getNextFormID(Plugin plugin)
         {
@@ -329,63 +445,13 @@ namespace TESVSnip
             if (tes4 != null && tes4.SubRecords.Count > 0 && tes4.SubRecords[0].Name == "HEDR" && tes4.SubRecords[0].Size >= 8)
             {
                 byte[] data = tes4.SubRecords[0].GetData();
-                uint formid = (uint)TypeConverter.GetObject<uint>(data, 8);
+                var formid = (uint)TypeConverter.GetObject<uint>(data, 8);
                 TypeConverter.i2h(formid + 1, data, 8);
                 tes4.SubRecords[0].SetData(data);
                 return formid;
             }
+
             throw new ApplicationException(Resources.PluginLacksAValidTes4RecordCannotContinue);
-        }
-
-        public static void updateFormIDReference(Plugin plugin, uint oldFormID, uint newFormID)
-        {
-            uint refCount = 0;
-            updateFormIDReference(plugin, oldFormID, newFormID, ref refCount);
-        }
-
-        public static void updateFormIDReference(Plugin plugin, uint oldFormID, uint newFormID, ref uint refCount)
-        {
-            foreach (Record record in plugin.Enumerate().OfType<Record>())
-            {
-                record.MatchRecordStructureToRecord();
-                foreach (SubRecord sr in record.SubRecords)
-                {
-                    var elements =  sr.EnumerateElements(true).ToList();
-                    foreach (Element e in elements)
-                    {
-                        if (e.Structure != null && e.Structure.type == ElementValueType.FormID)
-                        {
-                            if ((uint)e.Value == oldFormID)
-                            {
-                                e.AssignValue<uint>((object)newFormID);
-                                refCount++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        public static void giveRecordNewFormID(Record rec, bool updateReference)
-        {
-            uint formCount = 0, refCount = 0;
-            giveRecordNewFormID(rec, updateReference, ref formCount, ref refCount);
-        }
-
-        public static void giveRecordNewFormID(Record rec, bool updateReference, ref uint formCount, ref uint refCount)
-        {
-            var plugin = GetPluginFromNode(rec);
-            if (plugin == null)
-            {
-                throw new ApplicationException("Cannot select plugin");
-            }
-            uint newFormID = getNextFormID(plugin);
-            uint oldFormID = rec.FormID;
-            rec.FormID = newFormID;
-            formCount++;
-            if (oldFormID != 0 && updateReference)
-                updateFormIDReference(plugin, oldFormID, newFormID, ref refCount);
-            plugin.InvalidateCache();
         }
 
         public static void giveBaseRecordNewFormID(BaseRecord rec, bool updateReference)
@@ -409,143 +475,73 @@ namespace TESVSnip
             }
         }
 
-        #endregion NewFormID
-
-
-        #region StringManipulation
-
-        /// <summary>
-        /// Extract any internalized strings and put in string table
-        /// </summary>
-        /// <param name="plugin"></param>
-        public static int ExtractInternalStrings(Plugin plugin)
+        public static void giveRecordNewFormID(Record rec, bool updateReference)
         {
-            int count = 0;
-            // uint maxid = plugin.Masters.Max(x=>x.Strings.Count > 0 ? x.Strings.Keys.Max() : 0); // No need to check the masters string since the numbers are unique for every plugin
-
-            bool anyModified = false;
-            foreach (var record in plugin.Enumerate().OfType<Record>())
-            {
-                record.MatchRecordStructureToRecord();
-                foreach (var sr in record.SubRecords)
-                {
-                    var elements = record.EnumerateElements(sr, rawData: true).ToList();
-                    foreach (var elem in elements)
-                    {
-                        if (elem.Structure != null && elem.Structure.type == ElementValueType.LString)
-                        {
-                            var data = elem.Data;
-                            uint id = TypeConverter.h2i(data);
-                            if (id == 0) continue;
-                            if (data.Count == 4 && TypeConverter.IsLikelyString(data))
-                            {
-                                string str;
-                                if (plugin.Strings.TryGetValue(id, out str))
-                                    continue;
-                            }
-                            if (data.Count != 4 || TypeConverter.IsLikelyString(data))
-                            {
-                                string value = TypeConverter.GetString(data);
-                                if (!String.IsNullOrEmpty(value))
-                                {
-                                    // uint nextid = Math.Max(maxid, plugin.Strings.Count == 0 ? 0 : plugin.Strings.Keys.Max()) + 1; // No need to check the masters strings since the numbers are unique for every plugin
-                                    uint nextid = (plugin.Strings.Count == 0 ? 0 : plugin.Strings.Keys.Max()) + 1;
-                                    int idx = plugin.Strings.FindValue(value);
-                                    if (idx >= 0)
-                                    {
-                                        nextid = plugin.Strings.ElementAt(idx).Key;
-                                    }
-                                    else
-                                    {
-                                        plugin.Strings[nextid] = value;                                        
-                                    }
-                                    elem.AssignValue<ArraySegment<byte>>(
-                                        new ArraySegment<byte>((byte[])TypeConverter.i2h(nextid).Clone()));
-                                    ++count;
-                                }
-                            }
-                        }
-                    }
-                    if (elements.Any(x => x.Changed))
-                    {
-                        // need to repack the structure
-                        using (var ms = new MemoryStream(sr.GetReadonlyData().Length))
-                        {
-                            foreach (var seg in elements.Select(elem => elem.Data))
-                                ms.Write(seg.Array, seg.Offset, seg.Count);
-                            sr.SetData(ms.ToArray());
-                        }
-                        anyModified = true;
-                    }
-                }
-            }
-            if (anyModified)
-            {
-                var tes4 = plugin.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
-                if (tes4 != null) tes4.Flags1 |= 0x00000080U;
-            }
-            return count;
+            uint formCount = 0, refCount = 0;
+            giveRecordNewFormID(rec, updateReference, ref formCount, ref refCount);
         }
 
-
-        /// <summary>
-        /// Copy any strings references from master not currently in current plugin
-        /// </summary>
-        /// <param name="plugin"></param>
-        internal static int CopyMasterStringReferences(Plugin plugin)
+        public static void giveRecordNewFormID(Record rec, bool updateReference, ref uint formCount, ref uint refCount)
         {
+            var plugin = GetPluginFromNode(rec);
             if (plugin == null)
-                return -1;
+            {
+                throw new ApplicationException("Cannot select plugin");
+            }
 
-            var masters = plugin.Masters;
-            if (masters == null || masters.Length == 0)
-                return -1;
-            int count = 0;
+            uint newFormID = getNextFormID(plugin);
+            uint oldFormID = rec.FormID;
+            rec.FormID = newFormID;
+            formCount++;
+            if (oldFormID != 0 && updateReference)
+            {
+                updateFormIDReference(plugin, oldFormID, newFormID, ref refCount);
+            }
 
-            foreach (var record in plugin.Enumerate().OfType<Record>())
+            plugin.InvalidateCache();
+        }
+
+        public static void updateFormIDReference(Plugin plugin, uint oldFormID, uint newFormID)
+        {
+            uint refCount = 0;
+            updateFormIDReference(plugin, oldFormID, newFormID, ref refCount);
+        }
+
+        public static void updateFormIDReference(Plugin plugin, uint oldFormID, uint newFormID, ref uint refCount)
+        {
+            foreach (Record record in plugin.Enumerate().OfType<Record>())
             {
                 record.MatchRecordStructureToRecord();
-                foreach (var sr in record.SubRecords)
+                foreach (SubRecord sr in record.SubRecords)
                 {
-                    var elements = record.EnumerateElements(sr, rawData: true).ToList();
-                    foreach (var elem in elements)
+                    var elements = sr.EnumerateElements(true).ToList();
+                    foreach (Element e in elements)
                     {
-                        if (elem.Structure != null && elem.Structure.type == ElementValueType.LString)
+                        if (e.Structure != null && e.Structure.type == ElementValueType.FormID)
                         {
-                            var data = elem.Data;
-                            if (data.Count == 4)
+                            if ((uint)e.Value == oldFormID)
                             {
-                                string value;
-                                uint id = TypeConverter.h2i(data);
-                                if (id == 0) continue;
-                                if (!plugin.Strings.TryGetValue(id, out value))
-                                {
-                                    foreach (var master in masters.Reverse())
-                                    {
-                                        if ( master.Strings.TryGetValue(id, out value) )
-                                        {
-                                            ++count;
-                                            plugin.Strings[id] = value;
-                                            break;
-                                        }
-                                    }
-                                }
+                                e.AssignValue<uint>((object)newFormID);
+                                refCount++;
                             }
                         }
                     }
                 }
             }
-            return count;
         }
 
         internal static int CleanUnusedStrings(Plugin plugin)
         {
             if (plugin == null)
+            {
                 return -1;
+            }
 
             var masters = plugin.Masters;
             if (masters == null || masters.Length == 0)
+            {
                 return -1;
+            }
 
             LocalizedStringDict oldStrings = plugin.Strings;
             plugin.Strings = new LocalizedStringDict();
@@ -564,7 +560,11 @@ namespace TESVSnip
                             {
                                 string value;
                                 uint id = TypeConverter.h2i(data);
-                                if (id == 0) continue;
+                                if (id == 0)
+                                {
+                                    continue;
+                                }
+
                                 if (oldStrings.TryGetValue(id, out value))
                                 {
                                     oldStrings.Remove(id);
@@ -575,17 +575,87 @@ namespace TESVSnip
                     }
                 }
             }
+
             return oldStrings.Count;
+        }
+
+        /// <summary>
+        /// Copy any strings references from master not currently in current plugin.
+        /// </summary>
+        /// <param name="plugin">
+        /// </param>
+        /// <returns>
+        /// The System.Int32.
+        /// </returns>
+        internal static int CopyMasterStringReferences(Plugin plugin)
+        {
+            if (plugin == null)
+            {
+                return -1;
+            }
+
+            var masters = plugin.Masters;
+            if (masters == null || masters.Length == 0)
+            {
+                return -1;
+            }
+
+            int count = 0;
+
+            foreach (var record in plugin.Enumerate().OfType<Record>())
+            {
+                record.MatchRecordStructureToRecord();
+                foreach (var sr in record.SubRecords)
+                {
+                    var elements = record.EnumerateElements(sr, rawData: true).ToList();
+                    foreach (var elem in elements)
+                    {
+                        if (elem.Structure != null && elem.Structure.type == ElementValueType.LString)
+                        {
+                            var data = elem.Data;
+                            if (data.Count == 4)
+                            {
+                                string value;
+                                uint id = TypeConverter.h2i(data);
+                                if (id == 0)
+                                {
+                                    continue;
+                                }
+
+                                if (!plugin.Strings.TryGetValue(id, out value))
+                                {
+                                    foreach (var master in masters.Reverse())
+                                    {
+                                        if (master.Strings.TryGetValue(id, out value))
+                                        {
+                                            ++count;
+                                            plugin.Strings[id] = value;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return count;
         }
 
         internal static int CreateStringStubs(Plugin plugin)
         {
             if (plugin == null)
+            {
                 return -1;
+            }
 
             var masters = plugin.Masters;
             if (masters == null || masters.Length == 0)
+            {
                 return -1;
+            }
+
             int count = 0;
             foreach (var record in plugin.Enumerate().OfType<Record>())
             {
@@ -602,7 +672,11 @@ namespace TESVSnip
                             {
                                 string value;
                                 uint id = TypeConverter.h2i(data);
-                                if (id == 0) continue;
+                                if (id == 0)
+                                {
+                                    continue;
+                                }
+
                                 if (!plugin.Strings.TryGetValue(id, out value))
                                 {
                                     value = string.Format("STUB: {0} {1}", record.DescriptiveName, sr.DescriptiveName);
@@ -614,9 +688,9 @@ namespace TESVSnip
                     }
                 }
             }
+
             return count;
         }
-
 
         internal static int InternalizeStrings(Plugin plugin)
         {
@@ -634,7 +708,11 @@ namespace TESVSnip
                         {
                             var data = elem.Data;
                             uint id = TypeConverter.h2i(data);
-                            if (id == 0) continue;
+                            if (id == 0)
+                            {
+                                continue;
+                            }
+
                             if (data.Count == 4)
                             {
                                 var str = plugin.LookupFormStrings(id);
@@ -646,29 +724,84 @@ namespace TESVSnip
                             }
                         }
                     }
+
                     if (elements.Any(x => x.Changed))
                     {
                         // need to repack the structure
                         using (var ms = new MemoryStream(sr.GetReadonlyData().Length))
                         {
                             foreach (var seg in elements.Select(elem => elem.Data))
+                            {
                                 ms.Write(seg.Array, seg.Offset, seg.Count);
+                            }
+
                             sr.SetData(ms.ToArray());
                         }
+
                         anyModified = true;
                     }
                 }
             }
+
             if (anyModified)
             {
                 var tes4 = plugin.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
-                if (tes4 != null) tes4.Flags1 &= ~0x00000080U;
+                if (tes4 != null)
+                {
+                    tes4.Flags1 &= ~0x00000080U;
+                }
             }
+
             return count;
         }
 
-        #endregion StringManipulation
+        private static void StripEDIDsInternal(Rec r)
+        {
+            if (r is Record)
+            {
+                var r2 = (Record)r;
+                if (r2.Name != "GMST" && r2.SubRecords.Count > 0 && r2.SubRecords[0].Name == "EDID")
+                {
+                    r2.DeleteRecord(r2.SubRecords[0]);
+                }
 
-    } // class Spells
+                for (int i = 0; i < r2.SubRecords.Count; i++)
+                {
+                    if (r2.SubRecords[i].Name == "SCTX")
+                    {
+                        r2.SubRecords.RemoveAt(i--);
+                    }
+                }
+            }
+            else
+            {
+                foreach (Rec r2 in r.Records)
+                {
+                    StripEDIDsInternal(r2);
+                }
+            }
+        }
 
-} //namespace TESVSnip
+        private static int sanitizeCountRecords(Rec r)
+        {
+            if (r is Record)
+            {
+                return 1;
+            }
+            else
+            {
+                int i = 1;
+                foreach (Rec r2 in r.Records)
+                {
+                    i += sanitizeCountRecords(r2);
+                }
+
+                return i;
+            }
+        }
+    }
+
+    // class Spells
+}
+
+//namespace TESVSnip

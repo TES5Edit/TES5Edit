@@ -1,24 +1,44 @@
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
-
 namespace TESVSnip
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
     [StructLayout(LayoutKind.Explicit)]
     internal struct TypeConverter
     {
-        [FieldOffset(0)] private uint i;
-        [FieldOffset(0)] private int si;
-        [FieldOffset(0)] private ushort s;
-        [FieldOffset(0)] private short ss;
-        [FieldOffset(0)] private float f;
-        [FieldOffset(0)] private byte b1;
-        [FieldOffset(1)] private byte b2;
-        [FieldOffset(2)] private byte b3;
-        [FieldOffset(3)] private byte b4;
-        [FieldOffset(0)] private readonly sbyte sb1;
+        [FieldOffset(0)]
+        private uint i;
+
+        [FieldOffset(0)]
+        private int si;
+
+        [FieldOffset(0)]
+        private ushort s;
+
+        [FieldOffset(0)]
+        private short ss;
+
+        [FieldOffset(0)]
+        private float f;
+
+        [FieldOffset(0)]
+        private byte b1;
+
+        [FieldOffset(1)]
+        private byte b2;
+
+        [FieldOffset(2)]
+        private byte b3;
+
+        [FieldOffset(3)]
+        private byte b4;
+
+        [FieldOffset(0)]
+        private readonly sbyte sb1;
 
         private static TypeConverter tc;
+
         private static readonly byte[] bytes = new byte[4];
 
         /*public static float i2f(uint i) {
@@ -29,7 +49,6 @@ namespace TESVSnip
             tc.f=f;
             return tc.i;
         }*/
-
         public static float h2f(byte b1, byte b2, byte b3, byte b4)
         {
             tc.b1 = b1;
@@ -43,24 +62,56 @@ namespace TESVSnip
         {
             return (T)GetObject<T>(new ArraySegment<byte>(data, offset, data.Length - offset));
         }
-        
+
         public static object GetObject<T>(ArraySegment<byte> data)
         {
             T result = default(T);
-            if (result is float) return h2f(data);
-            if (result is int) return h2si(data);
-            if (result is uint) return h2i(data);
-            if (result is short) return h2ss(data);
-            if (result is ushort) return h2s(data);
-            if (result is sbyte) return h2sb(data);
-            if (result is byte) return h2b(data);
-            if (result is string) return GetString(data);
+            if (result is float)
+            {
+                return h2f(data);
+            }
+
+            if (result is int)
+            {
+                return h2si(data);
+            }
+
+            if (result is uint)
+            {
+                return h2i(data);
+            }
+
+            if (result is short)
+            {
+                return h2ss(data);
+            }
+
+            if (result is ushort)
+            {
+                return h2s(data);
+            }
+
+            if (result is sbyte)
+            {
+                return h2sb(data);
+            }
+
+            if (result is byte)
+            {
+                return h2b(data);
+            }
+
+            if (result is string)
+            {
+                return GetString(data);
+            }
+
             return default(T);
         }
 
         public static object GetValue<T>(ArraySegment<byte> data)
         {
-            return (T) GetObject<T>(data);
+            return (T)GetObject<T>(data);
         }
 
         public static bool TryGetObject<T>(byte[] data, int offset, out object result)
@@ -71,16 +122,52 @@ namespace TESVSnip
 
         public static ArraySegment<byte> GetData<T>(object value)
         {
-            Type t = typeof (T);
-            if (t == typeof(float)) return new ArraySegment<byte>(f2h(TESVSnip.Extensions.CastValue<float>(value)), 0, 4);
-            if (t == typeof(int)) return new ArraySegment<byte>(si2h(TESVSnip.Extensions.CastValue<int>(value)), 0, 4);
-            if (t == typeof(uint)) return new ArraySegment<byte>(i2h(TESVSnip.Extensions.CastValue<uint>(value)), 0, 4);
-            if (t == typeof(short)) return new ArraySegment<byte>(ss2h(TESVSnip.Extensions.CastValue<short>(value)), 0, 2);
-            if (t == typeof(ushort)) return new ArraySegment<byte>(s2h(TESVSnip.Extensions.CastValue<ushort>(value)), 0, 2);
-            if (t == typeof(sbyte)) return new ArraySegment<byte>(sb2h(TESVSnip.Extensions.CastValue<sbyte>(value)), 0, 1);
-            if (t == typeof(byte)) return new ArraySegment<byte>(si2h(TESVSnip.Extensions.CastValue<byte>(value)), 0, 1);
-            if (t == typeof(string)) return new ArraySegment<byte>(str2h(TESVSnip.Extensions.CastValue<string>(value)));
-            if (t == typeof(ArraySegment<byte>)) return (ArraySegment<byte>)value; 
+            Type t = typeof(T);
+            if (t == typeof(float))
+            {
+                return new ArraySegment<byte>(f2h(Extensions.CastValue<float>(value)), 0, 4);
+            }
+
+            if (t == typeof(int))
+            {
+                return new ArraySegment<byte>(si2h(Extensions.CastValue<int>(value)), 0, 4);
+            }
+
+            if (t == typeof(uint))
+            {
+                return new ArraySegment<byte>(i2h(Extensions.CastValue<uint>(value)), 0, 4);
+            }
+
+            if (t == typeof(short))
+            {
+                return new ArraySegment<byte>(ss2h(Extensions.CastValue<short>(value)), 0, 2);
+            }
+
+            if (t == typeof(ushort))
+            {
+                return new ArraySegment<byte>(s2h(Extensions.CastValue<ushort>(value)), 0, 2);
+            }
+
+            if (t == typeof(sbyte))
+            {
+                return new ArraySegment<byte>(sb2h(Extensions.CastValue<sbyte>(value)), 0, 1);
+            }
+
+            if (t == typeof(byte))
+            {
+                return new ArraySegment<byte>(si2h(Extensions.CastValue<byte>(value)), 0, 1);
+            }
+
+            if (t == typeof(string))
+            {
+                return new ArraySegment<byte>(str2h(Extensions.CastValue<string>(value)));
+            }
+
+            if (t == typeof(ArraySegment<byte>))
+            {
+                return (ArraySegment<byte>)value;
+            }
+
             return new ArraySegment<byte>(new byte[0]);
         }
 
@@ -92,13 +179,17 @@ namespace TESVSnip
                 Array.Copy(seg.Array, seg.Offset, data.Array, data.Offset, data.Count);
                 return true;
             }
+
             return false;
         }
 
         public static float h2f(byte[] data, int offset)
         {
-            if (offset + sizeof (float) > data.Length)
+            if (offset + sizeof(float) > data.Length)
+            {
                 return default(float);
+            }
+
             tc.b1 = data[offset + 0];
             tc.b2 = data[offset + 1];
             tc.b3 = data[offset + 2];
@@ -116,6 +207,7 @@ namespace TESVSnip
                 tc.b4 = data.Array[data.Offset + 3];
                 return tc.f;
             }
+
             return default(float);
         }
 
@@ -138,6 +230,7 @@ namespace TESVSnip
                 tc.b4 = data.Array[data.Offset + 3];
                 return tc.i;
             }
+
             return 0;
         }
 
@@ -160,6 +253,7 @@ namespace TESVSnip
                 tc.b4 = data[offset + 3];
                 return tc.si;
             }
+
             return 0;
         }
 
@@ -173,6 +267,7 @@ namespace TESVSnip
                 tc.b4 = data.Array[data.Offset + 3];
                 return tc.si;
             }
+
             return 0;
         }
 
@@ -191,6 +286,7 @@ namespace TESVSnip
                 tc.b2 = data.Array[data.Offset + 1];
                 return tc.s;
             }
+
             return default(ushort);
         }
 
@@ -209,6 +305,7 @@ namespace TESVSnip
                 tc.b2 = data.Array[data.Offset + 1];
                 return tc.ss;
             }
+
             return default(short);
         }
 
@@ -218,6 +315,7 @@ namespace TESVSnip
             {
                 return data.Array[data.Offset + 0];
             }
+
             return default(byte);
         }
 
@@ -228,6 +326,7 @@ namespace TESVSnip
                 tc.b1 = data.Array[data.Offset + 0];
                 return tc.sb1;
             }
+
             return default(sbyte);
         }
 
@@ -261,13 +360,13 @@ namespace TESVSnip
         public static byte[] ss2h(short ss)
         {
             tc.ss = ss;
-            return new[] {tc.b1, tc.b2};
+            return new[] { tc.b1, tc.b2 };
         }
 
         public static byte[] s2h(ushort ss)
         {
             tc.s = ss;
-            return new[] {tc.b1, tc.b2};
+            return new[] { tc.b1, tc.b2 };
         }
 
         /*public static void f2h(float f, byte[] data, int offset) {
@@ -277,7 +376,6 @@ namespace TESVSnip
             data[offset+2]=tc.b3;
             data[offset+3]=tc.b4;
         }*/
-
         public static void i2h(uint i, byte[] data, int offset)
         {
             tc.i = i;
@@ -315,11 +413,15 @@ namespace TESVSnip
             bool isValid = true;
             for (int i = 0; i < data.Count - 1 && isValid; ++i)
             {
-                var c = (char) data.Array[data.Offset + i];
-                //if (c == 0) return (i > 0);
-                isValid = !Char.IsControl(c) || (c == 0x0D) || (c == 0x0A) || (c == 0x09) || (Properties.Settings.Default.UseUTF8 && ((c & 0x80) != 0)); // Include CR, LF and TAB as normal characters to allow multiline strings + Allow Multibyte UTF-8
+                var c = (char)data.Array[data.Offset + i];
+
+                // if (c == 0) return (i > 0);
+                isValid = !char.IsControl(c) || (c == 0x0D) || (c == 0x0A) || (c == 0x09) || (Properties.Settings.Default.UseUTF8 && ((c & 0x80) != 0));
+                    
+                    // Include CR, LF and TAB as normal characters to allow multiline strings + Allow Multibyte UTF-8
             }
-            return (isValid && data.Array[data.Count - 1] == 0);
+
+            return isValid && data.Array[data.Count - 1] == 0;
         }
 
         public static string GetZString(ArraySegment<byte> data)
@@ -327,10 +429,15 @@ namespace TESVSnip
             var sb = new StringBuilder();
             for (int i = 0; i < data.Count; ++i)
             {
-                var c = (char) data.Array[data.Offset + i];
-                if (c == 0) return sb.ToString();
+                var c = (char)data.Array[data.Offset + i];
+                if (c == 0)
+                {
+                    return sb.ToString();
+                }
+
                 sb.Append(c);
             }
+
             return sb.ToString();
         }
 
@@ -338,16 +445,22 @@ namespace TESVSnip
         {
             ushort len = h2s(data);
             if (len > 0 && len <= data.Count + 2)
+            {
                 return Encoding.CP1252.GetString(data.Array, data.Offset + 2, len);
-            return "";
+            }
+
+            return string.Empty;
         }
 
         public static string GetIString(ArraySegment<byte> data)
         {
             int len = h2si(data);
             if (len > 0 && len <= data.Count + 4)
+            {
                 return Encoding.CP1252.GetString(data.Array, data.Offset + 4, len);
-            return "";
+            }
+
+            return string.Empty;
         }
 
         public static string GetString(ArraySegment<byte> data)
@@ -361,7 +474,10 @@ namespace TESVSnip
         {
             var sb = new StringBuilder();
             for (int i = 0; i < count && (offset + i) < data.Length; ++i)
+            {
                 sb.Append(data[offset + i].ToString("X2")).Append(" ");
+            }
+
             return sb.ToString();
         }
 
@@ -371,38 +487,47 @@ namespace TESVSnip
         }
 
         /// <summary>
-        /// Encode string including null termination character
+        /// Encode string including null termination character.
         /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
+        /// <param name="str">
+        /// </param>
+        /// <returns>
+        /// The System.Byte[].
+        /// </returns>
         public static byte[] str2h(string str)
         {
             int len = Encoding.CP1252.GetByteCount(str);
             var data = new byte[len + 1];
-            Encoding.CP1252.GetBytes(str).CopyTo(data,0);
+            Encoding.CP1252.GetBytes(str).CopyTo(data, 0);
             data[len] = 0;
             return data;
         }
 
         /// <summary>
-        /// Encode short byte length prefixed string
+        /// Encode short byte length prefixed string.
         /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
+        /// <param name="str">
+        /// </param>
+        /// <returns>
+        /// The System.Byte[].
+        /// </returns>
         public static byte[] bstr2h(string str)
         {
             int len = Encoding.CP1252.GetByteCount(str);
             var data = new byte[2 + len];
-            Array.Copy(s2h((ushort) len), 0, data, 0, 2);
+            Array.Copy(s2h((ushort)len), 0, data, 0, 2);
             Array.Copy(Encoding.CP1252.GetBytes(str), 0, data, 2, len);
             return data;
         }
 
         /// <summary>
-        /// Encode int length prefixed string
+        /// Encode int length prefixed string.
         /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
+        /// <param name="str">
+        /// </param>
+        /// <returns>
+        /// The System.Byte[].
+        /// </returns>
         public static byte[] istr2h(string str)
         {
             int len = Encoding.CP1252.GetByteCount(str);
@@ -414,12 +539,12 @@ namespace TESVSnip
 
         public static byte[] b2h(byte i)
         {
-            return new[] {i};
+            return new[] { i };
         }
 
         public static byte[] sb2h(sbyte i)
         {
-            return new[] {(byte) i};
+            return new[] { (byte)i };
         }
     }
 }

@@ -1,13 +1,14 @@
-using System;
-using System.Collections.Generic;
-
 namespace TESVSnip
 {
+    using System;
+    using System.Collections.Generic;
+
     using TESVSnip.Model;
 
     public class TESParserException : Exception
     {
-        public TESParserException(string msg) : base(msg)
+        public TESParserException(string msg)
+            : base(msg)
         {
         }
     }
@@ -15,67 +16,87 @@ namespace TESVSnip
     #region class SelectionContext
 
     /// <summary>
-    /// External state for holding single selection for use with evaluating descriptions and intelligent editors
+    /// External state for holding single selection for use with evaluating descriptions and intelligent editors.
     /// </summary>
     public class SelectionContext
     {
+        internal Dictionary<int, Conditional> Conditions = new Dictionary<int, Conditional>();
+
+        internal dFormIDLookupI formIDLookup;
+
+        internal dFormIDLookupR formIDLookupR;
+
+        internal dLStringLookup strLookup;
+
         private Rec record;
+
         private SubRecord subRecord;
+
+        public event EventHandler RecordChanged;
+
+        public event EventHandler SubRecordChanged;
 
         public Rec Record
         {
-            get { return record; }
+            get
+            {
+                return this.record;
+            }
+
             set
             {
-                if (record != value)
+                if (this.record != value)
                 {
-                    record = value;
-                    SubRecord = null;
-                    Conditions.Clear();
-                    if (RecordChanged != null)
-                        RecordChanged(this, EventArgs.Empty);
+                    this.record = value;
+                    this.SubRecord = null;
+                    this.Conditions.Clear();
+                    if (this.RecordChanged != null)
+                    {
+                        this.RecordChanged(this, EventArgs.Empty);
+                    }
                 }
+            }
+        }
+
+        public bool SelectedSubrecord
+        {
+            get
+            {
+                return this.SubRecord != null;
             }
         }
 
         public SubRecord SubRecord
         {
-            get { return subRecord; }
+            get
+            {
+                return this.subRecord;
+            }
+
             set
             {
-                if (subRecord != value)
+                if (this.subRecord != value)
                 {
-                    subRecord = value;
-                    if (SubRecordChanged != null)
-                        SubRecordChanged(this, EventArgs.Empty);
+                    this.subRecord = value;
+                    if (this.SubRecordChanged != null)
+                    {
+                        this.SubRecordChanged(this, EventArgs.Empty);
+                    }
                 }
             }
         }
 
-        internal Dictionary<int, Conditional> Conditions = new Dictionary<int, Conditional>();
-        internal dFormIDLookupI formIDLookup;
-        internal dLStringLookup strLookup;
-        internal dFormIDLookupR formIDLookupR;
-
-        public bool SelectedSubrecord
+        public SelectionContext Clone()
         {
-            get { return SubRecord != null; }
+            var result = (SelectionContext)MemberwiseClone();
+            result.RecordChanged = null;
+            result.SubRecordChanged = null;
+            return result;
         }
 
         public void Reset()
         {
-            Record = null;
-        }
-
-        public event EventHandler RecordChanged;
-        public event EventHandler SubRecordChanged;
-
-        public SelectionContext Clone()
-        {
-            var result = (SelectionContext) MemberwiseClone();
-            result.RecordChanged = null;
-            result.SubRecordChanged = null;
-            return result;
+            this.Record = null;
         }
     }
 
@@ -85,7 +106,7 @@ namespace TESVSnip
 
     internal static class Compressor
     {
-        private static string[] autoCompRecList = new string[0];
+        private static readonly string[] autoCompRecList = new string[0];
 
         public static bool CompressRecord(string name)
         {
@@ -99,54 +120,31 @@ namespace TESVSnip
 
     internal static class FlagDefs
     {
-        public static readonly string[] RecFlags1 = {
-                                                        "ESM file",
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        "Deleted",
-                                                        null,
-                                                        "Localized",
-                                                        null,
-                                                        "Casts shadows",
-                                                        "Quest item / Persistent reference",
-                                                        "Initially disabled",
-                                                        "Ignored",
-                                                        null,
-                                                        null,
-                                                        "Visible when distant",
-                                                        "Is full LOD",
-                                                        "Dangerous / Off limits (Interior cell)",
-                                                        "Data is compressed",
-                                                        "Can't wait",
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                    };
+        public static readonly string[] RecFlags1 =
+            {
+                "ESM file", null, null, null, null, "Deleted", null, "Localized", null, "Casts shadows", "Quest item / Persistent reference", "Initially disabled"
+                , "Ignored", null, null, "Visible when distant", "Is full LOD", "Dangerous / Off limits (Interior cell)", "Data is compressed", "Can't wait", null
+                , null, null, null, null, null, null, null, null, null, null, null, 
+            };
 
         public static string GetRecFlags1Desc(uint flags)
         {
-            string desc = "";
+            string desc = string.Empty;
             bool b = false;
             for (int i = 0; i < 32; i++)
             {
-                if ((flags & (uint) (1 << i)) > 0)
+                if ((flags & (uint)(1 << i)) > 0)
                 {
-                    if (b) desc += ", ";
+                    if (b)
+                    {
+                        desc += ", ";
+                    }
+
                     b = true;
-                    desc += (RecFlags1[i] == null ? "Unknown (" + ((uint) (1 << i)).ToString("x") + ")" : RecFlags1[i]);
+                    desc += RecFlags1[i] == null ? "Unknown (" + ((uint)(1 << i)).ToString("x") + ")" : RecFlags1[i];
                 }
             }
+
             return desc;
         }
     }

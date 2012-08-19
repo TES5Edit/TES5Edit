@@ -3,6 +3,7 @@
     internal struct Pair<A, B>
     {
         public A a;
+
         public B b;
 
         public Pair(A a, B b)
@@ -13,19 +14,33 @@
 
         public A Key
         {
-            get { return a; }
-            set { a = value; }
+            get
+            {
+                return this.a;
+            }
+
+            set
+            {
+                this.a = value;
+            }
         }
 
         public B Value
         {
-            get { return b; }
-            set { b = value; }
+            get
+            {
+                return this.b;
+            }
+
+            set
+            {
+                this.b = value;
+            }
         }
 
         public override string ToString()
         {
-            return a.ToString();
+            return this.a.ToString();
         }
     }
 }
