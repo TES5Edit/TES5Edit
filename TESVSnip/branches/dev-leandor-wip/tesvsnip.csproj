@@ -86,6 +86,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\AdvancedList.cs" />
+    <Compile Include="Collections\LocalizedStringDict.cs" />
+    <Compile Include="Collections\LocalizedStringFormat.cs" />
+    <Compile Include="Collections\LocalizedStrings.cs" />
+    <Compile Include="Collections\PropertyComparer.cs" />
+    <Compile Include="Collections\PropertyComparerCollection.cs" />
     <Compile Include="Collections\ValueComparer.cs" />
     <Compile Include="Controls\ballontooltip.cs">
       <SubType>Component</SubType>

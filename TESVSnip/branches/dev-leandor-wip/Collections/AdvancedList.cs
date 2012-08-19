@@ -1,7 +1,6 @@
-namespace TESVSnip.Collections.Generic
+namespace TESVSnip.Collections
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
@@ -81,7 +80,7 @@ namespace TESVSnip.Collections.Generic
         {
             var items = info.GetValue("Items", typeof(T[])) as T[];
             if (items != null) {
-                AddRange(items);
+                this.AddRange(items);
             }
 
             PersistAssist.Deserialize(this, info, context);
@@ -97,12 +96,12 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return _allowSort;
+                return this._allowSort;
             }
 
             set
             {
-                _allowSort = value;
+                this._allowSort = value;
             }
         }
 
@@ -137,7 +136,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return sorts != null ? sorts.Sorts : null;
+                return this.sorts != null ? this.sorts.Sorts : null;
             }
         }
 
@@ -193,7 +192,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return sorts != null;
+                return this.sorts != null;
             }
         }
 
@@ -207,7 +206,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return sorts == null ? ListSortDirection.Ascending : sorts.PrimaryDirection;
+                return this.sorts == null ? ListSortDirection.Ascending : this.sorts.PrimaryDirection;
             }
         }
 
@@ -221,7 +220,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return sorts == null ? null : sorts.PrimaryProperty;
+                return this.sorts == null ? null : this.sorts.PrimaryProperty;
             }
         }
 
@@ -235,7 +234,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return _allowSort;
+                return this._allowSort;
             }
         }
 
@@ -260,7 +259,7 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         public void ApplySort(ListSortDescriptionCollection sortCollection)
         {
-            if (_allowSort) {
+            if (this._allowSort) {
                 bool oldRaise = RaiseListChangedEvents;
                 RaiseListChangedEvents = false;
                 try {
@@ -272,7 +271,7 @@ namespace TESVSnip.Collections.Generic
                         SetItem(index++, item);
                     }
 
-                    sorts = tmp;
+                    this.sorts = tmp;
                 }
                 finally {
                     RaiseListChangedEvents = oldRaise;
@@ -355,7 +354,7 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("Items", ToArray());
+            info.AddValue("Items", this.ToArray());
             PersistAssist.Serialize(this, info, context);
         }
 
@@ -370,9 +369,9 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction)
         {
-            if (_allowSort) {
+            if (this._allowSort) {
                 ListSortDescription[] arr = { new ListSortDescription(prop, direction) };
-                ApplySort(new ListSortDescriptionCollection(arr));
+                this.ApplySort(new ListSortDescriptionCollection(arr));
             }
         }
 
@@ -381,201 +380,7 @@ namespace TESVSnip.Collections.Generic
         /// </summary>
         protected override void RemoveSortCore()
         {
-            sorts = null;
-        }
-    }
-
-    /// <summary>
-    /// The property comparer collection.
-    /// </summary>
-    /// <typeparam name="T">
-    /// </typeparam>
-    public class PropertyComparerCollection<T> : IComparer<T>
-    {
-        /// <summary>
-        /// The comparers.
-        /// </summary>
-        private readonly PropertyComparer<T>[] comparers;
-
-        /// <summary>
-        /// The sorts.
-        /// </summary>
-        private readonly ListSortDescriptionCollection sorts;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyComparerCollection{T}"/> class.
-        /// </summary>
-        /// <param name="sorts">
-        /// The sorts.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public PropertyComparerCollection(ListSortDescriptionCollection sorts)
-        {
-            if (sorts == null) {
-                throw new ArgumentNullException("sorts");
-            }
-
-            this.sorts = sorts;
-            var list = new List<PropertyComparer<T>>();
-            foreach (ListSortDescription item in sorts) {
-                list.Add(new PropertyComparer<T>(item.PropertyDescriptor, item.SortDirection == ListSortDirection.Descending));
-            }
-
-            comparers = list.ToArray();
-        }
-
-        /// <summary>
-        /// Gets the primary direction.
-        /// </summary>
-        /// <value>
-        /// The primary direction.
-        /// </value>
-        public ListSortDirection PrimaryDirection
-        {
-            get
-            {
-                return comparers.Length == 0 ? ListSortDirection.Ascending : comparers[0].Descending ? ListSortDirection.Descending : ListSortDirection.Ascending;
-            }
-        }
-
-        /// <summary>
-        /// Gets the primary property.
-        /// </summary>
-        /// <value>
-        /// The primary property.
-        /// </value>
-        public PropertyDescriptor PrimaryProperty
-        {
-            get
-            {
-                return comparers.Length == 0 ? null : comparers[0].Property;
-            }
-        }
-
-        /// <summary>
-        /// Gets the sorts.
-        /// </summary>
-        /// <value>
-        /// The sorts.
-        /// </value>
-        public ListSortDescriptionCollection Sorts
-        {
-            get
-            {
-                return sorts;
-            }
-        }
-
-        /// <summary>
-        /// The compare.
-        /// </summary>
-        /// <param name="x">
-        /// The x.
-        /// </param>
-        /// <param name="y">
-        /// The y.
-        /// </param>
-        /// <returns>
-        /// The System.Int32.
-        /// </returns>
-        int IComparer<T>.Compare(T x, T y)
-        {
-            int result = 0;
-            for (int i = 0; i < comparers.Length; i++) {
-                result = comparers[i].Compare(x, y);
-                if (result != 0) {
-                    break;
-                }
-            }
-
-            return result;
-        }
-    }
-
-    /// <summary>
-    /// The property comparer.
-    /// </summary>
-    /// <typeparam name="T">
-    /// </typeparam>
-    public class PropertyComparer<T> : IComparer<T>
-    {
-        /// <summary>
-        /// The descending.
-        /// </summary>
-        private readonly bool descending;
-
-        /// <summary>
-        /// The property.
-        /// </summary>
-        private readonly PropertyDescriptor property;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyComparer{T}"/> class.
-        /// </summary>
-        /// <param name="property">
-        /// The property.
-        /// </param>
-        /// <param name="descending">
-        /// The descending.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public PropertyComparer(PropertyDescriptor property, bool descending)
-        {
-            if (property == null) {
-                throw new ArgumentNullException("property");
-            }
-
-            this.descending = descending;
-            this.property = property;
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether descending.
-        /// </summary>
-        /// <value>
-        /// The descending.
-        /// </value>
-        public bool Descending
-        {
-            get
-            {
-                return descending;
-            }
-        }
-
-        /// <summary>
-        /// Gets the property.
-        /// </summary>
-        /// <value>
-        /// The property.
-        /// </value>
-        public PropertyDescriptor Property
-        {
-            get
-            {
-                return property;
-            }
-        }
-
-        /// <summary>
-        /// The compare.
-        /// </summary>
-        /// <param name="x">
-        /// The x.
-        /// </param>
-        /// <param name="y">
-        /// The y.
-        /// </param>
-        /// <returns>
-        /// The System.Int32.
-        /// </returns>
-        public int Compare(T x, T y)
-        {
-            // todo; some null cases
-            int value = Comparer.Default.Compare(property.GetValue(x), property.GetValue(y));
-            return descending ? -value : value;
+            this.sorts = null;
         }
     }
 }

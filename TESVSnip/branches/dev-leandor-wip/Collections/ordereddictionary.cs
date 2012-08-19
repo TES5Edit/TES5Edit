@@ -1,4 +1,4 @@
-namespace TESVSnip.Collections.Generic
+namespace TESVSnip.Collections
 {
     using System;
     using System.Collections;
@@ -41,9 +41,9 @@ namespace TESVSnip.Collections.Generic
         /// </summary>
         public OrderedDictionary()
         {
-            _kvp = new List<KeyValuePair<TKey, TItem>>();
-            _TKeyComparer = EqualityComparer<TKey>.Default;
-            _hash = new Dictionary<TKey, KeyValuePair<TKey, TItem>>(_TKeyComparer);
+            this._kvp = new List<KeyValuePair<TKey, TItem>>();
+            this._TKeyComparer = EqualityComparer<TKey>.Default;
+            this._hash = new Dictionary<TKey, KeyValuePair<TKey, TItem>>(this._TKeyComparer);
         }
 
         /// <summary>
@@ -54,9 +54,9 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         public OrderedDictionary(IEqualityComparer<TKey> KeyComparer)
         {
-            _kvp = new List<KeyValuePair<TKey, TItem>>();
-            _TKeyComparer = KeyComparer;
-            _hash = new Dictionary<TKey, KeyValuePair<TKey, TItem>>(_TKeyComparer);
+            this._kvp = new List<KeyValuePair<TKey, TItem>>();
+            this._TKeyComparer = KeyComparer;
+            this._hash = new Dictionary<TKey, KeyValuePair<TKey, TItem>>(this._TKeyComparer);
         }
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         public OrderedDictionary(OrderedDictionary<TKey, TItem> other)
         {
-            _kvp = new List<KeyValuePair<TKey, TItem>>(other._kvp);
-            _TKeyComparer = other._TKeyComparer;
-            _hash = new Dictionary<TKey, KeyValuePair<TKey, TItem>>(_TKeyComparer);
+            this._kvp = new List<KeyValuePair<TKey, TItem>>(other._kvp);
+            this._TKeyComparer = other._TKeyComparer;
+            this._hash = new Dictionary<TKey, KeyValuePair<TKey, TItem>>(this._TKeyComparer);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return _kvp.Count;
+                return this._kvp.Count;
             }
         }
 
@@ -124,7 +124,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return Count;
+                return this.Count;
             }
         }
 
@@ -182,7 +182,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return (ICollection)Keys;
+                return (ICollection)this.Keys;
             }
         }
 
@@ -210,7 +210,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return (ICollection)Values;
+                return (ICollection)this.Values;
             }
         }
 
@@ -224,7 +224,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return _kvp.Count;
+                return this._kvp.Count;
             }
         }
 
@@ -252,7 +252,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return Keys;
+                return this.Keys;
             }
         }
 
@@ -266,7 +266,7 @@ namespace TESVSnip.Collections.Generic
         {
             get
             {
-                return Values;
+                return this.Values;
             }
         }
 
@@ -286,7 +286,7 @@ namespace TESVSnip.Collections.Generic
             get
             {
                 KeyValuePair<TKey, TItem> kvp;
-                if (FindKVP(key, out kvp)) {
+                if (this.FindKVP(key, out kvp)) {
                     return kvp.Value;
                 }
 
@@ -295,7 +295,7 @@ namespace TESVSnip.Collections.Generic
 
             set
             {
-                Add(key, value);
+                this.Add(key, value);
             }
         }
 
@@ -355,23 +355,23 @@ namespace TESVSnip.Collections.Generic
         public void Add(TKey key, TItem value)
         {
             KeyValuePair<TKey, TItem> kvp;
-            if (FindKVP(key, out kvp)) {
+            if (this.FindKVP(key, out kvp)) {
                 if (kvp.Value == null || !kvp.Value.Equals(value)) {
                     kvp = new KeyValuePair<TKey, TItem>(key, value);
-                    _hash[key] = kvp;
-                    int idx = FindKey(key);
+                    this._hash[key] = kvp;
+                    int idx = this.FindKey(key);
                     if (idx >= 0) {
-                        _kvp[idx] = kvp;
+                        this._kvp[idx] = kvp;
                     }
                     else {
-                        _kvp.Add(new KeyValuePair<TKey, TItem>(key, value)); // ???? error condition
+                        this._kvp.Add(new KeyValuePair<TKey, TItem>(key, value)); // ???? error condition
                     }
                 }
             }
             else {
                 kvp = new KeyValuePair<TKey, TItem>(key, value);
-                _hash[key] = kvp;
-                _kvp.Add(new KeyValuePair<TKey, TItem>(key, value));
+                this._hash[key] = kvp;
+                this._kvp.Add(new KeyValuePair<TKey, TItem>(key, value));
             }
         }
 
@@ -380,7 +380,7 @@ namespace TESVSnip.Collections.Generic
         /// </summary>
         public void Clear()
         {
-            _kvp.Clear();
+            this._kvp.Clear();
         }
 
         // Summary:
@@ -413,11 +413,11 @@ namespace TESVSnip.Collections.Generic
             }
 
             KeyValuePair<TKey, TItem> kvp;
-            if (_hash.TryGetValue(key, out kvp)) {
+            if (this._hash.TryGetValue(key, out kvp)) {
                 return true;
             }
 
-            return FindKey(key) >= 0;
+            return this.FindKey(key) >= 0;
         }
 
         /// <summary>
@@ -437,7 +437,7 @@ namespace TESVSnip.Collections.Generic
                 throw new ArgumentNullException("key");
             }
 
-            return FindValue(value) >= 0;
+            return this.FindValue(value) >= 0;
         }
 
         // Summary:
@@ -491,7 +491,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         public int FindIndex(TKey match)
         {
-            return FindKey(match);
+            return this.FindKey(match);
         }
 
         /// <summary>
@@ -505,13 +505,13 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         public int FindValue(TItem value)
         {
-            for (int idx = 0; idx < _kvp.Count; ++idx) {
-                if (_kvp[idx].Value.Equals(value)) {
+            for (int idx = 0; idx < this._kvp.Count; ++idx) {
+                if (this._kvp[idx].Value.Equals(value)) {
                     return idx;
                 }
             }
 
-            return ~_kvp.Count;
+            return ~this._kvp.Count;
         }
 
         /// <summary>
@@ -536,7 +536,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         public TKey GetKey(int index)
         {
-            return _kvp[index].Key;
+            return this._kvp[index].Key;
         }
 
         /// <summary>
@@ -556,10 +556,10 @@ namespace TESVSnip.Collections.Generic
         public void Insert(int index, TKey key, TItem value)
         {
             KeyValuePair<TKey, TItem> kvp;
-            if (!FindKVP(key, out kvp)) {
+            if (!this.FindKVP(key, out kvp)) {
                 kvp = new KeyValuePair<TKey, TItem>(key, value);
-                _kvp.Insert(index, kvp);
-                _hash[key] = kvp;
+                this._kvp.Insert(index, kvp);
+                this._hash[key] = kvp;
                 return;
             }
 
@@ -583,11 +583,11 @@ namespace TESVSnip.Collections.Generic
                 throw new ArgumentNullException("key");
             }
 
-            _hash.Remove(key);
+            this._hash.Remove(key);
 
-            int idx = FindKey(key);
+            int idx = this.FindKey(key);
             if (idx >= 0) {
-                _kvp.RemoveAt(idx);
+                this._kvp.RemoveAt(idx);
                 return true;
             }
 
@@ -615,7 +615,7 @@ namespace TESVSnip.Collections.Generic
             }
 
             KeyValuePair<TKey, TItem> kvp;
-            if (FindKVP(key, out kvp)) {
+            if (this.FindKVP(key, out kvp)) {
                 value = kvp.Value;
                 return true;
             }
@@ -635,7 +635,7 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         void IDictionary.Add(object key, object value)
         {
-            Add((TKey)key, (TItem)value);
+            this.Add((TKey)key, (TItem)value);
         }
 
         /// <summary>
@@ -643,7 +643,7 @@ namespace TESVSnip.Collections.Generic
         /// </summary>
         void IDictionary.Clear()
         {
-            Clear();
+            this.Clear();
         }
 
         /// <summary>
@@ -657,7 +657,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         bool IDictionary.Contains(object key)
         {
-            return ContainsKey((TKey)key);
+            return this.ContainsKey((TKey)key);
         }
 
         /// <summary>
@@ -671,7 +671,7 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         void ICollection.CopyTo(Array array, int index)
         {
-            _kvp.CopyTo((KeyValuePair<TKey, TItem>[])array, index);
+            this._kvp.CopyTo((KeyValuePair<TKey, TItem>[])array, index);
         }
 
         /// <summary>
@@ -693,7 +693,7 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         void IDictionary.Remove(object key)
         {
-            Remove((TKey)key);
+            this.Remove((TKey)key);
         }
 
         /// <summary>
@@ -706,11 +706,11 @@ namespace TESVSnip.Collections.Generic
         /// </exception>
         void ICollection<KeyValuePair<TKey, TItem>>.Add(KeyValuePair<TKey, TItem> item)
         {
-            if (ContainsKey(item.Key)) {
+            if (this.ContainsKey(item.Key)) {
                 throw new ArgumentException();
             }
 
-            Add(item.Key, item.Value);
+            this.Add(item.Key, item.Value);
         }
 
         /// <summary>
@@ -724,7 +724,7 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         void IDictionary<TKey, TItem>.Add(TKey key, TItem value)
         {
-            Add(key, value);
+            this.Add(key, value);
         }
 
         /// <summary>
@@ -732,7 +732,7 @@ namespace TESVSnip.Collections.Generic
         /// </summary>
         void ICollection<KeyValuePair<TKey, TItem>>.Clear()
         {
-            Clear();
+            this.Clear();
         }
 
         /// <summary>
@@ -746,7 +746,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         bool ICollection<KeyValuePair<TKey, TItem>>.Contains(KeyValuePair<TKey, TItem> item)
         {
-            foreach (var kvp in _kvp) {
+            foreach (var kvp in this._kvp) {
                 if (kvp.Key.Equals(item.Key) && kvp.Value.Equals(item.Value)) {
                     return true;
                 }
@@ -766,7 +766,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         bool IDictionary<TKey, TItem>.ContainsKey(TKey key)
         {
-            return ContainsKey(key);
+            return this.ContainsKey(key);
         }
 
         /// <summary>
@@ -780,7 +780,7 @@ namespace TESVSnip.Collections.Generic
         /// </param>
         void ICollection<KeyValuePair<TKey, TItem>>.CopyTo(KeyValuePair<TKey, TItem>[] array, int arrayIndex)
         {
-            _kvp.CopyTo(array, arrayIndex);
+            this._kvp.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -816,7 +816,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         bool ICollection<KeyValuePair<TKey, TItem>>.Remove(KeyValuePair<TKey, TItem> item)
         {
-            return Remove(item.Key);
+            return this.Remove(item.Key);
         }
 
         /// <summary>
@@ -830,7 +830,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         bool IDictionary<TKey, TItem>.Remove(TKey key)
         {
-            return Remove(key);
+            return this.Remove(key);
         }
 
         /// <summary>
@@ -847,7 +847,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         bool IDictionary<TKey, TItem>.TryGetValue(TKey key, out TItem value)
         {
-            return TryGetValue(key, out value);
+            return this.TryGetValue(key, out value);
         }
 
         /// <summary>
@@ -864,7 +864,7 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         private bool FindKVP(TKey key, out KeyValuePair<TKey, TItem> kvp)
         {
-            if (_hash.TryGetValue(key, out kvp)) {
+            if (this._hash.TryGetValue(key, out kvp)) {
                 return true;
             }
 
@@ -883,13 +883,13 @@ namespace TESVSnip.Collections.Generic
         /// </returns>
         private int FindKey(TKey key)
         {
-            for (int idx = 0; idx < _kvp.Count; ++idx) {
-                if (_TKeyComparer.Equals(_kvp[idx].Key, key)) {
+            for (int idx = 0; idx < this._kvp.Count; ++idx) {
+                if (this._TKeyComparer.Equals(this._kvp[idx].Key, key)) {
                     return idx;
                 }
             }
 
-            return ~_kvp.Count;
+            return ~this._kvp.Count;
         }
 
         /// <summary>
@@ -921,8 +921,8 @@ namespace TESVSnip.Collections.Generic
             internal Enumerator(OrderedDictionary<TKey, TItem> list)
             {
                 this.list = list;
-                index = 0;
-                current = default(KeyValuePair<TKey, TItem>);
+                this.index = 0;
+                this.current = default(KeyValuePair<TKey, TItem>);
             }
 
             /// <summary>
@@ -935,7 +935,7 @@ namespace TESVSnip.Collections.Generic
             {
                 get
                 {
-                    return current;
+                    return this.current;
                 }
             }
 
@@ -949,7 +949,7 @@ namespace TESVSnip.Collections.Generic
             {
                 get
                 {
-                    return Current;
+                    return this.Current;
                 }
             }
 
@@ -963,7 +963,7 @@ namespace TESVSnip.Collections.Generic
             {
                 get
                 {
-                    return new DictionaryEntry(current.Key, current.Value);
+                    return new DictionaryEntry(this.current.Key, this.current.Value);
                 }
             }
 
@@ -977,7 +977,7 @@ namespace TESVSnip.Collections.Generic
             {
                 get
                 {
-                    return current.Key;
+                    return this.current.Key;
                 }
             }
 
@@ -991,7 +991,7 @@ namespace TESVSnip.Collections.Generic
             {
                 get
                 {
-                    return current.Value;
+                    return this.current.Value;
                 }
             }
 
@@ -1003,14 +1003,14 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             public bool MoveNext()
             {
-                if (index < list.Count) {
-                    current = list._kvp[index];
-                    index++;
+                if (this.index < this.list.Count) {
+                    this.current = this.list._kvp[this.index];
+                    this.index++;
                     return true;
                 }
 
-                index = list._kvp.Count + 1;
-                current = default(KeyValuePair<TKey, TItem>);
+                this.index = this.list._kvp.Count + 1;
+                this.current = default(KeyValuePair<TKey, TItem>);
                 return false;
             }
 
@@ -1022,7 +1022,7 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             bool IEnumerator.MoveNext()
             {
-                return MoveNext();
+                return this.MoveNext();
             }
 
             /// <summary>
@@ -1030,8 +1030,8 @@ namespace TESVSnip.Collections.Generic
             /// </summary>
             void IEnumerator.Reset()
             {
-                index = 0;
-                current = default(KeyValuePair<TKey, TItem>);
+                this.index = 0;
+                this.current = default(KeyValuePair<TKey, TItem>);
             }
 
             /// <summary>
@@ -1060,7 +1060,7 @@ namespace TESVSnip.Collections.Generic
             /// </param>
             internal OrderedKeyCollection(OrderedDictionary<TKey, TItem> list)
             {
-                _list = list;
+                this._list = list;
             }
 
             /// <summary>
@@ -1073,7 +1073,7 @@ namespace TESVSnip.Collections.Generic
             {
                 get
                 {
-                    return _list.Count;
+                    return this._list.Count;
                 }
             }
 
@@ -1167,7 +1167,7 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             public bool Contains(TKey item)
             {
-                return _list.ContainsKey(item);
+                return this._list.ContainsKey(item);
             }
 
             /// <summary>
@@ -1194,7 +1194,7 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             public IEnumerator<TKey> GetEnumerator()
             {
-                return new Enumerator(_list);
+                return new Enumerator(this._list);
             }
 
             /// <summary>
@@ -1235,7 +1235,7 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return new Enumerator(_list);
+                return new Enumerator(this._list);
             }
 
             /// <summary>
@@ -1267,8 +1267,8 @@ namespace TESVSnip.Collections.Generic
                 internal Enumerator(OrderedDictionary<TKey, TItem> list)
                 {
                     this.list = list;
-                    index = 0;
-                    current = default(TKey);
+                    this.index = 0;
+                    this.current = default(TKey);
                 }
 
                 /// <summary>
@@ -1281,7 +1281,7 @@ namespace TESVSnip.Collections.Generic
                 {
                     get
                     {
-                        return current;
+                        return this.current;
                     }
                 }
 
@@ -1295,7 +1295,7 @@ namespace TESVSnip.Collections.Generic
                 {
                     get
                     {
-                        return Current;
+                        return this.Current;
                     }
                 }
 
@@ -1307,14 +1307,14 @@ namespace TESVSnip.Collections.Generic
                 /// </returns>
                 public bool MoveNext()
                 {
-                    if (index < list.Count) {
-                        current = list._kvp[index].Key;
-                        index++;
+                    if (this.index < this.list.Count) {
+                        this.current = this.list._kvp[this.index].Key;
+                        this.index++;
                         return true;
                     }
 
-                    index = list._kvp.Count + 1;
-                    current = default(TKey);
+                    this.index = this.list._kvp.Count + 1;
+                    this.current = default(TKey);
                     return false;
                 }
 
@@ -1330,8 +1330,8 @@ namespace TESVSnip.Collections.Generic
                 /// </summary>
                 void IEnumerator.Reset()
                 {
-                    index = 0;
-                    current = default(TKey);
+                    this.index = 0;
+                    this.current = default(TKey);
                 }
             }
         }
@@ -1354,7 +1354,7 @@ namespace TESVSnip.Collections.Generic
             /// </param>
             internal OrderedValueCollection(OrderedDictionary<TKey, TItem> list)
             {
-                _list = list;
+                this._list = list;
             }
 
             /// <summary>
@@ -1367,7 +1367,7 @@ namespace TESVSnip.Collections.Generic
             {
                 get
                 {
-                    return _list.Count;
+                    return this._list.Count;
                 }
             }
 
@@ -1461,7 +1461,7 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             public bool Contains(TItem item)
             {
-                return _list.ContainsValue(item);
+                return this._list.ContainsValue(item);
             }
 
             /// <summary>
@@ -1488,7 +1488,7 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             public IEnumerator<TItem> GetEnumerator()
             {
-                return new Enumerator(_list);
+                return new Enumerator(this._list);
             }
 
             /// <summary>
@@ -1529,7 +1529,7 @@ namespace TESVSnip.Collections.Generic
             /// </returns>
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return new Enumerator(_list);
+                return new Enumerator(this._list);
             }
 
             /// <summary>
@@ -1561,8 +1561,8 @@ namespace TESVSnip.Collections.Generic
                 internal Enumerator(OrderedDictionary<TKey, TItem> list)
                 {
                     this.list = list;
-                    index = 0;
-                    current = default(TItem);
+                    this.index = 0;
+                    this.current = default(TItem);
                 }
 
                 /// <summary>
@@ -1575,7 +1575,7 @@ namespace TESVSnip.Collections.Generic
                 {
                     get
                     {
-                        return current;
+                        return this.current;
                     }
                 }
 
@@ -1589,7 +1589,7 @@ namespace TESVSnip.Collections.Generic
                 {
                     get
                     {
-                        return Current;
+                        return this.Current;
                     }
                 }
 
@@ -1601,14 +1601,14 @@ namespace TESVSnip.Collections.Generic
                 /// </returns>
                 public bool MoveNext()
                 {
-                    if (index < list.Count) {
-                        current = list._kvp[index].Value;
-                        index++;
+                    if (this.index < this.list.Count) {
+                        this.current = this.list._kvp[this.index].Value;
+                        this.index++;
                         return true;
                     }
 
-                    index = list._kvp.Count + 1;
-                    current = default(TItem);
+                    this.index = this.list._kvp.Count + 1;
+                    this.current = default(TItem);
                     return false;
                 }
 
@@ -1624,8 +1624,8 @@ namespace TESVSnip.Collections.Generic
                 /// </summary>
                 void IEnumerator.Reset()
                 {
-                    index = 0;
-                    current = default(TItem);
+                    this.index = 0;
+                    this.current = default(TItem);
                 }
             }
         }
