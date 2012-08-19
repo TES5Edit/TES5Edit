@@ -6,16 +6,6 @@ namespace TESVSnip.Data
     using System.Reflection;
     using System.Runtime.Serialization;
 
-    // 	/// <summary>
-    // 	/// The NonPersistable attribute is similar to NonSerializable as it tags fields or properties 
-    // 	/// as not persistable.  It is used in conjunction with the Peristable attribute when applied to a class.
-    // 	/// </summary>
-    // 	/// <remarks>This class is used with PersistAssist for excluding certain fields from being saved.</remarks>
-    // 	[AttributeUsage(AttributeTargets.Field|AttributeTargets.Property)]
-    // 	public sealed class NonPersistable : System.Attribute
-    // 	{
-    // 	}
-
     /// <summary>
     /// The PersistAssist class contains serialization helper classes.
     /// </summary>
