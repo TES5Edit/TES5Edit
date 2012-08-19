@@ -15,6 +15,7 @@ using TESVSnip;
 
 namespace ScriptCompiler
 {
+    using TESVSnip.Framework;
     using TESVSnip.Main;
     using TESVSnip.Model;
 
