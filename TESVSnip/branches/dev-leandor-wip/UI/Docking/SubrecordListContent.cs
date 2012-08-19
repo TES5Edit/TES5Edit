@@ -2,16 +2,21 @@
 {
     using TESVSnip.UI.ObjectControls;
 
-    public partial class SubrecordListContent : WeifenLuo.WinFormsUI.Docking.DockContent
+    using WeifenLuo.WinFormsUI.Docking;
+
+    public partial class SubrecordListContent : DockContent
     {
         public SubrecordListContent()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         public SubrecordListEditor SubrecordList
         {
-            get { return this.subrecordPanel; }
+            get
+            {
+                return this.subrecordPanel;
+            }
         }
     }
 }

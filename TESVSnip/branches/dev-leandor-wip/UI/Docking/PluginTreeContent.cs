@@ -2,16 +2,21 @@
 {
     using TESVSnip.UI.ObjectControls;
 
-    public partial class PluginTreeContent : WeifenLuo.WinFormsUI.Docking.DockContent
+    using WeifenLuo.WinFormsUI.Docking;
+
+    public partial class PluginTreeContent : DockContent
     {
         public PluginTreeContent()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         public PluginTreeView PluginTree
         {
-            get { return this.pluginTreeControl; }
+            get
+            {
+                return this.pluginTreeControl;
+            }
         }
     }
 }

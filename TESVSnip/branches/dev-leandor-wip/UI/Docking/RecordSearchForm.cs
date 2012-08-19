@@ -1,25 +1,19 @@
-﻿using System;
-using System.Windows.Forms;
-using TESVSnip.Model;
-using WeifenLuo.WinFormsUI.Docking;
-
-namespace TESVSnip.Docking
+﻿namespace TESVSnip.Docking
 {
+    using System;
+
+    using TESVSnip.Model;
+
     public partial class RecordSearchForm : BaseDockContent
     {
         public RecordSearchForm()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
-        private void RecordSearchForm_Shown(object sender, EventArgs e)
+        internal void ReferenceSearch(uint formid)
         {
-            this.subrecordPanel.FocusText();
-        }
-
-        private void RecordSearchForm_Load(object sender, EventArgs e)
-        {
-
+            this.subrecordPanel.ReferenceSearch(formid);
         }
 
         internal void SetSearchCriteria(SearchCriteriaSettings settings, bool doSearch)
@@ -27,9 +21,13 @@ namespace TESVSnip.Docking
             this.subrecordPanel.SetSearchCriteria(settings, doSearch);
         }
 
-        internal void ReferenceSearch(uint formid)
+        private void RecordSearchForm_Load(object sender, EventArgs e)
         {
-            this.subrecordPanel.ReferenceSearch(formid);
+        }
+
+        private void RecordSearchForm_Shown(object sender, EventArgs e)
+        {
+            this.subrecordPanel.FocusText();
         }
     }
 }
