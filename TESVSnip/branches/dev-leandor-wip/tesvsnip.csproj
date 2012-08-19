@@ -245,112 +245,112 @@
     <Compile Include="Data\serializationinfocachelist.cs" />
     <Compile Include="Data\Subrecord.cs" />
     <Compile Include="Data\SubrecordElement.cs" />
-    <Compile Include="Docking\BaseDockContent.cs">
+    <Compile Include="UI\Docking\BaseDockContent.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Docking\BaseDockContent.Designer.cs">
+    <Compile Include="UI\Docking\BaseDockContent.Designer.cs">
       <DependentUpon>BaseDockContent.cs</DependentUpon>
     </Compile>
-    <Compile Include="Docking\RichTextView.cs">
+    <Compile Include="UI\Docking\RichTextView.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Docking\RichTextView.Designer.cs">
+    <Compile Include="UI\Docking\RichTextView.Designer.cs">
       <DependentUpon>RichTextView.cs</DependentUpon>
     </Compile>
-    <Compile Include="Docking\SubrecordListContent.cs">
+    <Compile Include="UI\Docking\SubrecordListContent.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Docking\SubrecordListContent.Designer.cs">
+    <Compile Include="UI\Docking\SubrecordListContent.Designer.cs">
       <DependentUpon>SubrecordListContent.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\AddMasterForm.cs">
+    <Compile Include="UI\Forms\AddMasterForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\AddMasterForm.designer.cs">
+    <Compile Include="UI\Forms\AddMasterForm.designer.cs">
       <DependentUpon>AddMasterForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\CompressSettings.cs">
+    <Compile Include="UI\Forms\CompressSettings.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\CompressSettings.Designer.cs">
+    <Compile Include="UI\Forms\CompressSettings.Designer.cs">
       <DependentUpon>CompressSettings.cs</DependentUpon>
     </Compile>
-    <Compile Include="Docking\FullRecordEditor.cs">
+    <Compile Include="UI\Docking\FullRecordEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Docking\FullRecordEditor.Designer.cs">
+    <Compile Include="UI\Docking\FullRecordEditor.Designer.cs">
       <DependentUpon>FullRecordEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\BatchEditRecords.cs">
+    <Compile Include="UI\Forms\BatchEditRecords.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\BatchEditRecords.Designer.cs">
+    <Compile Include="UI\Forms\BatchEditRecords.Designer.cs">
       <DependentUpon>BatchEditRecords.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\InputBox.cs">
+    <Compile Include="UI\Forms\InputBox.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\InputBox.Designer.cs">
+    <Compile Include="UI\Forms\InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\RecordColumnSelect.cs">
+    <Compile Include="UI\Forms\RecordColumnSelect.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\RecordColumnSelect.Designer.cs">
+    <Compile Include="UI\Forms\RecordColumnSelect.Designer.cs">
       <DependentUpon>RecordColumnSelect.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\SearchFilterBasic.cs">
+    <Compile Include="UI\Forms\SearchFilterBasic.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\SearchFilterBasic.Designer.cs">
+    <Compile Include="UI\Forms\SearchFilterBasic.Designer.cs">
       <DependentUpon>SearchFilterBasic.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\MediumLevelRecordEditor.cs">
+    <Compile Include="UI\Forms\MediumLevelRecordEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\MediumLevelRecordEditor.designer.cs">
+    <Compile Include="UI\Forms\MediumLevelRecordEditor.designer.cs">
       <DependentUpon>MediumLevelRecordEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\NewMediumLevelRecordEditor.cs">
+    <Compile Include="UI\Forms\NewMediumLevelRecordEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\NewMediumLevelRecordEditor.designer.cs">
+    <Compile Include="UI\Forms\NewMediumLevelRecordEditor.designer.cs">
       <DependentUpon>NewMediumLevelRecordEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\LoadSettings.cs">
+    <Compile Include="UI\Forms\LoadSettings.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\LoadSettings.Designer.cs">
+    <Compile Include="UI\Forms\LoadSettings.Designer.cs">
       <DependentUpon>LoadSettings.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\MainView.Search.cs">
+    <Compile Include="UI\Forms\MainView.Search.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\MainView.Spells.cs">
+    <Compile Include="UI\Forms\MainView.Spells.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\MultilineStringEditor.cs">
+    <Compile Include="UI\Forms\MultilineStringEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\MultilineStringEditor.Designer.cs">
+    <Compile Include="UI\Forms\MultilineStringEditor.Designer.cs">
       <DependentUpon>MultilineStringEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Docking\PluginTreeContent.cs">
+    <Compile Include="UI\Docking\PluginTreeContent.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Docking\PluginTreeContent.Designer.cs">
+    <Compile Include="UI\Docking\PluginTreeContent.Designer.cs">
       <DependentUpon>PluginTreeContent.cs</DependentUpon>
     </Compile>
-    <Compile Include="Docking\RecordSearchForm.cs">
+    <Compile Include="UI\Docking\RecordSearchForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Docking\RecordSearchForm.Designer.cs">
+    <Compile Include="UI\Docking\RecordSearchForm.Designer.cs">
       <DependentUpon>RecordSearchForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\SearchFilterAdvanced.cs">
+    <Compile Include="UI\Forms\SearchFilterAdvanced.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\SearchFilterAdvanced.Designer.cs">
+    <Compile Include="UI\Forms\SearchFilterAdvanced.Designer.cs">
       <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
     </Compile>
     <Compile Include="Main\Extensions.cs" />
@@ -398,66 +398,66 @@
     <Compile Include="Model\SearchSubrecord.cs" />
     <Compile Include="Model\SearchSubrecordXml.cs" />
     <Compile Include="Model\SubRecord.cs" />
-    <Compile Include="ObjectControls\RecordEditor.cs">
+    <Compile Include="UI\ObjectControls\RecordEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ObjectControls\RecordEditor.Designer.cs">
+    <Compile Include="UI\ObjectControls\RecordEditor.Designer.cs">
       <DependentUpon>RecordEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\StringsEditor.cs">
+    <Compile Include="UI\Forms\StringsEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\StringsEditor.Designer.cs">
+    <Compile Include="UI\Forms\StringsEditor.Designer.cs">
       <DependentUpon>StringsEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\DataEdit.cs">
+    <Compile Include="UI\Forms\DataEdit.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\DataEdit.designer.cs">
+    <Compile Include="UI\Forms\DataEdit.designer.cs">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\GroupEditor.cs">
+    <Compile Include="UI\Forms\GroupEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\GroupEditor.designer.cs">
+    <Compile Include="UI\Forms\GroupEditor.designer.cs">
       <DependentUpon>GroupEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\HeaderEditor.cs">
+    <Compile Include="UI\Forms\HeaderEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\HeaderEditor.designer.cs">
+    <Compile Include="UI\Forms\HeaderEditor.designer.cs">
       <DependentUpon>HeaderEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\HexDataEdit.cs">
+    <Compile Include="UI\Forms\HexDataEdit.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\HexDataEdit.designer.cs">
+    <Compile Include="UI\Forms\HexDataEdit.designer.cs">
       <DependentUpon>HexDataEdit.cs</DependentUpon>
     </Compile>
     <Compile Include="Collections\LocalizedString.cs" />
     <Compile Include="Collections\ordereddictionary.cs" />
-    <Compile Include="ObjectControls\PluginTreeView.cs">
+    <Compile Include="UI\ObjectControls\PluginTreeView.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ObjectControls\PluginTreeView.Designer.cs">
+    <Compile Include="UI\ObjectControls\PluginTreeView.Designer.cs">
       <DependentUpon>PluginTreeView.cs</DependentUpon>
     </Compile>
-    <Compile Include="ObjectControls\RecordSearch.cs">
+    <Compile Include="UI\ObjectControls\RecordSearch.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ObjectControls\RecordSearch.Designer.cs">
+    <Compile Include="UI\ObjectControls\RecordSearch.Designer.cs">
       <DependentUpon>RecordSearch.cs</DependentUpon>
     </Compile>
-    <Compile Include="ObjectControls\SubrecordElementEditor.cs">
+    <Compile Include="UI\ObjectControls\SubrecordElementEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ObjectControls\SubrecordElementEditor.Designer.cs">
+    <Compile Include="UI\ObjectControls\SubrecordElementEditor.Designer.cs">
       <DependentUpon>SubrecordElementEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="ObjectControls\SubrecordListEditor.cs">
+    <Compile Include="UI\ObjectControls\SubrecordListEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ObjectControls\SubrecordListEditor.Designer.cs">
+    <Compile Include="UI\ObjectControls\SubrecordListEditor.Designer.cs">
       <DependentUpon>SubrecordListEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="Main\Pair.cs" />
@@ -468,10 +468,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\HexElement.cs">
+    <Compile Include="UI\RecordControls\HexElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\HexElement.Designer.cs">
+    <Compile Include="UI\RecordControls\HexElement.Designer.cs">
       <DependentUpon>HexElement.cs</DependentUpon>
     </Compile>
     <Compile Include="ZLibInterface\DotZLib\AdlerChecksum.cs" />
@@ -508,91 +508,91 @@
     <EmbeddedResource Include="Vendor\Controls\virtuallistview.resx">
       <DependentUpon>virtuallistview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Docking\BaseDockContent.resx">
+    <EmbeddedResource Include="UI\Docking\BaseDockContent.resx">
       <DependentUpon>BaseDockContent.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Docking\RichTextView.resx">
+    <EmbeddedResource Include="UI\Docking\RichTextView.resx">
       <DependentUpon>RichTextView.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Docking\SubrecordListContent.resx">
+    <EmbeddedResource Include="UI\Docking\SubrecordListContent.resx">
       <DependentUpon>SubrecordListContent.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\AddMasterForm.resx">
+    <EmbeddedResource Include="UI\Forms\AddMasterForm.resx">
       <DependentUpon>AddMasterForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\CompressSettings.resx">
+    <EmbeddedResource Include="UI\Forms\CompressSettings.resx">
       <DependentUpon>CompressSettings.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Docking\FullRecordEditor.resx">
+    <EmbeddedResource Include="UI\Docking\FullRecordEditor.resx">
       <DependentUpon>FullRecordEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\BatchEditRecords.resx">
+    <EmbeddedResource Include="UI\Forms\BatchEditRecords.resx">
       <DependentUpon>BatchEditRecords.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\InputBox.resx">
+    <EmbeddedResource Include="UI\Forms\InputBox.resx">
       <DependentUpon>InputBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\RecordColumnSelect.resx">
+    <EmbeddedResource Include="UI\Forms\RecordColumnSelect.resx">
       <DependentUpon>RecordColumnSelect.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\SearchFilterBasic.resx">
+    <EmbeddedResource Include="UI\Forms\SearchFilterBasic.resx">
       <DependentUpon>SearchFilterBasic.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\MediumLevelRecordEditor.resx">
+    <EmbeddedResource Include="UI\Forms\MediumLevelRecordEditor.resx">
       <DependentUpon>MediumLevelRecordEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\NewMediumLevelRecordEditor.resx">
+    <EmbeddedResource Include="UI\Forms\NewMediumLevelRecordEditor.resx">
       <DependentUpon>NewMediumLevelRecordEditor.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\LoadSettings.resx">
+    <EmbeddedResource Include="UI\Forms\LoadSettings.resx">
       <DependentUpon>LoadSettings.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\MultilineStringEditor.resx">
+    <EmbeddedResource Include="UI\Forms\MultilineStringEditor.resx">
       <DependentUpon>MultilineStringEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Docking\PluginTreeContent.resx">
+    <EmbeddedResource Include="UI\Docking\PluginTreeContent.resx">
       <DependentUpon>PluginTreeContent.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Docking\RecordSearchForm.resx">
+    <EmbeddedResource Include="UI\Docking\RecordSearchForm.resx">
       <DependentUpon>RecordSearchForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\SearchFilterAdvanced.resx">
+    <EmbeddedResource Include="UI\Forms\SearchFilterAdvanced.resx">
       <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ObjectControls\RecordEditor.resx">
+    <EmbeddedResource Include="UI\ObjectControls\RecordEditor.resx">
       <DependentUpon>RecordEditor.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\StringsEditor.resx">
+    <EmbeddedResource Include="UI\Forms\StringsEditor.resx">
       <DependentUpon>StringsEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\DataEdit.resx">
+    <EmbeddedResource Include="UI\Forms\DataEdit.resx">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\GroupEditor.resx">
+    <EmbeddedResource Include="UI\Forms\GroupEditor.resx">
       <DependentUpon>GroupEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\HeaderEditor.resx">
+    <EmbeddedResource Include="UI\Forms\HeaderEditor.resx">
       <DependentUpon>HeaderEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\HexDataEdit.resx">
+    <EmbeddedResource Include="UI\Forms\HexDataEdit.resx">
       <DependentUpon>HexDataEdit.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ObjectControls\PluginTreeView.resx">
+    <EmbeddedResource Include="UI\ObjectControls\PluginTreeView.resx">
       <DependentUpon>PluginTreeView.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ObjectControls\RecordSearch.resx">
+    <EmbeddedResource Include="UI\ObjectControls\RecordSearch.resx">
       <DependentUpon>RecordSearch.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ObjectControls\SubrecordElementEditor.resx">
+    <EmbeddedResource Include="UI\ObjectControls\SubrecordElementEditor.resx">
       <DependentUpon>SubrecordElementEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ObjectControls\SubrecordListEditor.resx">
+    <EmbeddedResource Include="UI\ObjectControls\SubrecordListEditor.resx">
       <DependentUpon>SubrecordListEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -600,36 +600,36 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\MainView.resx">
+    <EmbeddedResource Include="UI\Forms\MainView.resx">
       <DependentUpon>MainView.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\BaseElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\BaseElement.resx">
       <DependentUpon>BaseElement.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\HexElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\HexElement.resx">
       <DependentUpon>HexElement.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\RepeatingElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\RepeatingElement.resx">
       <DependentUpon>RepeatingElement.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\OptionsElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\OptionsElement.resx">
       <DependentUpon>OptionsElement.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\FlagsElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\FlagsElement.resx">
       <DependentUpon>FlagsElement.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\LStringElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\LStringElement.resx">
       <DependentUpon>LStringElement.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\FormIDElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\FormIDElement.resx">
       <DependentUpon>FormIDElement.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\OptionalElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\OptionalElement.resx">
       <DependentUpon>OptionalElement.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RecordControls\TextElement.resx">
+    <EmbeddedResource Include="UI\RecordControls\TextElement.resx">
       <DependentUpon>TextElement.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="build\tesvsnip.snk" />
@@ -645,53 +645,53 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Main\RecordStructure.cs" />
-    <Compile Include="RecordControls\BaseElement.cs">
+    <Compile Include="UI\RecordControls\BaseElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\BaseElement.Designer.cs">
+    <Compile Include="UI\RecordControls\BaseElement.Designer.cs">
       <DependentUpon>BaseElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\RepeatingElement.cs">
+    <Compile Include="UI\RecordControls\RepeatingElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\RepeatingElement.Designer.cs">
+    <Compile Include="UI\RecordControls\RepeatingElement.Designer.cs">
       <DependentUpon>RepeatingElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\OptionsElement.cs">
+    <Compile Include="UI\RecordControls\OptionsElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\OptionsElement.Designer.cs">
+    <Compile Include="UI\RecordControls\OptionsElement.Designer.cs">
       <DependentUpon>OptionsElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\FlagsElement.cs">
+    <Compile Include="UI\RecordControls\FlagsElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\FlagsElement.Designer.cs">
+    <Compile Include="UI\RecordControls\FlagsElement.Designer.cs">
       <DependentUpon>FlagsElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\LStringElement.cs">
+    <Compile Include="UI\RecordControls\LStringElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\LStringElement.Designer.cs">
+    <Compile Include="UI\RecordControls\LStringElement.Designer.cs">
       <DependentUpon>LStringElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\FormIDElement.cs">
+    <Compile Include="UI\RecordControls\FormIDElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\FormIDElement.Designer.cs">
+    <Compile Include="UI\RecordControls\FormIDElement.Designer.cs">
       <DependentUpon>FormIDElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\IElementControl.cs" />
-    <Compile Include="RecordControls\OptionalElement.cs">
+    <Compile Include="UI\RecordControls\IElementControl.cs" />
+    <Compile Include="UI\RecordControls\OptionalElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\OptionalElement.Designer.cs">
+    <Compile Include="UI\RecordControls\OptionalElement.Designer.cs">
       <DependentUpon>OptionalElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RecordControls\TextElement.cs">
+    <Compile Include="UI\RecordControls\TextElement.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="RecordControls\TextElement.Designer.cs">
+    <Compile Include="UI\RecordControls\TextElement.Designer.cs">
       <DependentUpon>TextElement.cs</DependentUpon>
     </Compile>
     <Compile Include="Vendor\RTFLib\RTF\IRTFCell.cs" />
@@ -717,10 +717,10 @@
     <Compile Include="ScriptCompiler\Tokenizer.cs" />
     <Compile Include="Main\Settings.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="Forms\MainView.cs">
+    <Compile Include="UI\Forms\MainView.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\MainView.designer.cs">
+    <Compile Include="UI\Forms\MainView.designer.cs">
       <DependentUpon>MainView.cs</DependentUpon>
     </Compile>
     <Compile Include="Main\TESParserException.cs" />
