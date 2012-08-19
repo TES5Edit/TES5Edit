@@ -2,25 +2,6 @@
 {
     using System;
 
-    internal enum ElementAssignmentType
-    {
-        Set, 
-
-        Add, 
-
-        Subtract, 
-
-        Multiply, 
-
-        Divide, 
-
-        BitAnd, 
-
-        BitOr, 
-
-        Clear, 
-    }
-
     /// <summary>
     ///   Helper for reference to Element structure including data
     /// </summary>

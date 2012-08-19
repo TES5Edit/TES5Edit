@@ -332,9 +332,18 @@
     <Compile Include="Main\CastValue.cs" />
     <Compile Include="Main\Spells.cs" />
     <Compile Include="Model\BaseRecord.cs" />
+    <Compile Include="Model\BatchCondElementType.cs" />
+    <Compile Include="Model\BatchCondRecordType.cs" />
+    <Compile Include="Model\BatchCriteria.cs" />
+    <Compile Include="Model\BatchCriteriaSettings.cs" />
+    <Compile Include="Model\BatchSubrecord.cs" />
+    <Compile Include="Model\ColumnCriteria.cs" />
     <Compile Include="Model\ColumnElement.cs" />
     <Compile Include="Model\BatchElement.cs" />
+    <Compile Include="Model\ColumnSettings.cs" />
+    <Compile Include="Model\ColumnSubrecord.cs" />
     <Compile Include="Model\Element.cs" />
+    <Compile Include="Model\ElementAssignmentType.cs" />
     <Compile Include="Model\GroupRecord.cs" />
     <Compile Include="Model\IGroupRecord.cs" />
     <Compile Include="Model\IRecord.cs" />
@@ -342,7 +351,17 @@
     <Compile Include="Model\PluginList.cs" />
     <Compile Include="Model\Rec.cs" />
     <Compile Include="Model\Record.cs" />
+    <Compile Include="Model\RecordChangeEventArgs.cs" />
+    <Compile Include="Model\SearchCondElementType.cs" />
+    <Compile Include="Model\SearchCondRecordType.cs" />
+    <Compile Include="Model\SearchCriteria.cs" />
+    <Compile Include="Model\SearchCriteriaList.cs" />
+    <Compile Include="Model\SearchCriteriaSettings.cs" />
+    <Compile Include="Model\SearchCriteriaXmlSettings.cs" />
     <Compile Include="Model\SearchElement.cs" />
+    <Compile Include="Model\SearchElementXml.cs" />
+    <Compile Include="Model\SearchSubrecord.cs" />
+    <Compile Include="Model\SearchSubrecordXml.cs" />
     <Compile Include="Model\SubRecord.cs" />
     <Compile Include="ObjectControls\RecordEditor.cs">
       <SubType>UserControl</SubType>
