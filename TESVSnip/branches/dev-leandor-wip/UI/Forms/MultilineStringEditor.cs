@@ -1,28 +1,26 @@
-﻿using System;
-using System.Windows.Forms;
-
-namespace TESVSnip.Forms
+﻿namespace TESVSnip.Forms
 {
+    using System;
+    using System.Windows.Forms;
+
     public partial class MultilineStringEditor : Form
     {
         public MultilineStringEditor()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         public MultilineStringEditor(string text)
         {
-            Text = text;
-            InitializeComponent();
+            this.Text = text;
+            this.InitializeComponent();
         }
 
-        public new String Text { get; set; }
+        public new string Text { get; set; }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void MultilineStringEditor_Load(object sender, EventArgs e)
         {
-            Text = textBox1.Text;
-            DialogResult = DialogResult.OK;
-            Close();
+            this.textBox1.Text = this.Text;
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -31,9 +29,11 @@ namespace TESVSnip.Forms
             Close();
         }
 
-        private void MultilineStringEditor_Load(object sender, EventArgs e)
+        private void btnOK_Click(object sender, EventArgs e)
         {
-            textBox1.Text = Text;
+            this.Text = this.textBox1.Text;
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 }

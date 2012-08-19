@@ -1,341 +1,107 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
-using System.Windows.Forms;
-
-using TESVSnip.Properties;
-
-namespace TESVSnip.Forms
+﻿namespace TESVSnip.Forms
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Globalization;
+    using System.Linq;
+    using System.Windows.Forms;
+
     using TESVSnip.Collections;
-    using TESVSnip.Main;
     using TESVSnip.Model;
+    using TESVSnip.Properties;
+
+    using Settings = TESVSnip.Main.Settings;
 
     public partial class StringsEditor : Form
     {
-        private class StringHolder
-        {
-            public Plugin Plugin { get; set; }
-            public uint ID { get; set; }
-            public string Value { get; set; }
-            public LocalizedStringFormat Format { get; set; }
-        }
+        private readonly List<StringHolder> addStrings = new List<StringHolder>();
+
+        private readonly List<StringHolder> remStrings = new List<StringHolder>();
 
         private readonly AdvancedList<StringHolder> strings = new AdvancedList<StringHolder>();
-        private readonly List<StringHolder> addStrings = new List<StringHolder>();
-        private readonly List<StringHolder> remStrings = new List<StringHolder>();
-        private readonly List<StringHolder> updateStrings = new List<StringHolder>();
 
-        public Plugin[] Plugins { get; set; }
+        private readonly List<StringHolder> updateStrings = new List<StringHolder>();
 
         public StringsEditor()
         {
-            InitializeComponent();
+            this.InitializeComponent();
             Icon = Resources.tesv_ico;
 
-            cboType.DataSource = Enum.GetNames(typeof (LocalizedStringFormat));
-            cboType.SelectedItem = LocalizedStringFormat.Base.ToString();
+            this.cboType.DataSource = Enum.GetNames(typeof(LocalizedStringFormat));
+            this.cboType.SelectedItem = LocalizedStringFormat.Base.ToString();
 
-            listStrings.DataSource = strings;
-            listStrings.AddBindingColumn("ID", "ID", 80, new Func<StringHolder, string>(a => a.ID.ToString("X8")));
-            listStrings.AddBindingColumn("Plugin", "Source", 80, new Func<StringHolder, string>(a => a.Plugin.Name));
-            listStrings.AddBindingColumn("Format", "Format", 50, HorizontalAlignment.Center);
-            listStrings.AddBindingColumn("Value", "Value", 500);
+            this.listStrings.DataSource = this.strings;
+            this.listStrings.AddBindingColumn("ID", "ID", 80, new Func<StringHolder, string>(a => a.ID.ToString("X8")));
+            this.listStrings.AddBindingColumn("Plugin", "Source", 80, new Func<StringHolder, string>(a => a.Plugin.Name));
+            this.listStrings.AddBindingColumn("Format", "Format", 50, HorizontalAlignment.Center);
+            this.listStrings.AddBindingColumn("Value", "Value", 500);
         }
 
-
-        private void PopulateStrings()
-        {
-            if (Plugins == null)
-                return;
-            foreach (var plugin in Plugins)
-            {
-                foreach (var kvp in plugin.Strings)
-                {
-                    strings.Add(new StringHolder
-                                    {
-                                        ID = kvp.Key,
-                                        Plugin = plugin,
-                                        Value = kvp.Value,
-                                        Format = LocalizedStringFormat.Base
-                                    }
-                        );
-                }
-                foreach (var kvp in plugin.ILStrings)
-                {
-                    strings.Add(new StringHolder
-                                    {
-                                        ID = kvp.Key,
-                                        Plugin = plugin,
-                                        Value = kvp.Value,
-                                        Format = LocalizedStringFormat.IL
-                                    }
-                        );
-                }
-                foreach (var kvp in plugin.DLStrings)
-                {
-                    strings.Add(new StringHolder
-                                    {
-                                        ID = kvp.Key,
-                                        Plugin = plugin,
-                                        Value = kvp.Value,
-                                        Format = LocalizedStringFormat.DL
-                                    }
-                        );
-                }
-            }
-        }
-
-        private void txtID_Validating(object sender, CancelEventArgs e)
-        {
-            string strID = txtID.Text;
-            if (string.IsNullOrEmpty(strID))
-                return;
-            uint uiID;
-            if (!uint.TryParse(strID, NumberStyles.HexNumber, null, out uiID))
-            {
-                error.SetError(txtID, "Invalid String ID");
-                txtString.Enabled = false;
-                btnEditString.Enabled = false;
-                btnAddString.Enabled = false;
-                btnDeleteString.Enabled = false;
-            }
-            else
-            {
-                error.SetError(txtID, null);
-                txtString.Enabled = true;
-                btnEditString.Enabled = true;
-                btnAddString.Enabled = true;
-                btnDeleteString.Enabled = true;
-            }
-        }
-
-        private void txtID_TextChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void btnEditString_Click(object sender, EventArgs e)
-        {
-            using (var editor = new MultilineStringEditor())
-            {
-                editor.Text = txtString.Text;
-                DialogResult result = editor.ShowDialog(this);
-                if (result == DialogResult.OK)
-                {
-                    txtString.Text = editor.Text;
-                }
-            }
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.OK;
-            Close();
-        }
-
-        private void StringsEditor_Load(object sender, EventArgs e)
-        {
-            Settings.GetWindowPosition("StringEditor", this);
-
-            Reload(Plugins);
-        }
-
-        private void listStrings_DoubleClick(object sender, EventArgs e)
-        {
-        }
-
-        private void listStrings_Click(object sender, EventArgs e)
-        {
-            var indices = listStrings.SelectedIndices;
-            if (indices.Count > 0)
-            {
-                int idx = indices[0];
-                var str = strings[idx];
-                SetSelectedItem(str);
-            }
-        }
-
-        private void SetSelectedItem(StringHolder str)
-        {
-            str.ID = str.ID;
-            txtID.Text = str.ID.ToString("X8");
-            txtString.Text = str.Value;
-            cboPlugins.SelectedItem = str.Plugin.Name;
-            cboType.SelectedItem = str.Format.ToString();
-        }
-
-        private void StringsEditor_ResizeEnd(object sender, EventArgs e)
-        {
-            listStrings.AutoFitColumnHeaders();
-        }
+        public Plugin[] Plugins { get; set; }
 
         public void Reload(Plugin[] plugins)
         {
-            Plugins = plugins;
-            listStrings.DataSource = null;
-            strings.Clear();
-            addStrings.Clear();
-            remStrings.Clear();
-            updateStrings.Clear();
+            this.Plugins = plugins;
+            this.listStrings.DataSource = null;
+            this.strings.Clear();
+            this.addStrings.Clear();
+            this.remStrings.Clear();
+            this.updateStrings.Clear();
 
             var strPlugins = new List<string>();
-            foreach (var plugin in Plugins)
+            foreach (var plugin in this.Plugins)
+            {
                 strPlugins.Add(plugin.Name);
-            cboPlugins.DataSource = strPlugins;
-            cboPlugins.SelectedIndex = 0;
-            PopulateStrings();
-            listStrings.DataSource = strings;
-            FitColumns();
-            UpdateStatusBar();
+            }
+
+            this.cboPlugins.DataSource = strPlugins;
+            this.cboPlugins.SelectedIndex = 0;
+            this.PopulateStrings();
+            this.listStrings.DataSource = this.strings;
+            this.FitColumns();
+            this.UpdateStatusBar();
         }
 
-        private void btnLookup_Click(object sender, EventArgs e)
+        private void ApplyChanges()
         {
-            string strID = txtID.Text;
-            if (string.IsNullOrEmpty(strID))
+            foreach (var change in this.remStrings)
             {
-                MessageBox.Show(this, "ID Field is empty.  Please specify a string ID to find.", "Error",
-                                MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                LocalizedStringDict dict = this.GetStringDict(change.Plugin, change.Format);
+                if (dict != null)
+                {
+                    dict.Remove(change.ID);
+                    change.Plugin.StringsDirty = true;
+                }
             }
-            uint uiID;
-            if (!uint.TryParse(strID, NumberStyles.HexNumber, null, out uiID))
+
+            foreach (var change in this.addStrings)
             {
-                MessageBox.Show(this, "Unable to parse string id", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LocalizedStringDict dict = this.GetStringDict(change.Plugin, change.Format);
+                if (dict != null)
+                {
+                    dict[change.ID] = change.Value;
+                    change.Plugin.StringsDirty = true;
+                }
             }
-            else
+
+            foreach (var change in this.updateStrings)
             {
-                StringHolder holder = strings.FirstOrDefault(a => a.ID == uiID);
-                if (holder != null)
-                    SetSelectedItem(holder);
+                LocalizedStringDict dict = this.GetStringDict(change.Plugin, change.Format);
+                if (dict != null)
+                {
+                    dict[change.ID] = change.Value;
+                    change.Plugin.StringsDirty = true;
+                }
             }
+
+            this.UpdateStatusBar();
         }
-
-        private void btnNewItem_Click(object sender, EventArgs e)
-        {
-            ResetEntry();
-        }
-
-
-        private bool TryGetCurrentID(out uint uiID)
-        {
-            uiID = 0;
-
-            string strID = txtID.Text;
-            if (string.IsNullOrEmpty(strID))
-                return false;
-            return uint.TryParse(strID, NumberStyles.HexNumber, null, out uiID);
-        }
-
-        private bool TryGetCurrentFormat(out LocalizedStringFormat format)
-        {
-            format =
-                (LocalizedStringFormat)
-                Enum.Parse(typeof (LocalizedStringFormat), cboType.SelectedItem.ToString(), true);
-            return true;
-        }
-
-        private bool TryGetCurrentPlugin(out Plugin plugin)
-        {
-            string pluginName = cboPlugins.SelectedItem.ToString();
-            plugin = Plugins.FirstOrDefault(a => a.Name == pluginName);
-            return (plugin != null);
-        }
-
-        private void btnAddString_Click(object sender, EventArgs e)
-        {
-            uint uiID;
-            LocalizedStringFormat format;
-            Plugin plugin;
-            string text = txtString.Text;
-            if (!TryGetCurrentID(out uiID))
-            {
-                MessageBox.Show(this, "ID Field is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (!TryGetCurrentFormat(out format))
-            {
-                MessageBox.Show(this, "Format is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (!TryGetCurrentPlugin(out plugin))
-            {
-                MessageBox.Show(this, "Plugin is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            bool doResize = strings.Count == 0;
-
-            StringHolder str = strings.FirstOrDefault(
-                a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
-            if (str == null)
-            {
-                str = new StringHolder
-                          {
-                              ID = uiID,
-                              Plugin = plugin,
-                              Value = text,
-                              Format = format
-                          };
-                strings.Add(str);
-            }
-
-            StringHolder addStr = addStrings.FirstOrDefault(
-                a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
-            if (addStr == null)
-                addStrings.Add(str);
-
-            if (doResize)
-                FitColumns();
-
-            UpdateStatusBar();
-        }
-
-        private void btnDeleteString_Click(object sender, EventArgs e)
-        {
-            uint uiID;
-            LocalizedStringFormat format;
-            Plugin plugin;
-            string text = txtString.Text;
-            if (!TryGetCurrentID(out uiID))
-            {
-                MessageBox.Show(this, "ID Field is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (!TryGetCurrentFormat(out format))
-            {
-                MessageBox.Show(this, "Format is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (!TryGetCurrentPlugin(out plugin))
-            {
-                MessageBox.Show(this, "Plugin is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            bool doResize = strings.Count == 0;
-
-            StringHolder str = strings.FirstOrDefault(
-                a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
-            if (str != null)
-                strings.Remove(str);
-
-            StringHolder remStr = remStrings.FirstOrDefault(
-                a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
-            if (remStr == null)
-                remStrings.Add(str);
-
-            if (doResize)
-                FitColumns();
-
-            UpdateStatusBar();
-        }
-
 
         private void FitColumns()
         {
             Application.DoEvents(); // handle outstanding events then do column sizing
-            listStrings.AutoFitColumnHeaders();
+            this.listStrings.AutoFitColumnHeaders();
         }
 
         private LocalizedStringDict GetStringDict(Plugin plugin, LocalizedStringFormat format)
@@ -353,44 +119,80 @@ namespace TESVSnip.Forms
                     strings = plugin.ILStrings;
                     break;
             }
+
             return strings;
+        }
+
+        private void PopulateStrings()
+        {
+            if (this.Plugins == null)
+            {
+                return;
+            }
+
+            foreach (var plugin in this.Plugins)
+            {
+                foreach (var kvp in plugin.Strings)
+                {
+                    this.strings.Add(new StringHolder { ID = kvp.Key, Plugin = plugin, Value = kvp.Value, Format = LocalizedStringFormat.Base });
+                }
+
+                foreach (var kvp in plugin.ILStrings)
+                {
+                    this.strings.Add(new StringHolder { ID = kvp.Key, Plugin = plugin, Value = kvp.Value, Format = LocalizedStringFormat.IL });
+                }
+
+                foreach (var kvp in plugin.DLStrings)
+                {
+                    this.strings.Add(new StringHolder { ID = kvp.Key, Plugin = plugin, Value = kvp.Value, Format = LocalizedStringFormat.DL });
+                }
+            }
         }
 
         private void ResetEntry()
         {
             Plugin plugin;
-            if (!TryGetCurrentPlugin(out plugin))
+            if (!this.TryGetCurrentPlugin(out plugin))
             {
-                txtID.Text = "";
-                txtString.Text = "";
+                this.txtID.Text = string.Empty;
+                this.txtString.Text = string.Empty;
             }
             else
             {
                 LocalizedStringFormat format;
-                if (!TryGetCurrentFormat(out format))
+                if (!this.TryGetCurrentFormat(out format))
                 {
-                    txtID.Text = "";
-                    txtString.Text = "";
+                    this.txtID.Text = string.Empty;
+                    this.txtString.Text = string.Empty;
                 }
                 else
                 {
-                    LocalizedStringDict strings = GetStringDict(plugin, format);
+                    LocalizedStringDict strings = this.GetStringDict(plugin, format);
                     if (strings != null)
                     {
                         if (strings.Count == 0)
                         {
-                            txtID.Text = 1.ToString("X8");
-                            txtString.Text = "";
+                            this.txtID.Text = 1.ToString("X8");
+                            this.txtString.Text = string.Empty;
                         }
                         else
                         {
                             uint max = strings.Max(a => a.Key);
-                            txtID.Text = (max + 1).ToString("X8");
-                            txtString.Text = "";
+                            this.txtID.Text = (max + 1).ToString("X8");
+                            this.txtString.Text = string.Empty;
                         }
                     }
                 }
             }
+        }
+
+        private void SetSelectedItem(StringHolder str)
+        {
+            str.ID = str.ID;
+            this.txtID.Text = str.ID.ToString("X8");
+            this.txtString.Text = str.Value;
+            this.cboPlugins.SelectedItem = str.Plugin.Name;
+            this.cboType.SelectedItem = str.Format.ToString();
         }
 
         private void StringsEditor_FormClosing(object sender, FormClosingEventArgs e)
@@ -398,45 +200,249 @@ namespace TESVSnip.Forms
             Settings.SetWindowPosition("StringEditor", this);
         }
 
+        private void StringsEditor_Load(object sender, EventArgs e)
+        {
+            Settings.GetWindowPosition("StringEditor", this);
+
+            this.Reload(this.Plugins);
+        }
+
+        private void StringsEditor_ResizeEnd(object sender, EventArgs e)
+        {
+            this.listStrings.AutoFitColumnHeaders();
+        }
+
+        private bool TryGetCurrentFormat(out LocalizedStringFormat format)
+        {
+            format = (LocalizedStringFormat)Enum.Parse(typeof(LocalizedStringFormat), this.cboType.SelectedItem.ToString(), true);
+            return true;
+        }
+
+        private bool TryGetCurrentID(out uint uiID)
+        {
+            uiID = 0;
+
+            string strID = this.txtID.Text;
+            if (string.IsNullOrEmpty(strID))
+            {
+                return false;
+            }
+
+            return uint.TryParse(strID, NumberStyles.HexNumber, null, out uiID);
+        }
+
+        private bool TryGetCurrentPlugin(out Plugin plugin)
+        {
+            string pluginName = this.cboPlugins.SelectedItem.ToString();
+            plugin = this.Plugins.FirstOrDefault(a => a.Name == pluginName);
+            return plugin != null;
+        }
+
         private void UpdateStatusBar()
         {
         }
 
-        private void btnApply_Click(object sender, EventArgs e)
+        private void btnAddString_Click(object sender, EventArgs e)
         {
-            ApplyChanges();
+            uint uiID;
+            LocalizedStringFormat format;
+            Plugin plugin;
+            string text = this.txtString.Text;
+            if (!this.TryGetCurrentID(out uiID))
+            {
+                MessageBox.Show(this, "ID Field is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!this.TryGetCurrentFormat(out format))
+            {
+                MessageBox.Show(this, "Format is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!this.TryGetCurrentPlugin(out plugin))
+            {
+                MessageBox.Show(this, "Plugin is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            bool doResize = this.strings.Count == 0;
+
+            StringHolder str = this.strings.FirstOrDefault(a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
+            if (str == null)
+            {
+                str = new StringHolder { ID = uiID, Plugin = plugin, Value = text, Format = format };
+                this.strings.Add(str);
+            }
+
+            StringHolder addStr = this.addStrings.FirstOrDefault(a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
+            if (addStr == null)
+            {
+                this.addStrings.Add(str);
+            }
+
+            if (doResize)
+            {
+                this.FitColumns();
+            }
+
+            this.UpdateStatusBar();
         }
 
-        private void ApplyChanges()
+        private void btnApply_Click(object sender, EventArgs e)
         {
-            foreach (var change in remStrings)
+            this.ApplyChanges();
+        }
+
+        private void btnDeleteString_Click(object sender, EventArgs e)
+        {
+            uint uiID;
+            LocalizedStringFormat format;
+            Plugin plugin;
+            string text = this.txtString.Text;
+            if (!this.TryGetCurrentID(out uiID))
             {
-                LocalizedStringDict dict = GetStringDict(change.Plugin, change.Format);
-                if (dict != null)
+                MessageBox.Show(this, "ID Field is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!this.TryGetCurrentFormat(out format))
+            {
+                MessageBox.Show(this, "Format is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!this.TryGetCurrentPlugin(out plugin))
+            {
+                MessageBox.Show(this, "Plugin is invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            bool doResize = this.strings.Count == 0;
+
+            StringHolder str = this.strings.FirstOrDefault(a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
+            if (str != null)
+            {
+                this.strings.Remove(str);
+            }
+
+            StringHolder remStr = this.remStrings.FirstOrDefault(a => (a.ID == uiID && a.Plugin.Equals(plugin) && a.Format == format));
+            if (remStr == null)
+            {
+                this.remStrings.Add(str);
+            }
+
+            if (doResize)
+            {
+                this.FitColumns();
+            }
+
+            this.UpdateStatusBar();
+        }
+
+        private void btnEditString_Click(object sender, EventArgs e)
+        {
+            using (var editor = new MultilineStringEditor())
+            {
+                editor.Text = this.txtString.Text;
+                DialogResult result = editor.ShowDialog(this);
+                if (result == DialogResult.OK)
                 {
-                    dict.Remove(change.ID);
-                    change.Plugin.StringsDirty = true;
+                    this.txtString.Text = editor.Text;
                 }
             }
-            foreach (var change in addStrings)
+        }
+
+        private void btnLookup_Click(object sender, EventArgs e)
+        {
+            string strID = this.txtID.Text;
+            if (string.IsNullOrEmpty(strID))
             {
-                LocalizedStringDict dict = GetStringDict(change.Plugin, change.Format);
-                if (dict != null)
+                MessageBox.Show(this, "ID Field is empty.  Please specify a string ID to find.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            uint uiID;
+            if (!uint.TryParse(strID, NumberStyles.HexNumber, null, out uiID))
+            {
+                MessageBox.Show(this, "Unable to parse string id", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                StringHolder holder = this.strings.FirstOrDefault(a => a.ID == uiID);
+                if (holder != null)
                 {
-                    dict[change.ID] = change.Value;
-                    change.Plugin.StringsDirty = true;
+                    this.SetSelectedItem(holder);
                 }
             }
-            foreach (var change in updateStrings)
+        }
+
+        private void btnNewItem_Click(object sender, EventArgs e)
+        {
+            this.ResetEntry();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+
+        private void listStrings_Click(object sender, EventArgs e)
+        {
+            var indices = this.listStrings.SelectedIndices;
+            if (indices.Count > 0)
             {
-                LocalizedStringDict dict = GetStringDict(change.Plugin, change.Format);
-                if (dict != null)
-                {
-                    dict[change.ID] = change.Value;
-                    change.Plugin.StringsDirty = true;
-                }
+                int idx = indices[0];
+                var str = this.strings[idx];
+                this.SetSelectedItem(str);
             }
-            UpdateStatusBar();
+        }
+
+        private void listStrings_DoubleClick(object sender, EventArgs e)
+        {
+        }
+
+        private void txtID_TextChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void txtID_Validating(object sender, CancelEventArgs e)
+        {
+            string strID = this.txtID.Text;
+            if (string.IsNullOrEmpty(strID))
+            {
+                return;
+            }
+
+            uint uiID;
+            if (!uint.TryParse(strID, NumberStyles.HexNumber, null, out uiID))
+            {
+                this.error.SetError(this.txtID, "Invalid String ID");
+                this.txtString.Enabled = false;
+                this.btnEditString.Enabled = false;
+                this.btnAddString.Enabled = false;
+                this.btnDeleteString.Enabled = false;
+            }
+            else
+            {
+                this.error.SetError(this.txtID, null);
+                this.txtString.Enabled = true;
+                this.btnEditString.Enabled = true;
+                this.btnAddString.Enabled = true;
+                this.btnDeleteString.Enabled = true;
+            }
+        }
+
+        private class StringHolder
+        {
+            public LocalizedStringFormat Format { get; set; }
+
+            public uint ID { get; set; }
+
+            public Plugin Plugin { get; set; }
+
+            public string Value { get; set; }
         }
     }
 }
