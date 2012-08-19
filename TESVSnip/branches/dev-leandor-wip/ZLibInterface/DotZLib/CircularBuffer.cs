@@ -1,83 +1,97 @@
-//
 // © Copyright Henrik Ravn 2004
-//
 // Use, modification and distribution are subject to the Boost Software License, Version 1.0. 
 // (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
-using System;
-using System.Diagnostics;
-
 namespace DotZLib
 {
+    using System;
+    using System.Diagnostics;
 
-	/// <summary>
-	/// This class implements a circular buffer
-	/// </summary>
-	internal class CircularBuffer
-	{
-        #region Private data
-        private int _capacity;
+    /// <summary>
+    /// This class implements a circular buffer.
+    /// </summary>
+    internal class CircularBuffer
+    {
+        private readonly byte[] _buffer;
+
+        private readonly int _capacity;
+
         private int _head;
-        private int _tail;
+
         private int _size;
-        private byte[] _buffer;
-        #endregion
+
+        private int _tail;
 
         public CircularBuffer(int capacity)
-        {    
-            Debug.Assert( capacity > 0 );
-            _buffer = new byte[capacity];
-            _capacity = capacity;
-            _head = 0;
-            _tail = 0;
-            _size = 0;
+        {
+            Debug.Assert(capacity > 0);
+            this._buffer = new byte[capacity];
+            this._capacity = capacity;
+            this._head = 0;
+            this._tail = 0;
+            this._size = 0;
         }
 
-        public int Size { get { return _size; } }
-
-        public int Put(byte[] source, int offset, int count)
+        public int Size
         {
-            Debug.Assert( count > 0 );
-            int trueCount = Math.Min(count, _capacity - Size);
-            for (int i = 0; i < trueCount; ++i)
-                _buffer[(_tail+i) % _capacity] = source[offset+i];
-            _tail += trueCount;
-            _tail %= _capacity;
-            _size += trueCount;
-            return trueCount;
-        }
-
-        public bool Put(byte b)
-        {
-            if (Size == _capacity) // no room
-                return false;
-            _buffer[_tail++] = b;
-            _tail %= _capacity;
-            ++_size;
-            return true;
+            get
+            {
+                return this._size;
+            }
         }
 
         public int Get(byte[] destination, int offset, int count)
         {
-            int trueCount = Math.Min(count,Size);
+            int trueCount = Math.Min(count, this.Size);
             for (int i = 0; i < trueCount; ++i)
-                destination[offset + i] = _buffer[(_head+i) % _capacity];
-            _head += trueCount;
-            _head %= _capacity;
-            _size -= trueCount;
+            {
+                destination[offset + i] = this._buffer[(this._head + i) % this._capacity];
+            }
+
+            this._head += trueCount;
+            this._head %= this._capacity;
+            this._size -= trueCount;
             return trueCount;
         }
 
         public int Get()
         {
-            if (Size == 0)
+            if (this.Size == 0)
+            {
                 return -1;
+            }
 
-            int result = (int)_buffer[_head++ % _capacity];
-            --_size;
+            var result = (int)this._buffer[this._head++ % this._capacity];
+            --this._size;
             return result;
         }
 
+        public int Put(byte[] source, int offset, int count)
+        {
+            Debug.Assert(count > 0);
+            int trueCount = Math.Min(count, this._capacity - this.Size);
+            for (int i = 0; i < trueCount; ++i)
+            {
+                this._buffer[(this._tail + i) % this._capacity] = source[offset + i];
+            }
+
+            this._tail += trueCount;
+            this._tail %= this._capacity;
+            this._size += trueCount;
+            return trueCount;
+        }
+
+        public bool Put(byte b)
+        {
+            if (this.Size == this._capacity)
+            {
+                // no room
+                return false;
+            }
+
+            this._buffer[this._tail++] = b;
+            this._tail %= this._capacity;
+            ++this._size;
+            return true;
+        }
     }
 }

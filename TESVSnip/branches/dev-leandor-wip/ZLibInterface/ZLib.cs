@@ -3,30 +3,16 @@ namespace TESVSnip.ZLibInterface
     using System;
     using System.IO;
 
+    using DotZLib;
+
     public static class ZLib
     {
         public static string Version { get; private set; }
 
-        public static void Initialize()
-        {
-            Version = DotZLib.Info.Version;
-        }
-
-        public static BinaryReader Decompress(Stream input, int expectedSize = 0)
-        {
-            if (input == null) {
-                throw new ArgumentNullException("input");
-            }
-
-            var buffer = new byte[input.Length];
-            input.Read(buffer, 0, (int)input.Length);
-
-            return Decompress(buffer, expectedSize);
-        }
-
         public static byte[] Compress(Stream input)
         {
-            if (input == null) {
+            if (input == null)
+            {
                 throw new ArgumentNullException("input");
             }
 
@@ -38,8 +24,10 @@ namespace TESVSnip.ZLibInterface
 
         public static byte[] Compress(byte[] input)
         {
-            using (var output = new MemoryStream()) {
-                using (var deflater = new DotZLib.Deflater(DotZLib.CompressLevel.Best)) {
+            using (var output = new MemoryStream())
+            {
+                using (var deflater = new Deflater(CompressLevel.Best))
+                {
                     deflater.DataAvailable += output.Write;
                     deflater.Add(input, 0, input.Length);
                 }
@@ -48,15 +36,36 @@ namespace TESVSnip.ZLibInterface
             }
         }
 
+        public static BinaryReader Decompress(Stream input, int expectedSize = 0)
+        {
+            if (input == null)
+            {
+                throw new ArgumentNullException("input");
+            }
+
+            var buffer = new byte[input.Length];
+            input.Read(buffer, 0, (int)input.Length);
+
+            return Decompress(buffer, expectedSize);
+        }
+
+        public static void Initialize()
+        {
+            Version = Info.Version;
+        }
+
         private static BinaryReader Decompress(byte[] buffer, int expectedSize = 0)
         {
-            if (buffer == null) {
+            if (buffer == null)
+            {
                 throw new ArgumentNullException("buffer");
             }
 
             var output = new MemoryStream(expectedSize);
-            try {
-                using (var inflater = new DotZLib.Inflater()) {
+            try
+            {
+                using (var inflater = new Inflater())
+                {
                     inflater.DataAvailable += output.Write;
                     inflater.Add(buffer, 0, buffer.Length);
                 }
@@ -64,7 +73,8 @@ namespace TESVSnip.ZLibInterface
                 output.Position = 0;
                 return new BinaryReader(output);
             }
-            catch {
+            catch
+            {
                 output.Dispose();
                 throw;
             }
