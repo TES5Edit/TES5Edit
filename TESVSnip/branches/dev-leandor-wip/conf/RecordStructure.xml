@@ -4362,17 +4362,17 @@ non-indent is being worked on
 			</Group>
 		</Group>
 		<Group optional="1" repeat="1">
-			<Subrecord name="QOBJ" desc="QOBJ" optional="1" repeat="1" size="2">
+			<Subrecord name="QOBJ" desc="QOBJ" optional="1" repeat="1">
 				<Element name="Unknown short" type="short" />
 			</Subrecord>
-			<Subrecord name="FNAM" desc="FNAM" optional="1" repeat="1" size="4">
+			<Subrecord name="FNAM" desc="FNAM" optional="1" repeat="1">
 				<Element name="Flags" type="int" hexview="1"/>
 			</Subrecord>
-			<Subrecord name="NNAM" desc="NNAM" optional="1" repeat="1" size="4">
+			<Subrecord name="NNAM" desc="NNAM" optional="1" repeat="1">
 				<Element name="Name" type="lstring" />
 			</Subrecord>
 			<Group optional="1" repeat="1">
-				<Subrecord name="QSTA" desc="QSTA" optional="1" repeat="1" size="8">
+				<Subrecord name="QSTA" desc="QSTA" optional="1" repeat="1">
 					<Element name="Unknown 4bytes 1" type="int" />
 					<Element name="Unknown 4bytes 2" type="int" />
 				</Subrecord>
