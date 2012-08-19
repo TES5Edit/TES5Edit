@@ -107,6 +107,8 @@
     <Compile Include="Framework\Persistence\PersistType.cs" />
     <Compile Include="Framework\Persistence\SerializationInfoCache.cs" />
     <Compile Include="Framework\Persistence\serializationinfocachelist.cs" />
+    <Compile Include="Framework\Services\Encoding.cs" />
+    <Compile Include="Framework\Services\FontLangInfo.cs" />
     <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
