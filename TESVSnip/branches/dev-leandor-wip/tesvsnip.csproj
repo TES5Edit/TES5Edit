@@ -215,12 +215,25 @@
     <Compile Include="Controls\virtuallistview.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Data\Extensions.cs" />
+    <Compile Include="Data\IPostSerializationCallback.cs" />
+    <Compile Include="Data\PersistableAttribute.cs" />
     <Compile Include="Data\persistassist.cs" />
+    <Compile Include="Data\PersistContext.cs" />
+    <Compile Include="Data\PersistContextStates.cs" />
+    <Compile Include="Data\PersistObject.cs" />
+    <Compile Include="Data\PersistSurrogate.cs" />
+    <Compile Include="Data\PersistType.cs" />
     <Compile Include="Data\RecordBuilder.cs" />
-    <Compile Include="Data\RecordStructure.cs">
+    <Compile Include="Data\Records.cs" />
+    <Compile Include="Data\RecordsRecord.cs" />
+    <Compile Include="Data\Group.cs">
       <SubType>code</SubType>
     </Compile>
+    <Compile Include="Data\SerializationInfoCache.cs" />
     <Compile Include="Data\serializationinfocachelist.cs" />
+    <Compile Include="Data\Subrecord.cs" />
+    <Compile Include="Data\SubrecordElement.cs" />
     <Compile Include="Docking\BaseDockContent.cs">
       <SubType>Form</SubType>
     </Compile>
