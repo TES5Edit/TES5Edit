@@ -1,4 +1,4 @@
-namespace TESVSnip.ZLibInterface.DotZLib
+namespace TESVSnip.DotZLib
 {
     /// <summary>
     /// Defines constants for the various flush types used with zlib.

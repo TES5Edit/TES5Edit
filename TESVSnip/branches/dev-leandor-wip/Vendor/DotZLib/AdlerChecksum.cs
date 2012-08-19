@@ -1,30 +1,30 @@
-namespace TESVSnip.ZLibInterface.DotZLib
+namespace TESVSnip.DotZLib
 {
     using System;
     using System.Runtime.InteropServices;
 
     /// <summary>
-    /// Implements a CRC32 checksum generator.
+    /// Implements a checksum generator that computes the Adler checksum on data.
     /// </summary>
-    public sealed class CRC32Checksum : ChecksumGeneratorBase
+    public sealed class AdlerChecksum : ChecksumGeneratorBase
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="CRC32Checksum"/> class. 
-        ///   Initializes a new instance of the CRC32 checksum generator.
+        /// Initializes a new instance of the <see cref="AdlerChecksum"/> class. 
+        ///   Initializes a new instance of the Adler checksum generator.
         /// </summary>
-        public CRC32Checksum()
+        public AdlerChecksum()
             : base()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CRC32Checksum"/> class. 
-        /// Initializes a new instance of the CRC32 checksum generator with a specified value.
+        /// Initializes a new instance of the <see cref="AdlerChecksum"/> class. 
+        /// Initializes a new instance of the Adler checksum generator with a specified value.
         /// </summary>
         /// <param name="initialValue">
         /// The value to set the current checksum to. 
         /// </param>
-        public CRC32Checksum(uint initialValue)
+        public AdlerChecksum(uint initialValue)
             : base(initialValue)
         {
         }
@@ -67,7 +67,7 @@ namespace TESVSnip.ZLibInterface.DotZLib
             GCHandle hData = GCHandle.Alloc(data, GCHandleType.Pinned);
             try
             {
-                _current = crc32(_current, hData.AddrOfPinnedObject().ToInt32() + offset, (uint)count);
+                _current = adler32(_current, hData.AddrOfPinnedObject().ToInt32() + offset, (uint)count);
             }
             finally
             {
@@ -76,7 +76,6 @@ namespace TESVSnip.ZLibInterface.DotZLib
         }
 
         [DllImport("ZLIB1.dll", CallingConvention = CallingConvention.Cdecl)]
-        [return: MarshalAs(UnmanagedType.U4)]
-        private static extern uint crc32([MarshalAs(UnmanagedType.U4)] uint crc, [MarshalAs(UnmanagedType.I4)] int data, [MarshalAs(UnmanagedType.U4)] uint length);
+        private static extern uint adler32(uint adler, int data, uint length);
     }
 }

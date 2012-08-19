@@ -136,6 +136,21 @@
     </Compile>
     <Compile Include="Vendor\Controls\History.cs" />
     <Compile Include="Vendor\Controls\nativemethods.cs" />
+    <Compile Include="Vendor\DotZLib\AdlerChecksum.cs" />
+    <Compile Include="Vendor\DotZLib\ChecksumGenerator.cs" />
+    <Compile Include="Vendor\DotZLib\ChecksumGeneratorBase.cs" />
+    <Compile Include="Vendor\DotZLib\CircularBuffer.cs" />
+    <Compile Include="Vendor\DotZLib\Codec.cs" />
+    <Compile Include="Vendor\DotZLib\CodecBase.cs" />
+    <Compile Include="Vendor\DotZLib\CompressLevel.cs" />
+    <Compile Include="Vendor\DotZLib\CRC32Checksum.cs" />
+    <Compile Include="Vendor\DotZLib\DataAvailableHandler.cs" />
+    <Compile Include="Vendor\DotZLib\Deflater.cs" />
+    <Compile Include="Vendor\DotZLib\FlushTypes.cs" />
+    <Compile Include="Vendor\DotZLib\Inflater.cs" />
+    <Compile Include="Vendor\DotZLib\Info.cs" />
+    <Compile Include="Vendor\DotZLib\ZLibException.cs" />
+    <Compile Include="Vendor\DotZLib\ZStream.cs" />
     <Compile Include="Vendor\HexBox\ByteCollection.cs" />
     <Compile Include="Vendor\HexBox\DataBlock.cs" />
     <Compile Include="Vendor\HexBox\DataMap.cs" />
@@ -478,21 +493,6 @@
     <Compile Include="UI\RecordControls\HexElement.Designer.cs">
       <DependentUpon>HexElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="ZLibInterface\DotZLib\AdlerChecksum.cs" />
-    <Compile Include="ZLibInterface\DotZLib\ChecksumGenerator.cs" />
-    <Compile Include="ZLibInterface\DotZLib\ChecksumGeneratorBase.cs" />
-    <Compile Include="ZLibInterface\DotZLib\CircularBuffer.cs" />
-    <Compile Include="ZLibInterface\DotZLib\Codec.cs" />
-    <Compile Include="ZLibInterface\DotZLib\CodecBase.cs" />
-    <Compile Include="ZLibInterface\DotZLib\CompressLevel.cs" />
-    <Compile Include="ZLibInterface\DotZLib\CRC32Checksum.cs" />
-    <Compile Include="ZLibInterface\DotZLib\DataAvailableHandler.cs" />
-    <Compile Include="ZLibInterface\DotZLib\Deflater.cs" />
-    <Compile Include="ZLibInterface\DotZLib\ZStream.cs" />
-    <Compile Include="ZLibInterface\DotZLib\FlushTypes.cs" />
-    <Compile Include="ZLibInterface\DotZLib\Inflater.cs" />
-    <Compile Include="ZLibInterface\DotZLib\Info.cs" />
-    <Compile Include="ZLibInterface\DotZLib\ZLibException.cs" />
     <Compile Include="ZLibInterface\ZLib.cs" />
     <EmbeddedResource Include="Vendor\Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
@@ -637,6 +637,7 @@
       <DependentUpon>TextElement.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="build\tesvsnip.snk" />
+    <None Include="Vendor\DotZLib\DotZLib.chm" />
     <None Include="Vendor\ObjectListView\ObjectListView.FxCop" />
     <None Include="Vendor\ObjectListView\ObjectListView.shfb" />
     <None Include="Properties\Settings.settings">
@@ -729,7 +730,6 @@
     </Compile>
     <Compile Include="Main\TESParserException.cs" />
     <Compile Include="Main\TypeConverter.cs" />
-    <None Include="ZLibInterface\DotZLib\DotZLib.chm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tesv_ico.ico" />
@@ -739,6 +739,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="build\buildver.txt" />
+    <Content Include="Vendor\DotZLib\LICENSE_1_0.txt" />
+    <Content Include="Vendor\DotZLib\readme.txt" />
     <Content Include="Vendor\ObjectListView\CustomDictionary.xml" />
     <Content Include="Vendor\ObjectListView\Resources\clear-filter.png" />
     <Content Include="Vendor\ObjectListView\Resources\clear-filter1.png" />
@@ -751,8 +753,6 @@
     <Content Include="Vendor\ObjectListView\Resources\sort-ascending1.png" />
     <Content Include="Vendor\ObjectListView\Resources\sort-descending.png" />
     <Content Include="Vendor\ObjectListView\Resources\sort-descending1.png" />
-    <Content Include="ZLibInterface\DotZLib\LICENSE_1_0.txt" />
-    <Content Include="ZLibInterface\DotZLib\readme.txt" />
     <Content Include="zlib1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

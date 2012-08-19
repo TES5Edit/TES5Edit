@@ -1,4 +1,4 @@
-namespace TESVSnip.ZLibInterface.DotZLib
+namespace TESVSnip.DotZLib
 {
     /// <summary>
     /// Defines constants for the available compression levels in zlib.

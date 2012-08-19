@@ -1,4 +1,4 @@
-namespace TESVSnip.ZLibInterface.DotZLib
+namespace TESVSnip.DotZLib
 {
     /// <summary>
     /// Declares methods and events for implementing compressors/decompressors.

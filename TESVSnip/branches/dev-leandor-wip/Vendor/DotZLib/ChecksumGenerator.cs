@@ -1,4 +1,4 @@
-namespace TESVSnip.ZLibInterface.DotZLib
+namespace TESVSnip.DotZLib
 {
     using System;
     using System.Text;

@@ -1,4 +1,4 @@
-namespace TESVSnip.ZLibInterface.DotZLib
+namespace TESVSnip.DotZLib
 {
     /// <summary>
     /// Represents the method that will be called from a codec when new data
