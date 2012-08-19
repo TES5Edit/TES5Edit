@@ -6,13 +6,13 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 using TESVSnip.Properties;
-using TESVSnip.RecordControls;
 
 namespace TESVSnip
 {
     using TESVSnip.Collections;
     using TESVSnip.Main;
     using TESVSnip.Model;
+    using TESVSnip.UI.RecordControls;
 
     internal partial class NewMediumLevelRecordEditor : Form
     {

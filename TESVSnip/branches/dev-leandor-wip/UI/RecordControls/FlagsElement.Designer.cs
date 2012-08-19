@@ -1,6 +1,7 @@
-﻿using TESVSnip.Windows.Controls;
-namespace TESVSnip.RecordControls
+﻿namespace TESVSnip.UI.RecordControls
 {
+    using TESVSnip.Windows.Controls;
+
     partial class FlagsElement
     {
         /// <summary> 
@@ -14,9 +15,9 @@ namespace TESVSnip.RecordControls
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (this.components != null))
             {
-                components.Dispose();
+                this.components.Dispose();
             }
             base.Dispose(disposing);
         }

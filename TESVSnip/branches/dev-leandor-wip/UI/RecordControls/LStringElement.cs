@@ -1,4 +1,4 @@
-﻿namespace TESVSnip.RecordControls
+﻿namespace TESVSnip.UI.RecordControls
 {
     using System;
     using System.Globalization;

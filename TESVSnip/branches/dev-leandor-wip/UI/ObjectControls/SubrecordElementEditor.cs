@@ -6,13 +6,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-using TESVSnip.RecordControls;
-
 namespace TESVSnip.Forms
 {
     using TESVSnip.Collections;
     using TESVSnip.Main;
     using TESVSnip.Model;
+    using TESVSnip.UI.RecordControls;
 
     public partial class SubrecordEditor : UserControl
     {
