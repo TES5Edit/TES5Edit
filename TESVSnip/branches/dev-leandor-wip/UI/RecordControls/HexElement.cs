@@ -7,7 +7,7 @@
 
     using Be.Windows.Forms;
 
-    using TESVSnip.Main;
+    using TESVSnip.Framework;
     using TESVSnip.UI.Forms;
 
     internal partial class HexElement : BaseElement

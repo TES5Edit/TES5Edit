@@ -3,6 +3,7 @@
     using System;
     using System.Windows.Forms;
 
+    using TESVSnip.Framework;
     using TESVSnip.Main;
 
     internal partial class FlagsElement : TextElement

@@ -22,7 +22,7 @@
     using WeifenLuo.WinFormsUI.Docking;
 
     using Settings = TESVSnip.Properties.Settings;
-    using TypeConverter = TESVSnip.Main.TypeConverter;
+    using TypeConverter = TESVSnip.Framework.TypeConverter;
 
     public partial class RecordSearch : UserControl, ISupportInitialize
     {

@@ -1,10 +1,8 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Framework
 {
     using System;
     using System.Runtime.InteropServices;
     using System.Text;
-
-    using TESVSnip.Framework;
 
     using Encoding = TESVSnip.Framework.Services.Encoding;
 

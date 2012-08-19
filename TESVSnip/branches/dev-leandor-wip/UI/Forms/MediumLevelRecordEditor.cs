@@ -6,6 +6,7 @@ namespace TESVSnip.UI.Forms
     using System.Globalization;
     using System.Windows.Forms;
 
+    using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
     using TESVSnip.Main;
     using TESVSnip.Model;

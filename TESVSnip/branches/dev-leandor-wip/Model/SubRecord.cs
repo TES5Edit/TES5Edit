@@ -12,6 +12,7 @@
 
     using RTF;
 
+    using TESVSnip.Framework;
     using TESVSnip.Framework.Persistence;
     using TESVSnip.Main;
     using TESVSnip.UI;

@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
 
+    using TESVSnip.Framework;
     using TESVSnip.Main;
 
     internal partial class FormIDElement : TextElement

@@ -110,6 +110,7 @@
     <Compile Include="Framework\Persistence\serializationinfocachelist.cs" />
     <Compile Include="Framework\Services\Encoding.cs" />
     <Compile Include="Framework\Services\FontLangInfo.cs" />
+    <Compile Include="Framework\TypeConverter.cs" />
     <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
@@ -731,7 +732,6 @@
       <DependentUpon>MainView.cs</DependentUpon>
     </Compile>
     <Compile Include="Main\TESParserException.cs" />
-    <Compile Include="Main\TypeConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tesv_ico.ico" />

@@ -10,6 +10,7 @@
     using System.Media;
     using System.Windows.Forms;
 
+    using TESVSnip.Framework;
     using TESVSnip.Main;
     using TESVSnip.Model;
 

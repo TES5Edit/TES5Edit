@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    using TESVSnip.Main;
+    using TESVSnip.Framework;
     using TESVSnip.Model;
     using TESVSnip.UI;
 

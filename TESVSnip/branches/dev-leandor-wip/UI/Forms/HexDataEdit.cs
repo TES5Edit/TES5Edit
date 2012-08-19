@@ -7,7 +7,7 @@ namespace TESVSnip.UI.Forms
 
     using Be.Windows.Forms;
 
-    using TESVSnip.Main;
+    using TESVSnip.Framework;
     using TESVSnip.Properties;
 
     internal partial class HexDataEdit : Form
