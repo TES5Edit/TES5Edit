@@ -14,7 +14,6 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using RTF;
 using TESVSnip.Data;
-using TESVSnip.Docking;
 using TESVSnip.Forms;
 using TESVSnip.Properties;
 using WeifenLuo.WinFormsUI.Docking;
@@ -25,6 +24,7 @@ using TESVSnip.Model;
 namespace TESVSnip
 {
     using TESVSnip.Main;
+    using TESVSnip.UI.Docking;
     using TESVSnip.UI.ObjectControls;
 
     internal delegate string dFormIDLookupS(string id);

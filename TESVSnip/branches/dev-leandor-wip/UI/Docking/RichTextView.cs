@@ -1,4 +1,4 @@
-﻿namespace TESVSnip.Docking
+﻿namespace TESVSnip.UI.Docking
 {
     using System.Windows.Forms;
 
