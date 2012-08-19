@@ -1,58 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using TESVSnip.Collections;
-
-namespace TESVSnip.Model
+﻿namespace TESVSnip.Model
 {
-    enum BatchCondRecordType
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Linq;
+
+    using TESVSnip.Collections;
+
+    internal enum BatchCondRecordType
     {
-        NoAction,
-        Create,
-        Delete,
+        NoAction, 
+
+        Create, 
+
+        Delete, 
     }
 
-    enum BatchCondElementType
+    internal enum BatchCondElementType
     {
-        Set,
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
-        BitAnd,
-        BitOr,
-        Clear,
+        Set, 
+
+        Add, 
+
+        Subtract, 
+
+        Multiply, 
+
+        Divide, 
+
+        BitAnd, 
+
+        BitOr, 
+
+        Clear, 
     }
 
-    class BatchCriteriaSettings
+    internal class BatchCriteriaSettings
     {
-        public string Type;
         public IEnumerable<BatchCriteria> Items;
+
+        public string Type;
     }
 
-
-    abstract class BatchCriteria
+    internal abstract class BatchCriteria
     {
         public bool Checked { get; set; }
+
         public string Name { get; set; }
 
         public abstract bool Evaluate(Record r);
+
         public abstract bool Evaluate(Record r, SubRecord sr);
     }
 
-    class BatchSubrecord : BatchCriteria
+    internal class BatchSubrecord : BatchCriteria
     {
-        public SubrecordStructure Record { get; set; }
         public ICollection<BatchElement> Children { get; set; }
+
+        public SubrecordStructure Record { get; set; }
+
         public BatchCondRecordType Type { get; set; }
 
         public override bool Evaluate(Record r)
         {
             var sr = r.SubRecords.FirstOrDefault(x => x.Name == this.Record.name);
-            return Evaluate(r, sr);
+            return this.Evaluate(r, sr);
         }
+
         public override bool Evaluate(Record r, SubRecord sr)
         {
             if (this.Type == BatchCondRecordType.Create)
@@ -62,17 +76,24 @@ namespace TESVSnip.Model
                     // guess the best insert location
                     int idx = -1;
                     RecordStructure rs;
-                    if ( RecordStructure.Records.TryGetValue(r.Name, out rs) )
+                    if (RecordStructure.Records.TryGetValue(r.Name, out rs))
                     {
-                        for ( int i = Array.FindIndex(rs.subrecords, structure => structure.name == this.Record.name) - 1; i >= 0; --i)
+                        for (int i = Array.FindIndex(rs.subrecords, structure => structure.name == this.Record.name) - 1; i >= 0; --i)
                         {
                             var srsname = rs.subrecords[i].name;
                             idx = r.SubRecords.IndexOf(r.SubRecords.FirstOrDefault(x => x.Name == srsname));
                         }
                     }
+
                     sr = new SubRecord(this.Record);
-                    if (idx < 0) r.SubRecords.Add(sr); 
-                    else r.SubRecords.Insert(idx+1, sr); 
+                    if (idx < 0)
+                    {
+                        r.SubRecords.Add(sr);
+                    }
+                    else
+                    {
+                        r.SubRecords.Insert(idx + 1, sr);
+                    }
                 }
             }
             else if (this.Type == BatchCondRecordType.Delete)
@@ -83,29 +104,47 @@ namespace TESVSnip.Model
                     sr = r.SubRecords.FirstOrDefault(x => x.Name == this.Record.name);
                 }
             }
+
             return true;
         }
     }
-    class BatchElement : BatchCriteria
+
+    internal class BatchElement : BatchCriteria
     {
-        public ElementStructure Record { get; set; }
-        public BatchSubrecord Parent { get; set; }
         private BatchCondElementType type;
-        public BatchCondElementType Type
-        {
-            get { return type; }
-            set { type = value; this.Checked = true; }
-        }
 
         private object value;
+
+        public BatchSubrecord Parent { get; set; }
+
+        public ElementStructure Record { get; set; }
+
+        public BatchCondElementType Type
+        {
+            get
+            {
+                return this.type;
+            }
+
+            set
+            {
+                this.type = value;
+                Checked = true;
+            }
+        }
+
         public object Value
         {
-            get { return value; }
-            set 
+            get
             {
-                if (AssignValue(value))
+                return this.value;
+            }
+
+            set
+            {
+                if (this.AssignValue(value))
                 {
-                    this.Checked = true;                    
+                    Checked = true;
                 }
             }
         }
@@ -117,6 +156,7 @@ namespace TESVSnip.Model
                 this.value = value;
                 return true;
             }
+
             var strvalue = value.ToString();
 
             var numText = strvalue;
@@ -127,7 +167,7 @@ namespace TESVSnip.Model
                 numText = strvalue.Substring(2);
             }
 
-            switch (Record.type)
+            switch (this.Record.type)
             {
                 case ElementValueType.String:
                 case ElementValueType.BString:
@@ -138,12 +178,14 @@ namespace TESVSnip.Model
                 case ElementValueType.Float:
                     {
                         float v;
-                        if ( float.TryParse(strvalue, NumberStyles.Any, CultureInfo.CurrentCulture, out v) )
+                        if (float.TryParse(strvalue, NumberStyles.Any, CultureInfo.CurrentCulture, out v))
                         {
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.Int:
                     {
                         int v;
@@ -152,7 +194,9 @@ namespace TESVSnip.Model
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.Short:
                     {
                         short v;
@@ -161,7 +205,9 @@ namespace TESVSnip.Model
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.Byte:
                     {
                         byte v;
@@ -170,7 +216,9 @@ namespace TESVSnip.Model
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.FormID:
                     {
                         uint v;
@@ -179,19 +227,21 @@ namespace TESVSnip.Model
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.Blob:
                     {
-                        return false;  // no support yet
-                    } 
+                        return false; // no support yet
+                    }
+
                 case ElementValueType.LString:
                     {
                         uint v;
-                        this.value = uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out v)
-                                         ? (object) v
-                                         : strvalue;
+                        this.value = uint.TryParse(strvalue, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out v) ? (object)v : strvalue;
                         return true;
-                    } 
+                    }
+
                 case ElementValueType.UShort:
                     {
                         ushort v;
@@ -200,7 +250,9 @@ namespace TESVSnip.Model
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.UInt:
                     {
                         uint v;
@@ -209,7 +261,9 @@ namespace TESVSnip.Model
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.SByte:
                     {
                         uint v;
@@ -218,35 +272,52 @@ namespace TESVSnip.Model
                             this.value = v;
                             return true;
                         }
-                    } break;
+                    }
+
+                    break;
             }
+
             return false;
         }
 
         public override bool Evaluate(Record r)
         {
             bool any = false;
-            foreach (bool value in r.SubRecords.Where(x => x.Name == this.Parent.Record.name).Select(x => Evaluate(r, x)))
+            foreach (bool value in r.SubRecords.Where(x => x.Name == this.Parent.Record.name).Select(x => this.Evaluate(r, x)))
             {
-                if (!value) return false;
+                if (!value)
+                {
+                    return false;
+                }
+
                 any = true;
             }
+
             return any;
         }
+
         public override bool Evaluate(Record r, SubRecord sr)
         {
             bool any = false;
-            foreach (bool value in sr.EnumerateElements().Where(x => x.Structure.name == this.Record.name).Select(x => Evaluate(r, sr, x)))
+            foreach (bool value in sr.EnumerateElements().Where(x => x.Structure.name == this.Record.name).Select(x => this.Evaluate(r, sr, x)))
             {
-                if (!value) return false;
+                if (!value)
+                {
+                    return false;
+                }
+
                 any = true;
             }
+
             return any;
         }
+
         public bool Evaluate(Record r, SubRecord sr, Element se)
         {
             if (se == null)
+            {
                 return false;
+            }
 
             var value = sr.GetCompareValue(se);
             int diff = ValueComparer.Compare(value, this.Value);
@@ -267,8 +338,8 @@ namespace TESVSnip.Model
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             return false;
         }
-
     }
 }

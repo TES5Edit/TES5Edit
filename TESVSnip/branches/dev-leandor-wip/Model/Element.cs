@@ -1,22 +1,28 @@
-﻿using System;
-
-namespace TESVSnip
+﻿namespace TESVSnip
 {
-    enum ElementAssignmentType
+    using System;
+
+    internal enum ElementAssignmentType
     {
-        Set,
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
-        BitAnd,
-        BitOr,
-        Clear,
+        Set, 
+
+        Add, 
+
+        Subtract, 
+
+        Multiply, 
+
+        Divide, 
+
+        BitAnd, 
+
+        BitOr, 
+
+        Clear, 
     }
 
-
     /// <summary>
-    /// Helper for reference to Element structure including data
+    ///   Helper for reference to Element structure including data
     /// </summary>
     internal sealed class Element
     {
@@ -24,6 +30,77 @@ namespace TESVSnip
 
         public Element()
         {
+        }
+
+        public Element(ElementStructure es, byte[] data, int offset, int count)
+            : this(es, new ArraySegment<byte>(data, offset, count))
+        {
+        }
+
+        public Element(ElementStructure es, ArraySegment<byte> data)
+        {
+            this.Structure = es;
+            this.Data = data;
+        }
+
+        public Element(ElementStructure es, ElementValueType vt, ArraySegment<byte> data)
+        {
+            this.Structure = es;
+            this.Data = data;
+            this.type = vt;
+        }
+
+        public bool Changed { get; private set; }
+
+        public ArraySegment<byte> Data { get; private set; }
+
+        public bool Modified { get; private set; }
+
+        public ElementStructure Structure { get; private set; }
+
+        public ElementValueType Type
+        {
+            get
+            {
+                return this.Structure == null && this.type == ElementValueType.Blob ? this.Structure.type : this.type;
+            }
+        }
+
+        // layout changed i.e. no inplace assignment possible
+        public object Value
+        {
+            get
+            {
+                switch (this.Type)
+                {
+                    case ElementValueType.Int:
+                        return TypeConverter.h2si(this.Data);
+                    case ElementValueType.UInt:
+                    case ElementValueType.FormID:
+                        return TypeConverter.h2i(this.Data);
+                    case ElementValueType.Float:
+                        return TypeConverter.h2f(this.Data);
+                    case ElementValueType.Short:
+                        return TypeConverter.h2ss(this.Data);
+                    case ElementValueType.UShort:
+                        return TypeConverter.h2s(this.Data);
+                    case ElementValueType.SByte:
+                        return TypeConverter.h2sb(this.Data);
+                    case ElementValueType.Byte:
+                        return TypeConverter.h2b(this.Data);
+                    case ElementValueType.String:
+                        return TypeConverter.GetString(this.Data);
+                    default:
+                        if (this.Data.Offset == 0 && this.Data.Count == this.Data.Array.Length)
+                        {
+                            return this.Data.Array;
+                        }
+
+                        var b = new byte[this.Data.Count];
+                        Array.Copy(this.Data.Array, this.Data.Offset, b, 0, this.Data.Count);
+                        return b;
+                }
+            }
         }
 
         public static Element CreateElement(ElementStructure es, byte[] data, ref int offset, bool rawData)
@@ -36,123 +113,142 @@ namespace TESVSnip
                 switch (es.type)
                 {
                     case ElementValueType.Int:
-                        len = maxlen >= sizeof (int) ? sizeof (int) : maxlen;
+                        len = maxlen >= sizeof(int) ? sizeof(int) : maxlen;
                         elem = new Element(es, ElementValueType.Int, new ArraySegment<byte>(data, offset, len));
                         offset += len;
                         break;
                     case ElementValueType.UInt:
                     case ElementValueType.FormID:
-                        len = maxlen >= sizeof (uint) ? sizeof (uint) : maxlen;
+                        len = maxlen >= sizeof(uint) ? sizeof(uint) : maxlen;
                         elem = new Element(es, ElementValueType.UInt, new ArraySegment<byte>(data, offset, len));
                         offset += len;
                         break;
                     case ElementValueType.Float:
-                        len = maxlen >= sizeof (float) ? sizeof (float) : maxlen;
+                        len = maxlen >= sizeof(float) ? sizeof(float) : maxlen;
                         elem = new Element(es, ElementValueType.Float, new ArraySegment<byte>(data, offset, len));
                         offset += len;
                         break;
                     case ElementValueType.Short:
-                        len = maxlen >= sizeof (short) ? sizeof (short) : maxlen;
+                        len = maxlen >= sizeof(short) ? sizeof(short) : maxlen;
                         elem = new Element(es, ElementValueType.Short, new ArraySegment<byte>(data, offset, len));
                         offset += len;
                         break;
                     case ElementValueType.UShort:
-                        len = maxlen >= sizeof (ushort) ? sizeof (ushort) : maxlen;
+                        len = maxlen >= sizeof(ushort) ? sizeof(ushort) : maxlen;
                         elem = new Element(es, ElementValueType.UShort, new ArraySegment<byte>(data, offset, len));
                         offset += len;
                         break;
                     case ElementValueType.SByte:
-                        len = maxlen >= sizeof (sbyte) ? sizeof (sbyte) : maxlen;
+                        len = maxlen >= sizeof(sbyte) ? sizeof(sbyte) : maxlen;
                         elem = new Element(es, ElementValueType.SByte, new ArraySegment<byte>(data, offset, len));
                         offset += len;
                         break;
                     case ElementValueType.Byte:
-                        len = maxlen >= sizeof (byte) ? sizeof (byte) : maxlen;
+                        len = maxlen >= sizeof(byte) ? sizeof(byte) : maxlen;
                         elem = new Element(es, ElementValueType.Byte, new ArraySegment<byte>(data, offset, len));
                         offset += len;
                         break;
                     case ElementValueType.String:
                         len = 0;
-                        for (int i = offset; i < data.Length && data[i] != 0; ++i, ++len) ;
-                        if (rawData) // raw form includes the zero termination byte
+                        for (int i = offset; i < data.Length && data[i] != 0; ++i, ++len)
                         {
-                            len = (len == 0 ? 0 : len + 1);
+                            ;
+                        }
+
+                        if (rawData)
+                        {
+                            // raw form includes the zero termination byte
+                            len = len == 0 ? 0 : len + 1;
                             elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(data, offset, len));
                             offset += len;
                         }
                         else
                         {
                             elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(data, offset, len));
-                            offset += (len == 0 ? 0 : len + 1);
+                            offset += len == 0 ? 0 : len + 1;
                         }
+
                         break;
                     case ElementValueType.BString:
-                        if (maxlen >= sizeof (ushort))
+                        if (maxlen >= sizeof(ushort))
                         {
                             len = TypeConverter.h2s(data[offset], data[offset + 1]);
                             len = (len < maxlen - 2) ? len : maxlen - 2;
-                            if (rawData) // raw data includes short prefix
+                            if (rawData)
                             {
-                                elem = new Element(es, ElementValueType.BString,
-                                                   new ArraySegment<byte>(data, offset, len + 2));
-                                offset += (len + 2);
+                                // raw data includes short prefix
+                                elem = new Element(es, ElementValueType.BString, new ArraySegment<byte>(data, offset, len + 2));
+                                offset += len + 2;
                             }
                             else
                             {
-                                elem = new Element(es, ElementValueType.String,
-                                                   new ArraySegment<byte>(data, offset + 2, len));
-                                offset += (len + 2);
+                                elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(data, offset + 2, len));
+                                offset += len + 2;
                             }
                         }
                         else
                         {
                             if (rawData)
-                                elem = new Element(es, ElementValueType.BString,
-                                                   new ArraySegment<byte>(new byte[2] {0, 0}));
+                            {
+                                elem = new Element(es, ElementValueType.BString, new ArraySegment<byte>(new byte[2] { 0, 0 }));
+                            }
                             else
+                            {
                                 elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(new byte[0]));
+                            }
+
                             offset += maxlen;
                         }
+
                         break;
                     case ElementValueType.IString:
                         if (maxlen >= sizeof(int))
                         {
                             len = TypeConverter.h2si(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
                             len = (len < maxlen - 4) ? len : maxlen - 4;
-                            if (rawData) // raw data includes int prefix
+                            if (rawData)
                             {
-                                elem = new Element(es, ElementValueType.IString,
-                                                   new ArraySegment<byte>(data, offset, len + 4));
-                                offset += (len + 4);
+                                // raw data includes int prefix
+                                elem = new Element(es, ElementValueType.IString, new ArraySegment<byte>(data, offset, len + 4));
+                                offset += len + 4;
                             }
                             else
                             {
-                                elem = new Element(es, ElementValueType.String,
-                                                   new ArraySegment<byte>(data, offset + 4, len));
-                                offset += (len + 4);
+                                elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(data, offset + 4, len));
+                                offset += len + 4;
                             }
                         }
                         else
                         {
                             if (rawData)
-                                elem = new Element(es, ElementValueType.IString,
-                                                   new ArraySegment<byte>(new byte[4] { 0, 0, 0, 0 }));
+                            {
+                                elem = new Element(es, ElementValueType.IString, new ArraySegment<byte>(new byte[4] { 0, 0, 0, 0 }));
+                            }
                             else
+                            {
                                 elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(new byte[0]));
+                            }
+
                             offset += maxlen;
                         }
+
                         break;
                     case ElementValueType.Str4:
                         len = maxlen >= 4 ? 4 : maxlen;
                         if (rawData)
+                        {
                             elem = new Element(es, ElementValueType.Str4, new ArraySegment<byte>(data, offset, len));
+                        }
                         else
+                        {
                             elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(data, offset, len));
+                        }
+
                         offset += len;
                         break;
 
                     case ElementValueType.LString:
-                        if (maxlen < sizeof (int))
+                        if (maxlen < sizeof(int))
                         {
                             elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(data, offset, maxlen));
                             offset += maxlen;
@@ -170,22 +266,26 @@ namespace TESVSnip
                             else
                             {
                                 len = 0;
-                                for (int i = offset; i < data.Length && data[i] != 0; ++i, ++len) ;
-                                if (rawData) // lstring as raw string includes the terminating null
+                                for (int i = offset; i < data.Length && data[i] != 0; ++i, ++len)
                                 {
-                                    len = (len == 0 ? 0 : len + 1);
-                                    elem = new Element(es, ElementValueType.LString,
-                                                       new ArraySegment<byte>(data, offset, len));
+                                    ;
+                                }
+
+                                if (rawData)
+                                {
+                                    // lstring as raw string includes the terminating null
+                                    len = len == 0 ? 0 : len + 1;
+                                    elem = new Element(es, ElementValueType.LString, new ArraySegment<byte>(data, offset, len));
                                     offset += len;
                                 }
                                 else
                                 {
-                                    elem = new Element(es, ElementValueType.String,
-                                                       new ArraySegment<byte>(data, offset, len));
-                                    offset += (len == 0 ? 0 : len + 1);
+                                    elem = new Element(es, ElementValueType.String, new ArraySegment<byte>(data, offset, len));
+                                    offset += len == 0 ? 0 : len + 1;
                                 }
                             }
                         }
+
                         break;
 
                     default:
@@ -199,76 +299,15 @@ namespace TESVSnip
             }
             finally
             {
-                if (offset > data.Length) offset = data.Length;
+                if (offset > data.Length)
+                {
+                    offset = data.Length;
+                }
             }
+
             return elem;
         }
 
-        public Element(ElementStructure es, byte[] data, int offset, int count)
-            : this(es, new ArraySegment<byte>(data, offset, count))
-        {
-        }
-
-        public Element(ElementStructure es, ArraySegment<byte> data)
-        {
-            Structure = es;
-            Data = data;
-        }
-
-        public Element(ElementStructure es, ElementValueType vt, ArraySegment<byte> data)
-        {
-            Structure = es;
-            Data = data;
-            type = vt;
-        }
-
-        public ElementValueType Type
-        {
-            get { return Structure == null && type == ElementValueType.Blob ? Structure.type : type; }
-        }
-
-        public ArraySegment<byte> Data { get; private set; }
-
-        public ElementStructure Structure { get; private set; }
-
-        public bool Modified { get; private set; }
-
-        // layout changed i.e. no inplace assignment possible
-        public bool Changed { get; private set; }
-
-        public object Value
-        {
-            get
-            {
-                switch (Type)
-                {
-                    case ElementValueType.Int:
-                        return TypeConverter.h2si(Data);
-                    case ElementValueType.UInt:
-                    case ElementValueType.FormID:
-                        return TypeConverter.h2i(Data);
-                    case ElementValueType.Float:
-                        return TypeConverter.h2f(Data);
-                    case ElementValueType.Short:
-                        return TypeConverter.h2ss(Data);
-                    case ElementValueType.UShort:
-                        return TypeConverter.h2s(Data);
-                    case ElementValueType.SByte:
-                        return TypeConverter.h2sb(Data);
-                    case ElementValueType.Byte:
-                        return TypeConverter.h2b(Data);
-                    case ElementValueType.String:
-                        return TypeConverter.GetString(Data);
-                    default:
-                        if (Data.Offset == 0 && Data.Count == Data.Array.Length)
-                            return Data.Array;
-                        var b = new byte[Data.Count];
-                        Array.Copy(Data.Array, Data.Offset, b, 0, Data.Count);
-                        return b;
-                }
-            }
-        }
-        #region Assign Value
         internal bool AssignValue<T>(object val)
         {
             if (TypeConverter.TrySetValue<T>(this.Data, val))
@@ -281,6 +320,7 @@ namespace TESVSnip
                 this.Modified = true;
                 this.Changed = true;
             }
+
             return true;
         }
 
@@ -290,14 +330,18 @@ namespace TESVSnip
             {
                 case ElementValueType.String:
                     {
-                        var str1 = TESVSnip.Extensions.CastValue<string>(this.Value);
+                        var str1 = Extensions.CastValue<string>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<string>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<string>(str1 + TESVSnip.Extensions.CastValue<string>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<string>(default(string)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<string>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<string>(str1 + Extensions.CastValue<string>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<string>(default(string));
                         }
                     }
+
                     break;
 
                 case ElementValueType.FormID:
@@ -308,17 +352,26 @@ namespace TESVSnip
                             var u2 = (uint)val;
                             switch (elemType)
                             {
-                                case ElementAssignmentType.Set: return AssignValue<uint>(u2); 
-                                case ElementAssignmentType.Add: return AssignValue<uint>(u1 + u2); 
-                                case ElementAssignmentType.Subtract: return AssignValue<uint>(u1 - u2); 
-                                case ElementAssignmentType.Multiply: return AssignValue<uint>(u1 * u2); 
-                                case ElementAssignmentType.Divide: return AssignValue<uint>(u1 / u2); 
-                                case ElementAssignmentType.BitAnd: return AssignValue<uint>(u1 & u2); 
-                                case ElementAssignmentType.BitOr: return AssignValue<uint>(u1 | u2); 
-                                case ElementAssignmentType.Clear: return AssignValue<uint>(default(uint)); 
+                                case ElementAssignmentType.Set:
+                                    return this.AssignValue<uint>(u2);
+                                case ElementAssignmentType.Add:
+                                    return this.AssignValue<uint>(u1 + u2);
+                                case ElementAssignmentType.Subtract:
+                                    return this.AssignValue<uint>(u1 - u2);
+                                case ElementAssignmentType.Multiply:
+                                    return this.AssignValue<uint>(u1 * u2);
+                                case ElementAssignmentType.Divide:
+                                    return this.AssignValue<uint>(u1 / u2);
+                                case ElementAssignmentType.BitAnd:
+                                    return this.AssignValue<uint>(u1 & u2);
+                                case ElementAssignmentType.BitOr:
+                                    return this.AssignValue<uint>(u1 | u2);
+                                case ElementAssignmentType.Clear:
+                                    return this.AssignValue<uint>(default(uint));
                             }
                         }
                     }
+
                     break;
 
                 case ElementValueType.Blob:
@@ -331,11 +384,15 @@ namespace TESVSnip
                         var s2 = (string)val;
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<string>(s2); 
-                            case ElementAssignmentType.Add: return AssignValue<string>(s1 + s2); 
-                            case ElementAssignmentType.Clear: return AssignValue<string>(default(string)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<string>(s2);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<string>(s1 + s2);
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<string>(default(string));
                         }
                     }
+
                     break;
 
                 case ElementValueType.BString:
@@ -344,126 +401,198 @@ namespace TESVSnip
 
                 case ElementValueType.Str4:
                     {
-                        var str2 = TESVSnip.Extensions.CastValue<string>(val);
+                        var str2 = Extensions.CastValue<string>(val);
                         if (this.Data.Count == 4 && str2.Length == 4)
                         {
                             switch (elemType)
                             {
-                                case ElementAssignmentType.Set: return AssignValue<string>(str2); 
-                                case ElementAssignmentType.Clear: return AssignValue<string>("    "); 
-                            }                            
+                                case ElementAssignmentType.Set:
+                                    return this.AssignValue<string>(str2);
+                                case ElementAssignmentType.Clear:
+                                    return this.AssignValue<string>("    ");
+                            }
                         }
-                        
                     }
+
                     break;
                 case ElementValueType.Float:
                     {
-                        var val1 = TESVSnip.Extensions.CastValue<float>(this.Value);
+                        var val1 = Extensions.CastValue<float>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<float>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<float>(val1 + TESVSnip.Extensions.CastValue<float>(val)); 
-                            case ElementAssignmentType.Subtract: return AssignValue<float>(val1 - TESVSnip.Extensions.CastValue<float>(val)); 
-                            case ElementAssignmentType.Multiply: return AssignValue<float>(val1 * TESVSnip.Extensions.CastValue<float>(val)); 
-                            case ElementAssignmentType.Divide: return AssignValue<float>(val1 / TESVSnip.Extensions.CastValue<float>(val)); 
-                            case ElementAssignmentType.BitAnd: return AssignValue<float>(TESVSnip.Extensions.CastValue<int>(val1) & TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.BitOr: return AssignValue<float>(TESVSnip.Extensions.CastValue<int>(val1) | TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<float>(default(float)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<float>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<float>(val1 + Extensions.CastValue<float>(val));
+                            case ElementAssignmentType.Subtract:
+                                return this.AssignValue<float>(val1 - Extensions.CastValue<float>(val));
+                            case ElementAssignmentType.Multiply:
+                                return this.AssignValue<float>(val1 * Extensions.CastValue<float>(val));
+                            case ElementAssignmentType.Divide:
+                                return this.AssignValue<float>(val1 / Extensions.CastValue<float>(val));
+                            case ElementAssignmentType.BitAnd:
+                                return this.AssignValue<float>(Extensions.CastValue<int>(val1) & Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.BitOr:
+                                return this.AssignValue<float>(Extensions.CastValue<int>(val1) | Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<float>(default(float));
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.Int:
                     {
-                        var val1 = TESVSnip.Extensions.CastValue<int>(this.Value);
+                        var val1 = Extensions.CastValue<int>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<int>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<int>(val1 + TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.Subtract: return AssignValue<int>(val1 - TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.Multiply: return AssignValue<int>(val1 * TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.Divide: return AssignValue<int>(val1 / TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.BitAnd: return AssignValue<int>(val1 & TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.BitOr: return AssignValue<int>(val1 | TESVSnip.Extensions.CastValue<int>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<int>(default(int)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<int>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<int>(val1 + Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.Subtract:
+                                return this.AssignValue<int>(val1 - Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.Multiply:
+                                return this.AssignValue<int>(val1 * Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.Divide:
+                                return this.AssignValue<int>(val1 / Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.BitAnd:
+                                return this.AssignValue<int>(val1 & Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.BitOr:
+                                return this.AssignValue<int>(val1 | Extensions.CastValue<int>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<int>(default(int));
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.Short:
                     {
-                        var val1 = TESVSnip.Extensions.CastValue<short>(this.Value);
+                        var val1 = Extensions.CastValue<short>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<short>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<short>(val1 + TESVSnip.Extensions.CastValue<short>(val)); 
-                            case ElementAssignmentType.Subtract: return AssignValue<short>(val1 - TESVSnip.Extensions.CastValue<short>(val)); 
-                            case ElementAssignmentType.Multiply: return AssignValue<short>(val1 * TESVSnip.Extensions.CastValue<short>(val)); 
-                            case ElementAssignmentType.Divide: return AssignValue<short>(val1 / TESVSnip.Extensions.CastValue<short>(val)); 
-                            case ElementAssignmentType.BitAnd: return AssignValue<short>(val1 & TESVSnip.Extensions.CastValue<short>(val)); 
-                            case ElementAssignmentType.BitOr: return AssignValue<short>(val1 | TESVSnip.Extensions.CastValue<short>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<short>(default(short)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<short>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<short>(val1 + Extensions.CastValue<short>(val));
+                            case ElementAssignmentType.Subtract:
+                                return this.AssignValue<short>(val1 - Extensions.CastValue<short>(val));
+                            case ElementAssignmentType.Multiply:
+                                return this.AssignValue<short>(val1 * Extensions.CastValue<short>(val));
+                            case ElementAssignmentType.Divide:
+                                return this.AssignValue<short>(val1 / Extensions.CastValue<short>(val));
+                            case ElementAssignmentType.BitAnd:
+                                return this.AssignValue<short>(val1 & Extensions.CastValue<short>(val));
+                            case ElementAssignmentType.BitOr:
+                                return this.AssignValue<short>(val1 | Extensions.CastValue<short>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<short>(default(short));
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.Byte:
                     {
-                        var val1 = TESVSnip.Extensions.CastValue<byte>(this.Value);
+                        var val1 = Extensions.CastValue<byte>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<byte>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<byte>(val1 + TESVSnip.Extensions.CastValue<byte>(val)); 
-                            case ElementAssignmentType.Subtract: return AssignValue<byte>(val1 - TESVSnip.Extensions.CastValue<byte>(val)); 
-                            case ElementAssignmentType.Multiply: return AssignValue<byte>(val1 * TESVSnip.Extensions.CastValue<byte>(val)); 
-                            case ElementAssignmentType.Divide: return AssignValue<byte>(val1 / TESVSnip.Extensions.CastValue<byte>(val)); 
-                            case ElementAssignmentType.BitAnd: return AssignValue<byte>(val1 & TESVSnip.Extensions.CastValue<byte>(val)); 
-                            case ElementAssignmentType.BitOr: return AssignValue<byte>(val1 | TESVSnip.Extensions.CastValue<byte>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<byte>(default(byte)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<byte>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<byte>(val1 + Extensions.CastValue<byte>(val));
+                            case ElementAssignmentType.Subtract:
+                                return this.AssignValue<byte>(val1 - Extensions.CastValue<byte>(val));
+                            case ElementAssignmentType.Multiply:
+                                return this.AssignValue<byte>(val1 * Extensions.CastValue<byte>(val));
+                            case ElementAssignmentType.Divide:
+                                return this.AssignValue<byte>(val1 / Extensions.CastValue<byte>(val));
+                            case ElementAssignmentType.BitAnd:
+                                return this.AssignValue<byte>(val1 & Extensions.CastValue<byte>(val));
+                            case ElementAssignmentType.BitOr:
+                                return this.AssignValue<byte>(val1 | Extensions.CastValue<byte>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<byte>(default(byte));
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.UShort:
                     {
-                        var val1 = TESVSnip.Extensions.CastValue<ushort>(this.Value);
+                        var val1 = Extensions.CastValue<ushort>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<ushort>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<ushort>(val1 + TESVSnip.Extensions.CastValue<ushort>(val)); 
-                            case ElementAssignmentType.Subtract: return AssignValue<ushort>(val1 - TESVSnip.Extensions.CastValue<ushort>(val)); 
-                            case ElementAssignmentType.Multiply: return AssignValue<ushort>(val1 * TESVSnip.Extensions.CastValue<ushort>(val)); 
-                            case ElementAssignmentType.Divide: return AssignValue<ushort>(val1 / TESVSnip.Extensions.CastValue<ushort>(val)); 
-                            case ElementAssignmentType.BitAnd: return AssignValue<ushort>(val1 & TESVSnip.Extensions.CastValue<ushort>(val)); 
-                            case ElementAssignmentType.BitOr: return AssignValue<ushort>(val1 | TESVSnip.Extensions.CastValue<ushort>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<ushort>(default(ushort)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<ushort>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<ushort>(val1 + Extensions.CastValue<ushort>(val));
+                            case ElementAssignmentType.Subtract:
+                                return this.AssignValue<ushort>(val1 - Extensions.CastValue<ushort>(val));
+                            case ElementAssignmentType.Multiply:
+                                return this.AssignValue<ushort>(val1 * Extensions.CastValue<ushort>(val));
+                            case ElementAssignmentType.Divide:
+                                return this.AssignValue<ushort>(val1 / Extensions.CastValue<ushort>(val));
+                            case ElementAssignmentType.BitAnd:
+                                return this.AssignValue<ushort>(val1 & Extensions.CastValue<ushort>(val));
+                            case ElementAssignmentType.BitOr:
+                                return this.AssignValue<ushort>(val1 | Extensions.CastValue<ushort>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<ushort>(default(ushort));
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.UInt:
                     {
-                        var val1 = TESVSnip.Extensions.CastValue<uint>(this.Value);
+                        var val1 = Extensions.CastValue<uint>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<uint>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<uint>(val1 + TESVSnip.Extensions.CastValue<uint>(val)); 
-                            case ElementAssignmentType.Subtract: return AssignValue<uint>(val1 - TESVSnip.Extensions.CastValue<uint>(val)); 
-                            case ElementAssignmentType.Multiply: return AssignValue<uint>(val1 * TESVSnip.Extensions.CastValue<uint>(val)); 
-                            case ElementAssignmentType.Divide: return AssignValue<uint>(val1 / TESVSnip.Extensions.CastValue<uint>(val)); 
-                            case ElementAssignmentType.BitAnd: return AssignValue<uint>(val1 & TESVSnip.Extensions.CastValue<uint>(val)); 
-                            case ElementAssignmentType.BitOr: return AssignValue<uint>(val1 | TESVSnip.Extensions.CastValue<uint>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<uint>(default(uint)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<uint>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<uint>(val1 + Extensions.CastValue<uint>(val));
+                            case ElementAssignmentType.Subtract:
+                                return this.AssignValue<uint>(val1 - Extensions.CastValue<uint>(val));
+                            case ElementAssignmentType.Multiply:
+                                return this.AssignValue<uint>(val1 * Extensions.CastValue<uint>(val));
+                            case ElementAssignmentType.Divide:
+                                return this.AssignValue<uint>(val1 / Extensions.CastValue<uint>(val));
+                            case ElementAssignmentType.BitAnd:
+                                return this.AssignValue<uint>(val1 & Extensions.CastValue<uint>(val));
+                            case ElementAssignmentType.BitOr:
+                                return this.AssignValue<uint>(val1 | Extensions.CastValue<uint>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<uint>(default(uint));
                         }
-                    } break;
+                    }
+
+                    break;
                 case ElementValueType.SByte:
                     {
-                        var val1 = TESVSnip.Extensions.CastValue<sbyte>(this.Value);
+                        var val1 = Extensions.CastValue<sbyte>(this.Value);
                         switch (elemType)
                         {
-                            case ElementAssignmentType.Set: return AssignValue<sbyte>(val); 
-                            case ElementAssignmentType.Add: return AssignValue<sbyte>(val1 + TESVSnip.Extensions.CastValue<sbyte>(val)); 
-                            case ElementAssignmentType.Subtract: return AssignValue<sbyte>(val1 - TESVSnip.Extensions.CastValue<sbyte>(val)); 
-                            case ElementAssignmentType.Multiply: return AssignValue<sbyte>(val1 * TESVSnip.Extensions.CastValue<sbyte>(val)); 
-                            case ElementAssignmentType.Divide: return AssignValue<sbyte>(val1 / TESVSnip.Extensions.CastValue<sbyte>(val)); 
-                            case ElementAssignmentType.BitAnd: return AssignValue<sbyte>(val1 & TESVSnip.Extensions.CastValue<sbyte>(val)); 
-                            case ElementAssignmentType.BitOr: return AssignValue<sbyte>(val1 | TESVSnip.Extensions.CastValue<sbyte>(val)); 
-                            case ElementAssignmentType.Clear: return AssignValue<sbyte>(default(sbyte)); 
+                            case ElementAssignmentType.Set:
+                                return this.AssignValue<sbyte>(val);
+                            case ElementAssignmentType.Add:
+                                return this.AssignValue<sbyte>(val1 + Extensions.CastValue<sbyte>(val));
+                            case ElementAssignmentType.Subtract:
+                                return this.AssignValue<sbyte>(val1 - Extensions.CastValue<sbyte>(val));
+                            case ElementAssignmentType.Multiply:
+                                return this.AssignValue<sbyte>(val1 * Extensions.CastValue<sbyte>(val));
+                            case ElementAssignmentType.Divide:
+                                return this.AssignValue<sbyte>(val1 / Extensions.CastValue<sbyte>(val));
+                            case ElementAssignmentType.BitAnd:
+                                return this.AssignValue<sbyte>(val1 & Extensions.CastValue<sbyte>(val));
+                            case ElementAssignmentType.BitOr:
+                                return this.AssignValue<sbyte>(val1 | Extensions.CastValue<sbyte>(val));
+                            case ElementAssignmentType.Clear:
+                                return this.AssignValue<sbyte>(default(sbyte));
                         }
-                    } break;
+                    }
+
+                    break;
             }
+
             return false;
         }
-        #endregion
     }
 }

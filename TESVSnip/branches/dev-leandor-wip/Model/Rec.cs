@@ -1,12 +1,17 @@
-﻿using System;
-using System.Runtime.Serialization;
-using TESVSnip.Data;
-
-namespace TESVSnip
+﻿namespace TESVSnip
 {
-    [Persistable(Flags = PersistType.DeclaredOnly), Serializable]
+    using System;
+    using System.Runtime.Serialization;
+
+    using TESVSnip.Data;
+
+    [Persistable(Flags = PersistType.DeclaredOnly)]
+    [Serializable]
     public abstract class Rec : BaseRecord
     {
+        [Persistable]
+        protected string descriptiveName;
+
         private BaseRecord parent;
 
         protected Rec()
@@ -18,28 +23,37 @@ namespace TESVSnip
         {
         }
 
-        [Persistable] protected string descriptiveName;
-
         public override string DescriptiveName
         {
-            get { return descriptiveName == null ? Name : (Name + descriptiveName); }
-            //set { descriptiveName = value; }
-        }
+            get
+            {
+                return this.descriptiveName == null ? Name : (Name + this.descriptiveName);
+            }
 
-        public override void SetDescription(string value)
-        {
-            descriptiveName = value;
-        }
-
-        public override void UpdateShortDescription()
-        {
-            descriptiveName = "";
+            // set { descriptiveName = value; }
         }
 
         public override BaseRecord Parent
         {
-            get { return parent; }
-            internal set { parent = value; }
+            get
+            {
+                return this.parent;
+            }
+
+            internal set
+            {
+                this.parent = value;
+            }
+        }
+
+        public override void SetDescription(string value)
+        {
+            this.descriptiveName = value;
+        }
+
+        public override void UpdateShortDescription()
+        {
+            this.descriptiveName = string.Empty;
         }
     }
 }

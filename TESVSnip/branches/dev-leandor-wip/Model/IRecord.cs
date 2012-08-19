@@ -1,13 +1,17 @@
-﻿using System;
-
-namespace TESVSnip
+﻿namespace TESVSnip
 {
+    using System;
+
     internal interface IRecord : ICloneable
     {
-        string Name { get; set; }
         string DescriptiveName { get; }
+
+        string Name { get; set; }
+
         BaseRecord Parent { get; }
+
         long Size { get; }
+
         long Size2 { get; }
     }
 }

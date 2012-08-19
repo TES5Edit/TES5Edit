@@ -1,33 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using TESVSnip.Collections;
-
-namespace TESVSnip.Model
+﻿namespace TESVSnip.Model
 {
-    class ColumnSettings
+    using System.Collections.Generic;
+
+    internal class ColumnSettings
     {
-        public string Type;
         public IEnumerable<ColumnCriteria> Items;
+
+        public string Type;
     }
 
-
-    abstract class ColumnCriteria
+    internal abstract class ColumnCriteria
     {
         public bool Checked { get; set; }
+
         public string Name { get; set; }
     }
 
-    class ColumnSubrecord : ColumnCriteria
+    internal class ColumnSubrecord : ColumnCriteria
     {
-        public SubrecordStructure Record { get; set; }
         public ICollection<ColumnElement> Children { get; set; }
+
+        public SubrecordStructure Record { get; set; }
     }
 
-    class ColumnElement : ColumnCriteria
+    internal class ColumnElement : ColumnCriteria
     {
-        public ElementStructure Record { get; set; }
         public ColumnSubrecord Parent { get; set; }
+
+        public ElementStructure Record { get; set; }
     }
 }
