@@ -5,6 +5,7 @@
     using System.Linq;
 
     using TESVSnip.Collections;
+    using TESVSnip.Main;
 
     internal class BatchElement : BatchCriteria
     {

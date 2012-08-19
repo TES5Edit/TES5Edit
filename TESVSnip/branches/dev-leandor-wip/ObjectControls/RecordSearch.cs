@@ -20,6 +20,7 @@ using WeifenLuo.WinFormsUI.Docking;
 namespace TESVSnip.ObjectControls
 {
     using TESVSnip.Collections;
+    using TESVSnip.Main;
 
     public partial class RecordSearch : UserControl, ISupportInitialize
     {

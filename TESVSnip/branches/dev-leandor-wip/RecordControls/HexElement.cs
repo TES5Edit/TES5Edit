@@ -6,6 +6,8 @@ using Be.Windows.Forms;
 
 namespace TESVSnip.RecordControls
 {
+    using TESVSnip.Main;
+
     internal partial class HexElement : BaseElement
     {
         private readonly DynamicByteProvider dbytes;

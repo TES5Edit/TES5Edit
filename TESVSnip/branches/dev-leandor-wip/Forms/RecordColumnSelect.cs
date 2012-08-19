@@ -12,6 +12,8 @@ using TESVSnip.Model;
 
 namespace TESVSnip.Forms
 {
+    using TESVSnip.Main;
+
     internal partial class RecordColumnSelect : Form
     {
         private RecordStructure rec;

@@ -6,6 +6,8 @@ using TESVSnip.Properties;
 
 namespace TESVSnip.RecordControls
 {
+    using TESVSnip.Main;
+
     internal partial class LStringElement : TextElement
     {
         public LStringElement()

@@ -24,6 +24,8 @@ using TESVSnip.Model;
 
 namespace TESVSnip
 {
+    using TESVSnip.Main;
+
     internal delegate string dFormIDLookupS(string id);
     internal delegate string dFormIDLookupI(uint id);
     internal delegate Record dFormIDLookupR(uint id);

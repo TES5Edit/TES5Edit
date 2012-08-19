@@ -2,6 +2,8 @@
 {
     using System;
 
+    using TESVSnip.Main;
+
     /// <summary>
     ///   Helper for reference to Element structure including data
     /// </summary>

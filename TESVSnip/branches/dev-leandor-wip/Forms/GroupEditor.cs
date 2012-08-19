@@ -5,6 +5,7 @@ using TESVSnip.Properties;
 
 namespace TESVSnip
 {
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     internal partial class GroupEditor : Form

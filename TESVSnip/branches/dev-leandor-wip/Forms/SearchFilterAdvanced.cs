@@ -11,6 +11,8 @@ using TESVSnip.Model;
 
 namespace TESVSnip.Forms
 {
+    using TESVSnip.Main;
+
     internal partial class SearchFilterAdvanced : Form
     {
         private RecordStructure rec;

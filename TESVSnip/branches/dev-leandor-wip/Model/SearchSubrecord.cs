@@ -3,6 +3,8 @@ namespace TESVSnip.Model
     using System.Collections.Generic;
     using System.Linq;
 
+    using TESVSnip.Main;
+
     internal class SearchSubrecord : SearchCriteria
     {
         public ICollection<SearchElement> Children { get; set; }

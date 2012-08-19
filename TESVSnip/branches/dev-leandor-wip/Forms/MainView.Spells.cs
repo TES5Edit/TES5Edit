@@ -14,6 +14,7 @@ using System.Drawing;
 namespace TESVSnip
 {
     using TESVSnip.Collections;
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     /// <summary>
@@ -32,7 +33,7 @@ namespace TESVSnip
             {
                 var rec = PluginTree.SelectedRecord as Record;
                 var p = rec != null ? rec.GetPlugin() : null;
-                TESVSnip.Spells.SanitizePlugin(p);
+                Spells.SanitizePlugin(p);
             }
             catch (ApplicationException ex)
             {
@@ -60,7 +61,7 @@ namespace TESVSnip
                 DialogResult.Yes)
                 return;
             var p = GetPluginFromNode(PluginTree.SelectedRecord);
-            TESVSnip.Spells.StripEDIDs(p);
+            Spells.StripEDIDs(p);
             PluginTree.RebuildObjects();
         }
 
@@ -651,7 +652,7 @@ namespace TESVSnip
             try
             {
                 foreach (var rec in records)
-                    TESVSnip.Spells.ReorderSubrecords(rec);
+                    Spells.ReorderSubrecords(rec);
             }
             finally
             {

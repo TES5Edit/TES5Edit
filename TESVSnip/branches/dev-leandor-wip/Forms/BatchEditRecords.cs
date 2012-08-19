@@ -13,6 +13,8 @@ using TESVSnip.Model;
 
 namespace TESVSnip.Forms
 {
+    using TESVSnip.Main;
+
     internal partial class BatchEditRecords : Form
     {
         private RecordStructure rec;

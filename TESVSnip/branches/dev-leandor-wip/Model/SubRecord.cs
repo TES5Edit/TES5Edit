@@ -13,6 +13,7 @@
     using RTF;
 
     using TESVSnip.Data;
+    using TESVSnip.Main;
 
     using Encoding = TESVSnip.Encoding;
 

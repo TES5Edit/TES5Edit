@@ -12,6 +12,7 @@ using TESVSnip.Properties;
 namespace TESVSnip.ObjectControls
 {
     using TESVSnip.Collections;
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     public partial class SubrecordListEditor : UserControl, ISupportInitialize

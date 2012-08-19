@@ -4,6 +4,8 @@ using System.Windows.Forms;
 
 namespace TESVSnip.RecordControls
 {
+    using TESVSnip.Main;
+
     internal interface IElementControl
     {
         ElementStructure Element { get; set; }

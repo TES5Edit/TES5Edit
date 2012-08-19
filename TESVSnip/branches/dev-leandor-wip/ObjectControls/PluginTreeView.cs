@@ -15,6 +15,7 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace TESVSnip.ObjectControls
 {
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     public partial class PluginTreeView : UserControl, ISupportInitialize

@@ -13,6 +13,7 @@
 
     using TESVSnip.Collections;
     using TESVSnip.Data;
+    using TESVSnip.Main;
     using TESVSnip.ZLibInterface;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]

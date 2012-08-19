@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     internal class RecordBuilder

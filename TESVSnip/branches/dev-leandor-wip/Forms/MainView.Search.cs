@@ -10,6 +10,7 @@ using System.Windows.Forms;
 
 namespace TESVSnip
 {
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     /// <summary>

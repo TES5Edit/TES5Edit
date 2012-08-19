@@ -10,6 +10,7 @@ using TESVSnip.Properties;
 namespace TESVSnip.Forms
 {
     using TESVSnip.Collections;
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     public partial class StringsEditor : Form

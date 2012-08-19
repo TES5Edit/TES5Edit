@@ -3,6 +3,8 @@ using System.Linq;
 
 namespace TESVSnip.RecordControls
 {
+    using TESVSnip.Main;
+
     internal partial class FormIDElement : TextElement
     {
         private class comboBoxItem

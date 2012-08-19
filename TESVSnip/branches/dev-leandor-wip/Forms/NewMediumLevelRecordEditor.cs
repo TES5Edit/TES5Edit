@@ -11,6 +11,7 @@ using TESVSnip.RecordControls;
 namespace TESVSnip
 {
     using TESVSnip.Collections;
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     internal partial class NewMediumLevelRecordEditor : Form

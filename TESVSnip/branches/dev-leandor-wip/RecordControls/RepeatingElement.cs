@@ -6,6 +6,7 @@ using System.Windows.Forms;
 namespace TESVSnip.RecordControls
 {
     using TESVSnip.Collections;
+    using TESVSnip.Main;
 
     internal partial class RepeatingElement : BaseElement, IOuterElementControl, IGroupedElementControl
     {

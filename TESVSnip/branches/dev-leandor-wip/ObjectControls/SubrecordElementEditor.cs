@@ -11,6 +11,7 @@ using TESVSnip.RecordControls;
 namespace TESVSnip.Forms
 {
     using TESVSnip.Collections;
+    using TESVSnip.Main;
     using TESVSnip.Model;
 
     public partial class SubrecordEditor : UserControl

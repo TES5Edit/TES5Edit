@@ -15,6 +15,8 @@ using TESVSnip.Model;
 
 namespace TESVSnip.Forms
 {
+    using TESVSnip.Main;
+
     internal partial class SearchFilterBasic : Form
     {
         private OLVColumn olvColumnName;

@@ -5,6 +5,7 @@
     using System.Linq;
 
     using TESVSnip.Collections;
+    using TESVSnip.Main;
 
     #region XML Serialization
 

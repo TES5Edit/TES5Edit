@@ -7,6 +7,8 @@ using TESVSnip.Properties;
 
 namespace TESVSnip
 {
+    using TESVSnip.Main;
+
     internal partial class HexDataEdit : Form
     {
         public static bool Canceled;
