@@ -18,6 +18,7 @@ namespace TESVSnip.UI.Forms
     using RTF;
 
     using TESVSnip.Data;
+    using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
     using TESVSnip.Main;
@@ -82,7 +83,7 @@ namespace TESVSnip.UI.Forms
 
             if (string.IsNullOrEmpty(Settings.Default.DefaultSaveFolder) || !Directory.Exists(Settings.Default.DefaultSaveFolder))
             {
-                this.SaveModDialog.InitialDirectory = Program.gameDataDir;
+                this.SaveModDialog.InitialDirectory = Options.Value.GameDataDirectory;
             }
             else
             {
@@ -91,7 +92,7 @@ namespace TESVSnip.UI.Forms
 
             if (string.IsNullOrEmpty(Settings.Default.DefaultOpenFolder) || !Directory.Exists(Settings.Default.DefaultOpenFolder))
             {
-                this.OpenModDialog.InitialDirectory = Program.gameDataDir;
+                this.OpenModDialog.InitialDirectory = Options.Value.GameDataDirectory;
             }
             else
             {
@@ -1517,7 +1518,7 @@ namespace TESVSnip.UI.Forms
             using (var dlg = new OpenFileDialog())
             {
                 dlg.Title = "Select Base Record Structure";
-                dlg.InitialDirectory = Program.settingsDir;
+                dlg.InitialDirectory = Options.Value.SettingsDirectory;
                 dlg.FileName = "RecordStructure.xml";
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                 {

@@ -14,6 +14,7 @@ using System.Xml;
 
 namespace ScriptCompiler
 {
+    using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
     using TESVSnip.Main;
@@ -163,9 +164,9 @@ namespace ScriptCompiler
             new Dictionary<string, Dictionary<string, ushort>>();
 
 //#if DEBUG
-        //        private static string xmlPath=System.IO.Path.Combine(Program.exeDir, @"conf\ScriptFunctions.xml");
+        //        private static string xmlPath=System.IO.Path.Combine(Program.ApplicationDirectory, @"conf\ScriptFunctions.xml");
 //#else
-        private static readonly string xmlPath = Path.Combine(Program.exeDir, @"conf\ScriptFunctions.xml");
+        private static readonly string xmlPath = Path.Combine(Options.Value.ApplicationDirectory, @"conf\ScriptFunctions.xml");
 //#endif
         private static void AddFunction(string name, string sname, FunctionSig sig)
         {

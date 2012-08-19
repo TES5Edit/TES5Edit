@@ -8,12 +8,13 @@ namespace TESVSnip.Main
     using System.Xml.Serialization;
 
     using TESVSnip.Data;
+    using TESVSnip.Domain.Services;
 
     internal class RecordStructure
     {
         public static Dictionary<string, RecordStructure> Records = new Dictionary<string, RecordStructure>(StringComparer.InvariantCultureIgnoreCase);
 
-        private static readonly string xmlPath = Path.Combine(Program.settingsDir, @"RecordStructure.xml");
+        private static readonly string xmlPath = Path.Combine(Options.Value.SettingsDirectory, @"RecordStructure.xml");
 
         private static bool loaded;
 

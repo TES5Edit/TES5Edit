@@ -5,9 +5,11 @@ namespace TESVSnip.Main
     using System.Windows.Forms;
     using System.Xml;
 
+    using TESVSnip.Domain.Services;
+
     internal static class Settings
     {
-        private static readonly string xmlPath = Path.Combine(Program.settingsDir, "settings.xml");
+        private static readonly string xmlPath = Path.Combine(Options.Value.SettingsDirectory, "settings.xml");
 
         private static XmlElement rootNode;
 

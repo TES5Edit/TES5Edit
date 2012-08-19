@@ -13,6 +13,7 @@
     using ScriptCompiler;
 
     using TESVSnip.Data;
+    using TESVSnip.Domain.Services;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
@@ -507,7 +508,7 @@
             {
                 if (string.IsNullOrEmpty(Settings.Default.DefaultSaveFolder) || !Directory.Exists(Settings.Default.DefaultSaveFolder))
                 {
-                    dlg.InitialDirectory = Path.Combine(Program.gameDataDir, "Strings");
+                    dlg.InitialDirectory = Path.Combine(Options.Value.GameDataDirectory, "Strings");
                 }
                 else
                 {
@@ -858,7 +859,7 @@
                 {
                     if (string.IsNullOrEmpty(Settings.Default.DefaultSaveFolder) || !Directory.Exists(Settings.Default.DefaultSaveFolder))
                     {
-                        dlg.InitialDirectory = Path.Combine(Program.gameDataDir, "Strings");
+                        dlg.InitialDirectory = Path.Combine(Options.Value.GameDataDirectory, "Strings");
                     }
                     else
                     {
@@ -1107,7 +1108,7 @@
             {
                 if (string.IsNullOrEmpty(Settings.Default.DefaultSaveFolder) || !Directory.Exists(Settings.Default.DefaultSaveFolder))
                 {
-                    dlg.InitialDirectory = Path.Combine(Program.gameDataDir, "Strings");
+                    dlg.InitialDirectory = Path.Combine(Options.Value.GameDataDirectory, "Strings");
                 }
                 else
                 {
