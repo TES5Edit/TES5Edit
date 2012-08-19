@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using TESVSnip.Collections;
-using TESVSnip.Collections.Generic;
+
 using System.Runtime.Serialization;
 using System.Collections;
 

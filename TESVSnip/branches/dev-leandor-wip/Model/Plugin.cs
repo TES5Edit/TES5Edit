@@ -10,6 +10,8 @@ using TESVSnip.Data;
 
 namespace TESVSnip
 {
+    using TESVSnip.Collections;
+
     [Persistable(Flags = PersistType.DeclaredOnly), Serializable]
     public sealed class Plugin : BaseRecord, IDeserializationCallback, IGroupRecord
     {

@@ -10,7 +10,7 @@ using System.Linq;
 using System.Media;
 using System.Windows.Forms;
 using BrightIdeasSoftware;
-using TESVSnip.Collections.Generic;
+
 using TESVSnip.Docking;
 using TESVSnip.Forms;
 using TESVSnip.Model;
@@ -19,6 +19,8 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace TESVSnip.ObjectControls
 {
+    using TESVSnip.Collections;
+
     public partial class RecordSearch : UserControl, ISupportInitialize
     {
         private OLVColumn[] baseColumns=null;

@@ -4,11 +4,13 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using TESVSnip.Collections.Generic;
+
 using TESVSnip.Properties;
 
 namespace TESVSnip.Forms
 {
+    using TESVSnip.Collections;
+
     public partial class StringsEditor : Form
     {
         private class StringHolder

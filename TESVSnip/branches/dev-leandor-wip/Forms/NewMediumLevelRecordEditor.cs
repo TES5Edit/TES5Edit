@@ -4,12 +4,14 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using TESVSnip.Collections.Generic;
+
 using TESVSnip.Properties;
 using TESVSnip.RecordControls;
 
 namespace TESVSnip
 {
+    using TESVSnip.Collections;
+
     internal partial class NewMediumLevelRecordEditor : Form
     {
         private Plugin p;

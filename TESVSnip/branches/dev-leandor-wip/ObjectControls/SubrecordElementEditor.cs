@@ -5,11 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using TESVSnip.Collections.Generic;
+
 using TESVSnip.RecordControls;
 
 namespace TESVSnip.Forms
 {
+    using TESVSnip.Collections;
+
     public partial class SubrecordEditor : UserControl
     {
         private Record r;

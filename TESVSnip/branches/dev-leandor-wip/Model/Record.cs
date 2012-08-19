@@ -6,12 +6,15 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using RTF;
-using TESVSnip.Collections.Generic;
+
 using TESVSnip.Data;
 
 namespace TESVSnip
 {
     using System.Diagnostics;
+
+    using TESVSnip.Collections;
+
     using ZLibInterface;
 
     [Persistable(Flags = PersistType.DeclaredOnly), Serializable]

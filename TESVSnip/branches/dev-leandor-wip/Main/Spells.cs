@@ -10,6 +10,8 @@ using TESVSnip.Properties;
 
 namespace TESVSnip
 {
+    using TESVSnip.Collections;
+
     /// <summary>
     /// This file contains the miscellaneous spells for the main form
     /// </summary>

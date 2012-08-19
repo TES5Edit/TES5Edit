@@ -6,11 +6,13 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using BrightIdeasSoftware;
-using TESVSnip.Collections.Generic;
+
 using TESVSnip.Properties;
 
 namespace TESVSnip.ObjectControls
 {
+    using TESVSnip.Collections;
+
     public partial class SubrecordListEditor : UserControl, ISupportInitialize
     {
         private SelectionContext context;

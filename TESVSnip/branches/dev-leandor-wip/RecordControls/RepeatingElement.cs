@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using TESVSnip.Collections.Generic;
 
 namespace TESVSnip.RecordControls
 {
+    using TESVSnip.Collections;
+
     internal partial class RepeatingElement : BaseElement, IOuterElementControl, IGroupedElementControl
     {
         private IElementControl innerControl;
