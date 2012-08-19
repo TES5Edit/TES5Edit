@@ -3,6 +3,7 @@
     using System;
 
     using TESVSnip.Main;
+    using TESVSnip.UI.Forms;
 
     internal interface IElementControl
     {

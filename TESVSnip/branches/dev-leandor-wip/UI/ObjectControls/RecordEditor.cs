@@ -9,6 +9,7 @@
     using TESVSnip.Collections;
     using TESVSnip.Main;
     using TESVSnip.Model;
+    using TESVSnip.UI.Forms;
 
     public partial class RecordEditor : UserControl
     {

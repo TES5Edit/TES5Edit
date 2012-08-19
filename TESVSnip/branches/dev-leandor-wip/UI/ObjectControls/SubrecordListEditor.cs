@@ -14,6 +14,7 @@
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
+    using TESVSnip.UI.Forms;
 
     using Settings = TESVSnip.Properties.Settings;
 

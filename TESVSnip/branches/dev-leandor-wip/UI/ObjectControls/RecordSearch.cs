@@ -13,11 +13,11 @@
     using BrightIdeasSoftware;
 
     using TESVSnip.Collections;
-    using TESVSnip.Forms;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
     using TESVSnip.UI.Docking;
+    using TESVSnip.UI.Forms;
 
     using WeifenLuo.WinFormsUI.Docking;
 

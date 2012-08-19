@@ -6,6 +6,7 @@
 
     using TESVSnip.Main;
     using TESVSnip.Model;
+    using TESVSnip.UI.Forms;
 
     internal class RecordBuilder
     {

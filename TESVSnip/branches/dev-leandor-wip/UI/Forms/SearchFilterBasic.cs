@@ -1,4 +1,4 @@
-﻿namespace TESVSnip.Forms
+﻿namespace TESVSnip.UI.Forms
 {
     using System;
     using System.Collections;
@@ -423,7 +423,7 @@
                     if (RecordStructure.Records.TryGetValue(settings.Type, out rec))
                     {
                         this.filterTree.Roots = this.ConfigureRecord(rec);
-                        AssignCriteria(settings);
+                        this.AssignCriteria(settings);
                         this.filterTree.RebuildAll(true);
                     }
                 }

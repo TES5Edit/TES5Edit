@@ -4,9 +4,9 @@
     using System.Globalization;
     using System.Windows.Forms;
 
-    using TESVSnip.Forms;
     using TESVSnip.Main;
     using TESVSnip.Properties;
+    using TESVSnip.UI.Forms;
 
     internal partial class LStringElement : TextElement
     {

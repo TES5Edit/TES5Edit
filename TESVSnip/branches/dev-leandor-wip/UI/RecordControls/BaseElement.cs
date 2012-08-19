@@ -4,6 +4,7 @@
     using System.Windows.Forms;
 
     using TESVSnip.Main;
+    using TESVSnip.UI.Forms;
 
     internal partial class BaseElement : UserControl, IElementControl
     {

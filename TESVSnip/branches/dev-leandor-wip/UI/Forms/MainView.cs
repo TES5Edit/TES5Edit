@@ -1,4 +1,4 @@
-namespace TESVSnip
+namespace TESVSnip.UI.Forms
 {
     using System;
     using System.Collections.Generic;
@@ -18,7 +18,6 @@ namespace TESVSnip
     using RTF;
 
     using TESVSnip.Data;
-    using TESVSnip.Forms;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
@@ -1899,7 +1898,7 @@ namespace TESVSnip
             var sr = this.SubrecordList.GetSelectedSubrecord();
             if (sr != null)
             {
-                UpdateMainText(sr);
+                this.UpdateMainText(sr);
             }
         }
 

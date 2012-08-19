@@ -1,4 +1,4 @@
-﻿namespace TESVSnip
+﻿namespace TESVSnip.UI.Forms
 {
     using System;
     using System.Collections;

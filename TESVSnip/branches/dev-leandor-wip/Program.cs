@@ -8,6 +8,8 @@ using TESVSnip.Properties;
 
 namespace TESVSnip
 {
+    using TESVSnip.UI.Forms;
+
     using ZLibInterface;
 
     internal static class Program

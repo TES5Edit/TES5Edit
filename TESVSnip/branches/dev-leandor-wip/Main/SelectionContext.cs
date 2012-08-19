@@ -4,6 +4,7 @@ namespace TESVSnip.Main
     using System.Collections.Generic;
 
     using TESVSnip.Model;
+    using TESVSnip.UI.Forms;
 
     /// <summary>
     /// External state for holding single selection for use with evaluating descriptions and intelligent editors.

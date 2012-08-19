@@ -1,4 +1,4 @@
-namespace TESVSnip {
+namespace TESVSnip.UI.Forms {
     partial class DataEdit {
         /// <summary>
         /// Required designer variable.
@@ -10,8 +10,8 @@ namespace TESVSnip {
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing) {
-            if(disposing && (components != null)) {
-                components.Dispose();
+            if(disposing && (this.components != null)) {
+                this.components.Dispose();
             }
             base.Dispose(disposing);
         }

@@ -16,6 +16,7 @@
     using TESVSnip.Model;
     using TESVSnip.Properties;
     using TESVSnip.UI.Docking;
+    using TESVSnip.UI.Forms;
 
     using WeifenLuo.WinFormsUI.Docking;
 

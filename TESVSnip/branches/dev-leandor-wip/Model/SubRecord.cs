@@ -14,6 +14,7 @@
 
     using TESVSnip.Data;
     using TESVSnip.Main;
+    using TESVSnip.UI.Forms;
 
     using Encoding = TESVSnip.Encoding;
 
