@@ -92,13 +92,7 @@
     <Compile Include="Collections\PropertyComparer.cs" />
     <Compile Include="Collections\PropertyComparerCollection.cs" />
     <Compile Include="Collections\ValueComparer.cs" />
-    <Compile Include="UI\Forms\dFormIDLookupI.cs" />
-    <Compile Include="UI\Forms\dFormIDLookupR.cs" />
-    <Compile Include="UI\Forms\dFormIDLookupS.cs" />
-    <Compile Include="UI\Forms\dFormIDScan.cs" />
-    <Compile Include="UI\Forms\dFormIDScanR.cs" />
-    <Compile Include="UI\Forms\dFormIDScanRec.cs" />
-    <Compile Include="UI\Forms\dLStringLookup.cs" />
+    <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
     <Compile Include="UI\RecordControls\ITextElementControl.cs" />

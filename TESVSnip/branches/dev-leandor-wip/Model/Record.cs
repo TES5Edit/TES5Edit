@@ -14,7 +14,7 @@
     using TESVSnip.Collections;
     using TESVSnip.Data;
     using TESVSnip.Main;
-    using TESVSnip.UI.Forms;
+    using TESVSnip.UI;
     using TESVSnip.ZLibInterface;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
