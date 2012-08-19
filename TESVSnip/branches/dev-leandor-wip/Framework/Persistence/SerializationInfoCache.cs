@@ -1,4 +1,4 @@
-namespace TESVSnip.Data
+namespace TESVSnip.Framework.Persistence
 {
     using System;
 

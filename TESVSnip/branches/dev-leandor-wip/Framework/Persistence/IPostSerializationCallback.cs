@@ -1,4 +1,4 @@
-namespace TESVSnip.Data
+namespace TESVSnip.Framework.Persistence
 {
     /// <summary>
     /// Interface that can be use for serialization callbacks even after IDeserialization.

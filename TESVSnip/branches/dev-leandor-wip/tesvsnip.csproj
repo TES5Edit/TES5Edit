@@ -95,6 +95,7 @@
     <Compile Include="Data\LocalizedStrings.cs" />
     <Compile Include="Framework\Extensions.cs" />
     <Compile Include="Framework\Pair.cs" />
+    <Compile Include="Framework\Persistence\IPostSerializationCallback.cs" />
     <Compile Include="Framework\Persistence\PersistableAttribute.cs" />
     <Compile Include="Framework\Persistence\PersistAssist.cs" />
     <Compile Include="Framework\Persistence\PersistContext.cs" />
@@ -102,6 +103,8 @@
     <Compile Include="Framework\Persistence\PersistObject.cs" />
     <Compile Include="Framework\Persistence\PersistSurrogate.cs" />
     <Compile Include="Framework\Persistence\PersistType.cs" />
+    <Compile Include="Framework\Persistence\SerializationInfoCache.cs" />
+    <Compile Include="Framework\Persistence\serializationinfocachelist.cs" />
     <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
@@ -241,15 +244,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Data\Extensions.cs" />
-    <Compile Include="Data\IPostSerializationCallback.cs" />
     <Compile Include="Data\RecordBuilder.cs" />
     <Compile Include="Data\Records.cs" />
     <Compile Include="Data\RecordsRecord.cs" />
     <Compile Include="Data\Group.cs">
       <SubType>code</SubType>
     </Compile>
-    <Compile Include="Data\SerializationInfoCache.cs" />
-    <Compile Include="Data\serializationinfocachelist.cs" />
     <Compile Include="Data\Subrecord.cs" />
     <Compile Include="Data\SubrecordElement.cs" />
     <Compile Include="UI\Docking\BaseDockContent.cs">

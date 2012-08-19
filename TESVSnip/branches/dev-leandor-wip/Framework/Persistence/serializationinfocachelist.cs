@@ -1,4 +1,4 @@
-namespace TESVSnip.Data
+namespace TESVSnip.Framework.Persistence
 {
     using System;
     using System.Collections;
@@ -35,7 +35,7 @@ namespace TESVSnip.Data
         ///   is less than zero.
         /// </exception>
         /// <remarks>
-        /// Please refer to <see cref="ArrayList(Int32)"/> for details.
+        /// Please refer to <see cref="ArrayList(int)"/> for details.
         /// </remarks>
         public SerializationInfoCacheList(int capacity)
             : base(capacity)
