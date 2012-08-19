@@ -92,6 +92,13 @@
     <Compile Include="Collections\PropertyComparer.cs" />
     <Compile Include="Collections\PropertyComparerCollection.cs" />
     <Compile Include="Collections\ValueComparer.cs" />
+    <Compile Include="Framework\Persistence\PersistableAttribute.cs" />
+    <Compile Include="Framework\Persistence\PersistAssist.cs" />
+    <Compile Include="Framework\Persistence\PersistContext.cs" />
+    <Compile Include="Framework\Persistence\PersistContextStates.cs" />
+    <Compile Include="Framework\Persistence\PersistObject.cs" />
+    <Compile Include="Framework\Persistence\PersistSurrogate.cs" />
+    <Compile Include="Framework\Persistence\PersistType.cs" />
     <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
@@ -232,13 +239,6 @@
     </Compile>
     <Compile Include="Data\Extensions.cs" />
     <Compile Include="Data\IPostSerializationCallback.cs" />
-    <Compile Include="Data\PersistableAttribute.cs" />
-    <Compile Include="Data\persistassist.cs" />
-    <Compile Include="Data\PersistContext.cs" />
-    <Compile Include="Data\PersistContextStates.cs" />
-    <Compile Include="Data\PersistObject.cs" />
-    <Compile Include="Data\PersistSurrogate.cs" />
-    <Compile Include="Data\PersistType.cs" />
     <Compile Include="Data\RecordBuilder.cs" />
     <Compile Include="Data\Records.cs" />
     <Compile Include="Data\RecordsRecord.cs" />

@@ -1,8 +1,10 @@
-namespace TESVSnip.Data
+namespace TESVSnip.Framework.Persistence
 {
     using System;
     using System.Collections;
     using System.Runtime.Serialization;
+
+    using TESVSnip.Data;
 
     /// <summary>
     /// </summary>
