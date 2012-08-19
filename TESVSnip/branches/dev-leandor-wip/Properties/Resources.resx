@@ -143,7 +143,7 @@
     <value>Cannot copy a plugin</value>
   </data>
   <data name="Filtering" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Controls\ObjectListView\Resources\filter1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Vendor\ObjectListView\Resources\filter1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="edit_add" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\edit_add.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -158,7 +158,7 @@
     <value>..\Resources\Find.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SortAscending" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Controls\ObjectListView\Resources\sort-ascending1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Vendor\ObjectListView\Resources\sort-ascending1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="cancel" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\cancel.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -188,7 +188,7 @@ Would you like to configure which Records to exclude?</value>
     <value>..\Resources\RolledBack.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ColumnFilterIndicator" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Controls\ObjectListView\Resources\filter-icons31.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Vendor\ObjectListView\Resources\filter-icons31.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="up" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\up.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -226,7 +226,7 @@ Are you sure you wish to continue?</value>
     <value>..\Resources\move_task_down.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SortDescending" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Controls\ObjectListView\Resources\sort-descending1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Vendor\ObjectListView\Resources\sort-descending1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="fileexport" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\fileexport.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -284,7 +284,7 @@ Are you sure you wish to continue?</value>
     <value>Missing Plugin</value>
   </data>
   <data name="ClearFiltering" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Controls\ObjectListView\Resources\clear-filter1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Vendor\ObjectListView\Resources\clear-filter1.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DeleteNode" xml:space="preserve">
     <value>Delete Node</value>
