@@ -736,6 +736,17 @@
   <ItemGroup>
     <Content Include="build\buildver.txt" />
     <Content Include="Vendor\ObjectListView\CustomDictionary.xml" />
+    <Content Include="Vendor\ObjectListView\Resources\clear-filter.png" />
+    <Content Include="Vendor\ObjectListView\Resources\clear-filter1.png" />
+    <Content Include="Vendor\ObjectListView\Resources\coffee.jpg" />
+    <Content Include="Vendor\ObjectListView\Resources\filter-icons3.png" />
+    <Content Include="Vendor\ObjectListView\Resources\filter-icons31.png" />
+    <Content Include="Vendor\ObjectListView\Resources\filter.png" />
+    <Content Include="Vendor\ObjectListView\Resources\filter1.png" />
+    <Content Include="Vendor\ObjectListView\Resources\sort-ascending.png" />
+    <Content Include="Vendor\ObjectListView\Resources\sort-ascending1.png" />
+    <Content Include="Vendor\ObjectListView\Resources\sort-descending.png" />
+    <Content Include="Vendor\ObjectListView\Resources\sort-descending1.png" />
     <Content Include="ZLibInterface\DotZLib\LICENSE_1_0.txt" />
     <Content Include="ZLibInterface\DotZLib\readme.txt" />
     <Content Include="zlib1.dll">
