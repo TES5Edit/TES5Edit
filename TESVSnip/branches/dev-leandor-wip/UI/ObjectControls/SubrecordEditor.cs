@@ -7,7 +7,7 @@
     using System.Runtime.InteropServices;
     using System.Windows.Forms;
 
-    using TESVSnip.Collections;
+    using TESVSnip.Framework.Collections;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.UI.RecordControls;

@@ -6,7 +6,7 @@
     using System.Linq;
     using System.Windows.Forms;
 
-    using TESVSnip.Collections;
+    using TESVSnip.Framework.Collections;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.UI.Forms;

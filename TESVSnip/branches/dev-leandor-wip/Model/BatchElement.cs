@@ -4,7 +4,7 @@
     using System.Globalization;
     using System.Linq;
 
-    using TESVSnip.Collections;
+    using TESVSnip.Framework.Collections;
     using TESVSnip.Main;
 
     internal class BatchElement : BatchCriteria

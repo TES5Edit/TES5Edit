@@ -1,4 +1,4 @@
-namespace TESVSnip.Collections
+namespace TESVSnip.Framework.Collections
 {
     using System;
     using System.Collections;

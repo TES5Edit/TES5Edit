@@ -12,7 +12,6 @@
 
     using ScriptCompiler;
 
-    using TESVSnip.Collections;
     using TESVSnip.Data;
     using TESVSnip.Main;
     using TESVSnip.Model;

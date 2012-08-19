@@ -85,10 +85,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\AdvancedList.cs" />
-    <Compile Include="Collections\PropertyComparer.cs" />
-    <Compile Include="Collections\PropertyComparerCollection.cs" />
-    <Compile Include="Collections\ValueComparer.cs" />
+    <Compile Include="Framework\Collections\AdvancedList.cs" />
+    <Compile Include="Framework\Collections\PropertyComparer.cs" />
+    <Compile Include="Framework\Collections\PropertyComparerCollection.cs" />
+    <Compile Include="Framework\Collections\ValueComparer.cs" />
     <Compile Include="Data\LocalizedString.cs" />
     <Compile Include="Data\LocalizedStringDict.cs" />
     <Compile Include="Data\LocalizedStringFormat.cs" />
@@ -439,7 +439,7 @@
     <Compile Include="UI\Forms\HexDataEdit.designer.cs">
       <DependentUpon>HexDataEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="Collections\ordereddictionary.cs" />
+    <Compile Include="Framework\Collections\ordereddictionary.cs" />
     <Compile Include="UI\ObjectControls\PluginTreeView.cs">
       <SubType>UserControl</SubType>
     </Compile>
