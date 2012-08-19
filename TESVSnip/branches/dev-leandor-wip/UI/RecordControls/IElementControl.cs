@@ -1,22 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
-
-namespace TESVSnip.RecordControls
+﻿namespace TESVSnip.RecordControls
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Windows.Forms;
+
     using TESVSnip.Main;
 
     internal interface IElementControl
     {
-        ElementStructure Element { get; set; }
-        ArraySegment<byte> Data { get; set; }
-        dFormIDLookupR formIDLookup { get; set; }
-        dFormIDScanRec formIDScan { get; set; }
-        dLStringLookup strIDLookup { get; set; }
+        event EventHandler DataChanged;
+
         bool Changed { get; set; }
 
+        ArraySegment<byte> Data { get; set; }
+
+        ElementStructure Element { get; set; }
+
+        dFormIDLookupR formIDLookup { get; set; }
+
+        dFormIDScanRec formIDScan { get; set; }
+
+        dLStringLookup strIDLookup { get; set; }
+
         void CommitChanges();
-        event EventHandler DataChanged;
     }
 
     internal interface IOuterElementControl : IElementControl
@@ -26,8 +32,10 @@ namespace TESVSnip.RecordControls
 
     internal interface ITextElementControl : IElementControl
     {
-        Label LabelType { get; }
         Label Label { get; }
+
+        Label LabelType { get; }
+
         TextBoxBase TextBox { get; }
     }
 

@@ -1,43 +1,15 @@
-﻿using System;
-using System.Windows.Forms;
-
-namespace TESVSnip.RecordControls
+﻿namespace TESVSnip.RecordControls
 {
+    using System;
+    using System.Windows.Forms;
+
     using TESVSnip.Main;
 
     internal partial class OptionsElement : TextElement
     {
-        private class comboBoxItem
-        {
-            public readonly string name;
-            public readonly int value;
-
-            public comboBoxItem(string name, int value)
-            {
-                this.name = name;
-                this.value = value;
-            }
-
-            public override string ToString()
-            {
-                return name;
-            }
-        }
-
-
         public OptionsElement()
         {
-            InitializeComponent();
-        }
-
-        protected override void UpdateElement()
-        {
-            base.UpdateElement();
-        }
-
-        protected override void UpdateLabel()
-        {
-            base.UpdateLabel();
+            this.InitializeComponent();
         }
 
         protected override void UpdateAllControls()
@@ -65,23 +37,46 @@ namespace TESVSnip.RecordControls
                         value = 0;
                         break;
                 }
-                cboOptions.Items.Clear();
+
+                this.cboOptions.Items.Clear();
                 int idx = -1;
                 for (int j = 0; j < element.options.Length; j += 2)
                 {
                     int cbVal;
                     if (int.TryParse(element.options[j + 1], out cbVal))
                     {
-                        cboOptions.Items.Add(new comboBoxItem(element.options[j], cbVal));
+                        this.cboOptions.Items.Add(new comboBoxItem(element.options[j], cbVal));
                         if (cbVal == value)
-                            idx = cboOptions.Items.Count - 1;
+                        {
+                            idx = this.cboOptions.Items.Count - 1;
+                        }
                     }
                 }
-                if (idx < cboOptions.Items.Count)
-                    cboOptions.SelectedIndex = idx;
+
+                if (idx < this.cboOptions.Items.Count)
+                {
+                    this.cboOptions.SelectedIndex = idx;
+                }
                 else
-                    cboOptions.SelectedIndex = -1;
+                {
+                    this.cboOptions.SelectedIndex = -1;
+                }
             }
+        }
+
+        protected override void UpdateElement()
+        {
+            base.UpdateElement();
+        }
+
+        protected override void UpdateLabel()
+        {
+            base.UpdateLabel();
+        }
+
+        private void cboOptions_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = true;
         }
 
         private void cboOptions_SelectedIndexChanged(object sender, EventArgs e)
@@ -106,7 +101,8 @@ namespace TESVSnip.RecordControls
                     oldIndex = -1;
                     break;
             }
-            var cbi = cboOptions.SelectedItem as comboBoxItem;
+
+            var cbi = this.cboOptions.SelectedItem as comboBoxItem;
             if (cbi != null)
             {
                 int newIndex = cbi.value;
@@ -130,15 +126,29 @@ namespace TESVSnip.RecordControls
                             SetCurrentData(new ArraySegment<byte>(TypeConverter.si2h(newIndex)));
                             break;
                     }
+
                     Changed = true;
                     UpdateText();
                 }
             }
         }
 
-        private void cboOptions_KeyPress(object sender, KeyPressEventArgs e)
+        private class comboBoxItem
         {
-            e.Handled = true;
+            public readonly string name;
+
+            public readonly int value;
+
+            public comboBoxItem(string name, int value)
+            {
+                this.name = name;
+                this.value = value;
+            }
+
+            public override string ToString()
+            {
+                return this.name;
+            }
         }
     }
 }

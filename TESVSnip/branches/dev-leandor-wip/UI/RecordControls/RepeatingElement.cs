@@ -1,81 +1,120 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
-
-namespace TESVSnip.RecordControls
+﻿namespace TESVSnip.RecordControls
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Drawing;
+    using System.Windows.Forms;
+
     using TESVSnip.Collections;
     using TESVSnip.Main;
 
     internal partial class RepeatingElement : BaseElement, IOuterElementControl, IGroupedElementControl
     {
-        private IElementControl innerControl;
-        private readonly AdvancedList<ArraySegment<byte>> elements = new AdvancedList<ArraySegment<byte>>();
         private readonly BindingSource bs = new BindingSource();
+
+        private readonly AdvancedList<ArraySegment<byte>> elements = new AdvancedList<ArraySegment<byte>>();
+
         private bool inUpdatePosition;
+
+        private IElementControl innerControl;
 
         public RepeatingElement()
         {
-            InitializeComponent();
-            bs.DataSource = elements;
-            bindingNavigator.BindingSource = bs;
-            bs.CurrentChanged += bs_CurrentChanged;
+            this.InitializeComponent();
+            this.bs.DataSource = this.elements;
+            this.bindingNavigator.BindingSource = this.bs;
+            this.bs.CurrentChanged += this.bs_CurrentChanged;
         }
 
-        private void bs_CurrentChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Data for overall points at.
+        /// </summary>
+        /// <value>
+        /// The data.
+        /// </value>
+        public override ArraySegment<byte> Data
         {
-            if (innerControl != null)
+            get
             {
-                if (bs.Current != null)
+                throw new ApplicationException("Data not valid");
+            }
+
+            set
+            {
+                throw new ApplicationException("Data not valid");
+            }
+        }
+
+        public IList<ArraySegment<byte>> Elements
+        {
+            get
+            {
+                return this.elements;
+            }
+        }
+
+        public IElementControl InnerControl
+        {
+            get
+            {
+                return this.innerControl;
+            }
+
+            set
+            {
+                if (this.innerControl != value)
                 {
-                    var data = (ArraySegment<byte>) bs.Current;
-                    innerControl.Data = data;
-                }
-                else
-                {
-                    innerControl.Data = default(ArraySegment<byte>);
+                    if (this.innerControl != null)
+                    {
+                        this.innerControl.DataChanged -= this.innerControl_DataChanged;
+                    }
+
+                    this.innerControl = value;
+                    this.controlPanel.Controls.Clear();
+                    var c = this.innerControl as Control;
+                    SuspendLayout();
+                    if (c != null)
+                    {
+                        c.Dock = DockStyle.Fill;
+                        c.MinimumSize = new Size(Width - c.Left - 24, c.Height - this.controlPanel.Height + c.MinimumSize.Height + 8);
+                        MinimumSize = new Size(Width, Size.Height - this.controlPanel.Height + c.MinimumSize.Height + 16);
+                        this.controlPanel.MinimumSize = new Size(c.MinimumSize.Width, c.MinimumSize.Height + 8);
+                        this.controlPanel.Controls.Add(c);
+
+                        // this.Size = this.MinimumSize;
+                    }
+
+                    ResumeLayout();
+                    if (this.innerControl != null)
+                    {
+                        this.innerControl.DataChanged += this.innerControl_DataChanged;
+                    }
                 }
             }
         }
 
-        #region IGroupedElementControl Members
-
-        public IList<ArraySegment<byte>> Elements
-        {
-            get { return elements; }
-        }
-
-
-        /// <summary>
-        /// Data for overall points at 
-        /// </summary>
-        public override ArraySegment<byte> Data
-        {
-            get { throw new ApplicationException("Data not valid"); }
-            set { throw new ApplicationException("Data not valid"); }
-        }
-
-        #endregion
-
         protected override ArraySegment<byte> GetCurrentData()
         {
-            if (bs.Count > 0 && bs.Position >= 0 && bs.Position < bs.Count)
-                return elements[bs.Position];
+            if (this.bs.Count > 0 && this.bs.Position >= 0 && this.bs.Position < this.bs.Count)
+            {
+                return this.elements[this.bs.Position];
+            }
+
             return default(ArraySegment<byte>);
         }
 
         /// <summary>
-        /// set data for currently selected element
+        /// Set data for currently selected element.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">
+        /// </param>
         protected override void SetCurrentData(ArraySegment<byte> value)
         {
-            if (!inUpdatePosition)
+            if (!this.inUpdatePosition)
             {
-                if (bs.Count > 0 && bs.Position >= 0 && bs.Position < bs.Count)
+                if (this.bs.Count > 0 && this.bs.Position >= 0 && this.bs.Position < this.bs.Count)
                 {
-                    elements[bs.Position] = value;
+                    this.elements[this.bs.Position] = value;
                 }
             }
         }
@@ -84,69 +123,28 @@ namespace TESVSnip.RecordControls
         {
             if (Element != null && !string.IsNullOrEmpty(Element.name))
             {
-                groupBox1.Text = string.Format("{0}: {1}", Element.type, Element.name)
-                                 + (!string.IsNullOrEmpty(Element.desc) ? (" (" + Element.desc + ")") : "");
+                this.groupBox1.Text = string.Format("{0}: {1}", Element.type, Element.name) + (!string.IsNullOrEmpty(Element.desc) ? (" (" + Element.desc + ")") : string.Empty);
             }
-        }
-
-        public IElementControl InnerControl
-        {
-            get { return innerControl; }
-            set
-            {
-                if (innerControl != value)
-                {
-                    if (innerControl != null)
-                        innerControl.DataChanged -= innerControl_DataChanged;
-
-                    innerControl = value;
-                    controlPanel.Controls.Clear();
-                    var c = innerControl as Control;
-                    SuspendLayout();
-                    if (c != null)
-                    {
-                        c.Dock = DockStyle.Fill;
-                        c.MinimumSize = new Size(Width - c.Left - 24,
-                                                 c.Height - controlPanel.Height + c.MinimumSize.Height + 8);
-                        MinimumSize = new Size(Width, Size.Height - controlPanel.Height + c.MinimumSize.Height + 16);
-                        controlPanel.MinimumSize = new Size(c.MinimumSize.Width, c.MinimumSize.Height + 8);
-                        controlPanel.Controls.Add(c);
-                        //this.Size = this.MinimumSize;
-                    }
-                    ResumeLayout();
-                    if (innerControl != null)
-                        innerControl.DataChanged += innerControl_DataChanged;
-                }
-            }
-        }
-
-        private void innerControl_DataChanged(object sender, EventArgs e)
-        {
-            SetCurrentData(innerControl.Data);
         }
 
         private void RepeatingElement_Resize(object sender, EventArgs e)
         {
-            if (innerControl != null)
+            if (this.innerControl != null)
             {
-                var c = innerControl as Control;
-                //c.MinimumSize = new Size(this.Width - c.Left - 24, this.MinimumSize.Height);
-            }
-        }
+                var c = this.innerControl as Control;
 
-        private void bindingNavigatorPositionItem_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                e.Handled = true;
+                // c.MinimumSize = new Size(this.Width - c.Left - 24, this.MinimumSize.Height);
             }
         }
 
         private void bindingNavigatorAddNewItem2_Click(object sender, EventArgs e)
         {
             // save current changes prior to adding new elements
-            if (innerControl != null)
-                innerControl.CommitChanges();
+            if (this.innerControl != null)
+            {
+                this.innerControl.CommitChanges();
+            }
+
             if (Element != null)
             {
                 var bytes = new byte[0];
@@ -172,21 +170,52 @@ namespace TESVSnip.RecordControls
                         bytes = new byte[2];
                         break;
                 }
-                elements.Add(new ArraySegment<byte>(bytes));
+
+                this.elements.Add(new ArraySegment<byte>(bytes));
             }
             else
             {
-                elements.Add(default(ArraySegment<byte>));
+                this.elements.Add(default(ArraySegment<byte>));
             }
+
             try
             {
-                inUpdatePosition = true;
-                bs.MoveLast();
+                this.inUpdatePosition = true;
+                this.bs.MoveLast();
             }
             finally
             {
-                inUpdatePosition = false;
+                this.inUpdatePosition = false;
             }
+        }
+
+        private void bindingNavigatorPositionItem_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void bs_CurrentChanged(object sender, EventArgs e)
+        {
+            if (this.innerControl != null)
+            {
+                if (this.bs.Current != null)
+                {
+                    var data = (ArraySegment<byte>)this.bs.Current;
+                    this.innerControl.Data = data;
+                }
+                else
+                {
+                    this.innerControl.Data = default(ArraySegment<byte>);
+                }
+            }
+        }
+
+        private void innerControl_DataChanged(object sender, EventArgs e)
+        {
+            this.SetCurrentData(this.innerControl.Data);
         }
     }
 }

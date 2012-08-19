@@ -1,80 +1,89 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
-
-namespace TESVSnip.RecordControls
+﻿namespace TESVSnip.RecordControls
 {
+    using System;
+    using System.Drawing;
+    using System.Windows.Forms;
+
     internal partial class OptionalElement : BaseElement, IOuterElementControl
     {
         private IElementControl innerControl;
 
         public OptionalElement()
         {
-            InitializeComponent();
-            chkUseValue.Checked = false;
-            UpdateStatus();
+            this.InitializeComponent();
+            this.chkUseValue.Checked = false;
+            this.UpdateStatus();
         }
 
         public override ArraySegment<byte> Data
         {
             get
             {
-                return chkUseValue.Checked && innerControl != null
-                           ? innerControl.Data
-                           : default(ArraySegment<byte>);
+                return this.chkUseValue.Checked && this.innerControl != null ? this.innerControl.Data : default(ArraySegment<byte>);
             }
+
             set
             {
-                if (InnerControl != null)
+                if (this.InnerControl != null)
                 {
-                    InnerControl.Data = value;
-                    chkUseValue.Checked = innerControl != null && innerControl.Data.Count > 0;
+                    this.InnerControl.Data = value;
+                    this.chkUseValue.Checked = this.innerControl != null && this.innerControl.Data.Count > 0;
                 }
-                UpdateAllControls();
+
+                this.UpdateAllControls();
             }
         }
 
         public IElementControl InnerControl
         {
-            get { return innerControl; }
+            get
+            {
+                return this.innerControl;
+            }
+
             set
             {
-                if (innerControl != value)
+                if (this.innerControl != value)
                 {
-                    innerControl = value;
-                    controlPanel.Controls.Clear();
-                    var c = innerControl as Control;
+                    this.innerControl = value;
+                    this.controlPanel.Controls.Clear();
+                    var c = this.innerControl as Control;
                     SuspendLayout();
                     if (c != null)
                     {
                         c.Dock = DockStyle.Fill;
-                        controlPanel.MinimumSize = c.MinimumSize;
-                        controlPanel.Controls.Add(c);
-                        MinimumSize = controlPanel.MinimumSize + new Size(0, chkUseValue.Height);
+                        this.controlPanel.MinimumSize = c.MinimumSize;
+                        this.controlPanel.Controls.Add(c);
+                        MinimumSize = this.controlPanel.MinimumSize + new Size(0, this.chkUseValue.Height);
                     }
+
                     ResumeLayout();
-                    UpdateStatus();
+                    this.UpdateStatus();
                 }
             }
-        }
-
-        private void chkUseValue_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateStatus();
-        }
-
-        private void UpdateStatus()
-        {
-            if (innerControl == null)
-                controlPanel.Enabled = false;
-            else
-                controlPanel.Enabled = chkUseValue.Checked;
         }
 
         protected override void UpdateAllControls()
         {
             base.UpdateAllControls();
-            UpdateStatus();
+            this.UpdateStatus();
+        }
+
+        private void UpdateStatus()
+        {
+            if (this.innerControl == null)
+            {
+                this.controlPanel.Enabled = false;
+            }
+            else
+            {
+                this.controlPanel.Enabled = this.chkUseValue.Checked;
+            }
+        }
+
+        private void chkUseValue_CheckedChanged(object sender, EventArgs e)
+        {
+            this.UpdateStatus();
         }
     }
 }
