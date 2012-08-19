@@ -4,6 +4,8 @@ namespace TESVSnip.Main
     using System.Runtime.InteropServices;
     using System.Text;
 
+    using TESVSnip.Framework;
+
     using Encoding = TESVSnip.Encoding;
 
     [StructLayout(LayoutKind.Explicit)]

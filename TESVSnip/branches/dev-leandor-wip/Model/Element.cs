@@ -2,6 +2,7 @@
 {
     using System;
 
+    using TESVSnip.Framework;
     using TESVSnip.Main;
 
     /// <summary>

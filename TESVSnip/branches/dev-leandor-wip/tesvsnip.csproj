@@ -93,6 +93,7 @@
     <Compile Include="Data\LocalizedStringDict.cs" />
     <Compile Include="Data\LocalizedStringFormat.cs" />
     <Compile Include="Data\LocalizedStrings.cs" />
+    <Compile Include="Framework\Extensions.cs" />
     <Compile Include="Framework\Pair.cs" />
     <Compile Include="Framework\Persistence\PersistableAttribute.cs" />
     <Compile Include="Framework\Persistence\PersistAssist.cs" />
@@ -359,7 +360,6 @@
     <Compile Include="UI\Forms\SearchFilterAdvanced.Designer.cs">
       <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
     </Compile>
-    <Compile Include="Main\Extensions.cs" />
     <Compile Include="Main\Compressor.cs" />
     <Compile Include="Main\Conditional.cs" />
     <Compile Include="Main\CondType.cs" />
