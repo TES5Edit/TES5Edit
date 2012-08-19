@@ -1,11 +1,11 @@
-﻿using System;
-using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
-using System.Windows.Forms;
-
-namespace TESVSnip.Forms
+﻿namespace TESVSnip.Forms
 {
+    using System;
+    using System.ComponentModel;
+    using System.Globalization;
+    using System.Linq;
+    using System.Windows.Forms;
+
     using TESVSnip.Collections;
     using TESVSnip.Main;
     using TESVSnip.Model;
@@ -13,161 +13,179 @@ namespace TESVSnip.Forms
     public partial class RecordEditor : UserControl
     {
         private readonly SelectionContext context = new SelectionContext();
-        private Record _record;
-        private uint Flags1;
-        private uint Flags2;
-        private uint Flags3;
-        private uint FormID;
+
         private readonly AdvancedList<SubRecord> subRecords = new AdvancedList<SubRecord>();
+
+        private uint Flags1;
+
+        private uint Flags2;
+
+        private uint Flags3;
+
+        private uint FormID;
+
+        private Record _record;
 
         public RecordEditor()
         {
-            InitializeComponent();
-            comboBox1.SetItems(FlagDefs.RecFlags1,4);
+            this.InitializeComponent();
+            this.comboBox1.SetItems(FlagDefs.RecFlags1, 4);
 
-            subrecordListEditor.SetContext(context);
-            subrecordListEditor.OnEditSubrecord += subrecordListEditor_OnEditSubrecord;
-            subrecordListEditor.SelectionChanged += subrecordListEditor_SelectionChanged;
+            this.subrecordListEditor.SetContext(this.context);
+            this.subrecordListEditor.OnEditSubrecord += this.subrecordListEditor_OnEditSubrecord;
+            this.subrecordListEditor.SelectionChanged += this.subrecordListEditor_SelectionChanged;
         }
 
-        public RecordEditor(Record rec) : this()
+        public RecordEditor(Record rec)
+            : this()
         {
-            Record = rec;
-        }
-
-        private void subrecordListEditor_OnEditSubrecord(SubRecord sr, bool hexView)
-        {
-            elementEditor.SetContext(Record, sr, hexView);
-        }
-
-        private void subrecordListEditor_SelectionChanged(object sender, EventArgs e)
-        {
-            var sr = subrecordListEditor.SubRecord;
-            bool hexview = (sr == null || sr.Structure == null);
-            elementEditor.SetContext(Record, subrecordListEditor.SubRecord, hexview);
+            this.Record = rec;
         }
 
         public Record Record
         {
-            get { return _record; }
+            get
+            {
+                return this._record;
+            }
+
             set
             {
-                if (_record != value)
+                if (this._record != value)
                 {
-                    _record = value;
-                    context.Record = _record;
-                    if (_record != null)
-                        ResetValues();
+                    this._record = value;
+                    this.context.Record = this._record;
+                    if (this._record != null)
+                    {
+                        this.ResetValues();
+                    }
                 }
             }
         }
 
+        private void Apply()
+        {
+            this._record.Name = this.tbName.Text;
+            this._record.Flags1 = this.Flags1;
+            this._record.Flags2 = this.Flags2;
+            this._record.Flags3 = this.Flags3;
+            this._record.FormID = this.FormID;
+            this._record.UpdateShortDescription();
+            this._record.SubRecords.Clear();
+            this.elementEditor.Save();
+            this._record.AddRecords(this.subrecordListEditor.SubRecords.OfType<BaseRecord>());
+        }
+
         private void ResetValues()
         {
-            Flags1 = _record.Flags1;
-            Flags2 = _record.Flags2;
-            Flags3 = _record.Flags3;
-            FormID = _record.FormID;
-            subRecords.Clear();
-            var srs = _record.SubRecords.Select(x => x.Clone()).OfType<SubRecord>().ToArray();
-            _record.MatchRecordStructureToRecord(srs);
-            subRecords.AddRange(srs);
-            subrecordListEditor.SubRecords = subRecords;
+            this.Flags1 = this._record.Flags1;
+            this.Flags2 = this._record.Flags2;
+            this.Flags3 = this._record.Flags3;
+            this.FormID = this._record.FormID;
+            this.subRecords.Clear();
+            var srs = this._record.SubRecords.Select(x => x.Clone()).OfType<SubRecord>().ToArray();
+            this._record.MatchRecordStructureToRecord(srs);
+            this.subRecords.AddRange(srs);
+            this.subrecordListEditor.SubRecords = this.subRecords;
 
-            tbName.Text = _record.Name;
-            tbFormID.Text = _record.FormID.ToString("X8");
-            textBox1.Text = _record.Flags1.ToString("X8");
+            this.tbName.Text = this._record.Name;
+            this.tbFormID.Text = this._record.FormID.ToString("X8");
+            this.textBox1.Text = this._record.Flags1.ToString("X8");
 
             try
             {
-                comboBox1.ItemCheck -= comboBox1_ItemCheck;
-                comboBox1.SetState(_record.Flags1);
+                this.comboBox1.ItemCheck -= this.comboBox1_ItemCheck;
+                this.comboBox1.SetState(this._record.Flags1);
             }
             finally
             {
-                comboBox1.ItemCheck += comboBox1_ItemCheck;
+                this.comboBox1.ItemCheck += this.comboBox1_ItemCheck;
             }
-            tbFlags2.Text = _record.Flags2.ToString("X8");
-            tbFlags3.Text = _record.Flags3.ToString("X8");
+
+            this.tbFlags2.Text = this._record.Flags2.ToString("X8");
+            this.tbFlags3.Text = this._record.Flags3.ToString("X8");
         }
 
-        private void tbFormID_Validating(object sender, CancelEventArgs e)
+        private void bCancel_Click(object sender, EventArgs e)
         {
-            uint value;
-            if (!uint.TryParse(tbFormID.Text, NumberStyles.HexNumber, null, out value))
-            {
-                MainView.PostStatusWarning("Invalid FormID Format");
-                e.Cancel = true;
-            }
-            FormID = value;
+            this.ResetValues();
         }
 
-        private void textBox1_Validating(object sender, CancelEventArgs e)
+        private void bSave_Click(object sender, EventArgs e)
         {
-            uint value;
-            if (!uint.TryParse(textBox1.Text, NumberStyles.HexNumber, null, out value))
-            {
-                MainView.PostStatusWarning("Invalid Flags Number Format");
-                e.Cancel = true;
-            }
-            Flags1 = value;
+            this.Apply();
+        }
+
+        private void comboBox1_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            this.Flags1 = this.comboBox1.GetState();
+            this.textBox1.Text = this.Flags1.ToString("X8");
+        }
+
+        private void comboBox1_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            this.Flags1 = this.comboBox1.GetState();
+            this.textBox1.Text = this.Flags1.ToString("X8");
+        }
+
+        private void subrecordListEditor_OnEditSubrecord(SubRecord sr, bool hexView)
+        {
+            this.elementEditor.SetContext(this.Record, sr, hexView);
+        }
+
+        private void subrecordListEditor_SelectionChanged(object sender, EventArgs e)
+        {
+            var sr = this.subrecordListEditor.SubRecord;
+            bool hexview = sr == null || sr.Structure == null;
+            this.elementEditor.SetContext(this.Record, this.subrecordListEditor.SubRecord, hexview);
         }
 
         private void tbFlags2_Validating(object sender, CancelEventArgs e)
         {
             uint value;
-            if (!uint.TryParse(tbFlags2.Text, NumberStyles.HexNumber, null, out value))
+            if (!uint.TryParse(this.tbFlags2.Text, NumberStyles.HexNumber, null, out value))
             {
                 MainView.PostStatusWarning("Invalid Flags Number Format");
                 e.Cancel = true;
             }
-            Flags2 = value;
+
+            this.Flags2 = value;
         }
 
         private void tbFlags3_Validating(object sender, CancelEventArgs e)
         {
             uint value;
-            if (!uint.TryParse(tbFlags3.Text, NumberStyles.HexNumber, null, out value))
+            if (!uint.TryParse(this.tbFlags3.Text, NumberStyles.HexNumber, null, out value))
             {
                 MainView.PostStatusWarning("Invalid Flags Number Format");
                 e.Cancel = true;
             }
-            Flags3 = value;
+
+            this.Flags3 = value;
         }
 
-        private void comboBox1_SelectionChangeCommitted(object sender, EventArgs e)
+        private void tbFormID_Validating(object sender, CancelEventArgs e)
         {
-            Flags1 = comboBox1.GetState();
-            textBox1.Text = Flags1.ToString("X8");
+            uint value;
+            if (!uint.TryParse(this.tbFormID.Text, NumberStyles.HexNumber, null, out value))
+            {
+                MainView.PostStatusWarning("Invalid FormID Format");
+                e.Cancel = true;
+            }
+
+            this.FormID = value;
         }
 
-        private void bSave_Click(object sender, EventArgs e)
+        private void textBox1_Validating(object sender, CancelEventArgs e)
         {
-            Apply();
-        }
+            uint value;
+            if (!uint.TryParse(this.textBox1.Text, NumberStyles.HexNumber, null, out value))
+            {
+                MainView.PostStatusWarning("Invalid Flags Number Format");
+                e.Cancel = true;
+            }
 
-        private void bCancel_Click(object sender, EventArgs e)
-        {
-            ResetValues();
-        }
-
-        private void Apply()
-        {
-            _record.Name = tbName.Text;
-            _record.Flags1 = Flags1;
-            _record.Flags2 = Flags2;
-            _record.Flags3 = Flags3;
-            _record.FormID = FormID;
-            _record.UpdateShortDescription();
-            _record.SubRecords.Clear();
-            elementEditor.Save();
-            _record.AddRecords(subrecordListEditor.SubRecords.OfType<BaseRecord>());
-        }
-
-        private void comboBox1_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            Flags1 = comboBox1.GetState();
-            textBox1.Text = Flags1.ToString("X8");
+            this.Flags1 = value;
         }
     }
 }
