@@ -1,4 +1,4 @@
-﻿namespace TESVSnip.ObjectControls
+﻿namespace TESVSnip.UI.ObjectControls
 {
     using System;
     using System.Collections;

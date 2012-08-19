@@ -19,12 +19,13 @@ using TESVSnip.Forms;
 using TESVSnip.Properties;
 using WeifenLuo.WinFormsUI.Docking;
 using Timer = System.Threading.Timer;
-using TESVSnip.ObjectControls;
+
 using TESVSnip.Model;
 
 namespace TESVSnip
 {
     using TESVSnip.Main;
+    using TESVSnip.UI.ObjectControls;
 
     internal delegate string dFormIDLookupS(string id);
     internal delegate string dFormIDLookupI(uint id);

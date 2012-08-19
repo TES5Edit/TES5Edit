@@ -1,5 +1,5 @@
 using TESVSnip.Forms;
-using TESVSnip.ObjectControls;
+
 namespace TESVSnip {
     partial class MainView {
         /// <summary>

@@ -1,4 +1,4 @@
-﻿namespace TESVSnip.Forms
+﻿namespace TESVSnip.UI.ObjectControls
 {
     using System;
     using System.ComponentModel;

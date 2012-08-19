@@ -1,5 +1,7 @@
 ﻿namespace TESVSnip.Docking
 {
+    using TESVSnip.UI.ObjectControls;
+
     partial class RecordSearchForm
     {
         /// <summary>
@@ -28,7 +30,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.subrecordPanel = new TESVSnip.ObjectControls.RecordSearch();
+            this.subrecordPanel = new RecordSearch();
             ((System.ComponentModel.ISupportInitialize)(this.subrecordPanel)).BeginInit();
             this.SuspendLayout();
             // 
@@ -61,6 +63,6 @@
 
         #endregion
 
-        private TESVSnip.ObjectControls.RecordSearch subrecordPanel;
+        private RecordSearch subrecordPanel;
     }
 }

@@ -1,5 +1,7 @@
 ﻿namespace TESVSnip.Docking
 {
+    using TESVSnip.UI.ObjectControls;
+
     partial class PluginTreeContent
     {
         /// <summary>
@@ -29,7 +31,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PluginTreeContent));
-            this.pluginTreeControl = new TESVSnip.ObjectControls.PluginTreeView();
+            this.pluginTreeControl = new PluginTreeView();
             ((System.ComponentModel.ISupportInitialize)(this.pluginTreeControl)).BeginInit();
             this.SuspendLayout();
             // 
@@ -64,6 +66,6 @@
 
         #endregion
 
-        private TESVSnip.ObjectControls.PluginTreeView pluginTreeControl;
+        private PluginTreeView pluginTreeControl;
     }
 }

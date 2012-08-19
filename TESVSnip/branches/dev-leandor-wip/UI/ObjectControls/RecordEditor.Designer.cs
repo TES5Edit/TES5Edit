@@ -1,6 +1,4 @@
-﻿using TESVSnip.ObjectControls;
-
-namespace TESVSnip.Forms
+﻿namespace TESVSnip.UI.ObjectControls
 {
     partial class RecordEditor
     {
@@ -15,9 +13,9 @@ namespace TESVSnip.Forms
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (this.components != null))
             {
-                components.Dispose();
+                this.components.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -43,10 +41,10 @@ namespace TESVSnip.Forms
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tbName = new System.Windows.Forms.TextBox();
-            this.subrecordListEditor = new TESVSnip.ObjectControls.SubrecordListEditor();
+            this.subrecordListEditor = new SubrecordListEditor();
             this.bCancel = new System.Windows.Forms.Button();
             this.bSave = new System.Windows.Forms.Button();
-            this.elementEditor = new TESVSnip.Forms.SubrecordEditor();
+            this.elementEditor = new SubrecordEditor();
             this.horizontalSplitContainer.Panel1.SuspendLayout();
             this.horizontalSplitContainer.Panel2.SuspendLayout();
             this.horizontalSplitContainer.SuspendLayout();

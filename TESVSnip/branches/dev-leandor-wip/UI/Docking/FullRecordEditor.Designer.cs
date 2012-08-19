@@ -2,6 +2,8 @@
 
 namespace TESVSnip.Docking
 {
+    using TESVSnip.UI.ObjectControls;
+
     partial class FullRecordEditor
     {
         /// <summary>
@@ -30,7 +32,7 @@ namespace TESVSnip.Docking
         /// </summary>
         private void InitializeComponent()
         {
-            this.panelRecordEditor = new TESVSnip.Forms.RecordEditor();
+            this.panelRecordEditor = new RecordEditor();
             this.SuspendLayout();
             // 
             // panelRecordEditor
