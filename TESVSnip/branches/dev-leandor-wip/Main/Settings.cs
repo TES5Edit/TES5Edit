@@ -1,4 +1,4 @@
-namespace TESVSnip
+namespace TESVSnip.Main
 {
     using System.Drawing;
     using System.IO;

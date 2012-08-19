@@ -1,4 +1,4 @@
-﻿namespace TESVSnip
+﻿namespace TESVSnip.Main
 {
     internal struct Pair<A, B>
     {

@@ -1,8 +1,10 @@
-namespace TESVSnip
+namespace TESVSnip.Main
 {
     using System;
     using System.Runtime.InteropServices;
     using System.Text;
+
+    using Encoding = TESVSnip.Encoding;
 
     [StructLayout(LayoutKind.Explicit)]
     internal struct TypeConverter
