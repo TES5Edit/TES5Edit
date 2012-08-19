@@ -92,32 +92,32 @@
     <Compile Include="Collections\PropertyComparer.cs" />
     <Compile Include="Collections\PropertyComparerCollection.cs" />
     <Compile Include="Collections\ValueComparer.cs" />
-    <Compile Include="Controls\ballontooltip.cs">
+    <Compile Include="Vendor\Controls\ballontooltip.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\bindinglistview.cs">
+    <Compile Include="Vendor\Controls\bindinglistview.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\CheckedComboBox.cs">
+    <Compile Include="Vendor\Controls\CheckedComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\objectbindinglistview.cs">
+    <Compile Include="Vendor\Controls\objectbindinglistview.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\CustomComboBox.cs">
+    <Compile Include="Vendor\Controls\CustomComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\CustomTreeControl.cs">
+    <Compile Include="Vendor\Controls\CustomTreeControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\FlagComboBox.cs">
+    <Compile Include="Vendor\Controls\FlagComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\FlagComboBox.Designer.cs">
+    <Compile Include="Vendor\Controls\FlagComboBox.Designer.cs">
       <DependentUpon>FlagComboBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\History.cs" />
-    <Compile Include="Controls\nativemethods.cs" />
+    <Compile Include="Vendor\Controls\History.cs" />
+    <Compile Include="Vendor\Controls\nativemethods.cs" />
     <Compile Include="Vendor\HexBox\ByteCollection.cs" />
     <Compile Include="Vendor\HexBox\DataBlock.cs" />
     <Compile Include="Vendor\HexBox\DataMap.cs" />
@@ -216,14 +216,14 @@
     <Compile Include="Vendor\ObjectListView\VirtualObjectListView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\OldNewEvent.cs" />
-    <Compile Include="Controls\PopupControl.cs">
+    <Compile Include="Vendor\Controls\OldNewEvent.cs" />
+    <Compile Include="Vendor\Controls\PopupControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\RichTextBoxEx.cs">
+    <Compile Include="Vendor\Controls\RichTextBoxEx.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\virtuallistview.cs">
+    <Compile Include="Vendor\Controls\virtuallistview.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Data\Extensions.cs" />
@@ -490,22 +490,22 @@
     <Compile Include="ZLibInterface\DotZLib\Info.cs" />
     <Compile Include="ZLibInterface\DotZLib\ZLibException.cs" />
     <Compile Include="ZLibInterface\ZLib.cs" />
-    <EmbeddedResource Include="Controls\ballontooltip.resx">
+    <EmbeddedResource Include="Vendor\Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\bindinglistview.resx">
+    <EmbeddedResource Include="Vendor\Controls\bindinglistview.resx">
       <DependentUpon>bindinglistview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\CustomComboBox.resx">
+    <EmbeddedResource Include="Vendor\Controls\CustomComboBox.resx">
       <DependentUpon>CustomComboBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\objectbindinglistview.resx">
+    <EmbeddedResource Include="Vendor\Controls\objectbindinglistview.resx">
       <DependentUpon>objectbindinglistview.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Vendor\ObjectListView\Utilities\ColumnSelectionForm.resx">
       <DependentUpon>ColumnSelectionForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\virtuallistview.resx">
+    <EmbeddedResource Include="Vendor\Controls\virtuallistview.resx">
       <DependentUpon>virtuallistview.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Docking\BaseDockContent.resx">
