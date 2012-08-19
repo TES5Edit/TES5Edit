@@ -474,12 +474,21 @@
     <Compile Include="RecordControls\HexElement.Designer.cs">
       <DependentUpon>HexElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="ZLibInterface\DotZLib\ChecksumImpl.cs" />
+    <Compile Include="ZLibInterface\DotZLib\AdlerChecksum.cs" />
+    <Compile Include="ZLibInterface\DotZLib\ChecksumGenerator.cs" />
+    <Compile Include="ZLibInterface\DotZLib\ChecksumGeneratorBase.cs" />
     <Compile Include="ZLibInterface\DotZLib\CircularBuffer.cs" />
+    <Compile Include="ZLibInterface\DotZLib\Codec.cs" />
     <Compile Include="ZLibInterface\DotZLib\CodecBase.cs" />
+    <Compile Include="ZLibInterface\DotZLib\CompressLevel.cs" />
+    <Compile Include="ZLibInterface\DotZLib\CRC32Checksum.cs" />
+    <Compile Include="ZLibInterface\DotZLib\DataAvailableHandler.cs" />
     <Compile Include="ZLibInterface\DotZLib\Deflater.cs" />
-    <Compile Include="ZLibInterface\DotZLib\DotZLib.cs" />
+    <Compile Include="ZLibInterface\DotZLib\ZStream.cs" />
+    <Compile Include="ZLibInterface\DotZLib\FlushTypes.cs" />
     <Compile Include="ZLibInterface\DotZLib\Inflater.cs" />
+    <Compile Include="ZLibInterface\DotZLib\Info.cs" />
+    <Compile Include="ZLibInterface\DotZLib\ZLibException.cs" />
     <Compile Include="ZLibInterface\ZLib.cs" />
     <EmbeddedResource Include="Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
