@@ -29,20 +29,6 @@ namespace TESVSnip.UI.Forms
     using Settings = TESVSnip.Properties.Settings;
     using Timer = System.Threading.Timer;
 
-    internal delegate string dFormIDLookupS(string id);
-
-    internal delegate string dFormIDLookupI(uint id);
-
-    internal delegate Record dFormIDLookupR(uint id);
-
-    internal delegate string dLStringLookup(uint id);
-
-    internal delegate string[] dFormIDScan(string type);
-
-    internal delegate Record[] dFormIDScanR(string type);
-
-    internal delegate IEnumerable<KeyValuePair<uint, Record>> dFormIDScanRec(string type);
-
     internal partial class MainView : Form
     {
         private const int WM_SETREDRAW = 0x0b;
