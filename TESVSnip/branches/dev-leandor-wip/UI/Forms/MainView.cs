@@ -18,6 +18,7 @@ namespace TESVSnip.UI.Forms
     using RTF;
 
     using TESVSnip.Data;
+    using TESVSnip.Framework;
     using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;

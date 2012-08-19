@@ -93,6 +93,7 @@
     <Compile Include="Data\LocalizedStringDict.cs" />
     <Compile Include="Data\LocalizedStringFormat.cs" />
     <Compile Include="Data\LocalizedStrings.cs" />
+    <Compile Include="Framework\EnumerableExtensions.cs" />
     <Compile Include="Framework\Extensions.cs" />
     <Compile Include="Framework\Pair.cs" />
     <Compile Include="Framework\Persistence\IPostSerializationCallback.cs" />
@@ -243,7 +244,6 @@
     <Compile Include="Vendor\Controls\virtuallistview.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Data\Extensions.cs" />
     <Compile Include="Data\RecordBuilder.cs" />
     <Compile Include="Data\Records.cs" />
     <Compile Include="Data\RecordsRecord.cs" />

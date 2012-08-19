@@ -1,10 +1,10 @@
-namespace TESVSnip.Data
+namespace TESVSnip.Framework
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
 
-    internal static class Extensions
+    internal static class EnumerableExtensions
     {
         private static readonly Random rand = new Random();
 
