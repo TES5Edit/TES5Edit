@@ -320,26 +320,26 @@ namespace TESVSnip
                    "Size: " + Size.ToString() + " bytes (including header)";
         }
 
-        internal override void SaveData(BinaryWriter bw)
+        internal override void SaveData(BinaryWriter writer)
         {
-            long startpos = bw.BaseStream.Position;
+            long startpos = writer.BaseStream.Position;
             var svSize = (uint) Size;
             var svSize2 = (uint) Size2;
-            WriteString(bw, "GRUP");
-            bw.Write(svSize); // Write uncompressed size for now
-            bw.Write(data);
-            bw.Write(groupType);
-            bw.Write(dateStamp);
-            bw.Write(flags); // should this check for oblivion?
-            foreach (Rec r in Records) r.SaveData(bw);
-            bw.Flush();
-            long curpos = bw.BaseStream.Position;
+            WriteString(writer, "GRUP");
+            writer.Write(svSize); // Write uncompressed size for now
+            writer.Write(data);
+            writer.Write(groupType);
+            writer.Write(dateStamp);
+            writer.Write(flags); // should this check for oblivion?
+            foreach (Rec r in Records) r.SaveData(writer);
+            writer.Flush();
+            long curpos = writer.BaseStream.Position;
             var wrSize = (uint) (curpos - startpos);
             if (wrSize != svSize2) // fix size due to compression
             {
-                bw.BaseStream.Position = startpos + 4;
-                bw.Write(wrSize); // Write the actuall compressed group size
-                bw.BaseStream.Position = curpos;
+                writer.BaseStream.Position = startpos + 4;
+                writer.Write(wrSize); // Write the actuall compressed group size
+                writer.BaseStream.Position = curpos;
             }
         }
 

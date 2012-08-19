@@ -137,22 +137,22 @@ namespace TESVSnip
             Owner = null;
         }
 
-        internal override void SaveData(BinaryWriter bw)
+        internal override void SaveData(BinaryWriter writer)
         {
             if (Data.Length > ushort.MaxValue)
             {
-                WriteString(bw, "XXXX");
-                bw.Write((ushort) 4);
-                bw.Write(Data.Length);
-                WriteString(bw, Name);
-                bw.Write((ushort) 0);
-                bw.Write(Data, 0, Data.Length);
+                WriteString(writer, "XXXX");
+                writer.Write((ushort) 4);
+                writer.Write(Data.Length);
+                WriteString(writer, Name);
+                writer.Write((ushort) 0);
+                writer.Write(Data, 0, Data.Length);
             }
             else
             {
-                WriteString(bw, Name);
-                bw.Write((ushort) Data.Length);
-                bw.Write(Data, 0, Data.Length);
+                WriteString(writer, Name);
+                writer.Write((ushort) Data.Length);
+                writer.Write(Data, 0, Data.Length);
             }
         }
 

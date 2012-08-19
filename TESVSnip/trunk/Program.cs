@@ -8,6 +8,8 @@ using TESVSnip.Properties;
 
 namespace TESVSnip
 {
+    using ZLibInterface;
+
     internal static class Program
     {
         public static string settingsDir { get; set; }
@@ -22,6 +24,8 @@ namespace TESVSnip
         [STAThread]
         private static void Main(string[] args)
         {
+            ZLib.Initialize();
+
             var plugins = new List<string>();
             settingsDir = Environment.CurrentDirectory;
             exeDir = Environment.CurrentDirectory;

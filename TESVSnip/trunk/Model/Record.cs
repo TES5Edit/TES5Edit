@@ -12,10 +12,13 @@ using TESVSnip.Data;
 namespace TESVSnip
 {
     using System.Diagnostics;
+    using ZLibInterface;
 
     [Persistable(Flags = PersistType.DeclaredOnly), Serializable]
     public sealed class Record : Rec, ISerializable, IDeserializationCallback
     {
+        private readonly uint dataSize;
+
         public readonly AdvancedList<SubRecord> SubRecords;
         [Persistable] public uint Flags1;
         [Persistable] public uint Flags2;
@@ -110,6 +113,8 @@ namespace TESVSnip
 
         internal Record(string name, uint dataSize, BinaryReader recordReader, bool oblivion)
         {
+            this.dataSize = dataSize;
+
             SubRecords = new AdvancedList<SubRecord>(1) { AllowSorting = false };
             Name = name;
             Flags1 = recordReader.ReadUInt32();
@@ -129,7 +134,7 @@ namespace TESVSnip
             }
 
             using (var stream = new MemoryStream(recordReader.ReadBytes((int)dataSize))) {
-                using (var dataReader = compressed ? Decompressor.Decompress(stream, dataSize, realSize) : new BinaryReader(stream)) {
+                using (var dataReader = compressed ? ZLib.Decompress(stream, (int)realSize) : new BinaryReader(stream)) {
                     while (dataReader.BaseStream.Position < dataReader.BaseStream.Length) {
                         var type = ReadRecName(dataReader);
                         uint size;
@@ -398,44 +403,53 @@ namespace TESVSnip
 
         #endregion
 
-        internal override void SaveData(BinaryWriter bw)
+        internal override void SaveData(BinaryWriter writer)
         {
-            WriteString(bw, Name);
-            var srSize = (uint) Size;
+            var position = writer.BaseStream.Position;
+            WriteString(writer, Name);
 
-            bool bCompress = false;
-            if (Properties.Settings.Default.UseDefaultRecordCompression)
-            {
-                bCompress = ((Flags1 & 0x00040000) != 0)
-                            || (Properties.Settings.Default.EnableAutoCompress && Compressor.CompressRecord(Name))
-                            || (Properties.Settings.Default.EnableCompressionLimit &&
-                                (srSize >= Properties.Settings.Default.CompressionLimit));
-            }
-            if (bCompress) // compressed
-            {
-                var stream = Compressor.GetSharedStream();
-                using (var writer = Compressor.AllocWriter(stream))
-                    foreach (SubRecord sr in SubRecords) sr.SaveData(writer);
+            uint realSize;
+            var compressed = false;
+            byte[] data;
+            using (var stream = new MemoryStream()) {
 
-                bw.Write((uint) stream.Length + 4); // Size of compressed section + length
-                bw.Write((Flags1 | 0x00040000));
-                bw.Write(FormID);
-                bw.Write(Flags2);
-                bw.Write(Flags3);
+                var dataWriter = new BinaryWriter(stream);
+                foreach (var subRecord in this.SubRecords) {
+                    subRecord.SaveData(dataWriter);
+                }
 
-                stream.Position = 0;
-                bw.Write(srSize); //ideally use writer bytes written but should be same
-                Compressor.CopyTo(bw, stream);
+                realSize = (uint)stream.Length;
+
+                if (Properties.Settings.Default.UseDefaultRecordCompression) {
+                    compressed = ((Flags1 & 0x00040000) != 0) || (Properties.Settings.Default.EnableAutoCompress && Compressor.CompressRecord(Name))
+                                 || (Properties.Settings.Default.EnableCompressionLimit && (realSize >= Properties.Settings.Default.CompressionLimit));
+                }
+
+                data = stream.ToArray();
+                if (compressed) {
+                    data = ZLib.Compress(data);
+                }
             }
-            else
-            {
-                bw.Write(srSize);
-                bw.Write((uint) (Flags1 & ~0x00040000));
-                bw.Write(FormID);
-                bw.Write(Flags2);
-                bw.Write(Flags3);
-                foreach (SubRecord sr in SubRecords) sr.SaveData(bw);
+
+            var dataSize = (uint)data.Length;
+            var flags = this.Flags1 & ~0x00040000U;
+            if (compressed) {
+                dataSize += 4;
+                flags |= 0x00040000;
+
+                Debug.WriteLineIf(this.dataSize != dataSize, string.Format("COMPRESSED RECORD [NAME={0} AT POSITION={1}] SIZE DIFFERS FROM ORIGINAL: ORIGINAL={2} ACTUAL={3}, RAW RECORD SIZE={4}", this.Name, position, this.dataSize, dataSize, realSize));
             }
+
+            writer.Write(dataSize); // Size of compressed section + length
+            writer.Write(flags);
+            writer.Write(FormID);
+            writer.Write(Flags2);
+            writer.Write(Flags3);
+            if (compressed) {
+                writer.Write(realSize);
+            }
+
+            writer.Write(data, 0, data.Length);
         }
 
         internal override List<string> GetIDs(bool lower)

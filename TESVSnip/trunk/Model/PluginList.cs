@@ -97,7 +97,7 @@ namespace TESVSnip
             throw new NotImplementedException();
         }
 
-        internal override void SaveData(BinaryWriter bw)
+        internal override void SaveData(BinaryWriter writer)
         {
             throw new NotImplementedException();
         }

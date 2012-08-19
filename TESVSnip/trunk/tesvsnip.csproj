@@ -426,12 +426,13 @@
     <Compile Include="RecordControls\HexElement.Designer.cs">
       <DependentUpon>HexElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\ChecksumImpl.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\CircularBuffer.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\CodecBase.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\Deflater.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\DotZLib.cs" />
-    <Compile Include="zlib-1.2.3\contrib\dotzlib\DotZLib\Inflater.cs" />
+    <Compile Include="ZLibInterface\DotZLib\ChecksumImpl.cs" />
+    <Compile Include="ZLibInterface\DotZLib\CircularBuffer.cs" />
+    <Compile Include="ZLibInterface\DotZLib\CodecBase.cs" />
+    <Compile Include="ZLibInterface\DotZLib\Deflater.cs" />
+    <Compile Include="ZLibInterface\DotZLib\DotZLib.cs" />
+    <Compile Include="ZLibInterface\DotZLib\Inflater.cs" />
+    <Compile Include="ZLibInterface\ZLib.cs" />
     <EmbeddedResource Include="Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
     </EmbeddedResource>
@@ -575,9 +576,6 @@
       <DependentUpon>TextElement.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="build\tesvsnip.snk" />
-    <None Include="ClassDiagram1.cd" />
-    <None Include="ClassDiagram2.cd" />
-    <None Include="ClassDiagram3.cd" />
     <None Include="Controls\ObjectListView\ObjectListView.FxCop" />
     <None Include="Controls\ObjectListView\ObjectListView.shfb" />
     <None Include="Properties\Settings.settings">
@@ -662,43 +660,6 @@
     <Compile Include="ScriptCompiler\Tokenizer.cs" />
     <Compile Include="Main\Settings.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="SharpZipLib\Checksums\Adler32.cs" />
-    <Compile Include="SharpZipLib\Checksums\CRC32.cs" />
-    <Compile Include="SharpZipLib\Checksums\IChecksum.cs" />
-    <Compile Include="SharpZipLib\Checksums\StrangeCRC.cs" />
-    <Compile Include="SharpZipLib\Core\FileSystemScanner.cs" />
-    <Compile Include="SharpZipLib\Core\INameTransform.cs" />
-    <Compile Include="SharpZipLib\Core\IScanFilter.cs" />
-    <Compile Include="SharpZipLib\Core\NameFilter.cs" />
-    <Compile Include="SharpZipLib\Core\PathFilter.cs" />
-    <Compile Include="SharpZipLib\Core\StreamUtils.cs" />
-    <Compile Include="SharpZipLib\Core\WindowsPathUtils.cs" />
-    <Compile Include="SharpZipLib\SharpZipBaseException.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\Deflater.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\DeflaterConstants.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\DeflaterEngine.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\DeflaterHuffman.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\DeflaterPending.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\Inflater.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\InflaterDynHeader.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\InflaterHuffmanTree.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\PendingBuffer.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\Streams\DeflaterOutputStream.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\Streams\InflaterInputStream.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\Streams\OutputWindow.cs" />
-    <Compile Include="SharpZipLib\Zip\Compression\Streams\StreamManipulator.cs" />
-    <Compile Include="SharpZipLib\Zip\FastZip.cs" />
-    <Compile Include="SharpZipLib\Zip\IEntryFactory.cs" />
-    <Compile Include="SharpZipLib\Zip\WindowsNameTransform.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipConstants.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipEntry.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipEntryFactory.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipException.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipExtraData.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipFile.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipHelperStream.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipNameTransform.cs" />
-    <Compile Include="SharpZipLib\Zip\ZipOutputStream.cs" />
     <Compile Include="Forms\MainView.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -707,7 +668,7 @@
     </Compile>
     <Compile Include="Main\TESsnipParser.cs" />
     <Compile Include="Main\TypeConverter.cs" />
-    <None Include="zlib-1.2.3\contrib\dotzlib\DotZLib.chm" />
+    <None Include="ZLibInterface\DotZLib\DotZLib.chm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tesv_ico.ico" />
@@ -717,25 +678,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="build\buildver.txt" />
-    <Content Include="conf\RecordStructure.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="conf\RecordStructureFormat.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\ScriptFunctions.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\ScriptFunctionsFormat.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\settings.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Controls\ObjectListView\CustomDictionary.xml" />
-    <Content Include="zlib-1.2.3\contrib\dotzlib\LICENSE_1_0.txt" />
-    <Content Include="zlib-1.2.3\contrib\dotzlib\readme.txt" />
+    <Content Include="ZLibInterface\DotZLib\LICENSE_1_0.txt" />
+    <Content Include="ZLibInterface\DotZLib\readme.txt" />
+    <Content Include="zlib1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\bookmark_add.png" />
     <None Include="Resources\14_layer_deletelayer.png" />
     <Content Include="Resources\clear-filter.png" />
@@ -812,6 +760,36 @@
     <MergeOutputFile>$(StageOutputDir)\$(TargetName)$(TargetExt)</MergeOutputFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="conf\LS_RecordStructure.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\OldRecordStructure.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\RecordStructure From 4_3_1b.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\RecordStructure SLuckyD v2 - Copy.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\RecordStructure SLuckyD.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\RecordStructure.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\RecordStructureFormat.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\ScriptFunctions.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\ScriptFunctionsFormat.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\settings.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <inputAssemblies Include="$(TargetPath)" />
     <inputAssemblies Include="$(TargetDir)\*.dll" />
     <CopyToStaging Include="$(ProjectDir)\LICENSE" />
