@@ -6,8 +6,6 @@ namespace TESVSnip.Data
     using System.Reflection;
     using System.Runtime.Serialization;
 
-    using TESVSnip.Data.Persistance;
-
     /// <summary>
     /// PersistType indicates the available actions for a Persistable.
     /// </summary>

@@ -1,4 +1,4 @@
-namespace TESVSnip.Data.Persistance
+namespace TESVSnip.Data
 {
     using System;
     using System.Collections;
