@@ -124,7 +124,9 @@
     <Compile Include="Vendor\HexBox\Design\HexFontEditor.cs" />
     <Compile Include="Vendor\HexBox\DynamicByteProvider.cs" />
     <Compile Include="Vendor\HexBox\FileByteProvider.cs" />
-    <Compile Include="Vendor\HexBox\HexBox.cs" />
+    <Compile Include="Vendor\HexBox\HexBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Vendor\HexBox\IByteProvider.cs" />
     <Compile Include="Vendor\HexBox\NativeMethods.cs" />
     <Compile Include="Vendor\ObjectListView\CellEditing\CellEditKeyEngine.cs" />
@@ -692,25 +694,25 @@
     <Compile Include="RecordControls\TextElement.Designer.cs">
       <DependentUpon>TextElement.cs</DependentUpon>
     </Compile>
-    <Compile Include="RTFLib\RTF\IRTFCell.cs" />
-    <Compile Include="RTFLib\RTF\IRtfProcessor.cs" />
-    <Compile Include="RTFLib\RTF\IRTFRow.cs" />
-    <Compile Include="RTFLib\RTF\RTFAlignment.cs" />
-    <Compile Include="RTFLib\RTF\RTFBorderSide.cs" />
-    <Compile Include="RTFLib\RTF\RTFBuilder.cs" />
-    <Compile Include="RTFLib\RTF\RTFBuilder.RTFFonts.cs" />
-    <Compile Include="RTFLib\RTF\RTFBuilder.RTFFormatWrap.cs" />
-    <Compile Include="RTFLib\RTF\RTFBuilder.RTFParaWrap.cs" />
-    <Compile Include="RTFLib\RTF\RTFBuilder.UnWrapped.cs" />
-    <Compile Include="RTFLib\RTF\RTFBuilderbase.cs" />
-    <Compile Include="RTFLib\RTF\RTFCell.cs" />
-    <Compile Include="RTFLib\RTF\RTFCellDefinition.cs" />
-    <Compile Include="RTFLib\RTF\RTFCellDefinitionBuilder.cs" />
-    <Compile Include="RTFLib\RTF\RTFFont.cs" />
-    <Compile Include="RTFLib\RTF\RTFImage.cs" />
-    <Compile Include="RTFLib\RTF\RTFRow.cs" />
-    <Compile Include="RTFLib\RTF\RTFRowDefinition.cs" />
-    <Compile Include="RTFLib\RTF\RTFUtil.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\IRTFCell.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\IRtfProcessor.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\IRTFRow.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFAlignment.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFBorderSide.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFBuilder.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFBuilder.RTFFonts.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFBuilder.RTFFormatWrap.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFBuilder.RTFParaWrap.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFBuilder.UnWrapped.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFBuilderbase.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFCell.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFCellDefinition.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFCellDefinitionBuilder.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFFont.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFImage.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFRow.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFRowDefinition.cs" />
+    <Compile Include="Vendor\RTFLib\RTF\RTFUtil.cs" />
     <Compile Include="ScriptCompiler\ScriptCompiler.cs" />
     <Compile Include="ScriptCompiler\Tokenizer.cs" />
     <Compile Include="Main\Settings.cs" />
