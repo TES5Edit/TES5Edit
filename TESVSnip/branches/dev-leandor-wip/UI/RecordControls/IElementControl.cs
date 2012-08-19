@@ -1,8 +1,6 @@
 ﻿namespace TESVSnip.UI.RecordControls
 {
     using System;
-    using System.Collections.Generic;
-    using System.Windows.Forms;
 
     using TESVSnip.Main;
 
@@ -23,24 +21,5 @@
         dLStringLookup strIDLookup { get; set; }
 
         void CommitChanges();
-    }
-
-    internal interface IOuterElementControl : IElementControl
-    {
-        IElementControl InnerControl { get; set; }
-    }
-
-    internal interface ITextElementControl : IElementControl
-    {
-        Label Label { get; }
-
-        Label LabelType { get; }
-
-        TextBoxBase TextBox { get; }
-    }
-
-    internal interface IGroupedElementControl : IElementControl
-    {
-        IList<ArraySegment<byte>> Elements { get; }
     }
 }

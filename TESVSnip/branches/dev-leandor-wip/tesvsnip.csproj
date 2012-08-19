@@ -92,6 +92,9 @@
     <Compile Include="Collections\PropertyComparer.cs" />
     <Compile Include="Collections\PropertyComparerCollection.cs" />
     <Compile Include="Collections\ValueComparer.cs" />
+    <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
+    <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
+    <Compile Include="UI\RecordControls\ITextElementControl.cs" />
     <Compile Include="Vendor\Controls\ballontooltip.cs">
       <SubType>Component</SubType>
     </Compile>
