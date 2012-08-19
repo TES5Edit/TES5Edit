@@ -1,4 +1,4 @@
-﻿namespace TESVSnip
+﻿namespace TESVSnip.Model
 {
     using System;
     using System.Collections.Generic;

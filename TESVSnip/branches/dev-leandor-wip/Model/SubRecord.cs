@@ -1,4 +1,4 @@
-﻿namespace TESVSnip
+﻿namespace TESVSnip.Model
 {
     using System;
     using System.Collections.Generic;
@@ -13,6 +13,8 @@
     using RTF;
 
     using TESVSnip.Data;
+
+    using Encoding = TESVSnip.Encoding;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
     [Serializable]
