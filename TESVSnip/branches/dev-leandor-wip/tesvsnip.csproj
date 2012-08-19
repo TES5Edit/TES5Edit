@@ -724,7 +724,6 @@
     <Compile Include="ScriptCompiler\ScriptCompiler.cs" />
     <Compile Include="ScriptCompiler\Tokenizer.cs" />
     <Compile Include="Main\Settings.cs" />
-    <Compile Include="Settings.cs" />
     <Compile Include="UI\Forms\MainView.cs">
       <SubType>Form</SubType>
     </Compile>
