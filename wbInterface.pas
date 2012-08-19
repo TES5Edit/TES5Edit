@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.547 (2012-08-3) EXPERIMENTAL';
+  VersionString               = '3.0.320 (2012-08-3) EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -2023,6 +2023,7 @@ var
   wbGameMode : TwbGameMode;
   wbAppName  : string;
   wbGameName : string;
+  wbLanguage : string;
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
