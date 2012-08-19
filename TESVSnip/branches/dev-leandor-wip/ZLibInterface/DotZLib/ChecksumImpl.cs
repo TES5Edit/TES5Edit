@@ -1,7 +1,7 @@
 // © Copyright Henrik Ravn 2004
 // Use, modification and distribution are subject to the Boost Software License, Version 1.0. 
 // (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-namespace DotZLib
+namespace TESVSnip.ZLibInterface.DotZLib
 {
     using System;
     using System.Runtime.InteropServices;
@@ -116,7 +116,7 @@ namespace DotZLib
         /// </remarks>
         public void Update(string data)
         {
-            Update(Encoding.UTF8.GetBytes(data));
+            this.Update(Encoding.UTF8.GetBytes(data));
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace DotZLib
         /// </param>
         public void Update(string data, Encoding encoding)
         {
-            Update(encoding.GetBytes(data));
+            this.Update(encoding.GetBytes(data));
         }
     }
 

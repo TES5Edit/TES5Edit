@@ -3,7 +3,7 @@ namespace TESVSnip.ZLibInterface
     using System;
     using System.IO;
 
-    using DotZLib;
+    using TESVSnip.ZLibInterface.DotZLib;
 
     public static class ZLib
     {
