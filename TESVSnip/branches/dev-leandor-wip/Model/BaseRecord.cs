@@ -11,6 +11,7 @@
     using RTF;
 
     using TESVSnip.Data;
+    using TESVSnip.Framework.Persistence;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
     [Serializable]

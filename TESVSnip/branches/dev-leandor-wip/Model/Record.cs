@@ -13,6 +13,7 @@
 
     using TESVSnip.Collections;
     using TESVSnip.Data;
+    using TESVSnip.Framework.Persistence;
     using TESVSnip.Main;
     using TESVSnip.UI;
     using TESVSnip.ZLibInterface;

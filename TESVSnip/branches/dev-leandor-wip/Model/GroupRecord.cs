@@ -10,6 +10,7 @@
     using System.Windows.Forms;
 
     using TESVSnip.Data;
+    using TESVSnip.Framework.Persistence;
     using TESVSnip.Main;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]

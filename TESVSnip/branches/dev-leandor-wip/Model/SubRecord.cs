@@ -13,6 +13,7 @@
     using RTF;
 
     using TESVSnip.Data;
+    using TESVSnip.Framework.Persistence;
     using TESVSnip.Main;
     using TESVSnip.UI;
 

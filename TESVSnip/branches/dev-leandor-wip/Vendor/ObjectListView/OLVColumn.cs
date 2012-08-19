@@ -34,10 +34,11 @@ using System.Drawing;
 using System.Drawing.Design;
 using System.Runtime.Serialization;
 using System.Windows.Forms;
-using TESVSnip.Data;
 
 namespace BrightIdeasSoftware
 {
+    using TESVSnip.Framework.Persistence;
+
     /// <summary>
     /// An OLVColumn knows which aspect of an object it should present.
     /// </summary>

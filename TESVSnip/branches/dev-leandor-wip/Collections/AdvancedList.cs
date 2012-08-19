@@ -7,6 +7,7 @@ namespace TESVSnip.Collections
     using System.Runtime.Serialization;
 
     using TESVSnip.Data;
+    using TESVSnip.Framework.Persistence;
 
     /// <summary>
     /// The advanced list.
