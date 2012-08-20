@@ -4480,7 +4480,7 @@ begin
   wbCNTO :=
     wbRStructExSK([0], [1], 'Item', [
       wbStructExSK(CNTO, [0], [1], 'Item', [
-        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH{, MSTT{?}{, STAT{?}]),
+        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, SLGM, BOOK, LVLI, KEYM, ALCH, LIGH{, MSTT{?}{, STAT{?}]),
         wbInteger('Count', itS32)
       ]),
       wbCOED
@@ -10033,7 +10033,7 @@ begin
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itS16),
           wbByteArray('Unknown', 2),
-          wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH]),
+          wbFormIDCk('Reference', [ARMO, AMMO, APPA, INGR, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH]),
           wbInteger('Count', itS16),
           wbByteArray('Unknown', 2)
         ]),
@@ -12482,7 +12482,7 @@ begin
         'On Death'
       ])),
       wbByteArray('Unknown', 3),
-      wbFormIDCk('Effect', [SPEL])
+      wbFormIDCk('Effect', [SPEL, NULL])
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
