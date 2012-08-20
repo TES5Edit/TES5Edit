@@ -12,22 +12,10 @@
 
 *******************************************************************************}
 
-{>>>
-
-  I copied this info about Skyrim's load order from forum since it needs to be implemented
-  in TES5Edit:
-
-  When Skyrim reads plugins.txt, it automatically assumes Skyrim.esm and Update.esm are in it - meaning it will ALWAYS load Skyrim.esm and Update.esm. Skyrim.esm will always load in position 00, however, Update.esm will not always load in position 01. See below.
-  If Update.esm isn't in plugins.txt, it will be loaded LAST of all the ESM files. So if you have Skyrim.esm, Dawnguard.esm, and Update.esm, but only Dawnguard.esm is in plugins.txt, then Update.esm will load last (position 02).
-  If Update.esm IS in plugins.txt, then it's loaded in the order it's listed.
-  Seeing as Update.esm is a patch file for Skyrim.esm, it's pretty obvious that it's intended to be loaded directly after Skyrim.esm (to fix it), but not later than other ESM files (to not mess with them).
-  So what we (wrinkyninja, and I, maybe others I forget) decided was that BAPI will always write Update.esm as the first entry in plugins.txt. This will ensure the game always loads Update.esm directly after Skyrim.esm (in position 01), so that it acts like a patch ESM should.
-
-<<<}
-
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_GENERATEJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
+
 program TES5Dump;
 
 {$I Compilers.inc}
@@ -329,6 +317,9 @@ begin
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
       WriteLn(ErrOutput, '             ', 'Default language is English');
+      WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
+      WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
