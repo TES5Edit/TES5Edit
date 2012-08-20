@@ -403,7 +403,7 @@ namespace TESVSnip.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If you don&apos;t know what this does, you probably don&apos;t want to click it
+        ///   Looks up a localized string similar to If you don't know what this does, you probably don't want to click it
         ///Continue anyway?.
         /// </summary>
         internal static string GeneralSpellWarningInquiry {
@@ -446,7 +446,7 @@ namespace TESVSnip.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This is the first time &apos;skyrim.esm&apos; has been loaded.
+        ///   Looks up a localized string similar to This is the first time 'skyrim.esm' has been loaded.
         ///The file is large size and takes significant memory to load.
         ///Would you like to configure which Records to exclude?.
         /// </summary>
