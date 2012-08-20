@@ -1,5 +1,6 @@
 {{Trail|File Formats|Mod File Format}}
 
+= Image Space Modifiers =
 {| class="wikitable" border="1" width="100%" 
 ! width="3%" | [[Tes5Mod:File Format Conventions|C]]
 ! width="10%" | SubRecord
@@ -38,14 +39,12 @@
 | + || BNAM || Blur || struct || 
 :Float - Unknown
 :Float - Radius
-:Float - Unknown
-:Float - Unknown
+:Float - Unknown x2
 |- 
 | + || VNAM || Double Vision || struct || 
 :Float - Unknown
 :Float - Radius
-:Float - Unknown
-:Float - Unknown
+:Float - Unknown x2
 |-
 |}
 = Cinematic Colors =
@@ -64,7 +63,7 @@
 ::Float - Green
 ::Float - Blue
 ::Float - Alpha
-:Unknown Data
+:Float - Unknown x5
 |- 
 | + || NAM3 || Fade || struct || 
 :Fade
@@ -74,7 +73,7 @@
 ::Float - Green
 ::Float - Blue
 ::Float - Alpha
-:Unknown Data
+:Float - Unknown x5
 |- 
 |}
 = Radial Blur =
@@ -88,11 +87,29 @@
 | + || RNAM || Data || struct || 
 :Float - Unknown
 :Float - Strength
+:Float - Unknown x2
+|- 
+| + || SNAM || Data || struct || 
 :Float - Unknown
+:Float - Rampup
+:Float - Unknown x2
+|- 
+| + || UNAM || Data || struct || 
 :Float - Unknown
+:Float - Start
+:Float - Unknown x2
+|- 
+| + || NAM1 || Data || struct || 
+:Float - Unknown
+:Float - Rampdown
+:Float - Unknown x2
+|- 
+| + || NAM2 || Data || struct || 
+:Float - Unknown
+:Float - Downstart
+:Float - Unknown x2
 |- 
 |}
-
 
 
 
