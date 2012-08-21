@@ -2186,14 +2186,7 @@ non-indent is being worked on
 		<Group id="VMAD" optional="1"/>
 		<Group id="OBND" optional="1"/>
 		<Subrecord name="ACBS" desc="Traits and Stats tabs (ULAGEPRUN - UserLevel, AutoCalc, Gender, Essential, PresetCharGen, Respawn, Unique, NoAffectOnStealthMeter)" optional="1" size="24">
-			<Element name="UL-A-G-E-P-R-U-N" type="byte" hexview="1" flags="Female;Essential;Preset;Respawn;AutoCalc;Unique;NotAffectStealth;UserLevel"/>
-			<Element name="Summon-Protected" type="byte" hexview="1" flags="UseTemplate;Flg10;Flg11;Protected;Flg13;Flg14;Summonable;Flg16"/>
-			<Element name="OGAnim-NoBleed-SimpAct" type="byte" hexview="1" flags="Doesn'tBleed;Flg18;BleedoutOverride;OppositeGenderAnims;SimpleActor;LoopedScript;Flg23;Flg24"/>
-			<Element name="Invulnerable-IsGhost" type="byte" hexview="1" flags="Flg25;Flg26;Flg27;Flg28;LoopedAudio;IsGhost;Flg31;Invulnerable"/>
-			<Element name="ACBS_Flag5" type="byte" hexview="1" flags="Flg33;Flg34;Flg35;Flg36;Flg37;Flg38;Flg39;Flg40"/>
-			<Element name="ACBS_Flag6" type="byte" hexview="1" flags="Flg41;Flg42;Flg43;Flg44;Flg45;Flg46;Flg47;Flg48"/>
-			<Element name="ACBS_Flag7" type="byte" hexview="1" flags="Flg49;Flg50;Flg51;Flg52;Flg53;Flg54;Flg55;Flg56"/>
-			<Element name="ACBS_Flag8" type="byte" hexview="1" flags="Flg57;Flg58;Flg59;Flg60;Flg61;Flg62;Flg63;Flg64"/>
+			<Element name="UL-A-G-E-P-R-U-N" type="uint" flags="Female;Essential;Is Char Gen Face Preset;Respawn;Auto-calc Stats;Unique;Doesn''t affect stealth meter;PCLevelMult;UseTemplate;Flg10;Flg11;Protected;Flg13;Flg14;Summonable;Flg16;Doesn''t bleed;Flg18;Bleedout Override;Opposite Gender Anims;Simple Actor;looped script;Flg23;Flg24;Flg25;Flg26;Flg27;Flg28;looped audio?;Is Ghost;Flg31;Invulnerable"/>
 			<Element name="Magicka Offset" type="ushort"/>
 			<Element name="Stamina Offset" type="ushort"/>
 			<Element name="Level or LevelMult" type="short" desc="Forces Level or LevelMult"/> <!-- Union:- wbInteger('Level', itS16, nil,...) or wbInteger('Level Mult', itS16, wbDiv(1000),...) -->
@@ -2201,8 +2194,7 @@ non-indent is being worked on
 			<Element name="Calc max level" type="ushort"/>
 			<Element name="Speed Multiplier" type="ushort"/>
 			<Element name="Disposition Base" type="short"/>
-			<Element name="Template flags1" type="byte" flags="UseTraits;UseStats;UseFactions;UseSpellList;UseAIData;UseAIPackage;UseModelAnim;UseBaseData"/>
-			<Element name="Template flags2" type="byte" flags="UseInventory;UseScript;UseDefPackList;UseKeywords;Flg77;Flg78;Flg79;Flg80"/>
+			<Element name="Template flags1" type="ushort" flags="UseTraits;UseStats;UseFactions;UseSpellList;UseAIData;UseAIPackage;UseModelAnim;UseBaseData;UseInventory;UseScript;UseDefPackList;UseKeywords;Flg13;Flg14;Flg15;Flg16"/>
 			<Element name="Health Offset" type="ushort"/>
 			<Element name="Bleedout Override" type="ushort"/>
 		</Subrecord>
