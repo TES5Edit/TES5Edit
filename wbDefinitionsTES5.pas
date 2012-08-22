@@ -847,7 +847,6 @@ var
   wbCNAMReq: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef; {Associated with CTDA}
   wbPRKR: IwbSubRecordDef; {Perk Array Record}
-  wbDNAMActor: IwbSubRecordStructDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbIntegerDef;
   wbCastEnum: IwbEnumDef;
@@ -4558,57 +4557,6 @@ begin
     ])
   ]);
 
-  wbDNAMActor := wbRStruct('Player Skills', [
-    wbStruct(DNAM, 'Player Skills', [
-      wbArray('Skill Values', wbInteger('Skill', itU8), [
-        'OneHanded',
-        'TwoHanded',
-        'Marksman',
-        'Block',
-        'Smithing',
-        'HeavyArmor',
-        'LightArmor',
-        'Pickpocket',
-        'Lockpicking',
-        'Sneak',
-        'Alchemy',
-        'Speechcraft',
-        'Alteration',
-        'Conjuration',
-        'Destruction',
-        'Illusion',
-        'Restoration',
-        'Enchanting'
-      ]),
-      wbArray('Skill Offsets', wbInteger('Skill', itU8), [
-        'OneHanded',
-        'TwoHanded',
-        'Marksman',
-        'Block',
-        'Smithing',
-        'HeavyArmor',
-        'LightArmor',
-        'Pickpocket',
-        'Lockpicking',
-        'Sneak',
-        'Alchemy',
-        'Speechcraft',
-        'Alteration',
-        'Conjuration',
-        'Destruction',
-        'Illusion',
-        'Restoration',
-        'Enchanting'
-      ]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      //wbByteArray('Unknown', 4),
-      wbFloat('Far away model distance'),
-      wbInteger('Geared up weapons', itU8),
-      wbByteArray('Unknown', 3)
-    ])
-  ], [], cpNormal, False, wbActorTemplateUseStatsAutoCalc);
-
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
@@ -5098,7 +5046,7 @@ begin
 
   wbPRKR := wbStruct(PRKR, 'Perk Record', [
     wbFormIDCk('Perk', [PERK]),
-    wbFloat
+    wbUnknown
   ]);
 
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
@@ -10056,7 +10004,7 @@ begin
     {46} 'Vampire Lord'
   ]), cpNormal, False, nil{, wbMGEFArchtypeAfterSet});
 
-  wbMGEFData := wbRstruct('Magic Effect Data', [
+  wbMGEFData := wbRStruct('Magic Effect Data', [
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}  'Hostile',
@@ -10313,7 +10261,7 @@ begin
       wbInteger('Calc min level', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
       wbInteger('Calc max level', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
       wbInteger('Speed Multiplier', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
-      wbInteger('Disposition Base', itS16, nil, cpNormal, True, wbActorTemplateUseTraits),
+      wbInteger('Disposition Base (unused)', itS16, nil, cpIgnore, True, wbActorTemplateUseTraits),
       wbInteger('Template Flags', itU16, wbFlags([
         {0x0001} 'Use Traits',
         {0x0002} 'Use Stats',
@@ -10364,7 +10312,53 @@ begin
     wbFULL,
     wbLString(SHRT, 'Short Name'),
     wbByteArray(DATA, 'Marker'),
-    wbDNAMActor,
+    wbStruct(DNAM, 'Player Skills', [
+      wbArray('Skill Values', wbInteger('Skill', itU8), [
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ]),
+      wbArray('Skill Offsets', wbInteger('Skill', itU8), [
+        'OneHanded',
+        'TwoHanded',
+        'Marksman',
+        'Block',
+        'Smithing',
+        'HeavyArmor',
+        'LightArmor',
+        'Pickpocket',
+        'Lockpicking',
+        'Sneak',
+        'Alchemy',
+        'Speechcraft',
+        'Alteration',
+        'Conjuration',
+        'Destruction',
+        'Illusion',
+        'Restoration',
+        'Enchanting'
+      ]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFloat('Far away model distance'),
+      wbInteger('Geared up weapons', itU8),
+      wbByteArray('Unknown', 3)
+    ], cpNormal, False, wbActorTemplateUseStatsAutoCalc),
     wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
     wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
