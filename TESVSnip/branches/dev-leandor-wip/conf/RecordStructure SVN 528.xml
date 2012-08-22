@@ -5262,7 +5262,7 @@ non-indent is being worked on
       <Subrecord name="PRKE" desc="Rank Effect Header" optional="1" repeat="1" size="3">
         <Element name="Effect Type" type="byte" options="Linked Quest Stage;0;Linked SPEL;1;Complex;2" condid="1" />
         <Element name="Rank Index" type="byte" />
-        <Element name="?? -- always 0" type="byte" notininfo="true"/>
+				<Element name="?? -- always 0" type="byte"/>
       </Subrecord>
       <Subrecord name="DATA" desc="Perk Effect Data" optional="1" size="8" condid="1" condition="equal" condvalue="0" >
         <Element name="QUST FormID" type="formid" reftype="QUST" />
