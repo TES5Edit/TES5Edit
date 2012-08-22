@@ -6,7 +6,7 @@ TESVSnip is a fork of the TESsnip utility bundled with Fallout Mod Manager with 
 In the word of the original author, TESsnip is a low level plugin editor that allows you to open esm/esp files, view the record structure and cut/copy/paste records and subrecords between different parents, including different esp's. You can also view and edit the data saved in a subrecord, in either hex or string format, as well as editing record headers.
 
 Requirements:
-  .NET 4.0
+  .NET 3.5
 
 Change Log:
 v 4.3.1b
@@ -16,7 +16,6 @@ v 4.3.1b
 - Re-enabled strings file saveing.
 - Fixed bug in "Strings|Extract Internal Strings To Table" that caused an exception if the plugins masters wasn't loaded. Also string id's are now unique in the plugin only as it is in game.
 - Lots of bugfixes to RecordStructure.xml. There where alot of lstrings that was not actually lstrings that would corrupt the plugin when using the strings spells.
-
 v 4.3
 - Elements with options or flags now work for the types short and byte also (was only working for int before), both signed and unsigned.
 - New string type called Istring that has an int that defines the string length. Used for MODS, MO2S, MO3S subrecords.
@@ -255,9 +254,6 @@ Credits:
                 - Tes5Lib (http://github.com/uesp/tes5lib)
 * Ails - Icons - http://ails.deviantart.com/art/420-Pixel-Art-Icons-for-RPG-129892453
 * Crystal Project - Icons released under LGPL
-* wmrojer - For all the 4.3 and 4.3.1 Changes
-* SLuckyD - For his work on the latest RecordStructure.xml
-* Beryllium-9 - For his work on the latest RecordStructure.xml
 
 License:
 * The TESsnip code is licensed under GPL so this is by extension also GPL

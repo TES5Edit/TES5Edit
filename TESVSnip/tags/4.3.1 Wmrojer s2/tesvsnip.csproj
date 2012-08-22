@@ -1,0 +1,847 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5FA31161-DDBB-430F-9E99-0ECE98B733DE}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TESVSnip</RootNamespace>
+    <AssemblyName>TESVSnip</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ApplicationIcon>Resources\tesv_ico.ico</ApplicationIcon>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ProductName>TESVSnip %28Skyrim Edition%29</ProductName>
+    <PublisherName>TESVSnip</PublisherName>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup>
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\build\')">$(MSBuildProjectDirectory)\</BUILD_ROOT>
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\build\')">$(MSBuildProjectDirectory)\..\</BUILD_ROOT>
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\..\build\')">$(MSBuildProjectDirectory)\..\..\</BUILD_ROOT>
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\..\..\build\')">$(MSBuildProjectDirectory)\..\..\..\</BUILD_ROOT>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>build\tesvsnip.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>false</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <Import Project="$(BUILD_ROOT)\build\tesvsnip.common.targets" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>
+    </NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WeifenLuo.WinFormsUI.Docking">
+      <HintPath>thirdparty\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Collections\AdvancedList.cs" />
+    <Compile Include="Collections\ValueComparer.cs" />
+    <Compile Include="Controls\ballontooltip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\bindinglistview.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\CheckedComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\objectbindinglistview.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\CustomComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\CustomTreeControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\FlagComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\FlagComboBox.Designer.cs">
+      <DependentUpon>FlagComboBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\History.cs" />
+    <Compile Include="Controls\nativemethods.cs" />
+    <Compile Include="Controls\ObjectListView\CellEditing\CellEditKeyEngine.cs" />
+    <Compile Include="Controls\ObjectListView\CellEditing\CellEditors.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\CellEditing\EditorRegistry.cs" />
+    <Compile Include="Controls\ObjectListView\DataListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\DragDrop\DragSource.cs" />
+    <Compile Include="Controls\ObjectListView\DragDrop\DropSink.cs" />
+    <Compile Include="Controls\ObjectListView\DragDrop\OLVDataObject.cs" />
+    <Compile Include="Controls\ObjectListView\FastDataListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\FastObjectListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Filtering\Cluster.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\ClusteringStrategy.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\ClustersFromGroupsStrategy.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\DateTimeClusteringStrategy.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\FilterMenuBuilder.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\Filters.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\ICluster.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\IClusteringStrategy.cs" />
+    <Compile Include="Controls\ObjectListView\Filtering\TextMatchFilter.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\Attributes.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\Comparers.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\DataSourceAdapter.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\Delegates.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\Enums.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Implementation\Events.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Implementation\GroupingParameters.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\Groups.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\Munger.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\NativeMethods.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\NullableDictionary.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\OLVListItem.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\OLVListSubItem.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\OlvListViewHitTestInfo.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\VirtualGroups.cs" />
+    <Compile Include="Controls\ObjectListView\Implementation\VirtualListDataSource.cs" />
+    <Compile Include="Controls\ObjectListView\ObjectListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\ObjectListView.DesignTime.cs" />
+    <Compile Include="Controls\ObjectListView\OLVColumn.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Rendering\Adornments.cs" />
+    <Compile Include="Controls\ObjectListView\Rendering\Decorations.cs" />
+    <Compile Include="Controls\ObjectListView\Rendering\Overlays.cs" />
+    <Compile Include="Controls\ObjectListView\Rendering\Renderers.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Rendering\Styles.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Rendering\TreeRenderer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\SubControls\GlassPanelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\SubControls\HeaderControl.cs" />
+    <Compile Include="Controls\ObjectListView\SubControls\ToolStripCheckedListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\SubControls\ToolTipControl.cs" />
+    <Compile Include="Controls\ObjectListView\TreeListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Utilities\ColumnSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Utilities\ColumnSelectionForm.Designer.cs">
+      <DependentUpon>ColumnSelectionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ObjectListView\Utilities\Generator.cs" />
+    <Compile Include="Controls\ObjectListView\Utilities\TypedObjectListView.cs" />
+    <Compile Include="Controls\ObjectListView\VirtualObjectListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\OldNewEvent.cs" />
+    <Compile Include="Controls\PopupControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\RichTextBoxEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\virtuallistview.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Data\persistassist.cs" />
+    <Compile Include="Data\RecordBuilder.cs" />
+    <Compile Include="Data\RecordStructure.cs">
+      <SubType>code</SubType>
+    </Compile>
+    <Compile Include="Data\serializationinfocachelist.cs" />
+    <Compile Include="Docking\BaseDockContent.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Docking\BaseDockContent.Designer.cs">
+      <DependentUpon>BaseDockContent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Docking\RichTextView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Docking\RichTextView.Designer.cs">
+      <DependentUpon>RichTextView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Docking\SubrecordListContent.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Docking\SubrecordListContent.Designer.cs">
+      <DependentUpon>SubrecordListContent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\AddMasterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AddMasterForm.designer.cs">
+      <DependentUpon>AddMasterForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\CompressSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CompressSettings.Designer.cs">
+      <DependentUpon>CompressSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Docking\FullRecordEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Docking\FullRecordEditor.Designer.cs">
+      <DependentUpon>FullRecordEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\BatchEditRecords.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\BatchEditRecords.Designer.cs">
+      <DependentUpon>BatchEditRecords.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\InputBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\InputBox.Designer.cs">
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\RecordColumnSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RecordColumnSelect.Designer.cs">
+      <DependentUpon>RecordColumnSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\SearchFilterBasic.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SearchFilterBasic.Designer.cs">
+      <DependentUpon>SearchFilterBasic.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\MediumLevelRecordEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MediumLevelRecordEditor.designer.cs">
+      <DependentUpon>MediumLevelRecordEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\NewMediumLevelRecordEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\NewMediumLevelRecordEditor.designer.cs">
+      <DependentUpon>NewMediumLevelRecordEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\LoadSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LoadSettings.Designer.cs">
+      <DependentUpon>LoadSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\MainView.Search.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MainView.Spells.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MultilineStringEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MultilineStringEditor.Designer.cs">
+      <DependentUpon>MultilineStringEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Docking\PluginTreeContent.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Docking\PluginTreeContent.Designer.cs">
+      <DependentUpon>PluginTreeContent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Docking\RecordSearchForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Docking\RecordSearchForm.Designer.cs">
+      <DependentUpon>RecordSearchForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\SearchFilterAdvanced.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SearchFilterAdvanced.Designer.cs">
+      <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Main\CastValue.cs" />
+    <Compile Include="Main\Spells.cs" />
+    <Compile Include="Model\BaseRecord.cs" />
+    <Compile Include="Model\ColumnElement.cs" />
+    <Compile Include="Model\BatchElement.cs" />
+    <Compile Include="Model\Element.cs" />
+    <Compile Include="Model\GroupRecord.cs" />
+    <Compile Include="Model\IGroupRecord.cs" />
+    <Compile Include="Model\IRecord.cs" />
+    <Compile Include="Model\Plugin.cs" />
+    <Compile Include="Model\PluginList.cs" />
+    <Compile Include="Model\Rec.cs" />
+    <Compile Include="Model\Record.cs" />
+    <Compile Include="Model\SearchElement.cs" />
+    <Compile Include="Model\SubRecord.cs" />
+    <Compile Include="ObjectControls\RecordEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ObjectControls\RecordEditor.Designer.cs">
+      <DependentUpon>RecordEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\StringsEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\StringsEditor.Designer.cs">
+      <DependentUpon>StringsEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\DataEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DataEdit.designer.cs">
+      <DependentUpon>DataEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\GroupEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\GroupEditor.designer.cs">
+      <DependentUpon>GroupEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\HeaderEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\HeaderEditor.designer.cs">
+      <DependentUpon>HeaderEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\HexBox\ByteCollection.cs" />
+    <Compile Include="Controls\HexBox\DataBlock.cs" />
+    <Compile Include="Controls\HexBox\DataMap.cs" />
+    <Compile Include="Controls\HexBox\Design\HexFontEditor.cs" />
+    <Compile Include="Controls\HexBox\DynamicByteProvider.cs" />
+    <Compile Include="Controls\HexBox\FileByteProvider.cs" />
+    <Compile Include="Controls\HexBox\HexBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\HexBox\IByteProvider.cs" />
+    <Compile Include="Controls\HexBox\NativeMethods.cs" />
+    <Compile Include="Forms\HexDataEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\HexDataEdit.designer.cs">
+      <DependentUpon>HexDataEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Collections\LocalizedString.cs" />
+    <Compile Include="Collections\ordereddictionary.cs" />
+    <Compile Include="ObjectControls\PluginTreeView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ObjectControls\PluginTreeView.Designer.cs">
+      <DependentUpon>PluginTreeView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ObjectControls\RecordSearch.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ObjectControls\RecordSearch.Designer.cs">
+      <DependentUpon>RecordSearch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ObjectControls\SubrecordElementEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ObjectControls\SubrecordElementEditor.Designer.cs">
+      <DependentUpon>SubrecordElementEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ObjectControls\SubrecordListEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ObjectControls\SubrecordListEditor.Designer.cs">
+      <DependentUpon>SubrecordListEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Main\Pair.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\HexElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\HexElement.Designer.cs">
+      <DependentUpon>HexElement.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Controls\ballontooltip.resx">
+      <DependentUpon>ballontooltip.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\bindinglistview.resx">
+      <DependentUpon>bindinglistview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\CustomComboBox.resx">
+      <DependentUpon>CustomComboBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\objectbindinglistview.resx">
+      <DependentUpon>objectbindinglistview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ObjectListView\Utilities\ColumnSelectionForm.resx">
+      <DependentUpon>ColumnSelectionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\virtuallistview.resx">
+      <DependentUpon>virtuallistview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Docking\BaseDockContent.resx">
+      <DependentUpon>BaseDockContent.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Docking\RichTextView.resx">
+      <DependentUpon>RichTextView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Docking\SubrecordListContent.resx">
+      <DependentUpon>SubrecordListContent.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\AddMasterForm.resx">
+      <DependentUpon>AddMasterForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\CompressSettings.resx">
+      <DependentUpon>CompressSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Docking\FullRecordEditor.resx">
+      <DependentUpon>FullRecordEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\BatchEditRecords.resx">
+      <DependentUpon>BatchEditRecords.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\InputBox.resx">
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\RecordColumnSelect.resx">
+      <DependentUpon>RecordColumnSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\SearchFilterBasic.resx">
+      <DependentUpon>SearchFilterBasic.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\MediumLevelRecordEditor.resx">
+      <DependentUpon>MediumLevelRecordEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\NewMediumLevelRecordEditor.resx">
+      <DependentUpon>NewMediumLevelRecordEditor.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LoadSettings.resx">
+      <DependentUpon>LoadSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\MultilineStringEditor.resx">
+      <DependentUpon>MultilineStringEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Docking\PluginTreeContent.resx">
+      <DependentUpon>PluginTreeContent.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Docking\RecordSearchForm.resx">
+      <DependentUpon>RecordSearchForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\SearchFilterAdvanced.resx">
+      <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ObjectControls\RecordEditor.resx">
+      <DependentUpon>RecordEditor.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\StringsEditor.resx">
+      <DependentUpon>StringsEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\DataEdit.resx">
+      <DependentUpon>DataEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\GroupEditor.resx">
+      <DependentUpon>GroupEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\HeaderEditor.resx">
+      <DependentUpon>HeaderEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\HexDataEdit.resx">
+      <DependentUpon>HexDataEdit.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ObjectControls\PluginTreeView.resx">
+      <DependentUpon>PluginTreeView.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ObjectControls\RecordSearch.resx">
+      <DependentUpon>RecordSearch.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ObjectControls\SubrecordElementEditor.resx">
+      <DependentUpon>SubrecordElementEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ObjectControls\SubrecordListEditor.resx">
+      <DependentUpon>SubrecordListEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\MainView.resx">
+      <DependentUpon>MainView.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\BaseElement.resx">
+      <DependentUpon>BaseElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\HexElement.resx">
+      <DependentUpon>HexElement.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\RepeatingElement.resx">
+      <DependentUpon>RepeatingElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\OptionsElement.resx">
+      <DependentUpon>OptionsElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\FlagsElement.resx">
+      <DependentUpon>FlagsElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\LStringElement.resx">
+      <DependentUpon>LStringElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\FormIDElement.resx">
+      <DependentUpon>FormIDElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\OptionalElement.resx">
+      <DependentUpon>OptionalElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RecordControls\TextElement.resx">
+      <DependentUpon>TextElement.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="build\tesvsnip.snk" />
+    <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
+    <None Include="ClassDiagram3.cd" />
+    <None Include="Controls\ObjectListView\ObjectListView.FxCop" />
+    <None Include="Controls\ObjectListView\ObjectListView.shfb" />
+    <None Include="Properties\app.manifest" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Main\RecordStructure.cs" />
+    <Compile Include="RecordControls\BaseElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\BaseElement.Designer.cs">
+      <DependentUpon>BaseElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\RepeatingElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\RepeatingElement.Designer.cs">
+      <DependentUpon>RepeatingElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\OptionsElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\OptionsElement.Designer.cs">
+      <DependentUpon>OptionsElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\FlagsElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\FlagsElement.Designer.cs">
+      <DependentUpon>FlagsElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\LStringElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\LStringElement.Designer.cs">
+      <DependentUpon>LStringElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\FormIDElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\FormIDElement.Designer.cs">
+      <DependentUpon>FormIDElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\IElementControl.cs" />
+    <Compile Include="RecordControls\OptionalElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\OptionalElement.Designer.cs">
+      <DependentUpon>OptionalElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RecordControls\TextElement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RecordControls\TextElement.Designer.cs">
+      <DependentUpon>TextElement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RTFLib\RTF\IRTFCell.cs" />
+    <Compile Include="RTFLib\RTF\IRtfProcessor.cs" />
+    <Compile Include="RTFLib\RTF\IRTFRow.cs" />
+    <Compile Include="RTFLib\RTF\RTFAlignment.cs" />
+    <Compile Include="RTFLib\RTF\RTFBorderSide.cs" />
+    <Compile Include="RTFLib\RTF\RTFBuilder.cs" />
+    <Compile Include="RTFLib\RTF\RTFBuilder.RTFFonts.cs" />
+    <Compile Include="RTFLib\RTF\RTFBuilder.RTFFormatWrap.cs" />
+    <Compile Include="RTFLib\RTF\RTFBuilder.RTFParaWrap.cs" />
+    <Compile Include="RTFLib\RTF\RTFBuilder.UnWrapped.cs" />
+    <Compile Include="RTFLib\RTF\RTFBuilderbase.cs" />
+    <Compile Include="RTFLib\RTF\RTFCell.cs" />
+    <Compile Include="RTFLib\RTF\RTFCellDefinition.cs" />
+    <Compile Include="RTFLib\RTF\RTFCellDefinitionBuilder.cs" />
+    <Compile Include="RTFLib\RTF\RTFFont.cs" />
+    <Compile Include="RTFLib\RTF\RTFImage.cs" />
+    <Compile Include="RTFLib\RTF\RTFRow.cs" />
+    <Compile Include="RTFLib\RTF\RTFRowDefinition.cs" />
+    <Compile Include="RTFLib\RTF\RTFUtil.cs" />
+    <Compile Include="ScriptCompiler\ScriptCompiler.cs" />
+    <Compile Include="ScriptCompiler\Tokenizer.cs" />
+    <Compile Include="Main\Settings.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="SharpZipLib\Checksums\Adler32.cs" />
+    <Compile Include="SharpZipLib\Checksums\CRC32.cs" />
+    <Compile Include="SharpZipLib\Checksums\IChecksum.cs" />
+    <Compile Include="SharpZipLib\Checksums\StrangeCRC.cs" />
+    <Compile Include="SharpZipLib\Core\FileSystemScanner.cs" />
+    <Compile Include="SharpZipLib\Core\INameTransform.cs" />
+    <Compile Include="SharpZipLib\Core\IScanFilter.cs" />
+    <Compile Include="SharpZipLib\Core\NameFilter.cs" />
+    <Compile Include="SharpZipLib\Core\PathFilter.cs" />
+    <Compile Include="SharpZipLib\Core\StreamUtils.cs" />
+    <Compile Include="SharpZipLib\Core\WindowsPathUtils.cs" />
+    <Compile Include="SharpZipLib\SharpZipBaseException.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\Deflater.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\DeflaterConstants.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\DeflaterEngine.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\DeflaterHuffman.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\DeflaterPending.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\Inflater.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\InflaterDynHeader.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\InflaterHuffmanTree.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\PendingBuffer.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\Streams\DeflaterOutputStream.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\Streams\InflaterInputStream.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\Streams\OutputWindow.cs" />
+    <Compile Include="SharpZipLib\Zip\Compression\Streams\StreamManipulator.cs" />
+    <Compile Include="SharpZipLib\Zip\FastZip.cs" />
+    <Compile Include="SharpZipLib\Zip\IEntryFactory.cs" />
+    <Compile Include="SharpZipLib\Zip\WindowsNameTransform.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipConstants.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipEntry.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipEntryFactory.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipException.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipExtraData.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipFile.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipHelperStream.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipNameTransform.cs" />
+    <Compile Include="SharpZipLib\Zip\ZipOutputStream.cs" />
+    <Compile Include="Forms\MainView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MainView.designer.cs">
+      <DependentUpon>MainView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Main\TESsnipParser.cs" />
+    <Compile Include="Main\TypeConverter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tesv_ico.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="build\buildver.txt" />
+    <Content Include="conf\RecordStructure.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="conf\RecordStructureFormat.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\ScriptFunctions.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\ScriptFunctionsFormat.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="conf\settings.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Controls\ObjectListView\CustomDictionary.xml" />
+    <None Include="Resources\bookmark_add.png" />
+    <None Include="Resources\14_layer_deletelayer.png" />
+    <Content Include="Resources\clear-filter.png" />
+    <None Include="Resources\configure_toolbars.png" />
+    <None Include="Resources\Edit_UndoHS.bmp" />
+    <None Include="Resources\EditTable.bmp" />
+    <Content Include="Resources\filter-icons3.png" />
+    <Content Include="Resources\filter.png" />
+    <None Include="Resources\search.png" />
+    <None Include="Resources\Find.bmp" />
+    <None Include="Resources\reload_all_tabs.png" />
+    <None Include="Resources\Revert.png" />
+    <None Include="Resources\RolledBack.bmp" />
+    <None Include="Resources\Save.bmp" />
+    <None Include="Resources\Open.bmp" />
+    <Content Include="Resources\sort-ascending.png" />
+    <Content Include="Resources\sort-descending.png" />
+    <None Include="Resources\warning.ico" />
+    <None Include="Resources\agt_forward.png" />
+    <None Include="Resources\agt_back.png" />
+    <None Include="Resources\quick_restart.png" />
+    <None Include="Resources\up.png" />
+    <None Include="Resources\down.png" />
+    <None Include="Resources\delete.png" />
+    <None Include="Resources\checkedbox1.png" />
+    <None Include="Resources\emptybox.png" />
+    <None Include="Resources\checkedbox.png" />
+    <None Include="Resources\next.png" />
+    <None Include="Resources\cancel.png" />
+    <None Include="Resources\fileexport.png" />
+    <None Include="Resources\agt_stop.png" />
+    <None Include="Resources\Paste.bmp" />
+    <None Include="Resources\Copy.bmp" />
+    <None Include="Resources\cut-2.bmp" />
+    <None Include="Resources\special_paste.png" />
+    <None Include="Resources\xdays.png" />
+    <None Include="Resources\editclear.png" />
+    <None Include="Resources\deletecell.png" />
+    <None Include="Resources\move_task_down.png" />
+    <None Include="Resources\move_task_up.png" />
+    <None Include="Resources\insertcell1.png" />
+    <None Include="Resources\insertcell.png" />
+    <None Include="Resources\edit_remove.png" />
+    <None Include="Resources\edit_add.png" />
+    <None Include="Resources\find.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <StageOutputDir>$(ProjectDir)\Output\</StageOutputDir>
+    <MergeOutputFile>$(StageOutputDir)\$(TargetName)$(TargetExt)</MergeOutputFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <inputAssemblies Include="$(TargetPath)" />
+    <inputAssemblies Include="$(TargetDir)\*.dll" />
+    <CopyToStaging Include="$(ProjectDir)\LICENSE" />
+    <CopyToStaging Include="$(ProjectDir)\README.TXT" />
+    <CopyToStagingConf Include="$(ProjectDir)conf\**" />
+  </ItemGroup>
+  <Target Name="Package">
+    <MakeDir Directories="$(StageOutputDir)" />
+    <Delete Files="$(StageOutputDir)conf\DockPanel.config" />
+    <Copy SourceFiles="@(CopyToStaging)" DestinationFolder="$(StageOutputDir)">
+    </Copy>
+    <Copy SourceFiles="@(CopyToStagingConf)" DestinationFolder="$(StageOutputDir)conf">
+    </Copy>
+    <Copy SourceFiles="$(TargetPath).config" DestinationFolder="$(StageOutputDir)">
+    </Copy>
+    <ILMerge InputAssemblies="@(inputAssemblies)" OutputFile="$(MergeOutputFile)" DebugInfo="true" />
+    <Delete Files="$(StageOutputDir)\$(ProjectName)_v$(Major).$(Minor).rar" />
+    <SimpleExec Command="$(ProgramFiles)\WinRar\rar.exe" Args="a -r $(ProjectName)_v$(Major).$(Minor).rar * -x*.pdb -x*vshost* -x*.rar" WorkingDirectory="$(StageOutputDir)" />
+    <SimpleExec Command="$(ProgramFiles)\WinRar\rar.exe" Args="c $(ProjectName)_v$(Major).$(Minor).rar" StdIn="README.TXT" WorkingDirectory="$(StageOutputDir)" />
+  </Target>
+</Project>
