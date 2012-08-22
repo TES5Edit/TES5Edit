@@ -962,9 +962,7 @@ non-indent is being worked on
 	<Record name="EYES" desc="Eyes"> <!-- accessed in CK by clicking 'All' and filtering -->
 		<Group id="EDID" optional="1"/>
 		<Group id="FULL" optional="1"/>
-		<Subrecord name="ICON" desc="Texture File (DDS)" optional="1">
-			<Element name="Path\Filename" type="string"/>
-		</Subrecord>
+		<Group id="ICONIMAGE" optional="1"/>
 		<Subrecord name="DATA" desc="Gender Availability" optional="1" size="1">
 			<Element name="Gender" type="byte" options="Unplayable;0;Male/Female;1;Female;3;Male;5;"/>
 		</Subrecord>
@@ -3459,9 +3457,7 @@ non-indent is being worked on
 			<Element name="Default Land Height" type="float"/>
 			<Element name="Default Water Height" type="float"/>
 		</Subrecord>
-		<Subrecord name="ICON" desc="Map Image" optional="1">
-			<Element name="Path\Filename" type="string"/>
-		</Subrecord>
+		<Group id="ICONIMAGE" optional="1"/>
 		<Subrecord name="MNAM" desc="World Bounds" optional="1" size="16">
 			<Element name="UsableDimen X" type="int"/>
 			<Element name="UsableDimen Y" type="int"/>
@@ -4517,12 +4513,7 @@ non-indent is being worked on
 	</Record>
 	<Record name="EFSH" desc="Effect Shader">
 		<Group id="EDID" optional="1"/>
-		<Subrecord name="ICON" desc="Membrane Fill Texture (DDS)" optional="1">
-			<Element name="Path\Filename" type="string"/>
-		</Subrecord>
-		<Subrecord name="ICO2" desc="Particle Shader  Texture (DDS)" optional="1">
-			<Element name="Path\Filename" type="string"/>
-		</Subrecord>
+		<Group id="ICONIMAGE" optional="1"/>
 		<Subrecord name="NAM7" desc="Holes (DDS)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
@@ -5263,6 +5254,7 @@ non-indent is being worked on
 	<Group id="VMAD" optional="1"/>
 	<Group id="FULL" optional="1"/>
 	<Group id="DESC" optional="1"/>
+	<Group id="ICONIMAGE" optional="1"/>
 	<Group id="CONDITIONAL" optional="1" repeat="1"/>
 	<Subrecord name="DATA" desc="Perk Data" optional="1" size="5">
 		<Element name="IsTrait" type="byte" options="No;0;Yes;1"/>
