@@ -1898,264 +1898,276 @@ non-indent is being worked on
 			<Element name="Name" type="string"/>
 		</Subrecord>
 	</Record>
-<Record name="NPC_" desc="Actor"> <!-- QNAM, NAM9, ECOR, SPOR, GNAM, NAM5 -->
-	<Group id="EDID" optional="1"/>
-	<Group id="VMAD" optional="1"/>
-	<Group id="OBND" optional="1"/>
-    <Subrecord name="ACBS" desc="Traits and Stats tabs (ULAGEPRUN - UserLevel, AutoCalc, Gender, Essential, PresetCharGen, Respawn, Unique, NoAffectOnStealthMeter)" optional="1" size="24">
-		<Element name="UL-A-G-E-P-R-U-N" type="byte" hexview="1" flags="Female;Essential;Preset;Respawn;AutoCalc;Unique;NotAffectStealth;UserLevel"/>
-		<Element name="Summon-Protected" type="byte" hexview="1" flags=";;;Protected;;;Summonable"/>
-		<Element name="OGAnim-NoBleed-SimpAct" type="byte" hexview="1" flags="Doesn'tBleed;;BleedoutOverride;OppositeGenderAnims;SimpleActor"/>
-		<Element name="Invulnerable-IsGhost" type="byte" hexview="1" flags=";;;;;IsGhost;;Invulnerable"/>
-      <Element name="Spell Points" type="ushort"/>
-      <Element name="Fatigue" type="ushort"/>
-      <Element name="Base Level" type="byte" desc="Forces Level"/>
-      <Element name="Start Level" type="byte" desc="Forces Level"/>
-      <Element name="alt level" type="byte" desc="Used when UseAltLevel is checked"/>
-      <Element name="alt level" type="byte"/>
-      <Element name="calcMin" type="ushort"/>
-      <Element name="Speed" type="ushort"/>
-      <Element name="Disposition Base" type="ushort"/>
-      <Element name="extra flags" type="byte" flags="Female;Vampire;UseWeapons;UseMagic;Hostile;;;DontHideName"/>
-      <Element name="(buffer1?)" type="byte"/>
-      <Element name="(buffer2?)" type="short"/>
-		<Element name="BleedoutOverride #" type="short"/>
-    </Subrecord>
-    <Subrecord name="SNAM" desc="Faction tab" optional="1" repeat="1" size="8">
-      <Element name="FACT FormID" type="formid" reftype="FACT" />
-      <Element name="Rank" type="byte" />
-      <Element name="Unknown byte" type="byte" />
-      <Element name="Flag" type="ushort" />
-    </Subrecord>
-    <Subrecord name="INAM" desc="Death Item (LVLI)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="LVLI" />
-    </Subrecord>
-    <Subrecord name="VTCK" desc="Voice Type (VTYP)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="VTYP" />
-    </Subrecord>
-    <Subrecord name="TPLT" desc="Template NPC (NPC_)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="NPC_" />
-    </Subrecord>
-    <Subrecord name="RNAM" desc="Race Type (RACE)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="RACE" />
-    </Subrecord>
-	<Group id="DESTRUCT" optional="1"/>
-    <Subrecord name="SPOR" desc="? Form List (FLST)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="FLST" />
-    </Subrecord>
-    <Subrecord name="SPCT" desc="Total Spell Count" optional="1" size="4">
-      <Element name="Count" type="int" />
-    </Subrecord>
-    <Subrecord name="SPLO" desc="Spell (SPEL)" optional="1" repeat="1" size="4">
-      <Element name="FormID" type="formid" reftype="SPEL" />
-    </Subrecord>
-    <Subrecord name="WNAM" desc="World Static (ARMO)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="ARMO" />
-    </Subrecord>
-    <Subrecord name="ANAM" desc="Armament (ARMO)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="ARMO" />
-    </Subrecord>
-    <Subrecord name="ATKR" desc="Attack Race (RACE)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="RACE" />
-    </Subrecord>
-    <Subrecord name="ATKD" desc="ATKD" optional="1" size="44">
-      <Element name="Unknown" type="float" />
-      <Element name="Unknown 1" type="float" />
-      <Element name="SPEL FormID" type="formid" reftype="SPEL" />
-      <Element name="Unknown 3" type="int" />
-      <Element name="Unknown 4" type="int" />
-      <Element name="Unknown 5" type="float" />
-      <Element name="Unknown 6" type="float" />
-      <Element name="Unknown 7" type="int" />
-      <Element name="Unknown 8" type="int" />
-      <Element name="Unknown 9" type="int" />
-      <Element name="Unknown 10" type="float" />
-    </Subrecord>
-    <Subrecord name="ATKE" desc="ATKE" optional="1">
-      <Element name="Name" type="string" />
-    </Subrecord>
-    <Subrecord name="ECOR" desc="? Form List (FLST)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="FLST" />
-    </Subrecord>
-    <Subrecord name="PRKZ" desc="Total Perk Count" optional="1" size="4">
-      <Element name="Count" type="int" />
-    </Subrecord>
-    <Subrecord name="PRKR" desc="Perk (PERK)" optional="1" repeat="1" size="8">
-      <Element name="FormID" type="formid" reftype="PERK" />
-      <Element name="Unknown" type="uint" hexview="true" />
-    </Subrecord>
-    <Subrecord name="COCT" desc="Container Total Item Count" optional="1" size="4">
-      <Element name="Total Count" type="int" />
-    </Subrecord>
-	<Group optional="1" repeat="1"> <!-- container items -->
-		<Subrecord name="CNTO" desc="Container Item" optional="1" repeat="1" size="8">
-		  <Element name="FormID" type="formid"/>
-		  <Element name="Count" type="int"/>
+	<Record name="NPC_" desc="Actor"> <!-- QNAM, NAM9, ECOR, SPOR, GNAM, NAM5 -->
+		<Group id="EDID" optional="1"/>
+		<Group id="VMAD" optional="1"/>
+		<Group id="OBND" optional="1"/>
+		<Subrecord name="ACBS" desc="Traits and Stats tabs (ULAGEPRUN - UserLevel, AutoCalc, Gender, Essential, PresetCharGen, Respawn, Unique, NoAffectOnStealthMeter)" optional="1" size="24">
+			<Element name="UL-A-G-E-P-R-U-N" type="byte" hexview="1" flags="Female;Essential;Preset;Respawn;AutoCalc;Unique;NotAffectStealth;UserLevel"/>
+			<Element name="Summon-Protected" type="byte" hexview="1" flags="UseTemplate;Flg10;Flg11;Protected;Flg13;Flg14;Summonable;Flg16"/>
+			<Element name="OGAnim-NoBleed-SimpAct" type="byte" hexview="1" flags="Doesn'tBleed;Flg18;BleedoutOverride;OppositeGenderAnims;SimpleActor;LoopedScript;Flg23;Flg24"/>
+			<Element name="Invulnerable-IsGhost" type="byte" hexview="1" flags="Flg25;Flg26;Flg27;Flg28;LoopedAudio;IsGhost;Flg31;Invulnerable"/>
+			<Element name="ACBS_Flag5" type="byte" hexview="1" flags="Flg33;Flg34;Flg35;Flg36;Flg37;Flg38;Flg39;Flg40"/>
+			<Element name="ACBS_Flag6" type="byte" hexview="1" flags="Flg41;Flg42;Flg43;Flg44;Flg45;Flg46;Flg47;Flg48"/>
+			<Element name="ACBS_Flag7" type="byte" hexview="1" flags="Flg49;Flg50;Flg51;Flg52;Flg53;Flg54;Flg55;Flg56"/>
+			<Element name="ACBS_Flag8" type="byte" hexview="1" flags="Flg57;Flg58;Flg59;Flg60;Flg61;Flg62;Flg63;Flg64"/>
+			<Element name="Magicka Offset" type="ushort"/>
+			<Element name="Stamina Offset" type="ushort"/>
+			<Element name="Level or LevelMult" type="short" desc="Forces Level or LevelMult"/> <!-- Union:- wbInteger('Level', itS16, nil,...) or wbInteger('Level Mult', itS16, wbDiv(1000),...) -->
+			<Element name="Calc min level" type="ushort"/>
+			<Element name="Calc max level" type="ushort"/>
+			<Element name="Speed Multiplier" type="ushort"/>
+			<Element name="Disposition Base" type="short"/>
+			<Element name="Template flags1" type="byte" flags="UseTraits;UseStats;UseFactions;UseSpellList;UseAIData;UseAIPackage;UseModelAnim;UseBaseData"/>
+			<Element name="Template flags2" type="byte" flags="UseInventory;UseScript;UseDefPackList;UseKeywords;Flg77;Flg78;Flg79;Flg80"/>
+			<Element name="Health Offset" type="ushort"/>
+			<Element name="Bleedout Override" type="ushort"/>
+			<Subrecord name="SNAM" desc="Faction tab" optional="1" repeat="1" size="8">
+				<Element name="FACT FormID" type="formid" reftype="FACT" />
+				<Element name="Rank" type="byte" />
+				<Element name="Unknown byte1" type="byte" name="Unknown1"/>
+				<Element name="Unknown byte2" type="byte" name="Unknown2 - flags?"/>
+				<Element name="Unknown byte3" type="byte" name="Unknown3 - flags?"/>
+			</Subrecord>
 		</Subrecord>
-		<Subrecord name="COED" desc="CND extra data" optional="1" size="12">
-	      <Element name="Faction ID" type="formid"/>
-	      <Element name="Faction Rank" type="int"/>
-	      <Element name="Item Condition" type="float"/>
+<!-- embedded in ACBS
+		<Subrecord name="SNAM" desc="Faction tab" optional="1" repeat="1" size="8">
+			<Element name="FACT FormID" type="formid" reftype="FACT" />
+			<Element name="Rank" type="byte" />
+			<Element name="Unknown byte1" type="byte" name="Unknown1"/>
+			<Element name="Unknown byte2" type="byte" name="Unknown2 - flags?"/>
+			<Element name="Unknown byte3" type="byte" name="Unknown3 - flags?"/>
 		</Subrecord>
-	</Group>
-    <Subrecord name="AIDT" desc="AI Data tab" optional="1" size="20">
-      <Element name="Aggression" type="byte" options="unaggressive;0;aggressive;1;very aggressive;2;frenzied;3;"/>
-      <Element name="Confidence" type="byte" options="cowardly;0;cautious;1;average;2;brave;3;foolhardy;4;"/>
-      <Element name="Energy" type="byte" />
-      <Element name="Morality" type="byte" options="any crime;0;vs enemies;1;property crimes;2;no crime;3;"/>
-      <Element name="Mood" type="byte" />
-      <Element name="Assistance" type="byte" options="nobody;0;allies;1;friends and allies;2;"/>
-      <Element name="Unknown byte 1" type="byte" />
-      <Element name="Unknown byte 2" type="byte" />
-      <Element name="Aggro Warn" type="float" />
-      <Element name="Aggro Warn/Attack" type="float" />
-      <Element name="Aggro Warn/Attack" type="float" />
-    </Subrecord>
-    <Subrecord name="PKID" desc="AI Package (PACK)" optional="1" repeat="1" size="4">
-      <Element name="FormID" type="formid" reftype="PACK" />
-    </Subrecord>
-    <Group id="KEYWORDS" optional="1"/>
-    <Subrecord name="CNAM" desc="Class Name (CLAS)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="CLAS" />
-    </Subrecord>
-    <Group id="FULL" optional="1"/>
-    <Subrecord name="SHRT" desc="Short In-Game Name" optional="1">
-      <Element name="Name" type="lstring" />
-    </Subrecord>
-    <Subrecord name="DATA" desc="Data Buffer (always empty)" optional="1" size="0"/>
-    <Subrecord name="DNAM" desc="Stats tab" optional="1" size="52">
-      <Element name='OneHanded Base' type='byte'/>
-      <Element name='TwoHanded Base' type='byte'/>
-      <Element name='Marksman Base' type='byte'/>
-      <Element name='Block Base' type='byte'/>
-      <Element name='Smithing Base' type='byte'/>
-      <Element name='HeavyArmor Base' type='byte'/>
-      <Element name='LightArmor Base' type='byte'/>
-      <Element name='Pickpocket Base' type='byte'/>
-      <Element name='Lockpicking Base' type='byte'/>
-      <Element name='Sneak Base' type='byte'/>
-      <Element name='Alchemy Base' type='byte'/>
-      <Element name='Speechcraft Base' type='byte'/>
-      <Element name='Alteration Base' type='byte'/>
-      <Element name='Conjuration Base' type='byte'/>
-      <Element name='Destruction Base' type='byte'/>
-      <Element name='Illusion Base' type='byte'/>
-      <Element name='Restoration Base' type='byte'/>
-      <Element name='Enchanting  Base' type='byte'/>
-      <Element name='OneHanded Mod' type='sbyte'/>
-      <Element name='TwoHanded Mod' type='sbyte'/>
-      <Element name='Marksman Mod' type='sbyte'/>
-      <Element name='Block Mod' type='sbyte'/>
-      <Element name='Smithing Mod' type='sbyte'/>
-      <Element name='HeavyArmor Mod' type='sbyte'/>
-      <Element name='LightArmor Mod' type='sbyte'/>
-      <Element name='Pickpocket Mod' type='sbyte'/>
-      <Element name='Lockpicking Mod' type='sbyte'/>
-      <Element name='Sneak Mod' type='sbyte'/>
-      <Element name='Alchemy Mod' type='sbyte'/>
-      <Element name='Speechcraft Mod' type='sbyte'/>
-      <Element name='Alteration Mod' type='sbyte'/>
-      <Element name='Conjuration Mod' type='sbyte'/>
-      <Element name='Destruction Mod' type='sbyte'/>
-      <Element name='Illusion Mod' type='sbyte'/>
-      <Element name='Restoration Mod' type='sbyte'/>
-      <Element name='Enchanting Mod' type='sbyte'/>
-      <Element name="Health" type="ushort" />
-      <Element name="Magika" type="ushort" />
-      <Element name="Stamina" type="ushort" />
-      <Element name="Base Armor/Unarmed?" type="ushort" />
-      <Element name="Flags 1" type="ushort" />
-      <Element name="Unknown 1" type="ushort" />
-      <Element name="Unknown 2" type="ushort" />
-      <Element name="Unknown 3" type="ushort" />
-    </Subrecord>
-    <Subrecord name="PNAM" desc="Head-Part Mesh (HDPT)" optional="1" repeat="1" size="4">
-      <Element name="FormID" type="formid" reftype="HDPT" />
-    </Subrecord>
-    <Subrecord name="HCLF" desc="Hair Color (CLFM)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="CLFM" />
-    </Subrecord>
-    <Subrecord name="ZNAM" desc="Combat Style (CSTY)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="CSTY" />
-    </Subrecord>
-    <Subrecord name="GNAM" desc="? Form List (FLST)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="FLST" />
-    </Subrecord>
-    <Subrecord name="NAM5" desc="NAM5" optional="1">
-      <Element name="flag? ushort" type="ushort" />
-    </Subrecord>
-    <Subrecord name="NAM6" desc="Body Height/Scale" optional="1" size="4">
-      <Element name="Height" type="float" />
-    </Subrecord>
-    <Subrecord name="NAM7" desc="Weight (Body Morph Slider)" optional="1" size="4">
-      <Element name="Weight" type="float" desc="values=0-100"/>
-    </Subrecord>
-    <Subrecord name="NAM8" desc="Sounds Tab" optional="1" size="4">
-      <Element name="Sound Volume" type="byte" options="Normal;1;Silent;2;Very Loud;3" />
-    </Subrecord>
-	<Group optional="1" repeat="1"> <!-- sound data -->
-		<Subrecord name="CSDT" desc="Sound Type" size="4">
-			<Element name="When Sound Plays" type="int" options="Idle;0;Aware;1;Attack;2;Hit;3;Death;4;Weapon;5;Movement Loop;6;Conscious Loop;7"/>
+-->
+		<Subrecord name="INAM" desc="Death Item (LVLI)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="LVLI" />
 		</Subrecord>
-		<Subrecord name="CSDI" desc="Actor Sound (SNDR)" optional="1" size="4">
-			<Element name="FormID" type="formid" reftype="SNDR" />
+		<Subrecord name="VTCK" desc="Voice Type (VTYP)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="VTYP" />
 		</Subrecord>
-		<Subrecord name="CSDC" desc="Sound Chance" optional="1" size="1">
-			<Element name="Percent Chance" type="byte" />
+		<Subrecord name="TPLT" desc="Template NPC (NPC_)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="NPC_" />
 		</Subrecord>
-	</Group>
-    <Subrecord name="CSCR" desc="Sound Template (NPC_)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="NPC_" />
-    </Subrecord>
-    <Subrecord name="DOFT" desc="Daily Outfit (OTFT)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="OTFT" />
-    </Subrecord>
-    <Subrecord name="SOFT" desc="Sleep Outfit (OTFT)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="OTFT" />
-    </Subrecord>
-    <Subrecord name="DPLT" desc="Daily Package List (FLST)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="FLST" />
-    </Subrecord>
-    <Subrecord name="CRIF" desc="Crime Faction (FACT)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="FACT" />
-    </Subrecord>
-    <Subrecord name="FTST" desc="Skin Complexion (TXST)" optional="1" size="4">
-      <Element name="FormID" type="formid" reftype="TXST" />
-    </Subrecord>
-    <Subrecord name="QNAM" desc="QNAM" optional="1" size="12">
-      <Element name="Unknown float 1" type="float" />
-      <Element name="Unknown float 2" type="float" />
-      <Element name="Unknown float 3" type="float" />
-    </Subrecord>
-    <Subrecord name="NAM9" desc="Character Gen Morphs tab" optional="1" size="76">
-      <Element name="Nose Length" type="float" />
-      <Element name="Nose Height" type="float" />
-      <Element name="Jaw Height" type="float" />
-      <Element name="Jaw Width" type="float" />
-      <Element name="Jaw Depth" type="float" />
-      <Element name="Cheekbone Height" type="float" />
-      <Element name="Cheekbone Width" type="float" />
-      <Element name="Eyes Height" type="float" />
-      <Element name="Eyes Width" type="float" />
-      <Element name="Brow Height" type="float" />
-      <Element name="Brow Width" type="float" />
-      <Element name="Brow Depth" type="float" />
-      <Element name="Mouth Height" type="float" />
-      <Element name="Mouth Depth" type="float" />
-      <Element name="Chin Width" type="float" />
-      <Element name="Chin Length" type="float" />
-      <Element name="Chin Depth" type="float" />
-      <Element name="Eyes Depth" type="float" />
-      <Element name="buffer/flags? 4bytes" type="uint" hexview="true" />
-    </Subrecord>
-    <Subrecord name="NAMA" desc="CharGen Morphs tab pulldowns (face-parts)" optional="1" size="16">
-      <Element name="NoseType" type="int" />
-      <Element name="unknown 4bytes" type="int" />
-      <Element name="EyesType" type="int" />
-      <Element name="MouthType" type="int" />
-    </Subrecord>
-	<Group id="TINTING" optional="1"/>
-</Record>
+		<Subrecord name="RNAM" desc="Race Type (RACE)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="RACE" />
+		</Subrecord>
+		<Group id="DESTRUCT" optional="1"/>
+		<Subrecord name="SPOR" desc="? Form List (FLST)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="FLST" />
+		</Subrecord>
+		<Subrecord name="SPCT" desc="Total Spell Count" optional="1" size="4">
+			<Element name="Count" type="int" />
+		</Subrecord>
+		<Subrecord name="SPLO" desc="Spell (SPEL)" optional="1" repeat="1" size="4">
+			<Element name="FormID" type="formid" reftype="SPEL" />
+		</Subrecord>
+		<Subrecord name="WNAM" desc="World Static (ARMO)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="ARMO" />
+		</Subrecord>
+		<Subrecord name="ANAM" desc="Armament (ARMO)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="ARMO" />
+		</Subrecord>
+		<Subrecord name="ATKR" desc="Attack Race (RACE)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="RACE" />
+		</Subrecord>
+		<Subrecord name="ATKD" desc="ATKD" optional="1" size="44">
+			<Element name="Unknown" type="float" />
+			<Element name="Unknown 1" type="float" />
+			<Element name="SPEL FormID" type="formid" reftype="SPEL" />
+			<Element name="Unknown 3" type="int" />
+			<Element name="Unknown 4" type="int" />
+			<Element name="Unknown 5" type="float" />
+			<Element name="Unknown 6" type="float" />
+			<Element name="Unknown 7" type="int" />
+			<Element name="Unknown 8" type="int" />
+			<Element name="Unknown 9" type="int" />
+			<Element name="Unknown 10" type="float" />
+		</Subrecord>
+		<Subrecord name="ATKE" desc="ATKE" optional="1">
+			<Element name="Name" type="string" />
+		</Subrecord>
+		<Subrecord name="ECOR" desc="? Form List (FLST)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="FLST" />
+		</Subrecord>
+		<Subrecord name="PRKZ" desc="Total Perk Count" optional="1" size="4">
+			<Element name="Count" type="int" />
+		</Subrecord>
+		<Subrecord name="PRKR" desc="Perk (PERK)" optional="1" repeat="1" size="8">
+			<Element name="FormID" type="formid" reftype="PERK" />
+			<Element name="Unknown" type="uint" hexview="true" />
+		</Subrecord>
+		<Subrecord name="COCT" desc="Container Total Item Count" optional="1" size="4">
+			<Element name="Total Count" type="int" />
+		</Subrecord>
+		<Group optional="1" repeat="1"> <!-- container items -->
+			<Subrecord name="CNTO" desc="Container Item" optional="1" repeat="1" size="8">
+				<Element name="FormID" type="formid"/>
+				<Element name="Count" type="int"/>
+			</Subrecord>
+			<Subrecord name="COED" desc="CND extra data" optional="1" size="12">
+				<Element name="Faction ID" type="formid"/>
+				<Element name="Faction Rank" type="int"/>
+				<Element name="Item Condition" type="float"/>
+			</Subrecord>
+		</Group>
+		<Subrecord name="AIDT" desc="AI Data tab" optional="1" size="20">
+			<Element name="Aggression" type="byte" options="unaggressive;0;aggressive;1;very aggressive;2;frenzied;3;"/>
+			<Element name="Confidence" type="byte" options="cowardly;0;cautious;1;average;2;brave;3;foolhardy;4;"/>
+			<Element name="Energy" type="byte" />
+			<Element name="Morality" type="byte" options="any crime;0;vs enemies;1;property crimes;2;no crime;3;"/>
+			<Element name="Mood" type="byte" />
+			<Element name="Assistance" type="byte" options="nobody;0;allies;1;friends and allies;2;"/>
+			<Element name="Unknown byte 1" type="byte" />
+			<Element name="Unknown byte 2" type="byte" />
+			<Element name="Aggro Warn" type="float" />
+			<Element name="Aggro Warn/Attack" type="float" />
+			<Element name="Aggro Warn/Attack" type="float" />
+		</Subrecord>
+		<Subrecord name="PKID" desc="AI Package (PACK)" optional="1" repeat="1" size="4">
+			<Element name="FormID" type="formid" reftype="PACK" />
+		</Subrecord>
+		<Group id="KEYWORDS" optional="1"/>
+		<Subrecord name="CNAM" desc="Class Name (CLAS)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="CLAS" />
+		</Subrecord>
+		<Group id="FULL" optional="1"/>
+		<Subrecord name="SHRT" desc="Short In-Game Name" optional="1">
+			<Element name="Name" type="lstring" />
+		</Subrecord>
+		<Subrecord name="DATA" desc="Data Buffer (always empty)" optional="1" size="0"/>
+		<Subrecord name="DNAM" desc="Stats tab" optional="1" size="52">
+			<Element name='OneHanded Base' type='byte'/>
+			<Element name='TwoHanded Base' type='byte'/>
+			<Element name='Marksman Base' type='byte'/>
+			<Element name='Block Base' type='byte'/>
+			<Element name='Smithing Base' type='byte'/>
+			<Element name='HeavyArmor Base' type='byte'/>
+			<Element name='LightArmor Base' type='byte'/>
+			<Element name='Pickpocket Base' type='byte'/>
+			<Element name='Lockpicking Base' type='byte'/>
+			<Element name='Sneak Base' type='byte'/>
+			<Element name='Alchemy Base' type='byte'/>
+			<Element name='Speechcraft Base' type='byte'/>
+			<Element name='Alteration Base' type='byte'/>
+			<Element name='Conjuration Base' type='byte'/>
+			<Element name='Destruction Base' type='byte'/>
+			<Element name='Illusion Base' type='byte'/>
+			<Element name='Restoration Base' type='byte'/>
+			<Element name='Enchanting  Base' type='byte'/>
+			<Element name='OneHanded Mod' type='sbyte'/>
+			<Element name='TwoHanded Mod' type='sbyte'/>
+			<Element name='Marksman Mod' type='sbyte'/>
+			<Element name='Block Mod' type='sbyte'/>
+			<Element name='Smithing Mod' type='sbyte'/>
+			<Element name='HeavyArmor Mod' type='sbyte'/>
+			<Element name='LightArmor Mod' type='sbyte'/>
+			<Element name='Pickpocket Mod' type='sbyte'/>
+			<Element name='Lockpicking Mod' type='sbyte'/>
+			<Element name='Sneak Mod' type='sbyte'/>
+			<Element name='Alchemy Mod' type='sbyte'/>
+			<Element name='Speechcraft Mod' type='sbyte'/>
+			<Element name='Alteration Mod' type='sbyte'/>
+			<Element name='Conjuration Mod' type='sbyte'/>
+			<Element name='Destruction Mod' type='sbyte'/>
+			<Element name='Illusion Mod' type='sbyte'/>
+			<Element name='Restoration Mod' type='sbyte'/>
+			<Element name='Enchanting Mod' type='sbyte'/>
+			<Element name="Health" type="ushort" />
+			<Element name="Magika" type="ushort" />
+			<Element name="Stamina" type="ushort" />
+			<Element name="Base Armor/Unarmed?" type="ushort" />
+			<Element name="Flags 1" type="ushort" />
+			<Element name="Unknown 1" type="ushort" />
+			<Element name="Unknown 2" type="ushort" />
+			<Element name="Unknown 3" type="ushort" />
+		</Subrecord>
+		<Subrecord name="PNAM" desc="Head-Part Mesh (HDPT)" optional="1" repeat="1" size="4">
+			<Element name="FormID" type="formid" reftype="HDPT" />
+		</Subrecord>
+		<Subrecord name="HCLF" desc="Hair Color (CLFM)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="CLFM" />
+		</Subrecord>
+		<Subrecord name="ZNAM" desc="Combat Style (CSTY)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="CSTY" />
+		</Subrecord>
+		<Subrecord name="GNAM" desc="? Form List (FLST)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="FLST" />
+		</Subrecord>
+		<Subrecord name="NAM5" desc="NAM5" optional="1">
+			<Element name="flag? ushort" type="ushort" />
+		</Subrecord>
+		<Subrecord name="NAM6" desc="Body Height/Scale" optional="1" size="4">
+			<Element name="Height" type="float" />
+		</Subrecord>
+		<Subrecord name="NAM7" desc="Weight (Body Morph Slider)" optional="1" size="4">
+			<Element name="Weight" type="float" desc="values=0-100"/>
+		</Subrecord>
+		<Subrecord name="NAM8" desc="Sounds Tab" optional="1" size="4">
+			<Element name="Sound Volume" type="byte" options="Normal;1;Silent;2;Very Loud;3" />
+		</Subrecord>
+		<Group optional="1" repeat="1"> <!-- sound data -->
+			<Subrecord name="CSDT" desc="Sound Type" size="4">
+				<Element name="When Sound Plays" type="int" options="Idle;0;Aware;1;Attack;2;Hit;3;Death;4;Weapon;5;Movement Loop;6;Conscious Loop;7"/>
+			</Subrecord>
+			<Subrecord name="CSDI" desc="Actor Sound (SNDR)" optional="1" size="4">
+				<Element name="FormID" type="formid" reftype="SNDR" />
+			</Subrecord>
+			<Subrecord name="CSDC" desc="Sound Chance" optional="1" size="1">
+				<Element name="Percent Chance" type="byte" />
+			</Subrecord>
+		</Group>
+		<Subrecord name="CSCR" desc="Sound Template (NPC_)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="NPC_" />
+		</Subrecord>
+		<Subrecord name="DOFT" desc="Daily Outfit (OTFT)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="OTFT" />
+		</Subrecord>
+		<Subrecord name="SOFT" desc="Sleep Outfit (OTFT)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="OTFT" />
+		</Subrecord>
+		<Subrecord name="DPLT" desc="Daily Package List (FLST)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="FLST" />
+		</Subrecord>
+		<Subrecord name="CRIF" desc="Crime Faction (FACT)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="FACT" />
+		</Subrecord>
+		<Subrecord name="FTST" desc="Skin Complexion (TXST)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="TXST" />
+		</Subrecord>
+		<Subrecord name="QNAM" desc="QNAM" optional="1" size="12">
+			<Element name="Unknown float 1" type="float" />
+			<Element name="Unknown float 2" type="float" />
+			<Element name="Unknown float 3" type="float" />
+		</Subrecord>
+		<Subrecord name="NAM9" desc="Character Gen Morphs tab" optional="1" size="76">
+			<Element name="Nose Length" type="float" />
+			<Element name="Nose Height" type="float" />
+			<Element name="Jaw Height" type="float" />
+			<Element name="Jaw Width" type="float" />
+			<Element name="Jaw Depth" type="float" />
+			<Element name="Cheekbone Height" type="float" />
+			<Element name="Cheekbone Width" type="float" />
+			<Element name="Eyes Height" type="float" />
+			<Element name="Eyes Width" type="float" />
+			<Element name="Brow Height" type="float" />
+			<Element name="Brow Width" type="float" />
+			<Element name="Brow Depth" type="float" />
+			<Element name="Mouth Height" type="float" />
+			<Element name="Mouth Depth" type="float" />
+			<Element name="Chin Width" type="float" />
+			<Element name="Chin Length" type="float" />
+			<Element name="Chin Depth" type="float" />
+			<Element name="Eyes Depth" type="float" />
+			<Element name="buffer/flags? 4bytes" type="uint" hexview="true" />
+		</Subrecord>
+		<Subrecord name="NAMA" desc="CharGen Morphs tab pulldowns (face-parts)" optional="1" size="16">
+			<Element name="NoseType" type="int" />
+			<Element name="unknown 4bytes" type="int" />
+			<Element name="EyesType" type="int" />
+			<Element name="MouthType" type="int" />
+		</Subrecord>
+		<Group id="TINTING" optional="1"/>
+	</Record>
 	<Record name="LVLN" desc="Leveled Actor"> <!-- Snip can't do element groups yet -->
 		<Group id="EDID" optional="1"/>
 		<Group id="OBND" optional="1"/>
