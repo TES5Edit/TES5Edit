@@ -1,0 +1,32 @@
+{{Trail|File Formats|Mod File Format}}
+DOOR records contain the data for doors.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || OBND || objectBounds || [[Tes5Mod:Mod_File_Format/OBND_Field|OBND]] || Object Bounds Data
+|- 
+| - || FULL || full name || lstring || In-game name
+|-
+| - || MODL || model || zstring || Models\ relative .nif
+|-
+| - || MODT || model data || struct[] || varying count of repeated 12 byte struct
+|-
+| - || SNAM || Open Sound || formid || ([[Tes5Mod:Mod_File_Format/SNDR|SNDR]])
+|-
+| - || QNAM || Close Sound || formid || ([[Tes5Mod:Mod_File_Format/SNDR|SNDR]])
+|-
+| + || FNAM || Flags || ubyte || Door Flags
+:0x02 Automatic
+:0x04 Hidden
+:0x08 Minimal Use
+:0x10 ? ''example: NorLabyrinthianLoadDoor01''
+:0x20 ? ''example: ImpJailDoor02NoSearch''
+|-
+|}

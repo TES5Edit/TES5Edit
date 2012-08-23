@@ -1,0 +1,27 @@
+{{Trail|File Formats|Mod File Format}}
+EFSH records are effect shaders.  Specifically, fade in/looping/fade out effect groups.
+
+Any record which does not have an applicable effect for any of the types is simply a blank string (0x00).
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || ICON || start effect || zstring || Path to .dds
+|-
+| + || ICO2 || looped effect || zstring || Path to .dds
+|-
+| + || NAM7 || post effect || zstring || Path to .dds
+|-
+| - || NAM8 || looped gradient || zstring || Path to .dds
+|-
+| - || NAM9 || end gradient || zstring || Path to .dds
+|-
+| + || DATA || unknown || struct || shader data, size ranges from 308 to 400 bytes (always an integral multiple of 4 bytes) in Skyrim.esm
+|-
+|}

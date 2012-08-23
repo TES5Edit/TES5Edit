@@ -1,0 +1,18 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+EQUP records are used as a reference for equippable slots.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|- 
+| - || PNAM || hand reference || formid[] || EQUP formids for left and/or right hand other EQUP records are pointing to
+|-
+| + || DATA || occupies slot || flags || When PNAM is specified, a 0x01 flag indicates that it will occupy the slot(s) in PNAM.  
+|}
+
+There are only a handful of records, and this sounds confusing, so as explanation BothHands has PNAM of both left and right hand EQUP, and DATA is 0x01.  EitherHands has the same PNAM but DATA is 0x00.

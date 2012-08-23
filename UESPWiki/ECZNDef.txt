@@ -1,0 +1,43 @@
+{{Trail|File Formats|Mod File Format}}
+'''ECZN''' records comprise an "Encounter Zone".  Encounter Zones control the loot found in an area, including the level of the loot and whether or not it resets.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+|rowspan=7| +
+|rowspan=7| DATA
+| data || struct[12] || 2 Records have length 8 instead of 12, but those 2 records are all zero
+|-
+|
+:owner ID
+| formID || Owner ([[Tes5Mod:Mod File Format/NPC_|NPC_]] or [[Tes5Mod:Mod File Format/FACT|FACT]])
+|-
+|
+:location
+| formID || Associated location ([[Tes5Mod:Mod_File_Format/LCTN|LCTN]])
+|-
+|
+:owner rank
+| int8 || Required rank in faction for ownership (either 0 or -1 used if no faction provided)
+|-
+|
+:min level
+| uint8 || Minimum level
+|-
+|
+:flags
+| uint8 || Flags:
+:0x01 = Never Resets
+:0x02 = Match PC Below Minimum Level
+:0x04 = Disable Combat Boundary
+|-
+|
+:max level
+| uint8 || Maximum level
+|}

@@ -1,0 +1,27 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+DUAL records are used as a reference for dual cast data.
+
+'''These records might not actually be used, only 2 records - doomSerpentDualCastData and FrostStormDualCastData'''
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|- 
+| + || OBND || object bounds || [[Tes5Mod:Mod_File_Format/OBND_Field|OBND]] || Object Bounds
+|-
+| + || DATA || unknown || struct || 24-byte struct
+:formID Projectile ([[Tes5Mod:Mod_File_Format/PROJ|PROJ]])
+:formID Explosion ([[Tes5Mod:Mod_File_Format/EXPL|EXPL]])
+:formID Effect Shader ([[Tes5Mod:Mod_File_Format/EFSH|EFSH]])
+:formID Hit Effect Art ([[Tes5Mod:Mod_File_Format/ARTO|ARTO]])
+:formID Impact Data Set ([[Tes5Mod:Mod_File_Format/IPDS|IPDS]])
+:uint32 scale inheritance flags
+::0x01 - hit effect art inherits scale
+::0x02 - projectile inherits scale
+::0x04 - explosion inherits scale
+|}
