@@ -1,0 +1,710 @@
+{{Trail|File Formats|Mod File Format}}
+The PERK record is a complex structure of subrecords which must be in the correct order and format to be properly parsed by the game.
+
+The overall PERK format is as follows:
+*[Basic Records] 
+*[Perk Sections] 1 or more
+
+= Basic Records =
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || VMAD || script info || VMAD || scripting info
+|-
+| - || FULL || full name || lstring || Full (in-game) name 
+|-
+| + || DESC || description || lstring || Description shown in-game when selecting the player's race (or 0)
+|-
+| * || CTDA || condition data || [[Tes5Mod:Mod_File_Format/CTDA_Field|CTDA]] || condition data
+|-
+| - || DATA || Data || Struct || 5-Byte Struct
+:IsTrait
+:Level
+:NumRanks
+:IsPlayable   
+:IsHidden
+|-
+| - || NNAM || Next Perk || Formid || Next Perk
+|}
+
+= Perk Section =
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| - || PRKE || Perk Entries || struct || 3 Byte Struct
+:uint8 - Type
+::00 - Quest + Stage
+::01 - Ability
+::02 - Entry Point
+:uint8 - Rank
+:uint8 - Priority
+|-{{ThickLine}}
+| - || DATA || Data || Struct || Struct
+:Struct #1
+::wbStructSK([0, 1], 'Quest + Stage', [
+::wbFormIDCk('Quest', [QUST]),
+::wbInteger('Quest Stage', itS8{, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt}),
+::wbByteArray('Unused', 3)
+:Struct #2
+::wbFormIDCk('Ability', [SPEL]),
+:Struct #3
+::wbStructSK([0, 1], 'Entry Point', [
+::wbInteger('Entry Point', itU8, wbEntryPointsEnum, cpNormal, True, nil{, wbPERKEntryPointAfterSet}),
+::wbInteger('Function', itU8, wbEnum([
+:::{0} 'Unknown 0',
+:::{1} 'Set Value', // EPFT=1
+:::{2} 'Add Value', // EPFT=1
+:::{3} 'Multiply Value', // EPFT=1
+:::{4} 'Add Range To Value', // EPFT=2
+:::{5} 'Add Actor Value Mult', // EPFT=2
+:::{6} 'Absolute Value', // no params
+:::{7} 'Negative Absolute Value', // no params
+:::{8} 'Add Leveled List', // EPFT=3
+:::{9} 'Add Activate Choice', // EPFT=4
+:::{10} 'Select Spell', // EPFT=5
+:::{11} 'Select Text', // EPFT=6
+:::{12} 'Set to Actor Value Mult', // EPFT=2
+:::{13} 'Multiply Actor Value Mult', // EPFT=2
+:::{14} 'Multiply 1 + Actor Value Mult', // EPFT=2
+:::{15} 'Set Text' // EPFT=7
+::wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
+|-{{ThickLine}}
+| - || PRKC || Perk Conditions || byte || Type - How to apply the conditions that follow. Has values of 0-2 but the actual values depend on the effect type. See the entry point EffectTypes for details.
+:Perk Condition
+:Run On (Tab Index)
+::Perk Owner
+::Target
+::Attacker
+::Attacker Weapon
+::Spell
+::Weapon
+::Item
+::Enchantment
+::Locked Reference
+|-
+| * || CTDA || condition data || [[Tes5Mod:Mod_File_Format/CTDA_Field|CTDA]] || condition data
+|-{{ThickLine}}
+| - || PRKC || Perk Conditions || byte || 
+:      wbRStruct('Function Parameters', [
+:        wbInteger(EPFT, 'Type', itU8),
+:        // case(EPFT) of
+:        // 1: EPFD=float
+:        // 2: EPFD=float,float
+:        // 3: EPFD=LVLI
+:        // 4: EPFD=SPEL, EPF2=lstring, EPFT3=int32 flags
+:        // 5: EPFD=SPEL
+:        // 6: EPFD=string
+:        // 7: EPFD=lstring
+:        wbLString(EPF2, 'Button Label'),
+:        wbStruct(EPF3, 'Script Flags', [
+:          wbInteger('Script Flags', itU8, wbFlags([
+:            'Run Immediately',
+:            'Replace Default'
+:          ])),
+:          wbByteArray('Unknown', 3)
+:        ]),
+:        wbUnion(EPFD, 'Data', wbEPFDDecider, [
+:          {0} wbByteArray('Unknown'),
+:          {1} wbFloat('Float'),
+:          {2} wbStruct('Float, Float', [
+:                wbFloat('Float 1'),
+:                wbFloat('Float 2')
+:              ]),
+:          {3} wbFormIDCk('Leveled Item', [LVLI]),
+:          {4} wbFormIDCk('Spell', [SPEL]),
+:          {5} wbFormIDCk('Spell', [SPEL]),
+:          {6} wbString('Text'),
+:          {7} wbLString('Text'),
+:          {8} wbStruct('Actor Value, Float', [
+:                wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
+:                wbFloat('Float')
+:              ])
+:        ], cpNormal, False{, wbEPFDDontShow})
+:      ], [], cpNormal, False{, wbPERKPRKCDontShow}),
+|-
+| - || PRKF || End Marker || Empty || Empty
+|}
+
+
+
+
+
+
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+
+<pre>
+The PERK record is a complex structure of subrecords which must be in the correct order and format to be properly parsed by the game.
+
+  Overall Format
+--------------------
+The overall PERK format is as follows:
+
+   [Basic Records] 
+   [Perk Sections] 1 or more
+   
+
+  Basic Records
+--------------------
+EDID(1)   zstring    EditorID
+VMAD(?)   struct     Script data
+FULL(1)   lstring    Perk Name
+DESC(1)   dlstring   Description
+CTDA(*)   32 bytes   Zero or more condition data subrecords for the perk to be available to the player
+DATA(1)   5 bytes    byte IsTrait
+                     byte Level
+                     byte NumRanks
+                     byte IsPlayable   
+                     byte IsHidden
+NNAM(?)   formid?    If present points to the next PERK 
+ICON(?)   zstring    Inventory image filename
+
+
+  Perk Sections
+--------------------
+What follows are 1 or more "perk sections". Each section starts with a PRKE subrecord and ends with a PRKF. 
+The type of the section is indicated by the data bytes of the PRKE field.
+The subrecord types shared between the different types of perk sections have the following formats. (To
+reiterate, this is not the layout of any type of perk section; this is just a description of the details of
+the different forms the subrecords can take, depending on the perk section type.)
+
+PRKE   3 bytes    byte Type      See below for more details on the format of each section type
+                        byte 3 is:
+                        00: perk section is Quest section
+                        01: perk section is Ability section
+                        02: perk section is Complex Entry Point section
+                  byte Rank      Value of 0 = Rank 1
+                  byte Priority  Assumed to be how to order/iterate through perk sections
+
+PRKC   1 byte     byte Type    How to apply the conditions that follow. Has values of 0-2 but the actual values
+                               depend on the effect type. See the entry point EffectTypes for details.
+                        Perk Owner
+                        Target
+                        Attacker
+                        Attacker Weapon
+                        Spell
+                        Weapon
+                        Item
+                        Enchantment
+                        Locked Reference
+
+CTDA   32 bytes   Condition data for the section
+  CIS1 zstring    Script variable associated with the previous CTDA
+  CIS2 zstring    Script variable associated with the previous CTDA
+
+EPFT   1 byte     byte Type    The type of the perk data that follows in EPFD, EPF2, and EPF3 subrecords 
+                        01: EPFD is a float
+                        02: EPFD is an 8 byte struct (float AV, float Factor)?
+                        03: EPFD is a formid (?)
+                        04:    	EPF2 = LString "verb" (feed) (optional)
+                        	EPF3 = dword? (0=No EPFD? or 3=SPEL EPFD?)
+                        	EPFD = formid (optional)
+                        05: EPFD is a formid (SPEL)
+                        06: EPFD is a zstring (GMST editorid?)
+                        07: EPFD is a lstring (verb for custom activate actions)
+
+  EPF2            see EPFT
+  EPF3            see EPFT
+  EPFD            see EPFT
+
+PRKF   0 bytes    Always the last subrecord in a perk section
+
+
+  Quest Section (0)
+-----------------------------------------
+For type 00 sections the data is just setting the stage of a specific quest
+applied without conditions:
+
+     PRKE(1)   3 bytes    0x00,0x00,0x00
+     DATA(1)   8 bytes    formid  QuestID
+                          byte    Stage
+                          byte[3] Null     Has junk data, assumably unused
+     PRKF(1)   0 bytes
+
+
+  Ability Section (1)
+-----------------------------------------
+For type 01 sections the data is simply a spell applied without conditions:
+
+     PRKE(1)   3 bytes    0x01,0x00,0x00
+     DATA(1)   4 bytes    formid SpellID?   Unsure if it is always a spell
+     PRKF(1)   0 bytes
+
+
+  Complex Entry Point Section (2)
+-----------------------------------------
+For type 02 sections there are one or more conditions which must be met in order to apply a variety of effects:
+
+     PRKE(1)   3 bytes    0x02,0x00,0x00
+     DATA(1)   3 bytes    byte EffectType     What effect to apply for the section (see below)
+                          byte FunctionType   How to apply the effect? Affects what should be found in the 
+                                              EPFT/EPFD which follow (see below for more details)                                              
+                          byte CondTypeCount  Number of different type of conditions to test for (01, 02 or 03).                                              
+                                              This is value is assumably fixed according to the effect type
+                                              and probably shouldn't be edited.
+
+     Begin Condition Sub-Section: The following sub-sections occurs 0 or more times
+         PRKC(1)     1 byte     Condition type
+         CTDA(1+)    32 bytes   1 or more conditions
+         CIS1(0-1)   zstring    String associated with the previous CTDA
+         CIS2(0-1)   zstring    String associated with the previous CTDA
+     End Condition Sub-Section
+
+     EPFT(1)       1 byte     byte DataType    Affects type of data that follows
+     EPFD(?)       variable   See the above details on EPFT for which subrecords should be found here and their format
+     EPF2(?)       dword
+     EPF3(?)       dword
+     PRKF(1)   0 bytes        Always ends a section
+
+
+
+  Perk Effect Types
+----------------------------
+The first byte in a DATA subrecord in a complex entry point section is the type of effect to apply and has the 
+values as listed below. The effect type determines what sort of data follows and in what format.
+
+  - 0x0E: Activate 
+       - Function = Add Activate Choice
+       - Button Label
+       - Run Immediately
+       - Replace Default
+       - Apply Spell
+       - Script Fragment?
+       - Condition Types: Perk Owner(0) and Target(1)
+       - Data.Unknown = 2
+  - 0x09: Add Level List On Death
+       - Function = Add Level List
+       - LevelListID
+       - Condition Types: Perk Owner and Target
+       - Data.Unknown = 2
+  - 0x05: Adjust Book Skill Points 1
+       - Functions: All Value
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x04: Adjust Limb Damage
+       - Functions: All Value
+       - Condition Types: Perk Owner, Attacker, Attacker Weapon
+       - Data.Unknown = 3
+  - 0x34: Apply Bashing Spell:
+       - Functions: Select Spell
+       - SpellID
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x33: Apply Combat Hit Speed
+       - Functions: Select Spell
+       - SpellID
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x35: Apply Reanimate Spell
+       - Functions: Select Spell
+       - SpellID
+       - Condition Types: Perk Owner, Spell, Target
+       - Data.Unknown = 3
+  - 0x45: Apply Sneaking Spell
+       - Functions: Select Spell
+       - SpellID
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x43: Apply Weapon Swing Spell
+       - Functions: Select Spell
+       - SpellID
+       - Condition Types: Perk Owner, Attacker, Attacker Weapon
+       - Data.Unknown = 3
+  - 0x03: Calculate Mine Explode Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Item
+       - Data.Unknown = 2
+  - 0x01: Calculate My Critical Hit Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x02: Calculate My Critical Hit Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x00: Calculate Weapon Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x4B: Can Dual Cast Spell
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x3D: Can Pickpocket Equipped Item
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target, Item
+       - Data.Unknown = 3
+  - 0x4A: Filter Activation
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x0A: Get Max Carry Weight
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x07: Get Should Attack
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Attacker
+       - Data.Unknown = 2
+  - 0x10: Ignore Broken Lock
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x0F: Ignore Running During Detection
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x41: Make Lockpicks Unbreakable
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x50: Mod Number of Enchantments Allowed
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x20: Mod Armor Weight
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Item
+       - Data.Unknown = 2
+  - 0x23: Mod Attack Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x1A: Mod Bashing Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x2E: Mod Bribe Amount
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x2F: Mod Detection Light
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x30: Mod Detection Movement
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x2D: Mod Favor Points
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x24: Mod Incoming Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Attacker, Attacker Weapon
+       - Data.Unknown = 3
+  - 0x2A: Mod Incoming Spell Duration
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x29: Mod Incoming Spell Magnitude
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x21: Mod Incoming Stagger
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Attacker
+       - Data.Unknown = 2
+  - 0x27: Mod Percent Blocked
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x2B: Mod Player Intimidation
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x2C: Mod Player Reputation
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x53: Mod Poison Dose Count
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Spell
+       - Data.Unknown = 3
+  - 0x1C: Mod Power Attack Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x1B: Mod Power Attack Stamina
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon
+       - Data.Unknown = 2
+  - 0x1F: Mod Secondary Value Weight
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell, Target
+       - Data.Unknown = 3
+  - 0x28: Mod Shield Deflect Arrow Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x52: Mod Shout OK
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x4F: Mod Soul Gem Enchanting
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Enchantment, Item
+       - Data.Unknown = 3
+  - 0x31: Mod Soul Gem Recharge
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Item
+       - Data.Unknown = 2
+  - 0x37: Mod Spell Casting Sound Event
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x26: Mod Spell Cost
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x1E: Mod Spell Duration
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell, Target
+       - Data.Unknown = 3
+  - 0x1D: Mod Spell Magnitude
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell, Target
+       - Data.Unknown = 3
+  - 0x25: Mod Target Damage Resistance
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x22: Mod Target Stagger
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x0B: Mod Addiction Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x42: Mod Alchemy Effectiveness
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x55: Mod Armor Rating
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Item
+       - Data.Unknown = 2
+  - 0x14: Mod Bow Zoom
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon
+       - Data.Unknown = 2
+  - 0x08: Mod Buy Prices
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x44: Mod Commanded Actor Limit
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x39: Mod Detection Sneak Skill
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x4D: Mod Enchantment Power
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Enchantment, Item
+       - Data.Unknown = 3
+  - 0x11: Mod Enemy Critical Hit Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x3A: Mod Falling Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x57: Mod Ingredients Harvested
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Item
+       - Data.Unknown = 2
+  - 0x48: Mod Ingredient Effects Learned
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x3E: Mod Lockpick Level Allowed
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x3B: Mod Lockpick Sweet Spot
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Locked Reference
+       - Data.Unknown = 2
+  - 0x56: Mod Lockpick Crime Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Locked Reference
+       - Data.Unknown = 2
+  - 0x5A: Mod Lockpick Key Reward Chance (Wax Key)
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Locked Reference
+       - Data.Unknown = 2
+  - 0x13: Mod Max Placeable Mines
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x38: Mod Pickpocket Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target, Item
+       - Data.Unknown = 3
+  - 0x46: Mod Player Magic Slowdown
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x0D: Mod Positive Chem Duration
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x59: Mod Potions Created (Create Duplicate Potion)
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x15: Mod Recover Arrow Chance
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x06: Mod Recovered Health
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x3C: Mod Sell Prices
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x16: Mod Skill Use
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x12: Mod Sneak Attack Multiplier
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon, Target
+       - Data.Unknown = 3
+  - 0x4E: Mod Soul Percent Captured to Weapon
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target, Item
+       - Data.Unknown = 3
+  - 0x58: Mod Spell Range to Location
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x19: Mod Telekinesis Damage
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x18: Mod Telekinesis Damage Multiplier
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x17: Mod Telekinesis Distance
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x4C: Mod Tempering Health
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Item
+       - Data.Unknown = 2
+  - 0x47: Mod Ward Magic Absorption Percent
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Spell
+       - Data.Unknown = 2
+  - 0x49: Purify Alchemy Ingredients
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x51: Set Activate Label
+       - Functions: SetText
+       - Text
+       - Condition Types: Perk Owner, Target
+       - Data.Unknown = 2
+  - 0x36: Set Boolean Graph Variable
+       - Functions: SelectText
+       - Text
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x3F: Set Lockpick Start Position
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x40: Set Progression Picking
+       - Functions: Value Types
+       - Condition Types: Perk Owner
+       - Data.Unknown = 1
+  - 0x32: Set Sweep Attack
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Weapon
+       - Data.Unknown = 2
+  - 0x54: Should Apply Placed Item
+       - Functions: Value Types
+       - Condition Types: Perk Owner, Target, Item
+       - Data.Unknown = 3
+
+
+  Function Types
+----------------------------
+Capitalized variables are input in section data:
+
+Function Types:
+  - 0x01: Set Value:              NewValue = VALUE
+             EPFT = 0x01  EPFD = float VALUE
+  - 0x02: Add Value:              NewValue = Value + AMOUNT
+             EPFT = 0x01  EPFD = float AMOUNT
+  - 0x03: Multiply Value:         NewValue = Value * FACTOR
+             EPFT = 0x01  EPFD = float AMOUNT
+  - 0x04: Add Range to Value:     NewValue = Value + random(MIN, MAX)
+             EPFT = 0x02  EPFD = float MIN, float MAX
+  - 0x05: Add Actor Value Mult:   NewValue = Value + AV * FACTOR
+             EPFT = 0x02  EPFD = float AV, float FACTOR
+  - 0x06: Absolute:               NewValue = Abs(Value)
+  - 0x07: Negative ABS Value:     NewValue = -Abs(Value)
+  - 0x08: Add Level List (Only EffectType 0x09)
+             EPFT = 0x03  EPFD = formid LevelListID
+  - 0x09: Add Activate Choice (Only EffectType 0x0E)
+             Script fragment info added to record VMAD
+             EPFT = 0x04  
+             EPF2 = zstring (button label if present)
+             EPF3 = word Flags1   0x01 = Run Immediately(No button label)  0x02 = Replace Default
+                    word Flags2   0x04 = Script Fragment? 0x03 = Spell?
+             EPFD = formid SpellID (if present)
+  - 0x0A: Select Spell (Only EffectTypes 0x33, 0x34, 0x35, 0x43, 0x45)
+             EPFT = 0x05  EPFD = formid SpellID
+  - 0x0B: Select Text (Only EffectType 0x36)
+             EPFT = 0x06 
+             EPFD = zstring (usually a GMST editor ID?)
+  - 0x0C: Set AV Mult:            NewValue = AV * FACTOR
+             EPFT = 0x02  EPFD = float AV, float FACTOR
+  - 0x0D: Multiply AV Mult:       NewValue = Value * AV * FACTOR
+             EPFT = 0x02  EPFD = float AV, float FACTOR
+  - 0x0E: Multiply 1 + AV Mult:   NewValue = Value * (1 + AV * FACTOR)
+             EPFT = 0x02  EPFD = float AV, float FACTOR
+  - 0x0F: Set Text (Only EffectType 0x51)
+             EPFT = 0x07
+             EPFD = lstring
+
+
+  Minimum Perk
+----------------------------
+  - EDID
+  - DESC (empty string)
+  - DATA (5 bytes)
+
+
+  Full Perk Subrecord Order
+----------------------------
+  - EDID
+  - VMAD
+  - DESC
+  - ICON       
+  - CTDA[]
+  - DATA
+  - NNAM
+  - PRKE...PRKF[]
+
+</pre>
