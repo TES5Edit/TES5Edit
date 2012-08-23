@@ -1,0 +1,23 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+A DLBR record is a Dialog "Branch", which is a reference of an associated QUST record, as well as a starting DIAL(Dialogue) topic.  They are references on a level above DIAL and below DLVW.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || || EDID || Editor ID || zstring || 
+|-
+| + || || QNAM || prereq? || formid || Reference to a [[Tes5Mod:Mod_File_Format/QUST|QUST]]. ''alternatives: activates QUST instead of prereq, or QUST is 'subject' of convo''
+|-
+| + || || TNAM || unknown || uint32 || ''Always 0, same field in DLVW points to DLBR''
+|-
+| + || || DNAM || flags? || uint32 || 
+:0x01 ''only once?''
+:0x02 ''no player interaction?''
+|-
+| + || || SNAM || start dialog || formid || Reference to a [[Tes5Mod:Mod_File_Format/DIAL|DIAL]]
+|}

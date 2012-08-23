@@ -1,0 +1,39 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+'''COBJ''' records describe Constructible OBJects recipes, such as those used for [[Skyrim:Cooking|Cooking]], [[Skyrim:Smelter|Smelter]]s, [[Skyrim:Forge|Forge]]s, [[Skyrim:Grindstone|Grindstone]]s, and [[Skyrim:Workbench|Workbench]]es.
+
+It appears that '''COBJ''' records are keyed by Editor Id rather than Form Id, as the game will gladly load any number of records with a Form Id of 0x00000000.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || || EDID || editorID || zstring || Max 0x200 bytes, including null terminator.
+|-
+| - || || COCT || object count || uint32 || Number of input objects (types of ingredients) required.
+|-{{ThickLine}}
+| rowspan="3" | *
+| rowspan="3" | 
+| rowspan="3" | CNTO || inputObject || struct[8] || 
+|-
+| 
+: item
+| formID || The form ID of the ingredient required to craft this item.
+|-
+| 
+: quantity
+| uint32 || How many of this ingredient is required to craft the item.
+|-{{ThickLine}}
+| - || || COED || unknown || [[Tes5Mod:Mod File Format/COED Field|COED]] || 
+|-
+| * || || CTDA || conditions || [[Tes5Mod:Mod File Format/CTDA_Field|CTDA]] || Additional requirements that must be met before the player can use the recipe.  Most notably, used for forging to specify the [[Skyrim:Smithing|Smithing]] perk that must be unlocked to create the item.
+|- 
+| + || || CNAM || outputObject || formID || Resulting output object FormID.
+|-
+| + || || BNAM || benchKeyword || formID || [KYWD 0x00088105] CraftingSmithingForge, [KYWD 0x000ADB78] CraftingSmithingArmorTable, [KYWD 0x000A5CCE] CraftingSmelter, [KYWD 0x00088108] CraftingSmithingSharpeningWheel
+|-
+| + || || NAM1 || outputQuantity || uint16 || Quantity of the output object created by the recipe.
+|}

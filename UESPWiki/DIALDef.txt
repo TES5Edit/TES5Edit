@@ -1,0 +1,33 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+A DIAL record defines a dialog topic.  The DIAL record is followed by a GRUP containing the responses (INFO subrecords).
+
+{| class="wikitable" width="100%"
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| - || EDID || editorId || zstring || Editor ID
+|-
+| - || FULL || player dialog || dlstring || Player dialog (optional).
+|-
+| + || PNAM || unknown || ubyte[4] || 4 bytes struct, larger than formids
+|-
+| - || BNAM || branch || formid || [[Tes5Mod:Mod_File_Format/DLBR|DLBR]] (Dialog Branch) formid.
+|-
+| + || QNAM || quest || formid || [[Tes5Mod:Mod_File_Format/QUST|QUST]] formid.
+|-
+| + || SNAM || story? || char[4] || sample value: 'CUST' (have dialog),'SCEN' (no edid/dialog)
+|-
+| + || DATA || dialType || ubyte[1] || Type (assumed from oblivion)
+: 0=Topic
+: 1=Conversation
+: 2=Combat
+: 3=Persuasion
+: 4=Detection
+: 5=Service
+: 6=Miscellaneous
+|-
+| + || TIFC || info count || uint32 || count of topic [[Tes5Mod:Mod_File_Format/INFO|INFO]] subrecords
+|}

@@ -1,0 +1,22 @@
+{{Trail|File Formats|Mod File Format}}
+ASTP defines a relationship between 2 people.  Unknown how or if this is actually used in-game.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || MPRT || male parent title || zstring || 
+|- 
+| + || FPRT || female parent title || zstring || 
+|- 
+| - || FCHT || male child title || zstring || 
+|- 
+| - || MCHT || female child title || zstring || 
+|- 
+| + || DATA || flags || uint32 || 0x01 = related
+|}

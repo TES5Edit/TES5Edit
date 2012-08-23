@@ -1,0 +1,24 @@
+{{Trail|File Formats|Mod File Format}}
+CPTH contains the data for a camera "path".
+
+Each camera path is essentially a series of CTDA checks (usually), a small amount of data specific to the path, then output CAMS.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| * || CTDA || objectBounds|| [[Tes5Mod:Mod File Format/CTDA Field|CTDA]] ||  CTDA, presumably checks
+|-
+| - || CIS1  || ctda variable || zstring || eg. Is3rdPKillOnly
+|-
+| + || ANAM || unknown || struct || 8-byte struct ''look like formids''
+|-
+| + || DATA || flags || byte || 0x01
+|-
+| * || SNAM || cameras || formid || [[Tes5Mod:Mod File Format/CAMS|CAMS]] - do not line up with CTDA count
+|}

@@ -1,0 +1,51 @@
+{{Trail|File Formats|Mod File Format}}
+The AVIF record is [[Tes5Mod:Actor_Value_Indices#Actor_Value_Codes|Actor Value]] information.
+
+Most records are simple but the player skills have perk tree graphical information in them as well in field groups (below thick line repeats for each index).
+
+CNAM is listed twice because it means something per group record and also at an individual record level (if no perk groupings).  On the perk level, it is the INAM of the perk it connects to in the perk tree (line to).  For example, Bullseye (INAM 7) in the Archery tree requires Quickshot OR Ranger, therefore both of those field groups have a CNAM field of 7.
+
+Note: Smithing and Pickpocket are different because the initial CNAM does not match up (Pickpocket would start at Cutpurse) and the AVSK has different data throughout.  It's possible the record-level CNAM has a different meaning than assumed.
+
+Perk tree information:
+*'''This does not change prerequisites'''.  Individual PERK records have CTDA for perk requirements that allow you to skip perks if removed.
+*5 coordinates are given for each point along with any lines to other points.  
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || FULL || name || lstring || Full (in-game) name
+|-
+| + || DESC || description || lstring || always 0
+|-
+| + || ANAM || abbreviation || zstring || Only present on 1Hand/2Hand AV records
+|-
+| + || CNAM || data || struct(4 bytes) || See below, if it's a player skill this record = INAM of starting perk?, if it's not then has large 4byte info (probably what is in the first 4 bytes of AVSK)
+|-
+| - || AVSK || av data? || struct(16 bytes) || Only present for skills with groupings.  ''usually 4 bytes of data + 12 bytes (00-00-00-00-00-00-00-40-00-00-00-00)'' The first float acts as experience progress multiplicator (changed by some stones, e.g. the lover stone)
+|-{{ThickLine}}
+| + || PNAM || perk || formid || [[Tes5Mod:Mod_File_Format/PERK|PERK]] formid, or 0 for the first
+|-
+| + || FNAM || flag? || dword || Most common values are 1 and 0. First perk of a tree has usually huge values.
+|-
+| + || XNAM || x-coord || dword || X Coordinate within the Perk-Grid
+|-
+| + || YNAM || y-coord || dword || Y Coordinate within the Perk-Grid
+|-
+| + || HNAM || horizontal position || float || Horizontal position of the Skill within the already via xnam/ynam set grid.
+|-
+| + || VNAM || vertical position || float || Vertical position of the Skill within the already via xnam/ynam set grid.
+|-
+| + || SNAM || skill || formid || [[Tes5Mod:Mod_File_Format/AVIF|AVIF]] formid, same one as parent usually.  Present whether or not CNAM is.
+|-
+| * || CNAM || connecting line || uint32 || corresponds to INAM pair unlocks, can be 0 or multiple
+|-
+| + || INAM || index number || uint32 || unique id AFTER record starting with PNAM, not necessarily sequential ''records end with INAM''
+|-
+|}

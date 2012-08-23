@@ -1,0 +1,28 @@
+{{Trail|File Formats|Mod File Format}}
+CLMT records contain information on climate settings.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || WLST || weather list || struct || 12-byte struct (possibly can repeat but not seen)
+:0-3 (formid) [[Tes5Mod:Mod File Format/WTHR|WTHR]]
+:4-7 (uint32) percent chance?  always 100
+:8-11 all 0x00
+|-
+| + || FNAM || sun model || zstring || path to sun .dds
+|-
+| + || GNAM || glare model || zstring || path to glare .dds
+|-
+| + || MODL || model || zstring || Path to .nif (always Sky\Stars.nif)
+|-
+| - || MODT || model data || struct || optional, if there always 02 followed by 11 0x00
+|-
+| + || TNAM || unknown || struct || 6-byte struct ''maybe day/night 2 RGB colormasks? DefaultClimate 21-3C-60-7B-00-C3''
+|-
+|}

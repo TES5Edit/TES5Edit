@@ -1,0 +1,66 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+ACHR records hold information about 'Actors'.  This is a specific [[Tes5Mod:Mod_File_Format/NPC_|NPC]] at a specific location potentially at a specific time (triggered by scripts or otherwise) doing a specific thing at a specified static marker, additionally with optional data like reference types.
+
+For all NPCs, it is the ACHR formID that you are using when you <code>moveto player</code> etc.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| - ||EDID ||Editor ID||zstring||editor id
+|-
+| - ||VMAD||Scripting||[[Tes5Mod:Mod_File_Format/VMAD_Field|VMAD]]||scripting info
+|-
+| + ||NAME || base NPC ||formid||base [[Tes5Mod:Mod_File_Format/NPC_|NPC_]]
+|-
+| - ||XPRD ||unknown||float||''incredibly rare,  1 only value seen''
+|-
+| - ||XPPA ||unknown||0-length||''marker for above/next 2?  Very rare fields''
+|-
+| - ||INAM ||unknown||uint32?||''incredibly rare,  0s only value seen''
+|-
+| - ||PDTO ||unknown||struct||8-byte struct ''0s only value seen''
+|-
+| - ||XRGD ||ragdoll?  ||struct||large struct, seems to be coords - sets of 3 or 6 floats followed by a uint32
+|-
+| - ||XRGB ||unknown||struct||12-byte struct, appears to be 3 floats
+|-
+| - ||XSCL||scale||float||''very rare''
+|-
+| - ||XLCM ||type?||uint32?||only values seen are 0x00, 0x02, 0x03
+|-
+| - ||XAPD ||activation point flags?||ubyte||only seen 0x00
+|-
+| - ||XAPR ||activation point ref||struct||8-byte struct 
+:formid [[Tes5Mod:Mod_File_Format/REFR|REFR]] usually to a [[Tes5Mod:Mod_File_Format/STAT|STAT]]
+:float?  ''common value 00-DB-17-00''
+|-
+| * ||XLRT ||location ref type||formid||[[Tes5Mod:Mod_File_Format/LCRT|LCRT]]
+|-
+| - ||XHOR||horseid||formid||''incredibly rare''
+|-
+| - ||XESP ||enablescript  point?||struct||8-byte struct 
+:formid [[Tes5Mod:Mod_File_Format/REFR|REFR]] usually to a [[Tes5Mod:Mod_File_Format/STAT|STAT]]
+:float range? ''common value 00-DB-17-00, also found 01-00-00-00 -- might be purposefully large''
+|-
+| - ||XEZN ||encounterzone||formid||[[Tes5Mod:Mod_File_Format/ECZN|ECZN]] 
+|-
+| - ||XOWN ||owner||formid||usually [[Tes5Mod:Mod_File_Format/FACT|FACT]] but horse/dog has [[Tes5Mod:Mod_File_Format/NPC_|NPC_]]
+|-
+| - ||XLCN||location||formid||[[Tes5Mod:Mod_File_Format/LCTN|LCTN]]
+|-
+| - ||XLKR ||location route?||struct||8-byte struct 
+:formid 0 or [[Tes5Mod:Mod_File_Format/KYWD|KYWD]] (usually LinkCarryStart/End)  
+:formid [[Tes5Mod:Mod_File_Format/REFR|REFR]] usually to a [[Tes5Mod:Mod_File_Format/STAT|STAT]] ([[Tes5Mod:Mod_File_Format/FURN|FURN]] also)
+|-
+| + ||DATA ||coords||struct||24 byte (rotation in radians)
+:X - float
+:Y - float
+:Z - float
+:rX - float 
+:rY - float
+:rZ - float
+|}
