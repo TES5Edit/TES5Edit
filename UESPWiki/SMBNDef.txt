@@ -1,0 +1,27 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+SMBN are "Story Manager Branch Nodes", which are branchs in a tree structure from other SMBN or SMQN (Quest nodes)
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || || EDID || Editor ID || zstring || ''all records have''
+|-
+| + || || PNAM || Parent || formid || Reference to parent SMBN, [[Tes5Mod:Mod_File_Format/SMQN|SMQN]] or [[Tes5Mod:Mod_File_Format/SMEN|SMEN]]
+|-
+| + || || SNAM || child? || formid || 0 or reference to child SMBN, [[Tes5Mod:Mod_File_Format/SMQN|SMQN]] or [[Tes5Mod:Mod_File_Format/SMEN|SMEN]]
+|-
+| + || || CITC || CTDA count || uint32  || Count of CTDA entries
+|-
+| * || || CTDA || Condition Data || [[Tes5Mod:Mod_File_Format/CTDA_Field|CTDA]]  || CTDA records (CITC count)
+|-
+| - || || CIS2 || variable name || zstring || Optional variable name eg "::playerAllegiance_var"
+|-
+| + || || DNAM || flags? || uint32? || Flags, only 0x00, 0x01 seen
+|-
+| + || || XNAM || unknown || uint32? || Always 0
+|}

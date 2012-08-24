@@ -1,0 +1,52 @@
+{{Trail|File Formats|Mod File Format}}
+STAT records contain information on static objects.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Object Bounds
+|-
+| - || MODL || model || zstring || Path to .nif
+|-
+| - || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+|-
+| - || MODS || texture data || ubyte[???] || unknown
+|-
+| + || DNAM || data|| ubyte[8] || unknown
+:float  MaxAngle    30-120 degrees?
+:formid MaterialID [[Tes5Mod:Mod File Format/MATO|MATO]] formid
+|-
+| - || MNAM || LOD Data || struct || 1040 byte structur present if the "HasDistanceLOD" flag is set. There is a lot of "junk" data after nul terminated strings (this seems to be confirmed by manually setting all data between strings to 0x00). The first empty string represents the lowest level detail model (i.e., if LODModel2 is empty then 3/4 should be as well).
+:char[260] LODModel1   HighDetail
+:char[260] LODModel2
+:char[260] LODModel3
+:char[260] LODModel4   LowDetail
+|-
+|}
+
+
+== Flags ==
+Statics use various flags from the Flags1 member in the record header.
+<pre>
+                Has Tree LOD = 0x00000040
+            Not On Local Map = 0x00000200
+            Has Distance LOD = 0x00008000
+     High Detail LOD Texture = 0x00020000
+                Has Currents = 0x00080000
+                   Is Marker = 0x00800000
+                    Obstacle = 0x02000000
+           Show On World Map = 0x10000000
+
+
+NavMesh Import Options (the following are mutually exclusive)
+   Collision Geometry = 0x00000000 (default)
+               Filter = 0x04000000
+         Bounding Box = 0x08000000
+               Ground = 0x40000000
+</pre>

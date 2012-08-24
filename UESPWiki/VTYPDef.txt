@@ -1,0 +1,25 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+VYTP records create a reference for Voice Types.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || DNAM  || type || byte ||
+{| class="wikitable" border="1" width="100%" 
+!|Value||Meaning
+|-
+|0x00||Creature ''- a few uniques in here
+|- 
+|0x01||Male
+|-
+|0x02||Daedra ''- except Molag Bal''
+|-
+|0x03||Female
+|}
+|}

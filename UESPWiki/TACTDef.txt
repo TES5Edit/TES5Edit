@@ -1,0 +1,26 @@
+{{Trail|File Formats|Mod File Format}}
+TACT contains the data for a "Talking Activator".  In other words, an object (not an NPC) with which you can start/receive dialog.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || OBND || objectBounds|| [[Tes5Mod:Mod File Format/OBND Field|OBND]] ||  Object bounds.
+|-
+| - || FULL || full name || zstring || Name seen ingame (if any)
+|-
+| + || MODL || model file || zstring || Relative directory to a .nif
+|-
+| - || MODT || model data? || struct || Variable length, factors of 12 ''collision data?  InvisibleCollision01.nif are the ones without''
+|-
+| + || PNAM || unknown || uint32? || ''only 2 values, 0 and 0xCC4C3300''
+|-
+| + || FNAM || unknown || ushort? || Always 0
+|-
+| + || VNAM || voice type || formid || Voice Type ([[Tes5Mod:Mod File Format/VTYP|VTYP]])
+|}

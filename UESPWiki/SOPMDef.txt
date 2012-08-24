@@ -1,0 +1,36 @@
+{{Trail|File Formats|Mod File Format}}
+SOPM are "sound output markers".  These are presumedly boxes in space the sound will be heard in, potentially with modifier data.  Sounds ([[Tes5Mod:Mod_File_Format/SNDR|SNDR]]) always tie to one of these.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || NAM1 || unknown || ubyte[4] || ''not float/uint32/formid'' (replaced by FNAM if present)
+|-
+| - || FNAM || flag? || uint32 || 1 only value
+|-
+| + || MNAM || marker? || uint32 || ''1 seems to indicate presence of ONAM field (0 otherwise), might indicate physical box''
+|-
+| - || CNAM || flag? || uint32 || ''2 only value, only present when FNAM is''
+|-
+| - || ONAM || object bounds? || struct || 24 byte struct ''coordinates for a cube?''
+
+     byte[24]
+|-
+| - || SNAM || object bounds? || struct || 16 byte struct ''replaces ONAM when FNAM/CNAM present, also looks like coordinates for a cube''
+
+     byte[16]
+|-
+| - || ANAM || unknown || struct || 20-byte struct ''completely unknown, only not present if ONAM is present''
+
+    dword
+    float
+    float
+    dword
+    dword
+|}

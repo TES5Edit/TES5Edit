@@ -1,0 +1,32 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+SMQN are "Story Manager Quest Nodes", which are branchs in a tree structure from SMBN other SMQN (Quest nodes).  These are extremely similar to Branch Nodes except that they have extra fields which involve an actual QUST record.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| - || || EDID || Editor ID || zstring || 
+|-
+| + || || PNAM || Parent || formid || Reference to parent SMQN, [[Tes5Mod:Mod_File_Format/SMBN|SMBN]] or [[Tes5Mod:Mod_File_Format/SMEN|SMEN]]
+|-
+| + || || SNAM || child? || formid || 0 or reference to child SMQN, [[Tes5Mod:Mod_File_Format/SMBN|SMBN]] or [[Tes5Mod:Mod_File_Format/SMEN|SMEN]]
+|-
+| + || || CITC || CTDA count || uint32  || Count of CTDA entries
+|-
+| * || || CTDA || Condition Data || [[Tes5Mod:Mod_File_Format/CTDA_Field|CTDA]]  || CTDA records (CITC count)
+|-
+| - || || CIS2 || variable name || zstring || Optional variable name eg "::playerAllegiance_var" ''may be passed to next CTDA only?''
+|-
+| + || || DNAM || flags || uint32 || Flags, 0x01 and also very large (0x10000, 0x100000) 
+|-
+| + || || XNAM || unknown || uint32? || Always 0
+|-
+| + || || QNAM || NNAM count || uint32  || Count of NNAM (QUST) entries
+|-
+| * || || NNAM || Quest node || formid || [[Tes5Mod:Mod_File_Format/QUST|QUST]] formids (QNAM count)
+|-
+|}

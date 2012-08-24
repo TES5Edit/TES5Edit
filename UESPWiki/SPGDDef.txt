@@ -1,0 +1,16 @@
+{{Trail|File Formats|Mod File Format}}
+SPGD records contain information on shader particle geometry.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || DATA || unknown || struct || 48-byte struct or 40 without ICON ''appears to be series of 4-byte values''
+|-
+| - || ICON || effects || zstring || Path to .dds
+|}

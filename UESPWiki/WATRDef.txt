@@ -1,0 +1,35 @@
+{{Trail|File Formats|Mod File Format}}
+WATR records contain information on water types.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes4Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes4Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || FULL || unknown || uint32 || unknown
+|-
+| + || ANAM || unknown || ubyte || unknown
+|-
+| + || FNAM || unknown || ubyte || unknown
+|-
+| - || MNAM || unknown || ubyte || unknown
+|-
+| - || SNAM || unknown || uint32 || unknown
+|-
+| - || TNAM || unknown || uint32 || unknown
+|-
+| + || DATA || unknown || uint16 || unknown
+|-
+| + || DNAM || unknown || ubyte[228] || unknown
+|-
+| + || GNAM || unknown || ubyte[12] || unknown
+|-
+| - || NAM0 || unknown || ubyte[12] || unknown
+|-
+| - || NAM1 || unknown || ubyte[12] || unknown
+|-
+|}

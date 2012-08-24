@@ -1,0 +1,46 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+REGN are "regions", but not in the locational sense (those are [[Tes5Mod:Mod_File_Format/LCTN|LCTN]]).  Each region ties together ambient information (weather/music/etc), presumably so they can be dropped into settings and provide a complete ambience.
+
+Between the thick line are repeatable field sets, RPLI/RPLD come in pairs, and every occurrence of the bottom fields is preceded by an RDAT (sole exception: RDM0/RDSA can be under same RDAT).  RDAT can also appear by itself (though rare).
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || || EDID || Editor ID || zstring || 
+|-
+| + || || RCLR || region color || struct || literal hex RGB color followed by 0x00 (unknown where used)
+|-
+| - || || WNAM || world name || formid || World ([[Tes5Mod:Mod_File_Format/WRLD|WRLD]]). 
+|-{{ThickLine}}
+| - || || RPLI || "pl" indicator? || ubyte[4] || ''only 00-04-00-00 and all 0s appear, no tie to other field presence/values obvious''
+|-
+| - || || RPLD || data for "pl"? || struct[] || series of 8-byte structs, vary in length from 32 to 172 ''look like floats, coords?''
+|-{{ThickLine}}
+| - || || RDAT || data header? || struct  || 8-byte struct
+:uint32 - flags?  common values <10
+:ubyte[4]? - ''sample values 01-37-00-00, 00-32-00-00''
+|-
+| - || || RDM0 || music || formid  || Music ([[Tes5Mod:Mod_File_Format/MUSC|MUSC]]) formid.  Can appear with RDSA under same RDAT or on its own.
+|-
+| - || || RDSA || sound data || struct[]  || 12-byte struct, total count arbitrary
+:formid - Sound Reference ([[Tes5Mod:Mod_File_Format/SNDR|SNDR]])
+:uint32? - always 15
+:float? - unknown
+|-
+| - || || RDWT || weather data || struct[]  || 12-byte struct, total count arbitrary
+:formid - Weather ([[Tes5Mod:Mod_File_Format/WTHR|WTHR]])
+:uint32? - percent chance (all should add up to 100)
+:ubyte[4] - all 0s
+|-
+| - || || RDOT || unknown || uint32?  || always 0
+|-
+| - || || ICON || shader? || zstring || path to .dds ''Trees\CanopyShadow.dds''
+|-
+| - || || RDMP || Region Name? || lstring || Region's display name (localized string).
+
+|}

@@ -1,0 +1,139 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+REFR records are over 90% of all records.  They are simply references, but they are references to anything at any point in time (relatively speaking, whether triggered or otherwise), at any location in the game, doing something specified, or nothing.  They can have extra items, or extra flags attached to them to identify them as containers, important places/locations.
+
+Though there are a lot of fields for modifying various aspects of different things, the only fields required are a NAME (this is the main object we are referring to) and DATA (locational information).
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| - || || EDID || Editor ID || zstring ||editor id
+|-
+| - || || VMAD || script info || [[Tes5Mod:Mod_File_Format/VMAD_Field|VMAD]] || scripting info
+|-
+| + || || NAME || basic object || formid || Formid of anything as the base object.
+|-
+| - || || XMBO || object bounds || struct || similar to [[Tes5Mod:Mod_File_Format/OBND_Field|OBND]]
+|-
+| - || || XPRM || placement ref marker? || struct || 32 byte struct
+:floatx3 - bounds
+:floatx3 - placement data
+:floatx1 - unknown 1.5, 2 seen
+:uint32 - unknown, value 1
+|-
+| - || || XPOD || portal destination || formid[2] || origin/dest [[Tes5Mod:Mod_File_Format/REFR|REFR]]
+|-
+| - || || XRMR || reference marker  || uint32 || count of following XLRM, seems to also be able to hold flags
+:0x10000 - seen in 0x000C6B47, 48
+|-
+| * || || XLRM || location room marker || formid || [[Tes5Mod:Mod_File_Format/REFR|REFR]] usually to a [[Tes5Mod:Mod_File_Format/STAT|STAT]]
+|-
+| - || || XRGD || rgb data?  || struct || large (28-1204 bytes) struct, looks like a heap of floats seen on
+:CONT, BOOK (56 bytes seems constant for BOOK), ALCH (112)
+|-
+| - || || XRDS || light-related || float || ~1.25 (radiance?)
+|-
+| - || || XEMI || emitted light || formid || [[Tes5Mod:Mod_File_Format/LIGH|LIGH]]
+|-
+| - || || XLIG || light data || struct || 
+:ubyte[4] - 0s
+:float
+:ubyte[4] - 0s
+:float
+|-
+| - || || XESP || enable parent || struct || 8-byte struct 
+:formid - Parent reference (Object to take enable state from)
+:uint32 - Flags (records with no flags set have random values in high bits)
+::0x0001 = Set Enable State Opposite Parent
+::0x0002 = Pop In
+|-
+| - || || XALP || unknown || ubyte[2] || seen on MSTT, values both bytes
+|-
+| - || || XNDP || door pivot? || struct || 8-byte struct
+:float -  usually ~1-2
+:float  - usually ~1-2
+|-
+| - || || XTEL || door teleport || struct || 32-byte struct
+:formid - destination [[Tes5Mod:Mod_File_Format/DOOR|DOOR]]
+:floatx3 - relative x/y/z
+:floatx3 - relative rx/ry/rz
+|-
+| - || || XSCL || scale || float || setScale
+|-
+| - || || XAPD || activation point data? || ubyte || only seen 0x00
+|-
+| - || || XAPR ||activation point ref || struct || 8-byte struct 
+:formid [[Tes5Mod:Mod_File_Format/REFR|REFR]] usually to a [[Tes5Mod:Mod_File_Format/STAT|STAT]]
+:float - range?  ''common value 00-DB-17-00''
+|-
+| - || || XLIB || leveled item base || formid || [[Tes5Mod:Mod_File_Format/LVLI|LVLI]] of objects using this as a base
+|-
+| - || || XLKR ||location route||struct||8-byte struct 
+:formid 0 or [[Tes5Mod:Mod_File_Format/KYWD|KYWD]] (usually LinkCarryStart/End)  
+:formid [[Tes5Mod:Mod_File_Format/REFR|REFR]] usually to a [[Tes5Mod:Mod_File_Format/STAT|STAT]] ([[Tes5Mod:Mod_File_Format/FURN|FURN]] also)
+|-
+| - || || XLOC || lock information (door/cont) || struct || 20 bytes
+:uint32 - flags? (does not match oblivion def)
+:formid KEYM (according to oblivion def, 0s so far)
+:float?
+:ubyte[8] - 0s
+|-
+| * || || XLRT || location ref type || formid || [[Tes5Mod:Mod_File_Format/LCRT|LCRT]]
+|-
+| - || || XOWN || owner || formid || usually [[Tes5Mod:Mod_File_Format/FACT|FACT]] but horse/dog has [[Tes5Mod:Mod_File_Format/NPC_|NPC_]]
+|-
+| - || || XCNT || item count || uint32 || if more than 1 (eg arrows)
+|-
+| - || || XCVL || || ||
+|-
+| - || || XCZA || || ||
+|-
+| - || || XCZC || || ||
+|-
+| - || || XEZN || || ||
+|-
+| - || || XFVC || || ||
+|-
+| - || || XHTW || || ||
+|-
+| - || || XIS2 || || ||
+|-
+| - || || XLCM || type? || uint32? || only values seen are 0x00, 0x02, 0x03
+|-
+| - || || XMBR || || ||
+|-
+| - || || XOCP || || ||
+|-
+| - || || XPWR || || ||
+|-
+| - || || XTRI || || ||
+|-
+| - || || ONAM || || ||
+|-
+| - || || SCHR || || ||
+|-
+| - || || SCTX || || ||
+|-
+| - || || XACT || || ||
+|-{{ThickLine}}
+| - || 37 || XPRD || unknown || float || comes in set
+|-
+| - || 37 || XPPA || unknown || 0-length || marker, XPRD/XPPA/PDTO/INAM are a set
+|-
+| - || 37 || PDTO || unknown || uint32?[2?]  || 0 only value seen, comes in set
+|-
+| - || 37 || INAM || unknown || uint32?  || comes in set
+|-{{ThickLine}}
+| + || || DATA || locational data || struct || 24 byte (rotation in radians)
+:X - float
+:Y - float
+:Z - float
+:rX - float 
+:rY - float
+:rZ - float
+''Note: Divide X,Y by 4096 to get cell location''
+|}
