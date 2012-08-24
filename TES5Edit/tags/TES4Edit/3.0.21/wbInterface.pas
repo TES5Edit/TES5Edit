@@ -11,6 +11,7 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbInterface;
 
 interface
@@ -22,7 +23,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.636 (2012-08-22) EXPERIMENTAL';
+  VersionString               = '3.0.21 (2011-06-15) EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -45,14 +46,14 @@ var
   wbSimpleLAND : Boolean = False;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
-  wbHideUnused : Boolean{} = False{True}{};
-  wbHideIgnored : Boolean{} = False{True}{};
+  wbHideUnused : Boolean{} = True;{}
+  wbHideIgnored : Boolean{} = True;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
-  wbMoreInfoForUnknown: Boolean{ = False{True}{};
+  wbMoreInfoForUnknown: Boolean = False;
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
@@ -62,16 +63,16 @@ var
   wbMasterUpdateDone: Boolean;
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
-  wbMasterRestore: Boolean;
   wbDontSave: Boolean;
+  wbMasterRestore: Boolean;
 
   wbLODGen: Boolean;
 
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{} = True{};
-  wbReportUnused: Boolean{} = True{};
+  wbReportMode: Boolean{ = True{};
+  wbReportUnused: Boolean{ = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
   wbReportUnknownFormIDs: Boolean{} = True{};
@@ -85,10 +86,6 @@ var
   wbReportUnknownEnums: Boolean{} = True{};
   wbReportFormIDNotAllowedReferences: Boolean{} = True{};
   wbReportUnknown: Boolean{} = True{};
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-  wbReportUnknownLStrings: Boolean{} = False{};
 
   wbCheckExpectedBytes: Boolean{} = True{};
 
@@ -574,7 +571,6 @@ type
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
-    function GetFullFileName: string;
     function GetUnsavedSince: TDateTime;
     function GetMaster(aIndex: Integer): IwbFile;
     function GetMasterCount: Integer;
@@ -604,9 +600,6 @@ type
 
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
-
-    function GetIsLocalized: Boolean;
-    procedure SetIsLocalized(Value: Boolean);
 
     property FileName: string
       read GetFileName;
@@ -640,10 +633,6 @@ type
     property IsESM: Boolean
       read GetIsESM
       write SetIsESM;
-
-    property IsLocalized: Boolean
-      read GetIsLocalized
-      write SetIsLocalized;
   end;
 
   IwbDataContainer = interface(IwbContainer)
@@ -688,7 +677,6 @@ type
     _Flags: Cardinal;
     function IsESM: Boolean; inline;
     function IsDeleted: Boolean; inline;
-    function IsLocalized: Boolean; inline;
     function CastsShadows: Boolean; inline;
     function IsPersistent: Boolean; inline;
     function IsInitiallyDisabled: Boolean; inline;
@@ -700,7 +688,6 @@ type
 
     procedure SetESM(aValue: Boolean);
     procedure SetDeleted(aValue: Boolean);
-    procedure SetLocalized(aValue: Boolean);
     procedure SetPersistent(aValue: Boolean);
     procedure SetCompressed(aValue: Boolean);
     procedure SetInitiallyDisabled(aValue: Boolean);
@@ -758,8 +745,6 @@ type
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
     procedure SetIsDeleted(aValue: Boolean);
-    function GetIsLocalized: Boolean;
-    procedure SetIsLocalized(aValue: Boolean);
     function GetIsCompressed: Boolean;
     procedure SetIsCompressed(aValue: Boolean);
     function GetIsVisibleWhenDistant: Boolean;
@@ -845,9 +830,6 @@ type
     property IsCompressed: Boolean
       read GetIsCompressed
       write SetIsCompressed;
-    property IsLocalized: Boolean
-      read GetIsLocalized
-      write SetIslocalized;
     property IsVisibleWhenDistant: Boolean
       read GetIsVisibleWhenDistant
       write SetIsVisibleWhenDistant;
@@ -1394,23 +1376,6 @@ function wbStringLC(const aName      : string;
                           aAfterSet  : TwbAfterSetCallback = nil)
                                      : IwbStringDef; overload;
 
-function wbLString(const aSignature : TwbSignature;
-                    const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbSubRecordDef; overload;
-
-function wbLString(const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
-
 function wbStringMgefCode(const aSignature : TwbSignature;
                           const aName      : string;
                                 aSize      : Integer = 0;
@@ -1430,14 +1395,12 @@ function wbStringMgefCode(const aName      : string;
 
 function wbLenString(const aSignature : TwbSignature;
                      const aName      : string;
-                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbSubRecordDef; overload;
 
 function wbLenString(const aName      : string;
-                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
@@ -1686,8 +1649,8 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aRequired            : Boolean = False;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
-                          aAfterLoad : TwbAfterLoadCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                         aAfterLoad : TwbAfterLoadCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil)
                                                : IwbStructDef; overload;
 
 function wbStructSK(const aSignature : TwbSignature;
@@ -1745,9 +1708,9 @@ function wbStruct(const aSignature : TwbSignature;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aOptionalFromElement : Integer = -1;
-                        aAfterLoad : TwbAfterLoadCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                          aOptionalFromElement : Integer = -1;
+                         aAfterLoad : TwbAfterLoadCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbStruct(const aName      : string;
@@ -1756,8 +1719,8 @@ function wbStruct(const aName      : string;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
-                        aAfterLoad : TwbAfterLoadCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                         aAfterLoad : TwbAfterLoadCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbStructDef; overload;
 
 function wbRStruct(const aName           : string;
@@ -1857,38 +1820,31 @@ function wbEmpty(const aName      : string;
                                   : IwbValueDef; overload;
 
 function wbFormID: IwbFormID; overload;
-
 function wbFormID(const aValidRefs : array of TwbSignature;
                         aPersistent: Boolean)
                                    : IwbFormID; overload;
-
 function wbFormIDNoReach(const aValidRefs  : array of TwbSignature;
                                aPersistent : Boolean)
                                            : IwbFormID; overload;
-
 function wbFormID(const aValidRefs     : array of TwbSignature;
                   const aValidFlstRefs : array of TwbSignature;
                         aPersistent    : Boolean)
                                        : IwbFormID; overload;
-
 function wbFormIDNoReach(const aValidRefs     : array of TwbSignature;
                          const aValidFlstRefs : array of TwbSignature;
                                aPersistent    : Boolean)
                                               : IwbFormID; overload;
-
 function wbFormID(const aSignature : TwbSignature;
                   const aName      : string = 'Unknown';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
-
 function wbFormID(const aName      : string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbIntegerDef; overload;
-
 function wbFormIDCk(const aSignature : TwbSignature;
                     const aName      : string;
                     const aValidRefs : array of TwbSignature;
@@ -1897,7 +1853,6 @@ function wbFormIDCk(const aSignature : TwbSignature;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil)
                                      : IwbSubRecordDef; overload;
-
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
                            const aName      : string;
                            const aValidRefs : array of TwbSignature;
@@ -1906,7 +1861,6 @@ function wbFormIDCkNoReach(const aSignature : TwbSignature;
                                  aRequired  : Boolean = False;
                                  aDontShow  : TwbDontShowCallback = nil)
                                             : IwbSubRecordDef; overload;
-
 function wbFormIDCk(const aName      : string;
                     const aValidRefs : array of TwbSignature;
                           aPersistent: Boolean = False;
@@ -1914,7 +1868,6 @@ function wbFormIDCk(const aName      : string;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil)
                                      : IwbIntegerDef; overload;
-
 function wbFormIDCkNoReach(const aName      : string;
                            const aValidRefs : array of TwbSignature;
                                  aPersistent: Boolean = False;
@@ -1922,7 +1875,6 @@ function wbFormIDCkNoReach(const aName      : string;
                                  aRequired  : Boolean = False;
                                  aDontShow  : TwbDontShowCallback = nil)
                                             : IwbIntegerDef; overload;
-
 function wbFormIDCk(const aSignature     : TwbSignature;
                     const aName          : string;
                     const aValidRefs     : array of TwbSignature;
@@ -1932,7 +1884,6 @@ function wbFormIDCk(const aSignature     : TwbSignature;
                           aRequired      : Boolean = False;
                           aDontShow      : TwbDontShowCallback = nil)
                                          : IwbSubRecordDef; overload;
-
 function wbFormIDCk(const aName          : string;
                     const aValidRefs     : array of TwbSignature;
                     const aValidFlstRefs : array of TwbSignature;
@@ -1941,7 +1892,6 @@ function wbFormIDCk(const aName          : string;
                           aRequired      : Boolean = False;
                           aDontShow      : TwbDontShowCallback = nil)
                                          : IwbIntegerDef; overload;
-
 function wbFormIDCkNoReach(const aName          : string;
                            const aValidRefs     : array of TwbSignature;
                            const aValidFlstRefs : array of TwbSignature;
@@ -1950,6 +1900,8 @@ function wbFormIDCkNoReach(const aName          : string;
                                  aRequired      : Boolean = False;
                                  aDontShow      : TwbDontShowCallback = nil)
                                                 : IwbIntegerDef; overload;
+
+
 
 function wbChar4: IwbChar4;
 
@@ -2017,13 +1969,12 @@ var
   wbSizeOfMainRecordStruct : Integer;
 
 type
-  TwbGameMode = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
+  TwbGameMode = (gmTES4, gmFO3, gmFNV, gmTES5);
 
 var
   wbGameMode : TwbGameMode;
   wbAppName  : string;
   wbGameName : string;
-  wbLanguage : string;
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -2109,8 +2060,7 @@ uses
   Variants,
   Math,
   AnsiStrings,
-  TypInfo,
-  wbLocalization;
+  TypInfo;
 
 function StrToSignature(const s: string): TwbSignature;
 var
@@ -2884,7 +2834,7 @@ type
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; virtual;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 
-    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); virtual;
+    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
     procedure FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 
     function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; virtual;
@@ -2935,20 +2885,12 @@ type
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
   end;
 
-  TwbLStringDef = class(TwbStringDef)
-  protected
-    function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; override;
-    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); override;
-    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
-  end;
 
   TwbLenStringDef = class(TwbValueDef, IwbLenStringDef)
   protected
-    Prefix: Integer;
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
                  const aName      : string;
-                       aPrefix    : integer;
                        aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                        aDontShow  : TwbDontShowCallback);
 
@@ -2985,12 +2927,6 @@ type
     FoundString            : Integer;
     NotFoundString         : Integer;
     Strings                : TStringList;
-
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-    FoundLString            : Integer;
-    NotFoundLString         : Integer;
 
     IsEmpty                : Integer;
     IsNotEmpty             : Integer;
@@ -3495,8 +3431,7 @@ function wbRecord(const aSignature       : TwbSignature;
                         aAddInfoCallback : TwbAddInfoCallback = nil;
                         aPriority        : TwbConflictPriority = cpNormal;
                         aRequired        : Boolean = False;
-                        aAfterLoad       : TwbAfterLoadCallback = nil;
-                        aAfterSet        : TwbAfterSetCallback = nil)
+                        aAfterLoad       : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil)
                                          : IwbRecordDef;
 begin
 //  if aSignature <> 'WATR' then
@@ -3599,40 +3534,6 @@ begin
   Result := wbSubRecord(aSignature, aName, wbStringLC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbStringLC(const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
-begin
-  Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
-end;
-
-function wbLString(const  aSignature : TwbSignature;
-                    const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbSubRecordDef; overload;
-begin
-  Result := wbSubRecord(aSignature, aName, wbLString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
-end;
-
-function wbLString(const  aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
-begin
-  Result := TwbLStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
-end;
-
 function wbStringMgefCode(const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
@@ -3643,6 +3544,17 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                                      : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbStringMgefCode('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+end;
+
+function wbStringLC(const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+begin
+  Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
 end;
 
 function wbStringMgefCode(const aName      : string;
@@ -3658,23 +3570,21 @@ end;
 
 function wbLenString(const aSignature : TwbSignature;
                      const aName      : string;
-                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenString('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbLenString('', aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
 function wbLenString(const aName      : string;
-                           aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbLenStringDef; overload;
 begin
-  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow);
+  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow);
 end;
 
 function wbUnion(const aSignature : TwbSignature;
@@ -4281,15 +4191,7 @@ function wbFormID(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(
-              aSignature,
-              aName,
-              itU32,
-              wbFormID,
-              aPriority,
-              aRequired,
-              False,
-              aDontShow);
+  Result := wbInteger(aSignature, aName, itU32, wbFormID, aPriority, aRequired, False, aDontShow);
 end;
 
 function wbFormID(const aName     : string;
@@ -4790,7 +4692,7 @@ begin
 end;
 
 constructor TwbRecordDef.Create(aPriority        : TwbConflictPriority;
-                                aRequired        : Boolean;
+                                aRequired        : Boolean;     
                           const aSignature       : TwbSignature;
                           const aName            : string;
                           const aMembers         : array of IwbRecordMemberDef;
@@ -4848,7 +4750,7 @@ end;
 
 function TwbRecordDef.GetMemberCount: Integer;
 begin
-  Result := Length(recMembers);
+  Result := Length(recMembers); 
 end;
 
 function TwbRecordDef.GetMemberFor(aSignature     : TwbSignature;
@@ -5167,7 +5069,7 @@ end;
 
 function TwbSubRecordStructDef.AllowUnordered: Boolean;
 begin
-  Result := srsAllowUnordered;
+  Result := srsAllowUnordered; 
 end;
 
 function TwbSubRecordStructDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -6593,7 +6495,7 @@ begin
         s := flgNames[i];
       if s = '' then
         if flgUnknownIsUnused then
-          s := 'Unused'
+          s := 'Unused' 
         else
           s := '<Unknown: '+IntToStr(i)+'>';
       if GetFlagDontShow(aElement, i) then
@@ -8456,17 +8358,6 @@ begin
           WriteLn('  ', Strings[k], ' (', Integer(Objects[k]),')');
     end;
 
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-  if wbReportUnknownLStrings then
-    if (FoundLString > 0) and (NotFoundLString < 1) then begin
-      WriteLn('Found Strings: ', s, ': ',Strings.Count,' (', FoundLString, ')');
-      with Strings do
-        for k := 0 to Pred(Count) do
-          WriteLn('  ', Strings[k], ' (', Integer(Objects[k]),')');
-    end;
-
   if wbReportEmpty then
     if IsEmpty > 0 then
       if IsNotEmpty > 0 then begin
@@ -8595,7 +8486,7 @@ begin
               SetLength(FloatsAtOffSet, Succ(Offset));
 
             try
-              f2 := RoundToEx(f, -3); {>>> Floating Point Violation <<<}
+              f2 := RoundToEx(f, -3);
               if (f2 <> 0) and (Abs(f-f2) < 0.0002) then begin
                 if (f2 > -1000000) and (f2 < 1000000) then begin
                   Inc(FoundFloatAtOffSet[Offset]);
@@ -8644,37 +8535,6 @@ begin
                 end;
               end else begin
                 Inc(NotFoundString);
-                Break;
-              end;
-
-            Inc(p);
-          end;
-        end;
-      end;
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-      if wbReportUnknownLStrings then begin
-        if (badSize < 1) and (NotFoundLString < 1) then begin
-          p := aBasePtr;
-          while (Cardinal(p)) < Cardinal(aEndPtr) do begin
-            if p^ < 32 then
-              if (Succ(Cardinal(p)) = Cardinal(aEndPtr)) and (p^ = 0) then begin
-                s := PAnsiChar(aBasePtr);
-                if Length(s) > 4 then begin
-                  Inc(FoundLString);
-
-                  if not Assigned(Strings) then
-                    Strings := TwbFastStringListCS.CreateSorted;
-
-                  with Strings do if Count < 15 then begin
-                    if not Find(s, i) then
-                      i := AddObject(s, TObject(0));
-                    Objects[i] := TObject(Succ(Integer(Objects[i])));
-                  end;
-                end;
-              end else begin
-                Inc(NotFoundLString);
                 Break;
               end;
 
@@ -9643,7 +9503,7 @@ begin
 //  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
 //    Result := NamedDef.Name;
   Result := '';
-
+  
   Used(aElement, Result);
 end;
 
@@ -9672,11 +9532,6 @@ end;
 function TwbMainRecordStructFlags.IsDeleted: Boolean;
 begin
   Result := (_Flags and $00000020) <> 0;
-end;
-
-function TwbMainRecordStructFlags.Islocalized: Boolean;
-begin
-  Result := (_Flags and $00000080) <> 0;
 end;
 
 function TwbMainRecordStructFlags.IsESM: Boolean;
@@ -9728,14 +9583,6 @@ begin
     _Flags := _Flags and not $00000001;
 end;
 
-procedure TwbMainRecordStructFlags.SetLocalized(aValue: Boolean);
-begin
-  if aValue then
-    _Flags := _Flags or $00000080
-  else
-    _Flags := _Flags and not $00000080
-end;
-
 procedure TwbMainRecordStructFlags.SetInitiallyDisabled(aValue: Boolean);
 begin
   if aValue then
@@ -9779,17 +9626,13 @@ var
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < Prefix then begin
+  if Len < 4 then begin
     if wbCheckExpectedBytes then
-      Result := Format('Expected at least %d bytes of data, found %d', [Prefix , Len]);
+      Result := Format('Expected at least %d bytes of data, found %d', [4 , Len]);
     Exit;
   end;
 
-  case Prefix of
-    1: Size := PByte(aBasePtr)^ + Prefix;
-    2: Size := PWord(aBasePtr)^ + Prefix;
-    4: Size := PCardinal(aBasePtr)^ + Prefix;
-  end;
+  Size := PCardinal(aBasePtr)^ + 4;
   if Len < Size then begin
     if wbCheckExpectedBytes then
       Result := Format('Expected %d bytes of data, found %d', [Size , Len]);
@@ -9799,19 +9642,15 @@ end;
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbLenStringDef do
-    Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
 end;
 
 constructor TwbLenStringDef.Create(aPriority  : TwbConflictPriority;
                                    aRequired  : Boolean;
                              const aName      : string;
-                                   aPrefix    : Integer;
                                    aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                                    aDontShow  : TwbDontShowCallback);
 begin
-  Prefix := aPrefix;
-  if not (Prefix in [1, 2, 4]) then Prefix := 4;
-
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
@@ -9819,24 +9658,17 @@ procedure TwbLenStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aEleme
 var
   Len     : Cardinal;
   NewSize : Cardinal;
-  p       : Pointer;
+  p       : PCardinal;
   s: AnsiString;
 begin
   s := aValue;
   Len := Length(s);
-  if (Prefix < 4) and (Len >= Cardinal(1) shl (Prefix*8)) then
-    raise Exception.Create('String length overflow');
-
-  NewSize := Len + Prefix;
+  NewSize := Len + 4;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
 
   p := aBasePtr;
-  case Prefix of
-    1: PByte(p)^ := Len;
-    2: PWord(p)^ := Len;
-    4: PCardinal(p)^ := Len;
-  end;
-  p := Pointer(Cardinal(p) + Prefix);
+  p^ := Len;
+  Inc(p);
   if Len > 1 then
     Move(s[1], p^, Len);
 end;
@@ -9867,19 +9699,14 @@ var
 begin
   if Assigned(aBasePtr) then begin
     Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-    if Result < Prefix then
+    if Result < 4 then
       Exit;
 
-    case Prefix of
-      1: Len := PByte(aBasePtr)^ + Prefix;
-      2: Len := PWord(aBasePtr)^ + Prefix;
-      4: Len := PCardinal(aBasePtr)^ + Prefix;
-    end;
-
+    Len := PCardinal(aBasePtr)^ + 4;
     if Len < Result then
       Result := Len;
   end else
-    Result := Prefix;
+    Result := 4;
 end;
 
 function TwbLenStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -9896,35 +9723,25 @@ function TwbLenStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: Iw
 var
   Size : Cardinal;
   Len  : Cardinal;
+  p    : PCardinal;
   s    : AnsiString;
 begin
   s := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < Prefix then
+  if Len < 4 then
     Exit;
 
-  case Prefix of
-    1: begin
-         Size := PByte(aBasePtr)^;
-         Inc(PByte(aBasePtr));
-       end;
-    2: begin
-         Size := PWord(aBasePtr)^;
-         Inc(PWord(aBasePtr));
-       end;
-    4: begin
-         Size := PCardinal(aBasePtr)^;
-         Inc(PCardinal(aBasePtr));
-       end;
-  end;
-  Dec(Len, Prefix);
+  p := aBasePtr;
+  Size := PCardinal(aBasePtr)^;
+  Inc(p);
+  Dec(Len, 4);
 
   if Len > Size then
     Len := Size;
 
   SetLength(s, Len);
   if Len > 0 then
-    Move(aBasePtr^, s[1], Len);
+    Move(p^, s[1], Len);
   Result := s;
   Used(aElement, Result);
 end;
@@ -9973,32 +9790,6 @@ end;
 function TwbStringLCDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
 begin
   Result := LowerCase(s);
-end;
-
-{ TwbLString }
-
-procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
-begin
-  if aElement._File.IsLocalized then
-    raise Exception.Create('Can not assign to a localized string')
-  else
-    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
-end;
-
-function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  if aElement._File.IsLocalized then
-    Result := 4
-  else
-    Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
-end;
-
-function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
-begin
-  if aElement._File.IsLocalized then
-    Result := GetLocalizedValue(PCardinal(aBasePtr)^, aElement)
-  else
-    Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
 end;
 
 { TwbStringScriptDef }
