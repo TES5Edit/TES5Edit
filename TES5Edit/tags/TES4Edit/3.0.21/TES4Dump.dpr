@@ -20,8 +20,8 @@ program TES4Dump;
 {$APPTYPE CONSOLE}
 
 uses
-  nxReplacementMemoryManager,
-  nxExceptionHook,
+//  nxReplacementMemoryManager,
+//  nxExceptionHook,
   Classes,
   SysUtils,
   Windows,
@@ -207,7 +207,7 @@ begin
       wbGameName := 'Oblivion';
       DefineTES4;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3 or TES4 to select mode.');
+      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
       Exit;
     end;
 
