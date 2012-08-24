@@ -11,4 +11,10 @@ Appears in the temporary world children group in CELL records.
 |- 
 | + || NVNM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
 |-
+| + || ONAM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+|-
+| + || PNAM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+|-
+| + || NNAM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+|-
 |}
