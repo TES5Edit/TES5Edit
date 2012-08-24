@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.320 (2012-08-3) EXPERIMENTAL';
+  VersionString               = '3.0.636 (2012-08-22) EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -2023,6 +2023,7 @@ var
   wbGameMode : TwbGameMode;
   wbAppName  : string;
   wbGameName : string;
+  wbLanguage : string;
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -9895,7 +9896,6 @@ function TwbLenStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: Iw
 var
   Size : Cardinal;
   Len  : Cardinal;
-  p    : Pointer;
   s    : AnsiString;
 begin
   s := '';
@@ -9903,13 +9903,20 @@ begin
   if Len < Prefix then
     Exit;
 
-  p := aBasePtr;
   case Prefix of
-    1: Size := PByte(aBasePtr)^;
-    2: Size := PWord(aBasePtr)^;
-    4: Size := PCardinal(aBasePtr)^;
+    1: begin
+         Size := PByte(aBasePtr)^;
+         Inc(PByte(aBasePtr));
+       end;
+    2: begin
+         Size := PWord(aBasePtr)^;
+         Inc(PWord(aBasePtr));
+       end;
+    4: begin
+         Size := PCardinal(aBasePtr)^;
+         Inc(PCardinal(aBasePtr));
+       end;
   end;
-  p := Pointer(Cardinal(p) + Prefix);
   Dec(Len, Prefix);
 
   if Len > Size then
@@ -9917,7 +9924,7 @@ begin
 
   SetLength(s, Len);
   if Len > 0 then
-    Move(p^, s[1], Len);
+    Move(aBasePtr^, s[1], Len);
   Result := s;
   Used(aElement, Result);
 end;

@@ -15,6 +15,7 @@
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_GENERATEJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
+
 program TES5Dump;
 
 {$I Compilers.inc}
@@ -275,6 +276,11 @@ begin
 //      GroupToSkip.Add('WRLD');
     end;
 
+    if wbFindCmdLineParam('l', s) and (wbGameMode = gmTES5) then
+      wbLanguage := s
+    else
+      wbLanguage := 'English';
+
     s := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
@@ -309,6 +315,11 @@ begin
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
+      WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
+      WriteLn(ErrOutput, '             ', 'Default language is English');
+      WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
+      WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;

@@ -13,8 +13,13 @@
 *******************************************************************************}
 // Thanks to zilav18
 
-// Anything written here is a temp hack for dump to show lstrings
-// needs complete rewrite for TES5Edit
+{>>>
+  Anything written here is a temp hack for dump to show lstrings.
+  The purpose is to make it work without large modifications to wbInterface or
+  other core files.
+  It doesn't free memory.
+  Needs complete rewrite for TES5Edit.
+<<<}
 
 unit wbLocalization;
 
@@ -112,7 +117,7 @@ end;
 function TwbLocalizationFile.ReadZString: string;
 var
   s: AnsiString;
-  c: Char;
+  c: AnsiChar;
 begin
   s := '';
   while fStream.Read(c, 1) = 1 do begin
@@ -199,7 +204,8 @@ begin
   Result := '';
   if ID = 0 then Exit;
 
-  if not Assigned(lFiles) then lFiles := TStringList.Create;
+  if not Assigned(lFiles) then
+    lFiles := TStringList.Create;
 
   case LocalizedValueDecider(aElement) of
     lsDLString: Extension := 'DLSTRINGS';
@@ -212,7 +218,7 @@ begin
 
   lFileName := Format('%s_%s.%s', [
     ChangeFileExt(lFileName, ''),
-    'English',
+    wbLanguage,
     Extension
   ]);
   lFullName := ExtractFilePath(lFullName) + 'Strings\' +  lFileName;
@@ -221,16 +227,27 @@ begin
   if idx = -1 then begin
     bFailed := false;
     // checking for file on disk
+    {>>>
+      better to use ContainerHandler for this, but...
+      it'll require to add TwbFolder for 'Strings\'
+      and there is no way to check if it is already been added without
+      modifications to wbBSA and wbInterface, which I tried to avoid
+    <<<}
     if FileExists(lFullName) then begin
       wblf := TwbLocalizationFile.Create(lFullName);
       lFiles.AddObject(lFileName, wblf);
     end else
     // checking for file in bsa
     begin
+      {>>>
+        ok this will load only 1 bsa file, hack is a hack
+        real TES5Edit probably has its own ContainerHandler with added bsas
+      <<<}
       if not Assigned(ContainerHandler) then begin
         ContainerHandler := wbCreateContainerHandler;
         BSAName := ChangeFileExt(aElement._File.GetFullFileName, '.bsa');
-        ContainerHandler.AddBSA(BSAName);
+        if FileExists(BSAName) then
+          ContainerHandler.AddBSA(BSAName);
       end;
       res := ContainerHandler.OpenResource('Strings\' +  lFileName);
       if length(res) > 0 then begin
