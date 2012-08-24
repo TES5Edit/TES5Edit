@@ -32,7 +32,7 @@ uses
 var
   RecordToSkip : TStringList;
   GroupToSkip  : TStringList;
-  SubRecordOrderList : TStringList;
+  SubRecordOrderList     : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
