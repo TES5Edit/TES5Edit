@@ -1,0 +1,14 @@
+{{Trail|File Formats|Mod File Format}}
+FLST records are very basic lists that simply consist of a name and groups of any number of formids (or none at all).
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| * || LNAM || object || formid || Any kind of formid
+|}

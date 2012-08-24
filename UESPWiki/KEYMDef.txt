@@ -1,0 +1,33 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+An KEYM record contains data for a key.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || || EDID || editorID || zstring || Record Editor ID
+|-
+| - || || VMAD || script data || [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] || Script Data
+|-
+| + || || OBND || objectBounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]] || Always 12 bytes even if all 0s
+|-
+| + || || FULL || itemName || lstring || Full (in-game) item name
+|- 
+| - || || MODL || model || zstring || World model filename
+|-
+| - || || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+|-
+| - || || YNAM || pickupSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when picked up
+|-
+| - || || ZNAM || dropSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when dropped
+|-
+| - || || KSIZ || numKeywords || [[Tes5Mod:Mod_File_Format/KYWD#Including_Keywords|KSIZ]] || KYWD Count.
+|-
+| - || || KWDA || keywords || [[Tes5Mod:Mod_File_Format/KYWD#Including_Keywords|KWDA]] || [KYWD 0x000914EF] VendorItemKey
+|-
+| + || || DATA || flags? || uint32? || 4 bytes, always 0
+|}

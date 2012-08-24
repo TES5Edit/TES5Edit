@@ -1,0 +1,27 @@
+{{Trail|File Formats|Mod File Format}}
+HAZD records contains information on traps, specifically model information, PHZD contains gameplay information.
+
+NOTE: All fields marked required since all records have them but they may not all be required.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Always 12 bytes even if all 0s
+|-
+| - || FULL || full name || lstring || Full (in-game) name
+|-
+| + || MODL || model || zstring || Path to .nif
+|-
+| - || MODT || model data || [[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]] || model textures
+|-
+| - || MNAM || unknown || uint32 || unknown, but looks like a form ID
+|-
+| + || DATA || unknown || struct || 40-byte struct ''appears to be a series of 8-byte data''
+|-
+|}

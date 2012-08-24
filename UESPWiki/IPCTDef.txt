@@ -1,0 +1,31 @@
+{{Trail|File Formats|Mod File Format}}
+IPCT records contain the data for impacts.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes4Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes4Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || MODL || model || zstring || Path to .nif
+|-
+| - || MODT || model data || struct[] || series of 12-byte structs
+|-
+| + || DATA || unknown || struct[] || Contains 5 elements, unknown types.
+|-
+| - || DODT || unknown || struct[] || Contains 9 elements, unknown types.
+|-
+| - || DNAM || Decal Type || formid || Texture Set formid.
+|-
+| - || ENAM || Decal Type || formid  || Texture Set formid.
+|-
+| - || SNAM || Sound Type || formid  || Sound Reference formid.
+|-
+| - || NAM1 || Sound Type || formid  || Sound Reference formid.
+|-
+| - || NAM2 || Hazard Type || formid  || Hazard Reference formid.
+|-
+|}

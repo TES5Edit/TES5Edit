@@ -1,0 +1,41 @@
+{{Trail|File Formats|Mod File Format}}
+HDPT records contain head part data.  
+
+Each record has base model information followed by a group of fields for each possible usage (chargen/other) indicating a .tri file.
+
+Finally, it's also a reference to a fixed list (FLST) of possible part data (except a few odd cases like manekins).
+
+NAM0/NAM1 pairs will repeat (in thick lines).
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || FULL || name || lstring || name string, matches editor ID in most (not all) records
+|-
+| - || MODL || model || zstring || Models\ relative .nif
+|-
+| - || MODT || model texture data || [[Tes5Mod:Mod_File_Format/Model_Textures_Field|MODT]] || model struct
+|-
+| + || DATA || flags || ubyte || flags
+|- 
+| + || PNAM || unknown || uint32 || ''type info or total part count?''
+|- 
+| * || HNAM || additional part || formid || Other '''HDPT''' formid attached (e.g. blind right eye to set of both)
+|-{{ThickLine}}
+| + || NAM0 || option type || uint32 || values:
+:0x00 ''generic default?''
+:0x01 ''default''
+:0x02 ''chargen''
+|-
+| + || NAM1 || .tri file || zstring ||  Path to .tri
+|-{{ThickLine}}
+| - || TNAM || base texture || formid || [[Tes5Mod:Mod_File_Format/TXST|TXST]] formid
+|-
+| - || RNAM || resource list || formid || Fixed List([[Tes5Mod:Mod_File_Format/FLST|FLST]]) formid
+|}

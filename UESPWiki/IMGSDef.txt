@@ -1,0 +1,22 @@
+{{Trail|File Formats|Mod File Format}}
+IMGS records contain the data for the Imagespaces used in the game.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes4Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes4Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || ENAM || unknown || float[14] || unknown
+|-
+| - || HNAM || HDR Parameters || float[9] ||  Format is a list of floating points - in the order of: Eye Adapt Speed, Bloom Radius, Bloom Threshold, Bloom Scale, Target Luminance #1, Target Luminance #2 (unsure of what these two do - I believe the first is target LUM, what's considered bright, and the second is the upper lum clamp; how many lums the eye will adapt to at a max, but I'm not positive), Sunlight Scale, Sky scale, Eye Adapt Strength.
+|-
+| - || CNAM || Cinematic Parameters  || float[3] || Saturation, Brightness, Contrast (floating point values for each, between 0 and 1).
+|-
+| - || TNAM || Tint Parameters  || float[4] || RWX format, floating points for red, blue, and green values between 0 and 1.
+|-
+| - || DNAM || unknown  || float[3] ''or'' float[4] (?)    || Unknown?
+|}

@@ -1,0 +1,50 @@
+{{Trail|File Formats|Mod File Format}}
+Faction Information
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || || EDID || editorID || zstring || Faction name
+|-
+| - || || FULL || name || lstring || Full name
+|-
+| * || || XNAM || Faction Relationships || struct[12] || ''3 uint32, 1 being an id and last 2 being flags. Interfaction relationship settings.''
+|- 
+| + || || DATA || flags? || ubyte[4] || ''looks to be flags''
+|-
+| - || || JAIL || Prison Marker || formid || REFR formid - The exterior jail marker for the faction's prison.
+|-
+| - || || WAIT || Follower Wait Marker || formid || REFR formid - Marker the player's followers are assigned to wait at.
+|-
+| - || || STOL || Evidence Chest || formid || REFR formid - Stolen goods are stored in this chest.
+|-
+| - || || PLCN || Player Belongings Chest || formid  || REFR formid - Player's inventory is stored in this chest.
+|-
+| - || || CRGR || crime group || id || Crime Factions List (FLST)
+|-
+| - || || JOUT || Jail Outfit || formid || OTFT formid - Jail outfit the player is given.
+|-
+| + || || CRVA || Crime Gold || ubyte[20] || Gold values for various types of crime. The ''attack on sight'' and ''arrest'' flags are likely stored here too.
+|-
+| - || || VEND || vendor list || formid || Merchandise list (FLST)
+|-
+| - || || VENC || vendor chest || formid || Reference to vendor chest (REFR)
+|-
+| + || || VENV || || struct[12] || ''vendor-related, all 0s unless vendor but appears to be required''
+|-
+| * || || RNAM || rankid || uint32 || Rank ID 
+|-
+| * || || MNAM || rank name? || lstring || ''was male name but no FNAM found, mage guild has MNAM, rare''
+|-
+| - || || CITC || fence? || uint32 || ''think this is really a single flag, only value is 1 and found in the tg fence factions''
+|-
+| - || || CTDA || || struct[32] || ''tq fence factions''
+|-
+| - || || PLVD || || struct [12] || ''related to services''
+|-
+|}

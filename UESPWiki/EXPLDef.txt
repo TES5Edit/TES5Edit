@@ -1,0 +1,27 @@
+{{Trail|File Formats|Mod File Format}}
+EXPL records contain information on explosion effects.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Always 12 bytes, even if all 0s.
+|-
+| - || FULL || full name || lstring || Full(in-game) name
+|-
+| - || MODL || model || zstring || Path to .nif
+|-
+| - || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+|-
+| - || EITM || enchantment || formid || Enchantment  ([[Tes5Mod:Mod File Format/ENCH|ENCH]]) formid
+|-
+| - || MNAM || modifier || formid || Image Space Modifier ([[Tes5Mod:Mod File Format/IMAD|IMAD]]) formid
+|-
+| + || DATA || data || struct || 52 bytes  ''exceptions: FXEmptyObject.nif, 48 w/ EITM, 44 w/o, spider/dragon projectiles 40 w/ 0s OBND''
+|-
+|}

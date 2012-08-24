@@ -1,0 +1,37 @@
+{{Trail|File Formats|Mod File Format}}
+FLOR records contain information on harvestable flora, as well as almost any other harvestable other than those in TREE.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || VMAD || script data || [[Tes5Mod:Mod File Format/VMAD_Field|VMAD]] || Script Data
+|-
+| + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Object Bounds
+|-
+| + || FULL || ingame name || lstring || Full (in-game) name 
+|-
+| + || MODL || model || zstring || Path to .nif
+|-
+| + || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+|-
+| - || MODS || unknown || struct || unknown model struct
+|-
+| + || PNAM || unknown || uint32? || 4 bytes, always 0
+|-
+| - || RNAM|| verb string || lstring || Verb seen ingame, eg RNAM = 'Catch' and FULL = 'Salmon'
+|-
+| + || FNAM || flags? || uint16? || 2 bytes, always 0
+|-
+| - || PFIG || result item || formid || Formid of [[Tes5Mod:Mod File Format/INGR|INGR]]/[[Tes5Mod:Mod File Format/ALCH|ALCH]] received
+|-
+| - || SNAM || use sound || formid || Formid of [[Tes5Mod:Mod File Format/SNDR|SNDR]] when activated
+|-
+| + || PFPC || percent chance? || ubyte[4] || Always 64-64-64-64 (100) unless VMAD present (then 0) ''ChickenNest sole exception''
+|-
+|}
