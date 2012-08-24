@@ -1,0 +1,358 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+'''NPC_''' records describe Non Player Characters.
+
+Note: set of 4 at the bottom are optional but must come together if present and repeat often.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || VMAD || script info || [[Tes5Mod:Mod File Format/VMAD Field|VMAD]] || script info
+|-
+| + || OBND || object bound || [[Tes5Mod:Mod File Format/OBND Field|OBND]] || Always 12 bytes, even if 0
+|-
+| + || ACBS || config || struct || 24-byte struct
+:uint32 Flags
+::0x01 - Female
+::0x02 - Essential
+::0x04 - Is CharGen Face Preset
+::0x08 - Respawn
+::0x10 - Auto calc stats
+::0x20 - Unique
+::0x40 - Doesn't affect stealth meter
+::0x80 - PC Level Mult
+::0x100 - Audio template? (not displayed in CK)
+::0x800 - Protected
+::0x4000 - Summonable
+::0x10000 - Doesn't Bleed
+::0x40000 - owned/follow? (''Horses, Atronachs, NOT Shadowmere''; not displayed in CK)
+::0x80000 - Opposite Gender Anims
+::0x100000 - Simple Actor
+::0x200000 - looped script? ''AAvenicci, Arcadia, Silvia, Afflicted, TortureVictims''
+::0x10000000 - looped audio? ''AAvenicci, Arcadia, Silvia, DA02 Cultists, Afflicted, TortureVictims''
+::0x20000000 - Ghost/non-interactable (Ghosts, Nocturnal)
+:uint16 - Magicka Offset
+:unit16 - Stamina Offset
+:uint16 - Level (if PC Level Mult false) ''or'' [PC Level Multiplier]x100 (if PC Level Mult true)
+:uint16 - Calc min level
+:uint16 - Calc max level
+:uint16 - Speed
+:uint16 - Disposition Base
+:uint16 - Template Data Flags (controls which parts of NPC Record are overwritten by the template)
+::0x01 - Use traits (Traits tab, including race, gender, height, weight, voice type, death item)
+::0x02 - Use stats (Stats tab, including level, autocalc, skills, health/magicka/stamina, class, speed)
+::0x04 - Use factions (both factions and assigned crime faction)
+::0x08 - Use spelllist (both spells and perks)
+::0x10 - Use AI Data (AI Data tab, including aggression/confidence/morality, combat style and gift filter)
+::0x20 - Use AI Packages (only the basic Packages listed on the AI Packages tab; rest of tab controlled by Def Pack List)
+::0x40 - (unused?)
+::0x80 - Use Base Data (including name and short name, and flags for Essential, Protected, Respawn, Summonable, Simple Actor, and Doesn't affect stealth meter)
+::0x100 - Use inventory (Inventory tab, including all outfits and geared-up item -- but ''not'' death item)
+::0x200 - Use script
+::0x400 - Use Def Pack List (the dropdown-selected package lists on the AI Packages tab)
+::0x800 - Use Attack Data (Attack Data tab, including attack race, events, and data)
+::0x1000 - Use keywords
+:uint16 - Health Offset
+:uint16 - Bleedout Override
+|-
+| * || SNAM || faction || struct || 8-byte struct
+:formid Faction ([[Tes5Mod:Mod File Format/FACT|FACT]])
+:uint32 Rank ''few factions have RNAM entries for factions, so most are 0.  player factions are often 255''
+|-
+| - || INAM || death item || formid || Death Item ([[Tes5Mod:Mod_File_Format/LVLI|LVLI]])
+|-
+| - || VTCK || Voice Type || formid || Voice Type ([[Tes5Mod:Mod_File_Format/VTYP|VTYP]])
+|-
+| - || TPLT || template || formid || Base Template ([[Tes5Mod:Mod_File_Format/NPC_|NPC_]])
+|-
+| + || RNAM || race || formid || Race ([[Tes5Mod:Mod_File_Format/RACE|RACE]])
+|-
+| - || WNAM || worn armor || formid || ([[Tes5Mod:Mod_File_Format/ARMO|ARMO]])  ''eg SkinAtronachFrost, SkinDragonPriest''
+|-
+| - || ANAM || armor || formid || ([[Tes5Mod:Mod_File_Format/ARMO|ARMO]])  ''alternate to WNAM, Odahviing''
+|-
+| * || ATKD || Attack Data|| struct || 44-byte struct (same structure as RACE record): override racial attack data for a given attack event
+:float - Damage Mult
+:float - Attack Chance
+:formid - Attack Spell
+:uint32 - flags:
+::0x01 - Ignore Weapon
+::0x02 - Bash Attack
+::0x04 - Power Attack
+::0x08 - Left Attack
+::0x10 - Rotating Attack
+:float - Attack Angle
+:float - Strike Angle
+:float - Stagger
+:formid - Attack Type
+:float - Knockdown
+:float - Recovery Time
+:float - Fatigue Mult
+|-
+| * || ATKE || attack event|| zstring || event name
+|-
+| - || ATKR || attack race || formid || ([[Tes5Mod:Mod_File_Format/RACE|RACE]]) ''creatures mostly but some nords etc - prob for unarmed''
+|-{{ThickLine}}
+| - || SPCT || spell count || uint32 || Spell Count
+|-
+| * || SPLO || spell || formid || ([[Tes5Mod:Mod_File_Format/SPEL|SPEL]]) or ([[Tes5Mod:Mod_File_Format/SHOU|SHOU]])
+|-{{ThickLine}}
+| - || ECOR || escape combat override  || formid || ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]])
+|-
+| - || SPOR || spell? override || formid ||  ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]]) ''only 2 instances''
+|-{{ThickLine}}
+| - || PRKZ || perk count || uint32 || Count of PRKR records
+|-
+| * || PRKR || perk record || struct || 8-byte struct
+:formid ([[Tes5Mod:Mod_File_Format/PERK|PERK]])
+:float?  ''looks like a float but values make no sense''
+|-{{ThickLine}}
+| + || COCT || numItems || uint32 || number of CNTO fields
+|-
+| * || CNTO || items || struct || 8-byte struct
+:formid Any item formid (WEAP/ARMO/ALCH)
+:uint32 count
+|-
+| - || COED || Container Owner? || struct || 12 byte struct
+:formid
+:formid
+:float
+|-{{ThickLine}}
+| + || AIDT || aiData || struct || 20 byte struct
+:ubyte Aggression 
+::0x00 unagressive
+::0x01 aggressive
+::0x02 very aggressive
+::0x03 frenzied
+:ubyte Confidence 
+::0x00 cowardly
+::0x01 cautious
+::0x02 average
+::0x03 brave
+::0x04 foolhardy.''
+:ubyte Energy
+:ubyte Morality 
+::0x00 any crime
+::0x01 violence against enemies
+::0x02 property crime only ''cicero at the farm is the only one thus far''
+::0x03 no crime
+:ubyte Mood? (guessing from order thus far matching actor value page) ''almost always 0 but Linwe has 7 here, which would mean 'disgusted', vn''
+:ubyte Assistance  
+::0x00 helps nobody
+::0x01 helps allies
+::0x02 helps friends and allies''
+:int16 unk6
+:int16 unk8 ''suspected distance''
+:int16 unkA
+:int16 Aggro Distance
+:int16 unkE '' very rare always paired with unk12, values: 14e3, 799, 14fd, 1523, 1291 only, suspect flags''
+:int16 unk10 ''suspected Attack Distance always <= Aggro Distance''
+:int16 unk12 '' very rare always paired with unkE, values: 538, 1e6, 53f, 54a, 44a only, suspect flags''
+|-
+| * || PKID || aiPackage || formid || AI package ([[Tes5Mod:Mod_File_Format/PACK|PACK]])
+|-
+| - || KSIZ || ([[Tes5Mod:Mod_File_Format/KYWD#Including_Keywords|KSIZ]]) || uint32 || count of keywords
+|-
+| - || KWDA || ([[Tes5Mod:Mod_File_Format/KYWD#Including_Keywords|KWDA]]) || formid[KSIZ] ||
+|-
+| + || CNAM || class || formid || Class ([[Tes5Mod:Mod_File_Format/CLAS|CLAS]])
+|-
+| - || FULL || fullName || lstring || Full (in-game) name
+|-
+| - || SHRT || short alias || lstring || if present used in Alias=?
+|-
+| + || DATA || marker || 0-length || 0-length, presumably to mark DNAM position
+|-
+| + || DNAM || skill/stat data || struct || 52-byte struct
+:18x ubyte - Base skills in the following order
+::OneHanded,TwoHanded,Marksman,Block,Smithing,HeavyArmor,LightArmor,
+::Pickpocket,Lockpicking,Sneak,Alchemy,Speechcraft,
+::Alteration,Conjuration,Destruction,Illusion,Restoration,Enchanting
+:18x byte - mod skill, same order as above
+:uint16 - health
+:uint16 - magicka
+:uint16 - stamina
+:uint16 - base armor/unarmed?  ''presets are 7 except argonian with 10, most npcs at 1''
+:uint16 
+:uint16
+:float?  2uint16s?  ''(or REFR formid but the reference is to a door in Crystaldrift Cave or a tree most of the time)''
+|-
+| * || PNAM || headParts  || formid || Head Part addons (hair, eyes, scars, etc) from [[Tes5Mod:Mod File Format/HDPT|HDPT]]
+|-
+| - || HCLF || hair color || formid || Hair color ([[Tes5Mod:Mod File Format/CLFM|CLFM]])
+|-
+| - || ZNAM || combat style || formid || Combat style ([[Tes5Mod:Mod File Format/CSTY|CSTY]])
+|-
+| + || NAM5 || unknown|| short || flags or marker, "always" FF-00
+|-
+| + || NAM6 || scale || float || setScale
+|-
+| + || NAM7 || weight || float || NPC Weight Value
+|-
+| + || NAM8 || unknown || float || seems to always be 1 as well
+|-
+| - || DOFT || defaultOutfit || formid || Default Outfit ([[Tes5Mod:Mod File Format/OTFT|OTFT]])
+|-
+| - || SOFT || sleepingOutfit || formid || Sleeping Outfit ([[Tes5Mod:Mod File Format/OTFT|OTFT]])
+|-
+| - || CRIF || crimeFaction || formid || crime faction ([[Tes5Mod:Mod File Format/FACT|FACT]])
+|-
+| - || CSCR || sound creature ref || formid || Audio Template ([[Tes5Mod:Mod File Format/NPC_|NPC_]]) to use as an audio template 
+|-
+| - || DPLT || defaultPackageList || formid || Default Package List ([[Tes5Mod:Mod File Format/FLST|FLST]])
+|-
+| - || FTST || feature set || formid || Head texture ([[Tes5Mod:Mod File Format/TXST|TXST]])
+|-
+| - || QNAM || mat lighting || struct || 12-byte struct - texture lighting data ''looks like ambient missing alpha (opaque prob assumed)''
+:float ambient R?
+:float ambient G?
+:float ambient B?
+|-
+| rowspan=20 | + || NAM9 || Face Morphs Values || struct || 76-byte struct - 18 floats + 1 unknown. Listed below in order:
+|-
+| ||
+: Nose Long/Short
+| float || 
+: -1 Short to 1 Long
+|-
+| ||
+: Nose Up/Down
+| float || 
+: -1 Down to 1 Up
+|-
+| ||
+: Jaw Up/Down
+| float || 
+: -1 Up to 1 Down
+|-
+| ||
+: Jaw Narrow/Wide
+| float || 
+: -1 Narrow to 1 Wide
+|-
+| ||
+: Jaw Forward Back
+| float || 
+: -1 Back to 1 Forward
+|-
+| ||
+: Cheeks Up/Down
+| float || 
+: -1 Down to 1 Up
+|-
+| ||
+: Cheeks Forward Back
+| float || 
+: -1 Forward to 1 Back
+|-
+| ||
+: Eyes Up/Down
+| float || 
+: -1 Down to 1 Up
+|-
+| ||
+: Eyes In/Out
+| float || 
+: -1 In to 1 Out
+|-
+| ||
+: Brows Up/Down
+| float || 
+: -1 Down to 1 Up
+|-
+| ||
+: Brows In/Out
+| float || 
+: -1 In to 1 Out
+|-
+| ||
+: Brows Forward/Back
+| float || 
+: -1 Back to 1 Forward
+|-
+| ||
+: Lips Up/Down
+| float || 
+: -1 Down to 1 Up
+|-
+| ||
+: Lips In/Out
+| float || 
+: -1 In to 1 Out
+|-
+| ||
+: Chin Thin/Wide
+| float || 
+: -1 Thin to 1 Wide
+|-
+| ||
+: Chin Up/Down
+| float || 
+: -1 Up to 1 Down
+|-
+| ||
+: Chin Underbite/Overbite
+| float || 
+: -1 Overbite to 1 Underbite
+|-
+| ||
+: Eyes Forward/Back
+| float || 
+: -1 Forward to 1 Back
+|-
+| ||
+: unknown 4 bytes
+| 4 Bytes || 
+: Unknown Value: 0xFFFFF7F7
+
+|-
+| rowspan=5 | *  || NAMA || faceParts (?) || struct || Face part presets (numeric, starting from 0)
+|-
+| ||
+: nose
+| int32 || 
+: Nose
+|-
+| ||
+: Unknown
+| int32? || 
+: Unknown, is set to -1 on most if not all humanoids
+|-
+| ||
+: eyes
+| int32 || 
+: Eyes
+|-
+| ||
+: mouth
+| int32 || 
+: Mouth
+
+|-
+| * || CSDT || sound location || uint32 || Number corresponding to where the sound comes from (foot step, idle, attack, etc).
+|-
+| * || CSDI || sound reference || formid || Reference to the sound to play.  Tied to the latest CSDT location.
+|-
+| * || CSDT || sound chance || ubyte || Always follows a CSDI record.  Chance (0-100) that the sound will play on the triggering event.
+|-
+| - || DEST || destruction data || struct || 8-byte struct ''1 record, maybe accidental, usually object destruction data''
+|-
+| - || DSTD || destruction data|| struct || 20-byte struct ''1 record, maybe accidental, usually object destruction data''
+|-
+| - || DSTF || destruction flag || 0-length || ''1 record, maybe accidental, usually object destruction data''
+|-
+
+|-{{ThickLine}}
+| - || TINI || Unknown || short || Unknown - Tint Mask Index?
+|-
+| - || TINC || Unknown || int32 || Unknown - one after each TINI (Guess: Tint Mask Color, possibly in RGB format?)
+|-
+| - || TINV || Unknown || int32 || Unknown - one after each TINC (Guess: Tint Mask Value?)
+|-
+| - || TIAS || Unknown || short || Unknown - one after each TINV
+|}

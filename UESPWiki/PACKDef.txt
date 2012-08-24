@@ -1,0 +1,372 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+{{TOCright}} '''PACK''' records describe AI packages, which are used to control the behavior and activities of NPCs.
+
+PACK records use a moderately complex structure, with various fields that occur multiple times and have different meanings depending upon where they occur within the overall structure.  The records also seem to generally contain a large amount of unnecessary and/or obsolete content -- deleted activities never seem to actually be deleted from the game data; some sections are required even though they are entirely empty in 99.9% of the PACK records.  As a result, a large fraction of the data in a given PACK record may not be visible in the CK editor.
+
+== Header ==
+These fields are always found at the start of the PACK record.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| - || VMAD || script info || [[Tes5Mod:Mod File Format/VMAD Field|VMAD]] || script info
+|-
+| * || [[Tes5Mod:Mod File Format/CTDA Field|CTDA]] || conditions || struct[32] || Conditions controlling when the package can be active.  CTDA fields can also be found in the [[#Procedure Tree|Procedure Tree]] section of the record, in which case the conditions are specific to that branch of the procedure tree.
+|-
+| * ||
+: CIS1
+|Variable name? || zstring || Auxiliary data for CTDA.
+|-
+| * ||
+: CIS2
+|Variable name? || zstring || Auxiliary data for CTDA.
+|-
+| - || IDLC || Idle Count || uint8 || Number of formids found in subsequent IDLA field
+|-
+| - || IDLA || Idle || formid[IDLC] || 1 or more [[Tes5Mod:Mod File Format/IDLE|IDLE]] formids
+|-
+| - || IDLF || Idle Flags || uint8 || Flags:
+:0x01: If set: Run In Sequence. If not set: Random
+:0x04: Do Once
+:0x08: ''Unknown''
+|-
+| - || IDLT || Idle Time || float ||
+|-
+| - || QNAM || Owner Quest || formid || QNAM can only appear once in the header section.  However, it can also appear in the [[#Begin/End/Change|Begin/End/Change]] section, with a different format and meaning.
+|- {{ThickLine}}
+| rowspan="4" | +
+| rowspan="4" | PKCU || PKCU field || struct[12]
+|-
+|
+:''Unknown''
+| ulong || Unknown, possibly flags.  Values range from 1 to 34.
+|-
+|
+:Package Template
+| formid || Formid for another PACK record that is used as a template.  This value can only be provided in records that are identified with Package Type "Package", and only templates with type "Package Template" are valid entries.
+|-
+|
+:''Unknown''
+| ulong || Unknown, possibly flags.  Values range from 0 to 29.
+|- {{ThickLine}}
+| rowspan="7" | +
+| rowspan="7" | PKDT || Package Flags || struct[12] ||
+|-
+|
+:Misc Flags
+| uint32 || Only flags that have a visible effect in the CK are listed here.  Many other flags may be set in the game data, but they are probably hold-overs from [[Tes4Mod:Mod File Format/PACK|Oblivion]] that were phased out during development.
+:0x04 = Must Complete
+:0x08 = Maintain Speed at Goal
+:0x40 = At Package Start Unlock Doors
+:0x80 = On Package Change Unlock Doors
+:0x400 = Once Per Day
+:0x2000 = Preferred Speed (although choice of Walk/Fast Walk/Jog/Run is stored separately, see below)
+:0x20000 = Always Sneak
+:0x40000 = Allow Swimming
+:0x100000 = Ignore Combat
+:0x200000 = Weapons Unequipped
+:0x800000 = Weapon Drawn
+:0x8000000 = No Combat Alert
+:0x20000000 = Wear Sleep Outfit
+|-
+|
+:Package Type
+| uint8 || Only the first byte is relevant:
+:0x01 = Package Template (if not set, Package Type is "Template")
+0x12 is always set.
+|-
+|
+:Interrupt Override
+| uint8 || Only observed values are 0 (None) and 4 (Combat)
+|-
+|
+:Preferred Speed
+| uint8 || This value is only relevant if the Preferred Speed Misc Flag is set (0x2000 above)
+:0 = Walk
+:1 = Jog
+:2 = Run
+:3 = Fast Walk
+|-
+|
+:''Unknown''
+| uint8 || Possibly padding
+|-
+|
+:Interrupt Flags
+| uint32 ||
+:0x01 = Hellos to player
+:0x02 = Random conversations
+:0x04 = Observe combat behavior
+:0x08 = Greet corpse behavior
+:0x10 = Reaction to player actions
+:0x20 = Friendly fire comments
+:0x40 = Aggro Radius Behavior
+:0x80 = Allow Idle Chatter
+:0x200 = World Interactions
+The remainder of the bits (0xFC00) can also be set, but they appear to be "extra" interrupt flags: the "Set all interrupt flags" sets the flags to 0xFFFF, and "Clear all interrupt flags" sets them to 0x0000, but the the higher bits do not correspond to any displayed flags in the CK editor.
+|- {{ThickLine}}
+| rowspan="8" | +
+| rowspan="8" | PSDT
+| Schedule || struct[12] || Information on when package is allowed to be active
+|-
+|
+:Month
+| byte || Any=-1 (only value currently being used in Skyrim)
+|-
+|
+:Day of week
+| byte || Day of week
+:-1=Any
+:0=Sundas
+:1=Morndas
+:2=Tirdas
+:3=Middas
+:4=Turdas
+:5=Fredas
+:6=Loredas
+:7=Weekdays: MTMTF
+:8=Weekends: Loredas, Sundas
+:9=Morndas, Middas, Fredas
+:10=Tirdas, Turdas
+|-
+|
+:Date
+| byte || Date (day of month); Any=0
+|-
+|
+:Hour
+| byte || Start hour (0-23); Any=-1
+|-
+|
+:Minute
+| byte || Start minutes (0-59); Any=-1
+|-
+|
+:''Unknown''
+| byte[3] || Probably unused padding (although values are typically not zero)
+|-
+|
+:Duration
+| uint32 || Duration in minutes, although the value is displayed in the CK using decimal hours
+|}
+
+== Public Package Data ==
+The section providing the public package data is located after the fields listed for the [[#Header|header]], and extends until an XNAM field is encountered.  It provides a list of activities and parameters controlling those activities, all of which are listed in the "Public Package Data" section of the CK edit interface.
+
+The section is made up of a series of ANAM fields, each of which is followed by various other fields providing the activity parameters corresponding to that ANAM field.  Then the section contains a series of UNAM fields, each of which provides the activity name corresponding to one of the previous ANAM fields.
+
+Note that ANAM fields are also found in the [[#Procedure Tree|Procedure Tree]] section, if one exists.
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| * || ANAM || Activity Type || zstring || A string identifying the type of data stored in this activity entry.  Each ANAM field is followed by one field that provides data with the given type.  Possible values in this section, and the associated field, are:
+* Bool: CNAM field, CNAM type=uint8
+* Float: CNAM field, CNAM type=float
+* Int: CNAM field, CNAM type=int32
+* Location: PLDT field
+* ObjectList: CNAM field, CNAM type=float
+* SingleRef: PTDA field
+* TargetSelector: PTDA field
+* Topic: PDTO field ''or'' TPIC field (only one instance of a TPIC field)
+One and only one of the following fields is found after each ANAM field.  (Other values for ANAM are only found in the Procedure Tree section of the record.)
+|-
+| -
+|
+:CNAM
+| Numeric Value || variable || CNAM is 1-4 bytes in size, and the type of data in CNAM depends upon the previous ANAM field; see above.
+|-
+| rowspan="3" | -
+| rowspan="3" |
+:PDTO
+| Topic Value || struct[8] || Note that PDTO fields can also occur in the [[#Begin/End/Change|Begin/End/Change]] section
+|-
+|
+:Type
+| long ||
+: 0 = Dialogue
+: 1 = Topic Subtype
+|-
+|
+:Topic Value
+| formid/char[4] || Formid for a [[Tes5Mod:Mod File Format/DIAL|DIAL]] record when type=0; 4-character string for type=1 (e.g. "HELO" for "Hello" subtype)
+|-
+| rowspan="4" | -
+| rowspan="4" |
+:PLDT
+| Location Value || struct[12] ||
+|-
+|
+:Type
+| long ||
+:0=Near reference, Location=formid
+:1=In cell, Location=formid
+:2=Near package start location, Location=unused
+:3=Near editor location, Location=unused
+:6=Near linked reference, Location=formid of a [[Tes5Mod:Mod File Format/KYWD|KYWD]] record
+:8=Alias (reference), Location=uint32 providing an AliasID
+:9=Alias (location), Location=formid
+:12=Near Self, Location=unused
+|-
+|
+:Location
+| variable || Location; always 4 bytes in length, but format depends upon Type as listed above. If Location is unused, then value is empty.
+|-
+|
+:Radius
+| long || Radius
+|- 
+| rowspan="4" | -
+| rowspan="4" |
+:PTDA
+| Target Value || struct[12] ||
+|-
+|
+:Type
+| long ||
+: 0=Specific reference, Target=formid
+: 1=Object ID, Target=formid
+: 2=Object Type, Target=uint32
+: 3=Linked Reference, Target=formid
+: 4=Ref Alias, Target=uint32 providing an AliasID
+: 6=Self, Target=unused
+|-
+|
+:Target
+| formid/long || Target; always 4 bytes in length, but format depends upon Type as listed above. If Location is unused, then value is empty.
+
+For Object Type, number appears to be a lookup value.  Known values are:
+:11 = Weapons: Any
+|-
+|
+:Count
+| long || Count (0 in all Skyrim records)
+|-
+| - ||
+:TPIC
+| ''Unknown'' || formid || [[Tes5Mod:Mod File Format/DIAL|DIAL]] record
+|-
+| * || UNAM || Activity ID || uint8
+|Each UNAM field provides a numerical ID; that ID can be looked up in the Package Template to determine the Name of the activity as listed in the CK.
+
+Although the UNAM fields are listed after all of the ANAM fields for this section, each UNAM field provides the name for one of the previous ANAM fields.  The first UNAM field corresponds to the first ANAM field, etc.
+|-
+| + || XNAM || ''Unknown'' || int8 || Number ranging from -77 to 99.  There is always one XNAM field in a PACK record, and it is always located at the end of the Public Package Data section.
+|}
+
+== Procedure Tree ==
+This section is the first of two sections that are only found in template packages.  This section defines the structure of the procedure tree used by this template and all packages based upon this template.
+
+As with the [[#Public Package Data|Public Package Data]] section, this section is also made up of a series of ANAM fields.  However, a completely different set of ANAM values appear in this section, and each ANAM section contains multiple fields, all of which are different than those found in Public Package Data.
+
+This section ends when a UNAM field is found, signaling the start of the [[#Procedure Data|Procedure Data]] section.
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| * || ANAM || Branch Type || zstring || A string identifying the type of branch data stored in the following section.  Possible values found in this section are:
+* Procedure: Basic element of the tree (only non-branch element).  All individual activities (PKC2 fields) are contained with Procedures.
+* Random: Top-level branch that can contain multiple Procedures.
+* Sequence: Top-level branch that can contain multiple Procedures.
+* Simultaneous: Top-level branch that can contain multiple Procedures.
+* Stacked: Top-level branch that can contain multiple Procedures.
+Each ANAM entry is followed by multiple fields.  The count column for the following entries is relative to a given ANAM field -- overall these fields can always occur 0 or many times in a given record.
+|-
+| + ||
+:CITC
+| Condition Count || uint32 || Number of conditions (CTDA fields) in this branch.  Can be 0, in which case there are no CTDA fields.
+|-
+| * ||
+:[[Tes5Mod:Mod File Format/CTDA Field|CTDA]]
+| Conditions || struct[32] || Conditions controlling when this branch can be active.  Note that conditions relevant to the overall package are provided using CTDA fields that appear in the [[#Header|header]] section.
+|-
+| - ||
+:PRCB
+| ''Unknown'' || struct[8] || Appears to be two uint32 values
+|-
+| - ||
+:PNAM 
+| Procedure Type || zstring || Note that PNAM fields also appear in the Procedure Data Section, in which case formats other than zstring are possible
+|-
+| - ||
+:FNAM
+| Flag || uint32 || Flag.  Only one bit is in use:
+:0x01=Success Completes Package
+|-
+| * ||
+:PKC2
+| Activity ID || uint8 || The PKC2 fields provide a list of all the activity IDs found in this branch.  Note that a given activity ID can occur multiple times within the Procedure Tree Section, in particular if that activity is part of multiple branches.
+|-
+| - ||
+:PFO2
+| ''Unknown'' || struct[16] ||
+|-
+| - ||
+:PFOR
+| ''Unknown'' || struct[12] ||
+|}
+
+== Procedure Data ==
+This section is also only found in template packages.  It provides the name associated with each activity ID.  It consists of a series of UNAM fields, each followed by one BNAM field and one PNAM field.
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| * || UNAM || Activity ID || uint8 || This is the same activity ID provided in both the [[#Public Package Data|Public Package Data]] and [[#Procedure Tree|Procedure Tree]] sections.  However, many additional activity IDs can also possibly appear; any additional IDs correspond to activities that were deleted from the package and are no longer accessible through the CK edit interface.
+|-
+| + ||
+:BNAM
+| Activity Name || zstring || The activity name as displayed in the CK
+|-
+| + ||
+:PNAM
+| ''Unknown'' || uint32 || Probably a flag: only values are 0 or 1.  Note that the PNAM fields also appear in the Procedure Tree section, but have a completely different format and meaning.
+|}
+
+== Begin/End/Change ==
+This section provides the 'On Begin', 'On End', and 'On Change' actions for this package.  It is always present at the end of all PACK records (for both standard packages and template packages -- even though the CK editor does not display this section for template packages).
+
+It consists of three marker fields (POBA, POEA, POCA), each of which is always followed by an INAM and a PDTO field.  Each marker may also be followed by a SCHR, SCDA, SCTX, and/or TNAM field.
+Always contains (although SCHR fields are optional)
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| - || POBA || On Begin || 0-size || Marks start of 'On Begin' actions
+|- 
+| - || POEA || On End || 0-size || Marks start of 'On End' actions
+|- 
+| - || POCA || On Change || 0-size || Marks start of 'On Change' actions
+|-
+| * || INAM || Idle || formid || [[Tes5Mod:Mod File Format/IDLE|IDLE]] record.  Field is always present but its value is 0 if there is no idle action.
+|-
+| * || SCHR || ''Unknown'' || struct[20] ||
+|-
+| * || SCDA || ''Unknown'' || struct[17] ||
+|-
+| * || SCTX || ''Unknown'' || zstring ||
+|-
+| * || TNAM || ''Unknown'' || uint32? || Always 0
+|-
+| * || QNAM || ''Unknown'' || uint32? || 
+|-
+| * || PDTO || Topic || struct[8] || Field is always present but is entirely 0 if there is no topic.  Note that PDTO fields also appear in [[#Public Package Data|Public Package Data]] section; the same structure is probably used in both cases.
+|}

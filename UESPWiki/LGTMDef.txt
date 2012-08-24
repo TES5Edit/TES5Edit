@@ -1,0 +1,16 @@
+{{Trail|File Formats|Mod File Format}}
+LGTM records contain information on lighting templates.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || DATA || data || struct || presumably directional data, usually 92 bytes, handful of 64/72 (24-length DALC)
+|-
+| + || DALC || luminescence count? || struct || usually 32 bytes, handful of 24
+|}

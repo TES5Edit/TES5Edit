@@ -1,0 +1,61 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+'''LCTN''' records are locations.  
+
+Locations are not primarily physical location data (those would be WRLD/CELL), they are a record tying together references of all types (Actor, Items, Places) and are usually assigned to a cell/dungeon/world area.  A location can be as big as an entire hold, or it can be a single campfire in the wilderness.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || || EDID || editorID || zstring || 
+|-
+| - || || LCPR || population refs || struct[] || arbitrary total count of 12 byte struct
+:formid [[Tes5Mod:Mod_File_Format/ACHR|ACHR]] (actor reference)
+:formid [[Tes5Mod:Mod_File_Format/CELL|CELL]] OR [[Tes5Mod:Mod_File_Format/WRLD|WRLD]](0x3C=Tamriel)
+:ubyte[4] record terminator?  FF-7F-FF-7F for CELL or FC-FF-1B-00 for WRLD
+|-
+| - || || LCUN || unique refs || struct[] || arbitrary total count of 12 byte struct
+:formid [[Tes5Mod:Mod_File_Format/NPC_|NPC_]] 
+:formid [[Tes5Mod:Mod_File_Format/ACHR|ACHR]] (actor reference)
+:formid [[Tes5Mod:Mod_File_Format/LCTN|LCTN]] (points to itself in most cases)
+|-
+| - || || LCSR || static refs || struct[] || arbitrary total count of 16 byte struct
+:formid [[Tes5Mod:Mod_File_Format/LCRT|LCRT]]
+:formid [[Tes5Mod:Mod_File_Format/REFR|REFR]] OR [[Tes5Mod:Mod_File_Format/ACHR|ACHR]]
+:formid [[Tes5Mod:Mod_File_Format/CELL|CELL]] OR [[Tes5Mod:Mod_File_Format/WRLD|WRLD]](0x3C=Tamriel)
+:ubyte[4] record terminator?  FF-7F-FF-7F for CELL or FC-FF-1B-00 for WRLD
+|-
+| * || || LCEC || encounter? || struct || ''almost always 0x3C(Tamriel) followed by arbritrary number of E0+-E0+-[varies, <0x20]-00
+|-
+| - || || LCEP || enable points? || struct[] || arbitrary total count of 16 byte struct
+:formid [[Tes5Mod:Mod_File_Format/ACHR|ACHR]]
+:formid [[Tes5Mod:Mod_File_Format/REFR|REFR]] ''sample value dunMzulftEnableMarker01''
+:ubyte[4] additional data, varies significantly though first byte always 0x00
+|-
+| - || || LCID || unknown || ubyte[??] || unknown
+|-
+| - || || FULL || full name || lstring || Full (in-game) name
+|-
+| - || || KSIZ || keyword count || [[Tes5Mod:Mod_File_Format/KYWD#Including_Keywords|KSIZ]] || Keyword count
+|-
+| - || || KWDA || keywords || [[Tes5Mod:Mod_File_Format/KYWD#Including_Keywords|KWDA]] || Keywords array
+|-
+| - || || PNAM || parent location || formid || Parent [[Tes5Mod:Mod_File_Format/LCTN|LCTN]] formid.
+|-
+| - || || NAM1 || music || formid || [[Tes5Mod:Mod_File_Format/MUSC|MUSC]] formid.
+|-
+| - || || FNAM || unknown || uint32 || unknown
+|-
+| - || || MNAM || marker || formid || Reference [[Tes5Mod:Mod_File_Format/REFR|REFR]] formid to a [[Tes5Mod:Mod_File_Format/STAT|STAT]]
+|-
+| - || || RNAM || unknown || formid? || "always" 0
+|-
+| - || || NAM0 || unknown || uint32 || unknown
+|-
+| - || || CNAM || unknown || ubyte[4] || ''appears to be 2 shorts''
+|-
+|}

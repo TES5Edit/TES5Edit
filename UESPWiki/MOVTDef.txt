@@ -1,0 +1,18 @@
+{{Trail|File Formats|Mod File Format}}
+MOVT record contain data regarding movement types.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || MNAM || name || zstring || Simplified name (usually EDID minus the trailing _MT)
+|-
+| + || SPED || unknown || struct || 44-byte struct  or 40-byte struct if INAM not specified.
+|-
+| - || INAM || unknown || struct || 12-byte struct ''appears to be 3 uint32s, common value FF-FF-7F-7F-FF-FF-7F-7F-FF-FF-7F-7F''
+|}

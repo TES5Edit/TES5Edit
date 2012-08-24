@@ -1,0 +1,27 @@
+{{Trail|File Formats|Mod File Format}}
+LVSP records contain information on Leveled Spells.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes4Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes4Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+
+|-
+| + || EDID || EditorID || (zstring)
+|-
+| + || OBND || Bounds || Data (struct[12 bytes])
+|-
+| + || LVLD || % Chance None || (byte)
+|-
+| + || LVLF || Level List Flags || (byte) || same as LVLI/LVLN?
+|-
+| + || LLCT || Count of LVLO subrecords || (byte)
+|-
+| + || LVLO || List Item || (12 bytes)
+    dword  Level 
+    formid SpellID
+    dword  Count
+|}

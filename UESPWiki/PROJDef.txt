@@ -1,0 +1,41 @@
+{{Trail|File Formats|Mod File Format}}
+PROJ records detail projectile data, specifically model information as AMMO covers the gameplay aspects.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
+|-
+| + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Object Bounds
+|-
+| + || FULL || full name || lstring || Full (in-game) name
+|-
+| - || MODL || model || zstring || Path to .nif
+|-
+| - || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+|-
+| - || MODS || unknown || struct || unknown model struct
+|-
+| - || DEST || destruction data || struct || 8 - byte struct, 1 per record ''may be unused, only BoundArrowPROJ have any destruction data''
+:uint32?  health?
+:uint16?
+:uint16?
+|-{{ThickLine}}
+| * || DSTD || destroyed data || struct || 20-byte struct, only first 8 non-zero
+|-
+| * || DSTF ||  || 0-byte || 0-length
+|-{{ThickLine}}
+| + || NAM1 || effect model || zstring || Path to effect .nif
+|-
+| - || NAM2 || effect data? || struct || 16-byte struct, only present if NAM1 is not null (but not required if so) ''believe it's actually bytes as values are sparse and don't occur along lines''
+|-
+| + || DATA || unknown || struct || 92-byte struct ''values randomly throughout''
+|-
+| - || VNAM || flags || uint32 || Flags (mutually exclusive)
+:0x01 ''collides with environment''?
+:0x02 ''no collision/destroy on impact? (bound arrow, spectral arrow, spider spit)''
+|}

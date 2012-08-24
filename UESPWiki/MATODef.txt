@@ -1,0 +1,19 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+MATO are material objects, records are simple and consist of a name, a model (usually) abd some structs presumably with dimensional information.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| + || || EDID || Editor ID || zstring || 
+|-
+| - || || MODL || model || zstring || path to .nif ''not present seems to = LOD''
+|-
+| * || || DNAM || dimensional data? || struct || ''very large when present''
+|-
+| + || || DATA || unknown || struct || ''usually 48 bytes, small number of 32/28''
+|-}

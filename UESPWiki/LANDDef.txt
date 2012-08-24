@@ -1,0 +1,48 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+
+{| class="wikitable" width="100%
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+|rowspan="4"| ?
+|rowspan="4"| 
+|rowspan="4"| ATXT 
+|rowspan="4"| Additional texture || formid || References [[Tes5Mod:Mod_File_Format/LTEX|land texture]] records except when the reference is zero.
+|-
+| uint8 || Specifies the quadrant this ATXT record applies to. 0 = bottom left. 1 = bottom right. 2 = upper-left. 3 = upper-right (the same as Oblivion).
+|-
+| 1 byte || Unknown.
+|-
+| uint16 || The texture layer, between 0 and 7 (i.e. 8 layers). The CS only allows up to 9 layers; the BTXT takes up the bottom layer. Uncertain of the game engine's limit (the same as Oblivion).
+|-
+|rowspan="3"| ? 
+|rowspan="3"| 
+|rowspan="3"| BTXT 
+|rowspan="3"| Base texture || formid || References [[Tes5Mod:Mod_File_Format/LTEX|land texture]] records except when the reference is zero. If the reference is zero the engine falls back to "dirt02.dds" as standard ground-layer.
+|-
+| uint8 || Specifies the quadrant this BTXT record applies to. 0 = bottom left. 1 = bottom right. 2 = upper-left. 3 = upper-right. (the same as Oblivion).
+|-
+| 3 bytes || Unknown.
+|-
+| ? || || DATA || || 4 bytes ||
+|-
+| ? || || VCLR || Vertex color || 3267 bytes ||  data (the same as Oblivion).
+|-
+| ? || || VHGT || Vertex height || 1096 bytes ||  data (the same as Oblivion).
+|-
+| ? || || VNML || vertex normals || 3267 bytes || 33x33 grid of vertex normals, with 3 bytes per vertex for the X, Y, Z normals (the same as Oblivion). The first row and column overlaps with the north and west cell.
+|-
+| ? || || VTXT || || 8 bytes* || A variable length list of 8 byte records
+|}
+
+== Vertex Height Data ==
+
+The VHGT record is a 3D mesh that has been highly optimized for storing landscape data.
+
+Each data-point is a signed byte. Data starts from the bottom left cell position and is filled one row at a time. Each value of 1 equates to a height of 8 game units (assumed from Oblivion) so each data point has an incremental game unit range of -1024 to +1016. Each value of the leftmost column offsets the height of all vertex data at that row and to the north. All grid-points of the remaining 32x32 grid offset the height of all landscape at that point and all points to the east just on that row.
+
+The height values for the four edges of the mesh must match the height values of the matching edge of neighboring landscape meshes. The bottom row values should join with the cell to its south. The left-most column likewise. The bottom row is a copy of the cell to the south's upper-most row. Likewise the left-most column is an copy of the cell to the west's right-most data column.

@@ -1,0 +1,296 @@
+<noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
+'''MGEF''' records hold information about magical effects which are used in spells, enchantments and potions.
+
+{| class="wikitable" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions#C_.28Count.29|C]]
+! width="3%" | [[Tes5Mod:File Format Conventions#V_.28Form_Version.29|V]]
+! width="10%" | Field
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|-
+| - || || CTDA || conditionData || [[Tes5Mod:Mod File Format/CTDA Field|CTDA]]
+|-
+| rowspan="39" valign="top" | -
+| rowspan="39" valign="top" |
+| rowspan="39" valign="top" | DATA || data || struct[152] || 
+|- 
+|
+:00:Flags
+| uint32 || Flags
+:0x00000001 = Hostile
+:0x00000002 = Recover
+:0x00000004 = Detrimental
+:0x00000008 = Snap to Navmesh
+:0x00000010 = No Hit Event
+:0x00000100 = Dispell Effects (toggle keywords to dispell type?)
+:0x00000200 = No Duration
+:0x00000400 = No Magnitude
+:0x00000800 = No Area
+:0x00001000 = FX Persist
+:0x00002000 = No Recast
+:0x00004000 = Gory Visual
+:0x00008000 = Hide in UI
+:0x00200000 = Power Affects Magnitude
+:0x00400000 = Power Affects Duration
+:0x04000000 = Painless
+:0x08000000 = No Hit Effect
+:0x10000000 = No Death Dispel
+:0x40000000 = ?
+:0x80000000 = ?
+|- 
+|
+:04:Base Cost
+| float || 
+|- 
+|
+:08:RelatedID
+| formID || The type of record here depends on the EffectType (see below).
+|- 
+|
+:0C:Skill
+| int32 || Usually a base magic skill [[Tes5Mod:Actor_Value_Indices#Actor Value Codes|ActorValue (index)]] or -1
+|- 
+|
+:10:ResistanceAV
+| uint32 || Resistance skill index (generally 39-45) [[Tes5Mod:Actor_Value_Indices#Actor Value Codes|ActorValue (index)]] or -1
+|- 
+|
+:14:Unknown1
+| uint32 || Mask of 0xffff0000 (lower 2 bytes always 0)
+|- 
+|
+:18:LightID
+| formID ||  [[Tes5Mod:Mod File Format/LIGH|LIGH]]
+|- 
+|
+:1C:TaperWeight
+| float || Somehow controls the tapering of the spell over time, 0-1 typically
+|- 
+|
+:20:HitShader
+| formID || [[Tes5Mod:Mod File Format/EFSH|EFSH]]
+|- 
+|
+:24:EnchantShader
+| FormID || [[Tes5Mod:Mod File Format/EFSH|EFSH]]
+|- 
+|
+:28:SkillLevel
+| uint32 || Required Skill level (0, 25, 50, 75, 100)
+|- 
+|
+:2C:Area 
+| uint32 || 0 for none
+|- 
+|
+:30:CastingTime
+| float || probably default if not provided, normal range 0.5-3
+|- 
+|
+:34:TaperCurve
+| float || Somehow affects the tapering of spell duration, 0-2 typically
+|- 
+|
+:38:TaperDuration
+| float || Controls how fast the duration tapers off assumably, 0-5 typically
+|- 
+|
+:3C:SecondAVWeight
+| float || Only valid if SecondAV is set, typical values of 0-2
+|- 
+|
+:40:EffectType
+| uint32 || The basic type of effect to apply (0-44). See below for effect type details.
+|- 
+|
+:44:PrimaryAV
+| int32 || [[Tes5Mod:Actor_Value_Indices#Actor Value Codes|ActorValue (index)]] or -1.  Vast majority are 24 (direct health)
+|- 
+|
+:48:ProjectileID
+| formID || [[Tes5Mod:Mod_File_Format/PROJ|PROJ]] 
+|- 
+|
+:4C:ExplosionID
+| formID ||  EXPL
+|- 
+|
+:50:CastType
+| uint32 || cast type:
+:0x00 - Constant Effect
+:0x01 - Fire and Forget
+:0x02 - Concentration
+|- 
+|
+:54:DeliveryType
+| uint32 || delivery type
+:0x00 - Self
+:0x01 - Touch
+:0x02 - Aimed
+:0x03 - Target Actor
+:0x04 - Target Location
+|- 
+|
+:58:SecondAV
+| int32 || Secondary [[Tes5Mod:Actor_Value_Indices#Actor Value Codes|ActorValue (index)]] or -1 (usually only shock/frost have this)
+|- 
+|
+:5C:CastingArtID
+| formID || Hand effects [[Tes5Mod:Mod_File_Format/ARTO|ARTO]] 
+|- 
+|
+:60:HitEffectArtID
+| formID || Impact effects [[Tes5Mod:Mod_File_Format/ARTO|ARTO]] (eg ward getting hit)
+|- 
+|
+:64:ImpactDataID
+| formID || Impact data [[Tes5Mod:Mod_File_Format/IPDS|IPDS]] of projectiles
+|- 
+|
+:68:SkillUsageMult
+| float || Typically 0-10
+|- 
+|
+:6C:DualCastID
+| formID ||  [[Tes5Mod:Mod_File_Format/DUAL|DUAL]]
+|- 
+|
+:70:DualCastScale
+| float || 0-3
+|- 
+|
+:74:EnchantArtID
+| formID || ARTO
+|- 
+|
+:78:NullData1
+| uint32 || Always 0
+|- 
+|
+:7C:NullData2
+| uint32 || Always 0
+|- 
+|
+:80:EquipAbility
+| formID || SPEL
+|- 
+|
+:84:ImageSpaceModID
+| formID || IPDS
+|- 
+|
+:88:PerkID
+| formID || PERK
+|- 
+|
+:8C:SoundVolume
+| uint32 || 0-3
+:0 = Loud
+:1 = Normal
+:2 = Silent
+:3 = Very Loud
+|- 
+|
+:90:ScriptAIDataScore
+| float || Unknown exact purpose, values of 0, 50, 9999, 100000, 1000000
+|- 
+|
+:94:ScriptAIDataDelayTime
+| float || Unknown exact purpose, values of 0, 60, 10000, 600000
+|-
+| - || || DNAM || Description || lstring || Effect description, e.g.: "Health regenerates <mag>% slower."
+|-
+| + || || EDID || EditorID || zstring || Max 0x200 bytes, including null terminator.
+|-
+| ? || || ESCE || CounterEffects || formid || Contain a magic effect formid that assumably counters the effects of the current one. Can occur zero or more times.
+|-
+| - || || FULL || name || lstring || 
+|-
+| - || || KSIZ || keywordCount || uint32 || 
+|-
+| * || || KWDA || keywords || formID[KSIZ.keywordCount] || 
+|-
+| - || || MDOB || static || formID || Menu Display Object
+|-
+| ? || || OBND || objectBounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]]
+|-
+| ? || || SNDD || soundData || struct[8][0 to 5] 
+: dword Type
+: formID SoundDesc
+|| Array of structs, max 6 items. Sound types include:
+:0 = Sheathe/Draw
+:1 = Charge
+:2 = Ready
+:3 = Release
+:4 = Concentration Cast Loop
+:5 = On Hit
+|-
+| ? || || VMAD || unknown || [[Tes5Mod:Mod_File_Format/VMAD_Field|VMAD]] || 
+|}
+
+
+== Effect Types ==
+The following are the valid effect types for each magic effect and their associated data:
+
+:0 = Value Mod: PrimaryAV selects which actor value to modify
+:1 = Script: No Extra data?
+:2 = Dispel: No extra data?
+:3 = Cure Disease: No extra data?
+:4 = Absorb: PrimaryAV selects which actor value to absorb
+:5 = Dual Value Mod: PrimaryAV  and SecondAV select which actor value to modify along with SecondAVWeight
+:6 = Calm: PrimaryAV is forced to be "Aggression"
+:7 = Demoralize: PrimaryAV is forced to be "Confidence"
+:8 = Frenzy: PrimaryAV is forced to be "Aggression"
+:9 = Disarm: No extra data?
+:10 = Command Summoned: No extra data?
+:11 = Invisibility: PrimaryAV is forced to be "Invisibility"
+:12 = Light: RelatedID is the light formid
+:15 = Lock: No extra data?
+:16 = Open: No extra data?
+:17 = Bound Weapon: RelatedID is the weapon to summon
+:18 = Summon Creature: RelatedID is a the NPC to spawn (must have the summonable flag set)
+:19 = Detect Life: No extra data?
+:20 = Telekinesis: No extra data?
+:21 = Paralysis: PrimaryAV is forced to be "Paralysis "
+:22 = Reanimate: No extra data?
+:23 = Soul Trap: No extra data?
+:24 = Turn Undead: PrimaryAV is forced to be "Confidence"
+:25 = Guide: RelatedID is a hazard, used only by Clairvoyance
+:26 = Werewolf Feed: No extra data?
+:27 = Cure Paralysis: No extra data?
+:28 = Cure Addiction: No extra data?
+:29 = Cure Poison: No extra data?
+:30 = Concussion: No extra data?
+:31 = Value and Parts: PrimaryAV is used, not used in game
+:32 = Accumulate Magnitude: PrimaryAV, used by Ward Steadfast/Lesser/Greater
+:33 = Stagger: No extra data?
+:34 = Peak Value Mod: PrimaryAV and SecondAV select which actor value to modify, note that SecondAVWeight is not used
+:35 = Cloak: RelatedID is a spell (only some spells supported, either/both hand?)
+:36 = Werewolf: RelatedID is a race
+:37 = Slow Time: No extra data?
+:38 = Rally: PrimaryAV is forced to be "Confidence"
+:39 = Enchance Weapon: RelatedID is an enchantment
+:40 = Spawn Hazard: RelatedID is a hazard
+:41 = Etherealize: No extra data?
+:42 = Banish: PrimaryAV is forced to be "Confidence"
+:43 = Spawn Scripted Ref: No extra data?, used by ThrowVoice
+:44 = Disguise: No extra data?
+
+== Notes ==
+:* Changing BaseCost is frustratingly ineffective (tried: Armor, WardConcSelfXX, [Fire|Frost|Shock]DamageConcAimed). At the same time, SPEL cost scales with magnitude (so it isn't no-Autocalc), and changing the EFID on the costly effect (negation of Lesser Ward) reduced cost to 0...  So the cost must flow from the MGEF.  Very frustrating. --[[User:Phezzan|Phezzan]] 16:15, 12 December 2011 (UTC)
+:* Minimum Record
+::* EDID
+::* DATA
+::* DNAM (empty string)
+:* Subrecord Order
+::* EDID
+::* VMAD
+::* FULL
+::* KSIZ
+::* KWDA
+::* DATA
+::* ESCE[]
+::* SNDD
+::* DNAM
+::* CTDA

@@ -1,0 +1,27 @@
+{{Trail|File Formats|Mod File Format}}
+MUSC records contain data regarding groups of [[Tes5Mod:Mod File Format/MUST|music tracks]].
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorID || zstring || Editor ID
+|-
+| + || FNAM || flags || uint32 || Flags (bitfield)
+:<tt>0x01</tt> - Plays One Selection
+:<tt>0x02</tt> - Abrupt Transition
+:<tt>0x04</tt> - Cycle Tracks
+:<tt>0x08</tt> - Maintain Track Order (only allowed, if "Cycle Tracks" is set)
+:<tt>0x20</tt> - Ducks Current Track
+|-
+| + || PNAM || data || struct || 4-byte struct
+:uint16 Priority ''(1 is highest priority, 100 is lowest priority)''
+:uint16 Ducking, in dB; scaled by100, i.e. 126 means 1.26; allowed maximum is 10000, i.e. 100.00
+|-
+| + || WNAM || fadeDuration || float || Fade Duration (seconds)
+|-
+| + || TNAM || music tracks || formid[] || Series of [[Tes5Mod:Mod File Format/MUST|MUST]] form IDs, total count arbitrary
+|}

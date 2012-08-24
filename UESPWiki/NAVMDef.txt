@@ -1,0 +1,14 @@
+{{Trail|File Formats|Mod File Format}}
+
+Appears in the temporary world children group in CELL records.
+
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes4Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes4Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || NVNM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+|-
+|}
