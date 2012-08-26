@@ -160,7 +160,7 @@
 			<Element name="% Chance of None" type="byte"/>
 		</Subrecord>
 		<Subrecord name="LVLF" desc="Check-boxes" optional="1" size="1">
-			<Element name="Calculate" type="byte" flags="From All at-under PC;For Each Item in Count;Use All;Special Loot"/>
+			<Element name="Calculate" type="byte" flags="Calculate from all levels at-under PC;For Each Item in Count;Use All Spells;Special Loot"/>
 		</Subrecord>
 		<Subrecord name="LVLG" desc="Use Global Variable (GLOB)" optional="1" size="4">
 			<Element name="GLOB FormID" type="formid" reftype="GLOB"/>
@@ -7196,7 +7196,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="Female Child Label" type="string"/>
 		</Subrecord>
 		<Subrecord name="DATA" desc="Family Association" optional="1" size="4">
-			<Element name="Family Association" type="int" options="No;0;Yes;1"/>
+			<Element name="Related" type="int" options="No;0;Yes;1"/>
 		</Subrecord>
 	</Record>
 	<Record name="OTFT" desc="Outfit">
