@@ -14,14 +14,14 @@ EYES records contain information on EYES!
 |-
 | + || ICON || path || zstring || Textures\ relative path to .dds
 |- 
-| + || DATA|| type || byte ||
+| + || DATA|| type || Flags/Byte ||
 {| class="wikitable" border="1" width="100%" 
 !|Value||Meaning
 |- 
-|0x01||Both genders
+|0x01||Playable
 |-
-|0x03||Female
+|0x02||Not Male
 |-
-|0x05||Male
+|0x04||Not Female
 |}
 |}
