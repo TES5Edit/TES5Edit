@@ -5558,7 +5558,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 	<Record name="VTYP" desc="Voice Type">
 		<Group id="EDID" optional="1"/>
 		<Subrecord name="DNAM" desc="Voice Type Data" optional="1" size="1">
-			<Element name="Voice Type" type="byte" options="Female/NoDialog;0;Male/AllowDefDialog;1;Female/NoDialog;2;Female/AllowDefDialog;3"/>
+			<Element name="Voice Type (00 = Male)" type="byte" flags="Allow Default Dialog;Female"/>
 		</Subrecord>
 	</Record>
 	<Record name="MATT" desc="Material Type">
@@ -6803,73 +6803,68 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="Ambient R" type="byte"/>
 			<Element name="Ambient G" type="byte"/>
 			<Element name="Ambient B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="Directional R" type="byte"/>
 			<Element name="Directional G" type="byte"/>
 			<Element name="Directional B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
-			<Element name="Fog Near R" type="byte"/>
-			<Element name="Fog Near G" type="byte"/>
-			<Element name="Fog Near B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
+			<Element name="Fog Color Near R" type="byte"/>
+			<Element name="Fog Color Near G" type="byte"/>
+			<Element name="Fog Color Near B" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="Fog Near" type="float"/>
 			<Element name="Fog Far" type="float"/>
-			<Element name="DirecRotation XY" type="short"/>
-			<Element name="(buffer)" type="short"/>
-			<Element name="DirecRotation Z" type="short"/>
-			<Element name="(buffer)" type="short"/>
+			<Element name="DirecRotation XY" type="uint"/>
+			<Element name="DirecRotation Z" type="uint"/>
 			<Element name="Directional Fade" type="float"/>
 			<Element name="Fog Clip Distance" type="float"/>
 			<Element name="Fog Power" type="float"/>
-			<Element name="(buffer)" type="float"/>
-			<Element name="(buffer)" type="float"/>
-			<Element name="(buffer)" type="float"/>
-			<Element name="(buffer)" type="float"/>
-			<Element name="(buffer)" type="float"/>
-			<Element name="(buffer)" type="float"/>
-			<Element name="Fog Near R" type="byte"/>
-			<Element name="Fog Near G" type="byte"/>
-			<Element name="Fog Near B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
-			<Element name="unknown float" type="float"/>
-			<Element name="Fog Far R" type="byte"/>
-			<Element name="Fog Far G" type="byte"/>
-			<Element name="Fog Far B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Fog Color Far R" type="byte"/>
+			<Element name="Fog Color Far G" type="byte"/>
+			<Element name="Fog Color Far B" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="Fog Max" type="float"/>
 			<Element name="Light Fade Start" type="float"/>
 			<Element name="Light Fade End" type="float"/>
-			<Element name="(buffer)" type="float"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
 		</Subrecord>
 		<Subrecord name="DALC" desc="Direct Ambient and Specular Colors" optional="1">
 			<Element name="DirAmb X+ R" type="byte"/>
 			<Element name="DirAmb X+ G" type="byte"/>
 			<Element name="DirAmb X+ B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="DirAmb X- R" type="byte"/>
 			<Element name="DirAmb X- G" type="byte"/>
 			<Element name="DirAmb X- B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="DirAmb Y+ R" type="byte"/>
 			<Element name="DirAmb Y+ G" type="byte"/>
 			<Element name="DirAmb Y+ B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="DirAmb Y- R" type="byte"/>
 			<Element name="DirAmb Y- G" type="byte"/>
 			<Element name="DirAmb Y- B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="DirAmb Z+ R" type="byte"/>
 			<Element name="DirAmb Z+ G" type="byte"/>
 			<Element name="DirAmb Z+ B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="DirAmb Z- R" type="byte"/>
 			<Element name="DirAmb Z- G" type="byte"/>
 			<Element name="DirAmb Z- B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
-			<Element name="Specular R" type="byte"/>
-			<Element name="Specular G" type="byte"/>
-			<Element name="Specular B" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte"/>
+			<Element name="Specular Color R" type="byte"/>
+			<Element name="Specular Color G" type="byte"/>
+			<Element name="Specular Color B" type="byte"/>
+			<Element name="Unused" type="byte"/>
 			<Element name="Fresnel Power (0-1)" type="float"/>
 		</Subrecord>
 	</Record>
@@ -7205,9 +7200,9 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		</Subrecord>
 	</Record>
 	<Record name="OTFT" desc="Outfit">
-		<Group id="EDID" optional="1"/>
-		<Subrecord name="INAM" desc="Armature (ARMO)" optional="1">
-			<Element name="ARMO FormID" type="formid" reftype="ARMO" repeat="1" optional="1" />
+		<Group id="EDID"/>
+		<Subrecord name="INAM" desc="Armature (ARMO)">
+			<Element name="FormID" type="formid" repeat="1"/>
 		</Subrecord>
 	</Record>
 	<Record name="ARTO" desc="Art Object">
