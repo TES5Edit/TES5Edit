@@ -9843,7 +9843,7 @@ begin
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count',
-      {0x04} 'Unknown 2'
+      {0x04} 'Use All Spells'
     ]), cpNormal, True),
     wbLLCT,
     wbRArrayS('Leveled List Entries',
