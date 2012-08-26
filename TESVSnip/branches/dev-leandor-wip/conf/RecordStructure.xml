@@ -5765,6 +5765,9 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		<Subrecord name="SNDD" desc="Footstep Sound (FSTS)" optional="1" size="4">
 			<Element name="FormID" type="formid" reftype="FSTS" />
 		</Subrecord>
+		<Subrecord name="ONAM" desc="Art Object" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="ARTO" />
+		</Subrecord>
 	</Record>
 	<Record name="ECZN" desc="Encounter Zone">
 		<Group id="EDID" optional="1"/>
