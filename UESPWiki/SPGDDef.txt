@@ -10,7 +10,22 @@ SPGD records contain information on shader particle geometry.
 |- 
 | + || EDID || editorId || zstring || Editor id
 |-
-| + || DATA || unknown || struct || 48-byte struct or 40 without ICON ''appears to be series of 4-byte values''
+| + || DATA || Data || struct || 48-byte struct or 40 without ICON
+:Float - Gravity Velocity
+:Float - Rotation Velocity
+:Float - Particle Size X
+:Float - Particle Size Y
+:Float - Center Offset Min
+:Float - Center Offset Max
+:Float - Initial Rotation Range
+:uint32 - # of Subtextures X
+:uint32 - # of Subtextures Y
+:uint32 - Type (In the CK Dust and Fog is set as Snow)
+::0 - Rain
+::1 - Snow
+These bytes are not present when a Particle Texture (ICON) is not assigned.
+:uint32 - Box Size
+:Float - Particle Density
 |-
-| - || ICON || effects || zstring || Path to .dds
+| - || ICON || Particle Texture || zstring || Path to .dds
 |}

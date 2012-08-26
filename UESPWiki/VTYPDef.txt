@@ -1,5 +1,5 @@
 <noinclude>{{Trail|File Formats|Mod File Format}}</noinclude>
-VYTP records create a reference for Voice Types.
+VTYP records create a reference for Voice Types.
 
 {| class="wikitable" border="1" width="100%" 
 ! width="3%" | [[Tes5Mod:File Format Conventions|C]]

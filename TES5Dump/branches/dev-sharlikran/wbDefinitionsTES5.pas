@@ -9215,6 +9215,7 @@ end;
 
 procedure DefineTES5k;
 begin
+
   wbRecord(OTFT, 'Outfit', [
     wbEDIDReq,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))

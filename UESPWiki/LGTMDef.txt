@@ -10,7 +10,71 @@ LGTM records contain information on lighting templates.
 |- 
 | + || EDID || editorId || zstring || Editor id
 |-
-| + || DATA || data || struct || presumably directional data, usually 92 bytes, handful of 64/72 (24-length DALC)
+| + || DATA || Lighting || struct || Lighting
+:byte - Ambient Color Red
+:byte - Ambient Color Green
+:byte - Ambient Color Blue
+:byte - Unused
+:byte - Directional Color Red
+:byte - Directional Color Green
+:byte - Directional Color Blue
+:byte - Unused
+:byte - Fog Color Near Red
+:byte - Fog Color Near Green
+:byte - Fog Color Near Blue
+:byte - Unused
+:float - Fog Near
+:float - Fog Far
+:uint32 - Directional Rotation XY
+:uint32 - Directional Rotation Z
+:float - Directional Fade
+:float - Fog Clip Distance
+:float - Fog Power
+:uint32 - Unknown
+:uint32 - Unknown
+:uint32 - Unknown
+:uint32 - Unknown
+:uint32 - Unknown
+:uint32 - Unknown
+:uint32 - Unknown
+:uint32 - Unknown
+:byte - Fog Color Far Red
+:byte - Fog Color Far Green
+:byte - Fog Color Far Blue
+:byte - Unused
+:float - Fog Max
+:float - Light Fade Start
+:float - Light Fade End
+:uint32 - Unknown
 |-
-| + || DALC || luminescence count? || struct || usually 32 bytes, handful of 24
+| + || DALC || Direct Ambient and Specular Colors || Struct || Direct Ambient and Specular Colors
+:byte - Directional Ambient X+ Red
+:byte - Directional Ambient X+ Green
+:byte - Directional Ambient X+ Blue
+:byte - Unused
+:byte - Directional Ambient X- Red
+:byte - Directional Ambient X- Green
+:byte - Directional Ambient X- Blue
+:byte - Unused
+:byte - Directional Ambient Y+ Red
+:byte - Directional Ambient Y+ Green
+:byte - Directional Ambient Y+ Blue
+:byte - Unused
+:byte - Directional Ambient Y- Red
+:byte - Directional Ambient Y- Green
+:byte - Directional Ambient Y- Blue
+:byte - Unused
+:byte - Directional Ambient Z+ Red
+:byte - Directional Ambient Z+ Green
+:byte - Directional Ambient Z+ Blue
+:byte - Unused
+:byte - Directional Ambient Z- Red
+:byte - Directional Ambient Z- Green
+:byte - Directional Ambient Z- Blue
+:byte - Unused
+:byte - Specular Color Red
+:byte - Specular Color Green
+:byte - Specular Color Blue
+:byte - Unused
+:float - Fresnel Power (0-1)
 |}

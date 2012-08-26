@@ -2,25 +2,15 @@
 OTFT defines the default outfit an actor will possess.
 
 ===Outfit===
-{| class="wikitable" width="100%" 
-! width="5%" | [[Tes5Mod:File Format Conventions|C]]
-! width="5%" | [[Tes5Mod:File Format Conventions|V]]
-! width="10%" | Field
-! width="10%" | Name
-! width="10%" | [[Tes5Mod:File Format Conventions|Type/Size]]
-! width="60%" | Info
+{| class="wikitable" border="1" width="100%" 
+! width="3%" | [[Tes5Mod:File Format Conventions|C]]
+! width="10%" | SubRecord
+! width="15%" | Name
+! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! | Info
+|- 
+| + || EDID || editorId || zstring || Editor id
 |-
-| +
-|
-| EDID
-| editorID
-| zstring
-| Max 0x200 bytes, including null terminator.
+| + || INAM || inventory list || FormID || Array of [[Tes5Mod:Mod_File_Format/ARMO|ARMO]] or [[Tes5Mod:Mod_File_Format/LVLI|LVLI]]
 |-
-| +
-| 
-| INAM
-| inventory list
-| formID[]
-| Series of [[Tes5Mod:Mod_File_Format/ARMO|ARMO]] or LVLI formids, total count arbitrary.
 |}
