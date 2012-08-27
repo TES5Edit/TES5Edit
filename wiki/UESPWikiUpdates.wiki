@@ -9,5 +9,3 @@ AACT, ACTI, ADDN, AMMO, ANIO, APPA, ARMO, ARTO, ASPC, ASTP, BOOK, BPTD, CAMS, CL
 == Common Fields ==
 
 DEST, MODL, OBND, BODT
-
- MNAM Syntax needs syntax check.  Scale may not be necessary
