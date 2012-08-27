@@ -224,7 +224,7 @@
 			<Element name="Red" type="byte"/>
 			<Element name="Green" type="byte"/>
 			<Element name="Blue" type="byte"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Unused" type="byte" notininfo="1"/>
 		</Subrecord>
 	</Group>
 	<Group id="DESC" optional="1">
@@ -714,6 +714,14 @@ non-indent is being worked on
 			<Element name="Record Count" type="uint"/>
 			<Element name="Next FormID" type="formid" desc="actual# next is this #+572"/>
 		</Subrecord>
+		<!-- OFST might never show up. Added just in case for examination -->
+		<Subrecord name="OFST" desc="Offset" optional="1">
+			<Element name="Value" type="blob" hexview="1"/>
+		</Subrecord>
+		<!-- DELE might never show up. Added just in case for examination -->
+		<Subrecord name="DELE" desc="Deleted Records" optional="1">
+			<Element name="Value" type="blob" hexview="1"/>
+		</Subrecord>
 		<Subrecord name="CNAM" desc="Author of the Plugin" optional="1">
 			<Element name="Author" type="string"/>
 		</Subrecord>
@@ -725,9 +733,6 @@ non-indent is being worked on
 			<Subrecord name="MAST" desc="Plugin Master Dependency">
 				<Element name="Master-ESM File" type="string"/>
 			</Subrecord>
-			<Subrecord name="SCRN" desc="Screenshot" optional="1">
-				<Element name="Screenshot" type="blob"/>
-			</Subrecord>
 			<Subrecord name="DATA" desc="(always zeroes)" optional="1" size="8">
 				<Element name="(buffer)" type="blob"/>
 			</Subrecord>
@@ -735,11 +740,14 @@ non-indent is being worked on
 		<Subrecord name="ONAM" desc="List of Records Existing in Multiple ESMs" optional="1">
 			<Element name="Dupe FormID" type="formid" repeat="1" desc="only ACHR and REFR"/>
 		</Subrecord>
+		<Subrecord name="SCRN" desc="Screenshot" optional="1">
+			<Element name="Screenshot" type="blob"/>
+		</Subrecord>
 		<Subrecord name="INTV" desc="Internal Version #" optional="1" size="4">
 			<Element name="Version #" type="uint"/>
 		</Subrecord>
-		<Subrecord name="INCC" desc="(always 00000010)" optional="1" size="4">
-			<Element name="(buffer)" type="uint" hexview="1"/>
+		<Subrecord name="INCC" desc="Inter Versioning Information" optional="1" size="4">
+			<Element name="Unknown" type="uint" hexview="1"/>
 		</Subrecord>
 	</Record>
 	<Record name="GMST" desc="Game setting">
@@ -979,12 +987,12 @@ non-indent is being worked on
 	</Record>
 	<Record name="HAIR" desc="(EMPTY/Legacy)"/>
 	<Record name="EYES" desc="Eyes">
-		<!-- accessed in CK by clicking 'All' and filtering -->
 		<Group id="EDID" optional="1"/>
 		<Group id="FULL" optional="1"/>
 		<Group id="ICONIMAGE" optional="1"/>
-		<Subrecord name="DATA" desc="Gender Availability" optional="1" size="1">
-			<Element name="Gender" type="byte" options="Unplayable;0;Male/Female;1;Female;3;Male;5;"/>
+		<Subrecord name="DATA" desc="Availability" optional="1" size="1">
+			<!-- Do not change names. CK sets flag when the check-box is empty -->
+			<Element name="Flags" type="byte" flags="Playable;Not Male;Not Female"/>
 		</Subrecord>
 	</Record>
 	<Record name="RACE" desc="Race or Creature Type">
@@ -1248,14 +1256,14 @@ non-indent is being worked on
 		</Subrecord>
 	</Record>
 	<Record name="SOUN" desc="Sound Marker">
-		<!-- 2 legacy(?) subrecords deleted by saving in CK -->
+		<!-- 2 legacy subrecords deleted by saving in CK -->
 		<Group id="EDID" optional="1"/>
 		<Group id="OBND" optional="1"/>
-		<Subrecord name="FNAM" desc="FX Path and WAV" optional="1">
+		<Subrecord name="FNAM" desc="FX Path and WAV - Unused Legacy Data" optional="1" notininfo="1">
 			<!-- deleted by saving in CK -->
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="SNDD" desc="Sound Data" optional="1">
+		<Subrecord name="SNDD" desc="Sound Data - Unused Legacy Data" optional="1" notininfo="1">
 			<!-- deleted by saving in CK -->
 			<Element name="Unknown int 1" type="int"/>
 			<Element name="Unknown int 2" type="int"/>
@@ -7256,9 +7264,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="Run Forward" type="float"/>
 			<Element name="Walk Back" type="float"/>
 			<Element name="Run Back" type="float"/>
-			<Element name="Walk RotateInPlace *" type="float" desc="(this # x57.29578)"/>
-			<Element name="Run RotateInPlace *" type="float" desc="(this # x57.29578)"/>
-			<Element name="Rotate While Moving *" type="float" desc="(this # x57.29578)"/>
+			<Element name="Walk Rotate In Place *" type="float" desc="(this # x57.29678)"/>
+			<Element name="Run Rotate In Place *" type="float" desc="(this # x57.29578)"/>
+			<!-- Not present if INAM is not specified -->
+			<Element name="Run Rotate While Moving *" type="float" desc="(this # x57.29578)" optional="1"/>
 		</Subrecord>
 		<Subrecord name="INAM" desc="Anim Change Thresholds (* see note, 3.4028=0)" optional="1">
 			<Element name="Directional *" type="float" desc="(this # x57.29578)"/>
@@ -7271,9 +7280,9 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		<Group id="EDID" optional="1"/>
 		<Group id="CNAM" optional="1"/>
 		<Subrecord name="GNAM" desc="Sound Category (SNCT)" optional="1" size="4">
-			<Element name="SNCT FormID" type="formid" reftype="SNCT"/>
+			<Element name="FormID" type="formid" reftype="SNCT"/>
 		</Subrecord>
-		<Subrecord name="SNAM" desc="Sound (SNDR)" optional="1" size="4">
+		<Subrecord name="SNAM" desc="Alternate Sound For (SNDR)" optional="1" size="4">
 			<Element name="FormID" type="formid" reftype="SNDR"/>
 		</Subrecord>
 		<Subrecord name="ANAM" desc="WAV File" optional="1" repeat="1">
@@ -7434,8 +7443,8 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		<Group id="EDID" optional="1"/>
 		<Group id="FULL" optional="1"/>
 		<Group id="CNAM" optional="1"/>
-		<Subrecord name="FNAM" desc="Unknown (legacy data?)" optional="1" size="4">
-			<Element name="(always 0 or 1)" type="int"/>
+		<Subrecord name="FNAM" desc="Playable" optional="1" size="4">
+			<Element name="Playable" type="uint" options="False;0;True;1"/>
 		</Subrecord>
 	</Record>
 	<Record name="REVB" desc="Reverb Parameter">
