@@ -1256,15 +1256,16 @@ non-indent is being worked on
 		</Subrecord>
 	</Record>
 	<Record name="SOUN" desc="Sound Marker">
-		<!-- 2 legacy subrecords deleted by saving in CK -->
+		<!-- 2 legacy subrecords FNAM and SNDD are deleted by saving in CK. Do Not Remove! -->
+		<!-- They are here for compatibility with older plugins. -->
 		<Group id="EDID" optional="1"/>
 		<Group id="OBND" optional="1"/>
+		<!-- FNAM deleted by saving in CK -->
 		<Subrecord name="FNAM" desc="FX Path and WAV - Unused Legacy Data" optional="1" notininfo="1">
-			<!-- deleted by saving in CK -->
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
+		<!-- SNDD deleted by saving in CK -->
 		<Subrecord name="SNDD" desc="Sound Data - Unused Legacy Data" optional="1" notininfo="1">
-			<!-- deleted by saving in CK -->
 			<Element name="Unknown int 1" type="int"/>
 			<Element name="Unknown int 2" type="int"/>
 			<Element name="Unknown int 3" type="int"/>
