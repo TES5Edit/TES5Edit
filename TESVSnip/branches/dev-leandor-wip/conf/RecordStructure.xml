@@ -7264,7 +7264,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="Run Forward" type="float"/>
 			<Element name="Walk Back" type="float"/>
 			<Element name="Run Back" type="float"/>
-			<Element name="Walk Rotate In Place *" type="float" desc="(this # x57.29678)"/>
+			<Element name="Walk Rotate In Place *" type="float" desc="(this # x57.29578)"/>
 			<Element name="Run Rotate In Place *" type="float" desc="(this # x57.29578)"/>
 			<!-- Not present if INAM is not specified -->
 			<Element name="Run Rotate While Moving *" type="float" desc="(this # x57.29578)" optional="1"/>
