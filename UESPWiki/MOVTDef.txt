@@ -12,7 +12,25 @@ MOVT record contain data regarding movement types.
 |-
 | + || MNAM || name || zstring || Simplified name (usually EDID minus the trailing _MT)
 |-
-| + || SPED || unknown || struct || 44-byte struct  or 40-byte struct if INAM not specified.
+| + || SPED || Default Data || struct || 44-byte struct or 40-byte struct if INAM not specified.
+:Float - Left Walk
+:Float - Left Run
+:Float - Right Walk
+:Float - Right Run
+:Float - Forward Walk
+:Float - Forward Run
+:Float - Back Walk
+:Float - Back Run
+:Float - Rotate in Place Walk
+:Float - Rotate in Place Run
+Not present if INAM is not specified
+:Float - Rotate while Moving Run
 |-
-| - || INAM || unknown || struct || 12-byte struct ''appears to be 3 uint32s, common value FF-FF-7F-7F-FF-FF-7F-7F-FF-FF-7F-7F''
+| - || INAM || Anim Change Thresholds || struct || 12-byte struct
+:Float - Directional - Scale: 57.296
+:Float - Movement Speed - Scale: 57.296
+:Float - Rotation Speed - Scale: 57.296
 |}
+= Note =
+
+If you make a new MOVT in the CK SPED will be 44 bytes.  If you select the check boxes for Anim Change Thresholds there default value will be 0 and the scale multiplier is useless.  This is either a bug with Bethesda's internal CK or only present in older MOVT records.

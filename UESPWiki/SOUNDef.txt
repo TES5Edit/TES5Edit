@@ -12,9 +12,13 @@ SOUN contains the data used for a simple sound.
 |-
 | + || OBND || objectBounds|| [[Tes5Mod:Mod File Format/OBND Field|OBND]] ||  Sets the bounds for the acoustic space.
 |-
-| - || FNAM || filename || zstring ||  Relative directory to a .wav
+| - || FNAM || Filename || zstring || Relative directory to a .wav
 |-
-| - || SNDD || sound data? || struct[36] ||  Appears to be required if FNAM is specified.
+| - || SNDD || Sound Data || struct || 36 Byte Struct
 |-
 | + || SDSC || sound || formid || Sound ([[Tes5Mod:Mod File Format/SNDR|SNDR]])
 |}
+
+= Notes =
+
+FNAM and SNDD are no longer used.  This is stored in the corresponding SNDR.  When this change took place is unknown.  FNAM and SNDD are not defined since it is legacy data.
