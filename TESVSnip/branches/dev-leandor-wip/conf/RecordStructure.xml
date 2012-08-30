@@ -6951,10 +6951,8 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		</Subrecord>
 		<Group id="CONDITIONAL" optional="1" repeat="1"/>
 		<Subrecord name="DNAM" desc="Check-boxes" optional="1">
-			<Element name="Random/Stack-WarnNoCQStart" type="byte" options="StackedSELECTED;0;RandomSELECTED;1;StackedSELECTED-WarnNoChildQStart;2;RandomSELECTED-WarnNoChildQStart;3"/>
-			<Element name="(buffer)" type="byte"/>
-			<Element name="Check-boxes" type="byte" flags="DoAllBefRep;SharesEvent;NumOfQuestsToRunCHECKED"/>
-			<Element name="(buffer)" type="byte"/>
+			<Element name="Node Flags" type="short" flags="Random;Warn if no child quest started"/>
+			<Element name="Quest Flags" type="short" flags="Do all before repeating;Shares Event;Num Of Quests To Run CHECKED"/>
 		</Subrecord>
 		<Subrecord name="XNAM" desc="Max Concurrent Quests" optional="1" size="4">
 			<Element name="Max Concurrent Quests" type="int"/>
@@ -6970,10 +6968,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 				<Element name="QUST FormID" type="formid" reftype="QUST"/>
 			</Subrecord>
 			<Subrecord name="FNAM" desc="FNAM" optional="1" repeat="1" size="4">
-				<Element name="Unknown 4bytes" type="int"/>
+				<Element name="Unknown" type="uint"/>
 			</Subrecord>
 			<Subrecord name="RNAM" desc="Hours Until Reset (to div by 24)" optional="1" repeat="1" size="4">
-				<Element name="HoursUntilReset" type="float" desc="(this # divided by 24)"/>
+				<Element name="Hours until reset" type="float" desc="(this # divided by 24)"/>
 			</Subrecord>
 		</Group>
 	</Record>
@@ -6985,14 +6983,12 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		<Subrecord name="SNAM" desc="Story Manager Event Node" optional="1" size="4">
 			<Element name="FormID" type="formid" reftype="SMEN" />
 		</Subrecord>
-		<Subrecord name="CITC" desc="CITC" optional="1" size="4">
-			<Element name="Unknown 4bytes" type="int" />
-		</Subrecord>
+		<Group id="CONDITIONAL" optional="1" repeat="1"/>
 		<Subrecord name="DNAM" desc="DNAM" optional="1">
-			<Element name="Unknown" type="int" />
+			<Element name="Flags" type="uint" flags="Random;Warn if no child quest started"/>
 		</Subrecord>
 		<Subrecord name="XNAM" desc="XNAM" optional="1" size="4">
-			<Element name="Unknown 4bytes" type="int" />
+			<Element name="Unknown" type="int" />
 		</Subrecord>
 		<Subrecord name="ENAM" desc="ENAM" optional="1" size="4">
 			<Element name="Name" type="STR4" />
