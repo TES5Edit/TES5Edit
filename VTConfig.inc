@@ -8,7 +8,6 @@
 // The initial developer of the original code is Mike Lischke (public@soft-gems.net, www.soft-gems.net).
 //----------------------------------------------------------------------------------------------------------------------
 
-{.$define UseFlatScrollbars}
 {.$define ReverseFullExpandHotKey} // Used to define Ctrl+'+' instead of Ctrl+Shift+'+' for full expand (and similar for collapsing).
 
 {.$define TntSupport} // Added by Igor Afanasyev to support unicode-aware inplace editors. This implementation uses
