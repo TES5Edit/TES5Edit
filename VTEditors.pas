@@ -453,7 +453,7 @@ begin
     not IsMultiLine then
     // Instead directly calling AutoAdjustSize it is necessary on Win9x/Me to decouple this notification message
     // and eventual resizing. Hence we use a message to accomplish that.
-    if IsWinNT then
+    if Win32Platform = VER_PLATFORM_WIN32_NT then
       AutoAdjustSize
     else
       PostMessage(FEdit.Handle, CM_AUTOADJUST, 0, 0);

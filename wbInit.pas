@@ -28,11 +28,12 @@ uses
   Dialogs,
   wbInterface,
   wbImplementation,
-  wbDefinitionsTES4,
   wbDefinitionsFO3,
   wbDefinitionsFNV,
-  wbDefinitionsTES5,
-  nxExeConst;
+  wbDefinitionsTES3,
+  wbDefinitionsTES4,
+  wbDefinitionsTES5{,
+  nxExeConst};
 
 procedure wbDoInit;
 begin

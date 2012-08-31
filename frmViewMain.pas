@@ -29,7 +29,7 @@ uses
 {$IFDEF DX3D}
   RenderUnit, Direct3D9, D3DX9, DXUT,
 {$ENDIF}
-  AppEvnts, dxGDIPlusClasses;
+  AppEvnts{, dxGDIPlusClasses};
 
 const
   DefaultInterval             = 1 / 24 / 6;

@@ -125,8 +125,9 @@ implementation
 
 uses
   Math,
-  Windows, Classes, SysUtils, Direct3D9, D3DX9, wbHelpers{,
-  wbScriptParse};
+  Windows, Classes, SysUtils, Direct3D9, D3DX9, wbHelpers
+  // Previously commented out by Elminster
+  {, wbScriptParse};
 
 type
   IwbScriptRule = interface

@@ -18,7 +18,7 @@ uses
   Windows,
   Classes,
   SysUtils,
-    CocoaBase,
+  CocoaBase,
   wbScriptTok,
   wbScript;
 
