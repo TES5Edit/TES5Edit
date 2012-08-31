@@ -18,9 +18,9 @@
 program TES5Edit;
 
 uses
-  nxReplacementMemoryManager,
+  {nxReplacementMemoryManager,}
   wbInit,
-  nxExceptionHook,
+  {nxExceptionHook,}
   Forms,
   Dialogs,
   SysUtils,
