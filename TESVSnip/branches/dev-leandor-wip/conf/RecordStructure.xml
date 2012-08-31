@@ -6175,7 +6175,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 	<Record name="MESG" desc="Message">
 		<Group id="EDID" optional="1"/>
 		<Group id="DESC" optional="1"/>
-		<Subrecord name="FULL" desc="Message Text" optional="1" size="4">
+		<Subrecord name="FULL" desc="Message Text" optional="1">
 			<Element name="In-game Text" type="lstring"/>
 		</Subrecord>
 		<Subrecord name="INAM" desc="Icon (UNUSED LEGACY DATA)" optional="1" size="4">
@@ -6189,7 +6189,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="(buffer)" type="byte"/>
 			<Element name="(buffer)" type="short"/>
 		</Subrecord>
-		<Subrecord name="TNAM" desc="Display Time" optional="1" size="4">
+		<Subrecord name="TNAM" desc="Display Time" optional="1">
 			<Element name="Display Time" type="int"/>
 		</Subrecord>
 		<Group optional="1" repeat="1">
