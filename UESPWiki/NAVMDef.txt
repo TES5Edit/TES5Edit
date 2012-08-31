@@ -1,6 +1,5 @@
 {{Trail|File Formats|Mod File Format}}
-
-Appears in the temporary world children group in CELL records.
+NAVM: World children group in CELL records.
 
 {| class="wikitable" border="1" width="100%" 
 ! width="3%" | [[Tes4Mod:File Format Conventions|C]]
@@ -9,12 +8,12 @@ Appears in the temporary world children group in CELL records.
 ! width="12%" | [[Tes4Mod:File Format Conventions|Type/Size]]
 ! | Info
 |- 
-| + || NVNM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+| + || NVNM || unknown || ''size varies'' || Undefined information
 |-
-| + || ONAM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+| - || ONAM || unknown || ''size varies'' || Undefined information
 |-
-| + || PNAM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+| - || PNAM || unknown || ''size varies'' || Undefined information
 |-
-| + || NNAM || unknown || ''size varies'' || So far every NAVM record only has one NVNM subrecord in it.
+| - || NNAM || unknown || ''size varies'' || Undefined information
 |-
 |}

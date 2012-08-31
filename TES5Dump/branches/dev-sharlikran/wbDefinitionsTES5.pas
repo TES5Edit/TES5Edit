@@ -9034,9 +9034,7 @@ begin
   wbRecord(EQUP, 'Equip Type', [
     wbEDIDReq,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Flags', itU32, wbFlags([
-      'Use All Parents'
-    ]), cpNormal, True)
+    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
   ]);
 
   wbRecord(RELA, 'Relationship', [

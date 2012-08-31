@@ -14,10 +14,33 @@ NOTE: All fields marked required since all records have them but they may not al
 |-
 | + || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND_Field|OBND]] || Object Bounds
 |-
-| + || MODL || model || zstring || Path to .nif
-|-
-| + || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+| + || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
 |-
 | + || DATA || unknown || struct || 32-byte struct
+:uint8 - Density
+:uint8 - Min Slope
+:uint8 - Max Slope
+:uint8 - Unknown
+:uint16 - Units From Water
+:uint16 - Unknown
+:uint32 - Units From Water Type - Enum
+::Above - At Least
+::Above - At Most
+::Below - At Least
+::Below - At Most
+::Either - At Least
+::Either - At Most
+::Either - At Most Above
+::Either - At Most Below
+:float32 - Position Range
+:float32 - Height Range
+:float32 - Color Range
+:float32 - Wave Period
+:uint8 - Flags
+::0x00000001 Vertex Lighting
+::0x00000002 Uniform Scaling
+::0x00000004 Fit to Slope
+:uint8 - Unknown
+:uint16 - Unknown
 |-
 |}

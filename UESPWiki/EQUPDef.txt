@@ -10,9 +10,7 @@ EQUP records are used as a reference for equippable slots.
 |- 
 | + || EDID || editorId || zstring || Editor id
 |- 
-| - || PNAM || hand reference || formid[] || EQUP formids for left and/or right hand other EQUP records are pointing to
+| - || PNAM || Equip Slots || FormID || Slot Parents of FormID EQUP.
 |-
-| + || DATA || occupies slot || flags || When PNAM is specified, a 0x01 flag indicates that it will occupy the slot(s) in PNAM.  
+| + || DATA || Use All Parents || boolean || Whether or not to use all equipment slots indicated by the PNAM values.
 |}
-
-There are only a handful of records, and this sounds confusing, so as explanation BothHands has PNAM of both left and right hand EQUP, and DATA is 0x01.  EitherHands has the same PNAM but DATA is 0x00.

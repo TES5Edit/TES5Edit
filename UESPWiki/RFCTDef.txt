@@ -1,5 +1,4 @@
 {{Trail|File Formats|Mod File Format}}
-
 RFCT records contain information on visual effects.
 
 {| class="wikitable" border="1" width="100%" 
@@ -15,8 +14,8 @@ RFCT records contain information on visual effects.
 :formID Effect Art ([[Tes5Mod:Mod File Format/ARTO|ARTO]])
 :formID Shader ([[Tes5Mod:Mod File Format/EFSH|EFSH]])
 :uint32 flags
-::0x01 - rotate to face target ''(only meaningful, if attach to camera is '''not''' set)''
+::0x01 - rotate to face target : Used when Attach To Camera is not set
 ::0x02 - attach to camera
-::0x04 - inherit rotation ''(only meaningful, if attach to camera is set)''
+::0x04 - inherit rotation : Used when Attach To Camera is not set
 |-
 |}

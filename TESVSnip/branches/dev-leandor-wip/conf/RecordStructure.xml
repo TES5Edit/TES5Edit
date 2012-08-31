@@ -1722,15 +1722,21 @@ non-indent is being worked on
 		<Group id="EDID" optional="1"/>
 		<Group id="OBND" optional="1"/>
 		<Group id="MODEL" optional="1"/>
-		<Subrecord name="DATA" desc="DATA" optional="1" size="32">
-			<Element name="Unknown" type="int" />
-			<Element name="Unknown 1" type="int" />
-			<Element name="Unknown 2" type="int" />
-			<Element name="Unknown 3" type="float" />
-			<Element name="Unknown 4" type="float" />
-			<Element name="Unknown 5" type="float" />
-			<Element name="Unknown 6" type="float" />
-			<Element name="Unknown 7" type="int" />
+		<Subrecord name="DATA" desc="DATA" optional="1">
+			<Element name="Density" type="byte" />
+			<Element name="Min Slope" type="byte" />
+			<Element name="Max Slope" type="byte" />
+			<Element name="Unknown" type="byte" notininfo="1"/>
+			<Element name="Units From Water" type="ushort" />
+			<Element name="Unknown" type="ushort" notininfo="1"/>
+			<Element name="Units From Water Type" type="uint" options="Above - At Least;0;Above - At Most;1;Below - At Least;2;Below - At Most;3;Either - At Least;4;Either - At Most;5;Either - At Most Above;6;Either - At Most Below;7"/>
+			<Element name="Position Range" type="float" />
+			<Element name="Height Range" type="float" />
+			<Element name="Color Range" type="float" />
+			<Element name="Wave Period" type="float" />
+			<Element name="Flags" type="byte" flags="Vertex Lighting;Uniform Scaling;Fit to Slope"/>
+			<Element name="Unused" type="byte" optional="1" notininfo="1"/>
+			<Element name="Unused" type="short" optional="1" notininfo="1"/>
 		</Subrecord>
 	</Record>
 	<Record name="TREE" desc="Tree">
@@ -2880,9 +2886,7 @@ non-indent is being worked on
 		<Subrecord name="DATA" desc="Effect Data" optional="1" size="12">
 			<Element name="Effect ARTO FormID" type="formid" reftype="ARTO"/>
 			<Element name="Shader EFSH FormID" type="formid" reftype="EFSH"/>
-			<Element name="Check-boxes" type="byte" flags="RotateToFaceTarget;AttachToCamera;InheritRotation"/>
-			<Element name="(buffer)" type="byte"/>
-			<Element name="(buffer)" type="short"/>
+			<Element name="Check-boxes" type="uint" flags="RotateToFaceTarget;AttachToCamera;InheritRotation"/>
 		</Subrecord>
 	</Record>
 	<Record name="REGN" desc="Region">

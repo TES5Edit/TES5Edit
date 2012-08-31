@@ -44,7 +44,8 @@ XXX Element XXX
 XXXXXXXXXXXXXXX
 name (required): A short human readable description of the element
 
-type (required): The type of data. Must be one of 'byte', 'short', 'int', 'float', 'formid', 'string', 'bstring', 'istring', 'lstring, 'str4' or 'blob'.
+type (required): The type of data. Must be one of 'sbyte', 'byte', 'short', 'ushort', 'uint', 'int', 'float', 'formid', 'string', 'bstring', 'istring', 'lstring, 'str4' or 'blob'.
+
 		'string'  is zero terminated.
 		'bstring' has a short (2byte) that leads that specifies the length.
 		'istring' has a int (4byte) that leads that specifies the length.
