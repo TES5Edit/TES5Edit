@@ -186,7 +186,7 @@ begin
   wbAllowInternalEdit := False;
 
   try
-    if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'TES5') then begin
+    if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
