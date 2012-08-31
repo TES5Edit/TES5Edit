@@ -503,7 +503,7 @@ begin
       Result := '<Out of range: '+IntToStr(aInt)+'>'
     else
       Result := '';
-  end else if aType = ctToStr then
+  end else if aType = ctToStr then 
     Result := IntToStr(aInt) + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
 end;
 

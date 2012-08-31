@@ -11,6 +11,7 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbBSA;
 
 interface
@@ -37,7 +38,7 @@ type
 implementation
 
 uses
-  zlibEx;
+  ZLIBEX;
 
 type
   TwbContainerHandler = class(TInterfacedObject, IwbContainerHandler)
