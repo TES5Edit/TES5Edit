@@ -28,6 +28,7 @@ uses
   Windows,
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
   wbImplementation in 'wbImplementation.pas',
