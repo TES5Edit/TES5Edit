@@ -70,8 +70,8 @@ var
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{ = True{};
-  wbReportUnused: Boolean{ = True{};
+  wbReportMode: Boolean{} = True{};
+  wbReportUnused: Boolean{} = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
   wbReportUnknownFormIDs: Boolean{} = True{};
