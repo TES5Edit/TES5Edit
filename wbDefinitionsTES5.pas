@@ -5890,13 +5890,13 @@ begin
   wbCTDA := wbRStruct('Conditions', [
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, nil{wbCtdaTypeToInt}, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unknown', 3, cpIgnore),
+      wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
       wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-      wbByteArray('Unknown', 2),
+      wbByteArray('Unknown', 2, cpIgnore, False, wbNeverShow),
       wbUnion('Parameter #1', wbCTDAParam1Decider, [
         wbByteArray('Unknown', 4),
         wbByteArray('None', 4, cpIgnore),
@@ -8953,7 +8953,7 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL], False, cpNormal, True)
   ]);
 
-  wbRecord(MUST, 'Music Type', [
+  wbRecord(MUST, 'Music Track', [
     wbEDIDReq,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette',
