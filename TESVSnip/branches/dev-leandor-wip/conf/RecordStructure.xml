@@ -47,6 +47,14 @@
 		</Subrecord>
 		<Group id="CONDITIONAL" optional="1" repeat="1"/>
 	</Group>
+	<Group id="Spells" optional="1" repeat="1">
+		<Subrecord name="SPCT" desc="Spell Count" optional="1" size="4">
+			<Element name="Count" type="int" />
+		</Subrecord>
+		<Subrecord name="SPLO" desc="Learned Spell (SPEL)" optional="1" repeat="1" size="4">
+			<Element name="FormID" type="formid" reftype="SPEL" />
+		</Subrecord>
+	</Group>
 	<Group id="KEYWORDS" optional="1">
 		<Subrecord name="KSIZ" desc="Number of Keywords" optional="1" size="4">
 			<Element name="Count" type="uint"/>
@@ -999,112 +1007,107 @@ non-indent is being worked on
 		<Group id="EDID" optional="1"/>
 		<Group id="FULL" optional="1"/>
 		<Group id="DESC" optional="1"/>
-		<Subrecord name="SPCT" desc="Spell Count" optional="1" size="4">
-			<Element name="Count" type="int" />
-		</Subrecord>
-		<Subrecord name="SPLO" desc="Learned Spell (SPEL)" optional="1" repeat="1" size="4">
-			<Element name="FormID" type="formid" reftype="SPEL" />
-		</Subrecord>
+		<Group id="Spells" optional="1"/>
 		<Subrecord name="WNAM" desc="Naked Armor (ARMO)" optional="1" size="4">
 			<Element name="FormID" type="formid" reftype="ARMO" />
 		</Subrecord>
-		<Subrecord name="BODT" desc="BODT" optional="1">
-			<Element name="Unknown 1" type="int" />
-			<Element name="Unknown 2" type="int" />
-			<Element name="Unknown 3" type="int" />
-		</Subrecord>
+		<Group id="BODYDATA" optional="1"/>
 		<Group id="KEYWORDS" optional="1"/>
-		<Group>
-			<!-- actor values -->
-			<Subrecord name="DATA" desc="Actor Values" size="128">
-				<Element name='Unknown Value 1' type='byte'/>
-				<Element name='Unknown Value 2' type='byte'/>
-				<Element name='Unknown Value 3' type='byte'/>
-				<Element name='Unknown Value 4' type='byte'/>
-				<Element name='Unknown Value 5' type='byte'/>
-				<Element name='Unknown Value 6' type='byte'/>
-				<Element name='Unknown Value 7' type='byte'/>
-				<Element name='Unknown Value 8' type='byte'/>
-				<Element name='Unknown Value 8' type='byte'/>
-				<Element name='Unknown Value 9' type='byte'/>
-				<Element name='Unknown Value 10' type='byte'/>
-				<Element name='Unknown Value 11' type='byte'/>
-				<Element name='Unknown Value 12' type='byte'/>
-				<Element name='Unknown Value 13' type='byte'/>
-				<Element name='Unknown Value 14' type='byte'/>
-				<Element name='Unknown Value 15' type='byte'/>
-				<Element name="Scale, Male" type="float" />
-				<Element name="Scale, Female" type="float" />
+		<!-- actor values -->
+		<Subrecord name="DATA" desc="Actor Values">
+			<Element name='Unknown Value 1' type='byte'/>
+			<Element name='Unknown Value 2' type='byte'/>
+			<Element name='Unknown Value 3' type='byte'/>
+			<Element name='Unknown Value 4' type='byte'/>
+			<Element name='Unknown Value 5' type='byte'/>
+			<Element name='Unknown Value 6' type='byte'/>
+			<Element name='Unknown Value 7' type='byte'/>
+			<Element name='Unknown Value 8' type='byte'/>
+			<Element name='Unknown Value 8' type='byte'/>
+			<Element name='Unknown Value 9' type='byte'/>
+			<Element name='Unknown Value 10' type='byte'/>
+			<Element name='Unknown Value 11' type='byte'/>
+			<Element name='Unknown Value 12' type='byte'/>
+			<Element name='Unknown Value 13' type='byte'/>
+			<Element name='Unknown Value 14' type='byte'/>
+			<Element name='Unknown Value 15' type='byte'/>
+			<Element name="Scale, Male" type="float" />
+			<Element name="Scale, Female" type="float" />
+			<Element name="Unknown 6" type="float" />
+			<Element name="Unknown 7" type="float" />
+			<Element name="Player Flag" type="uint" hexview='1' desc="Seems to set if a race is playable or not, also has values to designate as a vampire evolution of another race"/>
+			<Element name="Base Health" type="float" desc="Seems to be half of the game value"/>
+			<Element name="Base Magika" type="float" desc="Seems to be half of the game value"/>
+			<Element name="Base Stamina" type="float" desc="Seems to be half of the game value"/>
+			<Element name="Base Carry Weight" type="float" />
+			<Element name="Unknown 13" type="float" />
+			<Element name="Unknown 14" type="float" />
+			<Element name="Unknown 15" type="float" />
+			<Element name="Unknown 16" type="int" />
+			<Element name="Unknown 17" type="int" />
+			<Element name="Unknown 18" type="int" />
+			<Element name="Unknown 19" type="float" />
+			<Element name="Unknown 20" type="int" />
+			<Element name="Base Heal Rate" type="float" />
+			<Element name="Base Magika Rate" type="float" />
+			<Element name="Base Stamina Rate" type="float" />
+			<Element name="Unknown 24" type="float" />
+			<Element name="Unknown 25" type="float" />
+			<Element name="Unknown 26" type="int" />
+			<Element name="Unknown 27" type="float" />
+			<Element name="Unknown 28" type="float" />
+			<Element name="Unknown 29" type="float" />
+			<Element name="Unknown 30" type="float" />
+			<Element name="Unknown 31" type="int" />
+		</Subrecord>
+		<Group id="MODEL_NAME" optional="1"/>
+		<Subrecord name="NAM2" desc="Marker" optional="1">
+			<Element name="Name" type="blob" />
+		</Subrecord>
+		<Subrecord name="MTNM" desc="MTNM" optional="1" repeat="1">
+			<Element name="Name" type="str4" />
+		</Subrecord>
+		<Subrecord name="VTCK" desc="Voice Type (VTYP)" optional="1" size="8">
+			<Element name="Male Voice FormID" type="formid" reftype="VTYP" />
+			<Element name="Female Voice FormID" type="formid" reftype="VTYP" />
+		</Subrecord>
+		<Subrecord name="DNAM" desc="Decapitated Head (ARMO)" optional="1" size="8">
+			<Element name="Male FormID" type="formid" reftype="ARMO" />
+			<Element name="Female FormID" type="formid" reftype="ARMO" />
+		</Subrecord>
+		<Subrecord name="HCLF" desc="Hair Color (CLFM)" optional="1" size="8">
+			<Element name="Male FormID" type="formid" reftype="CLFM" />
+			<Element name="Female FormID" type="formid" reftype="CLFM" />
+		</Subrecord>
+		<Subrecord name="TINL" desc="TINL" optional="1" size="2">
+			<Element name="Unknown short" type="short" />
+		</Subrecord>
+		<Subrecord name="PNAM" desc="PNAM" optional="1" size="4">
+			<Element name="Unknown float" type="float" />
+		</Subrecord>
+		<Subrecord name="UNAM" desc="UNAM" optional="1" size="4">
+			<Element name="Unknown float" type="float" />
+		</Subrecord>
+		<Subrecord name="ATKR" desc="Attack Race" optional="1" size="4">
+			<Element name="Attack Race" type="formid" reftype="RACE" />
+		</Subrecord>
+		<Group optional="1" repeat="1">
+			<Subrecord name="ATKD" desc="ATKD" size="44">
+				<Element name="Unknown" type="float" />
+				<Element name="Unknown 1" type="float" />
+				<Element name="SPEL FormID" type="formid" reftype="SPEL" />
+				<Element name="Unknown 3" type="int" />
+				<Element name="Unknown 4" type="float" />
+				<Element name="Unknown 5" type="float" />
 				<Element name="Unknown 6" type="float" />
-				<Element name="Unknown 7" type="float" />
-				<Element name="Player Flag" type="uint" hexview='1' desc="Seems to set if a race is playable or not, also has values to designate as a vampire evolution of another race"/>
-				<Element name="Base Health" type="float" desc="Seems to be half of the game value"/>
-				<Element name="Base Magika" type="float" desc="Seems to be half of the game value"/>
-				<Element name="Base Stamina" type="float" desc="Seems to be half of the game value"/>
-				<Element name="Base Carry Weight" type="float" />
-				<Element name="Unknown 13" type="float" />
-				<Element name="Unknown 14" type="float" />
-				<Element name="Unknown 15" type="float" />
-				<Element name="Unknown 16" type="int" />
-				<Element name="Unknown 17" type="int" />
-				<Element name="Unknown 18" type="int" />
-				<Element name="Unknown 19" type="float" />
-				<Element name="Unknown 20" type="int" />
-				<Element name="Base Heal Rate" type="float" />
-				<Element name="Base Magika Rate" type="float" />
-				<Element name="Base Stamina Rate" type="float" />
-				<Element name="Unknown 24" type="float" />
-				<Element name="Unknown 25" type="float" />
-				<Element name="Unknown 26" type="int" />
-				<Element name="Unknown 27" type="float" />
-				<Element name="Unknown 28" type="float" />
-				<Element name="Unknown 29" type="float" />
-				<Element name="Unknown 30" type="float" />
-				<Element name="Unknown 31" type="int" />
+				<Element name="KYWD FormID" type="formid" reftype="KYWD" />
+				<Element name="Unknown 8" type="float" />
+				<Element name="Unknown 9" type="float" />
+				<Element name="Unknown 10" type="float" />
 			</Subrecord>
-			<Group id="MODEL_NAME" optional="1"/>
-			<Subrecord name="MTNM" desc="MTNM" optional="1" repeat="1" size="4">
-				<Element name="Name" type="str4" />
+			<Subrecord name="ATKE" desc="ATKE">
+				<Element name="Name" type="string" />
 			</Subrecord>
-			<Subrecord name="VTCK" desc="Voice Type (VTYP)" optional="1" size="8">
-				<Element name="Male Voice FormID" type="formid" reftype="VTYP" />
-				<Element name="Female Voice FormID" type="formid" reftype="VTYP" />
-			</Subrecord>
-			<Subrecord name="DNAM" desc="Decapitated Head (ARMO)" optional="1" size="8">
-				<Element name="Male FormID" type="formid" reftype="ARMO" />
-				<Element name="Female FormID" type="formid" reftype="ARMO" />
-			</Subrecord>
-			<Subrecord name="HCLF" desc="Hair Color (CLFM)" optional="1" size="8">
-				<Element name="Male FormID" type="formid" reftype="CLFM" />
-				<Element name="Female FormID" type="formid" reftype="CLFM" />
-			</Subrecord>
-			<Subrecord name="TINL" desc="TINL" optional="1" size="2">
-				<Element name="Unknown short" type="short" />
-			</Subrecord>
-			<Subrecord name="PNAM" desc="PNAM" optional="1" size="4">
-				<Element name="Unknown float" type="float" />
-			</Subrecord>
-			<Subrecord name="UNAM" desc="UNAM" optional="1" size="4">
-				<Element name="Unknown float" type="float" />
-			</Subrecord>
-			<Group optional="1" repeat="1">
-				<Subrecord name="ATKD" desc="ATKD" size="44">
-					<Element name="Unknown" type="float" />
-					<Element name="Unknown 1" type="float" />
-					<Element name="SPEL FormID" type="formid" reftype="SPEL" />
-					<Element name="Unknown 3" type="int" />
-					<Element name="Unknown 4" type="float" />
-					<Element name="Unknown 5" type="float" />
-					<Element name="Unknown 6" type="float" />
-					<Element name="KYWD FormID" type="formid" reftype="KYWD" />
-					<Element name="Unknown 8" type="float" />
-					<Element name="Unknown 9" type="float" />
-					<Element name="Unknown 10" type="float" />
-				</Subrecord>
-				<Subrecord name="ATKE" desc="ATKE">
-					<Element name="Name" type="string" />
-				</Subrecord>
-			</Group>
 		</Group>
 		<Group>
 			<!-- model data1 -->
@@ -1114,11 +1117,9 @@ non-indent is being worked on
 				<Element name="FormID" type="formid" reftype="BPTD"/>
 			</Subrecord>
 		</Group>
-		<Group>
 			<!-- model data2 -->
-			<Subrecord name="NAM3" desc="Marker for HKX Models"/>
-			<Group id="MODEL_NAME"/>
-		</Group>
+		<Subrecord name="NAM3" desc="Marker for HKX Models"/>
+		<Group id="MODEL_NAME"/>
 		<Subrecord name="NAM4" desc="Material Type (MATT)" optional="1" size="4">
 			<Element name="FormID" type="formid" reftype="MATT" />
 		</Subrecord>
@@ -1184,6 +1185,9 @@ non-indent is being worked on
 			<Element name="FormID" type="formid" reftype="MOVT" />
 		</Subrecord>
 		<Subrecord name="SNMV" desc="? Movement Type (MOVT)" optional="1" size="4">
+			<Element name="FormID" type="formid" reftype="MOVT" />
+		</Subrecord>
+		<Subrecord name="SPMV" desc="? Movement Type (MOVT)" optional="1" size="4">
 			<Element name="FormID" type="formid" reftype="MOVT" />
 		</Subrecord>
 		<Group optional="1" repeat="1">
