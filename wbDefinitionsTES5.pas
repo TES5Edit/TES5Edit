@@ -23,8 +23,7 @@ implementation
 uses
   Types, Classes, SysUtils, Math, Variants,
   wbInterface,
-  wbLocalization,
-  wbTES5ScriptDef;
+  wbLocalization;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -4339,7 +4338,7 @@ begin
       {0x40000000} 'Body AddOn 17',
       {0x80000000} 'FX01'
     ], True)),
-    wbInteger('General Flags', itU32, wbFlags([
+    wbInteger('General Flags', itU8, wbFlags([
       {0x00000001}'Modulates Voice', {>>> From ARMA <<<}
       {0x00000002}'Unknown 2',
       {0x00000004}'Unknown 3',
@@ -4347,34 +4346,11 @@ begin
       {0x00000010}'Non-Playable', {>>> From ARMO <<<}
       {0x00000020}'Unknown 6',
       {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8',
-      {0x00000100}'Unknown 9',
-      {0x00000200}'Unknown 10',
-      {0x00000400}'Unknown 11',
-      {0x00000800}'Unknown 12',
-      {0x00001000}'Unknown 13',
-      {0x00002000}'Unknown 14',
-      {0x00004000}'Unknown 15',
-      {0x00008000}'Unknown 16',
-      {0x00010000}'Unknown 17',
-      {0x00020000}'Unknown 18',
-      {0x00040000}'Unknown 19',
-      {0x00080000}'Unknown 20',
-      {0x00100000}'Unknown 21',
-      {0x00200000}'Unknown 22',
-      {0x00400000}'Unknown 23',
-      {0x00800000}'Unknown 24',
-      {0x01000000}'Unknown 25',
-      {0x02000000}'Unknown 26',
-      {0x03000000}'Unknown 27',
-      {0x08000000}'Unknown 28',
-      {0x10000000}'Unknown 29',
-      {0x20000000}'Unknown 30',
-      {0x40000000}'Unknown 31',
-      {0x80000000}'Unknown 32'
+      {0x00000080}'Unknown 8'
     ], True)),
+    wbByteArray('Unknown', 3),
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-  ], cpNormal, True, nil, 2);
+  ], cpNormal, True, nil, 3);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -5652,8 +5628,8 @@ begin
 
   wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
 
-  wbETYP := wbFormIDCk(ETYP, 'Equiptment Type', [EQUP, NULL]);
-  wbETYPReq := wbFormIDCk(ETYP, 'Equiptment Type', [EQUP, NULL], False, cpNormal, True);
+  wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
+  wbETYPReq := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL], False, cpNormal, True);
 
   wbFormTypeEnum := wbEnum([], [
      0, 'Activator',
@@ -5914,7 +5890,7 @@ begin
   wbCTDA := wbRStruct('Conditions', [
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, nil{wbCtdaTypeToInt}, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 3, cpIgnore),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
@@ -6212,7 +6188,7 @@ begin
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
-    wbFormIDCk(BAMT, 'Bash Material', [MATT]),
+    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
     wbDESC,
@@ -8533,7 +8509,7 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN, NULL]),
+    wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbFlags([
@@ -8610,7 +8586,7 @@ begin
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
       {40} wbFloat('Near Target Distance')
-    ], cpNormal, True, nil),
+    ], cpNormal, True, nil, 8),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
