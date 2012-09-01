@@ -32,7 +32,8 @@ requires
   VirtualTreesD10;
 
 contains
-  VirtualTreesReg in '..\Design\VirtualTreesReg.pas';
+  VirtualTreesReg in '..\Design\VirtualTreesReg.pas',
+  VirtualEditTreeReg in '..\Design\VirtualEditTreeReg.pas';
 
 end.
 

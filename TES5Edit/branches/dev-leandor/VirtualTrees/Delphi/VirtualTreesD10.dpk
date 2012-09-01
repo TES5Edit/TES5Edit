@@ -28,14 +28,17 @@ package VirtualTreesD10;
 
 requires
   vcl,
-  vclx;
+  vclx,
+  VclSmp;
 
 contains
   VirtualTrees in '..\Source\VirtualTrees.pas',
   VTHeaderPopup in '..\Source\VTHeaderPopup.pas',
   VTAccessibilityFactory in '..\Source\VTAccessibilityFactory.pas',
   VTAccessibility in '..\Source\VTAccessibility.pas',
-  MSAAIntf in '..\Source\MSAAIntf.pas';
+  VirtualEditTree in '..\Source\VirtualEditTree.pas',
+  Colors in '..\Source\Colors.pas',
+  VTEditors in '..\Source\VTEditors.pas';
 
 end.
 
