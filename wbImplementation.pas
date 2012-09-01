@@ -5293,7 +5293,7 @@ begin
     end;
   end;
 
-  if wbReportMode {and mrDef.AllowUnordered} then begin
+  if wbReportMode and mrDef.AllowUnordered then begin
     s := GetSignature + ' -> ' + s;
     CurrentRecPos := SubRecordOrderList.Add(s);
     SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
