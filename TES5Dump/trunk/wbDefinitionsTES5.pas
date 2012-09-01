@@ -9010,9 +9010,7 @@ begin
   wbRecord(EQUP, 'Equip Type', [
     wbEDIDReq,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Flags', itU32, wbFlags([
-      'Use All Parents'
-    ]), cpNormal, True)
+    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
   ]);
 
   wbRecord(RELA, 'Relationship', [
@@ -9191,6 +9189,7 @@ end;
 
 procedure DefineTES5k;
 begin
+
   wbRecord(OTFT, 'Outfit', [
     wbEDIDReq,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
@@ -9260,7 +9259,7 @@ begin
     wbEDIDReq,
     wbUnknown(CNAM),
     wbFormID(GNAM, 'Category'),
-    wbFormIDCk(SNAM, 'String', [SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR, NULL]),
     wbRArray('Sounds',
       wbRStruct('Sound Files', [
         wbString(ANAM, 'File Name')
@@ -11780,7 +11779,7 @@ begin
       wbString(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overriden Forms',
+    wbArray(ONAM, 'Overridden Forms',
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot'),
@@ -11791,6 +11790,7 @@ end;
 
 procedure DefineTES5o;
 begin
+
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,
