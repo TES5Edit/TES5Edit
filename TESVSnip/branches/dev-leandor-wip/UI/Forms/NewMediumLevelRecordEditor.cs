@@ -7,7 +7,6 @@ namespace TESVSnip.UI.Forms
 
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework.Collections;
-    using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
     using TESVSnip.UI.RecordControls;
