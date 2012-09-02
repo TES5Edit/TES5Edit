@@ -808,6 +808,23 @@
             this.SavePluginStrings(enc, LocalizedStringFormat.DL, this.DLStrings, FilePath + ".DLSTRINGS");
         }
 
+        internal void UpdateRecordCount()
+        {
+            int reccount = -1 + this.Records.Cast<Rec>().Sum(r => r.CountRecords());
+            var tes4 = this.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
+            if (tes4 != null) {
+                if (tes4.SubRecords.Count > 0 && tes4.SubRecords[0].Name == "HEDR" && tes4.SubRecords[0].Size >= 8) {
+                    byte[] data = tes4.SubRecords[0].GetData();
+                    byte[] reccountbytes = TypeConverter.si2h(reccount);
+                    for (int i = 0; i < 4; i++) {
+                        data[4 + i] = reccountbytes[i];
+                    }
+
+                    tes4.SubRecords[0].SetData(data);
+                }
+            }
+        }
+
         private void LoadPluginData(BinaryReader br, bool headerOnly, string[] recFilter)
         {
             bool oldHoldUpdates = HoldUpdates;
@@ -1081,26 +1098,6 @@
 
                     writer.Write(buffer, 0, nread);
                     left -= nread;
-                }
-            }
-        }
-
-        public void UpdateRecordCount()
-        {
-            int reccount = -1 + Records.Cast<Rec>().Sum(r => Spells.sanitizeCountRecords(r));
-            var tes4 = Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
-            if (tes4 != null)
-            {
-                if (tes4.SubRecords.Count > 0 && tes4.SubRecords[0].Name == "HEDR" && tes4.SubRecords[0].Size >= 8)
-                {
-                    byte[] data = tes4.SubRecords[0].GetData();
-                    byte[] reccountbytes = TypeConverter.si2h(reccount);
-                    for (int i = 0; i < 4; i++)
-                    {
-                        data[4 + i] = reccountbytes[i];
-                    }
-
-                    tes4.SubRecords[0].SetData(data);
                 }
             }
         }
