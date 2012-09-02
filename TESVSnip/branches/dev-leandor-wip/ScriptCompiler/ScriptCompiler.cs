@@ -15,10 +15,10 @@ using System.Xml;
 namespace ScriptCompiler
 {
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
-    using TESVSnip.Model;
 
     internal static class ScriptCompiler
     {

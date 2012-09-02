@@ -12,7 +12,7 @@
 
     using OC.Windows.Forms;
 
-    using TESVSnip.Model;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Properties;
     using TESVSnip.UI.Docking;
     using TESVSnip.UI.Forms;

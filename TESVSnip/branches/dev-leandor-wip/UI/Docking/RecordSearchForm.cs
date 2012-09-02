@@ -2,7 +2,7 @@
 {
     using System;
 
-    using TESVSnip.Model;
+    using TESVSnip.Domain.Model;
 
     public partial class RecordSearchForm : BaseDockContent
     {

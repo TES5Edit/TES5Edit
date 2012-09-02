@@ -2,7 +2,7 @@
 {
     using System;
 
-    using TESVSnip.Model;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Properties;
 
     public partial class FullRecordEditor : BaseDockContent

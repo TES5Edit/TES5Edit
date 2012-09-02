@@ -8,8 +8,8 @@
     using System.Windows.Forms;
 
     using TESVSnip.Domain.Data.Strings;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework.Collections;
-    using TESVSnip.Model;
     using TESVSnip.Properties;
 
     using Settings = TESVSnip.Domain.Services.Settings;

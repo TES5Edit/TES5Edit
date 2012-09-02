@@ -6,8 +6,8 @@
     using System.Linq;
     using System.Windows.Forms;
 
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework.Collections;
-    using TESVSnip.Model;
     using TESVSnip.UI.Forms;
 
     public partial class RecordEditor : UserControl

@@ -18,10 +18,10 @@ namespace TESVSnip.UI.Forms
     using RTF;
 
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
-    using TESVSnip.Model;
     using TESVSnip.Properties;
     using TESVSnip.UI.Docking;
     using TESVSnip.UI.ObjectControls;

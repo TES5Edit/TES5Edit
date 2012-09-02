@@ -11,8 +11,8 @@
     using System.Windows.Forms;
 
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework;
-    using TESVSnip.Model;
 
     using Settings = TESVSnip.Properties.Settings;
 

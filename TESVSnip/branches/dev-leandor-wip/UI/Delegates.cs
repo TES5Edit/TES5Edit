@@ -2,7 +2,7 @@ namespace TESVSnip.UI
 {
     using System.Collections.Generic;
 
-    using TESVSnip.Model;
+    using TESVSnip.Domain.Model;
 
     internal delegate string dFormIDLookupI(uint id);
 

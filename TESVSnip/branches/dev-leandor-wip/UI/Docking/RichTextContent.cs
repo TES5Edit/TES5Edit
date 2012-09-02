@@ -4,8 +4,8 @@
 
     using RTF;
 
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework.Services;
-    using TESVSnip.Model;
     using TESVSnip.Properties;
 
     public partial class RichTextContent : BaseDockContent

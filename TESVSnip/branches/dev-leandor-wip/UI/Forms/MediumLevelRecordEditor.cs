@@ -7,9 +7,9 @@ namespace TESVSnip.UI.Forms
     using System.Windows.Forms;
 
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
-    using TESVSnip.Model;
     using TESVSnip.Properties;
     using TESVSnip.Windows.Controls;
 

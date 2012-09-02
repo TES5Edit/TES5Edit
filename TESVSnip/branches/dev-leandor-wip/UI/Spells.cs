@@ -8,8 +8,8 @@ namespace TESVSnip.UI
 
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Data.Strings;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework;
-    using TESVSnip.Model;
     using TESVSnip.Properties;
 
     /// <summary>

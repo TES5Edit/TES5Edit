@@ -4,7 +4,7 @@ namespace TESVSnip.UI.Forms
     using System.Globalization;
     using System.Windows.Forms;
 
-    using TESVSnip.Model;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Properties;
 
     internal partial class HeaderEditor : Form

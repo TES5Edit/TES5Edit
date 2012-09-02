@@ -8,8 +8,8 @@
     using System.Windows.Forms;
 
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework.Collections;
-    using TESVSnip.Model;
     using TESVSnip.UI.RecordControls;
 
     public partial class SubrecordEditor : UserControl

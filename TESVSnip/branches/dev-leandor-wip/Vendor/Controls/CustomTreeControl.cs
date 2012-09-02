@@ -7,7 +7,7 @@ using BrightIdeasSoftware;
 
 namespace TESVSnip.Controls
 {
-    using TESVSnip.Model;
+    using TESVSnip.Domain.Model;
 
     internal class CustomTreeView : TreeListView
     {

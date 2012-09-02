@@ -8,7 +8,7 @@
     using BrightIdeasSoftware;
 
     using TESVSnip.Domain.Data.RecordStructure;
-    using TESVSnip.Model;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Properties;
 
     internal partial class RecordColumnSelect : Form

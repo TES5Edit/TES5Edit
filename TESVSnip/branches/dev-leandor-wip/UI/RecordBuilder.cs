@@ -5,8 +5,8 @@ namespace TESVSnip.UI
     using System.Linq;
 
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework;
-    using TESVSnip.Model;
 
     internal class RecordBuilder
     {
