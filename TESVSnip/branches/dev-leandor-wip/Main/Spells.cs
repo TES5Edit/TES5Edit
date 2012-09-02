@@ -392,7 +392,7 @@
 
                 plugin.InvalidateCache();
 
-                UpdateRecordCount(plugin);
+                plugin.UpdateRecordCount();
 
                 /* int reccount = -1 + plugin.Records.Cast<Rec>().Sum(r => sanitizeCountRecords(r));
                 var tes4 = plugin.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
@@ -418,26 +418,6 @@
             foreach (Rec r in p.Records)
             {
                 StripEDIDsInternal(r);
-            }
-        }
-
-        public static void UpdateRecordCount(Plugin plugin)
-        {
-            int reccount = -1 + plugin.Records.Cast<Rec>().Sum(r => sanitizeCountRecords(r));
-            var tes4 = plugin.Records.OfType<Record>().FirstOrDefault(x => x.Name == "TES4");
-            if (tes4 != null)
-            {
-                if (tes4.SubRecords.Count > 0 && tes4.SubRecords[0].Name == "HEDR" && tes4.SubRecords[0].Size >= 8)
-                {
-                    byte[] data = tes4.SubRecords[0].GetData();
-                    byte[] reccountbytes = TypeConverter.si2h(reccount);
-                    for (int i = 0; i < 4; i++)
-                    {
-                        data[4 + i] = reccountbytes[i];
-                    }
-
-                    tes4.SubRecords[0].SetData(data);
-                }
             }
         }
 
