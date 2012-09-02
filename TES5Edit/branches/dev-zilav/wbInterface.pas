@@ -85,10 +85,6 @@ var
   wbReportUnknownEnums: Boolean{} = True{};
   wbReportFormIDNotAllowedReferences: Boolean{} = True{};
   wbReportUnknown: Boolean{} = True{};
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-  wbReportUnknownLStrings: Boolean{} = False{};
 
   wbCheckExpectedBytes: Boolean{} = True{};
 
@@ -8456,17 +8452,6 @@ begin
           WriteLn('  ', Strings[k], ' (', Integer(Objects[k]),')');
     end;
 
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-  if wbReportUnknownLStrings then
-    if (FoundLString > 0) and (NotFoundLString < 1) then begin
-      WriteLn('Found Strings: ', s, ': ',Strings.Count,' (', FoundLString, ')');
-      with Strings do
-        for k := 0 to Pred(Count) do
-          WriteLn('  ', Strings[k], ' (', Integer(Objects[k]),')');
-    end;
-
   if wbReportEmpty then
     if IsEmpty > 0 then
       if IsNotEmpty > 0 then begin
@@ -8644,37 +8629,6 @@ begin
                 end;
               end else begin
                 Inc(NotFoundString);
-                Break;
-              end;
-
-            Inc(p);
-          end;
-        end;
-      end;
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-      if wbReportUnknownLStrings then begin
-        if (badSize < 1) and (NotFoundLString < 1) then begin
-          p := aBasePtr;
-          while (Cardinal(p)) < Cardinal(aEndPtr) do begin
-            if p^ < 32 then
-              if (Succ(Cardinal(p)) = Cardinal(aEndPtr)) and (p^ = 0) then begin
-                s := PAnsiChar(aBasePtr);
-                if Length(s) > 4 then begin
-                  Inc(FoundLString);
-
-                  if not Assigned(Strings) then
-                    Strings := TwbFastStringListCS.CreateSorted;
-
-                  with Strings do if Count < 15 then begin
-                    if not Find(s, i) then
-                      i := AddObject(s, TObject(0));
-                    Objects[i] := TObject(Succ(Integer(Objects[i])));
-                  end;
-                end;
-              end else begin
-                Inc(NotFoundLString);
                 Break;
               end;
 

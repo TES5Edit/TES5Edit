@@ -5890,13 +5890,13 @@ begin
   wbCTDA := wbRStruct('Conditions', [
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, nil{wbCtdaTypeToInt}, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
+      wbByteArray('Unknown', 3),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
       wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-      wbByteArray('Unknown', 2, cpIgnore, False, wbNeverShow),
+      wbByteArray('Unknown', 2),
       wbUnion('Parameter #1', wbCTDAParam1Decider, [
         wbByteArray('Unknown', 4),
         wbByteArray('None', 4, cpIgnore),
@@ -6188,7 +6188,7 @@ begin
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
-    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
+    wbFormIDCk(BAMT, 'Bash Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
     wbDESC,
@@ -8509,7 +8509,7 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Sound', [SOUN, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbFlags([
@@ -8586,7 +8586,7 @@ begin
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
       {40} wbFloat('Near Target Distance')
-    ], cpNormal, True, nil, 8),
+    ], cpNormal, True, nil),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
@@ -8953,7 +8953,7 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL], False, cpNormal, True)
   ]);
 
-  wbRecord(MUST, 'Music Track', [
+  wbRecord(MUST, 'Music Type', [
     wbEDIDReq,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette',
