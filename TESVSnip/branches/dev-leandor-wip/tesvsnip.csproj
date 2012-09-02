@@ -163,6 +163,9 @@
     <Compile Include="Framework\Services\Encoding.cs" />
     <Compile Include="Framework\Services\FontLangInfo.cs" />
     <Compile Include="Framework\TypeConverter.cs" />
+    <Compile Include="UI\Controls\CustomTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordBuilder.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
@@ -183,9 +186,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Vendor\Controls\CustomComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Vendor\Controls\CustomTreeControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Vendor\Controls\FlagComboBox.cs">

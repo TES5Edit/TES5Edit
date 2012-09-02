@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using BrightIdeasSoftware;
-
-namespace TESVSnip.Controls
+namespace TESVSnip.UI.Controls
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Windows.Forms;
+
+    using BrightIdeasSoftware;
+
     using TESVSnip.Domain.Model;
 
     internal class CustomTreeView : TreeListView
@@ -19,15 +20,15 @@ namespace TESVSnip.Controls
             switch (m.Msg)
             {
                 case 0x210: //WM_PARENTNOTIFY
-                    _contextMenuSet = 1;
+                    this._contextMenuSet = 1;
                     break;
                 case 0x21: //WM_MOUSEACTIVATE
-                    _contextMenuSet++;
+                    this._contextMenuSet++;
                     break;
                 case 0x7b: //WM_CONTEXTMENU
-                    if (_contextMenuSet == 1) // ignore mouse activate
-                        if (OnContextMenuKey != null)
-                            OnContextMenuKey(this, EventArgs.Empty);
+                    if (this._contextMenuSet == 1) // ignore mouse activate
+                        if (this.OnContextMenuKey != null)
+                            this.OnContextMenuKey(this, EventArgs.Empty);
                     break;
             }
         }
@@ -42,7 +43,7 @@ namespace TESVSnip.Controls
             set
             {
                 if (value != null)
-                    EnsureModelVisible(value);
+                    this.EnsureModelVisible(value);
                 base.SelectObject(value, true);
             }
         }
@@ -53,7 +54,7 @@ namespace TESVSnip.Controls
             set
             {
                 foreach (var r in value)
-                    EnsureModelVisible(r);
+                    this.EnsureModelVisible(r);
                 base.SelectObjects(value.ToList());
             }
         }
@@ -63,7 +64,7 @@ namespace TESVSnip.Controls
         {
             var rec = model as IRecord;
             var parent = rec != null ? rec.Parent : null;
-            if (parent != null) Expand(parent);
+            if (parent != null) this.Expand(parent);
             base.Expand(model);
         }
 
@@ -74,7 +75,7 @@ namespace TESVSnip.Controls
 
             var rec = modelObject as IRecord;
             var parent = rec != null ? rec.Parent : null;
-            if (parent != null) Expand(parent);
+            if (parent != null) this.Expand(parent);
             base.EnsureModelVisible(modelObject);
         }
 
@@ -87,7 +88,7 @@ namespace TESVSnip.Controls
             PrimarySortColumn = null;
             PrimarySortOrder = SortOrder.None;
             TreeModel.Unsort();
-            Roots = _baseRoots;
+            this.Roots = this._baseRoots;
             RebuildAll(true);
             ShowSortIndicator(LastSortColumn, LastSortOrder);
         }
@@ -99,8 +100,8 @@ namespace TESVSnip.Controls
             get { return base.Roots; }
             set
             {
-                _baseRoots = value.OfType<object>().ToArray();
-                base.Roots = _baseRoots;
+                this._baseRoots = value.OfType<object>().ToArray();
+                base.Roots = this._baseRoots;
             }
         }
     }
