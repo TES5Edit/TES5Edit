@@ -641,6 +641,7 @@
       <DependentUpon>TextElement.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="build\tesvsnip.snk" />
+    <None Include="Domain\Data\RecordStructure.xsd" />
     <None Include="Vendor\DotZLib\DotZLib.chm" />
     <None Include="Vendor\ObjectListView\ObjectListView.FxCop" />
     <None Include="Vendor\ObjectListView\ObjectListView.shfb" />
