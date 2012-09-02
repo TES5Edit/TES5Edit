@@ -4,8 +4,6 @@ namespace TESVSnip.Domain.Data.RecordStructure
     using System.Collections.Generic;
     using System.Linq;
 
-    using TESVSnip.Main;
-
     internal class SubrecordStructure : SubrecordBase
     {
         public readonly int CondID;

@@ -13,7 +13,6 @@
     using TESVSnip.Framework;
     using TESVSnip.Framework.Persistence;
     using TESVSnip.Framework.Services;
-    using TESVSnip.Main;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
     [Serializable]

@@ -1,7 +1,6 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Model
 {
     using TESVSnip.Framework;
-    using TESVSnip.Model;
 
     public interface ISelectionContext : ICloneable<ISelectionContext>
     {

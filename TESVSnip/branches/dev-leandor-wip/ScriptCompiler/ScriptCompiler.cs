@@ -18,7 +18,6 @@ namespace ScriptCompiler
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
-    using TESVSnip.Main;
     using TESVSnip.Model;
 
     internal static class ScriptCompiler

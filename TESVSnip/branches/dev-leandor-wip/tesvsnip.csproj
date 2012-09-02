@@ -128,8 +128,8 @@
     <Compile Include="Framework\Services\Encoding.cs" />
     <Compile Include="Framework\Services\FontLangInfo.cs" />
     <Compile Include="Framework\TypeConverter.cs" />
-    <Compile Include="Main\ISelectionContext.cs" />
     <Compile Include="Model\FlagDefs.cs" />
+    <Compile Include="Model\ISelectionContext.cs" />
     <Compile Include="Model\TESParserException.cs" />
     <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordBuilder.cs" />

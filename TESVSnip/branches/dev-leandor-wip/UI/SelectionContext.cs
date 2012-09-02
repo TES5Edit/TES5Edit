@@ -5,7 +5,6 @@ namespace TESVSnip.UI
 
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
-    using TESVSnip.Main;
     using TESVSnip.Model;
 
     /// <summary>
