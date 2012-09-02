@@ -164,6 +164,9 @@
     <Compile Include="Framework\Services\Encoding.cs" />
     <Compile Include="Framework\Services\FontLangInfo.cs" />
     <Compile Include="Framework\TypeConverter.cs" />
+    <Compile Include="ScriptCompiler\Keywords.cs" />
+    <Compile Include="ScriptCompiler\TokenStream.cs" />
+    <Compile Include="ScriptCompiler\TokenType.cs" />
     <Compile Include="UI\Controls\CustomTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -726,7 +729,7 @@
     <Compile Include="Vendor\RTFLib\RTF\RTFRowDefinition.cs" />
     <Compile Include="Vendor\RTFLib\RTF\RTFUtil.cs" />
     <Compile Include="ScriptCompiler\ScriptCompiler.cs" />
-    <Compile Include="ScriptCompiler\Tokenizer.cs" />
+    <Compile Include="ScriptCompiler\Token.cs" />
     <Compile Include="UI\Forms\MainView.cs">
       <SubType>Form</SubType>
     </Compile>
