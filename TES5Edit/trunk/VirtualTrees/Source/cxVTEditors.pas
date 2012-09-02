@@ -21,8 +21,8 @@ uses
   SysUtils,
   Controls,
   VTEditors, VirtualTrees,
-  {cxEdit, cxTextEdit, cxDropDownEdit,cxCheckComboBox,
-  cxLookAndFeelPainters};
+  cxEdit, cxTextEdit, cxDropDownEdit, cxCheckComboBox,
+  cxLookAndFeelPainters;
 
 type
   TcxCustomEditLink = class(TCustomEditLink)
