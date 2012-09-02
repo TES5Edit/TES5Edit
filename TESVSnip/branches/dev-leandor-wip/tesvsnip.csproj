@@ -128,6 +128,7 @@
     <Compile Include="Framework\TypeConverter.cs" />
     <Compile Include="Main\ISelectionContext.cs" />
     <Compile Include="Model\FlagDefs.cs" />
+    <Compile Include="Model\TESParserException.cs" />
     <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordBuilder.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
@@ -732,7 +733,6 @@
     <Compile Include="UI\Forms\MainView.designer.cs">
       <DependentUpon>MainView.cs</DependentUpon>
     </Compile>
-    <Compile Include="Main\TESParserException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tesv_ico.ico" />

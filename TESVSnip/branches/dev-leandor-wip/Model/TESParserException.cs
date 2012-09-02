@@ -1,4 +1,4 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Model
 {
     using System;
 
