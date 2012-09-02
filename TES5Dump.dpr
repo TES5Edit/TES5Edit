@@ -34,8 +34,6 @@ uses
   wbImplementation in 'wbImplementation.pas',
   wbInterface in 'wbInterface.pas',
   wbLocalization in 'wbLocalization.pas',
-  wbSavedGames in 'wbSavedGames.pas',
-  wbTES5ScriptDef in 'wbTES5ScriptDef.pas',
   wbBSA in 'wbBSA.pas';
 
 const
