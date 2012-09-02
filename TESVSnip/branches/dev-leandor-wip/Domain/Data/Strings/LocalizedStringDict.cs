@@ -1,4 +1,4 @@
-namespace TESVSnip.Data
+namespace TESVSnip.Domain.Data.Strings
 {
     using TESVSnip.Framework.Collections;
 
