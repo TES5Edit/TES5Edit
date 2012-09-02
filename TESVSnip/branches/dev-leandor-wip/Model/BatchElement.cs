@@ -6,7 +6,6 @@
 
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework.Collections;
-    using TESVSnip.Main;
 
     internal class BatchElement : BatchCriteria
     {

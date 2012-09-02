@@ -4,7 +4,6 @@
 
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
-    using TESVSnip.Main;
 
     /// <summary>
     ///   Helper for reference to Element structure including data

@@ -5,7 +5,6 @@ namespace TESVSnip.Model
     using System.Linq;
 
     using TESVSnip.Domain.Data.RecordStructure;
-    using TESVSnip.Main;
 
     internal class BatchSubrecord : BatchCriteria
     {
