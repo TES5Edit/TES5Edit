@@ -1,4 +1,4 @@
-namespace ScriptCompiler
+namespace TESVSnip.ScriptCompiler
 {
     using System;
     using System.Collections.Generic;

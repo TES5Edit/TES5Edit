@@ -1,4 +1,4 @@
-namespace ScriptCompiler
+namespace TESVSnip.ScriptCompiler
 {
     internal enum Keywords
     {
