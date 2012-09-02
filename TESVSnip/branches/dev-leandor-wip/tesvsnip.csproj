@@ -85,11 +85,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domain\Data\RecordStructure\Conditional.cs" />
+    <Compile Include="Domain\Data\RecordStructure\CondType.cs" />
+    <Compile Include="Domain\Data\RecordStructure\ElementStructure.cs" />
+    <Compile Include="Domain\Data\RecordStructure\ElementValueType.cs" />
     <Compile Include="Domain\Data\RecordStructure\Group.cs" />
     <Compile Include="Domain\Data\RecordStructure\Records.cs" />
     <Compile Include="Domain\Data\RecordStructure\RecordsRecord.cs" />
+    <Compile Include="Domain\Data\RecordStructure\RecordStructure.cs" />
+    <Compile Include="Domain\Data\RecordStructure\RecordXmlException.cs" />
     <Compile Include="Domain\Data\RecordStructure\Subrecord.cs" />
+    <Compile Include="Domain\Data\RecordStructure\SubrecordBase.cs" />
     <Compile Include="Domain\Data\RecordStructure\SubrecordElement.cs" />
+    <Compile Include="Domain\Data\RecordStructure\SubrecordGroup.cs" />
+    <Compile Include="Domain\Data\RecordStructure\SubrecordStructure.cs" />
     <Compile Include="Domain\Data\Strings\LocalizedString.cs" />
     <Compile Include="Domain\Data\Strings\LocalizedStringDict.cs" />
     <Compile Include="Domain\Data\Strings\LocalizedStringFormat.cs" />
@@ -382,16 +391,8 @@
       <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
     </Compile>
     <Compile Include="Main\Compressor.cs" />
-    <Compile Include="Main\Conditional.cs" />
-    <Compile Include="Main\CondType.cs" />
-    <Compile Include="Main\ElementStructure.cs" />
-    <Compile Include="Main\ElementValueType.cs" />
     <Compile Include="Main\FlagDefs.cs" />
-    <Compile Include="Main\RecordXmlException.cs" />
     <Compile Include="Main\Spells.cs" />
-    <Compile Include="Main\SubrecordBase.cs" />
-    <Compile Include="Main\SubrecordGroup.cs" />
-    <Compile Include="Main\SubrecordStructure.cs" />
     <Compile Include="Model\BaseRecord.cs" />
     <Compile Include="Model\BatchCondElementType.cs" />
     <Compile Include="Model\BatchCondRecordType.cs" />
@@ -654,7 +655,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Main\RecordStructure.cs" />
     <Compile Include="UI\RecordControls\BaseElement.cs">
       <SubType>UserControl</SubType>
     </Compile>

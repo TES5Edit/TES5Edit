@@ -1,10 +1,10 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Domain.Data.RecordStructure
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
 
-    using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Main;
 
     internal class SubrecordStructure : SubrecordBase
     {

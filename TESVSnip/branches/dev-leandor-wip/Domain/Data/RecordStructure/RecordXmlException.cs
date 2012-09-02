@@ -1,4 +1,4 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Domain.Data.RecordStructure
 {
     using System;
 

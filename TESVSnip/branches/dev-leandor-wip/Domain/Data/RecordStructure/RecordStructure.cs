@@ -1,4 +1,4 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Domain.Data.RecordStructure
 {
     using System;
     using System.Collections;
@@ -7,7 +7,6 @@ namespace TESVSnip.Main
     using System.Linq;
     using System.Xml.Serialization;
 
-    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Services;
 
     internal class RecordStructure

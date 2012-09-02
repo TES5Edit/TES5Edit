@@ -1,9 +1,7 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Domain.Data.RecordStructure
 {
     using System;
     using System.Globalization;
-
-    using TESVSnip.Domain.Data.RecordStructure;
 
     internal class SubrecordBase
     {

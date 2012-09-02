@@ -1,4 +1,4 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Domain.Data.RecordStructure
 {
     public enum CondType
     {

@@ -1,7 +1,5 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Domain.Data.RecordStructure
 {
-    using TESVSnip.Domain.Data.RecordStructure;
-
     internal class SubrecordGroup : SubrecordBase
     {
         public readonly SubrecordBase[] elements;
