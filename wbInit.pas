@@ -18,6 +18,7 @@ interface
 
 var
   wbApplicationTitle: string;
+  wbAppDataSubdirVista : string = 'xEdit';
 
 procedure wbDoInit;
 
@@ -146,17 +147,17 @@ begin
   end else
     wbDontSave := True;
 
-  nxAppDataSubdirVista := wbAppName;
+  wbAppDataSubdirVista := wbAppName;
   if wbTranslationMode then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Trans'
+    wbAppDataSubdirVista := wbAppDataSubdirVista + 'Trans'
   else if wbMasterRestore then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterRestore'
+    wbAppDataSubdirVista := wbAppDataSubdirVista + 'MasterRestore'
   else if wbMasterUpdate then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterUpdate'
+    wbAppDataSubdirVista := wbAppDataSubdirVista + 'MasterUpdate'
   else if wbEditAllowed then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Edit'
+    wbAppDataSubdirVista := wbAppDataSubdirVista + 'Edit'
   else
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'View';
+    wbAppDataSubdirVista := wbAppDataSubdirVista + 'View';
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
