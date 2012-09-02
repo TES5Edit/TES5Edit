@@ -6,8 +6,6 @@ namespace TESVSnip.Framework.Persistence
     using System.Reflection;
     using System.Runtime.Serialization;
 
-    using TESVSnip.Data;
-
     /// <summary>
     /// The PersistAssist class contains serialization helper classes.
     /// </summary>

@@ -6,7 +6,7 @@
     using System.Linq;
     using System.Windows.Forms;
 
-    using TESVSnip.Data;
+    using TESVSnip.Domain.Data.Strings;
     using TESVSnip.Framework;
     using TESVSnip.Model;
     using TESVSnip.Properties;

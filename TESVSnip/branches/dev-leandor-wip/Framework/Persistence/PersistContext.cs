@@ -4,8 +4,6 @@ namespace TESVSnip.Framework.Persistence
     using System.Collections;
     using System.Runtime.Serialization;
 
-    using TESVSnip.Data;
-
     /// <summary>
     /// </summary>
     public class PersistContext : IDisposable

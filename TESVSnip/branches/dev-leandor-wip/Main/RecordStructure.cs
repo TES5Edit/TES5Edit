@@ -7,7 +7,6 @@ namespace TESVSnip.Main
     using System.Linq;
     using System.Xml.Serialization;
 
-    using TESVSnip.Data;
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Services;
 

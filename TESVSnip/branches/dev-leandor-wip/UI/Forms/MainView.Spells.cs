@@ -12,8 +12,8 @@
 
     using ScriptCompiler;
 
-    using TESVSnip.Data;
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Data.Strings;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Main;

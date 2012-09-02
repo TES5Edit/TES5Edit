@@ -17,7 +17,6 @@ namespace TESVSnip.UI.Forms
 
     using RTF;
 
-    using TESVSnip.Data;
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;

@@ -4,7 +4,6 @@ namespace TESVSnip.UI
     using System.Collections.Generic;
     using System.Linq;
 
-    using TESVSnip.Data;
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
     using TESVSnip.Model;

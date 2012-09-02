@@ -9,7 +9,7 @@
     using System.Runtime.Serialization;
     using System.Windows.Forms;
 
-    using TESVSnip.Data;
+    using TESVSnip.Domain.Data.Strings;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Persistence;
     using TESVSnip.Framework.Services;
