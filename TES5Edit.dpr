@@ -12,6 +12,8 @@
 
 *******************************************************************************}
 
+{$DEFINE DEVEXFILES}
+
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_GENERATEJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON

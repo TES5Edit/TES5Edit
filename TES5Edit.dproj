@@ -25,7 +25,7 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
-		<PropertyGroup Condition="'$(Platform)'=='Win32' and '$(Cfg_2)'=='true' or '$(Cfg_2_Win32)'!=''">
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
 			<Cfg_2_Win32>true</Cfg_2_Win32>
 			<CfgParent>Cfg_2</CfgParent>
 			<Cfg_2>true</Cfg_2>
@@ -58,7 +58,7 @@
 			<DCC_ExeOutput>d:\games\Skyrim</DCC_ExeOutput>
 		</PropertyGroup>
 		<ItemGroup>
-			<DelphiCompile Include="TES5Edit.dpr">
+			<DelphiCompile Include="$(MainSource)">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="frmViewMain.pas">

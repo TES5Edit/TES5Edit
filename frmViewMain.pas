@@ -14,6 +14,8 @@
 
 unit frmViewMain;
 
+{$DEFINE DEVEXFILES}
+
 interface
 
 uses
@@ -28,7 +30,10 @@ uses
 {$IFDEF DX3D}
   RenderUnit, Direct3D9, D3DX9, DXUT,
 {$ENDIF}
-  AppEvnts, dxGDIPlusClasses;
+{$IFDEF DEVEXFILES}
+  dxGDIPlusClasses,
+{$ENDIF}
+  AppEvnts;
 
 const
   DefaultInterval             = 1 / 24 / 6;
