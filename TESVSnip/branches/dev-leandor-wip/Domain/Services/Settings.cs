@@ -1,11 +1,9 @@
-namespace TESVSnip.Main
+namespace TESVSnip.Domain.Services
 {
     using System.Drawing;
     using System.IO;
     using System.Windows.Forms;
     using System.Xml;
-
-    using TESVSnip.Domain.Services;
 
     internal static class Settings
     {

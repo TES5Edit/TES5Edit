@@ -103,7 +103,9 @@
     <Compile Include="Domain\Data\Strings\LocalizedStringDict.cs" />
     <Compile Include="Domain\Data\Strings\LocalizedStringFormat.cs" />
     <Compile Include="Domain\Data\Strings\LocalizedStrings.cs" />
+    <Compile Include="Domain\Services\Compressor.cs" />
     <Compile Include="Domain\Services\Options.cs" />
+    <Compile Include="Domain\Services\Settings.cs" />
     <Compile Include="Domain\Services\ZLib.cs" />
     <Compile Include="Framework\Collections\AdvancedList.cs" />
     <Compile Include="Framework\Collections\PropertyComparer.cs" />
@@ -392,7 +394,6 @@
     <Compile Include="UI\Forms\SearchFilterAdvanced.Designer.cs">
       <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
     </Compile>
-    <Compile Include="Main\Compressor.cs" />
     <Compile Include="Main\Spells.cs" />
     <Compile Include="Model\BaseRecord.cs" />
     <Compile Include="Model\BatchCondElementType.cs" />
@@ -726,7 +727,6 @@
     <Compile Include="Vendor\RTFLib\RTF\RTFUtil.cs" />
     <Compile Include="ScriptCompiler\ScriptCompiler.cs" />
     <Compile Include="ScriptCompiler\Tokenizer.cs" />
-    <Compile Include="Main\Settings.cs" />
     <Compile Include="UI\Forms\MainView.cs">
       <SubType>Form</SubType>
     </Compile>
