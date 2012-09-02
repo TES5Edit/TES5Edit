@@ -10,8 +10,8 @@
     using System.Media;
     using System.Windows.Forms;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
-    using TESVSnip.Main;
     using TESVSnip.Model;
 
     using Settings = TESVSnip.Properties.Settings;

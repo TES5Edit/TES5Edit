@@ -3,8 +3,7 @@
     using System;
     using System.Windows.Forms;
 
-    using TESVSnip.Main;
-    using TESVSnip.UI.Forms;
+    using TESVSnip.Domain.Data.RecordStructure;
 
     internal partial class BaseElement : UserControl, IElementControl
     {

@@ -2,6 +2,7 @@
 {
     using System;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
     using TESVSnip.Main;
 

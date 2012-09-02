@@ -2,8 +2,7 @@
 {
     using System;
 
-    using TESVSnip.Main;
-    using TESVSnip.UI.Forms;
+    using TESVSnip.Domain.Data.RecordStructure;
 
     internal interface IElementControl
     {

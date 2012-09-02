@@ -14,6 +14,7 @@ using System.Xml;
 
 namespace ScriptCompiler
 {
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;

@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
     using TESVSnip.Main;
 

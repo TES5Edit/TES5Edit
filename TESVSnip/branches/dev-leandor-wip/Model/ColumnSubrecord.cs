@@ -2,6 +2,7 @@ namespace TESVSnip.Model
 {
     using System.Collections.Generic;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Main;
 
     internal class ColumnSubrecord : ColumnCriteria

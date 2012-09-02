@@ -11,6 +11,7 @@
 
     using RTF;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework.Collections;
     using TESVSnip.Framework.Persistence;

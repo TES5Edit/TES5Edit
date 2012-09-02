@@ -12,6 +12,7 @@
 
     using RTF;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Persistence;
     using TESVSnip.Main;

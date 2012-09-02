@@ -4,9 +4,9 @@
     using System.Globalization;
     using System.Windows.Forms;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Services;
-    using TESVSnip.Main;
 
     internal partial class TextElement : BaseElement, ITextElementControl
     {

@@ -4,6 +4,7 @@
     using System.Globalization;
     using System.Linq;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework.Collections;
     using TESVSnip.Main;
 

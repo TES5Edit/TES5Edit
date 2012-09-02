@@ -1,5 +1,6 @@
 ﻿namespace TESVSnip.Model
 {
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Main;
 
     internal class ColumnElement : ColumnCriteria

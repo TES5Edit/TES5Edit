@@ -5,6 +5,7 @@ namespace TESVSnip.UI.Forms
     using System.IO;
     using System.Windows.Forms;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework.Collections;
     using TESVSnip.Main;
     using TESVSnip.Model;

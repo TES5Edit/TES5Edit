@@ -5,8 +5,8 @@
     using System.Drawing;
     using System.Windows.Forms;
 
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework.Collections;
-    using TESVSnip.Main;
 
     internal partial class RepeatingElement : BaseElement, IOuterElementControl, IGroupedElementControl
     {
