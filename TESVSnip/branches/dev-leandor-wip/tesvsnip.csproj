@@ -139,6 +139,11 @@
     <Compile Include="Domain\Model\SearchSubrecordXml.cs" />
     <Compile Include="Domain\Model\SubRecord.cs" />
     <Compile Include="Domain\Model\TESParserException.cs" />
+    <Compile Include="Domain\Scripts\Keywords.cs" />
+    <Compile Include="Domain\Scripts\ScriptCompiler.cs" />
+    <Compile Include="Domain\Scripts\Token.cs" />
+    <Compile Include="Domain\Scripts\TokenStream.cs" />
+    <Compile Include="Domain\Scripts\TokenType.cs" />
     <Compile Include="Domain\Services\Compressor.cs" />
     <Compile Include="Domain\Services\Options.cs" />
     <Compile Include="Domain\Services\Settings.cs" />
@@ -164,9 +169,6 @@
     <Compile Include="Framework\Services\Encoding.cs" />
     <Compile Include="Framework\Services\FontLangInfo.cs" />
     <Compile Include="Framework\TypeConverter.cs" />
-    <Compile Include="ScriptCompiler\Keywords.cs" />
-    <Compile Include="ScriptCompiler\TokenStream.cs" />
-    <Compile Include="ScriptCompiler\TokenType.cs" />
     <Compile Include="UI\Controls\CustomTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -728,8 +730,6 @@
     <Compile Include="Vendor\RTFLib\RTF\RTFRow.cs" />
     <Compile Include="Vendor\RTFLib\RTF\RTFRowDefinition.cs" />
     <Compile Include="Vendor\RTFLib\RTF\RTFUtil.cs" />
-    <Compile Include="ScriptCompiler\ScriptCompiler.cs" />
-    <Compile Include="ScriptCompiler\Token.cs" />
     <Compile Include="UI\Forms\MainView.cs">
       <SubType>Form</SubType>
     </Compile>

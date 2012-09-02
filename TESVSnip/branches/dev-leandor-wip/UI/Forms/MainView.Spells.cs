@@ -13,10 +13,10 @@
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Data.Strings;
     using TESVSnip.Domain.Model;
+    using TESVSnip.Domain.Scripts;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
     using TESVSnip.Properties;
-    using TESVSnip.ScriptCompiler;
 
     using Settings = TESVSnip.Properties.Settings;
 

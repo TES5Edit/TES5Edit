@@ -3,7 +3,7 @@
 //TODO: ref.local should work for references
 //TODO: End function call on ')'
 //TODO: ModPCMiscStat
-namespace TESVSnip.ScriptCompiler
+namespace TESVSnip.Domain.Scripts
 {
     using System;
     using System.Collections.Generic;

@@ -1,4 +1,4 @@
-namespace TESVSnip.ScriptCompiler
+namespace TESVSnip.Domain.Scripts
 {
     internal enum TokenType
     {
