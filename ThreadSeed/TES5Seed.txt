@@ -1,4 +1,4 @@
-[size="5"][b][color="#FF0000"]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He will compile the version himself with his original code once the necessary changes are made as a result of this project.[/color][/size][/b]
+[size="5"][b][color="#FF0000"]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size][/b]
 
 [size="5"][b][color="#00BFFF"]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1392239-wipz-tes5dumpfuture-tes5edit/][WIPz] TES5Dump/Future TES5Edit[/url][/color][/size][/b]
 
@@ -14,7 +14,7 @@ Threads:
 
 [color="#FF8C00"][size="4"][b]Current Progress:[/b][/size][/color]
 
-About 60% of the records are decoded at this time.  I have started to update the UESPWiki and I keep a current list on our site in the [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/UESPWikiUpdates]UESPWikiUpdates[/url].
+About 90-95% of the records are decoded at this time.  I have started to update the UESPWiki and I keep a current list on our site in the [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/UESPWikiUpdates]UESPWikiUpdates[/url].
 
 [color="#FF8C00"][size="4"][b]Current Contributors:[/b][/size][/color]
 
@@ -37,7 +37,7 @@ This utility will let you easily see how multiple mods interact and override eac
 
 When started it will automatically find your Skyrim Data directory. You then get a dialog to select which modules you want to load with the current selection from your plugins.txt as default value. Once you have confirmed that dialog the selected modules will start loading in the background.  The program will then work the same as its predecessors.
 
-[color="#FF8C00"][size="4"][b]License:[/color][/size][/b] Mozilla Public License (TES5Dump), proprietary (TES5Edit).
+[color="#FF8C00"][size="4"][b]License:[/color][/size][/b] Mozilla Public License TES5Dump and TES5Edit.
 
 Anyone is welcome to download the source to TES5Dump using the instructions below.
 
@@ -73,7 +73,7 @@ Repeat steps 2-4 until all possible record types and all possible fields are cov
 
 [color="#FF8C00"][size="4"][b]What we need for this project:[/b][/size][/color]
 
-We are looking for volunteers and TES enthusiasts who are willing to contribute their time in decoding Skyrim's files, and making updates to the UESP Wiki.  Currently the file for TES5Edit is just a copy of the definitions file from FNVEdit.
+We are looking for volunteers and TES enthusiasts who are willing to contribute their time in decoding Skyrim's files, and making updates to the UESP Wiki.
 
 If you would like to participate in this project please send me a PM.
 
@@ -101,5 +101,5 @@ You will need an SVN client like [url=http://tortoisesvn.net/downloads.html]Tort
 
 AndalayBay: Without her help getting me in touch with Elminster we would all still be waiting for confirmed record definitions, and even longer for a working TES5Edit.
 Bethesda: For their awesome program, and for this forum so we can accomplish this task.
-ElminsterAU: For all his hard work and agreeing to compile TES5Edit once we have made the necessary changes.
+ElminsterAU: For all his hard work on FO3/FNV/TES4Edit over the years.
 Zilav: For all his hard work helping with the project.

@@ -81,7 +81,6 @@
 				<Form>frmEditWarning</Form>
 			</DCCReference>
 			<DCCReference Include="wbBSA.pas"/>
-			<DCCReference Include="wbScript.pas"/>
 			<DCCReference Include="wbHelpers.pas"/>
 			<DCCReference Include="frmWaitForm.pas">
 				<Form>frmWait</Form>

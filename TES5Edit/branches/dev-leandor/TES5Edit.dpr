@@ -26,16 +26,18 @@ uses
   SysUtils,
   wbInterface,
   wbImplementation,
-  wbDefinitionsTES4,
   wbDefinitionsFO3,
   wbDefinitionsFNV,
+  wbDefinitionsTES3,
+  wbDefinitionsTES4,
+  wbDefinitionsTES5,
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
   FileSelectFrm in 'FileSelectFrm.pas' {frmFileSelect},
   ViewElementsFrm in 'ViewElementsFrm.pas' {frmViewElements},
   EditWarningFrm in 'EditWarningFrm.pas' {frmEditWarning},
   wbBSA in 'wbBSA.pas',
-  wbScript in 'wbScript.pas',
+{  wbScript in 'wbScript.pas',}
   wbHelpers in 'wbHelpers.pas',
   frmWaitForm in 'frmWaitForm.pas' {frmWait};
 

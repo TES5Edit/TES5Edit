@@ -67,8 +67,6 @@
 			<DCCReference Include="wbImplementation.pas"/>
 			<DCCReference Include="wbInterface.pas"/>
 			<DCCReference Include="wbLocalization.pas"/>
-			<DCCReference Include="wbSavedGames.pas"/>
-			<DCCReference Include="wbTES5ScriptDef.pas"/>
 			<DCCReference Include="wbBSA.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
