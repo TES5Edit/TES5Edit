@@ -5,14 +5,28 @@ unit VirtualTreesReg;
 
 interface
 
-// For some things to work we need code, which is classified as being unsafe for .NET.
-{$warn UNSAFE_TYPE off}
-{$warn UNSAFE_CAST off}
-{$warn UNSAFE_CODE off}
+{$include Compilers.inc}
+
+{$ifdef COMPILER_7_UP}
+  // For some things to work we need code, which is classified as being unsafe for .NET.
+  {$warn UNSAFE_TYPE off}
+  {$warn UNSAFE_CAST off}
+  {$warn UNSAFE_CODE off}
+{$endif COMPILER_7_UP}
+
+{$ifdef COMPILER_4}
+  {$R '..\Design\VirtualTrees.dcr'}
+{$endif COMPILER_4}
 
 uses
-  Windows, Classes, DesignIntf, DesignEditors, VCLEditors, PropertyCategories,
-  ColnEdit, VirtualTrees, VTHeaderPopup;
+  Windows, Classes,
+  {$ifdef COMPILER_6_UP}
+    DesignIntf, DesignEditors, VCLEditors, PropertyCategories,
+  {$else}
+    DsgnIntf,
+  {$endif}                       
+  ColnEdit,
+  VirtualTrees, VTHeaderPopup;
 
 type
   TVirtualTreeEditor = class (TDefaultEditor)
@@ -27,13 +41,18 @@ procedure Register;
 implementation
 
 uses
-  StrEdit, Dialogs, TypInfo, SysUtils, Graphics, CommCtrl, ImgList, Controls;
+  {$ifdef COMPILER_5_UP}
+    StrEdit,
+  {$else}
+    StrEditD4,
+  {$endif COMPILER_5_UP}
+  Dialogs, TypInfo, SysUtils, Graphics, CommCtrl, ImgList, Controls;
 
 type
   // The usual trick to make a protected property accessible in the ShowCollectionEditor call below.
   TVirtualTreeCast = class(TBaseVirtualTree);
 
-  TClipboardElement = class(TNestedProperty, ICustomPropertyDrawing)
+  TClipboardElement = class(TNestedProperty {$ifdef COMPILER_6_UP}, ICustomPropertyDrawing {$endif COMPILER_6_UP})
   private
     FElement: string;
   protected
@@ -46,37 +65,79 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const Value: string); override;
 
-    procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
-    procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+    {$ifdef COMPILER_5_UP}
+      {$ifdef COMPILER_6_UP}
+        procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+      {$endif COMPILER_6_UP}
+      procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+        {$ifndef COMPILER_6_UP} override; {$endif COMPILER_6_UP}
+    {$endif COMPILER_5_UP}
   end;
 
   // This is a special property editor to make the strings in the clipboard format string list
   // being shown as subproperties in the object inspector. This way it is shown what formats are actually available
   // and the user can pick them with a simple yes/no choice.
 
-  TGetPropEditProc = TGetPropProc;
+  {$ifdef COMPILER_6_UP}
+    TGetPropEditProc = TGetPropProc;
+  {$endif}
 
-  TClipboardFormatsProperty = class(TStringListProperty, ICustomPropertyDrawing)
+  TClipboardFormatsProperty = class(TStringListProperty {$ifdef COMPILER_6_UP}, ICustomPropertyDrawing {$endif COMPILER_6_UP})
   public
     function GetAttributes: TPropertyAttributes; override;
     procedure GetProperties(Proc: TGetPropEditProc); override;
-    procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
-    procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+    {$ifdef COMPILER_5_UP}
+      procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+        {$ifndef COMPILER_6_UP} override; {$endif}
+      procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+        {$ifndef COMPILER_6_UP} override; {$endif}
+    {$endif}
   end;
 
-  TCheckImageKindProperty = class(TEnumProperty, ICustomPropertyDrawing, ICustomPropertyListDrawing)
+  // Property categories. They are defined this way only for Delphi 5 & BCB 5.
+  {$ifdef COMPILER_5}
+    TVTHeaderCategory = class(TPropertyCategory)
+    public
+      class function Name: string; override;
+      class function Description: string; override;
+    end;
+
+    TVTPaintingCategory = class(TPropertyCategory)
+    public
+      class function Name: string; override;
+      class function Description: string; override;
+    end;
+
+    TVTIncrementalSearchCategory = class(TPropertyCategory)
+    public
+      class function Name: string; override;
+      class function Description: string; override;
+    end;
+  {$endif COMPILER_5}
+
+  TCheckImageKindProperty = class(TEnumProperty {$ifdef COMPILER_6_UP}, ICustomPropertyDrawing, ICustomPropertyListDrawing {$endif COMPILER_6_UP})
   public
-    procedure ListMeasureHeight(const Value: string; Canvas: TCanvas; var AHeight: Integer);
-    procedure ListMeasureWidth(const Value: string; ACanvas: TCanvas; var AWidth: Integer);
-    procedure ListDrawValue(const Value: string; ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
-    procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
-    procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+    {$ifdef COMPILER_5_UP}
+      procedure ListMeasureHeight(const Value: string; Canvas: TCanvas; var AHeight: Integer);
+        {$ifndef COMPILER_6_UP} override; {$endif}
+      procedure ListMeasureWidth(const Value: string; ACanvas: TCanvas; var AWidth: Integer);
+        {$ifndef COMPILER_6_UP} override; {$endif}
+      procedure ListDrawValue(const Value: string; ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+        {$ifndef COMPILER_6_UP} override; {$endif}
+      {$ifdef COMPILER_6_UP}
+      procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+      {$endif}
+      procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+        {$ifndef COMPILER_6_UP} override; {$endif}
+    {$endif}
   end;
 
-  resourcestring
-    sVTHeaderCategoryName = 'Header';
-    sVTPaintingCategoryName = 'Custom painting';
-    sVTIncremenalCategoryName = 'Incremental search';
+  {$ifdef COMPILER_6_UP}
+    resourcestring
+      sVTHeaderCategoryName = 'Header';
+      sVTPaintingCategoryName = 'Custom painting';
+      sVTIncremenalCategoryName = 'Incremental search';
+  {$endif}
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -190,54 +251,62 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure DrawBoolean(Checked: Boolean; ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+{$ifdef COMPILER_5_UP}
 
-var
-  BoxSize,
-  EntryWidth: Integer;
-  R: TRect;
-  State: Cardinal;
+  procedure DrawBoolean(Checked: Boolean; ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
 
-begin
-  with ACanvas do
+  var
+    BoxSize,
+    EntryWidth: Integer;
+    R: TRect;
+    State: Cardinal;
+
   begin
-    FillRect(ARect);
+    with ACanvas do
+    begin
+      FillRect(ARect);
 
-    BoxSize := ARect.Bottom - ARect.Top;
-    EntryWidth := ARect.Right - ARect.Left;
+      BoxSize := ARect.Bottom - ARect.Top;
+      EntryWidth := ARect.Right - ARect.Left;
 
-    R := Rect(ARect.Left + (EntryWidth - BoxSize) div 2, ARect.Top, ARect.Left + (EntryWidth + BoxSize) div 2,
-      ARect.Bottom);
-    InflateRect(R, -1, -1);
-    State := DFCS_BUTTONCHECK;
-    if Checked then
-      State := State or DFCS_CHECKED;
-    DrawFrameControl(Handle, R, DFC_BUTTON, State);
+      R := Rect(ARect.Left + (EntryWidth - BoxSize) div 2, ARect.Top, ARect.Left + (EntryWidth + BoxSize) div 2,
+        ARect.Bottom);
+      InflateRect(R, -1, -1);
+      State := DFCS_BUTTONCHECK;
+      if Checked then
+        State := State or DFCS_CHECKED;
+      DrawFrameControl(Handle, R, DFC_BUTTON, State);
+    end;
   end;
-end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TClipboardElement.PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+  {$ifdef COMPILER_6_UP}
 
-begin
-  DefaultPropertyDrawName(Self, ACanvas, ARect);
-end;
+    procedure TClipboardElement.PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+
+    begin
+      DefaultPropertyDrawName(Self, ACanvas, ARect);
+    end;
+
+  {$endif COMPILER_6_UP}
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TClipboardElement.PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+  procedure TClipboardElement.PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
 
-begin
-  DrawBoolean(CompareText(GetVisualValue, 'True') = 0, ACanvas, ARect, ASelected);
-end;
+  begin
+    DrawBoolean(CompareText(GetVisualValue, 'True') = 0, ACanvas, ARect, ASelected);
+  end;
+
+{$endif COMPILER_5_UP}
 
 //----------------- TClipboardFormatsProperty --------------------------------------------------------------------------
 
 function TClipboardFormatsProperty.GetAttributes: TPropertyAttributes;
 
 begin
-  Result := inherited GetAttributes + [paSubProperties, paFullWidthName];
+  Result := inherited GetAttributes + [paSubProperties {$ifdef COMPILER_5_UP}, paFullWidthName {$endif COMPILER_5_UP}];
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -259,119 +328,192 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TClipboardFormatsProperty.PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+{$ifdef COMPILER_5_UP}
 
-var
-  S: string;
-  Width: Integer;
-  R: TRect;
+  procedure TClipboardFormatsProperty.PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
 
-begin
-  with ACanvas do
+  var
+    S: string;
+    Width: Integer;
+    R: TRect;
+
   begin
-    Font.Name := 'Arial';
-    R := ARect;
-    Font.Color := clBlack;
-    S := GetName;
-    Width := TextWidth(S);
-    TextRect(R, R.Left + 1, R.Top + 1, S);
+    with ACanvas do
+    begin
+      Font.Name := 'Arial';
+      R := ARect;
+      Font.Color := clBlack;
+      S := GetName;
+      Width := TextWidth(S);
+      TextRect(R, R.Left + 1, R.Top + 1, S);
 
-    Inc(R.Left, Width + 8);
-    Font.Height := 14;
-    Font.Color := clBtnHighlight;
-    S := '(OLE drag and clipboard)';
-    SetBkMode(Handle, TRANSPARENT);
-    ExtTextOut(Handle, R.Left + 1, R.Top + 1, ETO_CLIPPED, @R, PChar(S), Length(S), nil);
-    Font.Color := clBtnShadow;
-    ExtTextOut(Handle, R.Left, R.Top, ETO_CLIPPED, @R, PChar(S), Length(S), nil);
+      Inc(R.Left, Width + 8);
+      Font.Height := 14;
+      Font.Color := clBtnHighlight;
+      S := '(OLE drag and clipboard)';
+      SetBkMode(Handle, TRANSPARENT);
+      ExtTextOut(Handle, R.Left + 1, R.Top + 1, ETO_CLIPPED, @R, PChar(S), Length(S), nil);
+      Font.Color := clBtnShadow;
+      ExtTextOut(Handle, R.Left, R.Top, ETO_CLIPPED, @R, PChar(S), Length(S), nil);
+    end;
   end;
-end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TClipboardFormatsProperty.PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+  procedure TClipboardFormatsProperty.PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
 
-begin
-  // Nothing to do here.
-end;
+  begin
+    // Nothing to do here.
+  end;
+
+{$endif COMPILER_5_UP}
+
+{$ifdef COMPILER_5}
+
+//----------------- TVTPaintingCategory --------------------------------------------------------------------------------
+
+  class function TVTPaintingCategory.Name: string;
+
+  begin
+    Result := 'Custom Painting';
+  end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+  class function TVTPaintingCategory.Description: string;
+
+  begin
+    Result := 'Custom Painting';
+  end;
+
+//----------------- TVTHeaderCategory ----------------------------------------------------------------------------------
+
+  class function TVTHeaderCategory.Name: string;
+
+  begin
+    Result := 'Header';
+  end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+  class function TVTHeaderCategory.Description: string;
+
+  begin
+    Result := 'Header';
+  end;
+
+//----------------- TVTIncrementalSearchCategory -----------------------------------------------------------------------
+
+  class function TVTIncrementalSearchCategory.Name: string;
+
+  begin
+    Result := 'Incremental Search';
+  end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+  class function TVTIncrementalSearchCategory.Description: string;
+
+  begin
+    Result := 'Incremental Search';
+  end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+{$endif COMPILER_5}
 
 //----------------- TCheckImageKindProperty ----------------------------------------------------------------------------
 
-const
-  cCheckImageKindComboItemBorder   = 0;
-  cCheckImageKindComboItemSpacing  = 2;
-  cCheckImageKindComboBitmapHeight = 16;
-  cCheckImageKindComboBitmapWidth  = 16;
+{$ifdef COMPILER_5_UP}
+
+  const
+    cCheckImageKindComboItemBorder   = 0;
+    cCheckImageKindComboItemSpacing  = 2;
+    cCheckImageKindComboBitmapHeight = 16;
+    cCheckImageKindComboBitmapWidth  = 16;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TCheckImageKindProperty.PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+  {$ifdef COMPILER_6_UP}
 
-begin
-  DefaultPropertyDrawName(Self, ACanvas, ARect);
-end;
+    procedure TCheckImageKindProperty.PropDrawName(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
 
-
-//----------------------------------------------------------------------------------------------------------------------
-
-procedure TCheckImageKindProperty.PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
-
-begin
-  if GetVisualValue <> '' then
-    ListDrawValue(GetVisualValue, ACanvas, ARect, ASelected)
-  else
-    DefaultPropertyDrawValue(Self, ACanvas, ARect);
-end;
-
-//----------------------------------------------------------------------------------------------------------------------
-
-procedure TCheckImageKindProperty.ListDrawValue(const Value: string; ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
-
-var
-  RighPosition: Integer;
-  OldPenColor: TColor;
-  CheckKind: TCheckImageKind;
-  ImageList: TCustomImageList;
-  RemainingRect: TRect;
-
-begin
-  RighPosition := ARect.Left + cCheckImageKindComboBitmapWidth;
-  with ACanvas do
-  try
-    OldPenColor := Pen.Color;
-    Pen.Color := Brush.Color;
-    Rectangle(ARect.Left, ARect.Top, RighPosition, ARect.Bottom);
-
-    CheckKind := TCheckImageKind(GetEnumValue(GetPropInfo^.PropType^, Value));
-    ImageList := TVirtualTreeCast.GetCheckImageListFor(CheckKind);
-    if ImageList <> nil then
     begin
-      ImageList_DrawEx(ImageList.Handle, ckCheckCheckedNormal, ACanvas.Handle, ARect.Left + cCheckImageKindComboItemBorder,
-        ARect.Top + cCheckImageKindComboItemBorder, 0, 0, CLR_NONE, CLR_NONE, ILD_TRANSPARENT);
+      DefaultPropertyDrawName(Self, ACanvas, ARect);
     end;
 
-    Pen.Color := OldPenColor;
-  finally
-    RemainingRect := Rect(RighPosition, ARect.Top, ARect.Right, ARect.Bottom);
-    DefaultPropertyListDrawValue(Value, ACanvas, RemainingRect, ASelected);
+  {$endif}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+  procedure TCheckImageKindProperty.PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
+
+  begin
+    if GetVisualValue <> '' then
+      ListDrawValue(GetVisualValue, ACanvas, ARect, ASelected)
+    else
+      {$ifdef COMPILER_6_UP}
+        DefaultPropertyDrawValue(Self, ACanvas, ARect);
+      {$else}
+        inherited PropDrawValue(ACanvas, ARect, ASelected);
+      {$endif}
   end;
-end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TCheckImageKindProperty.ListMeasureHeight(const Value: string; Canvas: TCanvas; var AHeight: Integer);
+  procedure TCheckImageKindProperty.ListDrawValue(const Value: string; ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
 
-begin
-  AHeight := cCheckImageKindComboBitmapHeight;
-end;
+  var
+    RighPosition: Integer;
+    OldPenColor: TColor;
+    CheckKind: TCheckImageKind;
+    ImageList: TCustomImageList;
+    RemainingRect: TRect;
+
+  begin
+    RighPosition := ARect.Left + cCheckImageKindComboBitmapWidth;
+    with ACanvas do
+    try
+      OldPenColor := Pen.Color;
+      Pen.Color := Brush.Color;
+      Rectangle(ARect.Left, ARect.Top, RighPosition, ARect.Bottom);
+
+      CheckKind := TCheckImageKind(GetEnumValue(GetPropInfo^.PropType^, Value));
+      ImageList := TVirtualTreeCast.GetCheckImageListFor(CheckKind);
+      if ImageList <> nil then
+      begin
+        ImageList_DrawEx(ImageList.Handle, ckCheckCheckedNormal, ACanvas.Handle, ARect.Left + cCheckImageKindComboItemBorder,
+          ARect.Top + cCheckImageKindComboItemBorder, 0, 0, CLR_NONE, CLR_NONE, ILD_TRANSPARENT);
+      end;
+
+      Pen.Color := OldPenColor;
+    finally
+      RemainingRect := Rect(RighPosition, ARect.Top, ARect.Right, ARect.Bottom);
+      {$ifdef COMPILER_6_UP}
+        DefaultPropertyListDrawValue(Value, ACanvas, RemainingRect, ASelected);
+      {$else}
+        inherited ListDrawValue(Value, ACanvas, RemainingRect, ASelected);
+      {$endif}
+    end;
+  end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TCheckImageKindProperty.ListMeasureWidth(const Value: string; ACanvas: TCanvas; var AWidth: Integer);
+  procedure TCheckImageKindProperty.ListMeasureHeight(const Value: string; Canvas: TCanvas; var AHeight: Integer);
 
-begin
-  AWidth := AWidth + cCheckImageKindComboBitmapWidth;
-end;
+  begin
+    AHeight := cCheckImageKindComboBitmapHeight;
+  end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+  procedure TCheckImageKindProperty.ListMeasureWidth(const Value: string; ACanvas: TCanvas; var AWidth: Integer);
+
+  begin
+    AWidth := AWidth + cCheckImageKindComboBitmapWidth;
+  end;
+
+{$endif COMPILER_5_UP}
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -385,9 +527,13 @@ begin
   RegisterPropertyEditor(TypeInfo(TCheckImageKind), nil, '', TCheckImageKindProperty);  
 
   // Categories:
-  RegisterPropertiesInCategory(sActionCategoryName, TBaseVirtualTree, ['ChangeDelay', 'EditDelay']);
+  {$ifdef COMPILER_5_UP}
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TActionCategory, {$endif} {$ifdef COMPILER_6_UP} sActionCategoryName, {$endif COMPILER_6_UP}
+      TBaseVirtualTree,
+      ['ChangeDelay',
+       'EditDelay']);
 
-  RegisterPropertiesInCategory(sDataCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TDataCategory, {$endif} {$ifdef COMPILER_6_UP} sDataCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['NodeDataSize',
        'RootNodeCount',
@@ -408,7 +554,7 @@ begin
        'OnNewText',
        'OnShortenString']);
 
-    RegisterPropertiesInCategory(slayoutCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TLayoutCategory, {$endif} {$ifdef COMPILER_6_UP} slayoutCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['AnimationDuration',
        'AutoExpandDelay',
@@ -427,7 +573,7 @@ begin
        'SelectionCurveRadius',
        'TextMargin']);
 
-    RegisterPropertiesInCategory(sVisualCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TVisualCategory, {$endif} {$ifdef COMPILER_6_UP} sVisualCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['Background*',
        'ButtonFillMode',
@@ -435,11 +581,11 @@ begin
        'Colors',
        'LineMode']);
 
-    RegisterPropertiesInCategory(sHelpCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} THelpCategory, {$endif} {$ifdef COMPILER_6_UP} sHelpCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['AccessibleName', 'Hint*', 'On*Hint*', 'On*Help*']);
 
-    RegisterPropertiesInCategory(sDragNDropCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TDragNDropCategory, {$endif} {$ifdef COMPILER_6_UP} sDragNDropCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['ClipboardFormats',
        'DefaultPasteMode',
@@ -450,7 +596,7 @@ begin
        'OnDragAllowed',
        'OnRenderOLEData']);
 
-    RegisterPropertiesInCategory(sInputCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TInputCategory, {$endif} {$ifdef COMPILER_6_UP} sInputCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['DefaultText',
        'DrawSelectionMode',
@@ -467,19 +613,20 @@ begin
        'OnNodeHeightTracking',
        'OnHotChange']);
 
-    RegisterPropertiesInCategory(sVTHeaderCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TVTHeaderCategory, {$endif} {$ifdef COMPILER_6_UP} sVTHeaderCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['OnHeader*', 'OnGetHeader*']);
 
-    RegisterPropertiesInCategory(sVTPaintingCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TVTPaintingCategory, {$endif} {$ifdef COMPILER_6_UP} sVTPaintingCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['On*Paint*',
        'OnDraw*',
        'On*Erase*']);
 
-    RegisterPropertiesInCategory(sVTIncremenalCategoryName,
+    RegisterPropertiesInCategory({$ifdef COMPILER_5} TVTIncrementalSearchCategory, {$endif} {$ifdef COMPILER_6_UP} sVTIncremenalCategoryName, {$endif COMPILER_6_UP}
       TBaseVirtualTree,
       ['*Incremental*']);
+  {$endif COMPILER_5_UP}
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
