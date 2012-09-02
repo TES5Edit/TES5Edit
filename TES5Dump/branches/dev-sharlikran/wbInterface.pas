@@ -10262,8 +10262,8 @@ initialization
   TwoPi := 2 * OnePi;
 
   if (DebugHook = 0) then
-    wbReportMode := False;
-//  else wbReportMode := wbUserDefinedDebug;
+    wbReportMode := False
+  else wbReportMode := wbUserDefinedDebug;
 
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;
