@@ -15,7 +15,6 @@ namespace TESVSnip.Domain.Model
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework.Collections;
     using TESVSnip.Framework.Persistence;
-    using TESVSnip.UI;
 
     [Persistable(Flags = PersistType.DeclaredOnly)]
     [Serializable]

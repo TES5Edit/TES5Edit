@@ -3,6 +3,7 @@
     using System;
 
     using TESVSnip.Domain.Data.RecordStructure;
+    using TESVSnip.Domain.Model;
 
     internal interface IElementControl
     {

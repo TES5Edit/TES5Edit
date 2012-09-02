@@ -7,6 +7,7 @@ namespace TESVSnip.UI.Forms
 
     using Be.Windows.Forms;
 
+    using TESVSnip.Domain.Model;
     using TESVSnip.Framework;
     using TESVSnip.Properties;
 

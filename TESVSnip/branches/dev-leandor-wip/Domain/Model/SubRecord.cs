@@ -15,7 +15,6 @@ namespace TESVSnip.Domain.Model
     using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Framework;
     using TESVSnip.Framework.Persistence;
-    using TESVSnip.UI;
 
     using Encoding = TESVSnip.Framework.Services.Encoding;
 

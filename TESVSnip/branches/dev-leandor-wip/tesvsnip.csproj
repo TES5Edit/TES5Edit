@@ -114,6 +114,7 @@
     <Compile Include="Domain\Model\ColumnElement.cs" />
     <Compile Include="Domain\Model\ColumnSettings.cs" />
     <Compile Include="Domain\Model\ColumnSubrecord.cs" />
+    <Compile Include="Domain\Model\Delegates.cs" />
     <Compile Include="Domain\Model\Element.cs" />
     <Compile Include="Domain\Model\ElementAssignmentType.cs" />
     <Compile Include="Domain\Model\FlagDefs.cs" />
@@ -166,7 +167,6 @@
     <Compile Include="UI\Controls\CustomTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\Delegates.cs" />
     <Compile Include="UI\RecordBuilder.cs" />
     <Compile Include="UI\RecordControls\IGroupedElementControl.cs" />
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
