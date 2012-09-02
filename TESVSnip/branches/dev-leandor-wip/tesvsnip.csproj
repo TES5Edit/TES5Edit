@@ -137,6 +137,7 @@
     <Compile Include="UI\RecordControls\IOuterElementControl.cs" />
     <Compile Include="UI\RecordControls\ITextElementControl.cs" />
     <Compile Include="UI\SelectionContext.cs" />
+    <Compile Include="UI\Spells.cs" />
     <Compile Include="Vendor\Controls\ballontooltip.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -394,7 +395,6 @@
     <Compile Include="UI\Forms\SearchFilterAdvanced.Designer.cs">
       <DependentUpon>SearchFilterAdvanced.cs</DependentUpon>
     </Compile>
-    <Compile Include="Main\Spells.cs" />
     <Compile Include="Model\BaseRecord.cs" />
     <Compile Include="Model\BatchCondElementType.cs" />
     <Compile Include="Model\BatchCondRecordType.cs" />

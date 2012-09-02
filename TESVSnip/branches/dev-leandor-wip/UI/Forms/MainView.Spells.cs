@@ -16,7 +16,6 @@
     using TESVSnip.Domain.Data.Strings;
     using TESVSnip.Domain.Services;
     using TESVSnip.Framework;
-    using TESVSnip.Main;
     using TESVSnip.Model;
     using TESVSnip.Properties;
 

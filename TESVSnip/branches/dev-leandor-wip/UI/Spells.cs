@@ -1,4 +1,4 @@
-﻿namespace TESVSnip.Main
+namespace TESVSnip.UI
 {
     using System;
     using System.Collections.Generic;
