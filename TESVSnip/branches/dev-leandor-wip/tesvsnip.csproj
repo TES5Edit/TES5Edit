@@ -85,6 +85,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domain\Data\RecordStructure\Group.cs" />
+    <Compile Include="Domain\Data\RecordStructure\Records.cs" />
+    <Compile Include="Domain\Data\RecordStructure\RecordsRecord.cs" />
+    <Compile Include="Domain\Data\RecordStructure\Subrecord.cs" />
+    <Compile Include="Domain\Data\RecordStructure\SubrecordElement.cs" />
     <Compile Include="Domain\Services\Options.cs" />
     <Compile Include="Domain\Services\ZLib.cs" />
     <Compile Include="Framework\Collections\AdvancedList.cs" />
@@ -268,13 +273,6 @@
     <Compile Include="Vendor\Controls\virtuallistview.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Data\Records.cs" />
-    <Compile Include="Data\RecordsRecord.cs" />
-    <Compile Include="Data\Group.cs">
-      <SubType>code</SubType>
-    </Compile>
-    <Compile Include="Data\Subrecord.cs" />
-    <Compile Include="Data\SubrecordElement.cs" />
     <Compile Include="UI\Docking\BaseDockContent.cs">
       <SubType>Form</SubType>
     </Compile>
