@@ -18,9 +18,6 @@ interface
 
 var
   wbApplicationTitle: string;
-  // nxAppDataSubdirVista : string = 'xEdit'; {>>> Taken from nxExeConst.pas <<<}
-  {>>> Changed nxAppDataSubdirVista to wbAppDataSubdirVista <<<}
-  wbAppDataSubdirVista : string = 'xEdit';
 
 procedure wbDoInit;
 
@@ -42,14 +39,7 @@ procedure wbDoInit;
 begin
   wbReportMode := False;
 
-  if FindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
-    wbGameMode := gmTES5;
-    wbAppName := 'TES5';
-    wbGameName := 'Skyrim';
-    wbVWDInTemporary := True;
-    wbLoadBSAs := False;
-    DefineTES5;
-  end else if FindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+  if FindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
@@ -69,8 +59,16 @@ begin
     wbGameName := 'Oblivion';
     wbLoadBSAs := True;
     DefineTES4;
+  end else if FindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+    wbGameMode := gmTES5;
+    wbAppName := 'TES5';
+    wbGameName := 'Skyrim';
+    wbLanguage := 'English';
+    wbVWDInTemporary := True;
+    wbLoadBSAs := False;
+    DefineTES5;
   end else begin
-    ShowMessage('Application name must start with FNV, FO3 or TES4 to select mode.');
+    ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
     Exit;
   end;
 
@@ -148,17 +146,17 @@ begin
   end else
     wbDontSave := True;
 
-  wbAppDataSubdirVista := wbAppName;
+  nxAppDataSubdirVista := wbAppName;
   if wbTranslationMode then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'Trans'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Trans'
   else if wbMasterRestore then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'MasterRestore'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterRestore'
   else if wbMasterUpdate then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'MasterUpdate'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterUpdate'
   else if wbEditAllowed then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'Edit'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Edit'
   else
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'View';
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'View';
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
