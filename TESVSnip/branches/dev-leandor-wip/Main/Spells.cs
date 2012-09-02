@@ -763,24 +763,6 @@
                 }
             }
         }
-
-        private static int sanitizeCountRecords(Rec r)
-        {
-            if (r is Record)
-            {
-                return 1;
-            }
-            else
-            {
-                int i = 1;
-                foreach (Rec r2 in r.Records)
-                {
-                    i += sanitizeCountRecords(r2);
-                }
-
-                return i;
-            }
-        }
     }
 
     // class Spells

@@ -55,5 +55,21 @@
         {
             this.descriptiveName = string.Empty;
         }
+
+        internal int CountRecords()
+        {
+            if (this is Record)
+            {
+                return 1;
+            }
+            
+            int i = 1;
+            foreach (Rec r2 in Records)
+            {
+                i += r2.CountRecords();
+            }
+
+            return i;
+        }
     }
 }
