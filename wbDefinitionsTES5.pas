@@ -5628,8 +5628,8 @@ begin
 
   wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
 
-  wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
-  wbETYPReq := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL], False, cpNormal, True);
+  wbETYP := wbFormIDCk(ETYP, 'Equiptment Type', [EQUP, NULL]);
+  wbETYPReq := wbFormIDCk(ETYP, 'Equiptment Type', [EQUP, NULL], False, cpNormal, True);
 
   wbFormTypeEnum := wbEnum([], [
      0, 'Activator',
@@ -5890,13 +5890,13 @@ begin
   wbCTDA := wbRStruct('Conditions', [
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, nil{wbCtdaTypeToInt}, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
+      wbByteArray('Unknown', 3),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
       wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-      wbByteArray('Unknown', 2, cpIgnore, False, wbNeverShow),
+      wbByteArray('Unknown', 2),
       wbUnion('Parameter #1', wbCTDAParam1Decider, [
         wbByteArray('Unknown', 4),
         wbByteArray('None', 4, cpIgnore),
@@ -6188,7 +6188,7 @@ begin
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
-    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
+    wbFormIDCk(BAMT, 'Bash Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
     wbDESC,
@@ -8509,7 +8509,7 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Sound', [SOUN, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbFlags([
@@ -8586,7 +8586,7 @@ begin
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
       {40} wbFloat('Near Target Distance')
-    ], cpNormal, True, nil, 8),
+    ], cpNormal, True, nil),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
@@ -8953,7 +8953,7 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL], False, cpNormal, True)
   ]);
 
-  wbRecord(MUST, 'Music Track', [
+  wbRecord(MUST, 'Music Type', [
     wbEDIDReq,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette',
@@ -9010,7 +9010,9 @@ begin
   wbRecord(EQUP, 'Equip Type', [
     wbEDIDReq,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      'Use All Parents'
+    ]), cpNormal, True)
   ]);
 
   wbRecord(RELA, 'Relationship', [
@@ -9189,7 +9191,6 @@ end;
 
 procedure DefineTES5k;
 begin
-
   wbRecord(OTFT, 'Outfit', [
     wbEDIDReq,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
@@ -9259,7 +9260,7 @@ begin
     wbEDIDReq,
     wbUnknown(CNAM),
     wbFormID(GNAM, 'Category'),
-    wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR, NULL]),
+    wbFormIDCk(SNAM, 'String', [SNDR, NULL]),
     wbRArray('Sounds',
       wbRStruct('Sound Files', [
         wbString(ANAM, 'File Name')
@@ -11779,7 +11780,7 @@ begin
       wbString(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overridden Forms',
+    wbArray(ONAM, 'Overriden Forms',
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot'),
@@ -11790,7 +11791,6 @@ end;
 
 procedure DefineTES5o;
 begin
-
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,

@@ -18,9 +18,7 @@
 program TES5Edit;
 
 uses
-  {nxReplacementMemoryManager,}
   wbInit,
-  {nxExceptionHook,}
   Forms,
   Dialogs,
   SysUtils,
@@ -35,7 +33,6 @@ uses
   ViewElementsFrm in 'ViewElementsFrm.pas' {frmViewElements},
   EditWarningFrm in 'EditWarningFrm.pas' {frmEditWarning},
   wbBSA in 'wbBSA.pas',
-  wbScript in 'wbScript.pas',
   wbHelpers in 'wbHelpers.pas',
   frmWaitForm in 'frmWaitForm.pas' {frmWait};
 
@@ -47,7 +44,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 begin
-  SysUtils.DecimalSeparator := '.';
+  SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := wbApplicationTitle;
