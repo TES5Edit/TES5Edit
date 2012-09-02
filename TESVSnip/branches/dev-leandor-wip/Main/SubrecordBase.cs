@@ -4,6 +4,7 @@ namespace TESVSnip.Main
     using System.Globalization;
 
     using TESVSnip.Data;
+    using TESVSnip.Domain.Data.RecordStructure;
 
     internal class SubrecordBase
     {

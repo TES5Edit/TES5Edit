@@ -8,6 +8,7 @@ namespace TESVSnip.Main
     using System.Xml.Serialization;
 
     using TESVSnip.Data;
+    using TESVSnip.Domain.Data.RecordStructure;
     using TESVSnip.Domain.Services;
 
     internal class RecordStructure

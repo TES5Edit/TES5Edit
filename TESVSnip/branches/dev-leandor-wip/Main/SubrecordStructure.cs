@@ -5,6 +5,7 @@ namespace TESVSnip.Main
     using System.Linq;
 
     using TESVSnip.Data;
+    using TESVSnip.Domain.Data.RecordStructure;
 
     internal class SubrecordStructure : SubrecordBase
     {
