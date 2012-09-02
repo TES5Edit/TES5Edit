@@ -836,21 +836,6 @@
     <MergeOutputFile>$(StageOutputDir)\$(TargetName)$(TargetExt)</MergeOutputFile>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="conf\LS_RecordStructure.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\OldRecordStructure.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\RecordStructure From 4_3_1b.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\RecordStructure SLuckyD v2 - Copy.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="conf\RecordStructure SLuckyD.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="conf\RecordStructure.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
