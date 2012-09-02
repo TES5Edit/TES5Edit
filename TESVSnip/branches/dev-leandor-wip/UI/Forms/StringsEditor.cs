@@ -12,7 +12,7 @@
     using TESVSnip.Model;
     using TESVSnip.Properties;
 
-    using Settings = TESVSnip.Main.Settings;
+    using Settings = TESVSnip.Domain.Services.Settings;
 
     public partial class StringsEditor : Form
     {

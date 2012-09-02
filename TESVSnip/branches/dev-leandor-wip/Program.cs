@@ -8,6 +8,8 @@
     using TESVSnip.Properties;
     using TESVSnip.UI.Forms;
 
+    using Settings = TESVSnip.Properties.Settings;
+
     internal static class Program
     {
         /// <summary>

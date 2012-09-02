@@ -104,11 +104,11 @@ namespace TESVSnip.UI.Forms
             {
                 if (!Settings.Default.IsFirstTimeOpening)
                 {
-                    Main.Settings.GetWindowPosition("TESsnip", this);
+                    Domain.Services.Settings.GetWindowPosition("TESsnip", this);
                 }
                 else
                 {
-                    Main.Settings.SetWindowPosition("TESsnip", this);
+                    Domain.Services.Settings.SetWindowPosition("TESsnip", this);
                     Settings.Default.IsFirstTimeOpening = false;
                     Settings.Default.Save();
                 }
@@ -1069,7 +1069,7 @@ namespace TESVSnip.UI.Forms
             this.RebuildSelection();
             this.CloseStringEditor();
             this.SaveDockingWindows();
-            Main.Settings.SetWindowPosition("TESsnip", this);
+            Domain.Services.Settings.SetWindowPosition("TESsnip", this);
         }
 
         private void UpdateMainText(BaseRecord rec)
