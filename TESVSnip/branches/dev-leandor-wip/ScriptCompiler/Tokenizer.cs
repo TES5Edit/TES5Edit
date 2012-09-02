@@ -1,112 +1,148 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace ScriptCompiler
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+
     internal enum TokenType
     {
-        Unknown,
-        Integer,
-        Float,
-        Keyword,
-        Symbol,
-        Local,
-        Global,
-        Function,
-        edid,
+        Unknown, 
+
+        Integer, 
+
+        Float, 
+
+        Keyword, 
+
+        Symbol, 
+
+        Local, 
+
+        Global, 
+
+        Function, 
+
+        edid, 
+
         Null
     }
 
     internal enum Keywords
     {
-        If,
-        ElseIf,
-        Else,
-        EndIf,
-        ScriptName,
-        Scn,
-        Short,
-        Int,
-        Float,
-        Ref,
-        Begin,
-        End,
-        Set,
-        To,
-        Return,
-        ShowMessage,
+        If, 
+
+        ElseIf, 
+
+        Else, 
+
+        EndIf, 
+
+        ScriptName, 
+
+        Scn, 
+
+        Short, 
+
+        Int, 
+
+        Float, 
+
+        Ref, 
+
+        Begin, 
+
+        End, 
+
+        Set, 
+
+        To, 
+
+        Return, 
+
+        ShowMessage, 
+
         NotAKeyword
     }
 
     internal struct Token
     {
-        public static readonly Token Null = new Token(TokenType.Null, null);
         public static readonly Token NewLine = new Token(TokenType.Symbol, "\n");
 
-        public readonly TokenType type;
-        public readonly string token;
-        public readonly string utoken;
+        public static readonly Token Null = new Token(TokenType.Null, null);
+
+        private static readonly Keywords[] flowlist = new[] { Keywords.If, Keywords.ElseIf, Keywords.Else, Keywords.EndIf, Keywords.Return };
+
+        private static readonly Keywords[] typelist = new[] { Keywords.Int, Keywords.Float, Keywords.Ref };
+
         public readonly Keywords keyword;
 
-        private static readonly Keywords[] typelist = new[] {Keywords.Int, Keywords.Float, Keywords.Ref};
+        public readonly string token;
 
-        private static readonly Keywords[] flowlist = new[]
-                                                          {
-                                                              Keywords.If, Keywords.ElseIf, Keywords.Else, Keywords.EndIf,
-                                                              Keywords.Return
-                                                          };
+        public readonly TokenType type;
+
+        public readonly string utoken;
 
         public Token(TokenType type, string token)
         {
             this.type = type;
-            utoken = token;
+            this.utoken = token;
             this.token = token;
-            keyword = Keywords.NotAKeyword;
+            this.keyword = Keywords.NotAKeyword;
         }
 
         public Token(TokenType type, string ltoken, string token)
         {
             this.type = type;
-            utoken = token;
+            this.utoken = token;
             this.token = ltoken;
-            keyword = Keywords.NotAKeyword;
+            this.keyword = Keywords.NotAKeyword;
         }
 
         public Token(TokenType type, Keywords keyword)
         {
-            if (keyword == Keywords.Short) keyword = Keywords.Int;
-            else if (keyword == Keywords.Scn) keyword = Keywords.ScriptName;
+            if (keyword == Keywords.Short)
+            {
+                keyword = Keywords.Int;
+            }
+            else if (keyword == Keywords.Scn)
+            {
+                keyword = Keywords.ScriptName;
+            }
+
             this.type = type;
             this.keyword = keyword;
-            token = keyword.ToString();
-            utoken = token;
-        }
-
-        public override string ToString()
-        {
-            if (type == TokenType.Keyword) return keyword.ToString();
-            return token;
+            this.token = keyword.ToString();
+            this.utoken = this.token;
         }
 
         public bool IsFlowControl()
         {
-            return type == TokenType.Keyword && Array.IndexOf(flowlist, keyword) != -1;
-        }
-
-        public bool IsType()
-        {
-            return type == TokenType.Keyword && Array.IndexOf(typelist, keyword) != -1;
-        }
-
-        public bool IsSymbol(string s)
-        {
-            return type == TokenType.Symbol && s == token;
+            return this.type == TokenType.Keyword && Array.IndexOf(flowlist, this.keyword) != -1;
         }
 
         public bool IsKeyword(Keywords k)
         {
-            return type == TokenType.Keyword && keyword == k;
+            return this.type == TokenType.Keyword && this.keyword == k;
+        }
+
+        public bool IsSymbol(string s)
+        {
+            return this.type == TokenType.Symbol && s == this.token;
+        }
+
+        public bool IsType()
+        {
+            return this.type == TokenType.Keyword && Array.IndexOf(typelist, this.keyword) != -1;
+        }
+
+        public override string ToString()
+        {
+            if (this.type == TokenType.Keyword)
+            {
+                return this.keyword.ToString();
+            }
+
+            return this.token;
         }
 
         /*public bool IsLiteral() {
@@ -118,25 +154,58 @@ namespace ScriptCompiler
     internal class TokenStream
     {
         private static readonly string[] ReservedWords = new[]
-                                                             {
-                                                                 "if", "elseif", "else", "endif", "scriptname", "scn",
-                                                                 "short", "int", "float", "ref", "begin", "end", "set",
-                                                                 "to", "return", "showmessage"
-                                                             };
+            {
+               "if", "elseif", "else", "endif", "scriptname", "scn", "short", "int", "float", "ref", "begin", "end", "set", "to", "return", "showmessage" 
+            };
+
+        private static readonly List<string> edids = new List<string>();
+
+        private static readonly List<string> functions = new List<string>();
 
         private static readonly List<string> globalVars = new List<string>();
-        private static readonly List<string> functions = new List<string>();
-        private static readonly List<string> edids = new List<string>();
+
+        private readonly StringBuilder builder = new StringBuilder(32);
+
+        private readonly List<string> errors;
+
+        private readonly List<Token> getNextStatementTokens = new List<Token>();
+
+        private readonly Queue<char> input;
+
         private readonly List<string> localVars = new List<string>();
 
-        public void AddLocal(string s)
+        private readonly Queue<Token> storedTokens;
+
+        private Token[] lastTokens;
+
+        private int line;
+
+        public TokenStream(string file, List<string> errors)
         {
-            localVars.Add(s);
+            this.errors = errors;
+            this.line = 1;
+            this.input = new Queue<char>(file.ToCharArray());
+            this.input.Enqueue('\n');
+            this.storedTokens = new Queue<Token>();
+            while (this.input.Count > 0)
+            {
+                this.PopTokenInternal();
+            }
+
+            this.line = 0;
         }
 
-        public static void AddGlobal(string s)
+        public int Line
         {
-            globalVars.Add(s);
+            get
+            {
+                return this.line;
+            }
+        }
+
+        public static void AddEdid(string s)
+        {
+            edids.Add(s);
         }
 
         public static void AddFunction(string s)
@@ -144,9 +213,9 @@ namespace ScriptCompiler
             functions.Add(s);
         }
 
-        public static void AddEdid(string s)
+        public static void AddGlobal(string s)
         {
-            edids.Add(s);
+            globalVars.Add(s);
         }
 
         public static void Reset()
@@ -155,75 +224,119 @@ namespace ScriptCompiler
             edids.Clear();
         }
 
-        private readonly Queue<char> input;
-        private readonly Queue<Token> storedTokens;
-
-        private int line;
-
-        public int Line
+        public void AddLocal(string s)
         {
-            get { return line; }
+            this.localVars.Add(s);
         }
 
-        private readonly List<string> errors;
-
-        private void AddError(string msg)
+        public Token[] PeekNextStatement()
         {
-            errors.Add(line.ToString() + ": " + msg);
-        }
-
-        private void SkipLine()
-        {
-            while (input.Count > 0 && input.Dequeue() != '\n') ;
-            line++;
-        }
-
-        private char SafePop()
-        {
-            if (input.Count == 0) return '\0';
-            char c = input.Dequeue();
-            while (c == '\r')
+            if (this.lastTokens == null)
             {
-                if (input.Count == 0) return '\0';
-                c = input.Dequeue();
+                this.lastTokens = this.PopNextStatement();
             }
-            if (c == '\t' || c == ',') c = ' ';
-            if (c < 32 && c != '\n') AddError("There is an invalid character in the file");
-            return c;
+
+            return this.lastTokens;
         }
 
-        private char SafePeek()
+        public Token[] PopNextStatement()
         {
-            if (input.Count == 0) return '\0';
-            char c = input.Peek();
-            while (c == '\r')
+            if (this.lastTokens != null)
             {
-                input.Dequeue();
-                if (input.Count == 0) return '\0';
-                c = input.Peek();
+                Token[] tmp = this.lastTokens;
+                this.lastTokens = null;
+                return tmp;
             }
-            if (c == '\t' || c == ',') c = ' ';
-            if (c < 32 && c != '\n') AddError("There is an invalid character in the file");
-            return c;
-        }
 
-        private readonly StringBuilder builder = new StringBuilder(32);
+            this.line++;
+            Token t = this.DequeueToken();
+            while (t.IsSymbol("\n"))
+            {
+                this.line++;
+                t = this.DequeueToken();
+            }
+
+            if (this.storedTokens.Count == 0)
+            {
+                return new Token[0];
+            }
+
+            this.getNextStatementTokens.Clear();
+            while (t.type != TokenType.Null && !t.IsSymbol("\n"))
+            {
+                this.getNextStatementTokens.Add(t);
+                t = this.DequeueToken();
+            }
+
+            return this.getNextStatementTokens.ToArray();
+        }
 
         private static Token FromWord(string token)
         {
             int i;
             string ltoken = token.ToLowerInvariant();
-            if (char.IsDigit(token[0]) ||
-                (token.Length > 1 && (token[0] == '.' || token[0] == '-') && char.IsDigit(token[1])))
+            if (char.IsDigit(token[0]) || (token.Length > 1 && (token[0] == '.' || token[0] == '-') && char.IsDigit(token[1])))
             {
-                if (token.Contains(".") || ltoken.Contains("e")) return new Token(TokenType.Float, token);
+                if (token.Contains(".") || ltoken.Contains("e"))
+                {
+                    return new Token(TokenType.Float, token);
+                }
+
                 return new Token(TokenType.Integer, token);
             }
+
             if ((i = Array.IndexOf(ReservedWords, ltoken)) != -1)
             {
-                return new Token(TokenType.Keyword, (Keywords) i);
+                return new Token(TokenType.Keyword, (Keywords)i);
             }
+
             return new Token(TokenType.Unknown, ltoken, token);
+        }
+
+        private void AddError(string msg)
+        {
+            this.errors.Add(this.line.ToString() + ": " + msg);
+        }
+
+        private Token DequeueToken()
+        {
+            if (this.storedTokens.Count == 0)
+            {
+                return Token.Null;
+            }
+
+            Token t = this.storedTokens.Dequeue();
+            if (t.type == TokenType.Unknown)
+            {
+                if (this.localVars.Contains(t.token))
+                {
+                    return new Token(TokenType.Local, t.token, t.utoken);
+                }
+
+                if (globalVars.Contains(t.token))
+                {
+                    return new Token(TokenType.Global, t.token, t.utoken);
+                }
+
+                if (functions.Contains(t.token))
+                {
+                    return new Token(TokenType.Function, t.token, t.utoken);
+                }
+
+                if (edids.Contains(t.token))
+                {
+                    return new Token(TokenType.edid, t.token, t.utoken);
+                }
+            }
+
+            return t;
+        }
+
+        private void PopTokenInternal()
+        {
+            Token t;
+            t = this.PopTokenInternal2();
+            this.storedTokens.Enqueue(t);
         }
 
         private Token PopTokenInternal2()
@@ -233,16 +346,19 @@ namespace ScriptCompiler
             {
                 while (true)
                 {
-                    c = SafePop();
-                    if (c == '\0') return Token.Null;
+                    c = this.SafePop();
+                    if (c == '\0')
+                    {
+                        return Token.Null;
+                    }
                     else if (c == '\n')
                     {
-                        line++;
+                        this.line++;
                         return Token.NewLine;
                     }
                     else if (c == ';')
                     {
-                        SkipLine();
+                        this.SkipLine();
                         return Token.NewLine;
                     }
                     else
@@ -253,211 +369,247 @@ namespace ScriptCompiler
                         }
                     }
                 }
-                if (char.IsLetterOrDigit(c) || c == '_' || ((c == '.' || c == '~') && char.IsDigit(SafePeek())))
+
+                if (char.IsLetterOrDigit(c) || c == '_' || ((c == '.' || c == '~') && char.IsDigit(this.SafePeek())))
                 {
-                    builder.Length = 0;
-                    if (c == '~') builder.Append('-');
-                    else builder.Append(c);
+                    this.builder.Length = 0;
+                    if (c == '~')
+                    {
+                        this.builder.Append('-');
+                    }
+                    else
+                    {
+                        this.builder.Append(c);
+                    }
+
                     bool numeric = char.IsDigit(c);
                     while (true)
                     {
-                        c = SafePeek();
+                        c = this.SafePeek();
                         if (char.IsLetterOrDigit(c) || c == '_' || (numeric && c == '.'))
                         {
-                            builder.Append(input.Dequeue());
+                            this.builder.Append(this.input.Dequeue());
                         }
-                        else break;
+                        else
+                        {
+                            break;
+                        }
                     }
-                    return FromWord(builder.ToString());
+
+                    return FromWord(this.builder.ToString());
                 }
                 else
+                {
                     switch (c)
                     {
                         case '"':
-                            builder.Length = 0;
-                            while ((c = SafePop()) != '"')
+                            this.builder.Length = 0;
+                            while ((c = this.SafePop()) != '"')
                             {
                                 if (c == '\r' || c == '\n' || c == '\0')
                                 {
-                                    AddError("Unexpected end of line");
+                                    this.AddError("Unexpected end of line");
                                     break;
                                 }
+
                                 if (c == '\\')
                                 {
-                                    switch (c = SafePop())
+                                    switch (c = this.SafePop())
                                     {
                                         case '\0':
                                         case '\r':
                                         case '\n':
-                                            AddError("Unexpected end of line");
-                                            return FromWord(builder.ToString());
+                                            this.AddError("Unexpected end of line");
+                                            return FromWord(this.builder.ToString());
                                         case '\\':
-                                            builder.Append('\\');
+                                            this.builder.Append('\\');
                                             break;
                                         case 'n':
-                                            builder.Append('\n');
+                                            this.builder.Append('\n');
                                             break;
                                         case '"':
-                                            builder.Append('"');
+                                            this.builder.Append('"');
                                             break;
                                         default:
-                                            AddError("Unrecognised escape sequence");
-                                            builder.Append(c);
+                                            this.AddError("Unrecognised escape sequence");
+                                            this.builder.Append(c);
                                             break;
                                     }
                                 }
-                                else builder.Append(c);
+                                else
+                                {
+                                    this.builder.Append(c);
+                                }
                             }
-                            return FromWord(builder.ToString());
+
+                            return FromWord(this.builder.ToString());
                         case '+':
                             return new Token(TokenType.Symbol, "+");
                         case '-':
                             return new Token(TokenType.Symbol, "-");
                         case '*':
-                            if (SafePeek() == '*')
+                            if (this.SafePeek() == '*')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "**");
                             }
+
                             return new Token(TokenType.Symbol, "*");
                         case '/':
-                            if (SafePeek() == '=')
+                            if (this.SafePeek() == '=')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "/=");
                             }
-                            if (SafePeek() == ')')
+
+                            if (this.SafePeek() == ')')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "/)");
                             }
+
                             return new Token(TokenType.Symbol, "/");
                         case '!':
-                            if (SafePeek() == '=')
+                            if (this.SafePeek() == '=')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "!=");
                             }
-                            AddError("Illegal symbol '!'");
+
+                            this.AddError("Illegal symbol '!'");
                             return new Token(TokenType.Symbol, "!");
                         case '=':
-                            if (SafePeek() == '=')
+                            if (this.SafePeek() == '=')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "==");
                             }
-                            AddError("Illegal symbol '='");
+
+                            this.AddError("Illegal symbol '='");
                             return new Token(TokenType.Symbol, "=");
                         case '>':
-                            if (SafePeek() == '=')
+                            if (this.SafePeek() == '=')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, ">=");
                             }
+
                             return new Token(TokenType.Symbol, ">");
                         case '<':
-                            if (SafePeek() == '=')
+                            if (this.SafePeek() == '=')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "<=");
                             }
+
                             return new Token(TokenType.Symbol, "<");
                         case '(':
                             return new Token(TokenType.Symbol, "(");
                         case ')':
                             return new Token(TokenType.Symbol, ")");
-                            //case ',':
-                            //    return new Token(TokenType.Symbol, ",");
+
+                            // case ',':
+                            // return new Token(TokenType.Symbol, ",");
                         case '&':
-                            if (SafePeek() == '&')
+                            if (this.SafePeek() == '&')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "&&");
                             }
-                            AddError("Illegal symbol '&'");
+
+                            this.AddError("Illegal symbol '&'");
                             return new Token(TokenType.Symbol, "&");
                         case '|':
-                            if (SafePeek() == '|')
+                            if (this.SafePeek() == '|')
                             {
-                                input.Dequeue();
+                                this.input.Dequeue();
                                 return new Token(TokenType.Symbol, "||");
                             }
-                            AddError("Illegal symbol '|'");
+
+                            this.AddError("Illegal symbol '|'");
                             return new Token(TokenType.Symbol, "|");
                         case '.':
                             return new Token(TokenType.Symbol, ".");
                         default:
-                            AddError("Unexpected character");
-                            SkipLine();
+                            this.AddError("Unexpected character");
+                            this.SkipLine();
                             break;
                     }
+                }
             }
         }
 
-        private void PopTokenInternal()
+        private char SafePeek()
         {
-            Token t;
-            t = PopTokenInternal2();
-            storedTokens.Enqueue(t);
-        }
-
-        private Token DequeueToken()
-        {
-            if (storedTokens.Count == 0) return Token.Null;
-            Token t = storedTokens.Dequeue();
-            if (t.type == TokenType.Unknown)
+            if (this.input.Count == 0)
             {
-                if (localVars.Contains(t.token)) return new Token(TokenType.Local, t.token, t.utoken);
-                if (globalVars.Contains(t.token)) return new Token(TokenType.Global, t.token, t.utoken);
-                if (functions.Contains(t.token)) return new Token(TokenType.Function, t.token, t.utoken);
-                if (edids.Contains(t.token)) return new Token(TokenType.edid, t.token, t.utoken);
+                return '\0';
             }
-            return t;
+
+            char c = this.input.Peek();
+            while (c == '\r')
+            {
+                this.input.Dequeue();
+                if (this.input.Count == 0)
+                {
+                    return '\0';
+                }
+
+                c = this.input.Peek();
+            }
+
+            if (c == '\t' || c == ',')
+            {
+                c = ' ';
+            }
+
+            if (c < 32 && c != '\n')
+            {
+                this.AddError("There is an invalid character in the file");
+            }
+
+            return c;
         }
 
-        private Token[] lastTokens;
-        private readonly List<Token> getNextStatementTokens = new List<Token>();
-
-        public Token[] PopNextStatement()
+        private char SafePop()
         {
-            if (lastTokens != null)
+            if (this.input.Count == 0)
             {
-                Token[] tmp = lastTokens;
-                lastTokens = null;
-                return tmp;
+                return '\0';
             }
-            line++;
-            Token t = DequeueToken();
-            while (t.IsSymbol("\n"))
+
+            char c = this.input.Dequeue();
+            while (c == '\r')
             {
-                line++;
-                t = DequeueToken();
+                if (this.input.Count == 0)
+                {
+                    return '\0';
+                }
+
+                c = this.input.Dequeue();
             }
-            if (storedTokens.Count == 0) return new Token[0];
-            getNextStatementTokens.Clear();
-            while (t.type != TokenType.Null && !t.IsSymbol("\n"))
+
+            if (c == '\t' || c == ',')
             {
-                getNextStatementTokens.Add(t);
-                t = DequeueToken();
+                c = ' ';
             }
-            return getNextStatementTokens.ToArray();
+
+            if (c < 32 && c != '\n')
+            {
+                this.AddError("There is an invalid character in the file");
+            }
+
+            return c;
         }
 
-        public Token[] PeekNextStatement()
+        private void SkipLine()
         {
-            if (lastTokens == null) lastTokens = PopNextStatement();
-            return lastTokens;
-        }
+            while (this.input.Count > 0 && this.input.Dequeue() != '\n')
+            {
+                ;
+            }
 
-        public TokenStream(string file, List<string> errors)
-        {
-            this.errors = errors;
-            line = 1;
-            input = new Queue<char>(file.ToCharArray());
-            input.Enqueue('\n');
-            storedTokens = new Queue<Token>();
-            while (input.Count > 0) PopTokenInternal();
-            line = 0;
+            this.line++;
         }
     }
 }
