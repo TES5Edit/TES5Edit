@@ -20,25 +20,25 @@
 program TES5Edit;
 
 uses
-  wbInit,
   Forms,
   Dialogs,
   SysUtils,
-  wbInterface,
-  wbImplementation,
-  wbDefinitionsFO3,
-  wbDefinitionsFNV,
-  wbDefinitionsTES3,
-  wbDefinitionsTES4,
-  wbDefinitionsTES5,
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
   FileSelectFrm in 'FileSelectFrm.pas' {frmFileSelect},
   ViewElementsFrm in 'ViewElementsFrm.pas' {frmViewElements},
   EditWarningFrm in 'EditWarningFrm.pas' {frmEditWarning},
+  frmWaitForm in 'frmWaitForm.pas' {frmWait},
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
-  frmWaitForm in 'frmWaitForm.pas' {frmWait};
+  wbInit in 'wbInit.pas',
+  wbInterface in 'wbInterface.pas',
+  wbImplementation in 'wbImplementation.pas',
+  wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
+  wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
+  wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas';
 
 {$R *.res}
 
