@@ -139,7 +139,7 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Parameters>
-						<Parameters Name="RunParams">-fnv -edit -skipbsa</Parameters>
+						<Parameters Name="RunParams">-tes5 -edit -skipbsa</Parameters>
 					</Parameters>
 				</Delphi.Personality>
 				<Platforms>
