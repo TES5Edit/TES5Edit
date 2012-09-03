@@ -17,8 +17,8 @@ interface
 uses
   Windows,
   Classes,
-  SysUtils,
-  CocoaBase,
+  SysUtils{,
+  CocoaBase,}
   ScriptTok,
   wbScriptBuilder;
 

@@ -11,7 +11,6 @@
      under the License.
 
 *******************************************************************************}
-// Thanks to zilav18
 unit wbTES5ScriptDef;
 
 interface
@@ -20,7 +19,11 @@ uses
   wbImplementation,
   wbInterface,
   wbBSA,
-  Types, Classes, SysUtils, Math, Variants;
+  Types, Classes, SysUtils, Math, Variants,
+  DxTypes,
+  Direct3D9,
+  wbScriptParse,
+	ScriptParse;
 
   implementation
 

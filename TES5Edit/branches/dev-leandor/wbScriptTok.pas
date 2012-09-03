@@ -16,8 +16,8 @@ unit wbScriptTok;
 interface
 uses
   Windows,
-  SysUtils,
-  CocoaBase;
+  SysUtils{,
+  CocoaBase};
 
 const
   TOK_eof = 0;

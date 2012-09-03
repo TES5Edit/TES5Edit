@@ -24,6 +24,7 @@ uses
   SysUtils,
   wbInterface,
   wbImplementation,
+  {wbTES5ScriptDef,}
   wbDefinitionsFO3,
   wbDefinitionsFNV,
   wbDefinitionsTES3,

@@ -17,8 +17,8 @@ unit wbScript;
 interface
 
 uses
-  wbInterface,
-  CocoaBase;
+  wbInterface{,
+  CocoaBase};
 
 type
   IwbScriptAction = interface
