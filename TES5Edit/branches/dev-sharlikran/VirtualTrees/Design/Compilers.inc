@@ -62,6 +62,8 @@
 // - COMPILER_15_UP : Kylix/Delphi/BCB 15.x or higher is the compiler.
 // - COMPILER_16    : Kylix/Delphi/BCB 16.x is the compiler.
 // - COMPILER_16_UP : Kylix/Delphi/BCB 16.x or higher is the compiler.
+// - COMPILER_17    : Kylix/Delphi/BCB 17.x is the compiler.
+// - COMPILER_17_UP : Kylix/Delphi/BCB 17.x or higher is the compiler.
 //
 // Only defined if Windows is the target:
 // - CPPB        : Any version of BCB is being used.
@@ -130,6 +132,11 @@
 {$ifdef Win32}
 
 // Compiler defines not specific to a particlular platform.
+
+ // RAD Studio XE (BDS 10.0) DELPHI and BCB are no longer defined, only COMPILER
+ {$ifdef VER240}
+   {$define COMPILER_17}
+ {$endif VER240}
 
  // RAD Studio XE (BDS 9.0) DELPHI and BCB are no longer defined, only COMPILER
  {$ifdef VER230}
@@ -740,6 +747,9 @@
 	   {$define DELPHI}
 	 {$endif}
 	{$ifend}
+{$endif}
+
+{$ifdef conditionalexpressions}
 	{$if CompilerVersion > 22}
 	 {$define COMPILER_1_UP}
 	 {$define COMPILER_2_UP}
@@ -757,6 +767,7 @@
 	 {$define COMPILER_14_UP}
 	 {$define COMPILER_15_UP}
 	 {$define COMPILER_16_UP}
+	 {$define COMPILER_17_UP}
 	 // Backwards compatibility
 	 {$define DELPHI_2_UP}
 	 {$define DELPHI_3_UP}
