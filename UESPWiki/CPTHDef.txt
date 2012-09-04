@@ -12,9 +12,7 @@ Each camera path is essentially a series of CTDA checks (usually), a small amoun
 |- 
 | + || EDID || editorId || zstring || Editor id
 |-
-| * || CTDA || objectBounds|| [[Tes5Mod:Mod File Format/CTDA Field|CTDA]] ||  CTDA, presumably checks
-|-
-| - || CIS1  || ctda variable || zstring || eg. Is3rdPKillOnly
+| * || CTDA || condition data || [[Tes5Mod:Mod_File_Format/CTDA_Field|CTDA]] || conditions
 |-
 | + || ANAM || unknown || struct || 8-byte struct ''look like formids''
 |-

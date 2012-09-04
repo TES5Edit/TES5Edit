@@ -5560,9 +5560,10 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		<Group id="EDID" optional="1"/>
 		<Group id="CONDITIONAL" optional="1" repeat="1"/>
 		<Subrecord name="ANAM" desc="Camera Path (CPTH)" optional="1">
-			<Element name="FormID 1" type="formid" reftype="CPTH"/>
-			<Element name="FormID 2" type="formid" reftype="CPTH"/>
-			<Element name="(rest of data)" type="blob"/>
+			<Group optional="1" repeat="1" size="4">
+				<Element name="Parent" type="formid" reftype="CPTH"/>
+				<Element name="Previous Sibling" type="formid" reftype="CPTH"/>
+			</Group>
 		</Subrecord>
 		<Subrecord name="DATA" desc="DATA" optional="1">
 			<Element name="Name" type="int"/>
