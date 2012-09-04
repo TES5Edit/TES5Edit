@@ -13,7 +13,20 @@ MATO are material objects, records are simple and consist of a name, a model (us
 |-
 | - || || MODL || model || zstring || path to .nif ''not present seems to = LOD''
 |-
-| * || || DNAM || Property Data || struct || ''very large when present''
+| * || || DNAM || Property Data || struct || Very large when present
 |-
-| + || || DATA || unknown || struct || ''usually 48 bytes, small number of 32/28''
-|-}
+| + || || DATA || unknown || struct || Usually 48 bytes, small number of 32/28
+:Float - Falloff Scale
+:Float - Falloff Bias
+:Float - Noise UV Scale
+:Float - Material UV Scale
+:Float - DirProjVector X
+:Float - DirProjVector Y
+:Float - DirProjVector Z
+:Float - Normal Dampener
+:Float - Single Pass Color R (this # x255)
+:Float - Single Pass Color G (this # x255)
+:Float - Single Pass Color B (this # x255)
+:uint32 - Single Pass (Boolean)
+|-
+|}

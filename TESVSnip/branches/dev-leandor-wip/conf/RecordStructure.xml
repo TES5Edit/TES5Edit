@@ -7238,7 +7238,7 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 		<Subrecord name="DNAM" desc="Gamebryo File Data" optional="1" repeat="1">
 			<Element name="(CK's View Properties Data)" type="blob"/>
 		</Subrecord>
-		<Subrecord name="DATA" desc="DATA" optional="1" size="48">
+		<Subrecord name="DATA" desc="Directional Material Data" optional="1">
 			<Element name="Falloff Scale" type="float"/>
 			<Element name="Falloff Bias" type="float"/>
 			<Element name="Noise UV Scale" type="float"/>
@@ -7246,13 +7246,11 @@ Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknow
 			<Element name="DirProjVector X" type="float"/>
 			<Element name="DirProjVector Y" type="float"/>
 			<Element name="DirProjVector Z" type="float"/>
-			<Element name="Normal Dampener" type="float"/>
-			<Element name="SPC R (this # x255)" type="float"/>
-			<Element name="SPC G (this # x255)" type="float"/>
-			<Element name="SPC B (this # x255)" type="float"/>
-			<Element name="Single Pass Yes/No" type="byte" flags="Yes"/>
-			<Element name="(buffer)" type="byte"/>
-			<Element name="(buffer)" type="short"/>
+			<Element name="Normal Dampener" type="float" optional="1"/>
+			<Element name="Single Pass Color R (this # x255)" type="float" optional="1"/>
+			<Element name="Single Pass Color G (this # x255)" type="float" optional="1"/>
+			<Element name="Single Pass Color B (this # x255)" type="float" optional="1"/>
+			<Element name="Single Pass" type="uint" options="False;0;True;1" optional="1"/>
 		</Subrecord>
 	</Record>
 	<Record name="MOVT" desc="Movement Type">
