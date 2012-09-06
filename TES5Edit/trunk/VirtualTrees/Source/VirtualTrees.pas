@@ -75,6 +75,9 @@ uses
   {$if CompilerVersion >= 18}
     oleacc,   // MSAA support in Delphi 2006 or higher
   {$ifend}
+  {$IF CompilerVersion > 23}
+  UITypes,
+  {$IFEND}
   Messages, SysUtils, Graphics, Controls, Forms, ImgList, ActiveX, StdCtrls, Classes, Menus, Printers,
   {>>>}Colors,{<<<}
   CommCtrl,   // image lists, common controls tree structures
@@ -993,7 +996,7 @@ type
     FMinWidth: Integer;
     FMaxWidth: Integer;
     FStyle: TVirtualTreeColumnStyle;
-    FImageIndex: TImageIndex;
+    FImageIndex: {>>>}System.UITypes.{<<<}TImageIndex;
     FBiDiMode: TBiDiMode;
     FLayout: TVTHeaderColumnLayout;
     FMargin,
@@ -1025,7 +1028,7 @@ type
     procedure SetCheckState(Value: TCheckState);
     procedure SetCheckType(Value: TCheckType);
     procedure SetColor(const Value: TColor);
-    procedure SetImageIndex(Value: TImageIndex);
+    procedure SetImageIndex(Value: {>>>}System.UITypes.{<<<}TImageIndex);
     procedure SetLayout(Value: TVTHeaderColumnLayout);
     procedure SetMargin(Value: Integer);
     procedure SetMaxWidth(Value: Integer);
@@ -1080,7 +1083,7 @@ type
     property Color: TColor read FColor write SetColor stored IsColorStored;
     property DefaultSortDirection: TSortDirection read fDefaultSortDirection write fDefaultSortDirection default sdAscending;
     property Hint: UnicodeString read FHint write FHint stored False;
-    property ImageIndex: TImageIndex read FImageIndex write SetImageIndex default -1;
+    property ImageIndex: {>>>}System.UITypes.{<<<}TImageIndex read FImageIndex write SetImageIndex default -1;
     property Layout: TVTHeaderColumnLayout read FLayout write SetLayout default blGlyphLeft;
     property Margin: Integer read FMargin write SetMargin default 4;
     property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 10000;
@@ -1628,12 +1631,12 @@ type
   private
     FAlwaysVisible: Boolean;
     FOwner: TBaseVirtualTree;
-    FScrollBars: TScrollStyle;                   // used to hide or show vertical and/or horizontal scrollbar
+    FScrollBars: {>>>}System.UITypes.{<<<}TScrollStyle;                   // used to hide or show vertical and/or horizontal scrollbar
     FScrollBarStyle: TScrollBarStyle;            // kind of scrollbars to use
     FIncrementX,
     FIncrementY: TVTScrollIncrement;             // number of pixels to scroll in one step (when auto scrolling)
     procedure SetAlwaysVisible(Value: Boolean);
-    procedure SetScrollBars(Value: TScrollStyle);
+    procedure SetScrollBars(Value: {>>>}System.UITypes.{<<<}TScrollStyle);
     procedure SetScrollBarStyle(Value: TScrollBarStyle);
   protected
     function GetOwner: TPersistent; override;
@@ -1644,7 +1647,7 @@ type
   published
     property AlwaysVisible: Boolean read FAlwaysVisible write SetAlwaysVisible default False;
     property HorizontalIncrement: TVTScrollIncrement read FIncrementX write FIncrementX default 20;
-    property ScrollBars: TScrollStyle read FScrollbars write SetScrollBars default ssBoth;
+    property ScrollBars: {>>>}System.UITypes.{<<<}TScrollStyle read FScrollbars write SetScrollBars default ssBoth;
     property ScrollBarStyle: TScrollBarStyle read FScrollBarStyle write SetScrollBarStyle default sbmRegular;
     property VerticalIncrement: TVTScrollIncrement read FIncrementY write FIncrementY default 20;
   end;
@@ -8922,7 +8925,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TVirtualTreeColumn.SetImageIndex(Value: TImageIndex);
+procedure TVirtualTreeColumn.SetImageIndex(Value: {>>>}System.UITypes.{<<<}TImageIndex);
 
 begin
   if Value <> FImageIndex then
@@ -9606,7 +9609,7 @@ end;
 procedure TVirtualTreeColumn.WriteHint(Writer: TWriter);
 
 begin
-  Writer.WriteWideString(FHint);
+  Writer.{>>>WriteWideString<<<}WriteString(FHint);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -9614,7 +9617,7 @@ end;
 procedure TVirtualTreeColumn.WriteText(Writer: TWriter);
 
 begin
-  Writer.WriteWideString(FText);
+  Writer.{>>>WriteWideString<<<}WriteString(FText);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -12279,8 +12282,8 @@ var
   I: TColumnIndex;
   NewWidth: Integer;
   {>>>}
-  OldWidth: Integer;
-  Delta: Integer;
+  {>>>OldWidth: Integer;
+  Delta: Integer;<<<}
   {<<<}
 begin
   Result := False;
@@ -13719,7 +13722,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TScrollBarOptions.SetScrollBars(Value: TScrollStyle);
+procedure TScrollBarOptions.SetScrollBars(Value: {>>>}System.UITypes.{<<<}TScrollStyle);
 
 begin
   if FScrollbars <> Value then
@@ -20116,7 +20119,7 @@ end;
 procedure TBaseVirtualTree.CreateParams(var Params: TCreateParams);
 
 const
-  ScrollBar: array[TScrollStyle] of Cardinal = (0, WS_HSCROLL, WS_VSCROLL, WS_HSCROLL or WS_VSCROLL);
+  ScrollBar: array[{>>>}System.UITypes.{<<<}TScrollStyle] of Cardinal = (0, WS_HSCROLL, WS_VSCROLL, WS_HSCROLL or WS_VSCROLL);
 
 begin
   inherited CreateParams(Params);
@@ -34741,7 +34744,7 @@ end;
 procedure TCustomVirtualStringTree.WriteText(Writer: TWriter);
 
 begin
-  Writer.WriteWideString(FDefaultText);
+  Writer.{>>>WriteWideString<<<}WriteString(FDefaultText);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
