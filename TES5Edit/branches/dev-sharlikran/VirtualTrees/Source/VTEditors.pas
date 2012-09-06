@@ -11,7 +11,8 @@ unit VTEditors;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  SysUtils,
+  Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, VirtualTrees, Buttons, ExtCtrls, ComCtrls, Spin;
 
 {$I Compilers.inc}
@@ -950,9 +951,18 @@ function TDateEditLink.GetEditText: WideString;
 var
   Sep: Char;
 begin
+  {$IF CompilerVersion > 23}
+  Sep := FormatSettings.DateSeparator;
+  {$ELSE}
   Sep := SysUtils.DateSeparator;
+  {$IFEND}
+
   try
+    {$IF CompilerVersion > 23}
+    if FDateSeparator <> #0 then FormatSettings.DateSeparator := FDateSeparator;
+    {$ELSE}
     if FDateSeparator <> #0 then SysUtils.DateSeparator := FDateSeparator;
+    {$IFEND}
       if FDateFormat <> '' then
         Result := FormatDateTime(FDateFormat, TDateTimePicker(EditControl).DateTime)
       else
@@ -961,7 +971,11 @@ begin
           dtkTime: Result := TimeToStr(TDateTimePicker(EditControl).DateTime);
         end;
   finally
+    {$IF CompilerVersion > 23}
+    FormatSettings.DateSeparator := Sep;
+    {$ELSE}
     SysUtils.DateSeparator := Sep;
+    {$IFEND}
   end;
 end;
 
@@ -972,18 +986,34 @@ var
 begin
   if Value <> '' then
   try
+    {$IF CompilerVersion > 23}
+    DF := FormatSettings.ShortDateFormat;
+    Sep := FormatSettings.DateSeparator;
+    {$ELSE}
     DF := ShortDateFormat;
     Sep := SysUtils.DateSeparator;
+    {$IFEND}
+
     try
+      {$IF CompilerVersion > 23}
+      if FDateFormat <> '' then FormatSettings.ShortDateFormat := FDateFormat;
+      if FDateSeparator <> #0 then FormatSettings.DateSeparator := FDateSeparator;
+      {$ELSE}
       if FDateFormat <> '' then ShortDateFormat := FDateFormat;
       if FDateSeparator <> #0 then SysUtils.DateSeparator := FDateSeparator;
+      {$IFEND}
       case FKind of
         dtkDate: TDateTimePicker(EditControl).Date := StrToDate(Value);
         dtkTime: TDateTimePicker(EditControl).Time := StrToTime(Value);
       end;
     finally
+      {$IF CompilerVersion > 23}
+      FormatSettings.ShortDateFormat := DF;
+      FormatSettings.DateSeparator := Sep;
+      {$ELSE}
       ShortDateFormat := DF;
       SysUtils.DateSeparator := Sep;
+      {$IFEND}
     end;
   except
   end;

@@ -1,7 +1,7 @@
 // JCL_DEBUG_EXPERT_INSERTJDBG OFF
 // JCL_DEBUG_EXPERT_GENERATEJDBG OFF
 // JCL_DEBUG_EXPERT_DELETEMAPFILE OFF
-package VirtualTreesD15D;
+package VirtualTreesD17D;
 
 {$R *.res}
 {$R '..\Design\VirtualTrees.dcr'}
@@ -35,7 +35,7 @@ package VirtualTreesD15D;
 
 requires
   dclstd,
-  VirtualTreesD15;
+  VirtualTreesD17;
 
 contains
   VirtualTreesReg in '..\Design\VirtualTreesReg.pas',
