@@ -133,12 +133,12 @@
 
 // Compiler defines not specific to a particlular platform.
 
- // RAD Studio XE (BDS 10.0) DELPHI and BCB are no longer defined, only COMPILER
+ // RAD Studio XE3 (BDS 10.0) DELPHI and BCB are no longer defined, only COMPILER
  {$ifdef VER240}
    {$define COMPILER_17}
  {$endif VER240}
 
- // RAD Studio XE (BDS 9.0) DELPHI and BCB are no longer defined, only COMPILER
+ // RAD Studio XE2 (BDS 9.0) DELPHI and BCB are no longer defined, only COMPILER
  {$ifdef VER230}
    {$define COMPILER_16}
  {$endif VER230}
@@ -634,6 +634,7 @@
 
 {$endif}
 
+// Delphi XE (CompilerVersion = 22), XE2(23), XE3 (24)
 {$ifdef COMPILER_15}
  {$define COMPILER_1_UP}
  {$define COMPILER_2_UP}
@@ -671,6 +672,7 @@
 
 {$endif}
 
+// Delphi XE2 (CompilerVersion = 23)
 {$ifdef COMPILER_16}
  {$define COMPILER_1_UP}
  {$define COMPILER_2_UP}
@@ -709,85 +711,44 @@
 
 {$endif}
 
-// RAD Studio XE and XE2
-{$ifdef conditionalexpressions}
-	{$if CompilerVersion = 22}
-	 {$define COMPILER_1_UP}
-	 {$define COMPILER_2_UP}
-	 {$define COMPILER_3_UP}
-	 {$define COMPILER_4_UP}
-	 {$define COMPILER_5_UP}
-	 {$define COMPILER_6_UP}
-	 {$define COMPILER_7_UP}
-	 {$define COMPILER_8_UP}
-	 {$define COMPILER_9_UP}
-	 {$define COMPILER_10_UP}
-	 {$define COMPILER_11_UP}
-	 {$define COMPILER_12_UP}
-	 {$define COMPILER_13_UP}
-	 {$define COMPILER_14_UP}
-	 {$define COMPILER_15_UP}
-	 // Backwards compatibility
-	 {$define DELPHI_2_UP}
-	 {$define DELPHI_3_UP}
-	 {$define DELPHI_4_UP}
-	 {$define DELPHI_5_UP}
-	 {$define DELPHI_6_UP}
-	 {$define DELPHI_7_UP}
-	 {$define DELPHI_8_UP}
-	 {$define DELPHI_9_UP}
-	 {$define CPPB_3_UP}
-	 {$define CPPB_4_UP}
-	 {$define CPPB_5_UP}
-	 {$define CPPB_6_UP}
+// Delphi XE3 (CompilerVersion = 24)
+{$ifdef COMPILER_17}
+ {$define COMPILER_1_UP}
+ {$define COMPILER_2_UP}
+ {$define COMPILER_3_UP}
+ {$define COMPILER_4_UP}
+ {$define COMPILER_5_UP}
+ {$define COMPILER_6_UP}
+ {$define COMPILER_7_UP}
+ {$define COMPILER_8_UP}
+ {$define COMPILER_9_UP}
+ {$define COMPILER_10_UP}
+ {$define COMPILER_11_UP}
+ {$define COMPILER_12_UP}
+ {$define COMPILER_14_UP}
+ {$define COMPILER_15_UP}
+ {$define COMPILER_16_UP}
+ {$define COMPILER_17_UP}
+ // Backwards compatibility
+ {$define DELPHI_2_UP}
+ {$define DELPHI_3_UP}
+ {$define DELPHI_4_UP}
+ {$define DELPHI_5_UP}
+ {$define DELPHI_6_UP}
+ {$define DELPHI_7_UP}
+ {$define DELPHI_8_UP}
+ {$define DELPHI_9_UP}
+ {$define CPPB_3_UP}
+ {$define CPPB_4_UP}
+ {$define CPPB_5_UP}
+ {$define CPPB_6_UP}
 
-	 {$ifdef BCB}
-	   {$define CPPB}
-	 {$else}
-	   {$define DELPHI}
-	 {$endif}
-	{$ifend}
-{$endif}
+ {$ifdef BCB}
+   {$define CPPB}
+ {$else}
+   {$define DELPHI}
+ {$endif}
 
-{$ifdef conditionalexpressions}
-	{$if CompilerVersion > 22}
-	 {$define COMPILER_1_UP}
-	 {$define COMPILER_2_UP}
-	 {$define COMPILER_3_UP}
-	 {$define COMPILER_4_UP}
-	 {$define COMPILER_5_UP}
-	 {$define COMPILER_6_UP}
-	 {$define COMPILER_7_UP}
-	 {$define COMPILER_8_UP}
-	 {$define COMPILER_9_UP}
-	 {$define COMPILER_10_UP}
-	 {$define COMPILER_11_UP}
-	 {$define COMPILER_12_UP}
-	 {$define COMPILER_13_UP}
-	 {$define COMPILER_14_UP}
-	 {$define COMPILER_15_UP}
-	 {$define COMPILER_16_UP}
-	 {$define COMPILER_17_UP}
-	 // Backwards compatibility
-	 {$define DELPHI_2_UP}
-	 {$define DELPHI_3_UP}
-	 {$define DELPHI_4_UP}
-	 {$define DELPHI_5_UP}
-	 {$define DELPHI_6_UP}
-	 {$define DELPHI_7_UP}
-	 {$define DELPHI_8_UP}
-	 {$define DELPHI_9_UP}
-	 {$define CPPB_3_UP}
-	 {$define CPPB_4_UP}
-	 {$define CPPB_5_UP}
-	 {$define CPPB_6_UP}
-
-	 {$ifdef BCB}
-	   {$define CPPB}
-	 {$else}
-	   {$define DELPHI}
-	 {$endif}
-	{$ifend}
 {$endif}
 
 //----------------------------------------------------------------------------------------------------------------------
