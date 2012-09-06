@@ -5092,6 +5092,7 @@ var
 begin
   RequiredRecords := [];
   PresentRecords := [];
+  FoundVMAD:= False;
 
   inherited;
 
