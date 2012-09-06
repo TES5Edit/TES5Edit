@@ -1,0 +1,7 @@
+// Microsoft Developer Studio generated Help ID include file.
+// Used by NifTexture.rc
+//
+#define HIDC_BROWSE_BUTTON              0x806503ea    // IDD_NIFTEXTURE_FORM [English (U.S.)]
+#define HIDC_MATERIAL_LIST              0x806503eb    // IDD_NIFTEXTURE_FORM [English (U.S.)]
+#define HIDC_TEXTURE_EDIT               0x806503e9    // IDD_NIFTEXTURE_FORM [English (U.S.)]
+#define HIDC_TEXTURE_LIST               0x806503e8    // IDD_NIFTEXTURE_FORM [English (U.S.)]

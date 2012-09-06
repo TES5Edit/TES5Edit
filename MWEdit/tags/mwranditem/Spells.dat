@@ -1,0 +1,357 @@
+#
+# MWRandItem Effect Data File - May 2003
+#		Dave Humphrey, uesp@sympatico.ca 
+#
+# The file contains all the prefix and suffix definitions used for the creation
+# of random items. The format is as follows.
+#
+# Comments		- Anything after the '#' character on a line is ignored.
+# Strings		- Values on the right side of the '=' can be surrounded with double
+#				  quote characters ("") if desired.#
+# 'Suffix'		- Start a suffix record
+# 'Prefix'		- Start a prefix record
+# 'Name'		- The effect name. The should be unique among all prefixes and suffixes
+#				  if it is to be used in a Unique item.
+# 'EffectType'	- The type of effect to apply to the item. It can be one of the following:
+#						"Enchant"	 = Use a normal enchantment
+#						"Spell"      = Create a useable spell on a misc item
+#						"MinDamage"	 = Modify the weapon's minimum damage by a % value.
+#						"MaxDamage"  = Modify the weapon's maximum damage by a % value.
+#						"Damage"     = Modify the weapon's damage by a % value.
+#						"Reach"      = Modify the weapon's reach by a % value.
+#						"Speed"      = Modify the weapon's speed by a % value.
+#						"Weight"     = Modify the item's weight by a % value.
+#						"EnchantPts" = Modify the item's enchant points by a % value.
+#						"Condition"  = Modify the item's condition/health by a % value.
+#						"Armor"      = Modify the armor's rating (AC) by a % value.
+# 'Cursed'		- A boolean ('true' or 'false') indicating whether the effect is considered
+#			      a curse or not.
+# 'ItemLevel'	- The level of the effect (1 to 100). Higher level effects will be rarer and
+#				  only encountered by players of higher levels.
+# 'ItemMask'	- Indicates which item types the effect is valid for. Can be a combination
+#				  of the following characters:
+#						W = Weapon
+#						A = Armor
+#						C = Clothing
+#						M = Misc
+#						* = All
+#					ex: WA  = Weapons and armor
+#						WCA = Weapons, armor, and clothing
+# 'MinQuality'	- 
+# 'MaxQuality'	- A value from 1 to 10,000 which is used to calculate the item's value.
+#				  Higher qualities will result in items with higher values.
+# 'MinEffect'
+# 'MaxEffect'	- Only required if the effect type is not an enchantment. The value depends
+#				  on the effect type ('EffectType' above);
+#					For Percent Values: 
+#							100.0 = Increase parameter by 100%
+#							-50.0 = Decrease parameter by 50%
+# 'Multiper'	- Another value (-10 to 50) used to calculate the item's value. Cursed
+#				  items should have negative values.
+# 'Enchant'		- Start an enchant data section. Enchant sections are only required if the
+#				  effect type is an enchantment or a spell.
+# 'EnchantType' - Type of Morrowind enchantment. Can be one of the following:
+#						"Cast Once"
+#						"Cast Strikes"
+#						"Cast When Used"
+#						"Constant Effect"
+# 'Charge1' or 'Uses1'
+# 'Charge2' or 'Uses2' 
+#	  	 		- Total number of charges/uses for the item (not required if item is constant effect).
+# 'EnchantCost1'
+# 'EnchantCost2'- Range of enchant costs for the item.
+# 'AutoCalc'	- Boolean value ('true' or 'false') indicating whether the enchantment costs
+#				  are automatically computed. This is recommended unless you want to override
+#				  the default costs.
+# 'Effect'		- Start an enchantment effect section. Each enchantment can have up to 2 effect sections.
+# 'EffectID'	- The enchantment effect ID (same as used in Morrowind).
+#						"sEffectWaterBreathing"
+#						"sEffectSwiftSwim"
+#						"sEffectWaterWalking"
+#						"sEffectShield"
+#						"sEffectFireShield"
+#						"sEffectLightningShield"
+#						"sEffectFrostShield"
+#						"sEffectBurden"
+#						"sEffectFeather"
+#						"sEffectJump"
+#						"sEffectLevitate"
+#						"sEffectSlowFall"
+#						"sEffectLock"
+#						"sEffectOpen"
+#						"sEffectFireDamage"
+#						"sEffectShockDamage"
+#						"sEffectFrostDamage"
+#						"sEffectDrainAttribute"
+#						"sEffectDrainHealth"
+#						"sEffectDrainSpellpoints"
+#						"sEffectDrainFatigue"
+#						"sEffectDrainSkill"
+#						"sEffectDamageAttribute"
+#						"sEffectDamageHealth"
+#						"sEffectDamageMagicka"
+#						"sEffectDamageFatigue"
+#						"sEffectDamageSkill"
+#						"sEffectPoison"
+#						"sEffectWeaknessToFire"
+#						"sEffectWeaknessToFrost"
+#						"sEffectWeaknessToShock"
+#						"sEffectWeaknessToMagicka"
+#						"sEffectWeaknessToCommonDisease"
+#						"sEffectWeaknessToBlightDisease"
+#						"sEffectWeaknessToCorprusDisease"
+#						"sEffectWeaknessToPoison"
+#						"sEffectWeaknessToNormalWeapons"
+#						"sEffectDisintegrateWeapon"
+#						"sEffectDisintegrateArmor"
+#						"sEffectInvisibility"
+#						"sEffectChameleon"
+#						"sEffectLight"
+#						"sEffectSanctuary"
+#						"sEffectNightEye"
+#						"sEffectCharm"
+#						"sEffectParalyze"
+#						"sEffectSilence"
+#						"sEffectBlind"
+#						"sEffectSound"
+#						"sEffectCalmHumanoid"
+#						"sEffectCalmCreature"
+#						"sEffectFrenzyHumanoid"
+#						"sEffectFrenzyCreature"
+#						"sEffectDemoralizeHumanoid"
+#						"sEffectDemoralizeCreature"
+#						"sEffectRallyHumanoid"
+#						"sEffectRallyCreature"
+#						"sEffectDispel"
+#						"sEffectSoultrap"
+#						"sEffectTelekinesis"
+#						"sEffectMark"
+#						"sEffectRecall"
+#						"sEffectDivineIntervention"
+#						"sEffectAlmsiviIntervention"
+#						"sEffectDetectAnimal"
+#						"sEffectDetectEnchantment"
+#						"sEffectDetectKey"
+#						"sEffectSpellAbsorption"
+#						"sEffectReflect"
+#						"sEffectCureCommonDisease"
+#						"sEffectCureBlightDisease"
+#						"sEffectCureCorprusDisease"
+#						"sEffectCurePoison"
+#						"sEffectCureParalyzation"
+#						"sEffectRestoreAttribute"
+#						"sEffectRestoreHealth"
+#						"sEffectRestoreSpellPoints"
+#						"sEffectRestoreFatigue"
+#						"sEffectRestoreSkill"
+#						"sEffectFortifyAttribute"
+#						"sEffectFortifyHealth"
+#						"sEffectFortifySpellpoints"
+#						"sEffectFortifyFatigue"
+#						"sEffectFortifySkill"
+#						"sEffectFortifyMagickaMultiplier"
+#						"sEffectAbsorbAttribute"
+#						"sEffectAbsorbHealth"
+#						"sEffectAbsorbSpellPoints"
+#						"sEffectAbsorbFatigue"
+#						"sEffectAbsorbSkill"
+#						"sEffectResistFire"
+#						"sEffectResistFrost"
+#						"sEffectResistShock"
+#						"sEffectResistMagicka"
+#						"sEffectResistCommonDisease"
+#						"sEffectResistBlightDisease"
+#						"sEffectResistCorprusDisease"
+#						"sEffectResistPoison"
+#						"sEffectResistNormalWeapons"
+#						"sEffectResistParalysis"
+#						"sEffectRemoveCurse"
+#						"sEffectTurnUndead"
+#						"sEffectSummonScamp"
+#						"sEffectSummonClannfear"
+#						"sEffectSummonDaedroth"
+#						"sEffectSummonDremora"
+#						"sEffectSummonAncestralGhost"
+#						"sEffectSummonSkeletalMinion"
+#						"sEffectSummonLeastBonewalker"
+#						"sEffectSummonGreaterBonewalker"
+#						"sEffectSummonBonelord"
+#						"sEffectSummonWingedTwilight"
+#						"sEffectSummonHunger"
+#						"sEffectSummonGoldensaint"
+#						"sEffectSummonFlameAtronach"
+#						"sEffectSummonFrostAtronach"
+#						"sEffectSummonStormAtronach"
+#						"sEffectFortifyAttackBonus"
+#						"sEffectCommandCreatures"
+#						"sEffectCommandHumanoids"
+#						"sEffectBoundDagger"
+#						"sEffectBoundLongsword"
+#						"sEffectBoundMace"
+#						"sEffectBoundBattleAxe"
+#						"sEffectBoundSpear"
+#						"sEffectBoundLongbow"
+#						"sEffectExtraSpell"
+#						"sEffectBoundCuirass"
+#						"sEffectBoundHelm"
+#						"sEffectBoundBoots"
+#						"sEffectBoundShield"
+#						"sEffectBoundGloves"
+#						"sEffectCorpus"
+#						"sEffectVampirism"
+#						"sEffectSummonCenturionSphere"
+#						"sEffectSunDamage"
+#						"sEffectStuntedMagicka"
+#						"sEffectStuntedFabricant"
+# 'AttributeID' - Required only if the EffectID is an enchantment effect that needs an attribute.
+#						"Strength"
+#						"Intelligence"
+#						"Willpower"
+#						"Agility"
+#						"Speed"
+#						"Endurance"
+#						"Personality"
+#						"Luck"
+# 'SkillID'		- Required only if the EffectID is an enchantment effect that needs a skill.
+#						"Block"
+#						"Armorer"
+#						"Medium Armor"
+#						"Heavy Armor"
+#						"Blunt Weapon"
+#						"Long Blade"
+#						"Axe"
+#						"Spear"
+#						"Athletics"
+#						"Enchant"
+#						"Destruction"
+#						"Alteration"
+#						"Illusion"
+#						"Conjuration"
+#						"Mysticism"
+#						"Restoration"
+#						"Alchemy"
+#						"Unarmored"
+#						"Security"
+#						"Sneak"
+#						"Acrobatics"
+#						"Light Armor"
+#						"Short Blade"
+#						"Marksman"
+#						"Mercantile"
+#						"Speechcraft"
+#						"Hand-to-hand"
+# 'RangeType'	- Enchantment effect range.
+#						"Self"
+#						"Touch"
+#						"Target"
+# 'Area1'
+# 'Area2'		- The enchantment effect area value range.
+# 'Duration1'
+# 'Duration2'	- The enchantment effect duration value range.
+# 'MagMin1'
+# 'MagMax1'
+# 'MagMin2'
+# 'MagMax2'		- The enchantment effect's range of magnitude values.
+# 'End'			- End a suffix or prefix record or Enchant or Effect sub-records.
+#
+
+Suffix
+	Name = Warmth
+	EffectType = Spell
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = M
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 1
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 1
+		EnchantCost2 = 3
+		AutoCalc = false
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 2
+			MagMax1 = 3
+			MagMax2 = 4
+  		End
+	End
+End
+
+Suffix
+	Name = Burning
+	EffectType = Spell
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = M
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 3
+		EnchantCost2 = 5
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 3
+			MagMax1 = 5
+			MagMax2 = 8
+  		End
+	End
+End
+
+
+Prefix
+	Name = Fire of
+	EffectType = Spell
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = M
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 3
+		EnchantCost2 = 5
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 3
+			MagMax1 = 5
+			MagMax2 = 8
+  		End
+	End
+End
+

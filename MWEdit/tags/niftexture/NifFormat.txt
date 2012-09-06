@@ -1,0 +1,491 @@
+
+
+  NifPosition
+-----------------------------
+A standard X/Y/Z position structure:
+	float X
+	float Y
+	float Z
+
+
+  Colors
+-----------------------------
+Colors are usually stored in the NIF in floating point RGB triplets with each color
+value ranging from 0.0 to 1.0. For example:
+	
+	White = (1.0, 1.0, 1.0)
+	Black = (0,0, 0.0, 0.0)
+	Red   = (1.0, 0.0, 0.0)
+	Gray  = (0.5, 0.5, 0.5)
+
+
+  NifColor3
+-----------------------------
+A standard 3-component RGB color:
+
+	float Red
+	float Green
+	float Blue
+
+
+  NifColor4
+-----------------------------
+A standard 3-component RGB color with an alpha channel:
+
+	float Red
+	float Green
+	float Blue
+	float Alpha
+
+
+  NifString
+-----------------------------
+This is a simple string type used in several places in the NIF file:
+
+	long StringLength
+    char Data[StringLength]
+
+The string data is not null terminated. A string length of 0 means there is no string
+data to read (empty string).
+
+
+  NifTransMatrix
+-----------------------------
+This is a relatively standard translation matrix simply composed of 16 floating point
+values:
+
+	float	Data[16]
+
+The various elements of note are:
+	0     = X Translation 
+	1     = Y Translation
+	2     = Z Translation
+	3-5   = X-Axis Vector
+	6-8   = Y-Axis Vector
+	9-11  = Z-Axis Vector
+	12    = Scale?, usually 1.0
+	13-15 = Unknown, usually (0,0,0)
+
+If you are not familiar with translation matrices, pickup any good book on 3D modelling or
+your 3D program's documentation. Note that the order of the matrix used in the NIF file
+is slightly different than that commonly used in 3D modellers.
+
+
+  NiAlphaProperty
+-----------------------------
+This record occurs if the material has any opacity applied to it, either with a map
+or just regularily.
+
+	long  Unknown1 (0x00000000)
+	long  Unknown2 (0xFFFFFFFF)
+	long  Unknown3 (0xFFFFFFFF)
+	short Unknown4 (0xED00)
+	char  Unknown5 (0x00)
+
+The values do not seem to change.
+ 
+
+  NiNode
+-----------------------------
+
+	NifString		NodeName
+	long			Unknown1
+	long			KeyFrameIndex
+		Keyframe index in file, or -1 (0xFFFFFFFF) if record has no keyframe data.
+		Points to a NiKeyframeController record.
+	short			Unknown3
+	NifTransMatrix	TransMatrix
+	NifLongArray	Array1
+	NifFloatArray	Array2 (Size=16)
+	NifLongArray	ChildArray
+		Holds the record indices of child objects. For instance an array of (1, 4, 6) 
+		means that there are three child objects belonging to the node (the 2nd, 5th, and
+		7th records in the NIF file since it is 0-based). The records referenced are
+		either NiNode, RootCollisionNode, or NiTriShape (unconfirmed).
+	NifLongArray	Array4
+
+
+  RootCollisionNode
+-----------------------------
+This appears to be the same as the NiNode record and appears only once in a NIF file, if
+at all. It specifies the object(s) to be used for collision
+
+	
+
+  NiTriShape
+-----------------------------
+
+	NifString		NodeName
+	long			Unknown1
+	long			Unknown2
+	short			Unknown3
+	NifTransMatrix	TransMatrix
+	NifLongArray	Array1
+		Contains indices in the NIF file of material related records. These include:
+			NiAlphaProperty, NiMaterialProperty, NiTexturingProperty, NiSpecularProperty
+		but seem to exclude:
+			NiSourceTexture
+	long			Unknown4
+	long			TriShapeDataIndex
+		Index of the NiTriShapeData record assocated with this TriShape.
+	long			Unknown5
+
+
+  NiTriShapeData
+-----------------------------
+
+	short			NumPoints
+		Number of vertices in the shape.
+	float			Unknown1
+		When exporting the same file several times, the low word of this value changes 
+		to various values.
+	NifPosition		Points[NumPoints]
+		Standard X/Y/Z position of each vertex in the shape.
+	float			Unknown2
+		When exporting the same file several times, the low word of this value changes 
+		to various values (similar to Unknown1, but slightly different low word value).
+	...
+	NifColor4		VertexColors[NumPoints]
+
+ 
+
+  NiTexturingProperty
+-----------------------------
+
+	long	Unknown1
+	long	Unknown2
+	long	Unknown3
+	short	Unknown4
+	long	Values1[8]
+				3 = Possibly index to a NiSourceTexture record in the file?
+	long	Unknown5
+	short	Unknown6
+	long	Unknown0a
+	...
+
+
+  NiSpecularProperty
+-----------------------------
+This record is present if the specular level of the material is 51 or greater.
+
+	long	Unknown1 (0x00000000)
+	long	Unknown2 (0xFFFFFFFF)
+	long	Unknown3 (0xFFFFFFFF)
+	short	Unknown4 (0x0001)
+
+There seems to be no further variation in this record by increasing the specular level.
+
+
+  NiMaterialProperty
+-----------------------------
+
+	NifString	MaterialName
+	long		Unknown1
+	long		Unknown2
+	short		Unknown3
+	float		Ambient_R
+	float		Ambient_G
+	float		Ambient_B
+	float		Diffuse_R
+	float		Diffuse_G
+	float		Diffuse_B
+	float		Specular_R
+	float		Specular_G
+	float		Specular_B
+	float		SelImmunination_R
+	float		SelImmunination_G
+	float		SelImmunination_B
+	float		Glossiness (0.0 to 1.0)
+	float		Opacity (0.0 to 1.0)
+
+
+   NiKeyframeController
+---------------------------------------
+Occurs whenever nodes are animated.
+
+	long		Unknown1 (0xFFFFFFFF)
+	short		Unknown2 (0x000C)
+	float		Unknown3 (1.0)
+	float		Unknown4 (0.0)
+	float		StartTime? (seconds)
+	float		EndTime? (seconds)
+	long		Unknown3
+	long		KeyFrameIndex
+		Index to a NiKeyframeData record in the NIF file?
+
+
+   NifKFDataArray1
+---------------------------------------
+This is a utility class used to help manage NiKeyFrameData records. It contains various
+types of rotation keyframe data.
+
+	long Size
+		The number of records in the array. A size of 0 indicates an empty 
+		array (no further data).
+	long Type
+		Indicates the type of position keyframe data contained in the array.
+				0x00000001 = Linear rotation data, 20 byte records
+					float		Time		 = Time (in seconds) of frame
+					float		Value1
+					float		Value2
+					float		Value3
+					float		Value4
+						Seem to be a combination of sin/cos values as in the TCB rotation
+						key data (but not the same?).
+				0x00000003 = TCB rotation data, 32 byte records (not used in NIFs?)
+					float	Time		= Time (in seconds) of frame
+					float	CosAngle2	= cos(Angle/2)
+					float	SinAngleX	= sin(Angle/2) * X
+					float	SinAngleY	= sin(Angle/2) * Y
+					float	SinAngleZ	= sin(Angle/2) * Z
+					float	Tension
+					float	Continuity
+					float	Bias
+						These values range from -1.0 to 1.0 which translate to a range
+						of 0.0 to 50.0 in 3DS.
+				0x00000004 = Euler rotation data, ? byte records
+					Not used in any Morrowind NIF file. Seems to contain several bezier
+					position keys (see NifKFDataArray2 below).
+				0x00000005 = Unknown type, 32 byte records
+	byte Records[][Size]
+		The size of the records depends on the type field. See above for the record
+		format for each type.
+
+
+   NifKFDataArray2
+---------------------------------------
+This is a utility class used to help manage NiKeyFrameData records. It contains various
+types of position keyframe data.
+
+	long	Size
+		The number of records in the array. A size of 0 indicates an empty 
+		array (no further data).
+	long	Type
+		Indicates the type of rotation keyframe data contained in the array.
+				0x00000001 = Linear position data, 16 byte records
+					float		Time		 = Time (in seconds) of frame
+					NifPosition	Position	 = Regular position data
+				0x00000002 = Bezier position data, 40 byte records
+					float		Time		 = Time (in seconds) of frame
+					NifPosition	Position	 = Regular position data
+					NifPosition	InBezier	 = In-Bezier data (XYZ)
+					NifPosition	OutBezier    = Out-Bezier data (XYZ)
+						A value of 266.66... in the bezier fields converts to a value
+						of 1.0 in 3DS.
+				0x00000003 = TCB position data, 28 byte records
+					float		Time
+					NifPosition	Position
+					float		Tension
+					float		Continuity
+					float		Bias
+						These TCB values range from -1.0 to 1.0 which translate to a range
+						of 0.0 to 50.0 in 3DS.
+	byte Records[][Size]
+		The size of the records depends on the type field. See above for the record
+		format for each type.
+
+
+   NifKFDataArray3
+---------------------------------------
+This is a utility class used to help manage NiKeyFrameData records. It contains various
+types of scaling keyframe data.
+
+	long	Size
+		The number of records in the array. A size of 0 indicates an empty 
+		array (no further data).
+	long	Type
+		Indicates the type of scaling keyframe data contained in the array.
+				0x00000001 = Linear scale data, 8 byte records
+					float	Time
+					float	Scale (1.0 is 100%)
+				0x00000002 = Bezier scale data, 16 byte records
+					float	Time
+					float	Scale (1.0 is 100%)
+					float	InBezier
+					float	OutBezier
+				0x00000003 = TCB scale data, 20 byte records
+					float	Time
+					float   Scale (1.0 is 100%)
+					float	Tension
+					float	Continuity
+					float	Bias
+						These TCB values range from -1.0 to 1.0 which translate to a range
+						of 0.0 to 50.0 in 3DS.
+	byte Records[][Size]
+		The size of the records depends on the type field. See above for the record
+		format for each type.
+
+
+   NiKeyFrameData
+---------------------------------------
+Contains three consectuctive arrays of keyframe data.
+
+	NifKFDataArray1	Array1, Rotation keyframe data
+	NifKFDataArray2	Array2, Position keyframe data
+	NifKFDataArray3	Array3, Scaling keyframe data
+ 
+
+
+  Appendix A - Matrix/Pivot Notes
+=======================================
+
+	Exporting a Single Object
+		- Changing object position has no effect on exported NIF.
+		- Changing the object scale modifies the actual point coordinates, but not the
+		  scales of Node or TriShape matrices. The translation coordinates of the TriShape
+		  matrix is modified (for non-zero translations).
+		- Rotation affects the TriShape matrix in the expected manner. The translation 
+		  coordinates of the TriShape matrix are also modified if non-zero. For instance, a
+		  90 deg rotation on the X-axis will swap the Y-Z translations.
+
+	Exporting Scene/Selection
+		For a single object using the Export Selected and Export commands result in nearly
+		same NIF output. When exporting the selected objects (only one selected object is
+		exported in 3DSMax v4.0???) the translation matrix for the NiNode is simply the
+		identity. When exporting the scene the NiNode and NiTriShape matrices are that 
+		relative to the scene origin and axes.
+
+	Handedness
+		NIF files seem to be exported with the opposite handedness from that used in 3DS.
+		To correct this, the handedness of the transformation matrix can be switched at the
+		node and trishape level. The V component of the texture coordinates also needs to
+		be reversed (negative) in order for the textures to appear right-side up. These 
+		two issues are possibly related issue but negating the V component works fine.
+
+
+  Appendix B - Heirarchy and Grouping
+=======================================
+Exactly how a NIF file and models are arranged is important when exporting or importing
+the model data. There are three main NIF records that are important to consider:
+
+		NiNode
+		NiTriShape
+		NiTriShapeData
+
+Morrowind's NIf seem to always follow this order (unconfirmed). There always seems to be
+exactly one NiTriShape record for each NiTriShapeData, but several NiTriShapes can belong
+to a single NiNode. The actual object vertex/face data is stored in the NiTriShapeData
+record. Both the NiNode and NiTriShape records have translation matrices.
+
+
+	SINGLE OBJECT
+  -------------------------------------
+	When a single object is exported to a NIF file it results in the structure:
+
+			NiNode
+			NiTriShape
+			NiMaterialProperty
+			NiTriShapeData
+
+	When using the export selected the NiNode and NiTriShape have the same name 
+	as the object in the scene. For a scene export the NiTriShape will have the name
+	of the object and the NiNode the name of the exported file.
+
+
+	SINGLE OBJECT GROUP
+  -------------------------------------
+	When a group is made with a single object the NIF file is exactly as with the
+	previous single object, except the NiNode and NiTriShape names are that of the group.
+
+	
+	TWO OBJECT GROUP
+  -------------------------------------
+	For two objects in a group the structure is:
+
+		NiNode (Group01)
+		NiTriShape (Box02)
+		NiMaterialProperty
+		NiTriShapeData
+		NiTriShape (Box01)
+		NiTriShapeData
+
+	If the two objects aren't grouped the NiNode has the name of the exported file. The
+	The NiTriShape matrices and the vertex coordinates are different whether the objects
+	are grouped or not.
+
+
+	THREE OBJECT GROUPS
+  -------------------------------------
+	For three objects grouped in various combinations the structures are:
+	
+			  One Group					   Two Grouped				  Three Grouped	 
+		  ----------------			  --------------------		  ----------------------
+			NiNode (Filename)			NiNode (Filename)			NiNode (Group01)
+			NiTriShape (Group01)		NiNode (Group01)			NiTriShape (Box01)
+			NiMaterialProperty			NiTriShape (Box01)			NiMaterialProperty	
+			NiTriShapeData				NiMaterialProperty			NiTriShapeData
+			NiTriShape (Box02)			NiTriShapeData				NiTriShape (Box02)
+			NiTriShapeData				NiTriShape (Box02)			NiTriShapeData
+			NiTriShape (Box03)			NiTriShapeData				NiTriShape (Box03)
+			NiTriShapeData				NiTriShape (Box03)			NiTriShapeData
+										NiTriShapeData
+
+	This structure reveals that the grouping of objects is not by the arrangement of
+	records alone. The objects in a group are found by looking at the last NifLongArray
+	in the NiNode record.
+
+	Another thing to be learned from this is that groups with a single child are reduced
+	to a single NiTriShape record. For example, the Group01 in the first column has a single
+	child Box01 but is reduced to a single object when exported.
+
+
+  Appendix C - Alpha Maps
+=======================================
+
+	- Most alpha/transparency related options for the Bitmap map have no effect on the 
+	  output NIF file.
+	- The Mono Channel Output option in the Bitmap map must be set to Alpha. The Alpha
+	  Source option should also be set to None.
+	- No alpha information is output to the NIF if the opacity is set to 100% even if
+	  a map is assigned to the opacity channel.
+	- No texture map is output for an opacity map if no diffuse map is used.
+	- Similarily, no texture map is output for an opacity map if the diffuse map is not the
+	  same as the texture map.
+	- Thus, the NIF file assumes that the alpha map and diffuse map for a material will
+	  be the same.
+	- The order of material records referenced in a TriShape has some effect on the output
+	  material. For instance, with a regular opacity the order is:
+			NiAlphaProperty
+			NiTexturingProperty
+			NiMaterialProperty
+  	  while with an opacity map:
+			NiTexturingProperty
+			NiAlphaProperty
+			NiMaterialProperty
+	  This seems to work fine sometimes but for some (many?) Morrowind NIFs this doesn't hold.
+	
+
+  Appendix D - Normals and Smoothing
+=======================================
+
+	- What appears to be the vertex normal information in the NiTriShapeData record doesn't
+	  appear to correctly store the smoothing information. This appears to be a 3DS issue.
+	  Adding a call to AutoSmooth(180 deg) previous to setting the normals seems to result in 
+	  proper normals, although the smoothing groups are messed up.
+	- When a NIF is exported, additional vertexes may be added depending on the smoothing groups.
+	  For instance a regular unsmoothed box will be exported as a mesh with 24 vertices while a
+	  completely smoothed box will be exported with 8 vertices.
+	- The problem with getting the normals to appear might possibly be an issue with the lack
+	  of smoothing groups when AutoSmooth() is not used previous to setting the vertex normals.
+
+
+	
+  Appendix E - Key Frame Hacking Notes
+=======================================
+NiKeyFrameData example with 2 bezier position keyframes:
+
+	0x00000000	= First array, empty
+	0x00000002	= Second array, 2 records
+	0x00000002	= Type of second array, 40 byte sub-records
+			Start of Array2 Sub-Records
+	float		Time[0], time in seconds of frame
+	nifpos_t	Position[0], regular position data
+	nifpos_t	PreDeltaPos[0], relative position from last keyframe
+	nifpos_t	PostDeltaPos[0], relative position to next keyframe
+
+	float		Time[1]
+	nifpos_t	Position[1]
+	nifpos_t	PreDeltaPos[1]
+	nifpos_t	PostDeltaPos[1]
+
+	0x00000000	= Third array, empty

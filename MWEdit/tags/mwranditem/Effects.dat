@@ -1,0 +1,4373 @@
+#
+# MWRandItem Effect Data File - May 2003
+#		Dave Humphrey, uesp@sympatico.ca 
+#
+# The file contains all the prefix and suffix definitions used for the creation
+# of random items. The format is as follows.
+#
+# Comments		- Anything after the '#' character on a line is ignored.
+# Strings		- Values on the right side of the '=' can be surrounded with double
+#				  quote characters ("") if desired.#
+# 'Suffix'		- Start a suffix record
+# 'Prefix'		- Start a prefix record
+# 'Name'		- The effect name. The should be unique among all prefixes and suffixes
+#				  if it is to be used in a Unique item.
+# 'EffectType'	- The type of effect to apply to the item. It can be one of the following:
+#						"Enchant"	 = Use a normal enchantment
+#						"Spell"      = Create a useable spell on a misc item
+#						"MinDamage"	 = Modify the weapon's minimum damage by a % value.
+#						"MaxDamage"  = Modify the weapon's maximum damage by a % value.
+#						"Damage"     = Modify the weapon's damage by a % value.
+#						"Reach"      = Modify the weapon's reach by a % value.
+#						"Speed"      = Modify the weapon's speed by a % value.
+#						"Weight"     = Modify the item's weight by a % value.
+#						"EnchantPts" = Modify the item's enchant points by a % value.
+#						"Condition"  = Modify the item's condition/health by a % value.
+#						"Armor"      = Modify the armor's rating (AC) by a % value.
+# 'Cursed'		- A boolean ('true' or 'false') indicating whether the effect is considered
+#			      a curse or not.
+# 'ItemLevel'	- The level of the effect (1 to 100). Higher level effects will be rarer and
+#				  only encountered by players of higher levels.
+# 'ItemMask'	- Indicates which item types the effect is valid for. Can be a combination
+#				  of the following characters:
+#						W = Weapon
+#						A = Armor
+#						C = Clothing
+#						M = Misc
+#						* = All
+#					ex: WA  = Weapons and armor
+#						WCA = Weapons, armor, and clothing
+# 'MinQuality'	- 
+# 'MaxQuality'	- A value from 1 to 10,000 which is used to calculate the item's value.
+#				  Higher qualities will result in items with higher values.
+# 'MinEffect'
+# 'MaxEffect'	- Only required if the effect type is not an enchantment. The value depends
+#				  on the effect type ('EffectType' above);
+#					For Percent Values: 
+#							100.0 = Increase parameter by 100%
+#							-50.0 = Decrease parameter by 50%
+# 'Multiper'	- Another value (-10 to 50) used to calculate the item's value. Cursed
+#				  items should have negative values.
+# 'Enchant'		- Start an enchant data section. Enchant sections are only required if the
+#				  effect type is an enchantment or a spell.
+# 'EnchantType' - Type of Morrowind enchantment. Can be one of the following:
+#						"Cast Once"
+#						"Cast Strikes"
+#						"Cast When Used"
+#						"Constant Effect"
+# 'Charge1' or 'Uses1'
+# 'Charge2' or 'Uses2' 
+#	  	 		- Total number of charges/uses for the item (not required if item is constant effect).
+# 'EnchantCost1'
+# 'EnchantCost2'- Range of enchant costs for the item.
+# 'AutoCalc'	- Boolean value ('true' or 'false') indicating whether the enchantment costs
+#				  are automatically computed. This is recommended unless you want to override
+#				  the default costs.
+# 'Effect'		- Start an enchantment effect section. Each enchantment can have up to 2 effect sections.
+# 'EffectID'	- The enchantment effect ID (same as used in Morrowind).
+#						"sEffectWaterBreathing"
+#						"sEffectSwiftSwim"
+#						"sEffectWaterWalking"
+#						"sEffectShield"
+#						"sEffectFireShield"
+#						"sEffectLightningShield"
+#						"sEffectFrostShield"
+#						"sEffectBurden"
+#						"sEffectFeather"
+#						"sEffectJump"
+#						"sEffectLevitate"
+#						"sEffectSlowFall"
+#						"sEffectLock"
+#						"sEffectOpen"
+#						"sEffectFireDamage"
+#						"sEffectShockDamage"
+#						"sEffectFrostDamage"
+#						"sEffectDrainAttribute"
+#						"sEffectDrainHealth"
+#						"sEffectDrainSpellpoints"
+#						"sEffectDrainFatigue"
+#						"sEffectDrainSkill"
+#						"sEffectDamageAttribute"
+#						"sEffectDamageHealth"
+#						"sEffectDamageMagicka"
+#						"sEffectDamageFatigue"
+#						"sEffectDamageSkill"
+#						"sEffectPoison"
+#						"sEffectWeaknessToFire"
+#						"sEffectWeaknessToFrost"
+#						"sEffectWeaknessToShock"
+#						"sEffectWeaknessToMagicka"
+#						"sEffectWeaknessToCommonDisease"
+#						"sEffectWeaknessToBlightDisease"
+#						"sEffectWeaknessToCorprusDisease"
+#						"sEffectWeaknessToPoison"
+#						"sEffectWeaknessToNormalWeapons"
+#						"sEffectDisintegrateWeapon"
+#						"sEffectDisintegrateArmor"
+#						"sEffectInvisibility"
+#						"sEffectChameleon"
+#						"sEffectLight"
+#						"sEffectSanctuary"
+#						"sEffectNightEye"
+#						"sEffectCharm"
+#						"sEffectParalyze"
+#						"sEffectSilence"
+#						"sEffectBlind"
+#						"sEffectSound"
+#						"sEffectCalmHumanoid"
+#						"sEffectCalmCreature"
+#						"sEffectFrenzyHumanoid"
+#						"sEffectFrenzyCreature"
+#						"sEffectDemoralizeHumanoid"
+#						"sEffectDemoralizeCreature"
+#						"sEffectRallyHumanoid"
+#						"sEffectRallyCreature"
+#						"sEffectDispel"
+#						"sEffectSoultrap"
+#						"sEffectTelekinesis"
+#						"sEffectMark"
+#						"sEffectRecall"
+#						"sEffectDivineIntervention"
+#						"sEffectAlmsiviIntervention"
+#						"sEffectDetectAnimal"
+#						"sEffectDetectEnchantment"
+#						"sEffectDetectKey"
+#						"sEffectSpellAbsorption"
+#						"sEffectReflect"
+#						"sEffectCureCommonDisease"
+#						"sEffectCureBlightDisease"
+#						"sEffectCureCorprusDisease"
+#						"sEffectCurePoison"
+#						"sEffectCureParalyzation"
+#						"sEffectRestoreAttribute"
+#						"sEffectRestoreHealth"
+#						"sEffectRestoreSpellPoints"
+#						"sEffectRestoreFatigue"
+#						"sEffectRestoreSkill"
+#						"sEffectFortifyAttribute"
+#						"sEffectFortifyHealth"
+#						"sEffectFortifySpellpoints"
+#						"sEffectFortifyFatigue"
+#						"sEffectFortifySkill"
+#						"sEffectFortifyMagickaMultiplier"
+#						"sEffectAbsorbAttribute"
+#						"sEffectAbsorbHealth"
+#						"sEffectAbsorbSpellPoints"
+#						"sEffectAbsorbFatigue"
+#						"sEffectAbsorbSkill"
+#						"sEffectResistFire"
+#						"sEffectResistFrost"
+#						"sEffectResistShock"
+#						"sEffectResistMagicka"
+#						"sEffectResistCommonDisease"
+#						"sEffectResistBlightDisease"
+#						"sEffectResistCorprusDisease"
+#						"sEffectResistPoison"
+#						"sEffectResistNormalWeapons"
+#						"sEffectResistParalysis"
+#						"sEffectRemoveCurse"
+#						"sEffectTurnUndead"
+#						"sEffectSummonScamp"
+#						"sEffectSummonClannfear"
+#						"sEffectSummonDaedroth"
+#						"sEffectSummonDremora"
+#						"sEffectSummonAncestralGhost"
+#						"sEffectSummonSkeletalMinion"
+#						"sEffectSummonLeastBonewalker"
+#						"sEffectSummonGreaterBonewalker"
+#						"sEffectSummonBonelord"
+#						"sEffectSummonWingedTwilight"
+#						"sEffectSummonHunger"
+#						"sEffectSummonGoldensaint"
+#						"sEffectSummonFlameAtronach"
+#						"sEffectSummonFrostAtronach"
+#						"sEffectSummonStormAtronach"
+#						"sEffectFortifyAttackBonus"
+#						"sEffectCommandCreatures"
+#						"sEffectCommandHumanoids"
+#						"sEffectBoundDagger"
+#						"sEffectBoundLongsword"
+#						"sEffectBoundMace"
+#						"sEffectBoundBattleAxe"
+#						"sEffectBoundSpear"
+#						"sEffectBoundLongbow"
+#						"sEffectExtraSpell"
+#						"sEffectBoundCuirass"
+#						"sEffectBoundHelm"
+#						"sEffectBoundBoots"
+#						"sEffectBoundShield"
+#						"sEffectBoundGloves"
+#						"sEffectCorpus"
+#						"sEffectVampirism"
+#						"sEffectSummonCenturionSphere"
+#						"sEffectSunDamage"
+#						"sEffectStuntedMagicka"
+#						"sEffectStuntedFabricant"
+# 'AttributeID' - Required only if the EffectID is an enchantment effect that needs an attribute.
+#						"Strength"
+#						"Intelligence"
+#						"Willpower"
+#						"Agility"
+#						"Speed"
+#						"Endurance"
+#						"Personality"
+#						"Luck"
+# 'SkillID'		- Required only if the EffectID is an enchantment effect that needs a skill.
+#						"Block"
+#						"Armorer"
+#						"Medium Armor"
+#						"Heavy Armor"
+#						"Blunt Weapon"
+#						"Long Blade"
+#						"Axe"
+#						"Spear"
+#						"Athletics"
+#						"Enchant"
+#						"Destruction"
+#						"Alteration"
+#						"Illusion"
+#						"Conjuration"
+#						"Mysticism"
+#						"Restoration"
+#						"Alchemy"
+#						"Unarmored"
+#						"Security"
+#						"Sneak"
+#						"Acrobatics"
+#						"Light Armor"
+#						"Short Blade"
+#						"Marksman"
+#						"Mercantile"
+#						"Speechcraft"
+#						"Hand-to-hand"
+# 'RangeType'	- Enchantment effect range.
+#						"Self"
+#						"Touch"
+#						"Target"
+# 'Area1'
+# 'Area2'		- The enchantment effect area value range.
+# 'Duration1'
+# 'Duration2'	- The enchantment effect duration value range.
+# 'MagMin1'
+# 'MagMax1'
+# 'MagMin2'
+# 'MagMax2'		- The enchantment effect's range of magnitude values.
+# 'End'			- End a suffix or prefix record or Enchant or Effect sub-records.
+#
+
+Suffix
+	Name = Warmth
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 1
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 1
+		EnchantCost2 = 3
+		AutoCalc = false
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 2
+			MagMax1 = 3
+			MagMax2 = 4
+  		End
+	End
+End
+
+Suffix
+	Name = Burning
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 3
+		EnchantCost2 = 5
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 3
+			MagMax1 = 5
+			MagMax2 = 8
+  		End
+	End
+End
+
+Suffix
+	Name = Fire
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 300
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 5
+		EnchantCost2 = 7
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 2
+			MagMin2 = 5
+			MagMax1 = 7
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Magma
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 300
+	MaxQuality = 400
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 150
+		Charge2 = 240
+		EnchantCost1 = 7
+		EnchantCost2 = 10
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 3
+			MagMin2 = 7
+			MagMax1 = 10
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Explosion
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = W
+	MinQuality = 400
+	MaxQuality = 700
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 200
+		Charge2 = 400
+		EnchantCost1 = 10
+		EnchantCost2 = 15
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 5
+			MagMin2 = 10
+			MagMax1 = 15
+			MagMax2 = 30
+  		End
+	End
+End
+
+Suffix
+	Name = Chills
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 1
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 1
+		EnchantCost2 = 3
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFrostDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 2
+			MagMax1 = 3
+			MagMax2 = 4
+  		End
+	End
+End
+
+Suffix
+	Name = Frost
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 3
+		EnchantCost2 = 5
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFrostDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 3
+			MagMax1 = 5
+			MagMax2 = 8
+  		End
+	End
+End
+
+Suffix
+	Name = Ice
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 300
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 5
+		EnchantCost2 = 7
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFrostDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 2
+			MagMin2 = 5
+			MagMax1 = 7
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Winter
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 300
+	MaxQuality = 400
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 150
+		Charge2 = 240
+		EnchantCost1 = 7
+		EnchantCost2 = 10
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFrostDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 3
+			MagMin2 = 7
+			MagMax1 = 10
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Chilled Death
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = W
+	MinQuality = 400
+	MaxQuality = 700
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 200
+		Charge2 = 400
+		EnchantCost1 = 10
+		EnchantCost2 = 15
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFrostDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 5
+			MagMin2 = 10
+			MagMax1 = 15
+			MagMax2 = 30
+  		End
+	End
+End
+
+Prefix
+	Name = Useless
+	EffectType = Damage
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = W
+	MinQuality = 10	
+	MaxQuality = 50
+	Multiplier = -6
+	MinEffect  = -0.70
+	MaxEffect  = -0.50
+End
+
+Prefix
+	Name = Bent
+	EffectType = Damage
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = W
+	MinQuality = 10	
+	MaxQuality = 50
+	Multiplier = -4
+	MinEffect  = -0.50
+	MaxEffect  = -0.25
+End
+
+Prefix
+	Name = Weak
+	EffectType = Damage
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = W
+	MinQuality = 10	
+	MaxQuality = 50
+	Multiplier = -2
+	MinEffect  = -0.25
+	MaxEffect  = -0.05
+End
+
+Prefix
+	Name = Jagged
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 100	
+	Multiplier = 2
+	MinEffect  = 0.05
+	MaxEffect  = 0.25
+End
+
+Prefix
+	Name = Deadly
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 100
+	MaxQuality = 200	
+	Multiplier = 4
+	MinEffect  = 0.25
+	MaxEffect  = 0.50
+End
+
+Prefix
+	Name = Heavy
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 400	
+	Multiplier = 8
+	MinEffect  = 0.50
+	MaxEffect  = 0.70
+End
+
+Prefix
+	Name = Vicious
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = W
+	MinQuality = 400
+	MaxQuality = 800	
+	Multiplier = 10
+	MinEffect  = 0.70
+	MaxEffect  = 0.90
+End
+
+Prefix
+	Name = Brutal
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 25
+	ItemMask = W
+	MinQuality = 800
+	MaxQuality = 1200	
+	Multiplier = 12
+	MinEffect  = 0.90
+	MaxEffect  = 1.10
+End
+
+Prefix
+	Name = Massive
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = W
+	MinQuality = 1200
+	MaxQuality = 1600	
+	Multiplier = 16
+	MinEffect  = 1.10
+	MaxEffect  = 1.25
+End
+
+Prefix
+	Name = Savage
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 35
+	ItemMask = W
+	MinQuality = 1600
+	MaxQuality = 2400	
+	Multiplier = 18
+	MinEffect  = 1.26
+	MaxEffect  = 1.60
+End
+
+Prefix
+	Name = Ruthless
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 43
+	ItemMask = W
+	MinQuality = 2400
+	MaxQuality = 3000	
+	Multiplier = 22
+	MinEffect  = 1.60
+	MaxEffect  = 1.80
+End
+
+Prefix
+	Name = Merciless
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 50
+	ItemMask = W
+	MinQuality = 3000
+	MaxQuality = 3500	
+	Multiplier = 26
+	MinEffect  = 1.80
+	MaxEffect  = 2.00
+End
+
+Prefix
+	Name = Decaying
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 55
+	ItemMask = W
+	MinQuality = 3500
+	MaxQuality = 4000	
+	Multiplier = 28
+	MinEffect  = 2.00
+	MaxEffect  = 2.20
+End
+
+Prefix
+	Name = Crystalline
+	EffectType = Damage
+	Cursed = false
+	ItemLevel = 60
+	ItemMask = W
+	MinQuality = 4000
+	MaxQuality = 5000	
+	Multiplier = 30
+	MinEffect  = 2.20
+	MaxEffect  = 2.40
+End
+
+
+Suffix
+	Name = Frailty
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectDamageAttribute
+			AttributeID = Strength
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Weakness
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectDamageAttribute
+			AttributeID = Strength
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+Suffix
+	Name = Strength
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Strength
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+
+Suffix
+	Name = Might
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Strength
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Power
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Strength
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Giants
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Strength
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Titans
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Strength
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+Suffix
+	Name = the Fool
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = AC
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectDamageMagicka
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 50
+			MagMax1 = 21
+			MagMax2 = 50
+  		End
+	End
+End
+
+Suffix
+	Name = Dyslexia
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = AC
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectDamageMagicka
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 20
+			MagMax1 = 1
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Magic
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = AC
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifySpellpoints
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 20
+			MagMax1 = 1
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = the Mind
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = AC
+	MinQuality = 50
+	MaxQuality = 150
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifySpellpoints
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 40
+			MagMax1 = 21
+			MagMax2 = 40
+  		End
+	End
+End
+
+Suffix
+	Name = Brilliance
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = AC
+	MinQuality = 150
+	MaxQuality = 250
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifySpellpoints
+			RangeType = Self
+			MagMin1 = 41
+			MagMin2 = 80
+			MagMax1 = 41
+			MagMax2 = 80
+  		End
+	End
+End
+
+Suffix
+	Name = Sorcery
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = AC
+	MinQuality = 250
+	MaxQuality = 500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifySpellpoints
+			RangeType = Self
+			MagMin1 = 81
+			MagMin2 = 120
+			MagMax1 = 81
+			MagMax2 = 120
+  		End
+	End
+End
+
+Suffix
+	Name = Wizardry
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = AC
+	MinQuality = 1000
+	MaxQuality = 2000
+	Multiplier = 15
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifySpellpoints
+			RangeType = Self
+			MagMin1 = 121
+			MagMin2 = 200
+			MagMax1 = 121
+			MagMax2 = 200
+  		End
+	End
+End
+
+
+Suffix
+	Name = Paralysis
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Agility
+			RangeType = Self
+			MagMin1 = -10
+			MagMin2 = -6
+			MagMax1 = -10
+			MagMax2 = -6
+  		End
+	End
+End
+
+Suffix
+	Name = Atrophy
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Agility
+			RangeType = Self
+			MagMin1 = -5
+			MagMin2 = -1
+			MagMax1 = -5
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = Agility
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 10
+	MaxQuality = 20
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Agility
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+Suffix
+	Name = Skill
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Agility
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Accuracy
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Agility
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Precision
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Agility
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Perfection
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Agility
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+Suffix
+	Name = Hinderance
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Speed
+			RangeType = Self
+			MagMin1 = -10
+			MagMin2 = -6
+			MagMax1 = -10
+			MagMax2 = -6
+  		End
+	End
+End
+
+Suffix
+	Name = Delay
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Speed
+			RangeType = Self
+			MagMin1 = -5
+			MagMin2 = -1
+			MagMax1 = -5
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = Speed
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Speed
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+
+Suffix
+	Name = Fleetness
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Speed
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Quickness
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Speed
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Swiftness
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Speed
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Celerity
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Speed
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+Suffix
+	Name = Illness
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Endurance
+			RangeType = Self
+			MagMin1 = -10
+			MagMin2 = -6
+			MagMax1 = -10
+			MagMax2 = -6
+  		End
+	End
+End
+
+Suffix
+	Name = Disease
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Endurance
+			RangeType = Self
+			MagMin1 = -5
+			MagMin2 = -1
+			MagMax1 = -5
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = Endurance
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Endurance
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+
+Suffix
+	Name = Zest
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Endurance
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Vim
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Endurance
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Vigor
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Endurance
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Life
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Endurance
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+
+Suffix
+	Name = Misfortune
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Luck
+			RangeType = Self
+			MagMin1 = -10
+			MagMin2 = -6
+			MagMax1 = -10
+			MagMax2 = -6
+  		End
+	End
+End
+
+Suffix
+	Name = Bad Luck
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Luck
+			RangeType = Self
+			MagMin1 = -5
+			MagMin2 = -1
+			MagMax1 = -5
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = Luck
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Luck
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+
+Suffix
+	Name = Fortune
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Luck
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Blessing
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Luck
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Fate
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Luck
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Serendipity
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Luck
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+Suffix
+	Name = Stupidity
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Intelligence
+			RangeType = Self
+			MagMin1 = -10
+			MagMin2 = -6
+			MagMax1 = -10
+			MagMax2 = -6
+  		End
+	End
+End
+
+Suffix
+	Name = Ignorance
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Intelligence
+			RangeType = Self
+			MagMin1 = -5
+			MagMin2 = -1
+			MagMax1 = -5
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = Intelligence
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Intelligence
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+
+Suffix
+	Name = Understanding
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Intelligence
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Perception
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Intelligence
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Discernment
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Intelligence
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Aptitude
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Intelligence
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+
+Suffix
+	Name = Foolishness
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Willpower
+			RangeType = Self
+			MagMin1 = -10
+			MagMin2 = -6
+			MagMax1 = -10
+			MagMax2 = -6
+  		End
+	End
+End
+
+Suffix
+	Name = Folly
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Willpower
+			RangeType = Self
+			MagMin1 = -5
+			MagMin2 = -1
+			MagMax1 = -5
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = Willpower
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Willpower
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+Suffix
+	Name = Resolve
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Willpower
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Resolution
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Willpower
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Drive
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Willpower
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Discipline
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Willpower
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+
+Suffix
+	Name = Repulsion
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Personality
+			RangeType = Self
+			MagMin1 = -10
+			MagMin2 = -6
+			MagMax1 = -10
+			MagMax2 = -6
+  		End
+	End
+End
+
+Suffix
+	Name = Revolt
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 10
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Personality
+			RangeType = Self
+			MagMin1 = -5
+			MagMin2 = -1
+			MagMax1 = -5
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = Personality
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Personality
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+Suffix
+	Name = Disposition
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Personality
+			RangeType = Self
+			MagMin1 = 6
+			MagMin2 = 10
+			MagMax1 = 6
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Charm
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 500
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Personality
+			RangeType = Self
+			MagMin1 = 11
+			MagMin2 = 15
+			MagMax1 = 11
+			MagMax2 = 15
+  		End
+	End
+End
+
+Suffix
+	Name = Character
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 500
+	MaxQuality = 1000
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Personality
+			RangeType = Self
+			MagMin1 = 16
+			MagMin2 = 20
+			MagMax1 = 16
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Charisma
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 2500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttribute
+			AttributeID = Personality
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 30
+			MagMax1 = 21
+			MagMax2 = 30
+  		End
+	End
+End
+
+Suffix
+	Name = the Vulture
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = -5
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = -50
+			MagMin2 = -21
+			MagMax1 = -50
+			MagMax2 = -21
+  		End
+	End
+End
+
+Suffix
+	Name = the Jackal
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = -21
+			MagMin2 = -1
+			MagMax1 = -21
+			MagMax2 = -1
+  		End
+	End
+End
+
+Suffix
+	Name = the Fox
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 5
+			MagMin2 = 20
+			MagMax1 = 5
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = the Jaguar
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 300
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 40
+			MagMax1 = 21
+			MagMax2 = 40
+  		End
+	End
+End
+
+Suffix
+	Name = the Eagle
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 300
+	MaxQuality = 400
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 41
+			MagMin2 = 60
+			MagMax1 = 41
+			MagMax2 = 60
+  		End
+	End
+End
+
+Suffix
+	Name = the Wolf
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 400
+	MaxQuality = 500
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 61
+			MagMin2 = 80
+			MagMax1 = 61
+			MagMax2 = 80
+  		End
+	End
+End
+
+Suffix
+	Name = the Tiger
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 25
+	ItemMask = ACW
+	MinQuality = 600
+	MaxQuality = 800
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 81
+			MagMin2 = 110
+			MagMax1 = 81
+			MagMax2 = 110
+  		End
+	End
+End
+
+Suffix
+	Name = the Lion
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 800
+	MaxQuality = 1000
+	Multiplier = 12
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 111
+			MagMin2 = 140
+			MagMax1 = 111
+			MagMax2 = 140
+  		End
+	End
+End
+
+Suffix
+	Name = the Mammoth
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 1400
+	Multiplier = 15
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 141
+			MagMin2 = 180
+			MagMax1 = 141
+			MagMax2 = 180
+  		End
+	End
+End
+
+Suffix
+	Name = the Whale
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 50
+	ItemMask = ACW
+	MinQuality = 1500
+	MaxQuality = 2000
+	Multiplier = 20
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyHealth
+			RangeType = Self
+			MagMin1 = 181
+			MagMin2 = 250
+			MagMax1 = 181
+			MagMax2 = 250
+  		End
+	End
+End
+
+
+Prefix
+	Name = Hyena's
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = -5
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = -50
+			MagMin2 = -21
+			MagMax1 = -50
+			MagMax2 = -21
+  		End
+	End
+End
+
+Prefix
+	Name = Frog's
+	EffectType = Enchant
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = -2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = -21
+			MagMin2 = -1
+			MagMax1 = -21
+			MagMax2 = -1
+  		End
+	End
+End
+
+Prefix
+	Name = Spider's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = ACW
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 5
+			MagMin2 = 20
+			MagMax1 = 5
+			MagMax2 = 20
+  		End
+	End
+End
+
+Prefix
+	Name = Raven's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = ACW
+	MinQuality = 200
+	MaxQuality = 300
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 40
+			MagMax1 = 21
+			MagMax2 = 40
+  		End
+	End
+End
+
+Prefix
+	Name = Snake's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 300
+	MaxQuality = 400
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 41
+			MagMin2 = 60
+			MagMax1 = 41
+			MagMax2 = 60
+  		End
+	End
+End
+
+Prefix
+	Name = Serpent's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = ACW
+	MinQuality = 400
+	MaxQuality = 500
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 61
+			MagMin2 = 80
+			MagMax1 = 61
+			MagMax2 = 80
+  		End
+	End
+End
+
+Prefix
+	Name = Drake's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 25
+	ItemMask = ACW
+	MinQuality = 600
+	MaxQuality = 800
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 81
+			MagMin2 = 110
+			MagMax1 = 81
+			MagMax2 = 110
+  		End
+	End
+End
+
+Prefix
+	Name = Dragon's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = ACW
+	MinQuality = 800
+	MaxQuality = 1000
+	Multiplier = 12
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 111
+			MagMin2 = 140
+			MagMax1 = 111
+			MagMax2 = 140
+  		End
+	End
+End
+
+Prefix
+	Name = Wyrm's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = ACW
+	MinQuality = 1000
+	MaxQuality = 1400
+	Multiplier = 15
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 141
+			MagMin2 = 180
+			MagMax1 = 141
+			MagMax2 = 180
+  		End
+	End
+End
+
+Prefix
+	Name = Hydra's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 50
+	ItemMask = ACW
+	MinQuality = 1500
+	MaxQuality = 2000
+	Multiplier = 20
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyFatigue
+			RangeType = Self
+			MagMin1 = 181
+			MagMin2 = 250
+			MagMax1 = 181
+			MagMax2 = 250
+  		End
+	End
+End
+
+
+Prefix
+	Name = Vulnerable
+	EffectType = Armor
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = A
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = -5
+	MinEffect = -0.90
+	MaxEffect = -0.50
+End
+
+Prefix
+	Name = Rusted
+	EffectType = Armor
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = A
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = -2
+	MinEffect = -0.50
+	MaxEffect = -0.10
+End
+
+Prefix
+	Name = Fine
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = A
+	MinQuality = 5
+	MaxQuality = 100
+	Multiplier = 2
+	MinEffect = 0.10
+	MaxEffect = 0.20
+End
+
+Prefix
+	Name = Strong
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = A
+	MinQuality = 100
+	MaxQuality = 150
+	Multiplier = 3
+	MinEffect = 0.20
+	MaxEffect = 0.30
+End
+
+Prefix
+	Name = Grand
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = A
+	MinQuality = 150
+	MaxQuality = 200
+	Multiplier = 5
+	MinEffect = 0.30
+	MaxEffect = 0.40
+End
+
+Prefix
+	Name = Valiant
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = A
+	MinQuality = 200	
+	MaxQuality = 300
+	Multiplier = 7
+	MinEffect = 0.40
+	MaxEffect = 0.50
+End
+
+Prefix
+	Name = Glorious
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 25
+	ItemMask = A
+	MinQuality = 300
+	MaxQuality = 400
+	Multiplier = 9
+	MinEffect = 0.50
+	MaxEffect = 0.60
+End
+
+Prefix
+	Name = Blessed
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = A
+	MinQuality = 400
+	MaxQuality = 500
+	Multiplier = 11
+	MinEffect = 0.60
+	MaxEffect = 0.70
+End
+
+Prefix
+	Name = Saintly
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 35
+	ItemMask = A
+	MinQuality = 500
+	MaxQuality = 600
+	Multiplier = 13
+	MinEffect = 0.70
+	MaxEffect = 0.80
+End
+
+Prefix
+	Name = Awesome
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = A
+	MinQuality = 600
+	MaxQuality = 750
+	Multiplier = 15
+	MinEffect = 0.80
+	MaxEffect = 0.90
+End
+
+Prefix
+	Name = Holy
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 50
+	ItemMask = A
+	MinQuality = 750
+	MaxQuality = 1000
+	Multiplier = 20
+	MinEffect = 0.90
+	MaxEffect = 1.10
+End
+
+Prefix
+	Name = Godly
+	EffectType = Armor
+	Cursed = false
+	ItemLevel = 60
+	ItemMask = A
+	MinQuality = 1000
+	MaxQuality = 1500
+	Multiplier = 25
+	MinEffect = 1.10
+	MaxEffect = 1.40
+End
+
+Suffix
+	Name = Fragility
+	EffectType = Condition
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = AW
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -5
+	MinEffect = -0.90
+	MaxEffect = -0.50
+End
+
+Suffix
+	Name = Brittleness
+	EffectType = Condition
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = AW
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -2
+	MinEffect = -0.50
+	MaxEffect = -0.10
+End
+
+Suffix
+	Name = Sturdiness
+	EffectType = Condition
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = AW
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 2
+	MinEffect = 0.10
+	MaxEffect = 0.25
+End
+
+Suffix
+	Name = Craftsmanship
+	EffectType = Condition
+	Cursed = false
+	ItemLevel = 12
+	ItemMask = AW
+	MinQuality = 100
+	MaxQuality = 300
+	Multiplier = 5
+	MinEffect = 0.25
+	MaxEffect = 0.50
+End
+
+Suffix
+	Name = Structure
+	EffectType = Condition
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = AW
+	MinQuality = 300
+	MaxQuality = 500
+	Multiplier = 7
+	MinEffect = 0.50
+	MaxEffect = 0.75
+End
+
+Suffix
+	Name = Expertise
+	EffectType = Condition
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = AW
+	MinQuality = 600
+	MaxQuality = 1000
+	Multiplier = 10
+	MinEffect = 0.75
+	MaxEffect = 1.25
+End
+
+Suffix
+	Name = Mastery
+	EffectType = Condition
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = AW
+	MinQuality = 1000
+	MaxQuality = 2000
+	Multiplier = 20
+	MinEffect = 1.25
+	MaxEffect = 2.00
+End
+
+
+Prefix
+	Name = Hefty
+	EffectType = Weight
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = AWC
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -5
+	MinEffect = 1.50
+	MaxEffect = 0.75
+End
+
+Prefix
+	Name = Weighty
+	EffectType = Weight
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = AWC
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -2
+	MinEffect = 0.74
+	MaxEffect = 0.10
+End
+
+Prefix
+	Name = Light
+	EffectType = Weight
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = AWC
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 2
+	MinEffect = -0.10
+	MaxEffect = -0.24
+End
+
+Prefix
+	Name = Underweight
+	EffectType = Weight
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = AWC
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 4
+	MinEffect = -0.25
+	MaxEffect = -0.50
+End
+
+Prefix
+	Name = Portable
+	EffectType = Weight
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = AWC
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 4
+	MinEffect = -0.50
+	MaxEffect = -0.75
+End
+
+Prefix
+	Name = Featherweight 
+	EffectType = Weight
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = AWC
+	MinQuality = 500
+	MaxQuality = 800
+	Multiplier = 10
+	MinEffect = -0.76
+	MaxEffect = -0.95
+End
+
+Prefix
+	Name = Insubstantial 
+	EffectType = Weight
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = AWC
+	MinQuality = 1000
+	MaxQuality = 1000
+	Multiplier = 20
+	MinEffect = -0.99
+	MaxEffect = -0.99
+End
+
+Suffix
+	Name = the Slug
+	EffectType = Speed
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = W
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -7
+	MinEffect = -0.75
+	MaxEffect = -0.41
+End
+
+Suffix
+	Name = Slowness
+	EffectType = Speed
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = W
+	MinQuality = 5
+	MaxQuality = 500
+	Multiplier = -3
+	MinEffect = -0.40
+	MaxEffect = -0.10
+End
+
+Suffix
+	Name = Fleetness
+	EffectType = Speed
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+	MinEffect = 0.10
+	MaxEffect = 0.25
+End
+
+
+Suffix
+	Name = Haste
+	EffectType = Speed
+	Cursed = false
+	ItemLevel = 12
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 400
+	Multiplier = 5
+	MinEffect = 0.26
+	MaxEffect = 0.50
+End
+
+Suffix
+	Name = Velocity
+	EffectType = Speed
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = W
+	MinQuality = 500
+	MaxQuality = 800
+	Multiplier = 9
+	MinEffect = 0.51
+	MaxEffect = 0.80
+End
+
+Suffix
+	Name = Acceleration
+	EffectType = Speed
+	Cursed = false
+	ItemLevel = 35
+	ItemMask = W
+	MinQuality = 1000
+	MaxQuality = 1500
+	Multiplier = 14
+	MinEffect = 0.81
+	MaxEffect = 1.49
+End
+
+Suffix
+	Name = Ultimate Haste
+	EffectType = Speed
+	Cursed = false
+	ItemLevel = 45
+	ItemMask = W
+	MinQuality = 1500
+	MaxQuality = 2000
+	Multiplier = 20
+	MinEffect = 1.50
+	MaxEffect = 2.00
+End
+
+Prefix
+	Name = Stubby
+	EffectType = Reach
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = W
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -5
+	MinEffect = -0.80
+	MaxEffect = -0.41
+End
+
+Prefix
+	Name = Short
+	EffectType = Reach
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = W
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -2
+	MinEffect = -0.40
+	MaxEffect = -0.10
+End
+
+Prefix
+	Name = Long
+	EffectType = Reach
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 150
+	Multiplier = 2
+	MinEffect = 0.10
+	MaxEffect = 0.24
+End
+
+Prefix
+	Name = Stretched
+	EffectType = Reach
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 400
+	Multiplier = 5
+	MinEffect = 0.25
+	MaxEffect = 0.50
+End
+
+Prefix
+	Name = Extended
+	EffectType = Reach
+	Cursed = false
+	ItemLevel = 25
+	ItemMask = W
+	MinQuality = 400
+	MaxQuality = 800
+	Multiplier = 9
+	MinEffect = 0.50
+	MaxEffect = 1.00
+End
+
+Prefix
+	Name = Infinite
+	EffectType = Reach
+	Cursed = false
+	ItemLevel = 40
+	ItemMask = W
+	MinQuality = 1000
+	MaxQuality = 1500
+	Multiplier = 15
+	MinEffect = 1.01
+	MaxEffect = 1.50
+End
+
+Prefix
+	Name = Bargain
+	EffectType = None
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -5
+End
+
+Prefix
+	Name = Cheap
+	EffectType = None
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -3
+End
+
+Prefix
+	Name = Inexpensive
+	EffectType = None
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -2
+End
+
+Prefix
+	Name = Overpriced
+	EffectType = None
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = 2
+End
+
+Prefix
+	Name = Expensive
+	EffectType = None
+	Cursed = true
+	ItemLevel = 5
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = 5
+End
+
+Prefix
+	Name = Extravagant
+	EffectType = None
+	Cursed = true
+	ItemLevel = 10
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = 10
+End
+
+Prefix
+	Name = Exquisite
+	EffectType = None
+	Cursed = true
+	ItemLevel = 15
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = 15
+End
+
+Prefix
+	Name = Antique
+	EffectType = None
+	Cursed = true
+	ItemLevel = 20
+	ItemMask = *
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = 20
+End
+
+
+Prefix
+	Name = Unmagical
+	EffectType = EnchantPts
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = WAC
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -5
+	MinEffect = -0.80
+	MaxEffect = -0.50
+End
+
+Prefix
+	Name = Poor
+	EffectType = EnchantPts
+	Cursed = true
+	ItemLevel = 1
+	ItemMask = WAC
+	MinQuality = 5
+	MaxQuality = 50
+	Multiplier = -2
+	MinEffect = -0.49
+	MaxEffect = -0.10
+End
+
+Prefix
+	Name = Magical
+	EffectType = EnchantPts
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = WAC
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+	MinEffect = 0.10
+	MaxEffect = 0.25
+End
+
+Prefix
+	Name = Potent
+	EffectType = EnchantPts
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = WAC
+	MinQuality = 250
+	MaxQuality = 500
+	Multiplier = 5
+	MinEffect = 0.26
+	MaxEffect = 0.50
+End
+
+Prefix
+	Name = Enchanting
+	EffectType = EnchantPts
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = WAC
+	MinQuality = 500
+	MaxQuality = 700
+	Multiplier = 12
+	MinEffect = 0.51
+	MaxEffect = 0.75
+End
+
+Prefix
+	Name = Sorcerous
+	EffectType = EnchantPts
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = WAC
+	MinQuality = 1000
+	MaxQuality = 1500
+	Multiplier = 20
+	MinEffect = 0.76
+	MaxEffect = 1.50
+End
+
+
+Suffix
+	Name = Bolting
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 1
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 1
+		EnchantCost2 = 3
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectShockDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 2
+			MagMax1 = 3
+			MagMax2 = 4
+  		End
+	End
+End
+
+Suffix
+	Name = Shocking
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 3
+		EnchantCost2 = 5
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectShockDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 3
+			MagMax1 = 5
+			MagMax2 = 8
+  		End
+	End
+End
+
+Suffix
+	Name = Electricity
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 300
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 5
+		EnchantCost2 = 7
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectShockDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 2
+			MagMin2 = 5
+			MagMax1 = 7
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Zapping
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 300
+	MaxQuality = 400
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 150
+		Charge2 = 240
+		EnchantCost1 = 7
+		EnchantCost2 = 10
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectShockDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 3
+			MagMin2 = 7
+			MagMax1 = 10
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Lightning
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = W
+	MinQuality = 400
+	MaxQuality = 700
+	Multiplier = 6
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 200
+		Charge2 = 400
+		EnchantCost1 = 10
+		EnchantCost2 = 15
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectShockDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 5
+			MagMin2 = 10
+			MagMax1 = 15
+			MagMax2 = 30
+  		End
+	End
+End
+
+
+Suffix
+	Name = Bane
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 1
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 1
+		EnchantCost2 = 3
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectPoison
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 2
+			MagMax1 = 3
+			MagMax2 = 4
+  		End
+	End
+End
+
+Suffix
+	Name = Poison
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 3
+		EnchantCost2 = 5
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectPoison
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 3
+			MagMax1 = 5
+			MagMax2 = 8
+  		End
+	End
+End
+
+Suffix
+	Name = Toxin
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 300
+	Multiplier = 3
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 100
+		Charge2 = 200
+		EnchantCost1 = 5
+		EnchantCost2 = 7
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectPoison
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 2
+			MagMin2 = 5
+			MagMax1 = 7
+			MagMax2 = 10
+  		End
+	End
+End
+
+Suffix
+	Name = Noxious
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 300
+	MaxQuality = 400
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 150
+		Charge2 = 240
+		EnchantCost1 = 7
+		EnchantCost2 = 10
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectPoison
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 3
+			MagMin2 = 7
+			MagMax1 = 10
+			MagMax2 = 20
+  		End
+	End
+End
+
+Suffix
+	Name = Venom
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = W
+	MinQuality = 400
+	MaxQuality = 700
+	Multiplier = 6
+
+	Enchant
+		EnchantType = "Cast Strikes"
+		Charge1 = 200
+		Charge2 = 400
+		EnchantCost1 = 10
+		EnchantCost2 = 15
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectPoison
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 5
+			MagMin2 = 10
+			MagMax1 = 15
+			MagMax2 = 30
+  		End
+	End
+End
+
+Prefix
+	Name = Sharp
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 2
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 5
+			MagMax1 = 1
+			MagMax2 = 5
+  		End
+	End
+End
+
+Prefix
+	Name = Warrior's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = W
+	MinQuality = 100
+	MaxQuality = 200
+	Multiplier = 4
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 5
+			MagMin2 = 10
+			MagMax1 = 5
+			MagMax2 = 10
+  		End
+	End
+End
+
+Prefix
+	Name = Soldier's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = W
+	MinQuality = 200
+	MaxQuality = 300
+	Multiplier = 7
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 10
+			MagMin2 = 20
+			MagMax1 = 10
+			MagMax2 = 20
+  		End
+	End
+End
+
+Prefix
+	Name = Lord's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = W
+	MinQuality = 300
+	MaxQuality = 500
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 20
+			MagMin2 = 30
+			MagMax1 = 20
+			MagMax2 = 30
+  		End
+	End
+End
+
+Prefix
+	Name = Knight's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 25
+	ItemMask = W
+	MinQuality = 500
+	MaxQuality = 750
+	Multiplier = 14
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 30
+			MagMin2 = 50
+			MagMax1 = 30
+			MagMax2 = 50
+  		End
+	End
+End
+
+Prefix
+	Name = Master's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 35
+	ItemMask = W
+	MinQuality = 750
+	MaxQuality = 1000
+	Multiplier = 17
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 50
+			MagMin2 = 75
+			MagMax1 = 50
+			MagMax2 = 75
+  		End
+	End
+End
+
+Prefix
+	Name = Champion's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 45
+	ItemMask = W
+	MinQuality = 1000
+	MaxQuality = 1200
+	Multiplier = 20
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 75
+			MagMin2 = 100
+			MagMax1 = 75
+			MagMax2 = 100
+  		End
+	End
+End
+
+Prefix
+	Name = King's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 55
+	ItemMask = W
+	MinQuality = 1200
+	MaxQuality = 1500
+	Multiplier = 25
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectFortifyAttackBonus
+			RangeType = Self
+			MagMin1 = 100
+			MagMin2 = 150
+			MagMax1 = 100
+			MagMax2 = 150
+  		End
+	End
+End
+
+
+Suffix
+	Name = Health
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = WAC
+	MinQuality = 800
+	MaxQuality = 800
+	Multiplier = 15
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectRestoreHealth
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 1
+			MagMax1 = 1
+			MagMax2 = 1
+  		End
+	End
+End
+
+Suffix
+	Name = Fortitude
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 15
+	ItemMask = WAC
+	MinQuality = 400
+	MaxQuality = 400
+	Multiplier = 10
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectRestoreFatigue
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 1
+			MagMax1 = 1
+			MagMax2 = 1
+  		End
+	End
+End
+
+Suffix
+	Name = Stoutness
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 35
+	ItemMask = WAC
+	MinQuality = 800
+	MaxQuality = 800
+	Multiplier = 15
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectRestoreFatigue
+			RangeType = Self
+			MagMin1 = 2
+			MagMin2 = 2
+			MagMax1 = 2
+			MagMax2 = 2
+  		End
+	End
+End
+
+Prefix
+	Name = Sorcerer's
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 50
+	ItemMask = WAC
+	MinQuality = 1500
+	MaxQuality = 1500
+	Multiplier = 20
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectRestoreSpellPoints
+			RangeType = Self
+			MagMin1 = 1
+			MagMin2 = 1
+			MagMax1 = 1
+			MagMax2 = 1
+  		End
+	End
+End
+
+Prefix
+	Name = Disguised
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 10
+	ItemMask = AC
+	MinQuality = 100
+	MaxQuality = 500
+	Multiplier = 5
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectChameleon
+			RangeType = Self
+			MagMin1 = 5
+			MagMin2 = 20
+			MagMax1 = 5
+			MagMax2 = 20
+  		End
+	End
+End
+
+Prefix
+	Name = Hidden
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 20
+	ItemMask = AC
+	MinQuality = 500
+	MaxQuality = 800
+	Multiplier = 8
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectChameleon
+			RangeType = Self
+			MagMin1 = 21
+			MagMin2 = 50
+			MagMax1 = 21
+			MagMax2 = 50
+  		End
+	End
+End
+
+Prefix
+	Name = Chameleon
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 25
+	ItemMask = AC
+	MinQuality = 800
+	MaxQuality = 1200
+	Multiplier = 12
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectChameleon
+			RangeType = Self
+			MagMin1 = 51
+			MagMin2 = 80
+			MagMax1 = 51
+			MagMax2 = 80
+  		End
+	End
+End
+
+Prefix
+	Name = Concealed
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 35
+	ItemMask = AC
+	MinQuality = 1200
+	MaxQuality = 2000
+	Multiplier = 20
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectChameleon
+			RangeType = Self
+			MagMin1 = 81
+			MagMin2 = 99
+			MagMax1 = 81
+			MagMax2 = 99
+  		End
+	End
+End
+
+Suffix
+	Name = Invisibility
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 30
+	ItemMask = AC
+	MinQuality = 800
+	MaxQuality = 1000
+	Multiplier = 12
+
+	Enchant
+		EnchantType = "Constant Effect"
+		AutoCalc = true
+
+		Effect	
+			EffectID = sEffectInvisibility
+			RangeType = Self
+  		End
+	End
+End
+
+
+Prefix
+	Name = XXFireTest
+	EffectType = Enchant
+	Cursed = false
+	ItemLevel = 5
+	ItemMask = W
+	MinQuality = 50
+	MaxQuality = 100
+	Multiplier = 1
+
+	Enchant
+		EnchantType = "Cast When Used"
+		Charge1 = 10
+		Charge2 = 30
+		EnchantCost1 = 1
+		EnchantCost2 = 3
+		AutoCalc = false
+
+		Effect	
+			EffectID = sEffectFireDamage
+			RangeType = Target
+			Area1 = 0
+			Area2 = 0
+			Duration1 = 1
+			Duration2 = 1
+			MagMin1 = 1
+			MagMin2 = 2
+			MagMax1 = 3
+			MagMax2 = 4
+  		End
+	End
+End

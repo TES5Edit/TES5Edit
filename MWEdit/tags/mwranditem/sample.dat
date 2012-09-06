@@ -1,0 +1,20 @@
+Prefix
+	Name = "Burning"
+
+	Enchant
+		Charge1 = 100
+		Charge2 = 200
+
+		Effect
+			EffectID = 10			
+			MagMin1 = 1
+			MagMin2 = 2
+			MagMax1 = 10
+			MaxMax2 = 20
+		End
+	End
+End
+
+Suffix
+	Name = "Destruction"
+End

@@ -1,0 +1,10 @@
+Item
+	ItemType = Misc
+	Name = "Test Misc"
+	Icon = "a\TX_Chitin_curaiss.tga"
+	Model = "a\A_M_Chitin_Cuirass_GND.nif"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 6
+	EffectMask = Spell | None | Weight
+End

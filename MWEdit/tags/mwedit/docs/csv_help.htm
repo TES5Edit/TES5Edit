@@ -1,0 +1,1519 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.0  (Win32)">
+	<META NAME="AUTHOR" CONTENT="Dave Humphrey">
+	<META NAME="CREATED" CONTENT="20040104;13003683">
+	<META NAME="CHANGEDBY" CONTENT="Dave Humphrey">
+	<META NAME="CHANGED" CONTENT="20040104;13500756">
+	<STYLE>
+	<!--
+		@page { size: 21.59cm 27.94cm; margin: 2cm }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US">
+<P><BR><BR>
+</P>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=40*>
+	<COL WIDTH=48*>
+	<COL WIDTH=167*>
+	<THEAD>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt"><B>Record</B></FONT></P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt"><B>Field</B></FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt"><B>Description</B></FONT></P>
+			</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Common</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Fields common
+				to all, or most, record types.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=10 WIDTH=16%>
+				<P ALIGN=RIGHT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">ID</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">The unique
+				item ID. If you specify an existing ID that has the same type as
+				the imported record, the existing record will be overwritten. If
+				the existing record is of a different type, an error will occur.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">ItemType</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">The type of
+				record to import. See the list of supported types below.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Name</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">For records
+				that have a displayed object name.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Model</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">The NIF model
+				of the objects that have one.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Icon</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Inventory icon
+				for carryable objects.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Script</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">The script
+				name for objects that can have them.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Floating point
+				weight in game units</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Item value,
+				unsigned, usually long (4 billion), sometimes short (65535)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Persist</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Persistance
+				flag, True/False, Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Blocked</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Blocked
+				(read-only) record flag, True/False, Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Activator</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Activator
+				objects</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Alchemy</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Potions</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">AutoCalc</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Yes/No,
+				True/False</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Apparatus</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Alchemy
+				apparatus objects (Retorts, Calcinators, etc...)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=4 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Quality </FONT>
+				</P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Floating point
+				(1.0 = default)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">AutoCalc </FONT>
+				</P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Yes/No,
+				True/False</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Armor</B> </FONT>
+				</P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Armor items</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=7 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Type</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Type
+				of armor, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Helmet</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Cuirass</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Left
+				Pauldron</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Right
+				Pauldron</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Greaves</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Boots</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Left
+				Gauntlet</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Right
+				Gauntlet</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Shield</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Left
+				Bracer</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	Right Bracer</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Rating</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Armor value,
+				long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Health</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Maximum
+				condition of armor, long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Enchant</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Enchantment ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">EnchantPts</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Available
+				enchant points, long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Book</B> </FONT>
+				</P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Books,
+				scrolls, parchments, etc...</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=5 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Teaches</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Skill ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Enchantment</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Enchantment ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">EnchantPts</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Available
+				enchant points, long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Class</B> </FONT>
+				</P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Custom class
+				description</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=2 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Description</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Class
+				description string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Playable</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Clothing</B> </FONT>
+				</P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">All clothing
+				objects</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=5 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Type</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Type
+				of clothing, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Pants</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Shoes</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Shirt</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Belt</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Robe</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	R.
+				Glove</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	L.
+				Glove</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Skirt</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Ring</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	Amulet</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned short</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">EnchantPts</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Available
+				enchant points, long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Enchantment</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Enchantment ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Container</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Any sort of
+				container: chest, barrel, desk, etc...</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=3 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Organic</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Respawn</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Enchantment</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Enchantment
+				description for use with items, potions, spells, etc...</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=4 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Type</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Type
+				of enchantment, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Cast
+				Once</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Cast
+				Strikes</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Cast
+				When Used</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	Constant
+				Effect</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Cost</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Cost to use
+				the enchantment</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Charge</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Maximum charge</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">AutoCalc</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Global</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Global
+				variable definition for use in scripts and dialogue</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=2 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Type</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Type
+				of value, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	short</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	long</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	float</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Global
+				variable value</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Ingrediant</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Ingrediant and
+				foods</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=2 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Light</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Light object,
+				both visible, carrayable, and invisible</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=4 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Sound</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Sound ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Radius</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long
+				range in game units</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Lock</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Lockpicks</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=4 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Uses</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Number of
+				uses, long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Quality</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Floating point
+				quality (default = 1.0)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Misc</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt"><SPAN LANG="en-US">Miscellaneous</SPAN>
+				objects</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=2 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>NPC</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">NPC definition</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=30 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Level</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">NPC level,
+				short</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Race</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Race ID string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Female</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Class</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Class ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Faction</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Faction ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Rank</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Faction rank
+				value, short</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">AutoCalc</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Respawn</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Animation</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Alternate
+				animation file</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Disposition</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Disposition
+				value, short</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Blood</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Blood
+				type, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Default
+				(Red)</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Skeleton
+				(White)</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Metal
+				(Gold)</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Default</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Skeleton</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Metal</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Red)</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	White</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	Gold</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Hair</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Hair bodypart
+				ID string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Head</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Head bodypart
+				ID string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Strength
+				(Str)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Agility
+				(Agi)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Speed (Spd)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Endurance
+				(End)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Willpower
+				(Wil)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Intelligence
+				(Int)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Personality
+				(Per)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Luck (Luc)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value, unsigned char (0-255). Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Item</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Inventory item
+				ID. If you wish to add multiple items you need to have additional
+				columns (ex: to add ten different items use ten Item columns).</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">ItemEx</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Iventory
+				item ID with the extended format:</FONT></P>
+				<P ALIGN=CENTER STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">ItemID=Count</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">such as
+				&ldquo;gold_001=1000&rdquo; (any spaces are ignored).</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Spell</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Spell ID
+				string. Similar to the Item field, use multiple Spell columns to
+				add several spells.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Skill</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Skill
+				value (unsigned char) with the format:</FONT></P>
+				<P ALIGN=CENTER STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Skill=Value</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">such as
+				&ldquo;Block=54&rdquo;. Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Attribute</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Attribute
+				value (unsigned char) with the format:</FONT></P>
+				<P ALIGN=CENTER STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Attribute=Value</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">such as
+				&ldquo;Str=54&rdquo;. Ignored if AutoCalc is true.</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Gold</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Amount of gold
+				carried by the NPC (unsigned long)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Health</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Maximum health
+				value (long, ignore if AutoCalc is true).</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Fatigue</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Maximum
+				fatigue value (long, ignore if AutoCalc is true).</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">SpellPts
+				(Magic)</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Maximum spell
+				points value (long, ignore if AutoCalc is true).</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Probe</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Trap disarming
+				probes</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=4 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Uses</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Number of uses</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Quality</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Floating point
+				quality (default of 1.0)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Race</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Custom race
+				definition</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=2 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Description</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Race
+				description string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Playable</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Repair</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Armorer repair
+				item</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=4 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Uses</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Number of uses</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Quality</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Floating point
+				quality (default of 1.0)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>SoundGen</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Creature sound
+				generation record</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=3 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Type</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Type
+				of sound, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Left
+				Foot</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Right
+				Foot</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Swim
+				Left</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Swim
+				Right</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Moan</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Roar</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Scream</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	Land</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Sound</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Sound ID
+				string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Creature</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Related
+				created ID string</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Sound</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Sound record</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=3 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">MinRange</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Minimum range
+				of sound in game units (0 to 255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">MaxRange</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Maximum range
+				of sound in game units (0 to 255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Volume</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Volume of
+				sound (0.0 to 1.0)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Spell</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Spell
+				definition</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=4 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">AutoCalc</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">True/False,
+				Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">PCStart</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Does the
+				player start with this spell. True/False, Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Type</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Type
+				of spell, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Spell</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Ability</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Blight</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Disease</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Curse</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	Power</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Cost</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Base cost of
+				spell in spell points (unsigned long)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Static</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Static object</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=16%>
+				<P><FONT SIZE=2 STYLE="font-size: 11pt"><B>Weapon</B></FONT></P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=84%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">All weapon
+				types</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD ROWSPAN=12 WIDTH=16%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Value</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Unsigned long</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Weight</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Type</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">Weapon
+				type, one of:</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Short
+				Blades</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Long
+				Blade</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Long
+				Blade, 2-Hand</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Blunt</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Blunt,
+				2-Close</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Blunt,
+				2-Wide</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Spear</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Axe</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Axe,
+				2-Hand</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Bow</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Crossbow</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Thrown</FONT></P>
+				<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt">	Arrow</FONT></P>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">	Bolt</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">ChopMin</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Damage,
+				unsigned char (0-255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">ChopMax</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Damage,
+				unsigned char (0-255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">SlashMin</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Damage,
+				unsigned char (0-255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">SlashMax</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Damage,
+				unsigned char (0-255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">ThrustMin</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Damage,
+				unsigned char (0-255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">ThrustMax</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Damage,
+				unsigned char (0-255)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">IgnoreResist</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Ignore
+				creature resistance, True/False, Yes/No</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Speed</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Higher is
+				faster, floating point (default = 1.0)</FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=19%>
+				<P ALIGN=CENTER><FONT SIZE=2 STYLE="font-size: 11pt">Reach</FONT></P>
+			</TD>
+			<TD WIDTH=65%>
+				<P ALIGN=LEFT><FONT SIZE=2 STYLE="font-size: 11pt">Longer is
+				farther, Floating point (default = 1.0)</FONT></P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>

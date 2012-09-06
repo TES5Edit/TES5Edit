@@ -1,0 +1,839 @@
+#
+# This file contains custom function definitions, such as those used in MWSE and MW-Enhanced,
+# for use with MWEdit. Functions can be changed, added or removed and MWEdit restarted for
+# those changes to take effect.
+#
+# If you find mistakes or omissions in this file please send an update to uesp@sympatico.ca.
+#
+# General Notes
+#	- Anything after the '#' character on a line is ignored
+#	- Parameters are not case sensitive
+#	- A function definition begins with a 'function' and ends with an 'end'.
+#
+# Function Parameters:
+#
+# Name = [Function Name]
+#		The name of the function.
+#
+# Options = [Option1] | [Option2] | ...
+#		Basic function options. Multiple options can be used seperated by the '|' character.
+#		Valid options are:
+#				None
+#				ShortVar		Short variable output when compiled
+#				AllowGlobal		Function allows global variables as input
+#				ExtraShort		Function has extra short value output (Journal)
+#				NoOptOut		No terminating 00 when compiled (Activate)
+#				Bloodmoon		Is function added with the Bloodmoon expansion
+#				Tribunal		Is function added with the Tribunal expansion
+#				Dialogue		Function is only valid in a dialogue result
+#				Bad				Function is known to be broken
+#				AllowVar		Allows variables as input to the function
+#				MWSE			A MWSE specific function
+#				MWE				A MWE specific function
+#
+# Return = [Option1] | [Option2] | ...
+#		Specifies the return options for the function. Valid values are:
+#				None			No return
+#				Byte			Byte value is returned
+#				Short			Short value is returned
+#				Long			Long value is returned
+#				Float			Float value is returned
+#				Ref				Reference value is returned (same as long)
+#				String			String value is returned
+#				Many			Multiple values might be returned
+#
+# Param1 = [Option1] | [Option2] | ....
+#		Options for the first input parameter to the function. Valid values are:
+#				None			No input
+#				Byte			Byte value is accepted
+#				Short			Short value is accepted
+#				Long			Long value is accepted
+#				Float			Float value is accepted
+#				Ref				Reference value is accepted (same as long)
+#				String			String value is accepted
+#				XYZ				Special values of 'X', 'Y' or 'Z', such as in SetPos
+#				Effect			Magic effect 
+#				Reset			Reset value (for AI packages)
+#				Animation		An animation value
+#				OptStart		Only used in AIWander
+#				Optional		Parameter is optional (no error if missing)
+#				NotRequired		Used in variable input functions (Choice, MessageBox)
+#				CellString		A string which might represent a cell name
+#				ShortString		Short variable output when compiled
+#				ID				Accepts an object ID (string)
+#				Many			Multiple values might be returned
+#				ScriptID		Must be a script (combined with ID)
+#				SoundID			Must be a sound (combined with ID)
+#				RaceID			Must be a race (combined with ID)
+#				JournalID		Must be a journal (combined with ID)
+#				FactionID		Must be a faction (combined with ID)
+#				ItemID			Must be a carryable item (combined with ID)
+#				RegionID		Must be a region (combined with ID)
+#				TopicID			Must be a dialogue topic (combined with ID)
+#				CellID			Must be a cell (combined with ID)
+#				EffectID		Must be a effect (combined with ID)
+#				LevelCreatureID	Must be a leveled creature (combined with ID)
+#				LevelItemID		Must be a leveled item (combined with ID)
+#				SoulgemID		Must be a soulgem (combined with ID)
+#				CreatureID		Must be a creature (combined with ID)
+#				SpellID			Must be a spell (combined with ID)
+#				NPCID			Must be a NPC (combined with ID)
+#
+# Param2 to Param12
+#		Same options as Param1 for the other 11 variables. These can be omitted if a function
+#		doesn't accept them.
+#
+# OpCode = [Value]
+#		The opcode value for the function. Accepts hexadecimal numbers in the form 0x....
+#
+function
+	Name = XAddItem
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3c28
+end
+function
+	Name = XAITravel
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Float
+	Param2 = Float
+	Param3 = Float
+	Opcode = 0x3c04
+end
+function
+	Name = XArcCos
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3835
+end
+function
+	Name = XArcSin
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3834
+end
+function
+	Name = XArcTan
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3833
+end
+function
+	Name = XContentList
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long
+	Opcode = 0x3f03
+end
+function
+	Name = XCos
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3832
+end
+function
+	Name = XDegrad
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3836
+end
+function
+	Name = XDistance
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Long | String
+	Opcode = 0x3c22
+end
+function 
+	Name = XDrop
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3f0d
+end
+function 
+	Name = XEquip
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Opcode = 0x3f0e
+end
+function
+	Name = XFileReadFloat
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3c13
+end
+function
+	Name = XFileReadLong
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3c12
+end
+function
+	Name = XFileReadShort
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3c11
+end
+function
+	Name = XFileReadString
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long | String
+	Param1 = Long | String
+	Opcode = 0x3c14
+end
+function
+	Name = XFileReadText
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Long | String
+	Opcode = 0x3f08
+end
+function
+	Name = XFileRewind
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Opcode = 0x3c10
+end
+function
+	Name = XFileSeek
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3c15
+end
+function
+	Name = XFileWriteFloat
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Float
+	Opcode = 0x3c33
+end
+function
+	Name = XFileWriteLong
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3c32
+end
+function
+	Name = XFileWriteShort
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Short
+	Opcode = 0x3c31
+end
+function
+	Name = XFileWriteString
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Long | String
+	Opcode = 0x3c34
+end
+function
+	Name = XFileWriteText
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Long | String
+	Param3 = Short | Long | Float | String | Many | Optional
+	Opcode = 0x3f09
+end
+function
+	Name = XFirstItem
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3c1e
+end
+function
+	Name = XFirstNPC
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3c1a
+end
+function
+	Name = XFirstStatic
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3c1f
+end
+function
+	Name = XGetBaseAgi
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f34
+end
+function
+	Name = XGetBaseEnd
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f36
+end
+function
+	Name = XGetBaseGold
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f23
+end
+function
+	Name = XGetBaseID
+	Options = MWSE
+	Return = Long | String
+	Opcode = 0x3f6f
+end
+function
+	Name = XGetBaseInt
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f32
+end
+function
+	Name = XGetBaseLuc
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f38
+end
+function
+	Name = XGetBasePer
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f37
+end
+function
+	Name = XGetBaseSpe
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f35
+end
+function
+	Name = XGetBaseStr
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f31
+end
+function
+	Name = XGetBaseWil
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f33
+end
+function
+	Name = XGetCharge
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f67
+end
+function
+	Name = XGetCombat
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3c20
+end
+function
+	Name = XGetCondition
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f65
+end
+function
+	Name = XGetEncumb
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f64
+end
+function
+	Name = XGetGold
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f24
+end
+function
+	Name = XGetMaxCharge
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f68
+end
+function
+	Name = XGetMaxCondition
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f66
+end
+function
+	Name = XGetName
+	Options = MWSE
+	Return = Long | String
+	Opcode = 0x3f6e
+end
+function
+	Name = XGetOwner
+	Options = MWSE
+	Return = Long | String
+	Opcode = 0x3f62
+end
+function
+	Name = XGetPCTarget
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3c07
+end
+function
+	Name = XGetQuality
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f69
+end
+function
+	Name = XGetRef
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long | String
+	Opcode = 0x3c1d
+end
+function
+	Name = XGetService
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long
+	Opcode = 0x3f04
+end
+function
+	Name = XGetValue
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f61
+end
+function
+	Name = XGetWeight
+	Options = MWSE
+	Return = Float
+	Opcode = 0x3f63
+end
+function
+	Name = XHasItemEquipped
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long | String
+	Opcode = 0x3c30
+end
+function
+	Name = XHypot
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Param2 = Float
+	Opcode = 0x3839
+end
+function
+	Name = XInventory
+	Options = MWSE
+	Return = Short | Long | Float | String | Many
+	Opcode = 0x3c2a
+end
+function
+	Name = XIsFemale
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f21
+end
+function
+	Name = XIsProvider
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f7c
+end
+function
+	Name = XIsTrader
+	Options = MWSE
+	Return = Long
+	OpCode = 0x3f3a
+end
+function
+	Name = XIsTrainer
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3f5e
+end
+function
+	Name = XKeyPressed
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long
+	Opcode = 0x3f00
+end
+function
+	Name = XLogMessage
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Short | Long | Float | String | Many | Optional
+	Opcode = 0x3c09
+end
+function
+	Name = XMemLook
+	Options = MWSE
+	Return = None
+	Opcode = 0x3f3f
+end
+function
+	Name = XMessageFix
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Short | Long | Float | String | Many | Optional
+	Opcode = 0x3f7e
+end
+function
+	Name = XModService
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long
+	Opcode = 0x3f06
+end
+function
+	Name = XMyCellID
+	Options = MWSE
+	Return = Long | String
+	Opcode = 0x3f22
+end
+function
+	Name = XNextRef
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long
+	Opcode = 0x3c1b
+end
+function
+	Name = XNextStack
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long
+	Opcode = 0x3c2b
+end
+function
+	Name = XPCCellID
+	Options = MWSE
+	Return = Long | String
+	Opcode = 0x3c2d
+end
+function
+	Name = XPlace
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long | String
+	Opcode = 0x3c2e
+end
+function
+	Name = XPosition
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Float
+	Param2 = Float
+	Param3 = Float
+	Param4 = Float
+	Opcode = 0x3c05
+end
+function
+	Name = XPositionCell
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Float
+	Param2 = Float
+	Param3 = Float
+	Param4 = Float
+	Param5 = Long | String
+	Opcode = 0x3c2c
+end
+function
+	Name = XRaddeg
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3837
+end
+function
+	Name = XRefID
+	Options = MWSE
+	Return = Long | String
+	Opcode = 0x3c1c
+end
+function
+	Name = XRefType
+	Options = MWSE
+	Return = Long
+	Opcode = 0x3c08
+end
+function
+	Name = XRemoveItem
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3c29
+end
+function
+	Name = XSetBaseGold
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long
+	Opcode = 0x3f25
+end
+function
+	Name = XSetGold
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long
+	Opcode = 0x3f26
+end
+function
+	Name = xSetName
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Opcode = 0x3f0f
+end
+function
+	Name = XSetRef
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long
+	Opcode = 0x3c18
+end
+function
+	Name = XSetService
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long
+	Opcode = 0x3f05
+end
+function
+	Name = XSin
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3831
+end
+function
+	Name = XSqrt
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3838
+end
+function
+	Name = XStartCombat
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = None
+	Param1 = Long | String
+	Opcode = 0x3c21
+end
+function
+	Name = XStringBuild
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Short | Long | Float | String | Many | Optional
+	Opcode = 0x3f0b
+end
+function
+	Name = XStringCompare
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long | String
+	Param2 = Long | String
+	Opcode = 0x3c2f
+end
+function
+	Name = XStringLength
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Long
+	Param1 = Long | String
+	Opcode = 0x3f0a
+end
+function
+	Name = XStringParse
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Long | String
+	Opcode = 0x3f0c
+end
+function
+	Name = XTan
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Float
+	Param1 = Float
+	Opcode = 0x3830
+end
+function
+	Name = XTextInput
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3f01
+end
+function
+	Name = XTextInputAlt
+	Options = MWSE | AllowGlobal | ShortVar | AllowVar
+	Return = Short | Long | Float | String | Many
+	Param1 = Long | String
+	Param2 = Long
+	Opcode = 0x3f02
+end
+function
+	Name = MenuTest
+	Options = None
+	Return = None
+	Param1 = Short
+	Opcode = 0x126
+end
+function
+	Name = ShowSceneGraph
+	Options = MWE
+	Return = None
+	Opcode = 0x123
+end
+function 
+	Name = StopCellTest
+	Options = MWE
+	Return = None
+	Opcode = 0x11F
+end
+function
+	Name = TestCells
+	Options = MWE
+	Return = None
+	Opcode = 0x120
+end
+function
+	Name = TestInteriorCells
+	Options = MWE
+	Return = None
+	Opcode = 0x121
+end
+function
+	Name = TestModels
+	Options = MWE
+	Return = None
+	Opcode = 0x122
+end
+#function		# Added to regular functions in v0.6.0-RC2
+#	Name = ToggleAi
+#	Options = MWE
+#	Return = None
+#	Opcode = 0x113
+#end
+function
+	Name = ToggleBorders
+	Options = MWE
+	Return = None
+	Opcode = 0x114
+end
+#function 		# Added to regular functions in v0.6.0-RC2
+#	Name = ToggleCollision
+#	Options = MWE
+#	Return = None
+#	Opcode = 0x118
+#end
+function
+	Name = ToggleCollisionBoxes
+	Options = MWE
+	Return = None
+	Opcode = 0x119
+end
+function
+	Name = ToggleCollisionGrid
+	Options = MWE
+	Return = None
+	Opcode = 0x11A
+end
+function
+	Name = ToggleDebugText
+	Options = MWE
+	Return = None
+	Opcode = 0x11B
+end
+function
+	Name = ToggleGrid
+	Options = MWE
+	Return = None
+	Opcode = 0x11D
+end
+function
+	Name = ToggleKillStats
+	Options = MWE
+	Return = None
+	Opcode = 0x12D
+end
+function
+	Name = ToggleLoadFade
+	Options = MWE
+	Return = None
+	Opcode = 0x132
+end
+#function		# Added to regular functions in v0.6.0-RC2
+#	Name = ToggleMenus
+#	Options = MWE
+#	Return = None
+#	Opcode = 0x011E
+#end
+function
+	Name = ToggleScripts
+	Options = MWE
+	Return = None
+	Opcode = 0x130
+end
+#function 		# Added to regular functions in v0.6.0-RC2
+#	Name = ToggleSky
+#	Options = MWE
+#	Return = None
+#	Opcode = 0x115
+#end
+function
+	Name = ToggleTextureString
+	Options = MWE
+	Return = None
+	Opcode = 0x11C
+end 
+function
+	Name = ToggleWater
+	Options = MWE
+	Return = None
+	Opcode = 0x129
+end
+function
+	Name = ToggleWireFrame
+	Options = MWE
+	Return = None
+	Opcode = 0x117
+end
+#function		# Added to regular functions in v0.6.0-RC2
+#	Name = ToggleWorld
+#	Options = MWE
+#	Return = None
+#	Opcode = 0x116
+#end

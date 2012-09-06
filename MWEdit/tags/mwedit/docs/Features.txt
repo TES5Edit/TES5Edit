@@ -1,0 +1,122 @@
+
+					MWEdit - Features Document
+
+ 				     Last Updated: 10 September 2006
+				     Dave Humphrey, uesp@symaptico.ca
+
+This is a general list of major features roughly organized into categories. Not 
+all minor features are listed.
+
+
+  General
+---------------------------------------
+	- Standard multiple document interface (MDI) allows editting of several plugins at
+	  the same time.
+	- More gracefully handling of errors (missing IDs, files, etc...) rather than simply
+	  terminating.  The current version simply ignores most errors.
+	- All master files are only loaded once per session which means much faster load
+	  times after the first time. Currently you must exit the application to clear the
+	  master data if required.
+	- Load times are much faster than the TESCS (roughly half). This doesn't include 
+	  the fact that all master files are only loaded once per session.
+	- Records can be permanently 'cleaned' from the active plugin easily. This includes
+	  INFO records and cell reference sub-records.
+	- Edit records by double-clicking in all lists (NPC inventory, containers, levelled
+	  lists, etc...).  
+	- Toggle viewing of only modified items.
+	- Copy or rename most record types.
+	- Option to backup plugin on save (PLUGIN.ESP.001, PLUGIN.ESP.002, etc...).
+	- Standard 'Save As' file menu added to change the saved plugin filename.
+	- Records can be dragged in many situations to copy that record (for instance to/from
+	  cell reference lists, containers, levelled lists, inventories) or between
+	  different plugins.
+	- Find a text string in all records. You can double-click a record in the result
+	  list to edit that record. The last ten searches are saved.
+	- Display all objects that use a particular record (like the Info comment in TESCS).
+	  Compiled scripts and dialog results are included in the search.
+	- New icons for all item types.
+	- Set a default author name for all new plugins.
+	- Export/import items to standard CSV files.
+	- View exactly where a record is used in the currently loaded records. Find object
+	  references in dialogue results and scripts.
+
+
+   Load Plugins
+---------------------------------------
+	- Extended load dialog with a sortable list showing the plugin name, type, and
+	  last modification date. This makes it much easier to find the plugin you want.
+	- Displays ESS save games in the file list.
+	- Load progress display.
+	- Load plugins from a custom game directory.
+
+
+   Main View
+---------------------------------------
+	- Item tab control has been changed into a list. This makes viewing a certain
+	  item type easier.
+	- Almost all item types are viewed and editted in the list view (such as
+	  scripts, globals, etc...).
+	- Each item in a plugin will have one edit window open at a time (unlike the
+	  TESCS where you can open multiple windows for a single item).
+	- Consistent design of the item windows.
+	- Color coding of active (green) and deleted (red) records in all lists. 
+	- Records can be sorted by their modified/delete status in all lists.
+	- The sort field and column widths for each item type is saved and restored
+	  when you leave and return to that item type. 
+
+
+   Dialogue
+---------------------------------------
+	- Copy and rename dialogue topics, including all the child INFOs.
+	- Change position of a dialogue responses Up/Down in the list.
+	- Copy dialogue responses (within a dialogue).
+	- Display of INFO function values in the dialogue list.  Values display not 
+	  only the function/ID for the function, but also the value compared against
+	  allowing one to quickly gather more information at a quick glance. 
+	- Resizable dialogue and info windows. 
+	- Using the standard cancel button in the dialogue window cancels all changes
+	  to INFOs of the dialogue. 
+
+
+   Script
+---------------------------------------
+	- Color coding of script code. Use a default white or blue color scheme or use
+	  any custom colors to identify the various word types. Can also be disabled.
+	- Select the font used in the script window.
+	- New script compiler reports many more errors and possible errors.
+	- Three levels of warning/error messages (weak, default, and strong) allowing you
+	  to set how many compiler messages are recorded.
+	- Compiler adds spaces to the script output where they might be required or
+	  expected (such as in if statements).
+	- Object types used in functions are checked more rigourously. If the function
+	  expects an NPC ID, you'll receive an error/warning if you use another type.
+	- Compiles script on save automatically (no warrning/errors displayed).
+	- Export and import scripts to/from text files.
+	- View detailed help on all script functions.
+	- All compiler errors/warnings are displayed in a splitter pane at the bottom of
+	  the script window. Double-click a message to jump to the location of the message.
+	- View detailed information on compiler messages and display the function help if
+	  the message is related to a specific function.
+	- Compiler does not permit the use of reserved words as local variables (such as
+	  end, X, Y, etc...).
+	- Functions that are known to be broken will result in a compiler message.	  
+	- Simple function tooltips can be displayed for faster scripting.
+	- Define custom functions, such as MWSE or MWE functions, in an external data 
+	  file (CustomFunctions.dat) which can then be used and compiled in the editor.
+	  Includes all current MWSE (v0.9.2a) and MWE functions.
+	- Use an external plugin file (MwExtraFile.esp by default) to define extra records,
+	  such as 'player', in order to compile scripts without needing to load its
+	  master files.
+	- Compile using original, Bloodmoon, or Tribunal function sets.
+	- Automatically indent scripts.
+
+
+   Other Items
+---------------------------------------
+	- Easier editing of item counts in Containers and Levelled Lists (use +/- to modify
+	  the count as well as the regular edit). Supports the selection of multiple items.
+	- When an object ID changes when editting a record, you have the option to 
+	  Rename, Copy, or Cancel.
+
+	
+

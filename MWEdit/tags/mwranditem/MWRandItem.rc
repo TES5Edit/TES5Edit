@@ -1,0 +1,459 @@
+//Microsoft Developer Studio generated resource script.
+// Last compiled 2/18/2004 at 19:8:1
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 68
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About MWRandItem"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "MWRandItem Version 1.7",IDC_STATIC,40,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright (C) 2003",IDC_STATIC,40,47,119,8
+    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
+    LTEXT           "created by Dave Humphrey",IDC_STATIC,40,22,119,8,
+                    SS_NOPREFIX
+    LTEXT           "uesp@sympatico.ca, http://12.145.63.45/~uesp/",
+                    IDC_STATIC,40,34,161,8,SS_NOPREFIX
+END
+
+IDD_MWRANDITEM_DIALOG DIALOGEX 0, 0, 324, 239
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "MWRandItem"
+MENU IDR_MWRANDITEM_MENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tab1",IDC_MAIN_TAB,"SysTabControl32",0x0,7,7,310,225
+END
+
+IDD_WEAPON_VIEW DIALOG DISCARDABLE  0, 0, 307, 205
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Damage",IDC_STATIC,7,130,168,68
+    LTEXT           "Chop........",IDC_STATIC,14,149,27,9
+    CTEXT           "Minimum",IDC_STATIC,55,137,35,9
+    CTEXT           "Maximum",IDC_STATIC,123,137,35,9
+    EDITTEXT        IDC_MINCHOP1,44,148,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MAXCHOP1,113,148,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Slash.......",IDC_STATIC,14,165,27,9
+    EDITTEXT        IDC_MINSLASH1,44,164,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MAXSLASH1,113,164,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Thrust.......",IDC_STATIC,14,181,27,9
+    EDITTEXT        IDC_MINTHRUST1,44,180,23,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MAXTHRUST1,113,180,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Weight............",IDC_STATIC,186,75,35,9
+    CTEXT           "From",IDC_STATIC,221,63,35,9
+    CTEXT           "To",IDC_STATIC,261,63,35,9
+    EDITTEXT        IDC_WEIGHT1,222,73,34,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_WEIGHT2,261,73,34,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MINCHOP3,78,148,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MINSLASH2,78,164,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MINTHRUST2,78,180,23,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "to",IDC_STATIC,70,150,8,8
+    LTEXT           "to",IDC_STATIC,70,166,8,8
+    LTEXT           "to",IDC_STATIC,70,182,8,8
+    LTEXT           "to",IDC_STATIC,139,150,8,8
+    LTEXT           "to",IDC_STATIC,139,166,8,8
+    LTEXT           "to",IDC_STATIC,139,182,8,8
+    EDITTEXT        IDC_MAXCHOP3,147,148,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MAXSLASH2,147,164,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MAXTHRUST2,147,180,24,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Health..........",IDC_STATIC,185,91,35,9
+    EDITTEXT        IDC_CONDITION1,222,89,34,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_CONDITION2,261,89,34,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Speed.............",IDC_STATIC,185,107,35,9
+    EDITTEXT        IDC_SPEED1,222,105,34,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SPEED2,261,105,34,12,ES_AUTOHSCROLL
+    LTEXT           "Reach............",IDC_STATIC,185,123,35,9
+    EDITTEXT        IDC_REACH1,222,121,34,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_REACH2,261,121,34,12,ES_AUTOHSCROLL
+    LTEXT           "Number To Create...",IDC_STATIC,7,9,66,9
+    EDITTEXT        IDC_NUMBER,73,8,34,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Enchant %.......",IDC_STATIC,186,18,49,10
+    EDITTEXT        IDC_ENCHANTCHANCE,238,17,34,12,ES_AUTOHSCROLL
+    GROUPBOX        "Chances",IDC_STATIC,179,7,121,43
+    LTEXT           "Ignore Resist %",IDC_STATIC,186,33,49,10
+    EDITTEXT        IDC_RESISTCHANCE,238,31,34,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Create",IDC_CREATEBUTTON,253,184,47,14
+    GROUPBOX        "Value Factors",IDC_STATIC,7,70,168,58
+    LTEXT           "Damage...",IDC_STATIC,13,82,31,9
+    EDITTEXT        IDC_DAMAGEFACTOR,46,81,40,12,ES_AUTOHSCROLL
+    LTEXT           "Health......",IDC_STATIC,13,97,31,9
+    EDITTEXT        IDC_HEALTHFACTOR,46,95,39,12,ES_AUTOHSCROLL
+    LTEXT           "Speed......",IDC_STATIC,13,113,31,9
+    EDITTEXT        IDC_SPEEDFACTOR,46,110,39,12,ES_AUTOHSCROLL
+    LTEXT           "Reach......",IDC_STATIC,95,84,31,9
+    EDITTEXT        IDC_REACHFACTOR,128,81,39,12,ES_AUTOHSCROLL
+    LTEXT           "Enchant...",IDC_STATIC,95,97,31,9
+    EDITTEXT        IDC_ENCHANTFACTOR,128,95,39,12,ES_AUTOHSCROLL
+    LTEXT           "Weight....",IDC_STATIC,95,113,31,9
+    EDITTEXT        IDC_WEIGHTFACTOR,128,110,39,12,ES_AUTOHSCROLL
+    GROUPBOX        "Chances",IDC_STATIC,179,54,121,83
+    GROUPBOX        "Levelled List",IDC_STATIC,7,23,168,45
+    CONTROL         "Create List",IDC_LEVELLIST,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,33,47,8
+    LTEXT           "ID...",IDC_STATIC,63,33,13,9
+    EDITTEXT        IDC_LEVELLISTID,77,31,92,12,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "Chance None...",IDC_STATIC,27,49,50,9
+    EDITTEXT        IDC_CHANCENONE,77,47,31,12,ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX        "Options",IDC_STATIC,179,139,121,43
+    LTEXT           "ID Prefix...",IDC_STATIC,183,150,34,9
+    EDITTEXT        IDC_IDPREFIX,217,148,50,12,ES_AUTOHSCROLL
+    CONTROL         "Use Short Number ID",IDC_USENUMBERID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,184,166,80,8
+END
+
+IDD_ENCHANT_VIEW DIALOG DISCARDABLE  0, 0, 185, 93
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Enchant",IDC_STATIC,55,42,28,8
+END
+
+IDD_OUTPUT_VIEW DIALOG DISCARDABLE  0, 0, 270, 131
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_ITEM_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | 
+                    WS_TABSTOP,7,7,256,117
+END
+
+IDD_CREATE_VIEW DIALOGEX 0, 0, 275, 182
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Item Options",IDC_STATIC,7,7,172,63
+    LTEXT           "Number....",IDC_STATIC,13,20,33,9
+    EDITTEXT        IDC_NUMBER,47,18,38,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Level.........",IDC_STATIC,13,36,33,9
+    EDITTEXT        IDC_LEVELFROM,47,34,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "to",IDC_STATIC,75,36,8,9
+    EDITTEXT        IDC_LEVELTO,83,34,25,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Bell Random",IDC_BELLCHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,52,52,8
+    EDITTEXT        IDC_BELLVALUE,70,50,39,12,ES_AUTOHSCROLL
+    CONTROL         "Weapons",IDC_WEAPONCHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,124,15,47,8
+    CONTROL         "Armor",IDC_ARMORCHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,124,28,47,8
+    CONTROL         "Clothing",IDC_CLOTHINGCREATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,124,41,47,8
+    GROUPBOX        "% Chance",IDC_STATIC,183,7,85,63
+    LTEXT           "Prefix........",IDC_STATIC,189,17,33,9
+    EDITTEXT        IDC_PREFIXCHANCE,223,15,38,12,ES_AUTOHSCROLL
+    LTEXT           "Suffix........",IDC_STATIC,189,30,33,9
+    EDITTEXT        IDC_SUFFIXCHANCE,223,28,38,12,ES_AUTOHSCROLL
+    LTEXT           "Unique........",IDC_STATIC,189,43,33,9
+    EDITTEXT        IDC_UNIQUECHANCE,223,41,38,12,ES_AUTOHSCROLL
+    LTEXT           "Curse........",IDC_STATIC,189,57,33,9
+    EDITTEXT        IDC_CURSECHANCE,223,54,38,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    GROUPBOX        "Misc. Options",IDC_STATIC,164,71,104,73
+    LTEXT           "ID Prefix...",IDC_STATIC,170,84,33,9
+    EDITTEXT        IDC_IDPREFIXTEXT,204,81,59,12,ES_AUTOHSCROLL
+    CONTROL         "Remove Duplicates",IDC_REMOVEDUPCHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,170,112,90,8
+    CONTROL         "Output Script File",IDC_OUTPUTSCRIPTCHECK,"Button",
+                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,170,125,90,
+                    8
+    GROUPBOX        "",IDC_STATIC,7,71,153,103,0,WS_EX_TRANSPARENT
+    CONTROL         "Create Level List",IDC_CREATELISTCHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,71,71,8,
+                    WS_EX_TRANSPARENT
+    CONTROL         "Use ID.....",IDC_USELISTID,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,84,45,8,WS_EX_TRANSPARENT
+    EDITTEXT        IDC_LISTID,63,82,92,12,ES_AUTOHSCROLL
+    LTEXT           "Chance None....",IDC_STATIC,14,114,55,9
+    EDITTEXT        IDC_CHANCENONE1,69,113,38,12,ES_AUTOHSCROLL
+    CONTROL         "Output Scripts",IDC_OUTPUTSCRIPTCHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,128,90,8
+    PUSHBUTTON      "&Create",IDC_CREATEBUTTON2,221,161,47,14
+    LTEXT           "ID Type....",IDC_STATIC,170,98,33,9
+    COMBOBOX        IDC_IDTYPECOMBO,204,96,60,48,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "PH Lists......",IDC_MAKEPHLIST,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,100,45,8,WS_EX_TRANSPARENT
+    EDITTEXT        IDC_PHLISTID,63,97,92,12,ES_AUTOHSCROLL
+    CONTROL         "Script Names",IDC_INSTALLSCRIPT,"Button",
+                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,15,143,45,25,
+                    WS_EX_TRANSPARENT
+    EDITTEXT        IDC_INSTALLSCRIPTNAME,63,140,92,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_UNINSTALLSCRIPTNAME,63,156,92,12,ES_AUTOHSCROLL
+    CONTROL         "Misc",IDC_MISCCREATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,124,54,47,8
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,21
+ PRODUCTVERSION 1,0,0,21
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "MWRandItem MFC Application\0"
+            VALUE "FileVersion", "1, 0, 0, 21\0"
+            VALUE "InternalName", "MWRandItem\0"
+            VALUE "LegalCopyright", "Copyright (C) 2003\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "MWRandItem.EXE\0"
+            VALUE "ProductName", "MWRandItem Application\0"
+            VALUE "ProductVersion", "1, 0, 0, 21\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
+
+    IDD_MWRANDITEM_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 317
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 232
+    END
+
+    IDD_WEAPON_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 300
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 198
+    END
+
+    IDD_ENCHANT_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 178
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 86
+    END
+
+    IDD_OUTPUT_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 263
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 124
+    END
+
+    IDD_CREATE_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 268
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 175
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About MWRandItem..."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Canada) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENC)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_CAN
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\MWRandItem.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\MWRandItem.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MWRANDITEM_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New",                        ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Load &Group...",              ID_FILE_LOADGROUP
+        MENUITEM "Save Group...",               ID_FILE_SAVEGROUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Merge ESP...",               ID_FILE_LOADBASE
+        MENUITEM "&Save ESP...",                ID_FILE_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "Test", GRAYED
+    BEGIN
+        MENUITEM "&Export ESP",                 ID_TEST_EXPORTESP
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_EXIT            "Quit the application."
+    ID_FILE_LOADBASE        "Loads a base ESP file.\nLoad Base..."
+    ID_FILE_LOADGROUP       "Load a group settings file.\nLoad Group"
+    ID_FILE_SAVEGROUP       "Saves the current settings to a group file.\nSave Group"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Clear all records."
+    ID_FILE_SAVE            "Saves the current items to an ESP file."
+END
+
+#endif    // English (Canada) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\MWRandItem.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

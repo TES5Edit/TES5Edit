@@ -1,0 +1,1285 @@
+# Microsoft Developer Studio Generated Dependency File, included by NifTexture.mak
+
+..\..\..\..\Source\Windows\ColorStatic.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Windows\ColorStatic.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\File\csvfile.cpp : \
+	"..\..\..\..\source\common\contain\ptrarray.h"\
+	"..\..\..\..\source\common\contain\temarray.h"\
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\Common\String\sstring.h"\
+	"..\..\..\..\Source\File\csvfile.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_base.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_chr.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_err.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_file.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_log.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_math.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_math.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_mem.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_str.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	
+
+..\..\..\..\..\Source\Common\dl_time.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_time.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\..\Source\Common\File\genfile.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	
+
+..\..\..\..\Source\Common\String\SString.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\String\sstring.h"\
+	
+
+..\..\..\..\..\Source\Common\tstfile.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	
+
+..\..\..\..\Source\Windows\WinUtil.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Windows\winutil.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifAlphaProperty.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAlphaProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifAmbientLight.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAmbientLight.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifAutoNormalParticles.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAutoNormalParticles.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifAutoNormalParticlesData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAutoNormalParticlesData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifBase.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifBillboardNode.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBillboardNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifBsAnimationNode.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBSAnimationNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifBSPArrayController.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBSPArrayController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifCamera.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifCamera.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifColorData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifColorData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifDirectionalLight.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifDirectionalLight.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifEndFile.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifEndFile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifEOF.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifEOF.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifFile.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAlphaProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAmbientLight.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAutoNormalParticles.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifAutoNormalParticlesData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBillboardNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBSAnimationNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBSPArrayController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifCamera.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifColorData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifDirectionalLight.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifEndFile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifEOF.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\niffile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifGeomMorpherController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifGravity.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifKeyFrameController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifKeyFrameData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifMaterialProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifMorphData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleColorModifier.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleGrowFade.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleRotation.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleSysController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifPathController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifPixelData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifPosData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifRootCollisonNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifRotatingParticles.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifRotatingParticlesData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifShadeProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSkinData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSkinInstance.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSourceTexture.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifStringData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTextKeyExtraData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTextureEffect.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTextureProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTriShape.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTriShapeData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifUVController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifUVData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVertexColorProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVertWeightsExtraData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVisController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVisData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifWireFrameProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifZBufferProperty.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifFloatData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifGeomMorpherController.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifGeomMorpherController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifGravity.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifGravity.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifKeyFrameController.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifKeyFrameController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifKeyFrameData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifKeyFrameData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifMaterialProperty.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifMaterialProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifMorphData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifMorphData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifNode.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifParticleColorModifier.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleColorModifier.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifParticleGrowFade.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleGrowFade.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifParticleNode.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifParticleRotation.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleRotation.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifParticleSysController.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifParticleSysController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifPathController.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifPathController.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifPixelData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifPixelData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifPosData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifPosData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifRootCollisionNode.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifRootCollisonNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifRotatingParticles.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifRotatingParticles.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifRotatingParticlesData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifRotatingParticlesData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifShadeProperty.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifShadeProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifSkinData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSkinData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifSkinInstance.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSkinInstance.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifSourceTexture.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSourceTexture.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifStringData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifStringData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifTextKeyExtraData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTextKeyExtraData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifTextureEffect.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTextureEffect.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifTextureProperty.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTextureProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifTriShape.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTriShape.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifTriShapeData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifRootCollisonNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTriShapeData.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifUVController.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifUVController.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifUVData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifUVData.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifVertexColorProperty.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVertexColorProperty.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifVertWeightsExtraData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVertWeightsExtraData.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifVisController.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVisController.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifVisData.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifVisData.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifWireframeProperty.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifWireFrameProperty.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+..\..\..\..\Source\uesp\Morrow\NIF\NifZBufferProperty.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifZBufferProperty.h"\
+	"..\..\..\test\xmltest\stdafx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+.\ChildFrm.cpp : \
+	".\ChildFrm.h"\
+	".\NifTexture.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+.\MainFrm.cpp : \
+	"..\..\..\..\source\common\contain\ptrarray.h"\
+	"..\..\..\..\source\common\contain\temarray.h"\
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\Common\String\sstring.h"\
+	"..\..\..\..\Source\File\csvfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\niffile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifMaterialProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSourceTexture.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	".\MainFrm.h"\
+	".\NifCopyDlg.h"\
+	".\NifTexture.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+.\NifTextureView.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\niffile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifMaterialProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSourceTexture.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\Windows\ColorStatic.h"\
+	".\NifTexture.h"\
+	".\NifTextureDoc.h"\
+	".\NifTextureView.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+.\NifCopyDlg.cpp : \
+	"..\..\..\..\source\common\contain\ptrarray.h"\
+	"..\..\..\..\source\common\contain\temarray.h"\
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\Common\String\sstring.h"\
+	"..\..\..\..\Source\File\csvfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\niffile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifMaterialProperty.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifSourceTexture.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\Windows\winutil.h"\
+	".\NifCopyDlg.h"\
+	".\NifTexture.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+.\NifTexture.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\niffile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	"..\..\..\..\Source\Windows\ColorStatic.h"\
+	".\ChildFrm.h"\
+	".\MainFrm.h"\
+	".\NifTexture.h"\
+	".\NifTextureDoc.h"\
+	".\NifTextureView.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+!IF  "$(CFG)" == "NifTexture - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "NifTexture - Win32 Debug"
+
+!ENDIF 
+
+.\NifTexture.rc : \
+	".\res\NifTexture.ico"\
+	".\res\NifTexture.rc2"\
+	".\res\NifTextureDoc.ico"\
+	".\res\Toolbar.bmp"\
+	".\resource.hm"\
+	
+
+.\NifTextureDoc.cpp : \
+	"..\..\..\..\Source\Common\dl_base.h"\
+	"..\..\..\..\Source\Common\dl_block.h"\
+	"..\..\..\..\Source\Common\dl_chr.h"\
+	"..\..\..\..\Source\Common\dl_err.h"\
+	"..\..\..\..\Source\Common\dl_file.h"\
+	"..\..\..\..\Source\Common\dl_log.h"\
+	"..\..\..\..\Source\Common\dl_mem.h"\
+	"..\..\..\..\Source\Common\dl_str.h"\
+	"..\..\..\..\Source\Common\File\genfile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifBase.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\niffile.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifFloatArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifLongArray.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifNode.h"\
+	"..\..\..\..\Source\uesp\Morrow\NIF\NifTypes.h"\
+	".\NifTexture.h"\
+	".\NifTextureDoc.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	"c:\programs\msvs\vc98\include\basetsd.h"\
+	
+
+!IF  "$(CFG)" == "NifTexture - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "NifTexture - Win32 Debug"
+
+!ENDIF 
+
+!IF  "$(CFG)" == "NifTexture - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "NifTexture - Win32 Debug"
+
+!ENDIF 
+

@@ -1,0 +1,9 @@
+begin [scriptname]
+	short Var
+
+	MessageBox, "%.0f", [Tempvar01]
+
+	player->AddItem, "[tempvar02]", 1
+	player->AddItem, [tempvar01], 1
+
+end

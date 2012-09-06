@@ -1,0 +1,944 @@
+<HTML>
+<HEAD>
+	<TITLE>MWEdit v0.5.5 - Using Guide</TITLE>
+</HEAD>
+<BODY>
+
+<CENTER>
+	<H2>MWEdit v0.5.5 - Using Guide</H2>
+</CENTER>
+
+
+<HR NOSHADE>
+<H3>Contents</H3>
+
+<DL>
+	<DD><A HREF="#introduction"><B>1. Introduction</B></A>
+	<DD><A HREF="#backup"><B>2. Backing Up Plugins</B></A>
+	<DD><A HREF="#cantdo"><B>3. What It Can't Do (Yet)</B></A>
+	<DD><A HREF="#loading"><B>4. Loading Plugins</B></A>
+	<DD><A HREF="#mainview"><B>5. The Main View</B></A>
+	<DD><A HREF="#recorddlg"><B>6. Record Windows</B></A>
+	<DD><A HREF="#scripting"><B>7. Scripting</B></A>
+	<DD><A HREF="#dialogue"><B>8. Dialogue</B></A>
+	<DD><A HREF="#contlist"><B>9. Containers, Levelled Lists</B></A>
+	<DD><A HREF="#find"><B>10. Find Text</B></A>
+	<DD><A HREF="#clean"><B>11. Cleaning Records</B></A>
+	<DD><A HREF="#bugs"><B>12. Submitting Bugs</B></A>
+	<DD><A HREF="#csv"><B>13. CSV Export/Imports</B></A>
+	<DD><A HREF="#scripttemplate"><B>14. Script Templates</B></A>
+</DL>
+<P>
+
+
+<HR NOSHADE>
+<A NAME="introduction"></A>
+<H3>1. Introduction</H3>
+MWEdit is an alternate editor for the Elder Scrolls: Morrowind RPG from Bethesda. While it is similar
+in appearance and design to the official Construction Set editor, it introduces new features that make
+creating plugins easier. 
+<P>
+This document explains some of the new features and the major differences from the official editor.
+<P>
+Comments and suggestions are always welcome...visit the SourceForge site at <A HREF="http://mwedit.sf.net"><B>mwedit.sf.net</B></A>
+to add bug/features, contribute to the forums, or simply e-mail me at <A HREF="mailto:uesp@sympatico.ca"><B>uesp@sympatico.ca</B></A>.
+<P>
+
+
+<HR NOSHADE>
+<A NAME="backup"></A>
+<H3>2. Backing Up Plugins</H3>
+A common concern when using any unofficial editor such as MWEdit is the possible corruption of the
+file data (plugins in this case),  especially for an editor still in alpha/beta release. As when 
+working with any data, it is reccommended that you back up your plugin files regularily.
+<P>
+Fortunately, MWEdit automatically backs up your plugin when you save it. The first time the plugin
+is backed up, the backup will be named "Plugin.esp.001". Subsequent back ups will be "Plugin.esp.002",
+"Plugin.esp.003", etc... MWEdit will never overwrite an existing plugin which means that if you save
+often, you'll have an almost complete history of changes in your plugin. This is useful if you accidently
+saved something you didn't want or need to revert to an earlier version for debugging.
+<P>
+Note that for large plugins, you may wish to delete the backups occasionally if you are low on
+disk space.
+<P>
+
+
+<HR NOSHADE>
+<A NAME="cantdo"></A>
+<H3>3. What It Can't Do (Yet)</H3>
+MWEdit is by no means a complete plugin editor, and might not ever be depending on the amount of 
+support and feedback I receive. The specific major areas that are currently missing are:
+<OL>
+	<LI>3D view (so you cannot add/edit cell references)
+	<LI>Region paint
+	<LI>Animations
+	<LI>Path grid
+	<LI>Cell reference information edit
+</OL>
+<P>
+
+
+<HR NOSHADE>
+<A NAME="loading"></A>
+<H3>4. Loading Plugins</H3>
+The load dialog window has been improved slightly as it includes the last modified date of each plugin,
+can be sorted, and displays ESS save game files as well. It is important to note that all ESM master files
+will only be loaded once each session, greatly increasing the load speed for subsequent loads. If you need
+to reload a master file simply quit the program and restart it.
+<P>
+It is also possible to load a plugin without having to load the required master files. This is particular
+helpful for quickly testing plugins or for debugging. It is important to note that if you do load a plugin
+without it's master(s) it is possible to 'lose' some information. For instance say an item in the plugin uses
+some script that is in the master file. If you edit and save that item the script field will be reset since
+the script doesn't exist. This may be fixed in a later version.
+<P>
+MWEdit uses a standard Multiple Document Interface (MDI) which allows you to edit several plugins at the
+same time. You can use this to copy content from one plugin to another (simply drag records from the main
+view from one document to the other).
+<P>
+
+
+<HR NOSHADE>
+<A NAME="mainview"></A>
+<H3>5. The Main View</H3>
+MWEdit's main view contains the same large item list but the tab control of record types has been changed
+into a list on the left side of the window. The alphabetically sorted list allows you to more quickly 
+select the desired type rather than having to find the type in the tab bar (which tends to keep changing
+the tab positions).
+<P>
+You'll also notice that all record types are in the record type list rather than having some items in the
+list and some accessed from the menu (like scripts, globals, etc... in TESCS). Currently the only thing
+not in the list is the plugin info (author and description text).
+<P>
+The list's columns are also slightly different, such as with the addition of the "Mod" column for all record
+types. This allows you to easily view all the active and deleted records by simply sorting by "Mod".
+Other record types have addition columns added as well. The last sort column as well as the column widths
+are saved and restored when you switch record types.
+<P>
+The record list is color coded to quickly identify active (green) and deleted (red) records. You can use
+the <I>View-View Changed</I> menu item to display only the current active records. Right-click on the
+item list to display commands such as <I>Copy</I>, <I>Rename</I>, etc... New, and hopefully clearer, icons
+have been created for all record types.
+<P>
+Note that all record lists in the game generally function identically. For instance, in the container item
+list you can double-click to display and edit that item.
+<P>
+
+
+<HR NOSHADE>
+<A NAME="recorddlg"></A>
+<H3>6. Record Windows</H3>
+There are number of important notes to mention in general about the windows used to edit individual
+records. The records are all similarily designed with a <I>Save</I> and a <I>Cancel</I> button in
+the same place. Changes to a record are never permanently saved until you press the <I>Save</I> button.
+If you close the window or pressing the <I>Cancel</I> button you will lose any changes made since
+you opened that window. This goes for the dialogue record window as well. Changes to any infos in
+a dialogue will not be recorded until the <I>Save</I> button is pressed. Note that if you save the
+plugin with open record windows, the changes made in those windows will not be stored in the file.
+<P>
+
+
+<HR NOSHADE>
+<A NAME="scripting"></A>
+<H3>7. Scripting</H3>
+One of the major reasons for creating MWEdit is to improve the ease of creating and debugging scripts which
+are probably one of the most difficult aspects of plugin creation.
+<P>
+A completely new script compiler has been created from scratch which records many more error messages and
+warnings than the TESCS compiler. An error message will prevent the script from compiling successfully while
+a warning message will not (although the compiler script may not work as expected).
+Some of what the new compiler checks include:
+<OL>
+	<LI>Object types used in functions are checked more rigourously. If the function
+		expects an NPC ID, you'll receive an error/warning if you use another type.
+	<LI>Functions that are known to be broken will result in a compiler message.	 
+	<LI>Compiler does not permit the use of reserved words as local variables (such as
+		<I>END</I>, <I>X</I>, <I>Y</I>, etc...).
+	<LI>Required spaces in <I>IF</I> and <I>SET</I> statements (spaces are added if missing)
+	<LI>Checks for missing or extra function arguments.
+	<LI>Does not allow the use of multiple objects references on one line.
+	<LI>Checks the number of buttons/variables used in the <I>MessageBox</I> function.
+	<LI>Warns for missing function commas.
+	<LI>Warns for local/global ID conflicts.
+	<LI>Checks if the function accepts variables or not.
+	<LI>Checks maximum length of variables, <I>IF</I>, <I>SET</I> statements, etc...
+	<LI>Checks for unknown or incorrect syntax.
+</OL>
+When you compile a script, all warning and error messages are displayed in a splitter list
+at the bottom of the script window. You can double-click a message to jump to that point in the
+script where the error occurred, or right-click the message to display more options such as
+viewing details of the message including any function information if available.
+<P>
+There are three levels of recording warning/error messages: <I>Weak</I>, <I>Default</I>, and 
+<I>Strong</I>, allowing you to set how many warning/error messages are recorded during a compile.
+<P>
+The script text is color coded which allows you to easily identify functions, numbers, keywords,
+etc... A default white or blue color scheme is available or define your own custom colors which are
+saved in the registry. The color formatting can also be disabled. The font used in the script
+window can also be selected.
+<P>
+Complete help on all the script functions is available from the help menu. The help describes
+all the function parameters, the return value, and function description as well as any special
+function notes (such as whether it is a Tribunal function, etc...).
+<P>
+Other script commands include the ability to export and import scripts to/from text files and
+the compiling of scripts on save automatically (no warrning/errors displayed). The Import/Export
+option is available from the <I>File</I> menu. Exporting a script will output the entire script(s)
+to a text file with the same name as the script (existing script files are overwritten). When
+you import a script the script name will be taken from the script name within the file (i.e., 
+<I>begin scriptname</I>).
+<P>
+
+
+<HR NOSHADE>
+<A NAME="dialogue"></A>
+<H3>8. Dialogue</H3>
+Editting dialogue topics and INFOs is another difficult part of creating plugins which MWEdit
+attempts to improve upon. Like the other record types, all changes you make to INFOs in a dialogue
+are not saved until you press the <I>Save</I> button. Otherwise, all additions, deletions, and
+modifications are cancelled.
+<P>
+When copying or renaming dialogue topics you will also create a copy of all child INFOs. You can
+similarily create a copy of INFO records within a dialogue topic (select the records and right-click
+on the list).
+<P>
+The INFO list in the dialogue window displays more information than that in TESCS. If the INFO
+uses any functions the entire function description (ex: 'GameHour >= 18') will appear in the list
+allowing you to more quickly determine which INFO you wish to edit.
+<P>
+Other options include being able to easily change the order of INFO records and the standard
+filtering by NPC.
+<P>
+The INFO record IDs are generated slightly differently than in TESCS in a manner
+which virtually guarantees that the ID is unique. The ID is an up to 30 digit number such as 
+<B>610641915360541333977</B> with the following format:
+<DL>
+	<DD><B>Bytes  0- 9:</B> Current system time in seconds since midnight, January 1, 1970
+	<DD><B>Bytes 10-19:</B> Drive c: serial number (or clock ticks if serial number is not available)
+	<DD><B>Bytes 20-29:</B> Incremented counter per application session starting at 1
+</DL>
+Thus, it is highly unlikely that two people will ever generate the same INFO ID.
+<P>
+
+
+<HR NOSHADE>
+<A NAME="contlist"></A>
+<H3>9. Containers and Levelled Lists</H3>
+MWEdit makes it easier to work with containers and levelled lists. Items can dragged into these lists
+from the main view or from other containers/lists as in TESCS. Records can also be editted directly
+from the container/list by double-clicking them. You can modify the item count in containers (or the
+level in levelled lists) by selecting one or more items and using the <I>+</I> and <I>-</I> keys to
+easily increment/decrement the value.
+<P>
+
+
+<HR NOSHADE>
+<A NAME="find"></A>
+<H3>10. Find Text</H3>
+MWEdit has the same <I>Find Text</I> command as TESCS in the <I>Edit</I> menu. The command searches
+through all currently loaded records for an exact match to the given text string (not case sensitive).
+The find results are improved in that they are all displayed in a single result list along with their
+ID and type (all of which can be sorted to quickly find the desired record). Double-click any record
+in the list to edit that record (including INFO records which will open the parent dialogue topic as
+well as the INFO edit window).
+<P>
+
+
+<HR NOSHADE>
+<A NAME="clean"></A>
+<H3>11. Cleaning Records</H3>
+A new command, <I>Clean</I>, is available for most record types (including INFOs) and some 
+sub-record types (such as individual cell references). To access the clean command select and 
+right-click one or more records. The clean command attempts to permanently remove the given 
+record from the current active file. Note that once you clean a record you cannot undo the clean
+(not yet anyways), other than reloading the plugin. This allows you to easily remove unwanted
+edits/references or revert a record to its original state. Previously this had to be done
+by a seperate utility such as TESAME.
+<P>
+It may not be possible to clean some INFO records depending on their contents. INFO records use a 
+doubly linked list structure which, if a record is cleaned, can be permanently messed up resulting
+in lost INFO records or an infinite looping structure. Generally you can clean INFO records unless
+you move or add new ones. You'll receive a warning message if you cannot clean a particular INFO.
+<P>
+
+<HR NOSHADE>
+<A NAME="bugs"></A>
+<H3>12. Submitting Bugs</H3>
+Bug/error reports and feature requests are gladly welcome and can be either submitted on the
+<A HREF="http://sourceforge.net/tracker/?group_id=90473&atid=593757"><B>MWEdit SourceForge Project Page</B></A> or by 
+<A HREF="mailto:uesp@sympatico.ca"><B>E-mailing Me</B></A>.
+You can find handy links in the Help menu as well on the toolbar for quickly displaying the bug reporting
+page on the SourceForge project site.
+<P>
+
+
+<HR NOSHADE>
+<A NAME="csv"></A>
+<H3>13. CSV Import/Export</H3>
+Many items have the option of being imported and exported from regular CSV (Comma Seperated Value) text files which
+can be output by most spreadsheet programs. This allows you to easily and quickly create a large number of items.
+You can import/export files by from the commands under the File menu.
+<P>
+Unlike the files output by the TESCS the supported CSV format is flexible and allows more record data to be imported
+or exported. The first line in the CSV file gives the column names for the subsequent data. In order for a CSV file
+to be successfully imported, these column names much match that as listed in the table below. The columns can appear
+in any order and all but the <I>ID</I> and <I>ItemType</I> columns are optional. 
+<P>
+<CENTER><TABLE BORDER=1 CELLPADDING=3 CELLSPACING=0>
+<TR VALIGN=TOP BGCOLOR="#cccccc">
+	<TH>Record</TH>
+	<TH>Field</TH>
+	<TH>Description</TH>
+</TR><TR>
+
+	<TD ROWSPAN=11 BGCOLOR="#cccccc"><B>Common</B></TD>
+	<TD COLSPAN=2>Fields common to all, or most, record types.</TD>
+</TR><TR>
+
+	<TD>ID</TD>
+	<TD>The unique item ID. If you specify an existing ID that has the same type as the imported record, the existing record will be overwritten. If the existing record is of a different type, an error will occur.</TD>
+</TR><TR>
+	<TD>ItemType</TD>
+	<TD>The type of record to import. See the list of supported types below:
+		<LI>Activator
+		<LI>Alchemy
+		<LI>Apparatus
+		<LI>Armor
+		<LI>Book
+		<LI>Class
+		<LI>Clothing
+		<LI>Container
+		<LI>Enchantment
+		<LI>Global	
+		<LI>Ingrediant
+		<LI>Light
+		<LI>Lock
+		<LI>Misc
+		<LI>NPC
+		<LI>Probe
+		<LI>Race
+		<LI>Repair
+		<LI>SoundGen
+		<LI>Sound
+		<LI>Spell
+		<LI>Static
+		<LI>Weapon
+		</UL></TD>
+</TR><TR>
+	<TD>Name</TD>
+	<TD>For records that have a displayed object name.</TD>
+</TR><TR>
+	<TD>Model</TD>
+	<TD>The NIF model of the objects that have one.</TD>
+</TR><TR>
+	<TD>Icon</TD>
+	<TD>Inventory icon for carryable objects.</TD>
+</TR><TR>
+	<TD>Script</TD>
+	<TD>The script name for objects that can have them.</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>Floating point weight in game units</TD>
+</TR><TR>
+	<TD>Value</TD>
+	<TD>Item value, unsigned, usually long (4 billion), sometimes short (65535)</TD>
+</TR><TR>
+	<TD>Persist</TD>
+	<TD>Persistance flag, True/False, Yes/No</TD>
+</TR><TR>
+	<TD>Blocked</TD>
+	<TD>Blocked (read-only) record flag, True/False, Yes/No</TD>
+</TR><TR>
+
+	<TD BGCOLOR="#cccccc"><B>Activator</B></TD>
+	<TD COLSPAN=2>Activator objects</TD>
+</TR><TR>
+
+	<TD ROWSPAN=4 BGCOLOR="#cccccc"><B>Alchemy</B></TD>
+	<TD COLSPAN=2>Potions</TD>
+</TR><TR>
+
+	<TD>AutoCalc</TD>
+	<TD>Yes/No, True/False</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+
+	<TD ROWSPAN=5 BGCOLOR="#cccccc"><B>Apparatus</B></TD>
+	<TD COLSPAN=2>Alchemy apparatus objects (Retorts, Calcinators, etc...)</TD>
+</TR><TR>
+
+	<TD>Quality</TD>
+	<TD>Floating point (1.0 = default)</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>AutoCalc</TD>
+	<TD>Yes/No, True/False</TD>
+</TR><TR>
+
+	<TD ROWSPAN=8 BGCOLOR="#cccccc"><B>Armor</B></TD>
+	<TD COLSPAN=2>Armor items</TD>
+</TR><TR>
+
+	<TD>Type</TD>
+	<TD>Type of armor, one of:
+		<UL><LI>Helmet
+		<LI>Cuirass
+		<LI>Left Pauldron
+		<LI>Right Pauldron
+		<LI>Greaves
+		<LI>Boots
+		<LI>Left Gauntlet
+		<LI>Right Gauntlet
+		<LI>Shield
+		<LI>Left Bracer
+		<LI>Right Bracer
+		</UL></TD>
+</TR><TR>
+	<TD>Rating</TD>
+	<TD>Armor value, long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Health</TD>
+	<TD>Maximum condition of armor, long</TD>
+</TR><TR>
+	<TD>Enchant</TD>
+	<TD>Enchantment ID string</TD>
+</TR><TR>
+	<TD>EnchantPts</TD>
+	<TD>Available enchant points, long</TD>
+</TR><TR>
+
+	<TD ROWSPAN=6 BGCOLOR="#cccccc"><B>Book</B></TD>
+	<TD COLSPAN=2>Books, scrolls, parchments, etc...</TD>
+</TR><TR>
+
+	<TD>Teaches</TD>
+	<TD>Skill ID string</TD>
+</TR><TR>
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Enchantment</TD>
+	<TD>Enchantment ID string</TD>
+</TR><TR>
+	<TD>EnchantPts</TD>
+	<TD>Available enchant points, long</TD>
+</TR><TR>
+
+	<TD ROWSPAN=3 BGCOLOR="#cccccc"><B>Class</B></TD>
+	<TD COLSPAN=2>Custom class description</TD>
+</TR><TR>
+
+	<TD>Description</TD>
+	<TD>Class description string</TD>
+</TR><TR>
+	<TD>Playable</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+
+	<TD ROWSPAN=6 BGCOLOR="#cccccc"><B>Clothing</B></TD>
+	<TD COLSPAN=2>All clothing objects</TD>
+</TR><TR>
+
+	<TD>Type</TD>
+	<TD>Type of clothing, one of:
+		<UL><LI>Pants
+		<LI>Shoes
+		<LI>Shirt
+		<LI>Belt
+		<LI>Robe
+		<LI>R. Glove
+		<LI>L. Glove
+		<LI>Skirt
+		<LI>Ring
+		<LI>Amulet
+		</UL></TD>
+</TR><TR>
+	<TD>Value</TD>
+	<TD>Unsigned short</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>EnchantPts</TD>
+	<TD>Available enchant points, long</TD>
+</TR><TR>
+	<TD>Enchantment</TD>
+	<TD>Enchantment ID string</TD>
+</TR><TR>
+
+	<TD ROWSPAN=4 BGCOLOR="#cccccc"><B>Container</B></TD>
+	<TD COLSPAN=2>Any sort of container: chest, barrel, desk, etc...</TD>
+</TR><TR>
+
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Organic</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+	<TD>Respawn</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+
+	<TD ROWSPAN=5 BGCOLOR="#cccccc"><B>Enchantment</B></TD>
+	<TD COLSPAN=2>Enchantment description for use with items, potions, spells, etc...</TD>
+</TR><TR>
+
+	<TD>Type</TD>
+	<TD>Type of enchantment, one of:
+		<UL><LI>Cast Once
+		<LI>Cast Strikes
+		<LI>Cast When Used
+		<LI>Constant Effect
+		</UL></TD>
+</TR><TR>
+	<TD>Cost</TD>
+	<TD>Cost to use the enchantment</TD>
+</TR><TR>
+	<TD>Charge</TD>
+	<TD>Maximum charge</TD>
+</TR><TR>
+	<TD>AutoCalc</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+
+	<TD ROWSPAN=3 BGCOLOR="#cccccc"><B>Global</B></TD>
+	<TD COLSPAN=2>Global variable definition for use in scripts and dialogue</TD>
+</TR><TR>
+
+	<TD>Type</TD>
+	<TD>Type of value, one of:
+		<UL><LI>short
+		<LI>long
+		<LI>float
+		</UL></TD>
+</TR><TR>
+	<TD>Value</TD>
+	<TD>Global variable value</TD>
+</TR><TR>
+
+	<TD ROWSPAN=3 BGCOLOR="#cccccc"><B>Ingrediant</B></TD>
+	<TD COLSPAN=2>Ingrediant and foods</TD>
+</TR><TR>
+
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+
+	<TD ROWSPAN=5 BGCOLOR="#cccccc"><B>Light</B></TD>
+	<TD COLSPAN=2>Light object, both visible, carrayable, and invisible</TD>
+</TR><TR>
+
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Sound</TD>
+	<TD>Sound ID string</TD>
+</TR><TR>
+	<TD>Radius</TD>
+	<TD>Unsigned long range in game units</TD>
+</TR><TR>
+
+	<TD ROWSPAN=5 BGCOLOR="#cccccc"><B>Lock</B></TD>
+	<TD COLSPAN=2>Lockpicks</TD>
+</TR><TR>
+
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Uses</TD>
+	<TD>Number of uses, long</TD>
+</TR><TR>
+	<TD>Quality</TD>
+	<TD>Floating point quality (default = 1.0)</TD>
+</TR><TR>
+
+	<TD ROWSPAN=3 BGCOLOR="#cccccc"><B>Misc</B></TD>
+	<TD COLSPAN=2>Miscellaneous objects</TD>
+</TR><TR>
+
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+
+	<TD ROWSPAN=31 BGCOLOR="#cccccc"><B>NPC</B></TD>
+	<TD COLSPAN=2>NPC definition</TD>
+</TR><TR>
+
+	<TD>Level</TD>
+	<TD>NPC level, short</TD>
+</TR><TR>
+	<TD>Race</TD>
+	<TD>Race ID string</TD>
+</TR><TR>
+	<TD>Female</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+	<TD>Class</TD>
+	<TD>Class ID string</TD>
+</TR><TR>
+	<TD>Faction</TD>
+	<TD>Faction ID string</TD>
+</TR><TR>
+	<TD>Rank</TD>
+	<TD>Faction rank value, short</TD>
+</TR><TR>
+	<TD>AutoCalc</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+	<TD>Respawn</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+	<TD>Animation</TD>
+	<TD>Alternate animation file</TD>
+</TR><TR>
+	<TD>Disposition</TD>
+	<TD>Disposition value, short</TD>
+</TR><TR>
+	<TD>Blood</TD>
+	<TD>Blood type, one of:
+		<UL><LI>Default (Red)
+		<LI>Skeleton (White)
+		<LI>Metal (Gold)
+		<LI>Default
+		<LI>Skeleton
+		<LI>Metal
+		<LI>Red)
+		<LI>White
+		<LI>Gold
+		</UL></TD>
+</TR><TR>
+	<TD>Hair</TD>
+	<TD>Hair bodypart ID string</TD>
+</TR><TR>
+	<TD>Head</TD>
+	<TD>Head bodypart ID string</TD>
+</TR><TR>
+	<TD>Strength (Str)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Agility (Agi)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Speed (Spd)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Endurance (End)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Willpower (Wil)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Intelligence (Int)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Personality (Per)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Luck (Luc)</TD>
+	<TD>Attribute value, unsigned char (0-255). Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Item</TD>
+	<TD>Inventory item ID. If you wish to add multiple items you need to have additional columns (ex: to add ten different items use ten Item columns).</TD>
+</TR><TR>
+	<TD>ItemEx</TD>
+	<TD>Iventory item ID with the extended format:</FONT></P> <P ALIGN=CENTER STYLE="margin-bottom: 0cm">ItemID=Count</FONT></P> <P ALIGN=LEFT>such as &ldquo;gold_001=1000&rdquo; (any spaces are ignored).</TD>
+</TR><TR>
+	<TD>Spell</TD>
+	<TD>Spell ID string. Similar to the Item field, use multiple Spell columns to add several spells.</TD>
+</TR><TR>
+	<TD>Skill</TD>
+	<TD>Skill value (unsigned char) with the format:</FONT></P> <P ALIGN=CENTER STYLE="margin-bottom: 0cm">Skill=Value</FONT></P> <P ALIGN=LEFT>such as &ldquo;Block=54&rdquo;. Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Attribute</TD>
+	<TD>Attribute value (unsigned char) with the format:</FONT></P> <P ALIGN=CENTER STYLE="margin-bottom: 0cm">Attribute=Value</FONT></P> <P ALIGN=LEFT>such as &ldquo;Str=54&rdquo;. Ignored if AutoCalc is true.</TD>
+</TR><TR>
+	<TD>Gold</TD>
+	<TD>Amount of gold carried by the NPC (unsigned long)</TD>
+</TR><TR>
+	<TD>Health</TD>
+	<TD>Maximum health value (long, ignore if AutoCalc is true).</TD>
+</TR><TR>
+	<TD>Fatigue</TD>
+	<TD>Maximum fatigue value (long, ignore if AutoCalc is true).</TD>
+</TR><TR>
+	<TD>SpellPts (Magic)</TD>
+	<TD>Maximum spell points value (long, ignore if AutoCalc is true).</TD>
+</TR><TR>
+
+	<TD ROWSPAN=5 BGCOLOR="#cccccc"><B>Probe</B></TD>
+	<TD>Trap disarming probes</TD>
+</TR><TR>
+
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Uses</TD>
+	<TD>Number of uses</TD>
+</TR><TR>
+	<TD>Quality</TD>
+	<TD>Floating point quality (default of 1.0)</TD>
+</TR><TR>
+
+	<TD ROWSPAN=3 BGCOLOR="#cccccc"><B>Race</B></TD>
+	<TD COLSPAN=2>Custom race definition</TD>
+</TR><TR>
+
+	<TD>Description</TD>
+	<TD>Race description string</TD>
+</TR><TR>
+	<TD>Playable</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+
+	<TD ROWSPAN=5 BGCOLOR="#cccccc"><B>Repair</B></TD>
+	<TD>Armorer repair item</TD>
+</TR><TR>
+
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Uses</TD>
+	<TD>Number of uses</TD>
+</TR><TR>
+	<TD>Quality</TD>
+	<TD>Floating point quality (default of 1.0)</TD>
+</TR><TR>
+
+	<TD ROWSPAN=4 BGCOLOR="#cccccc"><B>SoundGen</B></TD>
+	<TD COLSPAN=2>Creature sound generation record</TD>
+</TR><TR>
+
+	<TD>Type</TD>
+	<TD>Type of sound, one of:
+		<UL><LI>Left Foot
+		<LI>Right Foot
+		<LI>Swim Left
+		<LI>Swim Right
+		<LI>Moan
+		<LI>Roar
+		<LI>Scream
+		<LI>Land
+		</UL></TD>
+</TR><TR>
+	<TD>Sound</TD>
+	<TD>Sound ID string</TD>
+</TR><TR>
+	<TD>Creature</TD>
+	<TD>Related created ID string</TD>
+</TR><TR>
+
+	<TD ROWSPAN=4 BGCOLOR="#cccccc"><B>Sound</B></TD>
+	<TD COLSPAN=2>Sound record</TD>
+</TR><TR>
+
+	<TD>MinRange</TD>
+	<TD>Minimum range of sound in game units (0 to 255)</TD>
+</TR><TR>
+	<TD>MaxRange</TD>
+	<TD>Maximum range of sound in game units (0 to 255)</TD>
+</TR><TR>
+	<TD>Volume</TD>
+	<TD>Volume of sound (0.0 to 1.0)</TD>
+</TR><TR>
+	<TD ROWSPAN=5 BGCOLOR="#cccccc"><B>Spell</B></TD>
+	<TD COLSPAN=2>Spell definition</TD>
+</TR><TR>
+	<TD>AutoCalc</TD>
+	<TD>True/False, Yes/No</TD>
+</TR><TR>
+	<TD>PCStart</TD>
+	<TD>Does the player start with this spell. True/False, Yes/No</TD>
+</TR><TR>
+	<TD>Type</TD>
+	<TD>Type of spell, one of:
+		<UL><LI>Spell
+		<LI>Ability
+		<LI>Blight
+		<LI>Disease
+		<LI>Curse
+		<LI>Power
+		</UL></TD>
+</TR><TR>
+	<TD>Cost</TD>
+	<TD>Base cost of spell in spell points (unsigned long)</TD>
+</TR><TR>
+	<TD BGCOLOR="#cccccc"><B>Static</B></TD>
+	<TD COLSPAN=2>Static object</TD>
+</TR><TR>
+
+	<TD ROWSPAN=13 BGCOLOR="#cccccc"><B>Weapon</B></TD>
+	<TD COLSPAN=2>All weapon types</TD>
+</TR><TR>
+
+	<TD>Value</TD>
+	<TD>Unsigned long</TD>
+</TR><TR>
+	<TD>Weight</TD>
+	<TD>&nbsp;</TD>
+</TR><TR>
+	<TD>Type</TD>
+	<TD>Weapon type, one of:
+		<UL><LI>Short Blades
+		<LI>Long Blade
+		<LI>Long Blade, 2-Hand
+		<LI>Blunt
+		<LI>Blunt, 2-Close
+		<LI>Blunt, 2-Wide
+		<LI>Spear
+		<LI>Axe
+		<LI>Axe, 2-Hand
+		<LI>Bow
+		<LI>Crossbow
+		<LI>Thrown
+		<LI>Arrow
+		<LI>Bolt</TD>
+</TR><TR>
+	<TD>ChopMin</TD>
+	<TD>Damage, unsigned char (0-255)</TD>
+</TR><TR>
+	<TD>ChopMax</TD>
+	<TD>Damage, unsigned char (0-255)</TD>
+</TR><TR>
+	<TD>SlashMin</TD>
+	<TD>Damage, unsigned char (0-255)</TD>
+</TR><TR>
+	<TD>SlashMax</TD>
+	<TD>Damage, unsigned char (0-255)</TD>
+</TR><TR>
+	<TD>ThrustMin</TD>
+	<TD>Damage, unsigned char (0-255)</TD>
+</TR><TR>
+	<TD>ThrustMax</TD>
+	<TD>Damage, unsigned char (0-255)</TD>
+</TR><TR>
+	<TD>IgnoreResist</TD>
+	<TD>Ignore creature resistance, True/False, Yes/No</TD>
+</TR><TR>
+	<TD>Speed</TD>
+	<TD>Higher is faster, floating point (default = 1.0)</TD>
+</TR><TR>
+	<TD>Reach</TD>
+	<TD>Longer is farther, Floating point (default = 1.0)</TD>
+</TR>
+</TABLE></CENTER>
+<P>
+More supported records and fields will be added in the future. The easiest way to ensure a correct CSV file format is
+to export some sample records and load that file into your spreadsheet application. You can import multiple record
+types but exported files contain only the selected records of the currently displayed type in the main view.
+<P>
+When importing records, any existing record with the same ID will be overwritten, assuming it is the same item type.
+This allows you to reimport the same CSV file several times as you fine tune your item list. 
+<P>
+
+
+<HR NOSHADE>
+<A NAME="scripttemplate"></A>
+<H3>14. Script Templates</H3>
+MWEdit v0.5.5 introduced the idea of Script Templates to help modders to quickly create any number of 
+similar scripts from a source script and a CSV (Comma Seperated Value) files. The Script Template
+command can be found in the Edit menu.
+<P>
+The script template file is a regular text file that contains the entire source script for the
+templates (from the <I>begin</I> to the <I>end</I> statements). The source script will also contain
+special template variables that will be replaced by values in the CSV file. Take the following simple
+source script as an example:
+<PRE>begin [ScriptName]
+	short DoOnce
+
+	if ( DoOnce == 0 )
+		player-&gt;AddItem, [ItemID1], [ItemCount1]
+		set DoOnce to 1
+	endif
+end</PRE>
+The template variables are surrounded in square brackets ([]) and in the above example include <I>[ScriptName]</I>,
+<I>[ItemID1]</I>, and <I>[ItemCount1]</I>. The <I>[ScriptName]</I> is the only special and required template
+variable and specifies the script name for the new script (otherwise all scripts would be created with the same 
+name and overwrite each other). The other template variables can include any combination of letters/numbers
+(not case sensitive). When you loading a source script the template variables found in the script will be
+listed in the template variable list. The source script text can also be modified in the <I>Template Text</I> tab.
+<P>
+The CSV file in a regular Comma Seperated Value file that can be output by most spreadsheet applications.
+It contains the values of template variables to insert into the scripts to be created. A sample CSV file
+matching the above source example is given below:
+<PRE>	ScriptName, ItemID1, ItemCount1
+	dh_itemscr_01, gold_001, 1050
+	dh_itemscr_02, dh_item_test_01, 1
+	dh_itemscr_03, dh_levelist_01, 4</PRE>
+The first row in the CSV file contains the template variables matching those in the source script (without
+the surrounding [] brackets). The columns can appear in any order and the template variable name is not 
+case sensitive. When you load a CSV file you can check its contents in the <I>CSV File</I> tab to ensure
+it has been loaded successfully.
+<P>
+There are several options available affecting the creation of script templates.
+<DL>
+<DT><B>Keep Quotes (CSV)</B>
+	<DD>When this option is checked, any quotes in the CSV file will not be removed from the
+			CSV strings. This might be important if some of your IDs contain spaces. Depending
+			on how your CSV file is created or exported, keeping quotes may result in an incorrect
+			format for some values (like numbers). This option only takes affect for CSV files
+			loaded after the setting change.
+<P>
+<DT><B>Only Complete Rows (CSV)</B>
+	<DD>With the option checked only complete rows in the CSV file will be considered valid
+			for script creation. Incomplete rows (rows will missing values) will be ignored.
+<P>
+<DT><B>Auto Script Name</B>
+	<DD>With this option checked you can specify a script prefix to use when creating new scripts.
+			The Script names will start with your prefix followed by an 4 byte number index
+			(scriptname_0001, scriptname_0002, etc...). If this option is unchecked the script name
+			will be taken from the <I>ScriptName</I> column in the CSV file.
+</DL>
+The <I>Check</I> button will check the current source script and CSV file and settings to ensure
+everything works reasonably well. You will be notified of any errors or warnings. A check is
+also automatically performed when you press the <I>Create</I> button which will actually create
+the new scripts from the current settings. Note that any existing script name will be overwritten.
+<P>
+
+
+<HR NOSHADE>
+<ADDRESS>
+<SMALL>
+	Last Modified: 15 November 2003 by <A HREF="mailto:uesp@sympatico.ca"><B>Dave Humphrey</B></A>
+</SMALL>
+</ADDRESS>
+</BODY>
+</HTML>
+

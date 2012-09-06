@@ -1,0 +1,130 @@
+  Bugs
+---------------------------------------
+
+v0.4.1
+	- Sometimes the script compiler fails to compile but no warning/error message is generated
+	  (15 September 2003).
+
+v0.4.2
+	- Tab doesn't work properly in pages with a tab control (21 September 2003).
+	- The cell references might not be done 100% correctly (with respect to the reference 'ID')
+	  (29 September 2003).
+	- Problems with script symbol names such as 'float' and 'reset'. Fixing this would require
+	  changing how the compiler parses symbol names or adding rows in the compile tables for
+	  the token types (5 October 2003).
+
+v0.5.0
+	- The cell reference count may sometimes not be correct after adding/deleting/undeleting
+	  cell references. This can be fixed by adding a function that goes through and properly
+	  counts the references after editting (5 October 2003).
+	- The Info reference search command might return false positive matches (5 October 2003).
+
+
+
+
+  Possible Windows/System Bugs/Notes
+=======================================
+
+v0.5.0
+	- The ShellExecute() and ShellExecuteEx() functions do not appear to return a valid HINSTANCE
+	  handle as they should according to their definition (confirmed on the web).
+
+
+  Possible Construction Set Bugs/Notes
+=======================================
+
+v0.6.0
+	- If an NPC has an empty class/race/hair/head (unsure which one or combination) then the CS
+	  will crash when the AI package window is opened. 
+
+
+  Possible TESCK Script Bugs/Notes
+=======================================
+
+v0.4.1
+	- AiActivate, "player", reset ??? ("reset\0" is used in place of "player")
+	- AiWander: Idle2 value is completely ignored, Reset maybe incorrectly output as compared
+	  to the other AI functions. Does not limit the number of arguments?
+	- Functions accepting IDs output the ',' where it exists (in set statements?). Unneeded?
+	- Random: Outputs all but the first ASCII digit to the binary stream (strange?)
+			Regular Function: < X> <Function Code> <Binary Short>
+			Random:			  < X> <Function Code> <Binary Short> <Extra ASCII Bytes???> 
+		Outputting the Random function the 'correct' way appears to work fine.
+	- Show: Prevents compiled script SCDT data from being saved (no compile time errors?)
+	- SetJournalIndex/Journal: Has an extra short parameter after the index (always -1)?
+	- GetTarget: Does not require the ID to be a creature or NPC? (outputs a ' r' reference
+	  instead of an ' o').
+  	- GetDetected: Uses a ' r' type reference instead of a ' o' reference (npc/creature). This 
+   	  may be a bug or on purpose.
+    - Only MessageBox/GetSquareRoot accept globals?
+	- ModRegion: Has two extra unknown arguments?
+	- RemoveSoulgem: Does not accept the count variable as mentioned and used in some places.
+	- MessageBox: The TESCS actually parses the message string and looks for any % variables.
+		It then takes the next X arguments and considers them as the variables to output. This means
+		that if the '%' codes and output variables do not match, you'll lose or add some buttons.
+		Does not accept numbers.
+	- Set: A "set X to -10" will result in the compiled output "set X to 10 * -1". This only happens
+		for a single negative, numeric value. There are similar problems with outputting "set X to +10"
+		which has a compiled output like "set X to 10 +".
+
+
+v0.5.0
+	- A script in Tribunal has a name what includes the '-' character which should not be allowed.
+
+
+
+  CS Script Notes (v0.5.6)
+-----------------------------
+Some script notes for getting consistent results with the CS.
+
+	- Commas in function calls mess up the CS in several situations. It is recommended
+	  to never use commas (there should be no situation where they are needed).
+	- Using reset with AiWander results in inconsistent output in the CS and is not
+	  recommended until the behavior of reset is verified. 
+	- Spaces are important in the CS. Missing or extra spaces can result in the script
+	  not working as intended or outright crashing. A single space is needed on each
+	  side of the comparison operator in if and while statements as well as around
+	  any brackets and operators in expressions.
+					GOOD:	if ( SomeVar >= 10 )
+					BAD:    if (SomeVar >=10)
+				    GOOD:	set SomeVar to 10 * ( TestVar - SomeGlobal01 / 3 )
+				    BAD:	set SomeVar to 10*(TestVar-SomeGlobal01/3)
+	- Many of the animation codes used in LoopGroup and PlayGroup have changed at
+	  some point (expansion or patch). This will result in the incorrect animation 
+	  being played unless the version the script is run on matches the version it
+	  was compiled with (unless there is a hidden mechanism to correct them). This should
+	  be verified. Some example changes that could be checked:
+					BowAndArrow can be confused with Attack1 and InventoryWeaponOneHand
+					Hit1 is not changed
+					HandToHand can be confused with PickProbe and SpellTurnLeft
+	- MWEdit does not let script IDs start with a number. This is just a convienence to
+	  make parsing much simpler and is not likely to change. The CS may also experience 
+	  difficulties with scripts starting with a number or underscore.
+	- Ensure all function calls are enclosed in brackets with spaces on either side.
+	  Omitting the brackets or the spaces can result in incorrect compiled output in
+	  the CS in some situations.
+					GOOD:	if ( ( player->GetStrength ) < 90 )
+				    GOOD:	set SomeVar to ( player->GetStrength ) * LocalVar
+					BAD:	set SomeVar to player->GetStrength * LocalVar 
+								this outputs missing the call to GetStrength						 
+	- IDs starting with numbers (and possibly underscores) need to be surrounded in quotes
+	  in order for the CS and MWEdit to properly handle them. If you omit the quotes when
+	  compiling in the CS the scripts may not work correctly or crash. In MWEdit you will
+	  receive a compile time error.
+	- Unary add/minus operations may cause problems. Even simple expressions are output
+	  in a strange manner, for example:
+
+			set local to -1      => set local to -1 * 1 
+			set local to +15     => set local to 15 +
+			set local to -global => set local to -1 * global
+			if  local == -1      => if  local == -1      ; Not changed in if statements
+
+      More complex expressions may actually be output incorrectly, for example:
+
+					set local1 to -(-1 -9) * -local2 / -local3
+		Outputs As:	set local1 to 9 * -local2 / -local3
+
+					if     ( -testmisc2.local1 == 10 )		
+		Outputs As: if -1 *(  testmisc2.local1 == 10 )
+
+	  Such expressions will compile fine in the CS. 

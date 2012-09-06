@@ -1,0 +1,20 @@
+
+				MWEdit Statistics
+
+
+  v0.6.0
+=======================================
+
+  Source Information (approximate):
+		Total Files.....452 (200 CPP, 252 H), 4.7 Mb
+		Total Lines.....131316 (22813 empty, 48784 comment, 62714 source)
+
+
+  v0.5.0
+=======================================
+
+  Source Information (approximate):
+		Total Files.....390 (170 .CPP, 220 .H)
+		Total Lines.....105000 (18500 empty, 40000 comment, 46500 source)
+
+			

@@ -1,0 +1,252 @@
+
+					MWRandItem Effect Descriptions - May 2003
+						Dave Humphrey, uesp@sympatico.ca
+
+The following is the list and brief description of all the pre-defined effect names
+and their values.
+
+ 
+Weapon Damage Prefixes
+	Useless (-70 to -50%)
+	Bent (-50 to -25%)
+	Weak (-25 to -5%)
+	Jagged (5 to 25%)
+	Deadly (25 to 50%)
+	Heavy (50 to 70%)
+	Vicious (70 to 90%)
+	Brutal (90 to 110%)
+	Massive (110 to 125%) 
+	Savage  (126 to 160%)
+	Ruthless  (160 to 180%)
+	Merciless (180 to 200%)
+	Decaying (200 to 220%)
+	Crystalline (220 to 240%)
+
+Spell Point Suffixes
+	the Fool (-50 to -21)
+	Dyslexia (-20 to -1)
+	Magic (1 to 20)
+	the Mind (21 to 40)
+	Brilliance (41 to 80)
+	Sorcery (81 to 120)
+	Wizardry (121 to 200)
+
+Agility Suffixes
+	Paralysis (-10 to -6)
+	Atrophy (-5 to -1)
+	Agility (1 to 5)
+	Skill (6 to 10)
+	Accuracy (11 to 15)
+	Precision (16 to 20)
+	Perfection (21 to 30)
+
+Strength Suffixes
+	Frailty (-10 to -6)
+	Weakness (-5 to -1)
+	Strength (1 to 5)
+	Might (6 to 10)
+	Power (11 to 15)
+	Giants (16 to 20)
+	Titans (21 to 30)
+
+Speed Suffixes
+	Hinderance (-10 to -6)
+	Delay (-5 to -1)
+	Speed (1 to 5)
+	Fleetness (6 to 10)
+	Quickness (11 to 15)
+	Switfness (16 to 20)
+	Celerity (21 to 30)
+
+Endurance Suffixes
+	Illness (-10 to -6)
+	Disease (-5 to -1)
+	Endurance (1 to 5)
+	Zest (6 to 10)
+	Vim (11 to 15)
+	Vigor (16 to 20)
+	Life (21 to 30)
+
+Luck Suffixes
+	Mifortune (-10 to -6)
+	Bad Luck (-5 to -1)
+	Luck (1 to 5)
+	Fortune (6 to 10)
+	Blessing (11 to 15)
+	Fate (16 to 20)
+	Serendipity (21 to 30)
+
+Intelligence Suffixes
+	Stupidity (-10 to -6)
+	Ignorance (-5 to -1)
+	Intelligence (1 to 5)
+	Understanding (6 to 10)
+	Perception (11 to 15)
+	Discernment (16 to 20)
+	Aptitude (21 to 30)
+
+Willpower Suffixes
+	Foolishness (-10 to -6)
+	Folly (-5 to -1)
+	Willpower (1 to 5)
+	Resolve (6 to 10)
+	Resolution (11 to 15)
+	Drive (16 to 20)
+	Discipline (21 to 30)
+
+Personality Suffixes
+    Repulsion (-10 to -6)
+	Revolt (-5 to -1)
+	Personality (1 to 5)
+	Disposition (6 to 10)
+	Charm (11 to 15)
+	Character (16 to 20)
+	Charisma (21 to 30)
+
+Hit Point Suffixes
+	the Vulture (-50 to -21)
+	the Jackal (-21 to -1)
+	the Fox (5 to 20)
+	the Jaguar (21 to 40)
+	the Eagle (41 to 60)
+	the Wolf (61 to 80)
+	the Tiger (81 to 110)
+	the Lion (111 to 140)
+	the Mammoth (141 to 180)
+	the Whale (181 to 250)
+	
+Fatigue Prefixes
+	Hyena's (-50 to -21)
+	Frog's (-21 to -1)
+	Spider's (5 to 20)
+	Raven's (21 to 40)
+	Snake's (41 to 60)
+	Serpents (61 to 80)
+	Drake's (81 to 110)
+	Dragon's (111 to 140)
+	Wyrm's (141 to 180)
+	Hydra's (191 to 250)
+
+Armor Class Prefixes
+	Vulnerable (-90 to -50%)
+	Rusted (-50 to -10%)
+	Fine (10 to 20%)
+	Strong (20 to 30%)
+	Grand (30 to 40%)
+	Valiant (40 to 50%)
+	Glorious (50 to 60%)
+	Blesses (60 to 70%)
+	Saintly (70 tp 80%)
+	Awesome (80 tp 90%)
+	Holy (90 to 110%)
+	Godly (110 to 140%)
+
+Weapon/Armor Condition Suffixes
+	Fragility (-90 to -50%)
+	Brittleness (-50 to -10%)
+	Sturdiness (10 to 25%)
+	Craftsmanship (25 to 50%)
+	Structure (50 tp 75%)
+	Expertise (75 to 125%)
+	Mastery (125 to 200%)
+
+Weight Prefixes
+	Hefty (150 to 75%)
+	Weighty (74 to 10%)
+	Light (-10 to -24%)
+	Underweight (-25 to -50%)
+	Portable (-50 to -75%)
+	Featherweight (-76 to -95%)
+	Insubstantial (-99%)
+
+Weapon Speed Suffixes
+	the Slug (-75 to -41%)
+	Slowness (-40 to -10%)
+	Fleetness (10 to 25%)
+	Haste (26 to 50%)
+	Velocity (51 to 80%)
+	Acceleration (81 to 149%)
+	Ultimate Haste (150 to 200%)
+	
+Weapon Reach Prefixes
+	Stubby (-80 to -41%)
+	Short (-40 to -10%)
+	Long (10 to 24%)
+	Stretched (25 to 50%)
+	Extended (50 to 100%)
+	Infinite (101 to 150%)
+
+Value Prefixes
+	Bargain
+	Cheap
+	Inexpensive
+	Overpriced
+	Expensive
+	Extravagant
+	Exquisite
+	Antique
+
+Enchant Points Prefixes
+	Unmagical (-80 to -50%)
+	Poor (-49 to -10%)
+	Magical (10 to 25%)
+	Potent (26 to 50%)
+	Enchanting (51 to 75%)
+	Sorcerous (76 to 150%)
+	
+Fire Damage Suffixes
+	Warmth (1 to 4)
+	Burning (1 to 8)
+	Fire (2 to 10)
+	Magma (3 to 20)
+	Explosion (5 to 30)
+
+Cold Damage Suffixes
+	Chills (1 to 4)
+	Frost (1 to 8)
+	Ice (2 to 10)
+	Winter (3 to 20)
+	Chilled Death (5 to 30)
+
+Shock Damage Suffixes
+	Bolting (1 to 4)
+	Shocking (1 to 8)
+	Electricity (2 to 10)
+	Zapping (3 to 20)
+	Lightning (5 to 30)
+
+Poison Damage Suffixes
+	Bane (1 to 4)
+	Poison (1 to 8)
+	Toxin (2 to 10)
+	Noxious (3 to 20)
+	Venom (5 to 30)
+
+Weapon Attack Prefixes
+	Sharp (1 to 5)
+	Warrior's (5 to 10)
+	Soldier's (10 to 20)
+	Lord's (20 to 30)
+	Knight's (30 to 50)
+	Master's (50 to 75)
+	Champion's (75 to 100)
+	King's (100 to 150)
+
+Restore Health Suffixes
+	Health (+1)
+
+Restore Fatigue Suffixes
+	Fortitude (+1)
+	Stoutness (+2)
+
+Restore Magicka Prefixes
+	Sorcerer's (+1)
+
+Chameleon Prefixes
+	Disguised (5 to 20%)
+	Hidden (21 to 50%)
+	Chameleon (51 to 80%)
+	Concealed (81 to 99%)
+
+Invisibility Suffixes
+	Invisibility (100%)

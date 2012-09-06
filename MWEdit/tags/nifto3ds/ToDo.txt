@@ -1,0 +1,12 @@
+
+
+  Completed
+=======================================
+	- The Morrowind installation path is now read from the registry instead of 
+	  being hard coded to my personal MW installation (29 Dec 2003).
+	- Used the Windows long to short filename conversions in order to fit the 
+	  texture filenames into the short 8.3 DOS format used by the 3DS format.
+	  This requires the texture files to be copied from the CS CD onto the
+	  hard drive (29 Dec 2003).
+	- Errors/warnings/success will be properly displayed after a conversion
+	  (29 Dec 2003).

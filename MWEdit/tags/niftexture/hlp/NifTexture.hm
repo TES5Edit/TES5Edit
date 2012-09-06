@@ -1,0 +1,20 @@
+ 
+// Commands (ID_* and IDM_*) 
+HID_NIFCOPY_CREATE                      0x10003
+HID_NIFLOAD_BUTTON                      0x10004
+HID_CSVLOAD_BUTTON                      0x10005
+HID_NIFCOPY_CHECK                       0x10006
+HID_FILE_CREATECOPIES                   0x18003
+ 
+// Prompts (IDP_*) 
+ 
+// Resources (IDR_*) 
+HIDR_MAINFRAME                          0x20080
+HIDR_NIFTYPE                            0x20081
+ 
+// Dialogs (IDD_*) 
+HIDD_ABOUTBOX                           0x20064
+HIDD_NIFTEXTURE_FORM                    0x20065
+HIDD_NIFCOPY_DLG                        0x20082
+ 
+// Frame Controls (IDW_*) 

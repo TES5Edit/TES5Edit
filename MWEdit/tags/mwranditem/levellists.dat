@@ -1,0 +1,66 @@
+#
+# MWRandItem Effect Data File - June 2003
+#		Dave Humphrey, uesp@sympatico.ca 
+#
+# This file contains the external levelled lists that will be used in the output 
+# scripts to help add the random items to the game. For each levelled list that
+# you produce with MWRandItem with script output enabled, two scripts will be
+# created. One installation script that uses the AddToLevItem function and one
+# removal script that uses the RemoveFromLevItem function. Both functions require
+# the player to have Tribunal or Bloodmoon installed. The scripts are meant to
+# be called once as global scripts and will stop themselves automatically.
+#
+# For each levelled list in this file, a single AddToLevItem/RemoveFromLevItem
+# call will be made for each level list made in the program
+#
+# Each external levelled list is contained on one line with the format:
+#
+#	List = "ListName" [, Number]
+#
+#		"ListName" = The external levelled list name. Quotations are optional.
+#				     Name is limited to 32 bytes in length.
+#		Number	   = Number of times to add the new list to the given list. If
+#					 the number is not specified, 1 is the default.
+#
+# Anything after the '#' character on a line is ignore.
+#
+
+list = random_loot_special_marksman, 1
+list = l_b_Bandit_goods, 1
+list = l_n_smuggled_goods, 2
+list = random_loot_special, 1
+list = random_common_de_mclothes_01, 1
+list = random_de_pos_01, 1
+list = l_m_wpn_missle_arrow, 1
+list = l_m_potion, 1
+list = random_gem, 1
+list = random_expensive_de_mclothes_02, 1
+list = random_common_de_fclothes_01, 1
+list = random_de_weapon, 1
+list = random_dwarven_ingredients, 1
+list = random_expensive_de_fclothes_02, 1
+list = random_scroll_all, 1
+list = random_de_shoes_common, 1
+list = random_iron_weapon, 1
+list = l_n_wpn_missle_arrow, 1
+list = random_de_pos_01_nc, 1
+list = l_b_loot_tomb03, 1
+list = l_b_loot_tomb, 1
+list = random_dwarven_all, 1
+list = random_steel_weapon, 1
+list = l_m_wpn_melee, 1
+list = random_extravagant_de_mclothes1, 1
+list = l_m_wpn_melee_short blade, 1
+list = random ashlander weapon, 1
+list = random_imp_armor, 1
+list = l_b_rings, 1
+list = random_armor_iron, 1
+list = l_n_wpn_melee_short blade, 1
+list = l_n_wpn_melee_tomb, 1
+list = random_imp_weapon, 1
+list = Imperial Guard Random Weapon, 1
+list = random excellent melee weapon, 5
+list = l_n_wpn_melee_long blade, 1
+list = l_b_loot_tomb01, 1
+list = l_b_loot_tomb02, 2
+list = random_bandit_6-10, 2

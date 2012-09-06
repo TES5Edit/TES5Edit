@@ -1,0 +1,334 @@
+// Microsoft Developer Studio generated Help ID include file.
+// Used by MWEdit.rc
+//
+#define HIDC_ADJUSTTEXT                 0x80a803fb    // IDD_FACTION_DLG
+#define HIDC_AGITEXT                    0x80be04bd    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_AGITEXT1                   0x80a90487    // IDD_RACE_DLG
+#define HIDC_AGITEXT2                   0x80a90488    // IDD_RACE_DLG
+#define HIDC_ALARMTEXT                  0x80b704c9    // IDD_CREATURE_VIEW4 [English (U.S.)]
+#define HIDC_APPARATUSCHECK             0x80a7041b    // IDD_CLASS_DLG
+#define HIDC_AREASOUNDLIST              0x809d0454    // IDD_EFFECT_DLG
+#define HIDC_AREAVISUALLIST             0x809d0455    // IDD_EFFECT_DLG
+#define HIDC_ARMORCHECK                 0x80a70418    // IDD_CLASS_DLG
+#define HIDC_ASHTEXT                    0x80ad049a    // IDD_REGION_DLG
+#define HIDC_ATTRIBTEXT1                0x80a803f3    // IDD_FACTION_DLG
+#define HIDC_ATTRIBTEXT2                0x80a803f4    // IDD_FACTION_DLG
+#define HIDC_ATTRIBUTELIST              0x80aa0480    // IDD_SKILL_DLG
+#define HIDC_ATTRIBUTELIST1             0x80ae046e    // IDD_CLASS_DLG
+#define HIDC_ATTRIBUTELIST2             0x80ae046f    // IDD_CLASS_DLG
+#define HIDC_AUTHORTEXT                 0x80c504e1    // IDD_HEADER_DLG
+#define HIDC_AUTHOR_TEXT                0x80cc04fe    // IDD_OPTIONS_DLG
+#define HIDC_AUTHOR_TEXT2               0x80cc0500    // IDD_OPTIONS_DLG
+#define HIDC_AUTOCALCCHECK              0x808c0417    // IDD_ALCHEMY_DLG
+#define HIDC_BASECOSTTEXT               0x809d0448    // IDD_EFFECT_DLG
+#define HIDC_BEASTCHECK                 0x80a90422    // IDD_RACE_DLG
+#define HIDC_BIPEDCHECK                 0x80be041d    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_BIPEDLIST1                 0x808703fe    // IDD_ARMOR_DLG
+#define HIDC_BIPEDLIST2                 0x80870401    // IDD_ARMOR_DLG
+#define HIDC_BIPEDLIST3                 0x80870407    // IDD_ARMOR_DLG
+#define HIDC_BIPEDLIST4                 0x8087040a    // IDD_ARMOR_DLG
+#define HIDC_BIPEDLIST5                 0x8087040d    // IDD_ARMOR_DLG
+#define HIDC_BIPEDLIST6                 0x80870410    // IDD_ARMOR_DLG
+#define HIDC_BIPEDLIST7                 0x80870413    // IDD_ARMOR_DLG
+#define HIDC_BLIGHTTEXT                 0x80ad049b    // IDD_REGION_DLG
+#define HIDC_BLOCKEDCHECK               0x808a0416    // IDD_ACTIVATOR_DLG
+#define HIDC_BLOODLIST                  0x80be0428    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_BLUETEXT                   0x809d0401    // IDD_EFFECT_DLG
+#define HIDC_BLUETEXTA                  0x80b0048c    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_BLUETEXTF                  0x80af0407    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_BLUETEXTS                  0x80af0404    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_BOLTSOUNDLIST              0x809d044e    // IDD_EFFECT_DLG
+#define HIDC_BOLTVISUALLIST             0x809d044f    // IDD_EFFECT_DLG
+#define HIDC_BONUSTEXT1                 0x80a90475    // IDD_RACE_DLG
+#define HIDC_BONUSTEXT2                 0x80a90476    // IDD_RACE_DLG
+#define HIDC_BONUSTEXT3                 0x80a90477    // IDD_RACE_DLG
+#define HIDC_BONUSTEXT4                 0x80a90478    // IDD_RACE_DLG
+#define HIDC_BONUSTEXT5                 0x80a90479    // IDD_RACE_DLG
+#define HIDC_BONUSTEXT6                 0x80a9047a    // IDD_RACE_DLG
+#define HIDC_BONUSTEXT7                 0x80a9047b    // IDD_RACE_DLG
+#define HIDC_BOOKCHECK                  0x80a70419    // IDD_CLASS_DLG
+#define HIDC_BOOKTEXT                   0x80900421    // IDD_BOOK_DLG
+#define HIDC_CANCARRYCHECK              0x809a041b    // IDD_LIGHT_DLG
+#define HIDC_CASTSOUNDLIST              0x809d044b    // IDD_EFFECT_DLG
+#define HIDC_CASTVISUALLIST             0x809d044c    // IDD_EFFECT_DLG
+#define HIDC_CELLLIST                   0x80b2049f    // IDD_INFO_DLG
+#define HIDC_CELLLIST1                  0x80bc04d8    // IDD_CREATURE_VIEW5 [English (U.S.)]
+#define HIDC_CELLLIST2                  0x80bc04d9    // IDD_CREATURE_VIEW5 [English (U.S.)]
+#define HIDC_CELLLIST3                  0x80bc04db    // IDD_CREATURE_VIEW5 [English (U.S.)]
+#define HIDC_CELLLIST4                  0x80bc04dc    // IDD_CREATURE_VIEW5 [English (U.S.)]
+#define HIDC_CHANCENONETEXT             0x8098043d    // IDD_LEVELCREA_DLG
+#define HIDC_CHARGETEXT                 0x8096043a    // IDD_ENCHANT_DLG
+#define HIDC_CHOPMAXTEXT                0x80be03ff    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_CHOPMINTEXT                0x80be03fe    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_CLASSLIST                  0x80b2049b    // IDD_INFO_DLG
+#define HIDC_CLOSELIST                  0x809503f7    // IDD_DOOR_DLG
+#define HIDC_CLOTHINGCHECK              0x80a7041a    // IDD_CLASS_DLG
+#define HIDC_CLOUDYTEXT                 0x80ad0484    // IDD_REGION_DLG
+#define HIDC_COMBATTEXT                 0x80be03f9    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_COMPARELIST1               0x80b204a4    // IDD_INFO_DLG
+#define HIDC_COMPARELIST2               0x80b204a9    // IDD_INFO_DLG
+#define HIDC_COMPARELIST3               0x80b204a6    // IDD_INFO_DLG
+#define HIDC_COMPARELIST4               0x80b204ac    // IDD_INFO_DLG
+#define HIDC_COMPARELIST5               0x80b204af    // IDD_INFO_DLG
+#define HIDC_COMPARELIST6               0x80b204b2    // IDD_INFO_DLG
+#define HIDC_COSTTEXT                   0x80960439    // IDD_ENCHANT_DLG
+#define HIDC_CREATURELIST               0x8098043c    // IDD_LEVELCREA_DLG
+#define HIDC_CSVLIST                    0x80d20504    // IDD_SCRTEMP_PAGE3 [English (U.S.)]
+#define HIDC_CSV_FILE                   0x80d00502    // IDD_SCRTEMP_PAGE1 [English (U.S.)]
+#define HIDC_DELREACTION                0x80a80474    // IDD_FACTION_DLG
+#define HIDC_DESCTEXT                   0x80ab0446    // IDD_BIRTHSIGN_DLG
+#define HIDC_DYNAMICCHECK               0x809a0419    // IDD_LIGHT_DLG
+#define HIDC_EACHITEMCHECK              0x8099043e    // IDD_LEVELITEM_DLG
+#define HIDC_EFFECTLIST1                0x808c03f6    // IDD_ALCHEMY_DLG
+#define HIDC_EFFECTLIST2                0x808c03f8    // IDD_ALCHEMY_DLG
+#define HIDC_EFFECTLIST3                0x808c03fe    // IDD_ALCHEMY_DLG
+#define HIDC_EFFECTLIST4                0x808c0400    // IDD_ALCHEMY_DLG
+#define HIDC_EFFECTLIST5                0x808c0402    // IDD_ALCHEMY_DLG
+#define HIDC_EFFECTLIST6                0x808c0405    // IDD_ALCHEMY_DLG
+#define HIDC_EFFECTLIST7                0x808c0407    // IDD_ALCHEMY_DLG
+#define HIDC_EFFECTLIST8                0x808c0409    // IDD_ALCHEMY_DLG
+#define HIDC_ENCHANTCHECK               0x80a70457    // IDD_CLASS_DLG
+#define HIDC_ENCHANTLIST                0x808703f7    // IDD_ARMOR_DLG
+#define HIDC_ENCHANTTEXT                0x808703f8    // IDD_ARMOR_DLG
+#define HIDC_ENDTEXT                    0x80be04bf    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_ENDTEXT1                   0x80a9048b    // IDD_RACE_DLG
+#define HIDC_ENDTEXT2                   0x80a9048c    // IDD_RACE_DLG
+#define HIDC_ERRORLIST                  0x80c804f1    // IDD_SCRIPTERRORVIEW [English (U.S.)]
+#define HIDC_ESSENTIALCHECK             0x80be0419    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_EXTERIORCHECK              0x80af0494    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_EXTRAFILE_TEXT             0x80cc0503    // IDD_OPTIONS_DLG
+#define HIDC_FACTIONLIST                0x80b20472    // IDD_INFO_DLG
+#define HIDC_FACTREPTEXT                0x80a803f8    // IDD_FACTION_DLG
+#define HIDC_FAQTIGUETEXT               0x80be03f8    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_FARMORLIST1                0x80870400    // IDD_ARMOR_DLG
+#define HIDC_FARMORLIST2                0x80870403    // IDD_ARMOR_DLG
+#define HIDC_FARMORLIST3                0x80870409    // IDD_ARMOR_DLG
+#define HIDC_FARMORLIST4                0x8087040c    // IDD_ARMOR_DLG
+#define HIDC_FARMORLIST5                0x8087040f    // IDD_ARMOR_DLG
+#define HIDC_FARMORLIST6                0x80870412    // IDD_ARMOR_DLG
+#define HIDC_FARMORLIST7                0x80870415    // IDD_ARMOR_DLG
+#define HIDC_FCLOTHLIST1                0x8091042a    // IDD_CLOTHING_DLG
+#define HIDC_FCLOTHLIST2                0x8091042b    // IDD_CLOTHING_DLG
+#define HIDC_FCLOTHLIST3                0x8091042c    // IDD_CLOTHING_DLG
+#define HIDC_FCLOTHLIST4                0x8091042d    // IDD_CLOTHING_DLG
+#define HIDC_FCLOTHLIST5                0x8091042e    // IDD_CLOTHING_DLG
+#define HIDC_FCLOTHLIST6                0x8091042f    // IDD_CLOTHING_DLG
+#define HIDC_FCLOTHLIST7                0x80910430    // IDD_CLOTHING_DLG
+#define HIDC_FEMALECHECK                0x808f0418    // IDD_BODYPART_DLG
+#define HIDC_FIGHTTEXT                  0x80b704c7    // IDD_CREATURE_VIEW4 [English (U.S.)]
+#define HIDC_FILTERLIST                 0x809b0444    // IDD_DIALOGUE_DLG
+#define HIDC_FINDLIST                   0x80c604fd    // IDD_FIND_DLG
+#define HIDC_FIRECHECK                  0x809a0418    // IDD_LIGHT_DLG
+#define HIDC_FLEETEXT                   0x80b704c8    // IDD_CREATURE_VIEW4 [English (U.S.)]
+#define HIDC_FLICKERLIST                0x809a0445    // IDD_LIGHT_DLG
+#define HIDC_FLIESCHECK                 0x80be041b    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_FOGGYTEXT                  0x80ad0495    // IDD_REGION_DLG
+#define HIDC_FONTFACE_LIST              0x80cc04f5    // IDD_OPTIONS_DLG
+#define HIDC_FONTSIZE_LIST              0x80cc04f8    // IDD_OPTIONS_DLG
+#define HIDC_FORMAT_LIST                0x80cc04f7    // IDD_OPTIONS_DLG
+#define HIDC_GENDERLIST                 0x80b204a3    // IDD_INFO_DLG
+#define HIDC_GLOBALIST                  0x808d041a    // IDD_GLOBAL_DLG_OLD1 [English (U.S.)]
+#define HIDC_GOLDTEXT                   0x80bc04d7    // IDD_CREATURE_VIEW5 [English (U.S.)]
+#define HIDC_GREENTEXT                  0x809d0400    // IDD_EFFECT_DLG
+#define HIDC_GREENTEXTA                 0x80b0048b    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_GREENTEXTF                 0x80af0406    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_GREENTEXTS                 0x80af0403    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_GRIDTEXT                   0x80ae03f1    // IDD_CELL_DLG
+#define HIDC_HAIRLIST                   0x80b40427    // IDD_NPC_VIEW1 [English (U.S.)]
+#define HIDC_HEADLIST                   0x80b40426    // IDD_NPC_VIEW1 [English (U.S.)]
+#define HIDC_HEALTHTEXT                 0x808703f6    // IDD_ARMOR_DLG
+#define HIDC_HEIGHTTEXT1                0x80a90491    // IDD_RACE_DLG
+#define HIDC_HEIGHTTEXT2                0x80a90492    // IDD_RACE_DLG
+#define HIDC_HEIGHTTEXT5                0x80ad0497    // IDD_REGION_DLG
+#define HIDC_HELLOTEXT                  0x80b704ca    // IDD_CREATURE_VIEW4 [English (U.S.)]
+#define HIDC_HIDDENCHECK                0x80a8046d    // IDD_FACTION_DLG
+#define HIDC_HITSOUNDLIST               0x809d0451    // IDD_EFFECT_DLG
+#define HIDC_HITVISUALLIST              0x809d0452    // IDD_EFFECT_DLG
+#define HIDC_IDLIST                     0x80b20498    // IDD_INFO_DLG
+#define HIDC_IDTEXT                     0x808a03f0    // IDD_ACTIVATOR_DLG
+#define HIDC_IGNORERESISTCHECK          0x80a50417    // IDD_WEAPON_DLG
+#define HIDC_INDENTSPACES_TEXT          0x80cc0504    // IDD_OPTIONS_DLG
+#define HIDC_INFOLIST                   0x809b0443    // IDD_DIALOGUE_DLG
+#define HIDC_INGREDIANTCHECK            0x80a7041c    // IDD_CLASS_DLG
+#define HIDC_INTTEXT                    0x80be04bb    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_INTTEXT1                   0x80a90483    // IDD_RACE_DLG
+#define HIDC_INTTEXT2                   0x80a90484    // IDD_RACE_DLG
+#define HIDC_ITEMLIST                   0x80920431    // IDD_CONTAINER_DLG
+#define HIDC_LEVELTEXT                  0x80be04b9    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_LEVELTEXT2                 0x80be04c2    // IDD_NPC_VIEW1 [English (U.S.)]
+#define HIDC_LIGHTCHECK                 0x80a7041d    // IDD_CLASS_DLG
+#define HIDC_LUCTEXT                    0x80be04c1    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_LUCTEXT1                   0x80a9048f    // IDD_RACE_DLG
+#define HIDC_LUCTEXT2                   0x80a90490    // IDD_RACE_DLG
+#define HIDC_MAGICITEMCHECK             0x80a70424    // IDD_CLASS_DLG
+#define HIDC_MAGICSKILLTEXT             0x80be03fa    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_MAGICTEXT                  0x80be03f7    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_MAINTAB                    0x80930433    // IDD_CREATURE_DLG
+#define HIDC_MAJORLIST1                 0x80a70462    // IDD_CLASS_DLG
+#define HIDC_MAJORLIST2                 0x80a70463    // IDD_CLASS_DLG
+#define HIDC_MAJORLIST3                 0x80a70464    // IDD_CLASS_DLG
+#define HIDC_MAJORLIST4                 0x80a70465    // IDD_CLASS_DLG
+#define HIDC_MAJORLIST5                 0x80a70466    // IDD_CLASS_DLG
+#define HIDC_MAJORLIST6                 0x80ae0467    // IDD_CLASS_DLG
+#define HIDC_MAPCHECK                   0x80b00494    // IDD_EXTCELL_PAGE [English (U.S.)]
+#define HIDC_MARMORLIST1                0x808703ff    // IDD_ARMOR_DLG
+#define HIDC_MARMORLIST2                0x80870402    // IDD_ARMOR_DLG
+#define HIDC_MARMORLIST3                0x80870408    // IDD_ARMOR_DLG
+#define HIDC_MARMORLIST4                0x8087040b    // IDD_ARMOR_DLG
+#define HIDC_MARMORLIST5                0x8087040e    // IDD_ARMOR_DLG
+#define HIDC_MARMORLIST6                0x80870411    // IDD_ARMOR_DLG
+#define HIDC_MARMORLIST7                0x80870414    // IDD_ARMOR_DLG
+#define HIDC_MAXRANGETEXT               0x80a2045f    // IDD_SOUND_DLG
+#define HIDC_MAXSIZETEXT                0x809d03fb    // IDD_EFFECT_DLG
+#define HIDC_MCLOTHLIST1                0x80910423    // IDD_CLOTHING_DLG
+#define HIDC_MCLOTHLIST2                0x80910424    // IDD_CLOTHING_DLG
+#define HIDC_MCLOTHLIST3                0x80910425    // IDD_CLOTHING_DLG
+#define HIDC_MCLOTHLIST4                0x80910426    // IDD_CLOTHING_DLG
+#define HIDC_MCLOTHLIST5                0x80910427    // IDD_CLOTHING_DLG
+#define HIDC_MCLOTHLIST6                0x80910428    // IDD_CLOTHING_DLG
+#define HIDC_MCLOTHLIST7                0x80910429    // IDD_CLOTHING_DLG
+#define HIDC_MINORLIST1                 0x80a70468    // IDD_CLASS_DLG
+#define HIDC_MINORLIST2                 0x80a70469    // IDD_CLASS_DLG
+#define HIDC_MINORLIST3                 0x80a7046a    // IDD_CLASS_DLG
+#define HIDC_MINORLIST4                 0x80a7046b    // IDD_CLASS_DLG
+#define HIDC_MINORLIST5                 0x80a7046c    // IDD_CLASS_DLG
+#define HIDC_MINRANGETEXT               0x80a203f3    // IDD_SOUND_DLG
+#define HIDC_MISCCHECK                  0x80a7041e    // IDD_CLASS_DLG
+#define HIDC_NAMETEXT                   0x808a03f1    // IDD_ACTIVATOR_DLG
+#define HIDC_NAMETEXT2                  0x809203f2    // IDD_CONTAINER_DLG
+#define HIDC_NEGATIVECHECK              0x809d041a    // IDD_EFFECT_DLG
+#define HIDC_NEWREACTION                0x80a80473    // IDD_FACTION_DLG
+#define HIDC_NONECHECK                  0x80be041e    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_OBJECTLIST                 0x80af03ec    // IDD_MWEDIT_FORM [English (U.S.)]
+#define HIDC_OFFCHECK                   0x809a0417    // IDD_LIGHT_DLG
+#define HIDC_OPENLIST                   0x809503f6    // IDD_DOOR_DLG
+#define HIDC_ORGANICCHECK               0x80920417    // IDD_CONTAINER_DLG
+#define HIDC_OVERCASTTEXT               0x80ad0496    // IDD_REGION_DLG
+#define HIDC_PACKAGEEDIT                0x80b704d1    // IDD_CREATURE_VIEW4 [English (U.S.)]
+#define HIDC_PACKAGELIST                0x80b704c6    // IDD_CREATURE_VIEW4 [English (U.S.)]
+#define HIDC_PARTLIST                   0x808f041f    // IDD_BODYPART_DLG
+#define HIDC_PARTTYPELIST               0x808f0423    // IDD_BODYPART_DLG
+#define HIDC_PCFACTIONLIST              0x80b204a0    // IDD_INFO_DLG
+#define HIDC_PCRANKLIST                 0x80b204a1    // IDD_INFO_DLG
+#define HIDC_PCSTARTCHECK               0x80a3044b    // IDD_SPELL_DLG
+#define HIDC_PERTEXT                    0x80be04c0    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_PERTEXT1                   0x80a9048d    // IDD_RACE_DLG
+#define HIDC_PERTEXT2                   0x80a9048e    // IDD_RACE_DLG
+#define HIDC_PICKCHECK                  0x80a7041f    // IDD_CLASS_DLG
+#define HIDC_PLAYABLECHECK              0x808f0417    // IDD_BODYPART_DLG
+#define HIDC_POTIONCHECK                0x80a70421    // IDD_CLASS_DLG
+#define HIDC_PROBECHECK                 0x80a70420    // IDD_CLASS_DLG
+#define HIDC_PROGRESS1                  0x80c604df    // IDD_FIND_DLG
+#define HIDC_QUALITYTEXT                0x808b0418    // IDD_APPARATUS_DLG
+#define HIDC_RACELIST                   0x808f0421    // IDD_BODYPART_DLG
+#define HIDC_RADIUSTEXT                 0x809a03fe    // IDD_LIGHT_DLG
+#define HIDC_RAINTEXT                   0x80ad0498    // IDD_REGION_DLG
+#define HIDC_RANGELIST1                 0x809603fb    // IDD_ENCHANT_DLG
+#define HIDC_RANGELIST2                 0x809603fc    // IDD_ENCHANT_DLG
+#define HIDC_RANGELIST3                 0x80960404    // IDD_ENCHANT_DLG
+#define HIDC_RANGELIST4                 0x8096040b    // IDD_ENCHANT_DLG
+#define HIDC_RANGELIST5                 0x8096040c    // IDD_ENCHANT_DLG
+#define HIDC_RANGELIST6                 0x8096040d    // IDD_ENCHANT_DLG
+#define HIDC_RANGELIST7                 0x8096040e    // IDD_ENCHANT_DLG
+#define HIDC_RANGELIST8                 0x8096040f    // IDD_ENCHANT_DLG
+#define HIDC_RANKLIST                   0x80be0470    // IDD_FACTION_DLG
+#define HIDC_RANKTEXT                   0x80a803f2    // IDD_FACTION_DLG
+#define HIDC_RATINGTEXT                 0x808703f9    // IDD_ARMOR_DLG
+#define HIDC_REACHTEXT                  0x80a50405    // IDD_WEAPON_DLG
+#define HIDC_REACTIONLIST               0x80a80471    // IDD_FACTION_DLG
+#define HIDC_RECORDLIST                 0x80c604e3    // IDD_FIND_DLG
+#define HIDC_REDTEXT                    0x809d03ff    // IDD_EFFECT_DLG
+#define HIDC_REDTEXTA                   0x80b0048a    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_REDTEXTF                   0x80af0405    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_REDTEXTS                   0x80af0402    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_REPAIRCHECK                0x80a70423    // IDD_CLASS_DLG
+#define HIDC_REPAIRSCHECK               0x80a7045b    // IDD_CLASS_DLG
+#define HIDC_REPUTATIONTEXT             0x80be03f9    // IDD_NPC_VIEW1 [English (U.S.)]
+#define HIDC_RESPAWNCHECK               0x80920418    // IDD_CONTAINER_DLG
+#define HIDC_RESPAWNCHECK1              0x80be041a    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_RESULTTEXT                 0x80b2049a    // IDD_INFO_DLG
+#define HIDC_SCALETEXT                  0x80a0049d    // IDD_CELLREF_DLG
+#define HIDC_SCHOOLLIST                 0x809d0447    // IDD_EFFECT_DLG
+#define HIDC_SCRIPTLIST                 0x808a03f4    // IDD_ACTIVATOR_DLG
+#define HIDC_SCRIPTTEXT                 0x80bd03e8    // IDD_SCRIPT_DLG [English (U.S.)]
+#define HIDC_SCROLLCHECK                0x80900417    // IDD_BOOK_DLG
+#define HIDC_SIZETEXT                   0x809d0459    // IDD_EFFECT_DLG
+#define HIDC_SKILLLIST                  0x80900420    // IDD_BOOK_DLG
+#define HIDC_SKILLLIST1                 0x808c03f7    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLLIST2                 0x808c03f9    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLLIST3                 0x808c03ff    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLLIST4                 0x808c0401    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLLIST5                 0x808c0403    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLLIST6                 0x808c0406    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLLIST7                 0x808c0408    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLLIST8                 0x808c040a    // IDD_ALCHEMY_DLG
+#define HIDC_SKILLTEXT1                 0x80a803f5    // IDD_FACTION_DLG
+#define HIDC_SKILLTEXT2                 0x80a803f6    // IDD_FACTION_DLG
+#define HIDC_SLASHMAXTEXT               0x80be0401    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_SLASHMINTEXT               0x80be0400    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_SLEEPCHECK                 0x80b00493    // IDD_EXTCELL_PAGE [English (U.S.)]
+#define HIDC_SOULTEXT                   0x80be04dc    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_SOUNDGENLIST               0x80be04da    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_SOUNDLIST                  0x809a03f7    // IDD_LIGHT_DLG
+#define HIDC_SOUNDPLAY                  0x809a03f8    // IDD_LIGHT_DLG
+#define HIDC_SPDTEXT                    0x80be04be    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_SPDTEXT1                   0x80a90489    // IDD_RACE_DLG
+#define HIDC_SPDTEXT2                   0x80a9048a    // IDD_RACE_DLG
+#define HIDC_SPEEDTEXT                  0x809d045a    // IDD_EFFECT_DLG
+#define HIDC_SPELLCHECK                 0x80a70458    // IDD_CLASS_DLG
+#define HIDC_SPELLLIST                  0x80ab047f    // IDD_BIRTHSIGN_DLG
+#define HIDC_SPELLMAKECHECK             0x80a70459    // IDD_CLASS_DLG
+#define HIDC_STEALTHTEXT                0x80be03fb    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_STRTEXT                    0x80be04ba    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_STRTEXT1                   0x80a9047c    // IDD_RACE_DLG
+#define HIDC_STRTEXT2                   0x80a9047e    // IDD_RACE_DLG
+#define HIDC_SUCCEEDCHECK               0x80a3043a    // IDD_SPELL_DLG
+#define HIDC_SWIMSCHECK                 0x80be04dd    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_TEMPLATELIST               0x80d00503    // IDD_SCRTEMP_PAGE1 [English (U.S.)]
+#define HIDC_TEMPLATE_FILE              0x80d00501    // IDD_SCRTEMP_PAGE1 [English (U.S.)]
+#define HIDC_TEMPLATE_TEXT              0x80d10502    // IDD_SCRTEMP_PAGE2 [English (U.S.)]
+#define HIDC_THRUSTMAXTEXT              0x80be0403    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_THRUSTMINTEXT              0x80be0402    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_THUNDERTEXT                0x80ad0499    // IDD_REGION_DLG
+#define HIDC_TIMETEXT                   0x809a03f6    // IDD_LIGHT_DLG
+#define HIDC_TRAINCHECK                 0x80a7045a    // IDD_CLASS_DLG
+#define HIDC_TYPELIST                   0x808c03f3    // IDD_APPARATUS_DLG
+#define HIDC_TYPELIST1                  0x80b2049d    // IDD_INFO_DLG
+#define HIDC_TYPELIST2                  0x80b204a7    // IDD_INFO_DLG
+#define HIDC_TYPELIST3                  0x80b2049e    // IDD_INFO_DLG
+#define HIDC_TYPELIST4                  0x80b204aa    // IDD_INFO_DLG
+#define HIDC_TYPELIST5                  0x80b204ad    // IDD_INFO_DLG
+#define HIDC_TYPELIST6                  0x80b204b0    // IDD_INFO_DLG
+#define HIDC_USESTEXT                   0x809c0419    // IDD_LOCKPICK_DLG
+#define HIDC_VALUETEXT                  0x808c03fa    // IDD_ALCHEMY_DLG
+#define HIDC_VAMPIRECHECK               0x808f0419    // IDD_BODYPART_DLG
+#define HIDC_VARFUNCLIST1               0x80b204a2    // IDD_INFO_DLG
+#define HIDC_VARFUNCLIST2               0x80b204a8    // IDD_INFO_DLG
+#define HIDC_VARFUNCLIST3               0x80b204a5    // IDD_INFO_DLG
+#define HIDC_VARFUNCLIST4               0x80b204ab    // IDD_INFO_DLG
+#define HIDC_VARFUNCLIST5               0x80b204ae    // IDD_INFO_DLG
+#define HIDC_VARFUNCLIST6               0x80b204b1    // IDD_INFO_DLG
+#define HIDC_VOLUMETEXT                 0x80a2045e    // IDD_SOUND_DLG
+#define HIDC_WALKSCHECK                 0x80be041c    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_WARNLEVEL_LIST             0x80cc04f4    // IDD_OPTIONS_DLG
+#define HIDC_WATERCHECK                 0x80af0492    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_WATERTEXT                  0x80af0495    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_WATERTEXT2                 0x80af0497    // IDD_INTCELL_PAGE [English (U.S.)]
+#define HIDC_WEAPONCHECK                0x80a70425    // IDD_CLASS_DLG
+#define HIDC_WEAPSHIELDCHECK            0x80be04db    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_WEIGHTTEXT                 0x808c03f2    // IDD_ALCHEMY_DLG
+#define HIDC_WEIGHTTEXT1                0x80a90493    // IDD_RACE_DLG
+#define HIDC_WEIGHTTEXT2                0x80a90494    // IDD_RACE_DLG
+#define HIDC_WILTEXT1                   0x80a90485    // IDD_RACE_DLG
+#define HIDC_WILTEXT2                   0x80a90486    // IDD_RACE_DLG
+#define HIDC_WILTEXT3                   0x80be04bc    // IDD_CREATURE_VIEW1 [English (U.S.)]
+#define HIDC_XPOSTEXT                   0x80a00497    // IDD_CELLREF_DLG
+#define HIDC_XROTTEXT                   0x80a0049a    // IDD_CELLREF_DLG
+#define HIDC_YPOSTEXT                   0x80a00498    // IDD_CELLREF_DLG
+#define HIDC_YROTTEXT                   0x80a0049b    // IDD_CELLREF_DLG
+#define HIDC_ZPOSTEXT                   0x80a00499    // IDD_CELLREF_DLG
+#define HIDC_ZROTTEXT                   0x80a0049c    // IDD_CELLREF_DLG
+#define HIDDELETEGLOBAL                 0x808d0004    // IDD_GLOBAL_DLG_OLD1 [English (U.S.)]
+#define HIDNEWGLOBAL                    0x808d0003    // IDD_GLOBAL_DLG_OLD1 [English (U.S.)]
+#define HIDRESETGLOBAL                  0x808d0005    // IDD_GLOBAL_DLG_OLD1 [English (U.S.)]
+#define HID_SETACTIVE                   0x80820003    // IDD_OPENPLUGIN_DLG

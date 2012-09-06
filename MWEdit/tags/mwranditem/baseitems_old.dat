@@ -1,0 +1,8874 @@
+#
+#
+# MWRandItem Base Item Data File - May 2003
+#		Dave Humphrey, uesp@sympatico.ca
+#
+# This data file holds the unenchanted, base item data used for for the random
+# generation of items with MWRandItem. The format is as follows:
+#
+# Comments		- Anything after a '#' character on a line is ignored
+# Strings		- Values on the right side of the '=' can be surrounded with double
+#				  quote characters ("") if desired.#
+# 'Item'		- Start an item record
+# 'Icon'		- The inventory icon picture filename string.
+# 'Model'		- The NIF model filename string.
+# 'Name'		- The item name string.
+# 'ItemType'	- Base item type which can currently be
+#						"Weapon"
+#						"Armor"
+#						"Clothing"
+# 'BasePrice'	- The base item value in gold pieces (1 to 1,000,000).
+# 'ItemLevel'	- The item level (1 to 100). Higher level items are more powerful
+#			      and thus will be rarer.
+# 'Weight'		- The item's base weight (0.1 to 50.0).
+# 'EnchantPts'  - The object's enchant points (0 to 200).
+# 'Reach'		- The weapon's reach (0.1 to 2.0). Higher values indicate a larger reach.
+# 'Speed'		- The weapon's speed (0.1 to 2.0). Higher values indicate a faster weapon.
+# 'MinChop'
+# 'MaxChop'
+# 'MinSlash'
+# 'MaxSlash'
+# 'MinThrust'
+# 'MaxThrust'	- Weapon damages (1 to 255).
+# 'Condition'	- The weapon or armor condition/health value (1 to 65535).
+# 'Type'		- The weapon, armor, or clothing type. Valid values are:
+#						"Short Blade"
+#						"Long Blade"
+#						"Long Blade, 2-Hand"
+#						"Blunt"
+#						"Blunt, 2-Close"
+#						"Blunt, 2-Wide"
+#						"Spear"
+#						"Axe"
+#						"Axe, 2-Hand"
+#						"Bow"
+#						"Crossbow"
+#						"Thrown"
+#						"Arrow"
+#						"Bolt"
+#						"Helmet"
+#						"Cuirass"
+#						"Left Pauldron"
+#						"Right Pauldron"
+#						"Greaves"
+#						"Boots"
+#						"Left Gauntlet"
+#						"Right Gauntlet"
+#						"Shield"
+#						"Left Bracer"
+#						"Right Bracer"
+#						"Pants"
+#						"Shoes"
+#						"Shirt"
+#						"Belt"
+#						"Robe"
+#						"R. Glove"
+#						"L. Glove"
+#						"Skirt"
+#						"Ring"
+#						"Amulet"
+# 'IgnoreResist' - Ignore normal weapon resistance. Boolean flag ("true"/"false").
+# 'MHead'
+# 'MHair'
+# 'MNeck'
+# 'MChest'
+# 'MGroin'
+# 'MSkirt'
+# 'MRightHand'
+# 'MLeftHand'
+# 'MRightWrist'
+# 'MLeftWrist'
+# 'MShield'
+# 'MRightForeArm'
+# 'MLeftForeArm'
+# 'MRightUpperArm'
+# 'MLeftUpperArm'
+# 'MRightFoot'
+# 'MLeftFoot'
+# 'MRightAnkle'
+# 'MLeftAnkle'
+# 'MRightKnee'
+# 'MLeftKnee'
+# 'MRightUpper Leg'
+# 'MLeftUpper Leg'
+# 'MRightPauldron'
+# 'MLeftPauldron'
+# 'MWeapon'
+# 'MTail'		- Male clothing and weapon body part objects.
+# 'FHead'
+# 'FHair'
+# 'FNeck'
+# 'FChest'
+# 'FGroin'
+# 'FSkirt'
+# 'FRightHand'
+# 'FLeftHand'
+# 'FRightWrist'
+# 'FLeftWrist'
+# 'FShield'
+# 'FRightForeArm'
+# 'FLeftForeArm'
+# 'FRightUpperArm'
+# 'FLeftUpperArm'
+# 'FRightFoot'
+# 'FLeftFoot'
+# 'FRightAnkle'
+# 'FLeftAnkle'
+# 'FRightKnee'
+# 'FLeftKnee'
+# 'FRightUpperLeg'
+# 'FLeftUpperLeg'
+# 'FRightPauldron'
+# 'FLeftPauldron'
+# 'FWeapon'
+# 'FTail'		- Female clothing and weapon body part objects.
+# 'End'			- Ends an item record
+#
+
+Item
+	ItemType = Armor
+	Name = "Chitin Cuirass"
+	Icon = "a\TX_Chitin_curaiss.tga"
+	Model = "a\A_M_Chitin_Cuirass_GND.nif"
+	BasePrice = 45
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 100
+	Armor = 10
+	Type = "Cuirass"
+	Condition = 300
+	MChest = "a_m_chitin_chest"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Left Pauldron"
+	Icon = "a\TX_Chitin_pauldron.tga"
+	Model = "a\A_M_Chitin_UA_Pauldron.nif"
+	BasePrice = 16
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 10
+	Armor = 10
+	Type = "Left Pauldron"
+	Condition = 100
+	MLeftUpperArm = "a_m_chitin_ua_pauldron"
+	MLeftPauldron = "A_M_Chitin_pauldron_CL"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Right Pauldron"
+	Icon = "a\TX_Chitin_pauldron.tga"
+	Model = "a\A_M_Chitin_UA_Pauldron.nif"
+	BasePrice = 16
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 10
+	Armor = 10
+	Type = "Right Pauldron"
+	Condition = 100
+	MRightUpperArm = "a_m_chitin_ua_pauldron"
+	MRightPauldron = "A_M_Chitin_pauldron_CL"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Boots"
+	Icon = "a\TX_Chitin_boot.tga"
+	Model = "a\A_M_Chitin_Boot_GND.nif"
+	BasePrice = 13
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 44
+	Armor = 10
+	Type = "Boots"
+	Condition = 100
+	MLeftFoot = "a_m_chitin_f_boots"
+	MLeftAnkle = "a_m_chitin_a_boot"
+	MRightFoot = "a_m_chitin_f_boots"
+	MRightAnkle = "a_m_chitin_a_boot"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Greaves"
+	Icon = "a\TX_Chitin_greaves.tga"
+	Model = "a\A_M_Chitin_Greaves_GND.nif"
+	BasePrice = 29
+	ItemLevel = 1
+	Weight = 5.4
+	EnchantPts = 13
+	Armor = 10
+	Type = "Greaves"
+	Condition = 100
+	MGroin = "a_m_chitin_g_greaves"
+	MLeftUpperLeg = "a_m_chitin_ul_greaves"
+	MRightUpperLeg = "a_m_chitin_ul_greaves"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Helm"
+	Icon = "a\TX_Chitin_helmet.tga"
+	Model = "a\A_M_Chitin_Helmet.nif"
+	BasePrice = 19
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 125
+	Armor = 10
+	Type = "Helmet"
+	Condition = 100
+	MHead = "a_m_chitin_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Left Gauntlet"
+	Icon = "a\TX_Chitin_gauntlet.tga"
+	Model = "a\A_M_Chitin_Gauntlet_GND.nif"
+	BasePrice = 9
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 100
+	Armor = 10
+	Type = "Left Gauntlet"
+	Condition = 50
+	MLeftHand = "a_m_chitin_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Right Gauntlet"
+	Icon = "a\TX_Chitin_gauntlet.tga"
+	Model = "a\A_M_Chitin_Gauntlet_GND.nif"
+	BasePrice = 9
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 100
+	Armor = 10
+	Type = "Right Gauntlet"
+	Condition = 50
+	MRightHand = "a_m_chitin_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Shield"
+	Icon = "a\Tx_Indoril_shield.tga"
+	Model = "a\Shield_Indoril.nif"
+	BasePrice = 2000
+	ItemLevel = 8
+	Weight = 13.5
+	EnchantPts = 450
+	Armor = 45
+	Type = "Shield"
+	Condition = 900
+	MShield = "Shield_Indoril"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Right Pauldron"
+	Icon = "a\Tx_Templar_pauldron.tga"
+	Model = "a\A_Templar_M_CL_Pauldron.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 18
+	Type = "Right Pauldron"
+	Condition = 180
+	MRightPauldron = "a_templar_m_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Boots"
+	Icon = "a\Tx_Templar_boot.tga"
+	Model = "a\A_Templar_M_Boot_GND.nif"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 20
+	EnchantPts = 88
+	Armor = 18
+	Type = "Boots"
+	Condition = 180
+	MRightFoot = "a_templar_m_f_boot"
+	MRightAnkle = "a_templar_m_a_boot"
+	MLeftFoot = "a_templar_m_f_boot"
+	MLeftAnkle = "a_templar_m_a_boot"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Left Pauldron"
+	Icon = "a\Tx_Indoril_pauldron.tga"
+	Model = "a\A_Indoril_M_Pauldron_GND.nif"
+	BasePrice = 2400
+	ItemLevel = 9
+	Weight = 9
+	EnchantPts = 10
+	Armor = 45
+	Type = "Left Pauldron"
+	Condition = 450
+	MLeftUpperArm = "a_indoril_m_ua_pauldron"
+	MLeftPauldron = "a_indoril_m_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Right Pauldron"
+	Icon = "a\Tx_Indoril_pauldron.tga"
+	Model = "a\A_Indoril_M_Pauldron_GND.nif"
+	BasePrice = 2400
+	ItemLevel = 9
+	Weight = 9
+	EnchantPts = 10
+	Armor = 45
+	Type = "Right Pauldron"
+	Condition = 450
+	MRightUpperArm = "a_indoril_m_ua_pauldron"
+	MRightPauldron = "a_indoril_m_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Left Bracer"
+	Icon = "a\Tx_Templar_bracer.tga"
+	Model = "a\A_Templar_M_W_Bracer.nif"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 18
+	Type = "Left Bracer"
+	Condition = 90
+	MLeftWrist = "a_templar_m_w_bracer"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Right Bracer"
+	Icon = "a\Tx_Templar_bracer.tga"
+	Model = "a\A_Templar_M_W_Bracer.nif"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 18
+	Type = "Right Bracer"
+	Condition = 90
+	MRightWrist = "a_templar_m_w_bracer"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Left Pauldron"
+	Icon = "a\Tx_Templar_pauldron.tga"
+	Model = "a\A_Templar_M_CL_Pauldron.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 18
+	Type = "Left Pauldron"
+	Condition = 180
+	MLeftPauldron = "a_templar_m_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Knight Cuirass"
+	Icon = "a\Tx_Templar_curaiss.tga"
+	Model = "a\A_Templar_M_Cuirass_GND.nif"
+	BasePrice = 175
+	ItemLevel = 2
+	Weight = 30
+	EnchantPts = 200
+	Armor = 18
+	Type = "Cuirass"
+	Condition = 540
+	MChest = "templar_chest"
+End
+Item
+	ItemType = Clothing
+	Name = "Imperial Templar Belt"
+	Icon = "c\TX_C_belt_leather00.tga"
+	Model = "c\C_belt_Common_1.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 100
+	Type = "Belt"
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Mace"
+	Icon = "w\Tx_Mace01.tga"
+	Model = "w\W_mace.nif"
+	BasePrice = 48
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 50
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.3
+	Condition = 1800
+	MinChop = 3
+	MaxChop = 14
+	MinSlash = 3
+	MaxSlash = 14
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Dagger"
+	Icon = "w\Tx_dagger_dragon.tga"
+	Model = "w\W_Dagger_dragon.nif"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 20
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 450
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 4
+	MaxSlash = 5
+	MinThrust = 5
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Spiked Club"
+	Icon = "w\Tx_club01.tga"
+	Model = "w\W_Club00.nif"
+	BasePrice = 18
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 40
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 400
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 4
+	MaxSlash = 4
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Left Pauldron"
+	Icon = "a\Tx_Imperial_pauldron.tga"
+	Model = "a\A_Imperial_Pauldron_GND.nif"
+	BasePrice = 53
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 16
+	Type = "Left Pauldron"
+	Condition = 160
+	MLeftPauldron = "imperial cl pauldron"
+	MLeftUpperArm = "imperial ua"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Right Pauldron"
+	Icon = "a\Tx_Imperial_pauldron.tga"
+	Model = "a\A_Imperial_Pauldron_GND.nif"
+	BasePrice = 53
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 16
+	Type = "Right Pauldron"
+	Condition = 160
+	MRightPauldron = "imperial cl pauldron"
+	MRightUpperArm = "imperial ua"
+End
+Item
+	ItemType = Clothing
+	Name = "Imperial Belt"
+	Icon = "c\tx_belt_common01.tga"
+	Model = "c\C_belt_Common_1.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 5
+	Type = "Belt"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Left Gauntlet"
+	Icon = "a\Tx_Imperial_gauntlet.tga"
+	Model = "a\A_Imperial_A_Gauntlet_GND.nif"
+	BasePrice = 33
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 16
+	Type = "Left Gauntlet"
+	Condition = 80
+	MLeftHand = "a_imperial_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Right Gauntlet"
+	Icon = "a\Tx_Imperial_gauntlet.tga"
+	Model = "a\A_Imperial_A_Gauntlet_GND.nif"
+	BasePrice = 33
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 16
+	Type = "Right Gauntlet"
+	Condition = 80
+	MRightHand = "a_imperial_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Boots"
+	Icon = "a\Tx_Imperial_boot.tga"
+	Model = "a\A_Imperial_A_Boot_GND.nif"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 19
+	EnchantPts = 88
+	Armor = 16
+	Type = "Boots"
+	Condition = 170
+	MRightFoot = "imperial boot foot"
+	MLeftAnkle = "imperial boot ankle"
+	MRightAnkle = "imperial boot ankle"
+	MLeftFoot = "imperial boot foot"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Helmet"
+	Icon = "a\Tx_Indoril_helmet.tga"
+	Model = "a\A_Indoril_M_Helmet.nif"
+	BasePrice = 3000
+	ItemLevel = 10
+	Weight = 4.5
+	EnchantPts = 225
+	Armor = 45
+	Type = "Helmet"
+	Condition = 450
+	MHead = "indoril hlelmet"
+End
+Item
+	ItemType = Clothing
+	Name = "Imperial Templar Skirt"
+	Icon = "a\Tx_Templar_skirt.tga"
+	Model = "c\C_M_Skirt_Templar_GND.nif"
+	BasePrice = 6
+	ItemLevel = 1
+	Weight = 2.5
+	EnchantPts = 5
+	Type = "Skirt"
+	MSkirt = "templar skirt"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Helmet"
+	Icon = "a\Tx_Imperial_helmet.tga"
+	Model = "a\A_Imperial_M_Helmet.nif"
+	BasePrice = 70
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 250
+	Armor = 16
+	Type = "Helmet"
+	Condition = 160
+	MHair = "imperial helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Cuirass"
+	Icon = "a\Tx_Indoril_curaiss.tga"
+	Model = "a\A_Indoril_M_Cuirass_GND.nif"
+	BasePrice = 7000
+	ItemLevel = 16
+	Weight = 27
+	EnchantPts = 180
+	Armor = 45
+	Type = "Cuirass"
+	Condition = 1350
+	MChest = "a_indoril_m_chest"
+End
+Item
+	ItemType = Clothing
+	Name = "Indoril Belt"
+	Icon = "c\tx_belt_common02.tga"
+	Model = "c\C_belt_Common_2.NIF"
+	BasePrice = 5
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 5
+	Type = "Belt"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Left Gauntlet"
+	Icon = "a\Tx_Indoril_gauntlet.tga"
+	Model = "a\A_Indoril_M_Gauntlet_GND.nif"
+	BasePrice = 1400
+	ItemLevel = 7
+	Weight = 4.5
+	EnchantPts = 60
+	Armor = 45
+	Type = "Left Gauntlet"
+	Condition = 225
+	MLeftHand = "a_indoril_m_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Right Gauntlet"
+	Icon = "a\Tx_Indoril_gauntlet.tga"
+	Model = "a\A_Indoril_M_Gauntlet_GND.nif"
+	BasePrice = 1400
+	ItemLevel = 7
+	Weight = 4.5
+	EnchantPts = 60
+	Armor = 45
+	Type = "Right Gauntlet"
+	Condition = 225
+	MRightHand = "a_indoril_m_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Indoril Boots"
+	Icon = "a\Tx_Indoril_boot.tga"
+	Model = "a\A_Indoril_M_boot_GND.nif"
+	BasePrice = 2000
+	ItemLevel = 8
+	Weight = 18
+	EnchantPts = 26
+	Armor = 45
+	Type = "Boots"
+	Condition = 450
+	MRightFoot = "a_indoril_m_f_boot"
+	MRightAnkle = "a_indoril_m_a_boot"
+	MLeftAnkle = "a_indoril_m_a_boot"
+	MLeftFoot = "a_indoril_m_f_boot"
+End
+Item
+	ItemType = Armor
+	Name = "Right Leather Bracer"
+	Icon = "c\TX_C_bracerleather01.tga"
+	Model = "c\C_M_Bracer_W_leather01.nif"
+	BasePrice = 5
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 5
+	Type = "Right Bracer"
+	Condition = 25
+	MRightWrist = "c_m_bracer_w_leather01"
+End
+Item
+	ItemType = Armor
+	Name = "Left Leather Bracer"
+	Icon = "c\TX_C_bracerleather01.tga"
+	Model = "c\C_M_Bracer_W_leather01.nif"
+	BasePrice = 5
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 5
+	Type = "Left Bracer"
+	Condition = 20
+	MLeftWrist = "c_m_bracer_w_leather01"
+End
+Item
+	ItemType = Armor
+	Name = "Cloth Left Bracer"
+	Icon = "c\TX_C_bracerCloth.tga"
+	Model = "c\C_M_Bracer_W_clothwrap02.nif"
+	BasePrice = 3
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 4
+	Type = "Left Bracer"
+	Condition = 20
+	MLeftWrist = "c_m_bracer_w_clothwrap02"
+End
+Item
+	ItemType = Armor
+	Name = "Cloth Right Bracer"
+	Icon = "c\TX_C_bracerCloth.tga"
+	Model = "c\C_M_Bracer_W_clothwrap02.nif"
+	BasePrice = 3
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 4
+	Type = "Right Bracer"
+	Condition = 20
+	MRightWrist = "c_m_bracer_w_clothwrap02"
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Broadsword"
+	Icon = "w\Tx_Broadsword_Imperial.tga"
+	Model = "w\W_Broadsword_Imperial.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 50
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.25
+	Condition = 900
+	MinChop = 4
+	MaxChop = 14
+	MinSlash = 4
+	MaxSlash = 14
+	MinThrust = 2
+	MaxThrust = 14
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Shortsword"
+	Icon = "w\Tx_Shortsword01.tga"
+	Model = "w\W_shortsword00.nif"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 40
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 750
+	MinChop = 5
+	MaxChop = 12
+	MinSlash = 5
+	MaxSlash = 12
+	MinThrust = 7
+	MaxThrust = 12
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Imperial Shortsword"
+	Icon = "w\Tx_Shortsword_Imperial.tga"
+	Model = "w\W_Shortsword_Imperial.nif"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 9
+	EnchantPts = 50
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 700
+	MinChop = 4
+	MaxChop = 10
+	MinSlash = 4
+	MaxSlash = 10
+	MinThrust = 6
+	MaxThrust = 10
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Spear"
+	Icon = "w\Tx_Spear01.tga"
+	Model = "w\W_spear.nif"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 14
+	EnchantPts = 50
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 1000
+	MinChop = 2
+	MaxChop = 5
+	MinSlash = 2
+	MaxSlash = 5
+	MinThrust = 6
+	MaxThrust = 17
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Tanto"
+	Icon = "w\Tx_Tanto.tga"
+	Model = "w\W_Tanto.nif"
+	BasePrice = 28
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 22
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.25
+	Condition = 600
+	MinChop = 5
+	MaxChop = 11
+	MinSlash = 5
+	MaxSlash = 11
+	MinThrust = 6
+	MaxThrust = 11
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Imperial Broadsword"
+	Icon = "w\Tx_Broadsword_Imperial.tga"
+	Model = "w\W_Broadsword_Imperial.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 70
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.25
+	Condition = 600
+	MinChop = 6
+	MaxChop = 12
+	MinSlash = 4
+	MaxSlash = 12
+	MinThrust = 4
+	MaxThrust = 12
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Shield"
+	Icon = "a\Tx_Imperial_shield.tga"
+	Model = "a\A_Shield_Imperial.nif"
+	BasePrice = 78
+	ItemLevel = 1
+	Weight = 14
+	EnchantPts = 500
+	Armor = 16
+	Type = "Shield"
+	Condition = 320
+	MShield = "a_shield_imperial"
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Longsword"
+	Icon = "w\Tx_Iron_longsword.tga"
+	Model = "w\W_Iron_Longsword.nif"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 20
+	EnchantPts = 60
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.35
+	Condition = 800
+	MinChop = 2
+	MaxChop = 13
+	MinSlash = 1
+	MaxSlash = 18
+	MinThrust = 4
+	MaxThrust = 16
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Shortsword"
+	Icon = "w\Tx_Iron_shortsword.tga"
+	Model = "w\W_Iron_shortsword.nif"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 40
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 600
+	MinChop = 4
+	MaxChop = 9
+	MinSlash = 4
+	MaxSlash = 9
+	MinThrust = 7
+	MaxThrust = 11
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Nordic Claymore"
+	Icon = "w\Tx_Claymore_Nordic.tga"
+	Model = "w\W_Nordic_Claymore.nif"
+	BasePrice = 180
+	ItemLevel = 2
+	Weight = 30
+	EnchantPts = 100
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 1600
+	MinChop = 1
+	MaxChop = 30
+	MinSlash = 1
+	MaxSlash = 25
+	MinThrust = 1
+	MaxThrust = 18
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Dai-katana"
+	Icon = "w\Tx_daikatana.tga"
+	Model = "w\W_Daikatana.nif"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 20
+	EnchantPts = 70
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.35
+	Condition = 2700
+	MinChop = 1
+	MaxChop = 27
+	MinSlash = 1
+	MaxSlash = 23
+	MinThrust = 1
+	MaxThrust = 14
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Claymore"
+	Icon = "w\Tx_Claymore_Iron.tga"
+	Model = "w\W_Iron_Claymore.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 27
+	EnchantPts = 70
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 1400
+	MinChop = 1
+	MaxChop = 24
+	MinSlash = 1
+	MaxSlash = 21
+	MinThrust = 1
+	MaxThrust = 14
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Longsword"
+	Icon = "w\Tx_Silver_longsword.tga"
+	Model = "w\W_Longsword_Silver.nif"
+	BasePrice = 160
+	ItemLevel = 2
+	Weight = 16
+	EnchantPts = 48
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.35
+	Condition = 640
+	MinChop = 2
+	MaxChop = 14
+	MinSlash = 1
+	MaxSlash = 20
+	MinThrust = 4
+	MaxThrust = 18
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Shortsword"
+	Icon = "w\Tx_Shortsword_Ebony.tga"
+	Model = "w\W_Shortsword_Ebony.nif"
+	BasePrice = 10000
+	ItemLevel = 20
+	Weight = 16
+	EnchantPts = 80
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 1200
+	MinChop = 10
+	MaxChop = 20
+	MinSlash = 10
+	MaxSlash = 22
+	MinThrust = 15
+	MaxThrust = 25
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Longsword"
+	Icon = "w\Tx_Longsword_Ebony.tga"
+	Model = "w\W_Longsword_ebony.nif"
+	BasePrice = 20000
+	ItemLevel = 28
+	Weight = 40
+	EnchantPts = 120
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.35
+	Condition = 1600
+	MinChop = 2
+	MaxChop = 27
+	MinSlash = 1
+	MaxSlash = 37
+	MinThrust = 4
+	MaxThrust = 34
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Shortsword"
+	Icon = "w\Tx_Shortsword_Silver.tga"
+	Model = "w\W_silver_Shortsword.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 36
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 570
+	MinChop = 5
+	MaxChop = 10
+	MinSlash = 5
+	MaxSlash = 10
+	MinThrust = 7
+	MaxThrust = 10
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Longsword"
+	Icon = "w\Tx_Daedric_longsword.tga"
+	Model = "w\W_Longsword_daedric.nif"
+	BasePrice = 40000
+	ItemLevel = 40
+	Weight = 60
+	EnchantPts = 180
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.35
+	Condition = 3200
+	MinChop = 2
+	MaxChop = 32
+	MinSlash = 1
+	MaxSlash = 44
+	MinThrust = 4
+	MaxThrust = 40
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Nordic Battle Axe"
+	Icon = "w\Tx_WarAxe_Nordic.tga"
+	Model = "w\W_Nordic_BattleAxe.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 30
+	EnchantPts = 55
+	Type = "Axe, 2-Hand"
+	Reach = 1
+	Speed = 1
+	Condition = 1200
+	MinChop = 1
+	MaxChop = 30
+	MinSlash = 1
+	MaxSlash = 30
+	MinThrust = 1
+	MaxThrust = 4
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Axe"
+	Icon = "w\Tx_Battle_Axe.tga"
+	Model = "w\W_WarAxe_Steel.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 24
+	EnchantPts = 45
+	Type = "Axe"
+	Reach = 1
+	Speed = 1
+	Condition = 1200
+	MinChop = 1
+	MaxChop = 18
+	MinSlash = 1
+	MaxSlash = 10
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Battle Axe"
+	Icon = "w\tx_battleaxe_iron.tga"
+	Model = "w\W_BATTLEAXE_IRON.nif"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 30
+	EnchantPts = 55
+	Type = "Axe, 2-Hand"
+	Reach = 1
+	Speed = 1
+	Condition = 1200
+	MinChop = 1
+	MaxChop = 32
+	MinSlash = 1
+	MaxSlash = 24
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Claymore"
+	Icon = "w\Tx_Claymore.tga"
+	Model = "w\W_claymore.nif"
+	BasePrice = 160
+	ItemLevel = 2
+	Weight = 27
+	EnchantPts = 70
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 2100
+	MinChop = 1
+	MaxChop = 27
+	MinSlash = 1
+	MaxSlash = 23
+	MinThrust = 1
+	MaxThrust = 16
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Katana"
+	Icon = "w\Tx_Katana.tga"
+	Model = "w\W_N_Katana.nif"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 18
+	EnchantPts = 60
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.5
+	Condition = 1800
+	MinChop = 3
+	MaxChop = 20
+	MinSlash = 1
+	MaxSlash = 18
+	MinThrust = 1
+	MaxThrust = 6
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Saber"
+	Icon = "w\Tx_Saber.tga"
+	Model = "w\W_Saber.nif"
+	BasePrice = 48
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 55
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.4
+	Condition = 1050
+	MinChop = 5
+	MaxChop = 20
+	MinSlash = 4
+	MaxSlash = 18
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Wakizashi"
+	Icon = "w\Tx_Wakazashi.tga"
+	Model = "w\W_Wakizashi.nif"
+	BasePrice = 48
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 45
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.25
+	Condition = 600
+	MinChop = 8
+	MaxChop = 11
+	MinSlash = 7
+	MaxSlash = 12
+	MinThrust = 2
+	MaxThrust = 7
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Long Bow"
+	Icon = "w\tx_longbow.tga"
+	Model = "w\w_longbow.NIF"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 35
+	Type = "Bow"
+	Reach = 1
+	Speed = 1
+	Condition = 550
+	MinChop = 1
+	MaxChop = 20
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Arrow"
+	Icon = "w\tx_arrow_iron.tga"
+	Model = "w\W_Iron_arrow.NIF"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 0
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 3
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Staff"
+	Icon = "w\TX_Staff01.tga"
+	Model = "w\W_staff00.nif"
+	BasePrice = 28
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 70
+	Type = "Blunt, 2-Wide"
+	Reach = 1.8
+	Speed = 1.75
+	Condition = 300
+	MinChop = 2
+	MaxChop = 7
+	MinSlash = 3
+	MaxSlash = 7
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel War Axe"
+	Icon = "w\Tx_Battle_Axe.tga"
+	Model = "w\W_WarAxe_Steel.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 24
+	EnchantPts = 50
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 1200
+	MinChop = 1
+	MaxChop = 20
+	MinSlash = 1
+	MaxSlash = 11
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Longsword"
+	Icon = "w\Tx_Broadsword_leafbladed.tga"
+	Model = "w\W_Broadsword_leafblade.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 20
+	EnchantPts = 60
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.35
+	Condition = 900
+	MinChop = 2
+	MaxChop = 14
+	MinSlash = 1
+	MaxSlash = 20
+	MinThrust = 4
+	MaxThrust = 18
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Club"
+	Icon = "w\tx_spikedClub.tga"
+	Model = "w\W_spikedClub.NIF"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 40
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 600
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 3
+	MaxSlash = 4
+	MinThrust = 3
+	MaxThrust = 4
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Battle Axe"
+	Icon = "w\Tx_steel_battleaxe.tga"
+	Model = "w\W_steel_battleaxe.nif"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 30
+	EnchantPts = 55
+	Type = "Axe, 2-Hand"
+	Reach = 1
+	Speed = 1
+	Condition = 1800
+	MinChop = 1
+	MaxChop = 36
+	MinSlash = 1
+	MaxSlash = 27
+	MinThrust = 1
+	MaxThrust = 4
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Warhammer"
+	Icon = "w\Tx_Warhammer.tga"
+	Model = "w\W_Warhammer.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 32
+	EnchantPts = 55
+	Type = "Blunt, 2-Close"
+	Reach = 1.5
+	Speed = 1
+	Condition = 3000
+	MinChop = 1
+	MaxChop = 32
+	MinSlash = 1
+	MaxSlash = 27
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Halberd"
+	Icon = "w\Tx_halberd_steel.tga"
+	Model = "w\W_HALBERD_STEEL.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 14
+	EnchantPts = 50
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 1000
+	MinChop = 1
+	MaxChop = 4
+	MinSlash = 1
+	MaxSlash = 4
+	MinThrust = 5
+	MaxThrust = 23
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Crossbow"
+	Icon = "w\tx_crossbow_steell.tga"
+	Model = "w\W_Crossbow_Steel.NIF"
+	BasePrice = 160
+	ItemLevel = 2
+	Weight = 10
+	EnchantPts = 50
+	Type = "Crossbow"
+	Reach = 1
+	Speed = 1
+	Condition = 550
+	MinChop = 20
+	MaxChop = 20
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Throwing Star"
+	Icon = "w\Tx_Steel_star.tga"
+	Model = "w\W_Steel_star .NIF"
+	BasePrice = 3
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 15
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 75
+	MinChop = 2
+	MaxChop = 5
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Throwing Knife"
+	Icon = "w\Tx_dagger_dragon.tga"
+	Model = "w\W_Dagger_dragon.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 0.3
+	EnchantPts = 15
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 150
+	MinChop = 1
+	MaxChop = 4
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Dart"
+	Icon = "w\tx_w_dart_steel.tga"
+	Model = "w\W_dart_steel.NIF"
+	BasePrice = 6
+	ItemLevel = 1
+	Weight = 0.2
+	EnchantPts = 15
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 150
+	MinChop = 2
+	MaxChop = 5
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin Dagger"
+	Icon = "w\Tx_chitin_dagger.tga"
+	Model = "w\W_dagger_chitin.nif"
+	BasePrice = 6
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 10
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 380
+	MinChop = 3
+	MaxChop = 3
+	MinSlash = 3
+	MaxSlash = 3
+	MinThrust = 4
+	MaxThrust = 4
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin Shortsword"
+	Icon = "w\Tx_chitin_shortsword.tga"
+	Model = "w\W_Shortsword_chitin.nif"
+	BasePrice = 13
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 20
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 540
+	MinChop = 3
+	MaxChop = 7
+	MinSlash = 3
+	MaxSlash = 7
+	MinThrust = 4
+	MaxThrust = 9
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin Club"
+	Icon = "w\Tx_chitin_club.tga"
+	Model = "w\W_chitin_club.nif"
+	BasePrice = 6
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 20
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 320
+	MinChop = 3
+	MaxChop = 3
+	MinSlash = 2
+	MaxSlash = 2
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin War Axe"
+	Icon = "w\Tx_chitin_warAxe.tga"
+	Model = "w\W_Chitin_Axe.nif"
+	BasePrice = 19
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 25
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 640
+	MinChop = 1
+	MaxChop = 11
+	MinSlash = 1
+	MaxSlash = 6
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin Spear"
+	Icon = "w\Tx_chitin_spear.tga"
+	Model = "w\w_chitin_spear.nif"
+	BasePrice = 13
+	ItemLevel = 1
+	Weight = 7
+	EnchantPts = 25
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 500
+	MinChop = 1
+	MaxChop = 2
+	MinSlash = 1
+	MaxSlash = 2
+	MinThrust = 5
+	MaxThrust = 13
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin Short Bow"
+	Icon = "w\tx_shortbow_chitin.tga"
+	Model = "w\W_shortbow_chitin.NIF"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 10
+	Type = "Bow"
+	Reach = 1
+	Speed = 1
+	Condition = 500
+	MinChop = 1
+	MaxChop = 10
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin Throwing Star"
+	Icon = "w\tx_chitin_star.tga"
+	Model = "w\W_Chitin_star.NIF"
+	BasePrice = 3
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 7
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 40
+	MinChop = 2
+	MaxChop = 3
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Dagger"
+	Icon = "w\Tx_dagger_iron.tga"
+	Model = "w\W_iron_dagger.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 20
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 400
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 4
+	MaxSlash = 5
+	MinThrust = 5
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Tanto"
+	Icon = "w\Tx_tanto_iron.tga"
+	Model = "w\W_Tanto.nif"
+	BasePrice = 14
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 22
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.25
+	Condition = 500
+	MinChop = 5
+	MaxChop = 6
+	MinSlash = 5
+	MaxSlash = 6
+	MinThrust = 6
+	MaxThrust = 6
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Wakizashi"
+	Icon = "w\Tx_wakazashi_iron.tga"
+	Model = "w\W_wakizashi_iron.nif"
+	BasePrice = 24
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 45
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.25
+	Condition = 500
+	MinChop = 7
+	MaxChop = 12
+	MinSlash = 5
+	MaxSlash = 10
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Broadsword"
+	Icon = "w\Tx_Broadsword_iron.tga"
+	Model = "w\W_BROADSWORD_IRON.nif"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 50
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.25
+	Condition = 600
+	MinChop = 4
+	MaxChop = 12
+	MinSlash = 2
+	MaxSlash = 12
+	MinThrust = 2
+	MaxThrust = 12
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Saber"
+	Icon = "w\Tx_Saber_iron.tga"
+	Model = "w\W_SABER_IRON.nif"
+	BasePrice = 24
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 55
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.4
+	Condition = 700
+	MinChop = 5
+	MaxChop = 18
+	MinSlash = 4
+	MaxSlash = 16
+	MinThrust = 1
+	MaxThrust = 4
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Club"
+	Icon = "w\Tx_club_iron.tga"
+	Model = "w\W_CLUB_IRON.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 40
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 400
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 3
+	MaxSlash = 3
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Mace"
+	Icon = "w\tx_mace_iron.tga"
+	Model = "w\w_mace_iron.nif"
+	BasePrice = 24
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 50
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.3
+	Condition = 1200
+	MinChop = 1
+	MaxChop = 12
+	MinSlash = 1
+	MaxSlash = 12
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Warhammer"
+	Icon = "w\Tx_warhammer_iron.tga"
+	Model = "w\w_warhammer_iron.nif"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 32
+	EnchantPts = 55
+	Type = "Blunt, 2-Close"
+	Reach = 1.5
+	Speed = 1
+	Condition = 2000
+	MinChop = 1
+	MaxChop = 28
+	MinSlash = 1
+	MaxSlash = 24
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron War Axe"
+	Icon = "w\Tx_waraxe_iron.tga"
+	Model = "w\W_WARAXE_IRON.nif"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 24
+	EnchantPts = 50
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 800
+	MinChop = 1
+	MaxChop = 18
+	MinSlash = 1
+	MaxSlash = 10
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Spear"
+	Icon = "w\Tx_Spear01.tga"
+	Model = "w\w_spear_iron.nif"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 14
+	EnchantPts = 50
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 600
+	MinChop = 2
+	MaxChop = 4
+	MinSlash = 2
+	MaxSlash = 4
+	MinThrust = 6
+	MaxThrust = 15
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Halberd"
+	Icon = "w\Tx_halberd_iron.tga"
+	Model = "w\W_halberd_iron.nif"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 14
+	EnchantPts = 50
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 700
+	MinChop = 1
+	MaxChop = 3
+	MinSlash = 1
+	MaxSlash = 3
+	MinThrust = 5
+	MaxThrust = 20
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Battle Axe"
+	Icon = "w\tx_battleaxe_daedric.tga"
+	Model = "w\W_battleaxe_daedric.NIF"
+	BasePrice = 50000
+	ItemLevel = 44
+	Weight = 90
+	EnchantPts = 165
+	Type = "Axe, 2-Hand"
+	Reach = 1
+	Speed = 1
+	Condition = 4800
+	MinChop = 1
+	MaxChop = 80
+	MinSlash = 1
+	MaxSlash = 60
+	MinThrust = 1
+	MaxThrust = 8
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Claymore"
+	Icon = "w\Tx_Daedric_claymore.tga"
+	Model = "w\W_Claymore_Daedric.nif"
+	BasePrice = 80000
+	ItemLevel = 56
+	Weight = 81
+	EnchantPts = 210
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 5600
+	MinChop = 1
+	MaxChop = 60
+	MinSlash = 1
+	MaxSlash = 52
+	MinThrust = 1
+	MaxThrust = 36
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Club"
+	Icon = "w\Tx_club_daedric.tga"
+	Model = "w\W_club_daedric.nif"
+	BasePrice = 10000
+	ItemLevel = 20
+	Weight = 36
+	EnchantPts = 120
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 1600
+	MinChop = 10
+	MaxChop = 12
+	MinSlash = 4
+	MaxSlash = 8
+	MinThrust = 4
+	MaxThrust = 8
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Dagger"
+	Icon = "w\Tx_Dagger_daedric.tga"
+	Model = "w\W_Dagger_daedric.nif"
+	BasePrice = 10000
+	ItemLevel = 20
+	Weight = 9
+	EnchantPts = 60
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 700
+	MinChop = 8
+	MaxChop = 12
+	MinSlash = 8
+	MaxSlash = 12
+	MinThrust = 8
+	MaxThrust = 12
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Dai-katana"
+	Icon = "w\Tx_dai-katana_daedric.tga"
+	Model = "w\W_Dai-katana_daedric.nif"
+	BasePrice = 120000
+	ItemLevel = 69
+	Weight = 60
+	EnchantPts = 210
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.35
+	Condition = 7200
+	MinChop = 1
+	MaxChop = 60
+	MinSlash = 1
+	MaxSlash = 52
+	MinThrust = 1
+	MaxThrust = 30
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Dart"
+	Icon = "w\tx_dart_daedric.tga"
+	Model = "w\W_dart_daedric.NIF"
+	BasePrice = 4000
+	ItemLevel = 12
+	Weight = 0.4
+	EnchantPts = 45
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 90
+	MinChop = 2
+	MaxChop = 12
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Katana"
+	Icon = "w\Tx_katana_daedric.tga"
+	Model = "w\W_katana_daedric.nif"
+	BasePrice = 50000
+	ItemLevel = 44
+	Weight = 54
+	EnchantPts = 180
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.5
+	Condition = 4800
+	MinChop = 3
+	MaxChop = 44
+	MinSlash = 1
+	MaxSlash = 40
+	MinThrust = 1
+	MaxThrust = 14
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Long Bow"
+	Icon = "w\tx_longbow_daedric.tga"
+	Model = "w\W_longbow_daedric.NIF"
+	BasePrice = 50000
+	ItemLevel = 44
+	Weight = 24
+	EnchantPts = 105
+	Type = "Bow"
+	Reach = 1
+	Speed = 1
+	Condition = 1000
+	MinChop = 2
+	MaxChop = 50
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Mace"
+	Icon = "w\Tx_mace_daedric.tga"
+	Model = "w\W_mace_daedric.nif"
+	BasePrice = 24000
+	ItemLevel = 30
+	Weight = 45
+	EnchantPts = 150
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.3
+	Condition = 4800
+	MinChop = 3
+	MaxChop = 30
+	MinSlash = 3
+	MaxSlash = 30
+	MinThrust = 2
+	MaxThrust = 4
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Shortsword"
+	Icon = "w\Tx_Daedric_shortsword.tga"
+	Model = "w\W_Shortsword_Daedric.nif"
+	BasePrice = 20000
+	ItemLevel = 28
+	Weight = 24
+	EnchantPts = 120
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 1500
+	MinChop = 10
+	MaxChop = 26
+	MinSlash = 10
+	MaxSlash = 26
+	MinThrust = 12
+	MaxThrust = 24
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Spear"
+	Icon = "w\Tx_spear_daedric.tga"
+	Model = "w\W_spear_daedric.nif"
+	BasePrice = 20000
+	ItemLevel = 28
+	Weight = 42
+	EnchantPts = 150
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 1000
+	MinChop = 2
+	MaxChop = 9
+	MinSlash = 2
+	MaxSlash = 9
+	MinThrust = 6
+	MaxThrust = 40
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Staff"
+	Icon = "w\Tx_staff_daedric.tga"
+	Model = "w\W_staff_daedric.nif"
+	BasePrice = 14000
+	ItemLevel = 23
+	Weight = 24
+	EnchantPts = 210
+	Type = "Blunt, 2-Wide"
+	Reach = 1.8
+	Speed = 1.75
+	Condition = 1200
+	MinChop = 2
+	MaxChop = 16
+	MinSlash = 3
+	MaxSlash = 16
+	MinThrust = 1
+	MaxThrust = 12
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Tanto"
+	Icon = "w\Tx_tanto_daedric.tga"
+	Model = "w\W_tanto_daedric.nif"
+	BasePrice = 14000
+	ItemLevel = 23
+	Weight = 12
+	EnchantPts = 66
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.25
+	Condition = 1100
+	MinChop = 9
+	MaxChop = 20
+	MinSlash = 9
+	MaxSlash = 20
+	MinThrust = 9
+	MaxThrust = 20
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Wakizashi"
+	Icon = "w\Tx_wakazashi_daedric.tga"
+	Model = "w\W_wakazashi_daedric.nif"
+	BasePrice = 48000
+	ItemLevel = 43
+	Weight = 30
+	EnchantPts = 135
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.25
+	Condition = 1100
+	MinChop = 10
+	MaxChop = 30
+	MinSlash = 10
+	MaxSlash = 25
+	MinThrust = 7
+	MaxThrust = 11
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric War Axe"
+	Icon = "w\Tx_waraxe_daedric.tga"
+	Model = "w\W_waraxe_daedric.nif"
+	BasePrice = 30000
+	ItemLevel = 34
+	Weight = 72
+	EnchantPts = 150
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 3200
+	MinChop = 1
+	MaxChop = 44
+	MinSlash = 1
+	MaxSlash = 24
+	MinThrust = 1
+	MaxThrust = 6
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Warhammer"
+	Icon = "w\Tx_warhammer_daedric.tga"
+	Model = "w\W_warhammer_daedric.nif"
+	BasePrice = 30000
+	ItemLevel = 34
+	Weight = 96
+	EnchantPts = 165
+	Type = "Blunt, 2-Close"
+	Reach = 1.5
+	Speed = 1
+	Condition = 8000
+	MinChop = 1
+	MaxChop = 70
+	MinSlash = 1
+	MaxSlash = 60
+	MinThrust = 1
+	MaxThrust = 4
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dreugh Club"
+	Icon = "w\tx_dreugh_club.tga"
+	Model = "w\W_Dreugh_club.NIF"
+	BasePrice = 200
+	ItemLevel = 2
+	Weight = 10.8
+	EnchantPts = 36
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 400
+	MinChop = 7
+	MaxChop = 8
+	MinSlash = 4
+	MaxSlash = 5
+	MinThrust = 3
+	MaxThrust = 5
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dreugh Staff"
+	Icon = "w\tx_dreugh_staff.tga"
+	Model = "w\W_Dreugh_staff.NIF"
+	BasePrice = 400
+	ItemLevel = 4
+	Weight = 7.2
+	EnchantPts = 63
+	Type = "Blunt, 2-Wide"
+	Reach = 1.5
+	Speed = 1.75
+	Condition = 270
+	MinChop = 2
+	MaxChop = 10
+	MinSlash = 3
+	MaxSlash = 10
+	MinThrust = 1
+	MaxThrust = 8
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Battle Axe"
+	Icon = "w\Tx_Dwemer_battleaxe.tga"
+	Model = "w\W_Dwemer_battleaxe.nif"
+	BasePrice = 750
+	ItemLevel = 5
+	Weight = 30
+	EnchantPts = 55
+	Type = "Axe, 2-Hand"
+	Reach = 1
+	Speed = 1
+	Condition = 3000
+	MinChop = 1
+	MaxChop = 35
+	MinSlash = 1
+	MaxSlash = 33
+	MinThrust = 1
+	MaxThrust = 15
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Claymore"
+	Icon = "w\Tx_Dwemer_claymore.tga"
+	Model = "w\W_Dwemer_claymore.nif"
+	BasePrice = 1200
+	ItemLevel = 6
+	Weight = 27
+	EnchantPts = 70
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 3500
+	MinChop = 1
+	MaxChop = 33
+	MinSlash = 1
+	MaxSlash = 29
+	MinThrust = 1
+	MaxThrust = 20
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Crossbow"
+	Icon = "w\tx_crossbow_dwemer.tga"
+	Model = "w\W_Crossbow_Dwemer.NIF"
+	BasePrice = 1200
+	ItemLevel = 6
+	Weight = 10
+	EnchantPts = 50
+	Type = "Crossbow"
+	Reach = 1
+	Speed = 1
+	Condition = 750
+	MinChop = 30
+	MaxChop = 30
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Halberd"
+	Icon = "w\Tx_Dwemer_halberd.tga"
+	Model = "w\W_Dwemer_halberd.nif"
+	BasePrice = 600
+	ItemLevel = 4
+	Weight = 24
+	EnchantPts = 70
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 1000
+	MinChop = 3
+	MaxChop = 17
+	MinSlash = 1
+	MaxSlash = 13
+	MinThrust = 5
+	MaxThrust = 28
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Mace"
+	Icon = "w\Tx_Dwemer_mace.tga"
+	Model = "w\W_Dwemer_mace.nif"
+	BasePrice = 360
+	ItemLevel = 3
+	Weight = 15
+	EnchantPts = 50
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 3000
+	MinChop = 5
+	MaxChop = 17
+	MinSlash = 5
+	MaxSlash = 17
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Shortsword"
+	Icon = "w\Tx_Dwemer_shortsword.tga"
+	Model = "w\W_Dwemer_shortsword.nif"
+	BasePrice = 300
+	ItemLevel = 3
+	Weight = 8
+	EnchantPts = 40
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2
+	Condition = 1050
+	MinChop = 7
+	MaxChop = 14
+	MinSlash = 7
+	MaxSlash = 14
+	MinThrust = 8
+	MaxThrust = 15
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Spear"
+	Icon = "w\Tx_Dwemer_spear.tga"
+	Model = "w\W_Dwemer_spear.nif"
+	BasePrice = 300
+	ItemLevel = 3
+	Weight = 14
+	EnchantPts = 50
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 1400
+	MinChop = 2
+	MaxChop = 5
+	MinSlash = 2
+	MaxSlash = 5
+	MinThrust = 5
+	MaxThrust = 21
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven War Axe"
+	Icon = "w\Tx_Dwemer_waraxe.tga"
+	Model = "w\W_Dwemer_waraxe.nif"
+	BasePrice = 450
+	ItemLevel = 4
+	Weight = 24
+	EnchantPts = 50
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 2000
+	MinChop = 1
+	MaxChop = 24
+	MinSlash = 1
+	MaxSlash = 13
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Dwarven Warhammer"
+	Icon = "w\Tx_Dwemer_warhammer.tga"
+	Model = "w\W_Dwemer_warhammer.nif"
+	BasePrice = 600
+	ItemLevel = 4
+	Weight = 32
+	EnchantPts = 55
+	Type = "Blunt, 2-Close"
+	Reach = 1.5
+	Speed = 1
+	Condition = 5000
+	MinChop = 1
+	MaxChop = 39
+	MinSlash = 1
+	MaxSlash = 33
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Broadsword"
+	Icon = "w\Tx_Broadsword_ebony.tga"
+	Model = "w\W_broadsword_ebony.nif"
+	BasePrice = 15000
+	ItemLevel = 24
+	Weight = 24
+	EnchantPts = 100
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.25
+	Condition = 1800
+	MinChop = 4
+	MaxChop = 26
+	MinSlash = 2
+	MaxSlash = 26
+	MinThrust = 2
+	MaxThrust = 26
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Dart"
+	Icon = "w\tx_dart_ebony.tga"
+	Model = "w\W_Dart_ebony.NIF"
+	BasePrice = 2000
+	ItemLevel = 8
+	Weight = 0.4
+	EnchantPts = 30
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 60
+	MinChop = 2
+	MaxChop = 10
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Mace"
+	Icon = "w\Tx_mace_ebony.tga"
+	Model = "w\W_mace_ebony.nif"
+	BasePrice = 12000
+	ItemLevel = 21
+	Weight = 30
+	EnchantPts = 100
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 3600
+	MinChop = 7
+	MaxChop = 26
+	MinSlash = 7
+	MaxSlash = 26
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Spear"
+	Icon = "w\Tx_longspear_ebony.tga"
+	Model = "w\W_longspear_ebony.nif"
+	BasePrice = 10000
+	ItemLevel = 20
+	Weight = 28
+	EnchantPts = 100
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 1200
+	MinChop = 2
+	MaxChop = 8
+	MinSlash = 2
+	MaxSlash = 8
+	MinThrust = 5
+	MaxThrust = 32
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Staff"
+	Icon = "w\Tx_staff_ebony.tga"
+	Model = "w\W_staff_ebony.nif"
+	BasePrice = 7000
+	ItemLevel = 16
+	Weight = 16
+	EnchantPts = 900
+	Type = "Blunt, 2-Wide"
+	Reach = 1.8
+	Speed = 1.75
+	Condition = 900
+	MinChop = 2
+	MaxChop = 16
+	MinSlash = 3
+	MaxSlash = 16
+	MinThrust = 1
+	MaxThrust = 10
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Throwing Star"
+	Icon = "w\tx_star_ebony.tga"
+	Model = "w\W_Star_Ebony.NIF"
+	BasePrice = 2000
+	ItemLevel = 8
+	Weight = 0.2
+	EnchantPts = 30
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 900
+	MinChop = 2
+	MaxChop = 10
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony War Axe"
+	Icon = "w\Tx_waraxe_ebony.tga"
+	Model = "w\W_waraxe_ebony.nif"
+	BasePrice = 15000
+	ItemLevel = 24
+	Weight = 48
+	EnchantPts = 100
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 2400
+	MinChop = 1
+	MaxChop = 37
+	MinSlash = 1
+	MaxSlash = 20
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Claymore"
+	Icon = "w\Tx_Crystal_Claymore.tga"
+	Model = "w\w_claymore_crystal.nif"
+	BasePrice = 32000
+	ItemLevel = 35
+	Weight = 16.2
+	EnchantPts = 42
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 840
+	MinChop = 1
+	MaxChop = 45
+	MinSlash = 1
+	MaxSlash = 39
+	MinThrust = 1
+	MaxThrust = 27
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Dagger"
+	Icon = "w\tx_dagger_glass.tga"
+	Model = "w\W_dagger_glass.nif"
+	BasePrice = 4000
+	ItemLevel = 12
+	Weight = 1.8
+	EnchantPts = 12
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 300
+	MinChop = 6
+	MaxChop = 15
+	MinSlash = 6
+	MaxSlash = 15
+	MinThrust = 6
+	MaxThrust = 12
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Halberd"
+	Icon = "w\Tx_halberd_glass.tga"
+	Model = "w\W_halberd_glass.nif"
+	BasePrice = 16000
+	ItemLevel = 25
+	Weight = 8.4
+	EnchantPts = 30
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 600
+	MinChop = 1
+	MaxChop = 6
+	MinSlash = 1
+	MaxSlash = 6
+	MinThrust = 5
+	MaxThrust = 38
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Longsword"
+	Icon = "w\Tx_Crystal_longsword.tga"
+	Model = "w\W_Longsword_crystal.nif"
+	BasePrice = 16000
+	ItemLevel = 25
+	Weight = 12
+	EnchantPts = 36
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.35
+	Condition = 480
+	MinChop = 2
+	MaxChop = 24
+	MinSlash = 1
+	MaxSlash = 33
+	MinThrust = 4
+	MaxThrust = 30
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Staff"
+	Icon = "w\Tx_staff_glass.tga"
+	Model = "w\W_staff_glass.nif"
+	BasePrice = 5600
+	ItemLevel = 14
+	Weight = 4.8
+	EnchantPts = 42
+	Type = "Blunt, 2-Wide"
+	Reach = 1.5
+	Speed = 1.75
+	Condition = 240
+	MinChop = 2
+	MaxChop = 12
+	MinSlash = 3
+	MaxSlash = 12
+	MinThrust = 1
+	MaxThrust = 9
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Throwing Knife"
+	Icon = "w\Tx_Knife_glass.tga"
+	Model = "w\W_knife_glass.nif"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 0.2
+	EnchantPts = 9
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 80
+	MinChop = 1
+	MaxChop = 6
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Throwing Star"
+	Icon = "w\tx_star_glass.tga"
+	Model = "w\W_Star_Glass.NIF"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 9
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 40
+	MinChop = 2
+	MaxChop = 9
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass War Axe"
+	Icon = "w\Tx_waraxe_glass.tga"
+	Model = "w\W_waraxe_glass.nif"
+	BasePrice = 12000
+	ItemLevel = 21
+	Weight = 14.4
+	EnchantPts = 30
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 640
+	MinChop = 1
+	MaxChop = 33
+	MinSlash = 1
+	MaxSlash = 18
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Throwing Knife"
+	Icon = "w\Tx_knife_iron.tga"
+	Model = "w\W_KNIFE_IRON.nif"
+	BasePrice = 3
+	ItemLevel = 1
+	Weight = 0.3
+	EnchantPts = 15
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 100
+	MinChop = 1
+	MaxChop = 3
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Short Bow"
+	Icon = "w\tx_shortbow_steel.tga"
+	Model = "w\W_shortbow_steel.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 20
+	Type = "Bow"
+	Reach = 1
+	Speed = 1
+	Condition = 500
+	MinChop = 1
+	MaxChop = 15
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Claymore"
+	Icon = "w\Tx_Claymore_Silver.tga"
+	Model = "w\W_Silver_Claymore.nif"
+	BasePrice = 320
+	ItemLevel = 3
+	Weight = 21.6
+	EnchantPts = 56
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 1260
+	MinChop = 1
+	MaxChop = 27
+	MinSlash = 1
+	MaxSlash = 23
+	MinThrust = 1
+	MaxThrust = 16
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Dagger"
+	Icon = "w\Tx_silver_dagger.tga"
+	Model = "w\W_silver_dagger.nif"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 2.4
+	EnchantPts = 16
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 400
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 4
+	MaxSlash = 5
+	MinThrust = 5
+	MaxThrust = 5
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Dart"
+	Icon = "w\tx_dart_silver.tga"
+	Model = "w\W_Dart_silver.NIF"
+	BasePrice = 6
+	ItemLevel = 1
+	Weight = 0.2
+	EnchantPts = 12
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 24
+	MinChop = 2
+	MaxChop = 5
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Spear"
+	Icon = "w\Tx_silver_spear.tga"
+	Model = "w\W_silver_spear.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 11.2
+	EnchantPts = 40
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 500
+	MinChop = 1
+	MaxChop = 4
+	MinSlash = 1
+	MaxSlash = 4
+	MinThrust = 5
+	MaxThrust = 23
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Staff"
+	Icon = "w\Tx_silver_staff.tga"
+	Model = "w\W_silver_staff.nif"
+	BasePrice = 56
+	ItemLevel = 1
+	Weight = 6.4
+	EnchantPts = 56
+	Type = "Blunt, 2-Wide"
+	Reach = 1.5
+	Speed = 1.75
+	Condition = 270
+	MinChop = 2
+	MaxChop = 7
+	MinSlash = 3
+	MaxSlash = 7
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Throwing Star"
+	Icon = "w\tx_silver_star.tga"
+	Model = "w\W_silver_star.NIF"
+	BasePrice = 16
+	ItemLevel = 1
+	Weight = 0.2
+	EnchantPts = 12
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 45
+	MinChop = 2
+	MaxChop = 5
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver War Axe"
+	Icon = "w\Tx_silver_waraxe.tga"
+	Model = "w\W_silver_waraxe.nif"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 19.2
+	EnchantPts = 40
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 720
+	MinChop = 1
+	MaxChop = 20
+	MinSlash = 1
+	MaxSlash = 11
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Wooden Staff"
+	Icon = "w\Tx_wooden_staff.tga"
+	Model = "w\W_wooden_staff.nif"
+	BasePrice = 8
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 70
+	Type = "Blunt, 2-Wide"
+	Reach = 1.8
+	Speed = 1.75
+	Condition = 300
+	MinChop = 2
+	MaxChop = 6
+	MinSlash = 3
+	MaxSlash = 6
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Helm"
+	Icon = "a\Tx_Netch_Helmet.tga"
+	Model = "a\A_Netch_M_Helmet.nif"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 75
+	Armor = 5
+	Type = "Helmet"
+	Condition = 50
+	MHair = "a_netch_m_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Boiled Netch Leather Helm"
+	Icon = "a\Tx_Netch_boiled_helm.tga"
+	Model = "a\A_Netch_boiled_helm.NIF"
+	BasePrice = 17
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 75
+	Armor = 7
+	Type = "Helmet"
+	Condition = 70
+	MHead = "a_netch_boiled_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Left Pauldron"
+	Icon = "a\Tx_Netch_pauldron.tga"
+	Model = "a\A_Netch_M_Pauldron_GND.nif"
+	BasePrice = 12
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 10
+	Armor = 5
+	Type = "Left Pauldron"
+	Condition = 50
+	MLeftUpperArm = "a_netch_m_pauldron_ua"
+	MLeftPauldron = "a_netch_m_pauldron_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Cuirass"
+	Icon = "a\Tx_Netch_cuirass2.tga"
+	Model = "a\A_Netch_M_Currais2_GND.NIF"
+	BasePrice = 35
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 60
+	Armor = 5
+	Type = "Cuirass"
+	Condition = 150
+	MChest = "A_Netch_M_cuirass2"
+End
+Item
+	ItemType = Armor
+	Name = "Boiled Netch Leather Cuirass"
+	Icon = "a\Tx_Netch_cuirass.tga"
+	Model = "a\A_Netch_M_cuirass_GND.nif"
+	BasePrice = 37
+	ItemLevel = 1
+	Weight = 12
+	EnchantPts = 60
+	Armor = 7
+	Type = "Cuirass"
+	Condition = 210
+	MChest = "a_netch_m_chest"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Left Gauntlet"
+	Icon = "a\Tx_Netch_gauntlet.tga"
+	Model = "a\A_Netch_M_gauntlet_GND.nif"
+	BasePrice = 7
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 60
+	Armor = 5
+	Type = "Left Gauntlet"
+	Condition = 25
+	MLeftHand = "a_netch_m_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Right Gauntlet"
+	Icon = "a\Tx_Netch_gauntlet.tga"
+	Model = "a\A_Netch_M_gauntlet_GND.nif"
+	BasePrice = 7
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 60
+	Armor = 5
+	Type = "Right Gauntlet"
+	Condition = 25
+	MRightHand = "a_netch_m_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Greaves"
+	Icon = "a\Tx_Netch_greaves.tga"
+	Model = "a\A_Netch_M_Greave_GND.nif"
+	BasePrice = 22
+	ItemLevel = 1
+	Weight = 7
+	EnchantPts = 10
+	Armor = 5
+	Type = "Greaves"
+	Condition = 50
+	MGroin = "a_netch_m_greave_g"
+	MLeftUpperLeg = "a_netch_m_greave_ul"
+	MRightUpperLeg = "a_netch_m_greave_ul"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Boots"
+	Icon = "a\Tx_Netch_boots.tga"
+	Model = "a\A_Netch_M_boot_GND.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 26
+	Armor = 5
+	Type = "Boots"
+	Condition = 50
+	MLeftFoot = "a_netch_m_boot_f"
+	MLeftAnkle = "a_netch_m_boot_a"
+	MRightFoot = "a_netch_m_boot_f"
+	MRightAnkle = "a_netch_m_boot_a"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Shield"
+	Icon = "a\Tx_shield_Nordic_leather.tga"
+	Model = "a\Shield_Netch_leather.NIF"
+	BasePrice = 17
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 150
+	Armor = 5
+	Type = "Shield"
+	Condition = 100
+	MShield = "shield_netch_leather"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Tower Shield"
+	Icon = "a\Tx_Towershield_Netch.tga"
+	Model = "a\TowerShield_Netch_leather.NIF"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 9
+	EnchantPts = 225
+	Armor = 5
+	Type = "Shield"
+	Condition = 100
+	MShield = "towershield_netch_leather"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Helm"
+	Icon = "a\TX_NordicFur_helmet.tga"
+	Model = "a\A_NordicFur_Helmet.nif"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 75
+	Armor = 5
+	Type = "Helmet"
+	Condition = 50
+	MHair = "a_nordicfur_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Colovian Fur Helm"
+	Icon = "a\Tx_Fur_Colovian_helm.tga"
+	Model = "a\A_Helm_Colovian.NIF"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Armor = 7
+	Type = "Helmet"
+	Condition = 70
+	MHair = "a_helm_colovian"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Left Pauldron"
+	Icon = "a\Tx_NordicFur_pauldron.tga"
+	Model = "a\A_NordicFur_Pauldron_GND.nif"
+	BasePrice = 12
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Armor = 5
+	Type = "Left Pauldron"
+	Condition = 50
+	MLeftUpperArm = "a_nordicfur_pauldron_ua"
+	MLeftPauldron = "a_nordicfur_pauldron_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Cuirass"
+	Icon = "a\Tx_NordicFur_cuirass.tga"
+	Model = "a\A_NordicFur_M_Cuirass_GND.nif"
+	BasePrice = 35
+	ItemLevel = 1
+	Weight = 9
+	EnchantPts = 60
+	Armor = 5
+	Type = "Cuirass"
+	Condition = 150
+	MChest = "a_nordicfur_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Bearskin Cuirass"
+	Icon = "a\Tx_fur_cuirass.tga"
+	Model = "a\A_fur_cuirass_GND.NIF"
+	BasePrice = 35
+	ItemLevel = 1
+	Weight = 9
+	EnchantPts = 60
+	Armor = 5
+	Type = "Cuirass"
+	Condition = 150
+	MChest = "a_fur_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Left Bracer"
+	Icon = "a\tx_NordicFur_bracer.tga"
+	Model = "a\A_NordicFur_Bracer_W.NIF"
+	BasePrice = 5
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 5
+	Type = "Left Bracer"
+	Condition = 25
+	MLeftWrist = "A_NordicFur_Bracer_W"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Right Bracer"
+	Icon = "a\tx_NordicFur_bracer.tga"
+	Model = "a\A_NordicFur_Bracer_W.NIF"
+	BasePrice = 5
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 5
+	Type = "Right Bracer"
+	Condition = 25
+	MRightWrist = "A_NordicFur_Bracer_W"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Greaves"
+	Icon = "a\TX_NordicFur_greaves.tga"
+	Model = "a\A_NordicFur_Greave_GND.nif"
+	BasePrice = 22
+	ItemLevel = 1
+	Weight = 5.4
+	EnchantPts = 10
+	Armor = 5
+	Type = "Greaves"
+	Condition = 50
+	MGroin = "a_nordicfur_greave_g"
+	MLeftUpperLeg = "a_nordicfur_greave_ul"
+	MRightUpperLeg = "a_nordicfur_greave_ul"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Boots"
+	Icon = "a\Tx_NordicFur_boots.tga"
+	Model = "a\A_NordicFur_Boot_GND.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 26
+	Armor = 5
+	Type = "Boots"
+	Condition = 50
+	MLeftFoot = "a_nordicfur_boot_f"
+	MLeftAnkle = "a_nordicfur_boot_a"
+	MRightFoot = "a_nordicfur_boot_f"
+	MRightAnkle = "a_nordicfur_boot_a"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Leather Shield"
+	Icon = "a\Tx_shield_Nordic_leather.tga"
+	Model = "a\Shield_Nordic_leather.NIF"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 4.5
+	EnchantPts = 150
+	Armor = 5
+	Type = "Shield"
+	Condition = 100
+	MShield = "shield_nordic_leather"
+End
+Item
+	ItemType = Armor
+	Name = "Telvanni Dust Adept Helm"
+	Icon = "a\Tx_dustAdept_helm.tga"
+	Model = "a\A_DustAdept_Helm.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 250
+	Armor = 5
+	Type = "Helmet"
+	Condition = 50
+	MHead = "a_dustadept_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Telvanni Mole Crab Helm"
+	Icon = "a\tx_molecrab_helm.tga"
+	Model = "a\A_molecrab_helm.NIF"
+	BasePrice = 19
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 500
+	Armor = 6
+	Type = "Helmet"
+	Condition = 60
+	MHead = "a_molecrab_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Telvanni Cephalopod Helm"
+	Icon = "a\Tx_cephalopod_helm.tga"
+	Model = "a\A_Cephalopod_helm.NIF"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 1000
+	Armor = 8
+	Type = "Helmet"
+	Condition = 80
+	MHead = "a_cephalopod_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Studded Leather Cuiras"
+	Icon = "a\Tx_StuddedLeather_cuirass.tga"
+	Model = "a\A_StuddedLeather_C_GND.nif"
+	BasePrice = 65
+	ItemLevel = 1
+	Weight = 9
+	EnchantPts = 60
+	Armor = 10
+	Type = "Cuirass"
+	Condition = 300
+	MChest = "a_studdedleather_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Chain Coif"
+	Icon = "a\Tx_ImperialChain_Helmet.tga"
+	Model = "a\A_M_ImperialChain_Helmet.nif"
+	BasePrice = 35
+	ItemLevel = 1
+	Weight = 3.5
+	EnchantPts = 175
+	Armor = 10
+	Type = "Helmet"
+	Condition = 100
+	MHair = "a_m_imperialchain_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Chain Cuirass"
+	Icon = "a\Tx_ImperialChain_Cuirass.tga"
+	Model = "a\A_M_ImperialChain_C_GND.nif"
+	BasePrice = 90
+	ItemLevel = 1
+	Weight = 21
+	EnchantPts = 140
+	Armor = 12
+	Type = "Cuirass"
+	Condition = 300
+	MChest = "a_m_imperialchain_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Ringmail Cuirass"
+	Icon = "a\Tx_Ringmail_cuirass.tga"
+	Model = "a\A_Ringmail_Cuirass_GND.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 21
+	EnchantPts = 140
+	Armor = 10
+	Type = "Cuirass"
+	Condition = 300
+	MChest = "a_ringmail_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Mask Helm"
+	Icon = "a\TX_Chitin_helmet.tga"
+	Model = "a\A_M_Chitin_Helmet.nif"
+	BasePrice = 19
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 125
+	Armor = 10
+	Type = "Helmet"
+	Condition = 100
+	MHead = "a_m_chitin_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Redoran Watchman's Helm"
+	Icon = "a\Tx_watchmansHelm.tga"
+	Model = "a\A_WatchmansHelm.NIF"
+	BasePrice = 24
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 125
+	Armor = 11
+	Type = "Helmet"
+	Condition = 110
+	MHead = "a_watchmanshelm"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Shield"
+	Icon = "a\Tx_shield_chitin.tga"
+	Model = "a\Shield_Chitin.NIF"
+	BasePrice = 22
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 250
+	Armor = 10
+	Type = "Shield"
+	Condition = 200
+	MShield = "shield_chitin"
+End
+Item
+	ItemType = Armor
+	Name = "Chitin Tower Shield"
+	Icon = "a\Tx_Towershield_chitin.tga"
+	Model = "a\TowerShield_Chitin.NIF"
+	BasePrice = 32
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 375
+	Armor = 12
+	Type = "Shield"
+	Condition = 240
+	MShield = "towershield_chitin"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Newtscale Cuirass"
+	Icon = "a\tx_Newtscale_cuirass.tga"
+	Model = "a\A_Newstscale_C_GND.NIF"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 9
+	EnchantPts = 100
+	Armor = 10
+	Type = "Cuirass"
+	Condition = 300
+	MChest = "a_newtscale_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Silver Helm"
+	Icon = "a\tx_helm_silver.tga"
+	Model = "a\A_Helm_silver.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 5
+	EnchantPts = 200
+	Armor = 17
+	Type = "Helmet"
+	Condition = 170
+	MHair = "a_helm_silver"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Silver Cuirass"
+	Icon = "a\tx_silver_cuirass.tga"
+	Model = "a\A_Silver_Cuir_GND.NIF"
+	BasePrice = 280
+	ItemLevel = 3
+	Weight = 30
+	EnchantPts = 160
+	Armor = 18
+	Type = "Cuirass"
+	Condition = 540
+	MChest = "a_silver_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Duke's Guard Silver Cuirass"
+	Icon = "a\tx_silver_dukes_cuir.tga"
+	Model = "a\A_silver_duke_GND.NIF"
+	BasePrice = 350
+	ItemLevel = 3
+	Weight = 30
+	EnchantPts = 160
+	Armor = 20
+	Type = "Cuirass"
+	Condition = 600
+	MChest = "a_silver_cuirass_duke"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Greaves"
+	Icon = "a\Tx_Imperial_greaves.tga"
+	Model = "a\A_Imperial_Greaves_GND.NIF"
+	BasePrice = 98
+	ItemLevel = 1
+	Weight = 17
+	EnchantPts = 25
+	Armor = 16
+	Type = "Greaves"
+	Condition = 170
+	MGroin = "a_imperial_greaves_g"
+	MLeftUpperLeg = "a_imperial_greaves_ul"
+	MRightUpperLeg = "a_imperial_greaves_ul"
+	MLeftKnee = "a_imperial_greaves_k"
+	MRightKnee = "a_imperial_greaves_k"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Iron Helm"
+	Icon = "a\tx_NordicIron_Helm.tga"
+	Model = "a\A_NordicIron_Helm.NIF"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 250
+	Armor = 16
+	Type = "Helmet"
+	Condition = 160
+	MHead = "a_nordiciron_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Iron Cuirass"
+	Icon = "a\Tx_NordicIron_Cuirass.tga"
+	Model = "a\A_NordicIron_C_GND.NIF"
+	BasePrice = 130
+	ItemLevel = 2
+	Weight = 35
+	EnchantPts = 200
+	Armor = 16
+	Type = "Cuirass"
+	Condition = 480
+	MChest = "a_nordiciron_c"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Greaves"
+	Icon = "a\tx_Templar_greaves.tga"
+	Model = "a\A_Templar_Greaves_GND.NIF"
+	BasePrice = 110
+	ItemLevel = 2
+	Weight = 18
+	EnchantPts = 25
+	Armor = 18
+	Type = "Greaves"
+	Condition = 180
+	MGroin = "a_templar_greaves_g"
+	MLeftUpperLeg = "a_templar_greaves_ul"
+	MRightUpperLeg = "a_templar_greaves_ul"
+	MLeftKnee = "a_templar_greaves_k"
+	MRightKnee = "a_templar_greaves_k"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Helm"
+	Icon = "a\TX_Steel_helmet.tga"
+	Model = "a\A_Steel_Helmet.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 250
+	Armor = 15
+	Type = "Helmet"
+	Condition = 150
+	MHead = "a_steel_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Left Pauldron"
+	Icon = "a\TX_Steel_pauldron.tga"
+	Model = "a\A_Steel_Pauldron_GND.nif"
+	BasePrice = 48
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 15
+	Type = "Left Pauldron"
+	Condition = 150
+	MLeftUpperArm = "a_steel_pauldron_ua"
+	MLeftPauldron = "a_steel_pauldron_cl"
+	MLeftForeArm = "a_steel_pauldron_fa"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Right Pauldron"
+	Icon = "a\TX_Steel_pauldron.tga"
+	Model = "a\A_Steel_Pauldron_GND.nif"
+	BasePrice = 48
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 15
+	Type = "Right Pauldron"
+	Condition = 150
+	MRightUpperArm = "a_steel_pauldron_ua"
+	MRightPauldron = "a_steel_pauldron_cl"
+	MRightForeArm = "a_steel_pauldron_fa"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Cuirass"
+	Icon = "a\TX_Steel_curaiss.tga"
+	Model = "a\A_Steel_Cuirass_GND.nif"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 30
+	EnchantPts = 200
+	Armor = 15
+	Type = "Cuirass"
+	Condition = 450
+	MChest = "a_steel_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Shield"
+	Icon = "a\Tx_shield_steel.tga"
+	Model = "a\shield_steel.NIF"
+	BasePrice = 68
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 500
+	Armor = 15
+	Type = "Shield"
+	Condition = 300
+	MShield = "shield_steel"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Tower Shield"
+	Icon = "a\Tx_towershield_steel.tga"
+	Model = "a\TowerShield_steel.NIF"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 20
+	EnchantPts = 750
+	Armor = 18
+	Type = "Shield"
+	Condition = 360
+	MShield = "towershield_steel"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Left Gauntlet"
+	Icon = "a\TX_Steel_gauntlet.tga"
+	Model = "a\A_Steel_Gauntlet_GND.NIF"
+	BasePrice = 28
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 15
+	Type = "Left Gauntlet"
+	Condition = 75
+	MLeftHand = "a_steel_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Right Gauntlet"
+	Icon = "a\TX_Steel_gauntlet.tga"
+	Model = "a\A_Steel_Gauntlet_GND.NIF"
+	BasePrice = 28
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 15
+	Type = "Right Gauntlet"
+	Condition = 75
+	MRightHand = "a_steel_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Steel Greaves"
+	Icon = "a\TX_Steel_greaves.tga"
+	Model = "a\A_Steel_Greaves_GND.nif"
+	BasePrice = 88
+	ItemLevel = 1
+	Weight = 18
+	EnchantPts = 25
+	Armor = 15
+	Type = "Greaves"
+	Condition = 150
+	MGroin = "a_steel_greaves_g"
+	MLeftUpperLeg = "a_steel_greaves_ul"
+	MRightUpperLeg = "a_steel_greaves_ul"
+	MLeftKnee = "a_steel_greaves_k"
+	MRightKnee = "a_steel_greaves_k"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Left Pauldron"
+	Icon = "a\Tx_Iron_pauldron.tga"
+	Model = "a\A_Iron_Pauldron_GND.nif"
+	BasePrice = 24
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 10
+	Type = "Left Pauldron"
+	Condition = 100
+	MLeftUpperArm = "a_iron_pauldron_ua"
+	MLeftPauldron = "a_iron_pauldron_cl"
+	MLeftForeArm = "a_iron_pauldron_fa"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Right Pauldron"
+	Icon = "a\Tx_Iron_pauldron.tga"
+	Model = "a\A_Iron_Pauldron_GND.nif"
+	BasePrice = 24
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 20
+	Armor = 10
+	Type = "Right Pauldron"
+	Condition = 100
+	MRightUpperArm = "a_iron_pauldron_ua"
+	MRightPauldron = "a_iron_pauldron_cl"
+	MRightForeArm = "a_iron_pauldron_fa"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Cuirass"
+	Icon = "a\Tx_Iron_cuirass.tga"
+	Model = "a\A_Iron_Cuirass_GND.nif"
+	BasePrice = 70
+	ItemLevel = 1
+	Weight = 30
+	EnchantPts = 200
+	Armor = 10
+	Type = "Cuirass"
+	Condition = 2000
+	MChest = "a_iron_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Shield"
+	Icon = "a\tx_shield_iron.tga"
+	Model = "a\Shield_iron.NIF"
+	BasePrice = 34
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 500
+	Armor = 10
+	Type = "Shield"
+	Condition = 200
+	MShield = "shield_iron"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Tower Shield"
+	Icon = "a\tx_Towershield_iron.tga"
+	Model = "a\TowerShield_iron.NIF"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 18
+	EnchantPts = 750
+	Armor = 12
+	Type = "Shield"
+	Condition = 240
+	MShield = "towershield_iron"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Left Bracer"
+	Icon = "a\Tx_Iron_bracer.tga"
+	Model = "a\A_Iron_Bracer_W.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 10
+	Type = "Left Bracer"
+	Condition = 50
+	MLeftWrist = "A_Iron_Bracer_W"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Right Bracer"
+	Icon = "a\Tx_Iron_bracer.tga"
+	Model = "a\A_Iron_Bracer_W.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 200
+	Armor = 10
+	Type = "Right Bracer"
+	Condition = 50
+	MRightWrist = "A_Iron_Bracer_W"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Greaves"
+	Icon = "a\Tx_Iron_greaves.tga"
+	Model = "a\A_Iron_Greaves_GND.nif"
+	BasePrice = 44
+	ItemLevel = 1
+	Weight = 18
+	EnchantPts = 25
+	Armor = 10
+	Type = "Greaves"
+	Condition = 100
+	MGroin = "a_iron_greaves_g"
+	MLeftUpperLeg = "a_iron_greaves_ul"
+	MRightUpperLeg = "a_iron_greaves_ul"
+	MLeftKnee = "a_iron_greaves_k"
+	MRightKnee = "a_iron_greaves_k"
+End
+Item
+	ItemType = Armor
+	Name = "Native Gah-Julan Bonemold Helm"
+	Icon = "a\TX_Bonemold_Gah_Julan_h.tga"
+	Model = "a\A_Bonemold_Gah_Julan_h.nif"
+	BasePrice = 165
+	ItemLevel = 2
+	Weight = 4
+	EnchantPts = 200
+	Armor = 16
+	Type = "Helmet"
+	Condition = 160
+	MHead = "a_bonemold_gah_julan_h"
+End
+Item
+	ItemType = Armor
+	Name = "Native Chuzei Bonemold Helm"
+	Icon = "a\TX_Bonemold_chuzei_helm.tga"
+	Model = "a\A_Bonemold_Chuzei_helmet.nif"
+	BasePrice = 175
+	ItemLevel = 2
+	Weight = 4
+	EnchantPts = 200
+	Armor = 17
+	Type = "Helmet"
+	Condition = 170
+	MHead = "a_bonemold_chuzei_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Native Armun-An Bonemold Helm"
+	Icon = "a\TX_Bonemold_Armun_An_helm.tga"
+	Model = "a\A_Bonemold_Armun_An_helm.nif"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 4
+	EnchantPts = 200
+	Armor = 18
+	Type = "Helmet"
+	Condition = 180
+	MHead = "a_bonemold_armun_an_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Morag Tong Helm"
+	Icon = "a\Tx_MoragTong_Helm.tga"
+	Model = "a\A_MoragTong_Helm.NIF"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Armor = 12
+	Type = "Helmet"
+	Condition = 120
+	MHead = "a_moragtong_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Gah-Julan Bonemold R Pauldron"
+	Icon = "a\TX_Bonemold_Gah_Julan_Pau.tga"
+	Model = "a\A_Bonemold_Gah_J_UA_GND.nif"
+	BasePrice = 140
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 16
+	Armor = 17
+	Type = "Right Pauldron"
+	Condition = 170
+	MRightUpperArm = "a_bonemold_gah_julan_ua"
+	MRightPauldron = "a_bonemold_gah_julan_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Armun-An Bonemold R Pauldron"
+	Icon = "a\TX_Bonemold_Armun_An_Pau.tga"
+	Model = "a\A_Bonemold_Armun_UA_GND.nif"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 16
+	Armor = 15
+	Type = "Right Pauldron"
+	Condition = 150
+	MRightUpperArm = "a_bonemold_armun_an_ua"
+	MRightPauldron = "a_bonemold_armun_an_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Gah-Julan Bonemold L Pauldron"
+	Icon = "a\TX_Bonemold_Gah_Julan_Pau.tga"
+	Model = "a\A_Bonemold_Gah_J_UA_GND.nif"
+	BasePrice = 140
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 16
+	Armor = 17
+	Type = "Left Pauldron"
+	Condition = 170
+	MLeftUpperArm = "a_bonemold_gah_julan_ua"
+	MLeftPauldron = "a_bonemold_gah_julan_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Armun-An Bonemold L Pauldron"
+	Icon = "a\TX_Bonemold_Armun_An_Pau.tga"
+	Model = "a\A_Bonemold_Armun_UA_GND.nif"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 16
+	Armor = 15
+	Type = "Left Pauldron"
+	Condition = 150
+	MLeftUpperArm = "a_bonemold_armun_an_ua"
+	MLeftPauldron = "a_bonemold_armun_an_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Gah-Julan Bonemold Cuirass"
+	Icon = "a\TX_Bonemold_Gah_Julan_c.tga"
+	Model = "a\A_Bonemold_Gah_Julan_CGND.NIF"
+	BasePrice = 360
+	ItemLevel = 3
+	Weight = 24
+	EnchantPts = 160
+	Armor = 17
+	Type = "Cuirass"
+	Condition = 510
+	MChest = "a_bonemold_gah_julan_c"
+End
+Item
+	ItemType = Armor
+	Name = "Armun-An Bonemold Cuirass"
+	Icon = "a\TX_Bonemold_cuirass.tga"
+	Model = "a\A_Bonemold_cuirass_GND.nif"
+	BasePrice = 350
+	ItemLevel = 3
+	Weight = 24
+	EnchantPts = 160
+	Armor = 16
+	Type = "Cuirass"
+	Condition = 480
+	MChest = "a_bonemold_cuirass_c"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Left Bracer"
+	Icon = "a\TX_Bonemold_bracer.tga"
+	Model = "a\A_Bonemold_Bracer_GND.nif"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 160
+	Armor = 15
+	Type = "Left Bracer"
+	Condition = 75
+	MLeftWrist = "a_bonemold_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Right Bracer"
+	Icon = "a\TX_Bonemold_bracer.tga"
+	Model = "a\A_Bonemold_Bracer_GND.nif"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 160
+	Armor = 15
+	Type = "Right Bracer"
+	Condition = 75
+	MRightWrist = "a_bonemold_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Greaves"
+	Icon = "a\TX_Bonemold_greaves.tga"
+	Model = "a\A_Bonemold_Greaves_GND.nif"
+	BasePrice = 220
+	ItemLevel = 2
+	Weight = 13.4
+	EnchantPts = 20
+	Armor = 15
+	Type = "Greaves"
+	Condition = 150
+	MGroin = "a_bonemold_greaves_g"
+	MLeftUpperLeg = "a_bonemold_greaves_ul"
+	MRightUpperLeg = "a_bonemold_greaves_ul"
+	MLeftKnee = "a_bonemold_greaves_k"
+	MRightKnee = "a_bonemold_greaves_k"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Boots"
+	Icon = "a\TX_Bonemold_boots.tga"
+	Model = "a\A_Bonemold_Boot_GND.nif"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 16
+	EnchantPts = 70
+	Armor = 15
+	Type = "Boots"
+	Condition = 150
+	MLeftFoot = "a_bonemold_boots_f"
+	MLeftAnkle = "a_bonemold_boots_a"
+	MRightFoot = "a_bonemold_boots_f"
+	MRightAnkle = "a_bonemold_boots_a"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Shield"
+	Icon = "a\tx_bonemold_shield.tga"
+	Model = "a\Shield_bonemold.NIF"
+	BasePrice = 170
+	ItemLevel = 2
+	Weight = 10
+	EnchantPts = 400
+	Armor = 15
+	Type = "Shield"
+	Condition = 300
+	MShield = "shield_bonemold"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Tower Shield"
+	Icon = "a\tx_towershield_bonemold.tga"
+	Model = "a\Towershield_bonemold.nif"
+	BasePrice = 250
+	ItemLevel = 3
+	Weight = 13
+	EnchantPts = 600
+	Armor = 17
+	Type = "Shield"
+	Condition = 340
+	MShield = "towershield_bonemold"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Trollbone Helm"
+	Icon = "a\tx_Trollbone_helm.tga"
+	Model = "a\A_Trollbone_Helm.NIF"
+	BasePrice = 65
+	ItemLevel = 1
+	Weight = 8
+	EnchantPts = 200
+	Armor = 18
+	Type = "Helmet"
+	Condition = 180
+	MHair = "a_trollbone_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Trollbone Cuirass"
+	Icon = "a\tx_trollbone_cuirass.tga"
+	Model = "a\A_Trollbone_Cuirass_GND.NIF"
+	BasePrice = 165
+	ItemLevel = 2
+	Weight = 32
+	EnchantPts = 160
+	Armor = 18
+	Type = "Cuirass"
+	Condition = 540
+	MChest = "a_trollbone_cuir"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Trollbone Shield"
+	Icon = "a\tx_towershield_trollbone.tga"
+	Model = "a\TowerShield_Trollbone.NIF"
+	BasePrice = 78
+	ItemLevel = 1
+	Weight = 16
+	EnchantPts = 400
+	Armor = 18
+	Type = "Shield"
+	Condition = 360
+	MShield = "towershield_trollbone"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Dragonscale Helm"
+	Icon = "a\tx_dragonscale_helm.tga"
+	Model = "a\A_Dragonscale_Helm.NIF"
+	BasePrice = 130
+	ItemLevel = 2
+	Weight = 4
+	EnchantPts = 200
+	Armor = 20
+	Type = "Helmet"
+	Condition = 200
+	MHair = "a_dragonscale_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Dragonscale Cuirass"
+	Icon = "a\tx_dragonscale_cuirass.tga"
+	Model = "a\A_Dragonscale_Cuir_GND.NIF"
+	BasePrice = 340
+	ItemLevel = 3
+	Weight = 24
+	EnchantPts = 160
+	Armor = 20
+	Type = "Cuirass"
+	Condition = 600
+	MChest = "a_dragonscale_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Dragonscale Tower Shield"
+	Icon = "a\tx_Towershield_dragon.tga"
+	Model = "a\Towershield_Dragonscale.NIF"
+	BasePrice = 230
+	ItemLevel = 3
+	Weight = 12
+	EnchantPts = 600
+	Armor = 22
+	Type = "Shield"
+	Condition = 440
+	MShield = "towershield_dragonscale"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Helm"
+	Icon = "a\TX_Dwemer_helmet.tga"
+	Model = "a\A_Dwemer_Helmet.NIF"
+	BasePrice = 450
+	ItemLevel = 4
+	Weight = 5
+	EnchantPts = 250
+	Armor = 20
+	Type = "Helmet"
+	Condition = 200
+	MHead = "a_dwemer_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Right Pauldron"
+	Icon = "a\TX_Dwemer_pauldron.tga"
+	Model = "a\A_Dwemer_Pauldron_UA.nif"
+	BasePrice = 360
+	ItemLevel = 3
+	Weight = 10
+	EnchantPts = 20
+	Armor = 20
+	Type = "Right Pauldron"
+	Condition = 200
+	MRightUpperArm = "a_dwemer_pauldron_ua"
+	MRightPauldron = "a_dwemer_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Left Pauldron"
+	Icon = "a\TX_Dwemer_pauldron.tga"
+	Model = "a\A_Dwemer_Pauldron_UA.nif"
+	BasePrice = 360
+	ItemLevel = 3
+	Weight = 10
+	EnchantPts = 20
+	Armor = 20
+	Type = "Left Pauldron"
+	Condition = 200
+	MLeftUpperArm = "a_dwemer_pauldron_ua"
+	MLeftPauldron = "a_dwemer_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Cuirass"
+	Icon = "a\TX_Dwemer_cuirass.tga"
+	Model = "a\A_Dwemer_Cuir_GND.NIF"
+	BasePrice = 1050
+	ItemLevel = 6
+	Weight = 30
+	EnchantPts = 200
+	Armor = 20
+	Type = "Cuirass"
+	Condition = 600
+	MChest = "a_dwemer_cuirass_c"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Left Bracer"
+	Icon = "a\TX_Dwemer_bracer.tga"
+	Model = "a\A_Dwemer_Bracer_W.nif"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 5
+	EnchantPts = 200
+	Armor = 20
+	Type = "Left Bracer"
+	Condition = 100
+	MLeftWrist = "a_dwemer_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Right Bracer"
+	Icon = "a\TX_Dwemer_bracer.tga"
+	Model = "a\A_Dwemer_Bracer_W.nif"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 5
+	EnchantPts = 200
+	Armor = 20
+	Type = "Right Bracer"
+	Condition = 100
+	MRightWrist = "a_dwemer_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Greaves"
+	Icon = "a\TX_Dwemer_greaves.tga"
+	Model = "a\A_Dwemer_Greaves_GND.nif"
+	BasePrice = 660
+	ItemLevel = 5
+	Weight = 18
+	EnchantPts = 25
+	Armor = 20
+	Type = "Greaves"
+	Condition = 200
+	MGroin = "a_dwemer_greaves_g"
+	MLeftUpperLeg = "a_dwemer_greaves_ul"
+	MRightUpperLeg = "a_dwemer_greaves_ul"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Boots"
+	Icon = "a\TX_Dwemer_boots.tga"
+	Model = "a\A_Dwemer_Boots_GND.nif"
+	BasePrice = 300
+	ItemLevel = 3
+	Weight = 20
+	EnchantPts = 88
+	Armor = 20
+	Type = "Boots"
+	Condition = 200
+	MLeftFoot = "a_dwemer_boots_f"
+	MLeftAnkle = "a_dwemer_boots_a"
+	MRightFoot = "a_dwemer_boots_f"
+	MRightAnkle = "a_dwemer_boots_a"
+End
+Item
+	ItemType = Armor
+	Name = "Dwemer Shield"
+	Icon = "a\Tx_Dwemer_shield.tga"
+	Model = "a\Shield_Dwemer.nif"
+	BasePrice = 510
+	ItemLevel = 4
+	Weight = 15
+	EnchantPts = 500
+	Armor = 20
+	Type = "Shield"
+	Condition = 400
+	MShield = "shield_dwemer"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Helm"
+	Icon = "a\TX_Orcish_helmet.tga"
+	Model = "a\A_Orcish_Helmet.nif"
+	BasePrice = 1200
+	ItemLevel = 6
+	Weight = 4.4
+	EnchantPts = 300
+	Armor = 30
+	Type = "Helmet"
+	Condition = 300
+	MHead = "a_orcish_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Right Pauldron"
+	Icon = "a\TX_Orcish_pauldron.tga"
+	Model = "a\A_Orcish_Pauldron_UA.nif"
+	BasePrice = 960
+	ItemLevel = 6
+	Weight = 8
+	EnchantPts = 24
+	Armor = 30
+	Type = "Right Pauldron"
+	Condition = 300
+	MRightUpperArm = "a_orcish_pauldron_ua"
+	MRightPauldron = "A_Orcish_CL_Pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Left Pauldron"
+	Icon = "a\TX_Orcish_pauldron.tga"
+	Model = "a\A_Orcish_Pauldron_GND.nif"
+	BasePrice = 960
+	ItemLevel = 6
+	Weight = 8
+	EnchantPts = 24
+	Armor = 30
+	Type = "Left Pauldron"
+	Condition = 300
+	MLeftUpperArm = "a_orcish_pauldron_ua"
+	MLeftPauldron = "A_Orcish_CL_Pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Cuirass"
+	Icon = "a\TX_Orcish_cuirass.tga"
+	Model = "a\A_Orcish_Cuirass_GND.nif"
+	BasePrice = 2800
+	ItemLevel = 10
+	Weight = 26.5
+	EnchantPts = 240
+	Armor = 30
+	Type = "Cuirass"
+	Condition = 900
+	MChest = "a_orcish_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Left Bracer"
+	Icon = "a\TX_Orcish_bracer.tga"
+	Model = "a\A_Orcish_Bracer_GND.nif"
+	BasePrice = 400
+	ItemLevel = 4
+	Weight = 4.4
+	EnchantPts = 240
+	Armor = 30
+	Type = "Left Bracer"
+	Condition = 150
+	MLeftWrist = "a_orcish_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Greaves"
+	Icon = "a\TX_Orcish_greaves.tga"
+	Model = "a\A_Orcish_Greaves_GND.nif"
+	BasePrice = 1760
+	ItemLevel = 8
+	Weight = 13.45
+	EnchantPts = 30
+	Armor = 30
+	Type = "Greaves"
+	Condition = 300
+	MGroin = "a_orcish_greaves_g"
+	MLeftUpperLeg = "a_orcish_greaves_ul"
+	MRightUpperLeg = "a_orcish_greaves_ul"
+	MLeftKnee = "a_orcish_greaves_k"
+	MRightKnee = "a_orcish_greaves_k"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Boots"
+	Icon = "a\TX_Orcish_boots.tga"
+	Model = "a\A_Orcish_Boots_GND.nif"
+	BasePrice = 800
+	ItemLevel = 5
+	Weight = 17
+	EnchantPts = 105
+	Armor = 30
+	Type = "Boots"
+	Condition = 300
+	MLeftFoot = "a_orcish_boot_f"
+	MLeftAnkle = "a_orcish_boot_a"
+	MRightFoot = "a_orcish_boot_f"
+	MRightAnkle = "a_orcish_boot_a"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Tower Shield"
+	Icon = "a\TX_towershield_orcish.tga"
+	Model = "a\Towershield_Orcish.nif"
+	BasePrice = 2000
+	ItemLevel = 8
+	Weight = 13.4
+	EnchantPts = 900
+	Armor = 32
+	Type = "Shield"
+	Condition = 640
+	MShield = "towershield_orcish"
+End
+Item
+	ItemType = Armor
+	Name = "Dreugh Helm"
+	Icon = "a\tx_dreugh_helm.tga"
+	Model = "a\A_Dreugh_Helm.NIF"
+	BasePrice = 2250
+	ItemLevel = 9
+	Weight = 4.5
+	EnchantPts = 225
+	Armor = 40
+	Type = "Helmet"
+	Condition = 400
+	MHair = "a_dreugh_helm"
+End
+Item
+	ItemType = Armor
+	Name = "Dreugh Cuirass"
+	Icon = "a\tx_dreugh_cuirass.tga"
+	Model = "a\A_Dreugh_Cuirass_GND.NIF"
+	BasePrice = 5250
+	ItemLevel = 14
+	Weight = 27
+	EnchantPts = 180
+	Armor = 40
+	Type = "Cuirass"
+	Condition = 1200
+	MChest = "a_dreugh_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Dreugh Shield"
+	Icon = "a\tx_shield_dreugh.tga"
+	Model = "a\Shield_dreugh.NIF"
+	BasePrice = 2550
+	ItemLevel = 10
+	Weight = 13.5
+	EnchantPts = 450
+	Armor = 40
+	Type = "Shield"
+	Condition = 800
+	MShield = "shield_dreugh"
+End
+Item
+	ItemType = Armor
+	Name = "Redoran Master Helm"
+	Icon = "a\tx_redoranMaster_h.tga"
+	Model = "a\A_RedoranMaster_H.NIF"
+	BasePrice = 3000
+	ItemLevel = 10
+	Weight = 4.5
+	EnchantPts = 225
+	Armor = 45
+	Type = "Helmet"
+	Condition = 450
+	MHead = "a_redoranmaster_h"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Helm"
+	Icon = "a\TX_Glass_helmet.tga"
+	Model = "a\A_Glass_Helmet.nif"
+	BasePrice = 12000
+	ItemLevel = 21
+	Weight = 3
+	EnchantPts = 150
+	Armor = 50
+	Type = "Helmet"
+	Condition = 500
+	MHair = "a_glass_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Cuirass"
+	Icon = "a\TX_Glass_cuirass.tga"
+	Model = "a\A_Glass_cuirass_GND.nif"
+	BasePrice = 28000
+	ItemLevel = 33
+	Weight = 18
+	EnchantPts = 120
+	Armor = 50
+	Type = "Cuirass"
+	Condition = 1500
+	MChest = "a_glass_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Shield"
+	Icon = "a\TX_shield_glass.tga"
+	Model = "a\Shield_Glass.nif"
+	BasePrice = 13600
+	ItemLevel = 23
+	Weight = 9
+	EnchantPts = 300
+	Armor = 50
+	Type = "Shield"
+	Condition = 1000
+	MShield = "shield_glass"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Tower Shield"
+	Icon = "a\TX_towershield_glass.tga"
+	Model = "a\Towershield_Glass.nif"
+	BasePrice = 20000
+	ItemLevel = 28
+	Weight = 9
+	EnchantPts = 450
+	Armor = 55
+	Type = "Shield"
+	Condition = 1100
+	MShield = "towershield_glass"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Closed Helm"
+	Icon = "a\Tx_Ebony_helmet.tga"
+	Model = "a\A_Ebony_Helmet.nif"
+	BasePrice = 15000
+	ItemLevel = 24
+	Weight = 10
+	EnchantPts = 500
+	Armor = 60
+	Type = "Helmet"
+	Condition = 600
+	MHead = "a_ebony_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Right Pauldron"
+	Icon = "a\Tx_Ebony_pauldron.tga"
+	Model = "a\A_Ebony_Pauldron_GND.nif"
+	BasePrice = 12000
+	ItemLevel = 21
+	Weight = 20
+	EnchantPts = 40
+	Armor = 60
+	Type = "Right Pauldron"
+	Condition = 600
+	MRightUpperArm = "a_ebony_pauldron_ua"
+	MRightForeArm = "a_ebony_pauldron_fa"
+	MRightUpperArm = "a_ebony_pauldron_ua"
+	MRightPauldron = "a_ebony_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Left Pauldron"
+	Icon = "a\Tx_Ebony_pauldron.tga"
+	Model = "a\A_Ebony_Pauldron_GND.nif"
+	BasePrice = 12000
+	ItemLevel = 21
+	Weight = 20
+	EnchantPts = 40
+	Armor = 60
+	Type = "Left Pauldron"
+	Condition = 600
+	MLeftUpperArm = "a_ebony_pauldron_ua"
+	MLeftForeArm = "a_ebony_pauldron_fa"
+	MLeftPauldron = "a_ebony_cl_pauldron"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Cuirass"
+	Icon = "a\Tx_Ebony_cuirass.tga"
+	Model = "a\A_Ebony_Cuirass_GND.nif"
+	BasePrice = 35000
+	ItemLevel = 37
+	Weight = 60
+	EnchantPts = 400
+	Armor = 60
+	Type = "Cuirass"
+	Condition = 1800
+	MChest = "a_ebony_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Left Bracer"
+	Icon = "a\Tx_Ebony_bracer.tga"
+	Model = "a\A_Ebony_Bracer_w.nif"
+	BasePrice = 5000
+	ItemLevel = 14
+	Weight = 10
+	EnchantPts = 400
+	Armor = 60
+	Type = "Left Bracer"
+	Condition = 300
+	MLeftWrist = "a_ebony_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Right Bracer"
+	Icon = "a\Tx_Ebony_bracer.tga"
+	Model = "a\A_Ebony_Bracer_w.nif"
+	BasePrice = 5000
+	ItemLevel = 14
+	Weight = 10
+	EnchantPts = 400
+	Armor = 60
+	Type = "Right Bracer"
+	Condition = 300
+	MRightWrist = "a_ebony_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Greaves"
+	Icon = "a\Tx_Ebony_greaves.tga"
+	Model = "a\A_Ebony_Greaves_GND.nif"
+	BasePrice = 22000
+	ItemLevel = 29
+	Weight = 36
+	EnchantPts = 50
+	Armor = 60
+	Type = "Greaves"
+	Condition = 600
+	MGroin = "a_ebony_g_greaves"
+	MLeftUpperLeg = "a_ebony_greaves_ul"
+	MRightUpperLeg = "a_ebony_greaves_ul"
+	MLeftKnee = "a_ebony_greaves_k"
+	MRightKnee = "a_ebony_greaves_k"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Boots"
+	Icon = "a\Tx_Ebony_boot.tga"
+	Model = "a\A_Ebony_Boot_GND.nif"
+	BasePrice = 10000
+	ItemLevel = 20
+	Weight = 40
+	EnchantPts = 175
+	Armor = 60
+	Type = "Boots"
+	Condition = 600
+	MLeftFoot = "a_ebony_boot_f"
+	MLeftAnkle = "a_ebony_boot_a"
+	MRightFoot = "a_ebony_boot_f"
+	MRightAnkle = "a_ebony_boot_a"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Shield"
+	Icon = "a\tx_shield_ebony.tga"
+	Model = "a\Shield_ebony.NIF"
+	BasePrice = 17000
+	ItemLevel = 26
+	Weight = 30
+	EnchantPts = 1000
+	Armor = 60
+	Type = "Shield"
+	Condition = 1200
+	MShield = "shield_ebony"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Tower Shield"
+	Icon = "a\tx_towershield_ebony.tga"
+	Model = "a\TowerShield_ebony.NIF"
+	BasePrice = 25000
+	ItemLevel = 31
+	Weight = 30
+	EnchantPts = 1500
+	Armor = 60
+	Type = "Shield"
+	Condition = 1200
+	MShield = "towershield_ebony"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Face of Inspiration"
+	Icon = "a\TX_Daedric_fountain_helm.tga"
+	Model = "a\A_Daedric_fountain_h.NIF"
+	BasePrice = 13000
+	ItemLevel = 22
+	Weight = 15
+	EnchantPts = 750
+	Armor = 65
+	Type = "Helmet"
+	Condition = 650
+	MHead = "a_daedric_fountain_h"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Face of Terror"
+	Icon = "a\TX_Daedric_terrifying_h.tga"
+	Model = "a\A_Daedric_terrifying_h.nif"
+	BasePrice = 14000
+	ItemLevel = 23
+	Weight = 15
+	EnchantPts = 750
+	Armor = 75
+	Type = "Helmet"
+	Condition = 750
+	MHead = "a_daedric_terrifying_h"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Face of God"
+	Icon = "a\TX_Daedric_god_h.tga"
+	Model = "a\A_Daedric_god_h.NIF"
+	BasePrice = 15000
+	ItemLevel = 24
+	Weight = 15
+	EnchantPts = 750
+	Armor = 80
+	Type = "Helmet"
+	Condition = 800
+	MHead = "a_daedric_god_h"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Right Pauldron"
+	Icon = "a\Tx_Daedric_pauldron.tga"
+	Model = "a\A_Daedric_Pauldron_GND.nif"
+	BasePrice = 24000
+	ItemLevel = 30
+	Weight = 30
+	EnchantPts = 60
+	Armor = 80
+	Type = "Right Pauldron"
+	Condition = 800
+	MRightUpperArm = "a_daedric_pauldron_ua"
+	MRightPauldron = "a_daedric_pauldron_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Left Pauldron"
+	Icon = "a\Tx_Daedric_pauldron.tga"
+	Model = "a\A_Daedric_Pauldron_GND.nif"
+	BasePrice = 24000
+	ItemLevel = 30
+	Weight = 30
+	EnchantPts = 60
+	Armor = 80
+	Type = "Left Pauldron"
+	Condition = 800
+	MLeftUpperArm = "a_daedric_pauldron_ua"
+	MLeftPauldron = "a_daedric_pauldron_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Cuirass"
+	Icon = "a\Tx_Daedric_cuirass.tga"
+	Model = "a\A_Daedric_cuirass_GND.nif"
+	BasePrice = 70000
+	ItemLevel = 52
+	Weight = 90
+	EnchantPts = 600
+	Armor = 80
+	Type = "Cuirass"
+	Condition = 2400
+	MChest = "a_daedric_cuirass"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Left Gauntlet"
+	Icon = "a\Tx_Daedric_gauntlet.tga"
+	Model = "a\A_Daedric_gauntlet_GND.nif"
+	BasePrice = 14000
+	ItemLevel = 23
+	Weight = 15
+	EnchantPts = 600
+	Armor = 80
+	Type = "Left Gauntlet"
+	Condition = 400
+	MLeftHand = "a_daedric_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Right Gauntlet"
+	Icon = "a\Tx_Daedric_gauntlet.tga"
+	Model = "a\A_Daedric_gauntlet_GND.nif"
+	BasePrice = 14000
+	ItemLevel = 23
+	Weight = 15
+	EnchantPts = 600
+	Armor = 80
+	Type = "Right Gauntlet"
+	Condition = 400
+	MRightHand = "a_daedric_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Greaves"
+	Icon = "a\Tx_Daedric_greaves.tga"
+	Model = "a\A_Daedric_Greaves_GND.nif"
+	BasePrice = 44000
+	ItemLevel = 41
+	Weight = 54
+	EnchantPts = 75
+	Armor = 80
+	Type = "Greaves"
+	Condition = 800
+	MGroin = "a_daedric_greaves_g"
+	MLeftUpperLeg = "a_daedric_greaves_ul"
+	MRightUpperLeg = "a_daedric_greaves_ul"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Boots"
+	Icon = "a\Tx_Daedric_boots.tga"
+	Model = "a\A_Daedric_Boots_GND.nif"
+	BasePrice = 20000
+	ItemLevel = 28
+	Weight = 60
+	EnchantPts = 263
+	Armor = 80
+	Type = "Boots"
+	Condition = 800
+	MLeftFoot = "a_daedric_boots_f"
+	MLeftAnkle = "a_daedric_boots_a"
+	MRightFoot = "a_daedric_boots_f"
+	MRightAnkle = "a_daedric_boots_a"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Shield"
+	Icon = "a\TX_shield_daedric.tga"
+	Model = "a\Shield_Daedric.nif"
+	BasePrice = 34000
+	ItemLevel = 36
+	Weight = 45
+	EnchantPts = 1500
+	Armor = 80
+	Type = "Shield"
+	Condition = 1600
+	MShield = "shield_daedric"
+End
+Item
+	ItemType = Armor
+	Name = "Daedric Tower Shield"
+	Icon = "a\TX_Towershield_daedric.tga"
+	Model = "a\Towershield_Daedric.nif"
+	BasePrice = 50000
+	ItemLevel = 44
+	Weight = 45
+	EnchantPts = 2250
+	Armor = 80
+	Type = "Shield"
+	Condition = 1600
+	MShield = "towershield_daedric"
+End
+Item
+	ItemType = Armor
+	Name = "Netch Leather Right Pauldron"
+	Icon = "a\Tx_Netch_pauldron.tga"
+	Model = "a\A_Netch_M_Pauldron_GND.nif"
+	BasePrice = 12
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 10
+	Armor = 5
+	Type = "Right Pauldron"
+	Condition = 50
+	MRightUpperArm = "a_netch_m_pauldron_ua"
+	MRightPauldron = "a_netch_m_pauldron_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Right Pauldron"
+	Icon = "a\Tx_NordicFur_pauldron.tga"
+	Model = "a\A_NordicFur_Pauldron_GND.nif"
+	BasePrice = 12
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Armor = 5
+	Type = "Right Pauldron"
+	Condition = 50
+	MRightUpperArm = "a_nordicfur_pauldron_ua"
+	MRightPauldron = "a_nordicfur_pauldron_cl"
+End
+Item
+	ItemType = Armor
+	Name = "Orcish Right Bracer"
+	Icon = "a\TX_Orcish_bracer.tga"
+	Model = "a\A_Orcish_Bracer_GND.nif"
+	BasePrice = 400
+	ItemLevel = 4
+	Weight = 4.4
+	EnchantPts = 240
+	Armor = 30
+	Type = "Right Bracer"
+	Condition = 150
+	MRightWrist = "a_orcish_bracer_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shoes"
+	Icon = "c\TX_shoecom01.tga"
+	Model = "c\C_M_Shoe_common01_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Shoes"
+	MRightFoot = "c_m_shoe_f_leather00"
+	MLeftFoot = "c_m_shoe_f_leather00"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shoes"
+	Icon = "c\TX_C_shoecom01.tga"
+	Model = "c\C_M_Shoe_common02_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Shoes"
+	MLeftFoot = "c_m_shoe_f_leather01"
+	MRightFoot = "c_m_shoe_f_leather01"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shoes"
+	Icon = "c\Tx_shoes_common_3.tga"
+	Model = "c\C_Shoes_common_3_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_common_3"
+	MRightFoot = "c_shoes_common_3"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shoes"
+	Icon = "c\tx_shoes_common_4.tga"
+	Model = "c\C_shoes_common_4_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_common_4"
+	MRightFoot = "c_shoes_common_4"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shoes"
+	Icon = "c\tx_shoes_common_5.tga"
+	Model = "c\C_shoes_common_5_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_common_5"
+	MRightFoot = "c_shoes_common_5"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shoes"
+	Icon = "c\tx_shoes_expensive_1.tga"
+	Model = "c\C_M_Shoe_Expens_1_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 50
+	Type = "Shoes"
+	MLeftFoot = "c_m_shoe_expensive_1_f"
+	MRightFoot = "c_m_shoe_expensive_1_f"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shoes"
+	Icon = "c\tx_shoes_expensive_2.tga"
+	Model = "c\C_shoes_expensive_2_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 50
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_expensive_2"
+	MRightFoot = "c_shoes_expensive_2"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shoes"
+	Icon = "c\Tx_shoes_expensive_3.tga"
+	Model = "c\C_shoes_expensive_3_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 50
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_expensive_03"
+	MRightFoot = "c_shoes_expensive_03"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Shoes"
+	Icon = "c\tx_shoes_extrav_1.tga"
+	Model = "c\C_shoes_extrav_1_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_extrav_1_f"
+	MRightFoot = "c_shoes_extrav_1_f"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Shoes"
+	Icon = "c\tx_shoes_extrav_2.tga"
+	Model = "c\C_shoes_Extrav_2_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_extrav_2_f"
+	MRightFoot = "c_shoes_extrav_2_f"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Shoes"
+	Icon = "c\tx_shoes_exquisite_1.tga"
+	Model = "c\C_shoes_exquisite_1_GND.NIF"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 400
+	Type = "Shoes"
+	MLeftFoot = "c_shoes_exquisite_1_f"
+	MRightFoot = "c_shoes_exquisite_1_f"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\tx_pants_common_1u.tga"
+	Model = "c\C_M_Pants_common_1_u_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_1_u_g"
+	MRightAnkle = "c_m_pants_common_1_u_a"
+	MLeftUpperLeg = "c_m_pants_common_1_u_ul"
+	MRightUpperLeg = "c_m_pants_common_1_u_ul"
+	MLeftKnee = "c_m_pants_common_1_u_k"
+	MRightKnee = "c_m_pants_common_1_u_k"
+	MLeftAnkle = "c_m_pants_common_1_u_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\tx_pants_common_1a.tga"
+	Model = "c\C_M_Pants_common_1_a_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_1_a_g"
+	MRightAnkle = "c_m_pants_common_1_a_a"
+	MLeftUpperLeg = "c_m_pants_common_1_a_ul"
+	MRightUpperLeg = "c_m_pants_common_1_a_ul"
+	MLeftKnee = "c_m_pants_common_1_a_k"
+	MRightKnee = "c_m_pants_common_1_a_k"
+	MLeftAnkle = "c_m_pants_common_1_a_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\tx_pants_common_1z.tga"
+	Model = "c\C_M_Pants_common_1_z_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_1_z_g"
+	MRightAnkle = "c_m_pants_common_1_z_a"
+	MLeftUpperLeg = "c_m_pants_common_1_z_ul"
+	MRightUpperLeg = "c_m_pants_common_1_z_ul"
+	MLeftKnee = "c_m_pants_common_1_z_k"
+	MRightKnee = "c_m_pants_common_1_z_k"
+	MLeftAnkle = "c_m_pants_common_1_z_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\Tx_pants_common_1e.tga"
+	Model = "c\C_M_Pants_common_1_e_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_1_e_g"
+	MRightAnkle = "c_m_pants_common_1_e_a"
+	MLeftUpperLeg = "c_m_pants_common_1_e_ul"
+	MRightUpperLeg = "c_m_pants_common_1_e_ul"
+	MLeftKnee = "c_m_pants_common_1_e_k"
+	MRightKnee = "c_m_pants_common_1_e_k"
+	MLeftAnkle = "c_m_pants_common_1_e_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\Tx_pants_com01.tga"
+	Model = "c\C_M_Pants_GND_common01.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_g_common01"
+	FGroin = "c_f_pants_g_common01"
+	MRightAnkle = "c_m_pants_a_common01"
+	FRightAnkle = "c_f_pants_a_common01"
+	MLeftUpperLeg = "c_m_pants_ul_common01"
+	FLeftUpperLeg = "c_f_pants_ul_common01"
+	MRightUpperLeg = "c_m_pants_ul_common01"
+	FRightUpperLeg = "c_f_pants_ul_common01"
+	MLeftKnee = "c_m_pants_k_common01"
+	FLeftKnee = "c_f_pants_k_common01"
+	MRightKnee = "c_m_pants_k_common01"
+	FRightKnee = "c_f_pants_k_common01"
+	MLeftAnkle = "c_m_pants_a_common01"
+	FLeftAnkle = "c_f_pants_a_common01"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\Tx_Pants_comm_3.tga"
+	Model = "c\C_M_Pants_common_3_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_3_g"
+	MLeftUpperLeg = "c_m_pants_common_3_ul"
+	MRightUpperLeg = "c_m_pants_common_3_ul"
+	MLeftKnee = "c_m_pants_common_3_k"
+	MRightKnee = "c_m_pants_common_3_k"
+	MLeftAnkle = "c_m_pants_common_3_a"
+	MRightAnkle = "c_m_pants_common_3_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\Tx_pants_com04.tga"
+	Model = "c\C_M_Pants_GND_common02.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_g_common02"
+	FGroin = "c_f_pants_g_common02"
+	MRightAnkle = "c_m_pants_a_common02"
+	FRightAnkle = "c_f_pants_a_common02"
+	MLeftUpperLeg = "c_m_pants_ul_common02"
+	FLeftUpperLeg = "c_f_pants_ul_common02"
+	MRightUpperLeg = "c_m_pants_ul_common02"
+	FRightUpperLeg = "c_f_pants_ul_common02"
+	MLeftKnee = "c_m_pants_k_common02"
+	FLeftKnee = "c_f_pants_k_common02"
+	MRightKnee = "c_m_pants_k_common02"
+	FRightKnee = "c_f_pants_k_common02"
+	MLeftAnkle = "c_m_pants_a_common02"
+	FLeftAnkle = "c_f_pants_a_common02"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\tx_pants_common_5.tga"
+	Model = "c\C_M_Pants_common_5_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_5_g"
+	MRightAnkle = "c_m_pants_common_5_a"
+	MLeftUpperLeg = "c_m_pants_common_5_ul"
+	MRightUpperLeg = "c_m_pants_common_5_ul"
+	MLeftKnee = "c_m_pants_common_5_k"
+	MRightKnee = "c_m_pants_common_5_k"
+	MLeftAnkle = "c_m_pants_common_5_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Pants"
+	Icon = "c\Tx_pants_expensive_1.tga"
+	Model = "c\C_M_Pants_Expensive_1_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Pants"
+	MGroin = "c_m_pants_expensive_1_g"
+	MRightAnkle = "c_m_pants_expensive_1_a"
+	MLeftUpperLeg = "c_m_pants_expensive_1_ul"
+	MRightUpperLeg = "c_m_pants_expensive_1_ul"
+	MLeftKnee = "c_m_pants_expensive_1_k"
+	MRightKnee = "c_m_pants_expensive_1_k"
+	MLeftAnkle = "c_m_pants_expensive_1_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Pants"
+	Icon = "c\tx_pants_expensive_1u.tga"
+	Model = "c\C_M_Pants_Expens_1_u_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Pants"
+	MGroin = "c_m_pants_expensive_1_u_g"
+	MRightAnkle = "c_m_pants_expensive_1_u_a"
+	MLeftUpperLeg = "c_m_pants_expensive_1_u_ul"
+	MRightUpperLeg = "c_m_pants_expensive_1_u_ul"
+	MLeftKnee = "c_m_pants_expensive_1_u_k"
+	MRightKnee = "c_m_pants_expensive_1_u_k"
+	MLeftAnkle = "c_m_pants_expensive_1_u_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Pants"
+	Icon = "c\tx_pants_expensive_1a.tga"
+	Model = "c\C_M_Pants_Expens_1_a_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Pants"
+	MGroin = "c_m_pants_expens_1_a_g"
+	MRightAnkle = "c_m_pants_expens_1_a_a"
+	MLeftUpperLeg = "c_m_pants_expens_1_a_ul"
+	MRightUpperLeg = "c_m_pants_expens_1_a_ul"
+	MLeftKnee = "c_m_pants_expens_1_a_k"
+	MRightKnee = "c_m_pants_expens_1_a_k"
+	MLeftAnkle = "c_m_pants_expens_1_a_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Pants"
+	Icon = "c\tx_pants_expensive_1z.tga"
+	Model = "c\C_M_Pants_Expens_1_z_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Pants"
+	MGroin = "c_m_pants_expens_1_z_g"
+	MRightAnkle = "c_m_pants_expens_1_z_a"
+	MLeftUpperLeg = "c_m_pants_expens_1_z_ul"
+	MRightUpperLeg = "c_m_pants_expens_1_z_ul"
+	MLeftKnee = "c_m_pants_expens_1_z_k"
+	MRightKnee = "c_m_pants_expens_1_z_k"
+	MLeftAnkle = "c_m_pants_expens_1_z_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Pants"
+	Icon = "c\tx_pants_expensive_1e.tga"
+	Model = "c\C_M_Pants_expens_1_e_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Pants"
+	MGroin = "c_m_pants_expens_1_e_g"
+	MRightAnkle = "c_m_pants_expens_1_e_a"
+	MLeftUpperLeg = "c_m_pants_expens_1_e_ul"
+	MRightUpperLeg = "c_m_pants_expens_1_e_ul"
+	MLeftKnee = "c_m_pants_expens_1_e_k"
+	MRightKnee = "c_m_pants_expens_1_e_k"
+	MLeftAnkle = "c_m_pants_expens_1_e_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Pants"
+	Icon = "c\Tx_pants_expensive_2.tga"
+	Model = "c\C_M_Pants_expensive_2_GND.nif"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Pants"
+	MGroin = "c_m_pants_expensive_2_g"
+	MRightAnkle = "c_m_pants_expensive_2_a"
+	MLeftUpperLeg = "c_m_pants_expensive_2_ul"
+	MRightUpperLeg = "c_m_pants_expensive_2_ul"
+	MLeftKnee = "c_m_pants_expensive_2_k"
+	MRightKnee = "c_m_pants_expensive_2_k"
+	MLeftAnkle = "c_m_pants_expensive_2_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Pants"
+	Icon = "c\tx_pants_expensive_3.tga"
+	Model = "c\C_M_Pants_Expens_3_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Pants"
+	MGroin = "c_m_pants_common_4_b_g"
+	MRightAnkle = "c_m_pants_expens_3_a"
+	MLeftUpperLeg = "c_m_pants_common_4_b_ul"
+	MRightUpperLeg = "c_m_pants_common_4_b_ul"
+	MLeftKnee = "c_m_pants_common_4_b_k"
+	MRightKnee = "c_m_pants_common_4_b_k"
+	MLeftAnkle = "c_m_pants_expens_3_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Pants"
+	Icon = "c\tx_pants_extrav_1.tga"
+	Model = "c\C_M_Pants_extrav_1_GND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Pants"
+	MGroin = "c_m_pants_extrav_1_g"
+	MRightAnkle = "c_m_pants_extrav_1_a"
+	MLeftUpperLeg = "c_m_pants_extrav_1_ul"
+	MRightUpperLeg = "c_m_pants_extrav_1_ul"
+	MLeftKnee = "c_m_pants_extrav_1_k"
+	MRightKnee = "c_m_pants_extrav_1_k"
+	MLeftAnkle = "c_m_pants_extrav_1_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Pants"
+	Icon = "c\tx_pants_extrav_2.tga"
+	Model = "c\C_M_Pants_Extrav_2_GND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Pants"
+	MGroin = "c_m_pants_extrav_2_g"
+	MRightAnkle = "c_m_pants_extrav_2_a"
+	MLeftUpperLeg = "c_m_pants_extrav_2_ul"
+	MRightUpperLeg = "c_m_pants_extrav_2_ul"
+	MLeftKnee = "c_m_pants_extrav_2_k"
+	MRightKnee = "c_m_pants_extrav_2_k"
+	MLeftAnkle = "c_m_pants_extrav_2_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Pants"
+	Icon = "c\tx_pants_exquisite_1.tga"
+	Model = "c\C_M_Pants_exqisite_1_GND.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 2
+	EnchantPts = 600
+	Type = "Pants"
+	MGroin = "c_m_pants_exquisite_1_g"
+	MRightAnkle = "c_m_pants_exquisite_1_a"
+	MLeftUpperLeg = "c_m_pants_exquisite_1_ul"
+	MRightUpperLeg = "c_m_pants_exquisite_1_ul"
+	MLeftKnee = "c_m_pants_exquisite_1_k"
+	MRightKnee = "c_m_pants_exquisite_1_k"
+	MLeftAnkle = "c_m_pants_exquisite_1_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_Shirtcom02.tga"
+	Model = "c\C_M_Shirt_GND_commonL02.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_c_commonl02"
+	FChest = "c_f_shirt_c_commonl02"
+	MLeftUpperArm = "c_m_shirt_ua_commonl02"
+	MRightUpperArm = "c_m_shirt_ua_commonl02"
+	MLeftForeArm = "c_m_shirt_fa_commonl02"
+	MRightForeArm = "c_m_shirt_fa_commonl02"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcomm_03.tga"
+	Model = "c\C_M_Shirt_Common_3_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_3_c"
+	MLeftUpperArm = "c_m_shirt_common_3_ua"
+	MRightUpperArm = "c_m_shirt_common_3_ua"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcom04.tga"
+	Model = "c\C_M_Shirt_GND_commonL04.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_c_commonl04"
+	FChest = "c_f_shirt_c_commonl04"
+	MLeftUpperArm = "c_m_shirt_ua_commonl04"
+	MRightUpperArm = "c_m_shirt_ua_commonl04"
+	MLeftForeArm = "c_m_shirt_fa_commonl04"
+	MRightForeArm = "c_m_shirt_fa_commonl04"
+	MLeftWrist = "c_m_shirt_w_commonl04"
+	MRightWrist = "c_m_shirt_w_commonl04"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\tx_shirt_common_5.tga"
+	Model = "c\C_M_Shirt_common_5_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_5_c"
+	MLeftUpperArm = "c_m_shirt_common_5_ua"
+	MRightUpperArm = "c_m_shirt_common_5_ua"
+	MLeftForeArm = "c_m_shirt_common_5_f"
+	MRightForeArm = "c_m_shirt_common_5_f"
+	MLeftWrist = "c_m_shirt_common_5_w"
+	MRightWrist = "c_m_shirt_common_5_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\Tx_shirt_expensive_1.tga"
+	Model = "c\C_M_Shirt_Expensive_1_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Shirt"
+	MChest = "c_m_shirt_expensive_1_c"
+	MLeftUpperArm = "c_m_shirt_expensive_1_ua"
+	MRightUpperArm = "c_m_shirt_expensive_1_ua"
+	MLeftForeArm = "c_m_shirt_expensive_1_fa"
+	MRightForeArm = "c_m_shirt_expensive_1_fa"
+	MLeftWrist = "c_m_shirt_expensive_1_w"
+	MRightWrist = "c_m_shirt_expensive_1_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\Tx_shirt_expensive_2.tga"
+	Model = "c\C_M_Shirt_expensive_2_GND.nif"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Shirt"
+	MChest = "c_m_shirt_expensive_2_c"
+	MLeftUpperArm = "c_m_shirt_expensive_2_ua"
+	MRightUpperArm = "c_m_shirt_expensive_2_ua"
+	MLeftForeArm = "c_m_shirt_expensive_2_fa"
+	MRightForeArm = "c_m_shirt_expensive_2_fa"
+	MLeftWrist = "c_m_shirt_expensive_2_w"
+	MRightWrist = "c_m_shirt_expensive_2_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\tx_shirt_expensive_3.tga"
+	Model = "c\C_M_Shirt_expens_3_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Shirt"
+	MChest = "c_m_shirt_expens_3_c"
+	MLeftUpperArm = "c_m_shirt_expens_3_ua"
+	MRightUpperArm = "c_m_shirt_expens_3_ua"
+	MLeftForeArm = "c_m_shirt_expens_3_fa"
+	MRightForeArm = "c_m_shirt_expens_3_fa"
+	MLeftWrist = "c_m_shirt_expens_3_w"
+	MRightWrist = "c_m_shirt_expens_3_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Shirt"
+	Icon = "c\Tx_Shirt_extrav01.tga"
+	Model = "c\C_M_Shirt_extrav_1_GND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Shirt"
+	MChest = "c_m_shirt_extrav_1_c"
+	MLeftUpperArm = "c_m_shirt_extrav_1_ua"
+	MRightUpperArm = "c_m_shirt_extrav_1_ua"
+	MLeftForeArm = "c_m_shirt_extrav_1_fa"
+	MRightForeArm = "c_m_shirt_extrav_1_fa"
+	MLeftWrist = "c_m_shirt_extrav_1_w"
+	MRightWrist = "c_m_shirt_extrav_1_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Shirt"
+	Icon = "c\tx_shirt_extrav02.tga"
+	Model = "c\C_M_Shirt_Extrav_2_GND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Shirt"
+	MChest = "c_m_shirt_extrav_2_c"
+	MLeftUpperArm = "c_m_shirt_extrav_2_ua"
+	MRightUpperArm = "c_m_shirt_extrav_2_ua"
+	MLeftForeArm = "c_m_shirt_extrav_2_fa"
+	MRightForeArm = "c_m_shirt_extrav_2_fa"
+	MLeftWrist = "c_m_shirt_extrav_2_w"
+	MRightWrist = "c_m_shirt_extrav_2_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Shirt"
+	Icon = "c\tx_shirt_exquisite_1.tga"
+	Model = "c\C_M_Shirt_Exquisite_1_GND.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 2
+	EnchantPts = 600
+	Type = "Shirt"
+	MChest = "c_m_shirt_exquisite_1_c"
+	MLeftUpperArm = "c_m_shirt_exquisite_1_ua"
+	MRightUpperArm = "c_m_shirt_exquisite_1_ua"
+	MLeftForeArm = "c_m_shirt_exquisite_1_fa"
+	MRightForeArm = "c_m_shirt_exquisite_1_fa"
+	MLeftWrist = "c_m_shirt_exquisite_1_w"
+	MRightWrist = "c_m_shirt_exquisite_1_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Skirt"
+	Icon = "c\Tx_skirt_common_2.tga"
+	Model = "c\C_Skirt_common_2_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Skirt"
+	MSkirt = "c_skirt_common_2"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Skirt"
+	Icon = "c\Tx_skirt_common_3.tga"
+	Model = "c\C_Skirt_common_3_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Skirt"
+	MSkirt = "c_skirt_common_3"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Skirt"
+	Icon = "a\Tx_Imperial_skirt.tga"
+	Model = "c\C_M_Skirt_Imperial_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Skirt"
+	MSkirt = "imperial skirt"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Skirt"
+	Icon = "c\Tx_skirt_common_5.tga"
+	Model = "c\C_skirt_common_5_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Skirt"
+	MSkirt = "c_skirt_common_5"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Skirt"
+	Icon = "c\tx_skirt_expensive_1.tga"
+	Model = "c\C_Skirt_expensive_1_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Skirt"
+	MSkirt = "c_skirt_expensive_1"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Skirt"
+	Icon = "c\tx_skirt_expensive_2.tga"
+	Model = "c\C_Skirt_expensive_2_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Skirt"
+	MSkirt = "c_skirt_expensive_2"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\tx_skirt_expensive_3.tga"
+	Model = "c\C_Skirt_expensive_3_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Skirt"
+	MSkirt = "c_skirt_expensive_3"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Skirt"
+	Icon = "c\tx_skirt_extravagant_1.tga"
+	Model = "c\C_Skirt_extravagant_1GND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Skirt"
+	MSkirt = "c_skirt_extravagant_1"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Skirt"
+	Icon = "c\tx_skirt_extravagant_2.tga"
+	Model = "c\C_Skirt_extravagant_2GND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Skirt"
+	MSkirt = "c_skirt_extravagant_2"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Skirt"
+	Icon = "c\tx_skirt_exquisite_1.tga"
+	Model = "c\C_Skirt_exquisite_1_GND.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 2
+	EnchantPts = 600
+	Type = "Skirt"
+	MSkirt = "c_skirt_exquisite_1"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\tx_shirt_common_1u.tga"
+	Model = "c\C_M_Shirt_common_1_u_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_1_u_c"
+	MLeftUpperArm = "c_m_shirt_common_1_u_ua"
+	MRightUpperArm = "c_m_shirt_common_1_u_ua"
+	MLeftForeArm = "c_m_shirt_common_1_u_f"
+	MRightForeArm = "c_m_shirt_common_1_u_f"
+	MLeftWrist = "c_m_shirt_common_1_u_w"
+	MRightWrist = "c_m_shirt_common_1_u_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirt_common_1z.tga"
+	Model = "c\C_M_Shirt_common_1_z_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_1_z_c"
+	MLeftUpperArm = "c_m_shirt_common_1_z_ua"
+	MRightUpperArm = "c_m_shirt_common_1_z_ua"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirt_common_1a.tga"
+	Model = "c\C_M_Shirt_common_1_a_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_1_a_c"
+	MLeftUpperArm = "c_m_shirt_common_1_a_ua"
+	MRightUpperArm = "c_m_shirt_common_1_a_ua"
+	MLeftForeArm = "c_m_shirt_common_1_a_f"
+	MRightForeArm = "c_m_shirt_common_1_a_f"
+	MLeftWrist = "c_m_shirt_common_1_a_w"
+	MRightWrist = "c_m_shirt_common_1_a_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirt_common_1e.tga"
+	Model = "c\C_M_Shirt_common_1_e_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_1_e_c"
+	MLeftUpperArm = "c_m_shirt_common_1_e_ua"
+	MRightUpperArm = "c_m_shirt_common_1_e_ua"
+	MLeftForeArm = "c_m_shirt_common_1_e_fa"
+	MRightForeArm = "c_m_shirt_common_1_e_fa"
+	MLeftWrist = "c_m_shirt_common_1_e_w"
+	MRightWrist = "c_m_shirt_common_1_e_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcomm_2r.tga"
+	Model = "c\C_M_Shirt_Common_2_r_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_2_r_c"
+	MLeftUpperArm = "c_m_shirt_common_2_r_ua"
+	MRightUpperArm = "c_m_shirt_common_2_r_ua"
+	MRightForeArm = "c_m_shirt_common_2_r_fa"
+	MLeftForeArm = "c_m_shirt_common_2_r_fa"
+	MLeftWrist = "c_m_shirt_common_2_r_w"
+	MRightWrist = "c_m_shirt_common_2_r_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcomm_2h.tga"
+	Model = "c\C_M_Shirt_Common_2_h_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_2_h_c"
+	MLeftUpperArm = "c_m_shirt_common_2_h_ua"
+	MRightUpperArm = "c_m_shirt_common_2_h_ua"
+	MLeftForeArm = "c_m_shirt_common_2_h_fa"
+	MRightForeArm = "c_m_shirt_common_2_h_fa"
+	MRightWrist = "c_m_shirt_common_2_h_w"
+	MLeftWrist = "c_m_shirt_common_2_h_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcomm_2t.tga"
+	Model = "c\C_M_Shirt_Common_2_t_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_2_t_c"
+	MLeftUpperArm = "c_m_shirt_common_2_t_ua"
+	MRightUpperArm = "c_m_shirt_common_2_t_ua"
+	MLeftForeArm = "c_m_shirt_common_2_t_fa"
+	MRightForeArm = "c_m_shirt_common_2_t_fa"
+	MLeftWrist = "c_m_shirt_common_2_t_w"
+	MRightWrist = "c_m_shirt_common_2_t_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_Shirtcomm_03_b.tga"
+	Model = "c\C_M_Shirt_Common_3b_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_3b_c"
+	MLeftUpperArm = "c_m_shirt_common_3b_ua"
+	MRightUpperArm = "c_m_shirt_common_3b_ua"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\tx_shirt_expensive_1u.tga"
+	Model = "c\C_M_Shirt_Expens_1_u_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Shirt"
+	MChest = "c_m_shirt_expensive_1_u_c"
+	MLeftUpperArm = "c_m_shirt_expensive_1_u_ua"
+	MRightUpperArm = "c_m_shirt_expensive_1_u_ua"
+	MLeftForeArm = "c_m_shirt_expensive_1_u_fa"
+	MRightForeArm = "c_m_shirt_expensive_1_u_fa"
+	MLeftWrist = "c_m_shirt_expensive_1_u_w"
+	MRightWrist = "c_m_shirt_expensive_1_u_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\tx_shirt_expensive_1a.tga"
+	Model = "c\C_M_Shirt_Expens_1_a_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Shirt"
+	MChest = "c_m_shirt_expensive_1_a_c"
+	MLeftUpperArm = "c_m_shirt_expensive_1_a_ua"
+	MRightUpperArm = "c_m_shirt_expensive_1_a_ua"
+	MLeftForeArm = "c_m_shirt_expensive_1_a_fa"
+	MRightForeArm = "c_m_shirt_expensive_1_a_fa"
+	MLeftWrist = "c_m_shirt_expensive_1_a_w"
+	MRightWrist = "c_m_shirt_expensive_1_a_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\tx_shirt_expensive_1z.tga"
+	Model = "c\C_M_Shirt_Expens_1_z_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Shirt"
+	MChest = "c_m_shirt_expensive_1_z_c"
+	MLeftUpperArm = "c_m_shirt_expensive_1_z_ua"
+	MRightUpperArm = "c_m_shirt_expensive_1_z_ua"
+	MLeftForeArm = "c_m_shirt_expensive_1_z_f"
+	MRightForeArm = "c_m_shirt_expensive_1_z_f"
+	MLeftWrist = "c_m_shirt_expensive_1_z_w"
+	MRightWrist = "c_m_shirt_expensive_1_z_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Shirt"
+	Icon = "c\tx_shirt_expensive_1e.tga"
+	Model = "c\C_M_Shirt_expens_1_e_GND.NIF"
+	BasePrice = 15
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 75
+	Type = "Shirt"
+	MChest = "c_m_shirt_expens_1_e_c"
+	MLeftUpperArm = "c_m_shirt_expens_1_e_ua"
+	MRightUpperArm = "c_m_shirt_expens_1_e_ua"
+	MLeftForeArm = "c_m_shirt_expens_1_e_fa"
+	MRightForeArm = "c_m_shirt_expens_1_e_fa"
+	MLeftWrist = "c_m_shirt_expens_1_e_w"
+	MRightWrist = "c_m_shirt_expens_1_e_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Shirt"
+	Icon = "c\tx_shirt_extrav_1r.tga"
+	Model = "c\C_M_Shirt_extrav_1_rGND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Shirt"
+	MChest = "c_m_shirt_extrav_1_rc"
+	MLeftUpperArm = "c_m_shirt_extrav_1_rua"
+	MRightUpperArm = "c_m_shirt_extrav_1_rua"
+	MLeftForeArm = "c_m_shirt_extrav_1_rfa"
+	MRightForeArm = "c_m_shirt_extrav_1_rfa"
+	MLeftWrist = "c_m_shirt_extrav_1_rw"
+	MRightWrist = "c_m_shirt_extrav_1_rw"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Shirt"
+	Icon = "c\tx_shirt_extrav_1h.tga"
+	Model = "c\C_M_Shirt_extrav_1_hGND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Shirt"
+	MChest = "c_m_shirt_extrav_1_hc"
+	MLeftUpperArm = "c_m_shirt_extrav_1_hua"
+	MRightUpperArm = "c_m_shirt_extrav_1_hua"
+	MLeftForeArm = "c_m_shirt_extrav_1_hfa"
+	MRightForeArm = "c_m_shirt_extrav_1_hfa"
+	MLeftWrist = "c_m_shirt_extrav_1_hw"
+	MRightWrist = "c_m_shirt_extrav_1_hw"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Shirt"
+	Icon = "c\Tx_shirt_extrav_1t.tga"
+	Model = "c\C_M_Shirt_extrav_1_tGND.NIF"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 300
+	Type = "Shirt"
+	MChest = "c_m_shirt_extrav_1_tc"
+	MLeftUpperArm = "c_m_shirt_extrav_1_tua"
+	MRightUpperArm = "c_m_shirt_extrav_1_tua"
+	MLeftForeArm = "c_m_shirt_extrav_1_tfa"
+	MRightForeArm = "c_m_shirt_extrav_1_tfa"
+	MLeftWrist = "c_m_shirt_extrav_1_tw"
+	MRightWrist = "c_m_shirt_extrav_1_tw"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Belt"
+	Icon = "c\tx_belt_common01.tga"
+	Model = "c\C_belt_Common_1.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Belt"
+	Icon = "c\tx_belt_common02.tga"
+	Model = "c\C_belt_Common_2.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Belt"
+	Icon = "c\tx_belt_common03.tga"
+	Model = "c\C_belt_Common_3.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Belt"
+	Icon = "c\tx_belt_common04.tga"
+	Model = "c\C_belt_Common_4.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Belt"
+	Icon = "c\tx_belt_common05.tga"
+	Model = "c\C_belt_Common_5.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Belt"
+	Icon = "c\tx_belt_expensive01.tga"
+	Model = "c\C_belt_Expensive_1.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 50
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Belt"
+	Icon = "c\tx_belt_expensive02.tga"
+	Model = "c\C_belt_Expensive_2.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 50
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Belt"
+	Icon = "c\tx_belt_expensive03.tga"
+	Model = "c\C_belt_Expensive_3.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 50
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Belt"
+	Icon = "c\tx_belt_extravagant01.tga"
+	Model = "c\C_belt_Extravagant_1.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 200
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Belt"
+	Icon = "c\tx_belt_extravagant02.tga"
+	Model = "c\C_belt_Extravagant_2.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 200
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Belt"
+	Icon = "c\tx_belt_exquisite01.tga"
+	Model = "c\C_belt_Exquisite_1.NIF"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 400
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com02.tga"
+	Model = "c\C_M_Robe_common_02_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_02"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com02r.tga"
+	Model = "c\C_M_Robe_common_02r_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_02r"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com02h.tga"
+	Model = "c\C_M_Robe_common_05a_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_02h"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com02t.tga"
+	Model = "c\C_M_Robe_common_02t_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_02t"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\tx_Robe_com03.tga"
+	Model = "c\C_M_Robe_Common_3_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_3"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\tx_Robe_com03a.tga"
+	Model = "c\C_M_Robe_common_03a_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_03a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\tx_Robe_com03b.tga"
+	Model = "c\C_M_Robe_common_03b_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_03b"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\tx_robe_com04.tga"
+	Model = "c\C_M_Robe_Common_4_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_4"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\tx_robe_com05.tga"
+	Model = "c\C_M_Robe_Common_5_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_5"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com05a.tga"
+	Model = "c\C_M_Robe_common_05a_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_05a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com05b.tga"
+	Model = "c\C_M_Robe_common_05b_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_05b"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com05c.tga"
+	Model = "c\C_M_Robe_common_05c_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_05c"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Robe"
+	Icon = "c\Tx_robe_expensive_1.tga"
+	Model = "c\C_M_Robe_expensive_1_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 50
+	Type = "Robe"
+	MChest = "c_m_robe_expensive_1"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Robe"
+	Icon = "c\Tx_robe_expensive_2.tga"
+	Model = "c\C_M_Robe_Expensive_2_GND.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 50
+	Type = "Robe"
+	MChest = "c_m_robe_expensive_2"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Robe"
+	Icon = "c\Tx_robe_expensive_2a.tga"
+	Model = "c\C_M_Robe_expensive_2a_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 50
+	Type = "Robe"
+	MChest = "c_m_robe_expensive_2a"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Robe"
+	Icon = "c\tx_Robe_expensive_3.tga"
+	Model = "c\C_M_Robe_Expens_3_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 50
+	Type = "Robe"
+	MChest = "c_m_robe_expens_3"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\tx_robe_extrav_1.tga"
+	Model = "c\C_M_Robe_Extrav_1_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "c_m_robe_extrav_1"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\tx_robe_extrav_1a.tga"
+	Model = "c\C_M_Robe_Extrav_1a_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "c_m_robe_extrav_1a"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\tx_robe_extrav_1b.tga"
+	Model = "c\C_M_Robe_Extrav_1b_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "c_m_robe_extrav_1b"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\Tx_Robe_Extrav_1c.tga"
+	Model = "c\C_M_Robe_Extrav_1c_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "C_M_Robe_Extrav_1c"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\tx_robe_extrav_1r.tga"
+	Model = "c\C_M_Robe_Extrav_1r_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "c_m_robe_extrav_1r"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\tx_robe_extrav_1h.tga"
+	Model = "c\C_M_Robe_Extrav_1h_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "c_m_robe_extrav_1h"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\tx_robe_extrav_1t.tga"
+	Model = "c\C_M_Robe_Extrav_1t_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "c_m_robe_extrav_1t"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Robe"
+	Icon = "c\tx_robe_extrav_2.tga"
+	Model = "c\C_M_Robe_Extrav_2_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 200
+	Type = "Robe"
+	MChest = "c_m_robe_extrav_2"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Robe"
+	Icon = "c\Tx_Robe_exquisite_1.tga"
+	Model = "c\C_M_Robe_Exquisite_1_GND.nif"
+	BasePrice = 80
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 400
+	Type = "Robe"
+	MChest = "c_m_robe_exquisite_1"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Left Glove"
+	Icon = "c\tx_glove_common1.tga"
+	Model = "c\C_glove_common1_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "L. Glove"
+	MLeftHand = "c_glove_common1"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Left Glove"
+	Icon = "c\tx_glove_expensive1.tga"
+	Model = "c\C_glove_expensive1_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 50
+	Type = "L. Glove"
+	MLeftHand = "c_glove_expensive1"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Left Glove"
+	Icon = "c\tx_glove_extravagant_1.tga"
+	Model = "c\c_glove_extravagant1_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 200
+	Type = "L. Glove"
+	MLeftHand = "c_glove_extravagant1"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Right Glove"
+	Icon = "c\tx_glove_common1.tga"
+	Model = "c\C_glove_common1_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "R. Glove"
+	MRightHand = "c_glove_common1"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Right Glove"
+	Icon = "c\tx_glove_expensive1.tga"
+	Model = "c\C_glove_expensive1_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 50
+	Type = "R. Glove"
+	MRightHand = "c_glove_expensive1"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Right Glove"
+	Icon = "c\tx_glove_extravagant_1.tga"
+	Model = "c\c_glove_extravagant1_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 200
+	Type = "R. Glove"
+	MRightHand = "c_glove_extravagant1"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\tx_ring_common02.tga"
+	Model = "c\C_Ring_common02.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\tx_ring_common03.tga"
+	Model = "c\C_Ring_common03.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\tx_ring_common04.tga"
+	Model = "c\C_Ring_common04.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\tx_ring_common05.tga"
+	Model = "c\C_Ring_common05.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Ring"
+	Icon = "c\tx_ring_expensive01.tga"
+	Model = "c\C_Ring_expensive_1.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 150
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Ring"
+	Icon = "c\tx_ring_expensive02.tga"
+	Model = "c\C_Ring_expensive_2.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 150
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Ring"
+	Icon = "c\tx_ring_expensive03.tga"
+	Model = "c\C_Ring_expensive_3.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 150
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Ring"
+	Icon = "c\tx_ring_extravagant01.tga"
+	Model = "c\C_Ring_extravagant_1.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 0.1
+	EnchantPts = 600
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Ring"
+	Icon = "c\tx_ring_extravagant02.tga"
+	Model = "c\C_Ring_extravagant_2.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 0.1
+	EnchantPts = 600
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Ring"
+	Icon = "c\tx_ring_exquisite01.tga"
+	Model = "c\C_Ring_exquisite_1.NIF"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 0.1
+	EnchantPts = 1200
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Amulet"
+	Icon = "c\tx_amulet_com1.tga"
+	Model = "c\Amulet_Common_1.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Amulet"
+	Icon = "c\tx_amulet_com2.tga"
+	Model = "c\Amulet_Common_2.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Amulet"
+	Icon = "c\tx_amulet_com3.tga"
+	Model = "c\Amulet_Common_3.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Amulet"
+	Icon = "c\tx_amulet_com4.tga"
+	Model = "c\Amulet_Common_4.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Amulet"
+	Icon = "c\tx_amulet_com5.tga"
+	Model = "c\Amulet_Common_5.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Amulet"
+	Icon = "c\tx_amulet_expens1.tga"
+	Model = "c\Amulet_Expensive_1.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Amulet"
+	Icon = "c\tx_amulet_expens2.tga"
+	Model = "c\Amulet_Expensive_2.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Amulet"
+	Icon = "c\tx_amulet_expens3.tga"
+	Model = "c\Amulet_Expensive_3.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Sapphire Amulet"
+	Icon = "c\tx_amulet_extrav1.tga"
+	Model = "c\Amulet_Extravagant_1.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 600
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Extravagant Ruby Amulet"
+	Icon = "c\tx_amulet_extrav2.tga"
+	Model = "c\Amulet_Extravagant_2.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 600
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Amulet"
+	Icon = "c\tx_amulet_exquisite1.tga"
+	Model = "c\Amulet_Exquisit_1.NIF"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 1
+	EnchantPts = 1200
+	Type = "Amulet"
+End
+Item
+	ItemType = Weapon
+	Name = "Nordic Broadsword"
+	Icon = "w\Tx_Broadsword_Nordic.tga"
+	Model = "w\W_Nordic_Broadsword.nif"
+	BasePrice = 95
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 60
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.25
+	Condition = 800
+	MinChop = 6
+	MaxChop = 18
+	MinSlash = 2
+	MaxSlash = 18
+	MinThrust = 2
+	MaxThrust = 18
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Spear"
+	Icon = "w\Tx_Spear01.tga"
+	Model = "w\w_spear_iron.nif"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 14
+	EnchantPts = 50
+	Type = "Spear"
+	Reach = 1.8
+	Speed = 1
+	Condition = 400
+	MinChop = 1
+	MaxChop = 3
+	MinSlash = 1
+	MaxSlash = 3
+	MinThrust = 5
+	MaxThrust = 20
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\Tx_pants_com03_b.tga"
+	Model = "c\C_M_Pants_Common_3b_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_3b_g"
+	MRightAnkle = "c_m_pants_common_3b_a"
+	MRightKnee = "c_m_pants_common_3b_k"
+	MRightUpperLeg = "c_m_pants_common_3b_ul"
+	MLeftAnkle = "c_m_pants_common_3b_a"
+	MLeftKnee = "c_m_pants_common_3b_k"
+	MLeftUpperLeg = "c_m_pants_common_3b_ul"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Chain Greaves"
+	Icon = "a\Tx_ImperialChain_Greaves.tga"
+	Model = "a\A_M_ImperialChain_Gr_GND.nif"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 70
+	Armor = 20
+	Type = "Greaves"
+	Condition = 200
+	MGroin = "a_m_imperialchain_gr_g"
+	MLeftUpperLeg = "a_m_imperialchain_gr_ul"
+	MRightUpperLeg = "a_m_imperialchain_gr_ul"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Templar Helmet"
+	Icon = "a\Tx_Templar_helmet.tga"
+	Model = "a\A_Templar_M_Helmet.nif"
+	BasePrice = 75
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 250
+	Armor = 18
+	Type = "Helmet"
+	Condition = 180
+	MHair = "templar_helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Cuirass"
+	Icon = "a\Tx_Imperial_curaiss.tga"
+	Model = "a\A_Imperial_M_Cuirass_GND.nif"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 29
+	EnchantPts = 200
+	Armor = 16
+	Type = "Cuirass"
+	Condition = 460
+	MChest = "imperial cuirass"
+End
+Item
+	ItemType = Clothing
+	Name = "Imperial Skirt"
+	Icon = "a\Tx_Imperial_skirt.tga"
+	Model = "c\C_M_Skirt_Imperial_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 5
+	Type = "Skirt"
+	MSkirt = "imperial skirt"
+End
+Item
+	ItemType = Weapon
+	Name = "Lugrub's Axe"
+	Icon = "w\Tx_Battle_Axe.tga"
+	Model = "w\W_WarAxe_Steel.nif"
+	BasePrice = 60
+	ItemLevel = 1
+	Weight = 24
+	EnchantPts = 50
+	Type = "Axe"
+	Reach = 1
+	Speed = 1.25
+	Condition = 50
+	MinChop = 1
+	MaxChop = 18
+	MinSlash = 1
+	MaxSlash = 10
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\TX_pantscom00.tga"
+	Model = "c\C_M_Pants_GND_common00.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_g_common00"
+	FGroin = "c_f_pants_g_common00"
+	MRightAnkle = "c_m_pants_a_common00"
+	FRightAnkle = "c_f_pants_a_common00"
+	MLeftUpperLeg = "c_m_pants_ul_common00"
+	FLeftUpperLeg = "c_f_pants_ul_common00"
+	MRightUpperLeg = "c_m_pants_ul_common00"
+	FRightUpperLeg = "c_f_pants_ul_common00"
+	MLeftKnee = "c_m_pants_k_common00"
+	FLeftKnee = "c_f_pants_k_common00"
+	MRightKnee = "c_m_pants_k_common00"
+	FRightKnee = "c_f_pants_k_common00"
+	MLeftAnkle = "c_m_pants_a_common00"
+	FLeftAnkle = "c_f_pants_a_common00"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\TX_shirtcom01.tga"
+	Model = "c\C_M_Shirt_GND_common01.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_c_common01"
+	FChest = "c_f_shirt_c_common01"
+	MLeftUpperArm = "c_m_shirt_ua_common01"
+	MRightUpperArm = "c_m_shirt_ua_common01"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Skirt"
+	Icon = "c\Tx_Skirt_com01.tga"
+	Model = "c\C_M_Skirt_Common_01_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Skirt"
+	MSkirt = "c_f_skirt_g_common01"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com01.tga"
+	Model = "c\C_M_Robe_common_01_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "C_M_Robe_common_01"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcom04_a.tga"
+	Model = "c\C_M_Shirt_Common_4_a_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_4_a_c"
+	FChest = "c_f_shirt_common_4_a_c"
+	MLeftUpperArm = "c_m_shirt_common_4_a_ua"
+	MRightUpperArm = "c_m_shirt_common_4_a_ua"
+	MLeftForeArm = "c_m_shirt_common_4_a_fa"
+	MRightForeArm = "c_m_shirt_common_4_a_fa"
+	MLeftWrist = "c_m_shirt_common_4_a_w"
+	MRightWrist = "c_m_shirt_common_4_a_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcom04_b.tga"
+	Model = "c\C_M_Shirt_Common_4_b_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_4_b_c"
+	FChest = "c_f_shirt_common_4_b_c"
+	MLeftUpperArm = "c_m_shirt_common_4_b_ua"
+	MRightUpperArm = "c_m_shirt_common_4_b_ua"
+	MLeftForeArm = "c_m_shirt_common_4_b_fa"
+	MRightForeArm = "c_m_shirt_common_4_b_fa"
+	MLeftWrist = "c_m_shirt_common_4_b_w"
+	MRightWrist = "c_m_shirt_common_4_b_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\Tx_shirtcom04_c.tga"
+	Model = "c\C_M_Shirt_Common_4_c_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_4_c_c"
+	FChest = "c_f_shirt_common_4_c_c"
+	MLeftUpperArm = "c_m_shirt_common_4_c_ua"
+	MRightUpperArm = "c_m_shirt_common_4_c_ua"
+	MLeftForeArm = "c_m_shirt_common_4_c_fa"
+	MRightForeArm = "c_m_shirt_common_4_c_fa"
+	MLeftWrist = "c_m_shirt_common_4_c_w"
+	MRightWrist = "c_m_shirt_common_4_c_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\Tx_pants_com04_b.tga"
+	Model = "c\C_M_Pants_Common_4_b_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_4_b_g"
+	FGroin = "c_f_pants_common_4_b_g"
+	MLeftUpperLeg = "c_m_pants_common_4_b_ul"
+	FLeftUpperLeg = "c_f_pants_common_4_b_ul"
+	MRightUpperLeg = "c_m_pants_common_4_b_ul"
+	FRightUpperLeg = "c_f_pants_common_4_b_ul"
+	MLeftKnee = "c_m_pants_common_4_b_k"
+	FLeftKnee = "c_f_pants_common_4_b_k"
+	MRightKnee = "c_m_pants_common_4_b_k"
+	FRightKnee = "c_f_pants_common_4_b_k"
+	MLeftAnkle = "c_m_pants_common_4_b_a"
+	FLeftAnkle = "c_f_pants_common_4_b_a"
+	MRightAnkle = "c_m_pants_common_4_b_a"
+	FRightAnkle = "c_f_pants_common_4_b_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Hentus Pants"
+	Icon = "c\Tx_pants_com01.tga"
+	Model = "c\C_M_Pants_GND_common01.nif"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_g_common01"
+	FGroin = "c_f_pants_g_common01"
+	MRightAnkle = "c_m_pants_a_common01"
+	FRightAnkle = "c_f_pants_a_common01"
+	MLeftUpperLeg = "c_m_pants_ul_common01"
+	FLeftUpperLeg = "c_f_pants_ul_common01"
+	MRightUpperLeg = "c_m_pants_ul_common01"
+	FRightUpperLeg = "c_f_pants_ul_common01"
+	MLeftKnee = "c_m_pants_k_common01"
+	FLeftKnee = "c_f_pants_k_common01"
+	MRightKnee = "c_m_pants_k_common01"
+	FRightKnee = "c_f_pants_k_common01"
+	MLeftAnkle = "c_m_pants_a_common01"
+	FLeftAnkle = "c_f_pants_a_common01"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Left Gauntlet"
+	Icon = "a\Tx_NordicFur_gauntlet.tga"
+	Model = "a\A_NordicFur_Gauntlet_GND.nif"
+	BasePrice = 7
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 5
+	Type = "Left Gauntlet"
+	Condition = 25
+	MLeftHand = "a_nordicfur_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Nordic Fur Right Gauntlet"
+	Icon = "a\Tx_NordicFur_gauntlet.tga"
+	Model = "a\A_NordicFur_Gauntlet_GND.nif"
+	BasePrice = 7
+	ItemLevel = 1
+	Weight = 1.5
+	EnchantPts = 60
+	Armor = 5
+	Type = "Right Gauntlet"
+	Condition = 25
+	MRightHand = "a_nordicfur_gauntlet"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Skirt"
+	Icon = "c\Tx_skirt_com04_c.tga"
+	Model = "c\C_M_Skirt_Common_04_c_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Skirt"
+	MGroin = "c_f_skirt_g_common_4_c"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Chain Right Pauldron"
+	Icon = "a\Tx_ImperialChain_pauldron.tga"
+	Model = "a\A_M_ImperialChain_Pa_GND.nif"
+	BasePrice = 28
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 70
+	Armor = 20
+	Type = "Right Pauldron"
+	Condition = 200
+	MRightUpperArm = "a_m_imperialchain_pa_ua"
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Chain Left Pauldron"
+	Icon = "a\Tx_ImperialChain_pauldron.tga"
+	Model = "a\A_M_ImperialChain_Pa_UA.nif"
+	BasePrice = 28
+	ItemLevel = 1
+	Weight = 10
+	EnchantPts = 70
+	Armor = 20
+	Type = "Left Pauldron"
+	Condition = 200
+	MLeftUpperArm = "a_m_imperialchain_pa_ua"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Left Gauntlet"
+	Icon = "a\Tx_Iron_Gauntlet.tga"
+	Model = "a\A_Iron_Gauntlet_GND.nif"
+	BasePrice = 14
+	ItemLevel = 1
+	Weight = 7
+	EnchantPts = 25
+	Armor = 10
+	Type = "Left Gauntlet"
+	Condition = 50
+	MLeftHand = "a_iron_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Right Gauntlet"
+	Icon = "a\Tx_Iron_Gauntlet.tga"
+	Model = "a\A_Iron_Gauntlet_GND.nif"
+	BasePrice = 14
+	ItemLevel = 1
+	Weight = 7
+	EnchantPts = 10
+	Armor = 10
+	Type = "Right Gauntlet"
+	Condition = 50
+	MRightHand = "a_iron_gauntlet"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Helmet"
+	Icon = "a\Tx_Iron_Helm_01.tga"
+	Model = "a\A_Iron_Helm_01.nif"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 25
+	Armor = 10
+	Type = "Helmet"
+	Condition = 100
+	MHead = "a_iron_helm_01"
+End
+Item
+	ItemType = Armor
+	Name = "Hlaalu Guard Shield"
+	Icon = "a\tx_Towershield_Hlaalu.tga"
+	Model = "a\Towershield_Hlaluu.NIF"
+	BasePrice = 250
+	ItemLevel = 3
+	Weight = 13
+	EnchantPts = 600
+	Armor = 17
+	Type = "Shield"
+	Condition = 340
+	MShield = "towershield_hlaluu"
+End
+Item
+	ItemType = Armor
+	Name = "Redoran Guard Shield"
+	Icon = "a\Tx_Towershield_RedoranM.tga"
+	Model = "a\Towershield_RedoranM.NIF"
+	BasePrice = 250
+	ItemLevel = 3
+	Weight = 13
+	EnchantPts = 600
+	Armor = 17
+	Type = "Shield"
+	Condition = 340
+	MShield = "towershield_redoranm"
+End
+Item
+	ItemType = Armor
+	Name = "Telvanni Guard Shield"
+	Icon = "a\tx_towershield_Telv.tga"
+	Model = "a\Towershield_Telvanni.NIF"
+	BasePrice = 250
+	ItemLevel = 3
+	Weight = 13
+	EnchantPts = 600
+	Armor = 17
+	Type = "Shield"
+	Condition = 340
+	MShield = "towershield_telvanni"
+End
+Item
+	ItemType = Armor
+	Name = "Redoran Founder's Helm"
+	Icon = "a\TX_Bonemold_helmet.tga"
+	Model = "a\A_Bonemold_Helmet.nif"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 4.4
+	EnchantPts = 200
+	Armor = 18
+	Type = "Helmet"
+	Condition = 180
+	MHead = "a_bonemold_helmet"
+End
+Item
+	ItemType = Clothing
+	Name = "Othril Ring"
+	Icon = "c\tx_ring_expensive01.tga"
+	Model = "c\C_Ring_expensive_1.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Left Pauldron"
+	Icon = "a\TX_Glass_pauldron.tga"
+	Model = "a\A_Glass_Pauldron_GND.nif"
+	BasePrice = 9600
+	ItemLevel = 19
+	Weight = 3
+	EnchantPts = 15
+	Armor = 50
+	Type = "Left Pauldron"
+	Condition = 500
+	MLeftPauldron = "a_glass_cl_pauldron"
+	MLeftUpperArm = "a_glass_pauldron_ua"
+	MLeftForeArm = "a_glass_pauldron_fa"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Right Pauldron"
+	Icon = "a\TX_Glass_pauldron.tga"
+	Model = "a\A_Glass_Pauldron_GND.nif"
+	BasePrice = 9600
+	ItemLevel = 19
+	Weight = 3
+	EnchantPts = 15
+	Armor = 50
+	Type = "Right Pauldron"
+	Condition = 500
+	MRightPauldron = "a_glass_cl_pauldron"
+	MRightUpperArm = "a_glass_pauldron_ua"
+	MRightForeArm = "a_glass_pauldron_fa"
+End
+Item
+	ItemType = Weapon
+	Name = "Bonemold Arrow"
+	Icon = "w\tx_arrow_bonemold.tga"
+	Model = "w\W_Bonemold_arrow.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.15
+	EnchantPts = 12
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 4
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Dire Viperarrow"
+	Icon = "w\tx_arrow_bonemold.tga"
+	Model = "w\W_Bonemold_arrow.NIF"
+	BasePrice = 6
+	ItemLevel = 1
+	Weight = 0.2
+	EnchantPts = 12
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 4
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Sixth House Bell Hammer"
+	Icon = "w\W_6th_Hammer.tga"
+	Model = "w\W_6th_Hammer.NIF"
+	BasePrice = 5000
+	ItemLevel = 14
+	Weight = 75
+	EnchantPts = 105
+	Type = "Blunt, 2-Close"
+	Reach = 1.5
+	Speed = 1
+	Condition = 4000
+	MinChop = 1
+	MaxChop = 50
+	MinSlash = 1
+	MaxSlash = 45
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Bonemold Long Bow"
+	Icon = "w\tx_longbow_bonemold.tga"
+	Model = "w\W_longbow_bonemold.NIF"
+	BasePrice = 250
+	ItemLevel = 3
+	Weight = 7
+	EnchantPts = 400
+	Type = "Bow"
+	Reach = 1
+	Speed = 1
+	Condition = 700
+	MinChop = 1
+	MaxChop = 30
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Armor
+	Name = "Sarano Ebony Helm"
+	Icon = "a\Tx_Ebony_helmet.tga"
+	Model = "a\A_Ebony_Helmet.nif"
+	BasePrice = 15000
+	ItemLevel = 24
+	Weight = 10
+	EnchantPts = 500
+	Armor = 60
+	Type = "Helmet"
+	Condition = 600
+	MHead = "a_ebony_helmet"
+End
+Item
+	ItemType = Clothing
+	Name = "Mandas Family Locket"
+	Icon = "c\tx_amulet_exquisite1.tga"
+	Model = "c\Amulet_Exquisit_1.NIF"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 1
+	EnchantPts = 1200
+	Type = "Amulet"
+End
+Item
+	ItemType = Weapon
+	Name = "Corkbulb Arrow"
+	Icon = "w\tx_arrow_corkbulb.tga"
+	Model = "w\W_CorkBulb_arrow.NIF"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 5
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 1
+	MinChop = 1
+	MaxChop = 1
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Chitin Arrow"
+	Icon = "w\tx_arrow_chitin.tga"
+	Model = "w\W_Chitin_arrow.NIF"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 8
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 1
+	MinChop = 1
+	MaxChop = 2
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Arrow"
+	Icon = "w\tx_arrow_silver.tga"
+	Model = "w\W_Silver_arrow.NIF"
+	BasePrice = 3
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 12
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 3
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Arrow"
+	Icon = "w\tx_arrow_glass.tga"
+	Model = "w\W_Glass_arrow.NIF"
+	BasePrice = 8
+	ItemLevel = 1
+	Weight = 0.15
+	EnchantPts = 9
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 6
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Arrow"
+	Icon = "w\tx_arrow_ebony.tga"
+	Model = "w\W_Ebony_arrow.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 0.2
+	EnchantPts = 30
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 5
+	MaxChop = 10
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Arrow"
+	Icon = "w\tx_arrow_daedric.tga"
+	Model = "w\W_daedric_Arrow.NIF"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 0.3
+	EnchantPts = 45
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 1
+	MinChop = 10
+	MaxChop = 15
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Corkbulb Bolt"
+	Icon = "w\tx_bolt_corkbulb.tga"
+	Model = "w\W_bolt_corkbulb.NIF"
+	BasePrice = 5
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 6
+	Type = "Bolt"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 1
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Bolt"
+	Icon = "w\tx_bolt_iron.tga"
+	Model = "w\W_Bolt_iron.NIF"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 20
+	Type = "Bolt"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 2
+	MaxChop = 3
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Bolt"
+	Icon = "w\tx_bolt_steel.tga"
+	Model = "w\W_Bolt_steel.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 20
+	Type = "Bolt"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 2
+	MaxChop = 4
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Silver Bolt"
+	Icon = "w\tx_bolt_silver.tga"
+	Model = "w\W_Bolt_silver.NIF"
+	BasePrice = 8
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 16
+	Type = "Bolt"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 3
+	MaxChop = 3
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Bonemold Bolt"
+	Icon = "w\tx_bolt_bonemold.tga"
+	Model = "w\W_Bolt_bonemold.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.15
+	EnchantPts = 16
+	Type = "Bolt"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 3
+	MaxChop = 4
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Orcish Bolt"
+	Icon = "w\tx_bolt_orcish.tga"
+	Model = "w\W_Bolt_orcish.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 0.15
+	EnchantPts = 24
+	Type = "Bolt"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 6
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Arrow"
+	Icon = "w\tx_arrow_steel.tga"
+	Model = "w\W_Steel_Arrow.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 15
+	Type = "Arrow"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 4
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Steel Longbow"
+	Icon = "w\tx_longbow_Steel.tga"
+	Model = "w\W_longbow_steel.NIF"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 35
+	Type = "Bow"
+	Reach = 1
+	Speed = 1
+	Condition = 600
+	MinChop = 1
+	MaxChop = 25
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Foeburner"
+	Icon = "w\Tx_Dwemer_claymore.tga"
+	Model = "w\W_Dwemer_claymore.nif"
+	BasePrice = 1400
+	ItemLevel = 7
+	Weight = 16
+	EnchantPts = 48
+	Type = "Long Blade, 2-Hand"
+	Reach = 1
+	Speed = 1.25
+	Condition = 3500
+	MinChop = 2
+	MaxChop = 14
+	MinSlash = 1
+	MaxSlash = 20
+	MinThrust = 4
+	MaxThrust = 18
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Orc Warhammer"
+	Icon = "w\Tx_orcish_warhammer.tga"
+	Model = "w\W_Orcish_warhammer.NIF"
+	BasePrice = 1600
+	ItemLevel = 8
+	Weight = 38.4
+	EnchantPts = 66
+	Type = "Blunt, 2-Close"
+	Reach = 1.5
+	Speed = 1
+	Condition = 4000
+	MinChop = 1
+	MaxChop = 42
+	MinSlash = 1
+	MaxSlash = 36
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Orcish Battle Axe"
+	Icon = "w\Tx_orcish_waraxe.tga"
+	Model = "w\W_Orcish_battleaxe.nif"
+	BasePrice = 2000
+	ItemLevel = 8
+	Weight = 15
+	EnchantPts = 80
+	Type = "Axe, 2-Hand"
+	Reach = 1
+	Speed = 1
+	Condition = 2400
+	MinChop = 17
+	MaxChop = 28
+	MinSlash = 2
+	MaxSlash = 23
+	MinThrust = 0
+	MaxThrust = 2
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Throwing Knife of Sureflight"
+	Icon = "w\Tx_dagger_dragon.tga"
+	Model = "w\W_Dagger_dragon.nif"
+	BasePrice = 7
+	ItemLevel = 1
+	Weight = 0.3
+	EnchantPts = 15
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 100
+	MinChop = 1
+	MaxChop = 4
+	MinSlash = 0
+	MaxSlash = 1
+	MinThrust = 0
+	MaxThrust = 1
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Armor
+	Name = "Steel Boots"
+	Icon = "a\Tx_Steel_boot.tga"
+	Model = "a\A_Steel_Boots_GND.nif"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 20
+	EnchantPts = 88
+	Armor = 15
+	Type = "Boots"
+	Condition = 150
+	MLeftFoot = "a_steel_boot_f"
+	MRightFoot = "a_steel_boot_f"
+	MLeftAnkle = "a_steel_boot_a"
+	MRightAnkle = "a_steel_boot_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\tx_shirtcomm_2hh.tga"
+	Model = "c\C_M_Shirt_Common_2hh_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_2hh_c"
+	MLeftUpperArm = "c_m_shirt_common_2hh_ua"
+	MRightUpperArm = "c_m_shirt_common_2hh_ua"
+	MLeftForeArm = "c_m_shirt_common_2hh_fa"
+	MRightForeArm = "c_m_shirt_common_2hh_fa"
+	MLeftWrist = "c_m_shirt_common_2hh_w"
+	MRightWrist = "c_m_shirt_common_2hh_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\tx_shirtcomm_2rr.tga"
+	Model = "c\C_M_Shirt_Common_2rr_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_2rr_c"
+	MLeftUpperArm = "c_m_shirt_common_2rr_ua"
+	MRightUpperArm = "c_m_shirt_common_2rr_ua"
+	MLeftForeArm = "c_m_shirt_common_2rr_fa"
+	MRightForeArm = "c_m_shirt_common_2rr_fa"
+	MLeftWrist = "c_m_shirt_common_2rr_w"
+	MRightWrist = "c_m_shirt_common_2rr_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\tx_shirtcomm_2tt.tga"
+	Model = "c\C_M_Shirt_Common_2tt_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_2tt_c"
+	MLeftUpperArm = "c_m_shirt_common_2tt_ua"
+	MRightUpperArm = "c_m_shirt_common_2tt_ua"
+	MLeftForeArm = "c_m_shirt_common_2tt_fa"
+	MRightForeArm = "c_m_shirt_common_2tt_fa"
+	MLeftWrist = "c_m_shirt_common_2tt_w"
+	MRightWrist = "c_m_shirt_common_2tt_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com02hh.tga"
+	Model = "c\C_M_Robe_common_02hh_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_02hh"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com02rr.tga"
+	Model = "c\C_M_Robe_common_02rr_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_02rr"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Robe"
+	Icon = "c\Tx_Robe_com02tt.tga"
+	Model = "c\C_M_Robe_common_02tt_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 10
+	Type = "Robe"
+	MChest = "c_m_robe_common_02tt"
+End
+Item
+	ItemType = Armor
+	Name = "Redoran Banner Shield"
+	Icon = "a\Tx_Towershield_RedoranM.tga"
+	Model = "a\Towershield_RedoranM.NIF"
+	BasePrice = 250
+	ItemLevel = 3
+	Weight = 13
+	EnchantPts = 600
+	Armor = 17
+	Type = "Shield"
+	Condition = 340
+	MShield = "towershield_bonemold"
+End
+Item
+	ItemType = Armor
+	Name = "Native Gah-Julan Bonemold Helm"
+	Icon = "a\TX_Bonemold_Gah_Julan_h.tga"
+	Model = "a\A_Bonemold_Gah_Julan_h.nif"
+	BasePrice = 167
+	ItemLevel = 2
+	Weight = 4
+	EnchantPts = 200
+	Armor = 16
+	Type = "Helmet"
+	Condition = 160
+	MHead = "a_bonemold_gah_julan_h"
+End
+Item
+	ItemType = Weapon
+	Name = "Daedric Wakizashi"
+	Icon = "w\Tx_wakazashi_daedric.tga"
+	Model = "w\W_wakazashi_daedric.nif"
+	BasePrice = 48000
+	ItemLevel = 43
+	Weight = 30
+	EnchantPts = 135
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.25
+	Condition = 1100
+	MinChop = 12
+	MaxChop = 25
+	MinSlash = 10
+	MaxSlash = 21
+	MinThrust = 5
+	MaxThrust = 11
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Helm"
+	Icon = "a\TX_Bonemold_helmet.tga"
+	Model = "a\A_Bonemold_Helmet.nif"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 4
+	EnchantPts = 200
+	Armor = 18
+	Type = "Helmet"
+	Condition = 180
+	MHead = "a_bonemold_helmet"
+End
+Item
+	ItemType = Clothing
+	Name = "Therana's Skirt"
+	Icon = "a\Tx_Imperial_skirt.tga"
+	Model = "c\C_M_Skirt_Imperial_GND.nif"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 600
+	Type = "Skirt"
+	MSkirt = "imperial skirt"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Ring"
+	Icon = "c\tx_ring_exquisite01.tga"
+	Model = "c\C_Ring_exquisite_1.NIF"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 0.1
+	EnchantPts = 1200
+	Type = "Ring"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold R Pauldron"
+	Icon = "a\TX_Bonemold_pauldron.tga"
+	Model = "a\A_Bonemold_Pauldron_GND.nif"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 16
+	Armor = 15
+	Type = "Right Pauldron"
+	Condition = 150
+	MRightUpperArm = "a_bonemold_pauldron_ua"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold L Pauldron"
+	Icon = "a\TX_Bonemold_pauldron.tga"
+	Model = "a\A_Bonemold_Pauldron_GND.nif"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 16
+	Armor = 15
+	Type = "Left Pauldron"
+	Condition = 150
+	MLeftUpperArm = "a_bonemold_pauldron_ua"
+End
+Item
+	ItemType = Armor
+	Name = "Bonemold Cuirass"
+	Icon = "a\TX_Bonemold_cuirass.tga"
+	Model = "a\A_Bonemold_cuirass_GND.nif"
+	BasePrice = 350
+	ItemLevel = 3
+	Weight = 24
+	EnchantPts = 160
+	Armor = 16
+	Type = "Cuirass"
+	Condition = 480
+	MChest = "a_bonemold_cuirass_c"
+End
+Item
+	ItemType = Armor
+	Name = "Iron Boots"
+	Icon = "a\Tx_Iron_boots.tga"
+	Model = "a\A_Iron_Boot_GND.nif"
+	BasePrice = 20
+	ItemLevel = 1
+	Weight = 19
+	EnchantPts = 26
+	Armor = 10
+	Type = "Boots"
+	Condition = 450
+	MRightFoot = "a_iron_boot_f"
+	MRightAnkle = "a_iron_boot_a"
+	MLeftAnkle = "a_iron_boot_a"
+	MLeftFoot = "a_iron_boot_f"
+End
+Item
+	ItemType = Armor
+	Name = "Heavy Leather Boots"
+	Icon = "a\Tx_Boot_heavy_leather.tga"
+	Model = "a\A_Boot_hvy_leather_GND.NIF"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 8
+	EnchantPts = 26
+	Armor = 50
+	Type = "Boots"
+	Condition = 500
+	MLeftFoot = "a_boots_heavy_leather"
+	MLeftAnkle = "a_boots_heavy_leather"
+	MRightFoot = "a_boots_heavy_leather"
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Dagger"
+	Icon = "w\Tx_dagger_iron.tga"
+	Model = "w\W_iron_dagger.nif"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 20
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 400
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 4
+	MaxSlash = 5
+	MinThrust = 5
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Clothing
+	Name = "Ashkhan's Wedding Gift"
+	Icon = "c\tx_shirt_exquisite_1.tga"
+	Model = "c\C_M_Shirt_Exquisite_1_GND.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 2
+	EnchantPts = 600
+	Type = "Shirt"
+	MChest = "c_m_shirt_exquisite_1_c"
+	MLeftUpperArm = "c_m_shirt_exquisite_1_ua"
+	MRightUpperArm = "c_m_shirt_exquisite_1_ua"
+	MLeftForeArm = "c_m_shirt_exquisite_1_fa"
+	MRightForeArm = "c_m_shirt_exquisite_1_fa"
+	MLeftWrist = "c_m_shirt_exquisite_1_w"
+	MRightWrist = "c_m_shirt_exquisite_1_w"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Boots"
+	Icon = "a\TX_Glass_boots.tga"
+	Model = "a\A_Glass_Boots_GND.nif"
+	BasePrice = 8000
+	ItemLevel = 17
+	Weight = 3
+	EnchantPts = 100
+	Armor = 50
+	Type = "Boots"
+	Condition = 500
+	MLeftAnkle = "a_glass_boots_a"
+	MLeftFoot = "a_glass_boots_f"
+	MRightAnkle = "a_glass_boots_a"
+	MRightFoot = "a_glass_boots_f"
+End
+Item
+	ItemType = Armor
+	Name = "Glass Greaves"
+	Icon = "a\TX_Glass_greaves.tga"
+	Model = "a\A_Glass_Greaves_GND.nif"
+	BasePrice = 17600
+	ItemLevel = 26
+	Weight = 9
+	EnchantPts = 100
+	Armor = 50
+	Type = "Greaves"
+	Condition = 500
+	MGroin = "a_glass_greaves_g"
+	MLeftUpperLeg = "a_glass_greaves_ul"
+	MLeftKnee = "a_glass_greaves_k"
+	MRightUpperLeg = "a_glass_greaves_ul"
+	MRightKnee = "a_glass_greaves_k"
+End
+Item
+	ItemType = Clothing
+	Name = "Black Left Glove"
+	Icon = "c\tx_glove_MoragTong.tga"
+	Model = "c\C_glove_MoragTong_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "L. Glove"
+	MLeftHand = "c_glove_moragtong"
+End
+Item
+	ItemType = Clothing
+	Name = "Black Right Glove"
+	Icon = "c\tx_glove_MoragTong.tga"
+	Model = "c\C_glove_MoragTong_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "R. Glove"
+	MRightHand = "c_glove_moragtong"
+End
+Item
+	ItemType = Clothing
+	Name = "Left Bal Molagmer Glove"
+	Icon = "c\tx_glove_balmolagmer.tga"
+	Model = "c\C_glove_Balmolagmer_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "L. Glove"
+	MLeftHand = "c_glove_balmolagmer"
+End
+Item
+	ItemType = Clothing
+	Name = "Right Bal Molagmer Glove"
+	Icon = "c\tx_glove_balmolagmer.tga"
+	Model = "c\C_glove_Balmolagmer_GND.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "R. Glove"
+	MRightHand = "c_glove_balmolagmer"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Pants"
+	Icon = "c\tx_pants_comm_3c.tga"
+	Model = "c\C_M_Pants_common_3c_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Pants"
+	MGroin = "c_m_pants_common_3c_g"
+	MRightAnkle = "c_m_pants_common_3c_a"
+	MRightKnee = "c_m_pants_common_3c_k"
+	MRightUpperLeg = "c_m_pants_common_3c_ul"
+	MLeftAnkle = "c_m_pants_common_3c_a"
+	MLeftKnee = "c_m_pants_common_3c_k"
+	MLeftUpperLeg = "c_m_pants_common_3c_ul"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Shirt"
+	Icon = "c\tx_shirtcomm_3_c.tga"
+	Model = "c\C_M_Shirt_Common_3c_GND.NIF"
+	BasePrice = 4
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 20
+	Type = "Shirt"
+	MChest = "c_m_shirt_common_3c_c"
+	MLeftUpperArm = "c_m_shirt_common_3c_ua"
+	MRightUpperArm = "c_m_shirt_common_3c_ua"
+	MLeftForeArm = "c_m_shirt_common_3c_fa"
+	MRightForeArm = "c_m_shirt_common_3c_fa"
+	MLeftWrist = "c_m_shirt_common_3c_w"
+	MRightWrist = "c_m_shirt_common_3c_w"
+End
+Item
+	ItemType = Weapon
+	Name = "Auriel's Bow"
+	Icon = "w\tx_longbow_Ariel.tga"
+	Model = "w\W_longbow_Ariel.NIF"
+	BasePrice = 30000
+	ItemLevel = 34
+	Weight = 16
+	EnchantPts = 70
+	Type = "Bow"
+	Reach = 1
+	Speed = 1
+	Condition = 1000
+	MinChop = 2
+	MaxChop = 50
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Armor
+	Name = "Auriel's Shield"
+	Icon = "a\tx_shield_auriel.tga"
+	Model = "a\Shield_Art_Auriel.NIF"
+	BasePrice = 17000
+	ItemLevel = 26
+	Weight = 30
+	EnchantPts = 1000
+	Armor = 60
+	Type = "Shield"
+	Condition = 1200
+	MShield = "shield_art_auriel"
+End
+Item
+	ItemType = Weapon
+	Name = "Volendrung"
+	Icon = "w\tx_art_Volendrung.tga"
+	Model = "w\W_Art_Volendrung.NIF"
+	BasePrice = 600
+	ItemLevel = 4
+	Weight = 32
+	EnchantPts = 55
+	Type = "Blunt, 2-Close"
+	Reach = 1.5
+	Speed = 1
+	Condition = 5000
+	MinChop = 1
+	MaxChop = 39
+	MinSlash = 1
+	MaxSlash = 33
+	MinThrust = 1
+	MaxThrust = 2
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Shortsword"
+	Icon = "w\Tx_Art_MehrunesRazor.tga"
+	Model = "w\W_Art_MehrunesRazor.NIF"
+	BasePrice = 5000
+	ItemLevel = 14
+	Weight = 16
+	EnchantPts = 80
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 1200
+	MinChop = 10
+	MaxChop = 20
+	MinSlash = 10
+	MaxSlash = 20
+	MinThrust = 12
+	MaxThrust = 22
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Clothing
+	Name = "Hlervu Locket"
+	Icon = "c\tx_amulet_exquisite1.tga"
+	Model = "c\Amulet_Exquisit_1.NIF"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 1
+	EnchantPts = 1200
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Brallion's Exquisite Ring"
+	Icon = "c\tx_ring_exquisite01.tga"
+	Model = "c\C_Ring_exquisite_1.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 1200
+	Type = "Ring"
+End
+Item
+	ItemType = Weapon
+	Name = "Anora's Club"
+	Icon = "w\Tx_club_daedric.tga"
+	Model = "w\W_club_daedric.nif"
+	BasePrice = 10000
+	ItemLevel = 20
+	Weight = 36
+	EnchantPts = 120
+	Type = "Blunt"
+	Reach = 1
+	Speed = 1.5
+	Condition = 1600
+	MinChop = 10
+	MaxChop = 12
+	MinSlash = 4
+	MaxSlash = 8
+	MinThrust = 6
+	MaxThrust = 8
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Left Bracer"
+	Icon = "a\Tx_Ebony_bracer.tga"
+	Model = "a\A_Ebony_Bracer_w.nif"
+	BasePrice = 5000
+	ItemLevel = 14
+	Weight = 10
+	EnchantPts = 400
+	Armor = 60
+	Type = "Left Bracer"
+	Condition = 300
+	MLeftWrist = "a_ebony_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Ebony Right Bracer"
+	Icon = "a\Tx_Ebony_bracer.tga"
+	Model = "a\A_Ebony_Bracer_w.nif"
+	BasePrice = 5000
+	ItemLevel = 14
+	Weight = 10
+	EnchantPts = 400
+	Armor = 60
+	Type = "Right Bracer"
+	Condition = 300
+	MRightWrist = "a_ebony_bracer_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Exquisite Shirt"
+	Icon = "c\tx_shirt_exquisite_1.tga"
+	Model = "c\C_M_Shirt_Exquisite_1_GND.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 2
+	EnchantPts = 600
+	Type = "Shirt"
+	MChest = "c_m_shirt_exquisite_1_c"
+	MLeftUpperArm = "c_m_shirt_exquisite_1_ua"
+	MRightUpperArm = "c_m_shirt_exquisite_1_ua"
+	MLeftForeArm = "c_m_shirt_exquisite_1_fa"
+	MRightForeArm = "c_m_shirt_exquisite_1_fa"
+	MLeftWrist = "c_m_shirt_exquisite_1_w"
+	MRightWrist = "c_m_shirt_exquisite_1_w"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Amulet"
+	Icon = "c\tx_amulet_expens3.tga"
+	Model = "c\Amulet_Expensive_3.NIF"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Ring"
+	Icon = "c\tx_ring_expensive03.tga"
+	Model = "c\C_Ring_expensive_3.NIF"
+	BasePrice = 50
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 150
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Maurrie's Left Glove"
+	Icon = "c\tx_glove_extravagant_1.tga"
+	Model = "c\c_glove_extravagant1_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 200
+	Type = "L. Glove"
+	MLeftHand = "c_glove_extravagant1"
+End
+Item
+	ItemType = Clothing
+	Name = "Maurrie's Right Glove"
+	Icon = "c\tx_glove_extravagant_1.tga"
+	Model = "c\c_glove_extravagant1_GND.NIF"
+	BasePrice = 40
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 200
+	Type = "R. Glove"
+	MRightHand = "c_glove_extravagant1"
+End
+Item
+	ItemType = Clothing
+	Name = "Tsiya's Ring"
+	Icon = "c\tx_ring_common02.tga"
+	Model = "c\C_Ring_common02.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Weapon
+	Name = "Miner's Pick"
+	Icon = "w\tx_miner_pick.tga"
+	Model = "w\W_miner_pick.nif"
+	BasePrice = 8
+	ItemLevel = 1
+	Weight = 20
+	EnchantPts = 10
+	Type = "Axe, 2-Hand"
+	Reach = 1
+	Speed = 1
+	Condition = 400
+	MinChop = 3
+	MaxChop = 7
+	MinSlash = 2
+	MaxSlash = 3
+	MinThrust = 1
+	MaxThrust = 3
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Weapon
+	Name = "Enamor"
+	Icon = "w\Tx_dagger_dragon.tga"
+	Model = "w\W_Dagger_dragon.nif"
+	BasePrice = 4000
+	ItemLevel = 12
+	Weight = 1.8
+	EnchantPts = 12
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 400
+	MinChop = 7
+	MaxChop = 12
+	MinSlash = 7
+	MaxSlash = 12
+	MinThrust = 6
+	MaxThrust = 12
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Clothing
+	Name = "Firejade Amulet"
+	Icon = "c\tx_amulet_expens1.tga"
+	Model = "c\Amulet_Expensive_1.NIF"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Racer Suede Belt"
+	Icon = "c\tx_belt_expensive01.tga"
+	Model = "c\C_belt_Expensive_1.NIF"
+	BasePrice = 100
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 50
+	Type = "Belt"
+End
+Item
+	ItemType = Clothing
+	Name = "Glass Ring"
+	Icon = "c\tx_ring_expensive01.tga"
+	Model = "c\C_Ring_expensive_1.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 0.1
+	EnchantPts = 150
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Ebony Ring"
+	Icon = "c\tx_ring_expensive02.tga"
+	Model = "c\C_Ring_expensive_2.NIF"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 0.1
+	EnchantPts = 150
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Silk Pants"
+	Icon = "c\tx_pants_exquisite_1.tga"
+	Model = "c\C_M_Pants_exqisite_1_GND.NIF"
+	BasePrice = 360
+	ItemLevel = 3
+	Weight = 2
+	EnchantPts = 600
+	Type = "Pants"
+	MGroin = "c_m_pants_exquisite_1_g"
+	MRightAnkle = "c_m_pants_exquisite_1_a"
+	MLeftUpperLeg = "c_m_pants_exquisite_1_ul"
+	MRightUpperLeg = "c_m_pants_exquisite_1_ul"
+	MLeftKnee = "c_m_pants_exquisite_1_k"
+	MRightKnee = "c_m_pants_exquisite_1_k"
+	MLeftAnkle = "c_m_pants_exquisite_1_a"
+End
+Item
+	ItemType = Clothing
+	Name = "Brocade Shirt"
+	Icon = "c\tx_shirt_exquisite_1.tga"
+	Model = "c\C_M_Shirt_Exquisite_1_GND.NIF"
+	BasePrice = 360
+	ItemLevel = 3
+	Weight = 2
+	EnchantPts = 600
+	Type = "Shirt"
+	MChest = "c_m_shirt_exquisite_1_c"
+	MLeftUpperArm = "c_m_shirt_exquisite_1_ua"
+	MRightUpperArm = "c_m_shirt_exquisite_1_ua"
+	MLeftForeArm = "c_m_shirt_exquisite_1_fa"
+	MRightForeArm = "c_m_shirt_exquisite_1_fa"
+	MLeftWrist = "c_m_shirt_exquisite_1_w"
+	MRightWrist = "c_m_shirt_exquisite_1_w"
+End
+Item
+	ItemType = Weapon
+	Name = "Azura's Star"
+	Icon = "w\tx_art_azura_star.tga"
+	Model = "w\W_Art_AzuraStar .NIF"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 100
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 1200
+	MinChop = 1
+	MaxChop = 5
+	MinSlash = 1
+	MaxSlash = 5
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Clothing
+	Name = "Processus Vitellius' Ring"
+	Icon = "c\tx_ring_exquisite01.tga"
+	Model = "c\C_Ring_exquisite_1.NIF"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 0.1
+	EnchantPts = 1200
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Methas Hlaalu's Amulet"
+	Icon = "c\tx_amulet_expens3.tga"
+	Model = "c\Amulet_Expensive_3.NIF"
+	BasePrice = 150
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Weapon
+	Name = "A Rusty Dagger"
+	Icon = "w\Tx_dagger_iron.tga"
+	Model = "w\W_iron_dagger.nif"
+	BasePrice = 0
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 20
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 5
+	MinChop = 1
+	MaxChop = 2
+	MinSlash = 1
+	MaxSlash = 2
+	MinThrust = 2
+	MaxThrust = 2
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Clothing
+	Name = "Expensive Ring"
+	Icon = "c\tx_ring_expensive01.tga"
+	Model = "c\C_Ring_expensive_1.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 150
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Ilmeni's glove"
+	Icon = "c\tx_glove_expensive1.tga"
+	Model = "c\C_glove_expensive1_GND.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 50
+	Type = "L. Glove"
+	MLeftHand = "c_glove_expensive1"
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Fork"
+	Icon = "w\W_De_Fork.tga"
+	Model = "w\W_De_Fork.NIF"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 100
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 400
+	MinChop = 3
+	MaxChop = 5
+	MinSlash = 3
+	MaxSlash = 5
+	MinThrust = 3
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Pop's Amulet"
+	Icon = "c\tx_amulet_expens1.tga"
+	Model = "c\Amulet_Expensive_1.NIF"
+	BasePrice = 240
+	ItemLevel = 3
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+
+Item
+	ItemType = Clothing
+	Name = "Aundae Signet Ring"
+	Icon = "c\tx_ring_extravagant02.tga"
+	Model = "c\C_Ring_extravagant_2.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 0.1
+	EnchantPts = 600
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Aundae Amulet"
+	Icon = "c\tx_amulet_extrav2.tga"
+	Model = "c\Amulet_Extravagant_2.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 600
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Berne Amulet"
+	Icon = "c\tx_amulet_extrav2.tga"
+	Model = "c\Amulet_Extravagant_2.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 600
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Quarra Amulet"
+	Icon = "c\tx_amulet_extrav2.tga"
+	Model = "c\Amulet_Extravagant_2.NIF"
+	BasePrice = 120
+	ItemLevel = 2
+	Weight = 1
+	EnchantPts = 600
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Danar's Ring"
+	Icon = "c\tx_ring_common02.tga"
+	Model = "c\C_Ring_common02.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Tel Fyr amulet"
+	Icon = "c\tx_amulet_Madstone.tga"
+	Model = "c\Amulet_Madstone.NIF"
+	BasePrice = 3100
+	ItemLevel = 11
+	Weight = 3
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Daedric Sanctuary Amulet"
+	Icon = "c\tx_amulet_Madstone.tga"
+	Model = "c\Amulet_Madstone.NIF"
+	BasePrice = 3100
+	ItemLevel = 11
+	Weight = 3
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Julielle Aumine's Amulet"
+	Icon = "c\tx_amulet_com2.tga"
+	Model = "c\Amulet_Common_2.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 10
+	Type = "Amulet"
+End
+Item
+	ItemType = Weapon
+	Name = "Glass Dagger"
+	Icon = "w\tx_dagger_glass.tga"
+	Model = "w\W_dagger_glass.nif"
+	BasePrice = 4000
+	ItemLevel = 12
+	Weight = 1.8
+	EnchantPts = 12
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 400
+	MinChop = 7
+	MaxChop = 9
+	MinSlash = 7
+	MaxSlash = 9
+	MinThrust = 6
+	MaxThrust = 9
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Clothing
+	Name = "Skink's Amulet"
+	Icon = "c\tx_amulet_extrav1.tga"
+	Model = "c\Amulet_Extravagant_1.NIF"
+	BasePrice = 1000
+	ItemLevel = 6
+	Weight = 1
+	EnchantPts = 600
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Clothing
+	Name = "Delyna's Locket"
+	Icon = "c\tx_amulet_expens1.tga"
+	Model = "c\Amulet_Expensive_1.NIF"
+	BasePrice = 30
+	ItemLevel = 1
+	Weight = 1
+	EnchantPts = 150
+	Type = "Amulet"
+End
+Item
+	ItemType = Clothing
+	Name = "Common Ring"
+	Icon = "c\Tx_ring_common01.tga"
+	Model = "c\C_Ring_common01.NIF"
+	BasePrice = 2
+	ItemLevel = 1
+	Weight = 0.1
+	EnchantPts = 10
+	Type = "Ring"
+End
+Item
+	ItemType = Weapon
+	Name = "Dart of Judgment"
+	Icon = "w\tx_dart_daedric.tga"
+	Model = "w\W_dart_daedric.NIF"
+	BasePrice = 500
+	ItemLevel = 4
+	Weight = 0.1
+	EnchantPts = 0
+	Type = "Thrown"
+	Reach = 1
+	Speed = 1
+	Condition = 10
+	MinChop = 1
+	MaxChop = 12
+	MinSlash = 0
+	MaxSlash = 0
+	MinThrust = 0
+	MaxThrust = 0
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Armor
+	Name = "Gondolier's Helm"
+	Icon = "a\tx_gondolier_helm.tga"
+	Model = "a\A_Gondolier_M_Helmet.NIF"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 4
+	EnchantPts = 100
+	Armor = 1
+	Type = "Helmet"
+	Condition = 100
+	MHair = "A_Gondolier_M_Helmet"
+End
+Item
+	ItemType = Clothing
+	Name = "Gondolier Shirt"
+	Icon = "c\tx_shirt_common_gond.tga"
+	Model = "c\C_M_Shirt_Gondolier_GND.NIF"
+	BasePrice = 6
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 100
+	Type = "Shirt"
+	MChest = "C_M_Shirt_Gondalier_C"
+End
+Item
+	ItemType = Weapon
+	Name = "Ebony Broadsword"
+	Icon = "w\Tx_Broadsword_ebony.tga"
+	Model = "w\W_broadsword_ebony.nif"
+	BasePrice = 15000
+	ItemLevel = 24
+	Weight = 24
+	EnchantPts = 100
+	Type = "Long Blade"
+	Reach = 1
+	Speed = 1.25
+	Condition = 1800
+	MinChop = 4
+	MaxChop = 26
+	MinSlash = 2
+	MaxSlash = 26
+	MinThrust = 2
+	MaxThrust = 26
+	IgnoreResist = TRUE
+End
+Item
+	ItemType = Armor
+	Name = "Imperial Steel Helmet"
+	Icon = "a\Tx_Imperial_helmet.tga"
+	Model = "a\A_Imperial_M_Helmet.nif"
+	BasePrice = 70
+	ItemLevel = 1
+	Weight = 5
+	EnchantPts = 250
+	Armor = 16
+	Type = "Helmet"
+	Condition = 160
+	MHair = "imperial helmet"
+End
+Item
+	ItemType = Armor
+	Name = "Left Glass Bracer"
+	Icon = "a\TX_Glass_bracer.tga"
+	Model = "a\A_Glass_Bracer_W.nif"
+	BasePrice = 4000
+	ItemLevel = 12
+	Weight = 3
+	EnchantPts = 100
+	Armor = 50
+	Type = "Left Bracer"
+	Condition = 400
+	MLeftWrist = "a_glass_bracer_w"
+End
+Item
+	ItemType = Armor
+	Name = "Right Glass Bracer"
+	Icon = "a\TX_Glass_bracer.tga"
+	Model = "a\A_Glass_Bracer_W.nif"
+	BasePrice = 4000
+	ItemLevel = 12
+	Weight = 3
+	EnchantPts = 100
+	Armor = 50
+	Type = "Right Bracer"
+	Condition = 400
+	MRightWrist = "a_glass_bracer_w"
+End
+Item
+	ItemType = Weapon
+	Name = "Iron Dagger"
+	Icon = "w\Tx_dagger_iron.tga"
+	Model = "w\W_iron_dagger.nif"
+	BasePrice = 10
+	ItemLevel = 1
+	Weight = 3
+	EnchantPts = 20
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 2.5
+	Condition = 400
+	MinChop = 4
+	MaxChop = 5
+	MinSlash = 4
+	MaxSlash = 5
+	MinThrust = 5
+	MaxThrust = 5
+	IgnoreResist = FALSE
+End

@@ -1,0 +1,584 @@
+
+   BASIC ITEMS
+=======================================
+
+	char  Name[]
+		Base item name string.
+	long  Type
+		Item type value (bitmask).
+	long  BasePrice
+		Base item price.
+	float Weight
+	union {...}
+		All the item specific parameters (depending on item type).
+	long  ItemLevel
+		Base item level (higher level items will be rarer) (0-100).
+	char  Model[]
+	char  Icon[]
+		Model and icon names.
+
+
+   ITEM TYPES
+=======================================
+
+  Main
+	Weapon
+	Armor
+	Clothing
+
+  Minor
+	Apparatus
+	Lock Pick
+	Probe
+	Repair
+	Book
+	Ingrediant
+	Light
+	Misc
+	Potion
+
+
+
+   SUFFIXES AND PREFIXES
+=======================================
+
+    char  Name[]
+		The -fix name string. Must be unique.
+	bool Prefix
+		Indicates whether the effect is a prefix or suffix.
+	int  ItemLevel
+		A general indicator of the effect's power. Higher level -fixes will naturally
+		have a higher level and thus be more difficult to find (0 to 100).
+	bool Cursed
+		Indicates a cursed effect.
+	long ItemMask
+		A bitmask which indicates if the -fix is valid for the various item types.
+    int   MinQuality
+	int   MaxQuality
+		Quality range which will match the selected effect value. Higher values indicate
+		a better quality. Used in item value and parameter calculations (0 to 100,000).
+    int   Multiplier
+		Used to calculate the item's value (higher is more valuable). Cursed items should
+		have a negative value (-10 to 30).
+    int   EffectType		
+		Type of effect (damage, weight, spell effect, etc...)
+	float MinEffect
+	float MaxEffect
+		For non-spell effect types (for instance: +%speed), these specify the range of 
+		the effect.
+
+		For spell effect types, the effect data is stored in the following structures.
+		The number of effects per -fix is arbitrarily limited to 2.
+	EnchantData {
+		int		   EnchantType
+		short	   EffectID
+		int		   EnchantCost1
+		int		   EnchantCost2
+		int		   Charge1
+		int		   Charge2
+		EffectData Effects[2]
+		int		   NumEffects
+	}
+
+	EffectData {
+		byte  SkillID
+		byte  AttributeID
+		byte  RangeType
+		long  Area1
+		long  Area2
+		long  Duration1
+		long  Duration2
+		long  MagMin1
+		long  MagMin2
+		long  MagMax1
+		long  MagMax2
+	}
+
+	All members ending in 1/2 represent values that will change depending on the
+	item's quality.
+		
+
+   VALUE CALCULATIONS
+=======================================
+
+	Cost = Qp + Qs + I*(Mp + Ms)     if (Mp + Ms >= 0)
+	Cost = Qp + Qs + I/(Mp + Ms)     if (Mp + Ms <  0)
+
+	where:
+		Qp = Quality effect of the prefix (MinQuality to MaxQuality).
+		Qs = Quality effect of the suffix (MinQuality to MaxQuality).
+		I  = Cost of base item (BasePrice).
+		Mp = Prefix multiplier (Multiplier).
+		Ms = Suffix multiplier (Multiplier).
+
+For unique items the value is computed by added the cost from all effects.
+
+
+  UNIQUE ITEMS
+=======================================
+In Diablo, unique items have a set collection of effects (1 to 6). To simplify things,
+we can set it up so unique items select 1 to 6 existing suffixes and prefixes to use.
+
+	char  Name[]
+		Unique item name (should be non-item type specific or as desired).
+	long  ItemMask
+		Bitmask indicating which items are allowed.
+	int   ItemLevel
+		Basic level of unique item (higher levels will be rarer).
+	char  Model[]
+	char  Icon[]
+		Optional unique model/picture for the item.
+	char  Effects[6][]
+	int   NumEffects
+		The 1 to 6 prefix and suffix names to to the item.
+
+Only the first 6 enchantments from the fixes are placed on the item.
+
+
+   NAMING
+=======================================
+The randomly generated item name will be of the format:
+
+		[Prefix] [Base Item] of [Suffix]
+
+  ex:	Dragon's Chitin Short Bow of Suffocating
+		Daedric Long Blade of Fire
+		Cursed Leather Cuirass
+
+Items may have both a prefix and a suffix, only one, or neither. Unique item names
+use the given name to the unique.
+
+
+
+   PROBABILITIES
+=======================================
+
+    Can Be Cursed:
+		if random(0..2) is [0] (33%)
+
+	Prefix:
+		if random(0..3) is [0] (25%)
+
+	Suffix:
+		if random(0..1) is [0] (50%)
+
+    Unique:
+		if (has Prefix and Suffix) and (random(0..3) is [0]) (25%)
+
+	Results:
+		Has Prefix = (16/64) 25%
+		Has Suffix = (32/64) 50%
+		Has Both   = (7 /64) 10.9%
+		Is Unique  = (1 /64)  1.5%
+		Has None   = (16/64) 25%
+
+		Magical    = (48/64) 75%
+		UnCursed   = (32/48) 66.7%
+
+
+   ITEM CREATION
+=======================================
+
+	1. Compute random item level (1 to 100).
+	2. Pick random base item within an item level range (0.5 to 1.0).
+	3. Compute -fix chances.
+	4. If item is unique:
+			a. Select all uniques with matching item type.
+			b. Select all uniques with item level between (0.5 to 1.0) of 
+			   computed item level.
+			c. Randomly select unique from list.
+			d. Compute price.
+	5. If item has prefix:
+			a. Select all prefixes with matching type.
+			b. Select all prefixes with item level between (0.5 to 1.0) of 
+			   computed item level.
+			c. Remove cursed prefixes if required.
+			d. Randomly select prefix from list.
+			e. Compute price.
+	6. If item has suffix:
+			a. Select all suffixes with matching type.
+			b. Select all suffixes with item level between (0.5 to 1.0) of 
+			   computed item level.
+			c. Remove cursed suffixes if required.
+			d. Randomly select suffix from list.
+			e. Compute price.
+
+
+   INPUTS
+=======================================
+	- Desired level range of items
+	- 'Bell' level range option (more low levels than high levels)
+	- Input data files (base item, -fixes, uniques)
+	- Number of items to create
+	- Create leveled list
+	- Item types to create
+	- Base chances for prefix/suffix/unique/cursed
+
+
+   NOTES
+=======================================
+	- Does not check for 'invalid' suffix/prefix combinations.
+
+
+   DIABLO2 -FIXES
+=======================================
+Copied from http://members.core.com/~dfrease/Body/JG3-4.html
+
+All equipable items can have a prefix and/or a suffix. In the tables below, you
+can see the effects of each prefix and suffix in the game. The tables also provide
+information about the qlvl of each prefix and suffix, as well as information for
+calculating the price of any magical item (steps, base-max, range and multiplier).
+See chapter 3.6 for formulas to calculate prices of items. The prefixes and suffixes
+are grouped according to what type of effect they have. Unless otherwise stated, 
+prefixes and suffixes are cumulative with others of the same type and also with 
+effects on unique items that are of the same type. For information on how items 
+are assigned prefixes and suffixes, see chapter 3.8 and 3.9.
+
+Not all prefixes and suffixes can occur on all types of items. The tables also list
+on which type of items you will find each prefix and suffix. The following abbreviations
+are used:
+  A Armor and Helms 
+  t Staves, but only in Hellfire
+  S Shields 
+  B Bows
+  W Weapons (Axes, Clubs and Swords) J Jewelry
+  T Staves    
+
+
++ Strength
+Suffix        Value      Occ   qlvl   Steps Base-Max Range Multiplier
+frailty		-10 - -6	ASW_BJ	3							-3
+weakness	-5 - -1		ASWtBJ	1							-2
+strength	1 - 5		ASWtBJ	1	4	  200 - 1000 800 2
+might		6 - 10		ASW_BJ	5	4	1 200 - 2000 800 3
+power		11 - 15		ASW_BJ	11	4	2 200 - 3000 800 4
+giants		16 - 20		A_W_BJ	17	4	3 200 - 5000 1800 7
+titans		21 - 30		__W__J	23	9	5 200 - 10000 4800 10
+
+
++ Magic
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+the fool -10 - -6 ASWTBJ 3       -3
+dyslexia -5 - -1 ASWTBJ 1       -2
+magic 1 - 5 ASWTBJ 1 4 200 - 1 000 800 2
+the mind 6 - 10 ASWTBJ 5 4 1 200 - 2 000 800 3
+brilliance 11 - 15 ASWTBJ 11 4 2 200 - 3 000 800 4
+sorcery 16 - 20 A_WTBJ 17 4 3 200 - 5 000 1 800 7
+wizardry 21 - 30 ___T_J 23 9 5 200 - 10 000 4 800 10
+
+
++ Dexterity
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+paralysis -10 - -6 ASW_BJ 3       -3
+atrophy -5 - -1 ASWtBJ 1       -2
+dexterity 1 - 5 ASWtBJ 1 4 200 - 1 000 800 2
+skill 6 - 10 ASW_BJ 5 4 1 200 - 2 000 800 3
+accuracy 11 - 15 ASW_BJ 11 4 2 200 - 3 000 800 4
+precision 16 - 20 A_W_BJ 17 4 3 200 - 5 000 1 800 7
+perfection 21 - 30 ____BJ 23 9 5 200 - 10 000 4 800 10
+
+
++Vitality
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+illness -10 - -6 ASW_BJ 3       -3
+disease -5 - -1 ASWtBJ 1       -2
+vitality 1 - 5 ASWtBJ 1 4 200 - 1 000 800 2
+zest 6 - 10 ASW_BJ 5 4 1 200 - 2 000 800 3
+vim 11 - 15 ASW_BJ 11 4 2 200 - 3 000 800 4
+vigor 16 - 20 A_W_BJ 17 4 3 200 - 5 000 1 800 7
+life 21 - 30 _____J 23 9 5 200 - 10 000 4 800 10
+
+
++ All Attributes
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+trouble -10 - -6 ASWtBJ 12       -10
+the pit -5 - -1 ASWtBJ 5       -5
+the sky 1 - 3 ASWtBJ 5 2 800 - 4 000 3 200 5
+the moon 4 - 7 ASWtBJ 11 3 4 800 - 8 000 3 200 10
+the stars 8 - 11 A_W_BJ 17 3 8 800 - 12 000 3 200 15
+the heavens 12 - 15 __W_BJ 25 3 12 800 - 20 000 7 200 20
+the zodiac 16 - 20 _____J 30 4 20 800 - 40 000 19 200 30
+
+
++ Life
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+the vulture -25 - -11 AS___J 4       -4
+the jackal -10 - -1 AS___J 1       -2
+the fox 10 - 15 AS___J 1 5 100 - 1 000 900 2
+the jaguar 16 - 20 AS___J 5 4 1 100 - 2 000 900 3
+the eagle 21 - 30 AS___J 9 9 2 100 - 4 000 1 900 5
+the wolf 30 - 40 AS___J 15 10 4 100 - 6 000 1 900 7
+the tiger 41 - 50 AS___J 21 9 6 100 - 10 000 3 900 9
+the lion 51 - 60 A____J 27 9 10 100 - 15 000 4 900 11
+the mammoth 61 - 80 A_____ 35 19 15 100 - 19 000 3 900 12
+the whale 81 - 100 A_____ 60 19 19 100 - 30 000 10 900 13
+
+
++ Mana
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+corruption1  -all ASW___ 5   -1 000   2
+hyena's -25 - -11 ___T_J 4 14 100 - 1 000 900 -2
+frog's -10 - -1 ___T_J 1       -2
+spider's 10 - 15 ___T_J 1 5 500 - 1 000 500 2
+raven's 15 - 20 ___T_J 5 5 1 100 - 2 000 900 3
+snake's 21 - 30 ___T_J 9 9 2 100 - 4 000 1 900 5
+serpent's 30 - 40 ___T_J 15 10 4 100 - 6 000 1 900 7
+drake's 41 - 50 ___T_J 21 9 6 100 - 10 000 3 900 9
+dragon's 51 - 60 ___T_J 27 9 10 100 - 15 000 4 900 11
+wyrm's2  61 - 80 ___t__ 35 19 15 100 - 19 000 3 900 12
+hydra's2  81 - 100 ___t__ 60 19 19 100 - 30 000 10 900 13
+1A suffix.
+2Only available in Hellfire.
+
+
++% Armor Class1
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+vulnerable -100 - -51 AS____ 3       -3
+rusted -50 - -25 AS____ 1       -2
+fine 20 - 30 AS____ 1 10 20 - 100 80 2
+strong 31 - 40 AS____ 3 9 120 - 200 80 3
+grand 41 - 55 AS____ 6 14 220 - 300 80 5
+valiant 56 - 70 AS____ 10 14 320 - 400 80 7
+glorious 71 - 90 AS____ 14 19 420 - 600 180 9
+blessed 91 - 110 AS____ 19 19 620 - 800 180 11
+saintly 111 - 130 AS____ 24 19 820 - 1 200 380 13
+awesome 131 - 150 AS____ 28 19 1 220 - 2 000 780 15
+holy 151 - 170 AS____ 35 19 5 200 - 6 000 800 17
+godly 171 - 200 AS____ 60 29 6 200 - 7 000 800 20
+1There is a minimum increase of 1 in AC. That is, even if the percentage will give an increase to AC less than one, it will be increased by at least one. Due to a bug, any decrease in AC less than 1 will be transformed into a positive increase by 1.
+
+
++% To Hit
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+tin -10 - -6 __W_BJ 3       -3
+brass -5 - -1 __W_BJ 1       -2
+bronze 1 - 5 __W_BJ 1 4 100 - 500 400 2
+iron 6 - 10 __W_BJ 4 4 600 - 1 000 400 3
+steel 11 - 15 __W_BJ 6 4 1 100 - 1 500 400 5
+silver 16 - 20 __W_BJ 9 4 1 600 - 2 000 400 7
+gold 21 - 30 __W_BJ 12 9 2 100 - 3 000 900 9
+platinum 31 - 40 __W_B_ 16 9 3 100 - 4 000 900 11
+mithril 41 - 60 __W_B_ 20 19 4 100 - 6 000 1 900 13
+meteoric 61 - 80 __W_B_ 23 19 6 100 - 10 000 3 900 15
+weird 81 - 100 __W_B_ 35 19 10 100 - 14 000 3 900 17
+strange 101 - 150 __W_B_ 60 49 14 100 - 20 000 5 900 20
+
+
++% To Hit, +% Damage Done
+Prefix To Hit Damage Occurrence qlvl Steps1 Base-Max Range Multiplier
+clumsy -10 - -6 -75 - -50 __WTB_ 5       -7
+dull -5 - -1 -45 - -25 __WTB_ 1       -5
+sharp2  1 - 5 20 - 35 __WTB_ 1 15 350 - 950 600 5
+fine 6 - 10 36 - 50 __WTB_ 6 14 1 100 - 1 700 600 7
+Warrior's 11 - 15 51 - 65 __WTB_ 10 14 1 850 - 2 450 600 13
+soldier's 16 - 20 66 - 80 __WT__ 15 14 2 600 - 3 950 1 350 17
+lord's 21 - 30 81 - 95 __WT__ 19 14 4 100 - 5 950 1 850 21
+knight's 31 - 40 96 - 110 __WT__ 23 14 6 100 - 8 450 2 350 26
+master's 41 - 50 111 - 125 __WT__ 28 14 8 600 - 13 000 4 400 30
+champion's 51 - 75 126 - 150 __WT__ 40 24 15 200 - 24 000 8 800 33
+king's 76 - 100 151 - 175 __WT__ 28 24 24 100 - 35 000 10 900 38
+doppelganger's3  21 - 30 81 - 95 __Wt__ 11 14 2 000 - 2 400 400 10
+1It is the damage value that is used for price calculations.
+2Is treated by the game as a cursed item during item creation so you will, for example, not be able to buy it in town.
+3Only available in Hellfire. Has 10% chance of duplicating any monster hit except Diablo and unique monsters.
+
+
++% Damage Done
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+useless -100 __WtB_ 5       -8
+bent -75 - -50 __WtB_ 3       -4
+weak -45 - -25 __WtB_ 1       -3
+jagged 20 - 35 __WtB_ 4 15 250 - 450 200 3
+deadly 36 - 50 __WtB_ 6 14 500 - 700 200 4
+heavy 51 - 65 __WtB_ 9 14 750 - 950 200 5
+vicious 66 - 80 __WtB_ 12 14 1 000 - 1 450 450 8
+brutal 81 - 95 __WtB_ 16 14 1 500 - 1 950 450 10
+massive 96 - 110 __WtB_ 20 14 2000 - 2450 450 13
+savage 111 - 125 __W_B_ 23 14 2 500 - 3 000 500 15
+ruthless 126 - 150 __W_B_ 35 24 10 100 - 15 000 4 900 17
+merciless 151 - 175 __W_B_ 60 24 15 000 - 20 000 5 000 20
+decay1,2  150 - 250 __WtB_ 1   200 - 200 0 2
+crystalline1,3  200 - 280 __W___ 5 79 1 000 - 3 000 2 000 3
+1Only available in Hellfire.
+2Bonus decreases by 5% each hit. When reaching -100%, the item is destroyed.
+3Also has from -30 to -70% lower durability.
+
+
++ Damage Done
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+quality 1 - 2 __WtB_ 2 1 100 - 200 100 2
+maiming 3 - 5 __WtB_ 7 2 1 300 - 1 500 200 3
+slaying 6 - 8 __W___ 15 2 2 600 - 3 000 400 5
+gore 9 - 12 __W___ 25 3 4 100 - 5 000 900 8
+carnage 13 - 16 __W___ 35 3 5 100 - 10 000 4 900 10
+slaughter 17 - 20 __W___ 60 3 10 100 - 15 000 4 900 13
+
+
+- Damage Taken1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+pain +4 - +2 AS___J 4       -4
+tears 1 AS___J 2       -2
+health 1 AS___J 2   200   2
+protection 2 AS____ 6   400   4
+absorption 3 AS____ 12   1 001   10
+deflection 4 A_____ 20   2 500   15
+osmosis 5 - 6 A_____ 50 1 7 500 - 10 000 2 500 20
+1Works for all type of damage, even from spells, but does not work against other players. The damage is reduced before any resistance is applied but after the thieves effect. The damage will never be reduced below 1.
+
+
++ Fire Damage1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+flame 1 - 3 ____B_ 1   2 000   2
+fire 1 - 6 ____B_ 11   4 000   4
+burning 1 - 16 ____B_ 35   6 000   6
+flaming2  1 - 10 __WT__ 7   5 000   2
+1There are quite a few bugs associated with fire and lightning arrows which make them often deal erroneous damage (way too high or no additional damage at all).
+2A prefix.
+
+
++ Lightning Damage1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+shock 1 - 6 ____B_ 13   6 000   2
+lightning 1 - 10 ____B_ 21   8 000   4
+thunder 1 - 20 ____B_ 60   12 000   6
+lightning2  2 - 20 __WT__ 18   10 000   2
+1There are quite a few bugs associated with fire and lightning arrows which make them often deal erroneous damage (way too high or no additional damage at all).
+2A prefix.
+
+
+% Steal Life1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+the leech 3 __W___ 8   7 500   3
+blood 5 __W___ 19   15 000   3
+1The amount is based on damage done even if the monster has less HP left. The amount is not cumulative if you have more than one item with the capability of stealing life (an item of blood will take precedence over an item of the leech). An exception is The Undead Crown which is cumulative with both an item of blood or an item of the leech for a total of 3% to 15.5% or 5% to 17.5% life stealing. The Helm of Sprits, Shadowhawk, and The Eater of Souls are all treated as items of blood. Does not work against players. See chapter 6.1.4 for more information.
+
+
+% Steal Mana1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+the bat 3 __W___ 8   7 500   3
+vampires 5 __W___ 19   15 000   3
+1The amount is based on damage done even if the monster has less HP left. The amount is not cumulative if you have more than one item with the capability of stealing mana (an item of vampires will take precedence over an item of the bat. The Eater of Souls is treated as an item of vampire. Does not work against players. See chapter 6.1.4 for more information.
+
+
++% Resist Magic1
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+white 10 - 20 ASWTBJ 4 10 500 - 1 500 1 000 2
+pearl 21 - 30 ASWTBJ 10 9 2 100 - 3 000 900 2
+ivory 31 - 40 ASWTBJ 16 9 3 100 - 4 000 900 2
+crystal 41 - 50 ASWTBJ 20 9 8 200 - 12 000 3 800 3
+diamond 51 - 60 ASWTBJ 26 9 17 100 - 20 000 2 900 5
+1Is applied after any effects from thieves and -damage. It can reduce damage below 1.
+
+
++% Resist Fire1
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+red 10 - 20 ASWTBJ 4 10 500 - 1 500 1 000 2
+crimson 21 - 30 ASWTBJ 10 9 2 100 - 3 000 900 2
+crimson 31 - 40 ASWTBJ 16 9 3 100 - 4 000 900 2
+garnet 41 - 50 ASWTBJ 20 9 8 200 - 12 000 3 800 3
+ruby 51 - 60 ASWTBJ 26 9 17 100 - 20 000 2 900 5
+1Is applied after any effects from thieves and -damage. It can reduce damage below 1.
+
+
++% Resist Lightning1
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+blue 10 - 20 ASWTBJ 4 10 500 - 1 500 1 000 2
+azure 21 - 30 ASWTBJ 10 9 2 100 - 3 000 900 2
+lapis 31 - 40 ASWTBJ 16 9 3 100 - 4 000 900 2
+cobalt 41 - 50 ASWTBJ 20 9 8 200 - 12 000 3 800 3
+sapphire 51 - 60 ASWTBJ 26 9 17 100 - 20 000 2 900 5
+1Is applied after any effects from thieves and -damage. It can reduce damage below 1.
+
+
++% Resist All1
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+topaz 10 - 15 ASWTBJ 8 5 2 000 - 5 000 3 000 3
+amber 16 - 20 ASWTBJ 12 4 7 400 - 10 000 2 600 3
+jade 21 - 30 ASWTBJ 18 9 11 000 - 15 000 4 000 3
+obsidian 31 - 40 ASWTBJ 24 9 24 000 - 40 000 16 000 4
+emerald 41 - 50 _SWTB_ 31 9 61 000 - 75 000 14 000 7
+1Is applied after any effects from thieves and -damage. It can reduce damage below 1.
+
+
++ Spell Levels
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+angel's 1 ___T__ 15   25 000   2
+arch-angel's 2 ___T__ 25   50 000   3
+
+
+x Charges
+Prefix Value Occurrence qlvl Steps Base-Max Range Multiplier
+plentiful 2 ___T__ 4   2 000   2
+bountiful 3 ___T__ 9   3 000   3
+
+
+Damage / Penetrate Armor1
+Suffix Value2 Value3 Occurrence qlvl Steps Base-Max Range Multiplier
+piercing 2 - 6 25%4  __W_B_ 1   1 000   3
+puncturing 4 - 12 50%4  __W_B_ 9   2 000   6
+bashing 8 - 24 75%4  __W___ 17   4 000   12
+1In Diablo these suffixes lower the AC of the target by a specific random amount in the range shown in the table. In Hellfire they reduce the AC of the target by a certain percentage shown in the table. It does not work against players. The exact value (in Diablo) is determined at the time of creation of the item and the extra To Hit is never shown on the character screen.
+2In Diablo.
+3In Hellfire.
+4Add 12.5 when used by a Barbarian.
+
+
++% Light Radius1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+the dark -40 A_W—J 6       -3
+the night -20 A_W—J 3       -2
+light 20 A_W—J 4   750   2
+radiance 40 A_W—J 8   1 500   3
+1Also affects the distance at which you activate monsters. A higher value means at a greater distance. There is no additional effect of wearing more than +50% or less than -80% light radius. As a curiosity, the light radius is always one square less in the catacombs and it is always the highest light radius you have had on a level that counts, even if you later lower it.
+
+
+Weapon Speed1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+readiness2,3  quick __WTB_ 1   2 000   2
+swiftness3  fast __WTB_ 10   4 000   4
+speed faster __WT__ 19   8 000   8
+haste4  fastest __WT__ 27   16 000   16
+1A Bard only benefits from the fastest weapon.
+2Has no effect in Diablo.
+3In Hellfire, it makes the arrows travel faster on bows instead of increasing the swing speed.
+4Has the same effect as speed despite what is said in the latest Diablo patch (1.07).
+
+
+Hit Recovery1
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+balance1  fast A____J 1   2 000   2
+stability1  faster A____J 10   4 000   4
+harmony1  fastest A____J 20   8 000   8
+1A character only benefits from the fastest one, as they are not cumulative. The exception is if you have one of each in which case you will, in Diablo only, receive a further reduction in hit recovery time. See chapter 2.2.1 for more information.
+
+
++% Durability
+Suffix Value Occurrence qlvl Steps Base-Max Range Multiplier
+fragility =1 ASW___ 3       -4
+brittleness -75 - -26 ASW___ 1       -2
+sturdiness 26 - 75 ASWt__ 1   100   2
+craftsmanship 51 - 100 ASWt__ 6   200   2
+structure 101 - 200 ASWt__ 12   300   2
+many 100 ____B_ 3   750   2
+plenty 200 ____B_ 7   1 500   3
+the ages indestruct. ASWt__ 25   600   5
+
+
+Other
+Suffix Effect Occurrence qlvl Base-Max Multiplier
+the bear2  knocks target back __WTB_ 5 750 2
+blocking2  fast block _S____ 5 4 000 4
+thieves1,2,3  absorbs half trap damage AS___J 11 1 500 2
+thorns1,2  attacker takes 1-3 damage AS____ 1 500 2
+devastation1,2,4,5,6  5% chance of doing x 3 damage __WtB_ 1 1 200 3
+jester's1,2,4,5,7  each swing does x 0-6 damage9  __W___ 7 1 200 3
+peril1,2,4,6,8  x 2 damage to monster, x 1 to user __WtB_ 5 500 1
+1Does not work versus players.
+2These effects are not cumulative if you have them more than once. They are cumulative with other effects though.
+3In Hellfire it also absorbs half arrow and magical damage (magic, fire, lightning and apocalypse) from monster attacks. It is applied before both -damage and resistance.
+4Only available in Hellfire.
+5Damage bonus applies to total damage, not just weapon damage.
+6Does not work on bows.
+7A prefix.
+8Affects total damage versus monsters but only weapon damage and character damage versus user. This damage is modified by any -damage from enemies, though.
+9The game erroneously states it does x 0-5. Average value is x 2. For more details, see chapter 6.2.1. Does not work against Diablo or unique monsters.

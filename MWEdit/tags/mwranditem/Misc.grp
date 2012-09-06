@@ -1,0 +1,96 @@
+#
+# Sample Group Data File for MWRandItem, Dave Humphrey (uesp@m0use.net), 3 July 2003
+#
+# Holds all the various settings for the program so different data files and
+# parameters can be saved and quickly restored. 
+#
+# Each line holds a variable/value pair. Comments are anything after the #
+# character on a line. Description of the valid parameters are as follows:
+#
+# BaseItems = "baseitems.dat"
+# Effects = "c:\data\effects.dat"
+# Uniques = "..\uniques.dat"
+# LevelLists = "\\server\my_home\randitem\levellists.dat"
+# 	These specify the data files for the items/effects/etc.... If the filenames
+#	contain no path information (or a relative path), it is from the directory
+#	of MwRandItem.Exe. It is recommended that you use absolute path names to
+#	prevent any confusion in the file location.
+#
+# IDPrefix = "SIW_"
+#	The prefix for the item and record IDs
+# IDType = Long
+#	Type of ID. Can be "Long", "Short8" or "Short4".
+# MinLevel = 1
+# MaxLevel = 100
+#	Level range of items generated.
+# NumItems = 100
+#	Number of random items to generate.
+# UseBell = FALSE
+# RandomBell = 50
+#	Random bell number generation settings
+# MakePHLists = FALSE
+# PHListID = "phlist_"
+#	The place holder list options.
+# UseListID = FALSE
+# CreateLevelLists = FALSE
+# OutputScript = FALSE
+# OutputScriptRecord = FALSE
+#	Output script options 
+# RemoveDuplicates = TRUE
+#	Remove duplicated items or not.
+# ListID = "list_"
+#	The level list prefix string
+# ScriptFile = ""
+#	Old option which probably you won't use.
+# UseScriptNames = FALSE
+# InstallScript = "install_scr_01"
+# UninstallScript = "uninstall_scr_01"
+#	Used to specify the exact script IDs.
+# ItemMask = WAC
+#	Types of items to create. Can be a combination of one or more of:
+#		W = Weapon
+#		A = Armor
+#		C = Clothing
+#		M = Misc
+# ChanceNone = 10
+#	Chance none percentage for the level list.
+# PrefixChance = 0.25
+# SuffixChance = 0.5
+# UniqueChance = 0.25
+# CursedChance = 0.33
+#	The various chances that affect the item generation. Note that 0.5 is 50%.
+# ESPFile = "c:\Morrowind\Data Files\si_base_01.esp"
+# ESPFile = "c:\Morrowind\Data Files\si_base_02.esp"
+#	Specifies the base ESP files that are to be merged with any new items. You can 
+#	specify anywhere from 0 to 16 different files to include.
+#
+
+BaseItems = "misc.dat"
+Effects = "spells.dat"
+Uniques = "uniques.dat"
+LevelLists = "levellists.dat"
+IDPrefix = ""
+IDType = Long
+MinLevel = 1
+MaxLevel = 100
+NumItems = 100
+UseBell = FALSE
+MakePHLists = FALSE
+UseListID = FALSE
+CreateLevelLists = FALSE
+OutputScript = FALSE
+OutputScriptRecord = FALSE
+RemoveDuplicates = TRUE
+UseScriptNames = FALSE
+ListID = "list_"
+PHListID = "phlist_"
+ScriptFile = ""
+InstallScript = "install_scr_01"
+UninstallScript = "uninstall_scr_01"
+ItemMask = WAC
+RandomBell = 50
+ChanceNone = 10
+PrefixChance = 0.25
+SuffixChance = 0.5
+UniqueChance = 0.25
+CursedChance = 0.33

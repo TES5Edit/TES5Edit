@@ -1,0 +1,62 @@
+ToDO:
+
+  v0.4.1
+=======================================
+	- Cell reference dialog, add? and edit cell reference data
+	- Blocked records implementation (option to ignore?)
+	- Initialize reference counts, check IDs
+    - Force/warn loading of required masters (optional?)
+	- Deleted/ignored records on load (option to ignore or load)
+	- 3D stuff (simple)?
+	- Icon spell effect particle textures do not display?
+	- Auto-calc spell cost deviations?
+	- Region paint dialog?
+    - Help file documentation
+	- Rewrite save/Save as dialog implementation to force save to Data Files directory
+	- Toggle or view Tribunal/Bloodmoon specific content
+	- Info/reference find list for records
+	- Why is all script text selected on initial display?
+	- Compile (for error checking) the info results.
+	- Explicit object references. Check for existence in game. Check for persistence.
+	- More save game record support?
+	- Crash when editting dialogue INFO's in ESS save game?
+	- Duplicate dialogue/cell/object IDs (only for script compiling?)
+	- Need to test copy/rename of CELL/DIAL to ensure that all child objects are properly
+	  copied as well.
+	- Export/import other object types. Use same format as TESCK? 
+	- Add extended export/import format?
+	- Force loading of plugins by date instead of the given list order. For instance if the
+	  user sorts the plugins by name the files will be loaded alphabetically, which may/will
+	  cause problems (incorrect object version may/will be used).
+	- Double-check function definitions. Some have been noticed to be slightly different
+	  or changed. Especially check the MessageBox and Set function outputs (7 September 2003).
+	- Check sum of ModRegion function.
+	- MessageBox function, parse the '%' variables in the string and output arguments
+	  accordingly.
+	- Online bug support?
+	
+  v0.4.2
+=======================================
+	- Record bookmarks
+	- Allow loading/saving plugins from other directories.
+	- Add the LAND record type so they can be cleaned.
+
+  v0.5.0
+=======================================
+	- Item stolen flag (save games, NPC inventory items).
+	- Open NifEdit, NifTexture, or other programs on model files for an item. Similarily for the 
+	  item icon images.
+	- Add string/number support for the MessageBox function.
+	- 'New' plugins won't work if there are any existing 'noname%d.esp' files.
+	- For object inventories, ensure the found object is the correct type in cases where there are
+	  multiple objects with the same ID.
+	
+  v0.5.5
+=======================================
+	- Autocalc attribute and skill computations.
+
+
+  v0.6.0
+=======================================
+
+

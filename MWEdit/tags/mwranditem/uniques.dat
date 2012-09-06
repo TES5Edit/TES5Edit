@@ -1,0 +1,105 @@
+#
+# MWRandItem Uniques Data File - May 2003
+#		Dave Humphrey, uesp@sympatico.ca 
+#
+# The file contains all the unique definitions used for the creation
+# of random items. The format is as follows.
+#
+# Comments		- Anything after the '#' character on a line is ignored.
+# Strings		- Values on the right side of the '=' can be surrounded with double
+#				  quote characters ("") if desired.#
+# 'Unique'		- Start an unique record.
+# 'Name'		- The unique item name/suffix/prefix, depending on the name type. 
+# 'NameType'	- The type of name generation.
+#						Suffix	= Name is added to the base item name as a suffix.
+#						Prefix	= Name is added to the base item name as a prefix.
+#						Exact	= Name is copied exactly, base item name is not used (default).
+# 'ItemLevel'	- The item level of the unique (1 to 100). Higher level uniques will be
+#				  rarer and only encountered by high level players.
+# 'ItemMask'	- Indicates which item types the effect is valid for. Can be a combination
+#				  of the following characters:
+#						W = Weapon
+#						A = Armor
+#						C = Clothing
+#						* = All
+#					ex: WA  = Weapons and armor
+#						WCA = Weapons, armor, and clothing
+# 'Effect'		- Each unique item can have up to 6 different effects. These effects are
+#				  the name of an existing prefix or suffix effect as defined in the effects
+#				  data file. Only the first 8 enchantments from the effects are added to
+#				  the item (if it has that many).
+# 'End'			- End an unique record.
+#
+
+Unique
+	Name = "Instrument of Decay"
+	NameType = Exact
+	ItemLevel = 25
+	ItemMask = W
+	Effect = Fire
+	Effect = Vicious
+End
+
+Unique
+	Name = "Bringer of Death"
+	NameType = Exact
+	ItemLevel = 40
+	ItemMask = W
+	Effect = Warmth
+	Effect = Chills
+	Effect = Bolting
+	Effect = Bane
+End
+
+Unique
+	Name = "Healing Aura"
+	NameType = Exact
+	ItemLevel = 60
+	ItemMask = AC
+	Effect = Health
+	Effect = Stoutness
+End
+
+Unique
+	Name = "Curse of Health"
+	NameType = Exact
+	ItemLevel = 50
+	ItemMask = A
+	Effect = Fragility
+	Effect = Hefty
+	Effect = Health
+	Effect = Health
+	Effect = Stoutness
+	Effect = Stoutness
+End
+
+Unique
+	Name = "Hideous Vigor"
+	NameType = Exact
+	ItemLevel = 50
+	ItemMask = A
+	Effect = the Whale
+	Effect = Repulsion
+	Effect = Repulsion
+End
+
+Unique
+	Name = "of Vigor"
+	NameType = Suffix
+	ItemLevel = 1
+	ItemMask = AWC
+	Effect = the Whale
+	Effect = Repulsion
+	Effect = Repulsion
+End
+
+Unique
+	Name = "Vigorous"
+	NameType = Prefix
+	ItemLevel = 1
+	ItemMask = AWC
+	Effect = the Whale
+	Effect = Repulsion
+	Effect = Repulsion
+End
+

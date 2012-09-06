@@ -1,0 +1,234 @@
+#=============================================================================#
+#=============================================================================#
+# MWRandItem Base Item Data File - June 2003
+#		Dave Humphrey, uesp@sympatico.ca
+#	editted extremely by Jaga
+#
+# This data file holds the unenchanted, base item data used for the random
+# generation of items with MWRandItem. The format is as follows:
+#
+# Comments		- Anything after a '#' character on a line is ignored
+# Strings		- Values on the right side of the '=' can be surrounded with double
+#				  quote characters ("") if desired.#
+# 'Item'		- Start an item record
+# 'Icon'		- The inventory icon picture filename string.
+# 'Model'		- The NIF model filename string.
+# 'Name'		- The item name string.
+# 'ItemType'	- Base item type which can currently be
+#						"Weapon"
+#						"Armor"
+#						"Clothing"
+# 'BasePrice'	- The base item value in gold pieces (1 to 1,000,000).
+# 'ItemLevel'	- The item level (1 to 100). Higher level items are more powerful
+#			      and thus will be rarer.
+# 'Weight'		- The item's base weight (0.1 to 50.0).
+# 'EnchantPts'  - The object's enchant points (0 to 200).
+# 'Reach'		- The weapon's reach (0.1 to 2.0). Higher values indicate a larger reach.
+# 'Speed'		- The weapon's speed (0.1 to 2.0). Higher values indicate a faster weapon.
+# 'MinChop'
+# 'MaxChop'
+# 'MinSlash'
+# 'MaxSlash'
+# 'MinThrust'
+# 'MaxThrust'	- Weapon damages (1 to 255).
+# 'Condition'	- The weapon or armor condition/health value (1 to 65535).
+# 'Type'		- The weapon, armor, or clothing type. Valid values are:
+#						"Short Blade"
+#						"Long Blade"
+#						"Long Blade, 2-Hand"
+#						"Blunt"
+#						"Blunt, 2-Close"
+#						"Blunt, 2-Wide"
+#						"Spear"
+#						"Axe"
+#						"Axe, 2-Hand"
+#						"Bow"
+#						"Crossbow"
+#						"Thrown"
+#						"Arrow"
+#						"Bolt"
+#						"Helmet"
+#						"Cuirass"
+#						"Left Pauldron"
+#						"Right Pauldron"
+#						"Greaves"
+#						"Boots"
+#						"Left Gauntlet"
+#						"Right Gauntlet"
+#						"Shield"
+#						"Left Bracer"
+#						"Right Bracer"
+#						"Pants"
+#						"Shoes"
+#						"Shirt"
+#						"Belt"
+#						"Robe"
+#						"R. Glove"
+#						"L. Glove"
+#						"Skirt"
+#						"Ring"
+#						"Amulet"
+# 'IgnoreResist' 		- Ignore normal weapon resistance. Boolean flag ("true"/"false").
+# 'MHead'
+# 'MHair'
+# 'MNeck'
+# 'MChest'
+# 'MGroin'
+# 'MSkirt'
+# 'MRightHand'
+# 'MLeftHand'
+# 'MRightWrist'
+# 'MLeftWrist'
+# 'MShield'
+# 'MRightForeArm'
+# 'MLeftForeArm'
+# 'MRightUpperArm'
+# 'MLeftUpperArm'
+# 'MRightFoot'
+# 'MLeftFoot'
+# 'MRightAnkle'
+# 'MLeftAnkle'
+# 'MRightKnee'
+# 'MLeftKnee'
+# 'MRightUpper Leg'
+# 'MLeftUpper Leg'
+# 'MRightPauldron'
+# 'MLeftPauldron'
+# 'MWeapon'
+# 'MTail'			- Male clothing and weapon body part objects.
+# 'FHead'
+# 'FHair'
+# 'FNeck'
+# 'FChest'
+# 'FGroin'
+# 'FSkirt'
+# 'FRightHand'
+# 'FLeftHand'
+# 'FRightWrist'
+# 'FLeftWrist'
+# 'FShield'
+# 'FRightForeArm'
+# 'FLeftForeArm'
+# 'FRightUpperArm'
+# 'FLeftUpperArm'
+# 'FRightFoot'
+# 'FLeftFoot'
+# 'FRightAnkle'
+# 'FLeftAnkle'
+# 'FRightKnee'
+# 'FLeftKnee'
+# 'FRightUpperLeg'
+# 'FLeftUpperLeg'
+# 'FRightPauldron'
+# 'FLeftPauldron'
+# 'FWeapon'
+# 'FTail'			- Female clothing and weapon body part objects. 
+#
+# 'EffectMask'		- Type of effects that are valid for the item. Can be one or more of the
+#					  following:
+#							None
+#							All
+#							Enchant
+#							MinDamage
+#							MaxDamage
+#							Damage
+#							Reach
+#							Speed
+#							Weight
+#							EnchantPts
+#							Condition
+#							Armor
+#					  The mask can accept any number of values, for example:
+#
+#							EffectMask = None | Enchant | Weight
+#
+#					  If the EffectMask is omitted, and effect type is considered valid.				
+#
+# 'EnchantMask'		- Type of Morrowind enchantments that are valid for that item. Can be one
+#					  or more of the following:
+#							None
+#							All
+#							Cast Once
+#							Cast Strikes
+#							Cast When Used
+#							Constant Effect
+#					  The mask accepts any number of values, for example:
+#
+#							EnchantMask = None | Cast Once | Cast When Used
+#
+#					  If the EnchantMask is omitted, any enchant type is considered valid.
+# 'End'				- Ends an item record
+#
+
+
+
+#=========================================================================================#
+#====================================                  ===================================#
+#====================================       ARMOR      ===================================#
+#====================================                  ===================================#
+#=========================================================================================#
+
+
+
+#===================================================================#
+#============================  Chitin Armor  =======================#
+#===================================================================#
+
+Item
+	ItemType = Armor
+	Name = "Test Cuirass"
+	Material = "Chitin"
+	Icon = "a\TX_Chitin_curaiss.tga"
+	Model = "a\A_M_Chitin_Cuirass_GND.nif"
+	BasePrice = 25
+	ItemLevel = 1
+	Weight = 6
+	EnchantPts = 100
+	Armor = 10
+	Type = "Cuirass"
+	Condition = 300
+	MChest = "a_m_chitin_chest"
+	EffectMask = None
+End
+Item
+	ItemType = Armor
+	Name = "L. Pauldron"
+	Material = "Test Chitin"
+	Icon = "a\TX_Chitin_pauldron.tga"
+	Model = "a\A_M_Chitin_UA_Pauldron.nif"
+	BasePrice = 8
+	ItemLevel = 1
+	Weight = 2
+	EnchantPts = 10
+	Armor = 10
+	Type = "Left Pauldron"
+	Condition = 100
+	MLeftUpperArm = "a_m_chitin_ua_pauldron"
+	MLeftPauldron = "A_M_Chitin_pauldron_CL"
+	EffectMask = Enchant | None
+	EnchantMask = Constant Effect
+End
+Item
+	ItemType = Weapon
+	Name = "Eagle Claw"
+	Material = ""
+	Icon = "SI_W\xxx2.tga"
+	Model = "SI_W\xxx2.nif"
+	BasePrice = 1
+	ItemLevel = 1
+	Weight = 15
+	EnchantPts = 30
+	Type = "Short Blade"
+	Reach = 1
+	Speed = 1
+	Condition = 100
+	MinChop = 1
+	MaxChop = 5
+	MinSlash = 1
+	MaxSlash = 5
+	MinThrust = 1
+	MaxThrust = 5
+	IgnoreResist = FALSE
+	EffectMask = Enchant | None
+	EnchantMask = Cast Strikes
+End

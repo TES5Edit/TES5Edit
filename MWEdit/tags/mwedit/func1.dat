@@ -1,0 +1,3046 @@
+Function = Activate
+	Options = 0x8
+	Opcode = 0x1017
+	Return = 0x0, ""
+	Param1 = 0x820, ""
+	Desc = ""
+End
+Function = AddItem
+	Options = 0x0
+	Opcode = 0x10D4
+	Return = 0x0, ""
+	Param1 = 0x20, ""
+	Param2 = 0x2, ""
+	Desc = ""
+End
+Function = AddSoulGem
+	Options = 0x0
+	Opcode = 0x10EB
+	Return = 0x0, ""
+	Param1 = 0x10000020, ""
+	Param2 = 0x20000020, ""
+	Desc = ""
+End
+Function = AddSpell
+	Options = 0x0
+	Opcode = 0x111D
+	Return = 0x0, ""
+	Param1 = 0x40000020, ""
+	Desc = ""
+End
+Function = AddToLevCreature
+	Options = 0x800
+	Opcode = 0x11A6
+	Return = 0x0, ""
+	Param1 = 0x4000020, ""
+	Param2 = 0xA0000020, ""
+	Param3 = 0x8, ""
+	Desc = ""
+End
+Function = AddToLevItem
+	Options = 0x800
+	Opcode = 0x11A8
+	Return = 0x0, ""
+	Param1 = 0x8000020, ""
+	Param2 = 0x20, ""
+	Param3 = 0x8, ""
+	Desc = ""
+End
+Function = AddTopic
+	Options = 0x0
+	Opcode = 0x1022
+	Return = 0x0, ""
+	Param1 = 0x800020, ""
+	Desc = ""
+End
+Function = AIActivate
+	Options = 0x0
+	Opcode = 0x10F3
+	Return = 0x0, ""
+	Param1 = 0x20, ""
+	Param2 = 0x900, ""
+	Desc = ""
+End
+Function = AIEscort
+	Options = 0x0
+	Opcode = 0x10F4
+	Return = 0x0, ""
+	Param1 = 0xA0000020, ""
+	Param2 = 0x2, ""
+	Param3 = 0x8, ""
+	Param4 = 0x8, ""
+	Param5 = 0x8, ""
+	Param6 = 0x900, ""
+	Desc = ""
+End
+Function = AIEscortCell
+	Options = 0x0
+	Opcode = 0x10F5
+	Return = 0x0, ""
+	Param1 = 0xA0000020, ""
+	Param2 = 0x1000020, ""
+	Param3 = 0x2, ""
+	Param4 = 0x8, ""
+	Param5 = 0x8, ""
+	Param6 = 0x8, ""
+	Param7 = 0x900, ""
+	Desc = ""
+End
+Function = AIFollow
+	Options = 0x0
+	Opcode = 0x10F6
+	Return = 0x0, ""
+	Param1 = 0xA0000020, ""
+	Param2 = 0x2, ""
+	Param3 = 0x8, ""
+	Param4 = 0x8, ""
+	Param5 = 0x8, ""
+	Param6 = 0x900, ""
+	Desc = ""
+End
+Function = AIFollowCell
+	Options = 0x0
+	Opcode = 0x10F7
+	Return = 0x0, ""
+	Param1 = 0xA0000020, ""
+	Param2 = 0x1000020, ""
+	Param3 = 0x2, ""
+	Param4 = 0x8, ""
+	Param5 = 0x8, ""
+	Param6 = 0x8, ""
+	Param7 = 0x900, ""
+	Desc = ""
+End
+Function = AITravel
+	Options = 0x0
+	Opcode = 0x10F8
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Param2 = 0x8, ""
+	Param3 = 0x8, ""
+	Param4 = 0x900, ""
+	Desc = ""
+End
+Function = AIWander
+	Options = 0x0
+	Opcode = 0x10F9
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Param2 = 0x8, ""
+	Param3 = 0x408, ""
+	Param4 = 0x802, ""
+	Param5 = 0x802, ""
+	Param6 = 0x802, ""
+	Param7 = 0x802, ""
+	Param8 = 0x802, ""
+	Param9 = 0x802, ""
+	Param10 = 0x802, ""
+	Param11 = 0x802, ""
+	Param12 = 0x900, ""
+	Desc = ""
+End
+Function = BecomeWerewolf
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = Cast
+	Options = 0x0
+	Opcode = 0x1123
+	Return = 0x0, ""
+	Param1 = 0x40000020, ""
+	Param2 = 0xA0000020, ""
+	Desc = ""
+End
+Function = CellChanged
+	Options = 0x0
+	Opcode = 0x101F
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = CellUpdate
+	Options = 0x2000
+	Opcode = 0x1013
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = ChangeWeather
+	Options = 0x0
+	Opcode = 0x1124
+	Return = 0x0, ""
+	Param1 = 0x400020, ""
+	Param2 = 0x2, ""
+	Desc = ""
+End
+Function = Choice
+	Options = 0x1000
+	Opcode = 0x10C9
+	Return = 0x0, ""
+	Param1 = 0x10, ""
+	Param2 = 0x1010, ""
+	Param3 = 0x1010, ""
+	Param4 = 0x1010, ""
+	Param5 = 0x1010, ""
+	Param6 = 0x1010, ""
+	Param7 = 0x1010, ""
+	Param8 = 0x1010, ""
+	Param9 = 0x1010, ""
+	Param10 = 0x1010, ""
+	Param11 = 0x1010, ""
+	Param12 = 0x1010, ""
+	Desc = ""
+End
+Function = ClearForceJump
+	Options = 0x800
+	Opcode = 0x119E
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ClearForceMoveJump
+	Options = 0x800
+	Opcode = 0x11A1
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ClearForceRun
+	Options = 0x800
+	Opcode = 0x119B
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ClearForceSneak
+	Options = 0x0
+	Opcode = 0x1164
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ClearInfoActor
+	Options = 0x0
+	Opcode = 0x10CB
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = Disable
+	Options = 0x0
+	Opcode = 0x10DB
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisableLevitation
+	Options = 0x800
+	Opcode = 0x1194
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisablePlayerControls
+	Options = 0x0
+	Opcode = 0x10DE
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisablePlayerFighting
+	Options = 0x0
+	Opcode = 0x115A
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisablePlayerJumping
+	Options = 0x0
+	Opcode = 0x1140
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisablePlayerLooking
+	Options = 0x0
+	Opcode = 0x1143
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisablePlayerMagic
+	Options = 0x0
+	Opcode = 0x115D
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisablePlayerViewSwitch
+	Options = 0x0
+	Opcode = 0x10E3
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisableTeleporting
+	Options = 0x0
+	Opcode = 0x10EF
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DisableVanityMode
+	Options = 0x0
+	Opcode = 0x114C
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = DontSaveObject
+	Options = 0x800
+	Opcode = 0x115F
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = Drop
+	Options = 0x0
+	Opcode = 0x110D
+	Return = 0x0, ""
+	Param1 = 0x20, ""
+	Param2 = 0x2, ""
+	Desc = ""
+End
+Function = DropSoulGem
+	Options = 0x0
+	Opcode = 0x10ED
+	Return = 0x0, ""
+	Param1 = 0x20000020, ""
+	Desc = ""
+End
+Function = Enable
+	Options = 0x0
+	Opcode = 0x10DA
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableBirthMenu
+	Options = 0x0
+	Opcode = 0x1129
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableClassMenu
+	Options = 0x0
+	Opcode = 0x1128
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableInventoryMenu
+	Options = 0x0
+	Opcode = 0x1118
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableLevelupMenu
+	Options = 0x0
+	Opcode = 0x1158
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableLevitation
+	Options = 0x800
+	Opcode = 0x1193
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableMagicMenu
+	Options = 0x0
+	Opcode = 0x111A
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableMapMenu
+	Options = 0x0
+	Opcode = 0x1119
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableNameMenu
+	Options = 0x0
+	Opcode = 0x1126
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnablePlayerControls
+	Options = 0x0
+	Opcode = 0x10DD
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnablePlayerFighting
+	Options = 0x0
+	Opcode = 0x1159
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnablePlayerJumping
+	Options = 0x0
+	Opcode = 0x113F
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnablePlayerLooking
+	Options = 0x0
+	Opcode = 0x1142
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnablePlayerMagic
+	Options = 0x0
+	Opcode = 0x115C
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnablePlayerViewSwitch
+	Options = 0x0
+	Opcode = 0x10E2
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableRaceMenu
+	Options = 0x0
+	Opcode = 0x1127
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableRest
+	Options = 0x0
+	Opcode = 0x13F
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableStatReviewMenu
+	Options = 0x0
+	Opcode = 0x1160
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableStatsMenu
+	Options = 0x0
+	Opcode = 0x1117
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableTeleporting
+	Options = 0x0
+	Opcode = 0x10EE
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = EnableVanityMode
+	Options = 0x0
+	Opcode = 0x114B
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = Equip
+	Options = 0x0
+	Opcode = 0x110E
+	Return = 0x0, ""
+	Param1 = 0x200020, ""
+	Desc = ""
+End
+Function = ExplodeSpell
+	Options = 0x800
+	Opcode = 0x11AD
+	Return = 0x0, ""
+	Param1 = 0x40000020, ""
+	Desc = ""
+End
+Function = Face
+	Options = 0x0
+	Opcode = 0x1162
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = FadeIn
+	Options = 0x0
+	Opcode = 0x1131
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = FadeOut
+	Options = 0x0
+	Opcode = 0x1130
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = FadeTo
+	Options = 0x0
+	Opcode = 0x1145
+	Return = 0x0, ""
+	Param1 = 0x4, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = Fall
+	Options = 0x0
+	Opcode = 0x1166
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ForceGreeting
+	Options = 0x0
+	Opcode = 0x10E8
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ForceJump
+	Options = 0x800
+	Opcode = 0x119D
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ForceMoveJump
+	Options = 0x800
+	Opcode = 0x11A0
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ForceRun
+	Options = 0x800
+	Opcode = 0x119A
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ForceSneak
+	Options = 0x0
+	Opcode = 0x1163
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = GetAcrobatics
+	Options = 0x0
+	Opcode = 0x1077
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAgility
+	Options = 0x0
+	Opcode = 0x102C
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAIPackageDone
+	Options = 0x0
+	Opcode = 0x10FB
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAlarm
+	Options = 0x0
+	Opcode = 0x1105
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAlchemy
+	Options = 0x0
+	Opcode = 0x106B
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAlteration
+	Options = 0x0
+	Opcode = 0x105C
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAngle
+	Options = 0x0
+	Opcode = 0x100C
+	Return = 0x8, ""
+	Param1 = 0x40, ""
+	Desc = ""
+End
+Function = GetArmorBonus
+	Options = 0x0
+	Opcode = 0x1176
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetArmorer
+	Options = 0x0
+	Opcode = 0x103E
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetArmorType
+	Options = 0x800
+	Opcode = 0x1198
+	Return = 0x8, ""
+	Param1 = 0x2, ""
+	Desc = ""
+End
+Function = GetAthletics
+	Options = 0x0
+	Opcode = 0x1053
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAttackBonus
+	Options = 0x0
+	Opcode = 0x10A2
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetAttacked
+	Options = 0x0
+	Opcode = 0x1148
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetAxe
+	Options = 0x0
+	Opcode = 0x104D
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetBlightDisease
+	Options = 0x0
+	Opcode = 0x114A
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetBlindness
+	Options = 0x0
+	Opcode = 0x117F
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetBlock
+	Options = 0x0
+	Opcode = 0x103B
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetBluntWeapon
+	Options = 0x0
+	Opcode = 0x1047
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetButtonPressed
+	Options = 0x0
+	Opcode = 0x101E
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetCastPenalty
+	Options = 0x0
+	Opcode = 0x1179
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetChameleon
+	Options = 0x0
+	Opcode = 0x10C3
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetCollidingActor
+	Options = 0x800
+	Opcode = 0x11A4
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetCollidingPC
+	Options = 0x800
+	Opcode = 0x11A3
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetCommonDisease
+	Options = 0x0
+	Opcode = 0x1149
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetConjuration
+	Options = 0x0
+	Opcode = 0x1062
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetCurrentAIPackage
+	Options = 0x0
+	Opcode = 0x10FA
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetCurrentTime
+	Options = 0x0
+	Opcode = 0x1011
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetCurrentWeather
+	Options = 0x0
+	Opcode = 0x10A1
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetDeadCount
+	Options = 0x0
+	Opcode = 0x10FE
+	Return = 0x4, ""
+	Desc = ""
+End
+Function = GetDefendBonus
+	Options = 0x0
+	Opcode = 0x10A5
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetDestruction
+	Options = 0x0
+	Opcode = 0x1059
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetDetected
+	Options = 0x0
+	Opcode = 0x114E
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetDisabled
+	Options = 0x0
+	Opcode = 0x10DC
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetDisposition
+	Options = 0x0
+	Opcode = 0x1098
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetDistance
+	Options = 0x0
+	Opcode = 0x1001
+	Return = 0x8, ""
+	Param1 = 0x20, ""
+	Desc = ""
+End
+Function = GetEffect
+	Options = 0x1
+	Opcode = 0x1138
+	Return = 0x2, ""
+	Param1 = 0x80, ""
+	Desc = ""
+End
+Function = GetEnchant
+	Options = 0x0
+	Opcode = 0x1056
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetEndurance
+	Options = 0x0
+	Opcode = 0x1032
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetFactionReaction
+	Options = 0x0
+	Opcode = 0x1153
+	Return = 0x8, ""
+	Param1 = 0x100020, ""
+	Param2 = 0x100020, ""
+	Desc = ""
+End
+Function = GetFatigue
+	Options = 0x0
+	Opcode = 0x1092
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetFight
+	Options = 0x0
+	Opcode = 0x10FF
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetFlee
+	Options = 0x0
+	Opcode = 0x1102
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetFlying
+	Options = 0x0
+	Opcode = 0x1173
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetForceJump
+	Options = 0x800
+	Opcode = 0x119F
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetForceMoveJump
+	Options = 0x800
+	Opcode = 0x11A2
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetForceRun
+	Options = 0x800
+	Opcode = 0x119C
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetForceSneak
+	Options = 0x0
+	Opcode = 0x1165
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetHandToHand
+	Options = 0x0
+	Opcode = 0x1089
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetHealth
+	Options = 0x0
+	Opcode = 0x108C
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetHealthGetRatio
+	Options = 0x0
+	Opcode = 0x1154
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetHeavyArmor
+	Options = 0x0
+	Opcode = 0x1044
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetHello
+	Options = 0x0
+	Opcode = 0x1108
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetIllusion
+	Options = 0x0
+	Opcode = 0x105F
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetIntelligence
+	Options = 0x0
+	Opcode = 0x1026
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetInterior
+	Options = 0x0
+	Opcode = 0x110B
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetInvisible
+	Options = 0x0
+	Opcode = 0x1185
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetItemCount
+	Options = 0x0
+	Opcode = 0x10FD
+	Return = 0x4, ""
+	Param1 = 0x200020, ""
+	Desc = ""
+End
+Function = GetJournalIndex
+	Options = 0x0
+	Opcode = 0x10CD
+	Return = 0x4, ""
+	Param1 = 0x80020, ""
+	Desc = ""
+End
+Function = GetLevel
+	Options = 0x0
+	Opcode = 0x1157
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetLightArmor
+	Options = 0x0
+	Opcode = 0x107A
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetLineOfSight
+	Options = 0x0
+	Opcode = 0x10FC
+	Return = 0x2, ""
+	Param1 = 0x20, ""
+	Desc = ""
+End
+Function = GetLocked
+	Options = 0x0
+	Opcode = 0x1161
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetLongBlade
+	Options = 0x0
+	Opcode = 0x104A
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetLuck
+	Options = 0x0
+	Opcode = 0x1038
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetMagicka
+	Options = 0x0
+	Opcode = 0x108F
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetMarksman
+	Options = 0x0
+	Opcode = 0x1080
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetMasserPhase
+	Options = 0x0
+	Opcode = 0x1146
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetMediumArmor
+	Options = 0x0
+	Opcode = 0x1041
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetMercantile
+	Options = 0x0
+	Opcode = 0x1083
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetMysticism
+	Options = 0x0
+	Opcode = 0x1065
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetParalysis
+	Options = 0x0
+	Opcode = 0x1182
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetPCCell
+	Options = 0x0
+	Opcode = 0x1112
+	Return = 0x2, ""
+	Param1 = 0x1002020, ""
+	Desc = ""
+End
+Function = GetPCCrimeLevel
+	Options = 0x0
+	Opcode = 0x109B
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetPCFacRep
+	Options = 0x0
+	Opcode = 0x10D7
+	Return = 0x8, ""
+	Param1 = 0x100020, ""
+	Desc = ""
+End
+Function = GetPCinJail
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPCJumping
+	Options = 0x800
+	Opcode = 0x118C
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPCRank
+	Options = 0x0
+	Opcode = 0x110C
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPCRunning
+	Options = 0x800
+	Opcode = 0x118B
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPCSleep
+	Options = 0x0
+	Opcode = 0x10E0
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPCSneaking
+	Options = 0x800
+	Opcode = 0x118A
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetPCTraveling
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPCVisionBonus
+	Options = 0x0
+	Opcode = 0x11B0
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetPersonality
+	Options = 0x0
+	Opcode = 0x1035
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetPlayerControlsDisabled
+	Options = 0x0
+	Opcode = 0x10DF
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPlayerFightingDisabled
+	Options = 0x0
+	Opcode = 0x115B
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPlayerJumpingDisabled
+	Options = 0x0
+	Opcode = 0x1141
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPlayerLookingDisabled
+	Options = 0x0
+	Opcode = 0x1144
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPlayerMagicDisabled
+	Options = 0x0
+	Opcode = 0x115E
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPlayerViewSwitch
+	Options = 0x2000
+	Opcode = 0x10E4
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetPos
+	Options = 0x0
+	Opcode = 0x100A
+	Return = 0x8, ""
+	Param1 = 0x40, ""
+	Desc = ""
+End
+Function = GetRace
+	Options = 0x0
+	Opcode = 0x1139
+	Return = 0x2, ""
+	Param1 = 0x40020, ""
+	Desc = ""
+End
+Function = GetReputation
+	Options = 0x0
+	Opcode = 0x1095
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistBlight
+	Options = 0x0
+	Opcode = 0x10B7
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistCorprus
+	Options = 0x0
+	Opcode = 0x10BA
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistDisease
+	Options = 0x0
+	Opcode = 0x10B4
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistFire
+	Options = 0x0
+	Opcode = 0x10AB
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistFrost
+	Options = 0x0
+	Opcode = 0x10AE
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistMagicka
+	Options = 0x0
+	Opcode = 0x10A8
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistNormalWeapons
+	Options = 0x0
+	Opcode = 0x10C6
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistParalysis
+	Options = 0x0
+	Opcode = 0x10C0
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistPoison
+	Options = 0x0
+	Opcode = 0x10BD
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetResistShock
+	Options = 0x0
+	Opcode = 0x10B1
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetRestoration
+	Options = 0x0
+	Opcode = 0x1068
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetScale
+	Options = 0x800
+	Opcode = 0x118D
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSecondsPassed
+	Options = 0x0
+	Opcode = 0x1012
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSecundaPhase
+	Options = 0x0
+	Opcode = 0x1147
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSecurity
+	Options = 0x0
+	Opcode = 0x1071
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetShortBlade
+	Options = 0x0
+	Opcode = 0x107D
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSilence
+	Options = 0x0
+	Opcode = 0x117C
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSneak
+	Options = 0x0
+	Opcode = 0x1074
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSoundPlaying
+	Options = 0x0
+	Opcode = 0x1188
+	Return = 0x2, ""
+	Param1 = 0x20020, ""
+	Desc = ""
+End
+Function = GetSpear
+	Options = 0x0
+	Opcode = 0x1050
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSpeechcraft
+	Options = 0x0
+	Opcode = 0x1086
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSpeed
+	Options = 0x0
+	Opcode = 0x102F
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSpell
+	Options = 0x0
+	Opcode = 0x111F
+	Return = 0x2, ""
+	Param1 = 0x40000020, ""
+	Desc = ""
+End
+Function = GetSpellEffects
+	Options = 0x0
+	Opcode = 0x1121
+	Return = 0x2, ""
+	Param1 = 0x40000020, ""
+	Desc = ""
+End
+Function = GetSpellReadied
+	Options = 0x800
+	Opcode = 0x11AF
+	Return = 0x2, ""
+	Param1 = 0x40000020, ""
+	Desc = ""
+End
+Function = GetSquareRoot
+	Options = 0x4802
+	Opcode = 0x11AC
+	Return = 0x8, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = GetStandingActor
+	Options = 0x0
+	Opcode = 0x1114
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetStandingPC
+	Options = 0x0
+	Opcode = 0x1113
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetStartingAngle
+	Options = 0x0
+	Opcode = 0x100F
+	Return = 0x8, ""
+	Param1 = 0x40, ""
+	Desc = ""
+End
+Function = GetStartingPos
+	Options = 0x0
+	Opcode = 0x100E
+	Return = 0x8, ""
+	Param1 = 0x40, ""
+	Desc = ""
+End
+Function = GetStrength
+	Options = 0x0
+	Opcode = 0x1023
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSuperJump
+	Options = 0x0
+	Opcode = 0x1170
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetSwimSpeed
+	Options = 0x0
+	Opcode = 0x116D
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetTarget
+	Options = 0x0
+	Opcode = 0x1150
+	Return = 0x8, ""
+	Param1 = 0x20, ""
+	Desc = ""
+End
+Function = GetUnarmored
+	Options = 0x0
+	Opcode = 0x106E
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetVanityModeDisabled
+	Options = 0x0
+	Opcode = 0x114D
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetWaterBreathing
+	Options = 0x0
+	Opcode = 0x1167
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetWaterLevel
+	Options = 0x800
+	Opcode = 0x1190
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetWaterWalking
+	Options = 0x0
+	Opcode = 0x116A
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetWeaponDrawn
+	Options = 0x800
+	Opcode = 0x11AE
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetWeaponType
+	Options = 0x800
+	Opcode = 0x1197
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetWerewolfKills
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = GetWillpower
+	Options = 0x0
+	Opcode = 0x1029
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = GetWindSpeed
+	Options = 0x0
+	Opcode = 0x10A0
+	Return = 0x8, ""
+	Desc = ""
+End
+Function = Goodbye
+	Options = 0x0
+	Opcode = 0x10CA
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = GoToJail
+	Options = 0x0
+	Opcode = 0x10E9
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = HasItemEquipped
+	Options = 0x800
+	Opcode = 0x1199
+	Return = 0x2, ""
+	Param1 = 0x200020, ""
+	Desc = ""
+End
+Function = HasSoulGem
+	Options = 0x0
+	Opcode = 0x10EA
+	Return = 0x2, ""
+	Param1 = 0x20000020, ""
+	Desc = ""
+End
+Function = HitAttemptOnMe
+	Options = 0x0
+	Opcode = 0x1116
+	Return = 0x2, ""
+	Param1 = 0x200020, ""
+	Desc = ""
+End
+Function = HitOnMe
+	Options = 0x0
+	Opcode = 0x1115
+	Return = 0x2, ""
+	Param1 = 0x200020, ""
+	Desc = ""
+End
+Function = HurtCollidingActor
+	Options = 0x0
+	Opcode = 0x11A5
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = HurtStandingActor
+	Options = 0x0
+	Opcode = 0x1135
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = IsWerewolf
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = Journal
+	Options = 0x4
+	Opcode = 0x10CC
+	Return = 0x0, ""
+	Param1 = 0x80020, ""
+	Param2 = 0x2, ""
+	Desc = ""
+End
+Function = Lock
+	Options = 0x0
+	Opcode = 0x1136
+	Return = 0x0, ""
+	Param1 = 0x2, ""
+	Desc = ""
+End
+Function = LoopGroup
+	Options = 0x0
+	Opcode = 0x1015
+	Return = 0x0, ""
+	Param1 = 0x200, ""
+	Param2 = 0x1, ""
+	Param3 = 0x801, ""
+	Desc = ""
+End
+Function = LowerRank
+	Options = 0x0
+	Opcode = 0x10CF
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = MenuMode
+	Options = 0x0
+	Opcode = 0x1020
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = MessageBox
+	Options = 0x4001
+	Opcode = 0x1000
+	Return = 0x0, ""
+	Param1 = 0x10, ""
+	Param2 = 0x9808, ""
+	Param3 = 0x8810, ""
+	Desc = ""
+End
+Function = ModAcrobatics
+	Options = 0x4001
+	Opcode = 0x1079
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModAgility
+	Options = 0x4001
+	Opcode = 0x102E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModAlarm
+	Options = 0x4001
+	Opcode = 0x1107
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModAlchemy
+	Options = 0x4001
+	Opcode = 0x106D
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModAlteration
+	Options = 0x4001
+	Opcode = 0x105E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModArmorBonus
+	Options = 0x4001
+	Opcode = 0x1178
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModArmorer
+	Options = 0x4001
+	Opcode = 0x1040
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModAthletics
+	Options = 0x4001
+	Opcode = 0x1055
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModAttackBonus
+	Options = 0x4001
+	Opcode = 0x10A4
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModAxe
+	Options = 0x4001
+	Opcode = 0x104F
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModBlindness
+	Options = 0x4001
+	Opcode = 0x1181
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModBlock
+	Options = 0x4001
+	Opcode = 0x103D
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModBluntWeapon
+	Options = 0x4001
+	Opcode = 0x1049
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModCastPenalty
+	Options = 0x4001
+	Opcode = 0x117B
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModChameleon
+	Options = 0x4001
+	Opcode = 0x10C5
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModConjuration
+	Options = 0x4001
+	Opcode = 0x1064
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModCurrentFatigue
+	Options = 0x4001
+	Opcode = 0x1134
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModCurrentHealth
+	Options = 0x4001
+	Opcode = 0x1132
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModCurrentMagicka
+	Options = 0x4001
+	Opcode = 0x1133
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModDefendBonus
+	Options = 0x4001
+	Opcode = 0x10A7
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModDestruction
+	Options = 0x4001
+	Opcode = 0x105B
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModDisposition
+	Options = 0x4001
+	Opcode = 0x109A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModEnchant
+	Options = 0x4001
+	Opcode = 0x1058
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModEndurance
+	Options = 0x4001
+	Opcode = 0x1034
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModFactionReaction
+	Options = 0x0
+	Opcode = 0x1111
+	Return = 0x0, ""
+	Param1 = 0x100020, ""
+	Param2 = 0x100020, ""
+	Param3 = 0x2, ""
+	Desc = ""
+End
+Function = ModFatigue
+	Options = 0x4001
+	Opcode = 0x1094
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModFight
+	Options = 0x4001
+	Opcode = 0x1101
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModFlee
+	Options = 0x4001
+	Opcode = 0x1104
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModFlying
+	Options = 0x4001
+	Opcode = 0x1175
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModHandToHand
+	Options = 0x4001
+	Opcode = 0x108B
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModHealth
+	Options = 0x4001
+	Opcode = 0x108E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModHeavyArmor
+	Options = 0x4001
+	Opcode = 0x1046
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModHello
+	Options = 0x4001
+	Opcode = 0x110A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModIllusion
+	Options = 0x4001
+	Opcode = 0x1061
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModIntelligence
+	Options = 0x4001
+	Opcode = 0x1028
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModInvisible
+	Options = 0x4001
+	Opcode = 0x1187
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModLightArmor
+	Options = 0x4001
+	Opcode = 0x107C
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModLongBlade
+	Options = 0x4001
+	Opcode = 0x104C
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModLuck
+	Options = 0x4001
+	Opcode = 0x103A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModMagicka
+	Options = 0x4001
+	Opcode = 0x1091
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModMarksman
+	Options = 0x4001
+	Opcode = 0x1082
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModMediumArmor
+	Options = 0x4001
+	Opcode = 0x1043
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModMercantile
+	Options = 0x4001
+	Opcode = 0x1085
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModMysticism
+	Options = 0x4001
+	Opcode = 0x1067
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModParalysis
+	Options = 0x4001
+	Opcode = 0x1184
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModPCCrimeLevel
+	Options = 0x4001
+	Opcode = 0x109D
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModPCFacRep
+	Options = 0x0
+	Opcode = 0x10D9
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Param2 = 0x100820, ""
+	Desc = ""
+End
+Function = ModPCVisionBonus
+	Options = 0x4001
+	Opcode = 0x11B2
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModPersonality
+	Options = 0x4001
+	Opcode = 0x1037
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModRegion
+	Options = 0x0
+	Opcode = 0x1125
+	Return = 0x0, ""
+	Param1 = 0x400020, ""
+	Param2 = 0x1, ""
+	Param3 = 0x1, ""
+	Param4 = 0x1, ""
+	Param5 = 0x1, ""
+	Param6 = 0x1, ""
+	Param7 = 0x1, ""
+	Param8 = 0x1, ""
+	Param9 = 0x1, ""
+	Desc = ""
+End
+Function = ModReputation
+	Options = 0x4001
+	Opcode = 0x1097
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistBlight
+	Options = 0x4001
+	Opcode = 0x10B9
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistCorprus
+	Options = 0x4001
+	Opcode = 0x10BC
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistDisease
+	Options = 0x4001
+	Opcode = 0x10B6
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistFire
+	Options = 0x4001
+	Opcode = 0x10AD
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistFrost
+	Options = 0x4001
+	Opcode = 0x10B0
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistMagicka
+	Options = 0x4001
+	Opcode = 0x10AA
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistNormalWeapons
+	Options = 0x4001
+	Opcode = 0x10C8
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistParalysis
+	Options = 0x4001
+	Opcode = 0x10C2
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistPoison
+	Options = 0x4001
+	Opcode = 0x10BF
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModResistShock
+	Options = 0x4001
+	Opcode = 0x10B3
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModRestoration
+	Options = 0x4001
+	Opcode = 0x106A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModScale
+	Options = 0x4001
+	Opcode = 0x118F
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSecurity
+	Options = 0x4001
+	Opcode = 0x1073
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModShortBlade
+	Options = 0x4001
+	Opcode = 0x107F
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSilence
+	Options = 0x4001
+	Opcode = 0x117E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSneak
+	Options = 0x4001
+	Opcode = 0x1076
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSpear
+	Options = 0x4001
+	Opcode = 0x1052
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSpeechcraft
+	Options = 0x4001
+	Opcode = 0x1088
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSpeed
+	Options = 0x4001
+	Opcode = 0x1031
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModStrength
+	Options = 0x4001
+	Opcode = 0x1025
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSuperJump
+	Options = 0x4001
+	Opcode = 0x1172
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModSwimSpeed
+	Options = 0x4001
+	Opcode = 0x116F
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModUnarmored
+	Options = 0x4001
+	Opcode = 0x1070
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModWaterBreathing
+	Options = 0x4001
+	Opcode = 0x1169
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModWaterLevel
+	Options = 0x4801
+	Opcode = 0x1192
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModWaterWalking
+	Options = 0x4001
+	Opcode = 0x116C
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = ModWillpower
+	Options = 0x4001
+	Opcode = 0x102B
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = Move
+	Options = 0x0
+	Opcode = 0x1006
+	Return = 0x0, ""
+	Param1 = 0x40, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = MoveWorld
+	Options = 0x0
+	Opcode = 0x1008
+	Return = 0x0, ""
+	Param1 = 0x40, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = OnActivate
+	Options = 0x0
+	Opcode = 0x1018
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = OnDeath
+	Options = 0x0
+	Opcode = 0x10F0
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = OnKnockout
+	Options = 0x0
+	Opcode = 0x10F1
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = OnMurder
+	Options = 0x0
+	Opcode = 0x10F2
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = PayFine
+	Options = 0x0
+	Opcode = 0x114F
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = PayFineThief
+	Options = 0x0
+	Opcode = 0x1189
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = PCClearExpelled
+	Options = 0x0
+	Opcode = 0x10D3
+	Return = 0x0, ""
+	Param1 = 0x820, ""
+	Desc = ""
+End
+Function = PCExpell
+	Options = 0x0
+	Opcode = 0x10D2
+	Return = 0x0, ""
+	Param1 = 0x820, ""
+	Desc = ""
+End
+Function = PCExpelled
+	Options = 0x0
+	Opcode = 0x109F
+	Return = 0x0, ""
+	Param1 = 0x820, ""
+	Desc = ""
+End
+Function = PCForce1stPerson
+	Options = 0x0
+	Opcode = 0x113D
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = PCForce3rdPerson
+	Options = 0x0
+	Opcode = 0x113C
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = PCGet3rdPerson
+	Options = 0x0
+	Opcode = 0x113E
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = PCJoinFaction
+	Options = 0x0
+	Opcode = 0x113B
+	Return = 0x0, ""
+	Param1 = 0x820, ""
+	Desc = ""
+End
+Function = PCLowerRank
+	Options = 0x0
+	Opcode = 0x10D1
+	Return = 0x0, ""
+	Param1 = 0x820, ""
+	Desc = ""
+End
+Function = PCRaiseRank
+	Options = 0x0
+	Opcode = 0x10D0
+	Return = 0x0, ""
+	Param1 = 0x820, ""
+	Desc = ""
+End
+Function = PlaceAtMe
+	Options = 0x401
+	Opcode = 0x0
+	Return = 0x0, ""
+	Param1 = 0x20, ""
+	Param2 = 0x2, ""
+	Param3 = 0x8, ""
+	Param4 = 0x2, ""
+	Desc = ""
+End
+Function = PlaceAtPC
+	Options = 0x1
+	Opcode = 0x10E6
+	Return = 0x0, ""
+	Param1 = 0x20, ""
+	Param2 = 0x2, ""
+	Param3 = 0x8, ""
+	Param4 = 0x2, ""
+	Desc = ""
+End
+Function = PlaceItem
+	Options = 0x4801
+	Opcode = 0x1195
+	Return = 0x0, ""
+	Param1 = 0x20, ""
+	Param2 = 0x8, ""
+	Param3 = 0x8, ""
+	Param4 = 0x8, ""
+	Param5 = 0x8, ""
+	Desc = ""
+End
+Function = PlaceItemCell
+	Options = 0x4801
+	Opcode = 0x1196
+	Return = 0x0, ""
+	Param1 = 0x20, ""
+	Param2 = 0x1000020, ""
+	Param3 = 0x8, ""
+	Param4 = 0x8, ""
+	Param5 = 0x8, ""
+	Param6 = 0x8, ""
+	Desc = ""
+End
+Function = PlayBink
+	Options = 0x1
+	Opcode = 0x1155
+	Return = 0x0, ""
+	Param1 = 0x10, ""
+	Param2 = 0x801, ""
+	Desc = ""
+End
+Function = PlayGroup
+	Options = 0x1
+	Opcode = 0x1014
+	Return = 0x0, ""
+	Param1 = 0x200, ""
+	Param2 = 0x801, ""
+	Desc = ""
+End
+Function = PlayLoopSound3D
+	Options = 0x1
+	Opcode = 0x112E
+	Return = 0x0, ""
+	Param1 = 0x20020, ""
+	Desc = ""
+End
+Function = PlayLoopSound3DVP
+	Options = 0x1
+	Opcode = 0x112F
+	Return = 0x0, ""
+	Param1 = 0x20020, ""
+	Param2 = 0x8, ""
+	Param3 = 0x8, ""
+	Desc = ""
+End
+Function = PlaySound
+	Options = 0x1
+	Opcode = 0x1002
+	Return = 0x0, ""
+	Param1 = 0x20020, ""
+	Desc = ""
+End
+Function = PlaySound3D
+	Options = 0x1
+	Opcode = 0x112C
+	Return = 0x0, ""
+	Param1 = 0x20020, ""
+	Desc = ""
+End
+Function = PlaySound3DVP
+	Options = 0x1
+	Opcode = 0x112D
+	Return = 0x0, ""
+	Param1 = 0x20020, ""
+	Param2 = 0x8, ""
+	Param3 = 0x8, ""
+	Desc = ""
+End
+Function = PlaySoundVP
+	Options = 0x1
+	Opcode = 0x112B
+	Return = 0x0, ""
+	Param1 = 0x20020, ""
+	Param2 = 0x8, ""
+	Param3 = 0x8, ""
+	Desc = ""
+End
+Function = Position
+	Options = 0x0
+	Opcode = 0x1004
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Param2 = 0x8, ""
+	Param3 = 0x8, ""
+	Param4 = 0x8, ""
+	Desc = ""
+End
+Function = PositionCell
+	Options = 0x0
+	Opcode = 0x1005
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Param2 = 0x8, ""
+	Param3 = 0x8, ""
+	Param4 = 0x8, ""
+	Param5 = 0x1000020, ""
+	Desc = ""
+End
+Function = RaiseRank
+	Options = 0x0
+	Opcode = 0x10CE
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = Random
+	Options = 0x0
+	Opcode = 0x1021
+	Return = 0x2, ""
+	Param1 = 0x2, ""
+	Desc = ""
+End
+Function = RemoveEffects
+	Options = 0x0
+	Opcode = 0x1122
+	Return = 0x0, ""
+	Param1 = 0x80, ""
+	Desc = ""
+End
+Function = RemoveFromLevCreature
+	Options = 0x800
+	Opcode = 0x11A7
+	Return = 0x0, ""
+	Param1 = 0x4000020, ""
+	Param2 = 0xA0000020, ""
+	Param3 = 0x8, ""
+	Desc = ""
+End
+Function = RemoveFromLevItem
+	Options = 0x800
+	Opcode = 0x11A9
+	Return = 0x0, ""
+	Param1 = 0x8000020, ""
+	Param2 = 0x200020, ""
+	Param3 = 0x8, ""
+	Desc = ""
+End
+Function = RemoveItem
+	Options = 0x0
+	Opcode = 0x10D5
+	Return = 0x0, ""
+	Param1 = 0x200020, ""
+	Param2 = 0x2, ""
+	Desc = ""
+End
+Function = RemoveSoulGem
+	Options = 0x0
+	Opcode = 0x10EC
+	Return = 0x0, ""
+	Param1 = 0x20000020, ""
+	Desc = ""
+End
+Function = RemoveSpell
+	Options = 0x0
+	Opcode = 0x111E
+	Return = 0x0, ""
+	Param1 = 0x40000020, ""
+	Desc = ""
+End
+Function = RemoveSpellEffects
+	Options = 0x0
+	Opcode = 0x1120
+	Return = 0x0, ""
+	Param1 = 0x40000020, ""
+	Desc = ""
+End
+Function = RepairedOnMe
+	Options = 0x0
+	Opcode = 0x110F
+	Return = 0x0, ""
+	Param1 = 0x200020, ""
+	Desc = ""
+End
+Function = Resurrect
+	Options = 0x0
+	Opcode = 0x10E7
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = Rotate
+	Options = 0x0
+	Opcode = 0x1007
+	Return = 0x0, ""
+	Param1 = 0x40, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = RotateWorld
+	Options = 0x0
+	Opcode = 0x1009
+	Return = 0x0, ""
+	Param1 = 0x40, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = SameFaction
+	Options = 0x0
+	Opcode = 0x109E
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = Say
+	Options = 0x0
+	Opcode = 0x111B
+	Return = 0x0, ""
+	Param1 = 0x4010, ""
+	Param2 = 0x10, ""
+	Desc = ""
+End
+Function = SayDone
+	Options = 0x0
+	Opcode = 0x111C
+	Return = 0x2, ""
+	Desc = ""
+End
+Function = ScriptRunning
+	Options = 0x0
+	Opcode = 0x101D
+	Return = 0x2, ""
+	Param1 = 0x10020, ""
+	Desc = ""
+End
+Function = SetAcrobatics
+	Options = 0x4001
+	Opcode = 0x1078
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAgility
+	Options = 0x4001
+	Opcode = 0x102D
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAlarm
+	Options = 0x4001
+	Opcode = 0x1106
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAlchemy
+	Options = 0x4001
+	Opcode = 0x106C
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAlteration
+	Options = 0x4001
+	Opcode = 0x105D
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAngle
+	Options = 0x4001
+	Opcode = 0x100D
+	Return = 0x0, ""
+	Param1 = 0x40, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = SetArmorBonus
+	Options = 0x4001
+	Opcode = 0x1177
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetArmorer
+	Options = 0x4001
+	Opcode = 0x103F
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAthletics
+	Options = 0x4001
+	Opcode = 0x1054
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAtStart
+	Options = 0x0
+	Opcode = 0x1010
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = SetAttackBonus
+	Options = 0x4001
+	Opcode = 0x10A3
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetAxe
+	Options = 0x4001
+	Opcode = 0x104E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetBlindness
+	Options = 0x4001
+	Opcode = 0x1180
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetBlock
+	Options = 0x4001
+	Opcode = 0x103C
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetBluntWeapon
+	Options = 0x4001
+	Opcode = 0x1048
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetCastPenalty
+	Options = 0x4001
+	Opcode = 0x117A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetChameleon
+	Options = 0x4001
+	Opcode = 0x10C4
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetConjuration
+	Options = 0x4001
+	Opcode = 0x1063
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetDefendBonus
+	Options = 0x4001
+	Opcode = 0x10A6
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetDelete
+	Options = 0x800
+	Opcode = 0x11AB
+	Return = 0x0, ""
+	Param1 = 0x2, ""
+	Desc = ""
+End
+Function = SetDestruction
+	Options = 0x4001
+	Opcode = 0x105A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetDisposition
+	Options = 0x4001
+	Opcode = 0x1099
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetEnchant
+	Options = 0x4001
+	Opcode = 0x1057
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetEndurance
+	Options = 0x4001
+	Opcode = 0x1033
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetFactionReaction
+	Options = 0x0
+	Opcode = 0x1110
+	Return = 0x0, ""
+	Param1 = 0x100020, ""
+	Param2 = 0x100020, ""
+	Param3 = 0x2, ""
+	Desc = ""
+End
+Function = SetFatigue
+	Options = 0x4001
+	Opcode = 0x1093
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetFight
+	Options = 0x4001
+	Opcode = 0x1100
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetFlee
+	Options = 0x4001
+	Opcode = 0x1103
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetFlying
+	Options = 0x4001
+	Opcode = 0x1174
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetHandToHand
+	Options = 0x4001
+	Opcode = 0x108A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetHealth
+	Options = 0x4001
+	Opcode = 0x108D
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetHeavyArmor
+	Options = 0x4001
+	Opcode = 0x1045
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetHello
+	Options = 0x4001
+	Opcode = 0x1109
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetIllusion
+	Options = 0x4001
+	Opcode = 0x1060
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetIntelligence
+	Options = 0x4001
+	Opcode = 0x1027
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetInvisible
+	Options = 0x4001
+	Opcode = 0x1186
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetJournalIndex
+	Options = 0x4
+	Opcode = 0x11AA
+	Return = 0x0, ""
+	Param1 = 0x80020, ""
+	Param2 = 0x2, ""
+	Desc = ""
+End
+Function = SetLevel
+	Options = 0x4001
+	Opcode = 0x1156
+	Return = 0x0, ""
+	Param1 = 0x2, ""
+	Desc = ""
+End
+Function = SetLightArmor
+	Options = 0x4001
+	Opcode = 0x107B
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetLongBlade
+	Options = 0x4001
+	Opcode = 0x104B
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetLuck
+	Options = 0x4001
+	Opcode = 0x1039
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetMagicka
+	Options = 0x4001
+	Opcode = 0x1090
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetMarksman
+	Options = 0x4001
+	Opcode = 0x1081
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetMediumArmor
+	Options = 0x4001
+	Opcode = 0x1042
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetMercantile
+	Options = 0x4001
+	Opcode = 0x1084
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetMysticism
+	Options = 0x4001
+	Opcode = 0x1066
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetParalysis
+	Options = 0x4001
+	Opcode = 0x1183
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetPCCrimeLevel
+	Options = 0x0
+	Opcode = 0x109C
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetPCFacRep
+	Options = 0x0
+	Opcode = 0x10D8
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Param2 = 0x100820, ""
+	Desc = ""
+End
+Function = SetPCVisionBonus
+	Options = 0x4001
+	Opcode = 0x11B1
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetPersonality
+	Options = 0x4001
+	Opcode = 0x1036
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetPos
+	Options = 0x4001
+	Opcode = 0x100B
+	Return = 0x0, ""
+	Param1 = 0x40, ""
+	Param2 = 0x8, ""
+	Desc = ""
+End
+Function = SetReputation
+	Options = 0x4001
+	Opcode = 0x1096
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistBlight
+	Options = 0x4001
+	Opcode = 0x10B8
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistCorprus
+	Options = 0x4001
+	Opcode = 0x10BB
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistDisease
+	Options = 0x4001
+	Opcode = 0x10B5
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistFire
+	Options = 0x4001
+	Opcode = 0x10AC
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistFrost
+	Options = 0x4001
+	Opcode = 0x10AF
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistMagicka
+	Options = 0x4001
+	Opcode = 0x10A9
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistNormalWeapons
+	Options = 0x4001
+	Opcode = 0x10C7
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistParalysis
+	Options = 0x4001
+	Opcode = 0x10C1
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistPoison
+	Options = 0x4001
+	Opcode = 0x10BE
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetResistShock
+	Options = 0x4001
+	Opcode = 0x10B2
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetRestoration
+	Options = 0x4001
+	Opcode = 0x1069
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetScale
+	Options = 0x4801
+	Opcode = 0x118E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSecurity
+	Options = 0x4001
+	Opcode = 0x1072
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetShortBlade
+	Options = 0x4001
+	Opcode = 0x107E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSilence
+	Options = 0x4001
+	Opcode = 0x117D
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSneak
+	Options = 0x4001
+	Opcode = 0x1075
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSpear
+	Options = 0x4001
+	Opcode = 0x1051
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSpeechcraft
+	Options = 0x4001
+	Opcode = 0x1087
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSpeed
+	Options = 0x4001
+	Opcode = 0x1030
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetStrength
+	Options = 0x4001
+	Opcode = 0x1024
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSuperJump
+	Options = 0x4001
+	Opcode = 0x1171
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetSwimSpeed
+	Options = 0x4001
+	Opcode = 0x116E
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetUnarmored
+	Options = 0x4001
+	Opcode = 0x106F
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetWaterBreathing
+	Options = 0x4001
+	Opcode = 0x1168
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetWaterLevel
+	Options = 0x4801
+	Opcode = 0x1191
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetWaterWalking
+	Options = 0x4001
+	Opcode = 0x116B
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetWereWolfAcrobatics
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = SetWillpower
+	Options = 0x4001
+	Opcode = 0x102A
+	Return = 0x0, ""
+	Param1 = 0x8, ""
+	Desc = ""
+End
+Function = Show
+	Options = 0x2001
+	Opcode = 0x10D
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = ShowMap
+	Options = 0x0
+	Opcode = 0x1152
+	Return = 0x0, ""
+	Param1 = 0x1002020, ""
+	Desc = ""
+End
+Function = ShowRestMenu
+	Options = 0x0
+	Opcode = 0x10E5
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = SkipAnim
+	Options = 0x0
+	Opcode = 0x1016
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = StartCombat
+	Options = 0x0
+	Opcode = 0x1019
+	Return = 0x0, ""
+	Param1 = 0xA0000020, ""
+	Desc = ""
+End
+Function = StartScript
+	Options = 0x0
+	Opcode = 0x101B
+	Return = 0x0, ""
+	Param1 = 0x10020, ""
+	Desc = ""
+End
+Function = StopCombat
+	Options = 0x0
+	Opcode = 0x101A
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = StopScript
+	Options = 0x0
+	Opcode = 0x101C
+	Return = 0x0, ""
+	Param1 = 0x10020, ""
+	Desc = ""
+End
+Function = StopSound
+	Options = 0x0
+	Opcode = 0x1151
+	Return = 0x0, ""
+	Param1 = 0x20020, ""
+	Desc = ""
+End
+Function = StreamMusic
+	Options = 0x0
+	Opcode = 0x1003
+	Return = 0x0, ""
+	Param1 = 0x4010, ""
+	Desc = ""
+End
+Function = TurnMoonRed
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = TurnMoonWhite
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = UndoWerewolf
+	Options = 0x400
+	Opcode = 0x0
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = Unlock
+	Options = 0x0
+	Opcode = 0x1137
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = WakeUpPC
+	Options = 0x0
+	Opcode = 0x10E1
+	Return = 0x0, ""
+	Desc = ""
+End
+Function = XBox
+	Options = 0x0
+	Opcode = 0x113A
+	Return = 0x2, ""
+	Desc = ""
+End

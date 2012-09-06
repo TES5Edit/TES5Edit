@@ -1,0 +1,499 @@
+
+
+  v0.4.1 (released September 2003)
+=======================================
+	- Creature dialog - Finished (1 March 2003)
+	- Cell reference dialog, display references, clean references - Finished (1 March 2003)
+	- Add pointer array sort/search.  For small arrays (~100) the search time is the same, for
+	  medium arrays (~10000) the binary search is about x10 faster.  For large arrays (~60000)
+	  the search time is about x35 faster.  Load time is slightly increased as the array must
+	  be sorted as it is created (used one qsort() at end after load instead of adding records
+	  as sorted, much faster). Note that the standard bsearch() algorithm is ~10% slower that 
+	  the custom binary search used.  Finished (1 March 2003).
+    - Add sound button to Info Dialog for Voice records (2 March 2003)
+	- Journal edit dialog (2 March 2003).
+	- Simple load progress dialog (2 March 2003)
+	- Plugin author/desc dialog (2 March 2003)
+	- Drag records from cell reference list (3 March 2003)
+	- Properly sortable list when loading a plugin. Sort by filename or plugin type (Master, 
+	  Active, Regular) Default sort is alphabetical with all the master files at the top.  This
+	  makes finding a particular plugin much faster if you have lots of them (3 March 2003).
+	- Basic find text in all records (3 March 2003)
+	- Display of INFO function values in the dialogue list.  Values display not only the function/ID
+	  for the function, but also the value compared against allowing one to quickly gather more 
+	  information at a quick glance (ex: TESCK would display just "Choice" or "Gold_001" but 
+	  MWEdit would display "Choice == 1" or "Gold_001 >= 10000").  Resizable dialogue window. 
+	  (13 March 2003).
+    - Resize the dialogue info window (13 March 2003).
+    - Corrected the error with the plugin backup for a Save As command (14 March 2003).
+	- Corrected the local variable list in the dialogue info window (15 March 2003).
+	- Compiler graciously adds spaces in places where they might be required/expected by the
+	  game (such as in if statements etc...). (15 March 2003).
+	- Local variable list for INFO functions (15 March 2003).
+    - Script compiling (16 March 2003, 5 April 2003)
+		- set locals
+		- set globals
+		- set local object reference
+		- set to number/local/global/function (with/without object reference)
+		- if/elseif/while (local/global/obj-ref rel-op number/local/global)
+		- MessageBox function (1/2 args, 0 or more buttons)
+		- General functions (functions need to be double checked for input argument size)
+		- reset function argument (not sure how it is supposed to be implemented in TESCK?)
+		- Local object/script variable access (object.localvar, script.localvar)
+		- Checks object types more rigourously
+		- Animation groups/indices
+		- Ensure that new scripts have the correct sub-record order (SCVR SCDT SCTX) 
+		- Script textbox limited to 32768 characters.
+		- All functions/formats tested.
+	- ESS save games can be edited moderately well (must be in the Data Files directory) (5 April 2003).
+	- Drag records from one document to another (including DIAL) (5 April 2003)
+	- Create Copy and Rename right-click context menu options in main list (5 April 2003)
+	- INFO parent DIAL record properly set on record copy. (5 April 2003)
+	- All cell contents (object references) copied properly on copy/rename (5 April 2003)
+	- Cell local reference count copied properly now (5 April 2003)
+	- Script compiles on save automatically (no error messages output) (6 April 2003)
+	- Script import and export text (6 April 2003)
+	- Fixed bug with duplicate records in plugin/master not correctly being found (6 April 2003) 
+	- Went back to adding records as sorted initially instead of adding and sorting later. It
+	  is faster the former way but only if one file is being loaded. With two or more (especially
+	  for large masters) the latter is much faster in the end. (10 April 2003).
+    - Book text limit changed from 32000 to 65536 as in TESCK (22 April 2003).
+	- Added a file date column to the open plugin dialog. Plugins are sorted by Type then Date
+	  by default (as in the TESCS) (4 August 2003).
+    - Reset tokens for the script compiler now accept numeric values (31 August 2003).
+    - Added the Bloodmoon functions (31 August 2003)
+			BecomeWereWolf
+			GetPCinJail 
+			GetPCTraveling 
+			GetWerewolfKills 
+			IsWerewolf
+			PlaceAtMe
+			SetWereWolfAcrobatics
+			TurnMoonRed
+			TurnMoonWhite
+			UndoWerewolf
+	- Added a topic column in the find dialog for INFO records. For INFO records the parent 
+	  dialogue is opened for editting instead of the INFO itself (1 September 2003).
+    - Corrected the GetItemType() method for the Dialogue record type to properly return the
+	  right type string (1 September 2003).
+	- All dialogue type edit windows now display the correct record type string (1 September 2003).
+	- New/modified INFOs are properly added to both RecInfo arrays. Fixed bug when editting dialogue
+	  topics and all INFOs would disappear (1 September 2003).
+	- Can now properly change the dialogue topic ID and result in a new dialogue topic with a copy
+	  of all the dialogue's INFOs (1 September 2003). Note that the original dialogue is not deleted
+	  like it is in TESCS (you can do it manually if desired).
+	- Proper icon for the find dialog (1 September 2003).
+	- Added Ctrl+C/V/X shortcuts for text boxes in all record editing windows (1 September 2003).
+	- Added the function help window to the help menu (2 September 2003).
+	- Added the message list view in a splitter pane at the bottom of the script window for 
+	  displaying the errors/warnings from the last compile. Double-clicking a message will jump
+	  to that point in the file. (4 September 2003).
+	- Script and application icons added (4 September 2003).
+	- Added the detailed error view for the script compiler messages. Added the right-click
+	  context for the error list to view the error details, copy message to clipboard, goto 
+	  the error in the script, or view the function help window. (6 September 2003).
+	- Added the options dialog for modifying the various user options. Saves/loads the settings
+	  from the registry. (7 September 2003).
+	- The script compiler checks the type of function arguments better now, especially in the
+	  few cases where there are several records with the same ID (7 September 2003).
+	- The script compiler is stricter on local variable names than the TESCS compiler. For
+	  instance the latter will allow names like "end" but the former won't as "end" is considered
+	  a reserved word. This is a minor difference and being stricter is probably a good thing
+	  (7 September 2003). 
+	- Added the history list for the find dialog for past searches. Currently saves the last 10
+	  searches (7 September 2003).
+	- Added the default author name to the options dialog which is used to set default author
+	  for new plugins (7 September 2003).
+	- Editting an INFO record from the find dialog now displays the dialog and the info
+	  edit dialog (not just the dialog topic). Corrected a bug where modified INFO records
+	  would not be updated in the list (7 September 2003).
+	- The last sort field in the main record view is now saved when switching between record
+	  types. For instance, if you sort the weapons by Value, the next time you switch back to
+	  the weapon view they will still be sorted by Value (instead of the default sort field)
+	  (8 September 2003).
+	- Dialogue edit window now saves the column widths when the record is saved and closed
+	  (13 September 2003).
+	- The dialogue record (and other related records) dialogue now will not save any changes
+	  to the INFO records if the user presses cancel (13 September 2003). 
+	- INFO records can now be cleaned and deleted. INFO records cannot be cleaned unless the
+	  previous record has the same Prev/Next IDs (13 September 2003).
+	- Start scripts can be editted now (13 September 2003).
+	- Input dialog's initial focus is the main input textbox (14 September 2003).
+	- Container record dialog now properly implements the item count storage. Previously, the 
+	  item count would be messed up if you opened two or more containers that had the same
+	  item in them (14 September 2003).
+	- Similarily fixed the same item/record count bug for the NPC item list, Creature item list,
+	  levelled creature list, and the levelled item list. The levelled lists are done in a slightly
+	  different (and not particularily 'good') way since they allow multiple entries of the same
+	  record (14 September 2003).
+	- Creature and NPC item list now allow multiple selections and the ability to increase/decrease
+	  the item count using the +/- keys (14 September 2003).
+    - You can select a function in the script dialog and select "Func Help" from the right-click
+	  context menu to view help for that function (15 September 2003).
+	- For the script compiler, animation groups can now be enclosed by quotes (15 September 2003).
+	- Script functions test and output verifications:
+			- All A/C/D/E/F/H/J/K/L/O/P/R/S/U-Z functions (15 September 2003).
+			- All G functions. Fixed minor bug in GetDetected output (15 September 2003).
+			- All M functions, except MessageBox. Found 2 unknown ModRegion parameters (15 September 2003).
+			- MessageBox function (16 September 2003).
+			- Set command in various formats. Fixed a bunch of minor differences in compiled output
+			  (16 September 2003).
+			- Error/warning returned if the maximum number of variables/buttons are exceeded in
+			  a MessageBox function call (9 each). An error is also returned if you use a number
+			  for a variable value (only locals/globals allowed). Does not yet support strings for
+			  variables (16 September 2003).
+			- Strengthened the warning level of some compiler messages, i.e., some messages that
+			  were warnings by default are now errors (16 September 2003).
+	- Moved to using SourceForge for source control, documents, and downloading.
+
+
+  v0.4.2 (not released)
+=======================================
+	- Added Move Up/Down to the dialogue context menu (21 September 2003).
+	- Find Text and Plugin Info menu commands are now available when the current window
+	  isn't the main view (24 September 2003).
+	- Made the site link in the about dialog clickable (24 September 2003).
+	- Load dialog made a litle clearer (24 September 2003).
+	- Cleaning records now 'dirties' the document's modify flag (24 September 2003).
+	- Fixed bug with the field ID value (changed from 1000 to 200) being too high (conflicted with a 
+	  sublist field mask) which caused no IDs to be displayed in the cell reference list (24 September 2003). 
+	- Added the CEsmLand class for landscape records (26 September 2003).
+	- Fixed a bug in the compiled output for local variable references ("script.local"). Local variable
+	  references are now only supported on the left side of set statements (29 September 2003).
+	- Corrected the lack of statement count in compiled script output in if blocks (30 September 2003).
+	- Fixed the while compiled script output (30 September 2003).
+	- Tested and verified that IF/WHILE statements are correctly compiled (30 September 2003).
+	- Globals less than 4 bytes in size are correctly output in if statements (5 October 2003).
+	- Script compiler quickly tested by recompiling all/most scripts in my furniture plugin and 
+	  playing the game (5 October 2003).
+
+
+  v0.5.0 (released 5 October 2003)
+=======================================
+	- Properly implemented the FRMR cell reference index/flag sub-record. The reference index
+	  is now displayed in the reference list for debugging/hacking purposes (5 October 2003).
+	- Added an e-mail link to the toolbar/help menu. Corrected the omission of the links
+	  help sub-menu when a document is open (5 October 2003).
+	- Added Skirandi's item index as a help file. Added links to the function/index help on the 
+	  toolbar (5 October 2003).
+	- The cell dialog has been changed so that all changes to cell references are not saved until
+	  you press the 'Save' button (like every other dialog). Thus, you can use the 'Cancel' button
+	  to discard any changes made since the cell was opened for editting (5 October 2003).
+	- Added options to the cell references for editting, cleaning, copying, undeleting and 
+	  deleting (right click on the cell reference list). You can select multiple records to 
+	  perform the actions on. Double-clicking the cell reference now defaults to displaying 
+	  the reference edit page (5 October 2003).
+	- Added the "Info" option to display what records use another record. Accessed by right-
+	  clicking on the main object view. Scripts and dialog results are searched for possible
+	  reference uses as well. Not yet confirmed whether the search algorithim might return
+	  false positives (6 October 2003).
+	- Made the results textbox on the INFO dialog scrollable so you can see/edit more than
+	  the first four lines (6 October 2003).
+	- Added simple function tooltips in the script dialog. You can enable/disable them from
+	  the Options menu (11 October 2003).
+	- Fixed a bug when using the +/- in the list controls which caused the selection to change
+	  (13 October 2003).
+	- Fixed a bug in the array sorting/finding routine that rarely resulted in records not
+	  being able to be found (which would appear as a variety of problems) (13 October 2003).
+	- Fixed bug when choosing one active file then another which resulted in the files being
+	  loaded incorrectly (13 October 2003).
+	- Added the ability to import multiple records from CSV text files. This will allow you
+	  to mass create a bunch of records in a spreadsheet program and get them easily into your
+	  plugin. All (or almost all) of the record fields can be input in the CSV, unlike the 
+	  TESCS CSV files which only list certain parameters. The field values are choosen from
+	  the header row in the CSV (a proper documentation will be coming). Currently only Misc.
+	  records are supported for import (13 October 2003).
+	- Implemented shortcut keys (Ctrl+C, etc...) in find dialog and script template view 
+	  (15 October 2003).
+	- Added context menus to the find and uses dialogs. This includes the new 'Select Item'
+	  which selects the given item in the main list view (15 October 2003).
+	- Fixed the script edit button in NPC and Creature dialogs (15 October 2003).
+	- The previous filename is used when choosing model/texture/icon/sound files (18 October 2003).
+	- The Find Text command now finds text properly in INFO functions (18 October 2003).
+	- Fixed the bug which would prevent you from having more than one new plugin open at a
+	  time (3 November 2003).
+	- Fixed the script edit button on the start script dialog. Also fixed the script edit
+	  button for all dialogs where the script shares its ID with another record (like a 
+	  dialogue or cell) (3 November 2003). 
+	- Fixed the proper compiling of script local variable reference when the object 
+	  is enclosed in quotes (ex: set "object".local to something) (3 November 2003).
+
+
+  v0.5.5 (released 5 November 2003)
+=======================================
+	- Fixed bug in CSV export which would cause the ItemType field to be not filled in for
+	  some record types (4 Jan 2003).
+	- Yes/No type values in CSV files will be properly imported now (4 Jan 2003).
+	- Added the NPC for CSV export/imports (4 Jan 2003).
+
+
+  v0.5.6 (Build 55, 5 January 2004)
+=======================================
+
+
+
+  v0.6.0-RC1 (Build 0, 24 August 2006)
+=======================================
+	- Improved indexing of records which roughly halves the loading time and speeds up record
+	  lookups in general.
+	- Checks for duplicate IDs greatly speeded up using the improved record indexing.
+	- Added link to UESP Wiki on the function help page (jumps to the appropriate article).
+	- Added the custom game data path to the options. If this value is blank the default MW
+	  data path from the registry is used (if found). Specify a custom "Data Files" path
+	  if you wish to load files from an alternate game location.
+	- Fixed the bug where the open dialog would crash if it found a file with a date set
+	  far in the future.
+	- Merged in the v0.9.2a MWSE changes and custom function definitions. All custom functions
+	  are defined the "CustomFunctions.dat" file which allows one to add new function definitions
+	  as needed without requiring a recompile. See the data file for an explanation of how
+	  to edit/add new functions.
+	- Fixed bug in script compiler which would incorrectly output if() statements when they 
+	  appeared directly after certain function calls.
+	- Added the "backup saves" option which allows you to disable the automatic save backup
+	  option which is enabled by default.
+	- Corrected the definition of the SetWereWolfAcrobatics function.
+	- The error view at the bottom of the script dialog now shows up initially.
+	- Added the "no compile prompt" option which disables the popup message box after a 
+	  script is compiled. The final compile message is added to the end of the messages
+	  in the error list at the bottom of the script window.
+	- Added the "extra file" option. When this is enabled the given file is loaded and used
+	  if a certain record is not found in the current file. For example, the extra file 
+	  contains the "player" record. If you load an ESP without the Morrowind.esm master file
+	  you can still compile scripts using the "player" object by enabling this option. Any
+	  record type is supported in the extra file (globals, NPCs, scripts, etc...).
+	- Added basic undo functionality to the script editor (Ctrl-Z, the right-click
+	  context menu or via the Undo button). 
+	- Rearranged the function help page slightly and added the v0.9.2a MWSE functions. Note 
+	  the MWSE functions don't yet have an article on the Wiki.
+	- Modified the weapon dialog to prevent scripts from being applied on thrown, arrow, and
+	  bolt weapons.
+	- New NPCs will have initial values set for their race, class, hair, and head if there
+	  are any available. This is to try to prevent the Construction Set from crashing when
+	  editing the AI packages of an NPC with a missing race/class/hair/head.
+	- Added the "Strict Object IDs" options. When enabled it works the same as previous
+	  versions where only certain new object IDs are allowed. When disabled you can use
+	  pretty much any ID as long as it starts with a letter, number, or underscore.
+	- Added a bunch of the "Toggle..." and other functions as used in MW-Enhanced to the
+	  custom function file.
+
+
+v0.6.0-RC2 (Build 0, 27 August 2006)
+=======================================
+	- Fixed crash when cleaning a record.
+	- Changed the cell name to force an output of a terminating null character to try and prevent
+	  the cell renaming bug.
+	- Fixed bug when compiling scripts with the "extra file" enabled.
+	- Fixed generation of new Info/StartScript IDs which resulted in a bad ID in some cases.
+	- Corrected the default "extra file" name to match the distributed file.
+	- Fixed crash when dragging in script editor.
+	- Added undo for dragging text in script editor.
+	- Fixed crash/error in script editor caused by undo in some cases.
+	- Changed valid script if() syntax. Now allows operators, and functions on both sides
+	  and reference calls on the left side. Ensure to enclose both sides of the comparison
+	  operator in brackets to ensure it compiles correctly in the Construction Set, eg:
+
+				WRONG:		if (  Var1 * Var2 + 10  >=  Var2/109  )
+				CORRECT:	if ( (Var1 * Var2 + 10) >= (Var2/109) )
+
+	- Changed how extra variables are checked at the end of function calls to prevent some
+	  errors when functions are used in if() statements.
+	- Tabs will now undo in the script editor.
+	- Added the 'Indent' button to the script toolbar. When used it attempts to automatically
+	  indent the script according to the current settings. This action can be undone.
+	- Added various identation settings in the options dialog. 
+	- Added the following console functions to the script compiler:
+			CenterOnCell
+			CenterOnExterior
+			FillMap
+			FixMe
+			ToggleAI
+			ToggleCollision
+			ToggleFogOfWar
+			ToggleGodMode
+			ToggleMenus
+			ToggleSky
+			ToggleVanityMode
+			ToggleWorld
+	  Verified script output matches 100% to that produced in the CS with the above functions.
+
+
+v0.6.0-RC3 (Build 0, September 2006)
+=======================================
+	- Renamed "Ingrediant" to "Ingredient" on UI components.
+	- Changed the enchantment type "Cast Strikes" to "Cast On Strike".
+	- Added a bunch of AI data/flag columns to the right side of the NPC list.
+	- The 'ifx' and 'whilex' keywords now ident properly in the script editor.
+	- Fixed bug when renaming a record that would incorrectly change the name original record.
+	- The infos listed in a dialogue should now be correct. Dialogues also should be properly
+	  copied and renamed now along with their associated infos.
+	- When cleaning a record its edit window is automatically closed if open.
+	- Fixed misspelling of xRefType in function data files.
+	- Fixed a script compile bug with local variable references (eg: set SomeObject.LocalVar to 1)
+	  which would output incorrect data in some cases.
+	- Local variables can now be checked in if statements, ex:
+			if ( SomeObject.LocalVar == 1 )
+	- Checked output of whilex(i) using one character local variables as mentioned as a possible
+	  bug. Seems to be the same as multi-character variables and is the same output as MWEditSE.
+	- The while statement now accepts extended expression like the if statement. This also fixes
+	  a bug with some while statements being output incorrectly.
+	- Fixed bug when using extended functions within an if/while block (incorrect block size was
+	  begin output).
+	- Blank lines in scripts are no longer idented when using auto-indent.
+	- Script text is no longer selected when a script is opened.
+	- Added the "Script Compare" option to the test menu to help in quickly confirming compiled
+	  script output matches that of the CS. To use, create a plugin with one or more scripts to
+	  test. Compile one copy in the CS and one copy in MWEdit. Select the "Script Compare" and
+	  open the copy compiled in the CS. The script compare window will open and show the basic
+	  comparison results from the compiled data.
+	- Fixed bug which prevented the SameFaction function from being compiled.
+	- Fixed script compile bug related to outputting some functions incorrectly (was due to the 
+	  recent change in how functions are parsed).
+	- The omitted comma warning in function calls has been disabled at all warning levels.
+	- Corrected the current values for the animation groups. The animation opcodes have changed
+	  sometime between the original version of the CS and the latest version.
+	- Added some missing animation codes added in a previous patch or expansion. It is unsure
+	  whether any of these codes have a valid use in a script.
+				Attack1
+				Attack2
+				Attack3
+				Block Hit
+				Block Start
+				Block Stop
+				Equip Attach
+				Equip Start
+				Equip Stop
+				Loop Start
+				Loop Stop
+				Self Release
+				Self Start
+				Self Stop
+				Shoot Attach
+				Shoot Follow Attach
+				Shoot Follow Start
+				Shoot Follow Stop
+				Shoot Max Attack
+				Shoot Min Attack
+				Shoot Min Hit
+				Shoot Release
+				Shoot Start
+				Slash Hit
+				Slash Large Follow Start
+				Slash Large Follow Stop
+				Slash Max Attack
+				Slash Medium Follow Start
+				Slash Medium Follow Stop
+				Slash Min Attack
+				Slash Min Hit
+				Slash Small Follow Start
+				Slash Small Follow Stop
+				Slash Start
+				Start
+				Stop
+				SwimAttack1
+				SwimAttack2
+				SwimAttack3
+				SwimDeath2
+				SwimDeath3
+				SwimHit1
+				SwimHit2
+				SwimHit3
+				Target Release
+				Target Start
+				Target Stop
+				Thrust Hit
+				Thrust Large Follow Start
+				Thrust Large Follow Stop
+				Thrust Max Attack
+				Thrust Medium Follow Start
+				Thrust Medium Follow Stop
+				Thrust Min Attack
+				Thrust Min Hit
+				Thrust Small Follow Start
+				Thrust Small Follow Stop
+				Thrust Start
+				Touch Release
+				Touch Start
+				Touch Stop
+				Unequip Detach
+				Unequip Start
+				Unequip Stop
+	  Animation groups with a space in them must be enclosed in quotes when used, eg:
+
+				LoopGroup "Unequip Stop"
+
+	  New groups that have multiple opcodes use the lowest opcode value. See 
+
+				http://www.uesp.net/wiki/Tes3Mod:Animation_Groups
+
+	  for the complete list of valid animation groups.
+	- The script find dialog defaults to a down direction.
+	- Added the GetLOS function as as short form for GetLineOfSight.
+	- GetPCRank not accepts an optional faction parameter. Output in typical uses verified
+	  to 100% of that output by the CS.
+	- Removed the "Local variable 'var' conflicts an object ID" warning.
+	- Fixed bug with script undo when overwriting selected text with a character or paste
+	  operation.
+	- Fixed script compiler bug which would insert an extra "-" in if() statements in
+	  some cases.
+	- Lots of other minor improvements to the script compiler to ensure it matches the
+	  output of the CS as closely as possible.
+	- Included the MwEditScriptTest.esp file which was used to verify the output of the 
+	  script compiler matches as close to possible the output from the CS. The scripts
+	  starting with "testbar" are known to contain issues:
+
+			testbad_aiwander:	AiWander calls with reset are output strangely from the CS.
+			testbad_if3:		If/set expressions with negatives are output differently by the CS
+								but the final result is the same.
+			testbad_random1:
+			testbad_random2:	Random is just messed up by the CS but the 'correct' output
+								from MWEdit seems to work just fine.
+
+	  All other scripts are verified to compile in MWEdit to exactly the same as from the CS.
+	- Added the "Allow Bloodmoon" and "Allow Tribunal" options. When checked they allow the
+	  expansion specific script functions to be used (you'll receive an error/warning message
+	  otherwise). When "Allow Tribunal" is checked you can also use the extended set of
+	  animation groups. This feature does not currently recognize changes in existing
+	  functions made in the expansions, only new functions added in the expansion.
+	- Added a script compiler warning if a '34th' local variable is used.
+	- Improved the operation the function help command in the right-click context menu of
+	  the script editor.
+        - Added the 'Compile Active Scripts' command in the Edit menu which attempts to compile 
+          all scripts in the active plugin.
+
+
+v0.6.1 (28 Nov 2006)
+=======================================
+	- Globals that conflict with other IDs (eg: Stonghold is both a global and a topic) should
+	  now compile fine in scripts. Need confirmation this works everwhere but some simple tests
+	  seem to indicate it is working.
+	- Added console function abbreviations to the valid scripting functions.
+	- Globals now work in scripts when the 'extra file' option is enabled.	  
+	- Records with duplicate IDs should work better with the script compiler.
+	- String globals are now accepted in the script compiler. There still may be situations
+	  where the CS accepts a string but MwEdit does not. 
+	- The 'Choice' function should now be supported and properly compiled in scripts. Only basic
+	  checking of its function arguments are done due to its special syntax when output in scripts.
+	- The "compile all scripts" feature now outputs errors/warnings to a simple textbox dialog. All
+	  compile messages are also output to the Mwedit.log text file. Note that when compiling a 
+	  large number of scripts not all messages may display in the final message dialog.
+    - A blank/empty book teaches skill will now import correctly from a CSV file.
+	- Plugins with duplicate IDs will now properly display those records.
+	- Note that compiling scripts is slightly (20%) slower now due to the required checking for
+	  duplicate IDs. This is particularily noticable when compiling multiple scripts. For example, 
+	  compiling all scripts in Morrowind.esm takes around a minute (there is no progress bar).
+	- Added link to the Tes3Mod:Modding page on the UESP to the help menu and toolbar.
+	- Added the 'Make Active' command to the main record list context menu. This moves all 
+	  selected records to the active plugin.
+	- Improved support for the unary minus operation in scripts. For example:
+
+			set local to -(6 + global1)
+			set local to -player->getpos x
+
+	  Note that the CS seems to not handle complex unary minus operations very well and may 
+	  output invalid compiled data in those cases.
+	- Fixed crash when compiling a function call within another function.
+	- PlaceItem/PlaceItemCell now compile properly when called with variables.
+	- Main window can be maximized without it reverting when a record window is opened.
+	  Script and dialogue windows operate in the same manner.
+	- 'reset' is no longer a reserved word in scripts. Added a few more checks to allow
+	  local/global variables named 'reset'.

@@ -1,0 +1,4412 @@
+Function = Activate
+	Options = 0x8
+	Opcode = 0x1017
+	Return = 0x0, "None"
+	Param1 = 0x820, "player"
+	Desc = "This function tells the object to do its default activation."
+End
+Function = AddItem
+	Options = 0x0
+	Opcode = 0x10D4
+	Return = 0x0, "None"
+	Param1 = 0x20, "Object"
+	Param2 = 0x2, "Count"
+	Desc = Adds the given number of the item to the calling NPC. Note that the Count value has a short type 
+	Desc = which limits the number of items that you can add to 65535. When an NPC has armor added to its 
+	Desc = inventory (via AddItem or normally when you sell it to them), it will automatically equip the 
+	DescL = armor if:
+
+	Desc = 1. The NPC's skill in using that armor is higher than that of its currently equiped armor
+	DescL = (NPCs with higher Unarmored skill than the rest of the armored skills will never wear armor).
+	DescL = 2. The armor value of the new piece of armor is higher than the previous. (It will not switch to an equivalent armor piece). 
+	Desc = Also, an NPC will not replace a lost/removed/broken armor piece unless a new one is added.
+End
+Function = AddSoulGem
+	Options = 0x0
+	Opcode = 0x10EB
+	Return = 0x0, "None"
+	Param1 = 0x10000020, "Creature"
+	Param2 = 0x20000020, "Soulgem"
+	Desc = "Adds a filled soulgem to the calling object's inventory using the given creature and soulgem types."
+End
+Function = AddSpell
+	Options = 0x0
+	Opcode = 0x111D
+	Return = 0x0, "None"
+	Param1 = 0x40000020, "Spell ID"
+	Desc = "This function adds the given spell to the calling object. If the spell is a normal spell, it will"
+	Desc = "be added to the list of the actor's known spells. If the spell is a curse/disease it will be added"
+	Desc = "to the list of spells currently affecting the calling actor. Use RemoveSpell to remove spells added by AddSpell."
+End
+Function = AddToLevCreature
+	Options = 0x800
+	Opcode = 0x11A6
+	Return = 0x0, "None"
+	Param1 = 0x4000020, "Leveled Creature List"
+	Param2 = 0xA0000020, "Actor"
+	Param3 = 0x8, "Level"
+	Desc = "Allows the user to modify the levelled creature lists while the game is running."
+End
+Function = AddToLevItem
+	Options = 0x800
+	Opcode = 0x11A8
+	Return = 0x0, "None"
+	Param1 = 0x8000020, "Leveled Item List"
+	Param2 = 0x20, "Item"
+	Param3 = 0x8, "Item Level"
+	Desc = "Allows the user to modify the levelled item lists while the game is running."
+End
+Function = AddTopic
+	Options = 0x0
+	Opcode = 0x1022
+	Return = 0x0, "None"
+	Param1 = 0x800020, "Topic"
+	Desc = "Adds the given dialogue topic to the players list of known topics."
+End
+Function = AIActivate
+	Options = 0x0
+	Opcode = 0x10F3
+	Return = 0x0, "None"
+	Param1 = 0x20, "Object"
+	Param2 = 0x900, "Reset"
+	Desc = "Causes the referenced actor to attempt to activate the given object."
+End
+Function = AIEscort
+	Options = 0x0
+	Opcode = 0x10F4
+	Return = 0x0, "None"
+	Param1 = 0xA0000020, "Actor"
+	Param2 = 0x2, "Duration (sec)"
+	Param3 = 0x8, "X"
+	Param4 = 0x8, "Y"
+	Param5 = 0x8, "Z"
+	Param6 = 0x900, "Reset"
+	Desc = "Causes the calling actor to lead the player to the exterior destination."
+End
+Function = AIEscortCell
+	Options = 0x0
+	Opcode = 0x10F5
+	Return = 0x0, "None"
+	Param1 = 0xA0000020, "Actor"
+	Param2 = 0x1000020, "Cell"
+	Param3 = 0x2, "Duration (sec)"
+	Param4 = 0x8, "X"
+	Param5 = 0x8, "Y"
+	Param6 = 0x8, "Z"
+	Param7 = 0x900, "Reset"
+	Desc = "Causes the calling actor to lead the player to the interior destination."
+	WikiLink = "AIEscort"
+End
+Function = AIFollow
+	Options = 0x0
+	Opcode = 0x10F6
+	Return = 0x0, "None"
+	Param1 = 0xA0000020, "Actor"
+	Param2 = 0x2, "Duration"
+	Param3 = 0x8, "X"
+	Param4 = 0x8, "Y"
+	Param5 = 0x8, "Z"
+	Param6 = 0x900, "Reset"
+	Desc = "The calling actor will follow the given actor for the given duration or until they reach the exterior destination."
+End
+Function = AIFollowCell
+	Options = 0x0
+	Opcode = 0x10F7
+	Return = 0x0, "None"
+	Param1 = 0xA0000020, "Actor"
+	Param2 = 0x1000020, "Cell"
+	Param3 = 0x2, "Duration"
+	Param4 = 0x8, "X"
+	Param5 = 0x8, "Y"
+	Param6 = 0x8, "Z"
+	Param7 = 0x900, "Reset"
+	Desc = "The calling actor will follow the given actor for the given duration or until they reach the interior destination.""
+	WikiLink = "AIFollow"
+End
+Function = AITravel
+	Options = 0x0
+	Opcode = 0x10F8
+	Return = 0x0, "None"
+	Param1 = 0x8, "X"
+	Param2 = 0x8, "Y"
+	Param3 = 0x8, "Z"
+	Param4 = 0x900, "Reset"
+	Desc = "Starts the NPC to travel to the given exterior destination."
+End
+Function = AIWander
+	Options = 0x0
+	Opcode = 0x10F9
+	Return = 0x0, "None"
+	Param1 = 0x8, "Range"
+	Param2 = 0x8, "Duration (hour)"
+	Param3 = 0x408, "Time (hour)"
+	Param4 = 0x802, "Look Around %"
+	Param5 = 0x802, "Look Behind %"
+	Param6 = 0x802, "Scratch Head %"
+	Param7 = 0x802, "Shift Cloths %"
+	Param8 = 0x802, "Show Wares %"
+	Param9 = 0x802, "Look Furtively %"
+	Param10 = 0x802, "Deep Thought %"
+	Param11 = 0x802, "Grab Weapon %"
+	Param12 = 0x900, "Reset"
+	Desc = "Sets the given NPC to wander randomly in the current area using any AI grid points and performing various random idle movements."
+End
+Function = BecomeWerewolf
+	Options = 0x400
+	Opcode = 0x11B3
+	Return = 0x0, "None"
+	Desc = "Turn the player into a werewolf."
+End
+Function = Cast
+	Options = 0x0
+	Opcode = 0x1123
+	Return = 0x0, "None"
+	Param1 = 0x40000020, "Spell"
+	Param2 = 0xA0000020, "Actor"
+	Desc = "The calling object casts the given spell onto the target actor (spells only)."
+End
+Function = CellChanged
+	Options = 0x0
+	Opcode = 0x101F
+	Return = 0x2, "short"
+	Desc = "Returns 1 for one frame when the player changes a cell, or 0 otherwise."
+End
+Function = CellUpdate
+	Options = 0x2000
+	Opcode = 0x1013
+	Return = 0x2, "None"
+	Desc = "Broken. Updates the current objects cell position."
+End
+Function = ChangeWeather
+	Options = 0x0
+	Opcode = 0x1124
+	Return = 0x0, "None"
+	Param1 = 0x400020, "Region"
+	Param2 = 0x2, "Type (0-7)"
+	Desc = "Changes the weather in the specified region instantly. Weather types are: 0=Clear, 1=Cloudy,"
+	Desc = "2=Foggy, 3=Overcast, 4=Rain, 5=Thunder, 6=Ash, 7=Blight"
+End
+Function = Choice
+	Options = 0x1000
+	Opcode = 0x10C9
+	Return = 0x0, "None"
+	Param1 = 0x10, "Message"
+	Param2 = 0x1010, "Choice1"
+	Param3 = 0x1010, "Choice2"
+	Param4 = 0x1010, "Choice3"
+	Param5 = 0x1010, "Choice4"
+	Param6 = 0x1010, "Choice5"
+	Param7 = 0x1010, ""
+	Param8 = 0x1010, ""
+	Param9 = 0x1010, ""
+	Param10 = 0x1010, ""
+	Param11 = 0x1010, ""
+	Param12 = 0x1010, ""
+	Desc = "Used only in dialogue for presenting 1 to 5 choices to the user."
+End
+Function = ClearForceJump
+	Options = 0x800
+	Opcode = 0x119E
+	Return = 0x0, "None"
+	Desc = "Stops the calling actor from jumping from a previous call to ForceJump. "
+End
+Function = ClearForceMoveJump
+	Options = 0x800
+	Opcode = 0x11A1
+	Return = 0x0, "None"
+	Desc = "Stops the calling actor from jumping from a previous call to ForceMoveJump. "
+End
+Function = ClearForceRun
+	Options = 0x800
+	Opcode = 0x119B
+	Return = 0x0, "None"
+	Desc = "Stops the calling actor from running from a previous call to ForceRun. "
+End
+Function = ClearForceSneak
+	Options = 0x0
+	Opcode = 0x1164
+	Return = 0x0, "None"
+	Desc = "Stops the NPC sneaking from a previous call to ForceSneak. "
+End
+Function = ClearInfoActor
+	Options = 0x0
+	Opcode = 0x10CB
+	Return = 0x0, "None"
+	Desc = "Makes this info not appear in the journal."
+End
+Function = Disable
+	Options = 0x0
+	Opcode = 0x10DB
+	Return = 0x0, "None"
+	Desc = "Used to disable objects within the game."
+End
+Function = DisableLevitation
+	Options = 0x800
+	Opcode = 0x1194
+	Return = 0x0, "None"
+	Desc = "Disables the use of any levitation magic. "
+End
+Function = DisablePlayerControls
+	Options = 0x0
+	Opcode = 0x10DE
+	Return = 0x0, "None"
+	Desc = "Stops the player from moving or using any control."
+	WikiLink = "DisableControls"
+End
+Function = DisablePlayerFighting
+	Options = 0x0
+	Opcode = 0x115A
+	Return = 0x0, "None"
+	Desc = "Stops the player from being able to fight with a weapon."
+	WikiLink = "DisableControls"
+End
+Function = DisablePlayerJumping
+	Options = 0x0
+	Opcode = 0x1140
+	Return = 0x0, "None"
+	Desc = "Stops the player from being able to jump."
+	WikiLink = "DisableControls"
+End
+Function = DisablePlayerLooking
+	Options = 0x0
+	Opcode = 0x1143
+	Return = 0x0, "None"
+	Desc = "The player's view is fixed."
+	WikiLink = "DisableControls"
+End
+Function = DisablePlayerMagic
+	Options = 0x0
+	Opcode = 0x115D
+	Return = 0x0, "None"
+	Desc = "Stop the player from casting any spells."
+	WikiLink = "DisableControls"
+End
+Function = DisablePlayerViewSwitch
+	Options = 0x0
+	Opcode = 0x10E3
+	Return = 0x0, "None"
+	Desc = "Disables the switching between 1st and 3rd person views."
+	WikiLink = "DisableControls"
+End
+Function = DisableTeleporting
+	Options = 0x0
+	Opcode = 0x10EF
+	Return = 0x0, "None"
+	Desc = "Disables the use of teleportation magic."
+	WikiLink = "EnableDisableTeleporting"
+End
+Function = DisableVanityMode
+	Options = 0x0
+	Opcode = 0x114C
+	Return = 0x0, "None"
+	Desc = "Prevents the player from using the 3rd person view."
+	WikiLink = "DisableControls"
+End
+Function = DontSaveObject
+	Options = 0x800
+	Opcode = 0x115F
+	Return = 0x0, "None"
+	Desc = "Call when you do not want to save any changes in the calling object to the player's save game."
+End
+Function = Drop
+	Options = 0x0
+	Opcode = 0x110D
+	Return = 0x0, "None"
+	Param1 = 0x20, "Object"
+	Param2 = 0x2, "Count"
+	Desc = "The calling NPC drops the given number of the item into world at his feet."
+End
+Function = DropSoulGem
+	Options = 0x0
+	Opcode = 0x10ED
+	Return = 0x0, "None"
+	Param1 = 0x20000020, "Creature"
+	Desc = "Causes the calling object to drop a filled soulgem with the given creature's soul."
+	Desc = "Automatically chooses an appropriate soulgem to use."
+End
+Function = Enable
+	Options = 0x0
+	Opcode = 0x10DA
+	Return = 0x0, "None"
+	Desc = "Enables the calling object."
+	WikiLink = "EnableDisable"
+End
+Function = EnableBirthMenu
+	Options = 0x0
+	Opcode = 0x1129
+	Return = 0x0, "None"
+	Desc = "Displays the menu which allows the player to select a birth sign."
+	WikiLink = "EnableCharacterMenus"
+End
+Function = EnableClassMenu
+	Options = 0x0
+	Opcode = 0x1128
+	Return = 0x0, "None"
+	Desc = "Displays the menu which allows the player to choose their class."
+	WikiLink = "EnableCharacterMenus"
+End
+Function = EnableInventoryMenu
+	Options = 0x0
+	Opcode = 0x1118
+	Return = 0x0, "None"
+	Desc = "Allows the player to access their inventory."
+	WikiLink = "EnableControlsMenu"
+End
+Function = EnableLevelupMenu
+	Options = 0x0
+	Opcode = 0x1158
+	Return = 0x0, "None"
+	Desc = "Displays the levelup menu."
+	WikiLink = "EnableLevelupRest"
+End
+Function = EnableLevitation
+	Options = 0x800
+	Opcode = 0x1193
+	Return = 0x0, "None"
+	Desc = "Allow the use of levitation magic."
+	WikiLink = "EnableDisableLevitation"
+End
+Function = EnableMagicMenu
+	Options = 0x0
+	Opcode = 0x111A
+	Return = 0x0, "None"
+	Desc = "Allow the player view their spell menu."
+	WikiLink = "EnableControlsMenu"
+End
+Function = EnableMapMenu
+	Options = 0x0
+	Opcode = 0x1119
+	Return = 0x0, "None"
+	Desc = "Allow the player to view the map window."
+	WikiLink = "EnableControlsMenu"
+End
+Function = EnableNameMenu
+	Options = 0x0
+	Opcode = 0x1126
+	Return = 0x0, "None"
+	Desc = "Display the menu to let the player enter their name."
+	WikiLink = "EnableCharacterMenus"
+End
+Function = EnablePlayerControls
+	Options = 0x0
+	Opcode = 0x10DD
+	Return = 0x0, "None"
+	Desc = "Enable all controls that let the player move and interact in the world."
+	WikiLink = "EnableControlsMenu"
+End
+Function = EnablePlayerFighting
+	Options = 0x0
+	Opcode = 0x1159
+	Return = 0x0, "None"
+	Desc = "Allow the player to fight with weapons."
+	WikiLink = "EnableControls"
+End
+Function = EnablePlayerJumping
+	Options = 0x0
+	Opcode = 0x113F
+	Return = 0x0, "None"
+	Desc = "Allow the player to jump."
+	WikiLink = "EnableControls"
+End
+Function = EnablePlayerLooking
+	Options = 0x0
+	Opcode = 0x1142
+	Return = 0x0, "None"
+	Desc = "Allow the player to look around freely."
+	WikiLink = "EnableControls"
+End
+Function = EnablePlayerMagic
+	Options = 0x0
+	Opcode = 0x115C
+	Return = 0x0, "None"
+	Desc = "Allow the player to cast spells."
+	WikiLink = "EnableControls"
+End
+Function = EnablePlayerViewSwitch
+	Options = 0x0
+	Opcode = 0x10E2
+	Return = 0x0, "None"
+	Desc = "Let the player choose between the 3rd and 1st person views."
+	WikiLink = "EnableControls"
+End
+Function = EnableRaceMenu
+	Options = 0x0
+	Opcode = 0x1127
+	Return = 0x0, "None"
+	Desc = "Display the race menu to let the player choose their race."
+	WikiLink = "EnableCharacterMenus"
+End
+Function = EnableRest
+	Options = 0x0
+	Opcode = 0x13F
+	Return = 0x0, "None"
+	Desc = "Allow the player to sleep or rest."
+	WikiLink = "EnableLevelupRestControls"
+End
+Function = EnableStatReviewMenu
+	Options = 0x0
+	Opcode = 0x1160
+	Return = 0x0, "None"
+	Desc = "Display the final statistic review menu at the end of character creation."
+	WikiLink = "EnableCharacterMenu"
+End
+Function = EnableStatsMenu
+	Options = 0x0
+	Opcode = 0x1117
+	Return = 0x0, "None"
+	Desc = "Allow the player to view their statistics menu."
+	WikiLink = "EnableControlsMenu"
+End
+Function = EnableTeleporting
+	Options = 0x0
+	Opcode = 0x10EE
+	Return = 0x0, "None"
+	Desc = "Allow the player to use teleportation magic."
+	WikiLink = "EnableDisableTeleporting"
+End
+Function = EnableVanityMode
+	Options = 0x0
+	Opcode = 0x114B
+	Return = 0x0, "None"
+	Desc = "Let the player use the 3rd person view."
+	WikiLink = "EnableControls"
+End
+Function = Equip
+	Options = 0x0
+	Opcode = 0x110E
+	Return = 0x0, "None"
+	Param1 = 0x200020, "Object"
+	Desc = "Equips the given item on the calling actor (NPC or player). This function was broken"
+	Desc = "in the original game but fixed in Tribunal/Bloodmoon."
+End
+Function = ExplodeSpell
+	Options = 0x800
+	Opcode = 0x11AD
+	Return = 0x0, "None"
+	Param1 = 0x40000020, "Spell"
+	Desc = "Makes the calling object cast the given spell at itself. "
+End
+Function = Face
+	Options = 0x0
+	Opcode = 0x1162
+	Return = 0x0, "None"
+	Param1 = 0x8, "X"
+	Param2 = 0x8, "Y"
+	Desc = "Broken. Should cause the calling actor to face towards the given X/Y coordinate."
+End
+Function = FadeIn
+	Options = 0x0
+	Opcode = 0x1131
+	Return = 0x0, "None"
+	Param1 = 0x8, "Time (sec)"
+	Desc = "Fades the screen in to black in the given amount of time."
+	WikiLink = "FadeInOut"
+End
+Function = FadeOut
+	Options = 0x0
+	Opcode = 0x1130
+	Return = 0x0, "None"
+	Param1 = 0x8, "Time (sec)"
+	Desc = "Fades the screen out to black in the given amount of time."
+	WikiLink = "FadeInOut"
+End
+Function = FadeTo
+	Options = 0x0
+	Opcode = 0x1145
+	Return = 0x0, "None"
+	Param1 = 0x4, "Alpha (%)"
+	Param2 = 0x8, "Time (sec)"
+	Desc = "Fades the screen to a given amount in the set time. "
+End
+Function = Fall
+	Options = 0x0
+	Opcode = 0x1166
+	Return = 0x0, "None"
+	Desc = "Assumably causes the calling object to fall to the ground."
+End
+Function = ForceGreeting
+	Options = 0x0
+	Opcode = 0x10E8
+	Return = 0x0, "None"
+	Desc = "Makes the NPC start dialogue with the PC. Does not matter where the NPC is."
+End
+Function = ForceJump
+	Options = 0x800
+	Opcode = 0x119D
+	Return = 0x0, "None"
+	Desc = "Forces the calling actor to jump in place."
+End
+Function = ForceMoveJump
+	Options = 0x800
+	Opcode = 0x11A0
+	Return = 0x0, "None"
+	Desc = "Forces the calling actor to jump while they move."
+End
+Function = ForceRun
+	Options = 0x800
+	Opcode = 0x119A
+	Return = 0x0, "None"
+	Desc = "Forces the calling actor to run when they move."
+End
+Function = ForceSneak
+	Options = 0x0
+	Opcode = 0x1163
+	Return = 0x0, "None"
+	Desc = "Forces the calling actor to sneak when they move. "
+End
+Function = GetAcrobatics
+	Options = 0x0
+	Opcode = 0x1077
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetAgility
+	Options = 0x0
+	Opcode = 0x102C
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetAIPackageDone
+	Options = 0x0
+	Opcode = 0x10FB
+	Return = 0x8, "float"
+	Desc = "Returns 1 for one frame when the NPC's AI package has completed (usually returns 0)."
+End
+Function = GetAlarm
+	Options = 0x0
+	Opcode = 0x1105
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's AI setting."
+	WikiLink = "GetStat"
+End
+Function = GetAlchemy
+	Options = 0x0
+	Opcode = 0x106B
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetAlteration
+	Options = 0x0
+	Opcode = 0x105C
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetAngle
+	Options = 0x0
+	Opcode = 0x100C
+	Return = 0x8, "float"
+	Param1 = 0x40, "X/Y/Z"
+	Desc = "Returns a float value of the calling object's current orientation (in degrees) in the world along the specified axis."
+End
+Function = GetArmorBonus
+	Options = 0x0
+	Opcode = 0x1176
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current bonus."
+	WikiLink = "GetStat"
+End
+Function = GetArmorer
+	Options = 0x0
+	Opcode = 0x103E
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetArmorType
+	Options = 0x800
+	Opcode = 0x1198
+	Return = 0x8, "float"
+	Param1 = 0x2, "Location"
+	Desc = "Returns the armor weight class (-1=None; 0=Light; 1=Medium; 2=Heavy) of the actor's armor at the"
+	Desc = "given location. Location types: Helmet=0; Cuirass=1; L.Pauldron=2; R.Pauldron=3; Greaves=4;"
+	Desc = "Boots=5; L.Gauntlet=6; R.Gauntlet=7; Shield=8; L.Bracer=9; R.Bracer=10"
+End
+Function = GetAthletics
+	Options = 0x0
+	Opcode = 0x1053
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetAttackBonus
+	Options = 0x0
+	Opcode = 0x10A2
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current bonus."
+	WikiLink = "GetStat"
+End
+Function = GetAttacked
+	Options = 0x0
+	Opcode = 0x1148
+	Return = 0x2, "short"
+	Desc = "Returns 0 if the actor has never been attacked and 1 if he has been attacked. "
+End
+Function = GetAxe
+	Options = 0x0
+	Opcode = 0x104D
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetBlightDisease
+	Options = 0x0
+	Opcode = 0x114A
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the calling object has a blight disease, or 0 otherwise."
+	WikiLink = "GetStat"
+End
+Function = GetBlindness
+	Options = 0x0
+	Opcode = 0x117F
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetBlock
+	Options = 0x0
+	Opcode = 0x103B
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetBluntWeapon
+	Options = 0x0
+	Opcode = 0x1047
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetButtonPressed
+	Options = 0x0
+	Opcode = 0x101E
+	Return = 0x2, "short"
+	Desc = "Returns the user's choice from the previous MessageBox function. If the user hasn't made a choice yet the function returns -1."
+End
+Function = GetCastPenalty
+	Options = 0x0
+	Opcode = 0x1179
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetChameleon
+	Options = 0x0
+	Opcode = 0x10C3
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetCollidingActor
+	Options = 0x800
+	Opcode = 0x11A4
+	Return = 0x2, "short"
+	Desc = "Returns 1 if any actor (including the player) is colliding with the calling object."
+End
+Function = GetCollidingPC
+	Options = 0x800
+	Opcode = 0x11A3
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is colliding with the calling object. "
+	WikiLink = "GetColliding"
+End
+Function = GetCommonDisease
+	Options = 0x0
+	Opcode = 0x1149
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the calling object has a common disease, or 0 otherwise."
+	WikiLink = "GetColliding"
+End
+Function = GetConjuration
+	Options = 0x0
+	Opcode = 0x1062
+	Return = 0x2, "short"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetCurrentAIPackage
+	Options = 0x0
+	Opcode = 0x10FA
+	Return = 0x2, "short"
+	Desc = "Returns a short value based on the current AIPackage the NPC is performing. None=-1; Wander=0;"
+	Desc = "Travel=1; Escort=2; Follow=3; Activate=4; Pursue=5"
+End
+Function = GetCurrentTime
+	Options = 0x0
+	Opcode = 0x1011
+	Return = 0x8, "float"
+	Desc = "Unknown function that may return the same value of GetSecondsPassed."
+End
+Function = GetCurrentWeather
+	Options = 0x0
+	Opcode = 0x10A1
+	Return = 0x2, "short"
+	Desc = "Returns the current weather conditions. 0=Clear; 1=Cloudy; 2=Foggy; 3=Overcast;"
+	Desc = "4=Rain; 5=Thunder; 6=Ash; 7=Blight"
+End
+Function = GetDeadCount
+	Options = 0x0
+	Opcode = 0x10FE
+	Return = 0x4, "long"
+	Param1 = 0xA0000020, "Actor"
+	Desc = "Returns the number of items the given actor has been killed."
+End
+Function = GetDefendBonus
+	Options = 0x0
+	Opcode = 0x10A5
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current bonus."
+	WikiLink = "GetStat"
+End
+Function = GetDestruction
+	Options = 0x0
+	Opcode = 0x1059
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetDetected
+	Options = 0x0
+	Opcode = 0x114E
+	Return = 0x2, "short"
+	Param1 = 0xA0000020, "Actor"
+	Desc = "Returns 1 if the calling actor can detect the given actor. "
+End
+Function = GetDisabled
+	Options = 0x0
+	Opcode = 0x10DC
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the calling object is currently disabled."
+End
+Function = GetDisposition
+	Options = 0x0
+	Opcode = 0x1098
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current disposition with the player."
+	WikiLink = "GetStat"
+End
+Function = GetDistance
+	Options = 0x0
+	Opcode = 0x1001
+	Return = 0x8, "float"
+	Param1 = 0x20, "Object"
+	Desc = "Returns the distance between the calling object and the given object."
+End
+Function = GetEffect
+	Options = 0x1
+	Opcode = 0x1138
+	Return = 0x2, "short"
+	Param1 = 0x80, "EffectID"
+	Desc = "Returns 1 if the given spell effect is currently on the calling object."
+	Desc = "Effect IDs are the string values 'sEffectFrostDamage' etc...."
+End
+Function = GetEnchant
+	Options = 0x0
+	Opcode = 0x1056
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetEndurance
+	Options = 0x0
+	Opcode = 0x1032
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetFactionReaction
+	Options = 0x0
+	Opcode = 0x1153
+	Return = 0x8, "float"
+	Param1 = 0x100020, "Faction1"
+	Param2 = 0x100020, "Faction2"
+	Desc = "Returns the reaction adjustment for the two given factions."
+End
+Function = GetFatigue
+	Options = 0x0
+	Opcode = 0x1092
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current (maximum?) fatigue."
+	WikiLink = "GetStat"
+End
+Function = GetFight
+	Options = 0x0
+	Opcode = 0x10FF
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current AI setting."
+	WikiLink = "GetStat"
+End
+Function = GetFlee
+	Options = 0x0
+	Opcode = 0x1102
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current AI setting."
+	WikiLink = "GetStat"
+End
+Function = GetFlying
+	Options = 0x0
+	Opcode = 0x1173
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the calling object is currently flying."
+	WikiLink = "GetStat"
+End
+Function = GetForceJump
+	Options = 0x800
+	Opcode = 0x119F
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the actor has been forced to jump via a previous call to ForceJump."
+End
+Function = GetForceMoveJump
+	Options = 0x800
+	Opcode = 0x11A2
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the actor has been forced to move-jump via a previous call to ForceMoveJump."
+End
+Function = GetForceRun
+	Options = 0x800
+	Opcode = 0x119C
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the actor has been forced to run via a previous call to ForceRun."
+End
+Function = GetForceSneak
+	Options = 0x0
+	Opcode = 0x1165
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the actor has been forced to sneak via a previous call to ForceSneak."
+End
+Function = GetHandToHand
+	Options = 0x0
+	Opcode = 0x1089
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetHealth
+	Options = 0x0
+	Opcode = 0x108C
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetHealthGetRatio
+	Options = 0x0
+	Opcode = 0x1154
+	Return = 0x8, "float"
+	Desc = "Returns the calling actor's current/maximum health ratio (0 to 1)."
+	WikiLink = "GetStat"
+End
+Function = GetHeavyArmor
+	Options = 0x0
+	Opcode = 0x1044
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetHello
+	Options = 0x0
+	Opcode = 0x1108
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's AI setting."
+	WikiLink = "GetStat"
+End
+Function = GetIllusion
+	Options = 0x0
+	Opcode = 0x105F
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetIntelligence
+	Options = 0x0
+	Opcode = 0x1026
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetInterior
+	Options = 0x0
+	Opcode = 0x110B
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently inside."
+End
+Function = GetInvisible
+	Options = 0x0
+	Opcode = 0x1185
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the calling actor is invisible."
+	WikiLink = "GetStat"
+End
+Function = GetItemCount
+	Options = 0x0
+	Opcode = 0x10FD
+	Return = 0x4, "long"
+	Param1 = 0x200020, "Object"
+	Desc = "Returns the number of objects in the calling actor's inventory."
+End
+Function = GetJournalIndex
+	Options = 0x0
+	Opcode = 0x10CD
+	Return = 0x4, "long"
+	Param1 = 0x80020, "Journal"
+	Desc = "This function returns the current index of journal entry for that topic."
+End
+Function = GetLevel
+	Options = 0x0
+	Opcode = 0x1157
+	Return = 0x8, "float"
+	Desc = "Returns the current level of the calling actor."
+	WikiLink = "GetStat"
+End
+Function = GetLightArmor
+	Options = 0x0
+	Opcode = 0x107A
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetLineOfSight
+	Options = 0x0
+	Opcode = 0x10FC
+	Return = 0x2, "short"
+	Param1 = 0x20, "Object"
+	Desc = "Returns 1 if the calling object and the given object have a clear line-of-sight between them."
+End
+Function = GetLOS
+	Options = 0x0
+	Opcode = 0x10FC
+	Return = 0x2, "short"
+	Param1 = 0x20, "Object"
+	Desc = "Returns 1 if the calling object and the given object have a clear line-of-sight between them."
+End
+Function = GetLocked
+	Options = 0x0
+	Opcode = 0x1161
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the calling object is currently locked."
+End
+Function = GetLongBlade
+	Options = 0x0
+	Opcode = 0x104A
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetLuck
+	Options = 0x0
+	Opcode = 0x1038
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetMagicka
+	Options = 0x0
+	Opcode = 0x108F
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetMarksman
+	Options = 0x0
+	Opcode = 0x1080
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetMasserPhase
+	Options = 0x0
+	Opcode = 0x1146
+	Return = 0x8, "float"
+	Desc = "Returns the current phase of the moon of Tamriel. 0=New Moon/Interior;	1=Crescent;"
+	Desc = "2=Half; 3=Gibbous; 4=Full Moon"
+End
+Function = GetMediumArmor
+	Options = 0x0
+	Opcode = 0x1041
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetMercantile
+	Options = 0x0
+	Opcode = 0x1083
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetMysticism
+	Options = 0x0
+	Opcode = 0x1065
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetParalysis
+	Options = 0x0
+	Opcode = 0x1182
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetPCCell
+	Options = 0x0
+	Opcode = 0x1112
+	Return = 0x2, "short"
+	Param1 = 0x1002020, "Cell"
+	Desc = "Returns 1 if the player is currently in the given cell (including a partial match)."
+End
+Function = GetPCCrimeLevel
+	Options = 0x0
+	Opcode = 0x109B
+	Return = 0x8, "float"
+	Desc = "Returns the current crime level of the player."
+	WikiLink = "GetStat"
+End
+Function = GetPCFacRep
+	Options = 0x0
+	Opcode = 0x10D7
+	Return = 0x8, "float"
+	Param1 = 0x100020, "Faction"
+	Desc = "Returns the player's faction modifier towards the calling NPC's faction, or of the supplied FactionID."
+End
+Function = GetPCinJail
+	Options = 0x400
+	Opcode = 0x11BB
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently in jail."
+End
+Function = GetPCJumping
+	Options = 0x800
+	Opcode = 0x118C
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently jumping."
+End
+Function = GetPCRank
+	Options = 0x0
+	Opcode = 0x110C
+	Return = 0x2, "short"
+	Desc = "Returns the player's current rank in the calling NPC's faction."
+End
+Function = GetPCRunning
+	Options = 0x800
+	Opcode = 0x118B
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently running."
+End
+Function = GetPCSleep
+	Options = 0x0
+	Opcode = 0x10E0
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently sleeping."
+End
+Function = GetPCSneaking
+	Options = 0x800
+	Opcode = 0x118A
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the player is currently sneaking."
+End
+Function = GetPCTraveling
+	Options = 0x400
+	Opcode = 0x11BC 
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently travelling."
+End
+Function = GetPCVisionBonus
+	Options = 0x0
+	Opcode = 0x11B0
+	Return = 0x8, "float"
+	Desc = "Returns the player's vision bonus."
+	WikiLink = "GetStat"
+End
+Function = GetPersonality
+	Options = 0x0
+	Opcode = 0x1035
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetPlayerControlsDisabled
+	Options = 0x0
+	Opcode = 0x10DF
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player's controls have been disabled."
+	WikiLink = "GetControlsDisabled"
+End
+Function = GetPlayerFightingDisabled
+	Options = 0x0
+	Opcode = 0x115B
+	Return = 0x2, "short"
+	Desc = "Returns 1 if fighting has been disabled for the player."
+	WikiLink = "GetControlsDisabled"
+End
+Function = GetPlayerJumpingDisabled
+	Options = 0x0
+	Opcode = 0x1141
+	Return = 0x2, "short"
+	Desc = "Returns 1 if jumping has been disabled for the player."
+End
+Function = GetPlayerLookingDisabled
+	Options = 0x0
+	Opcode = 0x1144
+	Return = 0x2, "short"
+	Desc = "Returns 1 if free looking has been disabled for the player."
+	WikiLink = "GetControlsDisabled"
+End
+Function = GetPlayerMagicDisabled
+	Options = 0x0
+	Opcode = 0x115E
+	Return = 0x2, "short"
+	Desc = "Returns 1 if casting spells has been disabled for the player."
+End
+Function = GetPlayerViewSwitch
+	Options = 0x2000
+	Opcode = 0x10E4
+	Return = 0x2, "short"
+	Desc = "Returns 1 if switching views has been disabled for the player."
+	WikiLink = "GetControlsDisabled"
+End
+Function = GetPos
+	Options = 0x0
+	Opcode = 0x100A
+	Return = 0x8, "float"
+	Param1 = 0x40, "X/Y/Z"
+	Desc = "Returns the X/Y/Z coordinate for the calling object."
+End
+Function = GetRace
+	Options = 0x0
+	Opcode = 0x1139
+	Return = 0x2, "short"
+	Param1 = 0x40020, "Race"
+	Desc = "Returns 1 if the calling NPC's race matches the given race string."
+End
+Function = GetReputation
+	Options = 0x0
+	Opcode = 0x1095
+	Return = 0x8, "float"
+	Desc = "Returns the calling NPC's reputation."
+	WikiLink = "GetStat"
+End
+Function = GetResistBlight
+	Options = 0x0
+	Opcode = 0x10B7
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistCorprus
+	Options = 0x0
+	Opcode = 0x10BA
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistDisease
+	Options = 0x0
+	Opcode = 0x10B4
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistFire
+	Options = 0x0
+	Opcode = 0x10AB
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistFrost
+	Options = 0x0
+	Opcode = 0x10AE
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistMagicka
+	Options = 0x0
+	Opcode = 0x10A8
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistNormalWeapons
+	Options = 0x0
+	Opcode = 0x10C6
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistParalysis
+	Options = 0x0
+	Opcode = 0x10C0
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistPoison
+	Options = 0x0
+	Opcode = 0x10BD
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetResistShock
+	Options = 0x0
+	Opcode = 0x10B1
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current resistance."
+	WikiLink = "GetStat"
+End
+Function = GetRestoration
+	Options = 0x0
+	Opcode = 0x1068
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetScale
+	Options = 0x800
+	Opcode = 0x118D
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current scale."
+	WikiLink = "GetStat"
+End
+Function = GetSecondsPassed
+	Options = 0x0
+	Opcode = 0x1012
+	Return = 0x8, "float"
+	Desc = "Returns the number of real time seconds since the last frame."
+End
+Function = GetSecundaPhase
+	Options = 0x0
+	Opcode = 0x1147
+	Return = 0x8, "float"
+	Desc = "Returns the current phase of the moon of Tamriel. 0=New Moon/Interior; 1=Crescent;"
+	Desc ="2=Half; 3=Gibbous; 4=Full Moon"
+End
+Function = GetSecurity
+	Options = 0x0
+	Opcode = 0x1071
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetShortBlade
+	Options = 0x0
+	Opcode = 0x107D
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetSilence
+	Options = 0x0
+	Opcode = 0x117C
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetSneak
+	Options = 0x0
+	Opcode = 0x1074
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetSoundPlaying
+	Options = 0x0
+	Opcode = 0x1188
+	Return = 0x2, "short"
+	Param1 = 0x20020, "Sound"
+	Desc = "Returns 1 if the given sound is currently playing."
+End
+Function = GetSpear
+	Options = 0x0
+	Opcode = 0x1050
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetSpeechcraft
+	Options = 0x0
+	Opcode = 0x1086
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetSpeed
+	Options = 0x0
+	Opcode = 0x102F
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetSpell
+	Options = 0x0
+	Opcode = 0x111F
+	Return = 0x2, "short"
+	Param1 = 0x40000020, "Spell"
+	Desc = "Returns 1 if the calling object has the spell in their inventory."
+End
+Function = GetSpellEffects
+	Options = 0x0
+	Opcode = 0x1121
+	Return = 0x2, "short"
+	Param1 = 0x40000020, "Spell"
+	Desc = "Returns 1 if the calling object is under the effect of the given spell."
+End
+Function = GetSpellReadied
+	Options = 0x800
+	Opcode = 0x11AF
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the calling actor has a spell ready to be cast."
+End
+Function = GetSquareRoot
+	Options = 0x4802
+	Opcode = 0x11AC
+	Return = 0x8, "float"
+	Param1 = 0x8, "Value"
+	Desc = "Returns the square root of the given number/local/global variable."
+End
+Function = GetStandingActor
+	Options = 0x0
+	Opcode = 0x1114
+	Return = 0x2, "short"
+	Desc = "Returns 1 if any actor (including the player) is currently standing on the object."
+End
+Function = GetStandingPC
+	Options = 0x0
+	Opcode = 0x1113
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently standing on the object."
+End
+Function = GetStartingAngle
+	Options = 0x0
+	Opcode = 0x100F
+	Return = 0x8, "float"
+	Param1 = 0x40, "X/Y/Z"
+	Desc = "Returns a float value of the object's original orientation (in degrees) along the given world axis."
+End
+Function = GetStartingPos
+	Options = 0x0
+	Opcode = 0x100E
+	Return = 0x8, "float"
+	Param1 = 0x40, "X/Y/Z"
+	Desc = "Returns a float value of the object's original position along the given world axis. "
+End
+Function = GetStrength
+	Options = 0x0
+	Opcode = 0x1023
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetSuperJump
+	Options = 0x0
+	Opcode = 0x1170
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetSwimSpeed
+	Options = 0x0
+	Opcode = 0x116D
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current status."
+	WikiLink = "GetStat"
+End
+Function = GetTarget
+	Options = 0x0
+	Opcode = 0x1150
+	Return = 0x8, "float"
+	Param1 = 0x20, "Actor"
+	Desc = "Returns 1 if the target of the calling actor is the given actor."
+End
+Function = GetUnarmored
+	Options = 0x0
+	Opcode = 0x106E
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current skill."
+	WikiLink = "GetStat"
+End
+Function = GetVanityModeDisabled
+	Options = 0x0
+	Opcode = 0x114D
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the 3rd person view has been disabled."
+	WikiLink = "GetControlsDisabled"
+End
+Function = GetWaterBreathing
+	Options = 0x0
+	Opcode = 0x1167
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the calling actor can currently breath underwater."
+	WikiLink = "GetStat"
+End
+Function = GetWaterLevel
+	Options = 0x800
+	Opcode = 0x1190
+	Return = 0x8, "float"
+	Desc = "Return the cell's current water level?"
+	WikiLink = "WaterLevel"
+End
+Function = GetWaterWalking
+	Options = 0x0
+	Opcode = 0x116A
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the calling actor can currently walk on water."
+	WikiLink = "GetStat"
+End
+Function = GetWeaponDrawn
+	Options = 0x800
+	Opcode = 0x11AE
+	Return = 0x8, "float"
+	Desc = "Returns 1 if the calling actor has a weapon drawn ready to attack."
+End
+Function = GetWeaponType
+	Options = 0x800
+	Opcode = 0x1197
+	Return = 0x2, "short"
+	Desc = "Returns the weapon type of the actor's current weapon. Unarmed=-1; Short=0; Long 1-Hand=1;"
+	Desc = "Long, 2-Hand=2; Blunt, 1-Hand=3; Blunt, 2-Close=4; 	Blunt, 2-Wide=5; Spear=6; Axe1 -Hand=7;"
+	Desc = "Axe 2-Hande=8; Bow=9; Crossbow=10; Thrown=11; Arrow=12; Bolt=13"
+End
+Function = GetWerewolfKills
+	Options = 0x400
+	Opcode = 0x11B6
+	Return = 0x2, "short"
+	Desc = "Returns the number of kills the player(NPC?) has performed since they have turned into a werewolf."
+End
+Function = GetWillpower
+	Options = 0x0
+	Opcode = 0x1029
+	Return = 0x8, "float"
+	Desc = "Return the calling actor's current attribute."
+	WikiLink = "GetStat"
+End
+Function = GetWindSpeed
+	Options = 0x0
+	Opcode = 0x10A0
+	Return = 0x8, "float"
+	Desc = "Returns the current wind speed (0-2 for average conditions)."
+End
+Function = Goodbye
+	Options = 0x0
+	Opcode = 0x10CA
+	Return = 0x0, "None"
+	Desc = "Immediately ends the players conversation with the NPC, forcing the user to click the Goodbye option to end dialogue."
+End
+Function = GoToJail
+	Options = 0x0
+	Opcode = 0x10E9
+	Return = 0x0, "None"
+	Desc = "Sends the player to prison."
+End
+Function = HasItemEquipped
+	Options = 0x800
+	Opcode = 0x1199
+	Return = 0x2, "short"
+	Param1 = 0x200020, "Object"
+	Desc = "Returns 1 if the given item is currently equipped on the calling actor."
+End
+Function = HasSoulGem
+	Options = 0x0
+	Opcode = 0x10EA
+	Return = 0x2, "short"
+	Param1 = 0x20000020, "Creature"
+	Desc = "Returns 1 if the calling object has the given creature's soulgem in their inventory."
+End
+Function = HitAttemptOnMe
+	Options = 0x0
+	Opcode = 0x1116
+	Return = 0x2, "short"
+	Param1 = 0x200020, "Object"
+	Desc = "Returns 1 if the calling NPC is attempted to be hit by the given object in combat."
+	WikiLink = "HitOnMe"
+End
+Function = HitOnMe
+	Options = 0x0
+	Opcode = 0x1115
+	Return = 0x2, "short"
+	Param1 = 0x200020, "Object"
+	Desc = "Returns 1 if the calling NPC is hit by the given object in combat."
+End
+Function = HurtCollidingActor
+	Options = 0x0
+	Opcode = 0x11A5
+	Return = 0x0, "None"
+	Param1 = 0x8, "Damage"
+	Desc = "Damages any colliding actor the given number of health points per second."
+End
+Function = HurtStandingActor
+	Options = 0x0
+	Opcode = 0x1135
+	Return = 0x0, "None"
+	Param1 = 0x8, "Damage"
+	Desc = "Damages any standing actor the given number of health points per second."
+End
+Function = IsWerewolf
+	Options = 0x400
+	Opcode = 0x11B5
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the calling actor is a werewolf."
+End
+Function = Journal
+	Options = 0x4
+	Opcode = 0x10CC
+	Return = 0x0, "None"
+	Param1 = 0x80020, "Journal"
+	Param2 = 0x2, "Index"
+	Desc = "Adds a journal entry to the player's journal using the given value to determine which entry to add."
+End
+Function = Lock
+	Options = 0x0
+	Opcode = 0x1136
+	Return = 0x0, "None"
+	Param1 = 0x2, "Lock Level"
+	Desc = "Locks the calling object to the given lock value. "
+End
+Function = LoopGroup
+	Options = 0x0
+	Opcode = 0x1015
+	Return = 0x0, "None"
+	Param1 = 0x200, "Group"
+	Param2 = 0x1, "Number"
+	Param3 = 0x801, "Flags"
+	Desc = "Plays the animation group defined by GroupName the number of times specified. Flag values are:"
+	Desc = 0=Normal; 1=Immediate Start; 2=Immediate Loop"
+End
+Function = LowerRank
+	Options = 0x0
+	Opcode = 0x10CF
+	Return = 0x0, "None"
+	Desc = "Lowers the calling actor’s rank in its current faction in dialogue."
+End
+Function = MenuMode
+	Options = 0x0
+	Opcode = 0x1020
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the player is currently in menu mode."
+End
+function = MenuTest
+	Options = 0
+	Return = 0, "none"
+	Param1 = 0x2, "short"
+	Opcode = 0x126
+	desc = "When called, MenuTest closes certain types of inventory menus, including Player, NPC and"
+	desc = "containers. It doesn’t work for dialogue, enchanting, alchemy, spell or armorer menus. It"
+	descl = "works from the console as well as from a script. It also takes parameters:"
+	descl = "             0: for closing menu"
+	descl = "             3: open stats menu or focus it"
+	descl = "             4: open inventory menu or focus it"
+	descl = "             5: open spell menu or focus it"
+	descl = "             6: open map menu or focus it"
+	desc = "For menutest 3,4,5,6, it's like clicking on the upper right button of the menu."
+end
+Function = MessageBox
+	Options = 0x4001
+	Opcode = 0x1000
+	Return = 0x0, "None"
+	Param1 = 0x10, "Message"
+	Param2 = 0x9808, "Variables"
+	Param3 = 0x8810, "Buttons"
+	Desc = "Displays text and choices to the player."
+End
+Function = ModAcrobatics
+	Options = 0x4001
+	Opcode = 0x1079
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModAgility
+	Options = 0x4001
+	Opcode = 0x102E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModAlarm
+	Options = 0x4001
+	Opcode = 0x1107
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the AI setting by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModAlchemy
+	Options = 0x4001
+	Opcode = 0x106D
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModAlteration
+	Options = 0x4001
+	Opcode = 0x105E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModArmorBonus
+	Options = 0x4001
+	Opcode = 0x1178
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the bonus by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModArmorer
+	Options = 0x4001
+	Opcode = 0x1040
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModAthletics
+	Options = 0x4001
+	Opcode = 0x1055
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModAttackBonus
+	Options = 0x4001
+	Opcode = 0x10A4
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the bonus by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModAxe
+	Options = 0x4001
+	Opcode = 0x104F
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModBlindness
+	Options = 0x4001
+	Opcode = 0x1181
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModBlock
+	Options = 0x4001
+	Opcode = 0x103D
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModBluntWeapon
+	Options = 0x4001
+	Opcode = 0x1049
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModCastPenalty
+	Options = 0x4001
+	Opcode = 0x117B
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModChameleon
+	Options = 0x4001
+	Opcode = 0x10C5
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModConjuration
+	Options = 0x4001
+	Opcode = 0x1064
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModCurrentFatigue
+	Options = 0x4001
+	Opcode = 0x1134
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModCurrentHealth
+	Options = 0x4001
+	Opcode = 0x1132
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModCurrentMagicka
+	Options = 0x4001
+	Opcode = 0x1133
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModDefendBonus
+	Options = 0x4001
+	Opcode = 0x10A7
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the bonus by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModDestruction
+	Options = 0x4001
+	Opcode = 0x105B
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModDisposition
+	Options = 0x4001
+	Opcode = 0x109A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the disposition by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModEnchant
+	Options = 0x4001
+	Opcode = 0x1058
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModEndurance
+	Options = 0x4001
+	Opcode = 0x1034
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModFactionReaction
+	Options = 0x0
+	Opcode = 0x1111
+	Return = 0x0, "None"
+	Param1 = 0x100020, "Faction1"
+	Param2 = 0x100020, "Faction2"
+	Param3 = 0x2, "Value"
+	Desc = "Modifies the faction reaction of the two factions by the given value."
+End
+Function = ModFatigue
+	Options = 0x4001
+	Opcode = 0x1094
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModFight
+	Options = 0x4001
+	Opcode = 0x1101
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the AI setting by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModFlee
+	Options = 0x4001
+	Opcode = 0x1104
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the AI setting by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModFlying
+	Options = 0x4001
+	Opcode = 0x1175
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModHandToHand
+	Options = 0x4001
+	Opcode = 0x108B
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModHealth
+	Options = 0x4001
+	Opcode = 0x108E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModHeavyArmor
+	Options = 0x4001
+	Opcode = 0x1046
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModHello
+	Options = 0x4001
+	Opcode = 0x110A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the AI setting by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModIllusion
+	Options = 0x4001
+	Opcode = 0x1061
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModIntelligence
+	Options = 0x4001
+	Opcode = 0x1028
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModInvisible
+	Options = 0x4001
+	Opcode = 0x1187
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModLightArmor
+	Options = 0x4001
+	Opcode = 0x107C
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModLongBlade
+	Options = 0x4001
+	Opcode = 0x104C
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModLuck
+	Options = 0x4001
+	Opcode = 0x103A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModMagicka
+	Options = 0x4001
+	Opcode = 0x1091
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModMarksman
+	Options = 0x4001
+	Opcode = 0x1082
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModMediumArmor
+	Options = 0x4001
+	Opcode = 0x1043
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModMercantile
+	Options = 0x4001
+	Opcode = 0x1085
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModMysticism
+	Options = 0x4001
+	Opcode = 0x1067
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModParalysis
+	Options = 0x4001
+	Opcode = 0x1184
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModPCCrimeLevel
+	Options = 0x4001
+	Opcode = 0x109D
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the players crime level by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModPCFacRep
+	Options = 0x0
+	Opcode = 0x10D9
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Param2 = 0x100820, "Faction"
+	Desc = "Modifies the players reputation in the caller's faction or the given faction."
+End
+Function = ModPCVisionBonus
+	Options = 0x4001
+	Opcode = 0x11B2
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the bonus by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModPersonality
+	Options = 0x4001
+	Opcode = 0x1037
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModRegion
+	Options = 0x0
+	Opcode = 0x1125
+	Return = 0x0, "None"
+	Param1 = 0x400020, "Region"
+	Param2 = 0x1, "Clear %"
+	Param3 = 0x1, "Cloudy %"
+	Param4 = 0x1, "Foggy %"
+	Param5 = 0x1, "Overcast %"
+	Param6 = 0x1, "Rain %"
+	Param7 = 0x1, "Thunder %"
+	Param8 = 0x1, "Ash %"
+	Param9 = 0x1, "Blight %"
+	Param10 = 0x1, "Unknown1 %"
+	Param11 = 0x1, "Unknown2 %"
+	Desc = "Changes the weather chances for the given Region. Used to get rid of, or add weathers to an area"
+	Desc = "permanently. The values must add up to 100 or you will get odd results."
+End
+Function = ModReputation
+	Options = 0x4001
+	Opcode = 0x1097
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the repuation by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistBlight
+	Options = 0x4001
+	Opcode = 0x10B9
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistCorprus
+	Options = 0x4001
+	Opcode = 0x10BC
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistDisease
+	Options = 0x4001
+	Opcode = 0x10B6
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistFire
+	Options = 0x4001
+	Opcode = 0x10AD
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistFrost
+	Options = 0x4001
+	Opcode = 0x10B0
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistMagicka
+	Options = 0x4001
+	Opcode = 0x10AA
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistNormalWeapons
+	Options = 0x4001
+	Opcode = 0x10C8
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistParalysis
+	Options = 0x4001
+	Opcode = 0x10C2
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+End
+Function = ModResistPoison
+	Options = 0x4001
+	Opcode = 0x10BF
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModResistShock
+	Options = 0x4001
+	Opcode = 0x10B3
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the resistance by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModRestoration
+	Options = 0x4001
+	Opcode = 0x106A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModScale
+	Options = 0x4001
+	Opcode = 0x118F
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the scale by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSecurity
+	Options = 0x4001
+	Opcode = 0x1073
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModShortBlade
+	Options = 0x4001
+	Opcode = 0x107F
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSilence
+	Options = 0x4001
+	Opcode = 0x117E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSneak
+	Options = 0x4001
+	Opcode = 0x1076
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSpear
+	Options = 0x4001
+	Opcode = 0x1052
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSpeechcraft
+	Options = 0x4001
+	Opcode = 0x1088
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSpeed
+	Options = 0x4001
+	Opcode = 0x1031
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModStrength
+	Options = 0x4001
+	Opcode = 0x1025
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSuperJump
+	Options = 0x4001
+	Opcode = 0x1172
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModSwimSpeed
+	Options = 0x4001
+	Opcode = 0x116F
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModUnarmored
+	Options = 0x4001
+	Opcode = 0x1070
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the skill by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModWaterBreathing
+	Options = 0x4001
+	Opcode = 0x1169
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModWaterLevel
+	Options = 0x4801
+	Opcode = 0x1192
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the water level in the current cell."
+	WikiLink = "WaterLevel"
+End
+Function = ModWaterWalking
+	Options = 0x4001
+	Opcode = 0x116C
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the status by the given value."
+	WikiLink = "ModStat"
+End
+Function = ModWillpower
+	Options = 0x4001
+	Opcode = 0x102B
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Modifies the attribute by the given value."
+	WikiLink = "ModStat"
+End
+Function = Move
+	Options = 0x0
+	Opcode = 0x1006
+	Return = 0x0, "None"
+	Param1 = 0x40, "Axis"
+	Param2 = 0x8, "Speed"
+	Desc = "Moves the object along its given local axis at the given speed in units per second."
+	Desc = "Must be called continuously each frame for the object to be moved."
+End
+Function = MoveWorld
+	Options = 0x0
+	Opcode = 0x1008
+	Return = 0x0, "None"
+	Param1 = 0x40, "Axis"
+	Param2 = 0x8, "Speed"
+	Desc = "Moves the object along the given world axis at the given speed in units per second."
+	Desc = "Must be called continuously each frame for the object to be moved."
+	WikiLink = "Move"
+End
+Function = OnActivate
+	Options = 0x0
+	Opcode = 0x1018
+	Return = 0x2, "short"
+	Desc = "Returns 1 if calling object is activated, or 0 otherwise. An object is activated when you approach it in the game and press the spacebar (by default)."
+End
+Function = OnDeath
+	Options = 0x0
+	Opcode = 0x10F0
+	Return = 0x2, "short"
+	Desc = "Returns 1 for one frame when the actor is killed (0 otherwise)."
+End
+Function = OnKnockout
+	Options = 0x0
+	Opcode = 0x10F1
+	Return = 0x2, "short"
+	Desc = "Returns 1 for one frame when the actor is knocked out (0 otherwise)."
+End
+Function = OnMurder
+	Options = 0x0
+	Opcode = 0x10F2
+	Return = 0x2, "short"
+	Desc = "Returns 1 for one frame when the actor is murdered (0 otherwise). Both this and OnDeath will return 1 at the same time."
+End
+Function = PayFine
+	Options = 0x0
+	Opcode = 0x114F
+	Return = 0x0, "None"
+	Desc = "This function is used by the game to clear the AI after the player pays a fine to a guard or other law enforced."
+	Desc = "It removes any stolen merchandise from the player's inventory and puts it into the evidence chests around the island."
+End
+Function = PayFineThief
+	Options = 0x0
+	Opcode = 0x1189
+	Return = 0x0, "None"
+	Desc = "This function is used when the player uses the Thieves Guild to remove any bounty on their head but does not remove any stolen items."
+	WikiLink = "PayFine"
+End
+Function = PCClearExpelled
+	Options = 0x0
+	Opcode = 0x10D3
+	Return = 0x0, "None"
+	Param1 = 0x820, "Faction"
+	Desc = "Clears the player's expelled flag for the given faction. If no faction is specified, the caller's faction is used."
+End
+Function = PCExpell
+	Options = 0x0
+	Opcode = 0x10D2
+	Return = 0x0, "None"
+	Param1 = 0x820, "Faction"
+	Desc = "Expells the player from the given faction. If no faction is specified, the caller's faction is used."
+End
+Function = PCExpelled
+	Options = 0x0
+	Opcode = 0x109F
+	Return = 0x0, "None"
+	Param1 = 0x820, "Faction"
+	Desc = "Returns 1 if the player is currently expelled from the given faction, or 0 otherwise."
+	Desc = "If no faction is specified, the caller's faction is used."
+End
+Function = PCForce1stPerson
+	Options = 0x0
+	Opcode = 0x113D
+	Return = 0x0, "None"
+	Desc = "Queue the change to 1st person mode (this may have to wait for the current animation to finish)."
+End
+Function = PCForce3rdPerson
+	Options = 0x0
+	Opcode = 0x113C
+	Return = 0x0, "None"
+	Desc = "Queue the change to 3rd person mode (this may have to wait for the current animation to finish). "
+End
+Function = PCGet3rdPerson
+	Options = 0x0
+	Opcode = 0x113E
+	Return = 0x2, "short"
+	Desc = "Returns 1 if in 3rd person mode, or 0 otherwise. "
+End
+Function = PCJoinFaction
+	Options = 0x0
+	Opcode = 0x113B
+	Return = 0x0, "None"
+	Param1 = 0x820, "Faction"
+	Desc = "Joins the player to the given faction. If no faction is specified, the caller's faction is used."
+End
+Function = PCLowerRank
+	Options = 0x0
+	Opcode = 0x10D1
+	Return = 0x0, "None"
+	Param1 = 0x820, "Faction"
+	Desc = "Lowers the player's rank in the given faction. If no faction is specified, the caller's faction is used."
+End
+Function = PCRaiseRank
+	Options = 0x0
+	Opcode = 0x10D0
+	Return = 0x0, "None"
+	Param1 = 0x820, "Faction"
+	Desc = "Raises the player's rank in the given faction. If no faction is specified, the caller's faction is used."
+End
+Function = PlaceAtMe
+	Options = 0x401
+	Opcode = 0x11BA
+	Return = 0x0, "None"
+	Param1 = 0x20, "Item"
+	Param2 = 0x2, "Count"
+	Param3 = 0x8, "Distance"
+	Param4 = 0x2, "Direction (0-3)"
+	Desc = "Places the object at the given distance and direction from the object. If that location is not safe"
+	Desc = "(in the air, in a wall, etc), the object will be placed at one of the other axis or at the object's"
+	Desc = "exact location (feet)."
+	DescL= ""
+	DescL= ""
+	DescL= "Direction: 0=front; 1=back; 2=left; 3=right"			
+End
+Function = PlaceAtPC
+	Options = 0x1
+	Opcode = 0x10E6
+	Return = 0x0, "None"
+	Param1 = 0x20, "Item"
+	Param2 = 0x2, "Count"
+	Param3 = 0x8, "Distance"
+	Param4 = 0x2, "Direction (0-3)"
+	Desc = "Places the object at the given distance and direction from the player. If that location is not safe"
+	Desc = "(in the air, in a wall, etc), the object will be placed at one of the other axis or at the player’s"
+	Desc = "exact location (feet). It is used most often to spawn NPCs/creatures near the player for a coordinated and timed attack."
+	DescL= ""
+	DescL= ""
+	DescL= "Direction: 0=front; 1=back; 2=left; 3=right"			
+End
+Function = PlaceItem
+	Options = 0x4801
+	Opcode = 0x1195
+	Return = 0x0, "None"
+	Param1 = 0x20, "Item"
+	Param2 = 0x8, "X"
+	Param3 = 0x8, "Y"
+	Param4 = 0x8, "Z"
+	Param5 = 0x8, "Z-Angle (degrees)"
+	Desc = "Creates a new item at the given exterior location and angle."
+End
+Function = PlaceItemCell
+	Options = 0x4801
+	Opcode = 0x1196
+	Return = 0x0, "None"
+	Param1 = 0x20, "Item"
+	Param2 = 0x1000020, "Cell"
+	Param3 = 0x8, "X"
+	Param4 = 0x8, "Y"
+	Param5 = 0x8, "Z"
+	Param6 = 0x8, "Z-Angle (degrees)"
+	Desc = "Creates a new item in the given location and angle of the named cell."
+	WikiLink = "PlaceItem"
+End
+Function = PlayBink
+	Options = 0x1
+	Opcode = 0x1155
+	Return = 0x0, "None"
+	Param1 = 0x10, "Filename"
+	Param2 = 0x801, "Escape (0/1)"
+	Desc = "Plays the given BIK movie file. If Escape is 1 the player can escape the movie."
+End
+Function = PlayGroup
+	Options = 0x1
+	Opcode = 0x1014
+	Return = 0x0, "None"
+	Param1 = 0x200, "Group"
+	Param2 = 0x801, "Flag (0-2)"
+	Desc = "Plays the given animation group."
+	DescL= ""
+	DescL= "Flag: 0=Normal; 1=Immediate Start; 2=Immediate Loop" 
+End
+Function = PlayLoopSound3D
+	Options = 0x1
+	Opcode = 0x112E
+	Return = 0x0, "None"
+	Param1 = 0x20020, "Sound"
+	Desc = "Loops the sound to be played from the calling object's location in the game (so it will be dimmer the farther the player is away from it)."
+	WikiLink = "PlaySound"
+End
+Function = PlayLoopSound3DVP
+	Options = 0x1
+	Opcode = 0x112F
+	Return = 0x0, "None"
+	Param1 = 0x20020, "Sound"
+	Param2 = 0x8, "Volume (0-1)"
+	Param3 = 0x8, "Pitch (0-1)"
+	Desc = "Loops the sound at the caller's 3D location at the given volume and pitch."
+	WikiLink = "PlaySound"
+End
+Function = PlaySound
+	Options = 0x1
+	Opcode = 0x1002
+	Return = 0x0, "None"
+	Param1 = 0x20020, "Sound"
+	Desc = "Plays the sound at full volume."
+End
+Function = PlaySound3D
+	Options = 0x1
+	Opcode = 0x112C
+	Return = 0x0, "None"
+	Param1 = 0x20020, "Sound"
+	Desc = "Plays the sound once at the caller's 3D location."
+	WikiLink = "PlaySound"
+End
+Function = PlaySound3DVP
+	Options = 0x1
+	Opcode = 0x112D
+	Return = 0x0, "None"
+	Param1 = 0x20020, "Sound"
+	Param2 = 0x8, "Volume (0-1)"
+	Param3 = 0x8, "Pitch (0-1)"
+	Desc = "Plays the sound at the caller's 3D location at the given volume and pitch."
+	WikiLink = "PlaySound"
+End
+Function = PlaySoundVP
+	Options = 0x1
+	Opcode = 0x112B
+	Return = 0x0, "None"
+	Param1 = 0x20020, "Sound"
+	Param2 = 0x8, "Volume (0-1)"
+	Param3 = 0x8, "Pitch (0-1)"
+	Desc = "Plays the sound with the given volume and pitch."
+	WikiLink = "PlaySound"
+End
+Function = Position
+	Options = 0x0
+	Opcode = 0x1004
+	Return = 0x0, "None"
+	Param1 = 0x8, "X"
+	Param2 = 0x8, "Y"
+	Param3 = 0x8, "Z"
+	Param4 = 0x8, "Z-Angle (degrees)"
+	Desc = "Sets the position of the calling object to the given exterior location."
+	Desc = "If you try to teleport to an unsafe place (clipping with an object or out in the void), you will instead be placed at the next safe location."
+End
+Function = PositionCell
+	Options = 0x0
+	Opcode = 0x1005
+	Return = 0x0, "None"
+	Param1 = 0x8, "X"
+	Param2 = 0x8, "Y"
+	Param3 = 0x8, "Z"
+	Param4 = 0x8, "Z-Angle (degrees)"
+	Param5 = 0x1000020, "Cell"
+	Desc = "Sets the position of the calling object to the given location in the named cell."
+	Desc = "If you try to teleport to an unsafe place (clipping with an object or out in the void), you will instead be placed at the next safe location."
+	WikiLink = "Position"
+End
+Function = RaiseRank
+	Options = 0x0
+	Opcode = 0x10CE
+	Return = 0x0, "None"
+	Desc = "Raises the caller's rank in its current faction."
+End
+Function = Random
+	Options = 0x0
+	Opcode = 0x1021
+	Return = 0x2, "short"
+	Param1 = 0x2, "MaxNumber"
+	Desc = "Returns a random number ranging from 0 to (MaxNumber - 1)."
+End
+Function = RemoveEffects
+	Options = 0x0
+	Opcode = 0x1122
+	Return = 0x0, "None"
+	Param1 = 0x80, "Effect Number"
+	Desc = "Removes all spells currently affecting the calling actor that include the given effect."
+	Desc = "The given effect must be a number value for this function."
+End
+Function = RemoveFromLevCreature
+	Options = 0x800
+	Opcode = 0x11A7
+	Return = 0x0, "None"
+	Param1 = 0x4000020, "Levelled Creature List"
+	Param2 = 0xA0000020, "Actor"
+	Param3 = 0x8, "Level"
+	Desc = "Removes the given creature/level pair from the levelled list (assuming that it exists in the list)."
+	WikiLink = "RemoveFromLev"
+End
+Function = RemoveFromLevItem
+	Options = 0x800
+	Opcode = 0x11A9
+	Return = 0x0, "None"
+	Param1 = 0x8000020, "Levelled Item List"
+	Param2 = 0x200020, "Item"
+	Param3 = 0x8, "Level"
+	Desc = "Removes the given item/level pair from the levelled list (assuming that it exists in the list)."
+	WikiLink = "RemoveFromLev"
+End
+Function = RemoveItem
+	Options = 0x0
+	Opcode = 0x10D5
+	Return = 0x0, "None"
+	Param1 = 0x200020, "Item"
+	Param2 = 0x2, "Count"
+	Desc = "Removes the give number of the item from the calling object but does not drop it."
+	Desc = "There is a great potential for crashing the game if you attempt to remove an item within it's own script."
+End
+Function = RemoveSoulGem
+	Options = 0x0
+	Opcode = 0x10EC
+	Return = 0x0, "None"
+	Param1 = 0x20000020, "Creature"
+	Desc = "Removes one soulgem containing the given creature's soul from the calling actor's inventory."
+End
+Function = RemoveSpell
+	Options = 0x0
+	Opcode = 0x111E
+	Return = 0x0, "None"
+	Param1 = 0x40000020, "Spell"
+	Desc = "Removes the spell from the calling actors known spell list or affecting spells. If the spell is a normal spell,"
+	Desc = "it is removed from the actor's list of known spells. If the spell is a curse/disease it is removed from the list"
+	Desc = "of spells currently affecting the actor."
+End
+Function = RemoveSpellEffects
+	Options = 0x0
+	Opcode = 0x1120
+	Return = 0x0, "None"
+	Param1 = 0x40000020, "Spell"
+	Desc = "Removes the spell from the calling actors list of affecting spells."
+End
+Function = RepairedOnMe
+	Options = 0x0
+	Opcode = 0x110F
+	Return = 0x0, "None"
+	Param1 = 0x200020, "Item"
+	Desc = "Returns 1 if the calling object is repaired by given object, or 0 otherwise."
+End
+Function = Resurrect
+	Options = 0x0
+	Opcode = 0x10E7
+	Return = 0x0, "None"
+	Desc = "Brings actor back to life. When you do this any changes made to the actor in game (stats, inventory, etc...) will be reset to their original value."
+	Desc = "I have experienced game crashes when using this function from the console sometimes (not consistent)."
+End
+Function = Rotate
+	Options = 0x0
+	Opcode = 0x1007
+	Return = 0x0, "None"
+	Param1 = 0x40, "Axis"
+	Param2 = 0x8, "Degrees Per Second"
+	Desc = "Rotates the object along the specified object axis at the specified number of degrees per second."
+	Desc = "To be used properly, the function should be called continuously while rotation is desired."
+End
+Function = RotateWorld
+	Options = 0x0
+	Opcode = 0x1009
+	Return = 0x0, "None"
+	Param1 = 0x40, "Axis"
+	Param2 = 0x8, "Degrees Per Second"
+	Desc = "Rotates the object along the specified object axis at the specified number of degrees per second."
+	Desc = "To be used properly, the function should be called continuously while rotation is desired."
+	WikiLink = "Rotate"
+End
+Function = SameFaction
+	Options = 0x0
+	Opcode = 0x109E
+	Return = 0x2, "short"
+	Desc = "Returns 1 if player is in the faction of the calling NPC, or 0 otherwise. Used in dialogue only."
+End
+Function = Say
+	Options = 0x0
+	Opcode = 0x111B
+	Return = 0x0, "None"
+	Param1 = 0x4010, "Filename"
+	Param2 = 0x10, "Text"
+	Desc = "Makes the subject say the given WAV file using the given text for the caption. Only works on animating objects."
+End
+Function = SayDone
+	Options = 0x0
+	Opcode = 0x111C
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the object is not saying anything, or 0 otherwise."
+End
+Function = ScriptRunning
+	Options = 0x0
+	Opcode = 0x101D
+	Return = 0x2, "short"
+	Param1 = 0x10020, "Script"
+	Desc = "Returns 1 if the given script is running as a global script, or 0 otherwise."
+End
+Function = SetAcrobatics
+	Options = 0x4001
+	Opcode = 0x1078
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAgility
+	Options = 0x4001
+	Opcode = 0x102D
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute attribute of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAlarm
+	Options = 0x4001
+	Opcode = 0x1106
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute AI setting of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAlchemy
+	Options = 0x4001
+	Opcode = 0x106C
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAlteration
+	Options = 0x4001
+	Opcode = 0x105D
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAngle
+	Options = 0x4001
+	Opcode = 0x100D
+	Return = 0x0, "None"
+	Param1 = 0x40, "Axis"
+	Param2 = 0x8, "Angle (degrees)"
+	Desc = "ets the angle of the object in degrees using the given world axis. In Tribunal the function also accepts float variables in addition to literal values."
+End
+Function = SetArmorBonus
+	Options = 0x4001
+	Opcode = 0x1177
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute bonus of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetArmorer
+	Options = 0x4001
+	Opcode = 0x103F
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAthletics
+	Options = 0x4001
+	Opcode = 0x1054
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAtStart
+	Options = 0x0
+	Opcode = 0x1010
+	Return = 0x0, "None"
+	Desc = "This resets the object to the original position and orientation it was given in the editor, before any movement or rotation occurred."
+End
+Function = SetAttackBonus
+	Options = 0x4001
+	Opcode = 0x10A3
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute bonus of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetAxe
+	Options = 0x4001
+	Opcode = 0x104E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetBlindness
+	Options = 0x4001
+	Opcode = 0x1180
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetBlock
+	Options = 0x4001
+	Opcode = 0x103C
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetBluntWeapon
+	Options = 0x4001
+	Opcode = 0x1048
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetCastPenalty
+	Options = 0x4001
+	Opcode = 0x117A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetChameleon
+	Options = 0x4001
+	Opcode = 0x10C4
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetConjuration
+	Options = 0x4001
+	Opcode = 0x1063
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetDefendBonus
+	Options = 0x4001
+	Opcode = 0x10A6
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute bonus of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetDelete
+	Options = 0x800
+	Opcode = 0x11AB
+	Return = 0x0, "None"
+	Param1 = 0x2, "Flag (0/1)"
+	Desc = "The SetDelete function can be used in combination with Disable to remove an object more completely."
+	Desc = "SetDelete 1 marks a reference for deletion while SetDelete, 0 clears that flag. If the reference came"
+	Desc = "from the master file, it is still there but knows it shouldn’t be so has no art and no scripting."
+	Desc = "If was created in game, it will actually be deleted."
+End
+Function = SetDestruction
+	Options = 0x4001
+	Opcode = 0x105A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetDisposition
+	Options = 0x4001
+	Opcode = 0x1099
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute disposition of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetEnchant
+	Options = 0x4001
+	Opcode = 0x1057
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetEndurance
+	Options = 0x4001
+	Opcode = 0x1033
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute attribute of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetFactionReaction
+	Options = 0x0
+	Opcode = 0x1110
+	Return = 0x0, "None"
+	Param1 = 0x100020, "Faction1"
+	Param2 = 0x100020, "Faction2"
+	Param3 = 0x2, "Value"
+	Desc = "Sets the absolute reaction adjustment between the two factions."
+End
+Function = SetFatigue
+	Options = 0x4001
+	Opcode = 0x1093
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute fatigue of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetFight
+	Options = 0x4001
+	Opcode = 0x1100
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute AI setting of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetFlee
+	Options = 0x4001
+	Opcode = 0x1103
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute AI setting of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetFlying
+	Options = 0x4001
+	Opcode = 0x1174
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetHandToHand
+	Options = 0x4001
+	Opcode = 0x108A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetHealth
+	Options = 0x4001
+	Opcode = 0x108D
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute health of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetHeavyArmor
+	Options = 0x4001
+	Opcode = 0x1045
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+End
+Function = SetHello
+	Options = 0x4001
+	Opcode = 0x1109
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute AI setting of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetIllusion
+	Options = 0x4001
+	Opcode = 0x1060
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetIntelligence
+	Options = 0x4001
+	Opcode = 0x1027
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute attribute of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetInvisible
+	Options = 0x4001
+	Opcode = 0x1186
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetJournalIndex
+	Options = 0x4
+	Opcode = 0x11AA
+	Return = 0x0, "None"
+	Param1 = 0x80020, "Journal"
+	Param2 = 0x2, "Index"
+	Desc = "Sets the given journal to that index without displaying any journal text to the player. Can move up or down."
+End
+Function = SetLevel
+	Options = 0x4001
+	Opcode = 0x1156
+	Return = 0x0, "None"
+	Param1 = 0x2, "Value"
+	Desc = "Sets the absolute level of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetLightArmor
+	Options = 0x4001
+	Opcode = 0x107B
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetLongBlade
+	Options = 0x4001
+	Opcode = 0x104B
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetLuck
+	Options = 0x4001
+	Opcode = 0x1039
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetMagicka
+	Options = 0x4001
+	Opcode = 0x1090
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute magicka of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetMarksman
+	Options = 0x4001
+	Opcode = 0x1081
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+End
+Function = SetMediumArmor
+	Options = 0x4001
+	Opcode = 0x1042
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetMercantile
+	Options = 0x4001
+	Opcode = 0x1084
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetMysticism
+	Options = 0x4001
+	Opcode = 0x1066
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetParalysis
+	Options = 0x4001
+	Opcode = 0x1183
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetPCCrimeLevel
+	Options = 0x4001
+	Opcode = 0x109C
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute crime level of the player1."
+	WikiLink = "SetStat"
+End
+Function = SetPCFacRep
+	Options = 0x0
+	Opcode = 0x10D8
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Param2 = 0x100820, "Faction"
+	Desc = "Sets the player's reaction adjustment to the given faction or to the calling actor's faction."
+End
+Function = SetPCVisionBonus
+	Options = 0x4001
+	Opcode = 0x11B1
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute bonus of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetPersonality
+	Options = 0x4001
+	Opcode = 0x1036
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute attribute of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetPos
+	Options = 0x4001
+	Opcode = 0x100B
+	Return = 0x0, "None"
+	Param1 = 0x40, "Axis"
+	Param2 = 0x8, "Position"
+	Desc = "Sets the position of the object in game units (70 units per meter) using the given world axis."
+	Desc = "In Tribunal the function also accepts local float variables in addition to literal values (does not accept globals)."
+	Desc = "This function does modify the player's position. Unfortunately there are problems when you use SetPos to change the current cell."
+End
+Function = SetReputation
+	Options = 0x4001
+	Opcode = 0x1096
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute reputation of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistBlight
+	Options = 0x4001
+	Opcode = 0x10B8
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistCorprus
+	Options = 0x4001
+	Opcode = 0x10BB
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistDisease
+	Options = 0x4001
+	Opcode = 0x10B5
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistFire
+	Options = 0x4001
+	Opcode = 0x10AC
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistFrost
+	Options = 0x4001
+	Opcode = 0x10AF
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistMagicka
+	Options = 0x4001
+	Opcode = 0x10A9
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistNormalWeapons
+	Options = 0x4001
+	Opcode = 0x10C7
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistParalysis
+	Options = 0x4001
+	Opcode = 0x10C1
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistPoison
+	Options = 0x4001
+	Opcode = 0x10BE
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetResistShock
+	Options = 0x4001
+	Opcode = 0x10B2
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute resistance of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetRestoration
+	Options = 0x4001
+	Opcode = 0x1069
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetScale
+	Options = 0x4801
+	Opcode = 0x118E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute scale of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSecurity
+	Options = 0x4001
+	Opcode = 0x1072
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetShortBlade
+	Options = 0x4001
+	Opcode = 0x107E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSilence
+	Options = 0x4001
+	Opcode = 0x117D
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSneak
+	Options = 0x4001
+	Opcode = 0x1075
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSpear
+	Options = 0x4001
+	Opcode = 0x1051
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSpeechcraft
+	Options = 0x4001
+	Opcode = 0x1087
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSpeed
+	Options = 0x4001
+	Opcode = 0x1030
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute attribute of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetStrength
+	Options = 0x4001
+	Opcode = 0x1024
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute attribute of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSuperJump
+	Options = 0x4001
+	Opcode = 0x1171
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetSwimSpeed
+	Options = 0x4001
+	Opcode = 0x116E
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute bonus of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetUnarmored
+	Options = 0x4001
+	Opcode = 0x106F
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute skill of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetWaterBreathing
+	Options = 0x4001
+	Opcode = 0x1168
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+End
+Function = SetWaterLevel
+	Options = 0x4801
+	Opcode = 0x1191
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the water level in the current cell."
+	WikiLink = "WaterLevel"
+End
+Function = SetWaterWalking
+	Options = 0x4001
+	Opcode = 0x116B
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute status of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = SetWerewolfAcrobatics
+	Options = 0x400
+	Opcode = 0x11B9
+	Return = 0x0, "None"
+	Desc = "Sets the proper bonus to the acrobatics skill while the player (NPC?) is a werewolf."
+End
+Function = SetWillpower
+	Options = 0x4001
+	Opcode = 0x102A
+	Return = 0x0, "None"
+	Param1 = 0x8, "Value"
+	Desc = "Sets the absolute attribute of the calling NPC."
+	WikiLink = "SetStat"
+End
+Function = Show
+	Options = 0x2001
+	Opcode = 0x10D
+	Return = 0x0, "None"
+	Desc = "Unknown console command (similar to ShowVars?). If you use this in a script it will prevent the"
+	Desc = "script from being compiled (you'll get no errors in the editor but the compiled script data is not saved to the plugin)."
+End
+Function = ShowMap
+	Options = 0x0
+	Opcode = 0x1152
+	Return = 0x0, "None"
+	Param1 = 0x1002020, "Cell"
+	Desc = "Shows the given cell name on the world map. Will match complete or partial cells, so ShowMap, 'Vivec'"
+	Desc = "will show cells 'Vivec' and 'Vivec, Fred's House' as well."
+End
+Function = ShowRestMenu
+	Options = 0x0
+	Opcode = 0x10E5
+	Return = 0x0, "None"
+	Desc = "Displays the standard rest/sleep menu allowing the player to choose the amount of time they wish to rest."
+End
+function = ShowSceneGraph
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x123
+end
+Function = SkipAnim
+	Options = 0x0
+	Opcode = 0x1016
+	Return = 0x0, "None"
+	Desc = "Causes the current animation for the calling object to not be played for this frame."
+	Desc = "One of the useful things to do with this is to create armor dummies for displaying armour and clothing."
+End
+Function = StartCombat
+	Options = 0x0
+	Opcode = 0x1019
+	Return = 0x0, "None"
+	Param1 = 0xA0000020, "Target"
+	Desc = "The calling actor will attempt to start combat with the given actor. Should only be called once (not"
+	Desc = "continuously) or you may experience unintended results (such as the NPC not attacking at all). Once combat is started, the NPC is subject to the usual AI rules (such as fleeing)."
+End
+Function = StartScript
+	Options = 0x0
+	Opcode = 0x101B
+	Return = 0x0, "None"
+	Param1 = 0x10020, "Scipt Name"
+	Desc = "This function starts a script running as a global script. It is not attached to any object, so"
+	Desc = "functions like moving, rotating, checking distances and such have no bearing in a global script (which means you must specify object IDs explicity)."
+End
+function = StopCellTest
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x11F
+end
+Function = StopCombat
+	Options = 0x0
+	Opcode = 0x101A
+	Return = 0x0, "None"
+	Desc = "The calling actor will stop any combat it is currently involved in."
+	Desc = "Note that using this function can result in NPCs not to defend themselves or attack at all."
+End
+Function = StopScript
+	Options = 0x0
+	Opcode = 0x101C
+	Return = 0x0, "None"
+	Param1 = 0x10020, "Script Name"
+	Desc = "This stops a currently running global script starting previously with StartScript."
+End
+Function = StopSound
+	Options = 0x0
+	Opcode = 0x1151
+	Return = 0x0, "None"
+	Param1 = 0x20020, ""
+	Desc = ""
+End
+Function = StreamMusic
+	Options = 0x0
+	Opcode = 0x1003
+	Return = 0x0, "None"
+	Param1 = 0x4010, "Sound"
+	Desc = "Stops the given sound if it is playing and previously starting with PlayLoopSound."
+End
+function = TestCells
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x120
+end
+function = TestInteriorCells
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x121
+end
+function = TestModels
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x122
+end
+function = ToggleAi
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x113
+end
+function = ToggleBorders
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x114
+end
+function  = ToggleCollision
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x118
+end
+function = ToggleCollisionBoxes
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x119
+end
+function = ToggleCollisionGrid
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x11A
+end
+function = ToggleDebugText
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x11B
+end
+function = ToggleGrid
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x11D
+end
+function = ToggleKillStats
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x12D
+end
+function = ToggleLoadFade
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x132
+end
+function = ToggleMenus
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x011E
+	desc = "Unknown purpose"
+	WikiLink = "ToggleModes"
+end
+function = ToggleScripts
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x130
+end
+function  = ToggleSky
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x115
+end
+function = ToggleTextureString
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x11C
+end 
+function = ToggleWater
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x129
+end
+function = ToggleWireFrame
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x117
+end
+function = ToggleWorld
+	Options = 0x10000
+	Return = 0, "none"
+	Opcode = 0x116
+end
+Function = TurnMoonRed
+	Options = 0x400
+	Opcode = 0x11B7
+	Return = 0x0, "None"
+	Desc = "Turns the moon's of Tamriel blood red."
+	WikiLink = "TurnMoon"
+End
+Function = TurnMoonWhite
+	Options = 0x400
+	Opcode = 0x11B8
+	Return = 0x0, "None"
+	Desc = "Returns the moon's of Tamriel to their regular color."
+	WikiLink = "TurnMoon"
+End
+Function = UndoWerewolf
+	Options = 0x400
+	Opcode = 0x11B4
+	Return = 0x0, "None"
+	Desc = "Turns the player (NPC?) back into regular form."
+End
+Function = Unlock
+	Options = 0x0
+	Opcode = 0x1137
+	Return = 0x0, "None"
+	Desc = "Unlocks the calling container."
+End
+Function = WakeUpPC
+	Options = 0x0
+	Opcode = 0x10E1
+	Return = 0x0, "None"
+	Desc = "Wakes up the PC if they are sleeping. Use it to wake up the PC to notify them of some timed event."
+End
+Function = XBox
+	Options = 0x0
+	Opcode = 0x113A
+	Return = 0x2, "short"
+	Desc = "Returns 1 if the game is being played on the XBox, or 0 otherwise."
+End
+
+function = XAddItem
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "objectid"
+	Param2 = 0x04, "count"
+	Opcode = 0x3c28
+	desc = "A wrapper for the original AddItem to take variables."
+end
+function = XAITravel
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x08, "x"
+	Param2 = 0x08, "y"
+	Param3 = 0x08, "z"
+	Opcode = 0x3c04
+	desc = "A wrapper function for the original AiTravel to allow variables."
+end
+function = XArcCos
+	Options = 0xC003
+	Return = 0x08, "float [angle, radians]"
+	Param1 = 0x08, "float"
+	Opcode = 0x3835
+	desc = "Returns the arc cosine (in radians) of the value."
+end
+function = XArcSin
+	Options = 0xC003
+	Return = 0x08, "float [angle, radians]"
+	Param1 = 0x08, "float"
+	Opcode = 0x3834
+	desc = "Returns the arc sine (in radians) of the value."
+end
+function = XArcTan
+	Options = 0xC003
+	Return = 0x08, "float [angle, radians]"
+	Param1 = 0x08, "float"
+	Opcode = 0x3833
+	desc = "Returns the arc tangent (in radians) of the value."
+end
+function = XContentList
+	Options = 0xC003
+	Return = 0x801E, "string objectid, long count, long type, long value, float weight, string name, ref next"
+	Param1 = 0x04, "next reference"
+	Opcode = 0x3f03
+	desc = "An alternative to both the xInventory and xNextStack functions, which returns seven values based on the inventory of"
+	desc = "the current container, NPC, or creature rather than three. If the input parameter value is 0, the first item in the"
+	desc = "current container, NPC, or creatures is returned (like xInventory). The seventh (last) value returned can also be used"
+	desc = "as the input parameter to access the next item in the inventory (like xNextStack). Whenever the items in the container"
+	descl = "change, the next reference may be invalid and you should start again with a value of 0 for the input parameter."
+    descl = "          set id count type value weight name next to container->xContentList next"
+	desc = "The first return value is the objectid of one of the items in inventory. The second is the number of that particular"
+	desc = "item found in the inventory. The third is the type of that item using the codes listed for the xRefType function."
+	desc = "The next three parameters are the value, weight, and printable name of the item unless the object is of the Levelled"
+	desc = "Item type. For LEVI objects, the value and weight will be listed as 0 and the name field will contain a randomly selected"
+	desc = "object id for one random item selected from the levelled list. The normal levelled list rules aren't followed and lower"
+	desc = "level items are always more likely than higher level items. (In the future, the selection of random items may be improved.)"
+end
+function = XCos
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x08, "angle, radians"
+	Opcode = 0x3832
+	desc = "Returns the cosine of the angle (which given in radians)."
+end
+function = XDegRad
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x08, "degrees"
+	Opcode = 0x3836
+	desc = "Converts a value from degrees to radians."
+end
+function = XDistance
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x14, "target reference"
+	Opcode = 0x3c22
+	desc = "Similar to the original GetDistance function but takes a reference variable as the target instead of an objectid string."
+	desc = "Like the original, it uses the editor position not the current position for non-persistent objects."
+end
+function = XDrop
+	Options = 0xc003
+	Return = 0, "none"
+	Param1 = 0x14
+	Param2 = Long
+	Opcode = 0x3f0d
+end
+function = XEquip
+	Options = 0xc003
+	Return = 0, "none"
+	Param1 = 0x14
+	Opcode = 0x3f0e
+end
+function = XFileReadFloat
+	Options = 0xC003
+	Return = 0x801E, "long [count], float [values]..."
+	Param1 = 0x10, "filename"
+	Param2 = 0x04, "readcount"
+	Opcode = 0x3c13
+	desc = "Reads the number of FLOATs (2 bytes) requested from the file at the current reading position. The current position is then"
+	desc = "advanced. Returns the number of values actually read followed by the values."
+end
+function = XFileReadLong
+	Options = 0xC003
+	Return = 0x801E, "long [count], long [values]..."
+	Param1 = 0x10, "filename"
+	Param2 = 0x04, "readcount"
+	Opcode = 0x3c12
+	desc = "Reads the number of LONGs (2 bytes) requested from the file at the current reading position. The current position is then"
+	desc = "advanced. Returns the number of values actually read followed by the values."
+end
+function = XFileReadShort
+	Options = 0xC003
+	Return = 0x801E, "long [count], short [values]..."
+	Param1 = 0x10, "filename"
+	Param2 = 0x04, "readcount"
+	Opcode = 0x3c11
+	desc = "Reads the number of SHORTS (2 bytes) requested from the file at the current reading position. The current position is then"
+	desc = "advanced. Returns the number of values actually read followed by the values."
+end
+function = XFileReadString
+	Options = 0xC003
+	Return = 0x10, "string [value]"
+	Param1 = 0x10, "filename"
+	Opcode = 0x3c14
+	desc = "Similar to xFileReadShort but reads a single 'C'-style null terminated string from the file. If a string cannot be read it returns a 0."
+end
+function = XFileReadText
+	Options = 0xC003
+	Return = 0x801E, "long [matched], ..."
+	Param1 = 0x10, "filename"
+	Param2 = 0x10, "pattern"
+	Opcode = 0x3f08
+	desc = "Read a text string from from the file at the current reading position. The current position is then advanced. The"
+	desc = "pattern string is then used to extract data from the string just read and first return value indicates how much of"
+	desc = "the pattern is matched. The values matched by the pattern are also returned. The patterns and return values are the"
+	desc = "same as for the xStringParse function with one addition. Placing a single % sign at the end of the pattern will cause"
+	desc = "the read routine to stop when it gets to the end of a line (CR/LF) allowing you to use this to read a normal text file"
+	desc = "instead of a binary file. Without the trailing % sign on the pattern this will read up to the first NULL character or"
+	desc = "to the end of the file if it doesn't find a NULL character."
+end
+function = XFileRewind
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "filename"
+	Opcode = 0x3c10
+	desc = "Moves the current reading position to the start of the file. Call this or xFileSeek at the start of any script which"
+	desc = "uses file reading or writing functions, otherwise you will have problems with the current file position not being as expected."
+end
+function = XFileSeek
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "filename"
+	Param2 = 0x04, "offset"
+	Opcode = 0x3c15
+	desc = "Moves the current reading position to the specified offset in the file. You should call this or xRewind every frame before"
+	desc = "using other file functions. (This function isn't very useful if the file contains string data.)"
+end
+function = XFileWriteFloat
+	Options = 0xC003
+	Return = 0x0, "none"
+	Param1 = 0x10, "filename"
+	Param1 = 0x08, "float"
+	Opcode = 0x3c33
+	desc = "Writes a (4 byte) FLOAT value to the file at the current position and advances. The file is then truncated at the current"
+	desc = "position (just after the end of the new value), so you cannot use this to modify the values in the middle of an existing file."
+end
+function = XFileWriteLong
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "filename"
+	Param2 = 0x04, "long"
+	Opcode = 0x3c32
+	desc = "Writes a (4 byte) LONG value to the file at the current position and advances. The file is then truncated at the current"
+	desc = "position (just after the end of the new value), so you cannot use this to modify the values in the middle of an existing file."
+end
+function = XFileWriteShort
+	Options = 0xC003
+	Return = 0x0, "none"
+	Param1 = 0x10, "filename"
+	Param2 = 0x02, "value"
+	Opcode = 0x3c31
+	desc = "Writes a (2 byte) SHORT value to the file at the current position and advances. The file is then truncated at the current"
+	desc = "position (just after the end of the new value), so you cannot use this to modify the values in the middle of an existing file."
+end
+function = XFileWriteString
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "filename"
+	Param2 = 0x10, "value"
+	Opcode = 0x3c34
+	desc = "The same as for xFileWriteShort but stores a 'C'-style null terminated string to the file."
+end
+function = XFileWriteText
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "filename"
+	Param2 = 0x10, "format"
+	Param3 = 0x881E, "..."
+	Opcode = 0x3f09
+	desc = "Writes formatted string to the file at the current position and advances. The file is then truncated at the current position (just"
+	desc = "after the end of the new value), so you cannot use this to modify the values in the middle of an existing file. The formatting rules"
+	desc = "are the same as for the xStringBuild function with one addition. Placing a % at the end of the pattern will suppress the NULL that is"
+	desc = "normally printed, so a format string ending with "%N%" can be used to create a normal text file."
+end
+function = XFirstItem
+	Options = 0x8000
+	Return = 0x04, "reference"
+	Opcode = 0x3c1e
+	desc = "Returns a reference like FirstNPC except this one is the top of a list of ordinary objects the player can activate (and usually carry)."
+end
+function = XFirstNPC
+	Options = 0x8000
+	Return = 0x04, "reference"
+	Opcode = 0x3c1a
+	desc = "Returns a reference to one of the NPCs or Creatures in the players cell or 0 if there are none. The reference is"
+	desc = "simply the one on the top of a list of all NPCs and Creatures in the cell and you can use the xNextRef function to find the rest."
+end
+function = XFirstStatic
+	Options = 0x8000
+	Return = 0x04, "reference"
+	Opcode = 0x3c1f
+	desc = "Returns a reference like FirstNPC except this one is the top of a list of static objects (the non-carriable, non-interactive ones)."
+end
+function = XGetBaseAgi
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f34
+	desc = "Returns the base (unmodifed) agility for the NPC."
+end
+function = XGetBaseEnd
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f36
+	desc = "Returns the base (unmodifed) endurance for the NPC."
+end
+function = XGetBaseGold
+	Options = 0x8000
+	Return = 0x04, "long"
+	Opcode = 0x3f23
+	desc = "Returns the base amount of barter gold assigned to the NPC (or creature) in the Construction Set. This is the value"
+	desc = "that resets automatically each day."
+end
+function = XGetBaseID
+	Options = 0x8000
+	Return = 0x10, "string"
+	Opcode = 0x3f6f
+	desc = "Returns the base part of of the objectid for the object. This is really intended for use with NPCs. There are"
+	desc = "36 diseased Dreamers who share the object id 'dreamer' but if you use the xRefID function on one of them you will"
+	desc = "get an id that is unique to that particular NPC such as 'dreamer000002', this function would only return 'dreamer'".
+end
+function = XGetBaseInt
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f32
+	desc = "Returns the base (unmodifed) intelligence for the NPC."
+end
+function = XGetBaseLuc
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f38
+	desc = "Returns the base (unmodifed) luck for the NPC."
+end
+function = XGetBasePer
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f37
+	desc = "Returns the base (unmodifed) personality for the NPC."
+end
+function = XGetBaseSpe
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f35
+	desc = "Returns the base (unmodifed) speed for the NPC."
+end
+function = XGetBaseStr
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f31
+	desc = "Returns the base (unmodifed) strength for the NPC."
+end
+function = XGetBaseWil
+	Options = 0x8000
+	Return = 0x08, "float"
+	Opcode = 0x3f33
+	desc = "Returns the base (unmodifed) willpower for the NPC."
+end
+function = XGetCharge
+	Options = 0x8000
+	Return = 0x08, "float [charge]"
+	Opcode = 0x3f67
+	desc = "Returns the current charge on a 'cast when used' or 'cast when strikes' enchanted item. Constant effect and non-enchanted items return 0."
+end
+function = XGetCombat
+	Options = 0x8000
+	Return = 0x04, "reference"
+	Opcode = 0x3c20
+	desc = "Returns a reference to this NPC/creature's combat target or 0 if the NPC/creature is not in combat."
+end
+function = XGetCondition
+	Options = 0x8000
+	Return = 0x04, "long [condition]"
+	Opcode = 0x3f65
+	desc = "Returns the current condition for armor and weapons and remaining uses for lockpicks, probes, and repair tools."
+end
+function = XGetEncumb
+	Options = 0x8000
+	Return = 0x08, "float [encumberance]"
+	Opcode = 0x3f64
+	desc = "Returns the total weight of all objects in the inventory of a container, NPC, or creature. Levelled list items"
+	desc = "don't have a weight but they are assigned a weight of 0.001 by this fnction. If any of the items in the group"
+	desc = "are respawning items then the resulting weight will be negative."
+end
+function = XGetGold
+	Options = 0x8000
+	Return = 0x04, "long"
+	Opcode = 0x3f24
+	desc = "Returns the current amount of barter gold possessed by the NPC (or creature). The base gold amount is used"
+	desc = "if you haven't bartered with the NPC/creature recently."
+end
+function = XGetMaxCharge
+	Options = 0x8000
+	Return = 0x08, "float [maxcharge]"
+	Opcode = 0x3f68
+	desc = "Returns the maximum charge on an enchanted item."
+end
+function = XGetMaxCondition
+	Options = 0x8000
+	Return = 0x04, "long [maxcondition]"
+	Opcode = 0x3f66
+	desc = "Returns the maxium condition for armor and weapons and maximum uses for lockpicks, probes, and repair tools."
+end
+function = XGetName
+	Options = 0x8000
+	Return = 0x10, "string [name]"
+	Opcode = 0x3f6e
+	desc = "Returns a string containing the name (suitable for display, not the objectid) for the object or 0 if the object doesn't have"
+	desc = "a name. The NPC who falls from the sky near Seyda Neen has an object id of 'agronian guy' but his name is 'Tarhiel' when you"
+	desc = "look at his corpse."
+end
+function = XGetOwner
+	Options = 0x8000
+	Return = 0x10, "string [ownerid]"
+	Opcode = 0x3f62
+	desc = "Returns a 0 if the object is not owned, the objectid of the owner of the item if it is owned by a specific NPC or the"
+	desc = "string 'unknown' if it is owned by a faction or controlled by a variable."
+end
+function = XGetPCTarget
+	Options = 0x8000
+	Return = 0x04, "reference"
+	Opcode = 0x3c07
+	desc = "Returns a reference to the object in the player's crosshair or 0 if the player is not looking at anything that can be manipulated by the player."
+end
+function = XGetQuality
+	Options = 0x8000
+	Return = 0x08, "float [quality]"
+	Opcode = 0x3f69
+	desc = "Returns the quality of alchemical apparatus, lockpick, probe, and repair tool items."
+end
+function = XGetRef
+	Options = 0xC003
+	Return = 0x04, "reference"
+	Param1 = 0x10, "objectid"
+	Opcode = 0x3c1d
+	desc = "Returns a reference to one of the active objects matching the objectid or a 0 if no active object is found."
+	desc = "Active objects are in one of the loaded cells or are persistent like NPCs. This is most useful to locate NPCs"
+	desc = "and unique objects. If you try to find a mudcrab you could either find none (if you are far from the coast) or"
+	desc = "one of the many nearby (if you are near the coast)."
+end
+function = XGetService
+	Options = 0xC003
+	Return = 0x04, "long [service result]"
+	Param1 = 0x04, "mask"
+	Opcode = 0x3f04
+	desc = "Combines the features of xIsTrader, xIsTrainer, and xIsProvider in a single function with one return value. The"
+	desc = "service values are shown in the following table and if an NPC offers more than one service the sum of the service"
+	descl = "numbers will be returned. The mask parameter can be used as a filter to limit the return value to only consider the services indicated."
+    descl = "       Value             Service"
+    descl = "         1        Barters for Weapons"
+    descl = "         2        Barters for Armour"
+    descl = "         4        Barters for Clothing"
+    descl = "         8        Barters for Books"
+    descl = "         16       Barters for Ingrediants"
+    descl = "         32       Barters for Lockpicks"
+    descl = "         64       Barters for Probes"
+    descl = "         128      Barters for Lights"
+    descl = "         256      Barters for Alchemical Apparatus"
+    descl = "         512      Barters for Repair Tools"
+    descl = "         1024     Barters for Miscellaneous Items"
+    descl = "         2048     Sells Spells"
+    descl = "         4096     Barters for Enchanted Items"
+    descl = "         8192     Barters for Potions"
+    descl = "         16384    Provides Training"
+    descl = "         32768    Provides Spellmaking Service"
+    descl = "         65536    Provides Enchanting Service"
+    descl = "         131072   Repairs Armor and Weapons"
+    desc = "Use a mask of 16384 to see if the NPC is a trainer and the function will either return 16384 or 0. Use a mask of 96 (32+64)"
+	desc = "to see if the NPC sells thieving equipment. The value returned could be 0, 32, 64, or 96, but won't any other values even if"
+	desc = "the NPC provides other services too."
+end
+function = XGetValue
+	Options = 0x8000
+	Return = 0x04, "long [value]"
+	Opcode = 0x3f61
+	desc = "Returns the gold value of the object. Objects that can't be sold return 0."
+end
+function = XGetWeight
+	Options = 0x8000
+	Return = 0x08, "float [weight]"
+	Opcode = 0x3f63
+	desc = "Returns the weight of the object for carriable objects. Returns the maximum capacity of a container and 0 for all"
+	desc = "other objects. (When the player places multiple copies of one item on the ground the stack is considered one item"
+	desc = "and this function will calculate the value for the group not just a single item of that type.)"
+end
+function = XHasItemEquipped
+	Options = 0xC003
+	Return = 0x04, "long"
+	Param1 = 0x10, "objectid"
+	Opcode = 0x3c30
+	desc = "Returns 1 if the npc or creature has the object equipped or 0 otherwise."
+end
+function = XHypot
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x08, "float"
+	Param2 = 0x08, "float"
+	Opcode = 0x3839
+	desc = "Returns the hypotenuse for sides a and b, c = sqrt(a*a + b*b). Unlike xSqrt this is more efficient than calculating the"
+	desc = "formula inside the script."
+end
+function = XInventory
+	Options = 0x8000
+	Return = 0x801E, "string objectid, long count, reference next"
+	Opcode = 0x3c2a
+	desc = "Returns three values based on the inventory of the current container, NPC, or creature. The first is the objectid of one"
+	desc = "of the items in inventory. The second is the number of that particular item found in the inventory. The third is a reference"
+	desc = "that can be passed to the xNextStack function to find the rest of the items in the inventory. All three results will be 0 if"
+	desc = "there are no items in the inventory (and just the third will be zero if there is only one item in the inventory). (It is not"
+	desc = "possible to get a normal reference to objects inside an inventory. The reference returned by this function is of a unique type"
+	desc = "and should only be used with xNextStack.)"
+end
+function = XIsFemale
+	Options = 0x8000
+	Return = 0x04, "long"
+	Opcode = 0x3f21
+	desc = "Returns 1 if the NPC is female and 0 otherwise."
+end
+function = XIsProvider
+	Options = 0x8000
+	Return = 0x04, "long"
+	Opcode = 0x3f7c
+	desc = "Returns a non-zero value if the NPC/creature sells spells, repairs armor and weapons, or is an enchanter or spell maker."
+	desc = "Otherwise it returns a 0. New functions for each individual type are needed."
+end
+function = XIsTrader
+	Options = 0x8000
+	Return = 0x04, "long"
+	OpCode = 0x3f3a
+	desc = "Returns a 0 if the NPC/creature doesn't barter for items, otherwise it is a value that represents the combination of"
+	desc = "items the merchant will trade. New functions for each individual type are needed."
+end
+function = XIsTrainer
+	Options = 0x8000
+	Return = 0x04, "long"
+	Opcode = 0x3f5e
+	desc = "Returns a 1 if the NPC/creature is a Trainer and 0 otherwise."
+end
+function = XKeyPressed
+	Options = 0xC003
+	Return = 0x04, "long"
+	Param1 = 0x04, "long [keycode]"
+	Opcode = 0x3f00
+	desc = "Monitors the status of the keyboard (and mouse buttons). This can be similar to GetPCSneaking, but actually detects"
+	desc = "whether a particular key is really being pressed. If input parameter code is a Virtual Key Code (between 1 and 254)"
+	desc = "the return value will indicate the status of that key and a non-zero value means the key is being pressed. If the"
+	desc = "input code is 0, then on each call, the function will return the key code for the key (or one of the keys) currently"
+	desc = "being pressed. The specific values for the virtual key codes can be found in the Microsoft documentation at http://msdn.microsoft.com."
+	desc = "Some of the codes match different keys on different keyboard layouts."
+end
+function = XLogMessage
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "format"
+	Param2 = 0x881E, "..."
+	Opcode = 0x3c09
+	desc = "Writes out formatted strings to the log file (MWScriptExtender.log) Works much like MessageBox but with the additional"
+	desc = "formatting options described for xStringBuild. A trailing % in the format string will suppress the printing of the new"
+	desc = "line sequence allowing a single line of text to be created with two or more xLogMessage calls. The number of parameters"
+	desc = "specified in the formatstring MUST match those supplied or there will be trouble."
+end
+function = XMemLook
+	Options = 0x8000
+	Return = 0, "none"
+	Opcode = 0x3f3f
+end
+function = XMessageFix
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "message"
+	Param2 = 0x881E, "..."
+	Opcode = 0x3f7e
+	desc = "This function allows you to use STRING variables with the MessageBox function with a few restrictions. First,"
+	desc = "the MessageBox command must immediately follow this one. Second, the number of strings for this function must"
+	desc = "match the number of strings for the MessageBox. Third, the MessageBox can have buttons but it can't use variables."
+	desc = "And finally, the values of the strings used on the MessageBox will be replaced with the values from xMessageFix, but"
+	desc = "the MessageBox strings set a maximum size for each of the xMessageFix strings (it's OK if the MessageBox strings are"
+	desc = "longer than the MessageFix ones). Using aMessageFix can take both the STRING variable and literal string types and"
+	desc = "each string acts as a format string as described for the xStringBuild function. If a string ends in a single % and"
+	desc = "the formated string takes less space than the matching string from MessageBox, the remaining characters of the MessageBox"
+	descl = "string will be used."
+    desc = "While it is possible to use formatted messages and buttons, it is best to format strings with xStringBuild if there"
+	desc = "are buttons involved because of the limit of 12 parameters per function."
+end
+function = XModService
+	Options = 0xC003
+	Return = 0x04, "long?"
+	Param1 = 0x04, "long"
+	Opcode = 0x3f06
+	desc = "Uses the value parameter to modify the services offered by an NPC. A positive value adds that service (or set of services) to"
+	desc = "those already offered. A negative value will remove a service or service. The changes are not permanent."
+end
+function = XMyCellID
+	Options = 0x8000
+	Return = 0x10, "string [cellid]"
+	Opcode = 0x3f22
+	desc = "Returns a string containing the name of the cell the object (intended to be used with references to unique NPCs) inhabits. So"
+	desc = "fargoth->xMyCellID would return 'Seyda Neen' unless you've lured him into the wilderness for some reason. Useful for locating"
+	desc = "that missing companion. Can't locate items stored in containers or inventory."
+end
+function = XNextRef
+	Options = 0xC003
+	Return = 0x04, "reference"
+	Param1 = 0x04, "current reference"
+	Opcode = 0x3c1b
+    Desc = "Returns the 'next' reference in one of the three lists of objects in the current cell (NPC, Item, and Static) after"
+	desc = "the current one. If the player is outside, the list will cycle through all 9 loaded exterior cells which may be too"
+	desc = "much to do in a single frame."
+end
+function = XNextStack
+	Options = 0xC003
+	Return = 0x801E, "string [objectid], long [count], reference [next]"
+	Param1 = 0x04, "next"
+	Opcode = 0x3c2b
+	desc = "Returns the next item in the inventory stack. The parameter to this function is the third result from either xInventory"
+	desc = "or this function. Attempts to pass any other kind of reference to this function or use this reference with other functions"
+	desc = "will result in errors and possibly crash the game. If the inventory of the current NPC, creature, or container is changed"
+	desc = "(items added or removed) it will make the current stack reference invalid and you should get a new stack reference with xInventory."
+end
+function = XPCCellID
+	Options = 0x8000
+	Return = 0x10, "string [cellid]"
+	Opcode = 0x3c2d
+	desc = "Returns a string containing the name of the current cell."
+end
+function = XPlace
+	Options = 0xC003
+	Return = 0x04, "reference"
+	Param1 = 0x10, "objectid"
+	Opcode = 0x3c2e
+	desc = "Places an object of type objectid behind the player and returns a reference to the new object."
+end
+function = XPosition
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x08, "x"
+	Param2 = 0x08, "y"
+	Param3 = 0x08, "z"
+	Param4 = 0x08, "angle, degrees"
+	Opcode = 0x3c05
+	desc = "A wrapper function for the original Position to allow variables."
+end
+function = XPositionCell
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x08, "x"
+	Param2 = 0x08, "y"
+	Param3 = 0x08, "z"
+	Param4 = 0x08, "angle, degrees"
+	Param5 = 0x10, "cellname"
+	Opcode = 0x3c2c
+	desc = "A wrapper function for the original PositionCell to allow variables."
+end
+function = XRaddeg
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x08, "radians"
+	Opcode = 0x3837
+	desc = "Converts a value from radians to degrees."
+end
+function = XRefID
+	Options = 0x8000
+	Return = 0x10, "string [objectid]"
+	Opcode = 0x3c1c
+	desc = "Returns the objectid string of the object."
+end
+function = XRefType
+	Options = 0x8000
+	Return = 0x04, "long"
+	Opcode = 0x3c08
+end
+function = XRemoveItem
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x10, "objectid"
+	Param2 = 0x04, "count"
+	Opcode = 0x3c29
+	desc = "A wrapper for the original RemoveItem to take variables."
+end
+function = XSetBaseGold
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x04, "amount"
+	Opcode = 0x3f25
+	desc = "Returns the current amount of barter gold possessed by the NPC (or creature). The base gold amount is used if you"
+	desc = "haven't bartered with the NPC/creature recently."
+end
+function = XSetGold
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x04, "amount"
+	Opcode = 0x3f26
+	desc = "Changes the current amount of barter gold possessed by the NPC (or creature). This value is stored in save game"
+	desc = "files so it will survive a game reload. Setting this will have no effect if you haven't recently bartered with the"
+	desc = "NPC/creature. (But setting both this and the base gold ammount at the same time will likely do what you want.)"
+end
+function = xSetName
+	Options = 0xc003
+	Return = 0, "none"
+	Param1 = 0x14
+	Opcode = 0x3f0f
+end
+function = XSetRef
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x04, "reference"
+	Opcode = 0x3c18
+	descl = "This function provides a way of calling object functions where the syntax does not allow for it, Eg:"
+    descl = "           set myalchemyskill to myobject->GetAlchemy"
+	descl = "does not work because the original set statement does not allow the use of variables as objects, in this case you should use"
+    descl = "           xSetRef myobject"
+    descl = "           set myalchemyskill to GetAlchemy"
+end
+function = XSetService
+	Options = 0xC003
+	Return = 0x04, "long?"
+	Param1 = 0x04, "new services"
+	Opcode = 0x3f05
+	desc = "Uses the value parameter to change the NPC to offer the set of services represented by the number. The service number"
+	desc = "values are used and any old services are ignored, so using a value of 8 will make the NPC a bookseller and a value of"
+	desc = "131587 (1+2+512+131072) is typical for smiths. The values changed by this function are not permanent and may be reset"
+	desc = "after 72-hours or a game reload."
+end
+function = XSin
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x08, "angle, radians"
+	Opcode = 0x3831
+	desc = "Returns the sine of the angle (which given in radians)."
+end
+function = XSqrt
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x08, "float"
+	Opcode = 0x3838
+	desc = "Returns the square root of the value. (Use Tribunal's GetSquareRoot instead.)"
+end
+function = XStartCombat
+	Options = 0xC003
+	Return = 0, "none"
+	Param1 = 0x14, "reference"
+	Opcode = 0x3c21
+	desc = "A wrapper for the original StartCombat to take variables."
+end
+function = XStringBuild
+	Options = 0xC003
+	Return = 0x801E, "string [result]"
+	Param1 = 0x10, "format"
+	Param2 = 0x881E, "..."
+	Opcode = 0x3f0b
+	desc = "Returns a new string that is constructed based on the format string and any other variable values as needed. The format"
+	desc = "string is similar to those for MessageBox with % indicating some special character or variable substitution. Some patterns"
+	descl = "can be used to place special characters into the string:"
+	descl = "          %%   a single % sign is placed in the string."
+	descl = "          %n   a new line marker (CR/LF) is placed in the string."
+	descl = "          %q   a ' quotation mark is placed in the string."
+	descl = "The rest are used to insert values from the remaining parameters into the output string."
+	descl = "          %d   a short or long value is inserted as a decimal integer."
+	descl = "          %h   a short or long value is inserted as a hexadecimal integer."
+	descl = "          %f   a float value is inserted as real decimal number."
+	descl = "          %s   a string value is inserted."
+	descl = "          %l   a long value is inserted as a four character string."
+	desc = "The uppercase forms %N, %Q, %D, %H, %F, %S, and %L also work. The float specifier takes a precision specifier just like"
+	desc = "the MessageBox command. The format '%.3f' will print a floating point value with three digits after the decimal point."
+	desc = "The string specifier can take two numbers in its specifier."
+	descl = "          %2s     skips the first two characters of the string, but inserts the rest. 
+	descl = "          %.3s    inserts only three characters of the string. 
+	descl = "          %4.5s   skips 4 characters, then inserts the next 5 characters of the string. 
+	descl = "To put 'World, Hello!' into str, you could use the following statement."
+	descl = "              set str to xStringBuild '%7S%5.2s%.5S!' 'World, Hello'"
+	desc = "The compiler doesn't currently support more than 12 parameters at a time."
+end
+function = XStringCompare
+	Options = 0xC003
+	Return = 0x04, "long [compare]"
+	Param1 = 0x10, "string1"
+	Param2 = 0x10, "string2"
+	Opcode = 0x3c2f
+	desc = "Compares the two strings based on alphabetical order and returns 0 if they are equal, a negative number if the first string"
+	desc = "would appear first, and a postive number if the second string would appear first."
+end
+function = XStringLength
+	Options = 0xC003
+	Return = 0x04, "long [length]"
+	Param1 = 0x10, "string"
+	Opcode = 0x3f0a
+	desc= "Returns the number of characters in the input string."
+end
+function = XStringParse
+	Options = 0xC003
+	Return = 0x801E, "long [count], ..."
+	Param1 = 0x10, "pattern"
+	Param2 = 0x10, "source"
+	Opcode = 0x3f0c
+	desc = "Identifies and extracts data from the source string based on the pattern string. The first return value is a long"
+	desc = "indicating how much of the pattern matched successfully. The values matched by the pattern will then be returned in"
+	desc = "order. For example, the following statement will put value of 37 in the long variable lval, a value of 2.4 in the float"
+	desc = "variable fval, the string 'Golden Egg' in the string variable sval, and the value 4 into matches to indicated that all"
+	descl = "of the pattern successfully matched."
+	descl = "          set matches lval fval sval to xStringParse '%d %f %s' '37 2.4 Golden Egg'"
+	desc = "In the pattern string, all of the special features begin with a % symbol. Some, simply match special characters that can't"
+	descl = "otherwise be typed in the pattern string."
+    descl = "          %%   matches a single % sign."
+	descl = "          %n   matches the new line marker, CR/LF."
+	descl = "          %q   matches the ' quotation mark."
+	descl = "The rest return the values matched so they can be stored in variables with setx."
+	descl = "          %d   matches a decimal integer and the value is returned as type long."
+	descl = "          %h   matches a hexadecimal integer and the value is returned as type long."
+	descl = "          %f   matches a real number and the value is returned as type float." 
+	descl = "          %s   matches the rest of the string and returns it as type string."
+	descl = "          %l   matches exactly four characters and returns them as type long."
+	desc = "The uppercase forms %N, %Q, %D, %H, %F, %S, and %L also work. Only one of these takes a precision specifier, and it is best explained"
+	descl = "by example."
+	descl = "              set matches sval lval to xStringParse '%.0s_%d' 'gold_001'"
+    desc = "In this case, the special pattern '%.0s' is followed by a '_' character, so only 'gold' will be stored in the string sval, a"
+	desc = "value of 1 will be in lval, and matches will be 3. Matches is normally one more than the number of values returned to indicated"
+	desc = "that in addition to filling all of the variables the entire pattern was matched successfully. You could use a pattern simply for"
+	descl = "string comparison."
+	descl = "              set matches lval to xStringParse '%d Apples' somestring"
+    desc = "If the somestring variable really holds the string '43 Apples' then matches will be 2 to indicate that the pattern was matched"
+	desc = "completely. If somestring were '47 Pears' then matches will be 1 to indicate that the first variable was filled (with 47) but"
+	desc = "that the rest of the pattern failed to match. If somestring were 'Hello' then matches will be 0 to indicate that not even the"
+	desc = "first variable was filled correctly."
+end
+function = XTan
+	Options = 0xC003
+	Return = 0x08, "float"
+	Param1 = 0x08, "angle, radians"
+	Opcode = 0x3830
+	desc = "Returns the tangent of the angle (which given in radians)."
+end
+function = XTextInput
+	Options = 0xC003
+	Return = 0x801E, "long [length], string [input]"
+	Param1 = 0x10, "message"
+	Param2 = 0x04, "endchar"
+	Opcode = 0x3f01
+	desc = "This allows you to directly read keyboard input from the user and the results will be returned as a string. Pass a"
+	desc = "string and a virtual key code to the function. The function will wait for a key to be pressed and then take one of"
+	desc = "three actions. If the key pressed matches the endcode parameter, the string and it's length are returned. If the"
+	desc = "key pressed is a printable ASCII character, the character is added to the string and it and the number 0 are returned."
+	desc = "If the key is RETURN or BACKSPACE, a new line is started or one character is removed from the string, and the modifed"
+	desc = "string and a 0 are returned. The function returns after each key press so that the current value of the string can be"
+	desc = "shown with xMessageFix and MessageBox but the string should only be used normally after the length is returned. Player"
+	desc = "controls should be disabled while this function is used."
+end
+function = XTextInputAlt
+	Options = 0xC003
+	Return = 0x801E, "long [length], string [input]"
+	Param1 = 0x10, "message"
+	Param2 = 0x04, "endchar"
+	Opcode = 0x3f02
+	desc = "This function is identical to xTextInput except that the function simply checks the status of keys and returns immediately"
+	desc = "rather than waiting for a key to be pressed."
+end
+
+
+function = CenterOnCell
+	Options = 0
+	Return = 0, "none"
+	Param1 = 0x01000020, "CellID"
+	Opcode = 0x10d6
+end
+function = COC
+	Options = 0
+	Return = 0, "none"
+	Param1 = 0x01000020, "CellID"
+	Opcode = 0x10d6
+end
+function = CenterOnExterior
+	Options = 0
+	Return = 0, "none"
+	Param1 = 0x02, "CellX"
+	Param1 = 0x02, "CellY"
+	Opcode = 0x112a
+end
+function = COE
+	Options = 0
+	Return = 0, "none"
+	Param1 = 0x02, "CellX"
+	Param1 = 0x02, "CellY"
+	Opcode = 0x112a
+end
+function = FillMap
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x13e
+end
+function = FixMe
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x131
+end
+function = ToggleAI
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x113
+end
+function = TA
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x113
+end
+function = ToggleCollision
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x118
+end
+function = TCL
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x118
+end
+function = ToggleFogOfWar
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x13a
+end
+function = TFOW
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x13a
+end
+function = ToggleGodMode
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x112
+end
+function = TGM
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x112
+end
+function = ToggleMenus
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x11e
+end
+function = TM
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x11e
+end
+function = ToggleSky
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x115
+end
+function = TS
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x115
+end
+function = ToggleVanityMode
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x128
+end
+function = TVM
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x128
+end
+function = ToggleWorld
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x116
+end
+function = TW
+	Options = 0
+	Return = 0, "none"
+	Opcode = 0x116
+end
