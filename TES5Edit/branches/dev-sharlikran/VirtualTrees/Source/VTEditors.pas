@@ -11,6 +11,9 @@ unit VTEditors;
 interface
 
 uses
+  {$IF CompilerVersion > 23}
+  Types,
+  {$IFEND}
   SysUtils,
   Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, VirtualTrees, Buttons, ExtCtrls, ComCtrls, Spin;

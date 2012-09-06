@@ -20,6 +20,9 @@
 program TES5Edit;
 
 uses
+  {nxReplacementMemoryManager,}
+  {nxExceptionHook,}
+  wbInit,
   Forms,
   Dialogs,
   SysUtils,
@@ -48,7 +51,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 begin
-  SysUtils.FormatSettings.DecimalSeparator := '.';
+  SysUtils.DecimalSeparator := '.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := wbApplicationTitle;

@@ -10261,9 +10261,16 @@ end;
 initialization
   TwoPi := 2 * OnePi;
 
-  if (DebugHook = 0) then
-    wbReportMode := False
-  else wbReportMode := wbUserDefinedDebug;
+//------------------------------------------------------------------------------
+// DebugHook is set if an application is running under the IDE debugger.
+// DebugHook is 0 when an application operates outside the IDE debugger.
+// DebugHook is 1 when an application operates inside the IDE debugger.
+//
+// Old Routine forces wbReportMode false if TES5Dump is run from the command line
+//------------------------------------------------------------------------------
+//  if (DebugHook = 0) then
+//    wbReportMode := False
+//------------------------------------------------------------------------------
 
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;

@@ -75,6 +75,9 @@ uses
   {$if CompilerVersion >= 18}
     oleacc,   // MSAA support in Delphi 2006 or higher
   {$ifend}
+  {$IF CompilerVersion > 23}
+  UITypes,
+  {$IFEND}
   Messages, SysUtils, Graphics, Controls, Forms, ImgList, ActiveX, StdCtrls, Classes, Menus, Printers,
   {>>>}Colors,{<<<}
   CommCtrl,   // image lists, common controls tree structures

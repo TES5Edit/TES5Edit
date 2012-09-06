@@ -373,6 +373,11 @@ begin
     on e: Exception do
       WriteLn(ErrOutput, 'Unexpected Error: <',e.ClassName, ': ', e.Message,'>');
   end;
+//------------------------------------------------------------------------------
+// DebugHook is set if an application is running under the IDE debugger.
+// DebugHook is 0 when an application operates outside the IDE debugger.
+// DebugHook is 1 when an application operates inside the IDE debugger.
+//------------------------------------------------------------------------------
   if wbReportMode or (DebugHook <> 0) then Begin
     ReportDefs;
       ReportProgress('Writing ReportDefs After Error in ' + AppendInputFile +'.');
