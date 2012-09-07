@@ -19,9 +19,14 @@
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 program TES5Edit;
 
+{$I Compilers.inc}
+{$I TES5Edit.inc}
+
 uses
-  {nxReplacementMemoryManager,}
-  {nxExceptionHook,}
+	{$IFDEF USENEXUS}
+	nxReplacementMemoryManager,
+  nxExceptionHook,
+	{$ENDIF}
   wbInit,
   Forms,
   Dialogs,
@@ -51,7 +56,11 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 begin
+  {$IF CompilerVersion > 23}
+  FormatSettings.DecimalSeparator := '.';
+  {$ELSE}
   SysUtils.DecimalSeparator := '.';
+  {$IFEND}
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := wbApplicationTitle;
