@@ -9774,10 +9774,10 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
+          wbInteger('Level', itU16),
           wbByteArray('Unknown', 2, cpIgnore),
           wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itS16),
+          wbInteger('Count', itU16),
           wbByteArray('Unknown', 2, cpIgnore)
         ]),
 				wbCOED
@@ -9801,11 +9801,11 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unknown', 2),
+          wbInteger('Level', itU16),
+          wbByteArray('Unknown', 2, cpIgnore),
           wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unknown', 2)
+          wbInteger('Count', itU16),
+          wbByteArray('Unknown', 2, cpIgnore)
         ]),
         wbCOED
       ], [])
@@ -9825,11 +9825,11 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructSK([0], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unknown', 2),
+        wbInteger('Level', itU16),
+        wbByteArray('Unknown', 2, cpIgnore),
         wbFormIDCk('Reference', [SPEL]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unknown', 2)
+        wbInteger('Count', itU16),
+        wbByteArray('Unknown', 2, cpIgnore)
       ])
       ], [])
     )
