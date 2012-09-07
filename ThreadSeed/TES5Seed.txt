@@ -1,9 +1,10 @@
 [size="5"][b][color="#FF0000"]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size][/b]
 
-[size="5"][b][color="#00BFFF"]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1392239-wipz-tes5dumpfuture-tes5edit/][WIPz] TES5Dump/Future TES5Edit[/url][/color][/size][/b]
+[size="5"][b][color="#00BFFF"]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1409718-wipz-tes5dumpfuture-tes5edit/][WIPz] TES5Dump/Future TES5Edit[/url][/color][/size][/b]
 
 Threads:
 [spoiler]
+[topic='1392239']Thread 2[/topic]
 [topic='1388475']Thread 1[/topic]
 [/spoiler]
 
