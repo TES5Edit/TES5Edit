@@ -19,10 +19,15 @@
 program TES5Dump;
 
 {$I Compilers.inc}
+{$I TES5Edit.inc}
 
 {$APPTYPE CONSOLE}
 
 uses
+	{$IFDEF USENEXUS}
+	nxReplacementMemoryManager,
+  nxExceptionHook,
+	{$ENDIF}
   Classes,
   SysUtils,
   Windows,
@@ -185,7 +190,11 @@ var
   _File           : IwbFile;
   Masters         : TStringList;
 begin
+  {$IF CompilerVersion > 23}
+  FormatSettings.DecimalSeparator := '.';
+  {$ELSE}
   SysUtils.DecimalSeparator := '.';
+  {$IFEND}
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;

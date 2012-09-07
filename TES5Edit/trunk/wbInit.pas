@@ -29,12 +29,14 @@ uses
   Dialogs,
   wbInterface,
   wbImplementation,
+	{$IFDEF USENEXUS}
+  nxExeConst,
+	{$ENDIF}
   wbDefinitionsFO3,
   wbDefinitionsFNV,
   wbDefinitionsTES3,
   wbDefinitionsTES4,
-  wbDefinitionsTES5{,
-  nxExeConst};
+  wbDefinitionsTES5;
 
 procedure wbDoInit;
 begin
