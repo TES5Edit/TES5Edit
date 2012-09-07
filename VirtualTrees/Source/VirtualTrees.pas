@@ -996,7 +996,13 @@ type
     FMinWidth: Integer;
     FMaxWidth: Integer;
     FStyle: TVirtualTreeColumnStyle;
-    FImageIndex: {>>>}System.UITypes.{<<<}TImageIndex;
+    {>>>}
+    {$IF CompilerVersion > 23}
+    FImageIndex: System.UITypes.TImageIndex;
+    {$ELSE}
+    FImageIndex: TImageIndex;
+    {$IFEND}
+    {<<<}
     FBiDiMode: TBiDiMode;
     FLayout: TVTHeaderColumnLayout;
     FMargin,
@@ -1028,7 +1034,13 @@ type
     procedure SetCheckState(Value: TCheckState);
     procedure SetCheckType(Value: TCheckType);
     procedure SetColor(const Value: TColor);
+    {>>>}
+    {$IF CompilerVersion > 23}
     procedure SetImageIndex(Value: {>>>}System.UITypes.{<<<}TImageIndex);
+    {$ELSE}
+    procedure SetImageIndex(Value: TImageIndex);
+    {$IFEND}
+    {<<<}
     procedure SetLayout(Value: TVTHeaderColumnLayout);
     procedure SetMargin(Value: Integer);
     procedure SetMaxWidth(Value: Integer);
@@ -1083,7 +1095,13 @@ type
     property Color: TColor read FColor write SetColor stored IsColorStored;
     property DefaultSortDirection: TSortDirection read fDefaultSortDirection write fDefaultSortDirection default sdAscending;
     property Hint: UnicodeString read FHint write FHint stored False;
-    property ImageIndex: {>>>}System.UITypes.{<<<}TImageIndex read FImageIndex write SetImageIndex default -1;
+    {>>>}
+    {$IF CompilerVersion > 23}
+    property ImageIndex: System.UITypes.TImageIndex read FImageIndex write SetImageIndex default -1;
+    {$ELSE}
+    property ImageIndex: TImageIndex read FImageIndex write SetImageIndex default -1;
+    {$IFEND}
+    {<<<}
     property Layout: TVTHeaderColumnLayout read FLayout write SetLayout default blGlyphLeft;
     property Margin: Integer read FMargin write SetMargin default 4;
     property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 10000;
@@ -1631,12 +1649,24 @@ type
   private
     FAlwaysVisible: Boolean;
     FOwner: TBaseVirtualTree;
-    FScrollBars: {>>>}System.UITypes.{<<<}TScrollStyle;                   // used to hide or show vertical and/or horizontal scrollbar
+    {>>>}
+    {$IF CompilerVersion > 23}
+    FScrollBars: System.UITypes.TScrollStyle;    // used to hide or show vertical and/or horizontal scrollbar
+    {$ELSE}
+    FScrollBars: TScrollStyle;                   // used to hide or show vertical and/or horizontal scrollbar
+    {$IFEND}
+    {<<<}
     FScrollBarStyle: TScrollBarStyle;            // kind of scrollbars to use
     FIncrementX,
     FIncrementY: TVTScrollIncrement;             // number of pixels to scroll in one step (when auto scrolling)
     procedure SetAlwaysVisible(Value: Boolean);
-    procedure SetScrollBars(Value: {>>>}System.UITypes.{<<<}TScrollStyle);
+    {>>>}
+    {$IF CompilerVersion > 23}
+    procedure SetScrollBars(Value: System.UITypes.TScrollStyle);
+    {$ELSE}
+    procedure SetScrollBars(Value: TScrollStyle);
+    {$IFEND}
+    {<<<}
     procedure SetScrollBarStyle(Value: TScrollBarStyle);
   protected
     function GetOwner: TPersistent; override;
@@ -1647,7 +1677,13 @@ type
   published
     property AlwaysVisible: Boolean read FAlwaysVisible write SetAlwaysVisible default False;
     property HorizontalIncrement: TVTScrollIncrement read FIncrementX write FIncrementX default 20;
-    property ScrollBars: {>>>}System.UITypes.{<<<}TScrollStyle read FScrollbars write SetScrollBars default ssBoth;
+    {>>>}
+    {$IF CompilerVersion > 23}
+    property ScrollBars: System.UITypes.TScrollStyle read FScrollbars write SetScrollBars default ssBoth;
+    {$ELSE}
+    property ScrollBars: TScrollStyle read FScrollbars write SetScrollBars default ssBoth;
+    {$IFEND}
+    {<<<}
     property ScrollBarStyle: TScrollBarStyle read FScrollBarStyle write SetScrollBarStyle default sbmRegular;
     property VerticalIncrement: TVTScrollIncrement read FIncrementY write FIncrementY default 20;
   end;
@@ -8925,7 +8961,13 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TVirtualTreeColumn.SetImageIndex(Value: {>>>}System.UITypes.{<<<}TImageIndex);
+{>>>}
+{$IF CompilerVersion > 23}
+procedure TVirtualTreeColumn.SetImageIndex(Value: System.UITypes.TImageIndex);
+{$ELSE}
+procedure TVirtualTreeColumn.SetImageIndex(Value: TImageIndex);
+{$IFEND}
+{<<<}
 
 begin
   if Value <> FImageIndex then
@@ -13721,8 +13763,13 @@ begin
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
-
-procedure TScrollBarOptions.SetScrollBars(Value: {>>>}System.UITypes.{<<<}TScrollStyle);
+{>>>}
+{$IF CompilerVersion > 23}
+procedure TScrollBarOptions.SetScrollBars(Value: System.UITypes.TScrollStyle);
+{$ELSE}
+procedure TScrollBarOptions.SetScrollBars(Value: TScrollStyle);
+{$IFEND}
+{<<<}
 
 begin
   if FScrollbars <> Value then
@@ -20119,7 +20166,13 @@ end;
 procedure TBaseVirtualTree.CreateParams(var Params: TCreateParams);
 
 const
-  ScrollBar: array[{>>>}System.UITypes.{<<<}TScrollStyle] of Cardinal = (0, WS_HSCROLL, WS_VSCROLL, WS_HSCROLL or WS_VSCROLL);
+  {>>>}
+  {$IF CompilerVersion > 23}
+  ScrollBar: array[System.UITypes.TScrollStyle] of Cardinal = (0, WS_HSCROLL, WS_VSCROLL, WS_HSCROLL or WS_VSCROLL);
+  {$ELSE}
+  ScrollBar: array[TScrollStyle] of Cardinal = (0, WS_HSCROLL, WS_VSCROLL, WS_HSCROLL or WS_VSCROLL);
+  {$IFEND}
+  {<<<}
 
 begin
   inherited CreateParams(Params);
