@@ -18,7 +18,9 @@ interface
 
 var
   wbApplicationTitle: string;
+	{$IFNDEF USENEXUS}
   wbAppDataSubdirVista : string = 'xEdit';
+	{$ENDIF}
 
 procedure wbDoInit;
 
@@ -149,17 +151,22 @@ begin
   end else
     wbDontSave := True;
 
-  wbAppDataSubdirVista := wbAppName;
+  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := wbAppName;
   if wbTranslationMode then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'Trans'
+    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
+			{$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'Trans'
   else if wbMasterRestore then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'MasterRestore'
+    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
+		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'MasterRestore'
   else if wbMasterUpdate then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'MasterUpdate'
+    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
+		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'MasterUpdate'
   else if wbEditAllowed then
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'Edit'
+    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
+		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'Edit'
   else
-    wbAppDataSubdirVista := wbAppDataSubdirVista + 'View';
+    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
+		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'View';
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
