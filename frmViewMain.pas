@@ -33,7 +33,7 @@ uses
 {$IFDEF DEVEXFILES}
   dxGDIPlusClasses,
 {$ENDIF}
-  AppEvnts;
+  AppEvnts, System.Actions;
 
 const
   DefaultInterval             = 1 / 24 / 6;
