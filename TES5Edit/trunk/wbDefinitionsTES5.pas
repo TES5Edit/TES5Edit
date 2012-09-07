@@ -5890,7 +5890,7 @@ begin
   wbCTDA := wbRStruct('Conditions', [
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, nil{wbCtdaTypeToInt}, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 3, cpIgnore),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
@@ -9775,10 +9775,10 @@ begin
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itS16),
-          wbByteArray('Unknown', 2),
+          wbByteArray('Unknown', 2, cpIgnore),
           wbFormIDCk('Reference', [NPC_, LVLN]),
           wbInteger('Count', itS16),
-          wbByteArray('Unknown', 2)
+          wbByteArray('Unknown', 2, cpIgnore)
         ]),
 				wbCOED
       ], []),
