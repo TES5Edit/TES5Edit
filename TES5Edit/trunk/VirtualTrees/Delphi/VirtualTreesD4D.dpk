@@ -1,8 +1,7 @@
-package VirtualTreesD10D;
+package VirtualTreesD4D;
 
-{$R *.res}
-{$R '..\Design\VirtualTrees.dcr'}
-{$ALIGN 8}
+{$R *.RES}
+{$ALIGN ON}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}
@@ -12,7 +11,7 @@ package VirtualTreesD10D;
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS ON}
 {$RANGECHECKS ON}
 {$REFERENCEINFO OFF}
@@ -22,18 +21,18 @@ package VirtualTreesD10D;
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
-{$IMAGEBASE $30400000}
+{$IMAGEBASE $400000}
 {$DESCRIPTION 'Virtual Treeview design time package'}
 {$DESIGNONLY}
-{$IMPLICITBUILD ON}
 
 requires
-  dclstd,
-  VirtualTreesD10;
+  vcl40,
+  dclstd40,
+  VirtualTreesD4;
 
 contains
-  VirtualTreesReg in '..\Design\VirtualTreesReg.pas'{>>>},
-  VirtualEditTreeReg in '..\Design\VirtualEditTreeReg.pas'{<<<};
+  VirtualTreesReg in '..\Design\VirtualTreesReg.pas',
+  StrEditD4 in '..\Design\StrEditD4.pas';
 
 end.
 

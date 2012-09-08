@@ -1,4 +1,4 @@
-package VirtualTreesD10D;
+package VirtualTreesD9D;
 
 {$R *.res}
 {$R '..\Design\VirtualTrees.dcr'}
@@ -29,11 +29,10 @@ package VirtualTreesD10D;
 
 requires
   dclstd,
-  VirtualTreesD10;
+  VirtualTreesD9;
 
 contains
-  VirtualTreesReg in '..\Design\VirtualTreesReg.pas'{>>>},
-  VirtualEditTreeReg in '..\Design\VirtualEditTreeReg.pas'{<<<};
+  VirtualTreesReg in '..\Design\VirtualTreesReg.pas';
 
 end.
 

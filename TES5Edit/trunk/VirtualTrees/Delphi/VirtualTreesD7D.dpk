@@ -1,4 +1,4 @@
-package VirtualTreesD10D;
+package VirtualTreesD7D;
 
 {$R *.res}
 {$R '..\Design\VirtualTrees.dcr'}
@@ -12,7 +12,7 @@ package VirtualTreesD10D;
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS ON}
 {$RANGECHECKS ON}
 {$REFERENCEINFO OFF}
@@ -29,11 +29,10 @@ package VirtualTreesD10D;
 
 requires
   dclstd,
-  VirtualTreesD10;
+  VirtualTreesD7;
 
 contains
-  VirtualTreesReg in '..\Design\VirtualTreesReg.pas'{>>>},
-  VirtualEditTreeReg in '..\Design\VirtualEditTreeReg.pas'{<<<};
+  VirtualTreesReg in '..\Design\VirtualTreesReg.pas';
 
 end.
 
