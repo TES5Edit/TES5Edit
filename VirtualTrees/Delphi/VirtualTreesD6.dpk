@@ -1,19 +1,19 @@
-package VirtualTreesD10;
+package VirtualTreesD6;
 
 {$R *.res}
 {$ALIGN 8}
-{$ASSERTIONS OFF}
+{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO OFF}
+{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
-{$IOCHECKS OFF}
-{$LOCALSYMBOLS OFF}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
-{$OVERFLOWCHECKS OFF}
-{$RANGECHECKS OFF}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
 {$REFERENCEINFO OFF}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
@@ -28,18 +28,15 @@ package VirtualTreesD10;
 
 requires
   vcl,
-  vclx{>>>},
-  VclSmp{<<<};
+  vclx,
+  ThemeManagerD6;
 
 contains
   VirtualTrees in '..\Source\VirtualTrees.pas',
   VTHeaderPopup in '..\Source\VTHeaderPopup.pas',
   VTAccessibilityFactory in '..\Source\VTAccessibilityFactory.pas',
   VTAccessibility in '..\Source\VTAccessibility.pas',
-  VirtualEditTree in '..\Source\VirtualEditTree.pas',
-  Colors in '..\Source\Colors.pas',
-  VTEditors in '..\Source\VTEditors.pas';
-{>>>MSAAIntf in '..\Source\MSAAIntf.pas'; <<<}
+  MSAAIntf in '..\Source\MSAAIntf.pas';
 
 end.
 
