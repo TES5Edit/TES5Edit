@@ -469,7 +469,7 @@ type
     procedure GenerateLOD(const aWorldspace: IwbMainRecord);
     procedure DoGenerateLOD;
 
-    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
+    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; const aActions: TDynActions = nil; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
 
     procedure BuildAllRef;
     procedure ResetAllTags;
@@ -1061,8 +1061,82 @@ begin
 end;
 
 procedure TfrmMain.mniNavApplyScriptIntoClick(Sender: TObject);
+var
+  F          : TSearchRec;
+
+  Script     : IwbScript;
+
+  Elements   : TDynElements;
+  Actions    : TDynActions;
+
+  Scripts    : TStringList;
+  i          : Integer;
+  s          : string;
 begin
-  ShowMessage('Not implemented.');
+  Scripts := TStringList.Create;
+  try
+    with TfrmFileSelect.Create(Self) do try
+      for i := Low(Files) to High(Files) do begin
+        s := ChangeFileExt(Files[i].FileName, '');
+
+        if FindFirst(DataPath + s + '*.'+LowerCase(wbAppName)+'editscript', faAnyFile, F) = 0 then try
+          repeat
+            Scripts.Add(DataPath + F.Name);
+            CheckListBox1.AddItem('['+IntToHex(Files[i].LoadOrder, 2)+'] ' + ChangeFileExt(F.Name, ''), nil);
+          until FindNext(F) <> 0;
+        finally
+          FindClose(F);
+        end;
+      end;
+
+      if FindFirst(ProgramPath + '*.'+LowerCase(wbAppName)+'editscript', faAnyFile, F) = 0 then try
+        repeat
+          Scripts.Add(ProgramPath + F.Name);
+          CheckListBox1.AddItem('[XX] ' + ChangeFileExt(F.Name, ''), nil);
+        until FindNext(F) <> 0;
+      finally
+        FindClose(F);
+      end;
+
+      if Scripts.Count < 1 then begin
+        ShowMessage('No available scripts where found.');
+        Exit;
+      end;
+
+      Caption := 'Select Scripts...';
+      ShowModal;
+
+      for i := 0 to Pred(Scripts.Count) do
+        if CheckListBox1.Checked[i] then begin
+          if not Assigned(Script) then
+            Script := wbCreateScript(Files);
+          Script.LoadFromFile(Scripts[i]);
+        end;
+
+    finally
+      Free;
+    end;
+  finally
+    Scripts.Free;
+  end;
+
+  if not Assigned(Script) then
+    Exit;
+
+  wbStartTime := Now;
+
+  Enabled := False;
+  try
+    Script.ScanForTargets(Elements, Actions, ScriptScanProgress);
+    wbCurrentAction := '';
+
+    if Length(Elements) > 0 then
+      CopyInto(False, False, False, False, Elements, Actions, nil);
+  finally
+    wbCurrentAction := '';
+    Caption := Application.Title;
+    Enabled := True;
+  end;
 end;
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
@@ -1419,7 +1493,7 @@ begin
   end;
 end;
 
-function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
+function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; const aActions: TDynActions; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
   MainRecord                  : IwbMainRecord;
   MainRecord2                 : IwbMainRecord;
@@ -1436,7 +1510,7 @@ var
   LeveledListEntry            : IwbContainerElementRef;
   CopiedElement               : IwbElement;
 begin
-  if Assigned(aAfterCopyCallback) then begin
+  if Assigned(aAfterCopyCallback) or (Length(aActions)> 0) then begin
     Assert(not AsNew);
     Assert(not AsWrapper);
     Assert(not AsSpawnRate);
@@ -1449,6 +1523,9 @@ begin
     Assert(not DeepCopy);
     aAfterCopyCallback := AfterCopyAdjustSpawnRate;
   end;
+
+  if Assigned(aActions) then
+    Assert(Length(aElements) = Length(aActions));
 
   sl := TStringList.Create;
   sl.Sorted := True;
@@ -1594,6 +1671,8 @@ begin
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
                         aAfterCopyCallback(CopiedElement);
+                      if Assigned(aActions) and Assigned(aActions[j]) then
+                        aActions[j].Process(CopiedElement);
                     end;
                     Result[j] := CopiedElement;
                   end;
@@ -1610,6 +1689,8 @@ begin
                 if Assigned(CopiedElement) then begin
                   if Assigned(aAfterCopyCallback) then
                     aAfterCopyCallback(CopiedElement);
+                  if Assigned(aActions) and Assigned(aActions[0]) then
+                    aActions[0].Process(CopiedElement);
                 end;
                 Result[0] := CopiedElement;
                 if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
@@ -5085,6 +5166,7 @@ begin
     False,
     False,
     Elements,
+    nil,
     AfterCopyDisable);
 
   vstNav.Invalidate;
@@ -6539,7 +6621,7 @@ begin
     end;
 
     if Length(Elements) > 0 then
-      CopyInto(False, False, False, False, Elements, SetVWDCallback);
+      CopyInto(False, False, False, False, Elements, nil, SetVWDCallback);
 
     vstNav.Invalidate;
   finally

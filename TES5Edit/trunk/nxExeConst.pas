@@ -7,7 +7,7 @@
 {# NexusDB: Constants specific to Executable (nxServer, EM, etc)              #}
 {##############################################################################}
 
-//{$I nxDefine.inc}
+{$I nxDefine.inc}
 
 unit nxExeConst;
 
