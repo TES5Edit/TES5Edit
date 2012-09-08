@@ -11,17 +11,15 @@
      under the License.
 
 *******************************************************************************}
-// Thanks to zilav18
-unit wbTES5ScriptDef;
 
-interface
+{$IFDEF NEXUS}
+	{$DEFINE USENEXUS}
+{$ENDIF}
 
-uses
-  wbImplementation,
-  wbInterface,
-  wbBSA,
-  Types, Classes, SysUtils, Math, Variants;
+{$IFDEF NEXUS2}
+	{$DEFINE USENEXUS}
+{$ENDIF}
 
-  implementation
-
-end.
+{$IFDEF NEXUS3}
+	{$DEFINE USENEXUS}
+{$ENDIF}

@@ -30,6 +30,8 @@ uses
   DXTypes, Direct3D9, D3DX9,
   DXUT, DXUTcore, DXUTSettingsDlg, DXUTenum, DXUTmisc, DXUTgui;
 
+
+
 //--------------------------------------------------------------------------------------
 var
   fTeapot: ID3DXMesh;

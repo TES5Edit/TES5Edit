@@ -11,6 +11,7 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbInterface;
 
 interface
@@ -22,7 +23,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.636 (2012-08-22) EXPERIMENTAL';
+  VersionString               = '3.1.636 (2012-08-22) EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -2982,12 +2983,6 @@ type
     NotFoundString         : Integer;
     Strings                : TStringList;
 
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-    FoundLString            : Integer;
-    NotFoundLString         : Integer;
-
     IsEmpty                : Integer;
     IsNotEmpty             : Integer;
   protected
@@ -4277,15 +4272,7 @@ function wbFormID(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(
-              aSignature,
-              aName,
-              itU32,
-              wbFormID,
-              aPriority,
-              aRequired,
-              False,
-              aDontShow);
+  Result := wbInteger(aSignature, aName, itU32, wbFormID, aPriority, aRequired, False, aDontShow);
 end;
 
 function wbFormID(const aName     : string;
