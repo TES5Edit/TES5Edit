@@ -14,6 +14,8 @@
 
 unit frmViewMain;
 
+{$DEFINE DEVEXFILES}
+
 interface
 
 uses
@@ -23,13 +25,15 @@ uses
   ShellAPI,
   wbBSA,
   wbNifScanner,
-  {wbScript,}
   Direct3D9, D3DX9,
   wbHelpers, VirtualEditTree, VTEditors,
 {$IFDEF DX3D}
   RenderUnit, Direct3D9, D3DX9, DXUT,
 {$ENDIF}
-  AppEvnts, System.Actions{, dxGDIPlusClasses};
+{$IFDEF DEVEXFILES}
+  dxGDIPlusClasses,
+{$ENDIF}
+  AppEvnts, System.Actions;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -1755,8 +1759,9 @@ end;
 
 function TfrmMain.CheckAppPath: string;
 const
+  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
   ExeName : array[TwbGameMode] of string =
-    ('Oblivion.exe', 'Fallout3.exe', 'FalloutNV.exe');
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
 var
   s: string;
 begin
@@ -2757,7 +2762,7 @@ begin
 
     MyGamesTheGamePath := TheGameIniFileName + 'My Games\'+ wbGameName +'\';
 
-    if wbGameMode = gmTES4 then
+    if wbGameMode in [gmTES4, gmTES5] then
       TheGameIniFileName := MyGamesTheGamePath + wbGameName + '.ini'
     else
       TheGameIniFileName := MyGamesTheGamePath + 'Fallout.ini';
@@ -9533,7 +9538,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('TES', 'Fallout3', 'NewVegas');
+    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim');
 begin
   if not wbLoaderDone then
     Exit;

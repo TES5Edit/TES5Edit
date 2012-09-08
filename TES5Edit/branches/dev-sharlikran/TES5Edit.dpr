@@ -12,14 +12,21 @@
 
 *******************************************************************************}
 
+{$DEFINE DEVEXFILES}
+
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_GENERATEJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 program TES5Edit;
 
+{$I Compilers.inc}
+{$I TES5Edit.inc}
+
 uses
-  {nxReplacementMemoryManager,}
-  {nxExceptionHook,}
+	{$IFDEF USENEXUS}
+	nxReplacementMemoryManager,
+  nxExceptionHook,
+	{$ENDIF}
   wbInit,
   Forms,
   Dialogs,

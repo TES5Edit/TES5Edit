@@ -19,24 +19,27 @@
 program TES5Dump;
 
 {$I Compilers.inc}
+{$I TES5Edit.inc}
 
 {$APPTYPE CONSOLE}
 
 uses
+	{$IFDEF USENEXUS}
+	nxReplacementMemoryManager,
+  nxExceptionHook,
+	{$ENDIF}
   Classes,
   SysUtils,
   Windows,
+  wbBSA in 'wbBSA.pas',
+  wbLocalization in 'wbLocalization.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
   wbImplementation in 'wbImplementation.pas',
-  wbInterface in 'wbInterface.pas',
-  wbLocalization in 'wbLocalization.pas',
-  wbSavedGames in 'wbSavedGames.pas',
-  wbTES5ScriptDef in 'wbTES5ScriptDef.pas',
-  wbBSA in 'wbBSA.pas';
+  wbInterface in 'wbInterface.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -238,28 +241,6 @@ begin
       WriteLn(ErrOutput);
     end;
 
-    if wbFindCmdLineSwitch('more') then
-      wbMoreInfoForUnknown:= True
-    else
-      wbMoreInfoForUnknown:= False;
-
-    if wbFindCmdLineSwitch('debug') and (not wbMoreInfoForUnknown) then Begin
-      wbReportMode:= True;
-      wbUserDefinedDebug:= True;
-    end else Begin
-      wbReportMode:= False;
-      wbUserDefinedDebug:= False;
-    end;
-
-    if wbFindCmdLineSwitch('debug4') then Begin
-        wbUserDefinedDebugLvl4:= True;
-        wbReportMode:= True;
-        wbUserDefinedDebug:= True;
-      End
-      else Begin
-        wbUserDefinedDebugLvl4:= False;
-      End;
-
     if wbFindCmdLineParam('dg', s) then begin
       DumpGroups := TStringList.Create;
       DumpGroups.Sorted := True;
@@ -267,6 +248,11 @@ begin
       DumpGroups.CommaText := s;
       DumpGroups.Sort;
     end;
+
+    if wbFindCmdLineSwitch('more') then
+      wbMoreInfoForUnknown:= True
+    else
+      wbMoreInfoForUnknown:= False;
 
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
@@ -303,7 +289,6 @@ begin
       wbLanguage := 'English';
 
     s := ParamStr(ParamCount);
-    AppendInputFile := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
     if (ParamCount >= 1) and not FileExists(s) then begin
@@ -328,20 +313,15 @@ begin
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
       WriteLn(ErrOutput, '             ', 'decompressed and processed.');
-//    WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-//    WriteLn(ErrOutput, '             ', 'following default value applies:');
-//    WriteLn(ErrOutput, '             ', 'REFR');
+//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
+//      WriteLn(ErrOutput, '             ', 'following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-//    WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
-//    WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
+//      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
+//      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
-      WriteLn(ErrOutput, '-more        ', 'Displays additional information on Unknowns');
-      WriteLn(ErrOutput, '-debug       ', 'SubRecordOrderList.txt written to disk. Record information');
-      WriteLn(ErrOutput, '             ', 'written horizontally separated by ''\''s and displays extra');
-      WriteLn(ErrOutput, '             ', 'information for debugging subrecord order.');
-      WriteLn(ErrOutput, '-debug4      ', 'Dumps all Assigned(wbProgressCallback) to the Console. Use');
-      WriteLn(ErrOutput, '             ', 'with -dg, it is extremely verbose.');
+      WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
       WriteLn(ErrOutput, '             ', 'Default language is English');
       WriteLn(ErrOutput, '             ', '');
@@ -357,29 +337,19 @@ begin
 
     ReportProgress('Finished loading record. Starting Dump.');
 
-    if wbFindCmdLineSwitch('check') and (not wbReportMode) then
+    if wbFindCmdLineSwitch('check') and not wbReportMode then
       CheckForErrors(0, _File)
     else
       WriteContainer(_File);
 
-//    if wbReportMode and wbUserDefinedDebug then Begin
-    if wbReportMode then Begin
-      ReportProgress('Writing ReportDefs');
+    if wbReportMode then
       ReportDefs;
-    End;
 
     ReportProgress('All Done.');
   except
     on e: Exception do
       WriteLn(ErrOutput, 'Unexpected Error: <',e.ClassName, ': ', e.Message,'>');
   end;
-//------------------------------------------------------------------------------
-// DebugHook is set if an application is running under the IDE debugger.
-// DebugHook is 0 when an application operates outside the IDE debugger.
-// DebugHook is 1 when an application operates inside the IDE debugger.
-//------------------------------------------------------------------------------
-  if wbReportMode or (DebugHook <> 0) then Begin
-    ReportDefs;
-      ReportProgress('Writing ReportDefs After Error in ' + AppendInputFile +'.');
-  End;
+  if wbReportMode or (DebugHook <> 0) then
+    ReadLn;
 end.

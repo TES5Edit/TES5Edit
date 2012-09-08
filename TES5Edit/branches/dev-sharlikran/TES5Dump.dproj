@@ -59,6 +59,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="wbBSA.pas"/>
+        <DCCReference Include="wbLocalization.pas"/>
         <DCCReference Include="wbDefinitionsFNV.pas"/>
         <DCCReference Include="wbDefinitionsFO3.pas"/>
         <DCCReference Include="wbDefinitionsTES3.pas"/>
@@ -66,10 +68,6 @@
         <DCCReference Include="wbDefinitionsTES5.pas"/>
         <DCCReference Include="wbImplementation.pas"/>
         <DCCReference Include="wbInterface.pas"/>
-        <DCCReference Include="wbLocalization.pas"/>
-        <DCCReference Include="wbSavedGames.pas"/>
-        <DCCReference Include="wbTES5ScriptDef.pas"/>
-        <DCCReference Include="wbBSA.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
