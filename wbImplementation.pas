@@ -11,6 +11,7 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbImplementation;
 
 {$DEFINE DBGSUBREC}
@@ -4266,9 +4267,7 @@ begin
 end;
 {$D+}
 
-//------------------------------------------------------------------------------
-// TwbRecord
-//------------------------------------------------------------------------------
+{ TwbRecord }
 
 constructor TwbRecord.Create(const aContainer      : IwbContainer;
                                var aBasePtr        : Pointer;
@@ -4295,7 +4294,7 @@ begin
     if PwbSignature(aPtr)^ = 'GRUP' then
       Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
     else
-      Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
+      Result := TwbMainRecord.Create(aContainer,aPtr, aEndPtr, aPrevMainRecord);
 end;
 
 function TwbRecord.GetName: string;
@@ -4772,7 +4771,7 @@ begin
     else if SubRecord.Signature = 'FULL' then
       mrFullName := SubRecord.Value
     else if SubRecord.Signature = 'NAME' then
-      Exclude(mrStates, mrsBaseRecordChecked);
+      Exclude(mrStates, mrsBaseRecordChecked);     
   end;
   inherited;
   UpdateRefs;
@@ -4867,7 +4866,7 @@ begin
     (Sig = 'PGRE') or
     (Sig = 'ACRE') or
     (Sig = 'ACHR');
-  if not Result then
+  if not Result then 
     Exit;
   if not Supports(GetContainer, IwbGroupRecord, Group1) then
     raise Exception.Create(GetName + ' is not contained in a group.');
@@ -5293,7 +5292,7 @@ begin
     end;
   end;
 
-  if wbReportMode {and mrDef.AllowUnordered} then begin
+  if wbReportMode and mrDef.AllowUnordered then begin
     s := GetSignature + ' -> ' + s;
     CurrentRecPos := SubRecordOrderList.Add(s);
     SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
@@ -6329,7 +6328,7 @@ function TwbMainRecord.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if wbReportMode then begin
+  if wbReportMode then begin 
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -10310,7 +10309,7 @@ begin
   Result := wbIsInternalEdit;
   if Result then
     Exit;
-
+    
   if not wbEditAllowed then
     Exit;
 
@@ -12627,7 +12626,7 @@ begin
   Result := nil;
   if not Assigned(aFormList) or (aFormList.Signature <> 'FLST') then
     Exit;
-  if not Supports(aFormList.ElementByName['wbFormListToArray FormIDs'], IwbContainerElementRef, Container) then
+  if not Supports(aFormList.ElementByName[{>>>'FormIDs'<<<}'wbFormListToArray FormIDs'], IwbContainerElementRef, Container) then
     Exit;
   if Container.ElementCount < 1 then
     Exit;
