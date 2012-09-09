@@ -28,8 +28,8 @@ package VirtualTreesD10;
 
 requires
   vcl,
-  vclx,
-  VclSmp;
+  vclx{>>>},
+  VclSmp{<<<};
 
 contains
   VirtualTrees in '..\Source\VirtualTrees.pas',
@@ -39,6 +39,7 @@ contains
   VirtualEditTree in '..\Source\VirtualEditTree.pas',
   Colors in '..\Source\Colors.pas',
   VTEditors in '..\Source\VTEditors.pas';
+{>>>MSAAIntf in '..\Source\MSAAIntf.pas'; <<<}
 
 end.
 

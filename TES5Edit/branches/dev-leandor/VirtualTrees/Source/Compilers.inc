@@ -115,6 +115,36 @@
 // - DELPHI.NET      : Any version of Delphi.NET is being used.
 // - DELPHI.NET_1    : Delphi.NET version 1.x is being used.
 // - DELPHI.NET_1_UP : Delphi.NET version 1.x is being used.
+//
+// Delphi 6    - 14
+// Delphi 7    - 15
+// Delphi 8    - 16
+// Delphi 2005 - 17
+// Delphi 2006 - 18
+// Delphi 2007 - 18.5
+// Delphi 2009 - 20
+// Delphi 2010 - 21
+// Delphi XE   - 22
+// Delphi XE2  - 23
+// Delphi XE3  - 24
+//
+// {$IFDEF VER80}  - Delphi 1
+// {$IFDEF VER90}  - Delphi 2
+// {$IFDEF VER100} - Delphi 3
+// {$IFDEF VER120} - Delphi 4
+// {$IFDEF VER130} - Delphi 5
+// {$IFDEF VER140} - Delphi 6
+// {$IFDEF VER150} - Delphi 7
+// {$IFDEF VER160} - Delphi 8
+// {$IFDEF VER170} - Delphi 2005
+// {$IFDEF VER180} - Delphi 2006
+// {$IFDEF VER180} - Delphi 2007
+// {$IFDEF VER185} - Delphi 2007
+// {$IFDEF VER200} - Delphi 2009
+// {$IFDEF VER210} - Delphi 2010
+// {$IFDEF VER220} - Delphi XE
+// {$IFDEF VER230} - Delphi XE2
+// {$IFDEF VER240} - Delphi XE3
 //----------------------------------------------------------------------------------------------------------------------
 
 {$ifdef CLR}  // The common language runtime symbol is only defined for the .NET platform.
@@ -713,84 +743,83 @@
 
 // Delphi XE3 (CompilerVersion = 24)
 {$ifdef COMPILER_17}
- {$define COMPILER_1_UP}
- {$define COMPILER_2_UP}
- {$define COMPILER_3_UP}
- {$define COMPILER_4_UP}
- {$define COMPILER_5_UP}
- {$define COMPILER_6_UP}
- {$define COMPILER_7_UP}
- {$define COMPILER_8_UP}
- {$define COMPILER_9_UP}
- {$define COMPILER_10_UP}
- {$define COMPILER_11_UP}
- {$define COMPILER_12_UP}
- {$define COMPILER_14_UP}
- {$define COMPILER_15_UP}
- {$define COMPILER_16_UP}
- {$define COMPILER_17_UP}
- // Backwards compatibility
- {$define DELPHI_2_UP}
- {$define DELPHI_3_UP}
- {$define DELPHI_4_UP}
- {$define DELPHI_5_UP}
- {$define DELPHI_6_UP}
- {$define DELPHI_7_UP}
- {$define DELPHI_8_UP}
- {$define DELPHI_9_UP}
- {$define CPPB_3_UP}
- {$define CPPB_4_UP}
- {$define CPPB_5_UP}
- {$define CPPB_6_UP}
+	{$define COMPILER_1_UP}
+	{$define COMPILER_2_UP}
+	{$define COMPILER_3_UP}
+	{$define COMPILER_4_UP}
+	{$define COMPILER_5_UP}
+	{$define COMPILER_6_UP}
+	{$define COMPILER_7_UP}
+	{$define COMPILER_8_UP}
+	{$define COMPILER_9_UP}
+	{$define COMPILER_10_UP}
+	{$define COMPILER_11_UP}
+	{$define COMPILER_12_UP}
+	{$define COMPILER_14_UP}
+	{$define COMPILER_15_UP}
+	{$define COMPILER_16_UP}
+	{$define COMPILER_17_UP}
+	// Backwards compatibility
+	{$define DELPHI_2_UP}
+	{$define DELPHI_3_UP}
+	{$define DELPHI_4_UP}
+	{$define DELPHI_5_UP}
+	{$define DELPHI_6_UP}
+	{$define DELPHI_7_UP}
+	{$define DELPHI_8_UP}
+	{$define DELPHI_9_UP}
+	{$define CPPB_3_UP}
+	{$define CPPB_4_UP}
+	{$define CPPB_5_UP}
+	{$define CPPB_6_UP}
 
- {$ifdef BCB}
-   {$define CPPB}
- {$else}
-   {$define DELPHI}
- {$endif}
- 
- {$ifdef conditionalexpressions}
-		{$if CompilerVersion > 24}
-			{$define COMPILER_1_UP}
-			{$define COMPILER_2_UP}
-			{$define COMPILER_3_UP}
-			{$define COMPILER_4_UP}
-			{$define COMPILER_5_UP}
-			{$define COMPILER_6_UP}
-			{$define COMPILER_7_UP}
-			{$define COMPILER_8_UP}
-			{$define COMPILER_9_UP}
-			{$define COMPILER_10_UP}
-			{$define COMPILER_11_UP}
-			{$define COMPILER_12_UP}
-			{$define COMPILER_13_UP}
-			{$define COMPILER_14_UP}
-			{$define COMPILER_15_UP}
-			{$define COMPILER_16_UP}
-			{$define COMPILER_17_UP}
-			// Backwards compatibility
-			{$define DELPHI_2_UP}
-			{$define DELPHI_3_UP}
-			{$define DELPHI_4_UP}
-			{$define DELPHI_5_UP}
-			{$define DELPHI_6_UP}
-			{$define DELPHI_7_UP}
-			{$define DELPHI_8_UP}
-			{$define DELPHI_9_UP}
-			{$define CPPB_3_UP}
-			{$define CPPB_4_UP}
-			{$define CPPB_5_UP}
-			{$define CPPB_6_UP}
-
-			{$ifdef BCB}
-				{$define CPPB}
-			{$else}
-				{$define DELPHI}
-			{$endif}
-
-		{$ifend}
+	{$ifdef BCB}
+		{$define CPPB}
+  {$else}
+    {$define DELPHI}
 	{$endif}
+{$endif}
+ 
+{$ifdef conditionalexpressions}
+	{$if CompilerVersion > 24}
+		{$define COMPILER_1_UP}
+		{$define COMPILER_2_UP}
+		{$define COMPILER_3_UP}
+		{$define COMPILER_4_UP}
+		{$define COMPILER_5_UP}
+		{$define COMPILER_6_UP}
+		{$define COMPILER_7_UP}
+		{$define COMPILER_8_UP}
+		{$define COMPILER_9_UP}
+		{$define COMPILER_10_UP}
+		{$define COMPILER_11_UP}
+		{$define COMPILER_12_UP}
+		{$define COMPILER_13_UP}
+		{$define COMPILER_14_UP}
+		{$define COMPILER_15_UP}
+		{$define COMPILER_16_UP}
+		{$define COMPILER_17_UP}
+		// Backwards compatibility
+		{$define DELPHI_2_UP}
+		{$define DELPHI_3_UP}
+		{$define DELPHI_4_UP}
+		{$define DELPHI_5_UP}
+		{$define DELPHI_6_UP}
+		{$define DELPHI_7_UP}
+		{$define DELPHI_8_UP}
+		{$define DELPHI_9_UP}
+		{$define CPPB_3_UP}
+		{$define CPPB_4_UP}
+		{$define CPPB_5_UP}
+		{$define CPPB_6_UP}
 
+		{$ifdef BCB}
+			{$define CPPB}
+		{$else}
+			{$define DELPHI}
+		{$endif}
+
+	{$ifend}
 {$endif}
 
 //----------------------------------------------------------------------------------------------------------------------
