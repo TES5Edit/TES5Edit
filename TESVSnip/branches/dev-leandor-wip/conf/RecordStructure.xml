@@ -2673,9 +2673,9 @@ non-indent is being worked on
 		<Group id="KEYWORDS" optional="1"/>
 		<Subrecord name="DATA" desc="Ammo Settings" optional="1" size="16">
 			<Element name="PROJ FormID" type="formid" reftype="PROJ"/>
-			<Element name="Flags" type="int" options="Playable/Bolt;0;IgnoreResist/Playable/Bolt;1;Bolt;2;IgnoreResist/Bolt;3;Playable;4;IgnoreResist/Playable;5;Ignores Resistance;7"/>
+			<Element name="Flags" type="int" flags="Ignores Normal Weapon Resistance;Non-Playable;Non-Bolt"/>
 			<Element name="Damage" type="float"/>
-			<Element name="Value" type="int"/>
+			<Element name="Value" type="uint"/>
 		</Subrecord>
 		<Subrecord name="ONAM" desc="Short Name" optional="1">
 			<Element name="Name" type="string"/>
