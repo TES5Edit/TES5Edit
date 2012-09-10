@@ -185,7 +185,11 @@ var
   _File           : IwbFile;
   Masters         : TStringList;
 begin
+  {$IF CompilerVersion >= 24}
+  FormatSettings.DecimalSeparator := '.';
+  {$ELSE}
   SysUtils.DecimalSeparator := '.';
+  {$IFEND}
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
