@@ -19,13 +19,10 @@ interface
 uses
   Windows,
   SysUtils,
+  Controls,
   VTEditors, VirtualTrees,
-{$IFDEF DEVEXFILES}
-  cxEdit, cxTextEdit, cxDropDownEdit, cxCheckComboBox,
-  cxLookAndFeelPainters,
-{$ENDIF}
-  Controls;
-
+  cxEdit, cxTextEdit, cxDropDownEdit,cxCheckComboBox,
+  cxLookAndFeelPainters;
 
 type
   TcxCustomEditLink = class(TCustomEditLink)
