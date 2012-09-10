@@ -8528,9 +8528,10 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
-      wbInteger('Flags', itU16, wbFlags([
-        {0x0001}'Unknown 0',
-        {0x0002}'Always Loaded'
+      wbInteger('Flags', itU16, wbEnum([], [
+        {>>> Value Must be 1 or 3 <<<}
+        1, '', // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
+        3, 'Always Loaded' // {0x0002}'Always Loaded' : The Check-Box is Unchecked in the CK
       ]))
     ], cpNormal, True)
   ]);
@@ -9026,9 +9027,7 @@ begin
   wbRecord(EQUP, 'Equip Type', [
     wbEDIDReq,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Flags', itU32, wbFlags([
-      'Use All Parents'
-    ]), cpNormal, True)
+    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
   ]);
 
   wbRecord(RELA, 'Relationship', [
@@ -9207,6 +9206,7 @@ end;
 
 procedure DefineTES5k;
 begin
+
   wbRecord(OTFT, 'Outfit', [
     wbEDIDReq,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
@@ -9276,7 +9276,7 @@ begin
     wbEDIDReq,
     wbUnknown(CNAM),
     wbFormID(GNAM, 'Category'),
-    wbFormIDCk(SNAM, 'String', [SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR, NULL]),
     wbRArray('Sounds',
       wbRStruct('Sound Files', [
         wbString(ANAM, 'File Name')
@@ -11763,7 +11763,7 @@ begin
       wbString(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overriden Forms',
+    wbArray(ONAM, 'Overridden Forms',
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot'),
@@ -11774,6 +11774,7 @@ end;
 
 procedure DefineTES5o;
 begin
+
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,
