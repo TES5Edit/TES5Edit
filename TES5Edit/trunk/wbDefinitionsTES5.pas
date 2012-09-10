@@ -5890,13 +5890,13 @@ begin
   wbCTDA := wbRStruct('Conditions', [
     wbStruct(CTDA, 'Condition', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, nil{wbCtdaTypeToInt}, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
+      wbByteArray('Unknown', 3, cpIgnore),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
       wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-      wbByteArray('Unknown', 2, cpIgnore, False, wbNeverShow),
+      wbByteArray('Unknown', 2),
       wbUnion('Parameter #1', wbCTDAParam1Decider, [
         wbByteArray('Unknown', 4),
         wbByteArray('None', 4, cpIgnore),
@@ -8512,9 +8512,10 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
-      wbInteger('Flags', itU16, wbFlags([
-        {0x0001}'Unknown 0',
-        {0x0002}'Always Loaded'
+      wbInteger('Flags', itU16, wbEnum([], [
+        {>>> Value Must be 1 or 3 <<<}
+        1, '', // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
+        3, 'Always Loaded' // {0x0002}'Always Loaded' : The Check-Box is Unchecked in the CK
       ]))
     ], cpNormal, True)
   ]);
@@ -9773,11 +9774,11 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unknown', 2),
+          wbInteger('Level', itU16),
+          wbByteArray('Unknown', 2, cpIgnore),
           wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unknown', 2)
+          wbInteger('Level', itU16),
+          wbByteArray('Unknown', 2, cpIgnore)
         ]),
 				wbCOED
       ], []),
@@ -9800,10 +9801,10 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
+          wbInteger('Level', itU16),
           wbByteArray('Unknown', 2),
           wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
-          wbInteger('Count', itS16),
+          wbInteger('Level', itU16),
           wbByteArray('Unknown', 2)
         ]),
         wbCOED
@@ -9824,10 +9825,10 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructSK([0], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-        wbInteger('Level', itS16),
+        wbInteger('Level', itU16),
         wbByteArray('Unknown', 2),
         wbFormIDCk('Reference', [SPEL]),
-        wbInteger('Count', itS16),
+        wbInteger('Level', itU16),
         wbByteArray('Unknown', 2)
       ])
       ], [])
