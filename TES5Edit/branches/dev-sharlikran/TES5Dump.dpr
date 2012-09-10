@@ -19,27 +19,22 @@
 program TES5Dump;
 
 {$I Compilers.inc}
-{$I TES5Edit.inc}
 
 {$APPTYPE CONSOLE}
 
 uses
-	{$IFDEF USENEXUS}
-	nxReplacementMemoryManager,
-  nxExceptionHook,
-	{$ENDIF}
   Classes,
   SysUtils,
   Windows,
-  wbBSA in 'wbBSA.pas',
-  wbLocalization in 'wbLocalization.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
   wbImplementation in 'wbImplementation.pas',
-  wbInterface in 'wbInterface.pas';
+  wbInterface in 'wbInterface.pas',
+  wbLocalization in 'wbLocalization.pas',
+  wbBSA in 'wbBSA.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -190,7 +185,7 @@ var
   _File           : IwbFile;
   Masters         : TStringList;
 begin
-  {$IF CompilerVersion > 23}
+  {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
   {$ELSE}
   SysUtils.DecimalSeparator := '.';

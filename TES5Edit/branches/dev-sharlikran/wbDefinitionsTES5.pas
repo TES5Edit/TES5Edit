@@ -6188,7 +6188,7 @@ begin
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
-    wbFormIDCk(BAMT, 'Bash Material', [MATT]),
+    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
     wbDESC,
@@ -8509,7 +8509,7 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN, NULL]),
+    wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbEnum([], [
@@ -8587,7 +8587,7 @@ begin
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
       {40} wbFloat('Near Target Distance')
-    ], cpNormal, True, nil),
+    ], cpNormal, True, nil, 8),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
@@ -8954,7 +8954,7 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL], False, cpNormal, True)
   ]);
 
-  wbRecord(MUST, 'Music Type', [
+  wbRecord(MUST, 'Music Track', [
     wbEDIDReq,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette',
@@ -9774,11 +9774,11 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
-          wbByteArray('Unknown', 2),
+          wbInteger('Level', itU16),
+          wbByteArray('Unknown', 2, cpIgnore),
           wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itS16),
-          wbByteArray('Unknown', 2)
+          wbInteger('Level', itU16),
+          wbByteArray('Unknown', 2, cpIgnore)
         ]),
 				wbCOED
       ], []),
@@ -9801,10 +9801,10 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itS16),
+          wbInteger('Level', itU16),
           wbByteArray('Unknown', 2),
           wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
-          wbInteger('Count', itS16),
+          wbInteger('Level', itU16),
           wbByteArray('Unknown', 2)
         ]),
         wbCOED
@@ -9825,10 +9825,10 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructSK([0], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-        wbInteger('Level', itS16),
+        wbInteger('Level', itU16),
         wbByteArray('Unknown', 2),
         wbFormIDCk('Reference', [SPEL]),
-        wbInteger('Count', itS16),
+        wbInteger('Level', itU16),
         wbByteArray('Unknown', 2)
       ])
       ], [])
