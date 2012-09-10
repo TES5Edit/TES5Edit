@@ -17,9 +17,6 @@ unit Colors;
 interface
 
 uses
-  {$IF CompilerVersion > 23}
-  UITypes,
-  {$IFEND}
 	Windows, Messages, SysUtils, Classes, Graphics, Dialogs, Math, Controls, Forms;
 
 const
@@ -1065,3 +1062,4 @@ end;
 
 
 end.
+

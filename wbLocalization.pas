@@ -60,7 +60,6 @@ implementation
 
 var
   lFiles: TStringList;
-  ContainerHandler: IwbContainerHandler;
 
 constructor TwbLocalizationFile.Create(const aFileName: string);
 var
@@ -187,7 +186,7 @@ begin
     sigElem := '';
   sigRec := aElement.ContainingMainRecord.Signature;
 
-  if sigElem = 'DESC' then Result := lsDLString else // DESC always from dlstrings
+  if (sigElem = 'DESC') and (sigRec <> 'LSCR') then Result := lsDLString else // DESC always from dlstrings except LSCR
   if (sigRec = 'QUST') and (sigElem = 'CNAM') then Result := lsDLString else // quest log entry
   if (sigRec = 'INFO') and (sigElem <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
     Result := lsString; // others
@@ -225,36 +224,14 @@ begin
 
   idx := lFiles.IndexOf(lFileName);
   if idx = -1 then begin
-    bFailed := false;
-    // checking for file on disk
-    {>>>
-      better to use ContainerHandler for this, but...
-      it'll require to add TwbFolder for 'Strings\'
-      and there is no way to check if it is already been added without
-      modifications to wbBSA and wbInterface, which I tried to avoid
-    <<<}
-    if FileExists(lFullName) then begin
-      wblf := TwbLocalizationFile.Create(lFullName);
-      lFiles.AddObject(lFileName, wblf);
-    end else
-    // checking for file in bsa
-    begin
-      {>>>
-        ok this will load only 1 bsa file, hack is a hack
-        real TES5Edit probably has its own ContainerHandler with added bsas
-      <<<}
-      if not Assigned(ContainerHandler) then begin
-        ContainerHandler := wbCreateContainerHandler;
-        BSAName := ChangeFileExt(aElement._File.GetFullFileName, '.bsa');
-        if FileExists(BSAName) then
-          ContainerHandler.AddBSA(BSAName);
-      end;
-      res := ContainerHandler.OpenResource('Strings\' +  lFileName);
+    bFailed := true;
+    if Assigned(wbContainerHandler) then begin
+      res := wbContainerHandler.OpenResource('Strings\' +  lFileName);
       if length(res) > 0 then begin
         wblf := TwbLocalizationFile.Create(lFullName, res[low(res)].GetData);
         lFiles.AddObject(lFileName, wblf);
-      end else
-        bFailed := true;
+        bFailed := false;
+      end;
     end;
     if bFailed then begin
       Result := '<Error: No localization for lstring ID ' + IntToHex(ID, 8) +'>';
