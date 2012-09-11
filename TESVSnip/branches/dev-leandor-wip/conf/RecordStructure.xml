@@ -6585,39 +6585,60 @@ non-indent is being worked on
 		<!-- Snip doesn't support repeating element-groups yet -->
 		<Group id="FULL" optional="1"/>
 		<Subrecord name="DNAM" desc="Quest Data" optional="1" size="12">
-			<Element name="" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
-			<Element name="" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
+			<Element name="Flags" type="ushort" flags="Start Game Enabled;2;3;Allow repeated stages;Unknown5;Unknown6;Unknown7;Unknown8;Run Once;Exclude from dialogue export;Warn on alias fill failure;Unknown12;Unknown13;Unknown14;Unknown15;Unknown16"/>
 			<Element name="Priority" type="byte"/>
-			<Element name="" type="byte"/>
-			<Element name="i" type="int"/>
-			<Element name="i" type="int"/>
+			<Element name="Form Version" type="byte"/>
+			<Element name="Unknown" type="uint"/>
+			<Element name="Type" type="uint" options="None;0;Main Quest;1;Mages'' Guild;2;Thieves'' Guild;3;Dark Brotherhood;4;Companion Quests;5;Miscellaneous;6;Daedric;7;Side Quest;8;Civil War;9;DLC01 - Vampire;10;DLC02?;11"/>
 		</Subrecord>
 		<Subrecord name="ENAM" desc="(4letter abbrev)" optional="1" size="4">
 			<Element name="Unknown str4" type="str4"/>
 		</Subrecord>
+		<Subrecord name="QTGL" desc="Global Variable (GLOB)" optional="1" repeat="1" size="4">
+			<Element name="GLOB FormID" type="formid" reftype="GLOB"/>
+		</Subrecord>
 		<Subrecord name="FLTR" desc="Object Window Filter" optional="1">
 			<Element name="Path\Text" type="string"/>
 		</Subrecord>
+		<Group id="CONDITIONAL" optional="1" repeat="1"/>
+		<Subrecord name="NEXT" desc="Unknown" optional="1" repeat="1" size="0"/>
+		<Group id="CONDITIONAL" optional="1" repeat="1"/>
 		<Group optional="1" repeat="1">
 			<!-- main repeating groups; localized -->
-			<Subrecord name="NEXT" desc="Unknown" optional="1" repeat="1" size="0"/>
-			<Group id="CONDITIONAL" optional="1" repeat="1"/>
-			<Subrecord name="QTGL" desc="Global Variable (GLOB)" optional="1" repeat="1" size="4">
-				<Element name="GLOB FormID" type="formid" reftype="GLOB"/>
+			<!-- Quest Stage data -->
+			<Subrecord name="INDX" desc="Quest Stage" repeat="1" size="4">
+				<Element name="Stage Number" type="ushort"/>
+				<Element name="Start/End Flag" type="byte" options="None;0;Start;2;End;4"/>
+				<Element name="Percent Complete" type="byte"/>
 			</Subrecord>
+			<!-- Log Entries -->
 			<Group optional="1" repeat="1">
-				<!-- Quest Stage data -->
-				<Subrecord name="INDX" desc="Quest Stage" repeat="1" size="4">
-					<Element name="Stage Number" type="ushort"/>
-					<Element name="Start/End Flag" type="byte" options="None;0;Start;2;End;4"/>
-					<Element name="Percent Complete" type="byte"/>
-				</Subrecord>
 				<Subrecord name="QSDT" desc="Quest Stage Data Footer" optional="1" repeat="1" size="1">
 					<Element name="(always 0)" type="byte"/>
 				</Subrecord>
+				<Group id="CONDITIONAL" optional="1" repeat="1"/>
+				<Subrecord name="CNAM" desc="CNAM" optional="1" repeat="1">
+					<Element name="(mayLocalize) Text" type="lstring"/>
+				</Subrecord>
+				<Subrecord name="NAM0" desc="Quest (QUST)" optional="1" repeat="1" size="4">
+					<Element name="QUST FormID" type="formid" reftype="QUST"/>
+				</Subrecord>
+				<Subrecord name="SCHR" desc="SCHR" optional="1" repeat="1" size="20">
+					<Element name="Unknown" type="int"/>
+					<Element name="Unknown 1" type="int"/>
+					<Element name="Unknown 2" type="int"/>
+					<Element name="Unknown 3" type="int"/>
+					<Element name="Unknown 4" type="int"/>
+				</Subrecord>
+				<Subrecord name="SCTX" desc="SCTX" optional="1" repeat="1">
+					<Element name="Unknown" type="blob"/>
+				</Subrecord>
+				<Subrecord name="QNAM" desc="Quest (QUST)" optional="1" repeat="1" size="4">
+					<Element name="QUST FormID" type="formid" reftype="QUST"/>
+				</Subrecord>
 			</Group>
+			<!-- Quest Objective data; localized -->
 			<Group optional="1" repeat="1">
-				<!-- Quest Objective data; localized -->
 				<Subrecord name="QOBJ" desc="Quest Objective Index" optional="1" repeat="1" size="2">
 					<Element name="Quest Objective Index" type="short"/>
 				</Subrecord>
@@ -6631,42 +6652,28 @@ non-indent is being worked on
 					<!-- localized -->
 					<Element name="(mayLocalize) Text" type="lstring"/>
 				</Subrecord>
-				<Subrecord name="QSTA" desc="Quest Target Data" optional="1" repeat="1" size="8">
-					<Element name="Target Alias Index #" type="int"/>
-					<Element name="Check-box" type="int" flags="Compass Markers Ignore Locks"/>
-				</Subrecord>
-				<Group id="CONDITIONAL" optional="1" repeat="1"/>
+				<!-- Targets -->
+				<Group optional="1" repeat="1">
+					<Subrecord name="QSTA" desc="Quest Target Data" optional="1" repeat="1" size="8">
+						<Element name="Target Alias Index #" type="int"/>
+						<Element name="Check-box" type="int" flags="Compass Markers Ignore Locks"/>
+					</Subrecord>
+					<Group id="CONDITIONAL" optional="1" repeat="1"/>
+        </Group>
       </Group>
-			<Subrecord name="NAM0" desc="Quest (QUST)" optional="1" repeat="1" size="4">
-				<Element name="QUST FormID" type="formid" reftype="QUST"/>
-			</Subrecord>
-			<Subrecord name="CNAM" desc="CNAM" optional="1" repeat="1">
-				<Element name="(mayLocalize) Text" type="lstring"/>
-			</Subrecord>
-			<Subrecord name="SCHR" desc="SCHR" optional="1" repeat="1" size="20">
-				<Element name="Unknown" type="int"/>
-				<Element name="Unknown 1" type="int"/>
-				<Element name="Unknown 2" type="int"/>
-				<Element name="Unknown 3" type="int"/>
-				<Element name="Unknown 4" type="int"/>
-			</Subrecord>
-			<Subrecord name="SCTX" desc="SCTX" optional="1" repeat="1">
-				<Element name="Unknown" type="blob"/>
-			</Subrecord>
-			<Subrecord name="QNAM" desc="Quest (QUST)" optional="1" repeat="1" size="4">
-				<Element name="QUST FormID" type="formid" reftype="QUST"/>
-			</Subrecord>
-		</Group>
+    </Group>
 		<Subrecord name="ANAM" desc="Total # of Aliases" optional="1" size="4">
 			<Element name="# of Aliases" type="int"/>
 		</Subrecord>
+		<!-- Aliases -->
 		<Group optional="1" repeat="1">
-			<!-- secondary repeating groups; localized -->
+			<!-- Aliase; secondary repeating groups; localized -->
+			<!-- Alias Type -->
 			<Subrecord name="ALST" desc="Alias Index #" optional="1" repeat="1" size="4">
-				<Element name="Alias Index #" type="int"/>
+				<Element name="Reference Alias ID" type="int"/>
 			</Subrecord>
 			<Subrecord name="ALLS" desc="ALLS" optional="1" repeat="1" size="4">
-				<Element name="i" type="int"/>
+				<Element name="Location Alias ID" type="int"/>
 			</Subrecord>
 			<Subrecord name="ALID" desc="Alias Name" optional="1" repeat="1">
 				<Element name="Alias Name" type="string"/>
@@ -6677,38 +6684,53 @@ non-indent is being worked on
 				<Element name="Check-boxes" type="byte" flags="1;ClearsNameWhenRemoved;4;8;16;32;64;128;256;512"/>
 				<Element name="(always 0)" type="byte"/>
 			</Subrecord>
+			<Subrecord name="ALFI" desc="Force Into Alias When Filled" optional="1" repeat="1" size="4">
+				<Element name="(always 0)" type="int"/>
+			</Subrecord>
+			<Subrecord name="ALFL" desc="Location (LCTN)" optional="1" repeat="1" size="4">
+				<Element name="FormID" type="formid" reftype="LCTN"/>
+			</Subrecord>
+			<Subrecord name="ALFR" desc="Alias Reference" optional="1" repeat="1" size="4">
+				<Element name="FormID" type="formid"/>
+			</Subrecord>
+			<Subrecord name="ALUA" desc="FillType Unique Actor (NPC_)" optional="1" repeat="1" size="4">
+				<Element name="NPC_ FormID" type="formid" reftype="NPC_"/>
+			</Subrecord>
+			<!-- Location Alias Reference -->
 			<Subrecord name="ALFA" desc="ALFA" optional="1" repeat="1" size="4">
 				<Element name="Unknown 4bytes" type="int"/>
+			</Subrecord>
+			<Subrecord name="KNAM" desc="Keyword (KYWD)" optional="1" repeat="1" size="4">
+				<Element name="KYWD FormID" type="formid" reftype="KYWD"/>
 			</Subrecord>
 			<Subrecord name="ALRT" desc="Alert? Location Ref Type (LCRT)" optional="1" repeat="1" size="4">
 				<Element name="FormID" type="formid" reftype="LCRT"/>
 			</Subrecord>
-			<Subrecord name="ALNA" desc="ALNA" optional="1" repeat="1" size="4">
-				<Element name="Unknown 4bytes" type="int"/>
-			</Subrecord>
-			<Subrecord name="ALNT" desc="ALNT" optional="1" repeat="1" size="4">
-				<Element name="Unknown 4bytes" type="int"/>
-			</Subrecord>
+			<!-- External Alias Reference -->
 			<Subrecord name="ALEQ" desc="? (QUST)" optional="1" repeat="1" size="4">
 				<Element name="FormID" type="formid" reftype="QUST"/>
 			</Subrecord>
 			<Subrecord name="ALEA" desc="ALEA" optional="1" repeat="1" size="4">
 				<Element name="Unknown 4bytes" type="int"/>
 			</Subrecord>
-			<Subrecord name="NNAM" desc="NNAM" optional="1" repeat="1">
-				<!-- localized -->
-				<Element name="(mayLocalize) Name" type="lstring"/>
+			<!-- Create Reference to Object -->
+			<Subrecord name="ALCO" desc="XMarker(STAT)" optional="1" repeat="1" size="4">
+				<Element name="STAT FormID" type="formid" reftype="STAT"/>
 			</Subrecord>
-			<Subrecord name="QSTA" desc="QSTA" optional="1" repeat="1" size="8">
-				<Element name="Unknown 4bytes 1" type="int"/>
-				<Element name="Unknown 4bytes 2" type="int"/>
+			<Subrecord name="ALCA" desc="ALCA" optional="1" repeat="1" size="4">
+				<Element name="" type="int" flags="1;isMarker;4;8;16;32;64;128;256;512"/>
 			</Subrecord>
-			<Subrecord name="ALFI" desc="Force Into Alias When Filled" optional="1" repeat="1" size="4">
-				<Element name="(always 0)" type="int"/>
+			<Subrecord name="ALCL" desc="ALCL" optional="1" repeat="1" size="4">
+				<Element name="Unknown 4bytes" type="int"/>
 			</Subrecord>
-			<Subrecord name="ALFR" desc="Alias Reference" optional="1" repeat="1" size="4">
-				<Element name="FormID" type="formid"/>
+			<!-- Find Matching Reference 01 -->
+			<Subrecord name="ALNA" desc="ALNA" optional="1" repeat="1" size="4">
+				<Element name="Unknown 4bytes" type="int"/>
 			</Subrecord>
+			<Subrecord name="ALNT" desc="ALNT" optional="1" repeat="1" size="4">
+				<Element name="Unknown 4bytes" type="int"/>
+			</Subrecord>
+			<!-- Find Matching Reference 01 -->
 			<Subrecord name="ALFE" desc="ALFE" optional="1" repeat="1" size="4">
 				<Element name="" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
 				<Element name="" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
@@ -6719,18 +6741,6 @@ non-indent is being worked on
 				<!-- localize -->
 				<Element name="(mayLocalize) Text" type="lstring"/>
 			</Subrecord>
-			<Subrecord name="ALCO" desc="XMarker(STAT)" optional="1" repeat="1" size="4">
-				<Element name="STAT FormID" type="formid" reftype="STAT"/>
-			</Subrecord>
-			<Subrecord name="ALCA" desc="ALCA" optional="1" repeat="1" size="4">
-				<Element name="" type="int" flags="1;isMarker;4;8;16;32;64;128;256;512"/>
-			</Subrecord>
-			<Subrecord name="ALCL" desc="ALCL" optional="1" repeat="1" size="4">
-				<Element name="Unknown 4bytes" type="int"/>
-			</Subrecord>
-			<Subrecord name="ALUA" desc="FillType Unique Actor (NPC_)" optional="1" repeat="1" size="4">
-				<Element name="NPC_ FormID" type="formid" reftype="NPC_"/>
-			</Subrecord>
 			<Group id="CONDITIONAL" optional="1" repeat="1"/>
 			<Group id="KEYWORDS" optional="1"/>
 			<Subrecord name="COCT" desc="Container Total Item Count" optional="1" repeat="1" size="4">
@@ -6740,11 +6750,17 @@ non-indent is being worked on
 				<Element name="FormID" type="formid"/>
 				<Element name="Count" type="int"/>
 			</Subrecord>
-			<Subrecord name="SPOR" desc="? Form List (FLST)" optional="1" size="4">
+			<Subrecord name="SPOR" desc="Spectator override package list (FLST)" optional="1" size="4">
 				<Element name="FormID" type="formid" reftype="FLST"/>
 			</Subrecord>
-			<Subrecord name="ECOR" desc="? Form List (FLST)" optional="1" repeat="1" size="4">
+			<Subrecord name="OCOR" desc="Observe dead body override package list (FLST)" optional="1" repeat="1" size="4">
 				<Element name="FormID" type="formid" reftype="FLST"/>
+			</Subrecord>
+			<Subrecord name="GWOR" desc="Guard warn override package list (FLST)" optional="1" repeat="1" size="4">
+				<Element name="FormID" type="formid" reftype="FLST"/>
+			</Subrecord>
+			<Subrecord name="ECOR" desc="Combat override package list (FLST)" optional="1" repeat="1" size="4">
+				<Element name="MESG FormID" type="formid" reftype="FLST"/>
 			</Subrecord>
 			<Subrecord name="ALDN" desc="Display Name (MESG)" optional="1" repeat="1" size="4">
 				<Element name="MESG FormID" type="formid" reftype="MESG"/>
@@ -6761,15 +6777,26 @@ non-indent is being worked on
 			<Subrecord name="VTCK" desc="Additional Valid Voice Types for Export (VTYP)" optional="1" repeat="1" size="4">
 				<Element name="VTYP FormID" type="formid" reftype="VTYP"/>
 			</Subrecord>
-			<Subrecord name="KNAM" desc="Keyword (KYWD)" optional="1" repeat="1" size="4">
-				<Element name="KYWD FormID" type="formid" reftype="KYWD"/>
-			</Subrecord>
-			<Subrecord name="ALFL" desc="Location (LCTN)" optional="1" repeat="1" size="4">
-				<Element name="FormID" type="formid" reftype="LCTN"/>
-			</Subrecord>
 			<Subrecord name="ALED" desc="Unknown" optional="1" repeat="1" size="0"/>
 		</Group>
+		<Subrecord name="NNAM" desc="NNAM" optional="1" repeat="1">
+			<!-- localized -->
+			<Element name="(mayLocalize) Name" type="lstring"/>
+		</Subrecord>
+		<Subrecord name="NNAM" desc="Description" optional="1" repeat="1">
+			<!-- localized -->
+			<Element name="(mayLocalize) Name" type="lstring"/>
+		</Subrecord>
+		<!-- Targets -->
+		<Group optional="1" repeat="1">
+			<Subrecord name="QSTA" desc="Quest Target Data" optional="1" repeat="1" size="8">
+				<Element name="Target" type="formid"/>
+				<Element name="Check-box" type="int" flags="Compass Markers Ignore Locks"/>
+			</Subrecord>
+			<Group id="CONDITIONAL" optional="1" repeat="1"/>
+    </Group>
 	</Record>
+	<!-- 'Quest' - QUST -->
 	<Record name="IDLE" desc="Idle Animation">
 		<!-- 1byte unknown in DATA; accessed in the CK through the Gameplay pulldown -->
 		<Group id="EDID" optional="1"/>
