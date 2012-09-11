@@ -6375,7 +6375,7 @@ begin
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height'),
     wbString(XNAM, 'Water Noise Texture'),
-    wbArrayS(XCLR, 'Regions (unused?)', wbFormID('Region', cpIgnore, False)), // probably leftover, not seen in CK
+    wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
     wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
     wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
@@ -7891,6 +7891,7 @@ begin
 //------------------------------------------------------------------------------
 
   wbRecord(NAVM, 'Navigation Mesh', [
+    wbEDID,
     wbUnknown(NVNM),
     wbUnknown(ONAM),
     wbUnknown(PNAM),
@@ -8528,10 +8529,9 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
-      wbInteger('Flags', itU16, wbEnum([], [
-        {>>> Value Must be 1 or 3 <<<}
-        1, '', // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
-        3, 'Always Loaded' // {0x0002}'Always Loaded' : The Check-Box is Unchecked in the CK
+      wbInteger('Flags', itU16, wbFlags([
+        {0x0001}'Unknown 0',
+        {0x0002}'Always Loaded'
       ]))
     ], cpNormal, True)
   ]);
@@ -9027,7 +9027,9 @@ begin
   wbRecord(EQUP, 'Equip Type', [
     wbEDIDReq,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      'Use All Parents'
+    ]), cpNormal, True)
   ]);
 
   wbRecord(RELA, 'Relationship', [
@@ -9206,7 +9208,6 @@ end;
 
 procedure DefineTES5k;
 begin
-
   wbRecord(OTFT, 'Outfit', [
     wbEDIDReq,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
@@ -9276,7 +9277,7 @@ begin
     wbEDIDReq,
     wbUnknown(CNAM),
     wbFormID(GNAM, 'Category'),
-    wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR, NULL]),
+    wbFormIDCk(SNAM, 'String', [SNDR, NULL]),
     wbRArray('Sounds',
       wbRStruct('Sound Files', [
         wbString(ANAM, 'File Name')
@@ -9505,6 +9506,7 @@ begin
       ])),
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
+    wbFormIDCk(TPIC, 'Topic', [DIAL]),
     wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
     wbInteger(CNAM, 'Favor Level', itU8, wbEnum([
       'None',
@@ -10092,15 +10094,15 @@ begin
         {0x00000040} 'Doesn''t affect stealth meter',
         {0x00000080} 'PC Level Mult',
         {0x00000100} 'Use Template?',
-        {0x00000200} '',
-        {0x00000400} '',
+        {0x00000200} 'Unknown 9',
+        {0x00000400} 'Unknown 10',
         {0x00000800} 'Protected',
-        {0x00001000} '',
-        {0x00002000} '',
+        {0x00001000} 'Unknown 12',
+        {0x00002000} 'Unknown 13',
         {0x00004000} 'Summonable',
-        {0x00008000} '',
+        {0x00008000} 'Unknown 15',
         {0x00010000} 'Doesn''t bleed',
-        {0x00020000} '',
+        {0x00020000} 'Unknown 17',
         {0x00040000} 'Bleedout Override',
         {0x00080000} 'Opposite Gender Anims',
         {0x00100000} 'Simple Actor',
@@ -11763,7 +11765,7 @@ begin
       wbString(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overridden Forms',
+    wbArray(ONAM, 'Overriden Forms',
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot'),
@@ -11774,12 +11776,11 @@ end;
 
 procedure DefineTES5o;
 begin
-
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, NULL]),
+    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, NULL]),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),

@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.22a (2012-09-10) EXPERIMENTAL';
+  VersionString               = '3.0.22a EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -4821,7 +4821,13 @@ begin
              (aSignature = 'ACHR') or
              (aSignature = 'ACRE') or
              (aSignature = 'PGRE') or
-             (aSignature = 'PMIS')
+             (aSignature = 'PMIS') or
+             (aSignature = 'PARW') or {>>> Skyrim <<<}
+             (aSignature = 'PBEA') or {>>> Skyrim <<<}
+             (aSignature = 'PFLA') or {>>> Skyrim <<<}
+             (aSignature = 'PCON') or {>>> Skyrim <<<}
+             (aSignature = 'PBAR') or {>>> Skyrim <<<}
+             (aSignature = 'PHZD')    {>>> Skyrim <<<}
            )
          ) then begin
 
@@ -7885,6 +7891,12 @@ begin
           IsValid('ACRE') or
           IsValid('PGRE') or
           IsValid('PGRD') or
+          IsValid('PARW') or {>>> Skyrim <<<}
+          IsValid('PBAR') or {>>> Skyrim <<<}
+          IsValid('PBEA') or {>>> Skyrim <<<}
+          IsValid('PFLA') or {>>> Skyrim <<<}
+          IsValid('PCON') or {>>> Skyrim <<<}
+          IsValid('PHZD') or {>>> Skyrim <<<}
           IsValid('NAVM') or
           IsValid('INFO');
 
@@ -9732,7 +9744,6 @@ var
   Len  : Cardinal;
 begin
   Result := '';
-  {>>>}Size := 0;{<<<}
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < Prefix then begin
     if wbCheckExpectedBytes then
@@ -9820,7 +9831,6 @@ function TwbLenStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: Iwb
 var
   Len : Integer;
 begin
-  {>>>}Len := 0;{<<<}
   if Assigned(aBasePtr) then begin
     Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
     if Result < Prefix then
