@@ -1331,46 +1331,71 @@ begin
       {0x08} 'Use packdata',
       {0x10} 'Swap Subject and Target'
     ]);
+{
+    Compare operator (upper 3 bits)
+    LGE
+    000    0=Equal to
+    001    1=Not equal to
+    010    2=Greater than
+    011    3=Greater than or equal to
+    100    4=Less than
+    101    5=Less than or equal to
 
+    Flags (lower 5 bits)
+        0x01=OR (default is to AND conditions together)
+        0x02=Parameters (use aliases) : Force function parameters to use quest alias data (exclusive with "use pack data")
+        0x04=Use global
+        0x08=Use Pack Data : Force function parameters to use pack data (exclusive with "use aliases")
+        0x10=Swap Subject and Target
+}
   case aType of
     ctEditType:
       Result := 'CheckComboBox';
-    ctEditInfo: {>>> Needs revision for Skyrim <<<}
+    ctEditInfo:
       Result := 'Equal,Greater,Lesser,Or,"Use Aliases","Use Global","Use Packdata","Swap Subject and Target"';
-    ctToEditValue: begin  {>>> Needs revision for Skyrim <<<}
-      Result := '000000';
-      case aInt shr 5 of
-        0 : Result[1] := '1';
-        1 : Result[2] := '1';
-        2 : begin
-              Result[1] := '1';
-              Result[2] := '1';
-            end;
-        3 : Result[3] := '1';
-        4 : begin
-              Result[1] := '1';
-              Result[3] := '1';
-            end;
+    ctToEditValue: begin
+      Result := '00000000';
+      case aInt and $E0 of
+        $00 : Result[1] := '1';
+        $40 : Result[2] := '1';
+        $60 : begin
+                Result[1] := '1';
+                Result[2] := '1';
+              end;
+        $80 : Result[3] := '1';
+        $A0 : begin
+                Result[1] := '1';
+                Result[3] := '1';
+              end;
       end;
-      if (aInt and $01) <> 0 then
+//      if (aInt and $20) = 0 then  // Equal if zero bit
+//        Result[1] := '1';
+//      if (aInt and $40) <> 0 then // Greater
+//        Result[2] := '1';
+//      if (aInt and $80) <> 0 then // Lesser
+//        Result[3] := '1';
+      if (aInt and $01) <> 0 then // Or
         Result[4] := '1';
-      if (aInt and $02) <> 0 then
-        Result[6] := '1';
-      if (aInt and $04) <> 0 then
+      if (aInt and $02) <> 0 then // Use aliases
         Result[5] := '1';
+      if (aInt and $04) <> 0 then // Use global
+        Result[6] := '1';
+      if (aInt and $08) <> 0 then // Use packdata
+        Result[7] := '1';
+      if (aInt and $10) <> 0 then // Swap Subject and Target
+        Result[8] := '1';
     end;
     ctToStr: begin
-      case aInt shr 5 of
-        0 : Result := 'Equal to';
-        1 : Result := 'Not equal to';
-        2 : Result := 'Greater than';
-        3 : Result := 'Greater than or equal to';
-        4 : Result := 'Less than';
-        5 : Result := 'Less than or equal to';
+      case aInt and $E0 of
+        $00 : Result := 'Equal to';
+        $20 : Result := 'Not equal to';
+        $40 : Result := 'Greater than';
+        $60 : Result := 'Greater than or equal to';
+        $80 : Result := 'Less than';
+        $A0 : Result := 'Less than or equal to';
       else
         Result := '<Unknown Compare operator>'
       end;
-
       s := wbCtdaTypeFlags.ToString(aInt and $1F, aElement);
       if s <> '' then
         Result := Result + ' / ' + s;
@@ -1393,14 +1418,21 @@ begin
   end;
 end;
 
-{>>> Needs revision for Skyrim <<<}
 function wbCtdaTypeToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   s: string;
 begin
-  Result := 0; Exit;
-  s := aString + '000000';
-//  Result := 0;
+  s := aString + '00000000';
+  Result := 0;
+//  // Equal, set to 1 if not equal
+//  if s[1] = '0' then
+//    Result := Result or $20;
+//  // Greater
+//  if s[2] = '1' then
+//    Result := Result or $40;
+//  // Lesser
+//  if s[3] = '1' then
+//    Result := Result or $80;
   if s[1] = '1' then begin
     if s[2] = '1' then begin
       if s[3] = '1' then begin
@@ -1430,12 +1462,21 @@ begin
       end;
     end;
   end;
+  // Or
   if s[4] = '1' then
     Result := Result or $01;
-  if s[6] = '1' then
-    Result := Result or $02;
+  // Use aliases
   if s[5] = '1' then
+    Result := Result or $02;
+  // Use global
+  if s[6] = '1' then
     Result := Result or $04;
+  // Use packdata
+  if s[7] = '1' then
+    Result := Result or $08;
+  // Swap Subject and Target
+  if s[8] = '1' then
+    Result := Result or $10;
 end;
 
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -1511,16 +1552,18 @@ begin
   if not Supports(aElement, IwbContainerElementRef, Container) then
     Exit;
 
+  // reset value if "use global" has changed
   OldValue := aOldValue and $04;
   NewValue := aNewValue and $04;
   if OldValue <> NewValue then
     Container.ElementNativeValues['..\Comparison Value'] := 0;
 
-  if aNewValue and $02 then begin
-    Container.ElementNativeValues['..\Run On'] := 1;
-    if Integer(Container.ElementNativeValues['..\Run On']) = 1 then
-      aElement.NativeValue := Byte(aNewValue) and not $02;
-  end;
+  {>>> "run on target", no such flag in Skyrim <<<}
+//  if aNewValue and $02 then begin
+//    Container.ElementNativeValues['..\Run On'] := 1;
+//    if Integer(Container.ElementNativeValues['..\Run On']) = 1 then
+//      aElement.NativeValue := Byte(aNewValue) and not $02;
+//  end;
 end;
 
 function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -1701,35 +1744,35 @@ begin
 end;
 
 {>>>Needs Revision for Skyrim<<<}
-//function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
-//var
-//  Container: IwbContainer;
-//  s: string;
-//begin
-//  Result := Trim(aMainRecord.ElementValues['Responses\Response\NAM1']);
-//  if Result <> '' then
-//    Result := '''' + Result + '''';
-//
-//  Container := aMainRecord.Container;
-//  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
-//    Container := Container.Container;
-//
-//  if Assigned(Container) then begin
-//    s := Trim(Container.Name);
-//    if s <> '' then begin
-//      if Result <> '' then
-//        Result := Result + ' ';
-//      Result := Result + 'in ' + s;
-//    end;
-//  end;
-//
+function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
+var
+  Container: IwbContainer;
+  s: string;
+begin
+  Result := Trim(aMainRecord.ElementValues['Responses\Response\NAM1']);
+  if Result <> '' then
+    Result := '''' + Result + '''';
+
+  Container := aMainRecord.Container;
+  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
+    Container := Container.Container;
+
+  if Assigned(Container) then begin
+    s := Trim(Container.Name);
+    if s <> '' then begin
+      if Result <> '' then
+        Result := Result + ' ';
+      Result := Result + 'in ' + s;
+    end;
+  end;
+
 //  s := Trim(aMainRecord.ElementValues['QSTI']);
 //  if s <> '' then begin
 //    if Result <> '' then
 //      Result := Result + ' ';
 //    Result := Result + 'for ' + s;
 //  end;
-//end;
+end;
 
 //function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
 //var
@@ -2221,8 +2264,8 @@ type
     ptShout,              //SHOU
     ptLocation,           //LCTN
     ptRefType,            //LCRT
-    ptAlias,              // index into quest aliases
-    ptPackdata,           // index into packade data inputs
+    ptAlias,              // index into QUST quest aliases
+    ptPackdata,           // index into PACK package data inputs
     ptAssociationType,    // ASTP
     ptFurnitureAnim,      // enum
     ptFurnitureEntry,     // flags
@@ -2296,7 +2339,7 @@ const
 {N} (Index:  81; Name: 'IsRotating'),
 {V} (Index:  84; Name: 'GetDeadCount'; ParamType1: ptActorBase),
 {V} (Index:  91; Name: 'GetIsAlerted'),
-{V} (Index:  98; Name: 'GetPlayerControlsDisabled'; ParamType1: ptInteger; ParamType2: ptInteger{; ParamType3: ptInteger; ParamType4: ptInteger; ParamType5: ptInteger; ParamType6: ptInteger; ParamType7: ptInteger}),
+{V} (Index:  98; Name: 'GetPlayerControlsDisabled'; ParamType1: ptInteger; ParamType2: ptInteger),
 {V} (Index:  99; Name: 'GetHeadingAngle'; ParamType1: ptObjectReference),
 {N} (Index: 101; Name: 'IsWeaponMagicOut'),
 {V} (Index: 102; Name: 'IsTorchOut'),
@@ -2373,7 +2416,7 @@ const
 {V} (Index: 242; Name: 'GetUnconscious'),
 {V} (Index: 244; Name: 'GetRestrained'),
 {V} (Index: 246; Name: 'GetIsUsedItem'; ParamType1: ptReferencableObject),
-{V} (Index: 247; Name: 'GetIsUsedItemType'; ParamType1: ptFormType), // needs more work
+{V} (Index: 247; Name: 'GetIsUsedItemType'; ParamType1: ptFormType),
 {N} (Index: 248; Name: 'IsScenePlaying'; ParamType1: ptScene),
 {N} (Index: 249; Name: 'IsInDialogueWithPlayer'),
 {N} (Index: 250; Name: 'GetLocationCleared'; ParamType1: ptLocation),
@@ -2421,7 +2464,7 @@ const
 {V} (Index: 354; Name: 'IsEssential'),
 {V} (Index: 358; Name: 'IsPlayerMovingIntoNewSpace'),
 {N} (Index: 359; Name: 'GetInCurrentLoc'; ParamType1: ptLocation),
-{N} (Index: 360; Name: 'GetInCurrentLocAlias'; ParamType1: ptAlias), // needs more work
+{N} (Index: 360; Name: 'GetInCurrentLocAlias'; ParamType1: ptAlias),
 {V} (Index: 361; Name: 'GetTimeDead'),
 {N} (Index: 362; Name: 'HasLinkedRef'; ParamType1: ptKeyword),
 {V} (Index: 365; Name: 'IsChild'),
@@ -2685,6 +2728,7 @@ begin
     Container := aElement.Container
   else
     Container := aElement as IwbContainer;
+  // "use global" flag
   if Integer(Container.ElementByName['Type'].NativeValue) and $04 = 0 then
     Result := 0
   else
@@ -3728,30 +3772,31 @@ begin
   end;
 end;
 
-procedure wbCTDAAfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  //Size       : Cardinal;
-  TypeFlags  : Cardinal;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    TypeFlags := Container.ElementNativeValues['Type'];
-    if (TypeFlags and $02) <> 0 then begin
-      if Container.DateSize = 20 then
-        Container.DateSize := 28;
-      Container.ElementNativeValues['Type'] := TypeFlags and not $02;
-      Container.ElementEditValues['Run On'] := 'Target';
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
+{>>> No "Run On Target" flag in Skyrim, disabled <<<}
+//procedure wbCTDAAfterLoad(const aElement: IwbElement);
+//var
+//  Container  : IwbContainerElementRef;
+//  //Size       : Cardinal;
+//  TypeFlags  : Cardinal;
+//begin
+//  if wbBeginInternalEdit then try
+//    if not Supports(aElement, IwbContainerElementRef, Container) then
+//      Exit;
+//
+//    if Container.ElementCount < 1 then
+//      Exit;
+//
+//    TypeFlags := Container.ElementNativeValues['Type'];
+//    if (TypeFlags and $02) <> 0 then begin
+//      if Container.DateSize = 20 then
+//        Container.DateSize := 28;
+//      Container.ElementNativeValues['Type'] := TypeFlags and not $02;
+//      Container.ElementEditValues['Run On'] := 'Target';
+//    end;
+//  finally
+//    wbEndInternalEdit;
+//  end;
+//end;
 
 { Needs revision for Skyrim }
 //procedure wbMGEFAfterLoad(const aElement: IwbElement);
@@ -4052,8 +4097,10 @@ begin
 end;
 
 
-{ Updated, but not called for Skyrim }
-{ Why is it required to fix particle counts? Because 1 pass = 79 particles?}
+{>>>
+  Updated, but not called for Skyrim
+  Why is it required to fix particle counts? Because 1 pass = 79 particles?
+>>>}
 //procedure wbEFSHAfterLoad(const aElement: IwbElement);
 //var
 //  Container: IwbContainerElementRef;
@@ -4339,11 +4386,11 @@ begin
       {0x80000000} 'FX01'
     ], True)),
     wbInteger('General Flags', itU8, wbFlags([
-      {0x00000001}'Modulates Voice', {>>> From ARMA <<<}
+      {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
       {0x00000002}'Unknown 2',
       {0x00000004}'Unknown 3',
       {0x00000008}'Unknown 4',
-      {0x00000010}'Non-Playable', {>>> From ARMO <<<}
+      {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
       {0x00000020}'Unknown 6',
       {0x00000040}'Unknown 7',
       {0x00000080}'Unknown 8'
@@ -4409,7 +4456,7 @@ begin
     wbFloat('Shininess'),
     wbStruct('Parallax', [
       wbFloat('Scale'),
-      wbInteger('Passes', itU8) {This can't be higher than 30}
+      wbInteger('Passes', itU8) {>>> This can't be higher than 30 <<<}
     ]),
     wbInteger('Flags', itU8, wbFlags([
       {0x01}'Parallax',
@@ -4774,6 +4821,7 @@ begin
     {15} 'Array of Bool'
   ]);
 
+  {>>> Needs union depending on objFormat <<<}
   wbScriptObject := wbStruct('Object', [
     wbInteger('Unknown', itU16),
     wbInteger('AliasID', itS16),
@@ -4842,8 +4890,8 @@ begin
 <<<}
 
     //wbArray('Scripts', wbScriptEntry, -2), // comment out scriptCount when -2
-    wbByteArray('Scripts'),
-    wbScriptFragments
+    wbByteArray('Scripts')
+    //wbScriptFragments
   ], cpNormal, False, nil, -1);
 
   wbAttackData := wbRStruct('Attack Data', [
@@ -5887,7 +5935,7 @@ begin
 
   wbCTDA := wbRStruct('Conditions', [
     wbStruct(CTDA, 'Condition', [
-      wbInteger('Type', itU8, wbCtdaTypeToStr, nil{wbCtdaTypeToInt}, cpNormal, False, nil, wbCtdaTypeAfterSet),
+      wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
       wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
@@ -5942,7 +5990,7 @@ begin
         wbInteger('Casting Type', itU32, wbCastingSourceEnum),
         wbFormIDCkNoReach('Shout', [SHOU]),
         wbFormIDCkNoReach('Location', [LCTN]),
-        wbFormIDCkNoReach('Ref Type', [LCRT]),
+        wbFormIDCkNoReach('Location Ref Type', [LCRT]),
         wbInteger('Alias ID', itU32),
         wbInteger('Packdata ID', itU32),
         wbFormIDCk('Association Type', [ASTP]),
@@ -5961,7 +6009,7 @@ begin
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         wbInteger('Axis', itU32, wbAxisEnum),
-        wbInteger('Quest Stage (INVALID)', itS32),
+        wbInteger('Quest Stage', itS32),
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         wbInteger('Alignment', itU32, wbAlignmentEnum),
         wbFormIDCkNoReach('Equip Type', [EQUP]),
@@ -6041,7 +6089,7 @@ begin
         wbInteger('Casting Type', itU32, wbCastingSourceEnum),
         wbFormIDCkNoReach('Shout', [SHOU]),
         wbFormIDCkNoReach('Location', [LCTN]),
-        wbFormIDCkNoReach('Ref Type', [LCRT]),
+        wbFormIDCkNoReach('Location Ref Type', [LCRT]),
         wbInteger('Alias ID', itU32),
         wbInteger('Packdata ID', itU32),
         wbFormIDCk('Association Type', [ASTP]),
@@ -9519,6 +9567,7 @@ begin
     wbFormID(DNAM, 'Response Data'),
     wbCTDAs,
 
+    {>>> Unordered, CTDA can appear before or after LNAM <<<}
     wbRArray('Responses', wbRStruct('Response', [ // Begin Array
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
@@ -9536,7 +9585,8 @@ begin
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
       wbCTDAs,
-      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
+      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
+      wbCTDAs
     ], [])),
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRArray('Unknown',
@@ -11740,7 +11790,7 @@ begin
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
         {>>> Contains null-terminated mesh filename followed by random data up to 260 bytes <<<}
-        wbByteArray('Unknown', 260, cpIgnore)
+        wbByteArray('Mesh', 260, cpIgnore)
       ]), [
         'Level 0',
         'Level 1',
