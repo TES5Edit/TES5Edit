@@ -10625,7 +10625,8 @@ begin
         {0x1000} 'Unknown 13'
       ])),
       wbInteger('Priority', itU8),
-      wbByteArray('Unknown', 5),
+      wbInteger('Form Version', itU8, nil, cpIgnore),
+      wbByteArray('Unknown', 4),
       wbInteger('Type', itU32, wbEnum([
         {0} 'None',
         {1} 'Main Quest',
