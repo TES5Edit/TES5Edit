@@ -1368,12 +1368,6 @@ begin
                 Result[3] := '1';
               end;
       end;
-//      if (aInt and $20) = 0 then  // Equal if zero bit
-//        Result[1] := '1';
-//      if (aInt and $40) <> 0 then // Greater
-//        Result[2] := '1';
-//      if (aInt and $80) <> 0 then // Lesser
-//        Result[3] := '1';
       if (aInt and $01) <> 0 then // Or
         Result[4] := '1';
       if (aInt and $02) <> 0 then // Use aliases
@@ -1424,15 +1418,6 @@ var
 begin
   s := aString + '00000000';
   Result := 0;
-//  // Equal, set to 1 if not equal
-//  if s[1] = '0' then
-//    Result := Result or $20;
-//  // Greater
-//  if s[2] = '1' then
-//    Result := Result or $40;
-//  // Lesser
-//  if s[3] = '1' then
-//    Result := Result or $80;
   if s[1] = '1' then begin
     if s[2] = '1' then begin
       if s[3] = '1' then begin
@@ -1743,7 +1728,6 @@ begin
   end;
 end;
 
-{>>>Needs Revision for Skyrim<<<}
 function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
 var
   Container: IwbContainer;
@@ -1766,12 +1750,12 @@ begin
     end;
   end;
 
-//  s := Trim(aMainRecord.ElementValues['QSTI']);
-//  if s <> '' then begin
-//    if Result <> '' then
-//      Result := Result + ' ';
-//    Result := Result + 'for ' + s;
-//  end;
+  s := Trim(aMainRecord.ElementValues['QNAM']);
+  if s <> '' then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + 'for ' + s;
+  end;
 end;
 
 //function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
@@ -4025,6 +4009,7 @@ var
   Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
   i            : Integer;
+  w            : Single;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4042,6 +4027,17 @@ begin
     if (not Container.ElementExists['XCLW']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then begin
       Container.Add('XCLW', True);
       Container.ElementEditValues['XCLW'] := 'Default';
+    end;
+
+    if Container.ElementExists['XCLW'] then begin
+      w := Container.ElementNativeValues['XCLW'];
+      if (PCardinal(@w)^ = Int64($CF000000)) or
+         (PCardinal(@w)^ = Int64($4F7FFFC9))
+      then begin
+        //PCardinal(@w)^ := Int64($7F7FFFFF); // no water value
+        //Container.ElementNativeValues['XCLW'] := w;
+        Container.ElementEditValues['XCLW'] := 'Default';
+      end;
     end;
 
     if (not Container.ElementExists['XNAM']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then
@@ -6422,6 +6418,7 @@ begin
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height'),
+    //wbByteArray(XCLW, 'Water Height', 4),
     wbString(XNAM, 'Water Noise Texture'),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
@@ -8579,7 +8576,7 @@ begin
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbEnum([], [
         {>>> Value Must be 1 or 3 <<<}
-        1, '', // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
+        1, 'Unknown 1',    // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
         3, 'Always Loaded' // {0x0002}'Always Loaded' : The Check-Box is Unchecked in the CK
       ]))
     ], cpNormal, True)
@@ -9601,7 +9598,7 @@ begin
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])
-  ], False, nil{wbINFOAddInfo}, cpNormal, False, nil{wbINFOAfterLoad});
+  ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
   wbRecord(INGR, 'Ingredient', [
     wbEDIDReq,
@@ -11491,7 +11488,7 @@ begin
     {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
       wbInteger('Level', itU8, wbEnum([], [
-         1, 'Novice',
+         0, 'Novice',
         25, 'Apprentice',
         50, 'Adept',
         75, 'Expert',

@@ -2451,6 +2451,31 @@ begin
     end;
 end;
 
+procedure PluginListGroupESM(List: TStringList);
+var
+  slESM, slESP : TStringList;
+  IsESM        : Boolean;
+  i            : Integer;
+begin
+  slESM := TStringList.Create;
+  slESP := TStringList.Create;
+  try
+    for i := 0 to List.Count - 1 do begin
+      IsESM := SameText(ExtractFileExt(List[i]), '.esm');
+      if IsESM then
+        slESM.Add(List[i])
+      else
+        slESP.Add(List[i]);
+    end;
+    List.Clear;
+    List.AddStrings(slESM);
+    List.AddStrings(slESP);
+  finally
+    FreeAndNil(slESM);
+    FreeAndNil(slESP);
+  end;
+end;
+
 function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
   IsESM1                      : Boolean;
@@ -2735,23 +2760,26 @@ begin
         end;
 
         // plugins list for Oblivion, Fallout3, FNV with timestamps
-        // also for Skyrim if plugins.txt is empty
-        if sl.Count = 0 then begin
-          if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
-            repeat
-              s := ExtractFileExt(F.Name);
-              if SameText(s, '.esm') or SameText(s, '.esp') then begin
-                if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-                  DeleteFile(DataPath + F.Name)
-                else
-                  sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
-              end;
-            until FindNext(F) <> 0;
-          finally
-            FindClose(F);
-          end;
-          sl.CustomSort(PluginListCompare);
+        // Skyrim: add missing plugins that are in Data folder
+        if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
+          repeat
+            s := ExtractFileExt(F.Name);
+            if SameText(s, '.esm') or SameText(s, '.esp') then begin
+              if SameText(F.Name, wbGameName + '.hardcoded.esp') then
+                DeleteFile(DataPath + F.Name)
+              else
+              if FindMatchText(sl, F.Name) < 0 then
+                sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+            end;
+          until FindNext(F) <> 0;
+        finally
+          FindClose(F);
         end;
+
+        if wbGameMode = gmTES5 then
+          PluginListGroupESM(sl)
+        else
+          sl.CustomSort(PluginListCompare);
 
         if wbMasterUpdate and (wbGameMode <> gmTES5) and (sl.Count > 1) then begin
           Age := Integer(sl.Objects[0]);
