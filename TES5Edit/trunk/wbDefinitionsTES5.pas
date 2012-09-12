@@ -11500,10 +11500,10 @@ begin
       ])),
       wbByteArray('Unknown', 3),
       wbFormIDCkNoReach('Key', [KEYM, NULL]),
-      wbInteger('Flags', itU32, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, False, nil, 4),
+      wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
+      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 8)
+    ], cpNormal, False, nil, 5),
 
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 

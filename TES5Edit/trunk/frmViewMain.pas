@@ -2570,6 +2570,15 @@ begin
 end;
 
 procedure TfrmMain.DoInit;
+
+  function FindMatchText(Strings: TStrings; const Str: string): Integer;
+  begin
+    for Result := 0 to Strings.Count-1 do
+      if SameText(Strings[Result], Str) then
+        Exit;
+    Result := -1;
+  end;
+
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
 var
@@ -2702,22 +2711,49 @@ begin
 
       with TfrmFileSelect.Create(nil) do try
 
-        if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
-          repeat
-            s := ExtractFileExt(F.Name);
-            if SameText(s, '.esm') or SameText(s, '.esp') then begin
-              if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-                DeleteFile(DataPath + F.Name)
-              else
-                sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+        // Skyrim doesn't use timestamps anymore, only plugins.txt
+        if wbGameMode = gmTES5 then begin
+          // check if there is a BOSS plugins list present and use it
+          s := ExtractFilePath(PluginsFileName) + 'loadorder.txt';
+          if FileExists(s) then begin
+            AddMessage('Found BOSS load order list: ' + s);
+            sl.LoadFromFile(s)
+          end else
+            sl.LoadFromFile(PluginsFileName);
+
+          for i := Pred(sl.Count) downto 0 do begin
+            s := Trim(sl.Strings[i]);
+            j := Pos('#', s);
+            if j > 0 then
+              System.Delete(s, j, High(Integer));
+            s := Trim(s);
+            if (s = '') or not FileExists(DataPath + s) then begin
+              sl.Delete(i);
+              Continue;
             end;
-          until FindNext(F) <> 0;
-        finally
-          FindClose(F);
+          end;
         end;
 
-        sl.CustomSort(PluginListCompare);
-        if wbMasterUpdate and (sl.Count > 1) then begin
+        // plugins list for Oblivion, Fallout3, FNV with timestamps
+        // also for Skyrim if plugins.txt is empty
+        if sl.Count = 0 then begin
+          if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
+            repeat
+              s := ExtractFileExt(F.Name);
+              if SameText(s, '.esm') or SameText(s, '.esp') then begin
+                if SameText(F.Name, wbGameName + '.hardcoded.esp') then
+                  DeleteFile(DataPath + F.Name)
+                else
+                  sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+              end;
+            until FindNext(F) <> 0;
+          finally
+            FindClose(F);
+          end;
+          sl.CustomSort(PluginListCompare);
+        end;
+
+        if wbMasterUpdate and (wbGameMode <> gmTES5) and (sl.Count > 1) then begin
           Age := Integer(sl.Objects[0]);
           AgeDateTime := FileDateToDateTime(Age);
           for i := 1 to Pred(sl.Count) do begin
@@ -2746,7 +2782,24 @@ begin
             AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
           else
             CheckListBox1.Checked[j] := True;
+        end;
 
+        // Skyrim always loads Skyrim.esm and Update.esm no matter what
+        // even if plugins.txt is empty
+        if wbGameMode = gmTES5 then begin
+           j := FindMatchText(CheckListBox1.Items, 'Update.esm');
+           if (j < 0) and FileExists(DataPath + 'Update.esm') then begin
+             CheckListBox1.Items.Insert(0, 'Update.esm');
+             j := 0;
+           end;
+           CheckListBox1.Checked[j] := True;
+
+           j := FindMatchText(CheckListBox1.Items, 'Skyrim.esm');
+           if (j < 0) and FileExists(DataPath + 'Skyrim.esm') then begin
+             CheckListBox1.Items.Insert(0, 'Skyrim.esm');
+             j := 0;
+           end;
+           CheckListBox1.Checked[j] := True;
         end;
 
         if not (wbMasterUpdate or wbLODGen) then
