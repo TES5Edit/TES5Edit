@@ -11503,7 +11503,7 @@ begin
       wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
       wbByteArray('Unknown', 3),
       wbByteArray('Unknown', 8)
-    ], cpNormal, False, nil, 5),
+    ], cpNormal, False, nil, 4),
 
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
