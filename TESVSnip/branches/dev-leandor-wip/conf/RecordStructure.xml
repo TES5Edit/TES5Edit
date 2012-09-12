@@ -545,7 +545,7 @@
 			<Element name="Red" type="float" desc="Multiply by 255"/>
 			<Element name="Green" type="float" desc="Multiply by 255"/>
 			<Element name="Blue" type="float" desc="Multiply by 255"/>
-			<Element name="Unknown" type="float" HexView="1"/>
+			<Element name="Unknown" type="float" hexview="1"/>
 			<Element name="Primitive Type" type="uint" options="None;0;Box;1;Sphere;2;Portal Box;3;Unknown;4"/>
 		</Subrecord>
 	</Group>
@@ -6116,6 +6116,18 @@ non-indent is being worked on
       <!-- Needs Union Decider  -->
       <!-- FormID or STR4   -->
 			<Element name="DIAL FormID" type="formid" reftype="DIAL" />
+		</Subrecord>
+		<Subrecord name="XLOC" desc="Lock Information" optional="1">
+			<Element name="Level" type="byte" options="Novice;1;Apprentice;25;Adept;50;Expert;75;Master;100;Requires Key;255"/>
+			<Element name="Unknown 1" type="byte"  hexview="1"/>
+			<Element name="Unknown 2" type="ushort"  hexview="1"/>
+			<Element name="KEYM FormID" type="formid" reftype="KEYM"/>
+			<Element name="Flags" type="byte" flags="1;2;Leveled Lock;4;5;6;7;8"/>
+			<Element name="Unknown 3" type="byte" />
+			<Element name="Unknown 4" type="ushort" />
+      <!-- Verified if Size is needed here  -->
+			<Element name="Unknown 5" type="uint" />
+			<Element name="Unknown 6" type="uint" />
 		</Subrecord>
 
     <!-- Verified to here  -->
