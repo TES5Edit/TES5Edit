@@ -11488,14 +11488,22 @@ begin
 //    ])),
 
     {--- Lock ---}
+    {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
-      wbInteger('Level', itU8),
+      wbInteger('Level', itU8, wbEnum([], [
+         1, 'Novice',
+        25, 'Apprentice',
+        50, 'Adept',
+        75, 'Expert',
+       100, 'Master',
+       255, 'Requires Key'
+      ])),
       wbByteArray('Unknown', 3),
       wbFormIDCkNoReach('Key', [KEYM, NULL]),
-      wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unknown', 3),
-      wbByteArray('Unknown', 8)
-    ], cpNormal, False, nil, 5),
+      wbInteger('Flags', itU32, wbFlags(['', '', 'Leveled Lock'])),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, False, nil, 4),
 
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
