@@ -1851,7 +1851,7 @@ begin
       aElement.Container.ElementNativeValues['Reference'] := 0;
 end;
 
-{>>> Needs revisoon for Skyrim <<<}
+{>>> Needs revision for Skyrim <<<}
 procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainerElementRef;
@@ -2087,23 +2087,6 @@ begin
     if SameText(s, OrderedList) then
       Result := False;
   end;
-//  if Result then begin
-//    MainRecord := aContainer.ContainingMainRecord;
-//    if not Assigned(MainRecord) then
-//      Exit;
-//    MainRecord := MainRecord.MasterOrSelf;
-//    if not Assigned(MainRecord) then
-//      Exit;
-//    _File := MainRecord._File;
-//    if not Assigned(_File) then
-//      Exit;
-//    if not SameText(_File.FileName, 'WeaponModKits.esp') then
-//      Exit;
-//    case (MainRecord.FormID and $FFFFFF) of
-//      $0130EB, $0130ED, $01522D, $01522E, $0158D5, $0158D6, $0158D7, $0158D8, $0158D9, $0158DA, $0158DC, $0158DD, $018E20:
-//        Result := False;
-//    end;
-//  end;
 end;
 
 function wbPerkDATADecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3941,36 +3924,37 @@ begin
   end;
 end;
 
-procedure wbREFRAfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-  BaseRecord : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    Container.RemoveElement('RCLR');
-
-    if Container.ElementExists['Ammo'] then begin
-      BaseRecord := MainRecord.BaseRecord;
-      if Assigned(BaseRecord) and (BaseRecord.Signature <> 'WEAP') then
-        Container.RemoveElement('Ammo');
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
+{>>>Needs Revision for Skyrim<<<}
+//procedure wbREFRAfterLoad(const aElement: IwbElement);
+//var
+//  Container  : IwbContainerElementRef;
+//  MainRecord : IwbMainRecord;
+//  BaseRecord : IwbMainRecord;
+//begin
+//  if wbBeginInternalEdit then try
+//    if not Supports(aElement, IwbContainerElementRef, Container) then
+//      Exit;
+//
+//    if Container.ElementCount < 1 then
+//      Exit;
+//
+//    if not Supports(aElement, IwbMainRecord, MainRecord) then
+//      Exit;
+//
+//    if MainRecord.IsDeleted then
+//      Exit;
+//
+//    Container.RemoveElement('RCLR');
+//
+//    if Container.ElementExists['Ammo'] then begin
+//      BaseRecord := MainRecord.BaseRecord;
+//      if Assigned(BaseRecord) and (BaseRecord.Signature <> 'WEAP') then
+//        Container.RemoveElement('Ammo');
+//    end;
+//  finally
+//    wbEndInternalEdit;
+//  end;
+//end;
 
 {>>>Needs Revision for Skyrim<<<}
 //procedure wbINFOAfterLoad(const aElement: IwbElement);
@@ -4890,7 +4874,7 @@ begin
     //wbScriptFragments
   ], cpNormal, False, nil, -1);
 
-  wbAttackData := wbRStruct('Attack Data', [
+  wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
       wbFloat('Damage Mult'),
       wbFloat('Attack Chance'),
@@ -5285,7 +5269,7 @@ begin
       ])
     ),
 
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -6279,7 +6263,7 @@ begin
     wbFormIDCK(NAM1, 'Female Skin texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
     wbFormIDCK(NAM3, 'Female Skin Texture Swap List', [FLST, NULL]),
-    wbRArray('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
+    wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO])
   ]);
@@ -6473,7 +6457,7 @@ begin
         ]))
       ], cpNormal, False, nil, 1)
     ),
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -6514,7 +6498,7 @@ begin
         ]))
       ], cpNormal, False, nil, 1)
     ),
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -6555,7 +6539,7 @@ begin
         ]))
       ], cpNormal, False, nil, 1)
     ),
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -6596,7 +6580,7 @@ begin
         ]))
       ], cpNormal, False, nil, 1)
     ),
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -6637,7 +6621,7 @@ begin
         ]))
       ], cpNormal, False, nil, 1)
     ),
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -6679,7 +6663,7 @@ begin
         ]))
       ], cpNormal, False, nil, 1)
     ),
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -6721,7 +6705,7 @@ begin
         ]))
       ], cpNormal, False, nil, 1)
     ),
-    wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
@@ -7687,7 +7671,7 @@ begin
       'Scar',
       'Eyebrows'
     ])),
-    wbRArray('Extra Parts',
+    wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
     wbRStructs('Parts', 'Part', [
@@ -8406,7 +8390,8 @@ begin
     ], cpNormal, True{, nil, 4}),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
 
-    wbRArray('Perk Entries', wbRStruct('Perk Entry', [
+//    wbRArray('Perk Entries', wbRStruct('Perk Entry', [
+    wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
@@ -8456,7 +8441,7 @@ begin
         wbInteger(EPFT, 'Type', itU8, wbEnum([
           {0} 'None',
           {1} 'Float',
-          {2} 'Float,Float',
+          {2} 'Float/AV,Float',
           {3} 'LVLI',
           {4} 'SPEL,lstring,flags',
           {5} 'SPEL',
@@ -8498,7 +8483,7 @@ begin
         ], cpNormal, False{, wbEPFDDontShow})
       ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
-    ], []))
+    ], [])
   ]);
 
   wbRecord(BPTD, 'Body Part Data', [
@@ -8562,7 +8547,7 @@ begin
       ], cpNormal, True),
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal)
     ], [], cpNormal, True)
   ]);
 
@@ -8591,9 +8576,11 @@ begin
     wbDESCReq,
     wbString(ANAM, 'Abbreviation'),
     wbUnknown(CNAM),
-    wbStruct(AVSK, '', [
-      wbFloat('XP Mult'),
-      wbUnknown
+    wbStruct(AVSK, 'Skill', [
+      wbFloat('Skill Use Mult'),
+      wbFloat('Skill Offset Mult'),
+      wbFloat('Skill Improve Mult'),
+      wbFloat('Skill Improve Offset')
     ]),
     wbRArray('Perk Tree',
       wbRStruct('Node', [
@@ -8603,8 +8590,8 @@ begin
         wbInteger(YNAM, 'Perk-Grid Y', itU32),
         wbFloat(HNAM, 'Horizontal Position'),
         wbFloat(VNAM, 'Vertical Position'),
-        wbFormIDCk(SNAM, 'Skill', [AVIF, NULL]),
-        wbRArray('Connections', wbInteger(CNAM, 'Line', itU32)),
+        wbFormIDCk(SNAM, 'Associated Skill', [AVIF, NULL]),
+        wbRArray('Connections', wbInteger(CNAM, 'Line to Index', itU32)),
         wbInteger(INAM, 'Index', itU32)
       ], [])
     )
@@ -8983,7 +8970,7 @@ begin
     wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(MNAM, 'Num quests to run', itU32),
     wbInteger(QNAM, 'Quest Count', itU32),
-    wbRArray('Quests', wbRStruct('Quest', [
+    wbRArrayS('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
       wbUnknown(FNAM),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
@@ -9042,7 +9029,7 @@ begin
     wbEDIDReq,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Array TNAM', wbRStruct('Unknown', [
+    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
       wbUnknown(TNAM)
     ], [])),
     wbUnknown(ENAM),
@@ -9312,9 +9299,9 @@ begin
       wbFloat('Rotate while Moving Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
     ], cpNormal, True, nil, 10),
     wbStruct(INAM, 'Anim Change Thresholds', [
-      wbFloat('Directional', cpNormal, True, 57.296),
+      wbFloat('Directional', cpNormal, True, 180/Pi),
       wbFloat('Movement Speed'),
-      wbFloat('Rotation Speed', cpNormal, True, 57.296)
+      wbFloat('Rotation Speed', cpNormal, True, 180/Pi)
     ])
   ]);
 
@@ -10210,7 +10197,7 @@ begin
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
-    wbRArray('Attacks', wbAttackData),
+    wbRArrayS('Attacks', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbInteger(PRKZ, 'Perk Count', itU32),
@@ -11126,7 +11113,7 @@ begin
     ])
   ], []);
 
-  wbHeadPart := wbRStruct('Head Part', [
+  wbHeadPart := wbRStructSK([0],'Head Part', [
     wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
     wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
   ], []);
@@ -11201,7 +11188,7 @@ begin
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
-    wbRArray('Attacks', wbAttackData),
+    wbRArrayS('Attacks', wbAttackData),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
       wbRStruct('Male Body Data', [
@@ -11239,7 +11226,7 @@ begin
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
     wbRArrayS('Biped Object Names', wbString(NAME, 'Name')),
-    wbRArray('Movement Types', wbRStruct('Movement Types', [
+    wbRArrayS('Movement Types', wbRStructSK([0], 'Movement Types', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
       wbStruct(SPED, 'Override Values', [
         wbFloat('Left - Walk'),

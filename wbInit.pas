@@ -34,7 +34,49 @@ uses
   wbDefinitionsTES5;
   //nxExeConst;
 
+function wbFindCmdLineParam(const aSwitch     : string;
+                            const aChars      : TSysCharSet;
+                                  aIgnoreCase : Boolean;
+                              out aValue      : string)
+                                              : Boolean; overload;
+var
+  i : Integer;
+  s : string;
+begin
+  Result := False;
+  aValue := '';
+  for i := 1 to ParamCount do begin
+    s := ParamStr(i);
+    if (aChars = []) or (s[1] in aChars) then
+      if aIgnoreCase then begin
+        if AnsiCompareText(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
+          if (length(s)>(length(aSwitch)+2)) and (s[Length(aSwitch) + 2] = ':') then begin
+            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
+            Result := True;
+          end;
+          Exit;
+        end;
+      end else
+        if AnsiCompareStr(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
+          if s[Length(aSwitch) + 2] = ':' then begin
+            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
+            Result := True;
+          end;
+          Exit;
+        end;
+  end;
+end;
+
+function wbFindCmdLineParam(const aSwitch : string;
+                              out aValue  : string)
+                                          : Boolean; overload;
+begin
+  Result := wbFindCmdLineParam(aSwitch, ['-', '/'], True, aValue);
+end;
+
 procedure wbDoInit;
+var
+  s: string;
 begin
   wbReportMode := False;
 
@@ -64,8 +106,10 @@ begin
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
     wbLanguage := 'English';
+    if wbFindCmdLineParam('l', s) then
+      wbLanguage := s;
     wbVWDInTemporary := True;
-    wbLoadBSAs := True;
+    wbLoadBSAs := True; // localization won't work otherwise
     DefineTES5;
   end else begin
     ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
