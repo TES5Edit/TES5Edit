@@ -52,6 +52,7 @@ type
     constructor Create(const aFileName: string; aData: TBytes); overload;
     destructor Destroy; override;
     function ResolveString(ID: Cardinal): string;
+    procedure ExportToFile(const aFileName: string);
   end;
 
 function GetLocalizedValue(ID: Cardinal; aElement: IwbElement): string;
@@ -67,6 +68,7 @@ var
   fs: TFileStream;
   Buffer: PByte;
 begin
+  fFileName := aFileName;
   ext := LowerCase(ExtractFileExt(aFileName));
   if ext = '.dlstrings' then fFileType := lsDLString else
   if ext = '.ilstrings' then fFileType := lsILString else
@@ -91,6 +93,7 @@ constructor TwbLocalizationFile.Create(const aFileName: string; aData: TBytes);
 var
   ext: string;
 begin
+  fFileName := aFileName;
   ext := LowerCase(ExtractFileExt(aFileName));
   if ext = '.dlstrings' then fFileType := lsDLString else
   if ext = '.ilstrings' then fFileType := lsILString else
@@ -175,6 +178,23 @@ begin
     Result := '<Error: Unknown lstring ID ' + IntToHex(ID, 8) + '>';
 end;
 
+procedure TwbLocalizationFile.ExportToFile(const aFileName: string);
+var
+  i: integer;
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    for i := 0 to fStrings.Count - 1 do begin
+      sl.Add(IntToHex(Integer(fStrings.Objects[i]), 8));
+      sl.Add(fStrings[i]);
+    end;
+    sl.SaveToFile(aFileName);
+  finally
+    FreeAndNil(sl);
+  end;
+end;
+
 function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
 var
   sigElem, sigRec: TwbSignature;
@@ -188,6 +208,7 @@ begin
 
   if (sigElem = 'DESC') and (sigRec <> 'LSCR') then Result := lsDLString else // DESC always from dlstrings except LSCR
   if (sigRec = 'QUST') and (sigElem = 'CNAM') then Result := lsDLString else // quest log entry
+  if sigElem = 'EPFD' then Result := lsString else // PERK data lstring
   if (sigRec = 'INFO') and (sigElem <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
     Result := lsString; // others
 end;
@@ -241,6 +262,10 @@ begin
     wblf := TwbLocalizationFile(lFiles.Objects[idx]);
 
   Result := wblf.ResolveString(ID);
+//  if Pos('Error', Result) > 0 then begin
+//    wblf.ExportToFile('e:\1.txt');
+//    Result := '';
+//  end;
 end;
 
 end.
