@@ -5117,8 +5117,7 @@ non-indent is being worked on
 				<Element name="WRLD FormID" type="formid" reftype="WRLD"/>
 			</Subrecord>
 			<Subrecord name="PNAM" desc="Sharable Data Check-boxes">
-				<Element name="Check-boxes" type="byte" hexview="1" flags="UseLandData;UseLODData;UseMapData;UseWaterData;UseClimateData;unknown;UseSkyCell"/>
-				<Element name="(always 0)" type="byte"/>
+				<Element name="Check-boxes" type="ushort" hexview="1" flags="Use Land Data;Use LOD Data;Don''t Use Map Data;Use Water Data;Use Climate Data;Unknown 6;Use Sky Cell;Unknown 8;Unknown 9;Unknown 10;Unknown 11;Unknown 12;Unknown 13;Unknown 14;Unknown 15;Unknown 16"/>
 			</Subrecord>
 		</Group>
 		<Subrecord name="CNAM" desc="Climate Data (CLMT)" optional="1">
@@ -6080,8 +6079,9 @@ non-indent is being worked on
 		<Subrecord name="XRGD" desc="Ragdoll Data" optional="1" >
 			<Element name="Unknown" type="blob" />
 		</Subrecord>
+		<Group id="XAPD" optional="1"/>
+		<Group id="XAPR" optional="1"/>
 		<Group id="XLKR" optional="1"/>
-		<Group id="XSCL" optional="1"/>
    	<Group id="LevelModifier" optional="1"/>
 		<Subrecord name="XTEL" desc="Door Teleport" optional="1">
 			<Element name="Door REFR FormID" type="formid" reftype="REFR"/>
@@ -6098,11 +6098,11 @@ non-indent is being worked on
 			<Element name="Unknown" type="ushort"/>
 			<Element name="Unknown" type="ushort"/>
 		</Subrecord>
-			<Subrecord name="XMBO" desc="Object Bounds" optional="1">
-				<Element name="x1" type="float" />
-				<Element name="y1" type="float" />
-				<Element name="z1" type="float" />
-			</Subrecord>
+		<Subrecord name="XMBO" desc="Object Bounds" optional="1">
+			<Element name="x1" type="float" />
+			<Element name="y1" type="float" />
+			<Element name="z1" type="float" />
+		</Subrecord>
 		<Group id="XPRM" optional="1"/>
 		<Subrecord name="XPRD" desc="XPRD" optional="1">
 			<Element name="Unknown float" type="float" />
@@ -6129,19 +6129,28 @@ non-indent is being worked on
 			<Element name="Unknown 5" type="uint" />
 			<Element name="Unknown 6" type="uint" />
 		</Subrecord>
+		<Group id="XLRL" optional="1"/>
+		<Group id="XSCL" optional="1"/>
+		<Subrecord name="XMRK" desc="Map Data Marker" optional="1"/>
+		<Subrecord name="FNAM" desc="FNAM" optional="1">
+			<Element name="Flags" type="byte" flags="Visible;Can Travel To;Unknown 3"/>
+		</Subrecord>
+		<Group id="FULL" optional="1"/>
+    <!-- Map Data -->
+		<Subrecord name="TNAM" desc="TNAM" optional="1">
+			<Element name="Unknown short" type="short"/>
+		</Subrecord>
+		<Group id="XLKR" optional="1"/>
+
 
     <!-- Verified to here  -->
 		<Group optional="1" repeat="1">
 			<!-- localized; these change position depending when created -->
 			<Group id="FACTOWN" optional="1"/>
-			<Group id="FULL" optional="1"/>
 			<!-- localized -->
-			<Group id="XAPD" optional="1"/>
-			<Group id="XAPR" optional="1"/>
 			<Group id="XEMI" optional="1"/>
 			<Group id="XESP" optional="1"/>
 			<Group id="XLCN" optional="1"/>
-			<Group id="XLRL" optional="1"/>
 			<Group id="XTRI" optional="1"/>
 			<Subrecord name="XATR" desc="Attached to Ref" optional="1">
 				<Element name="FormID" type="formid"/>
@@ -6194,14 +6203,6 @@ non-indent is being worked on
 			</Subrecord>
 			<Subrecord name="XRDS" desc="Light Related" optional="1">
 				<Element name="Unknown float" type="float"/>
-			</Subrecord>
-      <!-- Map Data -->
-			<Subrecord name="XMRK" desc="Map Data Marker" optional="1"/>
-			<Subrecord name="FNAM" desc="FNAM" optional="1">
-				<Element name="Flags" type="byte" flags="Visible;Can Travel To;Unknown 3"/>
-			</Subrecord>
-			<Subrecord name="TNAM" desc="TNAM" optional="1">
-				<Element name="Unknown short" type="short"/>
 			</Subrecord>
       <!--            -->
 			<Subrecord name="XWCN" desc="XWCN" optional="1">
@@ -6280,13 +6281,6 @@ non-indent is being worked on
 				<Element name="Unknown 7" type="float" />
 				<Element name="Unknown 8" type="float" />
 			</Subrecord>
-			<Subrecord name="XLOC" desc="Lock Information" optional="1">
-				<Element name="Unknown Flags" type="uint" />
-				<Element name="KEYM FormID" type="formid" reftype="KEYM"/>
-				<Element name="Unknown 2" type="int" />
-				<Element name="Unknown 3" type="int" />
-				<Element name="Unknown 4" type="int" />
-			</Subrecord>
 			<Subrecord name="XCZC" desc="? (CELL)" optional="1">
 				<Element name="FormID" type="formid" reftype="CELL" />
 			</Subrecord>
@@ -6317,7 +6311,6 @@ non-indent is being worked on
 			<Group id="XESP" optional="1"/>
 			<Group id="XLCM" optional="1"/>
 			<Group id="XLCN" optional="1"/>
-			<Group id="XLKR" optional="1"/>
 			<Group id="XLRL" optional="1"/>
 			<Group id="XLRT" optional="1"/>
 			<Subrecord name="XFVC" desc="Favor Cost" optional="1">
