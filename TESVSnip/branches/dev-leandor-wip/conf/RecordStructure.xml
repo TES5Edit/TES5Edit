@@ -6141,7 +6141,17 @@ non-indent is being worked on
 			<Element name="Unknown short" type="short"/>
 		</Subrecord>
 		<Group id="XLKR" optional="1"/>
-
+    <!--            -->
+		<Subrecord name="XRDS" desc="Light Related?" optional="1">
+			<Element name="Radius" type="float"/>
+		</Subrecord>
+		<Subrecord name="XLIG" desc="Light Data" optional="1">
+			<Element name="FOV 90+/-" type="float"/>
+			<Element name="Fade 1.35+/-" type="float"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Shadow Depth Bias" type="float"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+		</Subrecord>
 
     <!-- Verified to here  -->
 		<Group optional="1" repeat="1">
@@ -6186,13 +6196,6 @@ non-indent is being worked on
 			<Subrecord name="XLRM" desc="Location Room Marker (REFR)" optional="1" repeat="1">
 				<Element name="REFR FormID" type="formid" reftype="REFR"/>
 			</Subrecord>
-			<Subrecord name="XLIG" desc="Light Data" optional="1">
-				<!-- unfinished -->
-				<Element name="Unknown float 1" type="float"/>
-				<Element name="Unknown float 2" type="float"/>
-				<Element name="Unknown float 3" type="float"/>
-				<Element name="Unknown float 4" type="float"/>
-			</Subrecord>
 		</Group>
 		<Group optional="1" repeat="1">
 			<!-- dunno haven't seen yet -->
@@ -6201,10 +6204,6 @@ non-indent is being worked on
 				<Element name="Unknown float" type="float"/>
 				<Element name="Unknown int 2" type="int"/>
 			</Subrecord>
-			<Subrecord name="XRDS" desc="Light Related" optional="1">
-				<Element name="Unknown float" type="float"/>
-			</Subrecord>
-      <!--            -->
 			<Subrecord name="XWCN" desc="XWCN" optional="1">
 				<Element name="Unknown int" type="int"/>
 			</Subrecord>
@@ -9292,614 +9291,614 @@ non-indent is being worked on
 	<Record name="DOBJ" desc="Dynamic Objects">
 		<!-- cannot properly be created or saved by the CK -->
 		<Subrecord name="DNAM" desc="(CK DESTROYS THIS DATA DURING SAVE)" optional="1">
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
-			<Element name="(4 letter name of object)" type="lstring"/>
+			<Element name="(4 letter name of object)" type="str4"/>
 			<Element name="FormID" type="formid"/>
 			<Group optional="1" repeat="1">
-				<Element name="(4 letter name of object)" type="lstring"/>
+				<Element name="(4 letter name of object)" type="str4"/>
 				<Element name="FormID" type="formid"/>
 			</Group>
 		</Subrecord>
