@@ -11,7 +11,6 @@
      under the License.
 
 *******************************************************************************}
-
 unit wbInterface;
 
 interface
@@ -23,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.1.636 (2012-08-22) EXPERIMENTAL';
+  VersionString               = '3.0.22a EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -2983,6 +2982,12 @@ type
     NotFoundString         : Integer;
     Strings                : TStringList;
 
+//------------------------------------------------------------------------------
+// Added LString Routine
+//------------------------------------------------------------------------------
+    FoundLString            : Integer;
+    NotFoundLString         : Integer;
+
     IsEmpty                : Integer;
     IsNotEmpty             : Integer;
   protected
@@ -4272,7 +4277,15 @@ function wbFormID(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormID, aPriority, aRequired, False, aDontShow);
+  Result := wbInteger(
+              aSignature,
+              aName,
+              itU32,
+              wbFormID,
+              aPriority,
+              aRequired,
+              False,
+              aDontShow);
 end;
 
 function wbFormID(const aName     : string;
@@ -4808,7 +4821,13 @@ begin
              (aSignature = 'ACHR') or
              (aSignature = 'ACRE') or
              (aSignature = 'PGRE') or
-             (aSignature = 'PMIS')
+             (aSignature = 'PMIS') or
+             (aSignature = 'PARW') or {>>> Skyrim <<<}
+             (aSignature = 'PBEA') or {>>> Skyrim <<<}
+             (aSignature = 'PFLA') or {>>> Skyrim <<<}
+             (aSignature = 'PCON') or {>>> Skyrim <<<}
+             (aSignature = 'PBAR') or {>>> Skyrim <<<}
+             (aSignature = 'PHZD')    {>>> Skyrim <<<}
            )
          ) then begin
 
@@ -7872,6 +7891,12 @@ begin
           IsValid('ACRE') or
           IsValid('PGRE') or
           IsValid('PGRD') or
+          IsValid('PARW') or {>>> Skyrim <<<}
+          IsValid('PBAR') or {>>> Skyrim <<<}
+          IsValid('PBEA') or {>>> Skyrim <<<}
+          IsValid('PFLA') or {>>> Skyrim <<<}
+          IsValid('PCON') or {>>> Skyrim <<<}
+          IsValid('PHZD') or {>>> Skyrim <<<}
           IsValid('NAVM') or
           IsValid('INFO');
 

@@ -52,6 +52,7 @@ type
     constructor Create(const aFileName: string; aData: TBytes); overload;
     destructor Destroy; override;
     function ResolveString(ID: Cardinal): string;
+    procedure ExportToFile(const aFileName: string);
   end;
 
 function GetLocalizedValue(ID: Cardinal; aElement: IwbElement): string;
@@ -60,7 +61,6 @@ implementation
 
 var
   lFiles: TStringList;
-  ContainerHandler: IwbContainerHandler;
 
 constructor TwbLocalizationFile.Create(const aFileName: string);
 var
@@ -68,6 +68,7 @@ var
   fs: TFileStream;
   Buffer: PByte;
 begin
+  fFileName := aFileName;
   ext := LowerCase(ExtractFileExt(aFileName));
   if ext = '.dlstrings' then fFileType := lsDLString else
   if ext = '.ilstrings' then fFileType := lsILString else
@@ -92,6 +93,7 @@ constructor TwbLocalizationFile.Create(const aFileName: string; aData: TBytes);
 var
   ext: string;
 begin
+  fFileName := aFileName;
   ext := LowerCase(ExtractFileExt(aFileName));
   if ext = '.dlstrings' then fFileType := lsDLString else
   if ext = '.ilstrings' then fFileType := lsILString else
@@ -176,6 +178,23 @@ begin
     Result := '<Error: Unknown lstring ID ' + IntToHex(ID, 8) + '>';
 end;
 
+procedure TwbLocalizationFile.ExportToFile(const aFileName: string);
+var
+  i: integer;
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    for i := 0 to fStrings.Count - 1 do begin
+      sl.Add(IntToHex(Integer(fStrings.Objects[i]), 8));
+      sl.Add(fStrings[i]);
+    end;
+    sl.SaveToFile(aFileName);
+  finally
+    FreeAndNil(sl);
+  end;
+end;
+
 function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
 var
   sigElem, sigRec: TwbSignature;
@@ -187,8 +206,9 @@ begin
     sigElem := '';
   sigRec := aElement.ContainingMainRecord.Signature;
 
-  if sigElem = 'DESC' then Result := lsDLString else // DESC always from dlstrings
+  if (sigElem = 'DESC') and (sigRec <> 'LSCR') then Result := lsDLString else // DESC always from dlstrings except LSCR
   if (sigRec = 'QUST') and (sigElem = 'CNAM') then Result := lsDLString else // quest log entry
+  if sigElem = 'EPFD' then Result := lsString else // PERK data lstring
   if (sigRec = 'INFO') and (sigElem <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
     Result := lsString; // others
 end;
@@ -225,36 +245,14 @@ begin
 
   idx := lFiles.IndexOf(lFileName);
   if idx = -1 then begin
-    bFailed := false;
-    // checking for file on disk
-    {>>>
-      better to use ContainerHandler for this, but...
-      it'll require to add TwbFolder for 'Strings\'
-      and there is no way to check if it is already been added without
-      modifications to wbBSA and wbInterface, which I tried to avoid
-    <<<}
-    if FileExists(lFullName) then begin
-      wblf := TwbLocalizationFile.Create(lFullName);
-      lFiles.AddObject(lFileName, wblf);
-    end else
-    // checking for file in bsa
-    begin
-      {>>>
-        ok this will load only 1 bsa file, hack is a hack
-        real TES5Edit probably has its own ContainerHandler with added bsas
-      <<<}
-      if not Assigned(ContainerHandler) then begin
-        ContainerHandler := wbCreateContainerHandler;
-        BSAName := ChangeFileExt(aElement._File.GetFullFileName, '.bsa');
-        if FileExists(BSAName) then
-          ContainerHandler.AddBSA(BSAName);
-      end;
-      res := ContainerHandler.OpenResource('Strings\' +  lFileName);
+    bFailed := true;
+    if Assigned(wbContainerHandler) then begin
+      res := wbContainerHandler.OpenResource('Strings\' +  lFileName);
       if length(res) > 0 then begin
         wblf := TwbLocalizationFile.Create(lFullName, res[low(res)].GetData);
         lFiles.AddObject(lFileName, wblf);
-      end else
-        bFailed := true;
+        bFailed := false;
+      end;
     end;
     if bFailed then begin
       Result := '<Error: No localization for lstring ID ' + IntToHex(ID, 8) +'>';
@@ -264,6 +262,10 @@ begin
     wblf := TwbLocalizationFile(lFiles.Objects[idx]);
 
   Result := wblf.ResolveString(ID);
+//  if Pos('Error', Result) > 0 then begin
+//    wblf.ExportToFile('e:\1.txt');
+//    Result := '';
+//  end;
 end;
 
 end.

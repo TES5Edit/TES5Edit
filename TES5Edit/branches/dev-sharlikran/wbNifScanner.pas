@@ -19,7 +19,6 @@ interface
 uses
   Windows,
   SysUtils,
-  DXTypes,
   Direct3D9;
 
 type

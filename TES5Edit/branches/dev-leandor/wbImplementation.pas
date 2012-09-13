@@ -11,7 +11,6 @@
      under the License.
 
 *******************************************************************************}
-
 unit wbImplementation;
 
 {$DEFINE DBGSUBREC}
@@ -2702,7 +2701,14 @@ begin
                  (Signature = 'PGRE') or
                  (Signature = 'PMIS') or
                  (Signature = 'ACHR') or
-                 (Signature = 'ACRE') then begin
+                 (Signature = 'ACRE') or
+                 (Signature = 'PARW') or {>>> Skyrim <<<}
+                 (Signature = 'PBEA') or {>>> Skyrim <<<}
+                 (Signature = 'PFLA') or {>>> Skyrim <<<}
+                 (Signature = 'PCON') or {>>> Skyrim <<<}
+                 (Signature = 'PBAR') or {>>> Skyrim <<<}
+                 (Signature = 'PHZD')    {>>> Skyrim <<<}
+              then begin
 
                 if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
                   if not Assigned(ONAMs) then begin
@@ -4267,7 +4273,9 @@ begin
 end;
 {$D+}
 
-{ TwbRecord }
+//------------------------------------------------------------------------------
+// TwbRecord
+//------------------------------------------------------------------------------
 
 constructor TwbRecord.Create(const aContainer      : IwbContainer;
                                var aBasePtr        : Pointer;
@@ -4294,7 +4302,7 @@ begin
     if PwbSignature(aPtr)^ = 'GRUP' then
       Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
     else
-      Result := TwbMainRecord.Create(aContainer,aPtr, aEndPtr, aPrevMainRecord);
+      Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
 end;
 
 function TwbRecord.GetName: string;
@@ -4357,7 +4365,13 @@ begin
         SameText(s, 'PGRE') or
         SameText(s, 'PMIS') or
         SameText(s, 'ACRE') or
-        SameText(s, 'ACHR')
+        SameText(s, 'ACHR') or
+        SameText(s, 'PARW') or {>>> Skyrim <<<}
+        SameText(s, 'PBEA') or {>>> Skyrim <<<}
+        SameText(s, 'PFLA') or {>>> Skyrim <<<}
+        SameText(s, 'PCON') or {>>> Skyrim <<<}
+        SameText(s, 'PBAR') or {>>> Skyrim <<<}
+        SameText(s, 'PHZD')    {>>> Skyrim <<<}
      ) then begin
 
     Group := GetChildGroup;
@@ -4771,7 +4785,7 @@ begin
     else if SubRecord.Signature = 'FULL' then
       mrFullName := SubRecord.Value
     else if SubRecord.Signature = 'NAME' then
-      Exclude(mrStates, mrsBaseRecordChecked);     
+      Exclude(mrStates, mrsBaseRecordChecked);
   end;
   inherited;
   UpdateRefs;
@@ -4865,8 +4879,14 @@ begin
     (Sig = 'PMIS') or
     (Sig = 'PGRE') or
     (Sig = 'ACRE') or
-    (Sig = 'ACHR');
-  if not Result then 
+    (Sig = 'ACHR') or
+    (Sig = 'PARW') or {>>> Skyrim <<<}
+    (Sig = 'PBEA') or {>>> Skyrim <<<}
+    (Sig = 'PFLA') or {>>> Skyrim <<<}
+    (Sig = 'PCON') or {>>> Skyrim <<<}
+    (Sig = 'PBAR') or {>>> Skyrim <<<}
+    (Sig = 'PHZD');   {>>> Skyrim <<<}
+  if not Result then
     Exit;
   if not Supports(GetContainer, IwbGroupRecord, Group1) then
     raise Exception.Create(GetName + ' is not contained in a group.');
@@ -5213,7 +5233,13 @@ begin
                   (mrDef.DefaultSignature = 'PGRE') or
                   (mrDef.DefaultSignature = 'PMIS') or
                   (mrDef.DefaultSignature = 'ACHR') or
-                  (mrDef.DefaultSignature = 'ACRE')
+                  (mrDef.DefaultSignature = 'ACRE') or
+                  (mrDef.DefaultSignature = 'PARW') or {>>> Skyrim <<<}
+                  (mrDef.DefaultSignature = 'PBEA') or {>>> Skyrim <<<}
+                  (mrDef.DefaultSignature = 'PFLA') or {>>> Skyrim <<<}
+                  (mrDef.DefaultSignature = 'PCON') or {>>> Skyrim <<<}
+                  (mrDef.DefaultSignature = 'PBAR') or {>>> Skyrim <<<}
+                  (mrDef.DefaultSignature = 'PHZD')    {>>> Skyrim <<<}
                 ) then begin
 
           mrBaseRecordID := CurrentRec.NativeValue;
@@ -5292,7 +5318,7 @@ begin
     end;
   end;
 
-  if wbReportMode and mrDef.AllowUnordered then begin
+  if wbReportMode {and mrDef.AllowUnordered} then begin
     s := GetSignature + ' -> ' + s;
     CurrentRecPos := SubRecordOrderList.Add(s);
     SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
@@ -5390,12 +5416,18 @@ begin
     SetLength(Result, 1);
     Result[0] := 'INFO';
   end else if GetSignature = 'CELL' then begin
-    SetLength(Result, 5);
+    SetLength(Result, 11);
     Result[0] := 'ACHR';
     Result[1] := 'ACRE';
     Result[2] := 'REFR';
     Result[3] := 'PGRE';
     Result[4] := 'PMIS';
+    Result[5] := 'PARW'; {>>> Skyrim <<<}
+    Result[6] := 'PBEA'; {>>> Skyrim <<<}
+    Result[7] := 'PFLA'; {>>> Skyrim <<<}
+    Result[8] := 'PCON'; {>>> Skyrim <<<}
+    Result[9] := 'PBAR'; {>>> Skyrim <<<}
+    Result[10] := 'PHZD'; {>>> Skyrim <<<}
   end else if GetSignature = 'WRLD' then begin
   end;
 
@@ -5591,7 +5623,14 @@ begin
       (GetSignature = 'PGRE') or
       (GetSignature = 'PMIS') or
       (GetSignature = 'ACHR') or
-      (GetSignature = 'ACRE') then begin
+      (GetSignature = 'ACRE') or
+      (GetSignature = 'PARW') or {>>> Skyrim <<<}
+      (GetSignature = 'PBEA') or {>>> Skyrim <<<}
+      (GetSignature = 'PFLA') or {>>> Skyrim <<<}
+      (GetSignature = 'PCON') or {>>> Skyrim <<<}
+      (GetSignature = 'PBAR') or {>>> Skyrim <<<}
+      (GetSignature = 'PHZD')    {>>> Skyrim <<<}
+    then begin
         if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
           Rec := MapMarker.RecordBySignature['FULL']
         else
@@ -5624,7 +5663,14 @@ begin
       (GetSignature = 'PGRE') or
       (GetSignature = 'PMIS') or
       (GetSignature = 'ACHR') or
-      (GetSignature = 'ACRE') then begin
+      (GetSignature = 'ACRE') or
+      (GetSignature = 'PARW') or {>>> Skyrim <<<}
+      (GetSignature = 'PBEA') or {>>> Skyrim <<<}
+      (GetSignature = 'PFLA') or {>>> Skyrim <<<}
+      (GetSignature = 'PCON') or {>>> Skyrim <<<}
+      (GetSignature = 'PBAR') or {>>> Skyrim <<<}
+      (GetSignature = 'PHZD')    {>>> Skyrim <<<}
+      then begin
         if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
           Rec := MapMarker.RecordBySignature['FULL']
         else
@@ -6138,7 +6184,18 @@ begin
   Result := False;
   try
     Signature := GetSignature;
-    if (Signature <> 'REFR') and (Signature <> 'ACRE') and (Signature <> 'ACHR') and (Signature <> 'PGRE') and (Signature <> 'PMIS') then
+    if (Signature <> 'REFR') and
+       (Signature <> 'ACRE') and
+       (Signature <> 'ACHR') and
+       (Signature <> 'PGRE') and
+       (Signature <> 'PMIS') and
+       (Signature <> 'PARW') and {>>> Skyrim <<<}
+       (Signature <> 'PBEA') and {>>> Skyrim <<<}
+       (Signature <> 'PFLA') and {>>> Skyrim <<<}
+       (Signature <> 'PCON') and {>>> Skyrim <<<}
+       (Signature <> 'PBAR') and {>>> Skyrim <<<}
+       (Signature <> 'PHZD')     {>>> Skyrim <<<}
+    then
       Exit;
 
     SelfRef := Self;
@@ -6263,7 +6320,18 @@ begin
   Result := False;
 
   Signature := GetSignature;
-  if (Signature <> 'REFR') and (Signature <> 'ACRE') and (Signature <> 'ACHR') and (Signature <> 'PGRE') and (Signature <> 'PMIS') then
+  if (Signature <> 'REFR') and
+     (Signature <> 'ACRE') and
+     (Signature <> 'ACHR') and
+     (Signature <> 'PGRE') and
+     (Signature <> 'PMIS') and
+     (Signature <> 'PARW') and {>>> Skyrim <<<}
+     (Signature <> 'PBEA') and {>>> Skyrim <<<}
+     (Signature <> 'PFLA') and {>>> Skyrim <<<}
+     (Signature <> 'PCON') and {>>> Skyrim <<<}
+     (Signature <> 'PBAR') and {>>> Skyrim <<<}
+     (Signature <> 'PHZD')     {>>> Skyrim <<<}
+  then
     Exit;
 
   SelfRef := Self;
@@ -6296,7 +6364,18 @@ begin
   aScale := 1;
 
   Signature := GetSignature;
-  if (Signature <> 'REFR') and (Signature <> 'ACRE') and (Signature <> 'ACHR') and (Signature <> 'PGRE') and (Signature <> 'PMIS') then
+  if (Signature <> 'REFR') and
+     (Signature <> 'ACRE') and
+     (Signature <> 'ACHR') and
+     (Signature <> 'PGRE') and
+     (Signature <> 'PMIS') and
+     (Signature <> 'PARW') and {>>> Skyrim <<<}
+     (Signature <> 'PBEA') and {>>> Skyrim <<<}
+     (Signature <> 'PFLA') and {>>> Skyrim <<<}
+     (Signature <> 'PCON') and {>>> Skyrim <<<}
+     (Signature <> 'PBAR') and {>>> Skyrim <<<}
+     (Signature <> 'PHZD')     {>>> Skyrim <<<}
+  then
     Exit;
 
   SelfRef := Self;
@@ -6328,7 +6407,7 @@ function TwbMainRecord.GetValue: string;
 var
   Def: IwbDef;
 begin
-  if wbReportMode then begin 
+  if wbReportMode then begin
     Def := GetValueDef;
     if Assigned(Def) then
       Def.Used;
@@ -6480,6 +6559,12 @@ begin
       (Signature = 'ACHR') or
       (Signature = 'ACRE') or
       (Signature = 'PGRD') or
+      (Signature = 'PARW') or {>>> Skyrim <<<}
+      (Signature = 'PBEA') or {>>> Skyrim <<<}
+      (Signature = 'PFLA') or {>>> Skyrim <<<}
+      (Signature = 'PCON') or {>>> Skyrim <<<}
+      (Signature = 'PBAR') or {>>> Skyrim <<<}
+      (Signature = 'PHZD') or {>>> Skyrim <<<}
       (Signature = 'NAVM') or
       (Signature = 'ROAD') or
       (Signature = 'LAND');
@@ -6735,7 +6820,18 @@ begin
           raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
       end;
       8, 10: begin {Persistent and Visible when Distant}
-        if (GetSignature <> 'REFR') and (GetSignature <> 'ACHR') and (GetSignature <> 'ACRE') and (GetSignature <> 'PGRE') and (GetSignature <> 'PMIS') then
+        if (GetSignature <> 'REFR') and
+           (GetSignature <> 'ACHR') and
+           (GetSignature <> 'ACRE') and
+           (GetSignature <> 'PGRE') and
+           (GetSignature <> 'PMIS') and
+           (GetSignature <> 'PARW') and {>>> Skyrim <<<}
+           (GetSignature <> 'PBEA') and {>>> Skyrim <<<}
+           (GetSignature <> 'PFLA') and {>>> Skyrim <<<}
+           (GetSignature <> 'PCON') and {>>> Skyrim <<<}
+           (GetSignature <> 'PBAR') and {>>> Skyrim <<<}
+           (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
+        then
           raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
 
         case GroupRecord.GroupType of
@@ -6752,7 +6848,21 @@ begin
         end;
       end;
       9: begin {Temporary}
-        if (GetSignature <> 'REFR') and (GetSignature <> 'ACHR') and (GetSignature <> 'ACRE') and (GetSignature <> 'LAND') and (GetSignature <> 'PGRD') and (GetSignature <> 'NAVM') and (GetSignature <> 'PGRE') and (GetSignature <> 'PMIS') then
+        if (GetSignature <> 'REFR') and
+           (GetSignature <> 'ACHR') and
+           (GetSignature <> 'ACRE') and
+           (GetSignature <> 'LAND') and
+           (GetSignature <> 'PGRD') and
+           (GetSignature <> 'NAVM') and
+           (GetSignature <> 'PGRE') and
+           (GetSignature <> 'PMIS') and
+           (GetSignature <> 'PARW') and {>>> Skyrim <<<}
+           (GetSignature <> 'PBEA') and {>>> Skyrim <<<}
+           (GetSignature <> 'PFLA') and {>>> Skyrim <<<}
+           (GetSignature <> 'PCON') and {>>> Skyrim <<<}
+           (GetSignature <> 'PBAR') and {>>> Skyrim <<<}
+           (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
+        then
           raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
         if mrStruct.mrsFlags.IsPersistent then
           raise Exception.Create('Record ' + GetName + ' can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
@@ -7405,7 +7515,18 @@ begin
   Result := False;
 
   Signature := GetSignature;
-  if (Signature <> 'REFR') and (Signature <> 'ACRE') and (Signature <> 'ACHR') and (Signature <> 'PGRE') and (Signature <> 'PMIS') then
+  if (Signature <> 'REFR') and
+     (Signature <> 'ACRE') and
+     (Signature <> 'ACHR') and
+     (Signature <> 'PGRE') and
+     (Signature <> 'PMIS') and
+     (Signature <> 'PARW') and {>>> Skyrim <<<}
+     (Signature <> 'PBEA') and {>>> Skyrim <<<}
+     (Signature <> 'PFLA') and {>>> Skyrim <<<}
+     (Signature <> 'PCON') and {>>> Skyrim <<<}
+     (Signature <> 'PBAR') and {>>> Skyrim <<<}
+     (Signature <> 'PHZD')     {>>> Skyrim <<<}
+  then
     Exit;
 
   SelfRef := Self;
@@ -9019,6 +9140,12 @@ begin
           (Signature <> 'ACRE') and
           (Signature <> 'PGRE') and
           (Signature <> 'PMIS') and
+          (Signature <> 'PARW') and {>>> Skyrim <<<}
+          (Signature <> 'PBEA') and {>>> Skyrim <<<}
+          (Signature <> 'PFLA') and {>>> Skyrim <<<}
+          (Signature <> 'PCON') and {>>> Skyrim <<<}
+          (Signature <> 'PBAR') and {>>> Skyrim <<<}
+          (Signature <> 'PHZD') and {>>> Skyrim <<<}
           (Signature <> 'ACHR') then
          Exit;
     9: if (Signature <> 'LAND') and
@@ -9027,6 +9154,12 @@ begin
           (Signature <> 'REFR') and
           (Signature <> 'PGRE') and
           (Signature <> 'PMIS') and
+          (Signature <> 'PARW') and {>>> Skyrim <<<}
+          (Signature <> 'PBEA') and {>>> Skyrim <<<}
+          (Signature <> 'PFLA') and {>>> Skyrim <<<}
+          (Signature <> 'PCON') and {>>> Skyrim <<<}
+          (Signature <> 'PBAR') and {>>> Skyrim <<<}
+          (Signature <> 'PHZD') and {>>> Skyrim <<<}
           (Signature <> 'ACRE') and
           (Signature <> 'ACHR') then
          Exit;
@@ -9400,7 +9533,18 @@ begin
     8, 9, 10: begin
       if not Supports(aElement, IwbMainRecord, MainRecord) then
         raise Exception.Create('Only main records can be added to ' + GetName);
-      if (MainRecord.Signature <> 'REFR') and (MainRecord.Signature <> 'ACHR') and (MainRecord.Signature <> 'ACRE') and (MainRecord.Signature <> 'PGRE') and (MainRecord.Signature <> 'PMIS') then
+      if (MainRecord.Signature <> 'REFR') and
+         (MainRecord.Signature <> 'ACHR') and
+         (MainRecord.Signature <> 'ACRE') and
+         (MainRecord.Signature <> 'PGRE') and
+         (MainRecord.Signature <> 'PMIS') and
+         (MainRecord.Signature <> 'PARW') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PBEA') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PFLA') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PCON') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PBAR') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PHZD')     {>>> Skyrim <<<}
+      then
         if (grStruct.grsGroupType <> 9) or ((MainRecord.Signature <> 'PGRD') and (MainRecord.Signature <> 'LAND') and (MainRecord.Signature <> 'NAVM')) then
           raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
       if aAsNew then
@@ -9581,27 +9725,38 @@ begin
          Result[0] := 'INFO';
        end;
     8: begin
-         SetLength(Result, 5);
+         SetLength(Result, 11);
          Result[0] := 'ACHR';
          Result[1] := 'ACRE';
          Result[2] := 'REFR';
          Result[3] := 'PGRE';
          Result[4] := 'PMIS';
+         Result[5] := 'PARW'; {>>> Skyrim <<<}
+         Result[6] := 'PBEA'; {>>> Skyrim <<<}
+         Result[7] := 'PFLA'; {>>> Skyrim <<<}
+         Result[8] := 'PCON'; {>>> Skyrim <<<}
+         Result[9] := 'PBAR'; {>>> Skyrim <<<}
+         Result[10] := 'PHZD'; {>>> Skyrim <<<}
        end;
     6, 9: begin
-         SetLength(Result, 5);
+         SetLength(Result, 11);
          Result[0] := 'ACHR';
          Result[1] := 'ACRE';
          Result[2] := 'REFR';
          Result[3] := 'PGRE';
          Result[4] := 'PMIS';
+         Result[5] := 'PARW'; {>>> Skyrim <<<}
+         Result[6] := 'PBEA'; {>>> Skyrim <<<}
+         Result[7] := 'PFLA'; {>>> Skyrim <<<}
+         Result[8] := 'PCON'; {>>> Skyrim <<<}
+         Result[9] := 'PBAR'; {>>> Skyrim <<<}
+         Result[10] := 'PHZD'; {>>> Skyrim <<<}
        end;
     10: begin
          SetLength(Result, 1);
          Result[0] := 'REFR';
        end;
   end;
-
   j := 0;
   for i := Low(Result) to High(Result) do
     if wbRecordDefMap.Find(Result[i], k) then begin
@@ -10309,7 +10464,7 @@ begin
   Result := wbIsInternalEdit;
   if Result then
     Exit;
-    
+
   if not wbEditAllowed then
     Exit;
 
@@ -12626,7 +12781,7 @@ begin
   Result := nil;
   if not Assigned(aFormList) or (aFormList.Signature <> 'FLST') then
     Exit;
-  if not Supports(aFormList.ElementByName[{>>>'FormIDs'<<<}'wbFormListToArray FormIDs'], IwbContainerElementRef, Container) then
+  if not Supports(aFormList.ElementByName['wbFormListToArray FormIDs'], IwbContainerElementRef, Container) then
     Exit;
   if Container.ElementCount < 1 then
     Exit;

@@ -19,27 +19,22 @@
 program TES5Dump;
 
 {$I Compilers.inc}
-{$I TES5Edit.inc}
 
 {$APPTYPE CONSOLE}
 
 uses
-	{$IFDEF USENEXUS}
-	nxReplacementMemoryManager,
-  nxExceptionHook,
-	{$ENDIF}
   Classes,
   SysUtils,
   Windows,
-  wbBSA in 'wbBSA.pas',
-  wbLocalization in 'wbLocalization.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
   wbImplementation in 'wbImplementation.pas',
-  wbInterface in 'wbInterface.pas';
+  wbInterface in 'wbInterface.pas',
+  wbLocalization in 'wbLocalization.pas',
+  wbBSA in 'wbBSA.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -186,11 +181,14 @@ end;
 
 var
   NeedsSyntaxInfo : Boolean;
-  s               : string;
+  s, s2           : string;
+  DataPath        : string;
+  i               : integer;
   _File           : IwbFile;
   Masters         : TStringList;
+  F               : TSearchRec;
 begin
-  {$IF CompilerVersion > 23}
+  {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
   {$ELSE}
   SysUtils.DecimalSeparator := '.';
@@ -204,21 +202,25 @@ begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
+      wbLoadBSAs := true;
       DefineTES5;
     end else if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
+      wbLoadBSAs := false;
       DefineFNV;
     end else if wbFindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
+      wbLoadBSAs := false;
       DefineFO3;
     end else if wbFindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
+      wbLoadBSAs := false;
       DefineTES4;
     end else begin
       WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
@@ -331,7 +333,34 @@ begin
       Exit;
     end;
 
+    if not Assigned(wbContainerHandler) then
+      wbContainerHandler := wbCreateContainerHandler;
+
     StartTime := Now;
+
+    if wbLoadBSAs then begin
+      DataPath := ExtractFilePath(s);
+      Masters := TStringList.Create;
+      wbMastersForFile(s, Masters);
+      Masters.Add(ExtractFileName(s));
+
+      for i := 0 to Masters.Count - 1 do begin
+        if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+          s2 := ChangeFileExt(Masters[i], '');
+          if FindFirst(DataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
+            repeat
+              ReportProgress('[' + F.Name + '] Loading Resources.');
+              wbContainerHandler.AddBSA(DataPath + F.Name);
+            until FindNext(F) <> 0;
+          finally
+            SysUtils.FindClose(F);
+          end;
+        end;
+      end;
+      FreeAndNil(Masters);
+      ReportProgress('[' + DataPath + '] Setting Resource Path.');
+      wbContainerHandler.AddFolder(DataPath);
+    end;
 
     _File := wbFile(s);
 

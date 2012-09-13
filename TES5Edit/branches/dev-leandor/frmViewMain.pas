@@ -14,8 +14,6 @@
 
 unit frmViewMain;
 
-{$DEFINE DEVEXFILES}
-
 interface
 
 uses
@@ -30,10 +28,7 @@ uses
 {$IFDEF DX3D}
   RenderUnit, Direct3D9, D3DX9, DXUT,
 {$ENDIF}
-{$IFDEF DEVEXFILES}
-  dxGDIPlusClasses,
-{$ENDIF}
-  AppEvnts, System.Actions;
+  AppEvnts, dxGDIPlusClasses;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -469,7 +464,7 @@ type
     procedure GenerateLOD(const aWorldspace: IwbMainRecord);
     procedure DoGenerateLOD;
 
-    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; const aActions: TDynActions = nil; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
+    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
 
     procedure BuildAllRef;
     procedure ResetAllTags;
@@ -1061,82 +1056,8 @@ begin
 end;
 
 procedure TfrmMain.mniNavApplyScriptIntoClick(Sender: TObject);
-var
-  F          : TSearchRec;
-
-  Script     : IwbScript;
-
-  Elements   : TDynElements;
-  Actions    : TDynActions;
-
-  Scripts    : TStringList;
-  i          : Integer;
-  s          : string;
 begin
-  Scripts := TStringList.Create;
-  try
-    with TfrmFileSelect.Create(Self) do try
-      for i := Low(Files) to High(Files) do begin
-        s := ChangeFileExt(Files[i].FileName, '');
-
-        if FindFirst(DataPath + s + '*.'+LowerCase(wbAppName)+'editscript', faAnyFile, F) = 0 then try
-          repeat
-            Scripts.Add(DataPath + F.Name);
-            CheckListBox1.AddItem('['+IntToHex(Files[i].LoadOrder, 2)+'] ' + ChangeFileExt(F.Name, ''), nil);
-          until FindNext(F) <> 0;
-        finally
-          FindClose(F);
-        end;
-      end;
-
-      if FindFirst(ProgramPath + '*.'+LowerCase(wbAppName)+'editscript', faAnyFile, F) = 0 then try
-        repeat
-          Scripts.Add(ProgramPath + F.Name);
-          CheckListBox1.AddItem('[XX] ' + ChangeFileExt(F.Name, ''), nil);
-        until FindNext(F) <> 0;
-      finally
-        FindClose(F);
-      end;
-
-      if Scripts.Count < 1 then begin
-        ShowMessage('No available scripts where found.');
-        Exit;
-      end;
-
-      Caption := 'Select Scripts...';
-      ShowModal;
-
-      for i := 0 to Pred(Scripts.Count) do
-        if CheckListBox1.Checked[i] then begin
-          if not Assigned(Script) then
-            Script := wbCreateScript(Files);
-          Script.LoadFromFile(Scripts[i]);
-        end;
-
-    finally
-      Free;
-    end;
-  finally
-    Scripts.Free;
-  end;
-
-  if not Assigned(Script) then
-    Exit;
-
-  wbStartTime := Now;
-
-  Enabled := False;
-  try
-    Script.ScanForTargets(Elements, Actions, ScriptScanProgress);
-    wbCurrentAction := '';
-
-    if Length(Elements) > 0 then
-      CopyInto(False, False, False, False, Elements, Actions, nil);
-  finally
-    wbCurrentAction := '';
-    Caption := Application.Title;
-    Enabled := True;
-  end;
+  ShowMessage('Not implemented.');
 end;
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
@@ -1493,7 +1414,7 @@ begin
   end;
 end;
 
-function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; const aActions: TDynActions; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
+function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
   MainRecord                  : IwbMainRecord;
   MainRecord2                 : IwbMainRecord;
@@ -1510,7 +1431,7 @@ var
   LeveledListEntry            : IwbContainerElementRef;
   CopiedElement               : IwbElement;
 begin
-  if Assigned(aAfterCopyCallback) or (Length(aActions)> 0) then begin
+  if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
     Assert(not AsWrapper);
     Assert(not AsSpawnRate);
@@ -1523,9 +1444,6 @@ begin
     Assert(not DeepCopy);
     aAfterCopyCallback := AfterCopyAdjustSpawnRate;
   end;
-
-  if Assigned(aActions) then
-    Assert(Length(aElements) = Length(aActions));
 
   sl := TStringList.Create;
   sl.Sorted := True;
@@ -1671,8 +1589,6 @@ begin
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
                         aAfterCopyCallback(CopiedElement);
-                      if Assigned(aActions) and Assigned(aActions[j]) then
-                        aActions[j].Process(CopiedElement);
                     end;
                     Result[j] := CopiedElement;
                   end;
@@ -1689,8 +1605,6 @@ begin
                 if Assigned(CopiedElement) then begin
                   if Assigned(aAfterCopyCallback) then
                     aAfterCopyCallback(CopiedElement);
-                  if Assigned(aActions) and Assigned(aActions[0]) then
-                    aActions[0].Process(CopiedElement);
                 end;
                 Result[0] := CopiedElement;
                 if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
@@ -2537,6 +2451,31 @@ begin
     end;
 end;
 
+procedure PluginListGroupESM(List: TStringList);
+var
+  slESM, slESP : TStringList;
+  IsESM        : Boolean;
+  i            : Integer;
+begin
+  slESM := TStringList.Create;
+  slESP := TStringList.Create;
+  try
+    for i := 0 to List.Count - 1 do begin
+      IsESM := SameText(ExtractFileExt(List[i]), '.esm');
+      if IsESM then
+        slESM.Add(List[i])
+      else
+        slESP.Add(List[i]);
+    end;
+    List.Clear;
+    List.AddStrings(slESM);
+    List.AddStrings(slESP);
+  finally
+    FreeAndNil(slESM);
+    FreeAndNil(slESP);
+  end;
+end;
+
 function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
   IsESM1                      : Boolean;
@@ -2656,6 +2595,15 @@ begin
 end;
 
 procedure TfrmMain.DoInit;
+
+  function FindMatchText(Strings: TStrings; const Str: string): Integer;
+  begin
+    for Result := 0 to Strings.Count-1 do
+      if SameText(Strings[Result], Str) then
+        Exit;
+    Result := -1;
+  end;
+
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
 var
@@ -2788,6 +2736,31 @@ begin
 
       with TfrmFileSelect.Create(nil) do try
 
+        // Skyrim doesn't use timestamps anymore, only plugins.txt
+        if wbGameMode = gmTES5 then begin
+          // check if there is a BOSS plugins list present and use it
+          s := ExtractFilePath(PluginsFileName) + 'loadorder.txt';
+          if FileExists(s) then begin
+            AddMessage('Found BOSS load order list: ' + s);
+            sl.LoadFromFile(s)
+          end else
+            sl.LoadFromFile(PluginsFileName);
+
+          for i := Pred(sl.Count) downto 0 do begin
+            s := Trim(sl.Strings[i]);
+            j := Pos('#', s);
+            if j > 0 then
+              System.Delete(s, j, High(Integer));
+            s := Trim(s);
+            if (s = '') or not FileExists(DataPath + s) then begin
+              sl.Delete(i);
+              Continue;
+            end;
+          end;
+        end;
+
+        // plugins list for Oblivion, Fallout3, FNV with timestamps
+        // Skyrim: add missing plugins that are in Data folder
         if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
           repeat
             s := ExtractFileExt(F.Name);
@@ -2795,6 +2768,7 @@ begin
               if SameText(F.Name, wbGameName + '.hardcoded.esp') then
                 DeleteFile(DataPath + F.Name)
               else
+              if FindMatchText(sl, F.Name) < 0 then
                 sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
             end;
           until FindNext(F) <> 0;
@@ -2802,8 +2776,12 @@ begin
           FindClose(F);
         end;
 
-        sl.CustomSort(PluginListCompare);
-        if wbMasterUpdate and (sl.Count > 1) then begin
+        if wbGameMode = gmTES5 then
+          PluginListGroupESM(sl)
+        else
+          sl.CustomSort(PluginListCompare);
+
+        if wbMasterUpdate and (wbGameMode <> gmTES5) and (sl.Count > 1) then begin
           Age := Integer(sl.Objects[0]);
           AgeDateTime := FileDateToDateTime(Age);
           for i := 1 to Pred(sl.Count) do begin
@@ -2832,11 +2810,31 @@ begin
             AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
           else
             CheckListBox1.Checked[j] := True;
+        end;
 
+        // Skyrim always loads Skyrim.esm and Update.esm no matter what
+        // even if plugins.txt is empty
+        if wbGameMode = gmTES5 then begin
+           j := FindMatchText(CheckListBox1.Items, 'Update.esm');
+           if (j < 0) and FileExists(DataPath + 'Update.esm') then begin
+             CheckListBox1.Items.Insert(0, 'Update.esm');
+             j := 0;
+           end;
+           CheckListBox1.Checked[j] := True;
+
+           j := FindMatchText(CheckListBox1.Items, 'Skyrim.esm');
+           if (j < 0) and FileExists(DataPath + 'Skyrim.esm') then begin
+             CheckListBox1.Items.Insert(0, 'Skyrim.esm');
+             j := 0;
+           end;
+           CheckListBox1.Checked[j] := True;
         end;
 
         if not (wbMasterUpdate or wbLODGen) then
           ShowModal;
+
+        if ModalResult <> mrOk then
+          frmMain.Close;
 
         sl2 := TStringList.Create;
         try
@@ -5166,7 +5164,6 @@ begin
     False,
     False,
     Elements,
-    nil,
     AfterCopyDisable);
 
   vstNav.Invalidate;
@@ -6621,7 +6618,7 @@ begin
     end;
 
     if Length(Elements) > 0 then
-      CopyInto(False, False, False, False, Elements, nil, SetVWDCallback);
+      CopyInto(False, False, False, False, Elements, SetVWDCallback);
 
     vstNav.Invalidate;
   finally
@@ -11630,44 +11627,6 @@ begin
     try
       wbStartTime := Now;
 
-      for i := 0 to Pred(ltLoadList.Count) do begin
-        LoaderProgress('loading "' + ltLoadList[i] + '"...');
-        _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster);
-        if wbEditAllowed and not wbTranslationMode then begin
-          SetLength(ltFiles, Succ(Length(ltFiles)));
-          ltFiles[High(ltFiles)] := _File;
-        end;
-        frmMain.SendAddFile(_File);
-        if frmMain.ForceTerminate then
-          Exit;
-
-        if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameName + '.esm') then begin
-          t := wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
-          s := ProgramPath + t;
-          if FileExists(s) then begin
-            LoaderProgress('loading "' + t + '"...');
-            _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
-            frmMain.SendAddFile(_File);
-            if frmMain.ForceTerminate then
-              Exit;
-
-            t := wbGameName + '.Hardcoded.esp';
-            s := ProgramPath + t;
-            if FileExists(s) then
-              DeleteFile(s);
-          end;
-        end;
-      end;
-
-      if wbBuildRefs then
-        for i := Low(ltFiles) to High(ltFiles) do
-          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') then begin
-            LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
-            ltFiles[i].BuildRef;
-            if frmMain.ForceTerminate then
-              Exit;
-          end;
-
       if not Assigned(wbContainerHandler) then begin
         wbContainerHandler := wbCreateContainerHandler;
 
@@ -11716,6 +11675,44 @@ begin
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);
       end;
+
+      for i := 0 to Pred(ltLoadList.Count) do begin
+        LoaderProgress('loading "' + ltLoadList[i] + '"...');
+        _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster);
+        if wbEditAllowed and not wbTranslationMode then begin
+          SetLength(ltFiles, Succ(Length(ltFiles)));
+          ltFiles[High(ltFiles)] := _File;
+        end;
+        frmMain.SendAddFile(_File);
+        if frmMain.ForceTerminate then
+          Exit;
+
+        if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameName + '.esm') then begin
+          t := wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
+          s := ProgramPath + t;
+          if FileExists(s) then begin
+            LoaderProgress('loading "' + t + '"...');
+            _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
+            frmMain.SendAddFile(_File);
+            if frmMain.ForceTerminate then
+              Exit;
+
+            t := wbGameName + '.Hardcoded.esp';
+            s := ProgramPath + t;
+            if FileExists(s) then
+              DeleteFile(s);
+          end;
+        end;
+      end;
+
+      if wbBuildRefs then
+        for i := Low(ltFiles) to High(ltFiles) do
+          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') then begin
+            LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
+            ltFiles[i].BuildRef;
+            if frmMain.ForceTerminate then
+              Exit;
+          end;
 
     except
       on E: Exception do begin

@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.636 (2012-08-22) EXPERIMENTAL';
+  VersionString               = '3.0.22a EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -45,14 +45,14 @@ var
   wbSimpleLAND : Boolean = False;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
-  wbHideUnused : Boolean{} = False{True}{};
-  wbHideIgnored : Boolean{} = False{True}{};
+  wbHideUnused : Boolean{} = True;{}
+  wbHideIgnored : Boolean{} = True;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
-  wbMoreInfoForUnknown: Boolean{ = False{True}{};
+  wbMoreInfoForUnknown: Boolean = False;
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
@@ -62,16 +62,16 @@ var
   wbMasterUpdateDone: Boolean;
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
-  wbMasterRestore: Boolean;
   wbDontSave: Boolean;
+  wbMasterRestore: Boolean;
 
   wbLODGen: Boolean;
 
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{} = True{};
-  wbReportUnused: Boolean{} = True{};
+  wbReportMode: Boolean{ = True{};
+  wbReportUnused: Boolean{ = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
   wbReportUnknownFormIDs: Boolean{} = True{};
@@ -85,10 +85,6 @@ var
   wbReportUnknownEnums: Boolean{} = True{};
   wbReportFormIDNotAllowedReferences: Boolean{} = True{};
   wbReportUnknown: Boolean{} = True{};
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-  wbReportUnknownLStrings: Boolean{} = False{};
 
   wbCheckExpectedBytes: Boolean{} = True{};
 
@@ -4825,7 +4821,13 @@ begin
              (aSignature = 'ACHR') or
              (aSignature = 'ACRE') or
              (aSignature = 'PGRE') or
-             (aSignature = 'PMIS')
+             (aSignature = 'PMIS') or
+             (aSignature = 'PARW') or {>>> Skyrim <<<}
+             (aSignature = 'PBEA') or {>>> Skyrim <<<}
+             (aSignature = 'PFLA') or {>>> Skyrim <<<}
+             (aSignature = 'PCON') or {>>> Skyrim <<<}
+             (aSignature = 'PBAR') or {>>> Skyrim <<<}
+             (aSignature = 'PHZD')    {>>> Skyrim <<<}
            )
          ) then begin
 
@@ -7889,6 +7891,12 @@ begin
           IsValid('ACRE') or
           IsValid('PGRE') or
           IsValid('PGRD') or
+          IsValid('PARW') or {>>> Skyrim <<<}
+          IsValid('PBAR') or {>>> Skyrim <<<}
+          IsValid('PBEA') or {>>> Skyrim <<<}
+          IsValid('PFLA') or {>>> Skyrim <<<}
+          IsValid('PCON') or {>>> Skyrim <<<}
+          IsValid('PHZD') or {>>> Skyrim <<<}
           IsValid('NAVM') or
           IsValid('INFO');
 
@@ -8456,17 +8464,6 @@ begin
           WriteLn('  ', Strings[k], ' (', Integer(Objects[k]),')');
     end;
 
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-  if wbReportUnknownLStrings then
-    if (FoundLString > 0) and (NotFoundLString < 1) then begin
-      WriteLn('Found Strings: ', s, ': ',Strings.Count,' (', FoundLString, ')');
-      with Strings do
-        for k := 0 to Pred(Count) do
-          WriteLn('  ', Strings[k], ' (', Integer(Objects[k]),')');
-    end;
-
   if wbReportEmpty then
     if IsEmpty > 0 then
       if IsNotEmpty > 0 then begin
@@ -8644,37 +8641,6 @@ begin
                 end;
               end else begin
                 Inc(NotFoundString);
-                Break;
-              end;
-
-            Inc(p);
-          end;
-        end;
-      end;
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-      if wbReportUnknownLStrings then begin
-        if (badSize < 1) and (NotFoundLString < 1) then begin
-          p := aBasePtr;
-          while (Cardinal(p)) < Cardinal(aEndPtr) do begin
-            if p^ < 32 then
-              if (Succ(Cardinal(p)) = Cardinal(aEndPtr)) and (p^ = 0) then begin
-                s := PAnsiChar(aBasePtr);
-                if Length(s) > 4 then begin
-                  Inc(FoundLString);
-
-                  if not Assigned(Strings) then
-                    Strings := TwbFastStringListCS.CreateSorted;
-
-                  with Strings do if Count < 15 then begin
-                    if not Find(s, i) then
-                      i := AddObject(s, TObject(0));
-                    Objects[i] := TObject(Succ(Integer(Objects[i])));
-                  end;
-                end;
-              end else begin
-                Inc(NotFoundLString);
                 Break;
               end;
 
@@ -9778,7 +9744,6 @@ var
   Len  : Cardinal;
 begin
   Result := '';
-  {>>>}Size := 0;{<<<}
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < Prefix then begin
     if wbCheckExpectedBytes then
@@ -9866,7 +9831,6 @@ function TwbLenStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: Iwb
 var
   Len : Integer;
 begin
-  {>>>}Len := 0;{<<<}
   if Assigned(aBasePtr) then begin
     Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
     if Result < Prefix then

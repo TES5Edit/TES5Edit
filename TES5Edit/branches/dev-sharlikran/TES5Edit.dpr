@@ -12,41 +12,29 @@
 
 *******************************************************************************}
 
-{$DEFINE DEVEXFILES}
-
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_GENERATEJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 program TES5Edit;
 
-{$I Compilers.inc}
-{$I TES5Edit.inc}
-
 uses
-	{$IFDEF USENEXUS}
-	nxReplacementMemoryManager,
-  nxExceptionHook,
-	{$ENDIF}
   wbInit,
   Forms,
   Dialogs,
   SysUtils,
+  wbInterface,
+  wbImplementation,
+  wbDefinitionsTES4,
+  wbDefinitionsFO3,
+  wbDefinitionsFNV,
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
   FileSelectFrm in 'FileSelectFrm.pas' {frmFileSelect},
   ViewElementsFrm in 'ViewElementsFrm.pas' {frmViewElements},
   EditWarningFrm in 'EditWarningFrm.pas' {frmEditWarning},
-  frmWaitForm in 'frmWaitForm.pas' {frmWait},
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
-  wbInit in 'wbInit.pas',
-  wbInterface in 'wbInterface.pas',
-  wbImplementation in 'wbImplementation.pas',
-  wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
-  wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
-  wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
-  wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
-  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas';
+  frmWaitForm in 'frmWaitForm.pas' {frmWait};
 
 {$R *.res}
 
@@ -56,11 +44,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 begin
-  {$IF CompilerVersion > 23}
-  FormatSettings.DecimalSeparator := '.';
-  {$ELSE}
-  SysUtils.DecimalSeparator := '.';
-  {$IFEND}
+  SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := wbApplicationTitle;

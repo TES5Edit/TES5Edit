@@ -14,18 +14,28 @@ object frmFileSelect: TfrmFileSelect
     615)
   PixelsPerInch = 96
   TextHeight = 13
+  object Label1: TLabel
+    Left = 8
+    Top = 11
+    Width = 33
+    Height = 13
+    Caption = 'Search'
+  end
   object CheckListBox1: TCheckListBox
     AlignWithMargins = True
     Left = 3
-    Top = 3
+    Top = 40
     Width = 326
-    Height = 572
+    Height = 535
+    Margins.Top = 40
     Margins.Bottom = 40
     Align = alClient
     ItemHeight = 13
     PopupMenu = PopupMenu1
     TabOrder = 0
     OnDblClick = CheckListBox1DblClick
+    ExplicitTop = 32
+    ExplicitHeight = 543
   end
   object BitBtn1: TBitBtn
     Left = 249
@@ -33,8 +43,20 @@ object frmFileSelect: TfrmFileSelect
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
-    TabOrder = 1
+    DoubleBuffered = True
     Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 1
+  end
+  object edSearch: TEdit
+    Left = 47
+    Top = 8
+    Width = 282
+    Height = 21
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 2
+    OnChange = edSearchChange
   end
   object PopupMenu1: TPopupMenu
     Left = 128

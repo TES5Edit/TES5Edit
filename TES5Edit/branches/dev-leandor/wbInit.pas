@@ -18,9 +18,6 @@ interface
 
 var
   wbApplicationTitle: string;
-	{$IFNDEF USENEXUS}
-  wbAppDataSubdirVista : string = 'xEdit';
-	{$ENDIF}
 
 procedure wbDoInit;
 
@@ -31,16 +28,55 @@ uses
   Dialogs,
   wbInterface,
   wbImplementation,
-	{$IFDEF USENEXUS}
-  nxExeConst,
-	{$ENDIF}
+  wbDefinitionsTES4,
   wbDefinitionsFO3,
   wbDefinitionsFNV,
-  wbDefinitionsTES3,
-  wbDefinitionsTES4,
   wbDefinitionsTES5;
+  //nxExeConst;
+
+function wbFindCmdLineParam(const aSwitch     : string;
+                            const aChars      : TSysCharSet;
+                                  aIgnoreCase : Boolean;
+                              out aValue      : string)
+                                              : Boolean; overload;
+var
+  i : Integer;
+  s : string;
+begin
+  Result := False;
+  aValue := '';
+  for i := 1 to ParamCount do begin
+    s := ParamStr(i);
+    if (aChars = []) or (s[1] in aChars) then
+      if aIgnoreCase then begin
+        if AnsiCompareText(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
+          if (length(s)>(length(aSwitch)+2)) and (s[Length(aSwitch) + 2] = ':') then begin
+            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
+            Result := True;
+          end;
+          Exit;
+        end;
+      end else
+        if AnsiCompareStr(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
+          if s[Length(aSwitch) + 2] = ':' then begin
+            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
+            Result := True;
+          end;
+          Exit;
+        end;
+  end;
+end;
+
+function wbFindCmdLineParam(const aSwitch : string;
+                              out aValue  : string)
+                                          : Boolean; overload;
+begin
+  Result := wbFindCmdLineParam(aSwitch, ['-', '/'], True, aValue);
+end;
 
 procedure wbDoInit;
+var
+  s: string;
 begin
   wbReportMode := False;
 
@@ -51,7 +87,8 @@ begin
     wbVWDInTemporary := True;
     wbLoadBSAs := False;
     DefineFNV;
-  end else if FindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
+  end else
+  if FindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
@@ -69,8 +106,10 @@ begin
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
     wbLanguage := 'English';
+    if wbFindCmdLineParam('l', s) then
+      wbLanguage := s;
     wbVWDInTemporary := True;
-    wbLoadBSAs := False;
+    wbLoadBSAs := True; // localization won't work otherwise
     DefineTES5;
   end else begin
     ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
@@ -109,8 +148,8 @@ begin
     wbLoadBSAs := True;
     wbBuildRefs := False;
   end else if FindCmdLineSwitch('masterupdate') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'MasterUpdate.exe') then begin
-    if not (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-      ShowMessage('MasterUpdate mode is only possible for FO3, FNV and TES5.');
+    if not (wbGameMode in [gmFO3, gmFNV]) then begin
+      ShowMessage('MasterUpdate mode is only possible for FO3 and FNV.');
       Exit;
     end;
     wbApplicationTitle := wbAppName + 'MasterUpdate ' + VersionString;
@@ -128,8 +167,8 @@ begin
     else if FindCmdLineSwitch('NoFixPersistence') then
       wbMasterUpdateFixPersistence := False;
   end else if FindCmdLineSwitch('masterrestore') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'MasterRestore.exe') then begin
-    if not (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-      ShowMessage('MasterRestore mode is only possible for FO3, FNV and TES5.');
+    if not (wbGameMode in [gmFO3, gmFNV]) then begin
+      ShowMessage('MasterRestore mode is only possible for FO3 and FNV.');
       Exit;
     end;
     wbApplicationTitle := wbAppName + 'MasterRestore ' + VersionString;
@@ -151,22 +190,17 @@ begin
   end else
     wbDontSave := True;
 
-  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := wbAppName;
+  {nxAppDataSubdirVista := wbAppName;
   if wbTranslationMode then
-    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
-			{$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'Trans'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Trans'
   else if wbMasterRestore then
-    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
-		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'MasterRestore'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterRestore'
   else if wbMasterUpdate then
-    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
-		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'MasterUpdate'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterUpdate'
   else if wbEditAllowed then
-    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
-		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'Edit'
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Edit'
   else
-    {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} := 
-		  {$IFDEF USENEXUS}nxAppDataSubdirVista{$ELSE}wbAppDataSubdirVista{$ENDIF} + 'View';
+    nxAppDataSubdirVista := nxAppDataSubdirVista + 'View';}
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;

@@ -10046,7 +10046,8 @@ begin
       {0x08} '',
       {0x10} 'No LOD Water',
       {0x20} 'No LOD Noise',
-      {0x40} 'Don''t Allow NPC Fall Damage'
+      {0x40} 'Don''t Allow NPC Fall Damage',
+      {0x80} 'Needs Water Adjustment'
     ]), cpNormal, True),
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [

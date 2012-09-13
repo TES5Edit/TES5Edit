@@ -4741,9 +4741,9 @@ begin
       {0}'Causes Damage',
       {1}'Reflective'
     ]), cpNormal, True),
-    wbString(MNAM, 'Material ID'),
+    wbString(MNAM, 'Material ID'{>>>}, 0, cpNormal, True{<<<}),
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
-    wbStruct(DATA, '', [
+    wbStruct(DATA, {>>>''<<<}'Weather Data', [
       wbFloat('Wind Velocity'),
       wbFloat('Wind Direction'),
       wbFloat('Wave Amplitude'),
@@ -4791,7 +4791,7 @@ begin
       wbFormIDCk('Daytime', [WATR, NULL]),
       wbFormIDCk('Nighttime', [WATR, NULL]),
       wbFormIDCk('Underwater', [WATR, NULL])
-    ], cpNormal, True)
+    ], cpNormal{>>>, True<<<})
   ]);
 
   wbRecord(WEAP, 'Weapon', [
