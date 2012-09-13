@@ -2595,15 +2595,6 @@ begin
 end;
 
 procedure TfrmMain.DoInit;
-
-  function FindMatchText(Strings: TStrings; const Str: string): Integer;
-  begin
-    for Result := 0 to Strings.Count-1 do
-      if SameText(Strings[Result], Str) then
-        Exit;
-    Result := -1;
-  end;
-
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
 var
@@ -2736,8 +2727,8 @@ begin
 
       with TfrmFileSelect.Create(nil) do try
 
-        // Skyrim doesn't use timestamps anymore, only plugins.txt
         if wbGameMode = gmTES5 then begin
+          // Skyrim doesn't use timestamps anymore, only plugins.txt
           // check if there is a BOSS plugins list present and use it
           s := ExtractFilePath(PluginsFileName) + 'loadorder.txt';
           if FileExists(s) then begin
@@ -2757,6 +2748,22 @@ begin
               Continue;
             end;
           end;
+
+          // Skyrim always loads Skyrim.esm and Update.esm no matter what
+          // even if plugins.txt is empty
+          j := FindMatchText(CheckListBox1.Items, 'Update.esm');
+          if (j < 0) and FileExists(DataPath + 'Update.esm') then begin
+           CheckListBox1.Items.Insert(0, 'Update.esm');
+           j := 0;
+          end;
+          CheckListBox1.Checked[j] := True;
+
+          j := FindMatchText(CheckListBox1.Items, 'Skyrim.esm');
+          if (j < 0) and FileExists(DataPath + 'Skyrim.esm') then begin
+           CheckListBox1.Items.Insert(0, 'Skyrim.esm');
+           j := 0;
+          end;
+          CheckListBox1.Checked[j] := True;
         end;
 
         // plugins list for Oblivion, Fallout3, FNV with timestamps
@@ -2810,24 +2817,6 @@ begin
             AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
           else
             CheckListBox1.Checked[j] := True;
-        end;
-
-        // Skyrim always loads Skyrim.esm and Update.esm no matter what
-        // even if plugins.txt is empty
-        if wbGameMode = gmTES5 then begin
-           j := FindMatchText(CheckListBox1.Items, 'Update.esm');
-           if (j < 0) and FileExists(DataPath + 'Update.esm') then begin
-             CheckListBox1.Items.Insert(0, 'Update.esm');
-             j := 0;
-           end;
-           CheckListBox1.Checked[j] := True;
-
-           j := FindMatchText(CheckListBox1.Items, 'Skyrim.esm');
-           if (j < 0) and FileExists(DataPath + 'Skyrim.esm') then begin
-             CheckListBox1.Items.Insert(0, 'Skyrim.esm');
-             j := 0;
-           end;
-           CheckListBox1.Checked[j] := True;
         end;
 
         if not (wbMasterUpdate or wbLODGen) then

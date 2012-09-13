@@ -9042,6 +9042,10 @@ var
 begin
   Result := '';
 
+  {>>> No ACVA errors <<<}
+  if IsValid('ACVA') then
+    Exit;
+
   if aInt = 0 then begin
     if IsValid('TRGT') and not IsValid('NULL') then begin
       Found := 'TRGT';
