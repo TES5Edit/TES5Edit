@@ -11475,6 +11475,7 @@ begin
     {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
       wbInteger('Level', itU8, wbEnum([], [
+         0, 'Novice(L)',
          1, 'Novice',
         25, 'Apprentice',
         50, 'Adept',
