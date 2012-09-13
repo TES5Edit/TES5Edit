@@ -516,8 +516,9 @@ begin
         0: Result := 'None';
         1: Result := 'Pleasant';
         2: Result := 'Cloudy';
-        3: Result := 'Rainy';
-        4: Result := 'Snow';
+        3: Result := 'Unknown 3';
+        4: Result := 'Rainy';
+        5: Result := 'Snow';
       else
         Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
       end;
@@ -527,7 +528,7 @@ begin
     end;
     ctCheck: begin
       case aInt and not 192 of
-        0..4: Result := '';
+        0..5: Result := '';
       else
         Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
       end;
@@ -3403,7 +3404,8 @@ begin
           'Quest'
         ], [
           $100, 'Magic Effect'
-        ]))
+        ])),
+        wbByteArray('Unknown')
       ])
     ], []);
 
@@ -3836,20 +3838,24 @@ begin
         {0x00000800} 'Spellmaking',
         {0x00001000} 'Enchanting',
         {0x00002000} 'No Ingredient',
-        {0x00004000} '',
-        {0x00008000} '',
+        {0x00004000} 'Unknown 14',
+        {0x00008000} 'Unknown 15',
         {0x00010000} 'Use weapon',
         {0x00020000} 'Use armor',
         {0x00040000} 'Use creature',
         {0x00080000} 'Use skill',
         {0x00100000} 'Use attribute',
-        {0x00200000} '',
-        {0x00400000} '',
-        {0x00800000} '',
+        {0x00200000} 'Unknown 21',
+        {0x00400000} 'Unknown 22',
+        {0x00800000} 'Unknown 23',
         {0x01000000} 'Use actor value',
         {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
         {0x04000000} 'Bolt projectile type',
-        {0x08000000} 'No hit effect'
+        {0x08000000} 'No hit effect',
+        {0x10000000} 'Unknown 28',
+        {0x20000000} 'Unknown 29',
+        {0x40000000} 'Unknown 30',
+        {0x80000000} 'Unknown 31'
       ])),
       wbFloat('Base cost'),
       wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
@@ -4421,7 +4427,7 @@ begin
           {2}'Objects',
           {3}'Weather',
           {4}'Map',
-          {5}'',
+          {5}'Unknown 5',
           {6}'Grass',
           {7}'Sound',
           {8}'',
@@ -4743,7 +4749,7 @@ begin
     ]), cpNormal, True),
     wbString(MNAM, 'Material ID'{>>>}, 0, cpNormal, True{<<<}),
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
-    wbStruct(DATA, {>>>''<<<}'Weather Data', [
+    wbStruct(DATA, '', [
       wbFloat('Wind Velocity'),
       wbFloat('Wind Direction'),
       wbFloat('Wave Amplitude'),

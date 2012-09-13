@@ -3575,12 +3575,16 @@ begin
       end;
     end;
 
-    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
-      if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-        Assert(False);
-      NewContainer.RemoveElement('PLD2');
-      NewContainer.AddElement(OldContainer);
-    end;
+    {>>>
+    Removing PLD2 are actualy causing troubles
+    http://forums.bethsoft.com/topic/1409718-wipz-tes5dumpfuture-tes5edit/page__view__findpost__p__21536789
+    <<<}
+//    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
+//      if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
+//        Assert(False);
+//      NewContainer.RemoveElement('PLD2');
+//      NewContainer.AddElement(OldContainer);
+//    end;
   finally
     wbEndInternalEdit;
   end;

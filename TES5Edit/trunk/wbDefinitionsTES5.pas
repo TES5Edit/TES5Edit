@@ -3924,26 +3924,30 @@ begin
   end;
 end;
 
-{>>>Needs Revision for Skyrim<<<}
-//procedure wbREFRAfterLoad(const aElement: IwbElement);
-//var
-//  Container  : IwbContainerElementRef;
-//  MainRecord : IwbMainRecord;
-//  BaseRecord : IwbMainRecord;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    if not Supports(aElement, IwbMainRecord, MainRecord) then
-//      Exit;
-//
-//    if MainRecord.IsDeleted then
-//      Exit;
-//
+procedure wbREFRAfterLoad(const aElement: IwbElement);
+var
+  Container  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  BaseRecord : IwbMainRecord;
+begin
+  if wbBeginInternalEdit then try
+    if not Supports(aElement, IwbContainerElementRef, Container) then
+      Exit;
+
+    if Container.ElementCount < 1 then
+      Exit;
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    if MainRecord.IsDeleted then
+      Exit;
+
+    if Container.ElementExists['XLOC'] then begin
+      if Container.ElementNativeValues['Lock Data\Level'] = 0 then
+        Container.ElementNativeValues['Lock Data\Level'] := 1;
+    end;
+
 //    Container.RemoveElement('RCLR');
 //
 //    if Container.ElementExists['Ammo'] then begin
@@ -3951,10 +3955,10 @@ end;
 //      if Assigned(BaseRecord) and (BaseRecord.Signature <> 'WEAP') then
 //        Container.RemoveElement('Ammo');
 //    end;
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
 
 {>>>Needs Revision for Skyrim<<<}
 //procedure wbINFOAfterLoad(const aElement: IwbElement);
@@ -6311,7 +6315,70 @@ begin
 end;
 
 procedure DefineTES5c;
+
+  procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
+  begin
+    wbRecord(aSignature, aName, [
+      wbVMAD,
+      wbFormIDCk(NAME, 'Projectile', [PROJ]),
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+      wbOwnership,
+      wbFloat(XHTW, 'Head-Tracking Weight'),
+      wbFloat(XFVC, 'Favor Cost'),
+      wbRArrayS('Reflected/Refracted By',
+        wbStructSK(XPWR, [0], 'Water', [
+          wbFormIDCk('Reference', [REFR]),
+          wbInteger('Type', itU32, wbFlags([
+            'Reflection',
+            'Refraction'
+          ]))
+        ], cpNormal, False, nil, 1)
+      ),
+      wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
+        wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+        wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
+      ], cpNormal, False, nil, 1)),
+      wbRStruct('Activate Parents', [
+        wbInteger(XAPD, 'Flags', itU8, wbFlags([
+          'Parent Activate Only'
+        ], True)),
+        wbRArrayS('Activate Parent Refs',
+          wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+            wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+            wbFloat('Delay')
+          ])
+        )
+      ], []),
+      wbXESP,
+      wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+      wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+      wbEmpty(XIS2, 'Ignored by Sandbox'),
+      wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
+      wbXSCL,
+      wbDataPosRot
+    ], True, wbPlacedAddInfo);
+  end;
+
 begin
+{>>>
+  Skrim has its own ref record for every projectile type
+  PARW 'Arrow'
+  PBEA 'Beam'
+  PFLA 'Flame'
+  PCON 'Cone' (voice)
+  PBAR 'Barrier'
+  PGRE 'Traps'
+  PHZD 'Hazards'
+  I guess all of them have the same structure
+<<<}
+  ReferenceRecord(PARW, 'Placed Arrow');
+  ReferenceRecord(PBAR, 'Placed Barrier');
+  ReferenceRecord(PBEA, 'Placed Beam');
+  ReferenceRecord(PCON, 'Placed Cone/Voice');
+  ReferenceRecord(PFLA, 'Placed Flame');
+  ReferenceRecord(PGRE, 'Placed Projectile');
+  ReferenceRecord(PHZD, 'Placed Hazard');
 
   wbRecord(CELL, 'Cell', [
     wbEDID,
@@ -6431,304 +6498,6 @@ begin
     wbFormIDCk(XCMO, 'Music Type', [MUSC]),
     wbFormIDCk(XCIM, 'Image Space', [IMGS])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
-
-{>>>
-  Skrim has its own ref record for every projectile type
-  PARW 'Arrow'
-  PBEA 'Beam'
-  PFLA 'Flame'
-  PCON 'Cone' (voice)
-  PBAR 'Barrier'
-  I guess all of them have the same structure
-<<<}
-  wbRecord(PARW, 'Placed Arrow', [
-    wbVMAD,
-    wbFormIDCk(NAME, 'Arrow', [PROJ]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbOwnership,
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
-    ], cpNormal, False, nil, 1)),
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbXESP,
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
-    wbXSCL,
-    wbDataPosRot
-  ], True, wbPlacedAddInfo);
-
-  wbRecord(PBAR, 'Placed Barrier', [
-    wbVMAD,
-    wbFormIDCk(NAME, 'Arrow', [PROJ]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbOwnership,
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
-    ], cpNormal, False, nil, 1)),
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbXESP,
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
-    wbXSCL,
-    wbDataPosRot
-  ], True, wbPlacedAddInfo);
-
-  wbRecord(PBEA, 'Placed Beam', [
-    wbVMAD,
-    wbFormIDCk(NAME, 'Arrow', [PROJ]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbOwnership,
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
-    ], cpNormal, False, nil, 1)),
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbXESP,
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
-    wbXSCL,
-    wbDataPosRot
-  ], True, wbPlacedAddInfo);
-
-  wbRecord(PCON, 'Placed Cone (voice)', [
-    wbVMAD,
-    wbFormIDCk(NAME, 'Arrow', [PROJ]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbOwnership,
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
-    ], cpNormal, False, nil, 1)),
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbXESP,
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
-    wbXSCL,
-    wbDataPosRot
-  ], True, wbPlacedAddInfo);
-
-  wbRecord(PFLA, 'Placed Flame', [
-    wbVMAD,
-    wbFormIDCk(NAME, 'Arrow', [PROJ]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbOwnership,
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
-    ], cpNormal, False, nil, 1)),
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbXESP,
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
-    wbXSCL,
-    wbDataPosRot
-  ], True, wbPlacedAddInfo);
-
-  {>>> Used for traps <<<}
-  wbRecord(PGRE, 'Placed Projectile', [
-    wbVMAD,
-    wbFormIDCk(NAME, 'Projectile', [PROJ]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbOwnership,
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
-    ], cpNormal, False, nil, 1)),
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbXESP,
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
-    wbXSCL,
-    wbDataPosRot
-  ], True, wbPlacedAddInfo);
-
-  {>>> Used for hazards <<<}
-  wbRecord(PHZD, 'Placed Hazard', [
-    wbVMAD,
-    wbFormIDCk(NAME, 'Hazard', [HAZD]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbOwnership,
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
-    ], cpNormal, False, nil, 1)),
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbXESP,
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
-    wbXSCL,
-    wbDataPosRot
-  ], True, wbPlacedAddInfo);
 
   wbRecord(CLAS, 'Class', [
     wbEDIDReq,
@@ -10321,36 +10090,36 @@ begin
   ], False, nil, cpNormal, False{, wbNPCAfterLoad});
 
   wbObjectTypeEnum := wbEnum([
-          ' NONE',
-          'Activators',
-          'Armor',
-          'Books',
-          'Clothing',
-          'Containers',
-          'Doors',
-          'Ingredients',
-          'Lights',
-          'Misc',
-          'Flora',
-          'Furniture',
-          'Weapons: Any',
-          'Ammo',
-          'NPCs',
-          'Creatures',
-          'Keys',
-          'Alchemy',
-          'Food',
-          ' All: Combat Wearable',
-          ' All: Wearable',
-          'Weapons: Ranged',
-          'Weapons: Melee',
-          'Weapons: NONE',
-          'Actor Effects: Any',
-          'Actor Effects: Range Target',
-          'Actor Effects: Range Touch',
-          'Actor Effects: Range Self',
-          'Actors: Any'
-        ]);
+    ' NONE',
+    'Activators',
+    'Armor',
+    'Books',
+    'Clothing',
+    'Containers',
+    'Doors',
+    'Ingredients',
+    'Lights',
+    'Misc',
+    'Flora',
+    'Furniture',
+    'Weapons: Any',
+    'Ammo',
+    'NPCs',
+    'Creatures',
+    'Keys',
+    'Alchemy',
+    'Food',
+    ' All: Combat Wearable',
+    ' All: Wearable',
+    'Weapons: Ranged',
+    'Weapons: Melee',
+    'Weapons: NONE',
+    'Actor Effects: Any',
+    'Actor Effects: Range Target',
+    'Actor Effects: Range Touch',
+    'Actor Effects: Range Self',
+    'Actors: Any'
+  ]);
 
   wbPKDTSpecificFlagsUnused := False;
 
@@ -11262,7 +11031,7 @@ begin
           wbMorphs,
           wbRArrayS('Race Presets Male', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
           wbRArrayS('Available Hair Colors Male', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
-          wbRArrayS('Face Details Testure Set List Male', wbFormIDCk(FTSM, 'Testure Set', [TXST, NULL])),
+          wbRArrayS('Face Details Texture Set List Male', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
           wbTints,
           wbMODLReq
@@ -11475,7 +11244,6 @@ begin
     {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
       wbInteger('Level', itU8, wbEnum([], [
-         0, 'Novice(L)',
          1, 'Novice',
         25, 'Apprentice',
         50, 'Adept',
@@ -11555,7 +11323,7 @@ begin
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
     wbDataPosRot
-  ], True, wbPlacedAddInfo, cpNormal, False, nil{wbREFRAfterLoad});
+  ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
 
   {>>> Almost no changes here, seems to be working as is <<<}
@@ -11950,7 +11718,7 @@ begin
       wbFloat('Depth Properties - Specular Lighting'),
       wbFloat('Specular Properties - Sun Sparkle Power')
     ]),
-    wbByteArray(GNAM, 'Unused', 0, cpIgnore, True),  // leftover
+    wbByteArray(GNAM, 'Unused', 0, cpNormal, True),  // leftover
     wbStruct(NAM0, 'Linear Velocity', [
       wbFloat('X'),
       wbFloat('Y'),
@@ -11962,8 +11730,8 @@ begin
       wbFloat('Z')
     ], cpNormal, False),
     wbString(NAM2, 'Noise Texture', 0, cpNormal, False),
-    wbString(NAM3, 'Unused', 0, cpIgnore),  // leftover
-    wbString(NAM4, 'Unused', 0, cpIgnore)  // leftover
+    wbString(NAM3, 'Unused', 0, cpNormal),  // leftover
+    wbString(NAM4, 'Unused', 0, cpNormal)  // leftover
   ], False, nil, cpNormal, False);
 
   wbRecord(WEAP, 'Weapon', [
