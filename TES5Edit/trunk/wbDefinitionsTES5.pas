@@ -4018,13 +4018,16 @@ begin
     end;
 
     if Container.ElementExists['XCLW'] then begin
-      w := Container.ElementNativeValues['XCLW'];
-      if (PCardinal(@w)^ = Int64($CF000000)) or
-         (PCardinal(@w)^ = Int64($4F7FFFC9))
-      then begin
-        //PCardinal(@w)^ := Int64($7F7FFFFF); // no water value
-        //Container.ElementNativeValues['XCLW'] := w;
-        Container.ElementEditValues['XCLW'] := 'Default';
+      if not VarIsNull(Container.ElementNativeValues['XCLW']) then begin
+        w := Container.ElementNativeValues['XCLW'];
+        if (PCardinal(@w)^ = Int64($CF000000)) or
+           (PCardinal(@w)^ = Int64($4F7FFFC9))
+        then begin
+          //PCardinal(@w)^ := Int64($7F7FFFFF); // no water value
+          //Container.ElementNativeValues['XCLW'] := w;
+          //Container.ElementEditValues['XCLW'] := 'Default';
+          Container.ElementNativeValues['XCLW'] := 0;
+        end;
       end;
     end;
 
@@ -5918,7 +5921,7 @@ begin
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbCTDA := wbRStruct('Conditions', [
-    wbStruct(CTDA, 'Condition', [
+    wbStruct(CTDA, 'Condition Entry', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
       wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
@@ -9308,7 +9311,7 @@ begin
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
+    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
     wbInteger(CNAM, 'Favor Level', itU8, wbEnum([
       'None',
       'Small',
