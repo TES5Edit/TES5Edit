@@ -3576,7 +3576,7 @@ begin
     end;
 
     {>>>
-    Removing PLD2 are actualy causing troubles
+    Removing PLD2 actualy causes troubles
     http://forums.bethsoft.com/topic/1409718-wipz-tes5dumpfuture-tes5edit/page__view__findpost__p__21536789
     <<<}
 //    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
