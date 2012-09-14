@@ -32,18 +32,11 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\build\')">$(MSBuildProjectDirectory)\</BUILD_ROOT>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\build\')">$(MSBuildProjectDirectory)\..\</BUILD_ROOT>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\..\build\')">$(MSBuildProjectDirectory)\..\..\</BUILD_ROOT>
-    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' AND Exists('$(MSBuildProjectDirectory)\..\..\..\build\')">$(MSBuildProjectDirectory)\..\..\..\</BUILD_ROOT>
-  </PropertyGroup>
-  <PropertyGroup>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>build\tesvsnip.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <Import Project="$(BUILD_ROOT)\build\tesvsnip.common.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
