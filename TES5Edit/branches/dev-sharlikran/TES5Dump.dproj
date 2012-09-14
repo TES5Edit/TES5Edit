@@ -7,7 +7,7 @@
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Console</AppType>
         <FrameworkType>None</FrameworkType>
-        <ProjectVersion>13.4</ProjectVersion>
+        <ProjectVersion>14.3</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <Platform>Win32</Platform>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>

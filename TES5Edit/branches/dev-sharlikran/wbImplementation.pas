@@ -13791,6 +13791,9 @@ begin
   if not wbReportMode then
     Exit;
 
+  if wbReportMode then
+    ReportDefs;
+
   SubRecordOrderList.Sorted := False;
 
   for i := 0 to Pred(SubRecordOrderList.Count) do
