@@ -23,6 +23,7 @@ uses
 function wbDistance(const a, b: TD3DXVector3): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
+function FindMatchText(Strings: TStrings; const Str: string): Integer;
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -200,6 +201,13 @@ begin
   end;
 end;
 
+function FindMatchText(Strings: TStrings; const Str: string): Integer;
+begin
+  for Result := 0 to Strings.Count-1 do
+    if SameText(Strings[Result], Str) then
+      Exit;
+  Result := -1;
+end;
 
 { TnxFastStringList }
 

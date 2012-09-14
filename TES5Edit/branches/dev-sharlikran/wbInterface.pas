@@ -57,6 +57,7 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  wbUserDefinedDebug: Boolean{} = False{};
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;
@@ -70,8 +71,8 @@ var
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{ = True{};
-  wbReportUnused: Boolean{ = True{};
+  wbReportMode: Boolean{} = True{};
+  wbReportUnused: Boolean{} = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
   wbReportUnknownFormIDs: Boolean{} = True{};
@@ -9042,6 +9043,10 @@ var
 begin
   Result := '';
 
+  {>>> No ACVA errors <<<}
+  if IsValid('ACVA') then
+    Exit;
+
   if aInt = 0 then begin
     if IsValid('TRGT') and not IsValid('NULL') then begin
       Found := 'TRGT';
@@ -10214,8 +10219,8 @@ end;
 initialization
   TwoPi := 2 * OnePi;
 
-  if (DebugHook = 0) then
-    wbReportMode := False;
+//  if (DebugHook = 0) then
+//    wbReportMode := False;
 
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;

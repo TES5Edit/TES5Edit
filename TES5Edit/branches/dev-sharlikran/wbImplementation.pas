@@ -5175,7 +5175,7 @@ begin
       Continue;
     end;
 
-    if mrDef.AllowUnordered then begin
+    if (mrDef.AllowUnordered or wbUserDefinedDebug) then begin
       CurrentDefPos := mrDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
       if CurrentDefPos < 0 then begin
         if Assigned(wbProgressCallback) then
@@ -5287,6 +5287,7 @@ begin
 
 //  if GetSignature = 'DIAL' then
 //    FoundError := True;
+  FoundError := True;
 
   if FoundError then
     if Assigned(wbProgressCallback) then begin
@@ -5296,7 +5297,7 @@ begin
 {$ENDIF}
     end;
 
-  if wbSortSubRecords and (mrDef.AllowUnordered or (esModified in eStates)) and (Length(cntElements) > 1) then
+  if wbSortSubRecords and ((mrDef.AllowUnordered or wbUserDefinedDebug) or (esModified in eStates)) and (Length(cntElements) > 1) then
     QuickSort(@cntElements[0], Low(cntElements), High(cntElements), CompareSubRecords);
 
   mrDef.AfterLoad(Self);

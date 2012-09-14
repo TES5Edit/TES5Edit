@@ -379,6 +379,8 @@ begin
     on e: Exception do
       WriteLn(ErrOutput, 'Unexpected Error: <',e.ClassName, ': ', e.Message,'>');
   end;
-  if wbReportMode or (DebugHook <> 0) then
-    ReadLn;
+  if wbReportMode or (DebugHook <> 0) then Begin
+    ReportProgress('Finished but with errors.');
+//    ReadLn;
+  end;
 end.
