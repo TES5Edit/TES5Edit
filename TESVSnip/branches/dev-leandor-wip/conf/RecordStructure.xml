@@ -223,17 +223,16 @@
 			<Element name="Flags" type="byte" flags="Head;Torso;Right Hand;Left Hand"/>
 		</Subrecord>
 	</Group>
-	<Group id="POSDATA" optional="1">
-		<!-- zPos uses an unknown formula to calc -->
-		<Subrecord name="DATA" desc="Position/Origin and Rotation" optional="1">
-			<Element name="X Position" type="float"/>
-			<Element name="Y Position" type="float"/>
-			<Element name="Z Position" type="float"/>
-			<Element name="X Rotation" type="float"/>
-			<Element name="Y Rotation" type="float"/>
-			<Element name="Z Rot (not actual #)" type="float"/>
-		</Subrecord>
-	</Group>
+  <Group id="POSDATA">
+    <Subrecord name="DATA" desc="Position/Origin and Rotation">
+      <Element name="X Position" type="float"/>
+      <Element name="Y Position" type="float"/>
+      <Element name="Z Position" type="float"/>
+      <Element name="X Rotation" type="float"/>
+      <Element name="Y Rotation" type="float"/>
+      <Element name="Z Rot (not actual #)" type="float"/>
+    </Subrecord>
+  </Group>
 	<Group id="SOUNDS" optional="1">
 		<Subrecord name="YNAM" desc="Pick Up Sound (SNDR)" optional="1">
 			<Element name="SNDR FormID" type="formid" reftype="SNDR"/>
@@ -503,7 +502,7 @@
 			<Element name="Check-Boxes" type="int" options="None;0;SetEnableOpposite;1;Pop In;2;SetEnableOpp/Pop In;3"/>
 		</Subrecord>
 	</Group>
-	<Group id="XLKR" optional="1">
+  <Group id="XLKR" optional="1">
 		<Subrecord name="XLKR" desc="Linked Ref" optional="1">
 			<Element name="KYWD FormID" type="formid" optional="1"/>
 			<Element name="Reference FormID" type="formid" optional="1"/>
@@ -6075,14 +6074,57 @@ non-indent is being worked on
 		<Group id="EDID" optional="1"/>
 		<Group id="VMAD" optional="1"/>
 		<Group id="NAME" optional="1"/>
+		<Subrecord name="XLIB" desc="Leveled Item Base (LVLI)" optional="1">
+			<Element name="FormID" type="formid" reftype="LVLI" />
+		</Subrecord>
+		<Group id="FACTOWN" optional="1"/>
 		<Group id="XLRT" optional="1"/>
 		<Subrecord name="XRGD" desc="Ragdoll Data" optional="1" >
 			<Element name="Unknown" type="blob" />
 		</Subrecord>
-		<Group id="XAPD" optional="1"/>
-		<Group id="XAPR" optional="1"/>
-		<Group id="XLKR" optional="1"/>
+ 		<Group id="XPRM" optional="1"/>
+    <!--            -->
+    <Group id="Pattern1" optional="1">
+      <Group id="XEMI" optional="1"/>
+      <Group id="XLKR" optional="1" repeat="1"/>
+      <Group id="XSCL" optional="1"/>
+    </Group>
+    <Group id="Pattern2" optional="1">
+      <Group id="XAPD" optional="1"/>
+      <Group id="XAPR" optional="1"/>
+      <Group id="XEMI" optional="1"/>
+    </Group>
+    <Group id="Pattern3" optional="1">
+      <Subrecord name="XRDS" desc="Light Related?" optional="1">
+        <Element name="Radius" type="float"/>
+      </Subrecord>
+      <Subrecord name="XLIG" desc="Light Data" optional="1">
+        <Element name="FOV 90+/-" type="float"/>
+        <Element name="Fade 1.35+/-" type="float"/>
+        <Element name="Unknown" type="uint" hexview="1"/>
+        <Element name="Shadow Depth Bias" type="float"/>
+        <Element name="Unknown" type="uint" hexview="1"/>
+      </Subrecord>
+      <Group id="XEMI" optional="1"/>
+    </Group>
+    <Group id="Pattern4" optional="1">
+      <Subrecord name="XRDS" desc="Light Related?" optional="1">
+        <Element name="Radius" type="float"/>
+      </Subrecord>
+      <Group id="XEMI" optional="1"/>
+      <Subrecord name="XLIG" desc="Light Data" optional="1">
+        <Element name="FOV 90+/-" type="float"/>
+        <Element name="Fade 1.35+/-" type="float"/>
+        <Element name="Unknown" type="uint" hexview="1"/>
+        <Element name="Shadow Depth Bias" type="float"/>
+        <Element name="Unknown" type="uint" hexview="1"/>
+      </Subrecord>
+    </Group>
+    <Group id="XAPD" optional="1"/>
+    <Group id="XAPR" optional="1"/>
+    <Group id="XAPR" optional="1"/>
    	<Group id="LevelModifier" optional="1"/>
+    <!--        -->
 		<Subrecord name="XTEL" desc="Door Teleport" optional="1">
 			<Element name="Door REFR FormID" type="formid" reftype="REFR"/>
 			<Element name="X Position" type="float"/>
@@ -6093,17 +6135,28 @@ non-indent is being worked on
 			<Element name="Z Rotation" type="float"/>
 			<Element name="Flags" type="uint" flags="No Alarm"/>
 		</Subrecord>
+		<Subrecord name="XTNM" desc="MessageBox (MESG)" optional="1">
+			<Element name="FormID" type="formid" reftype="MESG" />
+		</Subrecord>
+    <Group id="Pattern5" optional="1">
+		<Group id="XESP" optional="1"/>
+		<Group id="XTRI" optional="1"/>
+    </Group>
+    <Group id="Pattern6" optional="1">
+		<Group id="XTRI" optional="1"/>
+		<Group id="XESP" optional="1"/>
+    </Group>
 		<Subrecord name="XNDP" desc="door navMesh?" optional="1" >
 			<Element name="NAVM FormID" type="formid" reftype="NAVM"/>
 			<Element name="Unknown" type="ushort"/>
 			<Element name="Unknown" type="ushort"/>
 		</Subrecord>
+    <!--        -->
 		<Subrecord name="XMBO" desc="Object Bounds" optional="1">
 			<Element name="x1" type="float" />
 			<Element name="y1" type="float" />
 			<Element name="z1" type="float" />
 		</Subrecord>
-		<Group id="XPRM" optional="1"/>
 		<Subrecord name="XPRD" desc="XPRD" optional="1">
 			<Element name="Unknown float" type="float" />
 		</Subrecord>
@@ -6111,12 +6164,15 @@ non-indent is being worked on
 		<Subrecord name="INAM" desc="ImageSpace (IMGS)" optional="1">
 			<Element name="IMGS FormID" type="formid" reftype="IMGS"/>
 		</Subrecord>
-		<Subrecord name="PDTO" desc="PDTO" optional="1" >
-			<Element name="Type" type="uint" options="Topic Ref;0;Topic Subtype;1"/>
-      <!-- Needs Union Decider  -->
-      <!-- FormID or STR4   -->
-			<Element name="DIAL FormID" type="formid" reftype="DIAL" />
-		</Subrecord>
+    <Group id="Pattern7" optional="1">
+      <Subrecord name="PDTO" desc="PDTO" optional="1" >
+        <Element name="Type" type="uint" options="Topic Ref;0;Topic Subtype;1"/>
+        <!-- Needs Union Decider  -->
+        <!-- FormID or STR4   -->
+        <Element name="DIAL FormID" type="formid" reftype="DIAL" />
+      </Subrecord>
+      <Group id="XLKR" optional="1" repeat="1"/>
+    </Group>
 		<Subrecord name="XLOC" desc="Lock Information" optional="1">
 			<Element name="Level" type="byte" options="Novice;1;Apprentice;25;Adept;50;Expert;75;Master;100;Requires Key;255"/>
 			<Element name="Unknown 1" type="byte"  hexview="1"/>
@@ -6130,7 +6186,21 @@ non-indent is being worked on
 			<Element name="Unknown 6" type="uint" />
 		</Subrecord>
 		<Group id="XLRL" optional="1"/>
+    <!-- Begin Misc -->
+		<Subrecord name="XHTW" desc="Head-Tracking Weight" optional="1">
+			<Element name="Head-Tracking" type="float"/>
+		</Subrecord>
+		<Subrecord name="XFVC" desc="Favor Cost" optional="1">
+			<Element name="Value" type="float" />
+		</Subrecord>
+		<Subrecord name="XMBR" desc="Multibound (REFR)" optional="1">
+			<Element name="REFR FormID" type="formid" reftype="REFR"/>
+		</Subrecord>
+		<Subrecord name="XPWR" desc="Reflected By (REFR)" optional="1" repeat="1">
+			<Element name="REFR FormID" type="formid" reftype="REFR"/>
+		</Subrecord>
 		<Group id="XSCL" optional="1"/>
+    <!-- End Misc -->
 		<Subrecord name="XMRK" desc="Map Data Marker" optional="1"/>
 		<Subrecord name="FNAM" desc="FNAM" optional="1">
 			<Element name="Flags" type="byte" flags="Visible;Can Travel To;Unknown 3"/>
@@ -6140,44 +6210,61 @@ non-indent is being worked on
 		<Subrecord name="TNAM" desc="TNAM" optional="1">
 			<Element name="Unknown short" type="short"/>
 		</Subrecord>
-		<Group id="XLKR" optional="1"/>
-    <!--            -->
-		<Subrecord name="XRDS" desc="Light Related?" optional="1">
-			<Element name="Radius" type="float"/>
+		<Subrecord name="XRDS" desc="Light Related" optional="1">
+			<Element name="Unknown float" type="float"/>
 		</Subrecord>
-		<Subrecord name="XLIG" desc="Light Data" optional="1">
-			<Element name="FOV 90+/-" type="float"/>
-			<Element name="Fade 1.35+/-" type="float"/>
-			<Element name="Unknown" type="uint" hexview="1"/>
-			<Element name="Shadow Depth Bias" type="float"/>
-			<Element name="Unknown" type="uint" hexview="1"/>
+		<Group id="XLCN" optional="1"/>
+		<Subrecord name="XLCM" desc="XLCM" optional="1">
+			<Element name="Unknown 4bytes" type="int" />
 		</Subrecord>
+    <!--           -->
+    <Group id="Pattern8" optional="1">
+      <Group id="XAPD" optional="1"/>
+      <Group id="XAPR" optional="1" repeat="1"/>
+      <Group id="XLRT" optional="1"/>
+    </Group>
+    <Group id="Pattern9" optional="1">
+      <Group id="XLKR" optional="1" repeat="1"/>
+      <Subrecord name="XIS2" desc="Ignored by Sandbox" optional="1"/>
+    </Group>
+    <Group id="Pattern10" optional="1">
+      <Subrecord name="XIS2" desc="Ignored by Sandbox" optional="1"/>
+      <Group id="XLKR" optional="1" repeat="1"/>
+    </Group>
+    <Group id="Pattern11" optional="1">
+      <Subrecord name="XIS2" desc="Ignored by Sandbox" optional="1"/>
+      <Group id="XESP" optional="1"/>
+    </Group>
+    <Group id="Pattern12" optional="1">
+      <Subrecord name="XIS2" desc="Ignored by Sandbox" optional="1"/>
+      <Group id="FACTOWN" optional="1"/>
+    </Group>
+    <Group id="Pattern13" optional="1">
+      <Subrecord name="XIS2" desc="Ignored by Sandbox" optional="1"/>
+      <Group id="XLRT" optional="1"/>
+    </Group>
+    <Group id="Pattern14" optional="1">
+      <Group id="XESP" optional="1"/>
+			<Subrecord name="XRGD" desc="XRGD" optional="1" >
+				<Element name="Unknown" type="blob" />
+			</Subrecord>
+      <Subrecord name="XEZN" desc="Encounter Zone (ECZN)" optional="1">
+        <Element name="ECZN FormID" type="formid" reftype="ECZN"/>
+      </Subrecord>
+      <Group id="FACTOWN" optional="1"/>
+    </Group>
+    <Group id="Pattern15" optional="1">
+      <Group id="FACTOWN" optional="1"/>
+      <Subrecord name="XEZN" desc="Encounter Zone (ECZN)" optional="1">
+        <Element name="ECZN FormID" type="formid" reftype="ECZN"/>
+      </Subrecord>
+      <Group id="XESP" optional="1"/>
+    </Group>
 
     <!-- Verified to here  -->
 		<Group optional="1" repeat="1">
 			<!-- localized; these change position depending when created -->
-			<Group id="FACTOWN" optional="1"/>
 			<!-- localized -->
-			<Group id="XEMI" optional="1"/>
-			<Group id="XESP" optional="1"/>
-			<Group id="XLCN" optional="1"/>
-			<Group id="XTRI" optional="1"/>
-			<Subrecord name="XATR" desc="Attached to Ref" optional="1">
-				<Element name="FormID" type="formid"/>
-			</Subrecord>
-			<Subrecord name="XHTW" desc="Head-Tracking Weight" optional="1">
-				<Element name="Head-Tracking" type="float"/>
-			</Subrecord>
-			<Subrecord name="XMBR" desc="Multibound (REFR)" optional="1">
-				<Element name="REFR FormID" type="formid" reftype="REFR"/>
-			</Subrecord>
-			<Subrecord name="XPWR" desc="Reflected By (REFR)" optional="1" repeat="1">
-				<Element name="REFR FormID" type="formid" reftype="REFR"/>
-			</Subrecord>
-			<Subrecord name="XIS2" desc="Ignored by Sandbox" optional="1"/>
-			<Subrecord name="XEZN" desc="Encounter Zone (ECZN)" optional="1">
-				<Element name="ECZN FormID" type="formid" reftype="ECZN"/>
-			</Subrecord>
 			<Subrecord name="XCNT" desc="Item Count" optional="1">
 				<Element name="Count" type="int"/>
 			</Subrecord>
@@ -6235,9 +6322,6 @@ non-indent is being worked on
 			<Subrecord name="XACT" desc="XACT" optional="1">
 				<Element name="Unknown int" type="int"/>
 			</Subrecord>
-			<Subrecord name="XTNM" desc="MessageBox (MESG)" optional="1">
-				<Element name="FormID" type="formid" reftype="MESG" />
-			</Subrecord>
 			<Subrecord name="XRGB" desc="XRGB" optional="1">
 				<Element name="Unknown" type="float" />
 				<Element name="Unknown 1" type="int" />
@@ -6249,15 +6333,6 @@ non-indent is being worked on
 			<Subrecord name="XLTW" desc="? (REFR)" optional="1">
 				<Element name="FormID" type="formid" reftype="REFR" />
 			</Subrecord>
-			<Subrecord name="XRGD" desc="XRGD" optional="1" >
-				<Element name="Unknown" type="blob" />
-			</Subrecord>
-			<Subrecord name="XLIB" desc="Leveled Item Base (LVLI)" optional="1">
-				<Element name="FormID" type="formid" reftype="LVLI" />
-			</Subrecord>
-			<Subrecord name="XRDS" desc="Light Related" optional="1">
-				<Element name="Unknown float" type="float"/>
-			</Subrecord>
 			<Subrecord name="SCHR" desc="SCHR" optional="1">
 				<Element name="Unknown" type="int" />
 				<Element name="Unknown 1" type="int" />
@@ -6266,9 +6341,6 @@ non-indent is being worked on
 				<Element name="Unknown 4" type="int" />
 			</Subrecord>
 			<Subrecord name="SCTX" desc="SCTX" optional="1" />
-			<Subrecord name="XFVC" desc="XFVC" optional="1">
-				<Element name="Unknown float" type="float" />
-			</Subrecord>
 			<Subrecord name="XOCP" desc="XOCP" optional="1">
 				<Element name="Unknown" type="float" />
 				<Element name="Unknown 1" type="float" />
@@ -6286,16 +6358,20 @@ non-indent is being worked on
 			<Subrecord name="XCZA" desc="XCZA" optional="1">
 				<Element name="Unknown 4bytes" type="int" />
 			</Subrecord>
-			<Subrecord name="XLCM" desc="XLCM" optional="1">
-				<Element name="Unknown 4bytes" type="int" />
-			</Subrecord>
 			<Subrecord name="XMBP" desc="XMBP" optional="1"/>
-      <Group id="XSCL" optional="1"/>
       <Subrecord name="ONAM" desc="Open by Default" optional="1"/>
 		</Group>
 
     <!-- Verified DATA Here -->
-		<Group id="POSDATA" optional="1"/>
+    <!-- Attach reference -->
+    <!-- REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA  -->
+    <Group id="Pattern14" optional="1">
+      <Subrecord name="XATR" desc="Attached to Ref" optional="1">
+        <Element name="FormID" type="formid"/>
+      </Subrecord>
+      <Group id="XSCL" optional="1"/>
+    </Group>
+    <Group id="POSDATA"/>
 	</Record>
 	<Record name="ACHR" desc="Actor Reference">
 		<Group id="EDID" optional="1"/>
@@ -6389,7 +6465,7 @@ non-indent is being worked on
 			<Group id="XEMI" optional="1"/>
 			<Group id="XESP" optional="1"/>
 			<Group id="XLCN" optional="1"/>
-			<Group id="XLKR" optional="1"/>
+      <Group id="XLKR" optional="1"/>
 			<Group id="XLRL" optional="1"/>
 			<Group id="XLRT" optional="1"/>
 			<Group id="XPRM" optional="1"/>
@@ -6435,7 +6511,7 @@ non-indent is being worked on
 			<Group id="XEMI" optional="1"/>
 			<Group id="XESP" optional="1"/>
 			<Group id="XLCN" optional="1"/>
-			<Group id="XLKR" optional="1"/>
+      <Group id="XLKR" optional="1"/>
 			<Group id="XLRL" optional="1"/>
 			<Group id="XLRT" optional="1"/>
 			<Group id="XPRM" optional="1"/>
