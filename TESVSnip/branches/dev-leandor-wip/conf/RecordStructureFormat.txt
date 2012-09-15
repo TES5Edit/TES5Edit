@@ -26,13 +26,13 @@ id (required): A unique id by which the group is referenced from a Record.
 
 desc (optional): A human readable description of the subrecord contents
 
-optional (Boolean): Depreciated this is no longer valid in Group.
-
-repeat (Boolean): Depreciated this is no longer valid in Group.
-
-element (optional): Depreciated this is no longer valid in Group.
-
 subrecord (optional): The Subrecord block is evaluated as indicated by the Subrecord attributes and, repeat or optional apply to each individual Subrecord block within the Group block.
+
+element (optional): Elements within a the Subrecord block are evaluated as indicated by the Elements attributes and, repeat or optional apply to each individual Group block.  Group blocks can be bested within other Group blocks.
+
+repeat (Boolean): A value of 1 will repeat the entire Group block 1 or more times.  If omitted, defaults to 0.  This should only be used on nested Group Blocks within the Main Grop Block.
+
+optional (Boolean): Depreciated this is no longer valid within a Group block.
 
 NOTE: The size of the data is by each Subrecord block indepentently.  Group should not worry about the size.
 
