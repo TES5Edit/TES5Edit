@@ -3510,7 +3510,13 @@ begin
                (Signature = 'PGRE') or
                (Signature = 'PMIS') or
                (Signature = 'ACHR') or
-               (Signature = 'ACRE')
+               (Signature = 'ACRE') or
+               (Signature = 'PARW') or {>>> Skyrim <<<}
+               (Signature = 'PBAR') or {>>> Skyrim <<<}
+               (Signature = 'PBEA') or {>>> Skyrim <<<}
+               (Signature = 'PCON') or {>>> Skyrim <<<}
+               (Signature = 'PFLA') or {>>> Skyrim <<<}
+               (Signature = 'PHZD')    {>>> Skyrim <<<}
              ) then begin
 
             IsDeleted := True;

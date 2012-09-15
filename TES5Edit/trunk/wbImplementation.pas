@@ -1993,7 +1993,7 @@ begin
   else if wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
   else if wbGameMode = gmTES5 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.85';
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '2048';
   flLoadFinished := True;
 end;
@@ -10262,11 +10262,13 @@ var
   MainRecords : TDynMainRecords;
   Groups      : TDynGroupRecords;
   Group       : IwbContainerElementRef;
+  g           : IwbGroupRecord;
   i, j, k     : Integer;
   InsertRecord: IwbMainRecordEntry;
   TargetRecord: IwbMainRecordEntry;
   PrevRecord  : IwbMainRecordEntry;
   InfoQuest   : Int64;
+  InfoQuest2  : Int64;
   Inserted    : Boolean;
   NewElements : TDynElementInternals;
 begin
@@ -10313,7 +10315,15 @@ begin
                     if not Supports(TargetRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
                       Assert(False);
 
-                    InsertRecord.InsertEntryAfter(TargetRecord)
+                    {
+                    wbProgressCallback(Format('Inserting %s:[%s] after %s:[%s]', [
+                      InsertRecord._File.FileName,
+                      IntToHex(InsertRecord.FormID, 8),
+                      TargetRecord._File.FileName,
+                      IntToHex(TargetRecord.FormID, 8)
+                    ]));
+                    }
+                    InsertRecord.InsertEntryAfter(TargetRecord);
 
                   end else if InsertRecord.ElementExists['PNAM'] then
                     InsertRecord.InsertEntryHead
@@ -10327,11 +10337,21 @@ begin
               TargetRecord.RemoveEntry
             else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
               if not TargetRecord.ElementExists['PNAM'] then begin
-                InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
+                {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
+                if wbGameMode = gmTES5 then begin
+                  Supports(TargetRecord.Container, IwbGroupRecord, g);
+                  InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
+                end else
+                  InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
                 InsertRecord := PrevRecord;
                 Inserted := False;
                 while Assigned(InsertRecord) do begin
-                  if (not InsertRecord.IsDeleted) and (InfoQuest = InsertRecord.ElementNativeValues['QSTI']) then begin
+                  if wbGameMode = gmTES5 then begin
+                    Supports(InsertRecord.Container, IwbGroupRecord, g);
+                    InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
+                  end else
+                    InfoQuest2 := InsertRecord.ElementNativeValues['QSTI'];
+                  if (not InsertRecord.IsDeleted) and (InfoQuest = InfoQuest2) then begin
                     try
                       Inserted := True;
                       TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID;
