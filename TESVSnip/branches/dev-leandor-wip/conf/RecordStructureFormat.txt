@@ -28,13 +28,41 @@ optional (Boolean): Depreciated this is no longer valid in Group.
 
 repeat (Boolean): Depreciated this is no longer valid in Group.
 
-NOTE: Element and Subrecords blocks are all optional.  The size of the data is determined by the total Element [type] indicated in each Element.  If Subrecord blocks and elements are used then the data size is the total size indicated by the individual elements, and the Subrecord blocks within the Group block.  
+element (optional): Depreciated this is no longer valid in Group.
 
 subrecord (optional): The Subrecord block is evaluated as indicated by the Subrecord attributes and, repeat or optional apply to each individual Subrecord block within the Group block.
 
-element (optional): The Element is evaluated as indicated by the Element attributes and, repeat or optional apply only to the current individual Element within the Group block.
+NOTE: The size of the data is by each Subrecord block indepentently.  Group should not worry about the size.
 
 NOTE: When a Group block contains Subrecord blocks, [repeat] and [optional] apply only to the Subrecord block within the Group block.
+
+The Subrecords in the group determine the order.  TESVSnip 4.4.0a already does this correctly.
+
+<Group id="blah">
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ANAM" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ANAM" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+When a Subrecord block uses [optional] then the record is still skipped.  This also seems to work correctly with TESVSnip 4.4.0a.
 
 XXXXXXXXXXXXXXXXX
 XXX Subrecord XXX
