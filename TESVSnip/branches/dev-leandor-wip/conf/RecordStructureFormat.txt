@@ -24,6 +24,8 @@ XXX Group XXX
 XXXXXXXXXXXXXX
 id (required): A unique id by which the group is referenced from a Record.
 
+desc (optional): A human readable description of the subrecord contents
+
 optional (Boolean): Depreciated this is no longer valid in Group.
 
 repeat (Boolean): Depreciated this is no longer valid in Group.
