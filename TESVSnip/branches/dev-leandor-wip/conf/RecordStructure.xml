@@ -8801,52 +8801,11 @@ non-indent is being worked on
       <Element name="WRLD Cell Grid Y" type="short"/>
       <Element name="WRLD Cell Grid X" type="short"/>
 		</Subrecord>
-		<Subrecord name="LCPR" desc="Actor-Assigned (and starting locations)" optional="1">
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="(rest of data)" type="blob"/>
+    <Subrecord name="LCPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="4">
+      <Element name="ACHR FormID" type="formid"/>
+      <Element name="CELL/WRLD FormID" type="formid"/>
+      <Element name="WRLD Cell Grid Y" type="short"/>
+      <Element name="WRLD Cell Grid X" type="short"/>
 		</Subrecord>
 		<!-- Snip Can Display this correctly with this Syntax -->
 		<!-- Appears In Dawnguard.esm  -->
