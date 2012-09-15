@@ -76,7 +76,7 @@ elmcondition: If it exists, performs the same task as the subrecord attribute bu
 
 elmcondid (required if condition is used): An integer id that performs the same task as the subrecord attribute but, must match up with a previous elmcondid attribute attached to an element.  A value greater than 0 tells tessnip that this element will be compared to a element within the Subrecord or Group. Defaults to 0 if omitted.
 
-elmcondvalue (required if condition is used): Performs the same task as the subrecord attribute but, the value to compare against in a comparison of elmcondid.
+elmcondvalue (required if condition is used): Performs the same task as the subrecord attribute but, the value to compare against in a comparison of elmcondid.  elmconvalue can be an integer or flag value such as value="$04", value"$02", or value="$08".
 
 reftype (optional, only valid if type is formid): If the element is a formid that is restricted to point at a single type of record, set this to the appropriate 4 letter record code.
 
