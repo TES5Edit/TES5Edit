@@ -8795,13 +8795,13 @@ non-indent is being worked on
 	<Record name="LCTN" desc="Location Data">
 		<!-- localized; Snip doesn't have element-groups yet -->
 		<Group id="EDID" optional="1"/>
-    <Subrecord name="ACPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="4">
+    <Subrecord name="ACPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="12">
       <Element name="ACHR FormID" type="formid"/>
       <Element name="CELL/WRLD FormID" type="formid"/>
       <Element name="WRLD Cell Grid Y" type="short"/>
       <Element name="WRLD Cell Grid X" type="short"/>
 		</Subrecord>
-    <Subrecord name="LCPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="4">
+    <Subrecord name="LCPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="12">
       <Element name="ACHR FormID" type="formid"/>
       <Element name="CELL/WRLD FormID" type="formid"/>
       <Element name="WRLD Cell Grid Y" type="short"/>
@@ -8812,11 +8812,11 @@ non-indent is being worked on
 		<Subrecord name="RCPR" desc="Location Data" optional="1">
 			<Element name="Reference" type="formid" reftype="REFR" repeat="1" optional="1"/>
 		</Subrecord>
-		<!-- If this is not a Legacy Record it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
+		<!-- If this may or may not be a Legacy Record but it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
 		<Subrecord name="RCUN" desc="Location Data" optional="1">
 			<Element name="Reference" type="formid" reftype="REFR" repeat="1" optional="1"/>
 		</Subrecord>
-		<!-- If this is not a Legacy Record it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
+		<!-- If this may or may not be a Legacy Record but it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
 		<Subrecord name="RCSR" desc="Location Data" optional="1">
 			<Element name="Reference" type="formid" reftype="REFR" repeat="1" optional="1"/>
 		</Subrecord>
