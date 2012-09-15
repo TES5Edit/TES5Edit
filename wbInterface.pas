@@ -9964,10 +9964,15 @@ begin
 end;
 
 function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
+var
+  ID: Cardinal;
 begin
-  if aElement._File.IsLocalized then
-    Result := GetLocalizedValue(PCardinal(aBasePtr)^, aElement)
-  else
+  if aElement._File.IsLocalized then begin
+    if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
+      Result := '<Error: lstring ID should be Int32 value>'
+    else
+      Result := GetLocalizedValue(PCardinal(aBasePtr)^, aElement)
+  end else
     Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
 end;
 
