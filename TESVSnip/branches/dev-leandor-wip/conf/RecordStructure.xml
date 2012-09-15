@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- TESvSnip RecordStructure XML File v1.1 modified by SLuckyD, based on Snip v4.2's XML -->
 <!-- 2012-08-17 Beryllium-9 test SVN update -->
+<!-- condid Function List -->
+<!-- condid="1" for GMST attached to EDID -->
+<!-- condid Function List -->
+<!-- condid="3" for BOOK attached to DATA Function List -->
+<!-- condid Function List -->
+<!-- condid Function List -->
+<!-- condid Function List -->
 <Records xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<!-- Repetitive Groupings -->
 	<Group id="CONDITIONAL" optional="1" repeat="1">
@@ -811,6 +818,7 @@ non-indent is being worked on
 			<Element name="Unknown" type="uint" hexview="1"/>
 		</Subrecord>
 	</Record>
+  <!-- condid="1" for GMST attached to EDID -->
 	<Record name="GMST" desc="Game setting">
 		<!-- localized -->
 		<Group id="EDID" optional="1"/>
@@ -1639,16 +1647,26 @@ non-indent is being worked on
 		<Group id="SOUNDS" optional="1"/>
 		<Group id="KEYWORDS" optional="1"/>
 		<Subrecord name="DATA" desc="Book Settings" optional="1">
-			<Element name="Teaches/Taken" type="byte" flags="Skill;Can't Be Taken;Spell" condid="3"/>
-			<Element name="Flags 1" type="byte"/>
-			<Element name="Flags 2" type="ushort"/>
+       <!-- 1 or 3 is Skill -->
+       <!-- 4 or 6 is Spell -->
+			<Element name="Teaches/Taken" type="byte" flags="Teaches Skill;Can't Be Taken;Teaches Spell" condid="3"/>
+			<Element name="Book Type" type="byte" options="Book/Tome;0;Note/Scroll;255"/>
+			<Element name="Unknown" type="ushort"/>
+      
 			<!-- Future Enhancement :  Conditions not currently evaluated on elements
+		  <Element name="Unknown" type="blob" condition="equal" condid="3" condvalue="0"/>
 		  <Element name="Skill To Increase" type="int" condition="equal" condid="3" condvalue="1"/>
+		  <Element name="Skill To Increase" type="int" condition="equal" condid="3" condvalue="3"/>
 		  <Element name="Spell to Cast" type="formid" reftype="SPEL" condition="equal" condid="3" condvalue="4"/>
-		  <Element name="Unused" type="int" condition="equal" condid="3" condvalue="0"/>
-		  -->
-			<Element name="Skills or SPEL FormID" type="int" options="OneHanded;6;TwoHanded;7;Marksman;8;Block;9;Smithing;10;HeavyArmor;11;LightArmor;12;Pickpocket;13;Lockpicking;14;Sneak;15;Alchemy;16;Speechcraft;17;Alteration;18;Conjuration;19;Destruction;20;Illusion;21;Restoration;22;Enchanting;23;Fame;60;Infamy;61"/>
-			<Element name="Value" type="int"/>
+		  <Element name="Spell to Cast" type="formid" reftype="SPEL" condition="equal" condid="3" condvalue="6"/>
+		  End -->
+      
+      <!-- Old Routine
+			<Element name="Skills or SPEL FormID" type="uint" hexview="1" options="None;0;OneHanded;6;TwoHanded;7;Marksman;8;Block;9;Smithing;10;HeavyArmor;11;LightArmor;12;Pickpocket;13;Lockpicking;14;Sneak;15;Alchemy;16;Speechcraft;17;Alteration;18;Conjuration;19;Destruction;20;Illusion;21;Restoration;22;Enchanting;23;Fame;60;Infamy;61;None(Don't Use);4294967295"/>
+		  End -->
+      
+      <Element name="Skills or SPEL FormID" type="uint" hexview="1"/>
+      <Element name="Value" type="int"/>
 			<Element name="Weight" type="float"/>
 		</Subrecord>
 		<Subrecord name="INAM" desc="Inventory Art (STAT)" optional="1">

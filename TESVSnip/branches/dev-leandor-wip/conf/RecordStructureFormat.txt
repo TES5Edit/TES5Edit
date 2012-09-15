@@ -72,6 +72,12 @@ group: Still valid, but use of this should be avoided wherever possible. Use con
 
 condid: An integer, used to match up with the condid in a conditional subrecord. A value greater than 0 tells tessnip that this element will be compared to by a later subrecord. Defaults to 0 if omitted.
 
+elmcondition: If it exists, performs the same task as the subrecord attribute but, the given value is compared the value of a piece of data in a previous element. If the comparison returns false, this element is skipped. Must be one of 'exists', 'missing', 'equal', 'not', 'less', 'lessequal', 'greater', 'greaterequal', 'contains', 'startswith', or 'endswith'. The latter 3 work only for string comparisons, and the greater/less than only work on numeric values.
+
+elmcondid (required if condition is used): An integer id that performs the same task as the subrecord attribute but, must match up with a previous elmcondid attribute attached to an element.  A value greater than 0 tells tessnip that this element will be compared to a element within the Subrecord or Group. Defaults to 0 if omitted.
+
+elmcondvalue (required if condition is used): Performs the same task as the subrecord attribute but, the value to compare against in a comparison of elmcondid.
+
 reftype (optional, only valid if type is formid): If the element is a formid that is restricted to point at a single type of record, set this to the appropriate 4 letter record code.
 
 multiline (optional, only valid if type is string): Used as a hint by the tessnip record editor to use a bigger textbox for this field, and to allow linebreaks. Defaults to false if omitted.
