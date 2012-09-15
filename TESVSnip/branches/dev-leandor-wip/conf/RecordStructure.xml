@@ -186,41 +186,46 @@
 		</Subrecord>
 		<Subrecord name="MODT" desc="Model Texture Data (DDS referenced in NIF)" optional="1">
 			<!-- Snip doesn't support arranging this yet -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
 		</Subrecord>
 		<Group id="MODS" optional="1"/>
 		<Subrecord name="MODD" desc="FaceGen Model Flags" optional="1">
 			<Element name="Flags" type="byte" flags="Head;Torso;Right Hand;Left Hand"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO2Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO2T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO3Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO3T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO4Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO4T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO5Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO5T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
 		</Subrecord>
 	</Group>
   <Group id="POSDATA">
@@ -1020,9 +1025,8 @@ non-indent is being worked on
 		<Group id="FULL" optional="1"/>
 		<!-- localized -->
 		<Group id="MODEL" optional="1"/>
-		<!-- Snip doesn't support arranging this yet -->
-		<Subrecord name="DATA" desc="Check-Boxes" optional="1">
-			<Element name="Play/Gender/SolidTint/ExtPart" type="byte" options="NOT Playable/Unisex;0;Playable/Unisex;1;NOT Playable/Male;2;Playable/Male;3;NOT Playable/Female;4;Playable/Female;5;NOTPlay/Unisex/isExtraPart;8;Playable/Unisex/isExtraPart;9;NOTPlay/Male/isExtraPart;10;Playable/Male/isExtraPart;11;NOTPlay/Female/isExtraPart;12;Playable/Female/isExtraPart;13;NOTPlay/Unisex/useSolidTint;16;Playable/Unisex/useSolidTint;17;NOTPlay/Male/useSolidTint;18;Playable/Male/useSolidTint;19;Playable/Female/useSolidTint;20;NOTPlay/Female/useSolidTint;21;NOTPlay/Unisex/useSolidTint/isExtraPart;24;Playable/Unisex/useSolidTint/isExtraPart;25;NOTPlay/Male/useSolidTint/isExtraPart;26;Playable/Male/useSolidTint/isExtraPart;27;NOTPlay/Female/useSolidTint/isExtraPart;28;Playable/Female/useSolidTint/isExtraPart;29"/>
+    <Subrecord name="DATA" desc="Head Part Flags" optional="1">
+      <Element name="Flags" type="byte" flags="Playable;Male;Female;Is Extra Part;Use Solid Tint;Unknown 1;Unknown 1;Unknown 1"/>
 		</Subrecord>
 		<Subrecord name="PNAM" desc="HeadPart Type Pulldown" optional="1">
 			<Element name="HeadPartType" type="int" options="Misc;0;Face;1;Eyes;2;Hair;3;Facial Hair;4;Scar;5;Eyebrows;6"/>
@@ -1580,16 +1584,12 @@ non-indent is being worked on
 		<Subrecord name="MOD2" desc="Male world model" optional="1">
 			<Element name="Model Filename" type="string" />
 		</Subrecord>
-		<Subrecord name="MO2T" desc="Texture Files Hashes" optional="1">
-			<Element name="Unknown" type="blob" />
-		</Subrecord>
+    <Group id="MO2Textures" optional="1"/>
 		<Group id="Model2S" optional="1"/>
 		<Subrecord name="MOD4" desc="Female Ground Model Path" optional="1">
 			<Element name="Model Path 4" type="string" />
 		</Subrecord>
-		<Subrecord name="MO4T" desc="Model Data 4" optional="1">
-			<Element name="Model Data 4" type="blob" />
-		</Subrecord>
+    <Group id="MO4Textures" optional="1"/>
 		<Group id="Model4S" optional="1"/>
 		<Group id="BODYDATA" optional="1"/>
 		<Group id="DESTRUCT" optional="1"/>
@@ -2521,41 +2521,8 @@ non-indent is being worked on
 		<Subrecord name="MOD3" desc="Scope Target Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO3T" desc="Alternate Texture Data (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
-		<Subrecord name="EFSD" desc="Scope Effect Shader (EFSH)" optional="1">
+    <Group id="MO3Textures" optional="1"/>
+    <Subrecord name="EFSD" desc="Scope Effect Shader (EFSH)" optional="1">
 			<Element name="EFSH Form ID" type="formid" reftype="EFSH"/>
 		</Subrecord>
 		<Subrecord name="NNAM" desc="Embedded Weapon" optional="1">
@@ -8705,40 +8672,7 @@ non-indent is being worked on
 		<Subrecord name="MOD2" desc="Male Biped Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO2T" desc="Male Model Texture Data (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
+    <Group id="MO2Textures" optional="1"/>
 		<Subrecord name="MO2S" desc="Male Model Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
@@ -8759,40 +8693,7 @@ non-indent is being worked on
 		<Subrecord name="MOD3" desc="Female Biped Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO3T" desc="Female Model Texture (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
+    <Group id="MO3Textures" optional="1"/>
 		<Subrecord name="MO3S" desc="Female Model Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
@@ -8813,40 +8714,7 @@ non-indent is being worked on
 		<Subrecord name="MOD4" desc="Male 1stPerson Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO4T" desc="Male 1stPerson Model Textures (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
+    <Group id="MO4Textures" optional="1"/>
 		<Subrecord name="MO4S" desc="Male 1stPerson Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
@@ -8867,41 +8735,8 @@ non-indent is being worked on
 		<Subrecord name="MOD5" desc="Female 1stPerson Model NIF" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO5T" desc="Female 1stPerson Model Textures (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
-		<Subrecord name="MO5S" desc="Female 1stPerson Alternate Textures" optional="1">
+    <Group id="MO5Textures" optional="1"/>
+    <Subrecord name="MO5S" desc="Female 1stPerson Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
 			<Element name="Object Name" type="istring" optional="1"/>
