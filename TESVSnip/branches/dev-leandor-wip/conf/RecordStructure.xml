@@ -1650,11 +1650,11 @@
 			<Element name="Unknown" type="ushort"/>
       
 			<!-- Future Enhancement :  Conditions not currently evaluated on elements
-		  <Element name="Unknown" type="blob" condition="equal" condid="3" condvalue="0"/>
-		  <Element name="Skill To Increase" type="int" condition="equal" condid="3" condvalue="1"/>
-		  <Element name="Skill To Increase" type="int" condition="equal" condid="3" condvalue="3"/>
-		  <Element name="Spell to Cast" type="formid" reftype="SPEL" condition="equal" condid="3" condvalue="4"/>
-		  <Element name="Spell to Cast" type="formid" reftype="SPEL" condition="equal" condid="3" condvalue="6"/>
+		  <Element name="Unknown" type="blob" elmcondition="equal" elmcondid="3" elmcondvalue="0"/>
+		  <Element name="Skill To Increase" type="int" elmcondition="equal" elmcondid="3" elmcondvalue="1"/>
+		  <Element name="Skill To Increase" type="int" elmcondition="equal" elmcondid="3" elmcondvalue="3"/>
+		  <Element name="Spell to Cast" type="formid" reftype="SPEL" elmcondition="equal" elmcondid="3" elmcondvalue="4"/>
+		  <Element name="Spell to Cast" type="formid" reftype="SPEL" elmcondition="equal" elmcondid="3" elmcondvalue="6"/>
 		  End -->
       
       <!-- Old Routine
