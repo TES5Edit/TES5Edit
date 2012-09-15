@@ -10322,35 +10322,68 @@ begin
                     InsertRecord.InsertEntryTail;
                 end;
           TargetRecord := IwbMainRecordEntry(mreHeader.mrehTail);
-          while Assigned(TargetRecord) do begin
-            PrevRecord := TargetRecord.PrevEntry;
-            if not Equals(TargetRecord.Container) then
-              TargetRecord.RemoveEntry
-            else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
-              if not TargetRecord.ElementExists['PNAM'] then begin
-                InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
-                InsertRecord := PrevRecord;
-                Inserted := False;
-                while Assigned(InsertRecord) do begin
-                  if (not InsertRecord.IsDeleted) and (InfoQuest = InsertRecord.ElementNativeValues['QSTI']) then begin
-                    try
-                      Inserted := True;
-                      TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID;
-                    except
-                      TargetRecord.RemoveElement('PNAM');
+          
+          if wbGameMode in [gmTES5] then begin {>>> Skyrim Code <<<}
+            while Assigned(TargetRecord) do begin
+              PrevRecord := TargetRecord.PrevEntry;
+              if not Equals(TargetRecord.Container) then
+                TargetRecord.RemoveEntry
+              else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
+                if not TargetRecord.ElementExists['PNAM'] then begin
+                  InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
+                  InsertRecord := PrevRecord;
+                  Inserted := False;
+                  while Assigned(InsertRecord) do begin
+                    if (not InsertRecord.IsDeleted) and (InfoQuest = InsertRecord.ElementNativeValues['QSTI']) then begin
+                      try
+                        Inserted := True;
+                        TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID;
+                      except
+                        TargetRecord.RemoveElement('PNAM');
+                      end;
+                      Break;
                     end;
-                    Break;
+                    InsertRecord := InsertRecord.PrevEntry;
                   end;
-                  InsertRecord := InsertRecord.PrevEntry;
+                  if not Inserted then
+                    TargetRecord.Add('PNAM');
                 end;
-                if not Inserted then
-                  TargetRecord.Add('PNAM');
+              finally
+                wbEndInternalEdit;
               end;
-            finally
-              wbEndInternalEdit;
+              TargetRecord := PrevRecord;
             end;
-            TargetRecord := PrevRecord;
-          end;
+          End else Begin {>>> Old code for FO3/FNV/TES4 <<<}
+            while Assigned(TargetRecord) do begin
+              PrevRecord := TargetRecord.PrevEntry;
+              if not Equals(TargetRecord.Container) then
+                TargetRecord.RemoveEntry
+              else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
+                if not TargetRecord.ElementExists['PNAM'] then begin
+                  InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
+                  InsertRecord := PrevRecord;
+                  Inserted := False;
+                  while Assigned(InsertRecord) do begin
+                    if (not InsertRecord.IsDeleted) and (InfoQuest = InsertRecord.ElementNativeValues['QSTI']) then begin
+                      try
+                        Inserted := True;
+                        TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID;
+                      except
+                        TargetRecord.RemoveElement('PNAM');
+                      end;
+                      Break;
+                    end;
+                    InsertRecord := InsertRecord.PrevEntry;
+                  end;
+                  if not Inserted then
+                    TargetRecord.Add('PNAM');
+                end;
+              finally
+                wbEndInternalEdit;
+              end;
+              TargetRecord := PrevRecord;
+            end;
+          End;
 
           Assert(mreHeader.mrehCount = Length(cntElements));
 
