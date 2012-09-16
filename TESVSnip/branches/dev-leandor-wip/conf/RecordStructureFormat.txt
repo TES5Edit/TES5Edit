@@ -26,17 +26,18 @@ id (required): A unique id by which the group is referenced from a Record.
 
 desc (optional): A human readable description of the subrecord contents
 
+NOTE 1: The size of the data is by each Subrecord block indepentently.  Group should not worry about the size.
+NOTE 2: When a Group block contains Subrecord blocks, [repeat] and [optional] apply only to the Subrecord blocks within the Group block.
+
 subrecord (optional): The Subrecord block is evaluated as indicated by the Subrecord attributes and, repeat or optional apply to each individual Subrecord block within the Group block.
 
-element (optional): Elements within a the Subrecord block are evaluated as indicated by the Elements attributes and, repeat or optional apply to each individual Group block.  Group blocks can be bested within other Group blocks.
+element (optional): Elements within a the Subrecord block are evaluated as indicated by the Elements attributes and, repeat or optional apply to each individual Group block.  Group blocks can be nested within other Group blocks.
 
-repeat (Boolean): A value of 1 will repeat the entire Group block 1 or more times.  If omitted, defaults to 0.  This should only be used on nested Group Blocks within the Main Grop Block.
+repeat (optional - Boolean): A value of 1 will repeat the entire Group block 1 or more times.  If omitted, defaults to 0.  This should only be used on nested Group Blocks within the Main Grop Block.
 
-optional (Boolean): Depreciated this is no longer valid within a Group block.
+NOTE for optional: Only used with Group that will contain Surecord Blocks.  It should not to be used with Elements as there is nothing to track to and determine whether on not the information there.
 
-NOTE: The size of the data is by each Subrecord block indepentently.  Group should not worry about the size.
-
-NOTE: When a Group block contains Subrecord blocks, [repeat] and [optional] apply only to the Subrecord block within the Group block.
+optional (optional - Boolean):  A value of 1 indicates that if [name] is not found within the Record block the Subrecord block can be skipped. If omitted, defaults to 0.
 
 The Subrecords in the group determine the order.  TESVSnip 4.4.0a already does this correctly.
 
