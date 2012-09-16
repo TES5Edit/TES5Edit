@@ -11269,6 +11269,7 @@ begin
     {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
       wbInteger('Level', itU8, wbEnum([], [
+         0, 'Novice(Lg)',
          1, 'Novice',
         25, 'Apprentice',
         50, 'Adept',
@@ -11849,12 +11850,9 @@ begin
       wbFloat('Stagger')
     ]),
     wbStruct(CRDT, 'Critical Data', [
-      wbInteger('Damage', itU32),
+      wbByteArray('Damage', 4),
       wbFloat('% Mult'),
-      wbInteger('Flags', itU8, wbFlags([
-        'On Death'
-      ])),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Flags', 4),
       wbFormIDCk('Effect', [SPEL, NULL])
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
