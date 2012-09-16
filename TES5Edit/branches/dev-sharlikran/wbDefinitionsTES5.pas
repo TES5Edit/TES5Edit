@@ -734,7 +734,7 @@ var
   wbFULLFact: IwbSubRecordDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
-  wbScriptObject: IwbStructDef;
+  wbScriptObject: IwbUnionDef;
   wbScriptFragments: IwbStructDef;
   wbEntryPointsEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
@@ -2121,6 +2121,26 @@ begin
 end;
 
 {>>> For VMAD <<<}
+function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  ObjFormat: Integer;
+  Container: IwbContainer;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+  while Assigned(Container) and (Container.ElementType <> etSubRecord) do
+    Container := Container.Container;
+
+  if not Assigned(Container) then
+    Exit;
+
+  ObjFormat := Container.ElementNativeValues['Object Format'];
+
+  if ObjFormat = 1 then
+    Result := 1;
+end;
+
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -2133,7 +2153,7 @@ begin
   if not Assigned(Container) then Exit;
 
   Result := 0;
-  case Integer(Container.ElementNativeValues['propertyType']) of
+  case Integer(Container.ElementNativeValues['Type']) of
      1: Result := 1;
      2: Result := 2;
      3: Result := 3;
@@ -4808,36 +4828,41 @@ begin
     {15} 'Array of Bool'
   ]);
 
-  {>>> Needs union depending on objFormat <<<}
-  wbScriptObject := wbStruct('Object', [
-    wbInteger('Unknown', itU16),
-    wbInteger('AliasID', itS16),
-    wbFormID('FormID')
+  wbScriptObject := wbUnion('', wbScriptObjFormatDecider, [
+    wbStruct('Object', [
+      wbInteger('Unused', itU16),
+      wbInteger('Alias ID', itU16),
+      wbFormID('FormID')
+    ]),
+    wbStruct('Object', [
+      wbFormID('FormID'),
+      wbInteger('Alias ID', itU16),
+      wbInteger('Unused', itU16)
+    ])
   ]);
 
-  wbScriptEntry := wbStruct('Script', [
-    wbLenString('scriptName', 2),
-    wbInteger('Unknown', itU8),
+  wbScriptEntry := wbStructSK([0], 'Script', [
+    wbLenString('Name', 2),
+    wbInteger('Unused', itU8),
     //wbInteger('propertyCount', itU16),
-    wbArray('Properties', wbStruct('Property', [
-      wbLenString('propertyName', 2),
-      wbInteger('propertyType', itU8, wbPropTypeEnum),
-      wbInteger('Unknown', itU8),
+    wbArrayS('Properties', wbStructSK([0], 'Property', [
+      wbLenString('Name', 2),
+      wbInteger('Type', itU8, wbPropTypeEnum),
+      wbInteger('Unused', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbByteArray('Unknown', 0, cpIgnore),
-        {01} wbByteArray('Object', 8), {>>> should be wbScriptObject, but not shown in dump <<<}
-        {02} wbLenString('String', 2), {>>> bugged <<<}
-//        {02} wbArray('String', wbByteArray('', 1), -2),  {>>> bugged too <<<}
+        {01} wbScriptObject, {wbByteArray('Object', 8),} {>>> should be wbScriptObject, but not shown at all??? <<<}
+        {02} wbLenString('String', 2), {>>> bugged? <<<}
         {03} wbInteger('Int32', itU32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
-        {11} wbArray('Array of Object', wbByteArray('Element', 8), -1),
-        {12} wbArray('Array of String', wbLenString('Element', 2), -1), // {>>> this won't work too <<<}
+        {11} wbArray('Array of Object', wbScriptObject, -1),
+        {12} wbArray('Array of String', wbLenString('Element', 2), -1), // {>>> probably won't work too <<<}
         {13} wbArray('Array of Int32', wbInteger('Element', itU32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
-    ]), -2)
+    ]), -2) // comment propertyCount when -2
   ]);
 
   wbScriptFragments := wbStruct('Script Fragments', [
@@ -4865,21 +4890,18 @@ begin
   ]);
 
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('version', itS16),
-    wbInteger('objFormat', itS16),
-    wbInteger('scriptCount', itU16),
-
-{>>>
+    wbInteger('Version', itS16),
+    wbInteger('Object Format', itS16),
+    //wbInteger('Script Count', itU16),
+    {>>>
     For some reason when property type is String
     and VMAD has fragments section(?), wbScriptEntry gets bugged on that property
     Example: Skyrim.esm Quest [00091F1A] <dunLabyrinthian> "Labyrinthian"
-    Scripts parsing replaced with bytearray for better times
-<<<}
-
-    //wbArray('Scripts', wbScriptEntry, -2), // comment out scriptCount when -2
-    wbByteArray('Scripts')
-    //wbScriptFragments
-  ], cpNormal, False, nil, -1);
+    <<<}
+    wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount when -2
+    //wbByteArray('Scripts')
+    wbScriptFragments
+  ]);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -6309,7 +6331,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
-    wbString(CNAM, 'Description')
+    wbLString(CNAM, 'Description')
   ]);
 
   wbSPCT := wbInteger(SPCT, 'Spell Count', itU32);
@@ -9885,7 +9907,7 @@ begin
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True, nil{wbActorTemplateUseModelAnimation});
 
-  wbRecord(NPC_, 'Non-Player Character', [
+  wbRecord(NPC_, 'Actor', [
     wbEDIDReq,
     wbVMAD,
     wbOBNDReq,

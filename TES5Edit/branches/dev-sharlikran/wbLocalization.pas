@@ -42,6 +42,7 @@ type
     fFileName    : string;
     fFileType    : TwbLocalizationString;
     fStrings     : TStringList;
+    fModified    : boolean;
 
     function ReadZString: string;
     function ReadLenZString: string;
@@ -68,6 +69,7 @@ var
   fs: TFileStream;
   Buffer: PByte;
 begin
+  fModified := false;
   fFileName := aFileName;
   ext := LowerCase(ExtractFileExt(aFileName));
   if ext = '.dlstrings' then fFileType := lsDLString else
@@ -197,18 +199,19 @@ end;
 
 function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
 var
-  sigElem, sigRec: TwbSignature;
+  sigElement, sigRecord: TwbSignature;
   aRecord: IwbSubRecord;
 begin
   if Supports(aElement, IwbSubRecord, aRecord) then
-    sigElem := aRecord.Signature
+    sigElement := aRecord.Signature
   else
-    sigElem := '';
-  sigRec := aElement.ContainingMainRecord.Signature;
+    sigElement := '';
+  sigRecord := aElement.ContainingMainRecord.Signature;
 
-  if (sigElem = 'DESC') and (sigRec <> 'LSCR') then Result := lsDLString else // DESC always from dlstrings except LSCR
-  if (sigRec = 'QUST') and (sigElem = 'CNAM') then Result := lsDLString else // quest log entry
-  if (sigRec = 'INFO') and (sigElem <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
+  if (sigRecord <> 'LSCR') and (sigElement = 'DESC') then Result := lsDLString else // DESC always from dlstrings except LSCR
+  if (sigRecord = 'QUST') and (sigElement = 'CNAM') then Result := lsDLString else // quest log entry
+  if (sigRecord = 'BOOK') and (sigElement = 'CNAM') then Result := lsDLString else // Book CNAM description
+  if (sigRecord = 'INFO') and (sigElement <> 'RNAM') then Result := lsILString else // dialog, RNAM are lsString, others lsILString
     Result := lsString; // others
 end;
 
@@ -254,7 +257,7 @@ begin
       end;
     end;
     if bFailed then begin
-      Result := '<Error: No localization for lstring ID ' + IntToHex(ID, 8) +'>';
+      Result := '<Error: No localization for lstring ID ' + IntToHex(ID, 8) + '>';
       Exit;
     end;
   end else
