@@ -1,0 +1,65 @@
+object frmWait: TfrmWait
+  Left = 0
+  Top = 0
+  ClientHeight = 325
+  ClientWidth = 541
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object plMessage: TPanel
+    Left = 0
+    Top = 0
+    Width = 541
+    Height = 232
+    Align = alClient
+    Alignment = taLeftJustify
+    BorderWidth = 5
+    Caption = 'plMessage'
+    TabOrder = 0
+    VerticalAlignment = taAlignTop
+    ExplicitHeight = 243
+  end
+  object Panel2: TPanel
+    Left = 0
+    Top = 232
+    Width = 541
+    Height = 52
+    Align = alBottom
+    Caption = 'Panel2'
+    TabOrder = 1
+  end
+  object plCancel: TPanel
+    Left = 0
+    Top = 284
+    Width = 541
+    Height = 41
+    Align = alBottom
+    BevelOuter = bvNone
+    Padding.Left = 200
+    Padding.Top = 5
+    Padding.Right = 200
+    Padding.Bottom = 5
+    TabOrder = 2
+    ExplicitTop = 290
+    object bnCancel: TBitBtn
+      Left = 200
+      Top = 5
+      Width = 141
+      Height = 31
+      Align = alClient
+      TabOrder = 0
+      OnClick = bnCancelClick
+      Kind = bkCancel
+      ExplicitLeft = 232
+      ExplicitTop = 6
+      ExplicitWidth = 75
+      ExplicitHeight = 25
+    end
+  end
+end

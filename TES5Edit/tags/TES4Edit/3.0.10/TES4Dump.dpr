@@ -12,30 +12,25 @@
 
 *******************************************************************************}
 
-// JCL_DEBUG_EXPERT_INSERTJDBG ON
-// JCL_DEBUG_EXPERT_GENERATEJDBG ON
-// JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 program TES4Dump;
 
 {$APPTYPE CONSOLE}
 
 uses
-  nxReplacementMemoryManager,
-  nxExceptionHook,
+//  nxReplacementMemoryManager,
+//  nxExceptionHook,
   Classes,
   SysUtils,
   Windows,
   wbDefinitionsTES4,
   wbDefinitionsFO3,
   wbDefinitionsFNV,
-  wbDefinitionsTES5,
   wbInterface in 'wbInterface.pas',
-  wbImplementation in 'wbImplementation.pas';
+  wbImplementation in 'wbImplementation.pas',
+  wbNifScanner in 'wbNifScanner.pas';
 
 const
-  IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
-
-{$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
+  cVersion = 'Dump 2.2.21 EXPERIMENTAL (2009-05-04)';
 
 var
   StartTime  : TDateTime;
@@ -179,19 +174,13 @@ var
   NeedsSyntaxInfo : Boolean;
   s               : string;
   _File           : IwbFile;
-  Masters         : TStringList;
+
 begin
-  SysUtils.DecimalSeparator := '.';
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
 
   try
-    if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'TES5') then begin
-      wbGameMode := gmTES5;
-      wbAppName := 'TES5';
-      wbGameName := 'Skyrim';
-      DefineTES5;
-    end else if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+    if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
@@ -212,9 +201,9 @@ begin
     end;
 
     if not wbFindCmdLineSwitch('q') and not wbReportMode then begin
-      WriteLn(ErrOutput, wbAppName, 'Dump ', VersionString);
+      WriteLn(ErrOutput, wbAppName, cVersion);
       WriteLn(ErrOutput);
-
+{
       WriteLn(ErrOutput, 'This Program is subject to the Mozilla Public License');
       WriteLn(ErrOutput, 'Version 1.1 (the "License"); you may not use this program except in');
       WriteLn(ErrOutput, 'compliance with the License. You may obtain a copy of the License at');
@@ -225,6 +214,7 @@ begin
       WriteLn(ErrOutput, 'License for the specific language governing rights and limitations');
       WriteLn(ErrOutput, 'under the License.');
       WriteLn(ErrOutput);
+}
     end;
 
     if wbFindCmdLineParam('dg', s) then begin
