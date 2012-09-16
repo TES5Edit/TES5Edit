@@ -64,6 +64,73 @@ The Subrecords in the group determine the order.  TESVSnip 4.4.0a already does t
   </Subrecord>
 </Group>
 
+Use of repeat in Group for only elements:
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ANAM" Arguments>
+    <Elements>
+    <Elements>
+    <Group id="blah" repeat="5"> <!-- Start Here -->
+      <Elements>
+      <Elements>
+      <Elements>
+    </Group> <!-- End Here -->
+    <Elements>
+    <Elements>
+    <Elements>
+  </Subrecord>
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Group id="blah" repeat="1">
+    <Subrecord="ANAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="CNAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="PNAM" Arguments>
+      <Elements>
+    </Subrecord>
+  </Group> <!-- Stops once no more patterns fit this.  Then it leaves this Group Block and processes NAM0 -->
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+Use of Optional:
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <!-- ALLS and NAM0 might be there but ANAM, CNAM, and PNAM are not.
+  <Group id="blah" repeat="1" optional="1">
+    <Subrecord="ANAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="CNAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="PNAM" Arguments>
+      <Elements>
+    </Subrecord>
+  </Group> <!-- Stops once no more patterns fit this.  Then it leaves this Group Block and processes NAM0 -->
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+
 When a Subrecord block uses [optional] then the record is still skipped.  This also seems to work correctly with TESVSnip 4.4.0a.
 
 XXXXXXXXXXXXXXXXX
