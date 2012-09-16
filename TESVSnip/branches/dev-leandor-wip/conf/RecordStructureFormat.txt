@@ -92,6 +92,7 @@ Use of repeat in Group for only elements:
   <Subrecord="ALLS" Arguments>
     <Elements>
   </Subrecord>
+  <!-- Looks for this pattern of Subgroups, skips any marked optional. If none are optional skips it entirly.  Error produced when only some exists and not others. -->
   <Group id="blah" repeat="1">
     <Subrecord="ANAM" Arguments>
       <Elements>
@@ -130,7 +131,6 @@ Use of Optional:
     <Elements>
   </Subrecord>
 </Group>
-
 
 When a Subrecord block uses [optional] then the record is still skipped.  This also seems to work correctly with TESVSnip 4.4.0a.
 
