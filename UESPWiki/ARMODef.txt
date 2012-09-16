@@ -21,6 +21,8 @@ If MOD4 is not present, MOD2 is used for female characters instead.
 | - || FULL || full name || lstring || Full (in-game) name
 |-
 | - || EITM || enchantment || formid || Enchanment ([[Tes5Mod:Mod File Format/ENCH|ENCH]]).  Note there can be only 1 of these.
+|-
+| - || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
 |-{{ThickLine}}
 | + || MOD2 || male model || zstring || Male Models\ relative .nif
 |-

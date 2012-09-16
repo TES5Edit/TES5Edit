@@ -8674,11 +8674,9 @@
 		<Subrecord name="DNAM" desc="Number-boxes" optional="1">
 			<Element name="Male Priority (0-255)" type="byte"/>
 			<Element name="Female Priority (0-255)" type="byte"/>
-			<Element name="(always 2)" type="byte"/>
-			<Element name="(always 2)" type="byte"/>
-			<Element name="(always 0)" type="byte"/>
-			<Element name="(always 0)" type="byte"/>
+			<Element name="Unkown" type="uint" hexview="1"/>
 			<Element name="Detection Sound Value (0-255)" type="byte"/>
+      <!-- Needs Verification -->
 			<Element name="Body Part to Wear" type="byte" options="Head/Dragon;0;Dragon/Mannequin;10;FX;17;Hands;22;Feet/Torso/Arg/Hands;23;Body/Feet/Head;24"/>
 			<Element name="Weapon Adjust (-4 to 4)" type="float"/>
 		</Subrecord>
