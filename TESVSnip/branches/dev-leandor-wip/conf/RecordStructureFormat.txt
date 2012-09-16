@@ -37,7 +37,7 @@ repeat (optional - Boolean): A value of 1 will repeat the entire Group block 1 o
 
 NOTE for optional: Only used with Group that will contain Surecord Blocks.  It should not to be used with Elements as there is nothing to track to and determine whether on not the information there.
 
-optional (optional - Boolean):  A value of 1 indicates that if [name] is not found within the Record block the Subrecord block can be skipped. If omitted, defaults to 0.
+optional (optional - Boolean):  A value of 1 indicates that Group block will look at it's contents.  It will not apply to Elements.  If Subrecord blocks are found, and the [names] don't match within the Group glock, then the entire Group can be skipped. If omitted, defaults to 0.
 
 The Subrecords in the group determine the order.  TESVSnip 4.4.0a already does this correctly.
 
