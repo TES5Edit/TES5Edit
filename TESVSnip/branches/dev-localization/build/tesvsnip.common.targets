@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project InitialTargets="version" DefaultTargets="version" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <!-- Guess root folder and thirdparty folder if not explicitly defined-->
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' and EXISTS('$(MSBuildProjectDirectory)\build\')">$(MSBuildProjectDirectory)</BUILD_ROOT>
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' and EXISTS('$(MSBuildProjectDirectory)\..\build\')">$(MSBuildProjectDirectory)</BUILD_ROOT>
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == '' and EXISTS('$(MSBuildProjectDirectory)\..\..\build\')">$(MSBuildProjectDirectory)</BUILD_ROOT>
+    <BUILD_ROOT Condition="'$(BUILD_ROOT)' == ''">$(MSBuildProjectDirectory)</BUILD_ROOT>
+
+    <THIRDPARTY_ROOT Condition="'$(THIRDPARTY_ROOT)' == '' and EXISTS('$(BUILD_ROOT)\..\..\thirdparty\')">$(BUILD_ROOT)\..\..\thirdparty\</THIRDPARTY_ROOT>
+    <THIRDPARTY_ROOT Condition="'$(THIRDPARTY_ROOT)' == '' and EXISTS('$(BUILD_ROOT)\..\thirdparty\')">$(BUILD_ROOT)\..\thirdparty\</THIRDPARTY_ROOT>
+    <THIRDPARTY_ROOT Condition="'$(THIRDPARTY_ROOT)' == ''">$(BUILD_ROOT)\thirdparty\</THIRDPARTY_ROOT>
+    
+    <MSBuildCommunityTasksPath Condition="'$(MSBuildCommunityTasksPath)' == '' and EXISTS('$(THIRDPARTY_ROOT)\msbuild.community.tasks.v1.3.0.528')">$(THIRDPARTY_ROOT)\msbuild.community.tasks.v1.3.0.528</MSBuildCommunityTasksPath>
+    <MSBuildCommunityTasksPath Condition="'$(MSBuildCommunityTasksPath)' == '' and EXISTS('$(THIRDPARTY_ROOT)\msbuild.community.tasks')">$(THIRDPARTY_ROOT)\msbuild.community.tasks</MSBuildCommunityTasksPath>
+    <MSBuildCommunityTasksPath>$(THIRDPARTY_ROOT)\msbuild.community.tasks.v1.3.0.528</MSBuildCommunityTasksPath>
+    
+    <TsAssemblyVersion Condition="'$(TsAssemblyVersion)' == ''">$(BUILD_ROOT)\build\assemblyinfo.cs</TsAssemblyVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CompanyName>TESVSnip</CompanyName>
+    <ProductName>TESVSnip (Skyrim Edition)</ProductName>
+    <Copyright>Copyright (c) 2012</Copyright>
+    <Trademark>All Rights Reserved</Trademark>
+    <!-- <SignAssembly>true</SignAssembly> -->
+    <PublisherName>TESVSnip</PublisherName>
+    <AssemblyOriginatorKeyFile Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(BUILD_ROOT)\build\be.snk</AssemblyOriginatorKeyFile>
+    <ManifestKeyFile Condition="'$(ManifestKeyFile)' == ''">$(BUILD_ROOT)\build\be.snk</ManifestKeyFile>
+    <GitVersionNumber>0</GitVersionNumber>
+  </PropertyGroup>
+      
+  <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
+  <UsingTask TaskName="MSBuildTasks.SetEnvVar" AssemblyFile="$(BUILD_ROOT)\build\tesvsnip.buildtasks.dll"/>
+  <UsingTask TaskName="MSBuildTasks.SimpleExec" AssemblyFile="$(BUILD_ROOT)\build\tesvsnip.buildtasks.dll"/>
+
+  <!-- Check status of build variables and stop build if required folders cannot be located -->
+  <Target Name="build_check">
+    <Version VersionFile="$(BUILD_ROOT)\build\buildver.txt" RevisionType="BuildIncrement" BuildType="Automatic" Major="1" Minor="0">
+      <Output TaskParameter="Major" PropertyName="Major" />
+      <Output TaskParameter="Minor" PropertyName="Minor" />
+      <Output TaskParameter="Build" PropertyName="Build" />
+      <Output TaskParameter="Revision" PropertyName="Revision" />
+    </Version>
+    <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)"/>
+            
+    <Error
+        Text=" The BUILD_ROOT property must be set on the command line."
+        Condition="'$(BUILD_ROOT)' == '' or !Exists('$(BUILD_ROOT)')" />
+
+    <Error
+        Text=" The THIRDPARTY_ROOT property must be set on the command line."
+        Condition="'$(THIRDPARTY_ROOT)' == '' or !Exists('$(THIRDPARTY_ROOT)')" />
+    
+    <Message Text=" Using BUILD_ROOT = '$(BUILD_ROOT)'"/>
+    <Message Text=" Using THIRDPARTY_ROOT = '$(THIRDPARTY_ROOT)'"/>  
+  </Target>
+  
+  <!-- Build which depends on existence of version file -->
+  <Target Name="version" Condition="!EXISTS($(TsAssemblyVersion))" DependsOnTargets="build_check;version_force">
+  </Target>
+  
+  <!-- Target which can be used to build version file at any time -->
+  <Target Name="version_force"  DependsOnTargets="build_check">
+    <Error
+        Text=" The BUILD_ROOT property must be set on the command line."
+        Condition="'$(BUILD_ROOT)' == '' or !Exists('$(BUILD_ROOT)')" />
+
+    <Error
+        Text=" The THIRDPARTY_ROOT property must be set on the command line."
+        Condition="'$(THIRDPARTY_ROOT)' == '' or !Exists('$(THIRDPARTY_ROOT)')" />
+           
+    <SimpleExec Command="git" Args="log -1 &quot;--pretty=format:%h&quot; &quot;$(BUILD_ROOT)\.&quot;">
+        <Output TaskParameter="StdOut" PropertyName="GitVersionNumber" />
+        <Output TaskParameter="ExitCode" PropertyName="GitSuccess" />
+    </SimpleExec>
+    <SimpleExec Command="git" Args="log -1 &quot;--pretty=format:%cd&quot; &quot;$(BUILD_ROOT)\.&quot;">
+        <Output TaskParameter="StdOut" PropertyName="GitProjectDate" />
+        <Output TaskParameter="ExitCode" PropertyName="GitSuccess" />
+    </SimpleExec>
+    
+    <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
+    <Message Text="GitInfo: $(GitProjectDate) $(GitVersionNumber)" />
+    
+    <CreateItem Include="Major" AdditionalMetadata="ReplacementValue=$(Major)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="Minor" AdditionalMetadata="ReplacementValue=$(Minor)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="Build" AdditionalMetadata="ReplacementValue=$(Build)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="Revision" AdditionalMetadata="ReplacementValue=$(Revision)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="Configuration" AdditionalMetadata="ReplacementValue=$(Configuration)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="ProductName" AdditionalMetadata="ReplacementValue=$(ProductName)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="CompanyName" AdditionalMetadata="ReplacementValue=$(CompanyName)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="Copyright" AdditionalMetadata="ReplacementValue=$(Copyright)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="Trademark" AdditionalMetadata="ReplacementValue=$(Trademark)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <CreateItem Include="ProductId" AdditionalMetadata="ReplacementValue=$(ProductId)">
+      <Output TaskParameter="Include" ItemName="AssemblyInfoTokens" />
+    </CreateItem>
+    <AssemblyInfo CodeLanguage="CS" OutputFile="$(TsAssemblyVersion)" 
+        AssemblyCompany="$(CompanyName)" 
+        AssemblyTitle="$(ProductName) - Version $(Major).$(Minor) ($(GitVersionNumber))"
+        AssemblyProduct="" AssemblyCopyright="$(Copyright)" 
+        AssemblyTrademark="$(Trademark)" 
+        CLSCompliant="false" AssemblyDelaySign="false" 
+        AssemblyKeyName="" 
+        AssemblyCulture="" 
+        AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" 
+        AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" 
+        AssemblyInformationalVersion="$(ProductName) - Version $(Major).$(Minor)" 
+        />
+  </Target>
+  
+  <Target Name="Clean">
+    <Delete Files="$(TsAssemblyVersion)" Condition="EXISTS($(TsAssemblyVersion))"/>
+  </Target>
+  
+  <!-- Force include the TsAssemblyVersion file into project -->
+  <!-- <ItemGroup Condition="EXISTS($(TsAssemblyVersion))" > -->
+  <ItemGroup>
+    <Compile Include="$(TsAssemblyVersion)" />
+  </ItemGroup> 
+
+</Project>

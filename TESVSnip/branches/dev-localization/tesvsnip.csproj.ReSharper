@@ -1,0 +1,7 @@
+<Configuration>
+  <NamespaceFolders>
+    <SkipFolder>5FA31161-DDBB-430F-9E99-0ECE98B733DE/d:zlib-1.2.3/d:contrib/d:dotzlib</SkipFolder>
+    <SkipFolder>5FA31161-DDBB-430F-9E99-0ECE98B733DE/d:zlib-1.2.3/d:contrib</SkipFolder>
+    <SkipFolder>5FA31161-DDBB-430F-9E99-0ECE98B733DE/d:zlib-1.2.3</SkipFolder>
+  </NamespaceFolders>
+</Configuration>

@@ -1,0 +1,108 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TESVSnip.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="TESsnip" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ApplyFilterToAllESM" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DontAskUserAboutFiltering" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="IsFirstTimeOpeningSkyrimESM" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="EnableESMFilter" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AllESMRecords" Type="System.String" Scope="User">
+      <Value Profile="(Default)">AACT;ACTI;ADDN;ALCH;AMMO;ANIO;APPA;ARMA;ARMO;ARTO;ASPC;ASTP;AVIF;BOOK;BPTD;CAMS;CELL;CLAS;CLDC;CLFM;CLMT;COBJ;COLL;CONT;CPTH;CSTY;DEBR;DIAL;DLBR;DLVW;DOBJ;DOOR;DUAL;ECZN;EFSH;ENCH;EQUP;EXPL;EYES;FACT;FLOR;FLST;FSTP;FSTS;FURN;GLOB;GMST;GRAS;HAIR;HAZD;HDPT;IDLE;IDLM;IMAD;IMGS;INGR;IPCT;IPDS;KEYM;KYWD;LCRT;LCTN;LGTM;LIGH;LSCR;LTEX;LVLI;LVLN;LVSP;MATO;MATT;MESG;MGEF;MISC;MOVT;MSTT;MUSC;MUST;NAVI;NPC_;OTFT;PACK;PERK;PROJ;PWAT;QUST;RACE;REGN;RELA;REVB;RFCT;RGDL;SCEN;SCOL;SCPT;SCRL;SHOU;SLGM;SMBN;SMEN;SMQN;SNCT;SNDR;SOPM;SOUN;SPEL;SPGD;STAT;TACT;TREE;TXST;VTYP;WATR;WEAP;WOOP;WRLD;WTHR</Value>
+    </Setting>
+    <Setting Name="FilteredESMRecords" Type="System.String" Scope="User">
+      <Value Profile="(Default)">RGDL;CLDC;PWAT;SCOL;SCPT;HAIR;REGN;NAVI;WRLD;DIAL;CELL;IMAD;WTHR</Value>
+    </Setting>
+    <Setting Name="IsFirstTimeOpening" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DefaultSaveFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DefaultOpenFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="UseWindowsClipboard" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="MaxHistoryItem" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">30</Value>
+    </Setting>
+    <Setting Name="NoWindowsSounds" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DisableHyperlinks" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LocalizationName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">English</Value>
+    </Setting>
+    <Setting Name="SkyrimLocalizerPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Skyrim String Localizer.exe</Value>
+    </Setting>
+    <Setting Name="SaveStringsFiles" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="MonitorStringsFolderForChanges" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseMsftEdit" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AutoSaveDockingState" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="UseOldSubRecordEditor" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseDefaultRecordCompression" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="EnableAutoCompress" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AutoCompressRecords" Type="System.String" Scope="User">
+      <Value Profile="(Default)">REGN;NAVI;WRLD;DIAL;CELL;IMAD;WTHR</Value>
+    </Setting>
+    <Setting Name="EnableCompressionLimit" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="CompressionLimit" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">1024</Value>
+    </Setting>
+    <Setting Name="UseHexSubRecordEditor" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="SearchMRUNameList" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SearchMRUFormIDList" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SearchMRUFullList" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MaxSearchResults" Type="System.UInt16" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="LastSearchType" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="UseUTF8" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="CultureCodeUI" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>

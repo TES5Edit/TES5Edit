@@ -1,0 +1,208 @@
+TESsnip RecordStructure.xml format
+
+The basic layout consists of a single 'Records' root node, which contains one or more 'Record' and 'Group' child nodes, each containing one or more 'Subrecord' child nodes, which in turn contain one or more 'Element' child nodes. Each node has a different set of valid attributes. A Record can also contain a Group node, in which case the group must have no child nodes, and must have an id attribute that matches it to a Group node under the Records node. (Groups provide an easy way to save having to type out subrecords multiple times when the format of a subrecord is identical in several different records)
+
+If you make any changes to the xml file and want to make them available for others to use, or for them to be included in the original download, update the wiki at: 
+
+Fallout 3: http://falloutmods.wikia.com/wiki/Record_Structure_XML
+
+Elder Scrolls Records Structures:
+
+Morrowind: http://www.uesp.net/wiki/Tes3Mod:File_Format
+Oblivion: http://www.uesp.net/wiki/Tes4Mod:Mod_File_Format
+Skyrim: http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format
+
+XXXXXXXXXXXXXX
+XXX Record XXX
+XXXXXXXXXXXXXX
+name (required): the 4 letter code of the record
+
+desc (required): A human readable description of what the record contains
+
+XXXXXXXXXXXXXX
+XXX Group XXX
+XXXXXXXXXXXXXX
+id (required): A unique id by which the group is referenced from a Record.
+
+desc (optional): A human readable description of the subrecord contents
+
+subrecord (optional): The Subrecord block is evaluated as indicated by the Subrecord attributes and, repeat or optional apply to each individual Subrecord block within the Group block.
+
+element (optional): Elements within a the Subrecord block are evaluated as indicated by the Elements attributes and, repeat or optional apply to each individual Group block.  Group blocks can be bested within other Group blocks.
+
+repeat (Boolean): A value of 1 will repeat the entire Group block 1 or more times.  If omitted, defaults to 0.  This should only be used on nested Group Blocks within the Main Grop Block.
+
+optional (Boolean): Depreciated this is no longer valid within a Group block.
+
+NOTE: The size of the data is by each Subrecord block indepentently.  Group should not worry about the size.
+
+NOTE: When a Group block contains Subrecord blocks, [repeat] and [optional] apply only to the Subrecord block within the Group block.
+
+The Subrecords in the group determine the order.  TESVSnip 4.4.0a already does this correctly.
+
+<Group id="blah">
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ANAM" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ANAM" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+Use of repeat in Group for only elements:
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Subrecord="ANAM" Arguments>
+    <Elements>
+    <Elements>
+    <Group id="blah" repeat="5"> <!-- Start Here -->
+      <Elements>
+      <Elements>
+      <Elements>
+    </Group> <!-- End Here -->
+    <Elements>
+    <Elements>
+    <Elements>
+  </Subrecord>
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <Group id="blah" repeat="1">
+    <Subrecord="ANAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="CNAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="PNAM" Arguments>
+      <Elements>
+    </Subrecord>
+  </Group> <!-- Stops once no more patterns fit this.  Then it leaves this Group Block and processes NAM0 -->
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+Use of Optional:
+
+<Group id="blah">
+  <Subrecord="ALLS" Arguments>
+    <Elements>
+  </Subrecord>
+  <!-- ALLS and NAM0 might be there but ANAM, CNAM, and PNAM are not.
+  <Group id="blah" repeat="1" optional="1">
+    <Subrecord="ANAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="CNAM" Arguments>
+      <Elements>
+    </Subrecord>
+    <Subrecord="PNAM" Arguments>
+      <Elements>
+    </Subrecord>
+  </Group> <!-- Stops once no more patterns fit this.  Then it leaves this Group Block and processes NAM0 -->
+  <Subrecord="NAM0" Arguments>
+    <Elements>
+  </Subrecord>
+</Group>
+
+
+When a Subrecord block uses [optional] then the record is still skipped.  This also seems to work correctly with TESVSnip 4.4.0a.
+
+XXXXXXXXXXXXXXXXX
+XXX Subrecord XXX
+XXXXXXXXXXXXXXXXX
+name (required): the 4 letter code of the subrecord
+
+desc (required): A human readable description of the subrecord contents
+
+repeat (Boolean): A value of 1 will repeat the entire Subrecord block 1 or more times.  If omitted, defaults to 0.
+
+optional (Boolean): A value of 1 indicates that if [name] is not found within the Record block the Subrecord block can be skipped. If omitted, defaults to 0.
+
+size (optional): A size in bytes of the subrecord. The subrecord will be skipped without error if the [name] matches but the size doesn't. Can be used in the place of conditionals where the different subrecords have different sizes.
+
+notininfo (Boolean): A value of 1 indicates that the subrecord will be skipped without error when formatting the record into text if the [name] matches.  If omitted, defaults to 0. 
+
+NOTE: Previously Subrecords that made use of the Group attribute required that this was set to 1 or True.  That functionality has been depreciated and no longer used, [notininfo] applies to the entire Subrecord block.
+
+usehexeditor (optional): If present and set to a value of "true" the subrecord will open in the normal hex editor instead of an auto generated subrecord editor
+
+NOTE: If the subrecord block uses a condition then the condition should be evaluated against condid (Subrecord) or elmcondid (Element) then [condition] and [condvalue] are evaluated.
+
+condition (optional): If it exists, a given value is compared the value of a piece of data in a previous subrecord. If the comparison returns false, this record is skipped. Must be one of 'exists', 'missing', 'equal', 'not', 'less', 'lessequal', 'greater', 'greaterequal', 'contains', 'startswith', or 'endswith'. The latter 3 work only for string comparisons, and the greater/less than only work on numeric values.
+
+condid (required if condition is used): An integer id that must match up with a previous and unique condid attribute.
+
+condvalue (required if condition is used): The value to compare against in a comparison and, condvalue can be an valid [type] indicated in the matching element.  E.x. flag value such as value"$01", 'float', 'formid', 'string'.
+
+XXXXXXXXXXXXXXX
+XXX Element XXX
+XXXXXXXXXXXXXXX
+name (required): A short human readable description of the element
+
+type (required): The type of data. Must be one of 'sbyte', 'byte', 'short', 'ushort', 'uint', 'int', 'float', 'formid', 'string', 'bstring', 'istring', 'lstring, 'str4' or 'blob'.
+
+		'string'  is zero terminated.
+		'bstring' has a short (2byte) that leads that specifies the length.
+		'istring' has a int (4byte) that leads that specifies the length.
+		'lstring' is a localized string that can be either a int (4bytes that points to a string in a localized string file or a zero terminated string.
+		'str4'    is a 4 byte long string without any length or ending zero. Ie WEAP, ARMO
+
+desc (optional): A longer human readable description
+
+notininfo (optional): Performs the same task as the subrecord attribute, but will only hide the element and not the whole subrecord. Defaults to 0 if omitted.
+
+reftype (optional, only valid if type is formid): If the element is a formid that is restricted to point at a single type of record, set this to the appropriate 4 letter record code.
+
+multiline (optional, only valid if type is string): Used as a hint by the tessnip record editor to use a bigger text-box for this field, and to allow line breaks. Defaults to false if omitted.
+
+options (optional): A semicolon delimited list of descriptions and values that the field may take. (e.g. 'blue;0;green;1;red;2') Using this tag doesn't force the field to take one of the specified values, but will cause a combo box to appear on the record editor as an aid to the user.
+
+flags (optional): If present, must contain a semicolon delimited list of flags, starting from the first bit and working up as far as you're interested. Unknown or meaningless flags can be left blank. (e.g. flags="bit 1;;bit 3") Doesn't effect the subrecord editor, but only adds information to the subrecord info.
+
+repeat (optional): Performs the same task as the Subrecord attribute, but with the following exception: Defaults to 0 if omitted.  A value of 1 or more repeats the current element that number of times.
+
+optional (required 'Only' if repeat is greater then 1): Performs the same task as the Subrecord attribute, but with the following exception: A value greater then 1 skips the element that number of times.  Only required if repeat is used, and only if repeat is greater then 1.
+
+hexview: If present and set to a value of 'true', the field is displayed in base 16 instead of base 10. Doesn't effect the subrecord editor.
+
+elmcondition: Performs the same task as the Subrecord attribute, but with the following exception:  The given value compared is the value of a piece of data in a previous Element indicated by an elmcondid. If the comparison returns false, this Element is skipped.  Must be one of 'exists', 'missing', 'equal', 'not', 'less', 'lessequal', 'greater', 'greaterequal', 'contains', 'startswith', or 'endswith'. The latter 3 work only for string comparisons, and the greater/less than only work on numeric values.
+
+elmcondid: Performs the same task as the Subrecord attribute, but with the following exception: An integer, used to match up with the elmcondid in a conditional Element. A value greater than 0 tells tessnip that this Element will be compared later within an Element or Subrecord block. Defaults to 0 if omitted.
+
+elmcondvalue (required if elmcondition is used): Performs the same task as the subrecord attribute.  The value to compare against in a comparison and, elmcondvalue can be an valid [type] indicated in the matching element.  E.x. flag value such as value"$01", 'float', 'formid', 'string'.
+
+XXXXXXXXXXXXXXXXXXXXXXXX
+XXX Script Functions XXX
+XXXXXXXXXXXXXXXXXXXXXXXX
+
+All script functions are contained in ScriptFunctions.xml  and the format is described in ScriptFunctionsFormat.txt.
+
+Calling Script Functions:
+
+[Enter Syntax Here]
