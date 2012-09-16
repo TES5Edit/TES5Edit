@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- TESvSnip RecordStructure XML File v1.1 modified by SLuckyD, based on Snip v4.2's XML -->
 <!-- 2012-08-17 Beryllium-9 test SVN update -->
+<!-- condid Function List -->
+<!-- condid="1" for GMST attached to EDID -->
+<!-- condid="2" for PERK condid attached to Effect Type for DATA  -->
+<!-- condid="3" for BOOK attached to DATA Function List -->
+<!-- condid="4" for PERK condid attached to Type (string) in ANAM for CNAM  -->
+<!-- condid="5" for PACK Function List -->
+<!-- condid Function List -->
+<!-- condid Function List -->
 <Records xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<!-- Repetitive Groupings -->
 	<Group id="CONDITIONAL" optional="1" repeat="1">
@@ -186,41 +194,46 @@
 		</Subrecord>
 		<Subrecord name="MODT" desc="Model Texture Data (DDS referenced in NIF)" optional="1">
 			<!-- Snip doesn't support arranging this yet -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
 		</Subrecord>
 		<Group id="MODS" optional="1"/>
 		<Subrecord name="MODD" desc="FaceGen Model Flags" optional="1">
 			<Element name="Flags" type="byte" flags="Head;Torso;Right Hand;Left Hand"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO2Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO2T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO3Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO3T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO4Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO4T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
+		</Subrecord>
+	</Group>
+	<Group id="MO5Textures" desc="Model Texture Data (DDS referenced in NIF)">
+		<Subrecord name="MO5T" desc="Texture Files Hashes" optional="1">
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Total # of Textures Used by Model" type="uint"/>
+			<Element name="Unknown" type="uint" hexview="1"/>
+			<Element name="Unknown" type="uint" hexview="1" optional="1" repeat="1"/>
 		</Subrecord>
 	</Group>
   <Group id="POSDATA">
@@ -757,12 +770,7 @@
 			<Element name="FormID" type="formid" reftype="QUST" />
 		</Subrecord>
 	</Group>
-	<!-- condid="1" condition="startswith" condvalue="s" -->
-	<!-- State of Progress
-non-indent is being worked on
-	indent is done and verified (unless noted)
-  couple-spaces is old/untested data
--->
+
 	<!-- HERE STARTS THE RECORDS -->
 	<Record name="TES4" desc="Main plugin header">
 		<Subrecord name="HEDR" desc="Main Plugin Header" optional="1">
@@ -806,6 +814,7 @@ non-indent is being worked on
 			<Element name="Unknown" type="uint" hexview="1"/>
 		</Subrecord>
 	</Record>
+  <!-- condid="1" for GMST attached to EDID -->
 	<Record name="GMST" desc="Game setting">
 		<!-- localized -->
 		<Group id="EDID" optional="1"/>
@@ -1020,9 +1029,8 @@ non-indent is being worked on
 		<Group id="FULL" optional="1"/>
 		<!-- localized -->
 		<Group id="MODEL" optional="1"/>
-		<!-- Snip doesn't support arranging this yet -->
-		<Subrecord name="DATA" desc="Check-Boxes" optional="1">
-			<Element name="Play/Gender/SolidTint/ExtPart" type="byte" options="NOT Playable/Unisex;0;Playable/Unisex;1;NOT Playable/Male;2;Playable/Male;3;NOT Playable/Female;4;Playable/Female;5;NOTPlay/Unisex/isExtraPart;8;Playable/Unisex/isExtraPart;9;NOTPlay/Male/isExtraPart;10;Playable/Male/isExtraPart;11;NOTPlay/Female/isExtraPart;12;Playable/Female/isExtraPart;13;NOTPlay/Unisex/useSolidTint;16;Playable/Unisex/useSolidTint;17;NOTPlay/Male/useSolidTint;18;Playable/Male/useSolidTint;19;Playable/Female/useSolidTint;20;NOTPlay/Female/useSolidTint;21;NOTPlay/Unisex/useSolidTint/isExtraPart;24;Playable/Unisex/useSolidTint/isExtraPart;25;NOTPlay/Male/useSolidTint/isExtraPart;26;Playable/Male/useSolidTint/isExtraPart;27;NOTPlay/Female/useSolidTint/isExtraPart;28;Playable/Female/useSolidTint/isExtraPart;29"/>
+    <Subrecord name="DATA" desc="Head Part Flags" optional="1">
+      <Element name="Flags" type="byte" flags="Playable;Male;Female;Is Extra Part;Use Solid Tint;Unknown 1;Unknown 1;Unknown 1"/>
 		</Subrecord>
 		<Subrecord name="PNAM" desc="HeadPart Type Pulldown" optional="1">
 			<Element name="HeadPartType" type="int" options="Misc;0;Face;1;Eyes;2;Hair;3;Facial Hair;4;Scar;5;Eyebrows;6"/>
@@ -1580,16 +1588,12 @@ non-indent is being worked on
 		<Subrecord name="MOD2" desc="Male world model" optional="1">
 			<Element name="Model Filename" type="string" />
 		</Subrecord>
-		<Subrecord name="MO2T" desc="Texture Files Hashes" optional="1">
-			<Element name="Unknown" type="blob" />
-		</Subrecord>
+    <Group id="MO2Textures" optional="1"/>
 		<Group id="Model2S" optional="1"/>
 		<Subrecord name="MOD4" desc="Female Ground Model Path" optional="1">
 			<Element name="Model Path 4" type="string" />
 		</Subrecord>
-		<Subrecord name="MO4T" desc="Model Data 4" optional="1">
-			<Element name="Model Data 4" type="blob" />
-		</Subrecord>
+    <Group id="MO4Textures" optional="1"/>
 		<Group id="Model4S" optional="1"/>
 		<Group id="BODYDATA" optional="1"/>
 		<Group id="DESTRUCT" optional="1"/>
@@ -1639,16 +1643,26 @@ non-indent is being worked on
 		<Group id="SOUNDS" optional="1"/>
 		<Group id="KEYWORDS" optional="1"/>
 		<Subrecord name="DATA" desc="Book Settings" optional="1">
-			<Element name="Teaches/Taken" type="byte" flags="Skill;Can't Be Taken;Spell" condid="3"/>
-			<Element name="Flags 1" type="byte"/>
-			<Element name="Flags 2" type="ushort"/>
+       <!-- 1 or 3 is Skill -->
+       <!-- 4 or 6 is Spell -->
+			<Element name="Teaches/Taken" type="byte" flags="Teaches Skill;Can't Be Taken;Teaches Spell" condid="3"/>
+			<Element name="Book Type" type="byte" options="Book/Tome;0;Note/Scroll;255"/>
+			<Element name="Unknown" type="ushort"/>
+      
 			<!-- Future Enhancement :  Conditions not currently evaluated on elements
-		  <Element name="Skill To Increase" type="int" condition="equal" condid="3" condvalue="1"/>
-		  <Element name="Spell to Cast" type="formid" reftype="SPEL" condition="equal" condid="3" condvalue="4"/>
-		  <Element name="Unused" type="int" condition="equal" condid="3" condvalue="0"/>
-		  -->
-			<Element name="Skills or SPEL FormID" type="int" options="OneHanded;6;TwoHanded;7;Marksman;8;Block;9;Smithing;10;HeavyArmor;11;LightArmor;12;Pickpocket;13;Lockpicking;14;Sneak;15;Alchemy;16;Speechcraft;17;Alteration;18;Conjuration;19;Destruction;20;Illusion;21;Restoration;22;Enchanting;23;Fame;60;Infamy;61"/>
-			<Element name="Value" type="int"/>
+		  <Element name="Unknown" type="blob" elmcondition="equal" elmcondid="3" elmcondvalue="0"/>
+		  <Element name="Skill To Increase" type="int" elmcondition="equal" elmcondid="3" elmcondvalue="1"/>
+		  <Element name="Skill To Increase" type="int" elmcondition="equal" elmcondid="3" elmcondvalue="3"/>
+		  <Element name="Spell to Cast" type="formid" reftype="SPEL" elmcondition="equal" elmcondid="3" elmcondvalue="4"/>
+		  <Element name="Spell to Cast" type="formid" reftype="SPEL" elmcondition="equal" elmcondid="3" elmcondvalue="6"/>
+		  End -->
+      
+      <!-- Old Routine
+			<Element name="Skills or SPEL FormID" type="uint" hexview="1" options="None;0;OneHanded;6;TwoHanded;7;Marksman;8;Block;9;Smithing;10;HeavyArmor;11;LightArmor;12;Pickpocket;13;Lockpicking;14;Sneak;15;Alchemy;16;Speechcraft;17;Alteration;18;Conjuration;19;Destruction;20;Illusion;21;Restoration;22;Enchanting;23;Fame;60;Infamy;61;None(Don't Use);4294967295"/>
+		  End -->
+      
+      <Element name="Skills or SPEL FormID" type="uint" hexview="1"/>
+      <Element name="Value" type="int"/>
 			<Element name="Weight" type="float"/>
 		</Subrecord>
 		<Subrecord name="INAM" desc="Inventory Art (STAT)" optional="1">
@@ -2521,41 +2535,8 @@ non-indent is being worked on
 		<Subrecord name="MOD3" desc="Scope Target Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO3T" desc="Alternate Texture Data (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
-		<Subrecord name="EFSD" desc="Scope Effect Shader (EFSH)" optional="1">
+    <Group id="MO3Textures" optional="1"/>
+    <Subrecord name="EFSD" desc="Scope Effect Shader (EFSH)" optional="1">
 			<Element name="EFSH Form ID" type="formid" reftype="EFSH"/>
 		</Subrecord>
 		<Subrecord name="NNAM" desc="Embedded Weapon" optional="1">
@@ -8357,25 +8338,24 @@ non-indent is being worked on
 		<Group optional="1" repeat="1">
 			<!-- perk effect data; has condid marker for formatting -->
 			<Subrecord name="PRKE" desc="Rank Effect Header" optional="1" repeat="1" size="3">
-				<Element name="Effect Type" type="byte" options="Linked Quest Stage;0;Linked SPEL;1;Complex;2" condid="1" />
+				<Element name="Effect Type" type="byte" options="Linked Quest Stage;0;Linked SPEL;1;Entry Point;2" condid="2" />
 				<Element name="Rank Index" type="byte" />
-				<Element name="?? -- always 0" type="byte"/>
+				<Element name="Priority" type="byte"/>
 			</Subrecord>
-			<Subrecord name="DATA" desc="Perk Effect Data" optional="1" size="8" condid="1" condition="equal" condvalue="0" >
-				<Element name="QUST FormID" type="formid" reftype="QUST" />
-				<Element name="Stage" type="byte" />
-				<Element name="unused" type="byte" />
-				<Element name="unused" type="byte" />
-				<Element name="unused" type="byte" />
+			<Subrecord name="DATA" desc="Perk Effect Data" optional="1" size="8" condid="2" condition="equal" condvalue="0" >
+				<Element name="Quest" type="formid" reftype="QUST" />
+				<Element name="Quest Stage" type="byte" />
+				<Element name="Unknown" type="byte" />
+				<Element name="Unknown" type="ushort" />
 			</Subrecord>
-			<Subrecord name="DATA" desc="Perk Effect (SPEL)" optional="1" size="4" condid="1" condition="equal" condvalue="1" >
+			<Subrecord name="DATA" desc="Perk Effect (SPEL)" optional="1" size="4" condid="2" condition="equal" condvalue="1" >
 				<Element name="SPEL FormID" type="formid" reftype="SPEL" />
 			</Subrecord>
-			<Subrecord name="DATA" desc="Perk Entry Point data" optional="1" condid="1" condition="equal" condvalue="2">
+			<Subrecord name="DATA" desc="Perk Entry Point data" optional="1" condid="2" condition="equal" condvalue="2">
 				<!-- 1byte unknown -->
 				<Element name="EffectType" type="byte" options="Calculate Weapon Damage;0;Calculate My Critical Hit Chance;1;Calculate My Critical Hit Damage;2;Calculate Mine Explode Chance;3;Adjust Limb Damage;4;Adjust Book Skill Points 1;5;Mod Recovered Health;6;Get Should Attack;7;Mod Buy Prices;8;Add Level List On Death;9;Get Max Carry Weight;10;Mod Addiction Chance;11;Unknown;12;Mod Positive Chem Duration;13;Activate;14;Ignore Running During Detection;15;Ignore Broken Lock;16;Mod Enemy Critical Hit Chance;17;Mod Sneak Attack Multiplier;18;Mod Max Placeable Mines;19;Mod Bow Zoom;20;Mod Recover Arrow Chance;21;Mod Skill Use;22;Mod Telekinesis Distance;23;Mod Telekinesis Damage Multiplier;24;Mod Telekinesis Damage;25;Mod Bashing Damage;26;Mod Power Attack Stamina;27;Mod Power Attack Damage;28;Mod Spell Magnitude;29;Mod Spell Duration;30;Mod Secondary Value Weight;31;Mod Armor Weight;32;Mod Incoming Stagger;33;Mod Target Stagger;34;Mod Attack Damage;35;Mod Incoming Damage;36;Mod Target Damage Resistance;37;Mod Spell Cost;38;Mod Percent Blocked;39;Mod Shield Deflect Arrow Chance;40;Mod Incoming Spell Magnitude;41;Mod Incoming Spell Duration;42;Mod Player Intimidation;43;Mod Player Reputation;44;Mod Favor Points;45;Mod Bribe Amount;46;Mod Detection Light;47;Mod Detection Movement;48;Mod Soul Gem Recharge;49;Set Sweep Attack;50;Apply Combat Hit Speed;51;Apply Bashing Spell;52;Apply Reanimate Spell;53;Set Boolean Graph Variable;54;Mod Spell Casting Sound Event;55;Mod Pickpocket Chance;56;Mod Detection Sneak Skill;57;Mod Falling Damage;58;Mod Lockpick Sweet Spot;59;Mod Sell Prices;60;Can Pickpocket Equipped Item;61;Mod Lockpick Level Allowed;62;Set Lockpick Start Position;63;Set Progression Picking;64;Make Lockpicks Unbreakable;65;Mod Alchemy Effectiveness;66;Apply Weapon Swing Spell;67;Mod Commanded Actor Limit;68;Apply Sneaking Spell;69;Mod Player Magic Slowdown;70;Mod Ward Magic Absorption Percent;71;Mod Ingredient Effects Learned;72;Purify Alchemy Ingredients;73;Filter Activation;74;Can Dual Cast Spell;75;Mod Tempering Health;76;Mod Enchantment Power;77;Mod Soul Percent Captured to Weapon;78;Mod Soul Gem Enchanting;79;Mod Number of Enchantments Allowed;80;Set Activate Label;81;Mod Shout OK;82;Mod Poison Dose Count;83;Should Apply Placed Item;84;Mod Armor Rating;85;Mod Lockpick Crime Chance;86;Mod Ingredients Harvested;87;Mod Spell Range to Location;88;Mod Potions Created (Create Duplicate Potion);89;Mod Lockpick Key Reward Chance (Wax Key);90"/>
 				<Element name="FunctionType" type="byte" options="Set Value;1;Add Value;2;Multiply Value;3;Add Range to Value;4;Add Actor Value Mult;5;Absolute;6;Negative ABS Value;7;Add Level List (Only EffectType 9);8;Add Activate Choice (Only EffectType 14);9;Select Spell (Only EffectTypes 51, 52, 53, 83, 85);10;Select Text (Only EffectType 54);11;Set AV Mult;12;Multiply AV Mult;13;Multiply 1 + AV Mult;14;Set Text (Only EffectType 81);15"/>
-				<Element name="CondTypeCount" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
+				<Element name="CondTypeCount" type="byte" />
 			</Subrecord>
 			<Group optional="1" repeat="1">
 				<!-- perk conditionals -->
@@ -8386,7 +8366,7 @@ non-indent is being worked on
       </Group>
 			<Subrecord name="EPFT" desc="EPFD Type" optional="1" repeat="1">
 				<!-- condid2 -->
-				<Element name="EPFD Type" type="byte" options="float;1;2 floats;2;formid;3;script;4;Spell;5;Unlocker;6;lstring;7" condid="2" desc="1=float 2=8 byte struct 3=FormID 4=script? 5=Spell 6=Unlocker 7=lString"/>
+				<Element name="EPFD Type" type="byte" options="float;1;2 floats;2;formid;3;script;4;Spell;5;Unlocker;6;lstring;7" condid="4" desc="1=float 2=8 byte struct 3=FormID 4=script? 5=Spell 6=Unlocker 7=lString"/>
 			</Subrecord>
 			<Subrecord name="EPF2" desc="Entry Point Button Label" optional="1" repeat="1">
 				<!-- localized -->
@@ -8396,26 +8376,26 @@ non-indent is being worked on
 				<Element name="Check-Boxes" type="short" flags="Run Immediately;Replace Default;4;8;16;32;64;128;256;512"/>
 				<Element name="Check-Boxes" type="short" flags="Run Immediately;Replace Default;4;8;16;32;64;128;256;512"/>
 			</Subrecord>
-			<Subrecord name="EPFD" desc="Add/Multiply Value" optional="1" repeat="1" condid="2" condition="equal" condvalue="1">
+			<Subrecord name="EPFD" desc="Add/Multiply Value" optional="1" repeat="1" condid="4" condition="equal" condvalue="1">
 				<Element name="Add/Multiply Value" type="float"/>
 			</Subrecord>
-			<Subrecord name="EPFD" desc="Entry Point Value=(1 or 2 fields)" optional="1"  repeat="1" condid="2" condition="equal" condvalue="2">
+			<Subrecord name="EPFD" desc="Entry Point Value=(1 or 2 fields)" optional="1"  repeat="1" condid="4" condition="equal" condvalue="2">
 				<Element name="Value=(1st field)" type="float" options="AbsorbChance;83;Marksman;98;AlchemyMod;106;AlterationMod;108"/>
 				<Element name="Value=(2nd field)" type="float"/>
 			</Subrecord>
-			<Subrecord name="EPFD" desc="Entry Point Apply Spell/List/etc" optional="1" repeat="1" condid="2" condition="equal" condvalue="3">
+			<Subrecord name="EPFD" desc="Entry Point Apply Spell/List/etc" optional="1" repeat="1" condid="4" condition="equal" condvalue="3">
 				<Element name="Entry Point FormID" type="formid"/>
 			</Subrecord>
-			<Subrecord name="EPFD" desc="Entry Point Apply Spell (SPEL)" optional="1" repeat="1" condid="2" condition="equal" condvalue="4">
+			<Subrecord name="EPFD" desc="Entry Point Apply Spell (SPEL)" optional="1" repeat="1" condid="4" condition="equal" condvalue="4">
 				<Element name="SPEL FormID" type="formid" reftype="SPEL"/>
 			</Subrecord>
-			<Subrecord name="EPFD" desc="Spell (SPEL)" optional="1" repeat="1" condid="2" condition="equal" condvalue="5">
+			<Subrecord name="EPFD" desc="Spell (SPEL)" optional="1" repeat="1" condid="4" condition="equal" condvalue="5">
 				<Element name="SPEL FormID" type="formid" reftype="SPEL"/>
 			</Subrecord>
-			<Subrecord name="EPFD" desc="SetBooleanGraphVariable" optional="1" repeat="1" condid="2" condition="equal" condvalue="6">
+			<Subrecord name="EPFD" desc="SetBooleanGraphVariable" optional="1" repeat="1" condid="4" condition="equal" condvalue="6">
 				<Element name="(unlocker for another PERK/SPEL/etc)" type="string"/>
 			</Subrecord>
-			<Subrecord name="EPFD" desc="Set Activate Label" optional="1" repeat="1" condid="2" condition="equal" condvalue="7">
+			<Subrecord name="EPFD" desc="Set Activate Label" optional="1" repeat="1" condid="4" condition="equal" condvalue="7">
 				<!-- localized -->
 				<Element name="(mayLocalize) Set Activate Label" type="lstring"/>
 			</Subrecord>
@@ -8705,40 +8685,7 @@ non-indent is being worked on
 		<Subrecord name="MOD2" desc="Male Biped Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO2T" desc="Male Model Texture Data (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
+    <Group id="MO2Textures" optional="1"/>
 		<Subrecord name="MO2S" desc="Male Model Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
@@ -8759,40 +8706,7 @@ non-indent is being worked on
 		<Subrecord name="MOD3" desc="Female Biped Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO3T" desc="Female Model Texture (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
+    <Group id="MO3Textures" optional="1"/>
 		<Subrecord name="MO3S" desc="Female Model Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
@@ -8813,40 +8727,7 @@ non-indent is being worked on
 		<Subrecord name="MOD4" desc="Male 1stPerson Model (NIF)" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO4T" desc="Male 1stPerson Model Textures (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
+    <Group id="MO4Textures" optional="1"/>
 		<Subrecord name="MO4S" desc="Male 1stPerson Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
@@ -8867,41 +8748,8 @@ non-indent is being worked on
 		<Subrecord name="MOD5" desc="Female 1stPerson Model NIF" optional="1">
 			<Element name="Path\Filename" type="string"/>
 		</Subrecord>
-		<Subrecord name="MO5T" desc="Female 1stPerson Model Textures (localized DDS)" optional="1">
-			<!-- Snip doesn't support arranging this yet, same as MODT in MODELgroup -->
-			<Element name="(always 2)" type="int"/>
-			<Element name="Total # of Textures Used by Model" type="int"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="NIF Texture Filename (Localized Text ID #)" type="formid"/>
-			<Element name="DDS File Extension" type="string"/>
-			<Element name="Replaced by (Localized Text ID #)" type="formid"/>
-			<Element name="(rest of data)" type="blob"/>
-		</Subrecord>
-		<Subrecord name="MO5S" desc="Female 1stPerson Alternate Textures" optional="1">
+    <Group id="MO5Textures" optional="1"/>
+    <Subrecord name="MO5S" desc="Female 1stPerson Alternate Textures" optional="1">
 			<!-- Snip needs repeating element-groups -->
 			<Element name="# of Textures" type="int"/>
 			<Element name="Object Name" type="istring" optional="1"/>
@@ -8960,69 +8808,28 @@ non-indent is being worked on
 	<Record name="LCTN" desc="Location Data">
 		<!-- localized; Snip doesn't have element-groups yet -->
 		<Group id="EDID" optional="1"/>
-    <Subrecord name="ACPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="4">
+    <Subrecord name="ACPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="12">
       <Element name="ACHR FormID" type="formid"/>
       <Element name="CELL/WRLD FormID" type="formid"/>
       <Element name="WRLD Cell Grid Y" type="short"/>
       <Element name="WRLD Cell Grid X" type="short"/>
 		</Subrecord>
-		<Subrecord name="LCPR" desc="Actor-Assigned (and starting locations)" optional="1">
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="ACHR FormID" type="formid" reftype="ACHR" optional="1"/>
-			<Element name="CELL/WRLD FormID" type="formid" optional="1"/>
-			<Element name="WRLD Cell Grid Y" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="WRLD Cell Grid X" type="short" options="Interior Location;32767" optional="1"/>
-			<Element name="(rest of data)" type="blob"/>
+    <Subrecord name="LCPR" desc="Actor-Assigned Persistence Location" optional="1" repeat="12">
+      <Element name="ACHR FormID" type="formid"/>
+      <Element name="CELL/WRLD FormID" type="formid"/>
+      <Element name="WRLD Cell Grid Y" type="short"/>
+      <Element name="WRLD Cell Grid X" type="short"/>
 		</Subrecord>
 		<!-- Snip Can Display this correctly with this Syntax -->
 		<!-- Appears In Dawnguard.esm  -->
 		<Subrecord name="RCPR" desc="Location Data" optional="1">
 			<Element name="Reference" type="formid" reftype="REFR" repeat="1" optional="1"/>
 		</Subrecord>
-		<!-- If this is not a Legacy Record it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
+		<!-- If this may or may not be a Legacy Record but it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
 		<Subrecord name="RCUN" desc="Location Data" optional="1">
 			<Element name="Reference" type="formid" reftype="REFR" repeat="1" optional="1"/>
 		</Subrecord>
-		<!-- If this is not a Legacy Record it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
+		<!-- If this may or may not be a Legacy Record but it does not appear in Skyrim.esm, Update.esm, or Dawnguard.esm  -->
 		<Subrecord name="RCSR" desc="Location Data" optional="1">
 			<Element name="Reference" type="formid" reftype="REFR" repeat="1" optional="1"/>
 		</Subrecord>
