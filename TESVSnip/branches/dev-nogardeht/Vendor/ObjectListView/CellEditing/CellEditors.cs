@@ -13,7 +13,7 @@
  * v2.0.1
  * 2008-10-20   JPP  - Separated from ObjectListView.cs
  * 
- * Copyright (C) 2006-2008 Phillip Piper
+ * Copyright (C) 2006-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,35 +36,33 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace BrightIdeasSoftware
 {
+    
+
     /// <summary>
     /// These items allow combo boxes to remember a value and its description.
     /// </summary>
     internal class ComboBoxItem
     {
-        public ComboBoxItem(Object key, String description)
-        {
+        public ComboBoxItem(Object key, String description) {
             this.key = key;
             this.description = description;
         }
+        private String description;
 
-        private readonly String description;
-
-        public Object Key
-        {
+        public Object Key {
             get { return key; }
         }
+        private Object key;
 
-        private readonly Object key;
-
-        public override string ToString()
-        {
-            return description;
+        public override string ToString() {
+            return this.description;
         }
-    }
+    } 
 
     //-----------------------------------------------------------------------
     // Cell editors
@@ -86,24 +84,21 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="lv"></param>
         /// <param name="column"></param>
-        public AutoCompleteCellEditor(ObjectListView lv, OLVColumn column)
-        {
-            DropDownStyle = ComboBoxStyle.DropDown;
+        public AutoCompleteCellEditor(ObjectListView lv, OLVColumn column) {
+            this.DropDownStyle = ComboBoxStyle.DropDown;
 
-            var alreadySeen = new Dictionary<string, bool>();
-            for (int i = 0; i < Math.Min(lv.GetItemCount(), 1000); i++)
-            {
+            Dictionary<String, bool> alreadySeen = new Dictionary<string, bool>();
+            for (int i = 0; i < Math.Min(lv.GetItemCount(), 1000); i++) {
                 String str = column.GetStringValue(lv.GetModelObject(i));
-                if (!alreadySeen.ContainsKey(str))
-                {
-                    Items.Add(str);
+                if (!alreadySeen.ContainsKey(str)) {
+                    this.Items.Add(str);
                     alreadySeen[str] = true;
                 }
             }
 
-            Sorted = true;
-            AutoCompleteSource = AutoCompleteSource.ListItems;
-            AutoCompleteMode = AutoCompleteMode.Append;
+            this.Sorted = true;
+            this.AutoCompleteSource = AutoCompleteSource.ListItems;
+            this.AutoCompleteMode = AutoCompleteMode.Append;
         }
     }
 
@@ -112,16 +107,15 @@ namespace BrightIdeasSoftware
     /// </summary>
     internal class EnumCellEditor : ComboBox
     {
-        public EnumCellEditor(Type type)
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList;
-            ValueMember = "Key";
+        public EnumCellEditor(Type type) {
+            this.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.ValueMember = "Key";
 
-            var values = new ArrayList();
+            ArrayList values = new ArrayList();
             foreach (object value in Enum.GetValues(type))
                 values.Add(new ComboBoxItem(value, Enum.GetName(type, value)));
 
-            DataSource = values;
+            this.DataSource = values;
         }
     }
 
@@ -130,15 +124,13 @@ namespace BrightIdeasSoftware
     /// </summary>
     internal class IntUpDown : NumericUpDown
     {
-        public IntUpDown()
-        {
-            DecimalPlaces = 0;
-            Minimum = -9999999;
-            Maximum = 9999999;
+        public IntUpDown() {
+            this.DecimalPlaces = 0;
+            this.Minimum = -9999999;
+            this.Maximum = 9999999;
         }
 
-        public new int Value
-        {
+        new public int Value {
             get { return Decimal.ToInt32(base.Value); }
             set { base.Value = new Decimal(value); }
         }
@@ -149,15 +141,13 @@ namespace BrightIdeasSoftware
     /// </summary>
     internal class UintUpDown : NumericUpDown
     {
-        public UintUpDown()
-        {
-            DecimalPlaces = 0;
-            Minimum = 0;
-            Maximum = 9999999;
+        public UintUpDown() {
+            this.DecimalPlaces = 0;
+            this.Minimum = 0;
+            this.Maximum = 9999999;
         }
 
-        public new uint Value
-        {
+        new public uint Value {
             get { return Decimal.ToUInt32(base.Value); }
             set { base.Value = new Decimal(value); }
         }
@@ -168,16 +158,15 @@ namespace BrightIdeasSoftware
     /// </summary>
     internal class BooleanCellEditor : ComboBox
     {
-        public BooleanCellEditor()
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList;
-            ValueMember = "Key";
+        public BooleanCellEditor() {
+            this.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.ValueMember = "Key";
 
-            var values = new ArrayList();
+            ArrayList values = new ArrayList();
             values.Add(new ComboBoxItem(false, "False"));
             values.Add(new ComboBoxItem(true, "True"));
 
-            DataSource = values;
+            this.DataSource = values;
         }
     }
 
@@ -186,57 +175,45 @@ namespace BrightIdeasSoftware
     /// </summary>
     internal class BooleanCellEditor2 : CheckBox
     {
-        public bool? Value
-        {
-            get
-            {
-                switch (CheckState)
-                {
-                    case CheckState.Checked:
-                        return true;
-                    case CheckState.Indeterminate:
-                        return null;
-                    case CheckState.Unchecked:
-                    default:
-                        return false;
+        public BooleanCellEditor2() {
+        }
+
+        public bool? Value {
+            get {
+                switch (this.CheckState) {
+                    case CheckState.Checked: return true;
+                    case CheckState.Indeterminate: return null;
+                    case CheckState.Unchecked: 
+                    default: return false;
                 }
             }
-            set
-            {
-                if (value.HasValue)
-                    CheckState = value.Value ? CheckState.Checked : CheckState.Unchecked;
+            set {
+                if (value.HasValue) 
+                    this.CheckState = value.Value ? CheckState.Checked : CheckState.Unchecked;
                 else
-                    CheckState = CheckState.Indeterminate;
+                    this.CheckState = CheckState.Indeterminate;
             }
         }
 
-        public new HorizontalAlignment TextAlign
-        {
-            get
-            {
-                switch (CheckAlign)
-                {
-                    case ContentAlignment.MiddleRight:
-                        return HorizontalAlignment.Right;
-                    case ContentAlignment.MiddleCenter:
-                        return HorizontalAlignment.Center;
-                    case ContentAlignment.MiddleLeft:
-                    default:
-                        return HorizontalAlignment.Left;
+        public new HorizontalAlignment TextAlign {
+            get {
+                switch (this.CheckAlign) {
+                    case ContentAlignment.MiddleRight: return HorizontalAlignment.Right;
+                    case ContentAlignment.MiddleCenter: return HorizontalAlignment.Center;
+                    case ContentAlignment.MiddleLeft: 
+                    default: return HorizontalAlignment.Left;
                 }
             }
-            set
-            {
-                switch (value)
-                {
+            set {
+                switch (value) {
                     case HorizontalAlignment.Left:
-                        CheckAlign = ContentAlignment.MiddleLeft;
+                        this.CheckAlign = ContentAlignment.MiddleLeft;
                         break;
                     case HorizontalAlignment.Center:
-                        CheckAlign = ContentAlignment.MiddleCenter;
+                        this.CheckAlign = ContentAlignment.MiddleCenter;
                         break;
                     case HorizontalAlignment.Right:
-                        CheckAlign = ContentAlignment.MiddleRight;
+                        this.CheckAlign = ContentAlignment.MiddleRight;
                         break;
                 }
             }
@@ -251,15 +228,13 @@ namespace BrightIdeasSoftware
     /// the number of decimal places.</remarks>
     internal class FloatCellEditor : NumericUpDown
     {
-        public FloatCellEditor()
-        {
-            DecimalPlaces = 2;
-            Minimum = -9999999;
-            Maximum = 9999999;
+        public FloatCellEditor() {
+            this.DecimalPlaces = 2;
+            this.Minimum = -9999999;
+            this.Maximum = 9999999;
         }
 
-        public new double Value
-        {
+        new public double Value {
             get { return Convert.ToDouble(base.Value); }
             set { base.Value = Convert.ToDecimal(value); }
         }

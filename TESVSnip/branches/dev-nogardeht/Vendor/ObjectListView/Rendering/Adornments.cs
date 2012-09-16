@@ -14,7 +14,7 @@
  * - Use IPointLocator rather than Corners
  * - Add RotationCenter property ratherr than always using middle center
  * 
- * Copyright (C) 2009 Phillip Piper
+ * Copyright (C) 2009-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,13 +52,11 @@ namespace BrightIdeasSoftware
         /// </summary>
         [Browsable(false),
          DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ContentAlignment AdornmentCorner
-        {
-            get { return adornmentCorner; }
-            set { adornmentCorner = value; }
+        public System.Drawing.ContentAlignment AdornmentCorner {
+            get { return this.adornmentCorner; }
+            set { this.adornmentCorner = value; }
         }
-
-        private ContentAlignment adornmentCorner = ContentAlignment.MiddleCenter;
+        private System.Drawing.ContentAlignment adornmentCorner = System.Drawing.ContentAlignment.MiddleCenter;
 
         /// <summary>
         /// Gets or sets location within the reference rectange where the adornment will be drawn
@@ -66,48 +64,54 @@ namespace BrightIdeasSoftware
         /// <remarks>This is a simplied interface to ReferenceCorner and AdornmentCorner </remarks>
         [Category("ObjectListView"),
          Description("How will the adornment be aligned"),
-         DefaultValue(ContentAlignment.BottomRight),
+         DefaultValue(System.Drawing.ContentAlignment.BottomRight),
          NotifyParentProperty(true)]
-        public ContentAlignment Alignment
-        {
-            get { return alignment; }
-            set
-            {
-                alignment = value;
-                ReferenceCorner = value;
-                AdornmentCorner = value;
+        public System.Drawing.ContentAlignment Alignment {
+            get { return this.alignment; }
+            set { 
+                this.alignment = value;
+                this.ReferenceCorner = value;
+                this.AdornmentCorner = value;
             }
         }
-
-        private ContentAlignment alignment = ContentAlignment.BottomRight;
+        private System.Drawing.ContentAlignment alignment = System.Drawing.ContentAlignment.BottomRight;
 
         /// <summary>
         /// Gets or sets the offset by which the position of the adornment will be adjusted
         /// </summary>
-        [Category("ObjectListView"), Description("The offset by which the position of the adornment will be adjusted"),
-         DefaultValue(typeof (Size), "0,0")]
-        public Size Offset { get; set; }
+        [Category("ObjectListView"),
+         Description("The offset by which the position of the adornment will be adjusted"),
+         DefaultValue(typeof(Size), "0,0")]
+        public Size Offset {
+            get { return this.offset; }
+            set { this.offset = value; }
+        }
+        private Size offset = new Size();
 
         /// <summary>
         /// Gets or sets the point of the reference rectangle to which the adornment will be aligned.
         /// </summary>
         [Browsable(false),
          DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ContentAlignment ReferenceCorner
-        {
-            get { return referenceCorner; }
-            set { referenceCorner = value; }
+        public System.Drawing.ContentAlignment ReferenceCorner {
+            get { return this.referenceCorner; }
+            set { this.referenceCorner = value; }
         }
-
-        private ContentAlignment referenceCorner = ContentAlignment.MiddleCenter;
+        private System.Drawing.ContentAlignment referenceCorner = System.Drawing.ContentAlignment.MiddleCenter;
 
         /// <summary>
         /// Gets or sets the degree of rotation by which the adornment will be transformed.
         /// The centre of rotation will be the center point of the adornment.
         /// </summary>
-        [Category("ObjectListView"), Description("The degree of rotation that will be applied to the adornment."),
-         DefaultValue(0), NotifyParentProperty(true)]
-        public int Rotation { get; set; }
+        [Category("ObjectListView"),
+         Description("The degree of rotation that will be applied to the adornment."),
+         DefaultValue(0),
+         NotifyParentProperty(true)]
+        public int Rotation {
+            get { return this.rotation; }
+            set { this.rotation = value; }
+        }
+        private int rotation;
 
         /// <summary>
         /// Gets or sets the transparency of the overlay. 
@@ -116,12 +120,10 @@ namespace BrightIdeasSoftware
         [Category("ObjectListView"),
          Description("The transparency of this adornment. 0 is completely transparent, 255 is completely opaque."),
          DefaultValue(128)]
-        public int Transparency
-        {
-            get { return transparency; }
-            set { transparency = Math.Min(255, Math.Max(0, value)); }
+        public int Transparency {
+            get { return this.transparency; }
+            set { this.transparency = Math.Min(255, Math.Max(0, value)); }
         }
-
         private int transparency = 128;
 
         #endregion
@@ -139,27 +141,25 @@ namespace BrightIdeasSoftware
         /// <example>CalculateAlignedPosition(new Point(50, 100), new Size(10, 20), System.Drawing.ContentAlignment.TopLeft) -> Point(50, 100)</example>
         /// <example>CalculateAlignedPosition(new Point(50, 100), new Size(10, 20), System.Drawing.ContentAlignment.MiddleCenter) -> Point(45, 90)</example>
         /// <example>CalculateAlignedPosition(new Point(50, 100), new Size(10, 20), System.Drawing.ContentAlignment.BottomRight) -> Point(40, 80)</example>
-        public Point CalculateAlignedPosition(Point pt, Size size, ContentAlignment corner)
-        {
-            switch (corner)
-            {
-                case ContentAlignment.TopLeft:
+        public Point CalculateAlignedPosition(Point pt, Size size, System.Drawing.ContentAlignment corner) {
+            switch (corner) {
+                case System.Drawing.ContentAlignment.TopLeft:
                     return pt;
-                case ContentAlignment.TopCenter:
-                    return new Point(pt.X - (size.Width/2), pt.Y);
-                case ContentAlignment.TopRight:
+                case System.Drawing.ContentAlignment.TopCenter:
+                    return new Point(pt.X - (size.Width / 2), pt.Y);
+                case System.Drawing.ContentAlignment.TopRight:
                     return new Point(pt.X - size.Width, pt.Y);
-                case ContentAlignment.MiddleLeft:
-                    return new Point(pt.X, pt.Y - (size.Height/2));
-                case ContentAlignment.MiddleCenter:
-                    return new Point(pt.X - (size.Width/2), pt.Y - (size.Height/2));
-                case ContentAlignment.MiddleRight:
-                    return new Point(pt.X - size.Width, pt.Y - (size.Height/2));
-                case ContentAlignment.BottomLeft:
+                case System.Drawing.ContentAlignment.MiddleLeft:
+                    return new Point(pt.X, pt.Y - (size.Height / 2));
+                case System.Drawing.ContentAlignment.MiddleCenter:
+                    return new Point(pt.X - (size.Width / 2), pt.Y - (size.Height / 2));
+                case System.Drawing.ContentAlignment.MiddleRight:
+                    return new Point(pt.X - size.Width, pt.Y - (size.Height / 2));
+                case System.Drawing.ContentAlignment.BottomLeft:
                     return new Point(pt.X, pt.Y - size.Height);
-                case ContentAlignment.BottomCenter:
-                    return new Point(pt.X - (size.Width/2), pt.Y - size.Height);
-                case ContentAlignment.BottomRight:
+                case System.Drawing.ContentAlignment.BottomCenter:
+                    return new Point(pt.X - (size.Width / 2), pt.Y - size.Height);
+                case System.Drawing.ContentAlignment.BottomRight:
                     return new Point(pt.X - size.Width, pt.Y - size.Height);
             }
 
@@ -174,9 +174,8 @@ namespace BrightIdeasSoftware
         /// <param name="r"></param>
         /// <param name="sz"></param>
         /// <returns></returns>
-        public Rectangle CreateAlignedRectangle(Rectangle r, Size sz)
-        {
-            return CreateAlignedRectangle(r, sz, ReferenceCorner, AdornmentCorner, Offset);
+        public Rectangle CreateAlignedRectangle(Rectangle r, Size sz) {
+            return this.CreateAlignedRectangle(r, sz, this.ReferenceCorner, this.AdornmentCorner, this.Offset);
         }
 
         /// <summary>
@@ -196,10 +195,9 @@ namespace BrightIdeasSoftware
         /// very neat once you understand it.</para>
         /// </remarks>
         public Rectangle CreateAlignedRectangle(Rectangle r, Size sz,
-                                                ContentAlignment corner, ContentAlignment referenceCorner, Size offset)
-        {
-            Point referencePt = CalculateCorner(r, referenceCorner);
-            Point topLeft = CalculateAlignedPosition(referencePt, sz, corner);
+            System.Drawing.ContentAlignment corner, System.Drawing.ContentAlignment referenceCorner, Size offset) {
+            Point referencePt = this.CalculateCorner(r, referenceCorner);
+            Point topLeft = this.CalculateAlignedPosition(referencePt, sz, corner);
             return new Rectangle(topLeft + offset, sz);
         }
 
@@ -213,30 +211,28 @@ namespace BrightIdeasSoftware
         /// <example>CalculateReferenceLocation(new Rectangle(0, 0, 50, 100), System.Drawing.ContentAlignment.TopLeft) -> Point(0, 0)</example>
         /// <example>CalculateReferenceLocation(new Rectangle(0, 0, 50, 100), System.Drawing.ContentAlignment.MiddleCenter) -> Point(25, 50)</example>
         /// <example>CalculateReferenceLocation(new Rectangle(0, 0, 50, 100), System.Drawing.ContentAlignment.BottomRight) -> Point(50, 100)</example>
-        public Point CalculateCorner(Rectangle r, ContentAlignment corner)
-        {
-            switch (corner)
-            {
-                case ContentAlignment.TopLeft:
+        public Point CalculateCorner(Rectangle r, System.Drawing.ContentAlignment corner) {
+            switch (corner) {
+                case System.Drawing.ContentAlignment.TopLeft:
                     return new Point(r.Left, r.Top);
-                case ContentAlignment.TopCenter:
-                    return new Point(r.X + (r.Width/2), r.Top);
-                case ContentAlignment.TopRight:
+                case System.Drawing.ContentAlignment.TopCenter:
+                    return new Point(r.X + (r.Width / 2), r.Top);
+                case System.Drawing.ContentAlignment.TopRight:
                     return new Point(r.Right, r.Top);
-                case ContentAlignment.MiddleLeft:
-                    return new Point(r.Left, r.Top + (r.Height/2));
-                case ContentAlignment.MiddleCenter:
-                    return new Point(r.X + (r.Width/2), r.Top + (r.Height/2));
-                case ContentAlignment.MiddleRight:
-                    return new Point(r.Right, r.Top + (r.Height/2));
-                case ContentAlignment.BottomLeft:
+                case System.Drawing.ContentAlignment.MiddleLeft:
+                    return new Point(r.Left, r.Top + (r.Height / 2));
+                case System.Drawing.ContentAlignment.MiddleCenter:
+                    return new Point(r.X + (r.Width / 2), r.Top + (r.Height  / 2));
+                case System.Drawing.ContentAlignment.MiddleRight:
+                    return new Point(r.Right, r.Top + (r.Height / 2));
+                case System.Drawing.ContentAlignment.BottomLeft:
                     return new Point(r.Left, r.Bottom);
-                case ContentAlignment.BottomCenter:
-                    return new Point(r.X + (r.Width/2), r.Bottom);
-                case ContentAlignment.BottomRight:
+                case System.Drawing.ContentAlignment.BottomCenter:
+                    return new Point(r.X + (r.Width / 2), r.Bottom);
+                case System.Drawing.ContentAlignment.BottomRight:
                     return new Point(r.Right, r.Bottom);
             }
-
+            
             // Should never reach here
             return r.Location;
         }
@@ -247,8 +243,7 @@ namespace BrightIdeasSoftware
         /// <param name="item"></param>
         /// <param name="subItem"></param>
         /// <returns></returns>
-        public Rectangle CalculateItemBounds(OLVListItem item, OLVListSubItem subItem)
-        {
+        public Rectangle CalculateItemBounds(OLVListItem item, OLVListSubItem subItem) {
             if (item == null)
                 return Rectangle.Empty;
 
@@ -267,15 +262,14 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="g">The Graphics to be transformed</param>
         /// <param name="r">The rotation will be around the centre of this rect</param>
-        protected void ApplyRotation(Graphics g, Rectangle r)
-        {
-            if (Rotation == 0)
+        protected void ApplyRotation(Graphics g, Rectangle r) {
+            if (this.Rotation == 0)
                 return;
 
             // THINK: Do we want to reset the transform? I think we want to push a new transform
             g.ResetTransform();
-            var m = new Matrix();
-            m.RotateAt(Rotation, new Point(r.Left + r.Width/2, r.Top + r.Height/2));
+            Matrix m = new Matrix();
+            m.RotateAt(this.Rotation, new Point(r.Left + r.Width / 2, r.Top + r.Height / 2));
             g.Transform = m;
         }
 
@@ -283,9 +277,8 @@ namespace BrightIdeasSoftware
         /// Reverse the rotation created by ApplyRotation()
         /// </summary>
         /// <param name="g"></param>
-        protected void UnapplyRotation(Graphics g)
-        {
-            if (Rotation != 0)
+        protected void UnapplyRotation(Graphics g) {
+            if (this.Rotation != 0)
                 g.ResetTransform();
         }
 
@@ -302,16 +295,27 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// Gets or sets the image that will be drawn
         /// </summary>
-        [Category("ObjectListView"), Description("The image that will be drawn"), DefaultValue(null),
+        [Category("ObjectListView"),
+         Description("The image that will be drawn"),
+         DefaultValue(null),
          NotifyParentProperty(true)]
-        public Image Image { get; set; }
+        public Image Image {
+            get { return this.image; }
+            set { this.image = value; }
+        }
+        private Image image;
 
         /// <summary>
         /// Gets or sets if the image will be shrunk to fit with its horizontal bounds
         /// </summary>
-        [Category("ObjectListView"), Description("Will the image be shrunk to fit within its width?"),
+        [Category("ObjectListView"),
+         Description("Will the image be shrunk to fit within its width?"),
          DefaultValue(false)]
-        public bool ShrinkToWidth { get; set; }
+        public bool ShrinkToWidth {
+            get { return this.shrinkToWidth; }
+            set { this.shrinkToWidth = value; }
+        }
+        private bool shrinkToWidth;
 
         #endregion
 
@@ -322,12 +326,11 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="g">The Graphics used for drawing</param>
         /// <param name="r">The bounds of the rendering</param>
-        public void DrawImage(Graphics g, Rectangle r)
-        {
-            if (ShrinkToWidth)
-                DrawScaledImage(g, r, Image, Transparency);
+        public void DrawImage(Graphics g, Rectangle r) {
+            if (this.ShrinkToWidth)
+                this.DrawScaledImage(g, r, this.Image, this.Transparency);
             else
-                DrawImage(g, r, Image, Transparency);
+                this.DrawImage(g, r, this.Image, this.Transparency); 
         }
 
         /// <summary>
@@ -337,10 +340,9 @@ namespace BrightIdeasSoftware
         /// <param name="g">The Graphics used for drawing</param>
         /// <param name="r">The bounds of the rendering</param>
         /// <param name="transparency">How transparent should the image be (0 is completely transparent, 255 is opaque)</param>
-        public void DrawImage(Graphics g, Rectangle r, Image image, int transparency)
-        {
+        public void DrawImage(Graphics g, Rectangle r, Image image, int transparency) {
             if (image != null)
-                DrawImage(g, r, image, image.Size, transparency);
+                this.DrawImage(g, r, image, image.Size, transparency);
         }
 
         /// <summary>
@@ -351,20 +353,17 @@ namespace BrightIdeasSoftware
         /// <param name="r">The bounds of the rendering</param>
         /// <param name="sz">How big should the image be?</param>
         /// <param name="transparency">How transparent should the image be (0 is completely transparent, 255 is opaque)</param>
-        public void DrawImage(Graphics g, Rectangle r, Image image, Size sz, int transparency)
-        {
+        public void DrawImage(Graphics g, Rectangle r, Image image, Size sz, int transparency) {
             if (image == null)
                 return;
 
-            Rectangle adornmentBounds = CreateAlignedRectangle(r, sz);
-            try
-            {
-                ApplyRotation(g, adornmentBounds);
-                DrawTransparentBitmap(g, adornmentBounds, image, transparency);
+            Rectangle adornmentBounds = this.CreateAlignedRectangle(r, sz);
+            try {
+                this.ApplyRotation(g, adornmentBounds);
+                this.DrawTransparentBitmap(g, adornmentBounds, image, transparency);
             }
-            finally
-            {
-                UnapplyRotation(g);
+            finally {
+                this.UnapplyRotation(g);
             }
         }
 
@@ -376,22 +375,20 @@ namespace BrightIdeasSoftware
         /// <param name="g">The Graphics used for drawing</param>
         /// <param name="r">The bounds of the rendering</param>
         /// <param name="transparency">How transparent should the image be (0 is completely transparent, 255 is opaque)</param>
-        public void DrawScaledImage(Graphics g, Rectangle r, Image image, int transparency)
-        {
+        public void DrawScaledImage(Graphics g, Rectangle r, Image image, int transparency) {
             if (image == null)
                 return;
 
             // If the image is too wide to be drawn in the space provided, proportionally scale it down.
             // Too tall images are not scaled.
             Size size = image.Size;
-            if (image.Width > r.Width)
-            {
-                float scaleRatio = r.Width/(float) image.Width;
-                size.Height = (int) (image.Height*scaleRatio);
+            if (image.Width > r.Width) {
+                float scaleRatio = (float)r.Width / (float)image.Width;
+                size.Height = (int)((float)image.Height * scaleRatio);
                 size.Width = r.Width - 1;
             }
 
-            DrawImage(g, r, image, size, transparency);
+            this.DrawImage(g, r, image, size, transparency);
         }
 
         /// <summary>
@@ -401,29 +398,26 @@ namespace BrightIdeasSoftware
         /// <param name="r"></param>
         /// <param name="image"></param>
         /// <param name="transparency"></param>
-        protected void DrawTransparentBitmap(Graphics g, Rectangle r, Image image, int transparency)
-        {
+        protected void DrawTransparentBitmap(Graphics g, Rectangle r, Image image, int transparency) {
             ImageAttributes imageAttributes = null;
-            if (transparency != 255)
-            {
+            if (transparency != 255) {
                 imageAttributes = new ImageAttributes();
-                float a = transparency/255.0f;
+                float a = (float)transparency / 255.0f;
                 float[][] colorMatrixElements = {
-                                                    new float[] {1, 0, 0, 0, 0},
-                                                    new float[] {0, 1, 0, 0, 0},
-                                                    new float[] {0, 0, 1, 0, 0},
-                                                    new[] {0, 0, 0, a, 0},
-                                                    new float[] {0, 0, 0, 0, 1}
-                                                };
+                    new float[] {1,  0,  0,  0, 0},
+                    new float[] {0,  1,  0,  0, 0},
+                    new float[] {0,  0,  1,  0, 0},
+                    new float[] {0,  0,  0,  a, 0},
+                    new float[] {0,  0,  0,  0, 1}};
 
                 imageAttributes.SetColorMatrix(new ColorMatrix(colorMatrixElements));
             }
 
             g.DrawImage(image,
-                        r, // destination rectangle
-                        0, 0, image.Size.Width, image.Size.Height, // source rectangle
-                        GraphicsUnit.Pixel,
-                        imageAttributes);
+               r,                                          // destination rectangle
+               0, 0, image.Size.Width, image.Size.Height,  // source rectangle
+               GraphicsUnit.Pixel,
+               imageAttributes);
         }
 
         #endregion
@@ -442,22 +436,21 @@ namespace BrightIdeasSoftware
         /// </summary>
         [Category("ObjectListView"),
          Description("The background color of the text"),
-         DefaultValue(typeof (Color), "")]
-        public Color BackColor
-        {
-            get { return backColor; }
-            set { backColor = value; }
+         DefaultValue(typeof(Color), "")]
+        public Color BackColor {
+            get { return this.backColor; }
+            set { this.backColor = value; }
         }
-
         private Color backColor = Color.Empty;
 
         /// <summary>
         /// Gets the brush that will be used to paint the text
         /// </summary>
         [Browsable(false)]
-        public Brush BackgroundBrush
-        {
-            get { return new SolidBrush(Color.FromArgb(WorkingTransparency, BackColor)); }
+        public Brush BackgroundBrush {
+            get {
+                return new SolidBrush(Color.FromArgb(this.WorkingTransparency, this.BackColor));
+            }
         }
 
         /// <summary>
@@ -466,29 +459,34 @@ namespace BrightIdeasSoftware
         /// </summary>
         [Category("ObjectListView"),
          Description("The color of the border around the text"),
-         DefaultValue(typeof (Color), "")]
-        public Color BorderColor
-        {
-            get { return borderColor; }
-            set { borderColor = value; }
+         DefaultValue(typeof(Color), "")]
+        public Color BorderColor {
+            get { return this.borderColor; }
+            set { this.borderColor = value; }
         }
-
         private Color borderColor = Color.Empty;
 
         /// <summary>
         /// Gets the brush that will be used to paint the text
         /// </summary>
         [Browsable(false)]
-        public Pen BorderPen
-        {
-            get { return new Pen(Color.FromArgb(WorkingTransparency, BorderColor), BorderWidth); }
+        public Pen BorderPen {
+            get {
+                return new Pen(Color.FromArgb(this.WorkingTransparency, this.BorderColor), this.BorderWidth);
+            }
         }
 
         /// <summary>
         /// Gets or sets the width of the border around the text
         /// </summary>
-        [Category("ObjectListView"), Description("The width of the border around the text"), DefaultValue(0.0f)]
-        public float BorderWidth { get; set; }
+        [Category("ObjectListView"),
+         Description("The width of the border around the text"),
+         DefaultValue(0.0f)]
+        public float BorderWidth {
+            get { return this.borderWidth; }
+            set { this.borderWidth = value; }
+        }
+        private float borderWidth;
 
         /// <summary>
         /// How rounded should the corners of the border be? 0 means no rounding.
@@ -498,46 +496,53 @@ namespace BrightIdeasSoftware
          Description("How rounded should the corners of the border be? 0 means no rounding."),
          DefaultValue(16.0f),
          NotifyParentProperty(true)]
-        public float CornerRounding
-        {
-            get { return cornerRounding; }
-            set { cornerRounding = value; }
+        public float CornerRounding {
+            get { return this.cornerRounding; }
+            set { this.cornerRounding = value; }
         }
-
         private float cornerRounding = 16.0f;
 
         /// <summary>
         /// Gets or sets the font that will be used to draw the text
         /// </summary>
-        [Category("ObjectListView"), Description("The font that will be used to draw the text"), DefaultValue(null),
+        [Category("ObjectListView"),
+         Description("The font that will be used to draw the text"),
+         DefaultValue(null),
          NotifyParentProperty(true)]
-        public Font Font { get; set; }
+        public Font Font {
+            get { return this.font; }
+            set { this.font = value; }
+        }
+        private Font font;
 
         /// <summary>
         /// Gets the font that will be used to draw the text or a reasonable default
         /// </summary>
         [Browsable(false)]
-        public Font FontOrDefault
-        {
-            get { return Font ?? new Font("Tahoma", 16); }
+        public Font FontOrDefault {
+            get {
+                return this.Font ?? new Font("Tahoma", 16);
+            }
         }
 
         /// <summary>
         /// Does this text have a background?
         /// </summary>
         [Browsable(false)]
-        public bool HasBackground
-        {
-            get { return BackColor != Color.Empty; }
+        public bool HasBackground {
+            get {
+                return this.BackColor != Color.Empty;
+            }
         }
 
         /// <summary>
         /// Does this overlay have a border?
         /// </summary>
         [Browsable(false)]
-        public bool HasBorder
-        {
-            get { return BorderColor != Color.Empty && BorderWidth > 0; }
+        public bool HasBorder {
+            get {
+                return this.BorderColor != Color.Empty && this.BorderWidth > 0;
+            }
         }
 
         /// <summary>
@@ -547,47 +552,55 @@ namespace BrightIdeasSoftware
         [Category("ObjectListView"),
          Description("The maximum width the text (0 means no maximum). Text longer than this will wrap"),
          DefaultValue(0)]
-        public int MaximumTextWidth { get; set; }
+        public int MaximumTextWidth {
+            get { return this.maximumTextWidth; }
+            set { this.maximumTextWidth = value; }
+        }
+        private int maximumTextWidth;
 
         /// <summary>
         /// Gets or sets the formatting that should be used on the text
         /// </summary>
         [Browsable(false),
          DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public StringFormat StringFormat
-        {
-            get
-            {
-                if (stringFormat == null)
-                {
-                    stringFormat = new StringFormat();
-                    stringFormat.Alignment = StringAlignment.Center;
-                    stringFormat.LineAlignment = StringAlignment.Center;
-                    stringFormat.Trimming = StringTrimming.EllipsisCharacter;
-                    if (!Wrap)
-                        stringFormat.FormatFlags = StringFormatFlags.NoWrap;
+        public StringFormat StringFormat {
+            get {
+                if (this.stringFormat == null) {
+                    this.stringFormat = new StringFormat();
+                    this.stringFormat.Alignment = StringAlignment.Center;
+                    this.stringFormat.LineAlignment = StringAlignment.Center;
+                    this.stringFormat.Trimming = StringTrimming.EllipsisCharacter;
+                    if (!this.Wrap)
+                        this.stringFormat.FormatFlags = StringFormatFlags.NoWrap;
                 }
-                return stringFormat;
+                return this.stringFormat; 
             }
-            set { stringFormat = value; }
+            set { this.stringFormat = value; }
         }
-
         private StringFormat stringFormat;
 
         /// <summary>
         /// Gets or sets the text that will be drawn
         /// </summary>
-        [Category("ObjectListView"), Description("The text that will be drawn over the top of the ListView"),
-         DefaultValue(null), NotifyParentProperty(true), Localizable(true)]
-        public string Text { get; set; }
+        [Category("ObjectListView"),
+         Description("The text that will be drawn over the top of the ListView"),
+         DefaultValue(null),
+         NotifyParentProperty(true),
+         Localizable(true)]
+        public string Text {
+            get { return this.text; }
+            set { this.text = value; }
+        }
+        private string text;
 
         /// <summary>
         /// Gets the brush that will be used to paint the text
         /// </summary>
         [Browsable(false)]
-        public Brush TextBrush
-        {
-            get { return new SolidBrush(Color.FromArgb(WorkingTransparency, TextColor)); }
+        public Brush TextBrush {
+            get {
+                return new SolidBrush(Color.FromArgb(this.WorkingTransparency, this.TextColor));
+            }
         }
 
         /// <summary>
@@ -595,14 +608,12 @@ namespace BrightIdeasSoftware
         /// </summary>
         [Category("ObjectListView"),
          Description("The color of the text"),
-         DefaultValue(typeof (Color), "DarkBlue"),
+         DefaultValue(typeof(Color), "DarkBlue"),
          NotifyParentProperty(true)]
-        public Color TextColor
-        {
-            get { return textColor; }
-            set { textColor = value; }
+        public Color TextColor {
+            get { return this.textColor; }
+            set { this.textColor = value; }
         }
-
         private Color textColor = Color.DarkBlue;
 
         /// <summary>
@@ -611,12 +622,10 @@ namespace BrightIdeasSoftware
         [Category("ObjectListView"),
          Description("Will the text wrap?"),
          DefaultValue(true)]
-        public bool Wrap
-        {
-            get { return wrap; }
-            set { wrap = value; }
+        public bool Wrap {
+            get { return this.wrap; }
+            set { this.wrap = value; }
         }
-
         private bool wrap = true;
 
         #endregion
@@ -629,9 +638,8 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="g">The Graphics used for drawing</param>
         /// <param name="r">The reference rectangle in relation to which the text will be drawn</param>
-        public void DrawText(Graphics g, Rectangle r)
-        {
-            DrawText(g, r, Text, Transparency);
+        public void DrawText(Graphics g, Rectangle r) {
+            this.DrawText(g, r, this.Text, this.Transparency);
         }
 
         /// <summary>
@@ -641,13 +649,12 @@ namespace BrightIdeasSoftware
         /// <param name="r">The reference rectangle in relation to which the text will be drawn</param>
         /// <param name="text">The text to draw</param>
         /// <param name="transparency">How opaque should be text be</param>
-        public void DrawText(Graphics g, Rectangle r, string text, int transparency)
-        {
+        public void DrawText(Graphics g, Rectangle r, string text, int transparency) {
             if (String.IsNullOrEmpty(text))
                 return;
 
-            Rectangle textRect = CalculateTextBounds(g, r, text);
-            DrawBorderedText(g, textRect, text, transparency);
+            Rectangle textRect = this.CalculateTextBounds(g, r, text);
+            this.DrawBorderedText(g, textRect, text, transparency);
         }
 
         /// <summary>
@@ -657,30 +664,26 @@ namespace BrightIdeasSoftware
         /// <param name="textRect">The bounds within which the text should be drawn</param>
         /// <param name="text">The text to draw</param>
         /// <param name="transparency">How opaque should be text be</param>
-        protected void DrawBorderedText(Graphics g, Rectangle textRect, string text, int transparency)
-        {
+        protected void DrawBorderedText(Graphics g, Rectangle textRect, string text, int transparency) {
             Rectangle borderRect = textRect;
-            borderRect.Inflate((int) BorderWidth/2, (int) BorderWidth/2);
+            borderRect.Inflate((int)this.BorderWidth / 2, (int)this.BorderWidth / 2);
             borderRect.Y -= 1; // Looker better a little higher
 
-            try
-            {
-                ApplyRotation(g, textRect);
-                using (GraphicsPath path = GetRoundedRect(borderRect, CornerRounding))
-                {
-                    WorkingTransparency = transparency;
-                    if (HasBackground)
-                        g.FillPath(BackgroundBrush, path);
+            try {
+                this.ApplyRotation(g, textRect);
+                using (GraphicsPath path = this.GetRoundedRect(borderRect, this.CornerRounding)) {
+                    this.WorkingTransparency = transparency;
+                    if (this.HasBackground)
+                        g.FillPath(this.BackgroundBrush, path);
 
-                    g.DrawString(text, FontOrDefault, TextBrush, textRect, StringFormat);
+                    g.DrawString(text, this.FontOrDefault, this.TextBrush, textRect, this.StringFormat);
 
-                    if (HasBorder)
-                        g.DrawPath(BorderPen, path);
+                    if (this.HasBorder)
+                        g.DrawPath(this.BorderPen, path);
                 }
             }
-            finally
-            {
-                UnapplyRotation(g);
+            finally {
+                this.UnapplyRotation(g);
             }
         }
 
@@ -691,12 +694,11 @@ namespace BrightIdeasSoftware
         /// <param name="r"></param>
         /// <param name="text"></param>
         /// <returns>The bounds of the text</returns>
-        protected Rectangle CalculateTextBounds(Graphics g, Rectangle r, string text)
-        {
-            int maxWidth = MaximumTextWidth <= 0 ? r.Width : MaximumTextWidth;
-            SizeF sizeF = g.MeasureString(text, FontOrDefault, maxWidth, StringFormat);
-            var size = new Size(1 + (int) sizeF.Width, 1 + (int) sizeF.Height);
-            return CreateAlignedRectangle(r, size);
+        protected Rectangle CalculateTextBounds(Graphics g, Rectangle r, string text) {
+            int maxWidth = this.MaximumTextWidth <= 0 ? r.Width : this.MaximumTextWidth;
+            SizeF sizeF = g.MeasureString(text, this.FontOrDefault, maxWidth, this.StringFormat);
+            Size size = new Size(1 + (int)sizeF.Width, 1 + (int)sizeF.Height);
+            return this.CreateAlignedRectangle(r, size);
         }
 
         /// <summary>
@@ -707,13 +709,11 @@ namespace BrightIdeasSoftware
         /// <returns>A round cornered rectagle path</returns>
         /// <remarks>If I could rely on people using C# 3.0+, this should be
         /// an extension method of GraphicsPath.</remarks>
-        protected GraphicsPath GetRoundedRect(Rectangle rect, float diameter)
-        {
-            var path = new GraphicsPath();
+        protected GraphicsPath GetRoundedRect(Rectangle rect, float diameter) {
+            GraphicsPath path = new GraphicsPath();
 
-            if (diameter > 0)
-            {
-                var arc = new RectangleF(rect.X, rect.Y, diameter, diameter);
+            if (diameter > 0) {
+                RectangleF arc = new RectangleF(rect.X, rect.Y, diameter, diameter);
                 path.AddArc(arc, 180, 90);
                 arc.X = rect.Right - diameter;
                 path.AddArc(arc, 270, 90);
@@ -722,9 +722,7 @@ namespace BrightIdeasSoftware
                 arc.X = rect.Left;
                 path.AddArc(arc, 90, 90);
                 path.CloseFigure();
-            }
-            else
-            {
+            } else {
                 path.AddRectangle(rect);
             }
 

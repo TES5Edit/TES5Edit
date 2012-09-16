@@ -5,9 +5,13 @@
  * Date: 3-March-2011 10:53 pm
  *
  * Change log:
+ * 2012-04-14  JPP  - Fixed bug where, on a OLV with only a single editable column, tabbing
+ *                    to change rows would edit the cell above rather than the cell below
+ *                    the cell being edited.
+ * 2.5
  * 2011-03-03  JPP  - First version
  * 
- * Copyright (C) 2011 Phillip Piper
+ * Copyright (C) 2011-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,10 +31,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Windows.Forms;
+using BrightIdeasSoftware;
 
-namespace BrightIdeasSoftware
-{
+namespace BrightIdeasSoftware {
     /// <summary>
     /// Indicates the behavior of a key when a cell "on the edge" is being edited.
     /// and the normal behavior of that key would exceed the edge. For example,
@@ -38,8 +43,7 @@ namespace BrightIdeasSoftware
     /// the left most column, since the normal action of the key cannot be taken
     /// (since there are no more columns to the left).
     /// </summary>
-    public enum CellEditAtEdgeBehaviour
-    {
+    public enum CellEditAtEdgeBehaviour {
         /// <summary>
         /// The key press will be ignored
         /// </summary>
@@ -75,8 +79,7 @@ namespace BrightIdeasSoftware
     /// Indicates the normal behaviour of a key when used during a cell edit
     /// operation.
     /// </summary>
-    public enum CellEditCharacterBehaviour
-    {
+    public enum CellEditCharacterBehaviour {
         /// <summary>
         /// The key press will be ignored
         /// </summary>
@@ -170,8 +173,8 @@ namespace BrightIdeasSoftware
     /// <summary>
     /// Instances of this class handle key presses during a cell edit operation.
     /// </summary>
-    public class CellEditKeyEngine
-    {
+    public class CellEditKeyEngine {
+
         #region Public interface
 
         /// <summary>
@@ -180,11 +183,9 @@ namespace BrightIdeasSoftware
         /// <param name="key"></param>
         /// <param name="normalBehaviour"></param>
         /// <param name="atEdgeBehaviour"></param>
-        public virtual void SetKeyBehaviour(Keys key, CellEditCharacterBehaviour normalBehaviour,
-                                            CellEditAtEdgeBehaviour atEdgeBehaviour)
-        {
-            CellEditKeyMap[key] = normalBehaviour;
-            CellEditKeyAtEdgeBehaviourMap[key] = atEdgeBehaviour;
+        public virtual void SetKeyBehaviour(Keys key, CellEditCharacterBehaviour normalBehaviour, CellEditAtEdgeBehaviour atEdgeBehaviour) {
+            this.CellEditKeyMap[key] = normalBehaviour;
+            this.CellEditKeyAtEdgeBehaviourMap[key] = atEdgeBehaviour;
         }
 
         /// <summary>
@@ -193,42 +194,39 @@ namespace BrightIdeasSoftware
         /// <param name="olv"></param>
         /// <param name="keyData"></param>
         /// <returns>True if the key was completely handled.</returns>
-        public virtual bool HandleKey(ObjectListView olv, Keys keyData)
-        {
+        public virtual bool HandleKey(ObjectListView olv, Keys keyData) {
             if (olv == null) throw new ArgumentNullException("olv");
 
             CellEditCharacterBehaviour behaviour;
             if (!CellEditKeyMap.TryGetValue(keyData, out behaviour))
                 return false;
 
-            ListView = olv;
+            this.ListView = olv;
 
-            switch (behaviour)
-            {
-                case CellEditCharacterBehaviour.Ignore:
-                    break;
-                case CellEditCharacterBehaviour.CancelEdit:
-                    HandleCancelEdit();
-                    break;
-                case CellEditCharacterBehaviour.EndEdit:
-                    HandleEndEdit();
-                    break;
-                case CellEditCharacterBehaviour.ChangeColumnLeft:
-                case CellEditCharacterBehaviour.ChangeColumnRight:
-                    HandleColumnChange(keyData, behaviour);
-                    break;
-                case CellEditCharacterBehaviour.ChangeRowDown:
-                case CellEditCharacterBehaviour.ChangeRowUp:
-                    HandleRowChange(keyData, behaviour);
-                    break;
-                default:
-                    return HandleCustomVerb(keyData, behaviour);
-            }
-            ;
+            switch (behaviour) {
+            case CellEditCharacterBehaviour.Ignore:
+                break;
+            case CellEditCharacterBehaviour.CancelEdit:
+                this.HandleCancelEdit();
+                break;
+            case CellEditCharacterBehaviour.EndEdit:
+                this.HandleEndEdit();
+                break;
+            case CellEditCharacterBehaviour.ChangeColumnLeft:
+            case CellEditCharacterBehaviour.ChangeColumnRight:
+                this.HandleColumnChange(keyData, behaviour);
+                break;
+            case CellEditCharacterBehaviour.ChangeRowDown:
+            case CellEditCharacterBehaviour.ChangeRowUp:
+                this.HandleRowChange(keyData, behaviour);
+                break;
+            default:
+                return this.HandleCustomVerb(keyData, behaviour);
+            };
 
             return true;
         }
-
+        
         #endregion
 
         #region Implementation properties
@@ -237,55 +235,59 @@ namespace BrightIdeasSoftware
         /// Gets or sets the ObjectListView on which the current key is being handled.
         /// This cannot be null.
         /// </summary>
-        protected ObjectListView ListView { get; set; }
+        protected ObjectListView ListView {
+            get { return listView; }
+            set { listView = value; }
+        }
+        private ObjectListView listView;
 
         /// <summary>
         /// Gets the row of the cell that is currently being edited
         /// </summary>
-        protected OLVListItem ItemBeingEdited
-        {
-            get { return ListView.cellEditEventArgs.ListViewItem; }
+        protected OLVListItem ItemBeingEdited {
+            get {
+                return this.ListView.cellEditEventArgs.ListViewItem;
+            }
         }
 
         /// <summary>
         /// Gets the index of the column of the cell that is being edited
         /// </summary>
-        protected int SubItemIndexBeingEdited
-        {
-            get { return ListView.cellEditEventArgs.SubItemIndex; }
+        protected int SubItemIndexBeingEdited {
+            get {
+                return this.ListView.cellEditEventArgs.SubItemIndex;
+            }
         }
 
         /// <summary>
         /// Gets or sets the map that remembers the normal behaviour of keys
         /// </summary>
-        protected IDictionary<Keys, CellEditCharacterBehaviour> CellEditKeyMap
-        {
-            get
-            {
+        protected IDictionary<Keys, CellEditCharacterBehaviour> CellEditKeyMap {
+            get {
                 if (cellEditKeyMap == null)
-                    InitializeCellEditKeyMaps();
+                    this.InitializeCellEditKeyMaps();
                 return cellEditKeyMap;
             }
-            set { cellEditKeyMap = value; }
+            set {
+                cellEditKeyMap = value;
+            }
         }
-
         private IDictionary<Keys, CellEditCharacterBehaviour> cellEditKeyMap;
 
         /// <summary>
         /// Gets or sets the map that remembers the desired behaviour of keys 
         /// on edge cases.
         /// </summary>
-        protected IDictionary<Keys, CellEditAtEdgeBehaviour> CellEditKeyAtEdgeBehaviourMap
-        {
-            get
-            {
+        protected IDictionary<Keys, CellEditAtEdgeBehaviour> CellEditKeyAtEdgeBehaviourMap {
+            get {
                 if (cellEditKeyAtEdgeBehaviourMap == null)
-                    InitializeCellEditKeyMaps();
+                    this.InitializeCellEditKeyMaps();
                 return cellEditKeyAtEdgeBehaviourMap;
             }
-            set { cellEditKeyAtEdgeBehaviourMap = value; }
+            set {
+                cellEditKeyAtEdgeBehaviourMap = value;
+            }
         }
-
         private IDictionary<Keys, CellEditAtEdgeBehaviour> cellEditKeyAtEdgeBehaviourMap;
 
         #endregion
@@ -295,26 +297,25 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// Setup the default key mapping
         /// </summary>
-        protected virtual void InitializeCellEditKeyMaps()
-        {
-            cellEditKeyMap = new Dictionary<Keys, CellEditCharacterBehaviour>();
-            cellEditKeyMap[Keys.Escape] = CellEditCharacterBehaviour.CancelEdit;
-            cellEditKeyMap[Keys.Return] = CellEditCharacterBehaviour.EndEdit;
-            cellEditKeyMap[Keys.Enter] = CellEditCharacterBehaviour.EndEdit;
-            cellEditKeyMap[Keys.Tab] = CellEditCharacterBehaviour.ChangeColumnRight;
-            cellEditKeyMap[Keys.Tab | Keys.Shift] = CellEditCharacterBehaviour.ChangeColumnLeft;
-            cellEditKeyMap[Keys.Left | Keys.Alt] = CellEditCharacterBehaviour.ChangeColumnLeft;
-            cellEditKeyMap[Keys.Right | Keys.Alt] = CellEditCharacterBehaviour.ChangeColumnRight;
-            cellEditKeyMap[Keys.Up | Keys.Alt] = CellEditCharacterBehaviour.ChangeRowUp;
-            cellEditKeyMap[Keys.Down | Keys.Alt] = CellEditCharacterBehaviour.ChangeRowDown;
+        protected virtual void InitializeCellEditKeyMaps() {
+            this.cellEditKeyMap = new Dictionary<Keys, CellEditCharacterBehaviour>();
+            this.cellEditKeyMap[Keys.Escape] = CellEditCharacterBehaviour.CancelEdit;
+            this.cellEditKeyMap[Keys.Return] = CellEditCharacterBehaviour.EndEdit;
+            this.cellEditKeyMap[Keys.Enter] = CellEditCharacterBehaviour.EndEdit;
+            this.cellEditKeyMap[Keys.Tab] = CellEditCharacterBehaviour.ChangeColumnRight;
+            this.cellEditKeyMap[Keys.Tab | Keys.Shift] = CellEditCharacterBehaviour.ChangeColumnLeft;
+            this.cellEditKeyMap[Keys.Left | Keys.Alt] = CellEditCharacterBehaviour.ChangeColumnLeft;
+            this.cellEditKeyMap[Keys.Right | Keys.Alt] = CellEditCharacterBehaviour.ChangeColumnRight;
+            this.cellEditKeyMap[Keys.Up | Keys.Alt] = CellEditCharacterBehaviour.ChangeRowUp;
+            this.cellEditKeyMap[Keys.Down | Keys.Alt] = CellEditCharacterBehaviour.ChangeRowDown;
 
-            cellEditKeyAtEdgeBehaviourMap = new Dictionary<Keys, CellEditAtEdgeBehaviour>();
-            cellEditKeyAtEdgeBehaviourMap[Keys.Tab] = CellEditAtEdgeBehaviour.Wrap;
-            cellEditKeyAtEdgeBehaviourMap[Keys.Tab | Keys.Shift] = CellEditAtEdgeBehaviour.Wrap;
-            cellEditKeyAtEdgeBehaviourMap[Keys.Left | Keys.Alt] = CellEditAtEdgeBehaviour.Wrap;
-            cellEditKeyAtEdgeBehaviourMap[Keys.Right | Keys.Alt] = CellEditAtEdgeBehaviour.Wrap;
-            cellEditKeyAtEdgeBehaviourMap[Keys.Up | Keys.Alt] = CellEditAtEdgeBehaviour.ChangeColumn;
-            cellEditKeyAtEdgeBehaviourMap[Keys.Down | Keys.Alt] = CellEditAtEdgeBehaviour.ChangeColumn;
+            this.cellEditKeyAtEdgeBehaviourMap = new Dictionary<Keys, CellEditAtEdgeBehaviour>();
+            this.cellEditKeyAtEdgeBehaviourMap[Keys.Tab] = CellEditAtEdgeBehaviour.Wrap;
+            this.cellEditKeyAtEdgeBehaviourMap[Keys.Tab | Keys.Shift] = CellEditAtEdgeBehaviour.Wrap;
+            this.cellEditKeyAtEdgeBehaviourMap[Keys.Left | Keys.Alt] = CellEditAtEdgeBehaviour.Wrap;
+            this.cellEditKeyAtEdgeBehaviourMap[Keys.Right | Keys.Alt] = CellEditAtEdgeBehaviour.Wrap;
+            this.cellEditKeyAtEdgeBehaviourMap[Keys.Up | Keys.Alt] = CellEditAtEdgeBehaviour.ChangeColumn;
+            this.cellEditKeyAtEdgeBehaviourMap[Keys.Down | Keys.Alt] = CellEditAtEdgeBehaviour.ChangeColumn;
         }
 
         #endregion
@@ -324,17 +325,15 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// Handle the end edit command
         /// </summary>
-        protected virtual void HandleEndEdit()
-        {
-            ListView.PossibleFinishCellEditing();
+        protected virtual void HandleEndEdit() {
+            this.ListView.PossibleFinishCellEditing();
         }
 
         /// <summary>
         /// Handle the cancel edit command
         /// </summary>
-        protected virtual void HandleCancelEdit()
-        {
-            ListView.CancelCellEdit();
+        protected virtual void HandleCancelEdit() {
+            this.ListView.CancelCellEdit();
         }
 
         /// <summary>
@@ -343,8 +342,7 @@ namespace BrightIdeasSoftware
         /// <param name="keyData"></param>
         /// <param name="behaviour"></param>
         /// <returns></returns>
-        protected virtual bool HandleCustomVerb(Keys keyData, CellEditCharacterBehaviour behaviour)
-        {
+        protected virtual bool HandleCustomVerb(Keys keyData, CellEditCharacterBehaviour behaviour) {
             return false;
         }
 
@@ -353,55 +351,50 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="keyData"></param>
         /// <param name="behaviour"></param>
-        protected virtual void HandleRowChange(Keys keyData, CellEditCharacterBehaviour behaviour)
-        {
+        protected virtual void HandleRowChange(Keys keyData, CellEditCharacterBehaviour behaviour) {
             // If we couldn't finish editing the current cell, don't try to move it
-            if (!ListView.PossibleFinishCellEditing())
+            if (!this.ListView.PossibleFinishCellEditing())
                 return;
 
-            OLVListItem olvi = ItemBeingEdited;
-            int subItemIndex = SubItemIndexBeingEdited;
+            OLVListItem olvi = this.ItemBeingEdited;
+            int subItemIndex = this.SubItemIndexBeingEdited;
             bool isGoingUp = behaviour == CellEditCharacterBehaviour.ChangeRowUp;
 
             // Try to find a row above (or below) the currently edited cell
             // If we find one, start editing it and we're done.
-            OLVListItem adjacentOlvi = GetAdjacentItemOrNull(olvi, isGoingUp);
-            if (adjacentOlvi != null)
-            {
-                StartCellEditIfDifferent(adjacentOlvi, subItemIndex);
+            OLVListItem adjacentOlvi = this.GetAdjacentItemOrNull(olvi, isGoingUp);
+            if (adjacentOlvi != null) {
+                this.StartCellEditIfDifferent(adjacentOlvi, subItemIndex);
                 return;
             }
 
             // There is no adjacent row in the direction we want, so we must be on an edge.
             CellEditAtEdgeBehaviour atEdgeBehaviour = CellEditAtEdgeBehaviour.Wrap;
-            CellEditKeyAtEdgeBehaviourMap.TryGetValue(keyData, out atEdgeBehaviour);
-            switch (atEdgeBehaviour)
-            {
-                case CellEditAtEdgeBehaviour.Ignore:
-                    break;
-                case CellEditAtEdgeBehaviour.EndEdit:
-                    ListView.PossibleFinishCellEditing();
-                    break;
-                case CellEditAtEdgeBehaviour.Wrap:
-                    adjacentOlvi = GetAdjacentItemOrNull(null, isGoingUp);
-                    StartCellEditIfDifferent(adjacentOlvi, subItemIndex);
-                    break;
-                case CellEditAtEdgeBehaviour.ChangeColumn:
-                    // Figure out the next editable column
-                    List<OLVColumn> editableColumnsInDisplayOrder = EditableColumnsInDisplayOrder;
-                    int displayIndex = Math.Max(0,
-                                                editableColumnsInDisplayOrder.IndexOf(ListView.GetColumn(subItemIndex)));
-                    if (isGoingUp)
-                        displayIndex = (editableColumnsInDisplayOrder.Count + displayIndex - 1)%
-                                       editableColumnsInDisplayOrder.Count;
-                    else
-                        displayIndex = (displayIndex + 1)%editableColumnsInDisplayOrder.Count;
-                    subItemIndex = editableColumnsInDisplayOrder[displayIndex].Index;
+            this.CellEditKeyAtEdgeBehaviourMap.TryGetValue(keyData, out atEdgeBehaviour);
+            switch (atEdgeBehaviour) {
+            case CellEditAtEdgeBehaviour.Ignore:
+                break;
+            case CellEditAtEdgeBehaviour.EndEdit:
+                this.ListView.PossibleFinishCellEditing();
+                break;
+            case CellEditAtEdgeBehaviour.Wrap:
+                adjacentOlvi = this.GetAdjacentItemOrNull(null, isGoingUp);
+                this.StartCellEditIfDifferent(adjacentOlvi, subItemIndex);
+                break;
+            case CellEditAtEdgeBehaviour.ChangeColumn:
+                // Figure out the next editable column
+                List<OLVColumn> editableColumnsInDisplayOrder = this.EditableColumnsInDisplayOrder;
+                int displayIndex = Math.Max(0, editableColumnsInDisplayOrder.IndexOf(this.ListView.GetColumn(subItemIndex)));
+                if (isGoingUp)
+                    displayIndex = (editableColumnsInDisplayOrder.Count + displayIndex - 1) % editableColumnsInDisplayOrder.Count;
+                else
+                    displayIndex = (displayIndex + 1) % editableColumnsInDisplayOrder.Count;
+                subItemIndex = editableColumnsInDisplayOrder[displayIndex].Index;
 
-                    // Wrap to the next row and start the cell edit
-                    adjacentOlvi = GetAdjacentItemOrNull(null, isGoingUp);
-                    StartCellEditIfDifferent(adjacentOlvi, subItemIndex);
-                    break;
+                // Wrap to the next row and start the cell edit
+                adjacentOlvi = this.GetAdjacentItemOrNull(null, isGoingUp);
+                this.StartCellEditIfDifferent(adjacentOlvi, subItemIndex);
+                break;
             }
         }
 
@@ -410,48 +403,43 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="keyData"></param>
         /// <param name="behaviour"></param>
-        protected virtual void HandleColumnChange(Keys keyData, CellEditCharacterBehaviour behaviour)
-        {
+        protected virtual void HandleColumnChange(Keys keyData, CellEditCharacterBehaviour behaviour) {
             // If we couldn't finish editing the current cell, don't try to move it
-            if (!ListView.PossibleFinishCellEditing())
+            if (!this.ListView.PossibleFinishCellEditing())
                 return;
 
             // Changing columns only works in details mode
-            if (ListView.View != View.Details)
+            if (this.ListView.View != View.Details)
                 return;
 
-            List<OLVColumn> editableColumns = EditableColumnsInDisplayOrder;
-            OLVListItem olvi = ItemBeingEdited;
-            int displayIndex = Math.Max(0, editableColumns.IndexOf(ListView.GetColumn(SubItemIndexBeingEdited)));
+            List<OLVColumn> editableColumns = this.EditableColumnsInDisplayOrder;
+            OLVListItem olvi = this.ItemBeingEdited;
+            int displayIndex = Math.Max(0, editableColumns.IndexOf(this.ListView.GetColumn(this.SubItemIndexBeingEdited)));
             bool isGoingLeft = behaviour == CellEditCharacterBehaviour.ChangeColumnLeft;
 
             // Are we trying to continue past one of the edges?
             if ((isGoingLeft && displayIndex == 0) ||
-                (!isGoingLeft && displayIndex == editableColumns.Count - 1))
-            {
+                (!isGoingLeft && displayIndex == editableColumns.Count - 1)) {
                 // Yes, so figure out our at edge behaviour
                 CellEditAtEdgeBehaviour atEdgeBehaviour = CellEditAtEdgeBehaviour.Wrap;
-                CellEditKeyAtEdgeBehaviourMap.TryGetValue(keyData, out atEdgeBehaviour);
-                switch (atEdgeBehaviour)
-                {
-                    case CellEditAtEdgeBehaviour.Ignore:
-                        return;
-                    case CellEditAtEdgeBehaviour.EndEdit:
-                        HandleEndEdit();
-                        return;
-                    case CellEditAtEdgeBehaviour.ChangeRow:
-                    case CellEditAtEdgeBehaviour.Wrap:
-                        if (atEdgeBehaviour == CellEditAtEdgeBehaviour.ChangeRow)
-                            olvi = GetAdjacentItem(olvi, displayIndex == 0);
-                        if (isGoingLeft)
-                            displayIndex = editableColumns.Count - 1;
-                        else
-                            displayIndex = 0;
-                        break;
+                this.CellEditKeyAtEdgeBehaviourMap.TryGetValue(keyData, out atEdgeBehaviour);
+                switch (atEdgeBehaviour) {
+                case CellEditAtEdgeBehaviour.Ignore:
+                    return;
+                case CellEditAtEdgeBehaviour.EndEdit:
+                    this.HandleEndEdit();
+                    return;
+                case CellEditAtEdgeBehaviour.ChangeRow:
+                case CellEditAtEdgeBehaviour.Wrap:
+                    if (atEdgeBehaviour == CellEditAtEdgeBehaviour.ChangeRow)
+                        olvi = GetAdjacentItem(olvi, isGoingLeft && displayIndex == 0);
+                    if (isGoingLeft)
+                        displayIndex = editableColumns.Count - 1;
+                    else
+                        displayIndex = 0;
+                    break;
                 }
-            }
-            else
-            {
+            } else {
                 if (isGoingLeft)
                     displayIndex -= 1;
                 else
@@ -459,7 +447,7 @@ namespace BrightIdeasSoftware
             }
 
             int subItemIndex = editableColumns[displayIndex].Index;
-            StartCellEditIfDifferent(olvi, subItemIndex);
+            this.StartCellEditIfDifferent(olvi, subItemIndex);
         }
 
         #endregion
@@ -471,13 +459,12 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="olvi">The row to edit</param>
         /// <param name="subItemIndex">The cell within that row to edit</param>
-        protected void StartCellEditIfDifferent(OLVListItem olvi, int subItemIndex)
-        {
-            if (ItemBeingEdited == olvi && SubItemIndexBeingEdited == subItemIndex)
+        protected void StartCellEditIfDifferent(OLVListItem olvi, int subItemIndex) {
+            if (this.ItemBeingEdited == olvi && this.SubItemIndexBeingEdited == subItemIndex)
                 return;
 
-            ListView.EnsureVisible(olvi.Index);
-            ListView.StartCellEdit(olvi, subItemIndex);
+            this.ListView.EnsureVisible(olvi.Index);
+            this.ListView.StartCellEdit(olvi, subItemIndex);
         }
 
         /// <summary>
@@ -486,9 +473,8 @@ namespace BrightIdeasSoftware
         /// <param name="olvi">The row whose neighbour is sought</param>
         /// <param name="up">The direction of the adjacentness</param>
         /// <returns>An OLVListView adjacent to the given item, or null if there are no more items in that direction.</returns>
-        protected OLVListItem GetAdjacentItemOrNull(OLVListItem olvi, bool up)
-        {
-            return up ? ListView.GetPreviousItem(olvi) : ListView.GetNextItem(olvi);
+        protected OLVListItem GetAdjacentItemOrNull(OLVListItem olvi, bool up) {
+            return up ? this.ListView.GetPreviousItem(olvi) : this.ListView.GetNextItem(olvi);
         }
 
         /// <summary>
@@ -497,20 +483,17 @@ namespace BrightIdeasSoftware
         /// <param name="olvi">The row whose neighbour is sought</param>
         /// <param name="up">The direction of the adjacentness</param>
         /// <returns>An OLVListView adjacent to the given item, or null if there are no more items in that direction.</returns>
-        protected OLVListItem GetAdjacentItem(OLVListItem olvi, bool up)
-        {
-            return GetAdjacentItemOrNull(olvi, up) ?? GetAdjacentItemOrNull(null, up);
+        protected OLVListItem GetAdjacentItem(OLVListItem olvi, bool up) {
+            return this.GetAdjacentItemOrNull(olvi, up) ?? this.GetAdjacentItemOrNull(null, up);
         }
 
         /// <summary>
         /// Gets a collection of columns that are editable in the order they are shown to the user
         /// </summary>
-        protected List<OLVColumn> EditableColumnsInDisplayOrder
-        {
-            get
-            {
-                var editableColumnsInDisplayOrder = new List<OLVColumn>();
-                foreach (OLVColumn x in ListView.ColumnsInDisplayOrder)
+        protected List<OLVColumn> EditableColumnsInDisplayOrder {
+            get {
+                List<OLVColumn> editableColumnsInDisplayOrder = new List<OLVColumn>();
+                foreach (OLVColumn x in this.ListView.ColumnsInDisplayOrder)
                     if (x.IsEditable)
                         editableColumnsInDisplayOrder.Add(x);
                 return editableColumnsInDisplayOrder;

@@ -24,7 +24,7 @@ namespace TESVSnip.Windows.Controls
         public ObjectBindingListView()
         {
             InitializeComponent();
-            EnableSearchByKeyboard = false;
+            IsSearchOnSortColumn = false;
             FullRowSelect = true;
             HideSelection = false;
             View = View.Details;

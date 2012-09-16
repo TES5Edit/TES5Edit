@@ -7,7 +7,7 @@
  * Change log:
  * 2011-03-04  JPP  - First version
  * 
- * Copyright (C) 2011 Phillip Piper
+ * Copyright (C) 2011-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,14 +25,18 @@
  * If you wish to use this code in a closed source application, please contact phillip_piper@bigfoot.com.
  */
 
-namespace BrightIdeasSoftware
-{
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace BrightIdeasSoftware{
+
     /// <summary>
     /// Implementation of this interface control the selecting of cluster keys
     /// and how those clusters will be presented to the user
     /// </summary>
-    public interface IClusteringStrategy
-    {
+    public interface IClusteringStrategy {
+
         /// <summary>
         /// Gets or sets the column upon which this strategy will operate
         /// </summary>

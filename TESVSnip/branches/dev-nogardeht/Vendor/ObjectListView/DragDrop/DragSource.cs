@@ -13,7 +13,7 @@
  * 2009-04-15   JPP  - Separated DragSource.cs into DropSink.cs
  * 2009-03-17   JPP  - Initial version
  * 
- * Copyright (C) 2009-2011 Phillip Piper
+ * Copyright (C) 2009-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,12 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 using System.Windows.Forms;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace BrightIdeasSoftware
 {
@@ -87,8 +92,7 @@ namespace BrightIdeasSoftware
         /// <param name="button"></param>
         /// <param name="item"></param>
         /// <returns></returns>
-        public virtual Object StartDrag(ObjectListView olv, MouseButtons button, OLVListItem item)
-        {
+        public virtual Object StartDrag(ObjectListView olv, MouseButtons button, OLVListItem item) {
             return null;
         }
 
@@ -97,8 +101,7 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public virtual DragDropEffects GetAllowedEffects(Object data)
-        {
+        public virtual DragDropEffects GetAllowedEffects(Object data) {
             return DragDropEffects.None;
         }
 
@@ -107,8 +110,7 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="dragObject"></param>
         /// <param name="effect"></param>
-        public virtual void EndDrag(Object dragObject, DragDropEffects effect)
-        {
+        public virtual void EndDrag(Object dragObject, DragDropEffects effect) {
         }
 
         #endregion
@@ -130,8 +132,7 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// Construct a SimpleDragSource
         /// </summary>
-        public SimpleDragSource()
-        {
+        public SimpleDragSource() {
         }
 
         /// <summary>
@@ -139,9 +140,8 @@ namespace BrightIdeasSoftware
         /// the drag is complete
         /// </summary>
         /// <param name="refreshAfterDrop"></param>
-        public SimpleDragSource(bool refreshAfterDrop)
-        {
-            RefreshAfterDrop = refreshAfterDrop;
+        public SimpleDragSource(bool refreshAfterDrop) {
+            this.RefreshAfterDrop = refreshAfterDrop;
         }
 
         #endregion
@@ -152,7 +152,11 @@ namespace BrightIdeasSoftware
         /// Gets or sets whether the dragged rows should be refreshed when the 
         /// drag operation is complete.
         /// </summary>
-        public bool RefreshAfterDrop { get; set; }
+        public bool RefreshAfterDrop {
+            get { return refreshAfterDrop; }
+            set { refreshAfterDrop = value;  }
+        }
+        private bool refreshAfterDrop;
 
         #endregion
 
@@ -166,13 +170,12 @@ namespace BrightIdeasSoftware
         /// <param name="button"></param>
         /// <param name="item"></param>
         /// <returns></returns>
-        public virtual Object StartDrag(ObjectListView olv, MouseButtons button, OLVListItem item)
-        {
+        public virtual Object StartDrag(ObjectListView olv, MouseButtons button, OLVListItem item) {
             // We only drag on left mouse
             if (button != MouseButtons.Left)
                 return null;
 
-            return CreateDataObject(olv);
+            return this.CreateDataObject(olv);
         }
 
         /// <summary>
@@ -180,8 +183,7 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="data"></param>
         /// <returns>All opertions are supported</returns>
-        public virtual DragDropEffects GetAllowedEffects(Object data)
-        {
+        public virtual DragDropEffects GetAllowedEffects(Object data) {
             return DragDropEffects.All | DragDropEffects.Link; // why didn't MS include 'Link' in 'All'??
         }
 
@@ -190,13 +192,12 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="dragObject"></param>
         /// <param name="effect"></param>
-        public virtual void EndDrag(Object dragObject, DragDropEffects effect)
-        {
-            var data = dragObject as OLVDataObject;
+        public virtual void EndDrag(Object dragObject, DragDropEffects effect) {
+            OLVDataObject data = dragObject as OLVDataObject;
             if (data == null)
                 return;
 
-            if (RefreshAfterDrop)
+            if (this.RefreshAfterDrop)
                 data.ListView.RefreshObjects(data.ModelObjects);
         }
 
@@ -209,8 +210,7 @@ namespace BrightIdeasSoftware
         /// </remarks>
         /// <param name="olv">The ObjectListView that is the source of the drag</param>
         /// <returns>A data object for the drag</returns>
-        protected virtual object CreateDataObject(ObjectListView olv)
-        {
+        protected virtual object CreateDataObject(ObjectListView olv) {
             return new OLVDataObject(olv);
         }
 

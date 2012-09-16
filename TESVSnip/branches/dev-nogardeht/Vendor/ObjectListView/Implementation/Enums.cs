@@ -7,7 +7,7 @@
  * Change log:
  * 2011-03-31  JPP  - Split into its own file
  * 
- * Copyright (C) 2011 Phillip Piper
+ * Copyright (C) 2011-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,15 +25,17 @@
  * If you wish to use this code in a closed source application, please contact phillip_piper@bigfoot.com.
  */
 
-namespace BrightIdeasSoftware
-{
-    public partial class ObjectListView
-    {
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace BrightIdeasSoftware {
+
+    public partial class ObjectListView {
         /// <summary>
         /// How does a user indicate that they want to edit cells?
         /// </summary>
-        public enum CellEditActivateMode
-        {
+        public enum CellEditActivateMode {
             /// <summary>
             /// This list cannot be edited. F2 does nothing.
             /// </summary>
@@ -61,8 +63,7 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// These values specify how column selection will be presented to the user
         /// </summary>
-        public enum ColumnSelectBehaviour
-        {
+        public enum ColumnSelectBehaviour {
             /// <summary>
             /// No column selection will be presented 
             /// </summary>

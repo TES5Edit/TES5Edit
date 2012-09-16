@@ -80,7 +80,7 @@
             this.filterTree.CheckedAspectName = "Checked";
             this.filterTree.EmptyListMsg = "No Subrecords Found";
             this.filterTree.EmptyListMsgFont = new System.Drawing.Font("Comic Sans MS", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.filterTree.EnableSearchByKeyboard = true;
+            this.filterTree.IsSearchOnSortColumn = true;
             this.filterTree.GridLines = true;
             this.filterTree.HideSelection = false;
             this.filterTree.HighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
@@ -183,7 +183,7 @@
             this.treeListView1.CheckedAspectName = "Checked";
             this.treeListView1.EmptyListMsg = "No Search Items";
             this.treeListView1.EmptyListMsgFont = new System.Drawing.Font("Comic Sans MS", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.treeListView1.EnableSearchByKeyboard = true;
+            this.treeListView1.IsSearchOnSortColumn = true;
             this.treeListView1.GridLines = true;
             this.treeListView1.HideSelection = false;
             this.treeListView1.HighlightBackgroundColor = System.Drawing.SystemColors.Highlight;

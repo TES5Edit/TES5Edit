@@ -16,7 +16,7 @@
  *
  * To do:
  * 
- * Copyright (C) 2009-2010 Phillip Piper
+ * Copyright (C) 2009-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace BrightIdeasSoftware
 {
@@ -57,20 +58,17 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="olv">The ObjectListView to modify</param>
         /// <param name="enumerable">The collection whose first element will be used to generate columns.</param>
-        public static void GenerateColumns(ObjectListView olv, IEnumerable enumerable)
-        {
+        static public void GenerateColumns(ObjectListView olv, IEnumerable enumerable) {
             // Generate columns based on the type of the first model in the collection and then quit
-            if (enumerable != null)
-            {
-                foreach (object model in enumerable)
-                {
-                    GenerateColumns(olv, model.GetType());
+            if (enumerable != null) {
+                foreach (object model in enumerable) {
+                    Generator.GenerateColumns(olv, model.GetType());
                     return;
                 }
             }
 
             // If we reach here, the collection was empty, so we clear the list
-            ReplaceColumns(olv, new List<OLVColumn>());
+            Generator.ReplaceColumns(olv, new List<OLVColumn>());
         }
 
         /// <summary>
@@ -79,10 +77,9 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="olv">The ObjectListView to modify</param>
         /// <param name="type">The model type whose attributes will be considered.</param>
-        public static void GenerateColumns(ObjectListView olv, Type type)
-        {
-            IList<OLVColumn> columns = GenerateColumns(type);
-            ReplaceColumns(olv, columns);
+        static public void GenerateColumns(ObjectListView olv, Type type) {
+            IList<OLVColumn> columns = Generator.GenerateColumns(type);
+            Generator.ReplaceColumns(olv, columns);
         }
 
         /// <summary>
@@ -91,17 +88,15 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="type"></param>
         /// <returns>A collection of OLVColumns matching the attributes of Type that have OLVColumnAttributes.</returns>
-        public static IList<OLVColumn> GenerateColumns(Type type)
-        {
-            var columns = new List<OLVColumn>();
-
+        static public IList<OLVColumn> GenerateColumns(Type type) {
+            List<OLVColumn> columns = new List<OLVColumn>();
+            
             // Iterate all public properties in the class and build columns from those that have
             // an OLVColumn attribute.
-            foreach (PropertyInfo pinfo in type.GetProperties())
-            {
-                var attr = Attribute.GetCustomAttribute(pinfo, typeof (OLVColumnAttribute)) as OLVColumnAttribute;
+            foreach (PropertyInfo pinfo in type.GetProperties()) {
+                OLVColumnAttribute attr = Attribute.GetCustomAttribute(pinfo, typeof(OLVColumnAttribute)) as OLVColumnAttribute;
                 if (attr != null)
-                    columns.Add(MakeColumnFromAttribute(pinfo.Name, attr, pinfo.CanWrite));
+                    columns.Add(Generator.MakeColumnFromAttribute(pinfo.Name, attr, pinfo.CanWrite));
             }
 
             // How many columns have DisplayIndex specifically set?
@@ -116,7 +111,9 @@ namespace BrightIdeasSoftware
                 if (col.DisplayIndex < 0)
                     col.DisplayIndex = (columnIndex++);
 
-            columns.Sort(delegate(OLVColumn x, OLVColumn y) { return x.DisplayIndex.CompareTo(y.DisplayIndex); });
+            columns.Sort(delegate(OLVColumn x, OLVColumn y) {
+                return x.DisplayIndex.CompareTo(y.DisplayIndex);
+            });
 
             return columns;
         }
@@ -125,23 +122,20 @@ namespace BrightIdeasSoftware
 
         #region Implementation
 
-        private static void ReplaceColumns(ObjectListView olv, IList<OLVColumn> columns)
-        {
+        static private void ReplaceColumns(ObjectListView olv, IList<OLVColumn> columns) {
             olv.Clear();
             olv.AllColumns.Clear();
             olv.PrimarySortColumn = null;
             olv.SecondarySortColumn = null;
-            if (columns.Count > 0)
-            {
+            if (columns.Count > 0) {
                 olv.AllColumns.AddRange(columns);
                 olv.RebuildColumns();
             }
         }
 
-        private static OLVColumn MakeColumnFromAttribute(string aspectName, OLVColumnAttribute attr, bool editable)
-        {
+        private static OLVColumn MakeColumnFromAttribute(string aspectName, OLVColumnAttribute attr, bool editable) {
             string title = String.IsNullOrEmpty(attr.Title) ? aspectName : attr.Title;
-            var column = new OLVColumn(title, aspectName);
+            OLVColumn column = new OLVColumn(title, aspectName);
             column.AspectToStringFormat = attr.AspectToStringFormat;
             column.CheckBoxes = attr.CheckBoxes;
             column.DisplayIndex = attr.DisplayIndex;
@@ -300,6 +294,6 @@ namespace BrightIdeasSoftware
         }
 
         #endregion
-         */
+         */ 
     }
 }

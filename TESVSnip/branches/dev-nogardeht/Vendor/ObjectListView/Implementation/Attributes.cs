@@ -14,7 +14,7 @@
  *
  * To do:
  * 
- * Copyright (C) 2009-2010 Phillip Piper
+ * Copyright (C) 2009-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace BrightIdeasSoftware
@@ -51,17 +52,15 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// Create a new OLVColumnAttribute
         /// </summary>
-        public OLVColumnAttribute()
-        {
+        public OLVColumnAttribute() {
         }
 
         /// <summary>
         /// Create a new OLVColumnAttribute with the given title
         /// </summary>
         /// <param name="title">The title of the column</param>
-        public OLVColumnAttribute(string title)
-        {
-            Title = title;
+        public OLVColumnAttribute(string title) {
+            this.Title = title;
         }
 
         #endregion
@@ -71,64 +70,102 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// 
         /// </summary>
-        public string AspectToStringFormat { get; set; }
+        public string AspectToStringFormat {
+            get { return aspectToStringFormat; }
+            set { aspectToStringFormat = value; }
+        }
+        private string aspectToStringFormat;
 
         /// <summary>
         /// 
         /// </summary>
-        public bool CheckBoxes { get; set; }
+        public bool CheckBoxes {
+            get { return checkBoxes; }
+            set { checkBoxes = value; }
+        }
+        private bool checkBoxes;
 
         /// <summary>
         /// 
         /// </summary>
-        public int DisplayIndex
-        {
+        public int DisplayIndex {
             get { return displayIndex; }
             set { displayIndex = value; }
         }
-
         private int displayIndex = -1;
 
         /// <summary>
         /// 
         /// </summary>
-        public bool FillsFreeSpace { get; set; }
+        public bool FillsFreeSpace {
+            get { return fillsFreeSpace; }
+            set { fillsFreeSpace = value; }
+        }
+        private bool fillsFreeSpace;
 
         /// <summary>
         /// 
         /// </summary>
-        public int? FreeSpaceProportion { get; set; }
+        public int? FreeSpaceProportion {
+            get { return freeSpaceProportion; }
+            set { freeSpaceProportion = value; }
+        }
+        private int? freeSpaceProportion;
 
         /// <summary>
         /// An array of IComparables that mark the cutoff points for values when
         /// grouping on this column. 
         /// </summary>
-        public object[] GroupCutoffs { get; set; }
+        public object[] GroupCutoffs {
+            get { return groupCutoffs; }
+            set { groupCutoffs = value; }
+        }
+        private object[] groupCutoffs;
 
         /// <summary>
         /// 
         /// </summary>
-        public string[] GroupDescriptions { get; set; }
+        public string[] GroupDescriptions {
+            get { return groupDescriptions; }
+            set { groupDescriptions = value; }
+        }
+        private string[] groupDescriptions;
 
         /// <summary>
         /// 
         /// </summary>
-        public string GroupWithItemCountFormat { get; set; }
+        public string GroupWithItemCountFormat {
+            get { return groupWithItemCountFormat; }
+            set { groupWithItemCountFormat = value; }
+        }
+        private string groupWithItemCountFormat;
 
         /// <summary>
         /// 
         /// </summary>
-        public string GroupWithItemCountSingularFormat { get; set; }
+        public string GroupWithItemCountSingularFormat {
+            get { return groupWithItemCountSingularFormat; }
+            set { groupWithItemCountSingularFormat = value; }
+        }
+        private string groupWithItemCountSingularFormat;
 
         /// <summary>
         /// 
         /// </summary>
-        public bool Hyperlink { get; set; }
+        public bool Hyperlink {
+            get { return hyperlink; }
+            set { hyperlink = value; }
+        }
+        private bool hyperlink;
 
         /// <summary>
         /// 
         /// </summary>
-        public string ImageAspectName { get; set; }
+        public string ImageAspectName {
+            get { return imageAspectName; }
+            set { imageAspectName = value; }
+        }
+        private string imageAspectName;
 
         // We actually want this to be bool? but it seems attribute properties can't be nullable types.
         // So we explicitly track if the property has been set.
@@ -136,107 +173,122 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// 
         /// </summary>
-        public bool IsEditable
-        {
+        public bool IsEditable {
             get { return isEditable; }
-            set
-            {
+            set {
                 isEditable = value;
-                IsEditableSet = true;
+                this.IsEditableSet = true;
             }
         }
-
         private bool isEditable = true;
-        internal bool IsEditableSet;
+        internal bool IsEditableSet = false;
 
         /// <summary>
         /// 
         /// </summary>
-        public bool IsVisible
-        {
+        public bool IsVisible {
             get { return isVisible; }
             set { isVisible = value; }
         }
-
         private bool isVisible = true;
 
         /// <summary>
         /// 
         /// </summary>
-        public bool IsTileViewColumn { get; set; }
+        public bool IsTileViewColumn {
+            get { return isTileViewColumn; }
+            set { isTileViewColumn = value; }
+        }
+        private bool isTileViewColumn;
 
         /// <summary>
         /// 
         /// </summary>
-        public int MaximumWidth
-        {
+        public int MaximumWidth {
             get { return maximumWidth; }
             set { maximumWidth = value; }
         }
-
         private int maximumWidth = -1;
 
         /// <summary>
         /// 
         /// </summary>
-        public int MinimumWidth
-        {
+        public int MinimumWidth {
             get { return minimumWidth; }
             set { minimumWidth = value; }
         }
-
         private int minimumWidth = -1;
 
         /// <summary>
         /// 
         /// </summary>
-        public String Name { get; set; }
+        public String Name {
+            get { return name; }
+            set { name = value; }
+        }
+        private String name;
 
         /// <summary>
         /// 
         /// </summary>
-        public HorizontalAlignment TextAlign
-        {
-            get { return textAlign; }
-            set { textAlign = value; }
+        public HorizontalAlignment TextAlign {
+            get { return this.textAlign; }
+            set { this.textAlign = value; }
         }
-
         private HorizontalAlignment textAlign = HorizontalAlignment.Left;
 
         /// <summary>
         /// 
         /// </summary>
-        public String Tag { get; set; }
+        public String Tag {
+            get { return tag; }
+            set { tag = value; }
+        }
+        private String tag;
 
         /// <summary>
         /// 
         /// </summary>
-        public String Title { get; set; }
+        public String Title {
+            get { return title; }
+            set { title = value; }
+        }
+        private String title;
 
         /// <summary>
         /// 
         /// </summary>
-        public String ToolTipText { get; set; }
+        public String ToolTipText {
+            get { return toolTipText; }
+            set { toolTipText = value; }
+        }
+        private String toolTipText;
 
         /// <summary>
         /// 
         /// </summary>
-        public bool TriStateCheckBoxes { get; set; }
+        public bool TriStateCheckBoxes {
+            get { return triStateCheckBoxes; }
+            set { triStateCheckBoxes = value; }
+        }
+        private bool triStateCheckBoxes;
 
         /// <summary>
         /// 
         /// </summary>
-        public bool UseInitialLetterForGroup { get; set; }
+        public bool UseInitialLetterForGroup {
+            get { return useInitialLetterForGroup; }
+            set { useInitialLetterForGroup = value; }
+        }
+        private bool useInitialLetterForGroup;
 
         /// <summary>
         /// 
         /// </summary>
-        public int Width
-        {
+        public int Width {
             get { return width; }
             set { width = value; }
         }
-
         private int width = 150;
 
         #endregion

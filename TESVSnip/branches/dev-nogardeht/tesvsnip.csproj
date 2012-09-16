@@ -280,6 +280,8 @@
     <Compile Include="Vendor\ObjectListView\OLVColumn.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Vendor\ObjectListView\Properties\AssemblyInfo.cs" />
+    <Compile Include="Vendor\ObjectListView\Properties\Resources.Designer.cs" />
     <Compile Include="Vendor\ObjectListView\Rendering\Adornments.cs" />
     <Compile Include="Vendor\ObjectListView\Rendering\Decorations.cs" />
     <Compile Include="Vendor\ObjectListView\Rendering\Overlays.cs" />
@@ -518,6 +520,7 @@
     <EmbeddedResource Include="Vendor\Controls\objectbindinglistview.resx">
       <DependentUpon>objectbindinglistview.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Vendor\ObjectListView\Properties\Resources.resx" />
     <EmbeddedResource Include="Vendor\ObjectListView\Utilities\ColumnSelectionForm.resx">
       <DependentUpon>ColumnSelectionForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -651,6 +654,7 @@
     <None Include="build\tesvsnip.snk" />
     <None Include="Domain\Data\RecordStructure.xsd" />
     <None Include="Vendor\DotZLib\DotZLib.chm" />
+    <None Include="Vendor\ObjectListView\FullClassDiagram.cd" />
     <None Include="Vendor\ObjectListView\ObjectListView.FxCop" />
     <None Include="Vendor\ObjectListView\ObjectListView.shfb" />
     <None Include="Properties\Settings.settings">
@@ -736,6 +740,7 @@
     <Compile Include="UI\Forms\MainView.designer.cs">
       <DependentUpon>MainView.cs</DependentUpon>
     </Compile>
+    <None Include="Vendor\ObjectListView\olv-keyfile.snk" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tesv_ico.ico" />
@@ -748,6 +753,9 @@
     <Content Include="Vendor\DotZLib\LICENSE_1_0.txt" />
     <Content Include="Vendor\DotZLib\readme.txt" />
     <Content Include="Vendor\ObjectListView\CustomDictionary.xml" />
+    <Content Include="Vendor\ObjectListView\ObjectListView2005.csproj" />
+    <Content Include="Vendor\ObjectListView\ObjectListView2008.csproj" />
+    <Content Include="Vendor\ObjectListView\ObjectListView2010.csproj" />
     <Content Include="Vendor\ObjectListView\Resources\clear-filter.png" />
     <Content Include="Vendor\ObjectListView\Resources\clear-filter1.png" />
     <Content Include="Vendor\ObjectListView\Resources\coffee.jpg" />

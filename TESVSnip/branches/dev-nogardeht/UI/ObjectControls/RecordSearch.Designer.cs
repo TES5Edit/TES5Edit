@@ -259,7 +259,7 @@
             this.listSearchView.ContextMenuStrip = this.contextMenuStripList;
             resources.ApplyResources(this.listSearchView, "listSearchView");
             this.listSearchView.EmptyListMsgFont = new System.Drawing.Font("Comic Sans MS", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.listSearchView.EnableSearchByKeyboard = true;
+            this.listSearchView.IsSearchOnSortColumn = true;
             this.listSearchView.FullRowSelect = true;
             this.listSearchView.GridLines = true;
             this.listSearchView.HideSelection = false;

@@ -7,7 +7,7 @@
  * Change log:
  * 2011-03-31  JPP  - Split into its own file
  * 
- * Copyright (C) 2011 Phillip Piper
+ * Copyright (C) 2011-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,11 +26,12 @@
  */
 
 using System;
-using System.Drawing;
+using System.Collections.Generic;
+using System.Text;
 using System.Windows.Forms;
+using System.Drawing;
 
-namespace BrightIdeasSoftware
-{
+namespace BrightIdeasSoftware {
 
     #region Delegate declarations
 
@@ -96,8 +97,7 @@ namespace BrightIdeasSoftware
     /// <summary>
     /// This delegate will be used to own draw header column.
     /// </summary>
-    public delegate bool HeaderDrawingDelegate(
-        Graphics g, Rectangle r, int columnIndex, OLVColumn column, bool isPressed, HeaderStateStyle stateStyle);
+    public delegate bool HeaderDrawingDelegate(Graphics g, Rectangle r, int columnIndex, OLVColumn column, bool isPressed, HeaderStateStyle stateStyle);
 
     /// <summary>
     /// This delegate is called when a group has been created but not yet made

@@ -7,7 +7,7 @@
  * Change log:
  * 2011-03-31  JPP  - Split into its own file
  * 
- * Copyright (C) 2011 Phillip Piper
+ * Copyright (C) 2011-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,44 +27,43 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
+using System.Drawing;
 
-namespace BrightIdeasSoftware
-{
+namespace BrightIdeasSoftware {
+
     /// <summary>
     /// OLVListItems are specialized ListViewItems that know which row object they came from,
     /// and the row index at which they are displayed, even when in group view mode. They
     /// also know the image they should draw against themselves
     /// </summary>
-    public class OLVListItem : ListViewItem
-    {
+    public class OLVListItem : ListViewItem {
         #region Constructors
 
         /// <summary>
         /// Create a OLVListItem for the given row object
         /// </summary>
-        public OLVListItem(object rowObject)
-        {
-            this.RowObject = rowObject;
+        public OLVListItem(object rowObject) {
+            this.rowObject = rowObject;
         }
 
         /// <summary>
         /// Create a OLVListItem for the given row object
         /// </summary>
-        public OLVListItem(object rowObject, OLVListSubItem[] subItems, int imageIndex) : base(subItems, imageIndex)
+        public OLVListItem(object rowObject, OLVListSubItem[] subItems, int imageIndex)
+          : base(subItems, imageIndex)
         {
-            this.RowObject = null;
+          this.RowObject = null;
         }
 
         /// <summary>
         /// Create a OLVListItem for the given row object, represented by the given string and image
         /// </summary>
         public OLVListItem(object rowObject, string text, Object image)
-            : base(text, -1)
-        {
-            this.RowObject = rowObject;
-            imageSelector = image;
+            : base(text, -1) {
+            this.rowObject = rowObject;
+            this.imageSelector = image;
         }
 
         #endregion
@@ -74,16 +73,12 @@ namespace BrightIdeasSoftware
         /// <summary>
         /// Gets the bounding rectangle of the item, including all subitems
         /// </summary>
-        public new Rectangle Bounds
-        {
-            get
-            {
-                try
-                {
+        new public Rectangle Bounds {
+            get {
+                try {
                     return base.Bounds;
                 }
-                catch (ArgumentException)
-                {
+                catch (System.ArgumentException) {
                     // If the item is part of a collapsed group, Bounds will throw an exception
                     return Rectangle.Empty;
                 }
@@ -99,17 +94,16 @@ namespace BrightIdeasSoftware
         /// Unfortuneately, this won't work if this property is set through the base class, since
         /// the property is not declared as virtual.
         /// </remarks>
-        public new bool Checked
-        {
-            get { return base.Checked; }
-            set
-            {
-                if (Checked != value)
-                {
+        new public bool Checked {
+            get {
+                return base.Checked;
+            }
+            set {
+                if (this.Checked != value) {
                     if (value)
-                        ((ObjectListView) ListView).CheckObject(RowObject);
+                        ((ObjectListView)this.ListView).CheckObject(this.RowObject);
                     else
-                        ((ObjectListView) ListView).UncheckObject(RowObject);
+                        ((ObjectListView)this.ListView).UncheckObject(this.RowObject);
                 }
             }
         }
@@ -119,92 +113,81 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <remarks>.NET's Checked property was not built to handle tri-state checkboxes,
         /// and will return True for both Checked and Indeterminate states.</remarks>
-        public CheckState CheckState
-        {
-            get
-            {
-                switch (StateImageIndex)
-                {
-                    case 0:
-                        return CheckState.Unchecked;
-                    case 1:
-                        return CheckState.Checked;
-                    case 2:
-                        return CheckState.Indeterminate;
-                    default:
-                        return CheckState.Unchecked;
+        public CheckState CheckState {
+            get {
+                switch (this.StateImageIndex) {
+                case 0:
+                    return System.Windows.Forms.CheckState.Unchecked;
+                case 1:
+                    return System.Windows.Forms.CheckState.Checked;
+                case 2:
+                    return System.Windows.Forms.CheckState.Indeterminate;
+                default:
+                    return System.Windows.Forms.CheckState.Unchecked;
                 }
             }
-            set
-            {
-                if (checkState == value)
+            set {
+                if (this.checkState == value)
                     return;
 
-                checkState = value;
+                this.checkState = value;
 
                 //THINK: I don't think we need this, since the Checked property just uses StateImageIndex, which we are about to set.
                 //this.Checked = (checkState == CheckState.Checked);
 
                 // We have to specifically set the state image
-                switch (value)
-                {
-                    case CheckState.Unchecked:
-                        StateImageIndex = 0;
-                        break;
-                    case CheckState.Checked:
-                        StateImageIndex = 1;
-                        break;
-                    case CheckState.Indeterminate:
-                        StateImageIndex = 2;
-                        break;
+                switch (value) {
+                case System.Windows.Forms.CheckState.Unchecked:
+                    this.StateImageIndex = 0;
+                    break;
+                case System.Windows.Forms.CheckState.Checked:
+                    this.StateImageIndex = 1;
+                    break;
+                case System.Windows.Forms.CheckState.Indeterminate:
+                    this.StateImageIndex = 2;
+                    break;
                 }
             }
         }
-
         private CheckState checkState;
 
         /// <summary>
         /// Gets if this item has any decorations set for it.
         /// </summary>
-        public bool HasDecoration
-        {
-            get { return decorations != null && decorations.Count > 0; }
+        public bool HasDecoration {
+            get {
+                return this.decorations != null && this.decorations.Count > 0;
+            }
         }
 
         /// <summary>
         /// Gets or sets the decoration that will be drawn over this item
         /// </summary>
         /// <remarks>Setting this replaces all other decorations</remarks>
-        public IDecoration Decoration
-        {
-            get
-            {
-                if (HasDecoration)
-                    return Decorations[0];
+        public IDecoration Decoration {
+            get {
+                if (this.HasDecoration)
+                    return this.Decorations[0];
                 else
                     return null;
             }
-            set
-            {
-                Decorations.Clear();
+            set {
+                this.Decorations.Clear();
                 if (value != null)
-                    Decorations.Add(value);
+                    this.Decorations.Add(value);
             }
         }
 
         /// <summary>
         /// Gets the collection of decorations that will be drawn over this item
         /// </summary>
-        public IList<IDecoration> Decorations
-        {
-            get
-            {
-                if (decorations == null)
-                    decorations = new List<IDecoration>();
-                return decorations;
+        public IList<IDecoration> Decorations {
+            get {
+                if (this.decorations == null)
+                    this.decorations = new List<IDecoration>();
+                return this.decorations;
             }
         }
-
         private IList<IDecoration> decorations;
 
         /// <summary>
@@ -212,27 +195,28 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <remarks><para>This can be an Image, a string or an int. A string or an int will
         /// be used as an index into the small image list.</para></remarks>
-        public Object ImageSelector
-        {
+        public Object ImageSelector {
             get { return imageSelector; }
-            set
-            {
+            set {
                 imageSelector = value;
                 if (value is Int32)
-                    ImageIndex = (Int32) value;
+                    this.ImageIndex = (Int32)value;
                 else if (value is String)
-                    ImageKey = (String) value;
+                    this.ImageKey = (String)value;
                 else
-                    ImageIndex = -1;
+                    this.ImageIndex = -1;
             }
         }
-
         private Object imageSelector;
 
         /// <summary>
         /// Gets or sets the the model object that is source of the data for this list item.
         /// </summary>
-        public object RowObject { get; set; }
+        public object RowObject {
+            get { return rowObject; }
+            set { rowObject = value; }
+        }
+        private object rowObject;
 
         #endregion
 
@@ -243,12 +227,11 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="index">Index of the subitem to be returned</param>
         /// <returns>An OLVListSubItem</returns>
-        public virtual OLVListSubItem GetSubItem(int index)
-        {
-            if (index >= 0 && index < SubItems.Count)
-                return (OLVListSubItem) SubItems[index];
-            else
-                return null;
+        public virtual OLVListSubItem GetSubItem(int index) {
+            if (index >= 0 && index < this.SubItems.Count)
+                return (OLVListSubItem)this.SubItems[index];
+            
+            return null;
         }
 
 
@@ -256,19 +239,15 @@ namespace BrightIdeasSoftware
         /// Return bounds of the given subitem
         /// </summary>
         /// <remarks>This correctly calculates the bounds even for column 0.</remarks>
-        public virtual Rectangle GetSubItemBounds(int subItemIndex)
-        {
-            if (subItemIndex == 0)
-            {
-                Rectangle r = Bounds;
-                Point sides = NativeMethods.GetScrolledColumnSides(ListView, subItemIndex);
+        public virtual Rectangle GetSubItemBounds(int subItemIndex) {
+            if (subItemIndex == 0) {
+                Rectangle r = this.Bounds;
+                Point sides = NativeMethods.GetScrolledColumnSides(this.ListView, subItemIndex);
                 r.X = sides.X + 1;
                 r.Width = sides.Y - sides.X;
                 return r;
-            }
-            else
-            {
-                OLVListSubItem subItem = GetSubItem(subItemIndex);
+            } else {
+                OLVListSubItem subItem = this.GetSubItem(subItemIndex);
                 if (subItem == null)
                     return new Rectangle();
                 else

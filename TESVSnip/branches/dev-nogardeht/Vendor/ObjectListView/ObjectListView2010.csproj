@@ -29,6 +29,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Debug\ObjectListView.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CustomDictionary.xml" />
+    <None Include="FullClassDiagram.cd" />
     <None Include="Resources\sort-descending.png" />
     <None Include="Resources\sort-ascending.png" />
     <None Include="Resources\filter.png" />

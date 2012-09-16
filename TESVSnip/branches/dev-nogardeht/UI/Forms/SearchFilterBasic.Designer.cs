@@ -176,7 +176,7 @@
             this.filterTree.CheckedAspectName = "Checked";
             this.filterTree.EmptyListMsg = "No Subrecords Found";
             this.filterTree.EmptyListMsgFont = new System.Drawing.Font("Comic Sans MS", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.filterTree.EnableSearchByKeyboard = true;
+            this.filterTree.IsSearchOnSortColumn = true;
             this.filterTree.GridLines = true;
             this.filterTree.HideSelection = false;
             this.filterTree.HighlightBackgroundColor = System.Drawing.SystemColors.Highlight;

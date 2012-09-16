@@ -7,7 +7,7 @@
  * Change log:
  * 2011-03-30  JPP  - First version
  * 
- * Copyright (C) 2011 Phillip Piper
+ * Copyright (C) 2011-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,34 +27,33 @@
 
 using System;
 
-namespace BrightIdeasSoftware
-{
+namespace BrightIdeasSoftware {
+
     /// <summary>
     /// This enum is used to indicate various portions of a datetime
     /// </summary>
     [Flags]
-    public enum DateTimePortion
-    {
+    public enum DateTimePortion {
         /// <summary>
         /// Year
         /// </summary>
         Year = 0x01,
-
+        
         /// <summary>
         /// Month
         /// </summary>
         Month = 0x02,
-
+        
         /// <summary>
         /// Day of the month
         /// </summary>
         Day = 0x04,
-
+        
         /// <summary>
         /// Hour
         /// </summary>
         Hour = 0x08,
-
+        
         /// <summary>
         /// Minute
         /// </summary>
@@ -77,16 +76,14 @@ namespace BrightIdeasSoftware
     /// <example>
     /// someColumn.ClusteringStrategy = new DateTimeClusteringStrategy(DateTimePortion.Month, "MMMM");
     /// </example>
-    public class DateTimeClusteringStrategy : ClusteringStrategy
-    {
+    public class DateTimeClusteringStrategy : ClusteringStrategy {
         #region Life and death
 
         /// <summary>
         /// Create a strategy that clusters by month/year
         /// </summary>
         public DateTimeClusteringStrategy()
-            : this(DateTimePortion.Year | DateTimePortion.Month, "MMMM yyyy")
-        {
+            : this(DateTimePortion.Year | DateTimePortion.Month, "MMMM yyyy") {
         }
 
         /// <summary>
@@ -94,10 +91,9 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="portions"></param>
         /// <param name="format"></param>
-        public DateTimeClusteringStrategy(DateTimePortion portions, string format)
-        {
-            Portions = portions;
-            Format = format;
+        public DateTimeClusteringStrategy(DateTimePortion portions, string format) {
+            this.Portions = portions;
+            this.Format = format;
         }
 
         #endregion
@@ -112,18 +108,20 @@ namespace BrightIdeasSoftware
         /// in the Windows SDK. Both standard formats and custom format will work.</remarks>
         /// <example>"D" - long date pattern</example>
         /// <example>"MMMM, yyyy" - "January, 1999"</example>
-        public string Format { get; set; }
+        public string Format {
+            get { return format;  }
+            set { format = value;  }
+        }
+        private string format;
 
         /// <summary>
         /// Gets or sets the parts of the DateTime that will be extracted when
         /// determining the clustering key for an object.
         /// </summary>
-        public DateTimePortion Portions
-        {
-            get { return portions; }
-            set { portions = value; }
+        public DateTimePortion Portions {
+            get { return portions;  }
+            set { portions = value;  }
         }
-
         private DateTimePortion portions = DateTimePortion.Year | DateTimePortion.Month;
 
         #endregion
@@ -135,23 +133,22 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public override object GetClusterKey(object model)
-        {
+        public override object GetClusterKey(object model) {
             // Get the data attribute we want from the given model
             // Make sure the returned value is a DateTime
-            var dateTime = Column.GetValue(model) as DateTime?;
+            DateTime? dateTime = this.Column.GetValue(model) as DateTime?;
             if (!dateTime.HasValue)
                 return null;
 
             // Extract the parts of the datetime that we are intereted in.
             // Even if we aren't interested in a particular portion, we still have to give it a reasonable default
             // otherwise we won't be able to build a DateTime object for it
-            int year = ((Portions & DateTimePortion.Year) == DateTimePortion.Year) ? dateTime.Value.Year : 1;
-            int month = ((Portions & DateTimePortion.Month) == DateTimePortion.Month) ? dateTime.Value.Month : 1;
-            int day = ((Portions & DateTimePortion.Day) == DateTimePortion.Day) ? dateTime.Value.Day : 1;
-            int hour = ((Portions & DateTimePortion.Hour) == DateTimePortion.Hour) ? dateTime.Value.Hour : 0;
-            int minute = ((Portions & DateTimePortion.Minute) == DateTimePortion.Minute) ? dateTime.Value.Minute : 0;
-            int second = ((Portions & DateTimePortion.Second) == DateTimePortion.Second) ? dateTime.Value.Second : 0;
+            int year = ((this.Portions & DateTimePortion.Year) == DateTimePortion.Year) ? dateTime.Value.Year : 1;
+            int month = ((this.Portions & DateTimePortion.Month) == DateTimePortion.Month) ? dateTime.Value.Month : 1;
+            int day = ((this.Portions & DateTimePortion.Day) == DateTimePortion.Day) ? dateTime.Value.Day : 1;
+            int hour = ((this.Portions & DateTimePortion.Hour) == DateTimePortion.Hour) ? dateTime.Value.Hour : 0;
+            int minute = ((this.Portions & DateTimePortion.Minute) == DateTimePortion.Minute) ? dateTime.Value.Minute : 0;
+            int second = ((this.Portions & DateTimePortion.Second) == DateTimePortion.Second) ? dateTime.Value.Second : 0;
 
             return new DateTime(year, month, day, hour, minute, second);
         }
@@ -161,11 +158,10 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="cluster"></param>
         /// <returns></returns>
-        public override string GetClusterDisplayLabel(ICluster cluster)
-        {
-            var dateTime = cluster.ClusterKey as DateTime?;
+        public override string GetClusterDisplayLabel(ICluster cluster) {
+            DateTime? dateTime = cluster.ClusterKey as DateTime?; 
 
-            return ApplyDisplayFormat(cluster, dateTime.HasValue ? DateToString(dateTime.Value) : NULL_LABEL);
+            return this.ApplyDisplayFormat(cluster, dateTime.HasValue ? this.DateToString(dateTime.Value) : NULL_LABEL);
         }
 
         /// <summary>
@@ -173,21 +169,18 @@ namespace BrightIdeasSoftware
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        protected virtual string DateToString(DateTime dateTime)
-        {
-            if (String.IsNullOrEmpty(Format))
+        protected virtual string DateToString(DateTime dateTime) {
+            if (String.IsNullOrEmpty(this.Format))
                 return dateTime.ToString();
 
-            try
-            {
-                return dateTime.ToString(Format);
+            try {
+                return dateTime.ToString(this.Format);
             }
-            catch (FormatException)
-            {
-                return String.Format("Bad format string '{0}' for value '{1}'", Format, dateTime);
+            catch (FormatException) {
+                return String.Format("Bad format string '{0}' for value '{1}'", this.Format, dateTime);
             }
         }
-
+    
         #endregion
     }
 }

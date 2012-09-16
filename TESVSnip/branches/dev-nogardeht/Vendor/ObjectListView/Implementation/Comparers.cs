@@ -13,7 +13,7 @@
  *
  * TO DO:
  *
- * Copyright (C) 2006-2009 Phillip Piper
+ * Copyright (C) 2006-2012 Phillip Piper
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,8 +55,8 @@ namespace BrightIdeasSoftware
         /// <param name="order">The ordering for column values</param>
         public ColumnComparer(OLVColumn col, SortOrder order)
         {
-            column = col;
-            sortOrder = order;
+            this.column = col;
+            this.sortOrder = order;
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace BrightIdeasSoftware
         {
             // There is no point in secondary sorting on the same column
             if (col != col2)
-                secondComparer = new ColumnComparer(col2, order2);
+                this.secondComparer = new ColumnComparer(col2, order2);
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace BrightIdeasSoftware
         /// <returns>An ordering indication: -1, 0, 1</returns>
         public int Compare(object x, object y)
         {
-            return Compare((OLVListItem) x, (OLVListItem) y);
+            return this.Compare((OLVListItem)x, (OLVListItem)y);
         }
 
         /// <summary>
@@ -95,34 +95,31 @@ namespace BrightIdeasSoftware
         /// <returns>An ordering indication: -1, 0, 1</returns>
         public int Compare(OLVListItem x, OLVListItem y)
         {
-            if (sortOrder == SortOrder.None)
+            if (this.sortOrder == SortOrder.None)
                 return 0;
 
             int result = 0;
-            object x1 = column.GetValue(x.RowObject);
-            object y1 = column.GetValue(y.RowObject);
+            object x1 = this.column.GetValue(x.RowObject);
+            object y1 = this.column.GetValue(y.RowObject);
 
             // Handle nulls. Null values come last
-            bool xIsNull = (x1 == null || x1 == DBNull.Value);
-            bool yIsNull = (y1 == null || y1 == DBNull.Value);
-            if (xIsNull || yIsNull)
-            {
+            bool xIsNull = (x1 == null || x1 == System.DBNull.Value);
+            bool yIsNull = (y1 == null || y1 == System.DBNull.Value);
+            if (xIsNull || yIsNull) {
                 if (xIsNull && yIsNull)
                     result = 0;
                 else
                     result = (xIsNull ? -1 : 1);
-            }
-            else
-            {
-                result = CompareValues(x1, y1);
+            } else {
+                result = this.CompareValues(x1, y1);
             }
 
-            if (sortOrder == SortOrder.Descending)
+            if (this.sortOrder == SortOrder.Descending)
                 result = 0 - result;
 
             // If the result was equality, use the secondary comparer to resolve it
-            if (result == 0 && secondComparer != null)
-                result = secondComparer.Compare(x, y);
+            if (result == 0 && this.secondComparer != null)
+                result = this.secondComparer.Compare(x, y);
 
             return result;
         }
@@ -136,12 +133,11 @@ namespace BrightIdeasSoftware
         public int CompareValues(object x, object y)
         {
             // Force case insensitive compares on strings
-            var xAsString = x as String;
+            String xAsString = x as String;
             if (xAsString != null)
-                return String.Compare(xAsString, (String) y, StringComparison.CurrentCultureIgnoreCase);
-            else
-            {
-                var comparable = x as IComparable;
+                return String.Compare(xAsString, (String)y, StringComparison.CurrentCultureIgnoreCase);
+            else {
+                IComparable comparable = x as IComparable;
                 if (comparable != null)
                     return comparable.CompareTo(y);
                 else
@@ -149,9 +145,9 @@ namespace BrightIdeasSoftware
             }
         }
 
-        private readonly OLVColumn column;
-        private readonly SortOrder sortOrder;
-        private readonly ColumnComparer secondComparer;
+        private OLVColumn column;
+        private SortOrder sortOrder;
+        private ColumnComparer secondComparer;
     }
 
 
@@ -165,9 +161,8 @@ namespace BrightIdeasSoftware
         /// Create a group comparer
         /// </summary>
         /// <param name="order">The ordering for column values</param>
-        public OLVGroupComparer(SortOrder order)
-        {
-            sortOrder = order;
+        public OLVGroupComparer(SortOrder order) {
+            this.sortOrder = order;
         }
 
         /// <summary>
@@ -177,8 +172,7 @@ namespace BrightIdeasSoftware
         /// <param name="x">group1</param>
         /// <param name="y">group2</param>
         /// <returns>An ordering indication: -1, 0, 1</returns>
-        public int Compare(OLVGroup x, OLVGroup y)
-        {
+        public int Compare(OLVGroup x, OLVGroup y) {
             // If we can compare the sort values, do that.
             // Otherwise do a case insensitive compare on the group header.
             int result;
@@ -187,13 +181,13 @@ namespace BrightIdeasSoftware
             else
                 result = String.Compare(x.Header, y.Header, StringComparison.CurrentCultureIgnoreCase);
 
-            if (sortOrder == SortOrder.Descending)
+            if (this.sortOrder == SortOrder.Descending)
                 result = 0 - result;
 
             return result;
         }
 
-        private readonly SortOrder sortOrder;
+        private SortOrder sortOrder;
     }
 
     /// <summary>
@@ -208,8 +202,8 @@ namespace BrightIdeasSoftware
         /// <param name="order"></param>
         public ModelObjectComparer(OLVColumn col, SortOrder order)
         {
-            column = col;
-            sortOrder = order;
+            this.column = col;
+            this.sortOrder = order;
         }
 
         /// <summary>
@@ -224,7 +218,7 @@ namespace BrightIdeasSoftware
         {
             // There is no point in secondary sorting on the same column
             if (col != col2 && col2 != null && order2 != SortOrder.None)
-                secondComparer = new ModelObjectComparer(col2, order2);
+                this.secondComparer = new ModelObjectComparer(col2, order2);
         }
 
         /// <summary>
@@ -236,33 +230,30 @@ namespace BrightIdeasSoftware
         public int Compare(object x, object y)
         {
             int result = 0;
-            object x1 = column.GetValue(x);
-            object y1 = column.GetValue(y);
+            object x1 = this.column.GetValue(x);
+            object y1 = this.column.GetValue(y);
 
-            if (sortOrder == SortOrder.None)
+            if (this.sortOrder == SortOrder.None)
                 return 0;
 
             // Handle nulls. Null values come last
-            bool xIsNull = (x1 == null || x1 == DBNull.Value);
-            bool yIsNull = (y1 == null || y1 == DBNull.Value);
-            if (xIsNull || yIsNull)
-            {
+            bool xIsNull = (x1 == null || x1 == System.DBNull.Value);
+            bool yIsNull = (y1 == null || y1 == System.DBNull.Value);
+            if (xIsNull || yIsNull) {
                 if (xIsNull && yIsNull)
                     result = 0;
                 else
                     result = (xIsNull ? -1 : 1);
-            }
-            else
-            {
-                result = CompareValues(x1, y1);
+            } else {
+                result = this.CompareValues(x1, y1);
             }
 
-            if (sortOrder == SortOrder.Descending)
+            if (this.sortOrder == SortOrder.Descending)
                 result = 0 - result;
 
             // If the result was equality, use the secondary comparer to resolve it
-            if (result == 0 && secondComparer != null)
-                result = secondComparer.Compare(x, y);
+            if (result == 0 && this.secondComparer != null)
+                result = this.secondComparer.Compare(x, y);
 
             return result;
         }
@@ -276,12 +267,11 @@ namespace BrightIdeasSoftware
         public int CompareValues(object x, object y)
         {
             // Force case insensitive compares on strings
-            var xStr = x as String;
+            String xStr = x as String;
             if (xStr != null)
-                return String.Compare(xStr, (String) y, StringComparison.CurrentCultureIgnoreCase);
-            else
-            {
-                var comparable = x as IComparable;
+                return String.Compare(xStr, (String)y, StringComparison.CurrentCultureIgnoreCase);
+            else {
+                IComparable comparable = x as IComparable;
                 if (comparable != null)
                     return comparable.CompareTo(y);
                 else
@@ -289,12 +279,13 @@ namespace BrightIdeasSoftware
             }
         }
 
-        private readonly OLVColumn column;
-        private readonly SortOrder sortOrder;
-        private readonly ModelObjectComparer secondComparer;
+        private OLVColumn column;
+        private SortOrder sortOrder;
+        private ModelObjectComparer secondComparer;
 
         #region IComparer<object> Members
 
         #endregion
     }
+
 }

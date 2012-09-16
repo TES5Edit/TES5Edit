@@ -262,7 +262,7 @@
             this.PluginTree.ContextMenuStrip = this.contextMenuRecord;
             resources.ApplyResources(this.PluginTree, "PluginTree");
             this.PluginTree.EmptyListMsgFont = new System.Drawing.Font("Comic Sans MS", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.PluginTree.EnableSearchByKeyboard = true;
+            this.PluginTree.IsSearchOnSortColumn = true;
             this.PluginTree.GridLines = true;
             this.PluginTree.HideSelection = false;
             this.PluginTree.HighlightBackgroundColor = System.Drawing.SystemColors.Highlight;

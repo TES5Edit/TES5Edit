@@ -61,7 +61,7 @@
             this.listSubrecord.AllowDrop = true;
             this.listSubrecord.DataSource = null;
             resources.ApplyResources(this.listSubrecord, "listSubrecord");
-            this.listSubrecord.EnableSearchByKeyboard = false;
+            this.listSubrecord.IsSearchOnSortColumn = false;
             this.listSubrecord.FullRowSelect = true;
             this.listSubrecord.GridLines = true;
             this.listSubrecord.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
