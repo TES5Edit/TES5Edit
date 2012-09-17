@@ -290,4 +290,7 @@ Duration of process between 15 and 35 seconds.</value>
   <data name="UI_Language_MenuName" xml:space="preserve">
     <value>Language</value>
   </data>
+  <data name="UI_MRU_FileNotExist" xml:space="preserve">
+    <value>The file '{0}' doesn't exist and will be removed from the Recent list(s).</value>
+  </data>
 </root>

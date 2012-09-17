@@ -57,6 +57,9 @@ namespace TESVSnip.Domain.Model
         [Persistable]
         public virtual string Name { get; set; }
 
+        [Persistable]
+        public virtual string PluginPath { get; set; }
+
         public abstract BaseRecord Parent { get; internal set; }
 
         public virtual IList Records

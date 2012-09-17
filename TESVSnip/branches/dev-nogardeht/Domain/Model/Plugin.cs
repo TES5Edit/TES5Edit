@@ -70,6 +70,8 @@ namespace TESVSnip.Domain.Model
         internal Plugin(string FilePath, bool headerOnly, string[] recFilter)
         {
             Name = Path.GetFileName(FilePath);
+            PluginPath = Path.GetDirectoryName(FilePath);
+
             var fi = new FileInfo(FilePath);
             using (var br = new BinaryReader(fi.OpenRead()))
             {
@@ -735,6 +737,7 @@ namespace TESVSnip.Domain.Model
             {
                 this.SaveData(bw);
                 Name = Path.GetFileName(FilePath);
+                PluginPath = Path.GetDirectoryName(FilePath);
             }
             finally
             {

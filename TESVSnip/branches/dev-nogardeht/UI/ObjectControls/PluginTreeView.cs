@@ -722,15 +722,15 @@
 
         private void PluginTree_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.PluginTree.SelectedRecord != null)
+          if (this.PluginTree.SelectedRecord != null)
+          {
+            if (this._historyHandler.CurrentItem == null && !this.PluginTree.SelectedRecord.Equals(this._historyHandler.CurrentItem))
             {
-                if (this._historyHandler.CurrentItem == null && !this.PluginTree.SelectedRecord.Equals(this._historyHandler.CurrentItem))
-                {
-                    this._historyHandler.CurrentItem = this.PluginTree.SelectedRecord;
-                }
+              this._historyHandler.CurrentItem = this.PluginTree.SelectedRecord;
             }
+          }
 
-            this.RebuildSelection();
+          this.RebuildSelection();
         }
 
         private void PluginTree_SelectionChanged(object sender, EventArgs e)
@@ -742,14 +742,14 @@
 
             foreach (var sel in this.PluginTree.SelectedRecords.OfType<Record>())
             {
-                sel.MatchRecordStructureToRecord();
-                sel.UpdateShortDescription();
+              sel.MatchRecordStructureToRecord();
+              sel.UpdateShortDescription();
             }
 
             this.UpdateToolStripSelection();
             if (this.SelectionChanged != null)
             {
-                this.SelectionChanged(this, EventArgs.Empty);
+              this.SelectionChanged(this, EventArgs.Empty);
             }
         }
 
@@ -765,6 +765,11 @@
             catch
             {
             }
+        }
+
+        public void RebuildDisplayNode()
+        {
+          this.PluginTree.SetObjects(this.PluginTree.SelectedRecords);
         }
 
         private void RebuildSelection()
