@@ -144,6 +144,8 @@ namespace TESVSnip.UI.Forms
             this.SubrecordList.SelectionChanged += this.subrecordPanel_SelectionChanged;
             this.SubrecordList.OnSubrecordChanged += this.subrecordPanel_OnSubrecordChanged;
             this.SubrecordList.DataChanged += this.subrecordPanel_DataChanged;
+
+            this.LocalizeApp();    
         }
 
         public static event EventHandler ClipboardChanged;

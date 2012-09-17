@@ -169,6 +169,10 @@
     <Compile Include="Framework\Services\Encoding.cs" />
     <Compile Include="Framework\Services\FontLangInfo.cs" />
     <Compile Include="Framework\TypeConverter.cs" />
+    <Compile Include="TranslateUI\Localization.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TranslateUI\TranslateUIGlobalization.cs" />
     <Compile Include="UI\Controls\CustomTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -508,6 +512,12 @@
     <Compile Include="UI\RecordControls\HexElement.Designer.cs">
       <DependentUpon>HexElement.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Lang\resource.fr-FR.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Lang\resource.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Vendor\Controls\ballontooltip.resx">
       <DependentUpon>ballontooltip.cs</DependentUpon>
     </EmbeddedResource>
@@ -653,6 +663,8 @@
     </EmbeddedResource>
     <None Include="build\tesvsnip.snk" />
     <None Include="Domain\Data\RecordStructure.xsd" />
+    <None Include="TranslateUI\Tools\ResEx\ResEx.chm" />
+    <None Include="TranslateUI\Tools\ResEx\ResEx.exe.config" />
     <None Include="Vendor\DotZLib\DotZLib.chm" />
     <None Include="Vendor\ObjectListView\FullClassDiagram.cd" />
     <None Include="Vendor\ObjectListView\ObjectListView.FxCop" />
@@ -750,6 +762,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="build\buildver.txt" />
+    <Content Include="Lang\ResGen.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TranslateUI\Tools\ResEx\Extended.Common.dll" />
+    <Content Include="TranslateUI\Tools\ResEx\ResEx.exe" />
+    <Content Include="TranslateUI\Tools\ResEx\ResExSetup1.2.exe" />
+    <Content Include="TranslateUI\Tools\ResEx\ResExSetup1.5Beta.exe" />
+    <Content Include="TranslateUI\Tools\xmlDbEditor\xmlDbEditor.exe" />
+    <Content Include="TranslateUI\Tools\xmlDbEditor\xmlDbEditor.pdb" />
     <Content Include="Vendor\DotZLib\LICENSE_1_0.txt" />
     <Content Include="Vendor\DotZLib\readme.txt" />
     <Content Include="Vendor\ObjectListView\CustomDictionary.xml" />
@@ -844,6 +865,15 @@
   <PropertyGroup>
     <StageOutputDir>$(ProjectDir)\Output\</StageOutputDir>
     <MergeOutputFile>$(StageOutputDir)\$(TargetName)$(TargetExt)</MergeOutputFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>"$(TargetDir)Lang\resgen.exe" "$(TargetDir)Lang\resource.resx"
+"$(TargetDir)Lang\resgen.exe" "$(TargetDir)Lang\resource.fr-FR.resx"
+
+del "$(TargetDir)Lang\resource.resx"
+del "$(TargetDir)Lang\resource.fr-FR.resx"
+
+del "$(TargetDir)Lang\resgen.exe"</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="conf\RecordStructure.xml">
