@@ -11850,7 +11850,8 @@ begin
       wbFloat('Stagger')
     ]),
     wbStruct(CRDT, 'Critical Data', [
-      wbByteArray('Damage', 4),
+      wbInteger('Critical Damage', itU16),
+      wbByteArray('Unknown', 2),
       wbFloat('% Mult'),
       wbByteArray('Flags', 4),
       wbFormIDCk('Effect', [SPEL, NULL])

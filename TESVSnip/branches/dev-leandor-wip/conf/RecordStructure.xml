@@ -1965,7 +1965,7 @@
 			<Element name="s(somewhere near here..)" type="short"/>
 			<Element name="s120" type="short"/>
 			<Element name="s(should be the next string..)" type="short"/>
-			<Element name="s(Snip can display it yet)" type="short"/>
+			<Element name="s(Snip can'y display it yet)" type="short"/>
 			<Element name="s" type="short"/>
 			<Element name="s" type="short"/>
 			<Element name="s125" type="short"/>
@@ -2506,21 +2506,18 @@
 		<!-- localized; Snip doesn't support arranging this yet; localized; 7bytes and 1float unknown -->
 		<Group id="EDID" optional="1"/>
 		<Group id="VMAD" optional="1"/>
-		<!-- Snip doesn't support repeating element-groups yet -->
 		<Group id="OBND" optional="1"/>
 		<Group id="FULL" optional="1"/>
 		<!-- localized -->
 		<Group id="MODEL" optional="1"/>
-		<!-- Snip doesn't support arranging this yet -->
 		<Group id="ICONIMAGE" optional="1"/>
 		<Subrecord name="EITM" desc="Enchanting (ENCH)" optional="1">
 			<Element name="ENCH Form ID" type="formid" reftype="ENCH"/>
 		</Subrecord>
 		<Subrecord name="EAMT" desc="Enchantment Charge" optional="1">
-			<Element name="Enchantment Charge" type="short"/>
+			<Element name="Enchantment Charge" type="ushort"/>
 		</Subrecord>
 		<Group id="DESTRUCT" optional="1"/>
-		<!-- Snip doesn't support arranging this yet -->
 		<Group id="ETYP" optional="1"/>
 		<Subrecord name="BIDS" desc="Block Bash Impact Set (IPDS)" optional="1">
 			<Element name="IPDS FormID" type="formid" reftype="IPDS"/>
@@ -2532,16 +2529,8 @@
 		<Group id="KEYWORDS" optional="1"/>
 		<Group id="DESC" optional="1"/>
 		<!-- localized -->
-		<Subrecord name="MOD3" desc="Scope Target Model (NIF)" optional="1">
-			<Element name="Path\Filename" type="string"/>
-		</Subrecord>
-    <Group id="MO3Textures" optional="1"/>
-    <Subrecord name="EFSD" desc="Scope Effect Shader (EFSH)" optional="1">
-			<Element name="EFSH Form ID" type="formid" reftype="EFSH"/>
-		</Subrecord>
 		<Subrecord name="NNAM" desc="Embedded Weapon" optional="1">
 			<Element name="Node Name" type="string"/>
-			<!-- changed from lstring -->
 		</Subrecord>
 		<Subrecord name="INAM" desc="Impact Data Set (IPDS)" optional="1">
 			<Element name="IPDS FormID" type="formid" reftype="IPDS"/>
@@ -2583,43 +2572,42 @@
 			<Element name="(CK always 0/12, Van is 0)" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
 			<Element name="Speed" type="float"/>
 			<Element name="Reach" type="float"/>
-			<Element name="Check-boxes1" type="short" flags="IgnoresNormWeapResist;Automatic;4;Can'tDrop;HideBackPack;EmbeddedWeapon;Don'tUse1stPersISAnim;NonPlayable;256;512"/>
+			<Element name="Check-boxes1" type="short" flags="IgnoresNormWeapResist;Automatic (unused);Has Scope (unused);Can''t Drop;Hide Backpack (unused);Embedded Weapon (unused);Don''t Use 1st Person IS Anim (unused);Non-playable;Unlnown 9;Unlnown 10;Unlnown 11;Unlnown 12;Unlnown 13;Unlnown 14;Unlnown 15;Unlnown 16"/>
 			<Element name="(CK/Upd always 93/94/6F, Van has 91)" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
-			<Element name="(always 0)" type="byte"/>
+			<Element name="(always 0)" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
 			<Element name="Sight FOV" type="float"/>
-			<Element name="(always 0)" type="float"/>
+			<Element name="(always 0)" type="uint" hexview="1"/>
 			<Element name="Base VATS ToHit Chance" type="byte"/>
 			<Element name="Animation Attack Anim" type="byte" options="AttackLeft;26;AttackRight;32;Attack3;38;Attack4;44;Attack5;50;Attack6;56;Attack7;62;Attack8;68;AttackLoop;74;AttackSpin;80;AttackSpin2;86;PlaceMine;97;PlaceMine2;103;AttackThrow;109;AttackThrow2;115;AttackThrow3;121;AttackThrow4;127;AttackThrow5;133;Default;255"/>
 			<Element name="# of Projectiles" type="byte"/>
 			<Element name="EmbedWeap Actor Value" type="byte" options="PerceptionCondition;0;EnduranceCondition;1;LeftAttackCondition;2;RightAttackCondition;3;LeftMobilityCondition;4;RightMobilityCondition;5;BrainCondition;6;"/>
 			<Element name="Range Min" type="float"/>
 			<Element name="Range Max" type="float"/>
-			<Element name="OnHit pulldown" type="int" options="Normal Formula Behavior;0;Dismember Only;1;Explode Only;2;No Dismember/Explode;3"/>
-			<Element name="Check-boxes2" type="byte" flags="PlayerOnly;NPCsUseAmmo;NoJamAfterReload;8;Minor Crime;FixedRange;NotUsedInNormCombat;128;256;512"/>
-			<Element name="Check-boxes3" type="byte" flags="Don'tUse3rdPersISAnim;BurstShot;AlternateFiringRumble;LongBursts;NonHostile;BoundWeapon;64;128;256;512"/>
-			<Element name="(always 0)" type="short"/>
+			<Element name="OnHit pulldown" type="uint" options="Normal Formula Behavior;0;Dismember Only;1;Explode Only;2;No Dismember/Explode;3"/>
+			<Element name="Check-boxes2" type="ushort" flags="PlayerOnly;NPCsUseAmmo;NoJamAfterReload;8;Minor Crime;FixedRange;NotUsedInNormCombat;128;256;512"/>
+			<Element name="Check-boxes3" type="ushort" flags="Don'tUse3rdPersISAnim;BurstShot;AlternateFiringRumble;LongBursts;NonHostile;BoundWeapon;64;128;256;512"/>
 			<Element name="Animation Attack Multiplier" type="float"/>
-			<Element name="(always 0-5?)" type="float"/>
+			<Element name="Unknown (always 0-5?)" type="uint" hexview="1"/>
 			<Element name="Firing Rumble LeftMotor Strength" type="float"/>
 			<Element name="Firing Rumble RightMotor Strength" type="float"/>
 			<Element name="Firing Rumble Duration" type="float"/>
-			<Element name="(always 0)" type="int"/>
+			<Element name="Unknown (always 0)" type="uint"/>
 			<Element name="Animation Attack Shots/Second" type="float"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="Skill" type="int" options="OneHanded;6;TwoHanded;7;Marksman;8;Block;9;Smithing;10;HeavyArmor;11;LightArmor;12;Pickpocket;13;Lockpicking;14;Sneak;15;Alchemy;16;Speechcraft;17;Alteration;18;Conjuration;19;Destruction;20;Illusion;21;Restoration;22;Enchanting;23;Fame;60;Infamy;61"/>
-			<Element name="(always 0)" type="int"/>
-			<Element name="(always 0)" type="int"/>
+			<Element name="Unknown (always 0)" type="uint"/>
+			<Element name="Skill" type="uint" options="OneHanded;6;TwoHanded;7;Marksman;8;Block;9;Smithing;10;HeavyArmor;11;LightArmor;12;Pickpocket;13;Lockpicking;14;Sneak;15;Alchemy;16;Speechcraft;17;Alteration;18;Conjuration;19;Destruction;20;Illusion;21;Restoration;22;Enchanting;23;Fame;60;Infamy;61"/>
+			<Element name="Unknown (always 0)" type="uint"/>
+			<Element name="Unknown (always 0)" type="uint"/>
 			<Element name="Resist" type="int" options="None;-1;Damage;39;Poison;40;Fire;41;Electric;42;Frost;43;Magic;44"/>
-			<Element name="(always 0)" type="int"/>
+			<Element name="Unknown (always 0)" type="uint"/>
 			<Element name="Stagger" type="float"/>
 		</Subrecord>
 		<Subrecord name="CRDT" desc="Critical Effect Data" optional="1">
 			<!-- 3 unknown flags -->
-			<Element name="Critical Damage" type="short"/>
-			<Element name="(always 0)" type="byte"/>
-			<Element name="(always 0)" type="byte"/>
+			<Element name="Critical Damage" type="ushort"/>
+			<Element name="Unknown (always 0)" type="byte"/>
+			<Element name="Unknown (always 0)" type="byte"/>
 			<Element name="Critical % Multiplier" type="float"/>
-			<Element name="OnDeath check-box" type="byte" options="OnDeathUnchecked;0;OnDeathChecked;1"/>
+			<Element name="Flags" type="byte" options="OnDeathUnchecked;0;OnDeathChecked;1"/>
 			<Element name="(CK always diff, Van is FF)" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
 			<Element name="(CK always diff, Van is FF)" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
 			<Element name="(CK always 0-15, Van is FF)" type="byte" flags="1;2;4;8;16;32;64;128;256;512"/>
@@ -8674,9 +8662,11 @@
 		<Subrecord name="DNAM" desc="Number-boxes" optional="1">
 			<Element name="Male Priority (0-255)" type="byte"/>
 			<Element name="Female Priority (0-255)" type="byte"/>
-			<Element name="Unkown" type="uint" hexview="1"/>
+			<Element name="(always 2)" type="byte"/>
+			<Element name="(always 2)" type="byte"/>
+			<Element name="(always 0)" type="byte"/>
+			<Element name="(always 0)" type="byte"/>
 			<Element name="Detection Sound Value (0-255)" type="byte"/>
-      <!-- Needs Verification -->
 			<Element name="Body Part to Wear" type="byte" options="Head/Dragon;0;Dragon/Mannequin;10;FX;17;Hands;22;Feet/Torso/Arg/Hands;23;Body/Feet/Head;24"/>
 			<Element name="Weapon Adjust (-4 to 4)" type="float"/>
 		</Subrecord>
