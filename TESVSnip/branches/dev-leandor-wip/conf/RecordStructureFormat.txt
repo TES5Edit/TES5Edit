@@ -26,9 +26,6 @@ id (required): A unique id by which the group is referenced from a Record.
 
 desc (optional): A human readable description of the subrecord contents
 
-NOTE 1: The size of the data is by each Subrecord block indepentently.  Group should not worry about the size.
-NOTE 2: When a Group block contains Subrecord blocks, [repeat] and [optional] apply only to the Subrecord blocks within the Group block.
-
 subrecord (optional): The Subrecord block is evaluated as indicated by the Subrecord attributes and, repeat or optional apply to each individual Subrecord block within the Group block.
 
 element (optional): Elements within a the Subrecord block are evaluated as indicated by the Elements attributes and, repeat or optional apply to each individual Group block.  Group blocks can be nested within other Group blocks.
@@ -71,10 +68,10 @@ Use of repeat in Group for only elements:
   <Subrecord="ALLS" Arguments>
     <Elements>
   </Subrecord>
-  <Subrecord="ANAM" Arguments>
+  <Subrecord="ANAM" Arguments>  <!-- optional="1" could be used here -->
     <Elements>
     <Elements>
-    <Group id="blah" repeat="5"> <!-- Start Here -->
+    <Group id="blah" repeat="5"> <!-- Start Here --> <!-- Don't use optional="1" here -->
       <Elements>
       <Elements>
       <Elements>
