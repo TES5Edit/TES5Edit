@@ -71,7 +71,6 @@ namespace TESVSnip.Domain.Model
         {
             Name = Path.GetFileName(FilePath);
             PluginPath = Path.GetDirectoryName(FilePath);
-
             var fi = new FileInfo(FilePath);
             using (var br = new BinaryReader(fi.OpenRead()))
             {

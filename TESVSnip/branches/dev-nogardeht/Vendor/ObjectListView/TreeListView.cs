@@ -1285,7 +1285,8 @@ namespace BrightIdeasSoftware
                 }
                 set {
                     this.ChildBranches.Clear();
-                    foreach (Object x in value)
+                    if (value != null)
+                      foreach (Object x in value)
                         this.AddChild(x);
                 }
             }
