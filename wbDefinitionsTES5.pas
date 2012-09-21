@@ -3963,8 +3963,8 @@ begin
       Exit;
 
     if Container.ElementExists['XLOC'] then begin
-      if Container.ElementNativeValues['Lock Data\Level'] = 0 then
-        Container.ElementNativeValues['Lock Data\Level'] := 1;
+      if Container.ElementNativeValues['XLOC - Lock Data\Level'] = 0 then
+        Container.ElementNativeValues['XLOC - Lock Data\Level'] := 1;
     end;
 
 //    Container.RemoveElement('RCLR');
@@ -5940,7 +5940,7 @@ begin
       wbInteger('Duration', itU32)
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
-  wbCTDA := wbRStruct('Conditions', [
+  wbCTDA := wbRStruct('Condition', [
     wbStruct(CTDA, 'Condition Entry', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
       wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
@@ -10524,13 +10524,13 @@ begin
             'None'
           ]))
         ], []),
-        wbRStruct('Find Matching Reference', [
+        wbRStruct('Find Matching Reference Near Alias', [
           wbInteger(ALNA, 'Near Alias', itU32),
           wbInteger(ALNT, 'Near Type', itU32, wbEnum([
             'Linked Ref Child'
           ]))
         ], []),
-        wbRStruct('Find Matching Reference', [
+        wbRStruct('Find Matching Reference From Event', [
           wbString(ALFE, 'From Event', 4),
           wbByteArray(ALFD, 'Event Data')
         ], []),
