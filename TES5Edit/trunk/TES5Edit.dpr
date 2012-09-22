@@ -18,6 +18,7 @@
 program TES5Edit;
 
 uses
+  madExcept,
   wbInit,
   Forms,
   Dialogs,

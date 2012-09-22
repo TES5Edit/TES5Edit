@@ -25,7 +25,6 @@ object frmViewElements: TfrmViewElements
     BevelOuter = bvLowered
     Caption = 'Panel1'
     TabOrder = 0
-    ExplicitHeight = 285
     object pcView: TPageControl
       Left = 1
       Top = 1
@@ -38,7 +37,6 @@ object frmViewElements: TfrmViewElements
       Align = alClient
       TabOrder = 0
       TabPosition = tpBottom
-      ExplicitHeight = 283
     end
   end
   object Panel2: TPanel
@@ -49,8 +47,6 @@ object frmViewElements: TfrmViewElements
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = -8
-    ExplicitTop = 267
     object bnAbort: TBitBtn
       AlignWithMargins = True
       Left = 484
@@ -58,11 +54,11 @@ object frmViewElements: TfrmViewElements
       Width = 75
       Height = 27
       Align = alRight
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkClose
-      ExplicitLeft = 500
-      ExplicitTop = -1
-      ExplicitHeight = 33
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
     object bnOK: TBitBtn
       AlignWithMargins = True
@@ -71,11 +67,12 @@ object frmViewElements: TfrmViewElements
       Width = 75
       Height = 27
       Align = alRight
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       Visible = False
-      Kind = bkOK
-      ExplicitLeft = 359
-      ExplicitHeight = 33
     end
   end
 end

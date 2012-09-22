@@ -1920,6 +1920,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
+  Result := False; Exit; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
   Result := True;
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
