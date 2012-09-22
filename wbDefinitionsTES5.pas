@@ -2077,6 +2077,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
+  Result := False; Exit; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
   Result := True;
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
@@ -4036,19 +4037,18 @@ begin
       Container.ElementEditValues['XCLW'] := 'Default';
     end;
 
-    if Container.ElementExists['XCLW'] then begin
+{    if Container.ElementExists['XCLW'] then begin
       if not VarIsNull(Container.ElementNativeValues['XCLW']) then begin
         w := Container.ElementNativeValues['XCLW'];
         if (PCardinal(@w)^ = Int64($CF000000)) or
            (PCardinal(@w)^ = Int64($4F7FFFC9))
         then begin
-          //PCardinal(@w)^ := Int64($7F7FFFFF); // no water value
-          //Container.ElementNativeValues['XCLW'] := w;
+          Container.ElementNativeValues['XCLW'] := $7F7FFFFF;
           //Container.ElementEditValues['XCLW'] := 'Default';
-          Container.ElementNativeValues['XCLW'] := 0;
+          //Container.ElementNativeValues['XCLW'] := 0;
         end;
       end;
-    end;
+    end;}
 
     if (not Container.ElementExists['XNAM']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then
       Container.Add('XNAM', True);
@@ -4887,18 +4887,19 @@ begin
 //    ]), -2)
   ]);
 
+  {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
-    //wbInteger('Script Count', itU16),
+    wbInteger('Script Count', itU16),
     {>>>
     For some reason when property type is String
     and VMAD has fragments section(?), wbScriptEntry gets bugged on that property
     Example: Skyrim.esm Quest [00091F1A] <dunLabyrinthian> "Labyrinthian"
     <<<}
-    wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount when -2
-    //wbByteArray('Scripts')
-    wbScriptFragments
+    //wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount when -2
+    wbByteArray('Scripts')
+    //wbScriptFragments
   ]);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
@@ -5941,7 +5942,7 @@ begin
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbCTDA := wbRStruct('Condition', [
-    wbStruct(CTDA, 'Condition Entry', [
+    wbStruct(CTDA, '', [
       wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
       wbByteArray('Unknown', 3, cpIgnore, False, wbNeverShow),
       wbUnion('Comparison Value', wbCTDACompValueDecider, [
@@ -8359,7 +8360,7 @@ end;
 
 procedure DefineTES5h;
 begin
-  wbRecord(AVIF, 'ActorValue Information', [
+  wbRecord(AVIF, 'Actor Value Information', [
     wbEDID,
     wbFULL,
     wbDESCReq,
