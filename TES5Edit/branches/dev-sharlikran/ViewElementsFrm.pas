@@ -30,10 +30,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
   private
-    Edits: array of record
-      eElement: IwbElement;
-      eMemo: TMemo;
-    end;
+    Edits: TList;
     procedure MemoChange(Sender: TObject);
   public
     procedure AddElement(const aElement: IwbElement; aFocused, aEditable: Boolean);
@@ -46,6 +43,11 @@ type
 //    Element: IwbElement;
   end;
 
+  TwbEdit = class
+    eElement: IwbElement;
+    eMemo: TMemo;
+  end;
+
 implementation
 
 {$R *.dfm}
@@ -56,10 +58,14 @@ procedure TfrmViewElements.AddElement(const aElement: IwbElement;
   aFocused, aEditable: Boolean);
 var
   TabSheet : TwbTabSheet;
+  Edit     : TwbEdit;
   Memo     : TMemo;
 begin
   if not Assigned(aElement) then
     Exit;
+
+  if not Assigned(Edits) then
+    Edits := TList.Create;
 
   TabSheet := TwbTabSheet.Create(Self);
   TabSheet.PageControl := pcView;
@@ -72,11 +78,10 @@ begin
     Memo.Lines.Text := aElement.EditValue;
     bnOK.Visible := True;
     bnAbort.Kind := bkAbort;
-    SetLength(Edits, Succ(Length(Edits)));
-    with Edits[High(Edits)] do begin
-      eElement := aElement;
-      eMemo := Memo;
-    end;
+    Edit := TwbEdit.Create;
+    Edit.eElement := aElement;
+    Edit.eMemo := Memo;
+    Edits.Add(Edit);
   end else
     Memo.Lines.Text := aElement.Value;
   Memo.Align := alClient;
@@ -130,11 +135,23 @@ begin
   end else
     Result := mrAbort;
 
+  try
+
   if Result = mrOk then
-    for i := Low(Edits) to High(Edits) do
-      with Edits[i] do
-        if eMemo.Modified then
-          eElement.EditValue := eMemo.Text;
+    for i := 0 to Edits.Count - 1 do
+      with TwbEdit(Edits[i]) do
+        if eMemo.Modified then try
+            eElement.EditValue := eMemo.Text;
+          except
+            on E: Exception do
+              ShowMessage(Format('Assignment error: %s'#13#10'File: %s'#13#10'Element: %s',
+                [E.Message, eElement._File.FileName, eElement.Name]));
+          end;
+
+  finally
+    for i := 0 to Edits.Count - 1 do TwbEdit(Edits[i]).Free;
+    Edits.Free;
+  end;
 end;
 
 end.
