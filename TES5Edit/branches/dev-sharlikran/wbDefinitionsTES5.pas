@@ -5083,7 +5083,7 @@ begin
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbFloat(MODB, 'Bound Radius', cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
@@ -5092,7 +5092,7 @@ begin
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbFloat(MODB, 'Bound Radius', cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
@@ -5101,7 +5101,7 @@ begin
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbFloat(MODB, 'Bound Radius', cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
@@ -11473,7 +11473,7 @@ begin
   wbRecord(SOUN, 'Sound Marker', [
     wbEDIDReq,
     wbOBNDReq,
-    wbUnknown(FNAM), // leftover, unused
+    wbString(FNAM, 'File Name'), // leftover, unused
     wbUnknown(SNDD), // leftover, unused
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
   ]);
