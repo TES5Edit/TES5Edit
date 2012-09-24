@@ -8530,56 +8530,63 @@ begin
   wbRecord(LCTN, 'Location', [
     wbEDID,
 
-    wbArray(ACPR, 'Actors Persistent?', wbStruct('', [
+    wbArray(ACPR, 'Actor Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCPR, 'Actors', wbStruct('', [
+    wbArray(LCPR, 'Location Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(RCPR, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
+    {>>> From Danwguard.esm, Does not follow similar previous patterns <<<}
+    wbArray(RCPR, 'Actor Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbArray(ACUN, 'ActorBase Unique Refs?', wbStruct('', [
+    wbArray(ACUN, 'ActorBase Unique Refs', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN, NULL])
     ])),
-    wbArray(LCUN, 'Unique Refs', wbStruct('', [
+    wbArray(LCUN, 'Location Unique Reference', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN, NULL])
     ])),
-    wbUnknown(RCUN), // not yet seen
+    {>>> Not See Yet but suspect it has same format <<<}
+    wbArray(RCUN, 'ActorBase Unique Refs', wbStruct('', [
+      wbFormIDCk('Actor', [NPC_]),
+      wbFormIDCk('Ref', [ACHR]),
+      wbFormIDCk('Location', [LCTN, NULL])
+    ])),
 
-    wbArray(ACSR, 'ActorBase Ref Types?', wbStruct('', [
+    wbArray(ACSR, 'ActorBase Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCSR, 'Location Ref Types', wbStruct('', [
+    wbArray(LCSR, 'Location Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbUnknown(RCSR), // not yet seen
+    {>>> Seen in Open Cities <<<}
+    wbArray(RCSR, 'ActorBase Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbStruct(ACEC, 'Unknown', [
+    wbStruct(ACEC, 'BaseActor Encounter Reference', [
       wbFormIDCk('Location', [WRLD, CELL]),
       wbArray('Coordinates', wbStruct('', [
         wbInteger('Grid X', itS16),
         wbInteger('Grid Y', itS16)
       ]))
     ]),
-    wbRArray('Unknown',
+    wbRArray('Location Encounter Reference',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
@@ -8588,18 +8595,27 @@ begin
         ]))
       ])
     ),
-    wbUnknown(RCEC), // not yet seen
+    {>>> Seen in Open Cities <<<}
+    wbRArray('BaseActor Encounter Reference',
+      wbStruct(RCEC, 'Unknown', [
+        wbFormIDCk('Location', [WRLD, CELL]),
+        wbArray('Coordinates', wbStruct('', [
+          wbInteger('Grid X', itS16),
+          wbInteger('Grid Y', itS16)
+        ]))
+      ])
+    ),
 
-    wbArray(ACID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
-    wbArray(LCID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(ACID, 'ActorBase Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(LCID, 'Location Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
 
-    wbArray(ACEP, 'Unknown', wbStruct('', [
+    wbArray(ACEP, 'ActorBase Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCEP, 'Unknown', wbStruct('', [
+    wbArray(LCEP, 'Location Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
