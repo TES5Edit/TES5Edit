@@ -3980,6 +3980,50 @@ begin
   end;
 end;
 
+procedure wbWEAPAfterLoad(const aElement: IwbElement);
+var
+  Container  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  Flags      : Cardinal;
+begin
+  if wbBeginInternalEdit then try
+    if not Supports(aElement, IwbContainerElementRef, Container) then
+      Exit;
+
+    if Container.ElementCount < 1 then
+      Exit;
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    if MainRecord.IsDeleted then
+      Exit;
+
+//      wbInteger('Flags', itU16, wbFlags([
+//        {0x0002}'Automatic (unused)',
+//        {0x0004}'Has Scope (unused)',
+//        {0x0010}'Hide Backpack (unused)',
+//        {0x0020}'Embedded Weapon (unused)',
+//        {0x0040}'Don''t Use 1st Person IS Anim (unused)',
+//      ])),
+//      wbInteger('Flags 2', itU32, wbFlags([
+//        {0x00000004}'No Jam After Reload (unused)',
+//        {0x00000100}'Don''t Use 3rd Person IS Anim (unused)',
+
+    if Container.ElementExists['DNAM'] then begin
+      Flags := Container.ElementNativeValues['DNAM - Data\Flags'];
+      Flags := Flags and ($FFFF xor $0002 xor $0004 xor $0010 xor $0020 xor $0040);
+      Container.ElementNativeValues['DNAM - Data\Flags'] := Flags;
+      Flags := Container.ElementNativeValues['DNAM - Data\Flags2'];
+      Flags := Flags and ($FFFFFFFF xor $0004 xor $0100);
+      Container.ElementNativeValues['DNAM - Data\Flags2'] := Flags;
+    end;
+
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 {>>>Needs Revision for Skyrim<<<}
 //procedure wbINFOAfterLoad(const aElement: IwbElement);
 //var
@@ -8180,7 +8224,6 @@ begin
     ], cpNormal, True{, nil, 4}),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
 
-//    wbRArray('Perk Entries', wbRStruct('Perk Entry', [
     wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
@@ -11804,7 +11847,7 @@ begin
     ]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 3, cpIgnore),
       wbFloat('Speed'),
       wbFloat('Reach'),
       wbInteger('Flags', itU16, wbFlags([
@@ -11817,7 +11860,7 @@ begin
         {0x0040}'Don''t Use 1st Person IS Anim (unused)',
         {0x0080}'Non-playable'
       ])),
-      wbByteArray('Unknown', 2),
+      wbByteArray('Unknown', 2, cpIgnore),
       wbFloat('Sight FOV'),
       wbByteArray('Unknown', 4),
       wbInteger('Base VATS To-Hit Chance', itU8),
@@ -11832,7 +11875,7 @@ begin
         'Explode only',
         'No dismember/explode'
       ])),
-      wbInteger('Flags', itU32, wbFlags([
+      wbInteger('Flags2', itU32, wbFlags([
         {0x00000001}'Player Only',
         {0x00000002}'NPCs Use Ammo',
         {0x00000004}'No Jam After Reload (unused)',
@@ -11849,7 +11892,7 @@ begin
         {0x00002000}'Bound Weapon'
       ])),
       wbFloat('Animation Attack Mult'),
-      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
       wbFloat('Rumble - Left Motor Strength'),
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
@@ -11861,17 +11904,18 @@ begin
       wbFloat('Stagger')
     ]),
     wbStruct(CRDT, 'Critical Data', [
-      wbInteger('Damage', itU32),
+      wbInteger('Damage', itU16),
+      wbByteArray('Unknown', 2, cpIgnore),
       wbFloat('% Mult'),
       wbInteger('Flags', itU8, wbFlags([
         'On Death'
       ])),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 3, cpIgnore),
       wbFormIDCk('Effect', [SPEL, NULL])
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
-  ], False, nil, cpNormal, False);
+  ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,

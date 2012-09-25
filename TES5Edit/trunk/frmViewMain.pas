@@ -2719,6 +2719,12 @@ begin
 
   Settings := TMemIniFile.Create(SettingsFileName);
 
+  Left := Settings.ReadInteger(Name, 'Left', Left);
+  Top := Settings.ReadInteger(Name, 'Top', Top);
+  Width := Settings.ReadInteger(Name, 'Width', Width);
+  Height := Settings.ReadInteger(Name, 'Height', Height);
+  WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
+
   AddMessage('Loading active plugin list: ' + PluginsFileName);
 
   try
@@ -3628,6 +3634,15 @@ begin
   DoneDisplay;
 
   SaveChanged;
+
+  Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
+  if WindowState = wsNormal then begin
+    Settings.WriteInteger(Name, 'Left', Left);
+    Settings.WriteInteger(Name, 'Top', Top);
+    Settings.WriteInteger(Name, 'Width', Width);
+    Settings.WriteInteger(Name, 'Height', Height);
+  end;
+  Settings.UpdateFile;
 
   BackHistory := nil;
   ForwardHistory := nil;
