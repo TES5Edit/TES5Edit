@@ -2777,7 +2777,7 @@ begin
         if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
           repeat
             s := ExtractFileExt(F.Name);
-            if SameText(s, '.esm') or SameText(s, '.esp') then begin
+            if SameText(s, '.esm') or SameText(s, '.esp') or SameText(s, '.ghost') then begin
               if SameText(F.Name, wbGameName + '.hardcoded.esp') then
                 DeleteFile(DataPath + F.Name)
               else
