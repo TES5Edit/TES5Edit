@@ -3999,23 +3999,13 @@ begin
     if MainRecord.IsDeleted then
       Exit;
 
-//      wbInteger('Flags', itU16, wbFlags([
-//        {0x0002}'Automatic (unused)',
-//        {0x0004}'Has Scope (unused)',
-//        {0x0010}'Hide Backpack (unused)',
-//        {0x0020}'Embedded Weapon (unused)',
-//        {0x0040}'Don''t Use 1st Person IS Anim (unused)',
-//      ])),
-//      wbInteger('Flags 2', itU32, wbFlags([
-//        {0x00000004}'No Jam After Reload (unused)',
-//        {0x00000100}'Don''t Use 3rd Person IS Anim (unused)',
-
+    // clear IronSights flags which are randomly assigned in CK
     if Container.ElementExists['DNAM'] then begin
       Flags := Container.ElementNativeValues['DNAM - Data\Flags'];
-      Flags := Flags and ($FFFF xor $0002 xor $0004 xor $0010 xor $0020 xor $0040);
+      Flags := Flags and ($FFFF xor $0040);
       Container.ElementNativeValues['DNAM - Data\Flags'] := Flags;
       Flags := Container.ElementNativeValues['DNAM - Data\Flags2'];
-      Flags := Flags and ($FFFFFFFF xor $0004 xor $0100);
+      Flags := Flags and ($FFFFFFFF xor $0100);
       Container.ElementNativeValues['DNAM - Data\Flags2'] := Flags;
     end;
 
