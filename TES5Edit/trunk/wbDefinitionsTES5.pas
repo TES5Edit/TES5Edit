@@ -157,6 +157,7 @@ const
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
   BNAM : TwbSignature = 'BNAM';
+  BOD2 : TwbSignature = 'BOD2'; { New to Skyrim 1.6.91 CK}
   BODT : TwbSignature = 'BODT'; { New to Skyrim }
   BOOK : TwbSignature = 'BOOK';
   BPND : TwbSignature = 'BPND';
@@ -729,7 +730,7 @@ var
   wbFunctionsEnum: IwbEnumDef;
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
-  wbBODT: IwbSubRecordDef;
+  wbBodyData: IwbSubRecordUnionDef;
   wbFULLFact: IwbSubRecordDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
@@ -4390,54 +4391,95 @@ begin
     -1, 'None'
   ]);
 
-  wbBODT := wbStruct(BODT, 'Body Template', [
-    wbInteger('First Person Flags', itU32, wbFlags([
-      {0x00000001} 'Head',
-      {0x00000002} 'Hair',
-      {0x00000004} 'Body',
-      {0x00000008} 'Hands',
-      {0x00000010} 'Forearms',
-      {0x00000020} 'Amulet',
-      {0x00000040} 'Ring',
-      {0x00000080} 'Feet',
-      {0x00000100} 'Calves',
-      {0x00000200} 'Shield',
-      {0x00000400} 'Body AddOn 1 / Tail',
-      {0x00000800} 'Long Hair',
-      {0x00001000} 'Circlet',
-      {0x00002000} 'Body AddOn 2',
-      {0x00004000} 'Body AddOn 3',
-      {0x00008000} 'Body AddOn 4',
-      {0x00010000} 'Body AddOn 5',
-      {0x00020000} 'Body AddOn 6',
-      {0x00040000} 'Body AddOn 7',
-      {0x00080000} 'Body AddOn 8',
-      {0x00100000} 'Decapate Head',
-      {0x00200000} 'Decapate',
-      {0x00400000} 'Body AddOn 9',
-      {0x00800000} 'Body AddOn 10',
-      {0x01000000} 'Body AddOn 11',
-      {0x02000000} 'Body AddOn 12',
-      {0x03000000} 'Body AddOn 13',
-      {0x08000000} 'Body AddOn 14',
-      {0x10000000} 'Body AddOn 15',
-      {0x20000000} 'Body AddOn 16',
-      {0x40000000} 'Body AddOn 17',
-      {0x80000000} 'FX01'
-    ], True)),
-    wbInteger('General Flags', itU8, wbFlags([
-      {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
-      {0x00000002}'Unknown 2',
-      {0x00000004}'Unknown 3',
-      {0x00000008}'Unknown 4',
-      {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
-      {0x00000020}'Unknown 6',
-      {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8'
-    ], True)),
-    wbByteArray('Unknown', 3),
-    wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-  ], cpNormal, True, nil, 3);
+
+  wbBodyData :=
+    wbRunion('Body Template', [
+      wbStruct(BODT, 'Body Template', [
+        wbInteger('First Person Flags', itU32, wbFlags([
+          {0x00000001} 'Head',
+          {0x00000002} 'Hair',
+          {0x00000004} 'Body',
+          {0x00000008} 'Hands',
+          {0x00000010} 'Forearms',
+          {0x00000020} 'Amulet',
+          {0x00000040} 'Ring',
+          {0x00000080} 'Feet',
+          {0x00000100} 'Calves',
+          {0x00000200} 'Shield',
+          {0x00000400} 'Body AddOn 1 / Tail',
+          {0x00000800} 'Long Hair',
+          {0x00001000} 'Circlet',
+          {0x00002000} 'Body AddOn 2',
+          {0x00004000} 'Body AddOn 3',
+          {0x00008000} 'Body AddOn 4',
+          {0x00010000} 'Body AddOn 5',
+          {0x00020000} 'Body AddOn 6',
+          {0x00040000} 'Body AddOn 7',
+          {0x00080000} 'Body AddOn 8',
+          {0x00100000} 'Decapitate Head',
+          {0x00200000} 'Decapitate',
+          {0x00400000} 'Body AddOn 9',
+          {0x00800000} 'Body AddOn 10',
+          {0x01000000} 'Body AddOn 11',
+          {0x02000000} 'Body AddOn 12',
+          {0x03000000} 'Body AddOn 13',
+          {0x08000000} 'Body AddOn 14',
+          {0x10000000} 'Body AddOn 15',
+          {0x20000000} 'Body AddOn 16',
+          {0x40000000} 'Body AddOn 17',
+          {0x80000000} 'FX01'
+        ], True)),
+        wbInteger('General Flags', itU8, wbFlags([
+          {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
+          {0x00000002}'Unknown 2',
+          {0x00000004}'Unknown 3',
+          {0x00000008}'Unknown 4',
+          {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
+          {0x00000020}'Unknown 6',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8'
+        ], True)),
+        wbByteArray('Unknown', 3),
+        wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+      ], cpNormal, False, nil, 3),
+      wbStruct(BOD2, 'Body Template', [
+        wbInteger('First Person Flags', itU32, wbFlags([
+          {0x00000001} 'Head',
+          {0x00000002} 'Hair',
+          {0x00000004} 'Body',
+          {0x00000008} 'Hands',
+          {0x00000010} 'Forearms',
+          {0x00000020} 'Amulet',
+          {0x00000040} 'Ring',
+          {0x00000080} 'Feet',
+          {0x00000100} 'Calves',
+          {0x00000200} 'Shield',
+          {0x00000400} 'Body AddOn 1 / Tail',
+          {0x00000800} 'Long Hair',
+          {0x00001000} 'Circlet',
+          {0x00002000} 'Body AddOn 2',
+          {0x00004000} 'Body AddOn 3',
+          {0x00008000} 'Body AddOn 4',
+          {0x00010000} 'Body AddOn 5',
+          {0x00020000} 'Body AddOn 6',
+          {0x00040000} 'Body AddOn 7',
+          {0x00080000} 'Body AddOn 8',
+          {0x00100000} 'Decapitate Head',
+          {0x00200000} 'Decapitate',
+          {0x00400000} 'Body AddOn 9',
+          {0x00800000} 'Body AddOn 10',
+          {0x01000000} 'Body AddOn 11',
+          {0x02000000} 'Body AddOn 12',
+          {0x03000000} 'Body AddOn 13',
+          {0x08000000} 'Body AddOn 14',
+          {0x10000000} 'Body AddOn 15',
+          {0x20000000} 'Body AddOn 16',
+          {0x40000000} 'Body AddOn 17',
+          {0x80000000} 'FX01'
+        ], True)),
+      wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+    ], cpNormal)
+  ], []);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -6270,7 +6312,7 @@ begin
       wbMO4S
     ], []),
     wbICO2,
-    wbBODT,
+    wbBodyData,
     wbDEST,
     wbSounds,
     wbString(BMCT, 'Ragdoll Constraint Template'),
@@ -6291,7 +6333,7 @@ begin
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
-    wbBODT,
+    wbBodyData,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Male Priority', itU8),
@@ -9617,6 +9659,7 @@ end;
 
 procedure DefineTES5m;
 begin
+
   wbRecord(LSCR, 'Load Screen', [
     wbEDID,
     wbICON,
@@ -10966,7 +11009,7 @@ begin
       wbSPLOs
     ], []),
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-    wbBODT,
+    wbBodyData,
     wbKeywords,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
