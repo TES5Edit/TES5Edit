@@ -16,22 +16,28 @@ FLOR records contain information on harvestable flora, as well as almost any oth
 |-
 | + || FULL || ingame name || lstring || Full (in-game) name 
 |-
-| + || MODL || model || zstring || Path to .nif
+| + || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
 |-
-| + || MODT || model data || struct[] || series of 12-byte structs (assume xyz)
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
 |-
-| - || MODS || unknown || struct || unknown model struct
+| - || KSIZ || count || dword || Number of formids in the following KWDA subrecord
+|-
+| - || KWDA || keywords || formid || Formid array of keywords
 |-
 | + || PNAM || unknown || uint32? || 4 bytes, always 0
 |-
-| - || RNAM|| verb string || lstring || Verb seen ingame, eg RNAM = 'Catch' and FULL = 'Salmon'
+| - || RNAM|| verb string || lstring || Activate Text Override.  The verb seen ingame, eg RNAM = 'Catch' and FULL = 'Salmon'
 |-
 | + || FNAM || flags? || uint16? || 2 bytes, always 0
 |-
-| - || PFIG || result item || formid || Formid of [[Tes5Mod:Mod File Format/INGR|INGR]]/[[Tes5Mod:Mod File Format/ALCH|ALCH]] received
+| - || PFIG || Ingredient || formid || Formid of [[Tes5Mod:Mod File Format/INGR|INGR]]/[[Tes5Mod:Mod File Format/ALCH|ALCH]] received
 |-
-| - || SNAM || use sound || formid || Formid of [[Tes5Mod:Mod File Format/SNDR|SNDR]] when activated
+| - || SNAM || Pickup sound || formid || Formid of [[Tes5Mod:Mod File Format/SNDR|SNDR]] when activated
 |-
-| + || PFPC || percent chance? || ubyte[4] || Always 64-64-64-64 (100) unless VMAD present (then 0) ''ChickenNest sole exception''
+| + || PFPC || percent chance || uint32 || Seasonal Harvest Percent Change
+:byte - Spring
+:byte - Summer
+:byte - Fall
+:byte - Winter
 |-
 |}
