@@ -41,7 +41,7 @@ Note: set of 4 at the bottom are optional but must come together if present and 
 :uint16 - Level (if PC Level Mult false) ''or'' [PC Level Multiplier]x100 (if PC Level Mult true)
 :uint16 - Calc min level
 :uint16 - Calc max level
-:uint16 - Speed
+:uint16 - Speed Multiplier
 :uint16 - Disposition Base
 :uint16 - Template Data Flags (controls which parts of NPC Record are overwritten by the template)
 ::0x01 - Use traits (Traits tab, including race, gender, height, weight, voice type, death item)
@@ -72,9 +72,17 @@ Note: set of 4 at the bottom are optional but must come together if present and 
 |-
 | + || RNAM || race || formid || Race ([[Tes5Mod:Mod_File_Format/RACE|RACE]])
 |-
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
+|-{{ThickLine}}
+| - || SPCT || spell count || uint32 || Spell Count
+|-
+| * || SPLO || spell || formid || ([[Tes5Mod:Mod_File_Format/SPEL|SPEL]]) or ([[Tes5Mod:Mod_File_Format/SHOU|SHOU]])
+|-{{ThickLine}}
 | - || WNAM || worn armor || formid || ([[Tes5Mod:Mod_File_Format/ARMO|ARMO]])  ''eg SkinAtronachFrost, SkinDragonPriest''
 |-
 | - || ANAM || armor || formid || ([[Tes5Mod:Mod_File_Format/ARMO|ARMO]])  ''alternate to WNAM, Odahviing''
+|-{{ThickLine}}
+| - || ATKR || attack race || formid || ([[Tes5Mod:Mod_File_Format/RACE|RACE]]) ''creatures mostly but some nords etc - prob for unarmed''
 |-
 | * || ATKD || Attack Data|| struct || 44-byte struct (same structure as RACE record): override racial attack data for a given attack event
 :float - Damage Mult
@@ -95,16 +103,14 @@ Note: set of 4 at the bottom are optional but must come together if present and 
 :float - Fatigue Mult
 |-
 | * || ATKE || attack event|| zstring || event name
-|-
-| - || ATKR || attack race || formid || ([[Tes5Mod:Mod_File_Format/RACE|RACE]]) ''creatures mostly but some nords etc - prob for unarmed''
 |-{{ThickLine}}
-| - || SPCT || spell count || uint32 || Spell Count
+| - || SPOR || Spectator override package || formid ||  ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]]) ''only 2 instances''
 |-
-| * || SPLO || spell || formid || ([[Tes5Mod:Mod_File_Format/SPEL|SPEL]]) or ([[Tes5Mod:Mod_File_Format/SHOU|SHOU]])
-|-{{ThickLine}}
-| - || ECOR || escape combat override  || formid || ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]])
+| - || OCOR || Observe dead body override package  || formid || ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]])
 |-
-| - || SPOR || spell? override || formid ||  ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]]) ''only 2 instances''
+| - || GWOR || Observe dead body override package  || formid || ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]])
+|-
+| - || ECOR || Combat override package  || formid || ([[Tes5Mod:Mod_File_Format/FLST|FLST]]) containing ([[Tes5Mod:Mod_File_Format/PACK|PACK]])
 |-{{ThickLine}}
 | - || PRKZ || perk count || uint32 || Count of PRKR records
 |-
@@ -188,26 +194,34 @@ Note: set of 4 at the bottom are optional but must come together if present and 
 |-
 | - || ZNAM || combat style || formid || Combat style ([[Tes5Mod:Mod File Format/CSTY|CSTY]])
 |-
+| - || GNAM || Gift Filter || formid || Gifts ([[Tes5Mod:Mod_File_Format/FLST|FLST]])
+|-
 | + || NAM5 || unknown|| short || flags or marker, "always" FF-00
 |-
-| + || NAM6 || scale || float || setScale
+| + || NAM6 || Height || float || NPC Height Value
 |-
 | + || NAM7 || weight || float || NPC Weight Value
 |-
 | + || NAM8 || unknown || float || seems to always be 1 as well
+|-{{ThickLine}}
+| * || CSDT || sound location || uint32 || Number corresponding to where the sound comes from (foot step, idle, attack, etc).
+|-
+| * || CSDI || sound reference || formid || Reference to the sound to play.  Tied to the latest CSDT location.
+|-
+| * || CSDT || sound chance || ubyte || Always follows a CSDI record.  Chance (0-100) that the sound will play on the triggering event.
+|-{{ThickLine}}
+| - || CSCR || sound creature ref || formid || Audio Template ([[Tes5Mod:Mod File Format/NPC_|NPC_]]) to use as an audio template 
 |-
 | - || DOFT || defaultOutfit || formid || Default Outfit ([[Tes5Mod:Mod File Format/OTFT|OTFT]])
 |-
 | - || SOFT || sleepingOutfit || formid || Sleeping Outfit ([[Tes5Mod:Mod File Format/OTFT|OTFT]])
 |-
-| - || CRIF || crimeFaction || formid || crime faction ([[Tes5Mod:Mod File Format/FACT|FACT]])
-|-
-| - || CSCR || sound creature ref || formid || Audio Template ([[Tes5Mod:Mod File Format/NPC_|NPC_]]) to use as an audio template 
-|-
 | - || DPLT || defaultPackageList || formid || Default Package List ([[Tes5Mod:Mod File Format/FLST|FLST]])
 |-
-| - || FTST || feature set || formid || Head texture ([[Tes5Mod:Mod File Format/TXST|TXST]])
+| - || CRIF || crimeFaction || formid || crime faction ([[Tes5Mod:Mod File Format/FACT|FACT]])
 |-
+| - || FTST || feature set || formid || Head texture ([[Tes5Mod:Mod File Format/TXST|TXST]])
+|-{{ThickLine}}
 | - || QNAM || mat lighting || struct || 12-byte struct - texture lighting data ''looks like ambient missing alpha (opaque prob assumed)''
 :float ambient R?
 :float ambient G?
@@ -332,21 +346,7 @@ Note: set of 4 at the bottom are optional but must come together if present and 
 : mouth
 | int32 || 
 : Mouth
-
 |-
-| * || CSDT || sound location || uint32 || Number corresponding to where the sound comes from (foot step, idle, attack, etc).
-|-
-| * || CSDI || sound reference || formid || Reference to the sound to play.  Tied to the latest CSDT location.
-|-
-| * || CSDT || sound chance || ubyte || Always follows a CSDI record.  Chance (0-100) that the sound will play on the triggering event.
-|-
-| - || DEST || destruction data || struct || 8-byte struct ''1 record, maybe accidental, usually object destruction data''
-|-
-| - || DSTD || destruction data|| struct || 20-byte struct ''1 record, maybe accidental, usually object destruction data''
-|-
-| - || DSTF || destruction flag || 0-length || ''1 record, maybe accidental, usually object destruction data''
-|-
-
 |-{{ThickLine}}
 | - || TINI || Unknown || short || Unknown - Tint Mask Index?
 |-
