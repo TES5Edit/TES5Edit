@@ -2,6 +2,8 @@
 
 = CK Errors =
 
+Some of these errors occurred because I caused them, and others just randomly popped up because of the original plugin or resource
+
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/CK_Error_01.jpg
 
 https://skyrim-plugin-decoding-project.googlecode.com/svn/wiki/wikipics/CK_Error_02.jpg
