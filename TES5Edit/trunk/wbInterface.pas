@@ -159,6 +159,7 @@ type
     dtSubRecordStruct,
     dtSubRecordUnion,
     dtString,
+    dtLString,
     dtLenString,
     dtByteArray,
     dtInteger,
@@ -2933,6 +2934,7 @@ type
 
   TwbLStringDef = class(TwbStringDef)
   protected
+    function GetDefType: TwbDefType; override;
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; override;
     procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
@@ -9734,7 +9736,7 @@ end;
 
 function TwbLenStringDef.CanAssign(aIndex: Integer; const aDef: IwbDef) : Boolean;
 begin
-  Result := aDef.DefType in [dtString, dtLenString];
+  Result := aDef.DefType in [dtString, dtLString, dtLenString];
 end;
 
 function TwbLenStringDef.CanContainFormIDs: Boolean;
@@ -9947,6 +9949,11 @@ end;
 
 { TwbLString }
 
+function TwbLStringDef.GetDefType: TwbDefType;
+begin
+  Result := dtLString;
+end;
+
 procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
 begin
   if aElement._File.IsLocalized then
@@ -9971,7 +9978,7 @@ begin
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
       Result := '<Error: lstring ID should be Int32 value>'
     else
-      Result := GetLocalizedValue(PCardinal(aBasePtr)^, aElement)
+      Result := wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement)
   end else
     Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
 end;
