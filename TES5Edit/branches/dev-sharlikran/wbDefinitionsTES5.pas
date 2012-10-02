@@ -7731,10 +7731,8 @@ begin
         wbByteArray('Unknown', 0)
       ])
     ),
-    wbUnknown(NVPP),
-    wbUnknown(NVSI)
-//    wbArrayS(NVPP, 'Unknown', wbByteArray('Unknown' ,4)),
-//    wbArrayS(NVSI, 'Unknown', wbByteArray('Unknown' ,4))
+    wbArrayS(NVPP, 'Unknown', wbByteArray('Unknown' ,4)),
+    wbArrayS(NVSI, 'Unknown', wbByteArray('Unknown' ,4))
   ]);
 
 //------------------------------------------------------------------------------
@@ -12032,7 +12030,7 @@ begin
     {>>> There are A LOT of those in skyrim.esm, should be probably removed like OFST <<<}
     wbRArray('Unused', wbUnknown(RNAM), cpIgnore, False, wbNeverShow),
     {>>> END leftover from earlier CK versions <<<}
-    wbByteArray(MHDT, 'Unused', 0, cpNormal),
+    wbArrayS(MHDT, 'Unknown', wbByteArray('Unknown' ,4)),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimesions Center Cell', [
       wbInteger('X', itU16),
