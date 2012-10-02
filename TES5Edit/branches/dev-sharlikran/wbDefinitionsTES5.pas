@@ -619,6 +619,7 @@ const
   XPPA : TwbSignature = 'XPPA';
   XPRD : TwbSignature = 'XPRD';
   XPRM : TwbSignature = 'XPRM';
+  XPTL : TwbSignature = 'XPTL';
   XPWR : TwbSignature = 'XPWR';
   XRDS : TwbSignature = 'XRDS';
   XRGB : TwbSignature = 'XRGB';
@@ -11228,6 +11229,24 @@ begin
       wbFormIDCk('Origin', [REFR, NULL]),
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
+
+    wbStruct(XPTL, 'Portal Data', [
+      wbStruct('Size', [
+        wbFloat('Width', cpNormal, False, 2),
+        wbFloat('Height', cpNormal, False, 2)
+      ]),
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]),
+      wbStruct('Rotation (Quaternion?)', [
+        wbFloat('q1'),
+        wbFloat('q2'),
+        wbFloat('q3'),
+        wbFloat('q4')
+      ])
+    ]),
 
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
