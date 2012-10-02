@@ -57,7 +57,6 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
-  wbUserDefinedDebug: Boolean{} = False{};
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;
@@ -71,8 +70,8 @@ var
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
-  wbReportMode: Boolean{} = True{};
-  wbReportUnused: Boolean{} = True{};
+  wbReportMode: Boolean{ = True{};
+  wbReportUnused: Boolean{ = True{};
   wbReportRequired: Boolean{} = True{};
   wbReportUnusedData: Boolean{} = True{};
   wbReportUnknownFormIDs: Boolean{} = True{};
@@ -9795,8 +9794,8 @@ var
 begin
   s := aValue;
   Len := Length(s);
-  if (Prefix < 4) and (Len >= Cardinal(1) shl (Prefix*8)) then
-    raise Exception.Create('String length overflow');
+//  if (Prefix < 4) and (Len >= (Cardinal(1) shl (Prefix*8))) then
+//    raise Exception.Create('String length overflow');
 
   NewSize := Len + Prefix;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
@@ -9958,7 +9957,7 @@ end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if aElement._File.IsLocalized then
+  if Assigned(aElement._File) and aElement._File.IsLocalized then
     Result := 4
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
@@ -9968,7 +9967,7 @@ function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement
 var
   ID: Cardinal;
 begin
-  if aElement._File.IsLocalized then begin
+  if Assigned(aElement._File) and aElement._File.IsLocalized then begin
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
       Result := '<Error: lstring ID should be Int32 value>'
     else
@@ -10224,8 +10223,8 @@ end;
 initialization
   TwoPi := 2 * OnePi;
 
-//  if (DebugHook = 0) then
-//    wbReportMode := False;
+  if (DebugHook = 0) then
+    wbReportMode := False;
 
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;

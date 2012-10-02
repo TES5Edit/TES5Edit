@@ -157,6 +157,7 @@ const
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
   BNAM : TwbSignature = 'BNAM';
+  BOD2 : TwbSignature = 'BOD2'; { New to Skyrim 1.6.91 CK}
   BODT : TwbSignature = 'BODT'; { New to Skyrim }
   BOOK : TwbSignature = 'BOOK';
   BPND : TwbSignature = 'BPND';
@@ -729,7 +730,7 @@ var
   wbFunctionsEnum: IwbEnumDef;
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
-  wbBODT: IwbSubRecordDef;
+  wbBodyData: IwbSubRecordUnionDef;
   wbFULLFact: IwbSubRecordDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
@@ -3980,6 +3981,40 @@ begin
   end;
 end;
 
+procedure wbWEAPAfterLoad(const aElement: IwbElement);
+var
+  Container  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  Flags      : Cardinal;
+begin
+  if wbBeginInternalEdit then try
+    if not Supports(aElement, IwbContainerElementRef, Container) then
+      Exit;
+
+    if Container.ElementCount < 1 then
+      Exit;
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    if MainRecord.IsDeleted then
+      Exit;
+
+    // clear IronSights flags which are randomly assigned in CK
+    if Container.ElementExists['DNAM'] then begin
+      Flags := Container.ElementNativeValues['DNAM - Data\Flags'];
+      Flags := Flags and ($FFFF xor $0040);
+      Container.ElementNativeValues['DNAM - Data\Flags'] := Flags;
+      Flags := Container.ElementNativeValues['DNAM - Data\Flags2'];
+      Flags := Flags and ($FFFFFFFF xor $0100);
+      Container.ElementNativeValues['DNAM - Data\Flags2'] := Flags;
+    end;
+
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 {>>>Needs Revision for Skyrim<<<}
 //procedure wbINFOAfterLoad(const aElement: IwbElement);
 //var
@@ -4356,54 +4391,95 @@ begin
     -1, 'None'
   ]);
 
-  wbBODT := wbStruct(BODT, 'Body Template', [
-    wbInteger('First Person Flags', itU32, wbFlags([
-      {0x00000001} 'Head',
-      {0x00000002} 'Hair',
-      {0x00000004} 'Body',
-      {0x00000008} 'Hands',
-      {0x00000010} 'Forearms',
-      {0x00000020} 'Amulet',
-      {0x00000040} 'Ring',
-      {0x00000080} 'Feet',
-      {0x00000100} 'Calves',
-      {0x00000200} 'Shield',
-      {0x00000400} 'Body AddOn 1 / Tail',
-      {0x00000800} 'Long Hair',
-      {0x00001000} 'Circlet',
-      {0x00002000} 'Body AddOn 2',
-      {0x00004000} 'Body AddOn 3',
-      {0x00008000} 'Body AddOn 4',
-      {0x00010000} 'Body AddOn 5',
-      {0x00020000} 'Body AddOn 6',
-      {0x00040000} 'Body AddOn 7',
-      {0x00080000} 'Body AddOn 8',
-      {0x00100000} 'Decapate Head',
-      {0x00200000} 'Decapate',
-      {0x00400000} 'Body AddOn 9',
-      {0x00800000} 'Body AddOn 10',
-      {0x01000000} 'Body AddOn 11',
-      {0x02000000} 'Body AddOn 12',
-      {0x03000000} 'Body AddOn 13',
-      {0x08000000} 'Body AddOn 14',
-      {0x10000000} 'Body AddOn 15',
-      {0x20000000} 'Body AddOn 16',
-      {0x40000000} 'Body AddOn 17',
-      {0x80000000} 'FX01'
-    ], True)),
-    wbInteger('General Flags', itU8, wbFlags([
-      {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
-      {0x00000002}'Unknown 2',
-      {0x00000004}'Unknown 3',
-      {0x00000008}'Unknown 4',
-      {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
-      {0x00000020}'Unknown 6',
-      {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8'
-    ], True)),
-    wbByteArray('Unknown', 3),
-    wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-  ], cpNormal, True, nil, 3);
+
+  wbBodyData :=
+    wbRunion('Body Template', [
+      wbStruct(BODT, 'Body Template', [
+        wbInteger('First Person Flags', itU32, wbFlags([
+          {0x00000001} 'Head',
+          {0x00000002} 'Hair',
+          {0x00000004} 'Body',
+          {0x00000008} 'Hands',
+          {0x00000010} 'Forearms',
+          {0x00000020} 'Amulet',
+          {0x00000040} 'Ring',
+          {0x00000080} 'Feet',
+          {0x00000100} 'Calves',
+          {0x00000200} 'Shield',
+          {0x00000400} 'Body AddOn 1 / Tail',
+          {0x00000800} 'Long Hair',
+          {0x00001000} 'Circlet',
+          {0x00002000} 'Body AddOn 2',
+          {0x00004000} 'Body AddOn 3',
+          {0x00008000} 'Body AddOn 4',
+          {0x00010000} 'Body AddOn 5',
+          {0x00020000} 'Body AddOn 6',
+          {0x00040000} 'Body AddOn 7',
+          {0x00080000} 'Body AddOn 8',
+          {0x00100000} 'Decapitate Head',
+          {0x00200000} 'Decapitate',
+          {0x00400000} 'Body AddOn 9',
+          {0x00800000} 'Body AddOn 10',
+          {0x01000000} 'Body AddOn 11',
+          {0x02000000} 'Body AddOn 12',
+          {0x03000000} 'Body AddOn 13',
+          {0x08000000} 'Body AddOn 14',
+          {0x10000000} 'Body AddOn 15',
+          {0x20000000} 'Body AddOn 16',
+          {0x40000000} 'Body AddOn 17',
+          {0x80000000} 'FX01'
+        ], True)),
+        wbInteger('General Flags', itU8, wbFlags([
+          {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
+          {0x00000002}'Unknown 2',
+          {0x00000004}'Unknown 3',
+          {0x00000008}'Unknown 4',
+          {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
+          {0x00000020}'Unknown 6',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8'
+        ], True)),
+        wbByteArray('Unknown', 3),
+        wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+      ], cpNormal, False, nil, 3),
+      wbStruct(BOD2, 'Body Template', [
+        wbInteger('First Person Flags', itU32, wbFlags([
+          {0x00000001} 'Head',
+          {0x00000002} 'Hair',
+          {0x00000004} 'Body',
+          {0x00000008} 'Hands',
+          {0x00000010} 'Forearms',
+          {0x00000020} 'Amulet',
+          {0x00000040} 'Ring',
+          {0x00000080} 'Feet',
+          {0x00000100} 'Calves',
+          {0x00000200} 'Shield',
+          {0x00000400} 'Body AddOn 1 / Tail',
+          {0x00000800} 'Long Hair',
+          {0x00001000} 'Circlet',
+          {0x00002000} 'Body AddOn 2',
+          {0x00004000} 'Body AddOn 3',
+          {0x00008000} 'Body AddOn 4',
+          {0x00010000} 'Body AddOn 5',
+          {0x00020000} 'Body AddOn 6',
+          {0x00040000} 'Body AddOn 7',
+          {0x00080000} 'Body AddOn 8',
+          {0x00100000} 'Decapitate Head',
+          {0x00200000} 'Decapitate',
+          {0x00400000} 'Body AddOn 9',
+          {0x00800000} 'Body AddOn 10',
+          {0x01000000} 'Body AddOn 11',
+          {0x02000000} 'Body AddOn 12',
+          {0x03000000} 'Body AddOn 13',
+          {0x08000000} 'Body AddOn 14',
+          {0x10000000} 'Body AddOn 15',
+          {0x20000000} 'Body AddOn 16',
+          {0x40000000} 'Body AddOn 17',
+          {0x80000000} 'FX01'
+        ], True)),
+      wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+    ], cpNormal)
+  ], []);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -5082,7 +5158,7 @@ begin
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbFloat(MODB, 'Bound Radius', cpIgnore),
+      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
@@ -5091,7 +5167,7 @@ begin
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbFloat(MODB, 'Bound Radius', cpIgnore),
+      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
@@ -5100,7 +5176,7 @@ begin
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbFloat(MODB, 'Bound Radius', cpIgnore),
+      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
       wbMODD
@@ -6218,6 +6294,7 @@ begin
     wbOBNDReq,
     wbFULL,
     wbEITM,
+    wbInteger(EAMT, 'Enchantment Amount', itU16),
     wbRStruct('Male biped model', [
       wbString(MODL, 'Model Filename'),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
@@ -6236,7 +6313,7 @@ begin
       wbMO4S
     ], []),
     wbICO2,
-    wbBODT,
+    wbBodyData,
     wbDEST,
     wbSounds,
     wbString(BMCT, 'Ragdoll Constraint Template'),
@@ -6257,7 +6334,7 @@ begin
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
-    wbBODT,
+    wbBodyData,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Male Priority', itU8),
@@ -6483,11 +6560,8 @@ begin
       ]))
     ], cpNormal, False, nil, 11),
 
-    {>>> BEGIN leftover from earlier CK versions <<<}
-		wbByteArray(TVDT, 'Unknown', 0, cpIgnore),
-		wbByteArray(MHDT, 'Unknown', 0, cpIgnore),
-    {>>> END leftover from earlier CK versions <<<}
-
+		wbByteArray(TVDT, 'Unknown', 0, cpNormal),
+		wbByteArray(MHDT, 'Unknown', 0, cpNormal),
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
     wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
@@ -7714,10 +7788,10 @@ begin
 
   wbRecord(NAVM, 'Navigation Mesh', [
     wbEDID,
-    wbUnknown(NVNM),
-    wbUnknown(ONAM),
-    wbUnknown(PNAM),
-    wbUnknown(NNAM)
+    wbArray(NVNM, 'Mesh Data', wbByteArray('Unknown', 4)),
+    wbArray(ONAM, 'Mesh Data', wbByteArray('Unknown', 4)),
+    wbArray(PNAM, 'Mesh Data', wbByteArray('Unknown', 4)),
+    wbArray(NNAM, 'Mesh Data', wbByteArray('Unknown', 4))
   ], False{, wbNAVMAddInfo});
 
 //------------------------------------------------------------------------------
@@ -8183,7 +8257,6 @@ begin
     ], cpNormal, True{, nil, 4}),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
 
-//    wbRArray('Perk Entries', wbRStruct('Perk Entry', [
     wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
@@ -8533,56 +8606,63 @@ begin
   wbRecord(LCTN, 'Location', [
     wbEDID,
 
-    wbArray(ACPR, 'Actors Persistent?', wbStruct('', [
+    wbArray(ACPR, 'Actor Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCPR, 'Actors', wbStruct('', [
+    wbArray(LCPR, 'Location Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(RCPR, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR])),
+    {>>> From Danwguard.esm, Does not follow similar previous patterns <<<}
+    wbArray(RCPR, 'Actor Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbArray(ACUN, 'ActorBase Unique Refs?', wbStruct('', [
+    wbArray(ACUN, 'ActorBase Unique Refs', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN, NULL])
     ])),
-    wbArray(LCUN, 'Unique Refs', wbStruct('', [
+    wbArray(LCUN, 'Location Unique Reference', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN, NULL])
     ])),
-    wbUnknown(RCUN), // not yet seen
+    {>>> Not See Yet but suspect it has same format <<<}
+    wbArray(RCUN, 'ActorBase Unique Refs', wbStruct('', [
+      wbFormIDCk('Actor', [NPC_]),
+      wbFormIDCk('Ref', [ACHR]),
+      wbFormIDCk('Location', [LCTN, NULL])
+    ])),
 
-    wbArray(ACSR, 'ActorBase Ref Types?', wbStruct('', [
+    wbArray(ACSR, 'ActorBase Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCSR, 'Location Ref Types', wbStruct('', [
+    wbArray(LCSR, 'Location Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbUnknown(RCSR), // not yet seen
+    {>>> Seen in Open Cities <<<}
+    wbArray(RCSR, 'ActorBase Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbStruct(ACEC, 'Unknown', [
+    wbStruct(ACEC, 'BaseActor Encounter Reference', [
       wbFormIDCk('Location', [WRLD, CELL]),
       wbArray('Coordinates', wbStruct('', [
         wbInteger('Grid X', itS16),
         wbInteger('Grid Y', itS16)
       ]))
     ]),
-    wbRArray('Unknown',
+    wbRArray('Location Encounter Reference',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
@@ -8591,18 +8671,27 @@ begin
         ]))
       ])
     ),
-    wbUnknown(RCEC), // not yet seen
+    {>>> Seen in Open Cities <<<}
+    wbRArray('BaseActor Encounter Reference',
+      wbStruct(RCEC, 'Unknown', [
+        wbFormIDCk('Location', [WRLD, CELL]),
+        wbArray('Coordinates', wbStruct('', [
+          wbInteger('Grid X', itS16),
+          wbInteger('Grid Y', itS16)
+        ]))
+      ])
+    ),
 
-    wbArray(ACID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
-    wbArray(LCID, 'Unknown', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(ACID, 'ActorBase Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(LCID, 'Location Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
 
-    wbArray(ACEP, 'Unknown', wbStruct('', [
+    wbArray(ACEP, 'ActorBase Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCEP, 'Unknown', wbStruct('', [
+    wbArray(LCEP, 'Location Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
@@ -9571,6 +9660,7 @@ end;
 
 procedure DefineTES5m;
 begin
+
   wbRecord(LSCR, 'Load Screen', [
     wbEDID,
     wbICON,
@@ -9992,11 +10082,11 @@ begin
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArrayS('Attacks', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
+    wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
+    wbFormIDCk(GWOR, 'GObserve dead body override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
-    wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
-    wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
     wbCOCT,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
@@ -10920,7 +11010,7 @@ begin
       wbSPLOs
     ], []),
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-    wbBODT,
+    wbBodyData,
     wbKeywords,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
@@ -11268,7 +11358,6 @@ begin
     {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
       wbInteger('Level', itU8, wbEnum([], [
-         0, 'Novice(Lg)',
          1, 'Novice',
         25, 'Apprentice',
         50, 'Adept',
@@ -11307,6 +11396,7 @@ begin
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
+    {>>> XLKR, XLRT, XRDS, XLRL <<<}
 
     wbRArray('Patrol', wbRStruct('Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
@@ -11336,13 +11426,63 @@ begin
       wbInteger(FNAM, 'Flags', itU8, wbFlags([
         {0x01} 'Visible',
         {0x02} 'Can Travel To',
-        {0x04} 'Unknown 2'
+        {0x04} '"Show All" Hidden'
       ]), cpNormal, True),
       wbFULLReq,
-      wbStruct(TNAM, '', [
-        wbInteger('Type', itU8),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
+      wbInteger(TNAM, 'Marker Type', itU16, wbEnum([], [
+        1, 'City',
+        2, 'Town',
+        3, 'Settlement',
+        4, 'Cave',
+        5, 'Camp',
+        6, 'Fort',
+        7, 'Nordic Ruins',
+        8, 'Dwemer Ruin',
+        9, 'Shipwreck',
+        10, 'Grove',
+        11, 'Landmark',
+        12, 'Dragon Lair',
+        13, 'Farm',
+        14, 'Wood Mill',
+        15, 'Mine',
+        16, 'Imperial Camp',
+        17, 'Stormcloak Camp',
+        18, 'Doomstone',
+        19, 'Wheat Mill',
+        20, 'Smelter',
+        21, 'Stable',
+        22, 'Imperial Tower',
+        23, 'Clearing',
+        24, 'Pass',
+        25, 'Altar',
+        26, 'Rock',
+        27, 'Lighthouse',
+        28, 'Orc Stronghold',
+        29, 'Giant Camp',
+        30, 'Shack',
+        31, 'Nordic Tower',
+        32, 'Nordic Dwelling',
+        33, 'Docks',
+        34, 'Shrine',
+        35, 'Riften Castle',
+        36, 'Riften Capitol',
+        37, 'Windhelm Castle',
+        38, 'Windhelm Capitol',
+        39, 'Whiterun Castle',
+        40, 'Whiterun Capitol',
+        41, 'Solitude Castle',
+        42, 'Solitude Capitol',
+        43, 'Markarth Castle',
+        44, 'Markarth Capitol',
+        45, 'Winterhold Castle',
+        46, 'Winterhold Capitol',
+        47, 'Morthal Castle',
+        48, 'Morthal Capitol',
+        49, 'Falkreath Castle',
+        50, 'Falkreath Capitol',
+        51, 'Dawnstar Castle',
+        52, 'Dawnstar Capitol'
+      ]), cpNormal, True)
     ], [])),
 
     {--- Attach reference ---}
@@ -11472,7 +11612,7 @@ begin
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
     wbOBNDReq,
-    wbString(FNAM, 'File Name'), // leftover, unused
+    wbUnknown(FNAM), // leftover, unused
     wbUnknown(SNDD), // leftover, unused
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
   ]);
@@ -11775,6 +11915,11 @@ begin
     wbSounds,
     wbKeywords,
     wbDESC,
+    wbRStruct('Has Scope', [
+      wbString(MOD3, 'Model Filename'),
+      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+      wbMO3S
+    ], []),
     wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
     wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(WNAM, '1st Person Model Object', [STAT, NULL]),
@@ -11792,7 +11937,7 @@ begin
     ]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 3, cpIgnore),
       wbFloat('Speed'),
       wbFloat('Reach'),
       wbInteger('Flags', itU16, wbFlags([
@@ -11805,7 +11950,7 @@ begin
         {0x0040}'Don''t Use 1st Person IS Anim (unused)',
         {0x0080}'Non-playable'
       ])),
-      wbByteArray('Unknown', 2),
+      wbByteArray('Unknown', 2, cpIgnore),
       wbFloat('Sight FOV'),
       wbByteArray('Unknown', 4),
       wbInteger('Base VATS To-Hit Chance', itU8),
@@ -11820,7 +11965,7 @@ begin
         'Explode only',
         'No dismember/explode'
       ])),
-      wbInteger('Flags', itU32, wbFlags([
+      wbInteger('Flags2', itU32, wbFlags([
         {0x00000001}'Player Only',
         {0x00000002}'NPCs Use Ammo',
         {0x00000004}'No Jam After Reload (unused)',
@@ -11837,7 +11982,7 @@ begin
         {0x00002000}'Bound Weapon'
       ])),
       wbFloat('Animation Attack Mult'),
-      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
       wbFloat('Rumble - Left Motor Strength'),
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
@@ -11849,15 +11994,18 @@ begin
       wbFloat('Stagger')
     ]),
     wbStruct(CRDT, 'Critical Data', [
-      wbInteger('Critical Damage', itU16),
-      wbByteArray('Unknown', 2),
+      wbInteger('Damage', itU16),
+      wbByteArray('Unknown', 2, cpIgnore),
       wbFloat('% Mult'),
-      wbByteArray('Flags', 4),
+      wbInteger('Flags', itU8, wbFlags([
+        'On Death'
+      ])),
+      wbByteArray('Unknown', 3, cpIgnore),
       wbFormIDCk('Effect', [SPEL, NULL])
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
-  ], False, nil, cpNormal, False);
+  ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,
