@@ -11,7 +11,6 @@
      under the License.
 
 *******************************************************************************}
-// Thanks to zilav18
 
 {>>>
   Anything written here is a temp hack for dump to show lstrings.
@@ -39,29 +38,50 @@ type
   TwbLocalizationFile = class
   private
     fStream      : TStream;
+    fName        : string;
     fFileName    : string;
     fFileType    : TwbLocalizationString;
-    fStrings     : TStringList;
+    fStrings     : TStrings;
     fModified    : boolean;
 
     function ReadZString: string;
     function ReadLenZString: string;
     procedure ReadDirectory;
   protected
+    function Get(Index: Integer): string;
+    procedure Put(Index: Integer; const S: string);
   public
+    property Strings[Index: Integer]: string read Get write Put; default;
+    property Name: string read fName;
     constructor Create(const aFileName: string); overload;
     constructor Create(const aFileName: string; aData: TBytes); overload;
     destructor Destroy; override;
-    function ResolveString(ID: Cardinal): string;
+    function Count: Integer;
+    function IndexToID(Index: Integer): Integer;
     procedure ExportToFile(const aFileName: string);
   end;
 
-function GetLocalizedValue(ID: Cardinal; aElement: IwbElement): string;
-
-implementation
+  TwbLocalizationHandler = class
+  private
+    lFiles: TStrings;
+  protected
+    function Get(Index: Integer): TwbLocalizationFile;
+  public
+    property Items[Index: Integer]: TwbLocalizationFile read Get; default;
+    constructor Create;
+    destructor Destroy; override;
+    function Count: Integer;
+    function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
+    function AddLocalization(const aFileName: string): TwbLocalizationFile; overload;
+    function AddLocalization(const aFileName: string; aData: TBytes): TwbLocalizationFile; overload;
+    function GetValue(ID: Cardinal; aElement: IwbElement): string;
+    function GetLocalizationFileName(aElement: IwbElement; var aFileName, aFullName: string): boolean;
+  end;
 
 var
-  lFiles: TStringList;
+  wbLocalizationHandler: TwbLocalizationHandler;
+
+implementation
 
 constructor TwbLocalizationFile.Create(const aFileName: string);
 var
@@ -71,9 +91,10 @@ var
 begin
   fModified := false;
   fFileName := aFileName;
-  ext := LowerCase(ExtractFileExt(aFileName));
-  if ext = '.dlstrings' then fFileType := lsDLString else
-  if ext = '.ilstrings' then fFileType := lsILString else
+  fName := ExtractFileName(aFileName);
+  ext := ExtractFileExt(aFileName);
+  if SameText(ext, '.dlstrings') then fFileType := lsDLString else
+  if SameText(ext, '.ilstrings') then fFileType := lsILString else
     fFileType := lsString;
   // cache file in mem
   fStream := TMemoryStream.Create;
@@ -87,7 +108,7 @@ begin
     FreeMem(Buffer);
     FreeAndNil(fs);
   end;
-  fStrings := TStringList.Create;
+  fStrings := TwbFastStringList.Create;
   ReadDirectory;
 end;
 
@@ -95,10 +116,12 @@ constructor TwbLocalizationFile.Create(const aFileName: string; aData: TBytes);
 var
   ext: string;
 begin
+  fModified := false;
   fFileName := aFileName;
-  ext := LowerCase(ExtractFileExt(aFileName));
-  if ext = '.dlstrings' then fFileType := lsDLString else
-  if ext = '.ilstrings' then fFileType := lsILString else
+  fName := ExtractFileName(aFileName);
+  ext := ExtractFileExt(aFileName);
+  if SameText(ext, '.dlstrings') then fFileType := lsDLString else
+  if SameText(ext, '.ilstrings') then fFileType := lsILString else
     fFileType := lsString;
   fStream := TMemoryStream.Create;
   try
@@ -168,16 +191,41 @@ begin
   end;
 end;
 
-function TwbLocalizationFile.ResolveString(ID: Cardinal): string;
+function TwbLocalizationFile.Count: Integer;
+begin
+  Result := fStrings.Count;
+end;
+
+function TwbLocalizationFile.IndexToID(Index: Integer): Integer;
+begin
+  if Index < Count then
+    Result := Integer(fStrings.Objects[Index])
+  else
+    Result := -1;
+end;
+
+function TwbLocalizationFile.Get(Index: Integer): string;
 var
   idx: integer;
 begin
   Result := '';
-  idx := fStrings.IndexOfObject(pointer(ID));
+  idx := fStrings.IndexOfObject(Pointer(Index));
   if idx <> -1 then
     Result := fStrings[idx]
   else
-    Result := '<Error: Unknown lstring ID ' + IntToHex(ID, 8) + '>';
+    Result := '<Error: Unknown lstring ID ' + IntToHex(Index, 8) + '>';
+end;
+
+procedure TwbLocalizationFile.Put(Index: Integer; const S: string);
+var
+  idx: integer;
+begin
+  idx := fStrings.IndexOfObject(Pointer(Index));
+  if idx <> -1 then
+    if fStrings[idx] <> S then begin
+      fStrings[idx] := S;
+      fModified := true;
+    end;
 end;
 
 procedure TwbLocalizationFile.ExportToFile(const aFileName: string);
@@ -197,7 +245,46 @@ begin
   end;
 end;
 
-function LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
+constructor TwbLocalizationHandler.Create;
+begin
+  lFiles := TwbFastStringListCS.CreateSorted;
+end;
+
+destructor TwbLocalizationHandler.Destroy;
+var
+  i: integer;
+begin
+  for i := 0 to lFiles.Count - 1 do
+    TwbLocalizationFile(lFiles[i]).Free;
+  FreeAndNil(lFiles);
+end;
+
+function TwbLocalizationHandler.Count: Integer;
+begin
+  Result := lFiles.Count;
+end;
+
+function TwbLocalizationHandler.Get(Index: Integer): TwbLocalizationFile;
+begin
+  if Index < Count then
+    Result := TwbLocalizationFile(lFiles.Objects[Index])
+  else
+    Result := nil;
+end;
+
+function TwbLocalizationHandler.AddLocalization(const aFileName: string): TwbLocalizationFile;
+begin
+  Result := TwbLocalizationFile.Create(aFileName);
+  lFiles.AddObject(ExtractFileName(aFileName), Result);
+end;
+
+function TwbLocalizationHandler.AddLocalization(const aFileName: string; aData: TBytes): TwbLocalizationFile;
+begin
+  Result := TwbLocalizationFile.Create(aFileName, aData);
+  lFiles.AddObject(ExtractFileName(aFileName), Result);
+end;
+
+function TwbLocalizationHandler.LocalizedValueDecider(aElement: IwbElement): TwbLocalizationString;
 var
   sigElement, sigRecord: TwbSignature;
   aRecord: IwbSubRecord;
@@ -206,6 +293,7 @@ begin
     sigElement := aRecord.Signature
   else
     sigElement := '';
+
   sigRecord := aElement.ContainingMainRecord.Signature;
 
   if (sigRecord <> 'LSCR') and (sigElement = 'DESC') then Result := lsDLString else // DESC always from dlstrings except LSCR
@@ -215,19 +303,14 @@ begin
     Result := lsString; // others
 end;
 
-function GetLocalizedValue(ID: Cardinal; aElement: IwbElement): string;
+function TwbLocalizationHandler.GetLocalizationFileName(aElement: IwbElement; var aFileName, aFullName: string): boolean;
 var
-  lFileName, lFullName, Extension, BSAName: string;
-  idx: integer;
-  wblf: TwbLocalizationFile;
-  res: TDynResources;
-  bFailed: boolean;
+  Extension: String;
 begin
-  Result := '';
-  if ID = 0 then Exit;
+  Result := False;
 
-  if not Assigned(lFiles) then
-    lFiles := TStringList.Create;
+  if not Assigned(aElement) then
+    Exit;
 
   case LocalizedValueDecider(aElement) of
     lsDLString: Extension := 'DLSTRINGS';
@@ -235,15 +318,34 @@ begin
     lsString  : Extension := 'STRINGS';
   end;
 
-  lFileName := aElement._File.FileName;
-  lFullName := aElement._File.GetFullFileName;
+  aFileName := aElement._File.FileName;
+  aFullName := aElement._File.GetFullFileName;
 
-  lFileName := Format('%s_%s.%s', [
-    ChangeFileExt(lFileName, ''),
+  aFileName := Format('%s_%s.%s', [
+    ChangeFileExt(aFileName, ''),
     wbLanguage,
     Extension
   ]);
-  lFullName := ExtractFilePath(lFullName) + 'Strings\' +  lFileName;
+  aFullName := ExtractFilePath(aFullName) + 'Strings\' + aFileName;
+
+  Result := True;
+end;
+
+function TwbLocalizationHandler.GetValue(ID: Cardinal; aElement: IwbElement): string;
+var
+  lFileName, lFullName, BSAName: string;
+  idx: integer;
+  wblf: TwbLocalizationFile;
+  res: TDynResources;
+  bFailed: boolean;
+begin
+  Result := '';
+
+  if ID = 0 then
+    Exit;
+
+  if not GetLocalizationFileName(aElement, lFileName, lFullName) then
+    Exit;
 
   idx := lFiles.IndexOf(lFileName);
   if idx = -1 then begin
@@ -251,8 +353,7 @@ begin
     if Assigned(wbContainerHandler) then begin
       res := wbContainerHandler.OpenResource('Strings\' +  lFileName);
       if length(res) > 0 then begin
-        wblf := TwbLocalizationFile.Create(lFullName, res[low(res)].GetData);
-        lFiles.AddObject(lFileName, wblf);
+        wblf := AddLocalization(lFullName, res[low(res)].GetData);
         bFailed := false;
       end;
     end;
@@ -263,11 +364,10 @@ begin
   end else
     wblf := TwbLocalizationFile(lFiles.Objects[idx]);
 
-  Result := wblf.ResolveString(ID);
-//  if Pos('Error', Result) > 0 then begin
-//    wblf.ExportToFile('e:\1.txt');
-//    Result := '';
-//  end;
+  Result := wblf[ID];
 end;
+
+initialization
+  wbLocalizationHandler := TwbLocalizationHandler.Create;
 
 end.

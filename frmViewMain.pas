@@ -28,7 +28,8 @@ uses
 {$IFDEF DX3D}
   RenderUnit, Direct3D9, D3DX9, DXUT,
 {$ENDIF}
-  AppEvnts, dxGDIPlusClasses;
+  AppEvnts, dxGDIPlusClasses,
+  wbLocalization;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -247,6 +248,8 @@ type
     mniNavRenumberFormIDsFrom: TMenuItem;
     imgFlattr: TImage;
     tmrGenerator: TTimer;
+    N21: TMenuItem;
+    mniNavLocalizationEditor: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -435,6 +438,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure tmrGeneratorTimer(Sender: TObject);
     procedure mmoMessagesDblClick(Sender: TObject);
+    procedure mniNavLocalizationEditorClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -763,7 +767,8 @@ implementation
 uses
   Colors, Mask,
   cxVTEditors,
-  ShlObj, Registry, FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm;
+  ShlObj, Registry, StrUtils,
+  FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm, frmLocalizationForm;
 
 var
   NoNodes                     : TNodeArray;
@@ -2759,15 +2764,15 @@ begin
           // even if plugins.txt is empty
           j := FindMatchText(CheckListBox1.Items, 'Update.esm');
           if (j < 0) and FileExists(DataPath + 'Update.esm') then begin
-           CheckListBox1.Items.Insert(0, 'Update.esm');
-           j := 0;
+            CheckListBox1.Items.Insert(0, 'Update.esm');
+            j := 0;
           end;
           CheckListBox1.Checked[j] := True;
 
           j := FindMatchText(CheckListBox1.Items, 'Skyrim.esm');
           if (j < 0) and FileExists(DataPath + 'Skyrim.esm') then begin
-           CheckListBox1.Items.Insert(0, 'Skyrim.esm');
-           j := 0;
+            CheckListBox1.Items.Insert(0, 'Skyrim.esm');
+            j := 0;
           end;
           CheckListBox1.Checked[j] := True;
         end;
@@ -2777,7 +2782,7 @@ begin
         if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
           repeat
             s := ExtractFileExt(F.Name);
-            if SameText(s, '.esm') or SameText(s, '.esp') or SameText(s, '.ghost') then begin
+            if SameText(s, '.esm') or SameText(s, '.esp') or ContainsText(s, '.esp.ghost') then begin
               if SameText(F.Name, wbGameName + '.hardcoded.esp') then
                 DeleteFile(DataPath + F.Name)
               else
@@ -5924,6 +5929,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
   EditValue                   : string;
+  StringDef                   : IwbStringDef;
   IntegerDef                  : IwbIntegerDef;
   Flags                       : IwbFlagsDef;
   i                           : Integer;
@@ -5955,6 +5961,17 @@ begin
               EditValue[i+1] := '1';
           end;
 
+        finally
+          Free;
+        end;
+
+      end else
+
+      if Element.ValueDef.DefType = dtLString then begin
+
+        with TfrmLocalization.Create(Self) do try
+          EditValue(Element._File.FileName, 0);
+          ShowModal;
         finally
           Free;
         end;
@@ -7320,6 +7337,18 @@ begin
   InvalidateElementsTreeView(NoNodes);
 end;
 
+procedure TfrmMain.mniNavLocalizationEditorClick(Sender: TObject);
+begin
+  if not Assigned(wbLocalizationHandler) then
+    Exit;
+
+  with TfrmLocalization.Create(Self) do try
+    ShowModal;
+  finally
+    Free;
+  end;
+end;
+
 procedure TfrmMain.mniNavMarkModifiedClick(Sender: TObject);
 var
   NodeData                    : PNavNodeData;
@@ -8512,6 +8541,8 @@ begin
     mniNavCellChildNotVWD.Checked := SelectionIncludesAnyNotVWD(NoNodes);
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
+
+  mniNavLocalizationEditor.Visible := (wbGameMode = gmTES5);
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
@@ -11624,11 +11655,14 @@ begin
 end;
 
 procedure TLoaderThread.Execute;
+const
+  lstrings: array [1..3] of string = ('STRINGS', 'DLSTRINGS', 'ILSTRINGS');
 var
-  i                           : Integer;
+  i, j                        : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   F                           : TSearchRec;
+  res                         : TDynResources;
 begin
   LoaderProgress('starting...');
   try
@@ -11684,6 +11718,20 @@ begin
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);
+
+        if (wbGameMode = gmTES5) and Assigned(wbContainerHandler) then begin
+          for i := 0 to Pred(ltLoadList.Count) do begin
+            s := ChangeFileExt(ltLoadList[i], '');
+            for j := Low(lstrings) to High(lstrings) do begin
+              t := Format('%s_%s.%s', [s, wbLanguage, lstrings[j]]);
+              res := wbContainerHandler.OpenResource('Strings\' + t);
+              if length(res) > 0 then begin
+                LoaderProgress('[' + t + '] Loading Localization.');
+                wbLocalizationHandler.AddLocalization(ltDataPath + 'Strings\' + t, res[High(res)].GetData);
+              end;
+            end;
+          end;
+        end;
       end;
 
       for i := 0 to Pred(ltLoadList.Count) do begin

@@ -35,7 +35,8 @@ uses
   EditWarningFrm in 'EditWarningFrm.pas' {frmEditWarning},
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
-  frmWaitForm in 'frmWaitForm.pas' {frmWait};
+  frmWaitForm in 'frmWaitForm.pas' {frmWait},
+  frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization};
 
 {$R *.res}
 
