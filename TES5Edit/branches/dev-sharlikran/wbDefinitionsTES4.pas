@@ -4344,7 +4344,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], [XLOC]),
+    ], [XLOC{, XCLW, XCCM}]),
     wbXESP,
     wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
     wbUnion(XSED, '', wbREFRXSEDDecider, [

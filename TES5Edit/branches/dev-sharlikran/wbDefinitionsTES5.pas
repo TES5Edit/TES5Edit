@@ -1124,7 +1124,7 @@ begin
     if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
       for i := 0 to Pred(Stages.ElementCount) do
         if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
-          j := Stage.ElementNativeValues['INDX'];
+          j := Stage.ElementNativeValues['INDX\Stage Index'];
           s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
           t := IntToStr(j);
           while Length(t) < 3 do
@@ -1156,102 +1156,101 @@ begin
   end;
 end;
 
-{>>> Needs revision for Skyrim <<<}
-//function wbPerkDATAQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-//var
-//  Container  : IwbContainerElementRef;
-//  Param1     : IwbElement;
-//  MainRecord : IwbMainRecord;
-//  EditInfos  : TStringList;
-//  Stages     : IwbContainerElementRef;
-//  Stage      : IwbContainerElementRef;
-//  i, j       : Integer;
-//  s, t       : string;
-//begin
-//  case aType of
-//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Quest>';
-//    ctToEditValue: Result := IntToStr(aInt);
-//    ctToSortKey: begin
-//      Result := IntToHex64(aInt, 8);
-//      Exit;
-//    end;
-//    ctCheck: Result := '<Warning: Could not resolve Quest>';
-//    ctEditType: Result := '';
-//    ctEditInfo: Result := '';
-//  end;
-//
-//  if not Assigned(aElement) then
-//    Exit;
-//
-//  if aElement.ElementType = etValue then
-//    Supports(aElement.Container, IwbContainerElementRef, Container)
-//  else
-//    Supports(aElement, IwbContainerElementRef, Container);
-//
-//  if not Assigned(Container) then
-//    Exit;
-//
-//  Param1 := Container.ElementByName['Quest'];
-//
-//  if not Assigned(Param1) then
-//    Exit;
-//
-//  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-//    Exit;
-//
-//  if MainRecord.Signature <> QUST then begin
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-//      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-//    end;
-//    Exit;
-//  end;
-//
-//  case aType of
-//    ctEditType: begin
-//      Result := 'ComboBox';
-//      Exit;
-//    end;
-//    ctEditInfo:
-//      EditInfos := TStringList.Create;
-//  else
-//    EditInfos := nil;
-//  end;
-//  try
-//    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
-//      for i := 0 to Pred(Stages.ElementCount) do
-//        if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
-//          j := Stage.ElementNativeValues['INDX\Stage Index'];
-//          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
-//          t := IntToStr(j);
-//          while Length(t) < 3 do
-//            t := '0' + t;
-//          if s <> '' then
-//            t := t + ' ' + s;
-//          if Assigned(EditInfos) then
-//            EditInfos.AddObject(t, TObject(j))
-//          else if j = aInt then begin
-//            case aType of
-//              ctToStr, ctToEditValue: Result := t;
-//              ctCheck: Result := '';
-//            end;
-//            Exit;
-//          end;
-//        end;
-//    end;
-//
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-//      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-//      ctEditInfo: begin
-//        EditInfos.Sort;
-//        Result := EditInfos.CommaText;
-//      end;
-//    end;
-//  finally
-//    FreeAndNil(EditInfos);
-//  end;
-//end;
+function wbPerkDATAQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+  Param1     : IwbElement;
+  MainRecord : IwbMainRecord;
+  EditInfos  : TStringList;
+  Stages     : IwbContainerElementRef;
+  Stage      : IwbContainerElementRef;
+  i, j       : Integer;
+  s, t       : string;
+begin
+  case aType of
+    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Quest>';
+    ctToEditValue: Result := IntToStr(aInt);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '<Warning: Could not resolve Quest>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  if aElement.ElementType = etValue then
+    Supports(aElement.Container, IwbContainerElementRef, Container)
+  else
+    Supports(aElement, IwbContainerElementRef, Container);
+
+  if not Assigned(Container) then
+    Exit;
+
+  Param1 := Container.ElementByName['Quest'];
+
+  if not Assigned(Param1) then
+    Exit;
+
+  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if MainRecord.Signature <> QUST then begin
+    case aType of
+      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+    end;
+    Exit;
+  end;
+
+  case aType of
+    ctEditType: begin
+      Result := 'ComboBox';
+      Exit;
+    end;
+    ctEditInfo:
+      EditInfos := TStringList.Create;
+  else
+    EditInfos := nil;
+  end;
+  try
+    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
+      for i := 0 to Pred(Stages.ElementCount) do
+        if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
+          j := Stage.ElementNativeValues['INDX\Stage Index'];
+          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
+          t := IntToStr(j);
+          while Length(t) < 3 do
+            t := '0' + t;
+          if s <> '' then
+            t := t + ' ' + s;
+          if Assigned(EditInfos) then
+            EditInfos.AddObject(t, TObject(j))
+          else if j = aInt then begin
+            case aType of
+              ctToStr, ctToEditValue: Result := t;
+              ctCheck: Result := '';
+            end;
+            Exit;
+          end;
+        end;
+    end;
+
+    case aType of
+      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctEditInfo: begin
+        EditInfos.Sort;
+        Result := EditInfos.CommaText;
+      end;
+    end;
+  finally
+    FreeAndNil(EditInfos);
+  end;
+end;
 
 function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
 var
@@ -1927,16 +1926,6 @@ begin
   if VarIsEmpty(ArchType) then
     Result := 1
   else
-{
-    1  wbFormIDCk('Assoc. Item', [LIGH]),
-    2  wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
-    3  wbFormIDCk('Assoc. Item', [NPC_]),
-    4  wbFormIDCk('Assoc. Item', [HAZD]),
-    5  wbFormIDCk('Assoc. Item', [SPEL]),
-    6  wbFormIDCk('Assoc. Item', [RACE]),
-    7  wbFormIDCk('Assoc. Item', [ENCH])
-    8  wbFormIDCk('Assoc. Item', [KYWD, NULL])
-}
     case Integer(ArchType) of
       12: Result := 1; // Light
       17: Result := 2; // Bound Item
@@ -3969,6 +3958,8 @@ begin
       if Container.ElementNativeValues['XLOC - Lock Data\Level'] = 0 then
         Container.ElementNativeValues['XLOC - Lock Data\Level'] := 1;
     end;
+
+    Container.RemoveElement('XPTL');
 
 //    Container.RemoveElement('RCLR');
 //
@@ -6094,7 +6085,7 @@ begin
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         wbInteger('Axis', itU32, wbAxisEnum),
-        wbInteger('Quest Stage', itS32),
+        wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         wbInteger('Alignment', itU32, wbAlignmentEnum),
         wbFormIDCkNoReach('Equip Type', [EQUP]),
@@ -6296,12 +6287,12 @@ begin
     wbFULL,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, nil, True),
+//    wbRStruct('Male biped model', [
+//      wbString(MODL, 'Model Filename'),
+//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+//      wbMODS,
+//      wbMODD
+//    ], [], cpNormal, False, nil, True),
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
@@ -7787,10 +7778,10 @@ begin
 
   wbRecord(NAVM, 'Navigation Mesh', [
     wbEDID,
-    wbArray(NVNM, 'Mesh Data', wbByteArray('Unknown', 4)),
-    wbArray(ONAM, 'Mesh Data', wbByteArray('Unknown', 4)),
-    wbArray(PNAM, 'Mesh Data', wbByteArray('Unknown', 4)),
-    wbArray(NNAM, 'Mesh Data', wbByteArray('Unknown', 4))
+    wbArrayS(NVNM, 'Mesh Data', wbByteArray('Unknown', 4)),
+    wbArrayS(ONAM, 'Mesh Data', wbByteArray('Unknown', 4)),
+    wbArrayS(PNAM, 'Mesh Data', wbByteArray('Unknown', 4)),
+    wbArrayS(NNAM, 'Mesh Data', wbByteArray('Unknown', 4))
   ], False{, wbNAVMAddInfo});
 
 //------------------------------------------------------------------------------
@@ -8269,7 +8260,7 @@ begin
       wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
           wbFormIDCk('Quest', [QUST]),
-          wbInteger('Quest Stage', itS8{, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt}),
+          wbInteger('Quest Stage', itU8, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
           wbByteArray('Unused', 3)
         ]),
         wbFormIDCk('Ability', [SPEL]),
@@ -10082,7 +10073,7 @@ begin
     wbRArrayS('Attacks', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
-    wbFormIDCk(GWOR, 'GObserve dead body override package list', [FLST], False, cpNormal, False),
+    wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
@@ -10531,7 +10522,7 @@ begin
           {0x02} 'Fail Quest'
         ])),
         wbCTDAs,
-        wbLString(CNAM, 'Log Entry'),
+        wbLString(CNAM, 'Log Entry', 0, cpTranslate),
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
         {>>> BEGIN leftover from earlier CK versions <<<}
         wbUnknown(SCHR, cpIgnore),
@@ -11227,8 +11218,7 @@ begin
       wbFormIDCk('Origin', [REFR, NULL]),
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
-
-    wbStruct(XPTL, 'Portal Data', [
+    wbStruct(XPTL, 'Room Portal', [
       wbStruct('Size', [
         wbFloat('Width', cpNormal, False, 2),
         wbFloat('Height', cpNormal, False, 2)
@@ -11244,7 +11234,7 @@ begin
         wbFloat('q3'),
         wbFloat('q4')
       ])
-    ]),
+    ], cpIgnore), // removed by CK
 
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
@@ -11382,11 +11372,11 @@ begin
        100, 'Master',
        255, 'Requires Key'
       ])),
-      wbByteArray('Unknown', 3),
+      wbByteArray('Unused', 3, cpIgnore),
       wbFormIDCkNoReach('Key', [KEYM, NULL]),
       wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unknown', 3),
-      wbByteArray('Unknown', 8)
+      wbByteArray('Unused', 3, cpIgnore),
+      wbByteArray('Unused', 8, cpIgnore)
     ], cpNormal, False, nil, 4),
 
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -11413,7 +11403,6 @@ begin
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
-    {>>> XLKR, XLRT, XRDS, XLRL <<<}
 
     wbRArray('Patrol', wbRStruct('Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
@@ -11501,7 +11490,6 @@ begin
         52, 'Dawnstar Capitol'
       ]), cpNormal, True)
     ], [])),
-
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
     wbDataPosRot
@@ -12030,7 +12018,7 @@ begin
     {>>> There are A LOT of those in skyrim.esm, should be probably removed like OFST <<<}
     wbRArray('Unused', wbUnknown(RNAM), cpIgnore, False, wbNeverShow),
     {>>> END leftover from earlier CK versions <<<}
-    wbArrayS(MHDT, 'Unknown', wbByteArray('Unknown' ,4)),
+    wbByteArray(MHDT, 'Unused', 0, cpNormal),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimesions Center Cell', [
       wbInteger('X', itU16),
