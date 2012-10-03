@@ -35,7 +35,7 @@ Though there are a lot of fields for modifying various aspects of different thin
 | - || || XRGD || rgb data?  || struct || large (28-1204 bytes) struct, looks like a heap of floats seen on
 :CONT, BOOK (56 bytes seems constant for BOOK), ALCH (112)
 |-
-| - || || XRDS || light-related || float || ~1.25 (radiance?)
+| - || || XRDS || Radius || float || ~1.25 (radiance?)
 |-
 | - || || XEMI || emitted light || formid || [[Tes5Mod:Mod_File_Format/LIGH|LIGH]]
 |-
@@ -96,9 +96,72 @@ Though there are a lot of fields for modifying various aspects of different thin
 |-
 | - || || XEZN || || ||
 |-
-| - || || XFVC || || ||
+| - || || XFVC || Favor Cost || float ||
 |-
-| - || || XHTW || || ||
+| - || || FNAM ||Marker Flags || uint8 ||
+:uint8
+::{0x01} - Visible
+::{0x02} - Can Travel To
+::{0x04} - "Show All" Hidden
+|-
+| - || || FULL || ingame name || lstring || Name of the Marker
+|-
+| - || || TNAM || Marker Type || uint16 || The Icon for the Map Marker - Enum
+:uint16
+::1 - City
+::2 - Town
+::3 - Settlement
+::4 - Cave
+::5 - Camp
+::6 - Fort
+::7 - Nordic Ruins
+::8 - Dwemer Ruin
+::9 - Shipwreck
+::10 - Grove
+::11 - Landmark
+::12 - Dragon Lair
+::13 - Farm
+::14 - Wood Mill
+::15 - Mine
+::16 - Imperial Camp
+::17 - Stormcloak Camp
+::18 - Doomstone
+::19 - Wheat Mill
+::20 - Smelter
+::21 - Stable
+::22 - Imperial Tower
+::23 - Clearing
+::24 - Pass
+::25 - Altar
+::26 - Rock
+::27 - Lighthouse
+::28 - Orc Stronghold
+::29 - Giant Camp
+::30 - Shack
+::31 - Nordic Tower
+::32 - Nordic Dwelling
+::33 - Docks
+::34 - Shrine
+::35 - Riften Castle
+::36 - Riften Capitol
+::37 - Windhelm Castle
+::38 - Windhelm Capitol
+::39 - Whiterun Castle
+::40 - Whiterun Capitol
+::41 - Solitude Castle
+::42 - Solitude Capitol
+::43 - Markarth Castle
+::44 - Markarth Capitol
+::45 - Winterhold Castle
+::46 - Winterhold Capitol
+::47 - Morthal Castle
+::48 - Morthal Capitol
+::49 - Falkreath Castle
+::50 - Falkreath Capitol
+::51 - Dawnstar Castle
+::52 - Dawnstar Capitol
+|-
+| - || || XHTW || Head-Tracking Weight || Float ||
 |-
 | - || || XIS2 || || ||
 |-
