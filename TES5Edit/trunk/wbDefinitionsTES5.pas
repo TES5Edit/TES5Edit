@@ -731,7 +731,8 @@ var
   wbFunctionsEnum: IwbEnumDef;
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
-  wbBodyData: IwbSubRecordUnionDef;
+  wbBODT: IwbSubRecordDef;
+  wbBOD2: IwbSubRecordDef;
   wbFULLFact: IwbSubRecordDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
@@ -739,7 +740,8 @@ var
   wbScriptFragments: IwbStructDef;
   wbEntryPointsEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
-  wbLocationData: IwbStructDef;
+  wbPLDT: IwbSubRecordDef;
+  wbPLVD: IwbSubRecordDef;
   wbTargetData: IwbStructDef;
   wbAttackData: IwbSubRecordStructDef;
   wbLLCT: IwbSubRecordDef;
@@ -772,6 +774,7 @@ var
   wbAmbientColors: IwbStructDef;
   wbSMNodeFlags: IwbFlagsDef;
   wbBipedObjectEnum: IwbEnumDef;
+  wbBipedObjectFlags: IwbFlagsDef;
   wbArmorTypeEnum: IwbEnumDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
@@ -4383,95 +4386,60 @@ begin
     -1, 'None'
   ]);
 
+  wbBipedObjectFlags := wbFlags([
+    {0x00000001} 'Head',
+    {0x00000002} 'Hair',
+    {0x00000004} 'Body',
+    {0x00000008} 'Hands',
+    {0x00000010} 'Forearms',
+    {0x00000020} 'Amulet',
+    {0x00000040} 'Ring',
+    {0x00000080} 'Feet',
+    {0x00000100} 'Calves',
+    {0x00000200} 'Shield',
+    {0x00000400} 'Body AddOn 1 / Tail',
+    {0x00000800} 'Long Hair',
+    {0x00001000} 'Circlet',
+    {0x00002000} 'Body AddOn 2',
+    {0x00004000} 'Body AddOn 3',
+    {0x00008000} 'Body AddOn 4',
+    {0x00010000} 'Body AddOn 5',
+    {0x00020000} 'Body AddOn 6',
+    {0x00040000} 'Body AddOn 7',
+    {0x00080000} 'Body AddOn 8',
+    {0x00100000} 'Decapitate Head',
+    {0x00200000} 'Decapitate',
+    {0x00400000} 'Body AddOn 9',
+    {0x00800000} 'Body AddOn 10',
+    {0x01000000} 'Body AddOn 11',
+    {0x02000000} 'Body AddOn 12',
+    {0x03000000} 'Body AddOn 13',
+    {0x08000000} 'Body AddOn 14',
+    {0x10000000} 'Body AddOn 15',
+    {0x20000000} 'Body AddOn 16',
+    {0x40000000} 'Body AddOn 17',
+    {0x80000000} 'FX01'
+  ], True);
 
-  wbBodyData :=
-    wbRunion('Body Template', [
-      wbStruct(BODT, 'Body Template', [
-        wbInteger('First Person Flags', itU32, wbFlags([
-          {0x00000001} 'Head',
-          {0x00000002} 'Hair',
-          {0x00000004} 'Body',
-          {0x00000008} 'Hands',
-          {0x00000010} 'Forearms',
-          {0x00000020} 'Amulet',
-          {0x00000040} 'Ring',
-          {0x00000080} 'Feet',
-          {0x00000100} 'Calves',
-          {0x00000200} 'Shield',
-          {0x00000400} 'Body AddOn 1 / Tail',
-          {0x00000800} 'Long Hair',
-          {0x00001000} 'Circlet',
-          {0x00002000} 'Body AddOn 2',
-          {0x00004000} 'Body AddOn 3',
-          {0x00008000} 'Body AddOn 4',
-          {0x00010000} 'Body AddOn 5',
-          {0x00020000} 'Body AddOn 6',
-          {0x00040000} 'Body AddOn 7',
-          {0x00080000} 'Body AddOn 8',
-          {0x00100000} 'Decapitate Head',
-          {0x00200000} 'Decapitate',
-          {0x00400000} 'Body AddOn 9',
-          {0x00800000} 'Body AddOn 10',
-          {0x01000000} 'Body AddOn 11',
-          {0x02000000} 'Body AddOn 12',
-          {0x03000000} 'Body AddOn 13',
-          {0x08000000} 'Body AddOn 14',
-          {0x10000000} 'Body AddOn 15',
-          {0x20000000} 'Body AddOn 16',
-          {0x40000000} 'Body AddOn 17',
-          {0x80000000} 'FX01'
-        ], True)),
-        wbInteger('General Flags', itU8, wbFlags([
-          {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
-          {0x00000002}'Unknown 2',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8'
-        ], True)),
-        wbByteArray('Unknown', 3),
-        wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-      ], cpNormal, False, nil, 3),
-      wbStruct(BOD2, 'Body Template', [
-        wbInteger('First Person Flags', itU32, wbFlags([
-          {0x00000001} 'Head',
-          {0x00000002} 'Hair',
-          {0x00000004} 'Body',
-          {0x00000008} 'Hands',
-          {0x00000010} 'Forearms',
-          {0x00000020} 'Amulet',
-          {0x00000040} 'Ring',
-          {0x00000080} 'Feet',
-          {0x00000100} 'Calves',
-          {0x00000200} 'Shield',
-          {0x00000400} 'Body AddOn 1 / Tail',
-          {0x00000800} 'Long Hair',
-          {0x00001000} 'Circlet',
-          {0x00002000} 'Body AddOn 2',
-          {0x00004000} 'Body AddOn 3',
-          {0x00008000} 'Body AddOn 4',
-          {0x00010000} 'Body AddOn 5',
-          {0x00020000} 'Body AddOn 6',
-          {0x00040000} 'Body AddOn 7',
-          {0x00080000} 'Body AddOn 8',
-          {0x00100000} 'Decapitate Head',
-          {0x00200000} 'Decapitate',
-          {0x00400000} 'Body AddOn 9',
-          {0x00800000} 'Body AddOn 10',
-          {0x01000000} 'Body AddOn 11',
-          {0x02000000} 'Body AddOn 12',
-          {0x03000000} 'Body AddOn 13',
-          {0x08000000} 'Body AddOn 14',
-          {0x10000000} 'Body AddOn 15',
-          {0x20000000} 'Body AddOn 16',
-          {0x40000000} 'Body AddOn 17',
-          {0x80000000} 'FX01'
-        ], True)),
-      wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-    ], cpNormal)
-  ], []);
+  wbBODT := wbStruct(BODT, 'Body Template', [
+    wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+    wbInteger('General Flags', itU8, wbFlags([
+      {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
+      {0x00000002}'Unknown 2',
+      {0x00000004}'Unknown 3',
+      {0x00000008}'Unknown 4',
+      {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
+      {0x00000020}'Unknown 6',
+      {0x00000040}'Unknown 7',
+      {0x00000080}'Unknown 8'
+    ], True)),
+    wbByteArray('Unused', 3, cpIgnore),
+    wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+  ], cpNormal, False, nil, 3);
+  wbBOD2 := wbStruct(BOD2, 'Biped Body Template', [
+    wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+    wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+  ], cpNormal, False);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -5004,7 +4972,27 @@ begin
     wbString(ATKE, 'Attack Event')
   ], []);
 
-  wbLocationData := wbStruct('Location Data', [
+  wbPLDT := wbStruct(PLDT, 'Location', [
+    wbInteger('Type', itS32, wbLocationEnum),
+    wbUnion('Location Value', wbTypeDecider, [
+      {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
+      {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
+      {3} wbByteArray('Near Editor Location', 4, cpIgnore),
+      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, SHOU]),
+      {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
+      {6} wbFormIDCk('Keyword', [NULL, KYWD]),
+      {7} wbByteArray('Unknown', 4, cpIgnore),
+      {8} wbInteger('Alias ID', itU32),
+      {9} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+     {10} wbByteArray('Unknown', 4, cpIgnore),
+     {11} wbByteArray('Unknown', 4, cpIgnore),
+     {12} wbByteArray('Unknown', 4, cpIgnore)
+    ]),
+    wbInteger('Radius', itS32)
+  ]);
+
+  wbPLVD := wbStruct(PLVD, 'Location', [
     wbInteger('Type', itS32, wbLocationEnum),
     wbUnion('Location Value', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
@@ -5141,9 +5129,6 @@ begin
       'Left Hand'
     ]));
 
-//------------------------------------------------------------------------------
-// wbMODL MODL, MODB, MODT, MODS, MODD
-//------------------------------------------------------------------------------
 	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
 	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore);
 
@@ -6305,7 +6290,8 @@ begin
       wbMO4S
     ], []),
     wbICO2,
-    wbBodyData,
+    wbBODT,
+    wbBOD2,
     wbDEST,
     wbSounds,
     wbString(BMCT, 'Ragdoll Constraint Template'),
@@ -6326,7 +6312,8 @@ begin
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
-    wbBodyData,
+    wbBODT,
+    wbBOD2,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Male Priority', itU8),
@@ -6476,21 +6463,22 @@ begin
   wbRecord(CELL, 'Cell', [
     wbEDID,
     wbFULL,
-    wbStruct(DATA, 'General', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Is Interior Cell',
-        {0x02} 'Has Water',
-        {0x04} 'Can''t Travel From Here',
-        {0x08} 'No LOD Water',
-        {0x10} 'Unknown 5',
-        {0x20} 'Public Area',
-        {0x40} 'Hand Changed',
-        {0x80} 'Show Sky'
-      ])),
-      wbInteger('Flags2', itU8, wbFlags([
-        'Use Sky Lighting'
-      ]))
-    ], cpNormal, True, nil, 1),
+    {>>>
+    Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
+    and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
+    So let it be always itU16
+    <<<}
+    wbInteger(DATA, 'Flags', itU16, wbFlags([
+      {0x0001} 'Is Interior Cell',
+      {0x0002} 'Has Water',
+      {0x0004} 'Can''t Travel From Here',
+      {0x0008} 'No LOD Water',
+      {0x0010} 'Unknown 5',
+      {0x0020} 'Public Area',
+      {0x0040} 'Hand Changed',
+      {0x0080} 'Show Sky',
+      {0x0100} 'Use Sky Lighting'
+    ]), cpNormal, True),
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -6891,7 +6879,9 @@ begin
     wbFormIDCk(BNAM, 'Branch', [DLBR, NULL]),
     wbFormIDCk(QNAM, 'Quest', [QUST, NULL], False, cpNormal, False),
     wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU8, wbFlags([
+      // this should not be named Flags since TwbFile.BuildReachable
+      // expects Top-Level flag here from FNV
+      wbInteger('Topic Flags', itU8, wbFlags([
         'Do All Before Repeating'
       ]), cpNormal, True),
       wbByteArray('Unknown', 1),
@@ -7338,7 +7328,7 @@ begin
     wbFormIDCk(PLCN, 'Player Inventory Container', [REFR]),
     wbFormIDCk(CRGR, 'Shared Crime Faction List', [FLST]),
     wbFormIDCk(JOUT, 'Jail Outfit', [OTFT]),
-    wbStruct(CRVA, 'Crime Gold', [
+    wbStruct(CRVA, 'Crime Values', [
       {01} wbInteger('Arrest', itU8, wbEnum(['False', 'True'])),
       {02} wbInteger('Attack On Sight', itU8, wbEnum(['False', 'True'])),
       {02} wbInteger('Murder', itU16),
@@ -7358,7 +7348,7 @@ begin
     ], []),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
-    wbStruct(VENV, 'Grime Gold', [
+    wbStruct(VENV, 'Vendor Values', [
       {01} wbInteger('Start Hour', itU16),
       {02} wbInteger('End Hour', itU16),
       {02} wbInteger('Radius', itU16),
@@ -7367,9 +7357,7 @@ begin
              wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
       {02} wbByteArray('Unknown 2', 2)
       ]),
-    wbStruct(PLVD, 'Location', [
-      wbLocationData
-    ]),
+    wbPLVD,
     wbCITC,
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad});
@@ -10384,7 +10372,7 @@ begin
         ]),
         wbUnknown(BNAM),
         wbPDTOs,
-        wbStruct(PLDT, 'Location', [wbLocationData]),
+        wbPLDT,
         wbStruct(PTDA, 'Target', [wbTargetData]),
         wbUnknown(TPIC)
       ], [], cpNormal, False)),
@@ -10467,7 +10455,7 @@ begin
     wbEDID,
     wbVMAD,
     wbFULL,
-    wbStruct(DNAM, 'Quest Data', [
+    wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Start Game Enabled',
         {0x0002} 'Unknown 2',
@@ -11002,7 +10990,8 @@ begin
       wbSPLOs
     ], []),
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-    wbBodyData,
+    wbBODT,
+    wbBOD2,
     wbKeywords,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
@@ -11429,15 +11418,15 @@ begin
     wbEmpty(ONAM, 'Open by Default'),
 
     {--- Map Data ---}
-    wbRArray('Map', wbRStruct('Map Data', [
-      wbEmpty(XMRK, 'Map Data Marker'),
-      wbInteger(FNAM, 'Flags', itU8, wbFlags([
+    wbRStruct('Map Marker', [
+      wbEmpty(XMRK, 'Map Marker Start Marker'),
+      wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
         {0x01} 'Visible',
         {0x02} 'Can Travel To',
         {0x04} '"Show All" Hidden'
       ]), cpNormal, True),
       wbFULLReq,
-      wbInteger(TNAM, 'Marker Type', itU16, wbEnum([], [
+      wbInteger(TNAM, 'Type', itU16, wbEnum([], [
         1, 'City',
         2, 'Town',
         3, 'Settlement',
@@ -11491,7 +11480,7 @@ begin
         51, 'Dawnstar Castle',
         52, 'Dawnstar Capitol'
       ]), cpNormal, True)
-    ], [])),
+    ], []),
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
     wbDataPosRot
