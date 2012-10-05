@@ -518,7 +518,7 @@ begin
         2: Result := 'Cloudy';
         3: Result := 'Unknown 3';
         4: Result := 'Rainy';
-        5: Result := 'Snow';
+        8: Result := 'Snow';
       else
         Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
       end;
@@ -528,7 +528,7 @@ begin
     end;
     ctCheck: begin
       case aInt and not 192 of
-        0..5: Result := '';
+        0..4, 8: Result := '';
       else
         Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
       end;
