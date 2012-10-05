@@ -2469,7 +2469,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], [XCLW, XCMT])
+    ], [XCLW, XCMT, XCCM])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   wbServiceFlags :=
@@ -4344,7 +4344,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], [XLOC{, XCLW, XCCM}]),
+    ], [XLOC]),
     wbXESP,
     wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
     wbUnion(XSED, '', wbREFRXSEDDecider, [

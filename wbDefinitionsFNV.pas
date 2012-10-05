@@ -5259,7 +5259,7 @@ begin
         {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
         {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
         {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, TRGT], True),
-        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY]),
+        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
         {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
         {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
         {19} wbFormIDCkNoReach('Idle', [IDLE]),
@@ -5288,8 +5288,8 @@ begin
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
         {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP],
-                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, IMOD],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP, IMOD]),
         {46} wbInteger('Quest Objective (INVALID)', itS32),
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
@@ -5312,7 +5312,7 @@ begin
         {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
         {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
         {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, PMIS, ACHR, ACRE, PGRE, TRGT], True),
-        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY]),
+        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
         {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
         {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
         {19} wbFormIDCkNoReach('Idle', [IDLE]),
@@ -5381,8 +5381,8 @@ begin
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
         {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP],
-                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, IMOD],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP, IMOD]),
         {46} wbInteger('Quest Objective', itS32, wbCTDAParam2QuestObjectiveToStr, wbCTDAParam2QuestObjectiveToInt),
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
@@ -7371,7 +7371,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Placed Impact Object', [TREE, SOUN, ACTI, DOOR, STAT, FURN,
           CONT, ARMO, AMMO, LVLN, LVLC, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS,
-          ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CHIP])
+          ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CHIP, IMOD])
   ]);
 
   wbRecord(DEBR, 'Debris', [
@@ -9050,7 +9050,7 @@ begin
           wbFormIDCkNoReach('Cell', [CELL]),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
+          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, IMOD]),
           wbInteger('Object Type', itU32, wbObjectTypeEnum),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore)
@@ -9073,7 +9073,7 @@ begin
           wbFormIDCkNoReach('Cell', [CELL]),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
+          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, IMOD]),
           wbInteger('Object Type', itU32, wbObjectTypeEnum),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore)
@@ -9111,7 +9111,7 @@ begin
       ]), cpNormal, False, nil, nil, 2),
       wbUnion('Target', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
       ]),
@@ -9197,7 +9197,7 @@ begin
       ])),
       wbUnion('Target', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
       ]),
@@ -9243,7 +9243,7 @@ begin
         wbFormIDCkNoReach('Cell', [CELL]),
         wbByteArray('Unused', 4, cpIgnore),
         wbByteArray('Unused', 4, cpIgnore),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore),
         wbByteArray('Unused', 4, cpIgnore)
@@ -9549,8 +9549,8 @@ begin
     ]),
 
     {--- Map Data ---}
-    wbRStruct('Map Data', [
-      wbEmpty(XMRK, 'Map Data Marker'),
+    wbRStruct('Map Marker', [
+      wbEmpty(XMRK, 'Map Marker Start Marker'),
       wbInteger(FNAM, 'Flags', itU8, wbFlags([
         {0x01} 'Visible',
         {0x02} 'Can Travel To'
