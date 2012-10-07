@@ -4465,7 +4465,7 @@ begin
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
     {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
-           wbByteArray('Unknown', 4, cpIgnore),
+           wbByteArray('Unused', 4, cpIgnore),
            wbFormIDCk('Global Variable', [GLOB, NULL]),
            wbInteger('Required Rank', itS32)
          ]),
@@ -4647,7 +4647,7 @@ begin
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
     wbByteArray('Version Control Info 1', 4, cpIgnore),
-    wbInteger('Form Version', itU16, nil, cpIgnore{, false, nil, nil, 43}),
+    wbInteger('Form Version', itU16, nil, cpIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
   ]);
 
@@ -4949,12 +4949,13 @@ begin
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
     wbInteger('Script Count', itU16),
+    wbLenString('Script #1', 2),
     {>>>
     For some reason when property type is String
     and VMAD has fragments section(?), wbScriptEntry gets bugged on that property
     Example: Skyrim.esm Quest [00091F1A] <dunLabyrinthian> "Labyrinthian"
     <<<}
-    //wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount when -2
+    //wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount and Script1 when -2
     wbByteArray('Scripts')
     //wbScriptFragments
   ]);
@@ -5150,8 +5151,8 @@ begin
       'Left Hand'
     ]));
 
-	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
-	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore);
+	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
+	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
@@ -5340,13 +5341,13 @@ begin
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       {>>> BEGIN leftover from earlier CK versions <<<}
-      wbRStruct('Unknown', [
+      wbRStruct('Unused', [
         wbUnknown(SCHR),
         wbUnknown(SCDA),
         wbUnknown(SCTX),
         wbUnknown(QNAM),
         wbUnknown(SCRO)
-      ], [], cpIgnore),
+      ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs,
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
@@ -6030,12 +6031,12 @@ begin
         wbByteArray('None', 4, cpIgnore),
         wbInteger('Integer', itS32),
         wbFloat('Float'),
-        wbByteArray('Variable Name (INVALID)', 4, cpIgnore),
+        wbByteArray('Variable Name (unused)', 4, cpIgnore),
         wbInteger('Sex', itU32, wbSexEnum),
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         wbInteger('Axis', itU32, wbAxisEnum),
-        wbInteger('Quest Stage (INVALID)', itS32),
+        wbInteger('Quest Stage (unused)', itS32),
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         wbInteger('Alignment', itU32, wbAlignmentEnum),
         wbFormIDCkNoReach('Equip Type', [EQUP]),
@@ -6086,7 +6087,7 @@ begin
         wbByteArray('None', 4, cpIgnore),
         wbInteger('Integer', itS32),
         wbFloat('Float'),
-        wbByteArray('Variable Name (INVALID)', 4, cpIgnore),
+        wbByteArray('Variable Name (unused)', 4, cpIgnore),
         wbInteger('Sex', itU32, wbSexEnum),
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
@@ -6191,7 +6192,7 @@ begin
         {7} 'Event Data'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
-        wbInteger('Unknown', itU32, nil, cpIgnore),
+        wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA], True)
       ]),
       wbInteger('Parameter #3', itS32)
@@ -6301,13 +6302,13 @@ begin
 //    ], [], cpNormal, False, nil, True),
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO2S
     ], []),
     wbICON,
     wbRStruct('Female world model', [
       wbString(MOD4, 'Model Filename'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4S
     ], []),
     wbICO2,
@@ -6346,22 +6347,22 @@ begin
     ], cpNormal, True),
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO2S
     ], [], cpNormal, False),
     wbRStruct('Female world model', [
       wbString(MOD3, 'Model Filename'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO3S
     ], []),
     wbRStruct('Male 1st Person', [
       wbString(MOD4, 'Model Filename'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4S
     ], []),
     wbRStruct('Female 1st Person', [
       wbString(MOD5, 'Model Filename'),
-      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore),
+      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO5S
     ], []),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
@@ -7650,7 +7651,7 @@ begin
     ], cpNormal, True, nil, 22),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model Filename'),
-      wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
     ], [], cpNormal, True),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
@@ -8356,7 +8357,7 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
     wbMODLReq,
-    wbRStructs('Body Parts', 'Body Part', [
+    wbRStructsSK('Body Parts', 'Body Part', [0], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
@@ -8997,21 +8998,21 @@ begin
         wbEmpty(NEXT, 'Marker'),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
         {>>> BEGIN leftover from earlier CK versions <<<}
-        wbRStruct('Unknown', [
+        wbRStruct('Unused', [
           wbUnknown(SCHR),
           wbUnknown(SCDA),
           wbUnknown(SCTX),
           wbUnknown(QNAM),
           wbUnknown(SCRO)
-        ], [], cpIgnore),
+        ], [], cpIgnore, false, wbNeverShow),
         wbEmpty(NEXT, 'Marker'),
-        wbRStruct('Unknown', [
+        wbRStruct('Unused', [
           wbUnknown(SCHR),
           wbUnknown(SCDA),
           wbUnknown(SCTX),
           wbUnknown(QNAM),
           wbUnknown(SCRO)
-        ], [], cpIgnore),
+        ], [], cpIgnore, false, wbNeverShow),
         {>>> END leftover from earlier CK versions begin <<<}
         wbInteger(WNAM, 'Editor Width', itU32),
         wbEmpty(HNAM, 'Marker Phase End')
@@ -9075,32 +9076,32 @@ begin
       wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
       wbInteger(DEVA, 'Emotion Value', itU32),
       {>>> BEGIN leftover from earlier CK versions <<<}
-      wbRStruct('Unknown', [
+      wbRStruct('Unused', [
         wbUnknown(SCHR),
         wbUnknown(SCDA),
         wbUnknown(SCTX),
         wbUnknown(QNAM),
         wbUnknown(SCRO)
-      ], [], cpIgnore),
+      ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbEmpty(ANAM, 'End Marker')
     ], [])),
     {>>> BEGIN leftover from earlier CK versions <<<}
-    wbRStruct('Unknown', [
+    wbRStruct('Unused', [
       wbUnknown(SCHR),
       wbUnknown(SCDA),
       wbUnknown(SCTX),
       wbUnknown(QNAM),
       wbUnknown(SCRO)
-    ], [], cpIgnore),
+    ], [], cpIgnore, false, wbNeverShow),
     wbEmpty(NEXT, 'Marker'),
-    wbRStruct('Unknown', [
+    wbRStruct('Unused', [
       wbUnknown(SCHR),
       wbUnknown(SCDA),
       wbUnknown(SCTX),
       wbUnknown(QNAM),
       wbUnknown(SCRO)
-    ], [], cpIgnore),
+    ], [], cpIgnore, false, wbNeverShow),
     {>>> END leftover from earlier CK versions <<<}
     wbFormIDCk(PNAM, 'Quest', [QUST]),
     wbInteger(INAM, 'Action Count', itU32),
@@ -9461,7 +9462,7 @@ begin
         wbUnknown(SCHR),
         wbFormID(QNAM, 'Unknown'),
         wbEmpty(NEXT, 'Marker')
-      ], []), cpIgnore
+      ], []), cpIgnore, false, wbNeverShow
     ),
     {>>> END leftover from earlier CK versions <<<}
     wbLString(RNAM, 'Prompt'),
@@ -9711,10 +9712,10 @@ begin
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
-          wbByteArray('Unknown', 2, cpIgnore),
+          wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
           wbFormIDCk('Reference', [NPC_, LVLN]),
           wbInteger('Count', itU16),
-          wbByteArray('Unknown', 2, cpIgnore)
+          wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
 				wbCOED
       ], []),
@@ -9738,10 +9739,10 @@ begin
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
-          wbByteArray('Unknown', 2, cpIgnore),
+          wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
           wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
           wbInteger('Count', itU16),
-          wbByteArray('Unknown', 2, cpIgnore)
+          wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
         wbCOED
       ], [])
@@ -9762,10 +9763,10 @@ begin
       wbRStructSK([0], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
         wbInteger('Level', itU16),
-        wbByteArray('Unknown', 2, cpIgnore),
+        wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
         wbFormIDCk('Reference', [SPEL]),
         wbInteger('Count', itU16),
-        wbByteArray('Unknown', 2, cpIgnore)
+        wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
       ])
       ], [])
     )
@@ -10352,7 +10353,7 @@ begin
       wbInteger('Date', itU8),
       wbInteger('Hour', itS8),
       wbInteger('Minute', itS8),
-      wbByteArray('Unknown', 3, cpIgnore),
+      wbByteArray('Unused', 3, cpIgnore),
       wbInteger('Duration (minutes)', itS32)
     ], cpNormal, True),
     wbCTDAs,
@@ -10440,10 +10441,10 @@ begin
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       {>>> BEGIN leftover from earlier CK versions <<<}
-      wbUnknown(SCHR, cpIgnore),
-      wbUnknown(SCTX, cpIgnore),
-      wbUnknown(QNAM, cpIgnore),
-      wbUnknown(TNAM, cpIgnore),
+      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(QNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], []),
@@ -10451,10 +10452,10 @@ begin
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       {>>> BEGIN leftover from earlier CK versions <<<}
-      wbUnknown(SCHR, cpIgnore),
-      wbUnknown(SCTX, cpIgnore),
-      wbUnknown(QNAM, cpIgnore),
-      wbUnknown(TNAM, cpIgnore),
+      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(QNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], []),
@@ -10462,11 +10463,11 @@ begin
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       {>>> BEGIN leftover from earlier CK versions <<<}
-      wbUnknown(SCHR, cpIgnore),
-      wbUnknown(SCDA, cpIgnore),
-      wbUnknown(SCTX, cpIgnore),
-      wbUnknown(QNAM, cpIgnore),
-      wbUnknown(TNAM, cpIgnore),
+      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(SCDA, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(QNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], [])
@@ -10536,9 +10537,9 @@ begin
         wbLString(CNAM, 'Log Entry', 0, cpTranslate),
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
         {>>> BEGIN leftover from earlier CK versions <<<}
-        wbUnknown(SCHR, cpIgnore),
-        wbUnknown(SCTX, cpIgnore),
-        wbUnknown(QNAM, cpIgnore)
+        wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+        wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+        wbByteArray(QNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow)
         {>>> END leftover from earlier CK versions <<<}
       ], []))
     ], [])),
@@ -11230,7 +11231,7 @@ begin
       wbFormIDCk('Origin', [REFR, NULL]),
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
-    wbStruct(XPTL, 'Room Portal', [
+    wbStruct(XPTL, 'Room Portal (unused)', [
       wbStruct('Size', [
         wbFloat('Width', cpNormal, False, 2),
         wbFloat('Height', cpNormal, False, 2)
@@ -11420,8 +11421,8 @@ begin
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbUnknown(SCHR, cpIgnore), // leftover
-      wbUnknown(SCTX, cpIgnore), // leftover
+      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       wbPDTOs
     ], [])),
 
@@ -11934,7 +11935,7 @@ begin
     wbDESC,
     wbRStruct('Has Scope', [
       wbString(MOD3, 'Model Filename'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO3S
     ], []),
     wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
@@ -11954,7 +11955,7 @@ begin
     ]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
-      wbByteArray('Unknown', 3, cpIgnore),
+      wbByteArray('Unused', 3, cpIgnore),
       wbFloat('Speed'),
       wbFloat('Reach'),
       wbInteger('Flags', itU16, wbFlags([
@@ -11967,7 +11968,7 @@ begin
         {0x0040}'Don''t Use 1st Person IS Anim (unused)',
         {0x0080}'Non-playable'
       ])),
-      wbByteArray('Unknown', 2, cpIgnore),
+      wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Sight FOV'),
       wbByteArray('Unknown', 4),
       wbInteger('Base VATS To-Hit Chance', itU8),
@@ -12012,12 +12013,12 @@ begin
     ]),
     wbStruct(CRDT, 'Critical Data', [
       wbInteger('Damage', itU16),
-      wbByteArray('Unknown', 2, cpIgnore),
+      wbByteArray('Unused', 2, cpIgnore),
       wbFloat('% Mult'),
       wbInteger('Flags', itU8, wbFlags([
         'On Death'
       ])),
-      wbByteArray('Unknown', 3, cpIgnore),
+      wbByteArray('Unused', 3, cpIgnore),
       wbFormIDCk('Effect', [SPEL, NULL])
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
@@ -12030,7 +12031,7 @@ begin
     {>>> There are A LOT of those in skyrim.esm, should be probably removed like OFST <<<}
     wbRArray('Unused', wbUnknown(RNAM), cpIgnore, False, wbNeverShow),
     {>>> END leftover from earlier CK versions <<<}
-    wbByteArray(MHDT, 'Unused', 0, cpNormal),
+    wbByteArray(MHDT, 'Unknown', 0, cpNormal),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimesions Center Cell', [
       wbInteger('X', itU16),
@@ -12101,7 +12102,7 @@ begin
       {0x80} 'No Grass'
     ]), cpNormal, True),
     {>>> Object Bounds doesn't show up in CK <<<}
-    wbRStruct('Object Bounds', [
+    wbRStruct('Object Bounds (unused?)', [
       wbStruct(NAM0, 'Min', [
         wbFloat('X', cpNormal, False, 1/4096),
         wbFloat('Y', cpNormal, False, 1/4096)

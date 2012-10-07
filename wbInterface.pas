@@ -47,6 +47,7 @@ var
   wbIKnowWhatImDoing : Boolean = False;
   wbHideUnused : Boolean{} = True;{}
   wbHideIgnored : Boolean{} = True;{}
+  wbShowFormVersion : Boolean{} = False;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
