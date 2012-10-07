@@ -9646,7 +9646,7 @@ begin
   Result := (_Flags and $00000020) <> 0;
 end;
 
-function TwbMainRecordStructFlags.Islocalized: Boolean;
+function TwbMainRecordStructFlags.IsLocalized: Boolean;
 begin
   Result := (_Flags and $00000080) <> 0;
 end;

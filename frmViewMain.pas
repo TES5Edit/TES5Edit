@@ -2782,7 +2782,7 @@ begin
         if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
           repeat
             s := ExtractFileExt(F.Name);
-            if SameText(s, '.esm') or SameText(s, '.esp') or ContainsText(s, '.esp.ghost') then begin
+            if SameText(s, '.esm') or SameText(s, '.esp') or ContainsText(F.Name, '.esp.ghost') then begin
               if SameText(F.Name, wbGameName + '.hardcoded.esp') then
                 DeleteFile(DataPath + F.Name)
               else
@@ -3522,6 +3522,7 @@ begin
                (Signature = 'PMIS') or
                (Signature = 'ACHR') or
                (Signature = 'ACRE') or
+               //((wbGameMode = gmTES5) and (Signature = 'NAVM')) or
                (Signature = 'PARW') or {>>> Skyrim <<<}
                (Signature = 'PBAR') or {>>> Skyrim <<<}
                (Signature = 'PBEA') or {>>> Skyrim <<<}
@@ -8453,8 +8454,8 @@ begin
     wbEditAllowed and
     Assigned(Element);
 
-  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible;
-  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible;
+  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
+  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavRemoveIdenticalToMaster.Visible := mniNavCheckForErrors.Visible;
 
   mniNavRemove.Visible :=
@@ -8472,7 +8473,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
 
-  mniNavGenerateObjectLOD.Visible := mniNavCompareTo.Visible;
+  mniNavGenerateObjectLOD.Visible := mniNavCompareTo.Visible and (wbGameMode = gmTES4);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;

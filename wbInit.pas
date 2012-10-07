@@ -100,6 +100,7 @@ begin
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
     wbLoadBSAs := True;
+    wbAllowInternalEdit := false;
     DefineTES4;
   end else if FindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
     wbGameMode := gmTES5;
