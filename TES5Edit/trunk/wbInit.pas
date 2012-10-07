@@ -111,6 +111,7 @@ begin
       wbLanguage := s;
     wbVWDInTemporary := True;
     wbLoadBSAs := True; // localization won't work otherwise
+    wbHideIgnored := false; // to show Form Version
     DefineTES5;
   end else begin
     ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
