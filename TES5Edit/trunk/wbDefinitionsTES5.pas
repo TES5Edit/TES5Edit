@@ -1761,6 +1761,27 @@ begin
   end;
 end;
 
+function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
+var
+  Container: IwbContainer;
+  s: string;
+begin
+  Result := '';
+
+  Container := aMainRecord.Container;
+  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
+    Container := Container.Container;
+
+  if Assigned(Container) then begin
+    s := Trim(Container.Name);
+    if s <> '' then begin
+      if Result <> '' then
+        Result := Result + ' ';
+      Result := Result + 'in ' + s;
+    end;
+  end;
+end;
+
 //function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
 //var
 //  Rec        : IwbRecord;
@@ -4542,7 +4563,7 @@ begin
     {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
     {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
     {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
-    {0x00000800}'InitialyDisabled',
+    {0x00000800}'InitiallyDisabled',
     {0x00001000}'Ignored',
     {0x00002000}'Unknown 14',
     {0x00004000}'Unknown 15',
@@ -4626,7 +4647,7 @@ begin
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
     wbByteArray('Version Control Info 1', 4, cpIgnore),
-    wbInteger('Form Version', itU16, nil, cpIgnore),
+    wbInteger('Form Version', itU16, nil, cpIgnore{, false, nil, nil, 43}),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
   ]);
 
@@ -5246,7 +5267,7 @@ begin
       'Set Enable State to Opposite of Parent',
       'Pop In'
     ])),
-    wbByteArray('Unknown', 3)
+    wbByteArray('Unused', 3, cpIgnore)
   ]);
 
   wbPDTO :=
@@ -7772,7 +7793,7 @@ begin
     wbUnknown(ONAM),
     wbUnknown(PNAM),
     wbUnknown(NNAM)
-  ], False{, wbNAVMAddInfo});
+  ], False, wbNAVMAddInfo);
 
 //------------------------------------------------------------------------------
 // Begin Old NAVM
