@@ -4,6 +4,7 @@
 
 Threads:
 [spoiler]
+[topic='1412754']Thread 4[/topic]
 [topic='1409718']Thread 3[/topic]
 [topic='1392239']Thread 2[/topic]
 [topic='1388475']Thread 1[/topic]
@@ -17,7 +18,7 @@ Threads:
 
 [color="#FF8C00"][size="4"][b]Current Progress:[/b][/size][/color]
 
-About 90-95% of the records are decoded at this time.  I have started to update the UESPWiki and I keep a current list on our site in the [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/UESPWikiUpdates]UESPWikiUpdates[/url].
+Some aditional tweaking needs to be done but we are close to having on open beta.  About 90-95% of the records are decoded at this time.  I have started to update the UESPWiki and I keep a current list on our site in the [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/UESPWikiUpdates]UESPWikiUpdates[/url].
 
 [color="#FF8C00"][size="4"][b]Current Contributors:[/b][/size][/color]
 
@@ -43,10 +44,6 @@ When started it will automatically find your Skyrim Data directory. You then get
 [color="#FF8C00"][size="4"][b]License:[/color][/size][/b] Mozilla Public License TES5Dump and TES5Edit.
 
 Anyone is welcome to download the source to TES5Dump using the instructions below.
-
-[color="#FF8C00"][size="4"][b]Future Open source esEdit:[/color][/size][/b]
-
-TES5Edit as it is, has proprietary dependencies and the full source can not be compiled without it.  A separate project to provide an open source solution called [url=http://code.google.com/p/esedit/]esEdit[/url] is being started by WrinklyNinja.  The goal of that project is to provide an open source esEdit so that further development is not hindered by licensing issues.
 
 [color="#FF8C00"][size="4"][b]Why do we need TES5Dump:[/b][/size][/color]
 
