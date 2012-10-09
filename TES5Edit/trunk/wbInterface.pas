@@ -64,6 +64,7 @@ var
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
   wbDontSave: Boolean;
+  wbDontBackup: Boolean{} = False;{}
   wbMasterRestore: Boolean;
 
   wbLODGen: Boolean;

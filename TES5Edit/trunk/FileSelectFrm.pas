@@ -30,6 +30,7 @@ type
     InvertSelection1: TMenuItem;
     edSearch: TEdit;
     Label1: TLabel;
+    cbBackup: TCheckBox;
     procedure SelectAll1Click(Sender: TObject);
     procedure SelectNone1Click(Sender: TObject);
     procedure InvertSelection1Click(Sender: TObject);
