@@ -794,7 +794,7 @@ procedure DoRename;
 var
   i                           : Integer;
   s                           : string;
-  f, t                        : string;
+  b, f, t                     : string;
   OrgDate                     : Integer;
 begin
   wbFileForceClosed;
@@ -802,23 +802,39 @@ begin
   if wbDontSave then
     Exit;
 
+  // backup path
+  b := DataPath + wbAppName + 'Edit Backups\';
+  if not DirectoryExists(b) then
+    if not ForceDirectories(b) then
+      b := DataPath;
+
   if Assigned(FilesToRename) then
     for i := 0 to Pred(FilesToRename.Count) do begin
+      // create backup file
       s := FilesToRename.Names[i];
       f := DataPath + s;
       OrgDate := FileAge(f);
-      t := f + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+      t := b + s + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+      if not wbDontBackup then begin
+        // backup original file
+        if not RenameFile(f, t) then begin
+          MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
+          Continue;
+        end;
+      end else
+        // remove original file
+        if not SysUtils.DeleteFile(f) then begin
+          MessageBox(0, PChar('Could not delete "' + f + '".'), 'Error', 0);
+          Continue;
+        end;
+      // rename temp save file to original
+      t := f;
+      s := FilesToRename.ValueFromIndex[i];
+      f := DataPath + s;
       if not RenameFile(f, t) then
-        MessageBox(0, PChar('Count not rename "' + f + '" to "' + t + '".'), 'Error', 0)
-      else begin
-        t := f;
-        s := FilesToRename.ValueFromIndex[i];
-        f := DataPath + s;
-        if not RenameFile(f, t) then
-          MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
-        else
-          FileSetDate(t, OrgDate);
-      end;
+        MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
+      else
+        FileSetDate(t, OrgDate);
     end;
 end;
 
@@ -2833,8 +2849,10 @@ begin
         if not (wbMasterUpdate or wbLODGen) then
           ShowModal;
 
-        if ModalResult <> mrOk then
+        if ModalResult <> mrOk then begin
           frmMain.Close;
+          Exit;
+        end;
 
         sl2 := TStringList.Create;
         try
@@ -5933,7 +5951,7 @@ var
   StringDef                   : IwbStringDef;
   IntegerDef                  : IwbIntegerDef;
   Flags                       : IwbFlagsDef;
-  i                           : Integer;
+  i, StringID                 : Integer;
 begin
   if not wbEditAllowed then
     Exit;
@@ -5971,11 +5989,16 @@ begin
       if Element.ValueDef.DefType = dtLString then begin
 
         with TfrmLocalization.Create(Self) do try
-          EditValue(Element._File.FileName, 0);
+          wbLocalizationHandler.NoTranslate := true;
+          StringID := StrToInt64Def('$' + Element.Value, 0);
+          wbLocalizationHandler.NoTranslate := false;
+          EditValue(Element._File.FileName, StringID);
           ShowModal;
         finally
           Free;
         end;
+        vstView.Invalidate;
+        Exit;
 
       end else
         if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
@@ -8887,6 +8910,8 @@ begin
       end;
 
     Caption := 'Save changed files:';
+    cbBackup.Visible := True;
+    cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
     if (CheckListBox1.Count > 0) and not wbMasterUpdate then begin
       ShowModal;
@@ -8895,6 +8920,10 @@ begin
 
     Inc(wbShowStartTime);
     try
+      wbDontBackup := not cbBackup.Checked;
+      Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
+      Settings.UpdateFile;
+
       SavedAny := False;
       AnyErrors := False;
       t := '.save.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
@@ -8934,6 +8963,21 @@ begin
           Application.ProcessMessages;
           tmrMessagesTimer(nil);
         end;
+
+      t := '.bak.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+
+      for i := 0 to Pred(wbLocalizationHandler.Count) do
+        if wbLocalizationHandler[i].Modified then begin
+           s := wbLocalizationHandler[i].Name;
+           u := wbLocalizationHandler[i].FileName;
+           PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+           if RenameFile(u, u + t) then
+             wbLocalizationHandler[i].WriteToFile(u)
+           else
+             PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s);
+        end;
+
+
     finally
       Application.ProcessMessages;
       tmrMessagesTimer(nil);

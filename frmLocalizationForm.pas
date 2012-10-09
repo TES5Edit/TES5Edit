@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, VirtualTrees, VirtualEditTree;
+  Dialogs, StdCtrls, ExtCtrls, VirtualTrees, VirtualEditTree, ExtDlgs, Menus;
 
 type
   TfrmLocalization = class(TForm)
@@ -13,6 +13,12 @@ type
     Panel2: TPanel;
     Splitter1: TSplitter;
     memoText: TMemo;
+    pnlControls: TPanel;
+    btnSave: TButton;
+    pmuStrings: TPopupMenu;
+    mniFileExport: TMenuItem;
+    mniFileImport: TMenuItem;
+    dlgExport: TSaveTextFileDialog;
     procedure vetStringsInitNode(Sender: TBaseVirtualTree; ParentNode,
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vetStringsInitChildren(Sender: TBaseVirtualTree;
@@ -21,11 +27,18 @@ type
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure FormCreate(Sender: TObject);
     procedure vetStringsChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure btnSaveClick(Sender: TObject);
+    procedure vetStringsPaintText(Sender: TBaseVirtualTree;
+      const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      TextType: TVSTTextType);
+    procedure memoTextChange(Sender: TObject);
+    procedure pmuStringsPopup(Sender: TObject);
+    procedure mniFileExportClick(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
-    procedure EditValue(aFileName: String; ID: Integer);
+    procedure EditValue(aFileName: string; ID: integer);
   end;
 
 var
@@ -49,6 +62,35 @@ procedure TfrmLocalization.FormCreate(Sender: TObject);
 begin
   vetStrings.NodeDataSize := SizeOf(TTreeData);
   vetStrings.RootNodeCount := wbLocalizationHandler.Count;
+  pnlControls.Visible := false;
+end;
+
+procedure TfrmLocalization.memoTextChange(Sender: TObject);
+begin
+  if memoText.Modified and (vetStrings.FocusedNode.Parent <> vetStrings.RootNode) then
+    pnlControls.Visible := true;
+end;
+
+procedure TfrmLocalization.mniFileExportClick(Sender: TObject);
+var
+  Data: PTreeData;
+begin
+  Data := vetStrings.GetNodeData(vetStrings.FocusedNode);
+  dlgExport.FileName := wbLocalizationHandler[Data.FileIndex].Name + '.txt';
+
+  if not dlgExport.Execute then
+    Exit;
+
+  wbLocalizationHandler[Data.FileIndex].ExportToFile(dlgExport.FileName);
+end;
+
+procedure TfrmLocalization.pmuStringsPopup(Sender: TObject);
+var
+  Data: PTreeData;
+begin
+  Data := vetStrings.GetNodeData(vetStrings.FocusedNode);
+
+  mniFileExport.Visible :=  vetStrings.FocusedNode.Parent = vetStrings.RootNode;
 end;
 
 procedure TfrmLocalization.vetStringsChange(Sender: TBaseVirtualTree;
@@ -62,6 +104,7 @@ begin
     memoText.Lines.Clear
   else
     memoText.Lines.Text := wbLocalizationHandler[Data.FileIndex][Data.ID];
+  pnlControls.Visible := false;
 end;
 
 procedure TfrmLocalization.vetStringsGetText(Sender: TBaseVirtualTree;
@@ -118,7 +161,34 @@ begin
   end;
 end;
 
-procedure TfrmLocalization.EditValue(aFileName: String; ID: Integer);
+procedure TfrmLocalization.vetStringsPaintText(Sender: TBaseVirtualTree;
+  const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType);
+var
+  Data: PTreeData;
+begin
+  if Node.Parent <> Sender.RootNode then
+    Exit;
+
+  TargetCanvas.Font.Color := clWindowText;
+  Data := Sender.GetNodeData(Node);
+  if Assigned(Data) then
+    if wbLocalizationHandler[Data.FileIndex].Modified then
+      TargetCanvas.Font.Style := [fsBold];
+end;
+
+procedure TfrmLocalization.btnSaveClick(Sender: TObject);
+var
+  Data: PTreeData;
+begin
+  Data := vetStrings.GetNodeData(vetStrings.FocusedNode);
+  wbLocalizationHandler[Data.FileIndex][Data.ID] := memoText.Lines.Text;
+  memoText.Modified := false;
+  pnlControls.Visible := false;
+  vetStrings.Invalidate;
+end;
+
+procedure TfrmLocalization.EditValue(aFileName: string; ID: integer);
 var
   Data: PTreeData;
   Node: PVirtualNode;
@@ -129,12 +199,13 @@ begin
   while Assigned(Node) do begin
     Data := vetStrings.GetNodeData(Node);
     if Data.ID = ID then
-     if s = Copy(wbLocalizationHandler[Data.FileIndex].Name , 0, length(s)) then begin
-       vetStrings.FocusedNode := Node;
-       vetStrings.ScrollIntoView(Node, True);
-       Exit;
-     end;
-    Node := vetStrings.GetNextSibling(Node);
+      if s = Copy(wbLocalizationHandler[Data.FileIndex].Name , 0, length(s)) then begin
+        vetStrings.FocusedNode := Node;
+        vetStrings.Selected[vetStrings.FocusedNode] := True;
+        vetStrings.ScrollIntoView(Node, True);
+        Exit;
+      end;
+    Node := vetStrings.GetNext(Node);
   end;
 end;
 
