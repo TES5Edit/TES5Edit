@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.22a EXPERIMENTAL';
+  VersionString               = '3.0.22a';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -47,6 +47,7 @@ var
   wbIKnowWhatImDoing : Boolean = False;
   wbHideUnused : Boolean{} = True;{}
   wbHideIgnored : Boolean{} = True;{}
+  wbShowFormVersion : Boolean{} = False;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbEditAllowed: Boolean;
@@ -63,6 +64,7 @@ var
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
   wbDontSave: Boolean;
+  wbDontBackup: Boolean{} = False;{}
   wbMasterRestore: Boolean;
 
   wbLODGen: Boolean;
@@ -9646,7 +9648,7 @@ begin
   Result := (_Flags and $00000020) <> 0;
 end;
 
-function TwbMainRecordStructFlags.Islocalized: Boolean;
+function TwbMainRecordStructFlags.IsLocalized: Boolean;
 begin
   Result := (_Flags and $00000080) <> 0;
 end;
@@ -9957,9 +9959,16 @@ end;
 procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
 begin
   if aElement._File.IsLocalized then
-    raise Exception.Create('Can not assign to a localized string')
+    if wbLocalizationHandler.NoTranslate then
+      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue)
+    else
+      raise Exception.Create('Can not assign to a localized string')
   else
-    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
+    if wbLocalizationHandler.NoTranslate then begin
+      aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
+      PCardinal(aBasePtr)^ := StrToInt64Def('$' + aValue, 0);
+    end else
+      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
 end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;

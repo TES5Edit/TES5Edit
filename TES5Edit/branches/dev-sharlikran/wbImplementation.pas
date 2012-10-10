@@ -4565,7 +4565,7 @@ begin
           with TwbMainRecord(MainRecord.ElementID) do begin
             Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
             Self.mrStruct.mrsVCS1 := 0;
-            if wbGameMode in [gmFO3, gmFNV] then begin
+            if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
               Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
               Self.mrStruct.mrsVCS2 := 0;
             end;

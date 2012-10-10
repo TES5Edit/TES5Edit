@@ -100,6 +100,7 @@ begin
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
     wbLoadBSAs := True;
+    wbAllowInternalEdit := false;
     DefineTES4;
   end else if FindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
     wbGameMode := gmTES5;
@@ -110,6 +111,7 @@ begin
       wbLanguage := s;
     wbVWDInTemporary := True;
     wbLoadBSAs := True; // localization won't work otherwise
+    wbHideIgnored := false; // to show Form Version
     DefineTES5;
   end else begin
     ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');

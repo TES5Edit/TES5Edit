@@ -34,8 +34,6 @@ object frmFileSelect: TfrmFileSelect
     PopupMenu = PopupMenu1
     TabOrder = 0
     OnDblClick = CheckListBox1DblClick
-    ExplicitTop = 32
-    ExplicitHeight = 543
   end
   object BitBtn1: TBitBtn
     Left = 249
@@ -57,6 +55,17 @@ object frmFileSelect: TfrmFileSelect
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 2
     OnChange = edSearchChange
+  end
+  object cbBackup: TCheckBox
+    Left = 8
+    Top = 582
+    Width = 97
+    Height = 17
+    Caption = 'Backup plugins'
+    Checked = True
+    State = cbChecked
+    TabOrder = 3
+    Visible = False
   end
   object PopupMenu1: TPopupMenu
     Left = 128

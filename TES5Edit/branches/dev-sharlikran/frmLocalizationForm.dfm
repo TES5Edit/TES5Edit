@@ -2,7 +2,7 @@ object frmLocalization: TfrmLocalization
   Left = 0
   Top = 0
   Caption = 'Localization Editor'
-  ClientHeight = 524
+  ClientHeight = 523
   ClientWidth = 838
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,7 +18,7 @@ object frmLocalization: TfrmLocalization
   object Splitter1: TSplitter
     Left = 329
     Top = 0
-    Height = 524
+    Height = 523
     ResizeStyle = rsUpdate
     ExplicitLeft = 408
     ExplicitTop = 176
@@ -28,18 +28,16 @@ object frmLocalization: TfrmLocalization
     Left = 0
     Top = 0
     Width = 329
-    Height = 524
+    Height = 523
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitLeft = 32
-    ExplicitTop = 24
-    ExplicitHeight = 313
+    ExplicitHeight = 524
     object vetStrings: TVirtualEditTree
       Left = 0
       Top = 0
       Width = 329
-      Height = 524
+      Height = 523
       Align = alClient
       Colors.SelectionRectangleBlendColor = clGray
       Colors.SelectionRectangleBorderColor = clBlack
@@ -53,6 +51,7 @@ object frmLocalization: TfrmLocalization
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
       NodeDataSize = 8
+      PopupMenu = pmuStrings
       SelectionBlendFactor = 32
       SelectionCurveRadius = 3
       TabOrder = 0
@@ -63,9 +62,10 @@ object frmLocalization: TfrmLocalization
       TreeOptions.StringOptions = [toAutoAcceptEditChange]
       OnChange = vetStringsChange
       OnGetText = vetStringsGetText
+      OnPaintText = vetStringsPaintText
       OnInitChildren = vetStringsInitChildren
       OnInitNode = vetStringsInitNode
-      ExplicitHeight = 456
+      ExplicitHeight = 524
       Columns = <
         item
           Position = 0
@@ -83,22 +83,57 @@ object frmLocalization: TfrmLocalization
     Left = 332
     Top = 0
     Width = 506
-    Height = 524
+    Height = 523
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = 480
-    ExplicitTop = 144
-    ExplicitWidth = 185
-    ExplicitHeight = 41
+    ExplicitHeight = 524
     object memoText: TMemo
       Left = 0
       Top = 0
       Width = 506
-      Height = 524
+      Height = 488
       Align = alClient
       ScrollBars = ssVertical
       TabOrder = 0
+      OnChange = memoTextChange
+      ExplicitHeight = 473
     end
+    object pnlControls: TPanel
+      Left = 0
+      Top = 488
+      Width = 506
+      Height = 35
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 1
+      object btnSave: TButton
+        Left = 424
+        Top = 4
+        Width = 75
+        Height = 25
+        Caption = 'Save'
+        TabOrder = 0
+        OnClick = btnSaveClick
+      end
+    end
+  end
+  object pmuStrings: TPopupMenu
+    OnPopup = pmuStringsPopup
+    Left = 200
+    Top = 136
+    object mniFileExport: TMenuItem
+      Caption = 'Export to file'
+      OnClick = mniFileExportClick
+    end
+    object mniFileImport: TMenuItem
+      Caption = 'Import from file'
+    end
+  end
+  object dlgExport: TSaveTextFileDialog
+    Filter = 'Text file (*.txt)|*.txt'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Left = 200
+    Top = 200
   end
 end
