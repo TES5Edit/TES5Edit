@@ -250,6 +250,9 @@ type
     tmrGenerator: TTimer;
     N21: TMenuItem;
     mniNavLocalizationEditor: TMenuItem;
+    mniNavLocalizationSwitch: TMenuItem;
+    mniNavLocalization: TMenuItem;
+    mniNavLocalizationLanguage: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -439,6 +442,8 @@ type
     procedure tmrGeneratorTimer(Sender: TObject);
     procedure mmoMessagesDblClick(Sender: TObject);
     procedure mniNavLocalizationEditorClick(Sender: TObject);
+    procedure mniNavLocalizationSwitchClick(Sender: TObject);
+    procedure mniNavLocalizationLanguageClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -814,7 +819,7 @@ begin
       s := FilesToRename.Names[i];
       f := DataPath + s;
       OrgDate := FileAge(f);
-      t := b + s + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+      t := b + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
       if not wbDontBackup then begin
         // backup original file
         if not RenameFile(f, t) then begin
@@ -5986,7 +5991,7 @@ begin
 
       end else
 
-      if Element.ValueDef.DefType = dtLString then begin
+      if Element._File.IsLocalized and (Element.ValueDef.DefType = dtLString) then begin
 
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
@@ -5995,6 +6000,7 @@ begin
           EditValue(Element._File.FileName, StringID);
           ShowModal;
         finally
+          wbLocalizationHandler.NoTranslate := false;
           Free;
         end;
         vstView.Invalidate;
@@ -7373,6 +7379,113 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavLocalizationLanguageClick(Sender: TObject);
+var
+  i: integer;
+  sl: TStringList;
+begin
+  if not Assigned(wbLocalizationHandler) then
+    Exit;
+
+  wbLanguage := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
+
+  sl := TStringList.Create;
+  try
+    for i := Low(Files) to High(Files) do
+      sl.Add(Files[i].FileName);
+    wbLocalizationHandler.LoadForFiles(DataPath, sl);
+    vstNav.Invalidate;
+    vstView.Invalidate;
+  finally
+    sl.Free;
+  end;
+end;
+
+procedure TfrmMain.mniNavLocalizationSwitchClick(Sender: TObject);
+
+  procedure GatherLStrings(const aElement: IwbElement; var lst: TDynElements);
+  var
+    Container  : IwbContainerElementRef;
+    i          : Integer;
+  begin
+    if Assigned(aElement.ValueDef) and (aElement.ValueDef.DefType = dtLString) then begin
+      SetLength(lst, Succ(Length(lst)));
+      lst[High(lst)] := aElement;
+      //wbProgressCallback('LString found in : ' + aElement.FullPath);
+    end;
+    if Supports(aElement, IwbContainerElementRef, Container) then
+      for i := Pred(Container.ElementCount) downto 0 do
+        GatherLStrings(Container.Elements[i], lst);
+  end;
+
+var
+  NodeData            : PNavNodeData;
+  _File               : IwbFile;
+  i                   : integer;
+  Element             : IwbElement;
+  lstrings            : TDynElements;
+  fLocalize, ok       : boolean;
+  s                   : string;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+//  if not EditWarn then
+//    Exit;
+
+  NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+
+  if not Assigned(NodeData) then
+    Exit;
+
+  if not Supports(NodeData.Element, IwbFile, _File) then
+    Exit;
+
+  fLocalize := not _File.IsLocalized;
+
+  ok := false;
+  try
+    if fLocalize then
+      Caption := 'Localizing Records. Please wait...'
+    else
+      Caption := 'Delocalizing Records. Please wait...';
+    pgMain.ActivePage := tbsMessages;
+    wbStartTime := Now;
+    Enabled := false;
+
+    GatherLStrings(_File, lstrings);
+    //Exit;
+
+    for i := Low(lstrings) to High(lstrings) do begin
+      Element := lstrings[i];
+      if fLocalize then
+        wbLocalizationHandler.LocalizeElement(Element)
+      else begin
+        s := Element.EditValue;
+        wbLocalizationHandler.NoTranslate := true;
+        Element.EditValue := s;
+        wbLocalizationHandler.NoTranslate := false;
+      end;
+    end;
+
+    _File.IsLocalized := not _File.IsLocalized;
+    //vstNav.Invalidate;
+    ok := true;
+  finally
+    wbLocalizationHandler.NoTranslate := false;
+    Enabled := true;
+    PostAddMessage('[Processing done] ' +
+      ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
+      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+    Caption := Application.Title;
+
+    // that "localization" is a very dirty hack which can probably lead
+    // to problems if user continues to work with a plugin, so
+    // immediately force a "save changes" window and quit.
+    if ok then Close;
+  end;
+end;
+
 procedure TfrmMain.mniNavMarkModifiedClick(Sender: TObject);
 var
   NodeData                    : PNavNodeData;
@@ -8433,6 +8546,7 @@ var
   MainRecord                  : IwbMainRecord;
   i                           : Integer;
   Nodes                       : TNodeArray;
+  sl                          : TStringList;
 begin
   mniNavTest.Visible := DebugHook <> 0;
 
@@ -8566,7 +8680,32 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavLocalizationEditor.Visible := (wbGameMode = gmTES5);
+  mniNavLocalization.Visible := (wbGameMode = gmTES5);
+  mniNavLocalizationSwitch.Visible :=
+     Assigned(Element) and
+    (Element.ElementType = etFile) and
+    (Element._File.LoadOrder > 0);
+  if mniNavLocalizationSwitch.Visible then
+    if Element._File.IsLocalized then
+      mniNavLocalizationSwitch.Caption := 'Delocalize plugin'
+    else
+      mniNavLocalizationSwitch.Caption := 'Localize plugin';
+
+  if wbGameMode = gmTES5 then begin
+    mniNavLocalizationLanguage.Clear;
+    sl := wbLocalizationHandler.AvailableLanguages(DataPath);
+    for i := 0 to Pred(sl.Count) do begin
+      MenuItem := TMenuItem.Create(mniNavLocalizationLanguage);
+      MenuItem.Caption := sl[i];
+      MenuItem.RadioItem := true;
+      if SameText(sl[i], wbLanguage) then
+        MenuItem.Checked := true;
+      MenuItem.OnClick := mniNavLocalizationLanguageClick;
+      mniNavLocalizationLanguage.Add(MenuItem);
+    end;
+    sl.Free;
+  end;
+
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
@@ -8889,7 +9028,9 @@ procedure TfrmMain.SaveChanged;
 var
   i                           : Integer;
   FileStream                  : TFileStream;
+  FileType                    : array of Byte;
   _File                       : IwbFile;
+  _LFile                      : TwbLocalizationFile;
   NeedsRename                 : Boolean;
   u                           : string;
   s                           : string;
@@ -8907,6 +9048,14 @@ begin
       if (Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or wbTestWrite then begin
         CheckListBox1.AddItem(Files[i].FileName, Pointer(Files[i]));
         CheckListBox1.Checked[Pred(CheckListBox1.Count)] := esUnsaved in Files[i].ElementStates;
+        SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
+      end;
+
+    for i := 0 to Pred(wbLocalizationHandler.Count) do
+      if wbLocalizationHandler[i].Modified  or wbTestWrite then begin
+        CheckListBox1.AddItem(wbLocalizationHandler[i].Name, Pointer(wbLocalizationHandler[i]));
+        CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler[i].Modified;
+        SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
       end;
 
     Caption := 'Save changed files:';
@@ -8915,15 +9064,14 @@ begin
 
     if (CheckListBox1.Count > 0) and not wbMasterUpdate then begin
       ShowModal;
+      wbDontBackup := not cbBackup.Checked;
+      Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
+      Settings.UpdateFile;
       wbStartTime := Now;
     end;
 
     Inc(wbShowStartTime);
     try
-      wbDontBackup := not cbBackup.Checked;
-      Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
-      Settings.UpdateFile;
-
       SavedAny := False;
       AnyErrors := False;
       t := '.save.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
@@ -8931,52 +9079,62 @@ begin
       for i := 0 to Pred(CheckListBox1.Items.Count) do
         if CheckListBox1.Checked[i] then begin
 
-          _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-
-          s := CheckListBox1.Items[i];
-          u := s;
-          NeedsRename := FileExists(DataPath + CheckListBox1.Items[i]);
-          if NeedsRename then
-            s := s + t;
-
-          try
-            FileStream := TFileStream.Create(DataPath + s, fmCreate);
-            try
-              PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-              _File.WriteToStream(FileStream);
+          // localization file
+          if FileType[i] = 1 then begin
+            _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
+            s := _LFile.FileName;
+            NeedsRename := FileExists(s);
+            s := Copy(s, length(DataPath) + 1, length(s)); // relative path to string file from Data folder
+            u := s;
+            if NeedsRename then
+              s := s + t;
+            PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+            _LFile.WriteToFile(DataPath + s);
+            if FileExists(DataPath + s) then
               SavedAny := True;
-            finally
-              FileStream.Free;
+          end else
+
+          // plugin file
+          begin
+
+            _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
+
+            s := CheckListBox1.Items[i];
+            u := s;
+            NeedsRename := FileExists(DataPath + CheckListBox1.Items[i]);
+            if NeedsRename then
+              s := s + t;
+
+            try
+              FileStream := TFileStream.Create(DataPath + s, fmCreate);
+              try
+                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+                _File.WriteToStream(FileStream);
+                SavedAny := True;
+              finally
+                FileStream.Free;
+              end;
+
+            except
+              on E: Exception do begin
+                AnyErrors := True;
+                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
+              end;
             end;
 
-            if NeedsRename then begin
-              if not Assigned(FilesToRename) then
-                FilesToRename := TStringList.Create;
-              FilesToRename.Values[u] := s;
-            end;
-          except
-            on E: Exception do begin
-              AnyErrors := True;
-              PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
-            end;
           end;
+
+          if NeedsRename then begin
+            if not Assigned(FilesToRename) then
+              FilesToRename := TStringList.Create;
+            // s - rename from, relative to DataPath
+            // u - rename to, relative to DataPath
+            FilesToRename.Values[u] := s;
+          end;
+
           Application.ProcessMessages;
           tmrMessagesTimer(nil);
         end;
-
-      t := '.bak.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-
-      for i := 0 to Pred(wbLocalizationHandler.Count) do
-        if wbLocalizationHandler[i].Modified then begin
-           s := wbLocalizationHandler[i].Name;
-           u := wbLocalizationHandler[i].FileName;
-           PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-           if RenameFile(u, u + t) then
-             wbLocalizationHandler[i].WriteToFile(u)
-           else
-             PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s);
-        end;
-
 
     finally
       Application.ProcessMessages;
@@ -11700,14 +11858,11 @@ begin
 end;
 
 procedure TLoaderThread.Execute;
-const
-  lstrings: array [1..3] of string = ('STRINGS', 'DLSTRINGS', 'ILSTRINGS');
 var
   i, j                        : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   F                           : TSearchRec;
-  res                         : TDynResources;
 begin
   LoaderProgress('starting...');
   try
@@ -11764,19 +11919,9 @@ begin
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);
 
-        if (wbGameMode = gmTES5) and Assigned(wbContainerHandler) then begin
-          for i := 0 to Pred(ltLoadList.Count) do begin
-            s := ChangeFileExt(ltLoadList[i], '');
-            for j := Low(lstrings) to High(lstrings) do begin
-              t := Format('%s_%s.%s', [s, wbLanguage, lstrings[j]]);
-              res := wbContainerHandler.OpenResource('Strings\' + t);
-              if length(res) > 0 then begin
-                LoaderProgress('[' + t + '] Loading Localization.');
-                wbLocalizationHandler.AddLocalization(ltDataPath + 'Strings\' + t, res[High(res)].GetData);
-              end;
-            end;
-          end;
-        end;
+        if (wbGameMode = gmTES5) and Assigned(wbContainerHandler) then
+          wbLocalizationHandler.LoadForFiles(ltDataPath, ltLoadList);
+
       end;
 
       for i := 0 to Pred(ltLoadList.Count) do begin

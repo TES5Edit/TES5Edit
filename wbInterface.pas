@@ -9959,9 +9959,16 @@ end;
 procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
 begin
   if aElement._File.IsLocalized then
-    raise Exception.Create('Can not assign to a localized string')
+    if wbLocalizationHandler.NoTranslate then
+      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue)
+    else
+      raise Exception.Create('Can not assign to a localized string')
   else
-    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
+    if wbLocalizationHandler.NoTranslate then begin
+      aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
+      PCardinal(aBasePtr)^ := StrToInt64Def('$' + aValue, 0);
+    end else
+      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
 end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
