@@ -53,7 +53,7 @@ uses
 
 type
   TTreeData = record
-    FileIndex: Integer;
+    lFile: TwbLocalizationFile;
     ID: Integer;
   end;
   PTreeData = ^TTreeData;
@@ -76,12 +76,12 @@ var
   Data: PTreeData;
 begin
   Data := vetStrings.GetNodeData(vetStrings.FocusedNode);
-  dlgExport.FileName := wbLocalizationHandler[Data.FileIndex].Name + '.txt';
+  dlgExport.FileName := Data.lFile.Name + '.txt';
 
   if not dlgExport.Execute then
     Exit;
 
-  wbLocalizationHandler[Data.FileIndex].ExportToFile(dlgExport.FileName);
+  Data.lFile.ExportToFile(dlgExport.FileName);
 end;
 
 procedure TfrmLocalization.pmuStringsPopup(Sender: TObject);
@@ -103,7 +103,7 @@ begin
   if Data.ID = 0 then
     memoText.Lines.Clear
   else
-    memoText.Lines.Text := wbLocalizationHandler[Data.FileIndex][Data.ID];
+    memoText.Lines.Text := Data.lFile[Data.ID];
   pnlControls.Visible := false;
 end;
 
@@ -119,11 +119,11 @@ begin
       if Data.ID > 0 then
         CellText := IntToHex(Data.ID, 8)
       else
-        CellText := wbLocalizationHandler[Data.FileIndex].Name;
+        CellText := Data.lFile.Name;
     end;
     1: begin
       if Data.ID > 0 then
-        CellText := wbLocalizationHandler[Data.FileIndex][Data.ID]
+        CellText := Data.lFile[Data.ID]
       else
         CellText := '';
     end;
@@ -137,7 +137,7 @@ var
 begin
   Data := Sender.GetNodeData(Node);
   if Data.ID = 0 then
-    ChildCount := wbLocalizationHandler[Data.FileIndex].Count
+    ChildCount := Data.lFile.Count
   else
     ChildCount := 0;
 end;
@@ -146,18 +146,16 @@ procedure TfrmLocalization.vetStringsInitNode(Sender: TBaseVirtualTree;
   ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
   Data: PTreeData;
-  FileIndex: Integer;
 begin
   Data := Sender.GetNodeData(Node);
   if ParentNode = nil then begin
     Data.ID := 0;
-    Data.FileIndex := Node.Index;
-    if wbLocalizationHandler[Data.FileIndex].Count > 0 then
+    Data.lFile := wbLocalizationHandler[Node.Index];
+    if Data.lFile.Count > 0 then
       Include(InitialStates, ivsHasChildren);
   end else begin
-    FileIndex := PTreeData(Sender.GetNodeData(Node.Parent)).FileIndex;
-    Data.FileIndex := FileIndex;
-    Data.ID := wbLocalizationHandler[Data.FileIndex].IndexToID(Node.Index);
+    Data.lFile := PTreeData(Sender.GetNodeData(Node.Parent)).lFile;
+    Data.ID := Data.lFile.IndexToID(Node.Index);
   end;
 end;
 
@@ -173,7 +171,7 @@ begin
   TargetCanvas.Font.Color := clWindowText;
   Data := Sender.GetNodeData(Node);
   if Assigned(Data) then
-    if wbLocalizationHandler[Data.FileIndex].Modified then
+    if Data.lFile.Modified then
       TargetCanvas.Font.Style := [fsBold];
 end;
 
@@ -182,7 +180,7 @@ var
   Data: PTreeData;
 begin
   Data := vetStrings.GetNodeData(vetStrings.FocusedNode);
-  wbLocalizationHandler[Data.FileIndex][Data.ID] := memoText.Lines.Text;
+  Data.lFile[Data.ID] := memoText.Lines.Text;
   memoText.Modified := false;
   pnlControls.Visible := false;
   vetStrings.Invalidate;
@@ -199,7 +197,7 @@ begin
   while Assigned(Node) do begin
     Data := vetStrings.GetNodeData(Node);
     if Data.ID = ID then
-      if s = Copy(wbLocalizationHandler[Data.FileIndex].Name , 0, length(s)) then begin
+      if s = Copy(Data.lFile.Name , 0, length(s)) then begin
         vetStrings.FocusedNode := Node;
         vetStrings.Selected[vetStrings.FocusedNode] := True;
         vetStrings.ScrollIntoView(Node, True);

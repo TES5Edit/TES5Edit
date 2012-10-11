@@ -32,7 +32,6 @@ object frmLocalization: TfrmLocalization
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitHeight = 524
     object vetStrings: TVirtualEditTree
       Left = 0
       Top = 0
@@ -51,7 +50,6 @@ object frmLocalization: TfrmLocalization
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
       NodeDataSize = 8
-      PopupMenu = pmuStrings
       SelectionBlendFactor = 32
       SelectionCurveRadius = 3
       TabOrder = 0
@@ -65,7 +63,6 @@ object frmLocalization: TfrmLocalization
       OnPaintText = vetStringsPaintText
       OnInitChildren = vetStringsInitChildren
       OnInitNode = vetStringsInitNode
-      ExplicitHeight = 524
       Columns = <
         item
           Position = 0
@@ -87,7 +84,6 @@ object frmLocalization: TfrmLocalization
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitHeight = 524
     object memoText: TMemo
       Left = 0
       Top = 0
@@ -97,7 +93,6 @@ object frmLocalization: TfrmLocalization
       ScrollBars = ssVertical
       TabOrder = 0
       OnChange = memoTextChange
-      ExplicitHeight = 473
     end
     object pnlControls: TPanel
       Left = 0
