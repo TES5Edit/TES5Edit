@@ -69,7 +69,7 @@ var
 
   wbLODGen: Boolean;
 
-  wbAllowInternalEdit: Boolean{} = True{};
+  wbAllowInternalEdit: Boolean = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
   wbReportMode: Boolean{ = True{};
@@ -95,6 +95,8 @@ var
 
 //  wbRotationFactor : Extended = 1;
 //  wbRotationScale : Integer = 6;
+
+  wbDataPath: string;
 
 type
   TConflictAll = (
@@ -573,7 +575,6 @@ type
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
-    function GetFullFileName: string;
     function GetUnsavedSince: TDateTime;
     function GetMaster(aIndex: Integer): IwbFile;
     function GetMasterCount: Integer;
@@ -9958,17 +9959,23 @@ end;
 
 procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
 begin
+  if Copy(aValue, 1, Length(sStringID)) = sStringID then begin
+    aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
+    PCardinal(aBasePtr)^ := StrToInt64Def('$' + Copy(aValue, Succ(Length(sStringID)), Length(aValue)), 0);
+    Exit;
+  end;
+
   if aElement._File.IsLocalized then
+    // assign a string when delocalizing and NoTranslate is true
     if wbLocalizationHandler.NoTranslate then
       inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue)
     else
-      raise Exception.Create('Can not assign to a localized string')
+      // find or create a new lstring
+
+      //Assert(aElement._File.IsLocalized)
+      //raise Exception.Create('Can not assign to a localized string')
   else
-    if wbLocalizationHandler.NoTranslate then begin
-      aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
-      PCardinal(aBasePtr)^ := StrToInt64Def('$' + aValue, 0);
-    end else
-      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
+    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
 end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;

@@ -36,7 +36,8 @@ uses
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
   frmWaitForm in 'frmWaitForm.pas' {frmWait},
-  frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization};
+  frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization},
+  frmLocalizePluginForm in 'frmLocalizePluginForm.pas' {frmLocalizePlugin};
 
 {$R *.res}
 
@@ -51,6 +52,7 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.Title := wbApplicationTitle;
   Application.CreateForm(TfrmMain, frmMain);
+  Application.CreateForm(TfrmLocalizePlugin, frmLocalizePlugin);
   Application.Run;
   DoRename;
 end.
