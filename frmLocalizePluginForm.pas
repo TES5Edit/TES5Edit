@@ -45,6 +45,11 @@ begin
   if cbTranslation.Checked then begin
     j := 0;
     for i := 0 to Pred(clbFrom.Count) do begin
+      if clbFrom.Checked[i] and clbTo.Checked[i] then begin
+        MessageBox(0, PChar('Translation files should not match'), 'Error', 0);
+        Action := caNone;
+        Exit;
+      end;
       if clbFrom.Checked[i] then Inc(j);
       if clbTo.Checked[i] then Dec(j);
     end;

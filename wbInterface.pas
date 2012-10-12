@@ -69,7 +69,7 @@ var
 
   wbLODGen: Boolean;
 
-  wbAllowInternalEdit: Boolean = True{};
+  wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
   wbReportMode: Boolean{ = True{};
@@ -9958,6 +9958,8 @@ begin
 end;
 
 procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
+var
+  ID: Cardinal;
 begin
   if Copy(aValue, 1, Length(sStringID)) = sStringID then begin
     aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
@@ -9966,14 +9968,16 @@ begin
   end;
 
   if aElement._File.IsLocalized then
-    // assign a string when delocalizing and NoTranslate is true
     if wbLocalizationHandler.NoTranslate then
+      // assign a string when delocalizing and NoTranslate is true
       inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue)
-    else
-      // find or create a new lstring
-
-      //Assert(aElement._File.IsLocalized)
+    else begin
+      // set localized string's value
+      ID := wbLocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
+      aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
+      PCardinal(aBasePtr)^ := ID;
       //raise Exception.Create('Can not assign to a localized string')
+    end
   else
     inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
 end;
