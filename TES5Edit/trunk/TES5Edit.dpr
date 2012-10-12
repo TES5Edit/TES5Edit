@@ -52,7 +52,6 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.Title := wbApplicationTitle;
   Application.CreateForm(TfrmMain, frmMain);
-  Application.CreateForm(TfrmLocalizePlugin, frmLocalizePlugin);
   Application.Run;
   DoRename;
 end.

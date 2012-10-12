@@ -1795,7 +1795,6 @@ procedure TfrmMain.mniNavCheckForErrorsClick(Sender: TObject);
 var
   Nodes                       : TNodeArray;
   NodeData                    : PNavNodeData;
-  _File                       : IwbFile;
   i                           : Integer;
 begin
   UserWasActive := True;
@@ -7385,23 +7384,25 @@ end;
 procedure TfrmMain.mniNavLocalizationLanguageClick(Sender: TObject);
 var
   i: integer;
-  sl: TStringList;
+  s: string;
 begin
   if not Assigned(wbLocalizationHandler) then
     Exit;
 
-  wbLanguage := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
+  s := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
 
-  sl := TStringList.Create;
-  try
-    for i := Low(Files) to High(Files) do
-      sl.Add(Files[i].FileName);
-    wbLocalizationHandler.LoadForFiles(sl);
-    vstNav.Invalidate;
-    vstView.Invalidate;
-  finally
-    sl.Free;
-  end;
+  if wbLanguage = s then
+    Exit;
+
+  wbLanguage := s;
+
+  wbLocalizationHandler.Clear;
+  for i := Low(Files) to High(Files) do
+    if Files[i].IsLocalized then
+      wbLocalizationHandler.LoadForFile(Files[i].FileName);
+
+  vstNav.Invalidate;
+  vstView.Invalidate;
 end;
 
 procedure TfrmMain.mniNavLocalizationSwitchClick(Sender: TObject);
@@ -7425,7 +7426,7 @@ var
   NodeData            : PNavNodeData;
   _File               : IwbFile;
   i, j, Translated    : integer;
-  ID                  : Cardinal;
+  ID, StartTick       : Cardinal;
   Element             : IwbElement;
   lstrings            : TDynElements;
   fLocalize, ok       : boolean;
@@ -7437,9 +7438,6 @@ var
 begin
   if not wbEditAllowed then
     Exit;
-
-//  if not EditWarn then
-//    Exit;
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
 
@@ -7482,25 +7480,29 @@ begin
 
   end;
 
+  if not EditWarn then
+    Exit;
+
   ok := false;
+
   try
     if fLocalize then
       Caption := 'Localizing Records. Please wait...'
     else
       Caption := 'Delocalizing Records. Please wait...';
     pgMain.ActivePage := tbsMessages;
+
+    StartTick := GetTickCount;
     wbStartTime := Now;
     Enabled := false;
 
     if fTranslate then begin
-
       PostAddMessage('[Processing] Building translation index...');
 
       lFrom := TwbFastStringList.Create;
       lTo := TwbFastStringList.Create;
 
       for i := 0 to Pred(lFiles.Count) do begin
-
         if Integer(lFiles.Objects[i]) and 1 > 0 then begin
           wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
           for j := 0 to Pred(wblf.Count) do
@@ -7513,9 +7515,12 @@ begin
           lTo.AddStrings(wblf.Items);
           wblf.Destroy;
         end;
-
       end;
 
+      if lFrom.Count <> lTo.Count then begin
+        PostAddMessage('[Error] Number of strings in vocabulary does not match. Check parameters and run again.');
+        Exit;
+      end;
     end;
 
 
@@ -7524,6 +7529,7 @@ begin
 
     PostAddMessage('[Processing] Performing operation...');
     for i := Low(lstrings) to High(lstrings) do begin
+
       Element := lstrings[i];
       if fLocalize then begin
         s := Element.EditValue;
@@ -7542,12 +7548,19 @@ begin
         Element.EditValue := s;
         wbLocalizationHandler.NoTranslate := false;
       end;
+
+      if StartTick + 500 < GetTickCount then begin
+        Application.ProcessMessages;
+        StartTick := GetTickCount;
+      end;
+
     end;
 
     _File.IsLocalized := not _File.IsLocalized;
 
     vstNav.Invalidate;
     ok := true;
+
   finally
     if fLocalize and fTranslate then begin
       FreeAndNil(lFiles);
@@ -12017,10 +12030,6 @@ begin
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);
-
-        if (wbGameMode = gmTES5) and Assigned(wbContainerHandler) then
-          wbLocalizationHandler.LoadForFiles(ltLoadList);
-
       end;
 
       for i := 0 to Pred(ltLoadList.Count) do begin
@@ -12031,6 +12040,7 @@ begin
           ltFiles[High(ltFiles)] := _File;
         end;
         frmMain.SendAddFile(_File);
+
         if frmMain.ForceTerminate then
           Exit;
 

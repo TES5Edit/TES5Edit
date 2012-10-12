@@ -54,7 +54,7 @@ uses
 type
   TTreeData = record
     lFile: TwbLocalizationFile;
-    ID: Integer;
+    ID: Cardinal;
   end;
   PTreeData = ^TTreeData;
 
