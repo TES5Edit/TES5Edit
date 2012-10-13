@@ -1651,6 +1651,31 @@ begin
   Result := Min(Round(f), 254);
 end;
 
+function wbShortXYtoStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  x, y: SmallInt;
+begin
+  y := aInt and $FFFF;
+  x := aInt shr 16 and $FFFF;
+  Result := '';
+  case aType of
+    ctToStr, ctToEditValue: Result := Format('%d, %d', [x, y]);
+    ctCheck: Result := '';
+  end;
+end;
+
+function wbStrToShortXY(const aString: string; const aElement: IwbElement): Int64;
+var
+  x, y: SmallInt;
+  Value: Cardinal;
+begin
+  y := StrToIntDef(Copy(aString, 1, Pred(Pos(', ', aString))), 0);
+  x := StrToIntDef(Copy(aString, Pos(', ', aString) + 2, Length(aString)), 0);
+  PWord(@Value)^ := x;
+  PWord(Cardinal(@Value) + SizeOf(SmallInt))^ := y;
+  Result := Value;
+end;
+
 function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -2001,6 +2026,40 @@ begin
     Exit;
 
   if Integer(Container.ElementNativeValues['Run On']) = 2 then
+    Result := 1;
+end;
+
+function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  GroupRecord   : IwbGroupRecord;
+  MainRecord    : IwbMainRecord;
+  rData         : IwbRecord;
+  i: integer;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
+    Container := Container.Container;
+
+  if not Supports(Container, IwbGroupRecord, GroupRecord) then
+    Exit;
+
+  MainRecord := GroupRecord.ChildrenOf;
+
+  if not Assigned(MainRecord) then
+    Exit;
+
+  rDATA := MainRecord.RecordBySignature['DATA'];
+
+  if not Assigned(MainRecord) then
+    Exit;
+
+  i := rData.NativeValue;
+
+  // is interior cell?
+  if i and 1 <> 0 then
     Result := 1;
 end;
 
@@ -4838,7 +4897,7 @@ begin
     {9} 'Crossbow'
   ]);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
+  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbFULL := wbLString(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLString(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
   wbFULLReq := wbLString(FULL, 'Name', 0, cpNormal, True);
@@ -5363,14 +5422,6 @@ begin
     wbInteger(XCNT, 'Count', itS32),
     wbFloat(XRDS, 'Radius'),
     wbFloat(XHLP, 'Health'),
-
-    {--- Decals ---}
-    wbRArrayS('Linked Decals',
-      wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR]),
-        wbUnknown
-      ])
-    ),
 
     wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
@@ -6854,7 +6905,7 @@ begin
       wbFloat('Equipment Score Mult - Staff'),
       wbFloat('Avoid Threat Chance')
     ], cpNormal, True, nil, 0),
-    wbUnknown(CSMD),
+    wbUnknown(CSMD, cpIgnore),
     wbStruct(CSME, 'Melee', [
       wbFloat('Attack Staggered Mult'),
       wbFloat('Power Attack Staggered Mult'),
@@ -7713,29 +7764,32 @@ begin
 	wbRecord(NAVI, 'Navigation Mesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
-    wbRArray('Unknown',
-      wbStruct(NVMI, 'Unknown', [
+    wbRArray('NavMesh Data',
+      wbStruct(NVMI, 'Data', [
         wbFormIDCk('Navigation Mesh', [NAVM]),
         wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
-        wbArray('Meshes Set 1', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Meshes Set 2', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Doors', wbStruct('Door', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z'),
+        wbInteger('Preferred Merges Flag', itU32),
+        wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
+        wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
+        wbArray('Linked Doors', wbStruct('Door', [
           wbByteArray('Unknown', 4),
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4), // CELL FormID in some records
+        wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
         wbByteArray('Unknown', 0)
       ])
     ),
-    wbUnknown(NVPP),
+    wbStruct(NVPP, 'Preferred Pathing', [
+      wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
+      wbArray('Unknown', wbStruct('', [
+        wbFormIDCk('NavMesh', [NAVM]),
+        wbInteger('Unknown', itU32)
+      ]), -1)
+    ]),
     wbUnknown(NVSI)
-//    wbArrayS(NVPP, 'Unknown', wbByteArray('Unknown' ,4)),
-//    wbArrayS(NVSI, 'Unknown', wbByteArray('Unknown' ,4))
   ]);
 
 //------------------------------------------------------------------------------
@@ -7790,7 +7844,32 @@ begin
 
   wbRecord(NAVM, 'Navigation Mesh', [
     wbEDID,
-    wbUnknown(NVNM),
+    //wbUnknown(NVNM),
+    wbStruct(NVNM, 'Geometry', [
+      wbInteger('Unknown', itU32),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+      wbUnion('Parent', wbNVNMParentDecider, [
+//        no containers in wbUnion :(
+//        wbStruct('Coordinates', [
+//          wbInteger('Grid X', itS16),
+//          wbInteger('Grid Y', itS16)
+//        ]),
+        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
+        wbFormIDCk('Parent Cell', [CELL])
+      ]),
+      wbArray('Vertices', wbStruct('Vertex', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]), -1),
+      // here comes a prefixed length array of supposedly Tri(s).
+      // needs more work to structue it.
+//      wbArray('Tri',
+//        wbByteArray('Unknown', 12)
+//      , -1),
+      wbUnknown
+    ]),
     wbUnknown(ONAM),
     wbUnknown(PNAM),
     wbUnknown(NNAM)
@@ -7941,7 +8020,7 @@ begin
 
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbUnknown(ENAM),
+    wbUnknown(ENAM, cpIgnore),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Bloom Blur Radius'),
@@ -9200,7 +9279,7 @@ begin
       ],[])
     ),
     wbFormIDCk(ONAM, 'Output Model', [SOPM, NULL]),
-    wbLString(FNAM, 'String'),
+    wbLString(FNAM, 'String', 0, cpIgnore),
     wbCTDAs,
     wbStruct(LNAM, 'Values', [
       wbByteArray('Unknown', 1),
@@ -10433,7 +10512,7 @@ begin
             wbByteArray('Unknown', 3)
           ])
         ),
-        wbRArray('Unknown', wbUnknown(PFOR))
+        wbRArray('Unknown', wbUnknown(PFOR), cpIgnore)
       ], [], cpNormal, False))
     ], []),
     wbUNAMs,
@@ -11271,7 +11350,7 @@ begin
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
       )
     ], []),
-    wbEmpty(XMBP, 'MultiBound Primitive Marker'),
+    wbEmpty(XMBP, 'MultiBound Primitive Marker', cpIgnore),
 
     wbXRGD,
     wbXRGB,
@@ -11630,8 +11709,8 @@ begin
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
     wbOBNDReq,
-    wbUnknown(FNAM), // leftover, unused
-    wbUnknown(SNDD), // leftover, unused
+    wbUnknown(FNAM, cpIgnore), // leftover, unused
+    wbUnknown(SNDD, cpIgnore), // leftover, unused
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
   ]);
 

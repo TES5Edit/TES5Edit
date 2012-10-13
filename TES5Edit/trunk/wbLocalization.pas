@@ -482,10 +482,12 @@ begin
 
   for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
     s := wbLocalizationHandler.GetLocalizationFileNameByType(aFileName, ls);
-    res := wbContainerHandler.OpenResource(s);
-    if length(res) > 0 then begin
-      //wbProgressCallback('[' + s + '] Loading Localization.');
-      wbLocalizationHandler.AddLocalization(wbDataPath + s, res[High(res)].GetData);
+    if lFiles.IndexOf(ExtractFileName(s)) = -1 then begin
+      res := wbContainerHandler.OpenResource(s);
+      if length(res) > 0 then begin
+        //wbProgressCallback('[' + s + '] Loading Localization.');
+        wbLocalizationHandler.AddLocalization(wbDataPath + s, res[High(res)].GetData);
+      end;
     end;
   end;
 end;
