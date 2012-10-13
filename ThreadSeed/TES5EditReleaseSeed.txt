@@ -1,0 +1,7 @@
+TES5Edit 3.0.22 EXPERIMENTAL is now available in the Downloads section on our Google Code Site.
+
+ToDo List:
+
+I still need a copy of link for Miax’s Tome of FO3Edit - 2.3.3.  It was refereed to in the previous thread so I know someone has a copy.
+Update NAVM, NAVI, wbUnion for VMAD.
+
