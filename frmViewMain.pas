@@ -223,7 +223,6 @@ type
     mniNavTest: TMenuItem;
     N17: TMenuItem;
     N18: TMenuItem;
-    mniNavApplyScriptInto: TMenuItem;
     N19: TMenuItem;
     mniNavCheckForCircularLeveledLists: TMenuItem;
     pmuPath: TPopupMenu;
@@ -304,7 +303,6 @@ type
     procedure pmuNavPopup(Sender: TObject);
     procedure mniNavAddClick(Sender: TObject);
     procedure mniNavAddMastersClick(Sender: TObject);
-    procedure mniNavApplyScriptIntoClick(Sender: TObject);
     procedure mniNavBatchChangeReferencingRecordsClick(Sender: TObject);
     procedure mniNavBuildReachableClick(Sender: TObject);
     procedure mniNavBuildRefClick(Sender: TObject);
@@ -1080,11 +1078,6 @@ begin
   Application.ProcessMessages;
   if ForceTerminate then
     Abort;
-end;
-
-procedure TfrmMain.mniNavApplyScriptIntoClick(Sender: TObject);
-begin
-  ShowMessage('Not implemented.');
 end;
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
@@ -8679,10 +8672,6 @@ begin
     (Element.ElementType = etMainRecord) and
     ((Element as IwbMainRecord).MasterOrSelf.ReferencedByCount > 0);
 
-  mniNavApplyScriptInto.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed;
-
   mniNavCheckForErrors.Visible :=
     not wbTranslationMode and
     wbEditAllowed and
@@ -9907,7 +9896,7 @@ begin
       Settings.UpdateFile;
       ShowMessage('You''ve been actively using this program for a while now.'#13#13 +
         'If you should find this program useful I would greatly appreciate it if you ' +
-        'would go to the download page at '+SiteName[wbGameMode]+'Nexus and give it an endorsement.'#13#13 +
+        'would go to the download page at '+SiteName[wbGameMode]+' Nexus and give it an endorsement.'#13#13 +
         'If you have already endorsed this program I would like to thank you for your support and '+
         'if you have any suggestions how to improve this program please don''t hesitate to let me know about '+
         'them via the release topic on the Bethesda Game Studios Forums.');

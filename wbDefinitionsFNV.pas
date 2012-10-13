@@ -4270,8 +4270,8 @@ begin
     'ReloadZ'
   ]);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
-  wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpBenign, True);
+  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
+  wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
   wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
   wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
