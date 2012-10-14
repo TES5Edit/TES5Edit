@@ -2303,16 +2303,16 @@ begin
 
   ResetAllTags;
   for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-//    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries']);
-//    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries']);
+    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries']);
+    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries']);
     CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries']);
-//    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries']);
-//    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions', 'Actor Effects']);
-//    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects']);
-//    CheckGroup(GroupBySignature['CONT'], ['Items']);
-//    CheckGroup(GroupBySignature['FACT'], ['Relations']);
-//    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes']);
-//    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], True);
+    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries']);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions', 'Actor Effects']);
+    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects']);
+    CheckGroup(GroupBySignature['CONT'], ['Items']);
+    CheckGroup(GroupBySignature['FACT'], ['Relations']);
+    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes']);
+    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], True);
   end;
 
   TargetFile.CleanMasters;
