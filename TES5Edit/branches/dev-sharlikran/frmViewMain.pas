@@ -223,7 +223,6 @@ type
     mniNavTest: TMenuItem;
     N17: TMenuItem;
     N18: TMenuItem;
-    mniNavApplyScriptInto: TMenuItem;
     N19: TMenuItem;
     mniNavCheckForCircularLeveledLists: TMenuItem;
     pmuPath: TPopupMenu;
@@ -304,7 +303,6 @@ type
     procedure pmuNavPopup(Sender: TObject);
     procedure mniNavAddClick(Sender: TObject);
     procedure mniNavAddMastersClick(Sender: TObject);
-    procedure mniNavApplyScriptIntoClick(Sender: TObject);
     procedure mniNavBatchChangeReferencingRecordsClick(Sender: TObject);
     procedure mniNavBuildReachableClick(Sender: TObject);
     procedure mniNavBuildRefClick(Sender: TObject);
@@ -773,7 +771,8 @@ uses
   Colors, Mask,
   cxVTEditors,
   ShlObj, Registry, StrUtils,
-  FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm, frmLocalizationForm;
+  FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
+  frmLocalizationForm, frmLocalizePluginForm;
 
 var
   NoNodes                     : TNodeArray;
@@ -1079,11 +1078,6 @@ begin
   Application.ProcessMessages;
   if ForceTerminate then
     Abort;
-end;
-
-procedure TfrmMain.mniNavApplyScriptIntoClick(Sender: TObject);
-begin
-  ShowMessage('Not implemented.');
 end;
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
@@ -1794,7 +1788,6 @@ procedure TfrmMain.mniNavCheckForErrorsClick(Sender: TObject);
 var
   Nodes                       : TNodeArray;
   NodeData                    : PNavNodeData;
-  _File                       : IwbFile;
   i                           : Integer;
 begin
   UserWasActive := True;
@@ -2699,6 +2692,7 @@ begin
   end;
 
   DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
+  wbDataPath := DataPath;
   AddMessage('Using '+wbGameName+' Data Path: ' + DataPath);
 
   PluginsFileName := '';
@@ -6786,6 +6780,7 @@ begin
   sl.Free;
 end;
 }
+
 procedure TfrmMain.mniNavTestClick(Sender: TObject);
 var
   _File : IwbFile;
@@ -7382,23 +7377,25 @@ end;
 procedure TfrmMain.mniNavLocalizationLanguageClick(Sender: TObject);
 var
   i: integer;
-  sl: TStringList;
+  s: string;
 begin
   if not Assigned(wbLocalizationHandler) then
     Exit;
 
-  wbLanguage := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
+  s := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
 
-  sl := TStringList.Create;
-  try
-    for i := Low(Files) to High(Files) do
-      sl.Add(Files[i].FileName);
-    wbLocalizationHandler.LoadForFiles(DataPath, sl);
-    vstNav.Invalidate;
-    vstView.Invalidate;
-  finally
-    sl.Free;
-  end;
+  if wbLanguage = s then
+    Exit;
+
+  wbLanguage := s;
+
+  wbLocalizationHandler.Clear;
+  for i := Low(Files) to High(Files) do
+    if Files[i].IsLocalized then
+      wbLocalizationHandler.LoadForFile(Files[i].FileName);
+
+  vstNav.Invalidate;
+  vstView.Invalidate;
 end;
 
 procedure TfrmMain.mniNavLocalizationSwitchClick(Sender: TObject);
@@ -7421,17 +7418,19 @@ procedure TfrmMain.mniNavLocalizationSwitchClick(Sender: TObject);
 var
   NodeData            : PNavNodeData;
   _File               : IwbFile;
-  i                   : integer;
+  i, j, Translated    : integer;
+  ID, StartTick       : Cardinal;
   Element             : IwbElement;
   lstrings            : TDynElements;
   fLocalize, ok       : boolean;
+  fTranslate          : boolean;
   s                   : string;
+  lFiles              : TStringList;
+  lFrom, lTo          : TwbFastStringList;
+  wblf                : TwbLocalizationFile;
 begin
   if not wbEditAllowed then
     Exit;
-
-//  if not EditWarn then
-//    Exit;
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
 
@@ -7442,44 +7441,135 @@ begin
     Exit;
 
   fLocalize := not _File.IsLocalized;
+  fTranslate := false;
+  Translated := 0;
+
+  if fLocalize then begin
+
+    with TfrmLocalizePlugin.Create(Self) do try
+
+      lFiles := wbLocalizationHandler.AvailableLocalizationFiles;
+      clbFrom.Items.AddStrings(lFiles);
+      clbTo.Items.AddStrings(lFiles);
+
+      if ShowModal <> mrOk then begin
+        FreeAndNil(lFiles);
+        Exit;
+      end;
+
+      fTranslate := cbTranslation.Checked;
+
+      if fTranslate then
+        for i := 0 to Pred(lFiles.Count) do begin
+          j := 0;
+          if clbFrom.Checked[i] then j := j or 1;
+          if clbTo.Checked[i] then j := j or 2;
+          lFiles.Objects[i] := Pointer(j);
+        end;
+
+    finally
+      Free;
+    end;
+
+  end;
+
+  if not EditWarn then
+    Exit;
 
   ok := false;
+
   try
     if fLocalize then
       Caption := 'Localizing Records. Please wait...'
     else
       Caption := 'Delocalizing Records. Please wait...';
     pgMain.ActivePage := tbsMessages;
+
+    StartTick := GetTickCount;
     wbStartTime := Now;
     Enabled := false;
 
-    GatherLStrings(_File, lstrings);
-    //Exit;
+    if fTranslate then begin
+      PostAddMessage('[Processing] Building translation index...');
 
+      lFrom := TwbFastStringList.Create;
+      lTo := TwbFastStringList.Create;
+
+      for i := 0 to Pred(lFiles.Count) do begin
+        if Integer(lFiles.Objects[i]) and 1 > 0 then begin
+          wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
+          for j := 0 to Pred(wblf.Count) do
+            lFrom.Add(AnsiLowerCase(wblf.Items[j]));
+          wblf.Destroy;
+        end;
+
+        if Integer(lFiles.Objects[i]) and 2 > 0 then begin
+          wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
+          lTo.AddStrings(wblf.Items);
+          wblf.Destroy;
+        end;
+      end;
+
+      if lFrom.Count <> lTo.Count then begin
+        PostAddMessage('[Error] Number of strings in vocabulary does not match. Check parameters and run again.');
+        Exit;
+      end;
+    end;
+
+
+    PostAddMessage('[Processing] Collecting localizable values...');
+    GatherLStrings(_File, lstrings);
+
+    PostAddMessage('[Processing] Performing operation...');
     for i := Low(lstrings) to High(lstrings) do begin
+
       Element := lstrings[i];
-      if fLocalize then
-        wbLocalizationHandler.LocalizeElement(Element)
-      else begin
+      if fLocalize then begin
+        s := Element.EditValue;
+        if fTranslate then begin
+          j := lFrom.IndexOf(AnsiLowerCase(s));
+          if j <> -1 then begin
+            s := lTo[j];
+            Inc(Translated);
+          end;
+        end;
+        ID := wbLocalizationHandler.AddValue(s, Element);
+        Element.EditValue := sStringID + IntToHex(ID, 8);
+      end else begin
         s := Element.EditValue;
         wbLocalizationHandler.NoTranslate := true;
         Element.EditValue := s;
         wbLocalizationHandler.NoTranslate := false;
       end;
+
+      if StartTick + 500 < GetTickCount then begin
+        Application.ProcessMessages;
+        StartTick := GetTickCount;
+      end;
+
     end;
 
     _File.IsLocalized := not _File.IsLocalized;
-    //vstNav.Invalidate;
+
+    vstNav.Invalidate;
     ok := true;
+
   finally
+    if fLocalize and fTranslate then begin
+      FreeAndNil(lFiles);
+      FreeAndNil(lFrom);
+      FreeAndNil(lTo);
+    end;
+
     wbLocalizationHandler.NoTranslate := false;
     Enabled := true;
     PostAddMessage('[Processing done] ' +
       ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
+      ' Translated: ' + IntToStr(Translated) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     Caption := Application.Title;
 
-    // that "localization" is a very dirty hack which can probably lead
+    // that "(de)localization" is a very dirty hack which can probably lead
     // to problems if user continues to work with a plugin, so
     // immediately force a "save changes" window and quit.
     if ok then Close;
@@ -8582,10 +8672,6 @@ begin
     (Element.ElementType = etMainRecord) and
     ((Element as IwbMainRecord).MasterOrSelf.ReferencedByCount > 0);
 
-  mniNavApplyScriptInto.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed;
-
   mniNavCheckForErrors.Visible :=
     not wbTranslationMode and
     wbEditAllowed and
@@ -8693,7 +8779,7 @@ begin
 
   if wbGameMode = gmTES5 then begin
     mniNavLocalizationLanguage.Clear;
-    sl := wbLocalizationHandler.AvailableLanguages(DataPath);
+    sl := wbLocalizationHandler.AvailableLanguages;
     for i := 0 to Pred(sl.Count) do begin
       MenuItem := TMenuItem.Create(mniNavLocalizationLanguage);
       MenuItem.Caption := sl[i];
@@ -9088,10 +9174,25 @@ begin
             u := s;
             if NeedsRename then
               s := s + t;
-            PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-            _LFile.WriteToFile(DataPath + s);
-            if FileExists(DataPath + s) then
-              SavedAny := True;
+
+            try
+              FileStream := TFileStream.Create(DataPath + s, fmCreate);
+              try
+                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+                _LFile.WriteToStream(FileStream);
+                SavedAny := True;
+              finally
+                FileStream.Free;
+              end;
+
+            except
+              on E: Exception do begin
+                AnyErrors := True;
+                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
+              end;
+            end;
+
+
           end else
 
           // plugin file
@@ -9795,7 +9896,7 @@ begin
       Settings.UpdateFile;
       ShowMessage('You''ve been actively using this program for a while now.'#13#13 +
         'If you should find this program useful I would greatly appreciate it if you ' +
-        'would go to the download page at '+SiteName[wbGameMode]+'Nexus and give it an endorsement.'#13#13 +
+        'would go to the download page at '+SiteName[wbGameMode]+' Nexus and give it an endorsement.'#13#13 +
         'If you have already endorsed this program I would like to thank you for your support and '+
         'if you have any suggestions how to improve this program please don''t hesitate to let me know about '+
         'them via the release topic on the Bethesda Game Studios Forums.');
@@ -11918,10 +12019,6 @@ begin
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);
-
-        if (wbGameMode = gmTES5) and Assigned(wbContainerHandler) then
-          wbLocalizationHandler.LoadForFiles(ltDataPath, ltLoadList);
-
       end;
 
       for i := 0 to Pred(ltLoadList.Count) do begin
@@ -11932,6 +12029,7 @@ begin
           ltFiles[High(ltFiles)] := _File;
         end;
         frmMain.SendAddFile(_File);
+
         if frmMain.ForceTerminate then
           Exit;
 

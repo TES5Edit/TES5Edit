@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.22a';
+  VersionString               = '3.0.22 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -95,6 +95,8 @@ var
 
 //  wbRotationFactor : Extended = 1;
 //  wbRotationScale : Integer = 6;
+
+  wbDataPath: string;
 
 type
   TConflictAll = (
@@ -573,7 +575,6 @@ type
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
-    function GetFullFileName: string;
     function GetUnsavedSince: TDateTime;
     function GetMaster(aIndex: Integer): IwbFile;
     function GetMasterCount: Integer;
@@ -9957,18 +9958,28 @@ begin
 end;
 
 procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
+var
+  ID: Cardinal;
 begin
+  if Copy(aValue, 1, Length(sStringID)) = sStringID then begin
+    aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
+    PCardinal(aBasePtr)^ := StrToInt64Def('$' + Copy(aValue, Succ(Length(sStringID)), Length(aValue)), 0);
+    Exit;
+  end;
+
   if aElement._File.IsLocalized then
     if wbLocalizationHandler.NoTranslate then
+      // assign a string when delocalizing and NoTranslate is true
       inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue)
-    else
-      raise Exception.Create('Can not assign to a localized string')
-  else
-    if wbLocalizationHandler.NoTranslate then begin
+    else begin
+      // set localized string's value
+      ID := wbLocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
       aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
-      PCardinal(aBasePtr)^ := StrToInt64Def('$' + aValue, 0);
-    end else
-      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
+      PCardinal(aBasePtr)^ := ID;
+      //raise Exception.Create('Can not assign to a localized string')
+    end
+  else
+    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
 end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
