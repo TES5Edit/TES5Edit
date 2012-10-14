@@ -18,21 +18,29 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, wbInterface, ComCtrls, ExtCtrls, StdCtrls, Buttons;
+  Dialogs, wbInterface, ComCtrls, ExtCtrls, StdCtrls, Buttons, Menus, IniFiles;
 
 type
   TfrmViewElements = class(TForm)
     Panel1: TPanel;
     pcView: TPageControl;
     Panel2: TPanel;
-    bnAbort: TBitBtn;
-    bnOK: TBitBtn;
+    PopupMenu1: TPopupMenu;
+    mniCompareConf: TMenuItem;
+    pnlButtons: TPanel;
+    btnCompare: TButton;
+    btnOK: TButton;
+    btnCancel: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure btnCompareClick(Sender: TObject);
+    procedure mniCompareConfClick(Sender: TObject);
   private
     Edits: TList;
     procedure MemoChange(Sender: TObject);
   public
+    Settings: TMemIniFile;
+    CompareCmdLine: string;
     procedure AddElement(const aElement: IwbElement; aFocused, aEditable: Boolean);
     function ShowModal: Integer; override;
     { Public declarations }
@@ -51,6 +59,9 @@ type
 implementation
 
 {$R *.dfm}
+
+uses
+  ShellApi;
 
 { TfrmViewElements }
 
@@ -76,8 +87,8 @@ begin
   Memo.Parent := TabSheet;
   if aEditable then begin
     Memo.Lines.Text := aElement.EditValue;
-    bnOK.Visible := True;
-    bnAbort.Kind := bkAbort;
+    btnOK.Visible := True;
+    //btnCancel.Kind := bkAbort;
     Edit := TwbEdit.Create;
     Edit.eElement := aElement;
     Edit.eMemo := Memo;
@@ -95,6 +106,70 @@ begin
 
   if aFocused then
     pcView.ActivePage := TabSheet;
+end;
+
+procedure TfrmViewElements.btnCompareClick(Sender: TObject);
+var
+  TabSheet : TTabSheet;
+  idx, hinst: integer;
+  Path, aFile1, aFile2, aExe, aParams: string;
+  StartUpInfo: TStartUpInfo;
+  ProcessInfo: TProcessInformation;
+begin
+  if pcView.PageCount < 2 then
+    Exit;
+
+  idx := pcView.TabIndex;
+  if idx = 0 then
+    Inc(idx);
+
+  Path := ExtractFilePath(Application.ExeName);
+  aExe := Trim(Copy(CompareCmdLine, 1, Pred(Pos('%', CompareCmdLine))));
+  aParams := Copy(CompareCmdLine, Succ(Length(aExe)), Length(CompareCmdLine));
+  //aExe := '"' + aExe + '"';
+
+  try
+    TabSheet := pcView.Pages[idx];
+    aFile2 := Path + TabSheet.Caption + '.txt';
+    TMemo(TabSheet.Controls[0]).Lines.SaveToFile(aFile2);
+    aParams := StringReplace(aParams, '%2', '"'+aFile2+'"', []);
+
+    TabSheet := pcView.Pages[Pred(idx)];
+    aFile1 := Path + TabSheet.Caption + '.txt';
+    TMemo(TabSheet.Controls[0]).Lines.SaveToFile(aFile1);
+    aParams := StringReplace(aParams, '%1', '"'+aFile1+'"', []);
+
+    FillChar(StartUpInfo, SizeOf(TStartUpInfo), 0);
+    with StartUpInfo do begin
+      cb := SizeOf(TStartUpInfo);
+      dwFlags := STARTF_USESHOWWINDOW or STARTF_FORCEONFEEDBACK;
+      wShowWindow := SW_SHOWNORMAL;
+    end;
+
+    if CreateProcess(PChar(aExe), PChar(aParams),
+      nil, nil, false, NORMAL_PRIORITY_CLASS,
+      nil, nil, StartUpInfo, ProcessInfo)
+    then begin
+      WaitforSingleObject(ProcessInfo.hProcess, INFINITE);
+      //GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
+      CloseHandle(ProcessInfo.hThread);
+      CloseHandle(ProcessInfo.hProcess);
+      DeleteFile(aFile1);
+      DeleteFile(aFile2);
+    end else
+      raise Exception.Create(SysErrorMessage(GetLastError));
+  except
+    on E: Exception do
+      MessageBox(0, PChar('Could not execute command line'#13 + aExe + ' ' + aParams + #13'Error: ' + E.Message), 'Error', 0);
+  end;
+end;
+
+procedure TfrmViewElements.mniCompareConfClick(Sender: TObject);
+begin
+  if InputQuery('Comparison program', 'Command line (%1 and %2 are temp text files)', CompareCmdLine) then begin
+    Settings.WriteString('External', 'CompareCommandLine', CompareCmdLine);
+    Settings.UpdateFile;
+  end;
 end;
 
 procedure TfrmViewElements.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -128,6 +203,9 @@ function TfrmViewElements.ShowModal: Integer;
 var
   i: Integer;
 begin
+  if Assigned(Settings) then
+    CompareCmdLine := Settings.ReadString('External', 'CompareCommandLine', 'bcompare.exe %1 %2');
+
   if pcView.PageCount > 0 then begin
     if pcView.ActivePage = nil then
       pcView.ActivePage := pcView.Pages[0];
@@ -149,7 +227,8 @@ begin
           end;
 
   finally
-    for i := 0 to Edits.Count - 1 do TwbEdit(Edits[i]).Free;
+    for i := 0 to Pred(Edits.Count) do
+      TwbEdit(Edits[i]).Free;
     Edits.Free;
   end;
 end;

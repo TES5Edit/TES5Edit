@@ -747,8 +747,7 @@ var
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
-  wbCOCT: IwbSubRecordStructDef;
-  wbCOCTReq: IwbSubRecordStructDef;
+  wbCOCT: IwbSubRecordDef;
   wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
   wbCNAMReq: IwbSubRecordDef;
@@ -4540,17 +4539,8 @@ begin
       wbCOED
     ], []);
 
+  wbCOCT := wbInteger(COCT, 'Count', itU32);
   wbCNTOs := wbRArrayS('Items', wbCNTO);
-
-  wbCOCT := wbRStruct('Items', [
-    wbInteger(COCT, 'Count', itU32),
-    wbCNTOs
-  ], []);
-
-  wbCOCTReq := wbRStruct('Items', [
-    wbInteger(COCT, 'Count', itU32, nil, cpNormal, True),
-    wbCNTOs
-  ], [], cpNormal, True);
 
   wbDMDL := wbString(DMDL, 'Model Filename');
   wbSNAM := wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]);
@@ -6775,6 +6765,7 @@ begin
     wbFULL,
     wbMODL,
     wbCOCT,
+    wbCNTOs,
     wbDEST,
     wbStruct(DATA, '', [
       wbInteger('Flags', itU8, wbFlags([
@@ -9790,10 +9781,10 @@ begin
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itU16),
+          wbInteger('Level', itS16),
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
           wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itU16),
+          wbInteger('Count', itS16),
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
 				wbCOED
@@ -10059,6 +10050,7 @@ begin
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
     wbCOCT,
+    wbCNTOs,
     wbCTDAs,
     wbFormID(CNAM, 'Created Object'),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
@@ -10169,6 +10161,7 @@ begin
     wbInteger(PRKZ, 'Perk Count', itU32),
     wbRArray('Perks', wbPRKR),
     wbCOCT,
+    wbCNTOs,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
     wbKeywords,

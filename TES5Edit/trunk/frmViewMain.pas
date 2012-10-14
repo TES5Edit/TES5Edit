@@ -2172,6 +2172,8 @@ var
     EditorID           : string;
     SortableContainer  : IwbSortableContainer;
     IsFaultyOrderedList: Boolean;
+    CountElement       : IwbElement;
+    Entries            : IwbContainerElementRef;
   const
     OrderedList = 'OrderedList';
   begin
@@ -2250,6 +2252,15 @@ var
                 TargetRecord.RemoveElement(aListNames[l]);
                 for j := 0 to Pred(TargetLists[l].Count) do
                   wbCopyElementToRecord(IwbElement(Pointer(TargetLists[l].Objects[j])), TargetRecord, True, True);
+
+                // set COCT and LLCT counts
+                CountElement := TargetRecord.ElementBySignature['COCT'];
+                if not Assigned(CountElement) then
+                  CountElement := TargetRecord.ElementBySignature['LLCT'];
+                if Assigned(CountElement) then
+                  if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then begin
+                    CountElement.NativeValue := Entries.ElementCount;
+                end;
               end;
         end;
 
@@ -2292,16 +2303,16 @@ begin
 
   ResetAllTags;
   for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries']);
-    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries']);
+//    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries']);
+//    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries']);
     CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries']);
-    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries']);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions', 'Actor Effects']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects']);
-    CheckGroup(GroupBySignature['CONT'], ['Items']);
-    CheckGroup(GroupBySignature['FACT'], ['Relations']);
-    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes']);
-    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], True);
+//    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries']);
+//    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions', 'Actor Effects']);
+//    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects']);
+//    CheckGroup(GroupBySignature['CONT'], ['Items']);
+//    CheckGroup(GroupBySignature['FACT'], ['Relations']);
+//    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes']);
+//    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], True);
   end;
 
   TargetFile.CleanMasters;
@@ -10279,6 +10290,7 @@ begin
   if Assigned(NodeDatas) then begin
     with TfrmViewElements.Create(nil) do begin
       Caption := vstView.Path(vstView.FocusedNode, 0, ttNormal, '\');
+      Settings := Self.Settings;
       if Assigned(ActiveMaster) then
         Caption := ActiveMaster.Name + '\' + Caption;
 
