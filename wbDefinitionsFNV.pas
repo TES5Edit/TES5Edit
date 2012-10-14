@@ -10815,18 +10815,20 @@ begin
     wbDESC,
     wbStruct(DATA, 'Data', [
       wbInteger('Type', itU32, wbEnum([
-        'Kill from a Form List',
-        'Kill a specific FormID',
-        'Kill any in a category',
-        'Hit an Enemy',
-        'Discover a Map Marker',
-        'Use an Item',
-        'Acquire an Item',
-        'Use a Skill',
-        'Do Damage',
-        'Use an Item from a List',
-        'Acquire an Item from a List',
-        'Miscellaneous Stat'
+        {00} 'Kill from a Form List',
+        {01} 'Kill a specific FormID',
+        {02} 'Kill any in a category',
+        {03} 'Hit an Enemy',
+        {04} 'Discover a Map Marker',
+        {05} 'Use an Item',
+        {06} 'Acquire an Item',
+        {07} 'Use a Skill',
+        {08} 'Do Damage',
+        {09} 'Use an Item from a List',
+        {10} 'Acquire an Item from a List',
+        {11} 'Miscellaneous Stat',
+        {12} 'Unknown 12',
+        {13} 'Scripted Challenge'
       ])),
       wbInteger('Threshold', itU32),
       wbInteger('Flags', itU32, wbFlags([
