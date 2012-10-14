@@ -4,6 +4,8 @@ TES5Edit 3.0.22 EXPERIMENTAL by ElminsterAU updated for Skyrim by Zilav, and Sha
 
 This is a very early and highly experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.
 
+TES5Edit Cleaning Guide http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit
+
 Warning: Experimental Version, probably contains errors.
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to FO3Edit.exe to work with Fallout3.
