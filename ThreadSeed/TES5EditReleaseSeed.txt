@@ -46,3 +46,10 @@ or here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=23611"]Di
 Update Miax’s Tome of FO3Edit for Skyrim.
 Update NAVM, NAVI, and wbUnion for VMAD.
 Update the [url="http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
+
+[size="4"][color="#FF8C00"]Known Issues:[/color][/size]
+
+[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 51:[/url] TES5Edit: When making a Merged Patch COCT is not updated.
+[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 60:[/url] FNVEdit: "Copy as Override" on a Base Effect associated to a script.
+[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 51:[/url] FNVEdit: "Copy as Override" on some dialogs
+[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 51:[/url] TES4Edit: 3.0.22 throws an assertion failure when cleaning PGRD records from files.
