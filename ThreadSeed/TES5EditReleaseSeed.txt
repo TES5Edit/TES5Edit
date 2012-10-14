@@ -1,7 +1,48 @@
-TES5Edit 3.0.22 EXPERIMENTAL is now available in the Downloads section on our Google Code Site.
+[size="4"][color="#00BFFF"]TES5Edit 3.0.22 EXPERIMENTAL is now available in the Downloads section on our Google Code Site.[/color][/size]
 
-ToDo List:
+[size="4"][color="#00BFFF"]You can download [url="https://code.google.com/p/skyrim-plugin-decoding-project/downloads/list"]TES5Edit 3.0.22 EXPERIMENTAL[/url] at our Google Code site [url="http://code.google.com/p/skyrim-plugin-decoding-project/"]skyrim-plugin-decoding-project[/url] in the [url="https://code.google.com/p/skyrim-plugin-decoding-project/downloads/list"]downloads[/url] section.[/color][/size]
 
-I still need a copy of link for Miax’s Tome of FO3Edit - 2.3.3.  It was refereed to in the previous thread so I know someone has a copy.
-Update NAVM, NAVI, wbUnion for VMAD.
+[size="4"][color="#FF8C00"]TES5Edit 3.0.22 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url="http://skyrim.nexusmods.com/users/156622"]Zilav[/url], and [url="http://skyrim.nexusmods.com/users/4147439"]Sharlikran[/url].[/color][/size]
 
+[color="#FF0000"]This is a very early and highly experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.[/color]
+
+[url="http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
+
+Rename to TES4Edit.exe to work with Oblivion.
+Rename to FO3Edit.exe to work with Fallout3.
+Rename to FNVEdit.exe to work with New Vegas.
+
+Fallout3 [url="http://fallout3.nexusmods.com/mods/8629"]Training Manual[/url] for FO3Edit (applies to all game versions)
+
+[color="#FF8C00"]Check for new versions here:[/color] [url="https://code.google.com/p/skyrim-plugin-decoding-project/downloads/list"]skyrim-plugin-decoding-project[/url]
+
+[color="#FF8C00"]Important for Older Systems:[/color]
+If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.
+
+The most current (March 2008) version can be found here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=35"]DirectX End-User Runtime Web Installer[/url] 
+or here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=23611"]DirectX End-User Runtimes Redistributable[/url] (make sure to install it after unpacking it).
+
+[size="4"][color="#FF8C00"]Whats new in 3.0.22?[/color][/size]
+
+* Skyrim Support.
+* New exceptions handler.
+* Optional backups in a separate directory.
+* Remember position and state of the main window.
+* Fixed bug when editing with Shift+DblClick.
+* [All] Wrye Bash ghosted plugins (*.esp.ghost) in plugin selection window.
+* [ALL] FLST form list is no longer sorted.
+* [ALL] EDID affects conflict detection.
+* [TES5] Localization editor, plugin localization/delocalization with optional translation.
+* [TES5] -l:language command line switch to chose default localization files.
+* [TES5] Adding missed plugin files from plugins.txt/loadorder.txt to the end of plugins list.
+* [FNV] WeaponModKit IMOD record support for various subrecords.
+* [FNV] PLD2 subrecord is no longer removed in package.
+* [FNV/FO3] Quest stage signed value overflow fix.
+* [Oblivion] Fixed ownership record order in CELL.
+* [Oblivion] Snowy weather definition fix (thanks to Arthmoor).
+
+[size="4"][color="#FF8C00"]ToDo List:[/color][/size]
+
+Update Miax’s Tome of FO3Edit for Skyrim.
+Update NAVM, NAVI, and wbUnion for VMAD.
+Update the [url="http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
