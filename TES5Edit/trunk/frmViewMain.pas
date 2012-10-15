@@ -3478,6 +3478,7 @@ var
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
   UndeletedCount              : Cardinal;
+  DeletedNAVM                 : Cardinal;
   StartTick                   : Cardinal;
   i                           : Integer;
   MainRecord                  : IwbMainRecord;
@@ -3531,6 +3532,7 @@ begin
     Enabled := False;
 
     UndeletedCount := 0;
+    DeletedNAVM := 0;
     Count := 0;
     for i := Low(Selection) to High(Selection) do try
       StartNode := Selection[i];
@@ -3551,14 +3553,15 @@ begin
                (Signature = 'PMIS') or
                (Signature = 'ACHR') or
                (Signature = 'ACRE') or
-               //((wbGameMode = gmTES5) and (Signature = 'NAVM')) or
+               (Signature = 'NAVM') or
                (Signature = 'PARW') or {>>> Skyrim <<<}
                (Signature = 'PBAR') or {>>> Skyrim <<<}
                (Signature = 'PBEA') or {>>> Skyrim <<<}
                (Signature = 'PCON') or {>>> Skyrim <<<}
                (Signature = 'PFLA') or {>>> Skyrim <<<}
                (Signature = 'PHZD')    {>>> Skyrim <<<}
-             ) then begin
+             ) then
+            if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
 
             IsDeleted := True;
             IsDeleted := False;
@@ -3603,6 +3606,8 @@ begin
     PostAddMessage('[Undeleting and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
       ' Undeleted Records: ' + IntToStr(UndeletedCount) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+    if DeletedNAVM > 0 then
+      PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;

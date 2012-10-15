@@ -8427,7 +8427,7 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
     wbMODLReq,
-    wbRStructsSK('Body Parts', 'Body Part', [0], [
+    wbRStructsSK('Body Parts', 'Body Part', [1], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
