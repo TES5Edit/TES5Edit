@@ -31,6 +31,7 @@ type
     btnCompare: TButton;
     btnOK: TButton;
     btnCancel: TButton;
+    dlgCompareTool: TOpenDialog;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure btnCompareClick(Sender: TObject);
@@ -111,7 +112,7 @@ end;
 procedure TfrmViewElements.btnCompareClick(Sender: TObject);
 var
   TabSheet : TTabSheet;
-  idx, hinst: integer;
+  idx: integer;
   Path, aFile1, aFile2, aExe, aParams: string;
   StartUpInfo: TStartUpInfo;
   ProcessInfo: TProcessInformation;
@@ -126,7 +127,6 @@ begin
   Path := ExtractFilePath(Application.ExeName);
   aExe := Trim(Copy(CompareCmdLine, 1, Pred(Pos('%', CompareCmdLine))));
   aParams := Copy(CompareCmdLine, Succ(Length(aExe)), Length(CompareCmdLine));
-  //aExe := '"' + aExe + '"';
 
   try
     TabSheet := pcView.Pages[idx];
@@ -165,8 +165,16 @@ begin
 end;
 
 procedure TfrmViewElements.mniCompareConfClick(Sender: TObject);
+var
+  s: string;
 begin
-  if InputQuery('Comparison program', 'Command line (%1 and %2 are temp text files)', CompareCmdLine) then begin
+  if not dlgCompareTool.Execute then
+    Exit;
+
+  s := dlgCompareTool.FileName + ' %1 %2';
+
+  if InputQuery('Comparison program', 'Command line (%1 and %2 are temp text files)', s) then begin
+    CompareCmdLine := s;
     Settings.WriteString('External', 'CompareCommandLine', CompareCmdLine);
     Settings.UpdateFile;
   end;

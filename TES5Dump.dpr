@@ -362,6 +362,8 @@ begin
       wbContainerHandler.AddFolder(DataPath);
     end;
 
+    wbDataPath := DataPath;
+
     _File := wbFile(s);
 
     ReportProgress('Finished loading record. Starting Dump.');

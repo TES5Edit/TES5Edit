@@ -2111,7 +2111,8 @@ var
         end;
   end;
 
-  procedure CheckGroup(const aGroup: IwbGroupRecord; const aListNames: array of string; aAsSet: Boolean = False);
+  procedure CheckGroup(const aGroup: IwbGroupRecord; const aListNames: array of string;
+                       const aCntNames: array of string; aAsSet: Boolean = False);
   var
     IsOrderedList: Boolean;
 
@@ -2253,14 +2254,14 @@ var
                 for j := 0 to Pred(TargetLists[l].Count) do
                   wbCopyElementToRecord(IwbElement(Pointer(TargetLists[l].Objects[j])), TargetRecord, True, True);
 
-                // set COCT and LLCT counts
-                CountElement := TargetRecord.ElementBySignature['COCT'];
-                if not Assigned(CountElement) then
-                  CountElement := TargetRecord.ElementBySignature['LLCT'];
-                if Assigned(CountElement) then
-                  if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then begin
-                    CountElement.NativeValue := Entries.ElementCount;
+                // update counts
+                if (l < Length(aCntNames)) and (aCntNames[l] <> '') then begin
+                  CountElement := TargetRecord.ElementByName[aCntNames[l]];
+                  if Assigned(CountElement) then
+                    if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
+                      CountElement.NativeValue := Entries.ElementCount;
                 end;
+
               end;
         end;
 
@@ -2303,16 +2304,16 @@ begin
 
   ResetAllTags;
   for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries']);
-    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries']);
-    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries']);
-    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries']);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions', 'Actor Effects']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects']);
-    CheckGroup(GroupBySignature['CONT'], ['Items']);
-    CheckGroup(GroupBySignature['FACT'], ['Relations']);
-    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes']);
-    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], True);
+    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT - Count']);
+    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT - Count']);
+    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
+    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions', 'Actor Effects'], ['COCT - Count', '', 'SPCT - Count']);
+    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], ['COCT - Count', '', '', 'SPCT - Count']);
+    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
+    CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
+    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
+    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
   end;
 
   TargetFile.CleanMasters;
