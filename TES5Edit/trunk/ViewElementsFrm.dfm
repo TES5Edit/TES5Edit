@@ -25,8 +25,6 @@ object frmViewElements: TfrmViewElements
     BevelOuter = bvLowered
     Caption = 'Panel1'
     TabOrder = 0
-    ExplicitWidth = 546
-    ExplicitHeight = 252
     object pcView: TPageControl
       Left = 1
       Top = 1
@@ -39,9 +37,6 @@ object frmViewElements: TfrmViewElements
       Align = alClient
       TabOrder = 0
       TabPosition = tpBottom
-      ExplicitLeft = 0
-      ExplicitTop = 2
-      ExplicitWidth = 550
     end
   end
   object Panel2: TPanel
@@ -52,9 +47,6 @@ object frmViewElements: TfrmViewElements
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = -8
-    ExplicitTop = 266
-    ExplicitWidth = 568
     object pnlButtons: TPanel
       Left = 192
       Top = 0
@@ -96,11 +88,18 @@ object frmViewElements: TfrmViewElements
     end
   end
   object PopupMenu1: TPopupMenu
-    Left = 192
-    Top = 240
+    Left = 200
+    Top = 216
     object mniCompareConf: TMenuItem
       Caption = 'Configure external tool'
       OnClick = mniCompareConfClick
     end
+  end
+  object dlgCompareTool: TOpenDialog
+    Filter = 'Executable file (*.exe)|*.exe'
+    Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
+    Title = 'Select an external comparison tool'
+    Left = 288
+    Top = 216
   end
 end

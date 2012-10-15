@@ -10827,7 +10827,7 @@ begin
         {09} 'Use an Item from a List',
         {10} 'Acquire an Item from a List',
         {11} 'Miscellaneous Stat',
-        {12} 'Unknown 12',
+        {12} 'Craft Using an Item',
         {13} 'Scripted Challenge'
       ])),
       wbInteger('Threshold', itU32),

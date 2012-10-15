@@ -6452,7 +6452,7 @@ begin
     wbLString(CNAM, 'Description')
   ]);
 
-  wbSPCT := wbInteger(SPCT, 'Spell Count', itU32);
+  wbSPCT := wbInteger(SPCT, 'Count', itU32);
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, nil{wbActorTemplateUseActorEffectList});
 end;
@@ -10211,10 +10211,10 @@ begin
         'Enchanting'
       ]),
       wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
+      wbByteArray('Unused', 4, cpIgnore),
       wbFloat('Far away model distance'),
       wbInteger('Geared up weapons', itU8),
-      wbByteArray('Unknown', 3)
+      wbByteArray('Unused', 3, cpIgnore)
     ], cpNormal, False, nil{wbActorTemplateUseStatsAutoCalc}),
     wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, nil{wbActorTemplateUseModelAnimation}),
     wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
@@ -10264,17 +10264,18 @@ begin
       wbInteger('Eyes', itU32),
       wbInteger('Mouth', itU32)
     ]),
-    wbRArray('Tint Layers', wbRStruct('Layer', [
-      wbInteger(TINI, 'Tint Index', itU16),
-      wbStruct(TINC, 'Tint Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Alpha', itU8)
-      ]),
-      wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
-      wbInteger(TIAS, 'Preset', itS16)
-    ], []))
+    wbRArrayS('Tint Layers',
+      wbRStructSK([0], 'Layer', [
+        wbInteger(TINI, 'Tint Index', itU16),
+        wbStruct(TINC, 'Tint Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbInteger('Alpha', itU8)
+        ]),
+        wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
+        wbInteger(TIAS, 'Preset', itS16)
+      ], []))
   ], False, nil, cpNormal, False{, wbNPCAfterLoad});
 
   wbObjectTypeEnum := wbEnum([
@@ -11079,10 +11080,8 @@ begin
     wbEDID,
     wbFULL,
     wbDESCReq,
-    wbRstruct('Spells', [
-      wbSPCT,
-      wbSPLOs
-    ], []),
+    wbSPCT,
+    wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbBODT,
     wbBOD2,
