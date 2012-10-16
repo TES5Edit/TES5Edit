@@ -36,6 +36,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure btnCompareClick(Sender: TObject);
     procedure mniCompareConfClick(Sender: TObject);
+    procedure btnCancelClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     Edits: TList;
     procedure MemoChange(Sender: TObject);
@@ -107,6 +110,11 @@ begin
 
   if aFocused then
     pcView.ActivePage := TabSheet;
+end;
+
+procedure TfrmViewElements.btnCancelClick(Sender: TObject);
+begin
+  Close;
 end;
 
 procedure TfrmViewElements.btnCompareClick(Sender: TObject);
@@ -190,6 +198,23 @@ begin
   Font := Screen.IconFont;
 end;
 
+procedure TfrmViewElements.FormDestroy(Sender: TObject);
+var
+  i: Integer;
+begin
+  if Assigned(Edits) then begin
+    for i := 0 to Pred(Edits.Count) do
+      TwbEdit(Edits[i]).Free;
+    Edits.Free;
+  end;
+end;
+
+procedure TfrmViewElements.FormShow(Sender: TObject);
+begin
+  if Assigned(Settings) then
+    CompareCmdLine := Settings.ReadString('External', 'CompareCommandLine', 'bcompare.exe %1 %2');
+end;
+
 procedure TfrmViewElements.MemoChange(Sender: TObject);
 //var
 //  s: string;
@@ -211,9 +236,6 @@ function TfrmViewElements.ShowModal: Integer;
 var
   i: Integer;
 begin
-  if Assigned(Settings) then
-    CompareCmdLine := Settings.ReadString('External', 'CompareCommandLine', 'bcompare.exe %1 %2');
-
   if pcView.PageCount > 0 then begin
     if pcView.ActivePage = nil then
       pcView.ActivePage := pcView.Pages[0];
@@ -224,7 +246,7 @@ begin
   try
 
   if Result = mrOk then
-    for i := 0 to Edits.Count - 1 do
+    for i := 0 to Pred(Edits.Count) do
       with TwbEdit(Edits[i]) do
         if eMemo.Modified then try
             eElement.EditValue := eMemo.Text;
@@ -235,9 +257,6 @@ begin
           end;
 
   finally
-    for i := 0 to Pred(Edits.Count) do
-      TwbEdit(Edits[i]).Free;
-    Edits.Free;
   end;
 end;
 

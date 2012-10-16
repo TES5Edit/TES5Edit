@@ -9,6 +9,8 @@ object frmViewElements: TfrmViewElements
   Position = poDefault
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
@@ -84,6 +86,7 @@ object frmViewElements: TfrmViewElements
         Caption = 'Close'
         ModalResult = 2
         TabOrder = 2
+        OnClick = btnCancelClick
       end
     end
   end
