@@ -748,6 +748,8 @@ var
   wbLVLD: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
+  wbKSIZ: IwbSubRecordDef;
+  wbKWDAs: IwbSubRecordDef;
   wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
   wbCNAMReq: IwbSubRecordDef;
@@ -841,7 +843,6 @@ var
 //begin
 //  Result := StrToInt64(aString);
 //end;
-
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1551,6 +1552,11 @@ begin
 //    if Integer(Container.ElementNativeValues['..\Run On']) = 1 then
 //      aElement.NativeValue := Byte(aNewValue) and not $02;
 //  end;
+end;
+
+procedure wbAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  Exit;
 end;
 
 function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -4159,8 +4165,8 @@ begin
       end;
     end;}
 
-    if (not Container.ElementExists['XNAM']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then
-      Container.Add('XNAM', True);
+//    if (not Container.ElementExists['XNAM']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then
+//      Container.Add('XNAM', True);
 
     if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
       for i:= Pred(Container2.ElementCount) downto 0 do
@@ -4415,10 +4421,33 @@ begin
   wbCITC := wbInteger(CITC, 'Condition Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
-  wbKeywords := wbRStruct('Keywords', [
-    wbInteger(KSIZ, 'Count', itU32), {>>> Needs Count Updated <<<}
-    wbArrayS(KWDA, '', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True)
-  ], []);
+  wbSPCT := wbInteger(SPCT, 'Count', itU32);
+  wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
+  wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, nil{wbActorTemplateUseActorEffectList});
+
+  wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32);
+  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True);
+
+  wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
+    {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
+    {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
+           wbByteArray('Unused', 4, cpIgnore),
+           wbFormIDCk('Global Variable', [GLOB, NULL]),
+           wbInteger('Required Rank', itS32)
+         ]),
+    {08} wbFloat('Item Condition')
+  ]);
+
+  wbCNTO :=
+    wbRStructExSK([0], [1], 'Item', [
+      wbStructExSK(CNTO, [0], [1], 'Item', [
+        wbFormIDCk('Item', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, SLGM, SCRL]),
+        wbInteger('Count', itS32)
+      ]),
+      wbCOED
+    ], []);
+  wbCOCT := wbInteger(COCT, 'Count', itU32);
+  wbCNTOs := wbRArrayS('Items', wbCNTO);
 
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
@@ -4519,28 +4548,6 @@ begin
     wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, False);
-
-  wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
-    {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
-    {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
-           wbByteArray('Unused', 4, cpIgnore),
-           wbFormIDCk('Global Variable', [GLOB, NULL]),
-           wbInteger('Required Rank', itS32)
-         ]),
-    {08} wbFloat('Item Condition')
-  ]);
-
-  wbCNTO :=
-    wbRStructExSK([0], [1], 'Item', [
-      wbStructExSK(CNTO, [0], [1], 'Item', [
-        wbFormIDCk('Item', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, SLGM, SCRL]),
-        wbInteger('Count', itS32)
-      ]),
-      wbCOED
-    ], []);
-
-  wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCNTOs := wbRArrayS('Items', wbCNTO);
 
   wbDMDL := wbString(DMDL, 'Model Filename');
   wbSNAM := wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]);
@@ -5484,7 +5491,8 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -5509,7 +5517,8 @@ begin
     wbFULL,
     wbMODLReq,
     wbDEST,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbUnknown(PNAM, cpIgnore, True),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
     wbUnknown(FNAM, cpIgnore, True),
@@ -6246,14 +6255,14 @@ begin
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
   wbEffects :=
-    wbRStructs('Effects','Effect', [
+    wbRStructs('Effects', 'Effect', [
       wbEFID,
       wbEFIT,
       wbCTDAs
     ], []);
 
   wbEffectsReq :=
-    wbRStructs('Effects','Effect', [
+    wbRStructs('Effects', 'Effect', [
       wbEFID,
       wbEFIT,
       wbCTDAs
@@ -6263,7 +6272,8 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbDESC,
     wbMODL,
     wbICON,
@@ -6308,7 +6318,8 @@ begin
     wbDEST,
     wbSounds,
     wbDESC,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
         wbInteger('Flags', itU32, wbFlags([
@@ -6362,7 +6373,8 @@ begin
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbDESC,
     wbRArray('Armature', wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])),
     wbStruct(DATA, 'Data', [
@@ -6425,7 +6437,8 @@ begin
     wbLString(DESC, 'Book Text', 0, cpNormal, True),
     wbDEST,
     wbSounds,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
        {0x01} 'Teaches Skill',
@@ -6451,10 +6464,6 @@ begin
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbLString(CNAM, 'Description')
   ]);
-
-  wbSPCT := wbInteger(SPCT, 'Count', itU32);
-  wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
-  wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, nil{wbActorTemplateUseActorEffectList});
 end;
 
 procedure DefineTES5c;
@@ -7433,7 +7442,8 @@ begin
     wbFULL,
     wbMODLReq,
     wbDEST,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbUnknown(PNAM),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
@@ -7741,7 +7751,8 @@ begin
     wbICON,
     wbDEST,
     wbSounds,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbICON,
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
@@ -8429,6 +8440,7 @@ begin
     wbMODLReq,
     wbRStructsSK('Body Parts', 'Body Part', [1], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
+      wbString(PNAM, 'Pose Matching', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
@@ -8771,7 +8783,8 @@ begin
     ])),
 
     wbFull,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
     wbFormIDCk(NAM1, 'Music', [MUSC, NULL]),
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
@@ -9546,7 +9559,8 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbMODL,
     wbICON,
     wbETYP,
@@ -9581,7 +9595,8 @@ begin
     wbICON,
     wbDEST,
     wbSounds,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -9989,7 +10004,8 @@ begin
     wbVMAD,
     wbFULL,
     wbMDOB,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbMGEFData,
     wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF])),
     wbArray(SNDD, 'Sounds', wbStruct('', [
@@ -10016,7 +10032,8 @@ begin
     wbICON,
     wbDEST,
     wbSounds,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -10164,7 +10181,8 @@ begin
     wbCNTOs,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLString(SHRT, 'Short Name'),
@@ -10704,7 +10722,8 @@ begin
           wbByteArray(ALFD, 'Event Data')
         ], []),
         wbCTDAs,
-        wbKeywords,
+        wbKSIZ,
+        wbKWDAs,
         wbInteger(COCT, 'Count', itU32),
         wbCNTOs,
         wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
@@ -10945,82 +10964,69 @@ begin
     {0x80000000}'Avoids Roads'
   ]));
 
-  wbPhonemeTargets := wbUnion(PHWT, 'Phoneme Target', wbPHWTDecider, [
-    wbStruct('Weight', [
-      wbFloat('Aah'),
-      wbFloat('BigAah'),
-      wbFloat('BMP'),
-      wbFloat('ChJsh'),
-      wbFloat('DST'),
-      wbFloat('Eee'),
-      wbFloat('Eh'),
-      wbFloat('FV'),
-      wbFloat('I'),
-      wbFloat('K'),
-      wbFloat('N'),
-      wbFloat('Oh'),
-      wbFloat('OohQ'),
-      wbFloat('R'),
-      wbFloat('TH'),
-      wbFloat('W')
-    ]),
-    wbStruct('Weight', [
-      wbFloat('Aah'),
-      wbFloat('BigAah'),
-      wbFloat('BMP'),
-      wbFloat('ChJsh'),
-      wbFloat('DST'),
-      wbFloat('Eee'),
-      wbFloat('Eh'),
-      wbFloat('FV')
-    ]),
-    wbbyteArray('Unknown', 0)
-  ]);
+  wbPhonemeTargets := wbStruct(PHWT, 'Phoneme Target Weight', [
+    wbFloat('Aah / LipBigAah'),
+    wbFloat('BigAah / LipDST'),
+    wbFloat('BMP / LipEee'),
+    wbFloat('ChJsh / LipFV'),
+    wbFloat('DST / LipK'),
+    wbFloat('Eee / LipL'),
+    wbFloat('Eh / LipR'),
+    wbFloat('FV / LipTh'),
+    wbFloat('I'),
+    wbFloat('K'),
+    wbFloat('N'),
+    wbFloat('Oh'),
+    wbFloat('OohQ'),
+    wbFloat('R'),
+    wbFloat('TH'),
+    wbFloat('W')
+  ], cpNormal, False, nil, 8);
 
   wbPHWT := wbRStruct('FaceFX Phonemes', [
-    wbRStruct('FaceFX - IY', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - IH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - EH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - EY', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - AE', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - AA', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - AW', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - AY', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - AH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - AO', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - OY', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - OW', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - UH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - UW', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - ER', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - AX', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - S', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - SH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - Z', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - ZH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - F', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - TH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - V', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - DH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - M', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - N', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - NG', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - L', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - R', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - W', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - Y', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - HH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - B', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - D', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - JH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - G', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - P', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - T', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - K', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - CH', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - SIL', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - SHOTSIL', [wbPhonemeTargets], []),
-    wbRStruct('FaceFX - FLAP', [wbPhonemeTargets], [])
+    wbRStruct('IY', [wbPhonemeTargets], []),
+    wbRStruct('IH', [wbPhonemeTargets], []),
+    wbRStruct('EH', [wbPhonemeTargets], []),
+    wbRStruct('EY', [wbPhonemeTargets], []),
+    wbRStruct('AE', [wbPhonemeTargets], []),
+    wbRStruct('AA', [wbPhonemeTargets], []),
+    wbRStruct('AW', [wbPhonemeTargets], []),
+    wbRStruct('AY', [wbPhonemeTargets], []),
+    wbRStruct('AH', [wbPhonemeTargets], []),
+    wbRStruct('AO', [wbPhonemeTargets], []),
+    wbRStruct('OY', [wbPhonemeTargets], []),
+    wbRStruct('OW', [wbPhonemeTargets], []),
+    wbRStruct('UH', [wbPhonemeTargets], []),
+    wbRStruct('UW', [wbPhonemeTargets], []),
+    wbRStruct('ER', [wbPhonemeTargets], []),
+    wbRStruct('AX', [wbPhonemeTargets], []),
+    wbRStruct('S',  [wbPhonemeTargets], []),
+    wbRStruct('SH', [wbPhonemeTargets], []),
+    wbRStruct('Z',  [wbPhonemeTargets], []),
+    wbRStruct('ZH', [wbPhonemeTargets], []),
+    wbRStruct('F',  [wbPhonemeTargets], []),
+    wbRStruct('TH', [wbPhonemeTargets], []),
+    wbRStruct('V',  [wbPhonemeTargets], []),
+    wbRStruct('DH', [wbPhonemeTargets], []),
+    wbRStruct('M',  [wbPhonemeTargets], []),
+    wbRStruct('N',  [wbPhonemeTargets], []),
+    wbRStruct('NG', [wbPhonemeTargets], []),
+    wbRStruct('L',  [wbPhonemeTargets], []),
+    wbRStruct('R',  [wbPhonemeTargets], []),
+    wbRStruct('W',  [wbPhonemeTargets], []),
+    wbRStruct('Y',  [wbPhonemeTargets], []),
+    wbRStruct('HH', [wbPhonemeTargets], []),
+    wbRStruct('B',  [wbPhonemeTargets], []),
+    wbRStruct('D',  [wbPhonemeTargets], []),
+    wbRStruct('JH', [wbPhonemeTargets], []),
+    wbRStruct('G',  [wbPhonemeTargets], []),
+    wbRStruct('P',  [wbPhonemeTargets], []),
+    wbRStruct('T',  [wbPhonemeTargets], []),
+    wbRStruct('K',  [wbPhonemeTargets], []),
+    wbRStruct('CH', [wbPhonemeTargets], []),
+    wbRStruct('SIL', [wbPhonemeTargets], []),
+    wbRStruct('SHOTSIL', [wbPhonemeTargets], []),
+    wbRStruct('FLAP', [wbPhonemeTargets], [])
   ], []);
 
   wbMorphs := wbRStruct('Available Morphs', [
@@ -11085,7 +11091,8 @@ begin
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbBODT,
     wbBOD2,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
         wbInteger('Skill', itS8, wbActorValueEnum),
@@ -11768,7 +11775,8 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbMDOB,
     wbETYP,
     wbDESCReq,
@@ -11780,7 +11788,8 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbMDOB,
     wbETYP,
     wbDESC,
@@ -11872,7 +11881,8 @@ begin
     wbFULLReq,
     wbMODL,
     wbDEST,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbUnknown(PNAM),
     wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
@@ -12002,7 +12012,8 @@ begin
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
     wbSounds,
-    wbKeywords,
+    wbKSIZ,
+    wbKWDAs,
     wbDESC,
     wbRStruct('Has Scope', [
       wbString(MOD3, 'Model Filename'),

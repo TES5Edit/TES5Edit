@@ -2308,12 +2308,15 @@ begin
     CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT - Count']);
     CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
     CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions', 'Actor Effects'], ['COCT - Count', '', 'SPCT - Count']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], ['COCT - Count', '', '', 'SPCT - Count']);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
+    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'KSIZ - Keyword Count']);
     CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
     CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
     CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
+    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count'], True);
+    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count'], True);
+    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count'], True);
   end;
 
   TargetFile.CleanMasters;
@@ -11868,7 +11871,7 @@ begin
   tbsARMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
-  tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbMasterUpdate or wbLODGen);
+  tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbMasterUpdate or wbLODGen) and not wbIKnowWhatImDoing;
 
   InitDisplay;
 end;
