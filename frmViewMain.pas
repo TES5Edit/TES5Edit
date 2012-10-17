@@ -252,6 +252,8 @@ type
     mniNavLocalizationSwitch: TMenuItem;
     mniNavLocalization: TMenuItem;
     mniNavLocalizationLanguage: TMenuItem;
+    mniNavFilterForCleaning: TMenuItem;
+    mniNavCreateSEQFile: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -442,6 +444,8 @@ type
     procedure mniNavLocalizationEditorClick(Sender: TObject);
     procedure mniNavLocalizationSwitchClick(Sender: TObject);
     procedure mniNavLocalizationLanguageClick(Sender: TObject);
+    procedure mniNavFilterForCleaningClick(Sender: TObject);
+    procedure mniNavCreateSEQFileClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -549,6 +553,7 @@ type
     ModGroups: TStringList;
     Settings: TMemIniFile;
 
+    FilterPreset: Boolean; // new: flag to skip filter window
     FilterApplied: Boolean;
 
     FilterConflictAll: Boolean;
@@ -2255,7 +2260,7 @@ var
                   wbCopyElementToRecord(IwbElement(Pointer(TargetLists[l].Objects[j])), TargetRecord, True, True);
 
                 // update counts
-                if (l < Length(aCntNames)) and (aCntNames[l] <> '') then begin
+                if (l <= High(aCntNames)) and (aCntNames[l] <> '') then begin
                   CountElement := TargetRecord.ElementByName[aCntNames[l]];
                   if Assigned(CountElement) then
                     if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
@@ -2264,7 +2269,6 @@ var
 
               end;
         end;
-
 
         for l := Low(aListNames) to High(aListNames) do begin
           FreeAndNil(WinningLists[l]);
@@ -2320,6 +2324,64 @@ begin
   end;
 
   TargetFile.CleanMasters;
+end;
+
+procedure TfrmMain.mniNavCreateSEQFileClick(Sender: TObject);
+var
+  NodeData   : PNavNodeData;
+  _File      : IwbFile;
+  Group      : IwbGroupRecord;
+  i          : Integer;
+  MainRecord : IwbMainRecord;
+  QustFlags  : IwbElement;
+  FormIDs    : array of Cardinal;
+  FileStream : TFileStream;
+  p, s       : string;
+begin
+  NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+
+  if not Assigned(NodeData) then
+    Exit;
+
+  if not Supports(NodeData.Element, IwbFile, _File) then
+    Exit;
+
+  Group := _File.GroupBySignature['QUST'];
+
+  if not Assigned(Group) then
+    Exit;
+
+  for i := 0 to Pred(Group.ElementCount) do
+    if Supports(Group.Elements[i], IwbMainRecord, MainRecord) then begin
+      QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+      if not Assigned(QustFlags) then
+        Continue;
+      if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
+        SetLength(FormIDs, Succ(Length(FormIDs)));
+        FormIDs[High(FormIDs)] := MainRecord.FormID;
+      end;
+    end;
+
+  if Length(FormIDs) = 0 then
+    PostAddMessage('Done: Nothing to save.')
+  else try
+    try
+      p := DataPath + 'Seq\';
+      if not DirectoryExists(p) then
+        if not ForceDirectories(p) then
+          p := DataPath;
+      s := p + ChangeFileExt(_File.FileName, '.seq');
+      FileStream := TFileStream.Create(s, fmCreate);
+      FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
+      PostAddMessage('Done: Created ' + s);
+    finally
+      FileStream.Free;
+    end;
+  except
+    on e: Exception do
+      PostAddMessage('Error: Can''t create quest sequence file ' + s + ', ' + E.Message);
+  end;
+
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -2705,6 +2767,8 @@ begin
   finally
     Free;
   end;
+
+  AddMessage(wbAppName + 'Edit ' + VersionString);
 
   DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
   wbDataPath := DataPath;
@@ -3654,6 +3718,10 @@ begin
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  s        : string;
+  txt      : AnsiString;
+  fs       : TFileStream;
 begin
   Action := caFree;
   if LoaderStarted and not wbLoaderDone then begin
@@ -3686,6 +3754,19 @@ begin
     Settings.WriteInteger(Name, 'Height', Height);
   end;
   Settings.UpdateFile;
+
+  try
+    s := ExtractFilePath(Application.ExeName) + wbAppName + 'Edit_log.txt';
+    if FileExists(s) then begin
+      fs := TFileStream.Create(s, fmOpenReadWrite);
+      fs.Seek(0, soFromEnd);
+    end else
+      fs := TFileStream.Create(s, fmCreate);
+    txt := mmoMessages.Lines.Text + #13#10;
+    fs.WriteBuffer(txt[1], Length(txt));
+  finally
+    fs.Free;
+  end;
 
   BackHistory := nil;
   ForwardHistory := nil;
@@ -7912,185 +7993,189 @@ begin
   PersCellNode := nil;
   PersCellChecked := False;
 
-  with TfrmFilterOptions.Create(nil) do try
-    cbConflictAll.Checked := FilterConflictAll;
-    cbConflictThis.Checked := FilterConflictThis;
+  if not FilterPreset then begin
 
-    cbByInjectionStatus.Checked := FilterByInjectStatus;
-    cbInjected.Checked := FilterInjectStatus;
+    with TfrmFilterOptions.Create(nil) do try
+      cbConflictAll.Checked := FilterConflictAll;
+      cbConflictThis.Checked := FilterConflictThis;
 
-    cbByNotReachableStatus.Checked := FilterByNotReachableStatus;
-    cbNotReachable.Checked := FilterNotReachableStatus;
+      cbByInjectionStatus.Checked := FilterByInjectStatus;
+      cbInjected.Checked := FilterInjectStatus;
 
-    cbByNotReachableStatus.Enabled := ReachableBuild;
-    cbNotReachable.Enabled := ReachableBuild;
+      cbByNotReachableStatus.Checked := FilterByNotReachableStatus;
+      cbNotReachable.Checked := FilterNotReachableStatus;
 
-    cbByReferencesInjectedStatus.Checked := FilterByReferencesInjectedStatus;
-    cbReferencesInjected.Checked := FilterReferencesInjectedStatus;
+      cbByNotReachableStatus.Enabled := ReachableBuild;
+      cbNotReachable.Enabled := ReachableBuild;
 
-    cbByEditorID.Checked := FilterByEditorID;
-    edEditorID.Text := FilterEditorID;
+      cbByReferencesInjectedStatus.Checked := FilterByReferencesInjectedStatus;
+      cbReferencesInjected.Checked := FilterReferencesInjectedStatus;
 
-    cbByName.Checked := FilterByName;
-    edName.Text := FilterName;
+      cbByEditorID.Checked := FilterByEditorID;
+      edEditorID.Text := FilterEditorID;
 
-    cbByBaseEditorID.Checked := FilterByBaseEditorID;
-    edBaseEditorID.Text := FilterBaseEditorID;
+      cbByName.Checked := FilterByName;
+      edName.Text := FilterName;
 
-    cbByBaseName.Checked := FilterByBaseName;
-    edBaseName.Text := FilterBaseName;
+      cbByBaseEditorID.Checked := FilterByBaseEditorID;
+      edBaseEditorID.Text := FilterBaseEditorID;
 
-    cbScaledActors.Checked := FilterScaledActors;
+      cbByBaseName.Checked := FilterByBaseName;
+      edBaseName.Text := FilterBaseName;
 
-    cbByPersistent.Checked := FilterByPersistent;
-    cbPersistent.Checked := FilterPersistent;
-    cbUnnecessaryPersistent.Checked := FilterUnnecessaryPersistent;
-    cbMasterIsTemporary.Checked := FilterMasterIsTemporary;
-    cbIsMaster.Checked := FilterIsMaster;
-    cbPersistentPosChanged.Checked := FilterPersistentPosChanged;
+      cbScaledActors.Checked := FilterScaledActors;
 
-    cbByVWD.Checked := FilterByVWD;
-    cbVWD.Checked := FilterVWD;
+      cbByPersistent.Checked := FilterByPersistent;
+      cbPersistent.Checked := FilterPersistent;
+      cbUnnecessaryPersistent.Checked := FilterUnnecessaryPersistent;
+      cbMasterIsTemporary.Checked := FilterMasterIsTemporary;
+      cbIsMaster.Checked := FilterIsMaster;
+      cbPersistentPosChanged.Checked := FilterPersistentPosChanged;
 
-    cbByHasVWDMesh.Checked := FilterByHasVWDMesh;
-    cbHasVWDMesh.Checked := FilterHasVWDMesh;
+      cbByVWD.Checked := FilterByVWD;
+      cbVWD.Checked := FilterVWD;
 
-    cbRecordSignature.Checked := FilterBySignature;
-    RecordSignatures := FilterSignatures;
+      cbByHasVWDMesh.Checked := FilterByHasVWDMesh;
+      cbHasVWDMesh.Checked := FilterHasVWDMesh;
 
-    cbBaseRecordSignature.Checked := FilterByBaseSignature;
-    BaseRecordSignatures := FilterBaseSignatures;
+      cbRecordSignature.Checked := FilterBySignature;
+      RecordSignatures := FilterSignatures;
 
-    for i := 0 to Pred(clbConflictAll.Items.Count) do
-      clbConflictAll.Checked[i] := TConflictAll(Succ(i)) in FilterConflictAllSet;
-    for i := 0 to Pred(clbConflictThis.Items.Count) do
-      clbConflictThis.Checked[i] := TConflictThis(i + 2) in FilterConflictThisSet;
-    cbFlattenBlocks.Checked := FlattenBlocks;
-    cbFlattenCellChilds.Checked := FlattenCellChilds;
-    cbAssignPersWrldChild.Checked := AssignPersWrldChild;
-    cbInherit.Checked := InheritConflictByParent;
+      cbBaseRecordSignature.Checked := FilterByBaseSignature;
+      BaseRecordSignatures := FilterBaseSignatures;
 
-    if ShowModal <> mrOk then
-      Exit;
+      for i := 0 to Pred(clbConflictAll.Items.Count) do
+        clbConflictAll.Checked[i] := TConflictAll(Succ(i)) in FilterConflictAllSet;
+      for i := 0 to Pred(clbConflictThis.Items.Count) do
+        clbConflictThis.Checked[i] := TConflictThis(i + 2) in FilterConflictThisSet;
+      cbFlattenBlocks.Checked := FlattenBlocks;
+      cbFlattenCellChilds.Checked := FlattenCellChilds;
+      cbAssignPersWrldChild.Checked := AssignPersWrldChild;
+      cbInherit.Checked := InheritConflictByParent;
 
-    FilterConflictAll := cbConflictAll.Checked;
-    FilterConflictThis := cbConflictThis.Checked;
+      if ShowModal <> mrOk then
+        Exit;
 
-    FilterByInjectStatus := cbByInjectionStatus.Checked;
-    FilterInjectStatus := cbInjected.Checked;
+      FilterConflictAll := cbConflictAll.Checked;
+      FilterConflictThis := cbConflictThis.Checked;
 
-    FilterByNotReachableStatus := cbByNotReachableStatus.Checked;
-    FilterNotReachableStatus := cbNotReachable.Checked;
+      FilterByInjectStatus := cbByInjectionStatus.Checked;
+      FilterInjectStatus := cbInjected.Checked;
 
-    FilterByReferencesInjectedStatus := cbByReferencesInjectedStatus.Checked;
-    FilterReferencesInjectedStatus := cbReferencesInjected.Checked;
+      FilterByNotReachableStatus := cbByNotReachableStatus.Checked;
+      FilterNotReachableStatus := cbNotReachable.Checked;
 
-    FilterByEditorID := cbByEditorID.Checked;
-    FilterEditorID := edEditorID.Text;
+      FilterByReferencesInjectedStatus := cbByReferencesInjectedStatus.Checked;
+      FilterReferencesInjectedStatus := cbReferencesInjected.Checked;
 
-    FilterByName := cbByName.Checked;
-    FilterName := edName.Text;
+      FilterByEditorID := cbByEditorID.Checked;
+      FilterEditorID := edEditorID.Text;
 
-    FilterByBaseEditorID := cbByBaseEditorID.Checked;
-    FilterBaseEditorID := edBaseEditorID.Text;
+      FilterByName := cbByName.Checked;
+      FilterName := edName.Text;
 
-    FilterByBaseName := cbByBaseName.Checked;
-    FilterBaseName := edBaseName.Text;
+      FilterByBaseEditorID := cbByBaseEditorID.Checked;
+      FilterBaseEditorID := edBaseEditorID.Text;
 
-    FilterScaledActors := cbScaledActors.Checked;
+      FilterByBaseName := cbByBaseName.Checked;
+      FilterBaseName := edBaseName.Text;
 
-    FilterByPersistent := cbByPersistent.Checked;
-    FilterPersistent := cbPersistent.Checked;
-    FilterUnnecessaryPersistent := cbUnnecessaryPersistent.Checked;
-    FilterMasterIsTemporary := cbMasterIsTemporary.Checked;
-    FilterIsMaster := cbIsMaster.Checked;
-    FilterPersistentPosChanged := cbPersistentPosChanged.Checked;
+      FilterScaledActors := cbScaledActors.Checked;
 
-    FilterByVWD := cbByVWD.Checked;
-    FilterVWD := cbVWD.Checked;
+      FilterByPersistent := cbByPersistent.Checked;
+      FilterPersistent := cbPersistent.Checked;
+      FilterUnnecessaryPersistent := cbUnnecessaryPersistent.Checked;
+      FilterMasterIsTemporary := cbMasterIsTemporary.Checked;
+      FilterIsMaster := cbIsMaster.Checked;
+      FilterPersistentPosChanged := cbPersistentPosChanged.Checked;
 
-    FilterByHasVWDMesh := cbByHasVWDMesh.Checked;
-    FilterHasVWDMesh := cbHasVWDMesh.Checked;
+      FilterByVWD := cbByVWD.Checked;
+      FilterVWD := cbVWD.Checked;
 
-    FilterBySignature := cbRecordSignature.Checked;
-    FilterSignatures := RecordSignatures;
+      FilterByHasVWDMesh := cbByHasVWDMesh.Checked;
+      FilterHasVWDMesh := cbHasVWDMesh.Checked;
 
-    FilterByBaseSignature := cbBaseRecordSignature.Checked;
-    FilterBaseSignatures := BaseRecordSignatures;
+      FilterBySignature := cbRecordSignature.Checked;
+      FilterSignatures := RecordSignatures;
 
-    FilterConflictAllSet := [];
-    for i := 0 to Pred(clbConflictAll.Items.Count) do
-      if clbConflictAll.Checked[i] then
-        Include(FilterConflictAllSet, TConflictAll(Succ(i)));
+      FilterByBaseSignature := cbBaseRecordSignature.Checked;
+      FilterBaseSignatures := BaseRecordSignatures;
 
-    FilterConflictThisSet := [];
-    for i := 0 to Pred(clbConflictThis.Items.Count) do
-      if clbConflictThis.Checked[i] then
-        Include(FilterConflictThisSet, TConflictThis(i + 2));
+      FilterConflictAllSet := [];
+      for i := 0 to Pred(clbConflictAll.Items.Count) do
+        if clbConflictAll.Checked[i] then
+          Include(FilterConflictAllSet, TConflictAll(Succ(i)));
 
-    FlattenBlocks := cbFlattenBlocks.Checked;
-    FlattenCellChilds := cbFlattenCellChilds.Checked;
-    AssignPersWrldChild := cbAssignPersWrldChild.Checked;
-    InheritConflictByParent := cbInherit.Checked;
-  finally
-    Free;
+      FilterConflictThisSet := [];
+      for i := 0 to Pred(clbConflictThis.Items.Count) do
+        if clbConflictThis.Checked[i] then
+          Include(FilterConflictThisSet, TConflictThis(i + 2));
+
+      FlattenBlocks := cbFlattenBlocks.Checked;
+      FlattenCellChilds := cbFlattenCellChilds.Checked;
+      AssignPersWrldChild := cbAssignPersWrldChild.Checked;
+      InheritConflictByParent := cbInherit.Checked;
+    finally
+      Free;
+    end;
+
+    Settings.WriteBool('Filter', 'ConflictAll', FilterConflictAll);
+    Settings.WriteBool('Filter', 'ConflictThis', FilterConflictThis);
+
+    Settings.WriteBool('Filter', 'ByInjectStatus', FilterByInjectStatus);
+    Settings.WriteBool('Filter', 'InjectStatus', FilterInjectStatus);
+
+    Settings.WriteBool('Filter', 'ByNotReachableStatus', FilterByNotReachableStatus);
+    Settings.WriteBool('Filter', 'NotReachableStatus', FilterNotReachableStatus);
+
+    Settings.WriteBool('Filter', 'ByReferencesInjectedStatus', FilterByReferencesInjectedStatus);
+    Settings.WriteBool('Filter', 'ReferencesInjectedStatus', FilterReferencesInjectedStatus);
+
+    Settings.WriteBool('Filter', 'ByEditorID', FilterByEditorID);
+    Settings.WriteString('Filter', 'EditorID', FilterEditorID);
+
+    Settings.WriteBool('Filter', 'ByName', FilterByName);
+    Settings.WriteString('Filter', 'Name', FilterName);
+
+    Settings.WriteBool('Filter', 'ByBaseEditorID', FilterByBaseEditorID);
+    Settings.WriteString('Filter', 'BaseEditorID', FilterBaseEditorID);
+
+    Settings.WriteBool('Filter', 'ByBaseName', FilterByBaseName);
+    Settings.WriteString('Filter', 'BaseName', FilterBaseName);
+
+    Settings.WriteBool('Filter', 'ScaledActors', FilterScaledActors);
+
+    Settings.WriteBool('Filter', 'ByPersistent', FilterByPersistent);
+    Settings.WriteBool('Filter', 'Persistent', FilterPersistent);
+    Settings.WriteBool('Filter', 'UnnecessaryPersistent', FilterUnnecessaryPersistent);
+    Settings.WriteBool('Filter', 'MasterIsTemporary', FilterMasterIsTemporary);
+    Settings.WriteBool('Filter', 'PersistentPosChanged', FilterPersistentPosChanged);
+
+    Settings.WriteBool('Filter', 'ByVWD', FilterByVWD);
+    Settings.WriteBool('Filter', 'VWD', FilterVWD);
+
+    Settings.WriteBool('Filter', 'ByHasVWDMesh', FilterByHasVWDMesh);
+    Settings.WriteBool('Filter', 'HasVWDMesh', FilterHasVWDMesh);
+
+    Settings.WriteBool('Filter', 'BySignature', FilterBySignature);
+    Settings.WriteString('Filter', 'Signatures', FilterSignatures);
+
+    Settings.WriteBool('Filter', 'ByBaseSignature', FilterByBaseSignature);
+    Settings.WriteString('Filter', 'BaseSignatures', FilterBaseSignatures);
+
+    for ConflictAll := Low(ConflictAll) to High(ConflictAll) do
+      Settings.WriteBool('Filter', GetEnumName(TypeInfo(TConflictAll), Ord(ConflictAll)), ConflictAll in FilterConflictAllSet);
+
+    for ConflictThis := Low(ConflictThis) to High(ConflictThis) do
+      Settings.WriteBool('Filter', GetEnumName(TypeInfo(TConflictThis), Ord(ConflictThis)), ConflictThis in FilterConflictThisSet);
+
+    Settings.WriteBool('Filter', 'FlattenBlocks', FlattenBlocks);
+    Settings.WriteBool('Filter', 'FlattenCellChilds', FlattenCellChilds);
+    Settings.WriteBool('Filter', 'AssignPersWrldChild', AssignPersWrldChild);
+    Settings.WriteBool('Filter', 'InheritConflictByParent', InheritConflictByParent);
+    Settings.UpdateFile;
+
   end;
-
-  Settings.WriteBool('Filter', 'ConflictAll', FilterConflictAll);
-  Settings.WriteBool('Filter', 'ConflictThis', FilterConflictThis);
-
-  Settings.WriteBool('Filter', 'ByInjectStatus', FilterByInjectStatus);
-  Settings.WriteBool('Filter', 'InjectStatus', FilterInjectStatus);
-
-  Settings.WriteBool('Filter', 'ByNotReachableStatus', FilterByNotReachableStatus);
-  Settings.WriteBool('Filter', 'NotReachableStatus', FilterNotReachableStatus);
-
-  Settings.WriteBool('Filter', 'ByReferencesInjectedStatus', FilterByReferencesInjectedStatus);
-  Settings.WriteBool('Filter', 'ReferencesInjectedStatus', FilterReferencesInjectedStatus);
-
-  Settings.WriteBool('Filter', 'ByEditorID', FilterByEditorID);
-  Settings.WriteString('Filter', 'EditorID', FilterEditorID);
-
-  Settings.WriteBool('Filter', 'ByName', FilterByName);
-  Settings.WriteString('Filter', 'Name', FilterName);
-
-  Settings.WriteBool('Filter', 'ByBaseEditorID', FilterByBaseEditorID);
-  Settings.WriteString('Filter', 'BaseEditorID', FilterBaseEditorID);
-
-  Settings.WriteBool('Filter', 'ByBaseName', FilterByBaseName);
-  Settings.WriteString('Filter', 'BaseName', FilterBaseName);
-
-  Settings.WriteBool('Filter', 'ScaledActors', FilterScaledActors);
-
-  Settings.WriteBool('Filter', 'ByPersistent', FilterByPersistent);
-  Settings.WriteBool('Filter', 'Persistent', FilterPersistent);
-  Settings.WriteBool('Filter', 'UnnecessaryPersistent', FilterUnnecessaryPersistent);
-  Settings.WriteBool('Filter', 'MasterIsTemporary', FilterMasterIsTemporary);
-  Settings.WriteBool('Filter', 'PersistentPosChanged', FilterPersistentPosChanged);
-
-  Settings.WriteBool('Filter', 'ByVWD', FilterByVWD);
-  Settings.WriteBool('Filter', 'VWD', FilterVWD);
-
-  Settings.WriteBool('Filter', 'ByHasVWDMesh', FilterByHasVWDMesh);
-  Settings.WriteBool('Filter', 'HasVWDMesh', FilterHasVWDMesh);
-
-  Settings.WriteBool('Filter', 'BySignature', FilterBySignature);
-  Settings.WriteString('Filter', 'Signatures', FilterSignatures);
-
-  Settings.WriteBool('Filter', 'ByBaseSignature', FilterByBaseSignature);
-  Settings.WriteString('Filter', 'BaseSignatures', FilterBaseSignatures);
-
-  for ConflictAll := Low(ConflictAll) to High(ConflictAll) do
-    Settings.WriteBool('Filter', GetEnumName(TypeInfo(TConflictAll), Ord(ConflictAll)), ConflictAll in FilterConflictAllSet);
-
-  for ConflictThis := Low(ConflictThis) to High(ConflictThis) do
-    Settings.WriteBool('Filter', GetEnumName(TypeInfo(TConflictThis), Ord(ConflictThis)), ConflictThis in FilterConflictThisSet);
-
-  Settings.WriteBool('Filter', 'FlattenBlocks', FlattenBlocks);
-  Settings.WriteBool('Filter', 'FlattenCellChilds', FlattenCellChilds);
-  Settings.WriteBool('Filter', 'AssignPersWrldChild', AssignPersWrldChild);
-  Settings.WriteBool('Filter', 'InheritConflictByParent', InheritConflictByParent);
-  Settings.UpdateFile;
 
   Caption := sJustWait;
 
@@ -8374,7 +8459,13 @@ begin
                     (MainRecord.Signature = 'PGRE') or
                     (MainRecord.Signature = 'PMIS') or
                     (MainRecord.Signature = 'ACHR') or
-                    (MainRecord.Signature = 'ACRE')
+                    (MainRecord.Signature = 'ACRE') or
+                    (MainRecord.Signature = 'PHZD') or
+                    (MainRecord.Signature = 'PARW') or
+                    (MainRecord.Signature = 'PBAR') or
+                    (MainRecord.Signature = 'PBEA') or
+                    (MainRecord.Signature = 'PCON') or
+                    (MainRecord.Signature = 'PFLA')
                   ) or
               not Supports(MainRecord.RecordBySignature['NAME'], IwbRecord, Rec) or
               not Supports(Rec.LinksTo, IwbMainRecord, MainRecord) or
@@ -8400,7 +8491,13 @@ begin
                       (MainRecord.Signature = 'PGRE') or
                       (MainRecord.Signature = 'PMIS') or
                       (MainRecord.Signature = 'ACHR') or
-                      (MainRecord.Signature = 'ACRE')
+                      (MainRecord.Signature = 'ACRE') or
+                      (MainRecord.Signature = 'PHZD') or
+                      (MainRecord.Signature = 'PARW') or
+                      (MainRecord.Signature = 'PBAR') or
+                      (MainRecord.Signature = 'PBEA') or
+                      (MainRecord.Signature = 'PCON') or
+                      (MainRecord.Signature = 'PFLA')
                     ) or
                 not Supports(MainRecord.RecordBySignature['NAME'], IwbRecord, Rec) or
                 not Supports(Rec.LinksTo, IwbMainRecord, MainRecord) or
@@ -8416,7 +8513,13 @@ begin
                   (MainRecord.Signature <> 'PGRE') and
                   (MainRecord.Signature <> 'PMIS') and
                   (MainRecord.Signature <> 'ACRE') and
-                  (MainRecord.Signature <> 'ACHR')
+                  (MainRecord.Signature <> 'ACHR') and
+                  (MainRecord.Signature <> 'PHZD') and
+                  (MainRecord.Signature <> 'PARW') and
+                  (MainRecord.Signature <> 'PBAR') and
+                  (MainRecord.Signature <> 'PBEA') and
+                  (MainRecord.Signature <> 'PCON') and
+                  (MainRecord.Signature <> 'PFLA')
                 ) or
                 (
                   FilterByPersistent and
@@ -8486,6 +8589,69 @@ begin
     Signatures.Free;
     BaseSignatures.Free;
     vstNav.Visible:= True;
+  end;
+end;
+
+procedure TfrmMain.mniNavFilterForCleaningClick(Sender: TObject);
+begin
+  FilterConflictAll := False;
+  FilterConflictThis := False;
+
+  FilterByInjectStatus := False;
+  FilterInjectStatus := False;
+
+  FilterByNotReachableStatus := False;
+  FilterNotReachableStatus := False;
+
+  FilterByReferencesInjectedStatus := False;
+  FilterReferencesInjectedStatus := False;
+
+  FilterByEditorID := False;
+  FilterEditorID := '';
+
+  FilterByName := False;
+  FilterName := '';
+
+  FilterByBaseEditorID := False;
+  FilterBaseEditorID := '';
+
+  FilterByBaseName := False;
+  FilterBaseName := '';
+
+  FilterScaledActors := False;
+
+  FilterByPersistent := False;
+  FilterPersistent := False;
+  FilterUnnecessaryPersistent := False;
+  FilterMasterIsTemporary := False;
+  FilterIsMaster := False;
+  FilterPersistentPosChanged := False;
+
+  FilterByVWD := False;
+  FilterVWD := False;
+
+  FilterByHasVWDMesh := False;
+  FilterHasVWDMesh := False;
+
+  FilterBySignature := False;
+  FilterSignatures := '';
+
+  FilterByBaseSignature := False;
+  FilterBaseSignatures := '';
+
+  FilterConflictAllSet := [];
+  FilterConflictThisSet := [];
+
+  FlattenBlocks := False;
+  FlattenCellChilds := False;
+  AssignPersWrldChild := False;
+  InheritConflictByParent := True;
+
+  FilterPreset := True;
+  try
+    mniNavFilterApplyClick(Sender);
+  finally
+    FilterPreset := False;
   end;
 end;
 
@@ -8785,6 +8951,8 @@ begin
     mniNavCellChildNotVWD.Checked := SelectionIncludesAnyNotVWD(NoNodes);
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
+
+  mniNavCreateSEQFile.Visible := (wbGameMode = gmTES5);
 
   mniNavLocalization.Visible := (wbGameMode = gmTES5);
   mniNavLocalizationSwitch.Visible :=
