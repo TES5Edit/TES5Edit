@@ -4426,7 +4426,7 @@ begin
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, nil{wbActorTemplateUseActorEffectList});
 
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32);
-  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True);
+  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -5515,7 +5515,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbMODL,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -6335,7 +6335,7 @@ begin
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDID,
-    wbMODLReq,
+    wbMODL,
     wbString(BNAM, 'Type')
   ]);
 
@@ -7440,7 +7440,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbMODL,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -7620,7 +7620,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbMODL,
     wbDEST,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'On Local Map',
@@ -7781,6 +7781,12 @@ begin
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
+//        wbByteArray('Unknown', 4),
+//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+//        wbUnion('Parent', wbNVNMParentDecider, [
+//          wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
+//          wbFormIDCk('Parent Cell', [CELL])
+//        ]),
         wbByteArray('Unknown', 0)
       ])
     ),
@@ -7846,31 +7852,63 @@ begin
 
   wbRecord(NAVM, 'Navigation Mesh', [
     wbEDID,
-    //wbUnknown(NVNM),
     wbStruct(NVNM, 'Geometry', [
       wbInteger('Unknown', itU32),
       wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 8),
-//      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-//      wbUnion('Parent', wbNVNMParentDecider, [
-////        no containers in wbUnion :(
-////        wbStruct('Coordinates', [
-////          wbInteger('Grid X', itS16),
-////          wbInteger('Grid Y', itS16)
-////        ]),
-//        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
-//        wbFormIDCk('Parent Cell', [CELL])
-//      ]),
+//      wbByteArray('Unknown', 8),
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+      wbUnion('Parent', wbNVNMParentDecider, [
+//        no containers in wbUnion :(
+//        wbStruct('Coordinates', [
+//          wbInteger('Grid X', itS16),
+//          wbInteger('Grid Y', itS16)
+//        ]),
+        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
+        wbFormIDCk('Parent Cell', [CELL])
+      ]),
+
       wbArray('Vertices', wbStruct('Vertex', [
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
       ]), -1),
-      // here comes a prefixed length array of supposedly Tri(s).
-      // needs more work to structue it.
-//      wbArray('Tri',
-//        wbByteArray('Unknown', 12)
-//      , -1),
+
+      wbArray('Triangles',
+        wbStruct('Triangle', [
+          wbArray('Vertices', wbInteger('Vertex', itS16), 3),
+          wbArray('Edges', wbInteger('Triangle', itS16), [
+            '0 <-> 1',
+            '1 <-> 2',
+            '2 <-> 0'
+          ]),
+          wbInteger('Cover Marker', itU16),
+          wbInteger('Cover Edge #1 Flags', itU8),
+          wbInteger('Cover Edge #2 Flags', itU8)
+        ]),
+      -1),
+
+      wbArray('Bordering Triangles',
+//        wbStruct('Border Triangle', [
+//          wbFormIDCk('Mesh', [NAVM]),
+//          wbInteger('Triangle', itS16),
+//          wbInteger('Delimiter', itU32)
+//        ]),
+        wbByteArray('Unknown', 10),
+      -1),
+
+      wbArray('Door Triangles',
+        wbStruct('Door Triangle', [
+          wbInteger('Triangle before door', itS16),
+          wbByteArray('Unknown', 4),
+          wbFormIDCk('Door', [REFR])
+          //wbInteger('Delimiter', itU32)
+        ]),
+      -1),
+
+      wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
+      wbByteArray('Divisor', 4),
+      wbFloat('Max X'),
+      wbFloat('Max Y'),
       wbUnknown
     ]),
     wbUnknown(ONAM),
@@ -8438,7 +8476,7 @@ begin
 
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
-    wbMODLReq,
+    wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [1], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(PNAM, 'Pose Matching', 0, cpNormal, True),
@@ -8505,7 +8543,7 @@ begin
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBNDReq,
-    wbMODLReq,
+    wbMODL,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
@@ -9428,7 +9466,7 @@ begin
   wbRecord(GRAS, 'Grass', [
     wbEDID,
     wbOBNDReq,
-    wbMODLReq,
+    wbMODL,
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -10610,7 +10648,7 @@ begin
     wbEmpty(NEXT, 'Marker'),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
-      wbStruct(INDX, 'Stage Index', [
+      wbStructSK(INDX, [0], 'Stage Index', [
         wbInteger('Stage Index', itU16),
         wbInteger('Flags', itU8, wbFlags([
           {0x01} 'Unknown 1',
@@ -10653,10 +10691,14 @@ begin
     wbByteArray(ANAM, 'Aliases Marker', 4),
     wbRArrayS('Aliases',
       wbRStructSK([0], 'Alias', [
-        wbRUnion('Alias Type / ID', [
-          wbInteger(ALST, 'Reference Alias ID', itU32),
-          wbInteger(ALLS, 'Location Alias ID', itU32)
-        ], []),
+//        wbRUnion('Alias Type / ID', [
+//          wbInteger(ALST, 'Reference Alias ID', itU32),
+//          wbInteger(ALLS, 'Location Alias ID', itU32)
+//        ], []),
+        wbRStructSK([0, 1], 'Alias ID', [
+          wbInteger(ALST, 'Reference Alias', itU32),
+          wbInteger(ALLS, 'Location Alias', itU32)
+        ], [], cpNormal, False, nil, True),
         wbString(ALID, 'Alias Name', 0, cpTranslate),
         wbStruct(FNAM, 'Alias Flags', [
           wbInteger('Flags', itU16, wbFlags([
@@ -11160,14 +11202,14 @@ begin
         wbEmpty(MNAM, 'Male Data Marker'),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbMODLReq
+          wbMODL
         ], []), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbMODLReq
+          wbMODL
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -11230,7 +11272,7 @@ begin
           wbRArrayS('Face Details Texture Set List Male', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
           wbTints,
-          wbMODLReq
+          wbMODL
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
@@ -11242,7 +11284,7 @@ begin
           wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
           wbTints,
-          wbMODLReq
+          wbMODL
       ], [], cpNormal, True)
     ], [], cpNormal, False),
     // End Head Data
@@ -11476,7 +11518,7 @@ begin
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
       wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Unknown', itU16),
+      wbInteger('Teleport Marker Triangle', itS16),
       wbByteArray('Unknown', 2)
     ]),
 
@@ -11856,7 +11898,7 @@ begin
   wbRecord(TREE, 'Tree', [
     wbEDID,
     wbOBNDReq,
-    wbMODLReq,
+    wbMODL,
     wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, NULL]),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Ingredient Production', [
