@@ -614,6 +614,7 @@ const
   XNAM : TwbSignature = 'XNAM';
   XNDP : TwbSignature = 'XNDP';
   XOCP : TwbSignature = 'XOCP';
+  XORD : TwbSignature = 'XORD';
   XOWN : TwbSignature = 'XOWN';
   XPOD : TwbSignature = 'XPOD';
   XPPA : TwbSignature = 'XPPA';
@@ -750,7 +751,6 @@ var
   wbCOCT: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
-  wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
   wbCNAMReq: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef; {Associated with CTDA}
@@ -4426,7 +4426,7 @@ begin
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, nil{wbActorTemplateUseActorEffectList});
 
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32);
-  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True);
+  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -6472,7 +6472,7 @@ procedure DefineTES5c;
   begin
     wbRecord(aSignature, aName, [
       wbVMAD,
-      wbFormIDCk(NAME, 'Projectile', [PROJ]),
+      wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
       wbOwnership,
       wbFloat(XHTW, 'Head-Tracking Weight'),
@@ -7850,16 +7850,17 @@ begin
     wbStruct(NVNM, 'Geometry', [
       wbInteger('Unknown', itU32),
       wbByteArray('Unknown', 4),
-      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-      wbUnion('Parent', wbNVNMParentDecider, [
-//        no containers in wbUnion :(
-//        wbStruct('Coordinates', [
-//          wbInteger('Grid X', itS16),
-//          wbInteger('Grid Y', itS16)
-//        ]),
-        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
-        wbFormIDCk('Parent Cell', [CELL])
-      ]),
+      wbByteArray('Unknown', 8),
+//      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+//      wbUnion('Parent', wbNVNMParentDecider, [
+////        no containers in wbUnion :(
+////        wbStruct('Coordinates', [
+////          wbInteger('Grid X', itS16),
+////          wbInteger('Grid Y', itS16)
+////        ]),
+//        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
+//        wbFormIDCk('Parent Cell', [CELL])
+//      ]),
       wbArray('Vertices', wbStruct('Vertex', [
         wbFloat('X'),
         wbFloat('Y'),
@@ -10617,7 +10618,7 @@ begin
           {0x04} 'Shut Down Stage',
           {0x08} 'Keep Instance Data From Here On'
         ])),
-        wbByteArray('Unknown', 1)
+        wbInteger('Percent Complete', itU8)
       ]),
       wbRArray('Log Entries', wbRStruct('Log Entry', [
         wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
@@ -10644,14 +10645,14 @@ begin
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Compass Marker Ignores Locks'
           ])),
-          wbByteArray('Unknown', 3)
+          wbByteArray('Unused', 3)
         ]),
         wbCTDAs
       ], []))
     ], [])),
     wbByteArray(ANAM, 'Aliases Marker', 4),
-    wbRArray('Aliases',
-      wbRStruct('Alias', [
+    wbRArrayS('Aliases',
+      wbRStructSK([0], 'Alias', [
         wbRUnion('Alias Type / ID', [
           wbInteger(ALST, 'Reference Alias ID', itU32),
           wbInteger(ALLS, 'Location Alias ID', itU32)
@@ -11078,7 +11079,7 @@ begin
   ], []);
 
   wbHeadPart := wbRStructSK([0],'Head Part', [
-    wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
+    wbInteger(INDX, 'Head Part Number', itU32),
     wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
   ], []);
 
@@ -11286,7 +11287,7 @@ begin
         'Unknown 4'
       ]))
     ]),
-
+    wbUnknown(XORD),
     wbStruct(XOCP, 'Occlusion Plane Data', [
       wbStruct('Size', [
         wbFloat('Width', cpNormal, False, 2),
@@ -12164,7 +12165,8 @@ begin
           wbInteger('X', itS16),
           wbInteger('Y', itS16)
         ])
-      ])
+      ]),
+      wbByteArray('Unknown')
     ]),
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),

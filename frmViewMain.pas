@@ -2349,18 +2349,16 @@ begin
   Group := _File.GroupBySignature['QUST'];
 
   if not Assigned(Group) then
-    Exit;
-
-  for i := 0 to Pred(Group.ElementCount) do
-    if Supports(Group.Elements[i], IwbMainRecord, MainRecord) then begin
-      QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-      if not Assigned(QustFlags) then
-        Continue;
-      if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
-        SetLength(FormIDs, Succ(Length(FormIDs)));
-        FormIDs[High(FormIDs)] := MainRecord.FormID;
+    for i := 0 to Pred(Group.ElementCount) do
+      if Supports(Group.Elements[i], IwbMainRecord, MainRecord) then begin
+        QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+        if not Assigned(QustFlags) then
+          Continue;
+        if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
+          SetLength(FormIDs, Succ(Length(FormIDs)));
+          FormIDs[High(FormIDs)] := MainRecord.FormID;
+        end;
       end;
-    end;
 
   if Length(FormIDs) = 0 then
     PostAddMessage('Done: Nothing to save.')
@@ -2754,6 +2752,7 @@ begin
 
     if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then begin
       AddMessage('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
+      wbDontSave := True;
       Exit;
     end;
 
@@ -2761,6 +2760,7 @@ begin
 
     if DataPath = '' then begin
       AddMessage('Fatal: Could not determine '+wbGameName+' installation path.');
+      wbDontSave := True;
       Exit;
     end;
 
@@ -2768,7 +2768,7 @@ begin
     Free;
   end;
 
-  AddMessage(wbAppName + 'Edit ' + VersionString);
+  AddMessage(wbAppName + 'Edit ' + VersionString + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
   DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
   wbDataPath := DataPath;
@@ -3547,10 +3547,10 @@ var
   UndeletedCount              : Cardinal;
   DeletedNAVM                 : Cardinal;
   StartTick                   : Cardinal;
-  i                           : Integer;
+  i, n                        : Integer;
   MainRecord                  : IwbMainRecord;
   Position                    : TD3DXVector3;
-  Cntr                        : IwbContainerElementRef;
+  Cntr, Cntr2                 : IwbContainerElementRef;
 begin
   if not wbEditAllowed then
     Exit;
@@ -3628,8 +3628,8 @@ begin
                (Signature = 'PFLA') or {>>> Skyrim <<<}
                (Signature = 'PHZD')    {>>> Skyrim <<<}
              ) then
-            if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
-
+          //begin
+          if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
             IsDeleted := True;
             IsDeleted := False;
             PostAddMessage('Undeleting: ' + MainRecord.Name);
@@ -3649,6 +3649,18 @@ begin
               Cntr.ElementNativeValues['Reference'] := $14;
               Cntr.ElementNativeValues['Flags'] := 1;
             end;
+
+            // Undeleting NAVM, needs to update NAVI as well
+//            if (Signature = 'NAVM') then
+//              if wbGameMode in [gmTES5] then begin
+//                if Supports(MainRecord.ElementByPath['NVNM - Geometry\Vertices'], IwbContainerElementRef, Cntr) then begin
+//                  for n := 0 to Pred(Cntr.ElementCount) do
+//                    if Supports(Cntr.Elements[n], IwbContainerElementRef, Cntr2) then
+//                      Cntr2.ElementByName['Z'].NativeValue := -30000;
+//                end;
+//              end else
+//                Inc(DeletedNAVM);
+
             Inc(UndeletedCount);
           end;
         end;
@@ -3746,14 +3758,16 @@ begin
 
   SaveChanged;
 
-  Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
-  if WindowState = wsNormal then begin
-    Settings.WriteInteger(Name, 'Left', Left);
-    Settings.WriteInteger(Name, 'Top', Top);
-    Settings.WriteInteger(Name, 'Width', Width);
-    Settings.WriteInteger(Name, 'Height', Height);
+  if Assigned(Settings) then begin
+    Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
+    if WindowState = wsNormal then begin
+      Settings.WriteInteger(Name, 'Left', Left);
+      Settings.WriteInteger(Name, 'Top', Top);
+      Settings.WriteInteger(Name, 'Width', Width);
+      Settings.WriteInteger(Name, 'Height', Height);
+    end;
+    Settings.UpdateFile;
   end;
-  Settings.UpdateFile;
 
   try
     s := ExtractFilePath(Application.ExeName) + wbAppName + 'Edit_log.txt';
@@ -8952,7 +8966,9 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavCreateSEQFile.Visible := (wbGameMode = gmTES5);
+  mniNavCreateSEQFile.Visible := (wbGameMode = gmTES5) and
+     Assigned(Element) and
+    (Element.ElementType = etFile);
 
   mniNavLocalization.Visible := (wbGameMode = gmTES5);
   mniNavLocalizationSwitch.Visible :=
