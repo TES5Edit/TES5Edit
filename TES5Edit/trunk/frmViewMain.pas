@@ -1439,6 +1439,7 @@ begin
   end;
 end;
 
+{
 procedure AfterCopyTES5FixQUST(const aElement: IwbElement);
 var
   MainRecord         : IwbMainRecord;
@@ -1463,6 +1464,7 @@ begin
         if Alias.ElementCount = 2 then
           Alias.RemoveElement(0);
 end;
+}
 
 function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
@@ -1671,10 +1673,9 @@ begin
   finally
     sl.Free;
   end;
-
-  if wbGameMode = gmTES5 then
+{  if wbGameMode = gmTES5 then
     for i := Low(Result) to High(Result) do
-      AfterCopyTES5FixQUST(Result[i]);
+      AfterCopyTES5FixQUST(Result[i]);}
 end;
 
 procedure TfrmMain.mniNavChangeReferencingRecordsClick(Sender: TObject);
