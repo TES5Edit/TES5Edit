@@ -1,0 +1,223 @@
+[[Category: TES5Edit]]
+[[Category: TES5Edit: Tools Tutorials]]
+[[Category: Tutorials]]
+
+This tutorial is designed to teach modders and mod users how to use TES5Edit to clean mods. Cleaning mods is critical to the development of compatibility in the modding community and for creating a stable modded game environment, but TES5Edit is not a simple utility and care must be taken not to damage the mods in the process. This tutorial should help explain everything that you need to know to clean mods correctly.
+
+I will be using Sharlikran_Map_Markers_Expanded.esp. This file allows me to demonstrate the use of the program and to take pictures of the working process without using anyone's mod as a guinea pig.
+
+== How to obtain TES5Edit ==
+''If you already have installed TES5Edit and have it working, then skip this first paragraph.''
+
+First thing first, you'll ''need'' TES5Edit. Get the last version from the location below, which is:  3.0.22 EXPERIMENTAL (as of 10/14/2012)
+*[http://code.google.com/p/skyrim-plugin-decoding-project/downloads/list TES5Edit by ElminsterEU, updated by Zilav and Sharlikran for Skyrim]
+
+In order to use it, you need to place the files contained in the archive you just downloaded in any directory on your local computer. 
+
+As I show on the screenshot below, I placed mine in a seprate directory, ''any folder'' on your computer will work just as well.
+
+[[Image:TES5Edit Folder.jpg|800px|TES5Edit Install Folder]]
+
+== Setting up the shortcuts ==
+
+It is best to set up a shortcut at an easily accessible location because you will be opening, closing, and re-opening TES5Edit many, many times. Your desktop is the suggested location.
+
+== Having the mod ready ==
+
+Before you launch TES5Edit, be sure to have the ESP you want to clean already placed in the Data folder.  If not, then before launching the program, first copy one. For the sake of this example, I'll copy my plugin to the Data folder:
+
+[[Image:Selected Mod Before Cleaning.jpg|800px|Selected Mod Before Cleaning]]
+
+Take notice of its size so you can see the effect of the cleaning afterwards.
+
+= The cleaning process =
+
+== Warming up ==
+
+Ok, now launch TES5Edit. 
+
+The first window that opens asks you which mods to load:
+
+[[Image:TES5EditPluginList.jpg|250px|TES5Edit Plugin List]]
+
+In order to use this tool to clean, you should load only the mod you are cleaning and any other mods that the mod you are cleaning depends upon. Generally, this means you will only tick the specific mod you are cleaning but if the mod modifies another mod, that mod is required to be ticked as well. The tool will also load Skyrim.esm, since all master plugins are also loaded, and every mod depends on it. 
+
+So, to proceed, first deselect all the mods already checked (defined by the mods you have currently active). In order to do so quickly, right click on the window and then choose “Select None” 
+
+[[Image:TES5EditPluginListSelectNone.jpg|250px|Select None Popup]]
+
+Lastly, search for the mod you want to clean ''(you already copied it to the Data folder, right? If you didn't, then this is a good time to do so ... and restart TES5Edit in order to be able to see it in the list)''
+
+Then select it (tick the check to the left of the window), and click the OK button. 
+
+[[Image:TES5EditPluginSelected.jpg|250px|Selecting The Mod]]
+
+After that, let the program load the stuff it needs, and when it's done, it will say so. So don't bother it until it shows "Background Loader: finished" on the Message tab.
+
+[[Image:TES5EditAfterLloading.jpg|800px|Loading Finished]]
+
+In the picture we can see the original mod content, yet untouched and when unfiltered: 
+
+[[Image:TES5EditBeforeCleaning.jpg|800px|Before Cleaning]]
+
+== Checking step first ==
+
+The next step is only needed if you want to see if the mod has dirty records prior to cleaning it, so you can see what will be removed. If you're not interested in checking, just skip to the next section.
+
+Ok, then. Here's the way to do that: Right click on the left pane of the TES5Edit window, and in the popup menu choose Apply Filter:
+
+[[Image:Pic090-Apply Filter Popup.png|apply filter in the context menu|400px]]
+
+In that window that opens, in order to show only the records that are ‘identical to Master’, choose the following settings: 
+
+[[Image:Pic100-Filter Options for checking.png|filter options for checking|500px]]
+
+You should clear all ticks on options shown as un-ticked and only tick the ones shown. 
+
+After you're done, select OK and the filtering process will start. The program will change their window caption to show the filtering progress as it goes. It could take from seconds to several minutes, depending on how large the mod is and on the speed of your computer. 
+
+When the filtering is finished the caption will return to normal and the message:
+
+ [Filtering done] Processed Records: 1215550 Elapsed Time: 00:13
+
+will be printed on the message tab.
+
+The point of filtering is to instruct the program to show only the things that we want to focus on, so, with these settings it will show only the records which are identical to the corresponding master record, i.e. records whose presence is not needed in the current mod, since they aren't changing anything useful. The mod only got them because the CS included them without the modder wanting to do so. 
+
+After the filtering process is done, the program will show the content below (select the root of the tree and press the '*' which is located on the numeric keypad in order to expand all levels): 
+
+[[Image:Pic120-Filtered Records Shown.png|filtered records shown|500px]]
+
+As you can see in the image, the mod does in fact have some dirty records. They are shown colored in GREEN background and DARK GRAY text. Mainly they are landscape and some placed objects which got transferred to the mod since the CS thought that they had been touched. 
+
+None of those records are needed, since they an exact copy of the same information is already present on Skyrim.esm. 
+
+In order to be sure, you can look at the record's content. The program shows that in the right pane: 
+
+[[Image:Pic130-Single Record View.png|Single record view|500px]]
+
+The picture shows the REFR record for a Nirnroot which is identical to the one on the master. Notice the change in text color to Dark Gray there too. 
+But, in order to be sure about their 'equality' we can select 'Hide no conflict rows' from the popup context. 
+
+[[Image:Pic140-Hide no conflict rows.png|Hide no conflict rows|500px]]
+
+And lo! nothing is shown, confirming the first suspicion that those records are, in fact, identical.
+
+[[Image:Pic150-Nothing is show.png|Nothing is shown!|500px]]
+
+So, we can proceed with the cleaning.
+
+== Finally cleaning the mod ==
+Again, we need to go to the filter window, so again, right clink on the left pane, and select Apply Filter but this time choose this configuration instead: 
+
+[[Image:Pic160-Filter options for cleaning.png|Filter options for cleaning|500px]]
+
+Notice that all top level options must be unchecked, and only can be selected the one called 'Conflict status inherited by parent', after that choose OK again and the program will apply the filter ''(which now it takes only a few seconds, since the program has cached some of the information from the first filtering step done before)'' and when the filtering is finished, go to the left pane (the tree) and select the mod (in our case: CleanModsDemo.esp), right click on it and choose 'Remove "Identical to Master" records.' 
+
+[[Image:Pic170-Remove Identical to master.png|Context menu|500px]]
+
+Then a warning popup will appear. Just wait a few seconds, the Yes button will be enabled, and you can click it:
+
+[[Image:Pic190-Warning You are Sure.png|Warning! Are you sure?|400px]]
+
+Don't hate it! That warning is meant to prevent you accidentally changing something in a mod you didn't want to touch. 
+
+Ok, we're approaching the end of the process. 
+
+After you click "Yes, I’m absolutely sure" (because you are, right? Never lie to a program!), the removing process will be executed. After it finishes, you will notice that the modified mod turned to 'bold' as a signal that it has been modified. 
+
+And on the other side, on the message pane, a dump of what's being removed is printed: 
+
+[[Image:Pic210-Cleaning Log Whats got Removed.png|Cleaning Log|500px]]
+
+Here I copied that blurb of text so you can examine it more closely:
+ Removing: [REFR:00092A79] (places <CrateClutterMiddle05> "Crate" [CONT:00024CC2] in GRUP Cell Temporary Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464])
+ Removing: [REFR:00092A6F] (places <CrateClutterMiddleSame02> "Crate" [CONT:00029D77] in GRUP Cell Temporary Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464])
+ Removing: [REFR:00092A53] (places <CrateClutterMiddleSame01> "Crate" [CONT:0002444D] in GRUP Cell Temporary Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464])
+ Removing: [REFR:000654E8] (places <NorthMarker> [STAT:00000003] in GRUP Cell Temporary Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464])
+ Removing: [REFR:000028F7] (places <LowerClassBarrel01> [STAT:000104BB] in GRUP Cell Temporary Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464])
+ Removing: [PGRD:0009C59C]
+ Removing: GRUP Cell Temporary Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464]
+ Removing: [REFR:0009C594] (places <ChorrolTrapDoor01> "Trap Door" [DOOR:0002A821] in GRUP Cell Persistent Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464])
+ Removing: [REFR:0009C58F] (places <ladderloader01> "Door" [DOOR:0005642A] in GRUP Cell Persistent Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464])
+ Removing: GRUP Cell Persistent Children of <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464]
+ Removing: <HackdirtMoslinsDryGoodsBasement> "Moslin's Basement" [CELL:0009C464]
+ Removing: <GoblinJimsCave> "Goblin Jim's Cave" [CELL:0003131C]
+ Removing: [REFR:000CB1CF] (places <ARWelkydCage01> "Varla Stone Cage" [ACTI:00027037] in GRUP Cell Persistent Children of <Elenglynn> "Elenglynn" [CELL:00016634])
+ Removing: [REFR:000CB1C9] (places <ARTrapEvilStoneAUTOFIREFAR01> [ACTI:00085A4D] in GRUP Cell Persistent Children of <Elenglynn> "Elenglynn" [CELL:00016634])
+ Removing: [ACHR:0006F38D] (places <DeadCaptive02> "Dead Captive" [NPC_:000651A7] in GRUP Cell Persistent Children of <SageGlenHollow> "Sage Glen Hollow" [CELL:000149B0])
+ Removing: [REFR:00014B85] (places <CDoor02> "Wood Door" [DOOR:00003543] in GRUP Cell Persistent Children of <SageGlenHollow> "Sage Glen Hollow" [CELL:000149B0])
+ Removing: GRUP Cell Persistent Children of <SageGlenHollow> "Sage Glen Hollow" [CELL:000149B0]
+ Removing: <Arrow4Dwarven> "Dwarven Arrow" [AMMO:00022BE2]
+ Removing: <Arrow6Glass> "Glass Arrow" [AMMO:00022BE1]
+ Removing: <EncArrow4DwarvenFireDamageLight> "Arrow of Illumination" [AMMO:00008A4C]
+ Removing: <DreughWax> "Dreugh Wax" [INGR:00033673]
+ Removing: <Corn> "Corn" [INGR:0003366B]
+ Removing: <BoarMeat> "Boar Meat" [INGR:00033665]
+ Removing: <Breadloaf> "Bread Loaf" [INGR:00023D89]
+ Removing: GRUP Top "INGR"
+ [Removing "Identical to Master" records done]  Processed Records: 37 Removed Records: 25 Elapsed Time: 00:00
+
+On the tree pane, to the left, the mod’s content shows the records modified in a bold font: 
+
+[[Image:Pic220-Modified Content.png|Modified content in the right pane|400px]]
+
+As you can check for yourself, the records shown are the same that were shown when first filtering. Notice the removal of CELL and LAND records when they aren't needed anymore.
+
+== Saving the work ==
+Ok, understand this point which is very important: the modified mod is yet unsaved and it will not be saved until you want to. If you change your mind now, you will be allowed to exit the program (just click on the top-right corner of the window as you would do normally,) and then answer to the window that appears: 
+
+[[Image:Pic230-Save Selection Window.png|Save selection window|250px]]
+
+In that window, you can uncheck all the mods you want (in our case it’s just only one) to preserve them untouched and they won’t be modified at all.
+
+On the other hand, you can call the save window yourself by pressing the key combination 'Ctrl+S' (the standard save shortcut), and if you want to save them, now you can leave the checks ticked. 
+
+At this point, notice the message tab:
+
+ Saving CleanModsDemo.esp.save.2008_12_21_18_34_25
+ Done saving.
+
+The program doesn't actually touch the original mod when saving, it always generates a new file. The name is chosen to allow a distinct file to be generated each save, and so the program does, for every change you do, you can save and you will get a distinct file and the previous one will be left untouched. 
+
+That way, in case something goes wrong (maybe you delete a group record forgetting that within it was some important edit,) then, as soon as you notice it, you can roll back to the previous save file, or open it as a new mod and copy the editions back. Thus, it is important to stress this point: save often, and only do edits in chunks and save every one separately. In that way, you can go back to any point you  wish.
+
+Another thing to notice is that the original mod (CleanModsDemo.esp) is left untouched until you exit the program:
+
+[[Image:Pic240-Data Folder Before Saving.png|Before Saving|400px]]
+
+At which point the program will rename the old original file as a 'backup' file, and the new 'save' file as the original mod. (Notice the reduction in size? Those were the extra Landscape records now removed.)
+
+When we’re done and after we exit the tool:
+
+[[Image:Pic250-Data Folder After Saving.png|After save|400px]]
+
+the roles reverted, so you now can play test it directly after closing the program.
+
+Ok, that should be everything I can think of now.
+
+= Links =
+== Articles about the program ==
+*[http://www.oblivionmodwiki.com/index.php?title=TES4View TES4View on oblivionmodwiki]
+*[[TES5Edit]]
+
+== Related tutorials ==
+*[[Mod Cleaning Tutorial]]
+
+= Final words =
+
+Keep in mind that we're only scratching the surface of what can be done with this awesome tool. 
+
+The modding world is better thanks to generous individuals, like ElminsterEU, who have put an enormous chunk of their personal spare time into the making of this wonderful program. All kudos should go to him. And if you are in position of doing so, don't forget to rate the download in TESNexus.
+
+= Closing Remarks & Credits =
+
+This guide has been adapted from the [http://cs.elderscrolls.com/index.php/TES4Edit/Mod_cleaning_tutorial_with_TES4Edit TES4Edit/Mod cleaning tutorial with TES4Edit].
+
+Many thanks go to the various authors of and contributors to that article, including but not limited to: Brumbek, Aellis, Kalevala, Leeus, DragoonWraith.
+
+Thanks also go to ElminsterEU, Sharlikran, and Zilav for their work in getting TES5Edit released.
+
+Still to do:
+* Include pictures for the instructions a la [http://cs.elderscrolls.com/index.php/TES4Edit/Mod_cleaning_tutorial_with_TES4Edit TES4Edit/Mod cleaning tutorial with TES4Edit].
+* Get the correctness of the guide verified by the TES5Edit team.
