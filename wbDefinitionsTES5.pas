@@ -2157,8 +2157,8 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := False; Exit; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
-  Result := True;
+  Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
+  //Result := True;
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -7782,20 +7782,36 @@ begin
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
+        wbByteArray('Unknown')
+//        wbArray('Island', wbStruct('Data', [
+//          wbFloat('Min X'),
+//          wbFloat('Min Y'),
+//          wbFloat('Min Z'),
+//          wbFloat('Max X'),
+//          wbFloat('Max Y'),
+//          wbFloat('Max Z'),
+//          wbArray('Triangles',
+//            wbStruct('Triangle', [
+//              wbArray('Vertices', wbInteger('Vertex', itS16), 3)
+//            ])
+//          , -1),
+//          wbArray('Vertices', wbStruct('Vertex', [
+//            wbFloat('X'),
+//            wbFloat('Y'),
+//            wbFloat('Z')
+//          ]), -1)
+//        ]), -1),
+
 //        wbByteArray('Unknown', 4),
 //        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-//        wbUnion('Parent', wbNVNMParentDecider, [
-//          wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
-//          wbFormIDCk('Parent Cell', [CELL])
-//        ]),
-        wbByteArray('Unknown', 0)
+//        wbByteArray('Cell/Grid', 4)
       ])
     ),
     wbStruct(NVPP, 'Preferred Pathing', [
       wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-      wbArray('Unknown', wbStruct('', [
+      wbArray('NavMesh Tree?', wbStruct('', [
         wbFormIDCk('NavMesh', [NAVM]),
-        wbInteger('Unknown', itU32)
+        wbInteger('Index/Node', itU32)
       ]), -1)
     ]),
     wbUnknown(NVSI)
@@ -7889,13 +7905,12 @@ begin
       , -1),
 
       // 0f065f
-      wbArray('Border Triangles',
-        wbStruct('Border Triangle', [
+      wbArray('External Connections',
+        wbStruct('Connection', [
           wbByteArray('Unknown', 4),
           wbFormIDCk('Mesh', [NAVM]),
           wbInteger('Triangle', itS16)
         ])
-        //wbByteArray('Unknown', 10),
       , -1),
 
       wbArray('Door Triangles',
@@ -7907,7 +7922,7 @@ begin
       , -1),
 
       wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
-      wbByteArray('Divisor?', 4),
+      wbInteger('Divisor?', itU32),
       wbFloat('Max X Distance'),
       wbFloat('Max Y Distance'),
       wbFloat('Min X'),
@@ -10275,8 +10290,11 @@ begin
         'Restoration',
         'Enchanting'
       ]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unused', 4, cpIgnore),
+      //wbByteArray('Unknown', 4),
+      wbInteger('Health', itU16),
+      wbInteger('Magicka', itU16),
+      wbInteger('Stamina', itU16),
+      wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Far away model distance'),
       wbInteger('Geared up weapons', itU8),
       wbByteArray('Unused', 3, cpIgnore)

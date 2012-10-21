@@ -597,6 +597,7 @@ type
     FilterMasterIsTemporary: Boolean;
     FilterIsMaster: Boolean;
     FilterPersistentPosChanged: Boolean;
+    FilterDeleted: Boolean;
 
     FilterByVWD: Boolean;
     FilterVWD: Boolean;
@@ -2358,58 +2359,75 @@ end;
 
 procedure TfrmMain.mniNavCreateSEQFileClick(Sender: TObject);
 var
-  NodeData   : PNavNodeData;
-  _File      : IwbFile;
-  Group      : IwbGroupRecord;
-  i          : Integer;
-  MainRecord : IwbMainRecord;
-  QustFlags  : IwbElement;
-  FormIDs    : array of Cardinal;
-  FileStream : TFileStream;
-  p, s       : string;
+  SelectedNodes  : TNodeArray;
+  NodeData       : PNavNodeData;
+  _File          : IwbFile;
+  Group          : IwbGroupRecord;
+  i, n, j        : Integer;
+  MainRecord     : IwbMainRecord;
+  QustFlags      : IwbElement;
+  FormIDs        : array of Cardinal;
+  FileStream     : TFileStream;
+  p, s           : string;
 begin
-  NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
-
-  if not Assigned(NodeData) then
+  SelectedNodes := vstNav.GetSortedSelection(True);
+  if Length(SelectedNodes) < 1 then
     Exit;
 
-  if not Supports(NodeData.Element, IwbFile, _File) then
-    Exit;
+  j := 0;
 
-  Group := _File.GroupBySignature['QUST'];
+  for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+    NodeData := vstNav.GetNodeData(SelectedNodes[i]);
 
-  if not Assigned(Group) then
-    for i := 0 to Pred(Group.ElementCount) do
-      if Supports(Group.Elements[i], IwbMainRecord, MainRecord) then begin
-        QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-        if not Assigned(QustFlags) then
-          Continue;
-        if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
-          SetLength(FormIDs, Succ(Length(FormIDs)));
-          FormIDs[High(FormIDs)] := MainRecord.FormID;
-        end;
+    if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+      SetLength(FormIDs, 0);
+
+      if not Supports(NodeData.Element, IwbFile, _File) then
+        Continue;
+
+      if _File.LoadOrder = 0 then
+        Continue;
+
+      Group := _File.GroupBySignature['QUST'];
+
+      if Assigned(Group) then begin
+        for n := 0 to Pred(Group.ElementCount) do
+          if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
+            QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+            if Assigned(QustFlags) then
+              if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
+                SetLength(FormIDs, Succ(Length(FormIDs)));
+                FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
+              end;
+          end;
       end;
 
-  if Length(FormIDs) = 0 then
-    PostAddMessage('Done: Nothing to save.')
-  else try
-    try
-      p := DataPath + 'Seq\';
-      if not DirectoryExists(p) then
-        if not ForceDirectories(p) then
-          p := DataPath;
-      s := p + ChangeFileExt(_File.FileName, '.seq');
-      FileStream := TFileStream.Create(s, fmCreate);
-      FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
-      PostAddMessage('Done: Created ' + s);
-    finally
-      FileStream.Free;
+      if Length(FormIDs) = 0 then
+        PostAddMessage('Skipped: ' + _File.FileName + ' doesn''t need sequence file')
+      else try
+        try
+          p := DataPath + 'Seq\';
+          if not DirectoryExists(p) then
+            if not ForceDirectories(p) then
+              raise Exception.Create('Unable to create SEQ directory in game''s Data');
+          s := p + ChangeFileExt(_File.FileName, '.seq');
+          FileStream := TFileStream.Create(s, fmCreate);
+          FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
+          PostAddMessage('Created: ' + s);
+          Inc(j);
+        finally
+          if Assigned(FileStream) then
+            FreeAndNil(FileStream);
+        end;
+      except
+        on e: Exception do begin
+          PostAddMessage('Error: Can''t create ' + s + ', ' + E.Message);
+          Exit;
+        end;
+      end;
     end;
-  except
-    on e: Exception do
-      PostAddMessage('Error: Can''t create quest sequence file ' + s + ', ' + E.Message);
   end;
-
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(i) + ' Sequence Files Created: ' + IntToStr(j));
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -3175,6 +3193,8 @@ begin
   FilterMasterIsTemporary := Settings.ReadBool('Filter', 'MasterIsTemporary', False);
   FilterIsMaster := Settings.ReadBool('Filter', 'IsMaster', False);
   FilterPersistentPosChanged := Settings.ReadBool('Filter', 'PersistentPosChanged', False);
+
+  FilterDeleted := Settings.ReadBool('Filter', 'Deleted', False);
 
   FilterByVWD := Settings.ReadBool('Filter', 'ByVWD', False);
   FilterVWD := Settings.ReadBool('Filter', 'VWD', True);
@@ -8075,6 +8095,7 @@ begin
       cbMasterIsTemporary.Checked := FilterMasterIsTemporary;
       cbIsMaster.Checked := FilterIsMaster;
       cbPersistentPosChanged.Checked := FilterPersistentPosChanged;
+      cbDeleted.Checked := FilterDeleted;
 
       cbByVWD.Checked := FilterByVWD;
       cbVWD.Checked := FilterVWD;
@@ -8132,6 +8153,8 @@ begin
       FilterMasterIsTemporary := cbMasterIsTemporary.Checked;
       FilterIsMaster := cbIsMaster.Checked;
       FilterPersistentPosChanged := cbPersistentPosChanged.Checked;
+
+      FilterDeleted := cbDeleted.Checked;
 
       FilterByVWD := cbByVWD.Checked;
       FilterVWD := cbVWD.Checked;
@@ -8194,6 +8217,8 @@ begin
     Settings.WriteBool('Filter', 'UnnecessaryPersistent', FilterUnnecessaryPersistent);
     Settings.WriteBool('Filter', 'MasterIsTemporary', FilterMasterIsTemporary);
     Settings.WriteBool('Filter', 'PersistentPosChanged', FilterPersistentPosChanged);
+
+    Settings.WriteBool('Filter', 'Deleted', FilterDeleted);
 
     Settings.WriteBool('Filter', 'ByVWD', FilterByVWD);
     Settings.WriteBool('Filter', 'VWD', FilterVWD);
@@ -8550,6 +8575,12 @@ begin
               )
             ) or
             (
+              (FilterDeleted) and (
+                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
+                not MainRecord.IsDeleted
+              )
+            ) or
+            (
               (FilterByPersistent or FilterByVWD or FilterByHasVWDMesh) and (
                 not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
                 (
@@ -8670,6 +8701,8 @@ begin
   FilterMasterIsTemporary := False;
   FilterIsMaster := False;
   FilterPersistentPosChanged := False;
+
+  FilterDeleted := False;
 
   FilterByVWD := False;
   FilterVWD := False;
