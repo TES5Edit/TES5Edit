@@ -29,7 +29,7 @@ object frmFilterOptions: TfrmFilterOptions
     Left = 30
     Top = 172
     Width = 318
-    Height = 161
+    Height = 141
     BevelKind = bkTile
     BevelWidth = 3
     BorderStyle = bsNone
@@ -43,8 +43,11 @@ object frmFilterOptions: TfrmFilterOptions
     Top = 603
     Width = 75
     Height = 25
-    TabOrder = 2
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 2
   end
   object BitBtn2: TBitBtn
     Left = 763
@@ -52,8 +55,11 @@ object frmFilterOptions: TfrmFilterOptions
     Width = 75
     Height = 25
     Caption = 'Filter'
-    TabOrder = 3
+    DoubleBuffered = True
     Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
   end
   object cbInherit: TCheckBox
     Left = 354
@@ -314,13 +320,13 @@ object frmFilterOptions: TfrmFilterOptions
   object cbFlattenBlocks: TCheckBox
     Left = 8
     Top = 590
-    Width = 177
+    Width = 161
     Height = 17
     Caption = 'Flatten Blocks/Sub-Blocks'
     TabOrder = 35
   end
   object cbFlattenCellChilds: TCheckBox
-    Left = 191
+    Left = 185
     Top = 590
     Width = 157
     Height = 17
@@ -342,6 +348,14 @@ object frmFilterOptions: TfrmFilterOptions
     Height = 17
     Caption = 'Scaled Actors'
     TabOrder = 38
+  end
+  object cbDeleted: TCheckBox
+    Left = 8
+    Top = 319
+    Width = 145
+    Height = 17
+    Caption = 'deleted'
+    TabOrder = 39
   end
   object pmuSelection: TPopupMenu
     Left = 320

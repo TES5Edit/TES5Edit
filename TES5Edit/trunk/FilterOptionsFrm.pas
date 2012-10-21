@@ -65,6 +65,7 @@ type
     cbFlattenCellChilds: TCheckBox;
     cbAssignPersWrldChild: TCheckBox;
     cbScaledActors: TCheckBox;
+    cbDeleted: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure mniSelectionClick(Sender: TObject);
   private
