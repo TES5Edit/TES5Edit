@@ -597,6 +597,7 @@ type
     FilterMasterIsTemporary: Boolean;
     FilterIsMaster: Boolean;
     FilterPersistentPosChanged: Boolean;
+    FilterDeleted: Boolean;
 
     FilterByVWD: Boolean;
     FilterVWD: Boolean;
@@ -1439,6 +1440,33 @@ begin
   end;
 end;
 
+{
+procedure AfterCopyTES5FixQUST(const aElement: IwbElement);
+var
+  MainRecord         : IwbMainRecord;
+  Aliases            : IwbContainerElementRef;
+  Alias              : IwbContainerElementRef;
+  i                  : Integer;
+begin
+  // 25f3e
+  // 2893b
+  if not Supports(aElement, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if MainRecord.Signature <> 'QUST' then
+    Exit;
+
+  if not Supports(MainRecord.ElementByName['Aliases'], IwbContainerElementRef, Aliases) then
+    Exit;
+
+  for i := 0 to Pred(Aliases.ElementCount) do
+    if Supports(Aliases.Elements[i], IwbContainerElementRef, Alias) then
+      if Supports(Alias.ElementByName['Alias ID'], IwbContainerElementRef, Alias) then
+        if Alias.ElementCount = 2 then
+          Alias.RemoveElement(0);
+end;
+}
+
 function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
   MainRecord                  : IwbMainRecord;
@@ -1646,6 +1674,9 @@ begin
   finally
     sl.Free;
   end;
+{  if wbGameMode = gmTES5 then
+    for i := Low(Result) to High(Result) do
+      AfterCopyTES5FixQUST(Result[i]);}
 end;
 
 procedure TfrmMain.mniNavChangeReferencingRecordsClick(Sender: TObject);
@@ -2328,60 +2359,75 @@ end;
 
 procedure TfrmMain.mniNavCreateSEQFileClick(Sender: TObject);
 var
-  NodeData   : PNavNodeData;
-  _File      : IwbFile;
-  Group      : IwbGroupRecord;
-  i          : Integer;
-  MainRecord : IwbMainRecord;
-  QustFlags  : IwbElement;
-  FormIDs    : array of Cardinal;
-  FileStream : TFileStream;
-  p, s       : string;
+  SelectedNodes  : TNodeArray;
+  NodeData       : PNavNodeData;
+  _File          : IwbFile;
+  Group          : IwbGroupRecord;
+  i, n, j        : Integer;
+  MainRecord     : IwbMainRecord;
+  QustFlags      : IwbElement;
+  FormIDs        : array of Cardinal;
+  FileStream     : TFileStream;
+  p, s           : string;
 begin
-  NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
-
-  if not Assigned(NodeData) then
+  SelectedNodes := vstNav.GetSortedSelection(True);
+  if Length(SelectedNodes) < 1 then
     Exit;
 
-  if not Supports(NodeData.Element, IwbFile, _File) then
-    Exit;
+  j := 0;
 
-  Group := _File.GroupBySignature['QUST'];
+  for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+    NodeData := vstNav.GetNodeData(SelectedNodes[i]);
 
-  if not Assigned(Group) then
-    Exit;
+    if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+      SetLength(FormIDs, 0);
 
-  for i := 0 to Pred(Group.ElementCount) do
-    if Supports(Group.Elements[i], IwbMainRecord, MainRecord) then begin
-      QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-      if not Assigned(QustFlags) then
+      if not Supports(NodeData.Element, IwbFile, _File) then
         Continue;
-      if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
-        SetLength(FormIDs, Succ(Length(FormIDs)));
-        FormIDs[High(FormIDs)] := MainRecord.FormID;
+
+      if _File.LoadOrder = 0 then
+        Continue;
+
+      Group := _File.GroupBySignature['QUST'];
+
+      if Assigned(Group) then begin
+        for n := 0 to Pred(Group.ElementCount) do
+          if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
+            QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+            if Assigned(QustFlags) then
+              if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
+                SetLength(FormIDs, Succ(Length(FormIDs)));
+                FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
+              end;
+          end;
+      end;
+
+      if Length(FormIDs) = 0 then
+        PostAddMessage('Skipped: ' + _File.FileName + ' doesn''t need sequence file')
+      else try
+        try
+          p := DataPath + 'Seq\';
+          if not DirectoryExists(p) then
+            if not ForceDirectories(p) then
+              raise Exception.Create('Unable to create SEQ directory in game''s Data');
+          s := p + ChangeFileExt(_File.FileName, '.seq');
+          FileStream := TFileStream.Create(s, fmCreate);
+          FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
+          PostAddMessage('Created: ' + s);
+          Inc(j);
+        finally
+          if Assigned(FileStream) then
+            FreeAndNil(FileStream);
+        end;
+      except
+        on e: Exception do begin
+          PostAddMessage('Error: Can''t create ' + s + ', ' + E.Message);
+          Exit;
+        end;
       end;
     end;
-
-  if Length(FormIDs) = 0 then
-    PostAddMessage('Done: Nothing to save.')
-  else try
-    try
-      p := DataPath + 'Seq\';
-      if not DirectoryExists(p) then
-        if not ForceDirectories(p) then
-          p := DataPath;
-      s := p + ChangeFileExt(_File.FileName, '.seq');
-      FileStream := TFileStream.Create(s, fmCreate);
-      FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
-      PostAddMessage('Done: Created ' + s);
-    finally
-      FileStream.Free;
-    end;
-  except
-    on e: Exception do
-      PostAddMessage('Error: Can''t create quest sequence file ' + s + ', ' + E.Message);
   end;
-
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(i) + ' Sequence Files Created: ' + IntToStr(j));
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -2754,6 +2800,7 @@ begin
 
     if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then begin
       AddMessage('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
+      wbDontSave := True;
       Exit;
     end;
 
@@ -2761,6 +2808,7 @@ begin
 
     if DataPath = '' then begin
       AddMessage('Fatal: Could not determine '+wbGameName+' installation path.');
+      wbDontSave := True;
       Exit;
     end;
 
@@ -2768,7 +2816,7 @@ begin
     Free;
   end;
 
-  AddMessage(wbAppName + 'Edit ' + VersionString);
+  AddMessage(wbAppName + 'Edit ' + VersionString + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
   DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
   wbDataPath := DataPath;
@@ -3145,6 +3193,8 @@ begin
   FilterMasterIsTemporary := Settings.ReadBool('Filter', 'MasterIsTemporary', False);
   FilterIsMaster := Settings.ReadBool('Filter', 'IsMaster', False);
   FilterPersistentPosChanged := Settings.ReadBool('Filter', 'PersistentPosChanged', False);
+
+  FilterDeleted := Settings.ReadBool('Filter', 'Deleted', False);
 
   FilterByVWD := Settings.ReadBool('Filter', 'ByVWD', False);
   FilterVWD := Settings.ReadBool('Filter', 'VWD', True);
@@ -3547,10 +3597,10 @@ var
   UndeletedCount              : Cardinal;
   DeletedNAVM                 : Cardinal;
   StartTick                   : Cardinal;
-  i                           : Integer;
+  i, n                        : Integer;
   MainRecord                  : IwbMainRecord;
   Position                    : TD3DXVector3;
-  Cntr                        : IwbContainerElementRef;
+  Cntr, Cntr2                 : IwbContainerElementRef;
 begin
   if not wbEditAllowed then
     Exit;
@@ -3628,8 +3678,8 @@ begin
                (Signature = 'PFLA') or {>>> Skyrim <<<}
                (Signature = 'PHZD')    {>>> Skyrim <<<}
              ) then
-            if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
-
+          //begin
+          if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
             IsDeleted := True;
             IsDeleted := False;
             PostAddMessage('Undeleting: ' + MainRecord.Name);
@@ -3649,6 +3699,18 @@ begin
               Cntr.ElementNativeValues['Reference'] := $14;
               Cntr.ElementNativeValues['Flags'] := 1;
             end;
+
+            // Undeleting NAVM, needs to update NAVI as well
+//            if (Signature = 'NAVM') then
+//              if wbGameMode in [gmTES5] then begin
+//                if Supports(MainRecord.ElementByPath['NVNM - Geometry\Vertices'], IwbContainerElementRef, Cntr) then begin
+//                  for n := 0 to Pred(Cntr.ElementCount) do
+//                    if Supports(Cntr.Elements[n], IwbContainerElementRef, Cntr2) then
+//                      Cntr2.ElementByName['Z'].NativeValue := -30000;
+//                end;
+//              end else
+//                Inc(DeletedNAVM);
+
             Inc(UndeletedCount);
           end;
         end;
@@ -3746,14 +3808,16 @@ begin
 
   SaveChanged;
 
-  Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
-  if WindowState = wsNormal then begin
-    Settings.WriteInteger(Name, 'Left', Left);
-    Settings.WriteInteger(Name, 'Top', Top);
-    Settings.WriteInteger(Name, 'Width', Width);
-    Settings.WriteInteger(Name, 'Height', Height);
+  if Assigned(Settings) then begin
+    Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
+    if WindowState = wsNormal then begin
+      Settings.WriteInteger(Name, 'Left', Left);
+      Settings.WriteInteger(Name, 'Top', Top);
+      Settings.WriteInteger(Name, 'Width', Width);
+      Settings.WriteInteger(Name, 'Height', Height);
+    end;
+    Settings.UpdateFile;
   end;
-  Settings.UpdateFile;
 
   try
     s := ExtractFilePath(Application.ExeName) + wbAppName + 'Edit_log.txt';
@@ -8031,6 +8095,7 @@ begin
       cbMasterIsTemporary.Checked := FilterMasterIsTemporary;
       cbIsMaster.Checked := FilterIsMaster;
       cbPersistentPosChanged.Checked := FilterPersistentPosChanged;
+      cbDeleted.Checked := FilterDeleted;
 
       cbByVWD.Checked := FilterByVWD;
       cbVWD.Checked := FilterVWD;
@@ -8088,6 +8153,8 @@ begin
       FilterMasterIsTemporary := cbMasterIsTemporary.Checked;
       FilterIsMaster := cbIsMaster.Checked;
       FilterPersistentPosChanged := cbPersistentPosChanged.Checked;
+
+      FilterDeleted := cbDeleted.Checked;
 
       FilterByVWD := cbByVWD.Checked;
       FilterVWD := cbVWD.Checked;
@@ -8150,6 +8217,8 @@ begin
     Settings.WriteBool('Filter', 'UnnecessaryPersistent', FilterUnnecessaryPersistent);
     Settings.WriteBool('Filter', 'MasterIsTemporary', FilterMasterIsTemporary);
     Settings.WriteBool('Filter', 'PersistentPosChanged', FilterPersistentPosChanged);
+
+    Settings.WriteBool('Filter', 'Deleted', FilterDeleted);
 
     Settings.WriteBool('Filter', 'ByVWD', FilterByVWD);
     Settings.WriteBool('Filter', 'VWD', FilterVWD);
@@ -8506,6 +8575,12 @@ begin
               )
             ) or
             (
+              (FilterDeleted) and (
+                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
+                not MainRecord.IsDeleted
+              )
+            ) or
+            (
               (FilterByPersistent or FilterByVWD or FilterByHasVWDMesh) and (
                 not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
                 (
@@ -8626,6 +8701,8 @@ begin
   FilterMasterIsTemporary := False;
   FilterIsMaster := False;
   FilterPersistentPosChanged := False;
+
+  FilterDeleted := False;
 
   FilterByVWD := False;
   FilterVWD := False;
@@ -8952,7 +9029,9 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavCreateSEQFile.Visible := (wbGameMode = gmTES5);
+  mniNavCreateSEQFile.Visible := (wbGameMode = gmTES5) and
+     Assigned(Element) and
+    (Element.ElementType = etFile);
 
   mniNavLocalization.Visible := (wbGameMode = gmTES5);
   mniNavLocalizationSwitch.Visible :=

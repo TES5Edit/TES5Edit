@@ -1991,8 +1991,10 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
   else if wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbGameMode = gmTES5 then
+  else if wbGameMode = gmTES5 then begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94';
+    //Header.ElementByName['Form Version'].NativeValue := 43;
+  end;
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '2048';
   flLoadFinished := True;
 end;
@@ -10270,7 +10272,8 @@ begin
     Exit;
 
   {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}
-  if wbGameMode = gmTES5 then
+  {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
+  if wbGameMode in [gmFNV, gmTES5] then
     Exit;
 
   Include(grStates, gsSorting);

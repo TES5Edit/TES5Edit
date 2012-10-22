@@ -614,6 +614,7 @@ const
   XNAM : TwbSignature = 'XNAM';
   XNDP : TwbSignature = 'XNDP';
   XOCP : TwbSignature = 'XOCP';
+  XORD : TwbSignature = 'XORD';
   XOWN : TwbSignature = 'XOWN';
   XPOD : TwbSignature = 'XPOD';
   XPPA : TwbSignature = 'XPPA';
@@ -750,7 +751,6 @@ var
   wbCOCT: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
-  wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
   wbCNAMReq: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef; {Associated with CTDA}
@@ -788,6 +788,7 @@ var
   wbMorphs: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
   wbTintMaskTypeEnum: IwbEnumDef;
+  wbQUSTAliasFlags: IwbSubRecordDef;
   wbPKDTFlags: IwbFlagsDef;
   wbPKDTInterruptFlags: IwbFlagsDef;
   wbPDTO: IwbSubRecordDef;
@@ -2156,8 +2157,8 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := False; Exit; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
-  Result := True;
+  Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
+  //Result := True;
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -4426,7 +4427,7 @@ begin
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, nil{wbActorTemplateUseActorEffectList});
 
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32);
-  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True);
+  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -5077,7 +5078,7 @@ begin
       {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
       {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
       {3} wbByteArray('Near Editor Location', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, SHOU]),
+      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SHOU]),
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unknown', 4, cpIgnore),
@@ -5102,7 +5103,7 @@ begin
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA], True),
-      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, SHOU]),
+      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SHOU]),
       {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {3} wbFormID('Reference'),
       {4} wbInteger('Alias ID', itU32),
@@ -5515,7 +5516,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbMODL,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -6335,7 +6336,7 @@ begin
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDID,
-    wbMODLReq,
+    wbMODL,
     wbString(BNAM, 'Type')
   ]);
 
@@ -6472,7 +6473,7 @@ procedure DefineTES5c;
   begin
     wbRecord(aSignature, aName, [
       wbVMAD,
-      wbFormIDCk(NAME, 'Projectile', [PROJ]),
+      wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
       wbOwnership,
       wbFloat(XHTW, 'Head-Tracking Weight'),
@@ -7440,7 +7441,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbMODL,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -7620,7 +7621,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbMODL,
     wbDEST,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'On Local Map',
@@ -7781,14 +7782,36 @@ begin
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbByteArray('Unknown', 0)
+        wbByteArray('Unknown')
+//        wbArray('Island', wbStruct('Data', [
+//          wbFloat('Min X'),
+//          wbFloat('Min Y'),
+//          wbFloat('Min Z'),
+//          wbFloat('Max X'),
+//          wbFloat('Max Y'),
+//          wbFloat('Max Z'),
+//          wbArray('Triangles',
+//            wbStruct('Triangle', [
+//              wbArray('Vertices', wbInteger('Vertex', itS16), 3)
+//            ])
+//          , -1),
+//          wbArray('Vertices', wbStruct('Vertex', [
+//            wbFloat('X'),
+//            wbFloat('Y'),
+//            wbFloat('Z')
+//          ]), -1)
+//        ]), -1),
+
+//        wbByteArray('Unknown', 4),
+//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+//        wbByteArray('Cell/Grid', 4)
       ])
     ),
     wbStruct(NVPP, 'Preferred Pathing', [
       wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-      wbArray('Unknown', wbStruct('', [
+      wbArray('NavMesh Tree?', wbStruct('', [
         wbFormIDCk('NavMesh', [NAVM]),
-        wbInteger('Unknown', itU32)
+        wbInteger('Index/Node', itU32)
       ]), -1)
     ]),
     wbArrayS(NVSI, 'Unknown', wbByteArray('Unknown' ,4))
@@ -7846,10 +7869,10 @@ begin
 
   wbRecord(NAVM, 'Navigation Mesh', [
     wbEDID,
-    //wbUnknown(NVNM),
     wbStruct(NVNM, 'Geometry', [
       wbInteger('Unknown', itU32),
       wbByteArray('Unknown', 4),
+//      wbByteArray('Unknown', 8),
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
       wbUnion('Parent', wbNVNMParentDecider, [
 //        no containers in wbUnion :(
@@ -7860,16 +7883,55 @@ begin
         wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
+
       wbArray('Vertices', wbStruct('Vertex', [
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
       ]), -1),
-      // here comes a prefixed length array of supposedly Tri(s).
-      // needs more work to structue it.
-//      wbArray('Tri',
-//        wbByteArray('Unknown', 12)
-//      , -1),
+
+      wbArray('Triangles',
+        wbStruct('Triangle', [
+          wbArray('Vertices', wbInteger('Vertex', itS16), 3),
+          wbArray('Edges', wbInteger('Triangle', itS16), [
+            '0 <-> 1',
+            '1 <-> 2',
+            '2 <-> 0'
+          ]),
+          wbByteArray('Cover Marker?', 2),
+          wbInteger('Cover Edge #1 Flags', itU8),
+          wbInteger('Cover Edge #2 Flags', itU8)
+        ])
+      , -1),
+
+      // 0f065f
+      wbArray('External Connections',
+        wbStruct('Connection', [
+          wbByteArray('Unknown', 4),
+          wbFormIDCk('Mesh', [NAVM]),
+          wbInteger('Triangle', itS16)
+        ])
+      , -1),
+
+      wbArray('Door Triangles',
+        wbStruct('Door Triangle', [
+          wbInteger('Triangle before door', itS16),
+          wbByteArray('Unknown', 4),
+          wbFormIDCk('Door', [REFR])
+        ])
+      , -1),
+
+      wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
+      wbInteger('Divisor?', itU32),
+      wbFloat('Max X Distance'),
+      wbFloat('Max Y Distance'),
+      wbFloat('Min X'),
+      wbFloat('Min Y'),
+      wbFloat('Min Z'),
+      wbFloat('Max X'),
+      wbFloat('Max Y'),
+      wbFloat('Max Z'),
+      wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
       wbUnknown
     ]),
     wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
@@ -8437,7 +8499,7 @@ begin
 
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
-    wbMODLReq,
+    wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [1], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(PNAM, 'Pose Matching', 0, cpNormal, True),
@@ -8504,7 +8566,7 @@ begin
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBNDReq,
-    wbMODLReq,
+    wbMODL,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
@@ -8937,7 +8999,7 @@ begin
     wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(MNAM, 'Num quests to run', itU32),
     wbInteger(QNAM, 'Quest Count', itU32),
-    wbRArrayS('Quests', wbRStructSK([0], 'Quest', [
+    wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
       wbUnknown(FNAM),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
@@ -9427,7 +9489,7 @@ begin
   wbRecord(GRAS, 'Grass', [
     wbEDID,
     wbOBNDReq,
-    wbMODLReq,
+    wbMODL,
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -10228,8 +10290,11 @@ begin
         'Restoration',
         'Enchanting'
       ]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unused', 4, cpIgnore),
+      //wbByteArray('Unknown', 4),
+      wbInteger('Health', itU16),
+      wbInteger('Magicka', itU16),
+      wbInteger('Stamina', itU16),
+      wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Far away model distance'),
       wbInteger('Geared up weapons', itU8),
       wbByteArray('Unused', 3, cpIgnore)
@@ -10564,6 +10629,32 @@ begin
     ], [])
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
+  wbQUSTAliasFlags :=
+    wbStruct(FNAM, 'Alias Flags', [
+      wbInteger('Flags', itU16, wbFlags([
+        {0x0001}'Reserves Location/Reference',
+        {0x0002}'Optional',
+        {0x0004}'Quest Object',
+        {0x0008}'Allow Reuse in Quest',
+        {0x0010}'Allow Dead',
+        {0x0020}'Matching Ref - In Loaded Area',
+        {0x0040}'Essential',
+        {0x0080}'Allow Disabled',
+        {0x0100}'Stores Text',
+        {0x0200}'Allow Reserved',
+        {0x0400}'Protected',
+        {0x0800}'Forced by Aliases?',
+        {0x1000}'Allow Destroyed',
+        {0x2000}'Matching Ref - Closest',
+        {0x4000}'Uses Stored Text',
+        {0x8000}'Initially Disabled'
+      ])),
+      wbInteger('Additional Flags', itU16, wbFlags([
+        {0x0001}'Allow Cleared',
+        {0x0002}'Clear Names When Removed'
+      ]))
+    ], cpNormal, False, nil, 1);
+
   wbRecord(QUST, 'Quest', [
     wbEDID,
     wbVMAD,
@@ -10609,7 +10700,7 @@ begin
     wbEmpty(NEXT, 'Marker'),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
-      wbStruct(INDX, 'Stage Index', [
+      wbStructSK(INDX, [0], 'Stage Index', [
         wbInteger('Stage Index', itU16),
         wbInteger('Flags', itU8, wbFlags([
           {0x01} 'Unknown 1',
@@ -10617,7 +10708,7 @@ begin
           {0x04} 'Shut Down Stage',
           {0x08} 'Keep Instance Data From Here On'
         ])),
-        wbByteArray('Unknown', 1)
+        wbInteger('Unknown', itU8)
       ]),
       wbRArray('Log Entries', wbRStruct('Log Entry', [
         wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
@@ -10644,98 +10735,138 @@ begin
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Compass Marker Ignores Locks'
           ])),
-          wbByteArray('Unknown', 3)
+          wbByteArray('Unused', 3)
         ]),
         wbCTDAs
       ], []))
     ], [])),
     wbByteArray(ANAM, 'Aliases Marker', 4),
     wbRArray('Aliases',
-      wbRStruct('Alias', [
-        wbRUnion('Alias Type / ID', [
+      wbRUnion('Alias', [
+
+        // Reference Alias
+        wbRStruct('Alias', [
           wbInteger(ALST, 'Reference Alias ID', itU32),
-          wbInteger(ALLS, 'Location Alias ID', itU32)
-        ], []),
-        wbString(ALID, 'Alias Name', 0, cpTranslate),
-        wbStruct(FNAM, 'Alias Flags', [
-          wbInteger('Flags', itU16, wbFlags([
-            {0x0001}'Reserves Location/Reference',
-            {0x0002}'Optional',
-            {0x0004}'Quest Object',
-            {0x0008}'Allow Reuse in Quest',
-            {0x0010}'Allow Dead',
-            {0x0020}'Matching Ref - In Loaded Area',
-            {0x0040}'Essential',
-            {0x0080}'Allow Disabled',
-            {0x0100}'Stores Text',
-            {0x0200}'Allow Reserved',
-            {0x0400}'Protected',
-            {0x0800}'Forced by Aliases?',
-            {0x1000}'Allow Destroyed',
-            {0x2000}'Matching Ref - Closest',
-            {0x4000}'Uses Stored Text',
-            {0x8000}'Initially Disabled'
-          ])),
-          wbInteger('Additional Flags', itU16, wbFlags([
-            {0x0001}'Allow Cleared',
-            {0x0002}'Clear Names When Removed'
-          ]))
-        ], cpNormal, False, nil, 1),
-        wbInteger(ALFI, 'Force Into Alias When Filled', itU32),
-        wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
-        wbFormID(ALFR, 'Forced Reference'),
-        wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
-        wbRStruct('Location Alias Reference', [
-          wbInteger(ALFA, 'Alias', itU32),
-          wbFormIDCk(KNAM, 'Keyword', [KYWD]),
-          wbFormIDCk(ALRT, 'Ref Type', [LCRT])
-        ], []),
-        wbRStruct('External Alias Reference', [
-          wbFormIDCk(ALEQ, 'Quest', [QUST]),
-          wbInteger(ALEA, 'Alias', itU32)
-        ], []),
-        wbRStruct('Create Reference to Object', [
-          wbFormID(ALCO, 'Object'),
-          wbStruct(ALCA, 'Alias', [
-            wbInteger('Alias', itU16),
-            wbInteger('Create', itU16, wbEnum([] ,[
-              $0000, 'At',
-              $8000, 'In'
+          wbString(ALID, 'Alias Name'),
+          wbQUSTAliasFlags,
+          wbInteger(ALFI, 'Force Into Alias When Filled', itU32),
+          wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
+          wbFormID(ALFR, 'Forced Reference'),
+          wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
+          wbRStruct('Location Alias Reference', [
+            wbInteger(ALFA, 'Alias', itU32),
+            wbFormIDCk(KNAM, 'Keyword', [KYWD]),
+            wbFormIDCk(ALRT, 'Ref Type', [LCRT])
+          ], []),
+          wbRStruct('External Alias Reference', [
+            wbFormIDCk(ALEQ, 'Quest', [QUST]),
+            wbInteger(ALEA, 'Alias', itU32)
+          ], []),
+          wbRStruct('Create Reference to Object', [
+            wbFormID(ALCO, 'Object'),
+            wbStruct(ALCA, 'Alias', [
+              wbInteger('Alias', itU16),
+              wbInteger('Create', itU16, wbEnum([] ,[
+                $0000, 'At',
+                $8000, 'In'
+              ]))
+            ]),
+            wbInteger(ALCL, 'Level', itU32, wbEnum([
+              'Easy',
+              'Medium',
+              'Hard',
+              'Very Hard',
+              'None'
             ]))
-          ]),
-          wbInteger(ALCL, 'Level', itU32, wbEnum([
-            'Easy',
-            'Medium',
-            'Hard',
-            'Very Hard',
-            'None'
-          ]))
+          ], []),
+          wbRStruct('Find Matching Reference Near Alias', [
+            wbInteger(ALNA, 'Near Alias', itU32),
+            wbInteger(ALNT, 'Near Type', itU32, wbEnum([
+              'Linked Ref Child'
+            ]))
+          ], []),
+          wbRStruct('Find Matching Reference From Event', [
+            wbString(ALFE, 'From Event', 4),
+            wbByteArray(ALFD, 'Event Data')
+          ], []),
+          wbCTDAs,
+          wbKSIZ,
+          wbKWDAs,
+          wbInteger(COCT, 'Count', itU32),
+          wbCNTOs,
+          wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(ALDN, 'Display Name', [MESG]),
+          wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
+          wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
+          wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
+          wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], []),
-        wbRStruct('Find Matching Reference Near Alias', [
-          wbInteger(ALNA, 'Near Alias', itU32),
-          wbInteger(ALNT, 'Near Type', itU32, wbEnum([
-            'Linked Ref Child'
-          ]))
-        ], []),
-        wbRStruct('Find Matching Reference From Event', [
-          wbString(ALFE, 'From Event', 4),
-          wbByteArray(ALFD, 'Event Data')
-        ], []),
-        wbCTDAs,
-        wbKSIZ,
-        wbKWDAs,
-        wbInteger(COCT, 'Count', itU32),
-        wbCNTOs,
-        wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
-        wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
-        wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
-        wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-        wbFormIDCk(ALDN, 'Display Name', [MESG]),
-        wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
-        wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
-        wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-        wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
-        wbEmpty(ALED, 'Alias End', cpNormal, True)
+
+        // Location Alias
+        wbRStruct('Alias', [
+          wbInteger(ALLS, 'Location Alias ID', itU32),
+          wbString(ALID, 'Alias Name'),
+          wbQUSTAliasFlags,
+          wbInteger(ALFI, 'Force Into Alias When Filled', itU32),
+          wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
+          wbFormID(ALFR, 'Forced Reference'),
+          wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
+          wbRStruct('Location Alias Reference', [
+            wbInteger(ALFA, 'Alias', itU32),
+            wbFormIDCk(KNAM, 'Keyword', [KYWD]),
+            wbFormIDCk(ALRT, 'Ref Type', [LCRT])
+          ], []),
+          wbRStruct('External Alias Reference', [
+            wbFormIDCk(ALEQ, 'Quest', [QUST]),
+            wbInteger(ALEA, 'Alias', itU32)
+          ], []),
+          wbRStruct('Create Reference to Object', [
+            wbFormID(ALCO, 'Object'),
+            wbStruct(ALCA, 'Alias', [
+              wbInteger('Alias', itU16),
+              wbInteger('Create', itU16, wbEnum([] ,[
+                $0000, 'At',
+                $8000, 'In'
+              ]))
+            ]),
+            wbInteger(ALCL, 'Level', itU32, wbEnum([
+              'Easy',
+              'Medium',
+              'Hard',
+              'Very Hard',
+              'None'
+            ]))
+          ], []),
+          wbRStruct('Find Matching Reference Near Alias', [
+            wbInteger(ALNA, 'Near Alias', itU32),
+            wbInteger(ALNT, 'Near Type', itU32, wbEnum([
+              'Linked Ref Child'
+            ]))
+          ], []),
+          wbRStruct('Find Matching Reference From Event', [
+            wbString(ALFE, 'From Event', 4),
+            wbByteArray(ALFD, 'Event Data')
+          ], []),
+          wbCTDAs,
+          wbKSIZ,
+          wbKWDAs,
+          wbInteger(COCT, 'Count', itU32),
+          wbCNTOs,
+          wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
+          wbFormIDCk(ALDN, 'Display Name', [MESG]),
+          wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
+          wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
+          wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
+          wbEmpty(ALED, 'Alias End', cpNormal, True)
+        ], [])
       ], [])
     ),
     wbString(NNAM, 'Description', 0, cpNormal, False),
@@ -10756,38 +10887,38 @@ begin
   ]);
 
   wbNoseMorphFlags := wbInteger('Nose Morph Flags', itU32, wbFlags([
-        {0x00000001}'NoseType0',
-        {0x00000002}'NoseType1',
-        {0x00000004}'NoseType2',
-        {0x00000008}'NoseType3',
-        {0x00000010}'NoseType4',
-        {0x00000020}'NoseType5',
-        {0x00000040}'NoseType6',
-        {0x00000080}'NoseType7',
-        {0x00000100}'NoseType8',
-        {0x00000200}'NoseType9',
-        {0x00000400}'NoseType10',
-        {0x00000800}'NoseType11',
-        {0x00001000}'NoseType12',
-        {0x00002000}'NoseType13',
-        {0x00004000}'NoseType14',
-        {0x00008000}'NoseType15',
-        {0x00010000}'NoseType16',
-        {0x00020000}'NoseType17',
-        {0x00040000}'NoseType18',
-        {0x00080000}'NoseType19',
-        {0x00100000}'NoseType20',
-        {0x00200000}'NoseType21',
-        {0x00400000}'NoseType22',
-        {0x00800000}'NoseType23',
-        {0x01000000}'NoseType24',
-        {0x02000000}'NoseType25',
-        {0x03000000}'NoseType26',
-        {0x08000000}'NoseType27',
-        {0x10000000}'NoseType28',
-        {0x20000000}'NoseType29',
-        {0x40000000}'NoseType30',
-        {0x80000000}'NoseType31'
+    {0x00000001}'NoseType0',
+    {0x00000002}'NoseType1',
+    {0x00000004}'NoseType2',
+    {0x00000008}'NoseType3',
+    {0x00000010}'NoseType4',
+    {0x00000020}'NoseType5',
+    {0x00000040}'NoseType6',
+    {0x00000080}'NoseType7',
+    {0x00000100}'NoseType8',
+    {0x00000200}'NoseType9',
+    {0x00000400}'NoseType10',
+    {0x00000800}'NoseType11',
+    {0x00001000}'NoseType12',
+    {0x00002000}'NoseType13',
+    {0x00004000}'NoseType14',
+    {0x00008000}'NoseType15',
+    {0x00010000}'NoseType16',
+    {0x00020000}'NoseType17',
+    {0x00040000}'NoseType18',
+    {0x00080000}'NoseType19',
+    {0x00100000}'NoseType20',
+    {0x00200000}'NoseType21',
+    {0x00400000}'NoseType22',
+    {0x00800000}'NoseType23',
+    {0x01000000}'NoseType24',
+    {0x02000000}'NoseType25',
+    {0x04000000}'NoseType26',
+    {0x08000000}'NoseType27',
+    {0x10000000}'NoseType28',
+    {0x20000000}'NoseType29',
+    {0x40000000}'NoseType30',
+    {0x80000000}'NoseType31'
   ]));
 
   wbBrowMorphFlags := wbInteger('Brow Morph Flags', itU32, wbFlags([
@@ -10815,83 +10946,83 @@ begin
   ], True));
 
   wbEyesMorphFlags01 := wbInteger('Eye Morph Flags 1', itU32, wbFlags([
-        {0x00000001}'EyesType0',
-        {0x00000002}'EyesType1',
-        {0x00000004}'EyesType2',
-        {0x00000008}'EyesType3',
-        {0x00000010}'EyesType4',
-        {0x00000020}'EyesType5',
-        {0x00000040}'EyesType6',
-        {0x00000080}'EyesType7',
-        {0x00000100}'EyesType8',
-        {0x00000200}'EyesType9',
-        {0x00000400}'EyesType10',
-        {0x00000800}'EyesType11',
-        {0x00001000}'EyesType12',
-        {0x00002000}'EyesType13',
-        {0x00004000}'EyesType14',
-        {0x00008000}'EyesType15',
-        {0x00010000}'EyesType16',
-        {0x00020000}'EyesType17',
-        {0x00040000}'EyesType18',
-        {0x00080000}'EyesType19',
-        {0x00100000}'EyesType20',
-        {0x00200000}'EyesType21',
-        {0x00400000}'EyesType22',
-        {0x00800000}'EyesType23',
-        {0x01000000}'EyesType24',
-        {0x02000000}'EyesType25',
-        {0x03000000}'EyesType26',
-        {0x08000000}'EyesType27',
-        {0x10000000}'EyesType28',
-        {0x20000000}'EyesType29',
-        {0x40000000}'EyesType30',
-        {0x80000000}'EyesType31'
+    {0x00000001}'EyesType0',
+    {0x00000002}'EyesType1',
+    {0x00000004}'EyesType2',
+    {0x00000008}'EyesType3',
+    {0x00000010}'EyesType4',
+    {0x00000020}'EyesType5',
+    {0x00000040}'EyesType6',
+    {0x00000080}'EyesType7',
+    {0x00000100}'EyesType8',
+    {0x00000200}'EyesType9',
+    {0x00000400}'EyesType10',
+    {0x00000800}'EyesType11',
+    {0x00001000}'EyesType12',
+    {0x00002000}'EyesType13',
+    {0x00004000}'EyesType14',
+    {0x00008000}'EyesType15',
+    {0x00010000}'EyesType16',
+    {0x00020000}'EyesType17',
+    {0x00040000}'EyesType18',
+    {0x00080000}'EyesType19',
+    {0x00100000}'EyesType20',
+    {0x00200000}'EyesType21',
+    {0x00400000}'EyesType22',
+    {0x00800000}'EyesType23',
+    {0x01000000}'EyesType24',
+    {0x02000000}'EyesType25',
+    {0x04000000}'EyesType26',
+    {0x08000000}'EyesType27',
+    {0x10000000}'EyesType28',
+    {0x20000000}'EyesType29',
+    {0x40000000}'EyesType30',
+    {0x80000000}'EyesType31'
   ]));
 
   wbEyesMorphFlags02 := wbInteger('Eye Morph Flags 2', itU8, wbFlags([
-        {0x00000001}'EyesType32',
-        {0x00000002}'EyesType33',
-        {0x00000004}'EyesType34',
-        {0x00000008}'EyesType35',
-        {0x00000010}'EyesType36',
-        {0x00000020}'EyesType37',
-        {0x00000040}'EyesType38'
+    {0x00000001}'EyesType32',
+    {0x00000002}'EyesType33',
+    {0x00000004}'EyesType34',
+    {0x00000008}'EyesType35',
+    {0x00000010}'EyesType36',
+    {0x00000020}'EyesType37',
+    {0x00000040}'EyesType38'
   ], True));
 
   wbLipMorphFlags := wbInteger('Lip Morph Flags', itU32, wbFlags([
-        {0x00000001}'LipType0',
-        {0x00000002}'LipType1',
-        {0x00000004}'LipType2',
-        {0x00000008}'LipType3',
-        {0x00000010}'LipType4',
-        {0x00000020}'LipType5',
-        {0x00000040}'LipType6',
-        {0x00000080}'LipType7',
-        {0x00000100}'LipType8',
-        {0x00000200}'LipType9',
-        {0x00000400}'LipType10',
-        {0x00000800}'LipType11',
-        {0x00001000}'LipType12',
-        {0x00002000}'LipType13',
-        {0x00004000}'LipType14',
-        {0x00008000}'LipType15',
-        {0x00010000}'LipType16',
-        {0x00020000}'LipType17',
-        {0x00040000}'LipType18',
-        {0x00080000}'LipType19',
-        {0x00100000}'LipType20',
-        {0x00200000}'LipType21',
-        {0x00400000}'LipType22',
-        {0x00800000}'LipType23',
-        {0x01000000}'LipType24',
-        {0x02000000}'LipType25',
-        {0x03000000}'LipType26',
-        {0x08000000}'LipType27',
-        {0x10000000}'LipType28',
-        {0x20000000}'LipType29',
-        {0x40000000}'LipType30',
-        {0x80000000}'LipType31'
+    {0x00000001}'LipType0',
+    {0x00000002}'LipType1',
+    {0x00000004}'LipType2',
+    {0x00000008}'LipType3',
+    {0x00000010}'LipType4',
+    {0x00000020}'LipType5',
+    {0x00000040}'LipType6',
+    {0x00000080}'LipType7',
+    {0x00000100}'LipType8',
+    {0x00000200}'LipType9',
+    {0x00000400}'LipType10',
+    {0x00000800}'LipType11',
+    {0x00001000}'LipType12',
+    {0x00002000}'LipType13',
+    {0x00004000}'LipType14',
+    {0x00008000}'LipType15',
+    {0x00010000}'LipType16',
+    {0x00020000}'LipType17',
+    {0x00040000}'LipType18',
+    {0x00080000}'LipType19',
+    {0x00100000}'LipType20',
+    {0x00200000}'LipType21',
+    {0x00400000}'LipType22',
+    {0x00800000}'LipType23',
+    {0x01000000}'LipType24',
+    {0x02000000}'LipType25',
+    {0x04000000}'LipType26',
+    {0x08000000}'LipType27',
+    {0x10000000}'LipType28',
+    {0x20000000}'LipType29',
+    {0x40000000}'LipType30',
+    {0x80000000}'LipType31'
   ]));
 
   wbTintMaskTypeEnum := wbEnum([
@@ -11078,7 +11209,7 @@ begin
   ], []);
 
   wbHeadPart := wbRStructSK([0],'Head Part', [
-    wbInteger(INDX, 'Head Part Number', itU32), {>>> Needs Count Updated <<<}
+    wbInteger(INDX, 'Head Part Number', itU32),
     wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
   ], []);
 
@@ -11159,14 +11290,14 @@ begin
         wbEmpty(MNAM, 'Male Data Marker'),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbMODLReq
+          wbMODL
         ], []), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbMODLReq
+          wbMODL
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -11229,7 +11360,7 @@ begin
           wbRArrayS('Face Details Texture Set List Male', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
           wbTints,
-          wbMODLReq
+          wbMODL
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
@@ -11241,7 +11372,7 @@ begin
           wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
           wbTints,
-          wbMODLReq
+          wbMODL
       ], [], cpNormal, True)
     ], [], cpNormal, False),
     // End Head Data
@@ -11286,7 +11417,7 @@ begin
         'Unknown 4'
       ]))
     ]),
-
+    wbUnknown(XORD),
     wbStruct(XOCP, 'Occlusion Plane Data', [
       wbStruct('Size', [
         wbFloat('Width', cpNormal, False, 2),
@@ -11475,7 +11606,7 @@ begin
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
       wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Unknown', itU16),
+      wbInteger('Teleport Marker Triangle', itS16),
       wbByteArray('Unknown', 2)
     ]),
 
@@ -11855,7 +11986,7 @@ begin
   wbRecord(TREE, 'Tree', [
     wbEDID,
     wbOBNDReq,
-    wbMODLReq,
+    wbMODL,
     wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, NULL]),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Ingredient Production', [
@@ -12164,7 +12295,8 @@ begin
           wbInteger('X', itS16),
           wbInteger('Y', itS16)
         ])
-      ])
+      ]),
+      wbByteArray('Unknown')
     ]),
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
