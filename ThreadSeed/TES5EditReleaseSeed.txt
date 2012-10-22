@@ -90,6 +90,7 @@ or here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=23611"]Di
 
 Update Miax’s Tome of FO3Edit for Skyrim.
 Update NAVM, NAVI, and wbUnion for VMAD.
+Make TES5Edit Documentation
 Update the [url="http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
 
 [size="4"][color="#FF8C00"]Known Issues:[/color][/size]
