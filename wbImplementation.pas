@@ -4938,7 +4938,10 @@ begin
   BasePtr.mrsFlags._Flags := 0;
   BasePtr.mrsFormID := aFormID;
   BasePtr.mrsVCS1 := 0;
-  BasePtr.mrsVersion := 15;
+  if wbGameMode in [gmTES5] then
+    BasePtr.mrsVersion := 43
+  else
+    BasePtr.mrsVersion := 15;
   BasePtr.mrsVCS2 := 0;
 
   Group := nil;
@@ -10273,7 +10276,7 @@ begin
 
   {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}
   {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
-  if wbGameMode in [gmFNV, gmTES5] then
+  if wbGameMode in [gmFO3, gmFNV, gmTES5] then
     Exit;
 
   Include(grStates, gsSorting);
