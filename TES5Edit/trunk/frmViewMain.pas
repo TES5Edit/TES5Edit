@@ -2344,7 +2344,7 @@ begin
     CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
     CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
     CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
     CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
     CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
     CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
@@ -2800,6 +2800,8 @@ begin
 
     if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then begin
       AddMessage('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
+      if wbGameMode = gmTES5 then
+        AddMessage('This can happen after Steam updates, run Skyrim Launcher to restore registry settings');
       wbDontSave := True;
       Exit;
     end;
@@ -2808,6 +2810,8 @@ begin
 
     if DataPath = '' then begin
       AddMessage('Fatal: Could not determine '+wbGameName+' installation path.');
+      if wbGameMode = gmTES5 then
+        AddMessage('This can happen after Steam updates, run Skyrim Launcher to restore registry settings');
       wbDontSave := True;
       Exit;
     end;
@@ -2901,22 +2905,6 @@ begin
               Continue;
             end;
           end;
-
-          // Skyrim always loads Skyrim.esm and Update.esm no matter what
-          // even if plugins.txt is empty
-          j := FindMatchText(CheckListBox1.Items, 'Update.esm');
-          if (j < 0) and FileExists(DataPath + 'Update.esm') then begin
-            CheckListBox1.Items.Insert(0, 'Update.esm');
-            j := 0;
-          end;
-          CheckListBox1.Checked[j] := True;
-
-          j := FindMatchText(CheckListBox1.Items, 'Skyrim.esm');
-          if (j < 0) and FileExists(DataPath + 'Skyrim.esm') then begin
-            CheckListBox1.Items.Insert(0, 'Skyrim.esm');
-            j := 0;
-          end;
-          CheckListBox1.Checked[j] := True;
         end;
 
         // plugins list for Oblivion, Fallout3, FNV with timestamps
@@ -2936,9 +2924,20 @@ begin
           FindClose(F);
         end;
 
-        if wbGameMode = gmTES5 then
-          PluginListGroupESM(sl)
-        else
+        if wbGameMode = gmTES5 then begin
+          // Skyrim: load order is no longer sorted by timestamp
+          PluginListGroupESM(sl);
+
+          // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
+          // even if plugins.txt is empty
+          j := FindMatchText(sl, 'Skyrim.esm');
+          if j > 0 then
+            sl.Move(j, 0);
+
+          j := FindMatchText(sl, 'Update.esm');
+          if j > 1 then
+            sl.Move(j, 1);
+        end else
           sl.CustomSort(PluginListCompare);
 
         if wbMasterUpdate and (wbGameMode <> gmTES5) and (sl.Count > 1) then begin

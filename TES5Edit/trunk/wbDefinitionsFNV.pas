@@ -1992,8 +1992,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
-  //Result := True;
+  Result := True; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -4063,23 +4062,27 @@ var
   a, b: Single;
   NeedsFlip: Boolean;
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    NeedsFlip := False;
-    if Container.ElementCount > 1 then begin
-      a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[0].Value);
-      b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[0].Value);
-      case CompareValue(a, b) of
-        EqualsValue: begin
-          a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[1].Value);
-          b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[1].Value);
-          NeedsFlip := CompareValue(a, b) = GreaterThanValue;
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainer, Container) then begin
+      NeedsFlip := False;
+      if Container.ElementCount > 1 then begin
+        a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[0].Value);
+        b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[0].Value);
+        case CompareValue(a, b) of
+          EqualsValue: begin
+            a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[1].Value);
+            b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[1].Value);
+            NeedsFlip := CompareValue(a, b) = GreaterThanValue;
+          end;
+          GreaterThanValue:
+            NeedsFlip := True;
         end;
-        GreaterThanValue:
-          NeedsFlip := True;
       end;
+      if NeedsFlip then
+        Container.ReverseElements;
     end;
-    if NeedsFlip then
-      Container.ReverseElements;
+  finally
+    wbEndInternalEdit;
   end;
 end;
 
@@ -7523,7 +7526,8 @@ begin
 
   wbRecord(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
-    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
+    //wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
+    wbRArray('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False)
   ]);
 
   wbRecord(PERK, 'Perk', [

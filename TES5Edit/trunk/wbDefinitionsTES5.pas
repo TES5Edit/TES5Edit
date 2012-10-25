@@ -679,7 +679,6 @@ var
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
   wbXNAM: IwbSubRecordDef;
-  wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbDESCReq: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
@@ -753,8 +752,7 @@ var
   wbKWDAs: IwbSubRecordDef;
   wbCNAM: IwbSubRecordDef;
   wbCNAMReq: IwbSubRecordDef;
-  wbCITC: IwbSubRecordDef; {Associated with CTDA}
-  wbPRKR: IwbSubRecordDef; {Perk Array Record}
+  wbCITC: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbIntegerDef;
   wbCastEnum: IwbEnumDef;
@@ -2158,7 +2156,6 @@ const
   OrderedList = 'OrderedList';
 begin
   Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
-  //Result := True;
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -5113,11 +5110,6 @@ begin
     wbInteger('Count / Distance', itS32)
   ]);
 
-  wbPRKR := wbStruct(PRKR, 'Perk Record', [
-    wbFormIDCk('Perk', [PERK]),
-    wbUnknown
-  ]);
-
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
@@ -7354,12 +7346,11 @@ begin
       {0x00000008}'Friend'
     ]))
   ]);
-  wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
-    wbXNAMs,
+    wbRArrayS('Relations', wbXNAM),
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Hidden From NPC',
@@ -10219,7 +10210,7 @@ begin
       wbStructSK(SNAM, [0], 'Faction', [
         wbFormIDCk('Faction', [FACT]),
         wbInteger('Rank', itU8),
-        wbByteArray('Unknown', 3)
+        wbByteArray('Unused', 3, cpIgnore)
       ]), cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}
     ),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
@@ -10238,7 +10229,13 @@ begin
     wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
     wbInteger(PRKZ, 'Perk Count', itU32),
-    wbRArray('Perks', wbPRKR),
+    wbRArrayS('Perks',
+      wbStructSK(PRKR, [0], 'Perk', [
+        wbFormIDCk('Perk', [PERK]),
+        wbInteger('Rank', itU8),
+        wbByteArray('Unused', 3, cpIgnore)
+      ])
+    ),
     wbCOCT,
     wbCNTOs,
     wbAIDT,
@@ -10693,7 +10690,7 @@ begin
        {11} 'DLC02?'
       ]))
     ]),
-    wbString(ENAM, 'Event'),
+    wbString(ENAM, 'Event', 4),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
