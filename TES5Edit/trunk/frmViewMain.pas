@@ -446,6 +446,8 @@ type
     procedure mniNavLocalizationLanguageClick(Sender: TObject);
     procedure mniNavFilterForCleaningClick(Sender: TObject);
     procedure mniNavCreateSEQFileClick(Sender: TObject);
+    procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      var Allowed: Boolean);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -1899,6 +1901,7 @@ var
   _File                       : IwbFile;
 var
   NodeData                    : PNavNodeData;
+  CompareFile                 : string;
 begin
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
@@ -1911,6 +1914,14 @@ begin
     InitialDir := DataPath;
     if not Execute then
       Exit;
+
+    CompareFile := FileName;
+    // copy selected file to Data directory if it is not there
+    if not SameText(ExtractFilePath(CompareFile), DataPath) then begin
+      CompareFile := DataPath + ExtractFileName(CompareFile);
+      CopyFile(PChar(FileName), PChar(CompareFile), false);
+    end;
+
   end;
 
   vstNav.PopupMenu := nil;
@@ -1919,7 +1930,7 @@ begin
   SetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
-  TLoaderThread.Create(odModule.FileName, _File.FileName, _File.LoadOrder);
+  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder);
 end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
@@ -2343,15 +2354,19 @@ begin
     CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT - Count']);
     CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
     CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
     CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
     CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
     CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count'], True);
-    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count'], True);
-    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count'], True);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
+    // unsafe to copy VMAD subrecords to merged patch
+    if wbGameMode <> gmTES5 then
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
+//    CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+//    CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+//    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+//    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+//    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
   end;
 
   TargetFile.CleanMasters;
@@ -2739,6 +2754,7 @@ end;
 procedure TfrmMain.DoInit;
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
+  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
   i, j, k                     : Integer;
   s                           : string;
@@ -2798,20 +2814,21 @@ begin
   if DataPath = '' then with TRegistry.Create do try
     RootKey := HKEY_LOCAL_MACHINE;
 
-    if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then begin
-      AddMessage('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
-      if wbGameMode = gmTES5 then
-        AddMessage('This can happen after Steam updates, run Skyrim Launcher to restore registry settings');
-      wbDontSave := True;
-      Exit;
-    end;
+    if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
+      if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
+        AddMessage('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
+        if wbGameMode = gmTES5 then
+          AddMessage('This can happen after Steam updates, run game''s launcher to restore registry settings');
+        wbDontSave := True;
+        Exit;
+      end;
 
     DataPath := ReadString('Installed Path');
 
     if DataPath = '' then begin
-      AddMessage('Fatal: Could not determine '+wbGameName+' installation path.');
+      AddMessage('Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
       if wbGameMode = gmTES5 then
-        AddMessage('This can happen after Steam updates, run Skyrim Launcher to restore registry settings');
+        AddMessage('This can happen after Steam updates, run game''s launcher to restore registry settings');
       wbDontSave := True;
       Exit;
     end;
@@ -2940,7 +2957,7 @@ begin
         end else
           sl.CustomSort(PluginListCompare);
 
-        if wbMasterUpdate and (wbGameMode <> gmTES5) and (sl.Count > 1) then begin
+        if wbMasterUpdate and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
           Age := Integer(sl.Objects[0]);
           AgeDateTime := FileDateToDateTime(Age);
           for i := 1 to Pred(sl.Count) do begin
@@ -3732,8 +3749,8 @@ begin
     end;
 
     PostAddMessage('[Undeleting and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ' Undeleted Records: ' + IntToStr(UndeletedCount) +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      ', Undeleted Records: ' + IntToStr(UndeletedCount) +
+      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     if DeletedNAVM > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
   finally
@@ -7287,8 +7304,8 @@ begin
     end;
 
     PostAddMessage('[Removing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ' Removed Records: ' + IntToStr(RemovedCount) +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      ', Removed Records: ' + IntToStr(RemovedCount) +
+      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -11360,6 +11377,13 @@ begin
         {really seems to be the same}
       end;
     end;
+end;
+
+procedure TfrmMain.vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  var Allowed: Boolean);
+begin
+  if GetKeyState(VK_CONTROL) < 0 then
+    Sender.FullExpand(Node);
 end;
 
 procedure TfrmMain.vstNavFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);

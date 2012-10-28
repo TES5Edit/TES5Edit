@@ -3644,6 +3644,25 @@ begin
   end;
 end;
 
+procedure wbWRLDAfterLoad(const aElement: IwbElement);
+var
+  MainRecord: IwbMainRecord;
+begin
+  wbRemoveOFST(aElement);
+
+  if wbBeginInternalEdit then try
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    if MainRecord.ElementExists['Unused RNAM'] then
+      MainRecord.RemoveElement('Unused RNAM');
+
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 function wbActorTemplateUseTraits(const aElement: IwbElement): Boolean;
 var
   Element    : IwbElement;
@@ -3995,11 +4014,10 @@ end;
 //  end;
 //end;
 
-procedure wbNPCAfterLoad(const aElement: IwbElement);
+procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
-//  BaseRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4014,11 +4032,19 @@ begin
     if MainRecord.IsDeleted then
       Exit;
 
-    if Container.ElementNativeValues['NAM5'] > 255 then
-      Container.ElementNativeValues['NAM5'] := 255;
+    if not Assigned(Container.ElementBySignature['KSIZ']) then
+      if Assigned(Container.ElementBySignature['KWDA']) then
+        Container.ElementBySignature['KWDA'].Remove;
+
   finally
     wbEndInternalEdit;
   end;
+end;
+
+
+procedure wbNPCAfterLoad(const aElement: IwbElement);
+begin
+  wbRemoveEmptyKWDA(aElement);
 end;
 
 procedure wbREFRAfterLoad(const aElement: IwbElement);
@@ -4065,6 +4091,8 @@ var
   MainRecord : IwbMainRecord;
   Flags      : Cardinal;
 begin
+  wbRemoveEmptyKWDA(aElement);
+
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
@@ -4129,6 +4157,7 @@ var
   Container    : IwbContainerElementRef;
   Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
+  HasWater     : Boolean;
   i            : Integer;
   w            : Single;
 begin
@@ -4145,26 +4174,20 @@ begin
     if MainRecord.IsDeleted then
       Exit;
 
-    if (not Container.ElementExists['XCLW']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then begin
-      Container.Add('XCLW', True);
-      Container.ElementEditValues['XCLW'] := 'Default';
-    end;
+    if not Container.ElementExists['DATA'] then
+      Exit;
 
-{    if Container.ElementExists['XCLW'] then begin
-      if not VarIsNull(Container.ElementNativeValues['XCLW']) then begin
-        w := Container.ElementNativeValues['XCLW'];
-        if (PCardinal(@w)^ = Int64($CF000000)) or
-           (PCardinal(@w)^ = Int64($4F7FFFC9))
-        then begin
-          Container.ElementNativeValues['XCLW'] := $7F7FFFFF;
-          //Container.ElementEditValues['XCLW'] := 'Default';
-          //Container.ElementNativeValues['XCLW'] := 0;
-        end;
+    HasWater := (Container.ElementNativeValues['DATA'] and 2) <> 0;
+
+    if HasWater then begin
+      if not Container.ElementExists['XCLW'] then begin
+        Container.Add('XCLW', True);
+        Container.ElementEditValues['XCLW'] := '-2147483648.000000';
       end;
-    end;}
-
-//    if (not Container.ElementExists['XNAM']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then
-//      Container.Add('XNAM', True);
+    end else begin
+      if Container.ElementExists['XCLW'] then
+        Container.ElementEditValues['XCLW'] := '-2147483648.000000';
+    end;
 
     if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
       for i:= Pred(Container2.ElementCount) downto 0 do
@@ -4365,23 +4388,27 @@ var
   a, b: Single;
   NeedsFlip: Boolean;
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    NeedsFlip := False;
-    if Container.ElementCount > 1 then begin
-      a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[0].Value);
-      b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[0].Value);
-      case CompareValue(a, b) of
-        EqualsValue: begin
-          a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[1].Value);
-          b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[1].Value);
-          NeedsFlip := CompareValue(a, b) = GreaterThanValue;
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainer, Container) then begin
+      NeedsFlip := False;
+      if Container.ElementCount > 1 then begin
+        a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[0].Value);
+        b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[0].Value);
+        case CompareValue(a, b) of
+          EqualsValue: begin
+            a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[1].Value);
+            b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[1].Value);
+            NeedsFlip := CompareValue(a, b) = GreaterThanValue;
+          end;
+          GreaterThanValue:
+            NeedsFlip := True;
         end;
-        GreaterThanValue:
-          NeedsFlip := True;
       end;
+      if NeedsFlip then
+        Container.ReverseElements;
     end;
-    if NeedsFlip then
-      Container.ReverseElements;
+  finally
+    wbEndInternalEdit;
   end;
 end;
 
@@ -4411,7 +4438,6 @@ begin
     Container := aElement as IwbContainer;
   Result := Container.ElementByName['Type'].NativeValue;
 end;
-
 
 procedure DefineTES5a;
 begin
@@ -5248,9 +5274,9 @@ begin
       wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
       wbByteArray('Unknown', 2)
     ]),
-    wbRArray('Stages',  // Begin Stage Array
-      wbRStruct('Stage', [ // Begin Stage RStruct
-        wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
+    wbRArray('Stages',
+      wbRStruct('Stage', [
+        wbStruct(DSTD, 'Destruction Stage Data', [
           wbInteger('Health %', itU8),
           wbInteger('Index', itU8),
           wbInteger('Model Damage Stage', itU8),
@@ -5264,15 +5290,15 @@ begin
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32)
-        ], cpNormal, True), // End DSTD
-        wbRStructSK([0], 'Model', [ // Begin DMDL
+        ], cpNormal, True),
+        wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model Filename'),
           wbDMDT,
           wbDMDSs
-        ], [], cpNormal, False, nil), // End DMDL
+        ], [], cpNormal, False, nil),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], [], cpNormal, False, nil) // Begin Stage RStruct
-    ) // End Stage Array
+      ], [], cpNormal, False, nil)
+    )
   ], [], cpNormal, False, nil);
 
   wbDESTActor := wbRStruct('Destructable', [
@@ -6300,7 +6326,7 @@ begin
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
     wbEffectsReq
-  ]);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
 
   wbRecord(AMMO, 'Ammunition', [
     wbEDID,
@@ -6324,7 +6350,7 @@ begin
       wbInteger('Value', itU32)
     ], cpNormal, True),
     wbString(ONAM, 'Short Name')
-  ]);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDID,
@@ -6376,7 +6402,7 @@ begin
     ], cpNormal, True),
     wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO])
-  ]);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
@@ -10091,7 +10117,7 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ]);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
@@ -10102,8 +10128,7 @@ begin
     wbICON,
     wbDEST,
     wbSounds,
-    wbInteger(QUAL, 'Quality', itS32, wbEnum([
-      ], [
+    wbInteger(QUAL, 'Quality', itS32, wbEnum([], [
       0, 'Novice',
       1, 'Apprentice',
       2, 'Journeyman',
@@ -10288,9 +10313,9 @@ begin
         'Enchanting'
       ]),
       //wbByteArray('Unknown', 4),
-      wbInteger('Health', itU16),
-      wbInteger('Magicka', itU16),
-      wbInteger('Stamina', itU16),
+      wbInteger('Health?', itU16),
+      wbInteger('Magicka?', itU16),
+      wbInteger('Stamina?', itU16),
       wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Far away model distance'),
       wbInteger('Geared up weapons', itU8),
@@ -10356,7 +10381,7 @@ begin
         wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
         wbInteger(TIAS, 'Preset', itS16)
       ], []))
-  ], False, nil, cpNormal, False{, wbNPCAfterLoad});
+  ], False, nil, cpNormal, False, wbNPCAfterLoad);
 
   wbObjectTypeEnum := wbEnum([
     ' NONE',
@@ -12238,12 +12263,11 @@ begin
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,
     {>>> BEGIN leftover from earlier CK versions <<<}
-    {>>> There are A LOT of those in skyrim.esm, should be probably removed like OFST <<<}
-    wbRArray('Unused', wbUnknown(RNAM), cpIgnore, False, wbNeverShow),
+    wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
     {>>> END leftover from earlier CK versions <<<}
     wbByteArray(MHDT, 'Unknown', 0, cpNormal),
     wbFULL,
-    wbStruct(WCTR, 'Fixed Dimesions Center Cell', [
+    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itU16),
       wbInteger('Y', itU16)
     ]),
@@ -12330,7 +12354,7 @@ begin
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
     wbByteArray(OFST, 'Unknown')
-  ], False, nil, cpNormal, False, wbRemoveOFST);
+  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,

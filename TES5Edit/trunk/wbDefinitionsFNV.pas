@@ -1992,7 +1992,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := True; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
+  Result := True; {>>> Should not be sorted according to Arthmoor and JustinOther, left as sorted for compatibility <<<}
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -7526,8 +7526,7 @@ begin
 
   wbRecord(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
-    //wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
-    wbRArray('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False)
+    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
   wbRecord(PERK, 'Perk', [
@@ -7954,8 +7953,8 @@ begin
            {52} wbInteger('Projectile', itS32, wbDiv(1000)),
            {56} wbInteger('Melee', itS32, wbDiv(1000))
          ])
-    ], cpNormal, True),
-    wbArray(RAFB, 'Feedback Dynamic Bones', wbInteger('Bone', itU16), 0, nil, nil, cpNormal, True),
+    ], cpNormal, False),
+    wbArray(RAFB, 'Feedback Dynamic Bones', wbInteger('Bone', itU16), 0, nil, nil, cpNormal, False),
     wbStruct(RAPS, 'Pose Matching Data', [
     {00} wbArray('Match Bones', wbInteger('Bone', itU16, wbHideFFFF), 3),
     {06} wbInteger('Flags', itU8, wbFlags([
