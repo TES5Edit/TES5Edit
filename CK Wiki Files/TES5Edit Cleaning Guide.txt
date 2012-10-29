@@ -1,10 +1,10 @@
 [[Category:TES5Edit]]
-
+{{Languages}}
 =Introduction=
 
 This guide is designed to introduce mod authors and mod users to the concept of mod cleaning and to provide instructions on how to clean mods using TES5Edit. Clean mods are essential to the creation of a stable modded game environment in which there are minimal conflicts between the mods used.
 
-This guide is split into two sections: the first contains the information neccessary to understand why some mods need cleaning and the cleaning process itself, while the second provides the actual instructions for cleaning mods. There is also a [[TES5Edit_Cleaning_Guide_-_TES5Edit#Glossary|Glossary]] at the end of the guide that may be used as a quick reference if you forget what a term means.
+This guide is split into two sections: the first contains the information necessary to understand why some mods need cleaning and the cleaning process itself, while the second provides the actual instructions for cleaning mods. There is also a [[TES5Edit_Cleaning_Guide_-_TES5Edit#Glossary|Glossary]] at the end of the guide that may be used as a quick reference if you forget what a term means.
 
 While this guide may seem intimidating, cleaning is not hard once you understand it. Devote some time to reading through this guide and you'll be well on your way to have a squeaky-clean mod list and a fun, more stable game environment.
 
@@ -14,7 +14,7 @@ While this guide may seem intimidating, cleaning is not hard once you understand
 
 Many mods make unintentional or unnecessary edits to game elements. Such edits can be a problem when using multiple mods due to the "rule of one", that states that if multiple mods change the same record, only the changes from the mod loaded last will be applied.
 
-When a mod containing unintentional or unneccessary edits (known as a "dirty mod") is used with a mod that makes an intentional edit to one or more of the same elements, this can introduce the possibility of bad things happening, from incorrect game settings to broken content and crashing to desktop (CTD). The more dirty mods you run, the more likely you are to encounter such issues.
+When a mod containing unintentional or unnecessary edits (known as a "dirty mod") is used with a mod that makes an intentional edit to one or more of the same elements, this can introduce the possibility of bad things happening, from incorrect game settings to broken content and crashing to desktop (CTD). The more dirty mods you run, the more likely you are to encounter such issues.
 
 === Dirty Edits ===
 
@@ -30,7 +30,7 @@ The most common type of dirty edit is an Identical To Master (ITM) edit. This is
 
 === Wild Edits ===
 
-Wild edits are unintentional or misdirected edits to game elements by a mod author that cause unneccessary conflicts with other mods. They are called wild edits because they often appear to have been made hapazardly with no relation to the author's stated intentions.
+Wild edits are unintentional or misdirected edits to game elements by a mod author that cause unnecessary conflicts with other mods. They are called wild edits because they often appear to have been made haphazardly with no relation to the author's stated intentions.
 
 One example of a wild edit would be when a container is incorrectly modified to include an item, but instead of only that one container including the item, the result is that all containers of the same type include the item. If the description of the mod states that an item is added to a specific container, then it is clear this is a wild edit and the mod should be cleaned by fixing the wild edit.
 
@@ -39,6 +39,10 @@ One example of a wild edit would be when a container is incorrectly modified to 
 Deleted references are a common cause of crash-on-exit. This is because if one mod tries to modify a reference that another mod has deleted, then the first mod cannot find the reference, and this then leads to a crash when the game is exited.
 
 References are generally deleted to remove them from the game world, but a practically identical effect can be achieved by undeleting the reference then disabling it and moving it to a position where it is no longer visible in the Creation Kit (TES5Edit sets the Z axis position to -30,000 units).
+
+=== Quick List of What Not to Clean ===
+
+* Do NOT clean the unofficial patches (USKP, UDGP, UHFP). They have already been cleaned.
 
 == What Is Cleaning? ==
 
@@ -50,7 +54,7 @@ Cleaning can be automated when dealing with dirty edits and deleted references, 
 
 Manual cleaning is a fairly advanced technique that requires those performing it without the aid of specific step-by-step instructions to know how TES5Edit works and to know a bit about how mods work. Mod users will generally not need to perform manual cleaning most of the time, and so the specifics are not covered in this guide.
 
-Manual cleaning is all about using your judgement to decide whether an edit is a valid, intentional edit or a wild edit that should be removed. Wild edits may be obvious such as in the example below, or not obvious, such as some rocks that were accidently moved a small amount while editing a cell. Once you have judged that an edit is wild, you must then use your knowledge of modding to decide on the correct method of fixing it, and perform the fix correctly. Incorrectly judging an edit to be wild, choosing the wrong method of fixing a wild edit and performing the fix incorrectly will all lead to making the situation worse, which is why knowledge and experience are required when manually cleaning plugins.
+Manual cleaning is all about using your judgement to decide whether an edit is a valid, intentional edit or a wild edit that should be removed. Wild edits may be obvious such as in the example below, or not obvious, such as some rocks that were accidentally moved a small amount while editing a cell. Once you have judged that an edit is wild, you must then use your knowledge of modding to decide on the correct method of fixing it, and perform the fix correctly. Incorrectly judging an edit to be wild, choosing the wrong method of fixing a wild edit and performing the fix incorrectly will all lead to making the situation worse, which is why knowledge and experience are required when manually cleaning plugins.
 
 :'''''Example 2: Manually Cleaning A Wild Edit'''''
 
@@ -69,11 +73,14 @@ If cleaning deleted references, the program it analyses each reference a mod edi
 
 == How To Clean? ==
 
-Even when performing automated cleaning, it is important to ensure everything is set up so that cleaning can be performed correctly.
+[[File:Tes5EditVideo.jpg|425px|TES5EDIT : Cleaning your mods]]
+: [http://www.youtube.com/watch?v=UOQO2S6HDBw TES5EDIT : Cleaning your mods]
+
+Even when performing automated cleaning, it is important to ensure everything is set up so that cleaning can be performed correctly. Gophers video on TES5Edit: Cleaning your mods is a great way to become familiar with the cleaning process and gives a good example of why it's important to fix deleted references.
 
 === Order Of Cleaning ===
 
-It is recommended that you begin cleaning at the top of your load order and just do down the list. This will ensure that dependencies will be cleaned before the mods that are dependent on them, so long as yout load order is correct.
+It is recommended that you begin cleaning at the top of your load order and just do down the list. This will ensure that dependencies will be cleaned before the mods that are dependent on them, so long as your load order is correct.
 
 It is important to ensure a mod's dependencies are clean before cleaning the mod itself because the automated cleaning process will assume that the dependencies are clean. If this assumption is incorrect, it may lead to the mod being incorrectly cleaned.
 
@@ -108,7 +115,7 @@ Due to these rules, you cannot clean more than one mod in the same TES5Edit sess
 
 == A Community Effort ==
 
-The principle reason for the presence of dirty mods is a lack of awareness of the issues surrounding dirty mods and the importance of mod cleaning. As such, a community-wide effort is required to raise awareness and so reduce the incidence of dirty mods.
+The principal reason for the presence of dirty mods is a lack of awareness of the issues surrounding dirty mods and the importance of mod cleaning. As such, a community-wide effort is required to raise awareness and so reduce the incidence of dirty mods.
 
 It's '''NOT''' a good idea for everyone to just go ahead and clean their full load order and then forget about it.
 
@@ -131,20 +138,37 @@ For mod users:
 
 = Section 2: Mod Cleaning Instructions =
 
-Note: It is highly recommend that you load the plugin into the most recent version of the CK such as 1.6.89 before following these instructions.
+=== Order For Cleaning Bethesda's Master Files ===
+
+[[File:TES5EditCleaningUpdate.jpg|50px|TES5 Apply Filter For Cleaning Update.esm]]  [[File:TES5EditCleaningDawnguard.jpg|50px|TES5 Apply Filter For Cleaning Dawnguard.esm]]  [[File:TES5EditCleaningHearthfires.jpg|50px|TES5 Apply Filter For Cleaning Hearthfires.esm]]
+
+:For Update.esm: Load Skyrim.esm and Update.esm, but only clean Update.esm.
+:For Dawnguard.esm: Load Skyrim.esm, Update.esm, and Dawnguard.esm but only clean Dawnguard.esm.
+:For Hearthfires.esm: Load Skyrim.esm, Update.esm, Dawnguard.esm, and Hearthfires.esm but only clean Hearthfires.esm.
+
+=== Non Critical Errors ===
+
+<pre>Error: record ARMO contains unexpected (or out of order) subrecord MODL</pre>
+
+This error can occur for a variety of reasons and should be handled by the mod author.  However, loading a plugin into the CK can also help because the CK will save the file with everything in the order it should be.  Do so with caution because the CK has been known to omit subrecords that are out of order when loading and then later saving the plugin.
+
+<pre><Warning: Plugin contains 57 deleted NavMeshes which can not be undeleted></pre>
+
+You will see this warning for both Dawnguard.esm and Hearthfires.esm ignore it for now.  Otherwise this is a warning that there are deleted Navmesh records.  Any deleted Navmesh records should be reported to the author of the mod so they can be corrected properly.
+
+=== TES5Edit Cleaning Instructions ===
 
 These are the actual instructions for the automated cleaning of plugins using TES5Edit:
 
-# Download [http://code.google.com/p/skyrim-plugin-decoding-project/downloads/list TES5Edit].
+# Download [http://skyrim.nexusmods.com/mods/25859 TES5Edit].
 # Extract the downloaded archive to wherever you want.
 # Run the TES5Edit.exe file.
 # A dialog box appears listing all your installed plugins, with all currently active plugins ticked. Right-click anywhere in the list and pick "Select None".
 # Tick the boxes for the plugin you want to clean and for any of its implicit dependencies. You don't need to tick the boxes for its explicit dependencies as TES5Edit will automatically load them anyway.
 # Click "OK" in the dialog box.
 # A mod group dialog box may be displayed. '''Never''' tick any of the boxes in this dialog box when cleaning plugins. Click "OK" in the dialog box.
-# After the plugins have finished loading, right click the plugin you want to clean and select "Apply Filter".
-# A large dialog box with many options will be displayed. Make sure all the checkboxes are unticked apart from the "Conflict status inherited by parent" checkbox, which should be ticked. [[File:TES5 Apply Filter.jpg|thumb|TES5 Apply Filter]]
-# Click "OK" in the dialog box. Filtering will likely take a long time.
+# After the plugins have finished loading, right click the plugin you want to clean and select "Apply Filter For Cleaning". [[File:TES5EditApplyFilterForCleaning.jpg|thumb|TES5 Apply Filter For Cleaning]]
+# Filtering will likely take a long time.
 # Right click on the plugin you are cleaning and pick “Remove "Identical to Master" records”.
 # Wait two seconds when the big warning message appears and click “Yes…”.
 # The plugin name will turn bold if any dirty edits were found and removed. Check the Messages tab to see what was changed. Make a note of the number of ITM records removed for when reporting the plugin to the BOSS team.
@@ -172,7 +196,7 @@ This glossary contains definitions for the general modding terms and cleaning-sp
 
 '''Identical To Master edit''': A type of dirty edit made where the edited value(s) is/are identical to the value(s) without the edit.
 
-'''Wild edit''': An edit made which is not consistent with the intent of the mod, often caused by authors accidently making small edits or trying to perform an edit in the wrong way. Such edits must be cleaned manually.
+'''Wild edit''': An edit made which is not consistent with the intent of the mod, often caused by authors accidentally making small edits or trying to perform an edit in the wrong way. Such edits must be cleaned manually.
 
 '''Deleted reference''': A reference to a record that has been deleted. For example, placing a Silver Sword into the game world creates a Silver Sword reference there, which may then be removed by deleting it.
 
@@ -182,13 +206,20 @@ This glossary contains definitions for the general modding terms and cleaning-sp
 
 '''Implicit dependency''': A dependency for which there is no indication given within the dependent plugin, and which can only be determined by considering author intent.
 
+= Additional TES5Edit Resources =
+
+* [[TES5Edit|TES5Edit]]
+* [[TES5Edit_Mod_Cleaning_Tutorial|TES5Edit Mod Cleaning Tutorial]]
+* [[Skyrim_Dirty_Plugins_List|Skyrim Dirty Plugins List]]
+* [http://forums.bethsoft.com/topic/1419201-relz-tes5edit/ Official Elderscrolls TES5Edit forum topic]
+
 = Closing Remarks & Credits =
 
 This guide has been adapted from the [http://cs.elderscrolls.com/index.php/TES4Edit_Cleaning_Guide TES4Edit Cleaning Guide]. Much of the content of that guide has been removed for this guide, with all lists of mods being absent: this is partly because there are as yet no mods to list, but mainly because such lists belong on a separate wiki page from the guide. The special cleaning instructions section is also missing for the same reason, and the tips on avoiding dirty mods section is missing because I felt it was counter to the topic of the guide. I also left out the review of key concepts because I felt that having such a section would cause many readers to skip the rest of the information, and so put them in a position of false confidence from where they could do significant harm to their modded game.
 
 I have also created a [[Skyrim_Dirty_Plugins_List|Skyrim Dirty Plugins List]] page for the listing of any plugins that need cleaning, plugins that should not be cleaned, and plugins for which manual cleaning instructions are required.
 
-Many thanks go to the various authors of and contributors to that article, including but not limited to: Brumbek, Arthmoor, Vorians, ElminsterEU, WrinklyNinja, Sharlikran and dev_akm.
+Many thanks go to the various authors of and contributors to that article, including but not limited to: Brumbek, Arthmoor, Vorians, ElminsterEU, WrinklyNinja, and dev_akm.
 
 Thanks also go to ElminsterEU, Sharlikran, and Zilav for their work in getting TES5Edit released.
 
@@ -198,3 +229,4 @@ Still to do:
 * Include pictures for the instructions a la [http://cs.elderscrolls.com/index.php/TES4Edit/Mod_cleaning_tutorial_with_TES4Edit TES4Edit/Mod cleaning tutorial with TES4Edit].
 * Get the correctness of the guide verified by the TES5Edit team.
 * Create a separate wiki page to hold the list of mods needing cleaning (and which should not be cleaned, if there will be any), and instructions on how to generate the list from BOSS's masterlist.
+{{Languages}}

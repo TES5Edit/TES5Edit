@@ -1,6 +1,6 @@
 [size="4"][color="#00BFFF"]TES5Edit Plugin Cleaning Emporium[/color][/size]
 
-Time to grab a cup of coffee.  I prefer a custom blend myself with Cinnamon, Chocolate, Vanilla and anything with the word cream in it like Butterscotch Cream.  Bring up your favorite music, light a fire (if you have a fireplace), get comfy in your favorite chair, and clean some Skyrim plugins.  With the release the of [url="http://forums.bethsoft.com/topic/1418088-relz-tes5edit/"]TES5Edit[/url] begins the continued saga started by ElminsterAU.  Previous versions of FO3Edit (Fallout 3), FNVEdit (Fallout: New Vegas), and TES4Edit (Oblivion) have given us endless hours of gaming enjoyment.
+Time to grab a cup of coffee.  I prefer a custom blend myself with Cinnamon, Chocolate, Vanilla and anything with the word cream in it like Butterscotch Cream.  Bring up your favorite music, light a fire (if you have a fireplace), get comfy in your favorite chair, and clean some Skyrim plugins.  With the release the of [url="http://skyrim.nexusmods.com/mods/25859/"]TES5Edit[/url] begins the continued saga started by ElminsterAU.  Previous versions of FO3Edit (Fallout 3), FNVEdit (Fallout: New Vegas), and TES4Edit (Oblivion) have given us endless hours of gaming enjoyment.
 
 Now if you have no idea what I am talking about then you are in the right place.  While everyone is discussing whether or not to sort Form Lists, and DIAL INFO information this thread will be a place you can post your plugin cleaning questions and get feedback from others like you that have never heard of cleaning plugins and have no idea why you need to be doing that.
 
@@ -8,31 +8,31 @@ Now if you have no idea what I am talking about then you are in the right place.
 
 [size="4"][color="#00BFFF"]Updates on CK Wiki Pages:[/color][/size]
 [list]
-[*] [url="http://www.creationkit.com/Category:TES5Edit"]TES5Edit[/url]
+[*] [url="http://www.creationkit.com/TES5Edit"]TES5Edit[/url]
 [*] [url="http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
 [*] [color="#FF8C00"] - Working on Mod Cleaning Tutorial[/color]
-[*] [url="http://www.creationkit.com/Skyrim_TES5Edit_Mod_Cleaning_Tutorial"]TES5Edit Mod Cleaning Tutorial[/url]
+[*] [url="http://www.creationkit.com/TES5Edit_Mod_Cleaning_Tutorial"]TES5Edit Mod Cleaning Tutorial[/url]
 [*] [color="#FF8C00"] - Dirty Plugins List is empty but can be edited by anyone[/color]
 [*] [url="http://www.creationkit.com/Skyrim_Dirty_Plugins_List"]TES5Edit Skyrim Dirty Plugins List[/url]
 [/list]
 
-The above list is a good place to start to become familiar with the cleaning process.  Also, although it's for FNVEdit there is a good [url="http://www.youtube.com/watch?v=qVKe51dRm2M&feature=plcp"]tutorial for FNVEdit[/url] that will be similar to TES5Edit's tutorials Gopher has planed.
+Gopher's first video [url="http://youtu.be/UOQO2S6HDBw"]TES5EDIT : Cleaning your mods[/url] covers important cleaning aspects of TES5Edit and I look forward to more helful videos from him.
 
 I will be updateing this post as time goes on to bring attention to certain things.  However, what needs to be kept up to date are the CK Wiki pages that have been started.  They contain detailed information that simply doesn't need to be keep up to date here.  For now the screen shots don't match the text in the TES5Edit Mod Cleaning Tutorial because I'm working on it.  It does however show accurately what needs to be happening when you clean a plugin.  It shows how to use the colors to easily distinguish between a Regualr Edit and a Dirty Edit.  It will have more info as time goes on and new pages as well.
 
-[size="4"][color="#00BFFF"]You can download [url="https://code.google.com/p/skyrim-plugin-decoding-project/downloads/list"]TES5Edit 3.0.23 EXPERIMENTAL[/url] at our Google Code site [url="http://code.google.com/p/skyrim-plugin-decoding-project/"]skyrim-plugin-decoding-project[/url] in the [url="https://code.google.com/p/skyrim-plugin-decoding-project/downloads/list"]downloads[/url] section.[/color][/size]
+[size="4"][color="#00BFFF"][url="http://skyrim.nexusmods.com/mods/25859/"]TES5Edit 3.0.23 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
+
+[size="4"][color="#FF0000"]This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Feel free to ask about plugin cleaning in the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium/"][RELz] TES5Edit Plugin Cleaning Emporium[/url][/color].  If you require technical assistance the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1419201-relz-tes5edit/"][RELz] TES5Edit[/url][/color] thread is best for that.  As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
+
+[size="4"][color="#FF0000"]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
 
 [size="4"][color="#FF8C00"]TES5Edit 3.0.23 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url="http://skyrim.nexusmods.com/users/156622"]Zilav[/url], and [url="http://skyrim.nexusmods.com/users/4147439"]Sharlikran[/url].[/color][/size]
-
-[size="4"][color="#FF0000"]This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Ask questions in the official [url="http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium/"][RELz] TES5Edit Plugin Cleaning Emporium[/url].  As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
 
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to FO3Edit.exe to work with Fallout3.
 Rename to FNVEdit.exe to work with New Vegas.
 
 Fallout3 [url="http://fallout3.nexusmods.com/mods/8629"]Training Manual[/url] for FO3Edit (applies to all game versions)
-
-[color="#FF8C00"]Check for new versions here:[/color] [url="https://code.google.com/p/skyrim-plugin-decoding-project/downloads/list"]skyrim-plugin-decoding-project[/url]
 
 [color="#FF8C00"]Important for Older Systems:[/color]
 If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.
@@ -96,7 +96,7 @@ or here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=23611"]Di
 
 Make TES5Edit Documentation
 Update Miax’s Tome of FO3Edit for Skyrim.
-Update the [url="http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
+Update the [url="http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
 
 [size="4"][color="#FF8C00"]Known Issues:[/color][/size]
 

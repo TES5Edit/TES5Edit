@@ -1,13 +1,12 @@
-[[Category:Tools]]
+﻿[[Category:Tools]]
 [[Category:Data File Editors]]
-[[Category:TES5Edit]]
 
-=Description=
+== Description ==
 
 [[File:TES5Edit Main View.jpg|thumb|TES5Edit Main View]]
 '''TES5Edit''' is an advanced tool for manipulating Skyrim plugins. It is especially useful for comparing multiple plugins at the same time and resolving differences between them. It includes powerful functions for creating de-isolated plugins using simple drag-and-drop editing.	It also supports batch editing of selected records, which is extremely useful if you want to do something like add or remove an inventory item, faction, or AI package on a bunch of NPCs. It also lets you easily compare two or more similar records and drag-and-drop changes among them.
 
-'''TES5View''' is an advanced graphical esp viewer and conflict detector.  (Rename TES5Edit to TES5View) 
+'''TES5View''' is an advanced graphical esp viewer and conflict detector.  (Rename TES5Edit to TES5View)
 
 '''TES5Trans''' ''Translate Mode Description needs to be updated.''  (Rename TES5Edit to TES5Trans)
 
@@ -20,79 +19,67 @@ Both the detail view and the record list use the same color coding to signal the
 
 '''Background color''':
 
-White - Single Record:
-
-Green - Multiple but no conflict:
-
-Yellow - Override without conflict:
-
-Red - Conflict:
+: White - Single Record:
+: Green - Multiple but no conflict:
+: Yellow - Override without conflict:
+: Red - Conflict:
 
 '''Text color''':
 
-Black - Single Record:
+: Black - Single Record:
+: Purple - Master:
+: Gray - Identical to Master:
+: Orange - Identical to Master but conflict Winner:
+: Green - Override without conflict:
+: Orange - Conflict winner:
+: Red - Conflict loser:
 
-Purple - Master:
+Conflict detection is not simply based on the existence of multiple records for the same FormID in different plugins but instead performs a comparison of the parsed subrecord data.  The record tree view on the left side has a context menu where you can activate filtering. Filtering is 
+based on the same conflict categorization as the background and text color.  Yes, filtering will take a while. It has to decode and compare the contents of every single record which turns up more then once.
 
-Gray - Identical to Master:
+Be warned, this program uses a lot of memory. Performance on a system with less then 2GB of RAM will most likely be sub-optimal. Activating the filtering uses even more memory.
 
-Orange - Identical to Master but conflict Winner:
+== Installation ==
 
-Green - Override without conflict:
-
-Orange - Conflict winner:
-
-Red - Conflict loser:
-
-Conflict detection is not simply based on the existence of multiple records for the same FormID in different 
-plugins but instead performs a comparison of the parsed subrecord data.
-
-The record tree view on the left side has a context menu where you can activate filtering. Filtering is 
-based 
-on the same conflict categorization as the background and text color.
-
-Yes, filtering will take a while. It has to decode and compare the contents of every single record which 
-turns up more then once.
-
-Be warned, this program uses a lot of memory. Performance on a system with less then 2GB of RAM will 
-most likely be sub-optimal. Activating the filtering uses even more memory.
-
-=Installation= 
-#Extract the contents of the archive any where you so desire or into its own personal folder.
-#The program will automatically detect the directory where your plugins are located at.
+[[Image:TES5Edit Folder.jpg|800px|TES5Edit Install Folder]]
+ 
+# Extract the contents of the archive any where you so desire or into its own personal folder.
+# The program will automatically detect the directory where your plugins are located at.
 
 You can change the way the program interacts renaming it
-#TES5Edit.exe
-#TES5View.exe
-#TES5Trans.exe
+# TES5Edit.exe
+# TES5View.exe
+# TES5Trans.exe
 
-You can also create shortcuts to use on your desktop that will do the same thing that renaming the files will accomplish.
-
-I recommend using this option because it makes it easier to update one file then it is to rename it every time.
+You can also create shortcuts to use on your desktop that will do the same thing that renaming the files will accomplish. I recommend using this option because it makes it easier to update one file then it is to rename it every time.
 
 '''Example shortcuts'''
 <Pre>"C:\Program Files\TES5Edit_3_0_22_EXPERIMENTAL\TES5Edit.exe"</pre>
 <Pre>"C:\Program Files\TES5Edit_3_0_22_EXPERIMENTAL\TES5Edit.exe" -view</pre>
 <Pre>"C:\Program Files\TES5Edit_3_0_22_EXPERIMENTAL\TES5Edit.exe" -translate</pre>
 
-[http://code.google.com/p/skyrim-plugin-decoding-project/downloads/list Download TES5Edit from our Google Code Site skyrim-plugin-decoding-project]
+[http://skyrim.nexusmods.com/mods/25859/ Download TES5Edit from the Skyrim Nexus]
 
-[http://forums.bethsoft.com/topic/1415541-wipz-tes5dumpfuture-tes5edit/ Official Elderscrolls TES5Edit forum topic]
+[http://forums.bethsoft.com/topic/1419201-relz-tes5edit/ Official Elderscrolls TES5Edit forum topic]
 
-= Related Articles =
+= Additional TES5Edit Resources =
 
-[http://www.creationkit.com/Skyrim_Dirty_Plugins_List/ Dirty Plugins List]
+* [[TES5Edit_Cleaning_Guide_-_TES5Edit|TES5Edit Cleaning Guide]]
+* [[TES5Edit_Mod_Cleaning_Tutorial|TES5Edit Mod Cleaning Tutorial]]
+* [[Skyrim_Dirty_Plugins_List|Skyrim Dirty Plugins List]]
 
-[http://www.creationkit.com/Skyrim_TES5Edit_Mod_Cleaning_Tutorial/ TES5Edit Mod Cleaning Tutorial]
+== Closing Remarks & Credits ==
 
-= Closing Remarks & Credits =
-
-This has been adapted from the [http://cs.elderscrolls.com/index.php/TES4Edit TES4Edit] artical on the Elderscrolls Wiki.
+This has been adapted from the [http://cs.elderscrolls.com/index.php/TES4Edit TES4Edit] article on the Elderscrolls Wiki.
 
 Thanks also go to ElminsterEU, Sharlikran, and Zilav for their work in getting TES5Edit released. Special Thanks to Gopher for getting the word out with a short video announcing the public release of TES5Edit and his upcoming tutorials.
 
-Still to do:
+== Still to do ==
 * Make sure TES5Edit still utilizes TES5View and TES5Trans functionality.
 * Update the Dirty Plugins List
 * Update the TES5Edit Mod Cleaning Tutorial
 * Get the correctness of the guide verified by the TES5Edit team.
+
+== See Also ==
+*[[:Category:TESVSnip|TESVSnip]]
+{{Languages}}
