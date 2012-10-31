@@ -5,6 +5,14 @@ This is a an experimental release of TES5Edit. If you don't know what TES5Edit i
 Mod Makers, Cleaning your mods:
 [youtube]UOQO2S6HDBw[/youtube]
 
+Rename to TES4Edit.exe to work with Oblivion.
+Rename to FO3Edit.exe to work with Fallout3.
+Rename to FNVEdit.exe to work with New Vegas.
+
+[url=http://forums.bethsoft.com/topic/1419201-relz-tes5edit]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
+[url=http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
+TES5Edit
+
 [color=#FF0000]Note: These are all a work in Progress.[/color]
 
 [color=#00BFFF]Updates on CK Wiki Pages:[/color]
@@ -14,27 +22,6 @@ Mod Makers, Cleaning your mods:
 [*] [url=http://www.creationkit.com/Skyrim_TES5Edit_Mod_Cleaning_Tutorial]TES5Edit Mod Cleaning Tutorial[/url]
 [*] [url=http://www.creationkit.com/Skyrim_Dirty_Plugins_List]TES5Edit Skyrim Dirty Plugins List[/url]
 [/list]
-
-Rename to TES4Edit.exe to work with Oblivion.
-Rename to FO3Edit.exe to work with Fallout3.
-Rename to FNVEdit.exe to work with New Vegas.
-
-[url=http://forums.bethsoft.com/topic/1419201-relz-tes5edit]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
-[url=http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
-TES5Edit
-
-[color="#FF0000"]Note: These are all a work in Progress.[/color]
-
-[size="4"][color="#00BFFF"]Updates on CK Wiki Pages:[/color][/size]
-[list]
-[*] [url="http://www.creationkit.com/Category:TES5Edit"]TES5Edit[/url]
-[*] [url="http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
-[*] [color="#FF8C00"] - Working on Mod Cleaning Tutorial[/color]
-[*] [url="http://www.creationkit.com/Skyrim_TES5Edit_Mod_Cleaning_Tutorial"]TES5Edit Mod Cleaning Tutorial[/url]
-[*] [color="#FF8C00"] - Dirty Plugins List is empty but can be edited by anyone[/color]
-[*] [url="http://www.creationkit.com/Skyrim_Dirty_Plugins_List"]TES5Edit Skyrim Dirty Plugins List[/url]
-[/list]
-
 
 [url=http://fallout3.nexusmods.com/mods/8629]Fallout3 Training Manual for FO3Edit[/url]: Applies to all game versions
 

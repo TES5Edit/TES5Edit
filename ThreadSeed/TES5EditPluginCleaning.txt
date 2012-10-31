@@ -10,9 +10,7 @@ Now if you have no idea what I am talking about then you are in the right place.
 [list]
 [*] [url="http://www.creationkit.com/TES5Edit"]TES5Edit[/url]
 [*] [url="http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
-[*] [color="#FF8C00"] - Working on Mod Cleaning Tutorial[/color]
 [*] [url="http://www.creationkit.com/TES5Edit_Mod_Cleaning_Tutorial"]TES5Edit Mod Cleaning Tutorial[/url]
-[*] [color="#FF8C00"] - Dirty Plugins List is empty but can be edited by anyone[/color]
 [*] [url="http://www.creationkit.com/Skyrim_Dirty_Plugins_List"]TES5Edit Skyrim Dirty Plugins List[/url]
 [/list]
 

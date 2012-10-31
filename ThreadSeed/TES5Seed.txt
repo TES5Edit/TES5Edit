@@ -31,11 +31,11 @@ Threads:
 [list]
 [*] [url="http://www.creationkit.com/TES5Edit"]TES5Edit[/url]
 [*] [url="http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit"]TES5Edit Cleaning Guide[/url]
-[*] [color="#FF8C00"] - Working on Mod Cleaning Tutorial[/color]
 [*] [url="http://www.creationkit.com/TES5Edit_Mod_Cleaning_Tutorial"]TES5Edit Mod Cleaning Tutorial[/url]
-[*] [color="#FF8C00"] - Dirty Plugins List is empty but can be edited by anyone[/color]
 [*] [url="http://www.creationkit.com/Skyrim_Dirty_Plugins_List"]TES5Edit Skyrim Dirty Plugins List[/url]
 [/list]
+
+Gopher's first video [url="http://youtu.be/UOQO2S6HDBw"]TES5EDIT : Cleaning your mods[/url] covers important cleaning aspects of TES5Edit and I look forward to more helful videos from him.
 
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to FO3Edit.exe to work with Fallout3.

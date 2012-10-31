@@ -8,41 +8,48 @@ LIGH records represent base lighting objects.
 ! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
 ! | Info
 |- 
+| + || EDID || EditorID || zstring || 
+|- 
+| - || VMAD || Scripting || [[Tes5Mod:Mod_File_Format/VMAD_Field|VMAD]] || Scripting Info
+|-
+| + || OBND || Bounds || 12 byte struct || data 
+|- 
 | + || MODL || Model || zstring || filename
+|- 
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
+|-
+| + || FULL || Item name || lstring ||
+|-
+| + || ICON || icon || zstring || Inventory icon filename
+|-
+| + || MICO || icon || zstring || Message icon filename
+|-
+| + || DATA || Light Data || 48 byte struct ||
+:dword Time (-1 = Infinite)
+:dword Radius
+:dword Color (0x00BBGGRR)
+:dword Flags
+::0x0001  Dynamic?
+::0x0002  Carried?
+::0x0008  Flicker?
+::0x0040  FlickerSlow?
+::0x0080  Pulse?
+::0x0400  SpotShadow? 
+::0x0800
+::0x1000
+::0x2000
+::Note that Flicker, FlickerSlow and Pulse are mutually exclusive (only one can be true at a time)
+:float FallOff?
+:float FOV (default of 90 deg)?
+:float ? (mostly 0-10000, some strange values from 9e-13 to 1.67e+8)
+:float ? (0-1)
+:float ? (0-5)
+:float ? (0-512)
+:dword Value 
+:float Weight
 |- 
 | + || FNAM || Fade || float || Ranges from 0.1 to 10
 |- 
-| + || OBND || Bounds || 12 byte struct || data 
-|- 
-| + || EDID || EditorID || zstring || 
-|- 
-| + || DATA || Light Data || 48 byte struct ||
-    dword Time (-1 = Infinite)
-    dword Radius
-    dword Color (0x00BBGGRR)
-    dword Flags
-          0x0001  Dynamic?
-          0x0002  Carried?
-          0x0008  Flicker?
-          0x0040  FlickerSlow?
-          0x0080  Pulse?
-          0x0400  SpotShadow? 
-          0x0800
-          0x1000
-          0x2000
-                  Note that Flicker, FlickerSlow and Pulse are mutually exclusive (only one can be true at a time)
-    float FallOff?
-    float FOV (default of 90 deg)?
-    float ? (mostly 0-10000, some strange values from 9e-13 to 1.67e+8)
-    float ? (0-1)
-    float ? (0-5)
-    float ? (0-512)
-    dword Value 
-    float Weight
-|- 
-| + || MODT || Model || ? || texture data
-|- 
 | + || SNAM || Holding Sound || formid || SNDR
 |- 
-| + || FULL || Item name || lstring ||
 |}
