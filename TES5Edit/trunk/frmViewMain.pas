@@ -9429,13 +9429,16 @@ begin
 
     Caption := 'Save changed files:';
     cbBackup.Visible := True;
-    cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
+    if Assigned(Settings) then
+      cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
     if (CheckListBox1.Count > 0) and not wbMasterUpdate then begin
       ShowModal;
       wbDontBackup := not cbBackup.Checked;
-      Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
-      Settings.UpdateFile;
+      if Assigned(Settings) then begin
+        Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
+        Settings.UpdateFile;
+      end;
       wbStartTime := Now;
     end;
 

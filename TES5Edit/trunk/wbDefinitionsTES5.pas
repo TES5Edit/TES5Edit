@@ -4158,6 +4158,7 @@ var
   Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
   HasWater     : Boolean;
+  IsInterior   : Boolean;
   i            : Integer;
   w            : Single;
 begin
@@ -4177,6 +4178,7 @@ begin
     if not Container.ElementExists['DATA'] then
       Exit;
 
+    IsInterior := (Container.ElementNativeValues['DATA'] and 1) <> 0;
     HasWater := (Container.ElementNativeValues['DATA'] and 2) <> 0;
 
     if HasWater then begin
@@ -4188,6 +4190,17 @@ begin
       if Container.ElementExists['XCLW'] then
         Container.ElementEditValues['XCLW'] := '-2147483648.000000';
     end;
+
+//    if not Container.ElementExists['XCLW'] then begin
+//      Container.Add('XCLW', True);
+//      Container.ElementEditValues['XCLW'] := '-2147483648.000000';
+//    end;
+//
+//    if not HasWater then
+//      Container.ElementEditValues['XCLW'] := '-2147483648.000000';
+
+//    if IsInterior then
+//      Container.ElementEditValues['XCLW'] := '0.000000';
 
     if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
       for i:= Pred(Container2.ElementCount) downto 0 do
