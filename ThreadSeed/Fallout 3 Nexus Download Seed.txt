@@ -11,7 +11,6 @@ Rename to FNVEdit.exe to work with New Vegas.
 
 [url=http://forums.bethsoft.com/topic/1419201-relz-tes5edit]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
 [url=http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
-TES5Edit
 
 [color=#FF0000]Note: These are all a work in Progress.[/color]
 
@@ -25,10 +24,24 @@ TES5Edit
 
 [url=http://fallout3.nexusmods.com/mods/8629]Fallout3 Training Manual for FO3Edit[/url]: Applies to all game versions
 
-Important for Older Systems:
-If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.
+[color=#00BFFF]Important for Older Systems:[/color]
 
-The most current (March 2008) version [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url] or for [url=here: http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes Redistributable[/url]. (make sure to install it after unpacking it)
+If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  The most current (March 2008) version [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url] or for [url=here: http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes Redistributable[/url]. (make sure to install it after unpacking it)
+
+[color=#FF0000]With each new version of TES5Edit our cleaning routines become more accurate.  Because of this it's very important to restore the original Bethesda master files and the originals of the plugins you use and reclean them.[/color]
+
+[color=#00BFFF]Version 3.0.24 contains the following changes:[/color]
+
+- [TES5] Updated load order handling when plugins.txt is empty and no BOSS info is available
+- [TES5] Fixed event name definition in QUST
+- [TES5] CELL water level fixup for better conflicts detection
+- [TES5] Autoremoving legacy RNAMs from WRLD; empty keywords from NPC_, ARMO, AMMO, WEAP, ALCH, MISC
+- [TES5] Removed NPC_, ARMO, AMMO, WEAP records from Merged Patch (unsafe to copy possible scripts to a new plugin)
+- [FO3] No sorting of DIAL groups
+- [FO3/FNV] Fixed record definition for ragdolls which crashed game after cleaning several DLCs
+- Copy "Compare to" selected file to the game's data folder if it is not there
+- Improved registry handling on x64 systems
+- Hold CTRL key when expanding a node for full expand
 
 [color=#00BFFF]Version 3.0.23 contains the following changes:[/color]
 

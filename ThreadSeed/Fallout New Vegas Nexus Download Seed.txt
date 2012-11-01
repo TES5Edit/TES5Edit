@@ -1,0 +1,99 @@
+[color=#00BFFF]TES5Edit 3.0.23 EXPERIMENTAL by ElminsterAU updated for Skyrim by Zilav, and Sharlikran.[/color]
+
+This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Ask questions in the official Bethesda thread "[url=http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]" or "[url=http://forums.bethsoft.com/topic/1419201-relz-tes5edit][RELz] TES5Edit[/url]"  As always backup you plugins, save games, and use with caution. (at your own risk)
+
+Mod Makers, Cleaning your mods:
+[youtube]UOQO2S6HDBw[/youtube]
+
+Rename to TES4Edit.exe to work with Oblivion.
+Rename to FO3Edit.exe to work with Fallout3.
+Rename to FNVEdit.exe to work with New Vegas.
+
+[url=http://forums.bethsoft.com/topic/1419201-relz-tes5edit]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
+[url=http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
+
+[color=#FF0000]Note: These are all a work in Progress.[/color]
+
+[color=#00BFFF]Updates on CK Wiki Pages:[/color]
+[list]
+[*] [url=http://www.creationkit.com/Category:TES5Edit]TES5Edit[/url]
+[*] [url=http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit]TES5Edit Cleaning Guide[/url]
+[*] [url=http://www.creationkit.com/Skyrim_TES5Edit_Mod_Cleaning_Tutorial]TES5Edit Mod Cleaning Tutorial[/url]
+[*] [url=http://www.creationkit.com/Skyrim_Dirty_Plugins_List]TES5Edit Skyrim Dirty Plugins List[/url]
+[/list]
+
+[url=http://fallout3.nexusmods.com/mods/8629]Fallout3 Training Manual for FO3Edit[/url]: Applies to all game versions
+
+[color=#00BFFF]Important for Older Systems:[/color]
+
+If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  The most current (March 2008) version [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url] or for [url=here: http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes Redistributable[/url]. (make sure to install it after unpacking it)
+
+[color=#FF0000]With each new version of TES5Edit our cleaning routines become more accurate.  Because of this it's very important to restore the original Bethesda master files and the originals of the plugins you use and reclean them.[/color]
+
+[color=#00BFFF]Version 3.0.24 contains the following changes:[/color]
+
+- [TES5] Updated load order handling when plugins.txt is empty and no BOSS info is available
+- [TES5] Fixed event name definition in QUST
+- [TES5] CELL water level fixup for better conflicts detection
+- [TES5] Autoremoving legacy RNAMs from WRLD; empty keywords from NPC_, ARMO, AMMO, WEAP, ALCH, MISC
+- [TES5] Removed NPC_, ARMO, AMMO, WEAP records from Merged Patch (unsafe to copy possible scripts to a new plugin)
+- [FO3] No sorting of DIAL groups
+- [FO3/FNV] Fixed record definition for ragdolls which crashed game after cleaning several DLCs
+- Copy "Compare to" selected file to the game's data folder if it is not there
+- Improved registry handling on x64 systems
+- Hold CTRL key when expanding a node for full expand
+
+[color=#00BFFF]Version 3.0.23 contains the following changes:[/color]
+
+- [TES5] Merged patch updated for Skyrim, currently it merges:
+  * Leveled NPCs, Items, Spells
+  * NPC: Items, Spells, Head Parts, Factions
+  * Race: Hairs, Eyes, Spells
+  * Containers
+  * Relations
+  * Form Lists
+  * Keywords on: Armor, Weapon, Ammo, NPC
+- [TES5/FNV/FO3] When performing UDR there will be a warning message for deleted NavMeshes.
+- [TES5] Updated record definitions.
+  * BPDT was sorted by a localized name which is inconsistent for different languages (now sorted by a node name)
+  * NPC's tints are now sorted by tint index for better conflicts detection
+  * QUST aliases are no longer sorted by index
+  * QUST stages are now sorted by stage index
+  * Improved NavMeshes (thanks to Divstator)
+- [TES5] FaceFX phonemes where empty after copying RACE record.
+- [TES5] Fixed bugs when copying RACE and QUST (empty model was created for RACE; QUST location aliases were turning into ref ones).
+- [TES5] Create start-enabled quests sequence SEQ file (you can select several files at once).
+- [TES5] Improved error checking.
+- [FNV] CHAL record was missing some challenge types from Dead Money DLC.
+- [FNV] Disabled DIAL sorting, was causing errors when copying INFO records.
+- No autosaves when "you know what you are doing".
+- Compare with external tool option in Edit window.
+- "Apply Filter for Cleaning" menu. Note that xEdit saves filter settings when you press OK button in filter window, so if you clean plugin and exit the program, your filter settings will be preserved.
+- Filter option for deleted records.
+- Saving messages to [TES5/FNV/FO3/TES4]Edit_log.txt upon exit.
+- Fixed minor bug when Edit can't find game's folder. If your registry settings is invalid due to a Steam bug and Edit is unable to find your game, put it in the game's root folder where the game executable file is (Oblivion.exe, TESV.exe, etc).
+- Reason: The game's Registry entry is missing. This happens to a lot of people, because Steam likes to remove it whenever the game is updated or its game cache is verified. Run the game's launcher to add the Registry entry back again.
+
+[color=#00BFFF]Version 3.0.22 contains the following changes:[/color]
+
+- Skyrim Support.
+- New exceptions handler.
+- Optional backups in a separate directory.
+- Remember position and state of the main window.
+- Fixed bug when editing with Shift+DblClick.
+- [All] Wrye Bash ghosted plugins (*.esp.ghost) in plugin selection window.
+- [ALL] FLST form list is no longer sorted.
+- [ALL] EDID affects conflict detection.
+- [TES5] Localization editor, plugin localization/delocalization with optional translation.
+- [TES5] -l:language command line switch to chose default localization files.
+- [TES5] Adding missed plugin files from plugins.txt/loadorder.txt to the end of plugins list.
+- [FNV] WeaponModKit IMOD record support for various subrecords.
+- [FNV] PLD2 subrecord is no longer removed in package.
+- [FNV/FO3] Quest stage signed value overflow fix.
+- [Oblivion] Fixed ownership record order in CELL.
+- [Oblivion] Snowy weather definition fix (thanks to Arthmoor).
+
+ToDo List:
+
+Update Miax’s Tome of FO3Edit to be TES5Edit's documentation.
+Update NAVM, NAVI, and wbUnion for VMAD.
