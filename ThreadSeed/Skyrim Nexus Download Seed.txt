@@ -1,4 +1,4 @@
-[color=#00BFFF]TES5Edit 3.0.23 EXPERIMENTAL by ElminsterAU updated for Skyrim by Zilav, and Sharlikran.[/color]
+[color=#00BFFF]TES5Edit 3.0.24 EXPERIMENTAL by ElminsterAU updated for Skyrim by Zilav, and Sharlikran.[/color]
 
 This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Ask questions in the official Bethesda thread "[url=http://forums.bethsoft.com/topic/1418434-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]" or "[url=http://forums.bethsoft.com/topic/1419201-relz-tes5edit][RELz] TES5Edit[/url]"  As always backup you plugins, save games, and use with caution. (at your own risk)
 

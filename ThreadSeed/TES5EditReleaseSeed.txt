@@ -34,6 +34,20 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
 The most current (March 2008) version can be found here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=35"]DirectX End-User Runtime Web Installer[/url] 
 or here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=23611"]DirectX End-User Runtimes Redistributable[/url] (make sure to install it after unpacking it).
 
+[color=#00BFFF]Version 3.0.24 contains the following changes:[/color]
+[list]
+[*] - [TES5] Updated load order handling when plugins.txt is empty and no BOSS info is available
+[*] - [TES5] Fixed event name definition in QUST
+[*] - [TES5] CELL water level fixup for better conflicts detection
+[*] - [TES5] Autoremoving legacy RNAMs from WRLD; empty keywords from NPC_, ARMO, AMMO, WEAP, ALCH, MISC
+[*] - [TES5] Removed NPC_, ARMO, AMMO, WEAP records from Merged Patch (unsafe to copy possible scripts to a new plugin)
+[*] - [FO3] No sorting of DIAL groups
+[*] - [FO3/FNV] Fixed record definition for ragdolls which crashed game after cleaning several DLCs
+[*] - Copy "Compare to" selected file to the game's data folder if it is not there
+[*] - Improved registry handling on x64 systems
+[*] - Hold CTRL key when expanding a node for full expand
+[/list]
+
 [size="4"][color="#FF8C00"]Version 3.0.23 contains the following changes:[/color][/size]
 [list]
 [*] [TES5] Merged patch updated for Skyrim, currently it merges:
