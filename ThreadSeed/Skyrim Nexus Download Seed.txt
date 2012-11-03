@@ -5,6 +5,9 @@ This is a an experimental release of TES5Edit. If you don't know what TES5Edit i
 Mod Makers, Cleaning your mods:
 [youtube]UOQO2S6HDBw[/youtube]
 
+TES5EDIT : Cleaning your master files
+[youtube]Re8YBJm9l64[/youtube]
+
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to FO3Edit.exe to work with Fallout3.
 Rename to FNVEdit.exe to work with New Vegas.
@@ -31,6 +34,8 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
 [color=#FF0000]With each new version of TES5Edit our cleaning routines become more accurate.  Because of this it's very important to restore the original Bethesda master files and the originals of the plugins you use and reclean them.[/color]
 
 [color=#00BFFF]Version 3.0.24 contains the following changes:[/color]
+
+[color=#FF0000]NOTE Changes to Merged Patch: 3.0.24 of TES5Edit only adds Containers and Leveled Lists to Merged Patches.[/color]
 
 - [TES5] Updated load order handling when plugins.txt is empty and no BOSS info is available
 - [TES5] Fixed event name definition in QUST
