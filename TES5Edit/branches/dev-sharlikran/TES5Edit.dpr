@@ -37,7 +37,9 @@ uses
   wbHelpers in 'wbHelpers.pas',
   frmWaitForm in 'frmWaitForm.pas' {frmWait},
   frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization},
-  frmLocalizePluginForm in 'frmLocalizePluginForm.pas' {frmLocalizePlugin};
+  frmLocalizePluginForm in 'frmLocalizePluginForm.pas' {frmLocalizePlugin},
+  wbScriptAdapter in 'wbScriptAdapter.pas',
+  frmScriptForm in 'frmScriptForm.pas' {frmScript};
 
 {$R *.res}
 
