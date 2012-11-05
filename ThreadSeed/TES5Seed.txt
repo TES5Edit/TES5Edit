@@ -20,11 +20,9 @@ Threads:
 [topic='1388475']Thread 1[/topic]
 [/spoiler]
 
-[size="3"][url=http://forums.nexusmods.com/index.php?/topic/713668-wipz-tes5dumpfuture-tes5edit/]Fo3 Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
-[url=http://forums.nexusmods.com/index.php?/topic/713672-wipz-tes5dumpfuture-tes5edit/]FNV Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
-[url=http://forums.nexusmods.com/index.php?/topic/781826-wipz-tes5dumpfuture-tes5edit/]Oblivion Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
-[url="http://forums.nexusmods.com/index.php?showtopic=813094"]Skyrim Nexus - [WIPz] TES5Dump/Future TES5Edit[/url]
-[url=http://forums.nexusmods.com/index.php?/topic/715413-fnvedit-issue-depot-bug-reports/]FNVEdit Issue Depot (Bug Reports)[/url][/size]
+[size="4"][color="#FF8C00"]Support for other versions of Edit are located at these locations:[/color][/size] [size="3"][url=http://forums.nexusmods.com/index.php?/topic/83746-fo3edit/]FO3Edit[/url], [url=http://forums.nexusmods.com/index.php?/topic/248639-fnvedit/]FNVEdit[/url], [url=http://forums.nexusmods.com/index.php?showtopic=37310]TES4Edit[/url], [url="http://forums.nexusmods.com/index.php?showtopic=813094"]TES5Edit[/url][/size]
+
+[size="4"][color="#FF8C00"]Other versions of Edit can be downloaded at these locations:[/color][/size] [size="3"][url=http://www.fallout3nexus.com/downloads/file.php?id=637]FO3Edit[/url], [url=http://www.newvegasnexus.com/downloads/file.php?id=34703]FNVEdit[/url], [url=http://oblivion.nexusmods.com/mods/11536]TES4Edit[/url], [url="http://skyrim.nexusmods.com/mods/25859"]TES5Edit[/url][/size]
 
 [color="#FF0000"]Note: These are all a work in Progress.[/color]
 
