@@ -1992,8 +1992,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
-  //Result := True;
+  Result := True; {>>> Should not be sorted according to Arthmoor and JustinOther, left as sorted for compatibility <<<}
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -4063,23 +4062,27 @@ var
   a, b: Single;
   NeedsFlip: Boolean;
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    NeedsFlip := False;
-    if Container.ElementCount > 1 then begin
-      a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[0].Value);
-      b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[0].Value);
-      case CompareValue(a, b) of
-        EqualsValue: begin
-          a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[1].Value);
-          b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[1].Value);
-          NeedsFlip := CompareValue(a, b) = GreaterThanValue;
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainer, Container) then begin
+      NeedsFlip := False;
+      if Container.ElementCount > 1 then begin
+        a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[0].Value);
+        b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[0].Value);
+        case CompareValue(a, b) of
+          EqualsValue: begin
+            a := StrToFloat((Container.Elements[0] as IwbContainer).Elements[1].Value);
+            b := StrToFloat((Container.Elements[Pred(Container.ElementCount)] as IwbContainer).Elements[1].Value);
+            NeedsFlip := CompareValue(a, b) = GreaterThanValue;
+          end;
+          GreaterThanValue:
+            NeedsFlip := True;
         end;
-        GreaterThanValue:
-          NeedsFlip := True;
       end;
+      if NeedsFlip then
+        Container.ReverseElements;
     end;
-    if NeedsFlip then
-      Container.ReverseElements;
+  finally
+    wbEndInternalEdit;
   end;
 end;
 
@@ -7950,8 +7953,8 @@ begin
            {52} wbInteger('Projectile', itS32, wbDiv(1000)),
            {56} wbInteger('Melee', itS32, wbDiv(1000))
          ])
-    ], cpNormal, True),
-    wbArray(RAFB, 'Feedback Dynamic Bones', wbInteger('Bone', itU16), 0, nil, nil, cpNormal, True),
+    ], cpNormal, False),
+    wbArray(RAFB, 'Feedback Dynamic Bones', wbInteger('Bone', itU16), 0, nil, nil, cpNormal, False),
     wbStruct(RAPS, 'Pose Matching Data', [
     {00} wbArray('Match Bones', wbInteger('Bone', itU16, wbHideFFFF), 3),
     {06} wbInteger('Flags', itU8, wbFlags([
