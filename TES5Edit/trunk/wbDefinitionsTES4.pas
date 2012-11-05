@@ -325,7 +325,8 @@ var
   wbFunctionsEnum: IwbEnumDef;
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
-  wbEffects: IwbSubRecordUnionDef;
+//  wbEffects: IwbSubRecordUnionDef;
+  wbEffects: IwbSubRecordArrayDef;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -2228,14 +2229,12 @@ begin
 
   wbOBMEResolutionInfo := wbEnum(['None', 'FormID', 'Magic Effect Code', 'Actor Value']);
 
-  wbEffects :=
+  wbEffects := wbRArray('Effects',
     wbRUnion('Effects', [
-      wbRStruct('Effects', [
-        wbRStructs('Effects','Effect', [
-          wbEFID,
-          wbEFIT,
-          wbSCIT
-        ], [])
+      wbRStruct('Effect', [
+        wbEFID,
+        wbEFIT,
+        wbSCIT
       ], []),
       wbRStruct('Effects', [
         wbRStructs('Effects','Effect', [
@@ -2259,7 +2258,41 @@ begin
         wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
         wbFULLReq
       ], [])
-    ], []);
+    ], [])
+  );
+
+//  wbEffects :=
+//    wbRUnion('Effects', [
+//      wbRStruct('Effects', [
+//        wbRStructs('Effects','Effect', [
+//          wbEFID,
+//          wbEFIT,
+//          wbSCIT
+//        ], [])
+//      ], []),
+//      wbRStruct('Effects', [
+//        wbRStructs('Effects','Effect', [
+//          wbStruct(EFME, 'Oblivion Magic Extender', [
+//            wbInteger('Record Version', itU8),
+//            wbStruct('OBME Version', [
+//              wbInteger('Beta', itU8),
+//              wbInteger('Minor', itU8),
+//              wbInteger('Major', itU8)
+//            ]),
+//            wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
+//            wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
+//            wbByteArray('Unused', $0A)
+//          ]),
+//          wbEFIDOBME,
+//          wbEFITOBME,
+//          wbSCITOBME,
+//          wbString(EFII, 'Icon'),
+//          wbEFIX
+//        ], []),
+//        wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
+//        wbFULLReq
+//      ], [])
+//    ], []);
 
   wbRecord(ALCH, 'Potion', [
     wbEDID,
