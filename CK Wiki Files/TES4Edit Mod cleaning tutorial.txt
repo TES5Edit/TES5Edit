@@ -81,7 +81,7 @@ In the picture we can see the original mod content, yet untouched and unfiltered
 
 == Checking step first ==
 
-The next step is only needed if you want to see if the mod has dirty records prior to cleaning it, so you can see what will be removed. If you're not interested in checking, just skip to the next section.
+The next step is only needed if you want to see if the mod has dirty records prior to cleaning it, so you can see what will be removed. It has no impact on the cleaning process.  If you're not interested in checking, just skip to the next section [[TES5Edit_Cleaning_Guide_-_TES5Edit#Finally cleaning the mod|Finally cleaning the mod]].
 
 Ok, then. Here's the way to do that: Right click on the left pane of the TES5Edit window, and in the popup menu choose Apply Filter:
 
@@ -128,6 +128,17 @@ NOTE: Deselect 'Hide no conflict rows' from the popup context.
 So now, we can proceed with the cleaning.
 
 == Finally cleaning the mod ==
+
+=== Order For Cleaning Bethesda's Master Files ===
+
+[[File:TES5EditCleaningUpdate.jpg|50px|TES5 Apply Filter For Cleaning Update.esm]]  [[File:TES5EditCleaningDawnguard.jpg|50px|TES5 Apply Filter For Cleaning Dawnguard.esm]]  [[File:TES5EditCleaningHearthfires.jpg|50px|TES5 Apply Filter For Cleaning Hearthfires.esm]]
+
+:For Update.esm: Load Skyrim.esm and Update.esm, but only clean Update.esm.
+:For Dawnguard.esm: Load Skyrim.esm, Update.esm, and Dawnguard.esm but only clean Dawnguard.esm.
+:For Hearthfires.esm: Load Skyrim.esm, Update.esm, and Hearthfires.esm but only clean Hearthfires.esm.
+
+=== Cleaning the ESM or ESP ===
+
 Again, we need to go to the filter window, so again, right clink on the left pane, but this time select "Apply Filter For Cleaning" instead: 
 
 [[Image:TES5EditApplyFilterForCleaning.jpg|800px|Apply Filter For Cleaning]]
@@ -242,7 +253,7 @@ Another thing to notice is that the original mod (in this screen shot Dawnguard.
 
 [[Image:TES5EditSaveFileLocation.jpg|800px|Save File Location]]
 
-At which point the program will rename the old original file as a 'backup' file and place that in the folder TES5Edit Backups, and the new 'save' file as the original mod. (Notice the reduction in size? Those were the extra Landscape records now removed.)
+At which point the program will rename the old original file as a 'backup' file and place that in the folder TES5Edit Backups, and the new 'save' file as the original mod. (Notice the reduction in size?  Those were the extra records that are now removed.)
 
 When we’re done and after we exit the tool:
 

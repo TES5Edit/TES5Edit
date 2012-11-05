@@ -144,7 +144,7 @@ For mod users:
 
 :For Update.esm: Load Skyrim.esm and Update.esm, but only clean Update.esm.
 :For Dawnguard.esm: Load Skyrim.esm, Update.esm, and Dawnguard.esm but only clean Dawnguard.esm.
-:For Hearthfires.esm: Load Skyrim.esm, Update.esm, Dawnguard.esm, and Hearthfires.esm but only clean Hearthfires.esm.
+:For Hearthfires.esm: Load Skyrim.esm, Update.esm, and Hearthfires.esm but only clean Hearthfires.esm.
 
 === Non Critical Errors ===
 
