@@ -1993,7 +1993,7 @@ begin
     end;
 end;
 
-{ Nees revision for Skyrim }
+{ Needs revision for Skyrim }
 //procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 //var
 //  Container: IwbContainerElementRef;
@@ -8095,7 +8095,7 @@ begin
         'No Controller Vibration'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
-    ], cpNormal, True, nil, 11)
+    ], cpNormal, True, nil, 10)
   ]);
 
   wbRecord(DEBR, 'Debris', [
@@ -8757,7 +8757,7 @@ begin
 
   wbRecord(IPDS, 'Impact Data Set', [
     wbEDID,
-    wbRArray('Data', wbStruct(PNAM, '', [
+    wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
       wbFormIDCk('Material', [MATT]),
       wbFormIDCk('Impact', [IPCT])
     ]))

@@ -29,7 +29,7 @@ uses
   RenderUnit, Direct3D9, D3DX9, DXUT,
 {$ENDIF}
   AppEvnts, dxGDIPlusClasses,
-  wbLocalization;
+  wbLocalization, JvComponentBase, JvInterpreter;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -254,6 +254,7 @@ type
     mniNavLocalizationLanguage: TMenuItem;
     mniNavFilterForCleaning: TMenuItem;
     mniNavCreateSEQFile: TMenuItem;
+    mniNavApplyScript: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -448,6 +449,7 @@ type
     procedure mniNavCreateSEQFileClick(Sender: TObject);
     procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var Allowed: Boolean);
+    procedure mniNavApplyScriptClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -779,8 +781,10 @@ uses
   Colors, Mask,
   cxVTEditors,
   ShlObj, Registry, StrUtils,
+  wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
-  frmLocalizationForm, frmLocalizePluginForm;
+  frmLocalizationForm, frmLocalizePluginForm,
+  frmScriptForm;
 
 var
   NoNodes                     : TNodeArray;
@@ -5299,6 +5303,105 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
+const
+  sJustWait                   = 'Applying script. Please wait...';
+var
+  Selection                   : TNodeArray;
+  StartNode, Node, NextNode   : PVirtualNode;
+  NodeData                    : PNavNodeData;
+  Count                       : Cardinal;
+  StartTick                   : Cardinal;
+  Element                     : IwbElement;
+  jvi                         : TJvInterpreterProgram;
+  Scr                         : string;
+  i                           : integer;
+begin
+  with TfrmScript.Create(Self) do try
+    ScriptsPath := ExtractFilePath(Application.ExeName) + 'Edit Scripts\';
+    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', sNewScript);
+
+    if not ShowModal = mrOK then
+      Exit;
+
+    Scr := Script;
+
+  finally
+    Free;
+  end;
+
+  try
+    jvi := TJvInterpreterProgram.Create(Self);
+    jvi.Pas.Text := Scr;
+    jvi.Compile;
+
+    Selection := vstNav.GetSortedSelection(True);
+    vstNav.BeginUpdate;
+    try
+      StartTick := GetTickCount;
+      wbStartTime := Now;
+
+      Enabled := False;
+
+      Count := 0;
+      for i := Low(Selection) to High(Selection) do try
+        StartNode := Selection[i];
+        if Assigned(StartNode) then begin
+          Node := vstNav.GetLast(StartNode);
+          if not Assigned(Node) then
+            Node := StartNode;
+        end else
+          Node := nil;
+        while Assigned(Node) do begin
+          NextNode := vstNav.GetPrevious(Node);
+          NodeData := vstNav.GetNodeData(Node);
+
+          if Assigned(NodeData.Element) then
+            if NodeData.Element.ElementType in [etMainRecord] then begin
+              jvi.CallFunction('Process', nil, [NodeData.Element]);
+              Inc(Count);
+            end;
+
+//          if Supports(NodeData.Element, IwbMainRecord, MainRecord) then with MainRecord do begin
+//          end;
+
+          if Node = StartNode then
+            Node := nil
+          else
+            Node := NextNode;
+
+          if StartTick + 500 < GetTickCount then begin
+            Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
+              ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+            Application.ProcessMessages;
+            StartTick := GetTickCount;
+          end;
+        end;
+
+      finally
+        Enabled := True;
+      end;
+
+      PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
+        ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+    finally
+      vstNav.EndUpdate;
+      Caption := Application.Title;
+    end;
+
+//    Nodes := vstNav.GetSortedSelection(True);
+//    for i := Low(Nodes) to High(Nodes) do begin
+//      NodeData := vstNav.GetNodeData(Nodes[i]);
+//      if Assigned(NodeData) and Supports(NodeData.Element, IwbElement, Element) then begin
+//        jvi.CallFunction('Process', nil, [Element]);
+//      end;
+//    end;
+
+  finally
+    jvi.Free;
+  end;
+end;
+
 procedure TfrmMain.mniViewHideNoConflictClick(Sender: TObject);
 begin
   mniViewHideNoConflict.Checked := not mniViewHideNoConflict.Checked;
@@ -8974,6 +9077,7 @@ begin
   mniNavSortMasters.Visible := mniNavAddMasters.Visible;
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
+  mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
 
   mniNavGenerateObjectLOD.Visible := mniNavCompareTo.Visible and (wbGameMode = gmTES4);
 
@@ -12722,7 +12826,6 @@ begin
   end;
   frmMain.PostAddMessage('[PluggyLink] terminated');
 end;
-
 
 
 end.

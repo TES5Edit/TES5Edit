@@ -8142,7 +8142,11 @@ begin
       ])),
       wbInteger('Flags 2', itU8, wbFlags([
         {0x01} 'Say Once a Day',
-        {0x02} 'Always Darken'
+        {0x02} 'Always Darken',
+        {0x04} 'Unknown 2',
+        {0x08} 'Unknown 3',
+        {0x10} 'Low Intelligence',
+        {0x20} 'High Intelligence'
       ]))
     ], cpNormal, True, nil, 3),
     wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpNormal, True),
