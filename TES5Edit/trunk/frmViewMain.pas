@@ -255,6 +255,7 @@ type
     mniNavFilterForCleaning: TMenuItem;
     mniNavCreateSEQFile: TMenuItem;
     mniNavApplyScript: TMenuItem;
+    mniNavOptions: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -450,6 +451,7 @@ type
     procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var Allowed: Boolean);
     procedure mniNavApplyScriptClick(Sender: TObject);
+    procedure mniNavOptionsClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -784,7 +786,7 @@ uses
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
-  frmScriptForm;
+  frmScriptForm, frmOptionsForm;
 
 var
   NoNodes                     : TNodeArray;
@@ -3237,6 +3239,20 @@ begin
   AssignPersWrldChild := Settings.ReadBool('Filter', 'AssignPersWrldChild', False);
   InheritConflictByParent := Settings.ReadBool('Filter', 'InheritConflictByParent', True);
 
+  wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
+  wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
+  wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
+  wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
+  wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
+  wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
+  wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
+  wbUDRSetScaleValue := Settings.ReadFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
+  wbUDRSetZ := Settings.ReadBool('Options', 'UDRSetZ', wbUDRSetZ);
+  wbUDRSetZValue := Settings.ReadFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
+  wbUDRSetMSTT := Settings.ReadBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
+  wbUDRSetMSTTValue := Settings.ReadInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
   mniViewHideNoConflict.Checked := HideNoConflict;
 
@@ -3619,6 +3635,7 @@ var
   StartTick                   : Cardinal;
   i, n                        : Integer;
   MainRecord                  : IwbMainRecord;
+  Element                     : IwbElement;
   Position                    : TD3DXVector3;
   Cntr, Cntr2                 : IwbContainerElementRef;
 begin
@@ -3708,16 +3725,28 @@ begin
             else if wbGameMode = gmTES4 then
               IsPersistent := False;
             if not IsPersistent then
-              if GetPosition(Position) then begin
-                Position.z := -30000;
+              if wbUDRSetZ and GetPosition(Position) then begin
+                Position.z := wbUDRSetZValue;
                 SetPosition(Position);
               end;
             RemoveElement('Enable Parent');
             RemoveElement('XTEL');
             IsInitiallyDisabled := True;
-            if Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
+            if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
               Cntr.ElementNativeValues['Reference'] := $14;
               Cntr.ElementNativeValues['Flags'] := 1;
+            end;
+
+            if wbUDRSetScale then begin
+              if not Assigned(ElementBySignature['XSCL']) then
+                Element := Add('XSCL', True);
+                if Assigned(Element) then
+                  Element.NativeValue := wbUDRSetScaleValue;
+            end;
+
+            if wbUDRSetMSTT then begin
+              if Assigned(ElementBySignature['NAME']) then
+                ElementBySignature['NAME'].NativeValue := wbUDRSetMSTTValue;
             end;
 
             // Undeleting NAVM, needs to update NAVI as well
@@ -3840,7 +3869,7 @@ begin
   end;
 
   try
-    s := ExtractFilePath(Application.ExeName) + wbAppName + 'Edit_log.txt';
+    s := ProgramPath + wbAppName + 'Edit_log.txt';
     if FileExists(s) then begin
       fs := TFileStream.Create(s, fmOpenReadWrite);
       fs.Seek(0, soFromEnd);
@@ -5318,7 +5347,7 @@ var
   i                           : integer;
 begin
   with TfrmScript.Create(Self) do try
-    ScriptsPath := ExtractFilePath(Application.ExeName) + 'Edit Scripts\';
+    ScriptsPath := ProgramPath + 'Edit Scripts\';
     LastUsedScript := Settings.ReadString('View', 'LastUsedScript', sNewScript);
 
     if not ShowModal = mrOK then
@@ -8848,6 +8877,61 @@ begin
     mniNavFilterApplyClick(Sender);
   finally
     FilterPreset := False;
+  end;
+end;
+
+procedure TfrmMain.mniNavOptionsClick(Sender: TObject);
+begin
+  with TfrmOptions.Create(Self) do try
+
+    cbHideUnused.Checked := wbHideUnused;
+    cbHideIgnored.Checked := wbHideIgnored;
+    cbHideNeverShow.Checked := wbHideNeverShow;
+    cbLoadBSAs.Checked := wbLoadBSAs;
+    cbSortFLST.Checked := wbSortFLST;
+    cbIKnow.Checked := wbIKnowWhatImDoing;
+    cbUDRSetXESP.Checked := wbUDRSetXESP;
+    cbUDRSetScale.Checked := wbUDRSetScale;
+    edUDRSetScaleValue.Text := FloatToStrF(wbUDRSetScaleValue, ffFixed, 99, wbFloatDigits);
+    cbUDRSetZ.Checked := wbUDRSetZ;
+    edUDRSetZValue.Text := FloatToStrF(wbUDRSetZValue, ffFixed, 99, wbFloatDigits);
+    cbUDRSetMSTT.Checked := wbUDRSetMSTT;
+    edUDRSetMSTTValue.Text := IntToHex(wbUDRSetMSTTValue, 8);
+
+    if ShowModal <> mrOK then
+      Exit;
+
+    wbHideUnused := cbHideUnused.Checked;
+    wbHideIgnored := cbHideIgnored.Checked;
+    wbHideNeverShow := cbHideNeverShow.Checked;
+    wbLoadBSAs := cbLoadBSAs.Checked;
+    wbSortFLST := cbSortFLST.Checked;
+    wbIKnowWhatImDoing := cbIKnow.Checked;
+    wbUDRSetXESP := cbUDRSetXESP.Checked;
+    wbUDRSetScale := cbUDRSetScale.Checked;
+    wbUDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, wbUDRSetScaleValue);
+    wbUDRSetZ := cbUDRSetZ.Checked;
+    wbUDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, wbUDRSetZValue);
+    wbUDRSetMSTT := cbUDRSetMSTT.Checked;
+    wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
+
+    Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
+    Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
+    Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
+    Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
+    Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
+    Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
+    Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
+    Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
+    Settings.WriteFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
+    Settings.WriteBool('Options', 'UDRSetZ', wbUDRSetZ);
+    Settings.WriteFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
+    Settings.WriteBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
+    Settings.WriteInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+    Settings.UpdateFile;
+
+  finally
+    Free;
   end;
 end;
 
