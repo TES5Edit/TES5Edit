@@ -39,7 +39,8 @@ uses
   frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization},
   frmLocalizePluginForm in 'frmLocalizePluginForm.pas' {frmLocalizePlugin},
   wbScriptAdapter in 'wbScriptAdapter.pas',
-  frmScriptForm in 'frmScriptForm.pas' {frmScript};
+  frmScriptForm in 'frmScriptForm.pas' {frmScript},
+  frmOptionsForm in 'frmOptionsForm.pas' {frmOptions};
 
 {$R *.res}
 
