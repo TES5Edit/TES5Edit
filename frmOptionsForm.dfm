@@ -25,7 +25,7 @@ object frmOptions: TfrmOptions
     Top = 0
     Width = 466
     Height = 233
-    ActivePage = tsGeneral
+    ActivePage = tsCleaning
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
@@ -39,7 +39,8 @@ object frmOptions: TfrmOptions
         AutoSize = False
         Caption = 
           'Deactivate for Skyrim only if you extracted STRINGS files, will ' +
-          'reduce loading time greatly.'
+          'reduce loading time greatly. Otherwise you'#39'll see "no localizati' +
+          'on" text everywhere.'
         WordWrap = True
       end
       object cbIKnow: TCheckBox
@@ -49,6 +50,7 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'I know what I am doing'
         TabOrder = 0
+        Visible = False
       end
       object cbHideUnused: TCheckBox
         Left = 16
@@ -93,6 +95,8 @@ object frmOptions: TfrmOptions
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
+      ExplicitLeft = 20
+      ExplicitTop = 31
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -103,14 +107,17 @@ object frmOptions: TfrmOptions
       object cbUDRSetXESP: TCheckBox
         Left = 32
         Top = 32
-        Width = 201
-        Height = 17
-        Caption = 'Set enabled state opposite of player'
+        Width = 385
+        Height = 33
+        Caption = 
+          'Set enabled state opposite of player (deactivate at your own ris' +
+          'k, this is a critical setting)'
         TabOrder = 0
+        WordWrap = True
       end
       object cbUDRSetScale: TCheckBox
         Left = 32
-        Top = 55
+        Top = 71
         Width = 97
         Height = 17
         Caption = 'Set scale to'
@@ -118,7 +125,7 @@ object frmOptions: TfrmOptions
       end
       object cbUDRSetZ: TCheckBox
         Left = 32
-        Top = 78
+        Top = 94
         Width = 97
         Height = 17
         Caption = 'Set Z position to'
@@ -126,21 +133,21 @@ object frmOptions: TfrmOptions
       end
       object edUDRSetScaleValue: TEdit
         Left = 133
-        Top = 53
+        Top = 69
         Width = 84
         Height = 21
         TabOrder = 3
       end
       object edUDRSetZValue: TEdit
         Left = 133
-        Top = 76
+        Top = 92
         Width = 84
         Height = 21
         TabOrder = 4
       end
       object cbUDRSetMSTT: TCheckBox
         Left = 32
-        Top = 101
+        Top = 117
         Width = 201
         Height = 17
         Caption = '[FO3/FNV] Replace MSTT FormID with'
@@ -148,7 +155,7 @@ object frmOptions: TfrmOptions
       end
       object edUDRSetMSTTValue: TEdit
         Left = 239
-        Top = 99
+        Top = 115
         Width = 82
         Height = 21
         TabOrder = 6

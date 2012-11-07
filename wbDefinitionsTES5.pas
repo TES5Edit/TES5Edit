@@ -2297,7 +2297,7 @@ type
     ptFormType,      //?? Enum
     ptCriticalStage, //?? Enum
     ptObjectReference,    //REFR, ACHR
-    ptInventoryObject,    //ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, ARMA
+    ptInventoryObject,    //ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, ARMA, LIGH
     ptActor,              //ACHR
     ptVoiceType,          //VTYP
     ptIdleForm,           //IDLE
@@ -6125,7 +6125,7 @@ begin
         wbInteger('Form Type', itU32, wbFormTypeEnum),
         wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
         wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, SCRL, SLGM, INGR, FLST]),
+        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, SCRL, SLGM, INGR, FLST, LIGH]),
         wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
         wbFormIDCkNoReach('Voice Type', [VTYP, FLST]),
         wbFormIDCkNoReach('Idle', [IDLE]),
@@ -6181,7 +6181,7 @@ begin
         wbInteger('Form Type', itU32, wbFormTypeEnum),
         wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
         wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, SCRL, SLGM, INGR, FLST]),
+        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, SCRL, SLGM, INGR, FLST, LIGH]),
         wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
         wbFormIDCkNoReach('Voice Type', [VTYP, FLST]),
         wbFormIDCkNoReach('Idle', [IDLE]),
