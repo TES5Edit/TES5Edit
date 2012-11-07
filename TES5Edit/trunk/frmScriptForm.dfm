@@ -22,14 +22,19 @@ object frmScript: TfrmScript
     Left = 0
     Top = 33
     Width = 681
-    Height = 371
+    Height = 350
     Cursor = crIBeam
+    BorderStyle = bsNone
     RightMarginVisible = False
     Completion.ItemHeight = 13
     Completion.CRLF = '/n'
     Completion.Separator = '='
     TabStops = '3 5'
+    SmartTab = False
+    BracketHighlighting.WordPairs.Strings = (
+      'begin end')
     BracketHighlighting.StringEscape = #39#39
+    OnCaretChanged = EditorCaretChanged
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -37,11 +42,11 @@ object frmScript: TfrmScript
     Font.Name = 'Courier New'
     Font.Style = []
     Colors.Comment.Style = [fsItalic]
-    Colors.Comment.ForeColor = clOlive
+    Colors.Comment.ForeColor = clGreen
     Colors.Comment.BackColor = clWindow
     Colors.Number.ForeColor = clNavy
     Colors.Number.BackColor = clWindow
-    Colors.Strings.ForeColor = clPurple
+    Colors.Strings.ForeColor = clBlue
     Colors.Strings.BackColor = clWindow
     Colors.Symbol.ForeColor = clBlue
     Colors.Symbol.BackColor = clWindow
@@ -112,6 +117,22 @@ object frmScript: TfrmScript
       Caption = 'OK'
       ModalResult = 1
       TabOrder = 1
+    end
+  end
+  object pnlStatus: TPanel
+    Left = 0
+    Top = 383
+    Width = 681
+    Height = 21
+    Align = alBottom
+    BevelOuter = bvLowered
+    TabOrder = 3
+    object lblPosition: TLabel
+      Left = 8
+      Top = 4
+      Width = 137
+      Height = 13
+      AutoSize = False
     end
   end
 end

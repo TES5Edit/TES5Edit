@@ -3244,7 +3244,7 @@ begin
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
-  wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
+  //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
   wbUDRSetScaleValue := Settings.ReadFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
@@ -3634,7 +3634,7 @@ var
   DeletedNAVM                 : Cardinal;
   StartTick                   : Cardinal;
   i, n                        : Integer;
-  MainRecord                  : IwbMainRecord;
+  MainRecord, LinksToRecord   : IwbMainRecord;
   Element                     : IwbElement;
   Position                    : TD3DXVector3;
   Cntr, Cntr2                 : IwbContainerElementRef;
@@ -3745,8 +3745,11 @@ begin
             end;
 
             if wbUDRSetMSTT then begin
-              if Assigned(ElementBySignature['NAME']) then
-                ElementBySignature['NAME'].NativeValue := wbUDRSetMSTTValue;
+              Element := ElementBySignature['NAME'];
+              if Assigned(Element) then
+                if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
+                  if LinksToRecord.Signature = 'MSTT' then
+                    Element.NativeValue := wbUDRSetMSTTValue;
             end;
 
             // Undeleting NAVM, needs to update NAVI as well
@@ -5335,6 +5338,7 @@ end;
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 const
   sJustWait                   = 'Applying script. Please wait...';
+  sTerminated                 = 'Script terminated itself, Result=';
 var
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
@@ -5350,7 +5354,7 @@ begin
     ScriptsPath := ProgramPath + 'Edit Scripts\';
     LastUsedScript := Settings.ReadString('View', 'LastUsedScript', sNewScript);
 
-    if not ShowModal = mrOK then
+    if ShowModal <> mrOK then
       Exit;
 
     Scr := Script;
@@ -5359,8 +5363,8 @@ begin
     Free;
   end;
 
+  jvi := TJvInterpreterProgram.Create(Self);
   try
-    jvi := TJvInterpreterProgram.Create(Self);
     jvi.Pas.Text := Scr;
     jvi.Compile;
 
@@ -5373,7 +5377,16 @@ begin
       Enabled := False;
 
       Count := 0;
-      for i := Low(Selection) to High(Selection) do try
+
+      if jvi.FunctionExists('', 'Initialize') then begin
+        jvi.CallFunction('Initialize', nil, []);
+        if jvi.VResult <> 0 then begin
+          AddMessage(sTerminated + IntToStr(jvi.VResult));
+          Exit;
+        end;
+      end;
+
+      for i := Low(Selection) to High(Selection) do begin
         StartNode := Selection[i];
         if Assigned(StartNode) then begin
           Node := vstNav.GetLast(StartNode);
@@ -5387,12 +5400,17 @@ begin
 
           if Assigned(NodeData.Element) then
             if NodeData.Element.ElementType in [etMainRecord] then begin
-              jvi.CallFunction('Process', nil, [NodeData.Element]);
+
+              if jvi.FunctionExists('', 'Process') then begin
+                jvi.CallFunction('Process', nil, [NodeData.Element]);
+                if jvi.VResult <> 0 then begin
+                  AddMessage(sTerminated + IntToStr(jvi.VResult));
+                  Exit;
+                end;
+              end;
+
               Inc(Count);
             end;
-
-//          if Supports(NodeData.Element, IwbMainRecord, MainRecord) then with MainRecord do begin
-//          end;
 
           if Node = StartNode then
             Node := nil
@@ -5406,25 +5424,23 @@ begin
             StartTick := GetTickCount;
           end;
         end;
+      end;
 
-      finally
-        Enabled := True;
+      if jvi.FunctionExists('', 'Finalize') then begin
+        jvi.CallFunction('Finalize', nil, []);
+        if jvi.VResult <> 0 then begin
+          AddMessage(sTerminated + IntToStr(jvi.VResult));
+          Exit;
+        end;
       end;
 
       PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
         ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     finally
       vstNav.EndUpdate;
+      Enabled := True;
       Caption := Application.Title;
     end;
-
-//    Nodes := vstNav.GetSortedSelection(True);
-//    for i := Low(Nodes) to High(Nodes) do begin
-//      NodeData := vstNav.GetNodeData(Nodes[i]);
-//      if Assigned(NodeData) and Supports(NodeData.Element, IwbElement, Element) then begin
-//        jvi.CallFunction('Process', nil, [Element]);
-//      end;
-//    end;
 
   finally
     jvi.Free;
@@ -8889,7 +8905,7 @@ begin
     cbHideNeverShow.Checked := wbHideNeverShow;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
-    cbIKnow.Checked := wbIKnowWhatImDoing;
+    //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
     edUDRSetScaleValue.Text := FloatToStrF(wbUDRSetScaleValue, ffFixed, 99, wbFloatDigits);
@@ -8906,7 +8922,7 @@ begin
     wbHideNeverShow := cbHideNeverShow.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
-    wbIKnowWhatImDoing := cbIKnow.Checked;
+    //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
     wbUDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, wbUDRSetScaleValue);
@@ -8920,7 +8936,7 @@ begin
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
-    Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
+    //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
     Settings.WriteFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);

@@ -19,9 +19,13 @@ type
     pnlBottom: TPanel;
     btnCancel: TButton;
     btnOK: TButton;
+    pnlStatus: TPanel;
+    lblPosition: TLabel;
     procedure FormShow(Sender: TObject);
     procedure cmbScriptsChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure EditorCaretChanged(Sender: TObject; LastCaretX,
+      LastCaretY: Integer);
   private
     { Private declarations }
   public
@@ -47,52 +51,52 @@ begin
     Exit;
 
   s := cmbScripts.Items[cmbScripts.ItemIndex];
+  if s = sNewScript then
+    s := '_newscript_';
   Editor.Lines.Clear;
 
-  if s = sNewScript then begin
-    with Editor.Lines do begin
-      Add('unit userscript;');
-      Add('');
-      Add('procedure Process(e: IInterface);');
-      Add('begin');
-      Add('  // comment this out if you don''t want those messages');
-      Add('  AddMessage(''Processing: '' + GetFullPath(e));');
-      Add('');
-      Add('  // processing code goes here');
-      Add('');
-      Add('end;');
-      Add('');
-      Add('end.');
-    end;
-  end else begin
-    with TStringList.Create do try
-      LoadFromFile(ScriptsPath + s + '.pas');
-      Editor.Lines.Text := Text;
-    finally
-      Free;
-    end;
+  with TStringList.Create do try
+    LoadFromFile(ScriptsPath + s + '.pas');
+    Editor.Lines.Text := Text;
+    EditorCaretChanged(Editor, 0, 0);
+  finally
+    Free;
   end;
-
 end;
 
 procedure TfrmScript.ReadScriptsList;
 var
   F : TSearchRec;
+  sl: TStringList;
   i : Integer;
 begin
-  cmbScripts.Items.Add(sNewScript);
-  if FindFirst(ScriptsPath + '*.pas', faAnyFile, F) = 0 then try
-    repeat
-      cmbScripts.Items.Add(ChangeFileExt(F.Name, ''));
-    until FindNext(F) <> 0;
+  sl := TStringList.Create;
+  try
+    if FindFirst(ScriptsPath + '*.pas', faAnyFile, F) = 0 then try
+      repeat
+        if not SameText('_newscript_.pas', F.Name) then
+          sl.Add(ChangeFileExt(F.Name, ''));
+      until FindNext(F) <> 0;
+    finally
+      FindClose(F);
+    end;
+    sl.Sort;
+    sl.Insert(0, sNewScript);
+    cmbScripts.Items.Assign(sl);
   finally
-    FindClose(F);
+    sl.Free;
   end;
 
   i := cmbScripts.Items.IndexOf(LastUsedScript);
   if i = -1 then i := 0;
   cmbScripts.ItemIndex := i;
   cmbScriptsChange(Self);
+end;
+
+procedure TfrmScript.EditorCaretChanged(Sender: TObject; LastCaretX,
+  LastCaretY: Integer);
+begin
+  lblPosition.Caption := Format('Line:%d Col:%d', [Editor.CaretY, Editor.CaretX]);
 end;
 
 procedure TfrmScript.FormClose(Sender: TObject; var Action: TCloseAction);
