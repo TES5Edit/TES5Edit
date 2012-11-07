@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.23 EXPERIMENTAL';
+  VersionString               = '3.0.25 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -47,9 +47,11 @@ var
   wbIKnowWhatImDoing : Boolean = False;
   wbHideUnused : Boolean{} = True;{}
   wbHideIgnored : Boolean{} = True;{}
+  wbHideNeverShow : Boolean{} = True;{}
   wbShowFormVersion : Boolean{} = False;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
+  wbSortFLST: Boolean = True;
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
@@ -58,6 +60,14 @@ var
   wbTestWrite: Boolean;
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+
+  wbUDRSetXESP: Boolean = True;
+  wbUDRSetScale: Boolean = False;
+  wbUDRSetScaleValue: Single = 0.0;
+  wbUDRSetZ: Boolean = True;
+  wbUDRSetZValue: Single = -30000;
+  wbUDRSetMSTT: Boolean = True;
+  wbUDRSetMSTTValue: Int64 = $0000003B; { XMarker }
 
   wbMasterUpdate: Boolean;
   wbMasterUpdateDone: Boolean;

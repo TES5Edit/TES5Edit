@@ -53,9 +53,13 @@ begin
     with Editor.Lines do begin
       Add('unit userscript;');
       Add('');
-      Add('procedure Process(Element: IwbElement);');
+      Add('procedure Process(e: IInterface);');
       Add('begin');
-      Add('  AddMessage(''Processing: '' + Element.Name);');
+      Add('  // comment this out if you don''t want those messages');
+      Add('  AddMessage(''Processing: '' + GetFullPath(e));');
+      Add('');
+      Add('  // processing code goes here');
+      Add('');
       Add('end;');
       Add('');
       Add('end.');

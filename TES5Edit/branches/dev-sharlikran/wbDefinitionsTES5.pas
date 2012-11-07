@@ -2155,7 +2155,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
+  Result := wbSortFLST; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -3246,7 +3246,7 @@ end;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
-  Result := True;
+  Result := wbHideNeverShow;
 end;
 
 function GetREGNType(aElement: IwbElement): Integer;
@@ -6308,6 +6308,7 @@ begin
     wbKWDAs,
     wbDESC,
     wbMODL,
+    wbDEST,
     wbICON,
     wbSounds,
     wbETYP,
