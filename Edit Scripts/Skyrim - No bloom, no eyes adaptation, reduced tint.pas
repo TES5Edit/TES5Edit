@@ -40,18 +40,14 @@ begin
   
   AddMessage('Processing: ' + GetName(e));
   
-  v := ElementByPath(e, 'HNAM - HDR\Bloom Blur Radius');
-  if (v <> nil) and NoBloom then
-    SetEditValue(v, '0');
+  if NoBloom then
+    SetElementEditValues(e, 'HNAM - HDR\Bloom Blur Radius', '0');
   
-  v := ElementByPath(e, 'HNAM - HDR\Eye Adapt Speed');
-  if (v <> nil) and NoEye then
-    SetEditValue(v, '0');
+  if NoEye then begin
+    SetElementEditValues(e, 'HNAM - HDR\Eye Adapt Speed', '0');
+    SetElementEditValues(e, 'HNAM - HDR\Eye Adapt Strength', '0');
+  end;
     
-  v := ElementByPath(e, 'HNAM - HDR\Eye Adapt Strength');
-  if (v <> nil) and NoEye then
-    SetEditValue(v, '0');
-
   v := ElementByPath(e, 'TNAM - Tint\Amount');
   if (v <> nil) and NoTint then begin
     tint := GetNativeValue(v);
