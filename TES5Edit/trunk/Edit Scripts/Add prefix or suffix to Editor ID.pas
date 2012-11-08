@@ -23,7 +23,7 @@ begin
   // ask for string
   if not InputQuery('Enter', 'Prefix/suffix', s) then begin
     Result := 2;
-	Exit;
+    Exit;
   end;
   // empty string - do nothing
   if s = '' then

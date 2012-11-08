@@ -5498,7 +5498,7 @@ begin
     wbFlags([
       {0x00000001} 'Weapons',
       {0x00000002} 'Armor',
-      {0x00000004} 'Clothing',
+      {0x00000004} 'Alcohol',
       {0x00000008} 'Books',
       {0x00000010} 'Food',
       {0x00000020} 'Chems',

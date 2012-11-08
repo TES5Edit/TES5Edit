@@ -104,6 +104,40 @@ begin
     Element.NativeValue := Args.Values[1];
 end;
 
+procedure IwbElement_GetElementEditValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  Value := '';
+  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+    Value := Container.ElementEditValues[Args.Values[1]];
+end;
+
+procedure IwbElement_SetElementEditValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+    Container.ElementEditValues[Args.Values[1]] := Args.Values[2];
+end;
+
+procedure IwbElement_GetElementNativeValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  Value := '';
+  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+    Value := Container.ElementNativeValues[Args.Values[1]];
+end;
+
+procedure IwbElement_SetElementNativeValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+    Container.ElementNativeValues[Args.Values[1]] := Args.Values[2];
+end;
+
 procedure IwbElement_ElementByName(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Container: IwbContainerElementRef;
@@ -161,6 +195,10 @@ begin
     AddFunction('Dummy', 'SetEditValue', IwbElement_SetEditValue, 2, [varEmpty, varString], varEmpty);
     AddFunction('Dummy', 'GetNativeValue', IwbElement_GetNativeValue, 1, [varEmpty], varEmpty);
     AddFunction('Dummy', 'SetNativeValue', IwbElement_SetNativeValue, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Dummy', 'GetElementEditValues', IwbElement_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
+    AddFunction('Dummy', 'SetElementEditValues', IwbElement_SetElementEditValues, 3, [varEmpty, varString, varString], varEmpty);
+    AddFunction('Dummy', 'GetElementNativeValues', IwbElement_GetElementNativeValues, 2, [varEmpty, varString], varEmpty);
+    AddFunction('Dummy', 'SetElementNativeValues', IwbElement_SetElementNativeValues, 3, [varEmpty, varString, varEmpty], varEmpty);
     AddFunction('Dummy', 'ElementByName', IwbElement_ElementByName, 2, [varEmpty, varString], varEmpty);
     AddFunction('Dummy', 'ElementBySignature', IwbElement_ElementBySignature, 2, [varEmpty, varString], varEmpty);
     AddFunction('Dummy', 'ElementByPath', IwbElement_ElementByPath, 2, [varEmpty, varString], varEmpty);

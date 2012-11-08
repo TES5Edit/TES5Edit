@@ -12316,6 +12316,7 @@ begin
       wbFloat('Default Water Height')
     ]),
     wbString(ICON, 'Map Image'),
+    wbRStruct('Cloud Model', [wbMODL], []),
     wbStruct(MNAM, 'Map Data', [
       wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
@@ -12331,8 +12332,13 @@ begin
           wbInteger('Y', itS16)
         ])
       ]),
-      wbByteArray('Unknown')
-    ]),
+      wbStruct('Camera Data', [
+        wbFloat('Min Height'),
+        wbFloat('Max Height'),
+        wbFloat('Initial Pitch')
+      ])
+      //wbByteArray('Unknown')
+    ], cpNormal, False, nil, 2),
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
       wbFloat('Cell X Offset', cpNormal, False, 1/4096),
