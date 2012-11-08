@@ -70,6 +70,15 @@ begin
     Value := string(Element.Signature);
 end;
 
+procedure IwbElement_GetElementType(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+    Value := Element.ElementType;
+end;
+
 procedure IwbElement_GetEditValue(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -182,28 +191,100 @@ begin
     Value := Container.Elements[Args.Values[1]];
 end;
 
+procedure IwbElement_GetFile(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+    Value := Element._File;
+end;
+
+procedure IwbElement_GetLinksTo(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+    Value := Element.LinksTo;
+end;
+
+procedure IwbFile_GetFileName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
+    Value := _File.FileName;
+end;
+
+procedure IwbFile_GetLoadOrder(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
+    Value := _File.LoadOrder;
+end;
+
+procedure IwbFile_GetMasterCount(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
+    Value := _File.MasterCount;
+end;
+
+procedure IwbFile_GetMasterByIndex(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
+    if Args.Values[1] < _File.MasterCount then
+      Value := _File.Masters[Args.Values[1]];
+end;
+
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
+const
+  cUnit = 'Dummy';
 begin
   with JvInterpreterAdapter do begin
-    //AddFunction('Dummy', 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
-    AddFunction('Dummy', 'AddMessage', AddMessage, 1, [varString], varEmpty);
+    AddConst(cUnit, 'etFile', ord(etFile));
+    AddConst(cUnit, 'etMainRecord', ord(etMainRecord));
+    AddConst(cUnit, 'etGroupRecord', ord(etGroupRecord));
+    AddConst(cUnit, 'etSubRecord', ord(etSubRecord));
+    AddConst(cUnit, 'etSubRecordStruct', ord(etSubRecordStruct));
+    AddConst(cUnit, 'etSubRecordArray', ord(etSubRecordArray));
+    //AddConst(cUnit, 'etSubRecordUnion', ord(atSubRecordUnion));
+    AddConst(cUnit, 'etArray', ord(etArray));
+    AddConst(cUnit, 'etStruct', ord(etStruct));
+    AddConst(cUnit, 'etValue', ord(etValue));
+    AddConst(cUnit, 'etFlag', ord(etFlag));
+    AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
+
+    //AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     //AddIntfGet(IwbElement, 'Name', IwbElement_Name, 0, [VarEmpty], varEmpty);
-    AddFunction('Dummy', 'GetName', IwbElement_GetName, 1, [varEmpty], varEmpty);
-    AddFunction('Dummy', 'GetFullPath', IwbElement_GetFullPath, 1, [varEmpty], varEmpty);
-    AddFunction('Dummy', 'GetSignature', IwbElement_GetSignature, 1, [varEmpty], varEmpty);
-    AddFunction('Dummy', 'GetEditValue', IwbElement_GetEditValue, 1, [varEmpty], varEmpty);
-    AddFunction('Dummy', 'SetEditValue', IwbElement_SetEditValue, 2, [varEmpty, varString], varEmpty);
-    AddFunction('Dummy', 'GetNativeValue', IwbElement_GetNativeValue, 1, [varEmpty], varEmpty);
-    AddFunction('Dummy', 'SetNativeValue', IwbElement_SetNativeValue, 2, [varEmpty, varEmpty], varEmpty);
-    AddFunction('Dummy', 'GetElementEditValues', IwbElement_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
-    AddFunction('Dummy', 'SetElementEditValues', IwbElement_SetElementEditValues, 3, [varEmpty, varString, varString], varEmpty);
-    AddFunction('Dummy', 'GetElementNativeValues', IwbElement_GetElementNativeValues, 2, [varEmpty, varString], varEmpty);
-    AddFunction('Dummy', 'SetElementNativeValues', IwbElement_SetElementNativeValues, 3, [varEmpty, varString, varEmpty], varEmpty);
-    AddFunction('Dummy', 'ElementByName', IwbElement_ElementByName, 2, [varEmpty, varString], varEmpty);
-    AddFunction('Dummy', 'ElementBySignature', IwbElement_ElementBySignature, 2, [varEmpty, varString], varEmpty);
-    AddFunction('Dummy', 'ElementByPath', IwbElement_ElementByPath, 2, [varEmpty, varString], varEmpty);
-    AddFunction('Dummy', 'ElementCount', IwbElement_ElementCount, 1, [varEmpty], varEmpty);
-    AddFunction('Dummy', 'ElementByIndex', IwbElement_ElementByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'AddMessage', AddMessage, 1, [varString], varEmpty);
+    AddFunction(cUnit, 'GetName', IwbElement_GetName, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetFullPath', IwbElement_GetFullPath, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetSignature', IwbElement_GetSignature, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetElementType', IwbElement_GetElementType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetEditValue', IwbElement_GetEditValue, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetEditValue', IwbElement_SetEditValue, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'GetNativeValue', IwbElement_GetNativeValue, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetNativeValue', IwbElement_SetNativeValue, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetElementEditValues', IwbElement_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'SetElementEditValues', IwbElement_SetElementEditValues, 3, [varEmpty, varString, varString], varEmpty);
+    AddFunction(cUnit, 'GetElementNativeValues', IwbElement_GetElementNativeValues, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'SetElementNativeValues', IwbElement_SetElementNativeValues, 3, [varEmpty, varString, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ElementByName', IwbElement_ElementByName, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'ElementBySignature', IwbElement_ElementBySignature, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'ElementByPath', IwbElement_ElementByPath, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'ElementCount', IwbElement_ElementCount, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ElementByIndex', IwbElement_ElementByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'GetFile', IwbElement_GetFile, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetLinksTo', IwbElement_GetLinksTo, 1, [varEmpty], varEmpty);
+
+    AddFunction(cUnit, 'GetFileName', IwbFile_GetFileName, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetLoadOrder', IwbFile_GetLoadOrder, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetMasterCount', IwbFile_GetMasterCount, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetMasterByIndex', IwbFile_GetMasterByIndex, 2, [varEmpty, varInteger], varEmpty);
 
     // missing indentifiers from Windows unit
     //AddConst('Windows', 'IDOK', IDOK);

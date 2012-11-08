@@ -452,6 +452,8 @@ type
       var Allowed: Boolean);
     procedure mniNavApplyScriptClick(Sender: TObject);
     procedure mniNavOptionsClick(Sender: TObject);
+    procedure JvInterpreterProgram1GetValue(Sender: TObject; Identifier: string;
+      var Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -5335,6 +5337,34 @@ begin
   end;
 end;
 
+procedure TfrmMain.JvInterpreterProgram1GetValue(Sender: TObject;
+  Identifier: string; var Value: Variant; Args: TJvInterpreterArgs;
+  var Done: Boolean);
+begin
+  if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
+    Value := Length(Files);
+    Done := True;
+  end else
+  if SameText(Identifier, 'FileByIndex') then begin
+    if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
+      Value := Files[Integer(Args.Values[0])];
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
+  end;
+//      if (Args.Count=2) and
+//         VarIsNumeric(Args.Values[0]) and
+//          VarIsNumeric(Args.Values[1])
+//         then begin
+//           Value := Max(Args.Values[0],Args.Values[1]);
+//           Done := true; {VERY IMPORTANT!}
+//         end else begin
+//            { You can raise exceptions if invalid parameters are provided, or just let the default
+//             'not found' error get raised.}
+//            JvInterpreterError(ieIncompatibleTypes,0); // or  ieNotEnoughParams, or others.
+//         end;
+end;
+
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 const
   sJustWait                   = 'Applying script. Please wait...';
@@ -5365,6 +5395,7 @@ begin
 
   jvi := TJvInterpreterProgram.Create(Self);
   try
+    jvi.OnGetValue := JvInterpreterProgram1GetValue;
     jvi.Pas.Text := Scr;
     jvi.Compile;
 
@@ -5381,7 +5412,7 @@ begin
       if jvi.FunctionExists('', 'Initialize') then begin
         jvi.CallFunction('Initialize', nil, []);
         if jvi.VResult <> 0 then begin
-          AddMessage(sTerminated + IntToStr(jvi.VResult));
+          PostAddMessage(sTerminated + IntToStr(jvi.VResult));
           Exit;
         end;
       end;
@@ -5404,7 +5435,7 @@ begin
               if jvi.FunctionExists('', 'Process') then begin
                 jvi.CallFunction('Process', nil, [NodeData.Element]);
                 if jvi.VResult <> 0 then begin
-                  AddMessage(sTerminated + IntToStr(jvi.VResult));
+                  PostAddMessage(sTerminated + IntToStr(jvi.VResult));
                   Exit;
                 end;
               end;
@@ -5429,18 +5460,19 @@ begin
       if jvi.FunctionExists('', 'Finalize') then begin
         jvi.CallFunction('Finalize', nil, []);
         if jvi.VResult <> 0 then begin
-          AddMessage(sTerminated + IntToStr(jvi.VResult));
+          PostAddMessage(sTerminated + IntToStr(jvi.VResult));
           Exit;
         end;
       end;
 
-      PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
-        ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     finally
       vstNav.EndUpdate;
       Enabled := True;
       Caption := Application.Title;
     end;
+
+    PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
 
   finally
     jvi.Free;
@@ -11589,7 +11621,7 @@ end;
 procedure TfrmMain.vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
   var Allowed: Boolean);
 begin
-  if GetKeyState(VK_CONTROL) < 0 then
+  if GetKeyState(VK_SHIFT) < 0 then
     Sender.FullExpand(Node);
 end;
 
