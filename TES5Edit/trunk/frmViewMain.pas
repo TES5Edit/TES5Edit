@@ -5340,7 +5340,14 @@ end;
 procedure TfrmMain.JvInterpreterProgram1GetValue(Sender: TObject;
   Identifier: string; var Value: Variant; Args: TJvInterpreterArgs;
   var Done: Boolean);
+var
+  Element: IwbFile;
+  _File: IwbFile;
 begin
+  if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
+    Value := wbGameMode;
+    Done := True;
+  end else
   if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
     Value := Length(Files);
     Done := True;
@@ -5351,18 +5358,19 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
+  end else
+  if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
+    AddNewFile(_File);
+    Value := _File;
+    Done := True;
+  end else
+  if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
+    Value := false;
+    if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+      if Supports(IUnknown(Args.Values[1]), IwbFile, _File) then
+        Value := AddRequiredMasters(Element, _File, Args.Values[2]);
+    Done := True;
   end;
-//      if (Args.Count=2) and
-//         VarIsNumeric(Args.Values[0]) and
-//          VarIsNumeric(Args.Values[1])
-//         then begin
-//           Value := Max(Args.Values[0],Args.Values[1]);
-//           Done := true; {VERY IMPORTANT!}
-//         end else begin
-//            { You can raise exceptions if invalid parameters are provided, or just let the default
-//             'not found' error get raised.}
-//            JvInterpreterError(ieIncompatibleTypes,0); // or  ieNotEnoughParams, or others.
-//         end;
 end;
 
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);

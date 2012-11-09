@@ -14,9 +14,9 @@ end;
 function Process(e: IInterface): integer;
 begin
   Result := 0;
-  
+
   // comment this out if you don't want those messages
-  AddMessage('Processing: ' + GetFullPath(e));
+  AddMessage('Processing: ' + FullPath(e));
 
   // processing code goes here
 

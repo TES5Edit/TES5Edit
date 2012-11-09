@@ -25,7 +25,8 @@ uses
 
 procedure _Assigned(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Assigned(Pointer(NativeInt(Args.Values[0])));
+  Value := Assigned(V2O(Args.Values[0]));
+  //Value := Assigned(IInterface(Args.Values[0]));
 end;
 
 procedure AddMessage(var Value: Variant; Args: TJvInterpreterArgs);
@@ -39,44 +40,122 @@ end;
 //  Element: IwbElement;
 //begin
 //  Value := '';
-//  if Supports(IUnknown(Pointer(Args.Obj)), IwbElement, Element) then
+//  if Supports(IInterface(Pointer(Args.Obj)), IwbElement, Element) then
 //    Value := Element.Name;
 //end;
 
-procedure IwbElement_GetName(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbElement_Name(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.Name;
 end;
 
-procedure IwbElement_GetFullPath(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbElement_FullPath(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.FullPath;
 end;
 
-procedure IwbElement_GetSignature(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbElement_Signature(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbHasSignature;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbHasSignature, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbHasSignature, Element) then
     Value := string(Element.Signature);
 end;
 
-procedure IwbElement_GetElementType(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbElement_FormID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.FormID;
+end;
+
+procedure IwbElement_FixedFormID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.FixedFormID;
+end;
+
+procedure IwbElement_ElementType(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.ElementType;
+end;
+
+procedure IwbElement_GetIsEditable(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := false;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.IsEditable;
+end;
+
+procedure IwbElement_GetIsDeleted(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  Value := false;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.IsDeleted;
+end;
+
+procedure IwbElement_SetIsDeleted(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Element.IsDeleted := Value;
+end;
+
+procedure IwbElement_GetIsInitiallyDisabled(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  Value := false;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.IsInitiallyDisabled;
+end;
+
+procedure IwbElement_SetIsInitiallyDisabled(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Element.IsInitiallyDisabled := Value;
+end;
+
+procedure IwbElement_GetIsPersistent(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  Value := false;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.IsPersistent;
+end;
+
+procedure IwbElement_SetIsPersistent(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Element.IsPersistent := Value;
 end;
 
 procedure IwbElement_GetEditValue(var Value: Variant; Args: TJvInterpreterArgs);
@@ -84,7 +163,7 @@ var
   Element: IwbElement;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.EditValue;
 end;
 
@@ -92,7 +171,7 @@ procedure IwbElement_SetEditValue(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Element.EditValue := string(Args.Values[1]);
 end;
 
@@ -101,7 +180,7 @@ var
   Element: IwbElement;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.NativeValue;
 end;
 
@@ -109,7 +188,7 @@ procedure IwbElement_SetNativeValue(var Value: Variant; Args: TJvInterpreterArgs
 var
   Element: IwbElement;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Element.NativeValue := Args.Values[1];
 end;
 
@@ -118,7 +197,7 @@ var
   Container: IwbContainerElementRef;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.ElementEditValues[Args.Values[1]];
 end;
 
@@ -126,7 +205,7 @@ procedure IwbElement_SetElementEditValues(var Value: Variant; Args: TJvInterpret
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Container.ElementEditValues[Args.Values[1]] := Args.Values[2];
 end;
 
@@ -135,7 +214,7 @@ var
   Container: IwbContainerElementRef;
 begin
   Value := '';
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.ElementNativeValues[Args.Values[1]];
 end;
 
@@ -143,7 +222,7 @@ procedure IwbElement_SetElementNativeValues(var Value: Variant; Args: TJvInterpr
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Container.ElementNativeValues[Args.Values[1]] := Args.Values[2];
 end;
 
@@ -151,7 +230,7 @@ procedure IwbElement_ElementByName(var Value: Variant; Args: TJvInterpreterArgs)
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.ElementByName[Args.Values[1]];
 end;
 
@@ -160,7 +239,7 @@ var
   Container: IwbContainerElementRef;
   Signature: TwbSignature;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then begin
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
     Signature := StrToSignature(Args.Values[1]);
     Value := Container.ElementBySignature[Signature];
   end;
@@ -170,7 +249,7 @@ procedure IwbElement_ElementByPath(var Value: Variant; Args: TJvInterpreterArgs)
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.ElementByPath[Args.Values[1]];
 end;
 
@@ -179,7 +258,7 @@ var
   Container: IwbContainerElementRef;
 begin
   Value := -1;
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.ElementCount;
 end;
 
@@ -187,57 +266,150 @@ procedure IwbElement_ElementByIndex(var Value: Variant; Args: TJvInterpreterArgs
 var
   Container: IwbContainerElementRef;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbContainerElementRef, Container) then
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.Elements[Args.Values[1]];
+end;
+
+procedure IwbElement_AddElement(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+    Value := Container.Add(Args.Values[1], Args.Values[2]);
+end;
+
+procedure IwbElement_RemoveElement(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+    Value := Container.RemoveElement(string(Args.Values[1]));
 end;
 
 procedure IwbElement_GetFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element._File;
 end;
 
-procedure IwbElement_GetLinksTo(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbElement_LinksTo(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.LinksTo;
+end;
+
+procedure IwbElement_Master(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.Master;
+end;
+
+procedure IwbElement_Assign(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element, Element2: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[2]), IwbElement, Element2) then
+      Element.Assign(Args.Values[1], Element2, Args.Values[3]);
 end;
 
 procedure IwbFile_GetFileName(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
+  Element: IwbElement;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
-    Value := _File.FileName;
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.FileName
+  else
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Assigned(Element._File) then
+      Value := Element._File.FileName
 end;
 
 procedure IwbFile_GetLoadOrder(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
+  Value := -1;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     Value := _File.LoadOrder;
 end;
 
-procedure IwbFile_GetMasterCount(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbFile_MasterCount(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
+  Value := 0;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     Value := _File.MasterCount;
 end;
 
-procedure IwbFile_GetMasterByIndex(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbFile_MasterByIndex(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
-  if Supports(IUnknown(Args.Values[0]), IwbFile, _File) then
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     if Args.Values[1] < _File.MasterCount then
       Value := _File.Masters[Args.Values[1]];
+end;
+
+procedure IwbFile_GroupBySignature(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.GroupBySignature[StrToSignature(Args.Values[1])];
+end;
+
+procedure IwbFile_RecordByFormID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.RecordByFormID[Cardinal(Args.Values[1]), Args.Values[2]];
+end;
+
+procedure IwbFile_RecordByEditorID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.RecordByEditorID[string(Args.Values[1])];
+end;
+
+procedure IwbFile_AddMasterIfMissing(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    _File.AddMasterIfMissing(string(Args.Values[1]));
+end;
+
+procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '');
+end;
+
+procedure Pascal_Inc(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Inc(Args.Values[0]);
+end;
+
+procedure Pascal_Dec(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Dec(Args.Values[0]);
 end;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -245,6 +417,11 @@ const
   cUnit = 'Dummy';
 begin
   with JvInterpreterAdapter do begin
+    AddConst(cUnit, 'gmTES4', ord(gmTES4));
+    AddConst(cUnit, 'gmTES5', ord(gmTES5));
+    AddConst(cUnit, 'gmFO3', ord(gmFO3));
+    AddConst(cUnit, 'gmFNV', ord(gmFNV));
+
     AddConst(cUnit, 'etFile', ord(etFile));
     AddConst(cUnit, 'etMainRecord', ord(etMainRecord));
     AddConst(cUnit, 'etGroupRecord', ord(etGroupRecord));
@@ -258,13 +435,22 @@ begin
     AddConst(cUnit, 'etFlag', ord(etFlag));
     AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
 
-    //AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     //AddIntfGet(IwbElement, 'Name', IwbElement_Name, 0, [VarEmpty], varEmpty);
     AddFunction(cUnit, 'AddMessage', AddMessage, 1, [varString], varEmpty);
-    AddFunction(cUnit, 'GetName', IwbElement_GetName, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'GetFullPath', IwbElement_GetFullPath, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'GetSignature', IwbElement_GetSignature, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'GetElementType', IwbElement_GetElementType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'Signature', IwbElement_Signature, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'FormID', IwbElement_FormID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'FixedFormID', IwbElement_FixedFormID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetIsEditable', IwbElement_GetIsEditable, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetIsDeleted', IwbElement_GetIsDeleted, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsDeleted', IwbElement_SetIsDeleted, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'GetIsInitiallyDisabled', IwbElement_GetIsInitiallyDisabled, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsInitiallyDisabled', IwbElement_SetIsInitiallyDisabled, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'GetIsPersistent', IwbElement_GetIsPersistent, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsPersistent', IwbElement_SetIsPersistent, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetEditValue', IwbElement_GetEditValue, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetEditValue', IwbElement_SetEditValue, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'GetNativeValue', IwbElement_GetNativeValue, 1, [varEmpty], varEmpty);
@@ -278,16 +464,31 @@ begin
     AddFunction(cUnit, 'ElementByPath', IwbElement_ElementByPath, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'ElementCount', IwbElement_ElementCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementByIndex', IwbElement_ElementByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'AddElement', IwbElement_AddElement, 3, [varEmpty, varString, varBoolean], varEmpty);
+    AddFunction(cUnit, 'RemoveElement', IwbElement_RemoveElement, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'LinksTo', IwbElement_LinksTo, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'Master', IwbElement_Master, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ElementAssign', IwbElement_Assign, 4, [varEmpty, varInteger, varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetFile', IwbElement_GetFile, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'GetLinksTo', IwbElement_GetLinksTo, 1, [varEmpty], varEmpty);
 
     AddFunction(cUnit, 'GetFileName', IwbFile_GetFileName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrder', IwbFile_GetLoadOrder, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'GetMasterCount', IwbFile_GetMasterCount, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'GetMasterByIndex', IwbFile_GetMasterByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'MasterCount', IwbFile_MasterCount, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'MasterByIndex', IwbFile_MasterByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'GroupBySignature', IwbFile_GroupBySignature, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'RecordByFormID', IwbFile_RecordByFormID, 3, [varEmpty, varInteger, varBoolean], varEmpty);
+    AddFunction(cUnit, 'RecordByEditorID', IwbFile_RecordByEditorID, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'AddMasterIfMissing', IwbFile_AddMasterIfMissing, 2, [varEmpty, varString], varEmpty);
+
+    AddFunction(cUnit, 'wbCopyElementToFile', _wbCopyElementToFile, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
 
     // missing indentifiers from Windows unit
     //AddConst('Windows', 'IDOK', IDOK);
+    AddConst(cUnit, 'LowInteger', Low(Integer));
+    AddConst(cUnit, 'HighInteger', High(Integer));
+    AddFunction(cUnit, 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
+    AddFunction(cUnit, 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
+
   end;
 end;
 

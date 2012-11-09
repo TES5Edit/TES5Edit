@@ -1,6 +1,6 @@
 (*
-  This script will prepend or append supplied value to the EditorID field
-  of every selected record.
+  Example on how to access the current list of loaded plugins.
+  Lists plugins and their masters.
 *)
 unit UserScript;
 
@@ -15,10 +15,10 @@ var
 begin
   for i := 0 to FileCount - 1 do begin
     plugin := FileByIndex(i);
-    AddMessage(GetName(plugin)); // or GetFileName
-    for j := 0 to GetMasterCount(plugin) - 1 do begin
-      master := GetMasterByIndex(plugin, j);
-      AddMessage('      ' + GetName(master));
+    AddMessage(Name(plugin)); // or FileName()
+    for j := 0 to MasterCount(plugin) - 1 do begin
+      master := MasterByIndex(plugin, j);
+      AddMessage('      ' + Name(master));
     end;
   end;
 

@@ -35,10 +35,10 @@ var
 begin
   Result := 0;
   
-  if GetSignature(e) <> 'IMGS' then
+  if Signature(e) <> 'IMGS' then
     Exit;
   
-  AddMessage('Processing: ' + GetName(e));
+  AddMessage('Processing: ' + Name(e));
   
   if NoBloom then
     SetElementEditValues(e, 'HNAM - HDR\Bloom Blur Radius', '0');
