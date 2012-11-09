@@ -96,7 +96,7 @@ end;
 procedure TfrmScript.EditorCaretChanged(Sender: TObject; LastCaretX,
   LastCaretY: Integer);
 begin
-  lblPosition.Caption := Format('Line:%d Col:%d', [Editor.CaretY, Editor.CaretX]);
+  lblPosition.Caption := Format('Line:%d Col:%d', [Editor.CaretY + 1, Editor.CaretX + 1]);
 end;
 
 procedure TfrmScript.FormClose(Sender: TObject; var Action: TCloseAction);
