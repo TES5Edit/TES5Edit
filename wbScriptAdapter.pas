@@ -158,6 +158,23 @@ begin
     Element.IsPersistent := Value;
 end;
 
+procedure IwbElement_OverrideCount(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  Value := 0;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.OverrideCount;
+end;
+
+procedure IwbElement_OverrideByIndex(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.Overrides[Args.Values[1]];
+end;
+
 procedure IwbElement_GetEditValue(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -310,6 +327,39 @@ begin
     Value := Element.Master;
 end;
 
+procedure IwbElement_MasterOrSelf(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.MasterOrSelf;
+end;
+
+procedure IwbElement_IsMaster(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  Value := false;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.IsMaster;
+end;
+
+procedure IwbElement_IsWinningOverride(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.IsWinningOverride;
+end;
+
+procedure IwbElement_WinningOverride(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Element.WinningOverride;
+end;
+
 procedure IwbElement_Assign(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element, Element2: IwbElement;
@@ -402,6 +452,8 @@ begin
       Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '');
 end;
 
+{ Missing code }
+
 procedure Pascal_Inc(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Inc(Args.Values[0]);
@@ -410,6 +462,37 @@ end;
 procedure Pascal_Dec(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Dec(Args.Values[0]);
+end;
+
+procedure TStrings_Read_Delimiter(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TStrings(Args.Obj).Delimiter;
+end;
+
+procedure TStrings_Write_Delimiter(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  if length(string(Value)) > 0 then
+    TStrings(Args.Obj).Delimiter := string(Value)[1];
+end;
+
+procedure TStrings_Write_StrictDelimiter(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TStrings(Args.Obj).StrictDelimiter := Value;
+end;
+
+procedure TStrings_Read_DelimitedText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TStrings(Args.Obj).DelimitedText;
+end;
+
+procedure TStrings_Write_DelimitedText(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TStrings(Args.Obj).DelimitedText := Value;
+end;
+
+procedure JvInterpreter_SameText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := SameText(string(Args.Values[0]), string(Args.Values[1]));
 end;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -451,6 +534,8 @@ begin
     AddFunction(cUnit, 'SetIsInitiallyDisabled', IwbElement_SetIsInitiallyDisabled, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetIsPersistent', IwbElement_GetIsPersistent, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsPersistent', IwbElement_SetIsPersistent, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'OverrideCount', IwbElement_OverrideCount, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'OverrideByIndex', IwbElement_OverrideByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'GetEditValue', IwbElement_GetEditValue, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetEditValue', IwbElement_SetEditValue, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'GetNativeValue', IwbElement_GetNativeValue, 1, [varEmpty], varEmpty);
@@ -468,6 +553,10 @@ begin
     AddFunction(cUnit, 'RemoveElement', IwbElement_RemoveElement, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'LinksTo', IwbElement_LinksTo, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Master', IwbElement_Master, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'MasterOrSelf', IwbElement_MasterOrSelf, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'IsMaster', IwbElement_IsMaster, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'IsWinningOverride', IwbElement_IsWinningOverride, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'WinningOverride', IwbElement_WinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementAssign', IwbElement_Assign, 4, [varEmpty, varInteger, varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetFile', IwbElement_GetFile, 1, [varEmpty], varEmpty);
 
@@ -488,6 +577,14 @@ begin
     AddConst(cUnit, 'HighInteger', High(Integer));
     AddFunction(cUnit, 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
     AddFunction(cUnit, 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
+    AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
+
+    // add missing JvInterpreter code
+    AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
+    AddSet(TStrings, 'Delimiter', TStrings_Write_Delimiter, 0, [varEmpty]);
+    AddSet(TStrings, 'StrictDelimiter', TStrings_Write_StrictDelimiter, 0, [varEmpty]);
+    AddGet(TStrings, 'DelimitedText', TStrings_Read_DelimitedText, 0, [varEmpty], varEmpty);
+    AddSet(TStrings, 'DelimitedText', TStrings_Write_DelimitedText, 0, [varEmpty]);
 
   end;
 end;

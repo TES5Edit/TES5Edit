@@ -4041,6 +4041,40 @@ begin
   end;
 end;
 
+procedure wbReplaceBODTwithBOD2(const aElement: IwbElement);
+var
+  MainRecord    : IwbMainRecord;
+  ContainerBOD2 : IwbContainerElementRef;
+  ContainerBODT : IwbContainerElementRef;
+begin
+  if wbBeginInternalEdit then try
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+  if not Supports(MainRecord.ElementBySignature[BODT], IwbContainerElementRef, ContainerBODT) then
+    Exit;
+
+  if Supports(MainRecord.Add('BOD2', True), IwbContainerElementRef, ContainerBOD2) then begin
+     ContainerBOD2.ElementNativeValues['First Person Flags'] := ContainerBODT.ElementNativeValues['First Person Flags'];
+     ContainerBOD2.ElementNativeValues['Armor Type'] := ContainerBODT.ElementNativeValues['Armor Type'];
+     MainRecord.RemoveElement(BODT);
+  end;
+
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+procedure wbARMOAfterLoad(const aElement: IwbElement);
+begin
+  wbRemoveEmptyKWDA(aElement);
+  wbReplaceBODTwithBOD2(aElement);
+end;
+
+procedure wbARMAAfterLoad(const aElement: IwbElement);
+begin
+  wbReplaceBODTwithBOD2(aElement);
+end;
 
 procedure wbNPCAfterLoad(const aElement: IwbElement);
 begin
@@ -4083,6 +4117,12 @@ begin
   finally
     wbEndInternalEdit;
   end;
+end;
+
+procedure wbRACEAfterLoad(const aElement: IwbElement);
+begin
+  wbRemoveOFST(aElement);
+  wbReplaceBODTwithBOD2(aElement);
 end;
 
 procedure wbWEAPAfterLoad(const aElement: IwbElement);
@@ -4633,7 +4673,8 @@ begin
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
-    {0x00000004}'Unknown 3',
+    {>>> 0x00000004 ARMO: Not playable <<<}
+    {0x00000004}'NotPlayable',
     {0x00000008}'Unknown 4',
     {0x00000010}'Unknown 5',
     {0x00000020}'Deleted',
@@ -5139,7 +5180,7 @@ begin
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA], True),
-      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SHOU]),
+      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SHOU, SOUN, TXST, PROJ]),
       {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {3} wbFormID('Reference'),
       {4} wbInteger('Alias ID', itU32),
@@ -6416,7 +6457,7 @@ begin
     ], cpNormal, True),
     wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO])
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
+  ], False, nil, cpNormal, False, wbARMOAfterLoad);
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
@@ -6458,7 +6499,7 @@ begin
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO])
-  ]);
+  ], False, nil, cpNormal, False, wbARMOAfterLoad);
 
   wbRecord(BOOK, 'Book', [
     wbEDID,
@@ -11299,11 +11340,25 @@ begin
       wbFloat('Angular Acceleration Rate'),
       wbFloat('Angular Tolerance'),
       wbInteger('Flags 2', itU32, wbFlags([
-        {0x00000001}'Use Advanced Avoidance',
-        {0x00000002}'Non-Hostile'
+        {0x00000001} 'Use Advanced Avoidance',
+        {0x00000002} 'Non-Hostile',
+        {0x00000004} 'Unknown 2',
+        {0x00000008} 'Unknown 3',
+        {0x00000010} 'Allow Mounted Combat'
       ])),
-      wbByteArray('Unknown')
-    ], cpNormal, True),
+      wbStruct('Mount Data', [
+        wbFloat('Offset X', cpNormal, False, 1, -1, nil, nil, -63.479000),
+        wbFloat('Offset Y'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, -50.0),
+        wbFloat('Unknown'),
+        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, 65.0),
+        wbFloat('Unknown'),
+        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, -300.0),
+        wbFloat('Unknown')
+      ])
+      //wbByteArray('Unknown', 4*7)
+    ], cpNormal, True, nil, 29),
     wbEmpty(MNAM, 'Marker'),
     wbString(ANAM, 'Skeletal Model'),
     wbMODT,
@@ -11414,7 +11469,7 @@ begin
     // End Head Data
     wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
     wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
-  ], False, nil, cpNormal, False, wbRemoveOFST);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad);
 
 
   wbRecord(REFR, 'Placed Object', [
