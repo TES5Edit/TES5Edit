@@ -25,7 +25,7 @@ object frmOptions: TfrmOptions
     Top = 0
     Width = 466
     Height = 233
-    ActivePage = tsCleaning
+    ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
@@ -95,8 +95,6 @@ object frmOptions: TfrmOptions
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitLeft = 20
-      ExplicitTop = 31
       object Label1: TLabel
         Left = 16
         Top = 9
