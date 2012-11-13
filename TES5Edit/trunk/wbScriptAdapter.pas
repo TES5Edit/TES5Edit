@@ -18,7 +18,7 @@ uses
   JvInterpreter_Classes,
   JvInterpreter_Dialogs,
   JvInterpreter_Windows,
-  JvInterpreter_JvEditor,
+  //JvInterpreter_JvEditor,
   JvInterpreter;
 
 { TElement }
@@ -173,6 +173,14 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
     Value := Element.Overrides[Args.Values[1]];
+end;
+
+procedure IwbElement_SortKey(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.Sortkey[Args.Values[1]];
 end;
 
 procedure IwbElement_GetEditValue(var Value: Variant; Args: TJvInterpreterArgs);
@@ -536,6 +544,7 @@ begin
     AddFunction(cUnit, 'SetIsPersistent', IwbElement_SetIsPersistent, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'OverrideCount', IwbElement_OverrideCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'OverrideByIndex', IwbElement_OverrideByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetEditValue', IwbElement_GetEditValue, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetEditValue', IwbElement_SetEditValue, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'GetNativeValue', IwbElement_GetNativeValue, 1, [varEmpty], varEmpty);
@@ -597,7 +606,7 @@ begin
   JvInterpreter_Classes.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Windows.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
 end;
 
 initialization
