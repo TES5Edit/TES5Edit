@@ -1,7 +1,7 @@
-(*
+{
   This script will prepend or append supplied value to the EditorID field
   of every selected record.
-*)
+}
 unit UserScript;
 
 var
@@ -37,7 +37,7 @@ begin
   Result := 0;
   //AddMessage('Processing: ' + GetName(e));
   EditorID := ElementByName(e, 'EDID - Editor ID');
-  if EditorID <> nil then begin
+  if Assigned(EditorID) then begin
     if DoPrepend then
       SetEditValue(EditorID, s + GetEditValue(EditorID))
     else

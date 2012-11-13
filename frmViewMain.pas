@@ -1316,7 +1316,7 @@ begin
             aNodeDatas[i].ConflictThis := ctMaster
           else
             aNodeDatas[i].ConflictThis := ctUnknown;
-            
+
         end else begin
           SameAsLast := (i = Pred(aNodeCount)) or not (
             (Assigned(Element) <> Assigned(LastElement)) or
@@ -5398,12 +5398,14 @@ var
 begin
   with TfrmScript.Create(Self) do try
     ScriptsPath := ProgramPath + 'Edit Scripts\';
-    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', sNewScript);
+    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
 
     if ShowModal <> mrOK then
       Exit;
 
     Scr := Script;
+    Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
+    Settings.UpdateFile;
 
   finally
     Free;
@@ -5494,7 +5496,7 @@ begin
     for i := Low(Selection) to High(Selection) do
       vstNav.IterateSubtree(Selection[i], ClearConflict, nil);
     InvalidateElementsTreeView(Selection);
-    PostResetActiveTree;
+    //PostResetActiveTree;
   finally
     jvi.Free;
   end;
