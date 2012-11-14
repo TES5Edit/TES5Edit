@@ -1,16 +1,17 @@
-(*
+{
   Copy with override "Image Space" group from your plugins to a new one,
   then apply this script.
   Makes the same effect as those two mods:
-    Skyrim SDR http://skyrim.nexusmods.com/mods/7081
-    No Tint http://skyrim.nexusmods.com/mods/648
+    Skyrim SDR  http://skyrim.nexusmods.com/mods/7081
+    No Tint     http://skyrim.nexusmods.com/mods/648
+  
   No FPS hit unlike ENB.
   
   Warning: Skyrim SDR reported to screw night vision, so you might want to
   leave Bloom or Adaptation unchanged if that happens. Needs confirmation.
   
   Tweak TintMult and TintMin to your liking.
-*)
+}
 unit UserScript;
 
 const

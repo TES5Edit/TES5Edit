@@ -1,7 +1,7 @@
-(*
+{
   Create patch plugin that will contain weather changes
   from Climates of Tamriel and sound changes from Sounds of Skyrim - The Wilds.
-*)
+}
 unit UserScript;
 
 const
@@ -108,7 +108,7 @@ begin
     AddRequiredElementMasters(r_sosw, f, False);
     
     // copy sounds from SoS to patch
-	// Element from, index, element to, AsNew
+    // Element from, index, element to, AsNew
     ElementAssign(s2, LowInteger, s1, False);
 
   end;

@@ -85,11 +85,21 @@ object frmScript: TfrmScript
     object cmbScripts: TComboBox
       Left = 41
       Top = 6
-      Width = 448
+      Width = 553
       Height = 21
       Style = csDropDownList
+      DropDownCount = 20
       TabOrder = 0
       OnChange = cmbScriptsChange
+    end
+    object btnSave: TButton
+      Left = 600
+      Top = 4
+      Width = 75
+      Height = 25
+      Caption = 'Save'
+      TabOrder = 1
+      OnClick = btnSaveClick
     end
   end
   object pnlBottom: TPanel
@@ -130,9 +140,18 @@ object frmScript: TfrmScript
     object lblPosition: TLabel
       Left = 8
       Top = 4
-      Width = 137
+      Width = 633
       Height = 13
       AutoSize = False
     end
+  end
+  object dlgSave: TSaveDialog
+    DefaultExt = 'pas'
+    Filter = 'Pascal files (*.pas)|*.pas'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofOldStyleDialog, ofEnableSizing]
+    OptionsEx = [ofExNoPlacesBar]
+    Title = 'Save script'
+    Left = 600
+    Top = 48
   end
 end

@@ -1316,7 +1316,7 @@ begin
             aNodeDatas[i].ConflictThis := ctMaster
           else
             aNodeDatas[i].ConflictThis := ctUnknown;
-            
+
         end else begin
           SameAsLast := (i = Pred(aNodeCount)) or not (
             (Assigned(Element) <> Assigned(LastElement)) or
@@ -5348,6 +5348,14 @@ begin
     Value := wbGameMode;
     Done := True;
   end else
+  if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
+    Value := ProgramPath;
+    Done := True;
+  end else
+  if SameText(Identifier, 'DataPath') and (Args.Count = 0) then begin
+    Value := DataPath;
+    Done := True;
+  end else
   if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
     Value := Length(Files);
     Done := True;
@@ -5390,12 +5398,14 @@ var
 begin
   with TfrmScript.Create(Self) do try
     ScriptsPath := ProgramPath + 'Edit Scripts\';
-    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', sNewScript);
+    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
 
     if ShowModal <> mrOK then
       Exit;
 
     Scr := Script;
+    Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
+    Settings.UpdateFile;
 
   finally
     Free;
@@ -5407,6 +5417,7 @@ begin
     jvi.Pas.Text := Scr;
     jvi.Compile;
 
+    pgMain.ActivePage := tbsMessages;
     Selection := vstNav.GetSortedSelection(True);
     vstNav.BeginUpdate;
     try
@@ -5482,6 +5493,10 @@ begin
     PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
 
+    for i := Low(Selection) to High(Selection) do
+      vstNav.IterateSubtree(Selection[i], ClearConflict, nil);
+    InvalidateElementsTreeView(Selection);
+    //PostResetActiveTree;
   finally
     jvi.Free;
   end;
@@ -7900,7 +7915,9 @@ begin
           if j <> -1 then begin
             s := lTo[j];
             Inc(Translated);
-          end;
+          end else
+            // count empty strings as translated too
+            if s = '' then Inc(Translated);
         end;
         ID := wbLocalizationHandler.AddValue(s, Element);
         Element.EditValue := sStringID + IntToHex(ID, 8);
@@ -11629,7 +11646,7 @@ end;
 procedure TfrmMain.vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
   var Allowed: Boolean);
 begin
-  if GetKeyState(VK_SHIFT) < 0 then
+  if GetKeyState(VK_MENU) < 0 then
     Sender.FullExpand(Node);
 end;
 

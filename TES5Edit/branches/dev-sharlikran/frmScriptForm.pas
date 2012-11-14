@@ -21,11 +21,14 @@ type
     btnOK: TButton;
     pnlStatus: TPanel;
     lblPosition: TLabel;
+    btnSave: TButton;
+    dlgSave: TSaveDialog;
     procedure FormShow(Sender: TObject);
     procedure cmbScriptsChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditorCaretChanged(Sender: TObject; LastCaretX,
       LastCaretY: Integer);
+    procedure btnSaveClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -43,6 +46,41 @@ implementation
 
 {$R *.dfm}
 
+procedure TfrmScript.btnSaveClick(Sender: TObject);
+var
+  s, s2: string;
+  i: integer;
+begin
+  if cmbScripts.ItemIndex = -1 then
+    Exit;
+
+  s := cmbScripts.Items[cmbScripts.ItemIndex];
+  if s = sNewScript then begin
+    dlgSave.InitialDir := ScriptsPath;
+    if dlgSave.Execute then begin
+      s := dlgSave.FileName;
+      s2 := ChangeFileExt(ExtractFileName(s), '');
+      i := cmbScripts.Items.IndexOf(s2);
+      if i = -1 then begin
+        cmbScripts.Items.Add(s2);
+        cmbScripts.ItemIndex := Pred(cmbScripts.Items.Count);
+      end else
+        cmbScripts.ItemIndex := i;
+    end else
+      Exit;
+  end else
+    s := ScriptsPath + s + '.pas';
+
+
+  with TStringList.Create do try
+    Text := Editor.Lines.Text;
+    SaveToFile(s);
+    lblPosition.Caption := Format('Saved: %s', [ExtractFileName(s)]);
+  finally
+    Free;
+  end;
+end;
+
 procedure TfrmScript.cmbScriptsChange(Sender: TObject);
 var
   s: string;
@@ -58,6 +96,7 @@ begin
   with TStringList.Create do try
     LoadFromFile(ScriptsPath + s + '.pas');
     Editor.Lines.Text := Text;
+    Editor.SetFocus;
     EditorCaretChanged(Editor, 0, 0);
   finally
     Free;
@@ -101,7 +140,12 @@ end;
 
 procedure TfrmScript.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Script := Editor.Lines.Text;
+  if ModalResult = mrOk then begin
+    if Editor.Modified then
+       btnSaveClick(Sender);
+    Script := Editor.Lines.Text;
+    LastUsedScript := cmbScripts.Items[cmbScripts.ItemIndex];
+  end;
 end;
 
 procedure TfrmScript.FormShow(Sender: TObject);
