@@ -7022,8 +7022,8 @@ begin
   wbRecord(NAVI, 'Navigation Mesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
-    wbRArray('Unknown',
-      wbStruct(NVMI, 'Unknown', [
+    wbRArray('Navigation Map Infos',
+      wbStruct(NVMI, 'Navigation Map Info', [
         wbByteArray('Unknown', 4),
         wbFormIDCk('Navigation Mesh', [NAVM]),
         wbFormIDCk('Location', [CELL, WRLD]),

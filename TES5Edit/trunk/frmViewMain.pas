@@ -642,7 +642,7 @@ type
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
 
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
-    procedure ScriptScanProgress(aTotalCount, aCount: Integer);
+//    procedure ScriptScanProgress(aTotalCount, aCount: Integer);
   public
     destructor Destroy; override;
 
@@ -1086,7 +1086,7 @@ type
     Next   : PRefInfo;
   end;
 
-procedure TfrmMain.ScriptScanProgress(aTotalCount, aCount: Integer);
+{procedure TfrmMain.ScriptScanProgress(aTotalCount, aCount: Integer);
 begin
   Caption := '[Scanning] Processed Records: ' + IntToStr(aTotalCount) +
     ' References Found: ' + IntToStr(aCount) +
@@ -1094,7 +1094,7 @@ begin
   Application.ProcessMessages;
   if ForceTerminate then
     Abort;
-end;
+end;}
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
 begin
@@ -2386,7 +2386,7 @@ var
   NodeData       : PNavNodeData;
   _File          : IwbFile;
   Group          : IwbGroupRecord;
-  i, n, j        : Integer;
+  i, n, j, Count : Integer;
   MainRecord     : IwbMainRecord;
   QustFlags      : IwbElement;
   FormIDs        : array of Cardinal;
@@ -2397,6 +2397,7 @@ begin
   if Length(SelectedNodes) < 1 then
     Exit;
 
+  Count := 0;
   j := 0;
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
@@ -2448,9 +2449,11 @@ begin
           Exit;
         end;
       end;
+
+      Inc(Count);
     end;
   end;
-  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(i) + ' Sequence Files Created: ' + IntToStr(j));
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ' Sequence Files Created: ' + IntToStr(j));
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -3883,7 +3886,8 @@ begin
     txt := mmoMessages.Lines.Text + #13#10;
     fs.WriteBuffer(txt[1], Length(txt));
   finally
-    fs.Free;
+    if Assigned(fs) then
+      FreeAndNil(fs);
   end;
 
   BackHistory := nil;
@@ -6370,7 +6374,6 @@ begin
       end else
 
       if Element._File.IsLocalized and (Element.ValueDef.DefType = dtLString) then begin
-
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
@@ -6383,7 +6386,6 @@ begin
         end;
         vstView.Invalidate;
         Exit;
-
       end else
         if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
           Exit;
@@ -8274,6 +8276,7 @@ var
   Position                    : TD3DXVector3;
 
   Cells                       : array of array of array of PVirtualNode;
+  FileFiltered                : array of Integer;
 begin
   PersCellNode := nil;
   PersCellChecked := False;
@@ -8468,6 +8471,8 @@ begin
   end;
 
   Caption := sJustWait;
+
+  SetLength(FileFiltered, Length(Files));
 
   if FilterByPersistent and FilterPersistent and FilterUnnecessaryPersistent then
     BuildAllRef;
@@ -8859,6 +8864,12 @@ begin
                 )
               )
             ) then begin
+            if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
+              if Assigned(MainRecord._File) {and (MainRecord.Signature <> 'TES4')} then begin
+                for i := Low(Files) to High(Files) do
+                  if Files[i] = MainRecord._File then Break;
+                Inc(FileFiltered[i]);
+              end;
             vstNav.DeleteNode(Node, False);
           end;
 
@@ -8875,6 +8886,11 @@ begin
     finally
       Enabled := True;
     end;
+
+    for i := Low(Files) to High(Files) do
+      if (FileFiltered[i] > 0) and (FileFiltered[i] < Files[i].RecordCount) then
+        PostAddMessage(Format('[%s] Filtered %.0n of %.0n records',
+          [Files[i].FileName, Min(Files[i].RecordCount, FileFiltered[i]) + 0.0, Files[i].RecordCount + 0.0]));
 
     PostAddMessage('[Filtering done] ' + ' Processed Records: ' + IntToStr(Count) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
@@ -12515,7 +12531,7 @@ end;
 
 procedure TLoaderThread.Execute;
 var
-  i, j                        : Integer;
+  i                           : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   F                           : TSearchRec;

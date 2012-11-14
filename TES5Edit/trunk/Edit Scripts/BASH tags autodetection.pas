@@ -1,5 +1,5 @@
 {
-  Detect needed BASH tags for selected records.
+  Detect needed BASH tags for selected records (or whole plugin).
   Only plugin in question and its dependencies must be loaded (same as for cleaning).
   Tags information: http://tesfans.org/guides/wrye bash/docs/Wrye Bash Advanced Readme.html#patch-tags
   Currently supported tags:
