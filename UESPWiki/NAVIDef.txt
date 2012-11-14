@@ -11,24 +11,12 @@ There is only one NAVI record in Skyrim.esm.
 |- 
 | + || EDID || editorId || zstring || Editor id
 |-
-| + || NVER || unknown || uint32 || unknown, value is 0x0C
+| + || NVER || Version || uint32 || unknown, value is 0x0C
 |-
-| * || NVMI || unknown || ''size varies'' || occurs 15642 times ''presumably contains data for NAVM (15966 count)''
-:Examples of information are
-::FormID - Navigation Mesh [NAVM]
-::FormID - Location [CELL, WRLD]
-::Struct- Grid
-:::uint16 'X'
-:::uint16 'Y'
+| * || NVMI || Navmesh Data || [[Tes5Mod:Mod_File_Format/NVMI_Field|NVMI]] || Navmesh data.
 |-
-| + || NVPP || unknown || ubyte[25696] || I see certain patterns here.
-:Pattern 1 
-::It begins with an integer, I suspect it's the amount of Navigation Mesh Groups
-:Pattern 2 
-::There is an integer of 00 00 00 01 and it is followed by one NAVM Entry.  This seems to be an end or transition point.
-:Pattern 3
-::There is an integer of greater then one that indicates the number of NAVM references that follow it.  This appears to be the start of a Nav Mesh Group
+| + || NVPP || Navmesh Preferred Pathing || [[Tes5Mod:Mod_File_Format/NVPP_Field|NVPP]] || Preferred pathing data.
 |-
-| - || NVSI || unknown || unknown || Only appears in Dawnguard.esm and seems to be only NAVM references.
+| - || NVSI || unknown || formid[] || Appears since Dawnguard and seems to be only [[Tes5Mod:Mod_File_Format/NAVM|NAVM]] references.
 |-
 |}

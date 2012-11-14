@@ -8,7 +8,7 @@ NAVM: World children group in CELL records.
 ! width="12%" | [[Tes4Mod:File Format Conventions|Type/Size]]
 ! | Info
 |- 
-| + || NVNM || unknown || ''size varies'' || Undefined information
+| + || NVNM || unknown || [[Tes5Mod:Mod_File_Format/NVNM_Field|NVNM]] || Navmesh geometry.
 |-
 | - || ONAM || unknown || ''size varies'' || Undefined information
 |-
