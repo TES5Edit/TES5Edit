@@ -96,6 +96,7 @@ begin
   with TStringList.Create do try
     LoadFromFile(ScriptsPath + s + '.pas');
     Editor.Lines.Text := Text;
+    Editor.Modified := False;
     Editor.SetFocus;
     EditorCaretChanged(Editor, 0, 0);
   finally

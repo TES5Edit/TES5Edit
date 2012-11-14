@@ -1,3 +1,7 @@
+  // FormID+prefixed array assertion debug
+  //12226
+  // error 3109 4787 4727 13066 13325 3889
+  // 13132
 unit wbScriptAdapter;
 
 interface
@@ -53,6 +57,15 @@ begin
     Value := Element.Name;
 end;
 
+procedure IwbElement_Path(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.Path;
+end;
+
 procedure IwbElement_FullPath(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -75,7 +88,7 @@ procedure IwbElement_FormID(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbMainRecord;
 begin
-  Value := '';
+  Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
     Value := Element.FormID;
 end;
@@ -84,7 +97,7 @@ procedure IwbElement_FixedFormID(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbMainRecord;
 begin
-  Value := '';
+  Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
     Value := Element.FixedFormID;
 end;
@@ -121,7 +134,7 @@ var
   Element: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
-    Element.IsDeleted := Value;
+    Element.IsDeleted := Args.Values[1];
 end;
 
 procedure IwbElement_GetIsInitiallyDisabled(var Value: Variant; Args: TJvInterpreterArgs);
@@ -138,7 +151,7 @@ var
   Element: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
-    Element.IsInitiallyDisabled := Value;
+    Element.IsInitiallyDisabled := Args.Values[1];
 end;
 
 procedure IwbElement_GetIsPersistent(var Value: Variant; Args: TJvInterpreterArgs);
@@ -155,7 +168,7 @@ var
   Element: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
-    Element.IsPersistent := Value;
+    Element.IsPersistent := Args.Values[1];
 end;
 
 procedure IwbElement_OverrideCount(var Value: Variant; Args: TJvInterpreterArgs);
@@ -301,6 +314,16 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.Add(Args.Values[1], Args.Values[2]);
+end;
+
+procedure IwbElement_AddElementElement(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+    if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
+      Container.AddElement(Element);
 end;
 
 procedure IwbElement_RemoveElement(var Value: Variant; Args: TJvInterpreterArgs);
@@ -530,6 +553,7 @@ begin
     //AddIntfGet(IwbElement, 'Name', IwbElement_Name, 0, [VarEmpty], varEmpty);
     AddFunction(cUnit, 'AddMessage', AddMessage, 1, [varString], varEmpty);
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Signature', IwbElement_Signature, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FormID', IwbElement_FormID, 1, [varEmpty], varEmpty);
@@ -559,6 +583,7 @@ begin
     AddFunction(cUnit, 'ElementCount', IwbElement_ElementCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementByIndex', IwbElement_ElementByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'AddElement', IwbElement_AddElement, 3, [varEmpty, varString, varBoolean], varEmpty);
+    AddFunction(cUnit, 'AddElementElement', IwbElement_AddElementElement, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'RemoveElement', IwbElement_RemoveElement, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'LinksTo', IwbElement_LinksTo, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Master', IwbElement_Master, 1, [varEmpty], varEmpty);
