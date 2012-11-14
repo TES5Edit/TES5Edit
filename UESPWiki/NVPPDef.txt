@@ -1,0 +1,47 @@
+<noinclude>{{Trail|File Formats|Mod File Format|Fields}}
+{{TOCright}}</noinclude>
+'''NVPP''' fields contain navmesh preferred pathing data, and are present in any mod that changes a navmesh.
+
+{| class="wikitable" width="100%" 
+! width="20%" | Name
+! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]
+! width="60%" | Info
+|- 
+| Path count || uint32 || This is the total number of structures. [Formid count, Path formid]
+|-
+| Formid count || uint32 || This is a path node if Formid count = 1, otherwise it is the count of formids that are part of a preferred path.
+|-
+| Path Formid || formid || This is path node formid if Formid count = 1, otherwise it is the formids that contain a preferred path.
+|- 
+| Node || formid || This the name of the Path node.
+|- 
+| Node index || uint32 || This is the index of the Path node.
+|}
+The NVPP field is composed of a relational database made up of 2 tables. The “Path count” is the number of structures that create the first table.
+The Formid count acts as a field seperator. If it is = 1, then the formid that follows is an index, otherwise it is the data(formid) that contain a preferred path.
+
+For example, if Formid count = 1 and the following Path formid = 000000AA and if the next Formid count = 3 and is followed by the Path Formids = 000000BB, 000000CC, 000000DD. Then followed by Formid count = 1 and Path formid = 000000ZZ. Then the table would look something like this.
+{| class="wikitable" width="50%" 
+! width="20%" | Path Index
+! width="20%" | Navmesh formids containing a preferred path
+|- 
+| 000000AA || 000000BB
+|- 
+| 000000AA || 000000CC
+|- 
+| 000000AA || 000000DD
+|-
+| 000000ZZ || More Path formids
+|}
+Once the first table is built by iterating through the structures until the number of structures = Path count, the second table is created.
+The second table is an index table. For example, Node Name would be = 000000AA and it's index would be 0. And would look something like this.
+{| class="wikitable" width="50%" 
+! width="20%" | Node Name(formid)
+! width="20%" | Node index
+|- 
+| 000000AA || 00000000
+|- 
+| 000000ZZ || 00000001
+|- 
+|}
+This type of data structure could also be represented by tree/root structure as well.
