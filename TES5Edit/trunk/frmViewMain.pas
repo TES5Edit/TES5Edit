@@ -247,7 +247,6 @@ type
     mniNavRenumberFormIDsFrom: TMenuItem;
     imgFlattr: TImage;
     tmrGenerator: TTimer;
-    N21: TMenuItem;
     mniNavLocalizationEditor: TMenuItem;
     mniNavLocalizationSwitch: TMenuItem;
     mniNavLocalization: TMenuItem;
@@ -256,6 +255,7 @@ type
     mniNavCreateSEQFile: TMenuItem;
     mniNavApplyScript: TMenuItem;
     mniNavOptions: TMenuItem;
+    mniNavLogAnalyzer: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -454,6 +454,7 @@ type
     procedure mniNavOptionsClick(Sender: TObject);
     procedure JvInterpreterProgram1GetValue(Sender: TObject; Identifier: string;
       var Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
+    procedure mniNavLogAnalyzerClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -788,7 +789,7 @@ uses
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
-  frmScriptForm, frmOptionsForm;
+  frmScriptForm, frmLogAnalyzerForm, frmOptionsForm;
 
 var
   NoNodes                     : TNodeArray;
@@ -7964,6 +7965,17 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavLogAnalyzerClick(Sender: TObject);
+begin
+  with TfrmLogAnalyzer.Create(Self) do begin
+    lDataPath := DataPath;
+    lMyGamesTheGamePath := MyGamesTheGamePath;
+    PFiles := @Files;
+    ltLog := TLogType(TMenuItem(Sender).Tag);
+    Show;
+  end;
+end;
+
 procedure TfrmMain.mniNavMarkModifiedClick(Sender: TObject);
 var
   NodeData                    : PNavNodeData;
@@ -9350,6 +9362,23 @@ begin
       mniNavLocalizationLanguage.Add(MenuItem);
     end;
     sl.Free;
+  end;
+
+  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmTES5]);
+  mniNavLogAnalyzer.Clear;
+  if wbGameMode = gmTES5 then begin
+    MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
+    MenuItem.OnClick := mniNavLogAnalyzerClick;
+    MenuItem.Caption := 'Papyrus Log';
+    MenuItem.Tag := Integer(ltTES5Papyrus);
+    mniNavLogAnalyzer.Add(MenuItem);
+  end else
+  if wbGameMode = gmTES4 then begin
+    MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
+    MenuItem.OnClick := mniNavLogAnalyzerClick;
+    MenuItem.Caption := 'RuntimeScriptProfiler OBSE Extension Log';
+    MenuItem.Tag := Integer(ltTES4RuntimeScriptProfiler);
+    mniNavLogAnalyzer.Add(MenuItem);
   end;
 
 end;

@@ -13,6 +13,8 @@ object frmLogAnalyzer: TfrmLogAnalyzer
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object pnlTop: TPanel
@@ -23,7 +25,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 756
     DesignSize = (
       786
       65)
@@ -42,7 +43,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       Anchors = [akTop, akRight]
       Caption = '...'
       TabOrder = 0
-      ExplicitLeft = 623
+      OnClick = btnFileSelectClick
     end
     object btnAnalyze: TButton
       Left = 709
@@ -52,9 +53,9 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       Anchors = [akTop, akRight]
       Caption = 'Analyze'
       TabOrder = 1
-      ExplicitLeft = 663
+      OnClick = btnAnalyzeClick
     end
-    object LabeledEdit1: TLabeledEdit
+    object edLogFile: TLabeledEdit
       Left = 48
       Top = 11
       Width = 615
@@ -65,7 +66,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       EditLabel.Caption = 'Log file'
       LabelPosition = lpLeft
       TabOrder = 2
-      ExplicitWidth = 553
     end
     object edLogSize: TLabeledEdit
       Left = 96
@@ -88,10 +88,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = 216
-    ExplicitTop = 152
-    ExplicitWidth = 345
-    ExplicitHeight = 153
     object Splitter1: TSplitter
       Left = 345
       Top = 0
@@ -154,6 +150,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       ReadOnly = True
       ScrollBars = ssBoth
       TabOrder = 1
+      ExplicitLeft = 351
     end
   end
   object dlgOpen: TOpenDialog
