@@ -16,7 +16,7 @@ type
     LoadOrder: Byte;
     FormID: Cardinal;
     Name, Text: string;
-    wbRecord: IwbMainRecord;
+    Element: IwbElement;
     Value1: Single;
     Value2: Single;
     Value3: Single;
@@ -28,33 +28,48 @@ type
     btnAnalyze: TButton;
     edLogFile: TLabeledEdit;
     dlgOpen: TOpenDialog;
-    edLogSize: TLabeledEdit;
     Label1: TLabel;
     pnlClient: TPanel;
     vstForms: TVirtualEditTree;
     Splitter1: TSplitter;
     memoText: TMemo;
+    edLogSize: TLabeledEdit;
+    Label2: TLabel;
     procedure FormShow(Sender: TObject);
     procedure btnFileSelectClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAnalyzeClick(Sender: TObject);
+    procedure vstFormsInitNode(Sender: TBaseVirtualTree; ParentNode,
+      Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+    procedure vstFormsInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      var ChildCount: Cardinal);
+    procedure vstFormsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure vstFormsChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vstFormsDblClick(Sender: TObject);
   private
     { Private declarations }
     LogEntries: array of TLogEntry;
     LogPlugins: array of TLogEntry;
-    ProcessLog: procedure (const aFileName: String) of object;
+    ProcessLog: function (const aFileName: String): Boolean of object;
     function FormIDFromString(s: String): String;
     function RecordByFormID(FormID: Cardinal): IwbMainRecord;
-    procedure ParsePapyrusData(const aData: String);
-    procedure ReadPapyrusLog(const aFileName: String);
+    procedure BuildPluginsList;
+    function ParsePapyrusData(const aData: String): Boolean;
+    function ReadPapyrusLog(const aFileName: String): Boolean;
+    function ParseRuntimeScriptProfilerData(const aData: String): Boolean;
+    function ReadRuntimeScriptProfilerLog(const aFileName: String): Boolean;
   public
     { Public declarations }
     lDataPath, lMyGamesTheGamePath: string;
     ltLog: TLogType;
+    MaxLogSize: integer;
     PFiles: ^TDynFiles;
+    JumpTo: procedure (aInterface: IInterface; aBackward: Boolean) of object;
   end;
 
-  // modified version from http://stackoverflow.com/questions/2815839/delphi-alternative-to-using-reset-readln-for-text-file-reading
+  // modified version from
+  // http://stackoverflow.com/questions/2815839/delphi-alternative-to-using-reset-readln-for-text-file-reading
   TTextStream = class(TObject)
   private
     FHost: TStream;
@@ -85,6 +100,12 @@ implementation
 const
   sLineBreak = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF}
                {$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF};
+
+type
+  TTreeData = record
+    PEntry: ^TLogEntry;
+  end;
+  PTreeData = ^TTreeData;
 
 { TTextStream }
 
@@ -189,41 +210,163 @@ begin
   end;
 end;
 
-function TfrmLogAnalyzer.FormIDFromString(s: String): String;
+procedure TfrmLogAnalyzer.vstFormsChange(Sender: TBaseVirtualTree;
+  Node: PVirtualNode);
+var
+  Data: PTreeData;
+  MainRecord: IwbMainRecord;
+begin
+  Data := Sender.GetNodeData(Node);
+  if not Assigned(Data) then
+    Exit;
 
-  function IsHex(c: char): boolean;
-  begin
-    Result := c in ['0'..'9', 'A'..'F'];
+  case ltLog of
+    ltTES4RuntimeScriptProfiler: begin
+      if Node.Parent = Sender.RootNode then
+        memoText.Lines.Text := Data.PEntry.Text
+      else begin
+        memoText.Lines.Clear;
+        memoText.Lines.Add(Format('; RuntimeScriptProfiler - max execution time: %.4n ms', [Data.PEntry.Value3]));
+        if Supports(Data.PEntry.Element, IwbMainRecord, MainRecord) then
+          memoText.Lines.Add(MainRecord.ElementEditValues['SCTX']);
+      end;
+    end;
+    ltTES5Papyrus: begin
+      memoText.Lines.Text := Data.PEntry.Text;
+    end;
   end;
+  // scroll memo to the top
+  memoText.SelStart := 0;
+  memoText.Perform(EM_SCROLLCARET, 0, 0);
+end;
 
+procedure TfrmLogAnalyzer.vstFormsDblClick(Sender: TObject);
+var
+  Data: PTreeData;
+begin
+  if not Assigned(JumpTo) then
+    Exit;
+
+  Data := vstForms.GetNodeData(vstForms.FocusedNode);
+
+  if not Assigned(Data) then
+    Exit;
+
+  JumpTo(Data.PEntry.Element, False);
+end;
+
+procedure TfrmLogAnalyzer.vstFormsGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: string);
+var
+  Data: PTreeData;
+  MainRecord: IwbMainRecord;
+  IsPlugin: Boolean;
+begin
+  Data := Sender.GetNodeData(Node);
+  IsPlugin := (Supports(Data.PEntry.Element, IwbFile) or (Node.Parent = Sender.RootNode));
+  case Column of
+    0: begin
+      if IsPlugin then
+        CellText := Data.PEntry.Text
+      else
+        CellText := IntToHex(Data.PEntry.FormID, 8);
+    end;
+    1: begin
+      if Supports(Data.PEntry.Element, IwbMainRecord, MainRecord) then
+        CellText := MainRecord.Name
+      else
+        CellText := '';
+    end;
+    2: begin
+      CellText := Format('%.0n', [Round(Data.PEntry.Value1) + 0.0]);
+    end;
+    3: begin
+      CellText := Format('%.0n', [Round(Data.PEntry.Value2) + 0.0]);
+    end;
+  end;
+end;
+
+procedure TfrmLogAnalyzer.vstFormsInitChildren(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; var ChildCount: Cardinal);
+var
+  Data: PTreeData;
+  i: integer;
+begin
+  Data := Sender.GetNodeData(Node);
+  ChildCount := 0;
+  for i := Low(LogEntries) to High(LogEntries) do
+    if LogEntries[i].LoadOrder = Data.PEntry.LoadOrder then
+      Inc(ChildCount);
+end;
+
+procedure TfrmLogAnalyzer.vstFormsInitNode(Sender: TBaseVirtualTree; ParentNode,
+  Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+var
+  Data: PTreeData;
+  lo, i, j: integer;
+begin
+  Data := Sender.GetNodeData(Node);
+  if ParentNode = nil then begin
+    Data.PEntry := @LogPlugins[Node.Index];
+    Include(InitialStates, ivsHasChildren);
+  end else begin
+    lo := PTreeData(Sender.GetNodeData(Node.Parent)).PEntry.LoadOrder;
+    j := 0;
+    for i := Low(LogEntries) to High(LogEntries) do
+      if LogEntries[i].LoadOrder = lo then begin
+        if j = Node.Index then
+          Data.PEntry := @LogEntries[i];
+        Inc(j);
+      end;
+  end;
+end;
+
+function IsHex(c: char): boolean;
+begin
+  Result := c in ['0'..'9', 'A'..'F'];
+end;
+
+function IsHexStr(s: string): boolean;
 var
   i: integer;
 begin
-  Result := '';
-  for i := 1 to Length(s) - 7 do
-    if
-      IsHex(s[i]) and
-      IsHex(s[i+1]) and
-      IsHex(s[i+2]) and
-      IsHex(s[i+3]) and
-      IsHex(s[i+4]) and
-      IsHex(s[i+5]) and
-      IsHex(s[i+6]) and
-      IsHex(s[i+7])
-    then begin
-      Result := Copy(s, i, 8);
+  Result := True;
+  for i := 1 to Length(s) do begin
+    Result := Result and IsHex(s[i]);
+    if not Result then
       Exit;
-    end;
+  end;
+  if Length(s) = 0 then
+    Result := False;
 end;
 
-procedure TfrmLogAnalyzer.ParsePapyrusData(const aData: String);
+function TfrmLogAnalyzer.FormIDFromString(s: String): String;
+var
+  i: integer;
+  f: string;
+begin
+  Result := '';
+  for i := 1 to Length(s) - 7 do begin
+    f := Copy(s, i, 8);
+    if IsHexStr(f) then begin
+      Result := f;
+      Exit;
+    end;
+  end;
+end;
+
+function TfrmLogAnalyzer.ParsePapyrusData(const aData: String): Boolean;
 var
   s, txt: string;
   IsError: boolean;
   IsWarning: boolean;
   i: integer;
   fid: Cardinal;
+  elem: IwbElement;
 begin
+  Result := True;
+
   // skip papyrus timestamp
   txt := trim(Copy(aData, 27, Length(aData)));
   if Copy(txt, 1, 6) = 'error:' then IsError := True else
@@ -248,32 +391,39 @@ begin
       Exit;
     end;
 
+  elem := RecordByFormID(fid);
+  if (fid shr 24 <> $FF) and not Assigned(elem) then
+    memoText.Lines.Add('Unknown FormID [' + s + '], changed load order?');
+
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
     FormID := fid;
     LoadOrder := FormID shr 24;
-    wbRecord := RecordByFormID(FormID);
+    Element := elem;
     Text := txt;
     if IsError then Value1 := 1 else Value1 := 0;
     if IsWarning then Value2 := 1 else Value2 := 0;
   end;
-
 end;
 
-procedure TfrmLogAnalyzer.ReadPapyrusLog(const aFileName: String);
+function TfrmLogAnalyzer.ReadPapyrusLog(const aFileName: String): Boolean;
 var
   sLine: string;
   Entry: string;
 begin
+  Result := True;
   Entry := '';
   with TTextStream.Create(TFileStream.Create(aFilename, fmOpenRead or fmShareDenyWrite)) do try
+    Limit := MaxLogSize;
     while ReadLn(sLine) do begin
       if (Length(sLine) > 25) and (sLine[1] = '[') and (sLine[2] in ['0'..'9']) then begin
         if Length(Entry) > 0 then
           ParsePapyrusData(Entry);
         Entry := sLine;
       end else begin
-        Entry := Entry + sLine + sLineBreak;
+        if Length(Entry) > 0 then
+          Entry := Entry + sLineBreak;
+        Entry := Entry + sLine;
       end;
     end;
     if Length(Entry) > 0 then
@@ -283,6 +433,141 @@ begin
   end;
 end;
 
+function TfrmLogAnalyzer.ParseRuntimeScriptProfilerData(const aData: String): Boolean;
+var
+  s, txt, sTime: string;
+  fTime: single;
+  i: integer;
+  fid: Cardinal;
+  elem: IwbElement;
+begin
+  Result := True;
+
+  s := Copy(aData, 1, 8);
+
+  if s = '' then
+    Exit;
+
+  fid := StrToInt64Def('$' + s, 0);
+
+  sTime := Copy(aData, 18, Length(aData));
+  sTime := Copy(sTime, 1, Pos(' ', sTime));
+  fTime := StrToFloatDef(sTime, 0);
+
+  for i := Low(LogEntries) to High(LogEntries) do
+    if LogEntries[i].FormID = fid then with LogEntries[i] do begin
+      // times executed
+      Value1 := Value1 + 1;
+      // total time
+      Value2 := Value2 + fTime;
+      // max execution time
+      if fTime > Value3 then Value3 := fTime;
+      Exit;
+    end;
+
+  elem := RecordByFormID(fid);
+  if (fid shr 24 <> $FF) and not Assigned(elem) then begin
+    //memoText.Lines.Add('Unknown FormID [' + s + '], changed load order?');
+    //Result := False;
+    Exit;
+  end;
+
+  SetLength(LogEntries, Succ(Length(LogEntries)));
+  with LogEntries[Pred(Length(LogEntries))] do begin
+    FormID := fid;
+    LoadOrder := FormID shr 24;
+    Element := elem;
+    Text := txt;
+    Value1 := 1;
+    Value2 := fTime;
+    Value3 := fTime;
+  end;
+
+end;
+
+function TfrmLogAnalyzer.ReadRuntimeScriptProfilerLog(const aFileName: String): Boolean;
+var
+  sLine: string;
+begin
+  Result := True;
+  with TTextStream.Create(TFileStream.Create(aFilename, fmOpenRead or fmShareDenyWrite)) do try
+    Limit := MaxLogSize;
+    while ReadLn(sLine) do begin
+      if (Length(sLine) > 9) and IsHexStr(Copy(sLine, 1, 8)) and (sLine[9] = #9) then
+        if not ParseRuntimeScriptProfilerData(sLine) then begin
+          Result := False;
+          Exit;
+        end;
+    end;
+  finally
+    Free;
+  end;
+end;
+
+procedure TfrmLogAnalyzer.BuildPluginsList;
+
+  procedure QuickSort(var A: array of TLogEntry; iLo, iHi: Integer) ;
+  var
+    Lo, Hi, Pivot: Integer;
+    T: TLogEntry;
+  begin
+    Lo := iLo;
+    Hi := iHi;
+    Pivot := A[(Lo + Hi) div 2].LoadOrder;
+    repeat
+      while A[Lo].LoadOrder < Pivot do Inc(Lo);
+      while A[Hi].LoadOrder > Pivot do Dec(Hi);
+      if Lo <= Hi then begin
+        T := A[Lo];
+        A[Lo] := A[Hi];
+        A[Hi] := T;
+        Inc(Lo) ;
+        Dec(Hi) ;
+       end;
+    until Lo > Hi;
+    if Hi > iLo then QuickSort(A, iLo, Hi);
+    if Lo < iHi then QuickSort(A, Lo, iHi);
+  end;
+
+var
+  i, j: integer;
+  fExists: boolean;
+begin
+  // make a list of affected plugins
+  for i := Low(LogEntries) to High(LogEntries) do begin
+    fExists := false;
+    for j := Low(LogPlugins) to High(LogPlugins) do
+      if LogPlugins[j].LoadOrder = LogEntries[i].LoadOrder then begin
+        LogPlugins[j].Value1 := LogPlugins[j].Value1 + LogEntries[i].Value1;
+        LogPlugins[j].Value2 := LogPlugins[j].Value2 + LogEntries[i].Value2;
+        LogPlugins[j].Value3 := LogPlugins[j].Value3 + LogEntries[i].Value3;
+        fExists := true;
+        Break;
+      end;
+    if not fExists then begin
+      SetLength(LogPlugins, Succ(Length(LogPlugins)));
+      with LogPlugins[Pred(Length(LogPlugins))] do begin
+        Value1 := LogEntries[i].Value1;
+        Value2 := LogEntries[i].Value2;
+        Value3 := LogEntries[i].Value3;
+        LoadOrder := LogEntries[i].LoadOrder;
+        if LoadOrder = $FF then
+          Text := '[FF] Saved game'
+        else
+          if Assigned(LogEntries[i].Element) then begin
+            if Assigned(LogEntries[i].Element._File) then begin
+              Element := LogEntries[i].Element._File;
+              Text := Element.Name;
+            end;
+          end else
+            Text := 'Unknown';
+      end;
+    end;
+  end;
+  // sort plugins by load order
+  QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
+end;
+
 procedure TfrmLogAnalyzer.btnAnalyzeClick(Sender: TObject);
 begin
   if not FileExists(edLogFile.Text) then begin
@@ -290,8 +575,20 @@ begin
     Exit;
   end;
 
-  if Assigned(ProcessLog) then
-    ProcessLog(edLogFile.Text);
+  if not Assigned(ProcessLog) then
+    Exit;
+
+  vstForms.Clear;
+  memoText.Lines.Clear;
+  SetLength(LogPlugins, 0);
+  SetLength(LogEntries, 0);
+
+  MaxLogSize := StrToIntDef(edLogSize.Text, 0)*1024*1024;
+  if ProcessLog(edLogFile.Text) then begin
+    BuildPluginsList;
+    vstForms.NodeDataSize := SizeOf(TTreeData);
+    vstForms.RootNodeCount := Length(LogPlugins);
+  end;
 end;
 
 procedure TfrmLogAnalyzer.btnFileSelectClick(Sender: TObject);
@@ -310,10 +607,19 @@ begin
   case ltLog of
     ltTES4RuntimeScriptProfiler: begin
       edLogFile.Text := ExtractFilePath(ExcludeTrailingBackslash(lDataPath)) + 'RuntimeScriptProfiler.log';
+      ProcessLog := ReadRuntimeScriptProfilerLog;
+      vstForms.Header.Columns[2].Width := 100;
+      vstForms.Header.Columns[2].Text := 'Frames Executed';
+      vstForms.Header.Columns[2].Width := 100;
+      vstForms.Header.Columns[3].Text := 'Total Time, ms';
     end;
     ltTES5Papyrus: begin
       edLogFile.Text := lMyGamesTheGamePath + 'Logs\Script\Papyrus.0.log';
       ProcessLog := ReadPapyrusLog;
+      vstForms.Header.Columns[2].Width := 100;
+      vstForms.Header.Columns[2].Text := 'Errors';
+      vstForms.Header.Columns[2].Width := 100;
+      vstForms.Header.Columns[3].Text := 'Warnings';
     end;
   end;
   dlgOpen.InitialDir := ExtractFilePath(edLogFile.Text);
