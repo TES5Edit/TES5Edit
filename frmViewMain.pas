@@ -3000,12 +3000,12 @@ begin
             CheckListBox1.Checked[j] := True;
         end;
 
-        if not (wbMasterUpdate or wbLODGen) then
+        if not (wbMasterUpdate or wbLODGen) then begin
           ShowModal;
-
-        if ModalResult <> mrOk then begin
-          frmMain.Close;
-          Exit;
+          if ModalResult <> mrOk then begin
+            frmMain.Close;
+            Exit;
+          end;
         end;
 
         sl2 := TStringList.Create;
@@ -7968,9 +7968,11 @@ end;
 procedure TfrmMain.mniNavLogAnalyzerClick(Sender: TObject);
 begin
   with TfrmLogAnalyzer.Create(Self) do begin
+    Caption := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
     lDataPath := DataPath;
     lMyGamesTheGamePath := MyGamesTheGamePath;
     PFiles := @Files;
+    JumpTo := frmMain.JumpTo;
     ltLog := TLogType(TMenuItem(Sender).Tag);
     Show;
   end;
