@@ -21,6 +21,7 @@ type
     Value2: Single;
     Value3: Single;
   end;
+  PLogEntry = ^TLogEntry;
 
   TfrmLogAnalyzer = class(TForm)
     pnlTop: TPanel;
@@ -34,7 +35,6 @@ type
     Splitter1: TSplitter;
     memoText: TMemo;
     edLogSize: TLabeledEdit;
-    Label2: TLabel;
     procedure FormShow(Sender: TObject);
     procedure btnFileSelectClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -47,6 +47,10 @@ type
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstFormsChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstFormsDblClick(Sender: TObject);
+    procedure vstFormsFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vstFormsCompareNodes(Sender: TBaseVirtualTree; Node1,
+      Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+    procedure vstFormsHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
   private
     { Private declarations }
     LogEntries: array of TLogEntry;
@@ -74,7 +78,7 @@ type
   private
     FHost: TStream;
     FOffset, FSize, FLimit: Integer;
-    FBuffer: array[0..1023] of AnsiChar;
+    FBuffer: array[0..4095] of AnsiChar;
     FEOF: Boolean;
     function FillBuffer: Boolean;
   protected
@@ -103,7 +107,7 @@ const
 
 type
   TTreeData = record
-    PEntry: ^TLogEntry;
+    PEntry: PLogEntry;
   end;
   PTreeData = ^TTreeData;
 
@@ -125,9 +129,9 @@ function TTextStream.FillBuffer: Boolean;
 begin
   FOffset := 0;
   FSize := FHost.Read(FBuffer, SizeOf(FBuffer));
-  Result := (FSize > 0);
   if (FLimit > 0) and (FHost.Position > FLimit) then
-    Result := False;
+    FSize := 0;
+  Result := (FSize > 0);
   FEOF := Result;
 end;
 
@@ -138,6 +142,7 @@ var
   EOLChar: AnsiChar;
 begin
   Data := '';
+  Line := '';
   Result := False;
   try
     repeat
@@ -185,7 +190,7 @@ begin
   Result := nil;
   FileID := FormID shr 24;
 
-  if FileID = 255 then
+  if FileID = $FF then
     Exit;
 
   _File := nil;
@@ -240,6 +245,23 @@ begin
   memoText.Perform(EM_SCROLLCARET, 0, 0);
 end;
 
+procedure TfrmLogAnalyzer.vstFormsCompareNodes(Sender: TBaseVirtualTree; Node1,
+  Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+var
+  PEntry1, PEntry2: PLogEntry;
+begin
+  Result := 0;
+  PEntry1 := PTreeData(Sender.GetNodeData(Node1)).PEntry;
+  PEntry2 := PTreeData(Sender.GetNodeData(Node2)).PEntry;
+
+  case Column of
+    0: Result := CmpW32(PEntry1.FormID, PEntry2.FormID);//CmpB8(PEntry1.LoadOrder, PEntry2.LoadOrder);
+    1: Result := Comparetext(PEntry1.Text, PEntry2.Text);
+    2: Result := CmpI32(round(PEntry1.Value1), round(PEntry2.Value1));
+    3: Result := CmpI32(round(PEntry1.Value2), round(PEntry2.Value2));
+  end;
+end;
+
 procedure TfrmLogAnalyzer.vstFormsDblClick(Sender: TObject);
 var
   Data: PTreeData;
@@ -253,6 +275,14 @@ begin
     Exit;
 
   JumpTo(Data.PEntry.Element, False);
+end;
+
+procedure TfrmLogAnalyzer.vstFormsFreeNode(Sender: TBaseVirtualTree;
+  Node: PVirtualNode);
+begin
+  with PTreeData(Sender.GetNodeData(Node))^ do begin
+    PEntry.Element := nil;
+  end;
 end;
 
 procedure TfrmLogAnalyzer.vstFormsGetText(Sender: TBaseVirtualTree;
@@ -284,6 +314,25 @@ begin
     3: begin
       CellText := Format('%.0n', [Round(Data.PEntry.Value2) + 0.0]);
     end;
+  end;
+end;
+
+procedure TfrmLogAnalyzer.vstFormsHeaderClick(Sender: TVTHeader;
+  HitInfo: TVTHeaderHitInfo);
+begin
+  with HitInfo do begin
+    if Button <> mbLeft then
+      Exit;
+
+    if Sender.SortColumn = Column then
+      if Sender.SortDirection = sdAscending then
+        Sender.SortDirection := sdDescending
+      else
+        Sender.SortDirection := sdAscending
+    else begin
+      Sender.SortColumn := Column;
+    end;
+    vstForms.ScrollIntoView(vstForms.FocusedNode, True);
   end;
 end;
 
@@ -377,23 +426,34 @@ begin
 
   s := FormIDFromString(txt);
 
-  if s = '' then
-    Exit;
-
-  fid := StrToInt64Def('$' + s, 0);
+  if s = '' then begin
+    // check for "saved game" messages
+    if
+      (Pos('[None].', txt) > 0) or
+      (Pos('in the type table in save', txt) > 0) or
+      (Pos('referenced by the save game', txt) > 0)
+    then
+      fid := $FF000000
+    else
+      Exit;
+  end else
+    fid := StrToInt64Def('$' + s, 0);
 
   for i := Low(LogEntries) to High(LogEntries) do
     if LogEntries[i].FormID = fid then begin
       if IsError then LogEntries[i].Value1 := LogEntries[i].Value1 + 1 else
-        if IsError then LogEntries[i].Value2 := LogEntries[i].Value2 + 1;
+        if IsWarning then LogEntries[i].Value2 := LogEntries[i].Value2 + 1;
       if Pos(txt, LogEntries[i].Text) = 0 then
         LogEntries[i].Text := LogEntries[i].Text + sLineBreak + sLineBreak + txt;
       Exit;
     end;
 
   elem := RecordByFormID(fid);
-  if (fid shr 24 <> $FF) and not Assigned(elem) then
-    memoText.Lines.Add('Unknown FormID [' + s + '], changed load order?');
+  if (fid shr 24 <> $FF) and not Assigned(elem) then begin
+    memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? Exiting...');
+    Result := False;
+    Exit;
+  end;
 
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
@@ -467,8 +527,8 @@ begin
 
   elem := RecordByFormID(fid);
   if (fid shr 24 <> $FF) and not Assigned(elem) then begin
-    //memoText.Lines.Add('Unknown FormID [' + s + '], changed load order?');
-    //Result := False;
+    memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? Exiting...');
+    Result := False;
     Exit;
   end;
 
@@ -505,30 +565,6 @@ begin
 end;
 
 procedure TfrmLogAnalyzer.BuildPluginsList;
-
-  procedure QuickSort(var A: array of TLogEntry; iLo, iHi: Integer) ;
-  var
-    Lo, Hi, Pivot: Integer;
-    T: TLogEntry;
-  begin
-    Lo := iLo;
-    Hi := iHi;
-    Pivot := A[(Lo + Hi) div 2].LoadOrder;
-    repeat
-      while A[Lo].LoadOrder < Pivot do Inc(Lo);
-      while A[Hi].LoadOrder > Pivot do Dec(Hi);
-      if Lo <= Hi then begin
-        T := A[Lo];
-        A[Lo] := A[Hi];
-        A[Hi] := T;
-        Inc(Lo) ;
-        Dec(Hi) ;
-       end;
-    until Lo > Hi;
-    if Hi > iLo then QuickSort(A, iLo, Hi);
-    if Lo < iHi then QuickSort(A, Lo, iHi);
-  end;
-
 var
   i, j: integer;
   fExists: boolean;
@@ -564,8 +600,6 @@ begin
       end;
     end;
   end;
-  // sort plugins by load order
-  QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
 end;
 
 procedure TfrmLogAnalyzer.btnAnalyzeClick(Sender: TObject);
@@ -584,10 +618,22 @@ begin
   SetLength(LogEntries, 0);
 
   MaxLogSize := StrToIntDef(edLogSize.Text, 0)*1024*1024;
-  if ProcessLog(edLogFile.Text) then begin
-    BuildPluginsList;
-    vstForms.NodeDataSize := SizeOf(TTreeData);
-    vstForms.RootNodeCount := Length(LogPlugins);
+  Enabled := False;
+  Application.ProcessMessages;
+  try
+    memoText.Lines.Add('Processing log...');
+    if ProcessLog(edLogFile.Text) then begin
+      BuildPluginsList;
+      vstForms.NodeDataSize := SizeOf(TTreeData);
+      vstForms.RootNodeCount := Length(LogPlugins);
+      memoText.Lines.Add('Done.');
+      memoText.Lines.Add('Hint: double click on FormID to jump to that record');
+    end else begin
+      SetLength(LogPlugins, 0);
+      SetLength(LogEntries, 0);
+    end;
+  finally
+    Enabled := True;
   end;
 end;
 
@@ -612,6 +658,8 @@ begin
       vstForms.Header.Columns[2].Text := 'Frames Executed';
       vstForms.Header.Columns[2].Width := 100;
       vstForms.Header.Columns[3].Text := 'Total Time, ms';
+      memoText.Lines.Add('RuntimeScriptProfiler by ShadeMe');
+      memoText.Lines.Add('http://www.oblivion.nexusmods.com/mods/41863');
     end;
     ltTES5Papyrus: begin
       edLogFile.Text := lMyGamesTheGamePath + 'Logs\Script\Papyrus.0.log';
@@ -620,6 +668,10 @@ begin
       vstForms.Header.Columns[2].Text := 'Errors';
       vstForms.Header.Columns[2].Width := 100;
       vstForms.Header.Columns[3].Text := 'Warnings';
+      memoText.Lines.Add('How to enable logging');
+      memoText.Lines.Add('http://www.creationkit.com/FAQ:_My_Script_Doesn''t_Work!');
+      memoText.Lines.Add('Papyrus errors description');
+      memoText.Lines.Add('http://www.creationkit.com/Papyrus_Runtime_Errors');
     end;
   end;
   dlgOpen.InitialDir := ExtractFilePath(edLogFile.Text);

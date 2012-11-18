@@ -1,7 +1,6 @@
 object frmLogAnalyzer: TfrmLogAnalyzer
   Left = 0
   Top = 0
-  BorderIcons = [biSystemMenu]
   Caption = 'Log Analyzer'
   ClientHeight = 528
   ClientWidth = 773
@@ -21,13 +20,13 @@ object frmLogAnalyzer: TfrmLogAnalyzer
     Left = 0
     Top = 0
     Width = 773
-    Height = 57
+    Height = 41
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     DesignSize = (
       773
-      57)
+      41)
     object Label1: TLabel
       Left = 751
       Top = 14
@@ -35,13 +34,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       Height = 13
       Anchors = [akTop, akRight]
       Caption = 'MB'
-    end
-    object Label2: TLabel
-      Left = 15
-      Top = 38
-      Width = 217
-      Height = 13
-      Caption = 'Double click on FormID to jump to that record'
     end
     object btnFileSelect: TButton
       Left = 602
@@ -91,30 +83,30 @@ object frmLogAnalyzer: TfrmLogAnalyzer
   end
   object pnlClient: TPanel
     Left = 0
-    Top = 57
+    Top = 41
     Width = 773
-    Height = 471
+    Height = 487
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 65
-    ExplicitWidth = 786
-    ExplicitHeight = 382
+    ExplicitTop = 57
+    ExplicitHeight = 471
     object Splitter1: TSplitter
       Left = 0
-      Top = 249
+      Top = 265
       Width = 773
       Height = 3
       Cursor = crVSplit
       Align = alTop
       ResizeStyle = rsUpdate
+      ExplicitTop = 249
       ExplicitWidth = 133
     end
     object vstForms: TVirtualEditTree
       Left = 0
       Top = 0
       Width = 773
-      Height = 249
+      Height = 265
       Align = alTop
       Anchors = [akLeft, akTop, akRight, akBottom]
       Colors.SelectionRectangleBlendColor = clGray
@@ -128,22 +120,25 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       Header.Font.Style = []
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+      Header.SortColumn = 0
       NodeDataSize = 8
       SelectionBlendFactor = 32
       SelectionCurveRadius = 3
       TabOrder = 0
-      TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes]
+      TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes]
       TreeOptions.MiscOptions = [toInitOnSave, toToggleOnDblClick, toWheelPanning]
       TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect]
       TreeOptions.StringOptions = [toAutoAcceptEditChange]
       OnChange = vstFormsChange
+      OnCompareNodes = vstFormsCompareNodes
       OnDblClick = vstFormsDblClick
+      OnFreeNode = vstFormsFreeNode
       OnGetText = vstFormsGetText
+      OnHeaderClick = vstFormsHeaderClick
       OnInitChildren = vstFormsInitChildren
       OnInitNode = vstFormsInitNode
-      ExplicitTop = -2
-      ExplicitWidth = 786
+      ExplicitHeight = 249
       Columns = <
         item
           Position = 0
@@ -170,7 +165,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
     end
     object memoText: TMemo
       Left = 0
-      Top = 252
+      Top = 268
       Width = 773
       Height = 219
       Align = alClient
@@ -183,10 +178,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       ReadOnly = True
       ScrollBars = ssBoth
       TabOrder = 1
-      ExplicitLeft = 348
-      ExplicitTop = 288
-      ExplicitWidth = 438
-      ExplicitHeight = 94
+      ExplicitTop = 252
     end
   end
   object dlgOpen: TOpenDialog

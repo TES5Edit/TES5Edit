@@ -202,7 +202,6 @@ type
     DisplayPanel: TPanel;
     ApplicationEvents1: TApplicationEvents;
     N5: TMenuItem;
-    N13: TMenuItem;
     mniNavCellChildPers: TMenuItem;
     mniNavCellChildTemp: TMenuItem;
     mniNavCellChildNotVWD: TMenuItem;
@@ -223,7 +222,6 @@ type
     mniNavTest: TMenuItem;
     N17: TMenuItem;
     N18: TMenuItem;
-    N19: TMenuItem;
     mniNavCheckForCircularLeveledLists: TMenuItem;
     pmuPath: TPopupMenu;
     mniPathPluggyLink: TMenuItem;
@@ -256,6 +254,8 @@ type
     mniNavApplyScript: TMenuItem;
     mniNavOptions: TMenuItem;
     mniNavLogAnalyzer: TMenuItem;
+    mniNavOther: TMenuItem;
+    N13: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1451,33 +1451,6 @@ begin
   end;
 end;
 
-{
-procedure AfterCopyTES5FixQUST(const aElement: IwbElement);
-var
-  MainRecord         : IwbMainRecord;
-  Aliases            : IwbContainerElementRef;
-  Alias              : IwbContainerElementRef;
-  i                  : Integer;
-begin
-  // 25f3e
-  // 2893b
-  if not Supports(aElement, IwbMainRecord, MainRecord) then
-    Exit;
-
-  if MainRecord.Signature <> 'QUST' then
-    Exit;
-
-  if not Supports(MainRecord.ElementByName['Aliases'], IwbContainerElementRef, Aliases) then
-    Exit;
-
-  for i := 0 to Pred(Aliases.ElementCount) do
-    if Supports(Aliases.Elements[i], IwbContainerElementRef, Alias) then
-      if Supports(Alias.ElementByName['Alias ID'], IwbContainerElementRef, Alias) then
-        if Alias.ElementCount = 2 then
-          Alias.RemoveElement(0);
-end;
-}
-
 function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
   MainRecord                  : IwbMainRecord;
@@ -1685,9 +1658,6 @@ begin
   finally
     sl.Free;
   end;
-{  if wbGameMode = gmTES5 then
-    for i := Low(Result) to High(Result) do
-      AfterCopyTES5FixQUST(Result[i]);}
 end;
 
 procedure TfrmMain.mniNavChangeReferencingRecordsClick(Sender: TObject);
@@ -2298,6 +2268,9 @@ var
 
         if IsFaultyOrderedList then begin
           PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
+        end else
+        if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
+          PostAddMessage('Error: Can''t merge for winning record with scripts ' + MainRecord.Name);
         end else begin
           TargetRecord := nil;
           for l := Low(aListNames) to High(aListNames) do
@@ -2369,13 +2342,13 @@ begin
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
     CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
     // unsafe to copy VMAD subrecords to merged patch
-    if wbGameMode <> gmTES5 then
-      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
-//    CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-//    CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-//    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-//    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-//    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+//    if wbGameMode <> gmTES5 then
+    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
   end;
 
   TargetFile.CleanMasters;
@@ -11491,51 +11464,6 @@ begin
     lblPath.Visible := False;
   end;
   SetActiveRecord(Element as IwbMainRecord);
-end;
-
-function CmpB8(a, b: Byte): Integer;
-asm
-  xor ecx, ecx
-  cmp al, dl
-  ja @@GT
-  je @@EQ
-@@LT:
-  dec ecx
-  dec ecx
-@@GT:
-  inc ecx
-@@EQ:
-  mov eax, ecx
-end;
-
-function CmpI32(a, b: Integer): Integer;
-asm
-  xor ecx, ecx
-  cmp eax, edx
-  jg @@GT
-  je @@EQ
-@@LT:
-  dec ecx
-  dec ecx
-@@GT:
-  inc ecx
-@@EQ:
-  mov eax, ecx
-end;
-
-function CmpW32(a, b: Cardinal): Integer;
-asm
-  xor ecx, ecx
-  cmp eax, edx
-  ja @@GT
-  je @@EQ
-@@LT:
-  dec ecx
-  dec ecx
-@@GT:
-  inc ecx
-@@EQ:
-  mov eax, ecx
 end;
 
 function FindSortElement(const aElement: IwbElement): IwbElement;
