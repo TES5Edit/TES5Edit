@@ -7912,7 +7912,6 @@ begin
         wbFloat('Z')
       ]), -1),
 
-      wbUnknown {
       wbArray('Triangles',
         wbStruct('Triangle', [
           wbArray('Vertices', wbInteger('Vertex', itS16), 3),
@@ -7954,7 +7953,7 @@ begin
       wbFloat('Max Y'),
       wbFloat('Max Z'),
       wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
-      wbUnknown   }
+      wbUnknown
     ]),
     wbUnknown(ONAM),
     wbUnknown(PNAM),
