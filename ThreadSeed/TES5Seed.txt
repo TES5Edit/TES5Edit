@@ -191,7 +191,7 @@ If you would like to participate in this project please send me a PM.
 
 Any general knowledge of how to edit html and possibly xml.  After you have checked out the files the folder you will work with is UESPWiki.  It will contain templates of each record posted on UESPWiki.  To make changes to the [url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]UESP Wiki[/url] site you need to register first.  Registration is free and hardly any information is required.
 
-Please refer to the on site wiki: [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/DecodingRecords]PostingToTheUESPWiki[/url] 
+Please refer to the on site wiki: [url=http://code.google.com/p/skyrim-plugin-decoding-project/wiki/PostingToTheUESPWiki]PostingToTheUESPWiki[/url] 
 
 [color="#FF8C00"][size="3"][b]Record Decoders:[/b][/size][/color]
 
