@@ -171,6 +171,22 @@ begin
     Element.IsPersistent := Args.Values[1];
 end;
 
+procedure IwbElement_GetFormVersion(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Cardinal(Element.Version);
+end;
+
+procedure IwbElement_SetFormVersion(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Element.Version := Args.Values[1];
+end;
+
 procedure IwbElement_OverrideCount(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbMainRecord;
@@ -584,6 +600,8 @@ begin
     AddFunction(cUnit, 'SetIsInitiallyDisabled', IwbElement_SetIsInitiallyDisabled, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetIsPersistent', IwbElement_GetIsPersistent, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsPersistent', IwbElement_SetIsPersistent, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'GetFormVersion', IwbElement_GetFormVersion, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetFormVersion', IwbElement_SetFormVersion, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'OverrideCount', IwbElement_OverrideCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'OverrideByIndex', IwbElement_OverrideByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);

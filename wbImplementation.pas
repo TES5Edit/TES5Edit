@@ -870,6 +870,8 @@ type
     function GetRotation(out aRotation: TD3DXVector3): Boolean;
     function GetScale(out aScale: Single): Boolean;
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
+    function GetFormVersion: Cardinal; {>>> Form Version access <<<}
+    procedure SetFormVersion(aFormVersion: Cardinal); {>>> Form Version access <<<}
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
@@ -5794,6 +5796,17 @@ begin
   end;
 
   Result := mrFullName;
+end;
+
+function TwbMainRecord.GetFormVersion: Cardinal;
+begin
+  Result := mrStruct.mrsVersion;
+end;
+
+procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
+begin
+  MakeHeaderWriteable;
+  mrStruct.mrsVersion := aFormVersion;
 end;
 
 function TwbMainRecord.GetGridCell(out aGridCell: TwbGridCell): Boolean;

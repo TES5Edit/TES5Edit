@@ -793,6 +793,14 @@ type
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 
+    {>>> Form Version access  <<<}
+    function GetFormVersion: Cardinal;
+    procedure SetFormVersion(aFormVersion: Cardinal);
+
+    property Version: Cardinal
+      read GetFormVersion
+      write SetFormVersion;
+
     property BaseRecord: IwbMainRecord
       read GetBaseRecord;
     property BaseRecordID: Cardinal
