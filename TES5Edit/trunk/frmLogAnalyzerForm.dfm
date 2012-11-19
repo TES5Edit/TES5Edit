@@ -89,8 +89,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 57
-    ExplicitHeight = 471
     object Splitter1: TSplitter
       Left = 0
       Top = 265
@@ -138,7 +136,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       OnHeaderClick = vstFormsHeaderClick
       OnInitChildren = vstFormsInitChildren
       OnInitNode = vstFormsInitNode
-      ExplicitHeight = 249
       Columns = <
         item
           Position = 0
@@ -178,7 +175,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       ReadOnly = True
       ScrollBars = ssBoth
       TabOrder = 1
-      ExplicitTop = 252
     end
   end
   object dlgOpen: TOpenDialog

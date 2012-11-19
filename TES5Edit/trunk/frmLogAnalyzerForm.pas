@@ -57,6 +57,7 @@ type
     LogPlugins: array of TLogEntry;
     ProcessLog: function (const aFileName: String): Boolean of object;
     function FormIDFromString(s: String): String;
+    function BracketedFormIDFromString(s: String; Brackets: string = '()'): String;
     function RecordByFormID(FormID: Cardinal): IwbMainRecord;
     procedure BuildPluginsList;
     function ParsePapyrusData(const aData: String): Boolean;
@@ -68,6 +69,7 @@ type
     lDataPath, lMyGamesTheGamePath: string;
     ltLog: TLogType;
     MaxLogSize: integer;
+    FormIDErrors: integer;
     PFiles: ^TDynFiles;
     JumpTo: procedure (aInterface: IInterface; aBackward: Boolean) of object;
   end;
@@ -405,6 +407,22 @@ begin
   end;
 end;
 
+function TfrmLogAnalyzer.BracketedFormIDFromString(s: String; Brackets: string = '()'): String;
+var
+  i: integer;
+  f: string;
+begin
+  Result := '';
+  for i := 1 to Length(s) - 9 do
+    if (s[i] = Brackets[1]) and (s[i+9] = Brackets[2]) then begin
+      f := Copy(s, i + 1, 8);
+      if IsHexStr(f) then begin
+        Result := f;
+        Exit;
+      end;
+    end;
+end;
+
 function TfrmLogAnalyzer.ParsePapyrusData(const aData: String): Boolean;
 var
   s, txt: string;
@@ -424,7 +442,7 @@ begin
   if not (IsError or IsWarning) then
     Exit;
 
-  s := FormIDFromString(txt);
+  s := BracketedFormIDFromString(txt);
 
   if s = '' then begin
     // check for "saved game" messages
@@ -450,8 +468,9 @@ begin
 
   elem := RecordByFormID(fid);
   if (fid shr 24 <> $FF) and not Assigned(elem) then begin
-    memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? Exiting...');
-    Result := False;
+    if FormIDErrors = 0 then
+      memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
+    Inc(FormIDErrors);
     Exit;
   end;
 
@@ -527,8 +546,9 @@ begin
 
   elem := RecordByFormID(fid);
   if (fid shr 24 <> $FF) and not Assigned(elem) then begin
-    memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? Exiting...');
-    Result := False;
+    if FormIDErrors = 0 then
+      memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
+    Inc(FormIDErrors);
     Exit;
   end;
 
@@ -565,6 +585,30 @@ begin
 end;
 
 procedure TfrmLogAnalyzer.BuildPluginsList;
+
+  procedure QuickSort(var A: array of TLogEntry; iLo, iHi: Integer);
+	var
+	  Lo, Hi, Pivot: Integer;
+	  T: TLogEntry;
+	begin
+	  Lo := iLo;
+	  Hi := iHi;
+	  Pivot := A[(Lo + Hi) div 2].LoadOrder;
+	  repeat
+	    while A[Lo].LoadOrder < Pivot do Inc(Lo);
+	    while A[Hi].LoadOrder > Pivot do Dec(Hi);
+	    if Lo <= Hi then begin
+	      T := A[Lo];
+	      A[Lo] := A[Hi];
+	      A[Hi] := T;
+	      Inc(Lo);
+	      Dec(Hi);
+	    end;
+	  until Lo > Hi;
+	  if Hi > iLo then QuickSort(A, iLo, Hi);
+	  if Lo < iHi then QuickSort(A, Lo, iHi);
+	end;
+
 var
   i, j: integer;
   fExists: boolean;
@@ -600,6 +644,8 @@ begin
       end;
     end;
   end;
+  // sort plugins by load order
+	QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
 end;
 
 procedure TfrmLogAnalyzer.btnAnalyzeClick(Sender: TObject);
@@ -618,6 +664,7 @@ begin
   SetLength(LogEntries, 0);
 
   MaxLogSize := StrToIntDef(edLogSize.Text, 0)*1024*1024;
+  FormIDErrors := 0;
   Enabled := False;
   Application.ProcessMessages;
   try
@@ -626,6 +673,8 @@ begin
       BuildPluginsList;
       vstForms.NodeDataSize := SizeOf(TTreeData);
       vstForms.RootNodeCount := Length(LogPlugins);
+      if FormIDErrors > 0 then
+        memoText.Lines.Add(Format('Ignored %d unknown FormIDs', [FormIDErrors]));
       memoText.Lines.Add('Done.');
       memoText.Lines.Add('Hint: double click on FormID to jump to that record');
     end else begin

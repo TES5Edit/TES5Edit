@@ -5,20 +5,16 @@
     Skyrim SDR  http://skyrim.nexusmods.com/mods/7081
     No Tint     http://skyrim.nexusmods.com/mods/648
   
-  No FPS hit unlike ENB.
-  
   Warning: Skyrim SDR reported to screw night vision, so you might want to
   leave Bloom or Adaptation unchanged if that happens. Needs confirmation.
-  
-  Tweak TintMult and TintMin to your liking.
 }
 unit UserScript;
 
 const
   BloomMult = 0;          // Bloom multiplier
-  AdaptSpeed = 100;       // Adaptation speed
+  AdaptSpeed = 90;        // Adaptation speed
   AdaptStrengthMult = 1;  // Adaptation strength multiplier
-  TintMult = 0.65;        // Tint multiplier
+  TintMult = 0.45;        // Tint multiplier
   TintMin  = 0.1;         // Min tint amount
   
 var

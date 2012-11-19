@@ -68,10 +68,6 @@ var
 begin
   Result := 0;
   
-  // prevent import into skyrim.esm, SameText - case insensitive compare
-  if not DoExport and SameText(GetFileName(e), 'skyrim.esm') then
-    Exit;
-  
   // process only weapons, skip other records
   if Signature(e) <> 'WEAP' then
     Exit;
@@ -99,14 +95,14 @@ begin
       // there should be 9 columns in each line
       if slValues.Count = 9 then begin
         // uncomment if you want to import names
-        //if GetElementEditValues(e, 'FULL - Name') <> slValues[1] then SetElementEditValues(e, 'FULL - Name', slValues[1]);
-        if GetElementEditValues(e, 'DATA\Value')  <> slValues[2] then SetElementEditValues(e, 'DATA\Value', slValues[2]);
-        if GetElementEditValues(e, 'DATA\Weight') <> slValues[3] then SetElementEditValues(e, 'DATA\Weight', slValues[3]);
-        if GetElementEditValues(e, 'DATA\Damage') <> slValues[4] then SetElementEditValues(e, 'DATA\Damage', slValues[4]);
-        if GetElementEditValues(e, 'DNAM\Speed')  <> slValues[5] then SetElementEditValues(e, 'DNAM\Speed', slValues[5]);
-        if GetElementEditValues(e, 'DNAM\Reach')  <> slValues[6] then SetElementEditValues(e, 'DNAM\Reach', slValues[6]);
-        if GetElementEditValues(e, 'CRDT\Damage') <> slValues[7] then SetElementEditValues(e, 'CRDT\Damage', slValues[7]);
-        if GetElementEditValues(e, 'CRDT\% Mult') <> slValues[8] then SetElementEditValues(e, 'CRDT\% Mult', slValues[8]);
+        //SetElementEditValues(e, 'FULL - Name', slValues[1]);
+        SetElementEditValues(e, 'DATA\Value',  slValues[2]);
+        SetElementEditValues(e, 'DATA\Weight', slValues[3]);
+        SetElementEditValues(e, 'DATA\Damage', slValues[4]);
+        SetElementEditValues(e, 'DNAM\Speed',  slValues[5]);
+        SetElementEditValues(e, 'DNAM\Reach',  slValues[6]);
+        SetElementEditValues(e, 'CRDT\Damage', slValues[7]);
+        SetElementEditValues(e, 'CRDT\% Mult', slValues[8]);
       end else
         AddMessage(Format('Line %d doesn''t have 9 columns', [i+1]));
     end;

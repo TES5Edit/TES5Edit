@@ -10,7 +10,7 @@
   
   Version: 1.0
 }
-unit UserScript;
+unit BashTagsDetector;
 
 var
   slTags: TStringList;

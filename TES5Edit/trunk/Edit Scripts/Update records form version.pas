@@ -19,21 +19,12 @@ var
 begin
   Result := 0;
   
-  // do not apply to the main file (case insensitive)
-  if SameText(GetFileName(Rec), 'skyrim.esm') then begin
-    AddMessage('Can''t change the main game file');
-    Result := 1;
-    Exit;
-  end;
-  
   fv := GetFormVersion(Rec);
   
-  if fv >= FV_Check then
-    Exit;
-  
-  AddMessage(Format('Found form version %d on %s', [fv, Name(Rec)]));
-  
-  SetFormVersion(Rec, FV_Set);
+  if fv >= FV_Check then begin
+    AddMessage(Format('Found form version %d on %s', [fv, Name(Rec)]));
+    SetFormVersion(Rec, FV_Set);
+  end;
   
 end;
 
