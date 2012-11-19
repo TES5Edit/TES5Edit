@@ -35,7 +35,7 @@ var
   EditorID: IInterface;
 begin
   Result := 0;
-  //AddMessage('Processing: ' + GetName(e));
+  //AddMessage('Processing: ' + Name(e));
   EditorID := ElementByName(e, 'EDID - Editor ID');
   if Assigned(EditorID) then begin
     if DoPrepend then

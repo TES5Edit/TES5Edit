@@ -1,0 +1,40 @@
+{
+  Find and update records with Form Version less than FV_Check.
+  FV_Set is a new value to set.
+  Can be used for any game, but has a meaning only for Skyrim currently.
+}
+unit UserScript;
+
+const
+  FV_Check = 40;
+  FV_Set = 43;
+
+var
+  DoPrepend: boolean;
+  s: string;
+  
+function Process(Rec: IInterface): integer;
+var
+  fv: integer;
+begin
+  Result := 0;
+  
+  // do not apply to the main file (case insensitive)
+  if SameText(GetFileName(Rec), 'skyrim.esm') then begin
+    AddMessage('Can''t change the main game file');
+    Result := 1;
+    Exit;
+  end;
+  
+  fv := GetFormVersion(Rec);
+  
+  if fv >= FV_Check then
+    Exit;
+  
+  AddMessage(Format('Found form version %d on %s', [fv, Name(Rec)]));
+  
+  SetFormVersion(Rec, FV_Set);
+  
+end;
+
+end.
