@@ -420,8 +420,8 @@ var
   Element, Element2: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Supports(IInterface(Args.Values[2]), IwbElement, Element2) then
-      Element.Assign(Args.Values[1], Element2, Args.Values[3]);
+    if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Element2) then
+      Value := Element.Assign(Args.Values[1], Element2, Args.Values[3]);
 end;
 
 procedure IwbFile_GetFileName(var Value: Variant; Args: TJvInterpreterArgs);

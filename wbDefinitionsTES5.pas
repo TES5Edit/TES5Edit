@@ -2155,7 +2155,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := wbSortFLST; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
+  Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
