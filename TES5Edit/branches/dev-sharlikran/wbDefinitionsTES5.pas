@@ -2155,7 +2155,7 @@ var
 const
   OrderedList = 'OrderedList';
 begin
-  Result := wbSortFLST; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
+  Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
   rEDID := aContainer.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;
@@ -7912,7 +7912,6 @@ begin
         wbFloat('Z')
       ]), -1),
 
-      wbUnknown {
       wbArray('Triangles',
         wbStruct('Triangle', [
           wbArray('Vertices', wbInteger('Vertex', itS16), 3),
@@ -7954,7 +7953,7 @@ begin
       wbFloat('Max Y'),
       wbFloat('Max Z'),
       wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
-      wbUnknown   }
+      wbUnknown
     ]),
     wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
     wbArrayS(PNAM, 'Unknown', wbByteArray('Unknown', 4)),

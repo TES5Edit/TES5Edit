@@ -793,6 +793,14 @@ type
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 
+    {>>> Form Version access  <<<}
+    function GetFormVersion: Cardinal;
+    procedure SetFormVersion(aFormVersion: Cardinal);
+
+    property Version: Cardinal
+      read GetFormVersion
+      write SetFormVersion;
+
     property BaseRecord: IwbMainRecord
       read GetBaseRecord;
     property BaseRecordID: Cardinal
@@ -2003,6 +2011,7 @@ function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
 function IntToHex64(Value: Int64; Digits: Integer): string; inline;
 procedure QuickSort(SortList: PwbPointerArray; L, R: Integer;
   SCompare: TListSortCompare);
+function CmpB8(a, b: Byte): Integer;
 function CmpI32(a, b : Integer) : Integer;
 function CmpW32(a, b: Cardinal): Integer;
 function CmpI64(const a, b : Int64) : Integer;
@@ -6854,6 +6863,21 @@ begin
     QuickSort(@enSparseNamesMap[0], Low(enSparseNames), High(enSparseNames), CompareSparseName);
 
   inherited Create(cpNormal, False);
+end;
+
+function CmpB8(a, b: Byte): Integer;
+asm
+  xor ecx, ecx
+  cmp al, dl
+  ja @@GT
+  je @@EQ
+@@LT:
+  dec ecx
+  dec ecx
+@@GT:
+  inc ecx
+@@EQ:
+  mov eax, ecx
 end;
 
 function CmpI32(a, b : Integer) : Integer;

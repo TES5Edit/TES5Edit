@@ -54,8 +54,9 @@ begin
   for i := 0 to FileCount - 1 do begin
     f := FileByIndex(i);
     s := GetFileName(f);
-    if s = sCoT then f_cot := f else
-      if s = sSoSTheWilds then f_sosw := f;
+    // SameText - case insensitive compare
+    if SameText(s, sCoT) then f_cot := f else
+      if SameText(s, sSoSTheWilds) then f_sosw := f;
   end;
   
   if not Assigned(f_cot) or not Assigned(f_sosw) then begin
@@ -112,6 +113,8 @@ begin
     ElementAssign(s2, LowInteger, s1, False);
 
   end;
+  
+  AddMessage('Patch is ready.');
 
 end;
 

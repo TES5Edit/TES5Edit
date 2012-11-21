@@ -171,6 +171,22 @@ begin
     Element.IsPersistent := Args.Values[1];
 end;
 
+procedure IwbElement_GetFormVersion(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Value := Cardinal(Element.Version);
+end;
+
+procedure IwbElement_SetFormVersion(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, Element) then
+    Element.Version := Args.Values[1];
+end;
+
 procedure IwbElement_OverrideCount(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbMainRecord;
@@ -308,6 +324,14 @@ begin
     Value := Container.Elements[Args.Values[1]];
 end;
 
+procedure IwbElement_ElementExists(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+    Value := Container.ElementExists[string(Args.Values[1])];
+end;
+
 procedure IwbElement_AddElement(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Container: IwbContainerElementRef;
@@ -396,8 +420,8 @@ var
   Element, Element2: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Supports(IInterface(Args.Values[2]), IwbElement, Element2) then
-      Element.Assign(Args.Values[1], Element2, Args.Values[3]);
+    if (V2O(Args.Values[2]) = nil) or Supports(IInterface(Args.Values[2]), IwbElement, Element2) then
+      Value := Element.Assign(Args.Values[1], Element2, Args.Values[3]);
 end;
 
 procedure IwbFile_GetFileName(var Value: Variant; Args: TJvInterpreterArgs);
@@ -483,6 +507,16 @@ begin
       Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '');
 end;
 
+procedure _wbCopyElementToRecord(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[1]), IwbMainRecord, MainRecord) then
+      Value := wbCopyElementToRecord(Element, MainRecord, Args.Values[2], Args.Values[3]);
+end;
+
 { Missing code }
 
 procedure Pascal_Inc(var Value: Variant; Args: TJvInterpreterArgs);
@@ -566,6 +600,8 @@ begin
     AddFunction(cUnit, 'SetIsInitiallyDisabled', IwbElement_SetIsInitiallyDisabled, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetIsPersistent', IwbElement_GetIsPersistent, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsPersistent', IwbElement_SetIsPersistent, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'GetFormVersion', IwbElement_GetFormVersion, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetFormVersion', IwbElement_SetFormVersion, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'OverrideCount', IwbElement_OverrideCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'OverrideByIndex', IwbElement_OverrideByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);
@@ -582,6 +618,7 @@ begin
     AddFunction(cUnit, 'ElementByPath', IwbElement_ElementByPath, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'ElementCount', IwbElement_ElementCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementByIndex', IwbElement_ElementByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'ElementExists', IwbElement_ElementExists, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'AddElement', IwbElement_AddElement, 3, [varEmpty, varString, varBoolean], varEmpty);
     AddFunction(cUnit, 'AddElementElement', IwbElement_AddElementElement, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'RemoveElement', IwbElement_RemoveElement, 2, [varEmpty, varString], varEmpty);
@@ -604,6 +641,7 @@ begin
     AddFunction(cUnit, 'AddMasterIfMissing', IwbFile_AddMasterIfMissing, 2, [varEmpty, varString], varEmpty);
 
     AddFunction(cUnit, 'wbCopyElementToFile', _wbCopyElementToFile, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
+    AddFunction(cUnit, 'wbCopyElementToRecord', _wbCopyElementToRecord, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
 
     // missing indentifiers from Windows unit
     //AddConst('Windows', 'IDOK', IDOK);

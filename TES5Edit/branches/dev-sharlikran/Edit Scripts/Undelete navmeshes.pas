@@ -83,10 +83,8 @@ begin
   // currently only for Skyrim
   if wbGameMode = gmTES5 then begin
     vertices := ElementByPath(e, 'NVNM - Geometry\Vertices');
-    for i := 0 to ElementCount(vertices) - 1 do begin
-      v := ElementByIndex(vertices, v);
-      SetElementNativeValues(v, 'Z', -30000);
-    end;
+    for i := 0 to ElementCount(vertices) - 1 do
+      SetElementNativeValues(ElementByIndex(vertices, v), 'Z', -30000);
   end;
  
   Inc(UndeletedCount);
