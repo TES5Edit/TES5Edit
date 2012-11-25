@@ -16,7 +16,7 @@ begin
   // instead can also load keywords from a text file (one keyword per line)
   // ProgramPath - path were xEdit exe file is
   // DataPath    - path to game's Data folder
-  // sl.LoadFromFile(ProgramPath + 'keywords.txt');
+  // slKeywords.LoadFromFile(ProgramPath + 'keywords.txt');
 end;
     
 function Process(e: IInterface): integer;
@@ -34,7 +34,7 @@ begin
   // get existing keywords list or add a new
   kwda := ElementBySignature(e, 'KWDA');
   if not Assigned(kwda) then
-    kwda := AddElement(e, 'KWDA', True);
+    kwda := Add(e, 'KWDA', True);
     
   // no keywords subrecord (it must exist) - terminate script
   if not Assigned(kwda) then begin
@@ -75,7 +75,7 @@ begin
   
   // update KSIZ keywords count
   if not ElementExists(e, 'KSIZ') then
-    AddElement(e, 'KSIZ', True);
+    Add(e, 'KSIZ', True);
   SetElementNativeValues(e, 'KSIZ', ElementCount(kwda));
   
   AddMessage('Processed: ' + Name(e));

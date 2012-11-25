@@ -4047,6 +4047,8 @@ var
   ContainerBOD2 : IwbContainerElementRef;
   ContainerBODT : IwbContainerElementRef;
 begin
+  Exit; {>>> Looks like causes problems with Dawnguard.esm <<<}
+
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
@@ -11360,7 +11362,7 @@ begin
     wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
-    wbRArrayS('Biped Object Names', wbString(NAME, 'Name')),
+    wbRArray('Biped Object Names', wbString(NAME, 'Name')),
     wbRArrayS('Movement Types', wbRStructSK([0], 'Movement Types', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
       wbStruct(SPED, 'Override Values', [
@@ -11380,7 +11382,7 @@ begin
     wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType),
     wbRArrayS('Equip Slots', wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])),
     wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
-    wbRArrayS('Phoneme Target Names', wbString(PHTN, 'Name')),
+    wbRArray('Phoneme Target Names', wbString(PHTN, 'Name')),
     wbPHWT,
     wbFormIDCk(WKMV, 'Base Movement Default - Walk', [MOVT, NULL]),
     wbFormIDCk(RNMV, 'Base Movement Default - Run', [MOVT, NULL]),

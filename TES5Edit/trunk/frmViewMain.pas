@@ -2269,8 +2269,9 @@ var
         if IsFaultyOrderedList then begin
           PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
         end else
+        // unsafe to copy VMAD subrecords to merged patch until they are decoded
         if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
-          PostAddMessage('Error: Can''t merge for winning record with scripts ' + MainRecord.Name);
+          PostAddMessage('Error: Can''t merge for the winning record with scripts ' + MainRecord.Name);
         end else begin
           TargetRecord := nil;
           for l := Low(aListNames) to High(aListNames) do
@@ -2341,8 +2342,6 @@ begin
     CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
     CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
-    // unsafe to copy VMAD subrecords to merged patch
-//    if wbGameMode <> gmTES5 then
     CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
     CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
     CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
