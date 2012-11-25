@@ -4,10 +4,6 @@
 }
 unit UserScript;
 
-var
-  DoPrepend: boolean;
-  s: string;
-  
 function Initialize: integer;
 var
   i, j: integer;
