@@ -66,7 +66,7 @@ begin
   SetIsInitiallyDisabled(e, True);
   
   // add enabled opposite of player (true - silent)
-  xesp := AddElement(e, 'XESP', True);
+  xesp := Add(e, 'XESP', True);
   if Assigned(xesp) then begin
     SetElementNativeValues(xesp, 'Reference', $14); // Player ref
     SetElementNativeValues(xesp, 'Flags', 1);  // opposite of parent flag

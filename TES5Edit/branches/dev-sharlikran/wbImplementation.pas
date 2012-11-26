@@ -4565,7 +4565,7 @@ begin
             Self.mrStruct.mrsVCS1 := 0;
             if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
               Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
-              Self.mrStruct.mrsVCS2 := 0;
+              Self.mrStruct.mrsVCS2 := 0; //mrStruct.mrsVCS2;
             end;
           end;
         end;

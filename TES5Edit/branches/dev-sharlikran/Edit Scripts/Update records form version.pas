@@ -9,10 +9,6 @@ const
   FV_Check = 40;
   FV_Set = 43;
 
-var
-  DoPrepend: boolean;
-  s: string;
-  
 function Process(Rec: IInterface): integer;
 var
   fv: integer;
