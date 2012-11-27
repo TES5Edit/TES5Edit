@@ -1993,10 +1993,8 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
   else if wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbGameMode = gmTES5 then begin
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94';
-    //Header.ElementByName['Form Version'].NativeValue := 43;
-  end;
+  else if wbGameMode = gmTES5 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '2048';
   flLoadFinished := True;
 end;
