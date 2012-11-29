@@ -91,8 +91,19 @@ procedure IwbElement_ElementType(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
+  Value := -1;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.ElementType;
+end;
+
+procedure IwbElement_DefType(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := -1;
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Assigned(Element.ValueDef) then
+      Value := Element.ValueDef.DefType;
 end;
 
 procedure IwbElement_IsInjected(var Value: Variant; Args: TJvInterpreterArgs);
@@ -594,7 +605,6 @@ procedure IwbMainRecord_ReferencedByIndex(var Value: Variant; Args: TJvInterpret
 var
   MainRecord: IwbMainRecord;
 begin
-  Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
     Value := MainRecord.ReferencedBy[Args.Values[1]];
 end;
@@ -878,6 +888,22 @@ begin
   Value := SameText(string(Args.Values[0]), string(Args.Values[1]));
 end;
 
+procedure JvInterpreter_IntToHex64(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := IntToHex64(Args.Values[0], Args.Values[1]);
+end;
+
+procedure JvInterpreter_StrToInt64(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := StrToInt64(Args.Values[0]);
+end;
+
+procedure JvInterpreter_StrToInt64Def(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := StrToInt64Def(Args.Values[0], Args.Values[1]);
+end;
+
+
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 const
   cUnit = 'Dummy';
@@ -901,14 +927,34 @@ begin
     AddConst(cUnit, 'etFlag', ord(etFlag));
     AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
 
+    { TwbDefType }
+    AddConst(cUnit, 'dtRecord', ord(dtRecord));
+    AddConst(cUnit, 'dtSubRecord', ord(dtSubRecord));
+    AddConst(cUnit, 'dtSubRecordArray', ord(dtSubRecordArray));
+    AddConst(cUnit, 'dtSubRecordStruct', ord(dtSubRecordStruct));
+    AddConst(cUnit, 'dtSubRecordUnion', ord(dtSubRecordUnion));
+    AddConst(cUnit, 'dtString', ord(dtString));
+    AddConst(cUnit, 'dtLString', ord(dtLString));
+    AddConst(cUnit, 'dtLenString', ord(dtLenString));
+    AddConst(cUnit, 'dtByteArray', ord(dtByteArray));
+    AddConst(cUnit, 'dtInteger', ord(dtInteger));
+    AddConst(cUnit, 'dtIntegerFormater', ord(dtIntegerFormater));
+    AddConst(cUnit, 'dtFloat', ord(dtFloat));
+    AddConst(cUnit, 'dtArray', ord(dtArray));
+    AddConst(cUnit, 'dtStruct', ord(dtStruct));
+    AddConst(cUnit, 'dtUnion', ord(dtUnion));
+    AddConst(cUnit, 'dtEmpty', ord(dtEmpty));
+
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'AddMessage', AddMessage, 1, [varString], varEmpty);
+    AddClass(cUnit, TwbFastStringList, 'TwbFastStringList');
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'DefType', IwbElement_DefType, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'IsInjected', IwbElement_IsInjected, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'IsEditable', IwbElement_GetIsEditable, 1, [varEmpty], varEmpty);
@@ -1010,6 +1056,9 @@ begin
     AddFunction(cUnit, 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
     AddFunction(cUnit, 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
     AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
+    AddFunction('SysUtils', 'IntToHex64', JvInterpreter_IntToHex64, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('SysUtils', 'StrToInt64', JvInterpreter_StrToInt64, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'StrToInt64Def', JvInterpreter_StrToInt64Def, 2, [varEmpty, varEmpty], varEmpty);
 
     // add missing JvInterpreter code
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
