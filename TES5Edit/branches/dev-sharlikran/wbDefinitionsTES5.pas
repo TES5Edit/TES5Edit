@@ -6854,9 +6854,9 @@ begin
     wbDEST,
     wbStruct(DATA, '', [
       wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Allow Sounds When Animation',
-        {0x02} 'Respawns',
-        {0x04} 'Show Owner'
+          {0x01} 'Allow Sounds When Animation',
+          {0x02} 'Respawns',
+          {0x04} 'Show Owner'
       ])),
       wbFloat('Weight')
     ], cpNormal, True),
