@@ -888,6 +888,17 @@ begin
   Value := SameText(string(Args.Values[0]), string(Args.Values[1]));
 end;
 
+procedure JvInterpreter_StringReplace(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  rf: TReplaceFlags;
+  f: byte;
+begin
+  f := V2S(Args.Values[2]);
+  if (f and ord(rfReplaceAll)) > 0 then rf := rf + [rfReplaceAll];
+  if (f and ord(rfIgnoreCase)) > 0 then rf := rf + [rfIgnoreCase];
+  Value := StringReplace(Args.Values[0], Args.Values[1], Args.Values[2], rf);
+end;
+
 procedure JvInterpreter_IntToHex64(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := IntToHex64(Args.Values[0], Args.Values[1]);
@@ -1051,11 +1062,14 @@ begin
 
     // missing funcs from JvInterpreter
     //AddConst('Windows', 'IDOK', IDOK);
+    AddConst(cUnit, 'rfReplaceAll', Ord(rfReplaceAll));
+    AddConst(cUnit, 'rfIgnoreCase', Ord(rfIgnoreCase));
     AddConst(cUnit, 'LowInteger', Low(Integer));
     AddConst(cUnit, 'HighInteger', High(Integer));
     AddFunction(cUnit, 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
     AddFunction(cUnit, 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
     AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
+    AddFunction('SysUtils', 'StringReplace', JvInterpreter_StringReplace, 4, [varString, varString, varString, varEmpty], varEmpty);
     AddFunction('SysUtils', 'IntToHex64', JvInterpreter_IntToHex64, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'StrToInt64', JvInterpreter_StrToInt64, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'StrToInt64Def', JvInterpreter_StrToInt64Def, 2, [varEmpty, varEmpty], varEmpty);
