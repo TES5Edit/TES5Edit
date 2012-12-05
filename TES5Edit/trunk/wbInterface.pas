@@ -9829,7 +9829,7 @@ var
   Len     : Cardinal;
   NewSize : Cardinal;
   p       : Pointer;
-  s: AnsiString;
+  s       : AnsiString;
 begin
   s := aValue;
   Len := Length(s);
