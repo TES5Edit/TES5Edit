@@ -114,6 +114,9 @@ var
 
 implementation
 
+uses
+  WideStrUtils;
+
 constructor TwbLocalizationFile.Create(const aFileName: string);
 var
   fs: TFileStream;
@@ -183,19 +186,26 @@ end;
 
 function TwbLocalizationFile.ReadZString(aStream: TStream): string;
 var
-  s: AnsiString;
-  c: AnsiChar;
+  s: RawByteString;
+  buf: TBytes;
+  c: Byte;
 begin
   s := '';
   while aStream.Read(c, 1) = 1 do begin
-    if c <> #0 then s := s + c else break;
+    if c = 0 then break;
+    SetLength(buf, Succ(Length(buf)));
+    buf[High(buf)] := c;
   end;
-  Result := s;
+  SetLength(s, Length(buf));
+  Move(buf[0], s[1], Length(buf));
+  //Result := UTF8Decode(s); // chinese
+  Result := s; // others
+  //if IsUTF8String(s) then Result := UTF8Decode(s) else Result := s;
 end;
 
 function TwbLocalizationFile.ReadLenZString(aStream: TStream): string;
 var
-  s: AnsiString;
+  s: RawByteString;
   Len: Cardinal;
 begin
   aStream.ReadBuffer(Len, 4);
@@ -203,28 +213,29 @@ begin
   SetLength(s, Len);
   aStream.ReadBuffer(s[1], Len);
   Result := s;
+  //if IsUTF8String(s) then Result := UTF8Decode(s) else Result := s;
 end;
 
 procedure TwbLocalizationFile.WriteZString(aStream: TStream; aString: string);
-const z: AnsiChar = #0;
+const z: Byte = 0;
 var
-  s: AnsiString;
+  s: RawByteString;
 begin
   s := aString;
-  aStream.WriteBuffer(PAnsiChar(s)^, length(s));
+  aStream.WriteBuffer(s[1], length(s));
   aStream.WriteBuffer(z, SizeOf(z));
 end;
 
 procedure TwbLocalizationFile.WriteLenZString(aStream: TStream; aString: string);
-const z: AnsiChar = #0;
+const z: Byte = 0;
 var
-  s: AnsiString;
+  s: RawByteString;
   l: Cardinal;
 begin
   s := aString;
   l := length(s) + SizeOf(z);
   aStream.WriteBuffer(l, SizeOf(Cardinal));
-  aStream.WriteBuffer(PAnsiChar(s)^, length(s));
+  aStream.WriteBuffer(s[1], length(s));
   aStream.WriteBuffer(z, SizeOf(z));
 end;
 
