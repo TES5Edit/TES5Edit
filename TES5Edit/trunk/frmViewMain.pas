@@ -5318,8 +5318,11 @@ procedure TfrmMain.JvInterpreterProgram1GetValue(Sender: TObject;
   Identifier: string; var Value: Variant; Args: TJvInterpreterArgs;
   var Done: Boolean);
 var
-  Element: IwbFile;
-  _File: IwbFile;
+  Element             : IwbElement;
+  MainRecord          : IwbMainRecord;
+  _File               : IwbFile;
+  Node                : PVirtualNode;
+  NodeData            : PNavNodeData;
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
     Value := wbGameMode;
@@ -5351,9 +5354,35 @@ begin
   end else
   if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
     Value := false;
-    if Supports(IUnknown(Args.Values[0]), IwbElement, Element) then
-      if Supports(IUnknown(Args.Values[1]), IwbFile, _File) then
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+      if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
         Value := AddRequiredMasters(Element, _File, Args.Values[2]);
+    Done := True;
+  end else
+  if SameText(Identifier, 'RemoveNode') and (Args.Count = 1) then begin
+    Value := False;
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+      Node := FindNodeForElement(Element);
+      if Assigned(Node) then begin
+        NodeData := vstNav.GetNodeData(Node);
+        if Supports(Element, IwbMainRecord, MainRecord) then begin
+          CheckHistoryRemove(BackHistory, MainRecord);
+          CheckHistoryRemove(ForwardHistory, MainRecord);
+        end;
+        SetActiveRecord(nil);
+        if Element.Equals(NodeData.Container) then
+          NodeData.Container := nil;
+        if Assigned(NodeData.Container) then
+          NodeData.Container.Remove;
+        Element.Remove;
+        NodeData.Element := nil;
+        NodeData.Container := nil;
+        Element := nil;
+        vstNav.DeleteNode(Node, False);
+        Value := True;
+      end;
+    end;
+    //InvalidateElementsTreeView(NoNodes);
     Done := True;
   end;
 end;
@@ -5470,9 +5499,9 @@ begin
     PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
 
-    for i := Low(Selection) to High(Selection) do
-      vstNav.IterateSubtree(Selection[i], ClearConflict, nil);
-    InvalidateElementsTreeView(Selection);
+//    for i := Low(Selection) to High(Selection) do
+//      vstNav.IterateSubtree(Selection[i], ClearConflict, nil);
+    InvalidateElementsTreeView(NoNodes);
     //PostResetActiveTree;
   finally
     jvi.Free;
