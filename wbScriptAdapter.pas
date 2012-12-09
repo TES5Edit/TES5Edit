@@ -57,6 +57,11 @@ begin
     wbProgressCallback(Args.Values[0]);
 end;
 
+procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbTestWrite := True;
+  wbForceNewHeader := True;
+end;
 
 { IwbElement }
 
@@ -447,12 +452,12 @@ begin
     vtyp := VarType(Args.Values[1]);
     case vtyp of
       varInteger, varInt64, varWord, varLongWord, varShortInt:
-         Value := Container.RemoveElement(integer(Args.Values[1]));
+         Value := Container.RemoveElement(integer(Args.Values[1]), True);
       varString, varUString:
          Value := Container.RemoveElement(string(Args.Values[1]));
     else
       if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
-        Value := Container.RemoveElement(Element);
+        Value := Container.RemoveElement(Element, True);
     end;
   end;
 end;
@@ -970,7 +975,7 @@ begin
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'AddMessage', AddMessage, 1, [varString], varEmpty);
-    AddClass(cUnit, TwbFastStringList, 'TwbFastStringList');
+    AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
