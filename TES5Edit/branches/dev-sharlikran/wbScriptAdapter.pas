@@ -57,6 +57,11 @@ begin
     wbProgressCallback(Args.Values[0]);
 end;
 
+procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbTestWrite := True;
+  wbForceNewHeader := True;
+end;
 
 { IwbElement }
 
@@ -440,9 +445,21 @@ end;
 procedure IwbContainer_RemoveElement(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Container: IwbContainerElementRef;
+  Element: IwbElement;
+  vtyp: integer;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Container.RemoveElement(string(Args.Values[1]));
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then begin
+    vtyp := VarType(Args.Values[1]);
+    case vtyp of
+      varInteger, varInt64, varWord, varLongWord, varShortInt:
+         Value := Container.RemoveElement(integer(Args.Values[1]), True);
+      varString, varUString:
+         Value := Container.RemoveElement(string(Args.Values[1]));
+    else
+      if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
+        Value := Container.RemoveElement(Element, True);
+    end;
+  end;
 end;
 
 procedure IwbContainer_RemoveByIndex(var Value: Variant; Args: TJvInterpreterArgs);
@@ -958,7 +975,7 @@ begin
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'AddMessage', AddMessage, 1, [varString], varEmpty);
-    AddClass(cUnit, TwbFastStringList, 'TwbFastStringList');
+    AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
@@ -1006,7 +1023,7 @@ begin
     AddFunction(cUnit, 'Add', IwbContainer_Add, 3, [varEmpty, varString, varBoolean], varEmpty);
     AddFunction(cUnit, 'AddElement', IwbContainer_AddElement, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'InsertElement', IwbContainer_InsertElement, 3, [varEmpty, varInteger, varEmpty], varEmpty);
-    AddFunction(cUnit, 'RemoveElement', IwbContainer_RemoveElement, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'RemoveElement', IwbContainer_RemoveElement, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'RemoveByIndex', IwbContainer_RemoveByIndex, 3, [varEmpty, varInteger, varBoolean], varEmpty);
     AddFunction(cUnit, 'ReverseElements', IwbContainer_ReverseElements, 1, [varEmpty], varEmpty);
 

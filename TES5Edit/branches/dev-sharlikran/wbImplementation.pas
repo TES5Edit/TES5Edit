@@ -7973,6 +7973,9 @@ begin
 
     aStream.WriteBuffer(mrs, wbSizeOfMainRecordStruct );
 
+    if wbForceNewHeader then
+      aStream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
+
     if mrStruct.mrsFlags.IsCompressed then begin
 
       MemoryStream := TMemoryStream.Create;
@@ -7990,7 +7993,10 @@ begin
       inherited;
 
     NewPosition := aStream.Position;
-    DataSize := (NewPosition - CurrentPosition) - wbSizeOfMainRecordStruct;
+    if wbForceNewHeader then
+      DataSize := (NewPosition - CurrentPosition) - wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
+    else
+      DataSize := (NewPosition - CurrentPosition) - wbSizeOfMainRecordStruct;
     aStream.Position := CurrentPosition + 4;
     aStream.WriteBuffer(DataSize, SizeOf(DataSize));
     aStream.Position := NewPosition;
@@ -10430,6 +10436,8 @@ begin
   CurrentPosition := aStream.Position;
   grs := grStruct^;
   aStream.WriteBuffer(grs, wbSizeOfMainRecordStruct );
+  if wbForceNewHeader then
+    aStream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
   inherited;
   if (esModified in eStates) or wbTestWrite then begin
 
@@ -10440,7 +10448,10 @@ begin
     aStream.Position := NewPosition;
 
   end else
-    Assert(CurrentPosition + grStruct.grsGroupSize = aStream.Position);
+    if wbForceNewHeader then
+      Assert(CurrentPosition + grStruct.grsGroupSize + SizeOf(wbNewHeaderAddon) = aStream.Position)
+    else
+      Assert(CurrentPosition + grStruct.grsGroupSize = aStream.Position);
 
   Exclude(eStates, esUnsaved);
 end;
