@@ -9588,8 +9588,29 @@ begin
 end;
 
 function TwbUnionDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+var
+  i: Integer;
+  tempValueDef: IwbValueDef;
+  tempStruct: IwbStructDef;
+  tempArray: IwbArrayDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).ToString(aBasePtr, aEndPtr, aElement);
+  tempValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  Result := tempValueDef.ToString(aBasePtr, aEndPtr, aElement);
+  if (Result = '') and Supports(tempValueDef, IwbStructDef, tempStruct) then
+    for i := 0 to Pred(tempStruct.MemberCount) do
+      begin
+        Cardinal(aEndPtr) := Cardinal(aBasePtr) + tempStruct.Members[i].Size[aBasePtr, aEndPtr, aElement];
+        if not wbHideUnused or (tempStruct.Members[i].Name <> 'Unused') then
+          Result := Result + '< ' + tempStruct.Members[i].Name + ' ' + tempStruct.Members[i].ToString(aBasePtr, aEndPtr, aElement) + ' > ';
+        aBasePtr := aEndPtr;
+      end;
+//  if (Result = '') and Supports(tempValueDef, IwbArrayDef, tempArray) then
+//    for i := 0 to tempArray.ElementCount do
+//      begin
+//        Cardinal(aEndPtr) := Cardinal(aBasePtr) + tempStruct.Members[i].Size[aBasePtr, aEndPtr, aElement];
+//        Result := Result + tempArray[i].ToString(aBasePtr, aEndPtr, aElement);      // Requires coding Array[i]
+//        aBasePtr := aEndPtr;
+//      end;
   Used(aElement, Result);
 end;
 
