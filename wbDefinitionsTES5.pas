@@ -2221,35 +2221,15 @@ end;
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
-
-  procedure FindProperty(theContainer: IwbContainer);
-  var
-    i           : Integer;
-    Element     : IwbElement;
-    aContainer  : IwbContainer;
-  begin
-    if Assigned(theContainer) and (Pos('Property #', theContainer.Name)<>1) then begin
-      for i := 0 to Pred(theContainer.ElementCount) do begin
-        Element := theContainer.Elements[i];
-        if Supports(Element, IwbContainer, aContainer) then
-          if (Pos('Property #', aContainer.Name) = 1) then begin
-            Container := aContainer;
-            break;
-          end else
-            FindProperty(aContainer);
-      end;
-    end;
-  end;
-
 begin
-  Result := 0;
   if aElement.ElementType = etValue then
     Container := aElement.Container
   else
     Container := aElement as IwbContainer;
-  FindProperty(Container);
+
   if not Assigned(Container) then Exit;
 
+  Result := 0;
   case Integer(Container.ElementNativeValues['Type']) of
      1: Result := 1;
      2: Result := 2;
@@ -2270,19 +2250,16 @@ begin
   Result := 0;
 end;
 
-{>>> For VMAD <<<}
+{>>> For VMAD, Unused <<<}
 function wbScriptFragmentsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
-
 begin
   if aElement.ElementType = etValue then
     Container := aElement.Container
   else
     Container := aElement as IwbContainer;
-  if not Assigned(Container) then Exit;
-  if Container.Name = 'Fragments' then
-    Container := Container.Container;
+
   if not Assigned(Container) then Exit;
 
   Result := Integer(Container.ElementNativeValues['fragmentCount']);
@@ -5042,7 +5019,7 @@ begin
     {15} 'Array of Bool'
   ]);
 
-  wbScriptObject := wbUnion('ObjectUnion', wbScriptObjFormatDecider, [
+  wbScriptObject := wbUnion('', wbScriptObjFormatDecider, [
     wbStruct('Object', [
       wbInteger('Unused', itU16),
       wbInteger('Alias ID', itU16),
@@ -5057,19 +5034,20 @@ begin
 
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('Name', 2),
-    wbInteger('Unknown', itU8),
+    wbInteger('Unused', itU8),
+    //wbInteger('propertyCount', itU16),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('Name', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
-      wbInteger('Unknown', itU8),
+      wbInteger('Unused', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbByteArray('Unknown', 0, cpIgnore),
-        {01} wbScriptObject, {>>> should be wbScriptObject, but not shown at all??? <<<}
+        {01} {wbScriptObject}wbByteArray('Object', 8), {>>> should be wbScriptObject, but not shown at all??? <<<}
         {02} wbLenString('String', 2), {>>> bugged? <<<}
         {03} wbInteger('Int32', itU32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
-        {11} wbArray('Array of Object', wbScriptObject, -1),
+        {11} wbArray('Array of Object', {wbScriptObject}wbByteArray('Object', 8), -1),
         {12} wbArray('Array of String', wbLenString('Element', 2), -1), // {>>> probably won't work too <<<}
         {13} wbArray('Array of Int32', wbInteger('Element', itU32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
@@ -5079,31 +5057,43 @@ begin
   ]);
 
   wbScriptFragments := wbStruct('Script Fragments', [
-    wbInteger('SF Unknown', itS8),
-    wbInteger('fragmentCount', itU16),
-    wbLenString('fileName', 2),
-    wbArray('Fragments', wbStruct('fragment', [
-      wbInteger('Quest Stage Index', itU16),
-      wbInteger('Unknown', itS16),
-      wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS8),
-      wbLenString('scriptName', 2),
-      wbLenString('fragmentName', 2)
-    ]), [], wbScriptFragmentsCounter),
     wbUnknown
+{>>> records have different fragments format, needs union <<<}
+//    wbInteger('Unknown', itS8),
+//    wbInteger('fragmentCount', itU16),
+//    wbLenString('fileName', 2),
+//    wbArray('Fragments', wbStruct('fragment', [
+//      wbInteger('Quest Stage Index', itU16),
+//      wbInteger('Unknown', itS16),
+//      wbInteger('Unknown', itS32),
+//      wbInteger('Unknown', itS8),
+//      wbLenString('scriptName', 2),
+//      wbLenString('fragmentName', 2)
+//    ]), [], wbScriptFragmentsCounter),
+//    wbArray('Aliases', wbStruct('Alias', [
+//      wbInteger('Unknown', itS16),
+//      wbInteger('AliasID', itU16),
+//      wbInteger('Unknown', itS32),
+//      wbInteger('Unknown', itS16),
+//      wbInteger('objFormat', itS16),
+//      wbArray('Scripts', wbScriptEntry, -2)
+//    ]), -2)
   ]);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
+    wbInteger('Script Count', itU16),
+    wbLenString('Script #1', 2),
     {>>>
     For some reason when property type is String
     and VMAD has fragments section(?), wbScriptEntry gets bugged on that property
     Example: Skyrim.esm Quest [00091F1A] <dunLabyrinthian> "Labyrinthian"
     <<<}
-    wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount and Script1 when -2
-    wbScriptFragments
+    //wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount and Script1 when -2
+    wbByteArray('Scripts')
+    //wbScriptFragments
   ]);
 
   wbAttackData := wbRStructSK([1], 'Attack', [

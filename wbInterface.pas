@@ -3230,7 +3230,6 @@ type
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
-    function GetIsVariableSize: Boolean; override;
     function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     {---IwbStructDef---}
@@ -6400,20 +6399,9 @@ begin
     if Size = High(Integer) then begin
       Result := High(Integer);
       Exit;
-    end else
-      Inc(PByte(aBasePtr), Size);
+    end;
     Inc(Result, Size);
   end;
-end;
-
-function TwbStructDef.GetIsVariableSize: Boolean;
-var
-  i    : Integer;
-begin
-  Result := False;
-  for i := Low(stMembers) to High(stMembers) do
-    if stMembers[i].IsVariableSize then
-      Result := True;
 end;
 
 procedure TwbStructDef.Report(const aParents: TwbDefPath);
