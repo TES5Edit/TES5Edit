@@ -3278,6 +3278,7 @@ procedure TfrmMain.edEditorIDSearchKeyDown(Sender: TObject; var Key: Word; Shift
 var
   EditorID                    : string;
   Node                        : PVirtualNode;
+  NodeData                    : PNavNodeData;
 begin
   if (Key = VK_RETURN) and (Shift = []) then begin
     Key := 0;
@@ -3299,20 +3300,23 @@ begin
       Node := vstNav.GetFirst;
 
     while Assigned(Node) do begin
-      if StartsWith(vstNav.Text[Node, 1, False], EditorID) then begin
-        if not vstNav.FullyVisible[Node] then begin
-          vstNav.FullyVisible[Node] := True;
-          Node := vstNav.NodeParent[Node];
-        end
-        else begin
-          edEditorIDSearch.Color := Lighter(clLime, 0.85);
-          vstNav.ClearSelection;
-          vstNav.FocusedNode := Node;
-          vstNav.Selected[vstNav.FocusedNode] := True;
-          edEditorIDSearch.SelectAll;
-          Exit;
+      // don't search in hidden elements
+      NodeData := vstNav.GetNodeData(Node);
+      if Assigned(NodeData) and Assigned(NodeData.Element) and not NodeData.Element.IsHidden then
+        if StartsWith(vstNav.Text[Node, 1, False], EditorID) then begin
+          if not vstNav.FullyVisible[Node] then begin
+            vstNav.FullyVisible[Node] := True;
+            Node := vstNav.NodeParent[Node];
+          end
+          else begin
+            edEditorIDSearch.Color := Lighter(clLime, 0.85);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := Node;
+            vstNav.Selected[vstNav.FocusedNode] := True;
+            edEditorIDSearch.SelectAll;
+            Exit;
+          end;
         end;
-      end;
       Node := vstNav.GetNext(Node)
     end;
 
@@ -3367,6 +3371,9 @@ begin
           Node := FindNodeForElement(MainRecord);
           if not Assigned(Node) then
             for i := 0 to Pred(MainRecord.OverrideCount) do begin
+              // don't search in hidden elements
+              if MainRecord.Overrides[i].IsHidden then
+                Continue;
               Node := FindNodeForElement(MainRecord.Overrides[i]);
               if Assigned(Node) then
                 Break;
@@ -9801,7 +9808,7 @@ begin
             if NeedsRename then
               s := s + t;
 
-            try
+            //try
               FileStream := TFileStream.Create(DataPath + s, fmCreate);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
@@ -9811,12 +9818,12 @@ begin
                 FileStream.Free;
               end;
 
-            except
+            {except
               on E: Exception do begin
                 AnyErrors := True;
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
               end;
-            end;
+            end;}
 
           end;
 
