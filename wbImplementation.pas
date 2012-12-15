@@ -8359,16 +8359,10 @@ begin
 
   if Count <> Length(cntElements) then
     case srArraySizePrefix of
-      1: PByte(dcDataBasePtr)^ := Length(cntElements);
-      2: PWord(dcDataBasePtr)^ := Length(cntElements);
-      4: PCardinal(dcDataBasePtr)^ := Length(cntElements);
+      1: PByte(GetDataBasePtr)^ := Length(cntElements);
+      2: PWord(GetDataBasePtr)^ := Length(cntElements);
+      4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
     end;
-//  if Count <> Length(cntElements) then
-//    case srArraySizePrefix of
-//      1: PByte(GetDataBasePtr)^ := Length(cntElements);
-//      2: PWord(GetDataBasePtr)^ := Length(cntElements);
-//      4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
-//    end;
 end;
 
 procedure TwbSubRecord.CheckTerminator;
