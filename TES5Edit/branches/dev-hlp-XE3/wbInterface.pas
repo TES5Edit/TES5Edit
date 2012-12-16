@@ -6304,6 +6304,8 @@ begin
       while (Count > Index) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
         BasePtr := EndPtr;
         Element := Container.Elements[Index];
+        if not Assigned(Element) then
+          Element := aElement; // If it is too soon, revert to previous way of doing things
         Size := arElement.Size[BasePtr, aEndPtr, Element];
         if Size = High(Integer) then begin
           Result := High(Integer);
@@ -9634,7 +9636,7 @@ var
   i: Integer;
   tempValueDef: IwbValueDef;
   tempStruct: IwbStructDef;
-  tempArray: IwbArrayDef;
+//  tempArray: IwbArrayDef;
 begin
   tempValueDef := Decide(aBasePtr, aEndPtr, aElement);
   Result := tempValueDef.ToString(aBasePtr, aEndPtr, aElement);

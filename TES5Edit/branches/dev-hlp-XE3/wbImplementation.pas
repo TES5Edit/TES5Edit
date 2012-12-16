@@ -3541,7 +3541,10 @@ begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit;
-  Result := IInterface(cntElements[aIndex]) as IwbElement;
+  if not Assigned(cntElements) then
+    Result := nil
+  else
+    Result := IInterface(cntElements[aIndex]) as IwbElement;
 end;
 
 function TwbContainer.GetElementByName(const aName: string): IwbElement;
