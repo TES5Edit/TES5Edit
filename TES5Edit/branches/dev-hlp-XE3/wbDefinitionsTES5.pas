@@ -738,6 +738,7 @@ var
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbUnionDef;
   wbScriptFragments: IwbStructDef;
+  wbScriptFragmentsQuest: IwbStructDef;
   wbEntryPointsEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
   wbPLDT: IwbSubRecordDef;
@@ -2209,8 +2210,7 @@ begin
   while Assigned(Container) and (Container.ElementType <> etSubRecord) do
     Container := Container.Container;
 
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(Container) then Exit;
 
   ObjFormat := Container.ElementNativeValues['Object Format'];
 
@@ -2221,18 +2221,76 @@ end;
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
+  X             : Integer;
+  Y             : Integer;
+
+  // We are going to assume that this will only be called from the Scripts array of VMAD
+  // ===================================================================================
+
+  // The element we need is the one whose path is
+  //   QUST \ VMAD - Virtual Machine Adapter \ Scripts \ Script #X \ Properties \ Property #Y
+  // When aElement points to
+  //      QUST \ VMAD - Virtual Machine Adapter \ Scripts \ Script #X \ Properties \ Property #Y
+  //   or QUST \ VMAD - Virtual Machine Adapter \ Scripts \ Script #0 \ Properties \ Property #0 \ Value
+  //   we are ok, otherwise we are only ok when X = 0 and Y = 0 (case where we are starting from QUST \ VMAD - Virtual Machine Adapter \ Scripts
+  //
+  // So, can we find the proper value for X and Y using aBasePtr ?
+  //
+  // Might be overkill now that TwbArrayDef.GetSize is changed to provide the "proper" aElement.
+  //
+
+  function FindY: Integer;
+  const
+    aLabel = 'Property #';
+  var
+    S: String;
+    i: Integer;
+  begin
+    Result := -1;
+    if Assigned(Container) and (Pos(aLabel, Container.Path)>1) then begin
+      S := Copy(Container.Path, Pos(aLabel, Container.Path)+Length(aLabel));
+      i := 1;
+      While (Length(S)>=i) and (S[i] in ['0'..'9']) do Inc(i);
+      if i<Length(S) then Delete(S, i, Length(S));
+      Result := StrToInt(S);
+    end;
+  end;
+
+  function FindX: Integer;
+  const
+    aLabel = 'Script #';
+  var
+    S: String;
+    i: Integer;
+  begin
+    Result := -1;
+    if Assigned(Container) and (Pos(aLabel, Container.Path)>1) then begin
+      S := Copy(Container.Path, Pos(aLabel, Container.Path)+Length(aLabel));
+      i := 1;
+      While (Length(S)>=i) and (S[i] in ['0'..'9']) do Inc(i);
+      if i<Length(S) then Delete(S, i, Length(S));
+      Result := StrToInt(S);
+    end;
+  end;
 
   procedure FindProperty(theContainer: IwbContainer);
   var
     i           : Integer;
     Element     : IwbElement;
     aContainer  : IwbContainer;
+    aScript     : String;
+    aProperty   : String;
   begin
-    if Assigned(theContainer) and (Pos('Property #', theContainer.Name)<>1) then begin
+    aScript := 'Script #';
+    if X > -1 then aScript := aScript+IntToStr(X);
+    aProperty := 'Property #';
+    if Y > -1 then aProperty := aProperty+IntToStr(Y);
+
+    if Assigned(theContainer) and (Pos(aProperty, theContainer.Name)<>1) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
-          if (Pos('Property #', aContainer.Name) = 1) then begin
+          if (Pos(aProperty, aContainer.Name) = 1) and (Pos(aScript, theContainer.Path)>0) then begin
             Container := aContainer;
             break;
           end else
@@ -2247,6 +2305,16 @@ begin
     Container := aElement.Container
   else
     Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+
+  X := FindX;
+  Y := FindY;
+  if (X<0) or (Y<0) then begin
+    { we should do something ! }
+    Result := 0;
+    Exit;
+  end;
+
   FindProperty(Container);
   if not Assigned(Container) then Exit;
 
@@ -2276,12 +2344,13 @@ var
   Container     : IwbContainer;
 
 begin
+  Result := 0;
   if aElement.ElementType = etValue then
     Container := aElement.Container
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  if Container.Name = 'Fragments' then
+  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
@@ -5064,13 +5133,13 @@ begin
       wbInteger('Unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbByteArray('Unknown', 0, cpIgnore),
-        {01} wbScriptObject, {>>> should be wbScriptObject, but not shown at all??? <<<}
-        {02} wbLenString('String', 2), {>>> bugged? <<<}
+        {01} wbScriptObject,
+        {02} wbLenString('String', 2),
         {03} wbInteger('Int32', itU32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
         {11} wbArray('Array of Object', wbScriptObject, -1),
-        {12} wbArray('Array of String', wbLenString('Element', 2), -1), // {>>> probably won't work too <<<}
+        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
         {13} wbArray('Array of Int32', wbInteger('Element', itU32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
@@ -5090,19 +5159,22 @@ begin
       wbLenString('scriptName', 2),
       wbLenString('fragmentName', 2)
     ]), [], wbScriptFragmentsCounter),
-    wbUnknown
+    wbArray('Aliases', wbStruct('alias', [
+      wbInteger('Unknown', itS16),
+      wbInteger('AliasID', itS16),
+      wbInteger('Unknown', itS32),
+      wbInteger('Unknown', itS16),
+      wbInteger('Alias Object Format', itS16),
+	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
+	  ]), -2)
+
   ]);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
-    {>>>
-    For some reason when property type is String
-    and VMAD has fragments section(?), wbScriptEntry gets bugged on that property
-    Example: Skyrim.esm Quest [00091F1A] <dunLabyrinthian> "Labyrinthian"
-    <<<}
-    wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount and Script1 when -2
+    wbArrayS('Scripts', wbScriptEntry, -2),
     wbScriptFragments
   ]);
 

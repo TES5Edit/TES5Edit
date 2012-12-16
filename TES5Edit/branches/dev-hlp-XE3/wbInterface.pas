@@ -6213,9 +6213,32 @@ function TwbArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElem
 var
   Prefix  : Integer;
   Count   : Integer;
+  Index     : Integer; // Used instead of count for easier debugging output.
   Size    : Integer;
   BasePtr : Pointer;
   EndPtr  : Pointer;
+  Container : IwbContainer;
+  Element   : IwbElement;
+
+  procedure FindOurself(theContainer: IwbContainer; aName: String);
+  var
+    i           : Integer;
+    Element     : IwbElement;
+    aContainer  : IwbContainer;
+  begin
+    if Assigned(theContainer) and (Pos(aName, theContainer.Name)<>1) then begin
+      for i := 0 to Pred(theContainer.ElementCount) do begin
+        Element := theContainer.Elements[i];
+        if Supports(Element, IwbContainer, aContainer) then
+          if (Pos(aName, aContainer.Name) = 1) then begin
+            Container := aContainer;
+            break;
+          end else
+            FindOurself(aContainer, aName);
+      end;
+    end;
+  end;
+
 begin
   Result := 0;
   Prefix := 0;
@@ -6254,30 +6277,47 @@ begin
     if not Assigned(aBasePtr) and (Count < 1) then
       Count := 1;
 
-    if (Count < 1) and not Assigned(arCountCallback) then
+    if (Count < 1) and not Assigned(arCountCallback) then begin
       Result := High(Integer);
+      Exit;
+    end;
   end;
 
   if Count > 0 then
     if arElement.IsVariableSize then begin
 
+      // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
+      // First advance to ourselves :
+      if aElement.ElementType = etValue then
+        Container := aElement.Container
+      else
+        Container := aElement as IwbContainer;
+      if Pos('\ '+ noName, Container.Path) = 0 then
+        FindOurself(Container, noName);
+      if not Assigned(Container) then begin
+        Result := High(Integer);
+        Exit;
+      end;
+
       EndPtr := aBasePtr;
-      while (Count > 0) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
+      Index := 0;
+      while (Count > Index) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
         BasePtr := EndPtr;
-        Size := arElement.Size[BasePtr, aEndPtr, aElement];
+        Element := Container.Elements[Index];
+        Size := arElement.Size[BasePtr, aEndPtr, Element];
         if Size = High(Integer) then begin
           Result := High(Integer);
           Exit;
         end;
         Inc(Cardinal(EndPtr), Size);
         Inc(Result, Size);
-        Dec(Count);
+        Inc(Index);
       end;
 
     end else begin
-      Result := arElement.Size[aBasePtr, aEndPtr, aElement];
-      if Result < High(Integer) then
-        Result := (Count * Result) + Prefix;
+      Size := arElement.Size[aBasePtr, aEndPtr, aElement];
+      if Size < High(Integer) then
+        Result := (Count * Size) + Prefix;
     end;
 end;
 
@@ -6400,8 +6440,8 @@ begin
     if Size = High(Integer) then begin
       Result := High(Integer);
       Exit;
-    end else
-      Inc(PByte(aBasePtr), Size);
+    end;
+    Inc(Cardinal(aBasePtr), Size);
     Inc(Result, Size);
   end;
 end;
@@ -6412,8 +6452,10 @@ var
 begin
   Result := False;
   for i := Low(stMembers) to High(stMembers) do
-    if stMembers[i].IsVariableSize then
+    if stMembers[i].IsVariableSize then begin
       Result := True;
+      Break;
+    end;
 end;
 
 procedure TwbStructDef.Report(const aParents: TwbDefPath);
