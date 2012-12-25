@@ -71,7 +71,7 @@ begin
   end else begin
     Supports(aContainer, IwbContainerElementRef, ContainerRef);
     for i := 0 to Pred(aContainer.ElementCount) do
-      WriteElement(aContainer.Elements[i], aIndent);
+      WriteElement(aContainer.Elements[i].Decide, aIndent);
   end;
 end;
 

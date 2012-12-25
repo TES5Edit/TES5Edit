@@ -281,6 +281,8 @@ type
     procedure AfterConstruction; override;
     class function NewInstance: TObject; override;
     procedure FreeInstance; override;
+
+    function Decide: IwbElement; virtual;
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -8261,11 +8263,6 @@ begin
         CheckCount;
         CheckTerminator;
       end;
-      dtStruct: begin
-
-      Result := inherited Assign(aIndex, aElement, aOnlySK);
-
-      end;
     else
       Result := inherited Assign(aIndex, aElement, aOnlySK);
     end;
@@ -8409,6 +8406,43 @@ begin
       else
         break;
     end;
+  finally
+    if CanDecide then
+      Internal.EndDecide;
+  end;
+end;
+
+function ResolveElement(const aValueDef: IwbValueDef; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
+var
+  Internal  : IwbElementInternal;
+  ValueDef  : IwbValueDef;
+  UnionDef  : IwbUnionDef;
+  CanDecide : Boolean;
+begin
+  ValueDef := aValueDef;
+  Result := aElement;
+
+  Supports(aElement, IwbElementInternal, Internal);
+  CanDecide := False;
+  try
+    while Supports(ValueDef, IwbUnionDef, UnionDef) do begin
+      CanDecide := CanDecide or (Assigned(Internal) and Internal.BeginDecide);
+      if CanDecide then
+        Valuedef := UnionDef.Decide(aBasePtr,aEndPtr,aElement)
+      else
+        break;
+    end;
+    if ValueDef <> aValueDef then
+      case ValueDef.DefType of
+        dtArray: begin
+          Result := TwbArray.Create(TwbContainer(aElement).GetContainer, aBasePtr, aEndPtr, ValueDef, '('+aElement.Name+')');
+          TwbElement(Result).SetContainer(TwbContainer(aElement).GetContainer);
+        end;
+        dtStruct: begin
+          Result := TwbStruct.Create(nil, aBasePtr, aEndPtr, ValueDef, '('+aElement.Name+')');
+          TwbElement(Result).SetContainer(TwbContainer(aElement).GetContainer);
+        end;
+      end;
   finally
     if CanDecide then
       Internal.EndDecide;
@@ -10557,6 +10591,18 @@ begin
   Result := False;
 end;
 
+function TwbElement.Decide: IwbElement;
+var
+  SelfRef  : TwbValueBase;
+begin
+  Result := Self;
+  if GetElementType = etValue then begin
+    SelfRef := Self as TwbValueBase;
+    if Supports(SelfRef.vbValueDef, IwbUnionDef)  then
+      Result := ResolveElement(SelfRef.vbValueDef, SelfRef.dcBasePtr, SelfRef.dcEndPtr, SelfRef);
+  end;
+end;
+
 function CompareLoadOrderSL(List: TStringList; Index1, Index2: Integer): Integer;
 begin
   if Index1 = Index2 then begin
@@ -12421,7 +12467,7 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
-    if Assigned(aBasePtr) and (i >= OptionalFromElement) and ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, nil] > Cardinal(aEndPtr)) ) then begin
+    if Assigned(aBasePtr) and (i >= OptionalFromElement) and ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, aContainer] > Cardinal(aEndPtr)) ) then begin
       aEndPtr := aBasePtr;
       ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
       if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then

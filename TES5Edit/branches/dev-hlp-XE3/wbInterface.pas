@@ -242,7 +242,7 @@ type
     etSubRecord,
     etSubRecordStruct,
     etSubRecordArray,
-    atSubRecordUnion,
+    etSubRecordUnion,
     etArray,
     etStruct,
     etValue,
@@ -361,6 +361,8 @@ type
     procedure Tag;
     procedure ResetTags;
     function IsTagged: Boolean;
+
+    function Decide: IwbElement;
 
     property IsHidden: Boolean
       read GetIsHidden;
@@ -6211,12 +6213,12 @@ end;
 
 function TwbArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Prefix  : Integer;
-  Count   : Integer;
+  Prefix    : Integer;
+  Count     : Integer;
   Index     : Integer; // Used instead of count for easier debugging output.
-  Size    : Integer;
-  BasePtr : Pointer;
-  EndPtr  : Pointer;
+  Size      : Integer;
+  BasePtr   : Pointer;
+  EndPtr    : Pointer;
   Container : IwbContainer;
   Element   : IwbElement;
 
@@ -6228,7 +6230,7 @@ var
   begin
     if Assigned(theContainer) and (Pos(aName, theContainer.Name)<>1) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
-        Element := theContainer.Elements[i];
+        Element := theContainer.Elements[i].Decide;
         if Supports(Element, IwbContainer, aContainer) then
           if (Pos(aName, aContainer.Name) = 1) then begin
             Container := aContainer;
@@ -6242,6 +6244,19 @@ var
 begin
   Result := 0;
   Prefix := 0;
+
+  // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
+  // First advance to ourselves :
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if Pos('\ '+ noName, Container.Path) = 0 then
+    FindOurself(Container, noName);
+  if not Assigned(Container) then begin
+    Result := High(Integer);
+    Exit;
+  end;
 
   Count := arCount;
   if Count < 0 then begin
@@ -6272,7 +6287,7 @@ begin
       Count := 0;
   end else begin
     if (Count < 1) and Assigned(arCountCallback) then
-      Count := arCountCallback(aBasePtr, aEndPtr, aElement);
+      Count := arCountCallback(aBasePtr, aEndPtr, Container);
 
     if not Assigned(aBasePtr) and (Count < 1) then
       Count := 1;
@@ -6285,19 +6300,6 @@ begin
 
   if Count > 0 then
     if arElement.IsVariableSize then begin
-
-      // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
-      // First advance to ourselves :
-      if aElement.ElementType = etValue then
-        Container := aElement.Container
-      else
-        Container := aElement as IwbContainer;
-      if Pos('\ '+ noName, Container.Path) = 0 then
-        FindOurself(Container, noName);
-      if not Assigned(Container) then begin
-        Result := High(Integer);
-        Exit;
-      end;
 
       EndPtr := aBasePtr;
       Index := 0;

@@ -19,7 +19,9 @@ interface
 uses
   Windows,
   SysUtils,
-  Direct3D9;
+  DXtypes,
+  Direct3D9,
+  Colors;
 
 type
   TSubsetInfo = record

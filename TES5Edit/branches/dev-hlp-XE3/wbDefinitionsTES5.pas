@@ -739,6 +739,10 @@ var
   wbScriptObject: IwbUnionDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
+  wbScriptFragmentsInfo: IwbStructDef;
+  wbScriptFragmentsPack: IwbStructDef;
+  wbScriptFragmentsPerk: IwbStructDef;
+  wbScriptFragmentsScen: IwbStructDef;
   wbEntryPointsEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
   wbPLDT: IwbSubRecordDef;
@@ -2332,14 +2336,8 @@ begin
   end;
 end;
 
-{>>> For VMAD, Unused <<<}
-function wbScriptFragmentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := 0;
-end;
-
 {>>> For VMAD <<<}
-function wbScriptFragmentsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
 
@@ -2350,11 +2348,65 @@ begin
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
+  while Assigned(Container) and (Container.ElementType <> etMainRecord) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  if Pos('INFO', Container.Name) = 1 then
+    Result := 1
+  else if Pos('PACK', Container.Name) = 1 then
+    Result := 2
+  else if Pos('PERK', Container.Name) = 1 then
+    Result := 3
+  else if Pos('QUST', Container.Name) = 1 then
+    Result := 4
+  else if Pos('SCEN', Container.Name) = 1 then
+    Result := 1;
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsCounterQuest(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+
+begin
+  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Pos('Script Fragments Quest', Container.Name) <> 1) do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
   Result := Integer(Container.ElementNativeValues['fragmentCount']);
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsCounterPack(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  F             : Integer;
+  Count         : Integer;
+  i             : Integer;
+begin
+  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Pos('Script Fragments Pack', Container.Name) <> 1) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  F := Container.ElementByName['Package Fragments Flags'].NativeValue;
+  for i := 0 to 7 do begin
+    if (F and 1) = 1 then
+      Inc(Result);
+    F := F shr 1;
+  end;
 end;
 
 function wbBOOKTeachesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5144,21 +5196,56 @@ begin
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
-    ]), -2) // comment propertyCount when -2
+    ]), -2)
   ]);
 
-  wbScriptFragments := wbStruct('Script Fragments', [
-    wbInteger('SF Unknown', itS8),
+  wbScriptFragmentsPack := wbStruct('Script Fragments Package', [
+    wbInteger('Package Fragments Flags', itU8, wbFlags([
+      {1} 'OnBegin',
+      {2} 'OnEnd',
+      {4} 'OnChange'
+    ])),
+			//      {0} 'none',
+			//      {1} 'OnBegin',
+			//      {2} 'OnEnd',
+			//      {3} 'OnBegin OnEnd ordered Begin then End in the following Package Fragments array',
+			//      {4} 'OnChange',
+			//      {5} 'OnBegin OnChange ordered Begin then Change',
+			//      {6} 'OnEnd OnChange ordered End then Change',
+			//      {7} 'OnBegin OnEnd OnChange ordered Begin then End then Change',
+    wbLenString('fileName', 2),
+    wbArray('Package Fragments',
+      wbStruct('Package Fragment', [
+          wbInteger('Unknown', itS8),
+          wbLenString('scriptName', 2),
+          wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsCounterPack)
+  ]);
+
+  wbScriptFragmentsPerk := wbStruct('Script Fragments Perk', [
+    wbLenString('fileName', 2),
+    wbArray('Perk Fragments',
+      wbStruct('Perk Fragment', [
+          wbInteger('Fragment Index', itU16),
+          wbInteger('Unknown', itS16),
+          wbInteger('Unknown', itS8),
+          wbLenString('scriptName', 2),
+          wbLenString('fragmentName', 2)
+      ]), -2)
+  ]);
+
+  wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
-    wbArray('Fragments', wbStruct('fragment', [
-      wbInteger('Quest Stage Index', itU16),
-      wbInteger('Unknown', itS16),
-      wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS8),
-      wbLenString('scriptName', 2),
-      wbLenString('fragmentName', 2)
-    ]), [], wbScriptFragmentsCounter),
+    wbArray('Quest Fragments',
+      wbStruct('Quest Fragment', [
+          wbInteger('Quest Stage Index', itU16),
+          wbInteger('Unknown', itS16),
+          wbInteger('Unknown', itS32),
+          wbInteger('Unknown', itS8),
+          wbLenString('scriptName', 2),
+          wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsCounterQuest),
     wbArray('Aliases', wbStruct('alias', [
       wbInteger('Unknown', itS16),
       wbInteger('AliasID', itS16),
@@ -5167,8 +5254,17 @@ begin
       wbInteger('Alias Object Format', itS16),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
-
   ]);
+  wbScriptFragments := wbStruct('Script Fragments', [
+    wbInteger('Unknown', itS8),
+    wbUnion('Fragments', wbScriptFragmentDecider, [
+      {00} wbByteArray('Unknown 00'),
+      {01} wbByteArray('Undecoded 01'),
+      {02} wbScriptFragmentsPack,  // It is possible to have a fragment script without fragments! Dump will output error at the moment (see Skyrim.esm 1.8)
+      {03} wbScriptFragmentsPerk,
+      {04} wbScriptFragmentsQuest
+    ])
+  ], cpNormal, false, nil, -1);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
