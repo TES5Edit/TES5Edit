@@ -950,9 +950,9 @@ function TDateEditLink.GetEditText: WideString;
 var
   Sep: Char;
 begin
-  Sep := SysUtils.DateSeparator;
+  Sep := FormatSettings.DateSeparator;
   try
-    if FDateSeparator <> #0 then SysUtils.DateSeparator := FDateSeparator;
+    if FDateSeparator <> #0 then FormatSettings.DateSeparator := FDateSeparator;
       if FDateFormat <> '' then
         Result := FormatDateTime(FDateFormat, TDateTimePicker(EditControl).DateTime)
       else
@@ -961,7 +961,7 @@ begin
           dtkTime: Result := TimeToStr(TDateTimePicker(EditControl).DateTime);
         end;
   finally
-    SysUtils.DateSeparator := Sep;
+    FormatSettings.DateSeparator := Sep;
   end;
 end;
 
@@ -972,18 +972,18 @@ var
 begin
   if Value <> '' then
   try
-    DF := ShortDateFormat;
-    Sep := SysUtils.DateSeparator;
+    DF := FormatSettings.ShortDateFormat;
+    Sep := FormatSettings.DateSeparator;
     try
-      if FDateFormat <> '' then ShortDateFormat := FDateFormat;
-      if FDateSeparator <> #0 then SysUtils.DateSeparator := FDateSeparator;
+      if FDateFormat <> '' then FormatSettings.ShortDateFormat := FDateFormat;
+      if FDateSeparator <> #0 then FormatSettings.DateSeparator := FDateSeparator;
       case FKind of
         dtkDate: TDateTimePicker(EditControl).Date := StrToDate(Value);
         dtkTime: TDateTimePicker(EditControl).Time := StrToTime(Value);
       end;
     finally
-      ShortDateFormat := DF;
-      SysUtils.DateSeparator := Sep;
+      FormatSettings.ShortDateFormat := DF;
+      FormatSettings.DateSeparator := Sep;
     end;
   except
   end;

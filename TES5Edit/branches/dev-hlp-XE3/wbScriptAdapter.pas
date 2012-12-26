@@ -965,7 +965,7 @@ begin
     AddConst(cUnit, 'etSubRecord', ord(etSubRecord));
     AddConst(cUnit, 'etSubRecordStruct', ord(etSubRecordStruct));
     AddConst(cUnit, 'etSubRecordArray', ord(etSubRecordArray));
-    AddConst(cUnit, 'etSubRecordUnion', ord(atSubRecordUnion));
+    AddConst(cUnit, 'etSubRecordUnion', ord(etSubRecordUnion));
     AddConst(cUnit, 'etArray', ord(etArray));
     AddConst(cUnit, 'etStruct', ord(etStruct));
     AddConst(cUnit, 'etValue', ord(etValue));

@@ -2225,83 +2225,6 @@ end;
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
-  X             : Integer;
-  Y             : Integer;
-
-  // We are going to assume that this will only be called from the Scripts array of VMAD
-  // ===================================================================================
-
-  // The element we need is the one whose path is
-  //   QUST \ VMAD - Virtual Machine Adapter \ Scripts \ Script #X \ Properties \ Property #Y
-  // When aElement points to
-  //      QUST \ VMAD - Virtual Machine Adapter \ Scripts \ Script #X \ Properties \ Property #Y
-  //   or QUST \ VMAD - Virtual Machine Adapter \ Scripts \ Script #0 \ Properties \ Property #0 \ Value
-  //   we are ok, otherwise we are only ok when X = 0 and Y = 0 (case where we are starting from QUST \ VMAD - Virtual Machine Adapter \ Scripts
-  //
-  // So, can we find the proper value for X and Y using aBasePtr ?
-  //
-  // Might be overkill now that TwbArrayDef.GetSize is changed to provide the "proper" aElement.
-  //
-
-  function FindY: Integer;
-  const
-    aLabel = 'Property #';
-  var
-    S: String;
-    i: Integer;
-  begin
-    Result := -1;
-    if Assigned(Container) and (Pos(aLabel, Container.Path)>1) then begin
-      S := Copy(Container.Path, Pos(aLabel, Container.Path)+Length(aLabel));
-      i := 1;
-      While (Length(S)>=i) and (S[i] in ['0'..'9']) do Inc(i);
-      if i<Length(S) then Delete(S, i, Length(S));
-      Result := StrToInt(S);
-    end;
-  end;
-
-  function FindX: Integer;
-  const
-    aLabel = 'Script #';
-  var
-    S: String;
-    i: Integer;
-  begin
-    Result := -1;
-    if Assigned(Container) and (Pos(aLabel, Container.Path)>1) then begin
-      S := Copy(Container.Path, Pos(aLabel, Container.Path)+Length(aLabel));
-      i := 1;
-      While (Length(S)>=i) and (S[i] in ['0'..'9']) do Inc(i);
-      if i<Length(S) then Delete(S, i, Length(S));
-      Result := StrToInt(S);
-    end;
-  end;
-
-  procedure FindProperty(theContainer: IwbContainer);
-  var
-    i           : Integer;
-    Element     : IwbElement;
-    aContainer  : IwbContainer;
-    aScript     : String;
-    aProperty   : String;
-  begin
-    aScript := 'Script #';
-    if X > -1 then aScript := aScript+IntToStr(X);
-    aProperty := 'Property #';
-    if Y > -1 then aProperty := aProperty+IntToStr(Y);
-
-    if Assigned(theContainer) and (Pos(aProperty, theContainer.Name)<>1) then begin
-      for i := 0 to Pred(theContainer.ElementCount) do begin
-        Element := theContainer.Elements[i];
-        if Supports(Element, IwbContainer, aContainer) then
-          if (Pos(aProperty, aContainer.Name) = 1) and (Pos(aScript, theContainer.Path)>0) then begin
-            Container := aContainer;
-            break;
-          end else
-            FindProperty(aContainer);
-      end;
-    end;
-  end;
 
 begin
   Result := 0;
@@ -2311,16 +2234,7 @@ begin
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
 
-  X := FindX;
-  Y := FindY;
-  if (X<0) or (Y<0) then begin
-    { we should do something ! }
-    Result := 0;
-    Exit;
-  end;
 
-  FindProperty(Container);
-  if not Assigned(Container) then Exit;
 
   case Integer(Container.ElementNativeValues['Type']) of
      1: Result := 1;
@@ -2340,7 +2254,7 @@ end;
 function wbScriptFragmentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
-
+  MainRecord : IwbMainRecord;
 begin
   Result := 0;
   if aElement.ElementType = etValue then
@@ -2352,15 +2266,16 @@ begin
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  if Pos('INFO', Container.Name) = 1 then
+  Supports(Container, IwbMainRecord, MainRecord);
+  if MainRecord.Signature = INFO then
     Result := 1
-  else if Pos('PACK', Container.Name) = 1 then
+  else if MainRecord.Signature = PACK then
     Result := 2
-  else if Pos('PERK', Container.Name) = 1 then
+  else if MainRecord.Signature = PERK then
     Result := 3
-  else if Pos('QUST', Container.Name) = 1 then
+  else if MainRecord.Signature = QUST then
     Result := 4
-  else if Pos('SCEN', Container.Name) = 1 then
+  else if MainRecord.Signature = SCEN then
     Result := 1;
 end;
 

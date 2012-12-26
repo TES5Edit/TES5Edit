@@ -18,7 +18,6 @@
 program TES5Edit;
 
 uses
-  madExcept,
   wbInit,
   Forms,
   Dialogs,
@@ -28,6 +27,7 @@ uses
   wbDefinitionsTES4,
   wbDefinitionsFO3,
   wbDefinitionsFNV,
+  wbDefinitionsTES5,
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
   FileSelectFrm in 'FileSelectFrm.pas' {frmFileSelect},

@@ -29,7 +29,7 @@ uses
   RenderUnit, Direct3D9, D3DX9, DXUT,
 {$ENDIF}
   AppEvnts, dxGDIPlusClasses,
-  wbLocalization, JvComponentBase, JvInterpreter;
+  wbLocalization, JvComponentBase, JvInterpreter, System.Actions;
 
 const
   DefaultInterval             = 1 / 24 / 6;
