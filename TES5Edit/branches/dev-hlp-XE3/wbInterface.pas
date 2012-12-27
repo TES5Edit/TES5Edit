@@ -247,7 +247,8 @@ type
     etStruct,
     etValue,
     etFlag,
-    etStringListTerminator
+    etStringListTerminator,
+    etUnion
   );
 
   IwbContainer = interface;
@@ -361,8 +362,6 @@ type
     procedure Tag;
     procedure ResetTags;
     function IsTagged: Boolean;
-
-    function Decide: IwbElement;
 
     property IsHidden: Boolean
       read GetIsHidden;
@@ -2124,6 +2123,10 @@ threadvar
 
 var
   wbActorValueEnum: IwbEnumDef;
+
+function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
+function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContainerElementRef;
+
 
 implementation
 
@@ -6230,7 +6233,7 @@ var
   begin
     if Assigned(theContainer) and (Pos(aName, theContainer.Name)<>1) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
-        Element := theContainer.Elements[i].Decide;
+        Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
           if (Pos(aName, aContainer.Name) = 1) then begin
             Container := aContainer;
@@ -9634,29 +9637,8 @@ begin
 end;
 
 function TwbUnionDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
-var
-  i: Integer;
-  tempValueDef: IwbValueDef;
-  tempStruct: IwbStructDef;
-//  tempArray: IwbArrayDef;
 begin
-  tempValueDef := Decide(aBasePtr, aEndPtr, aElement);
-  Result := tempValueDef.ToString(aBasePtr, aEndPtr, aElement);
-  if (Result = '') and Supports(tempValueDef, IwbStructDef, tempStruct) then
-    for i := 0 to Pred(tempStruct.MemberCount) do
-      begin
-        Cardinal(aEndPtr) := Cardinal(aBasePtr) + tempStruct.Members[i].Size[aBasePtr, aEndPtr, aElement];
-        if not wbHideUnused or (tempStruct.Members[i].Name <> 'Unused') then
-          Result := Result + '< ' + tempStruct.Members[i].Name + ' ' + tempStruct.Members[i].ToString(aBasePtr, aEndPtr, aElement) + ' > ';
-        aBasePtr := aEndPtr;
-      end;
-//  if (Result = '') and Supports(tempValueDef, IwbArrayDef, tempArray) then
-//    for i := 0 to tempArray.ElementCount do
-//      begin
-//        Cardinal(aEndPtr) := Cardinal(aBasePtr) + tempStruct.Members[i].Size[aBasePtr, aEndPtr, aElement];
-//        Result := Result + tempArray[i].ToString(aBasePtr, aEndPtr, aElement);      // Requires coding Array[i]
-//        aBasePtr := aEndPtr;
-//      end;
+  Result := Decide(aBasePtr, aEndPtr, aElement).ToString(aBasePtr, aEndPtr, aElement);
   Used(aElement, Result);
 end;
 
@@ -10360,6 +10342,26 @@ begin
       PCardinal(@Result[1])^ := MgefCode;
     end;
   end;
+end;
+
+function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
+begin
+  if aElement.ElementType = etUnion then begin
+    Result := aElement.Container;
+    while Result.ElementType = etUnion do
+      Result := Result.Container
+  end else
+    Result := aElement as IwbContainer;
+end;
+
+function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContainerElementRef;
+begin
+  if (aElement.ElementType = etUnion) or (aElement.ElementType = etValue) then begin
+    Supports(aElement.Container, IwbContainerElementRef, Result);
+    while Result.ElementType = etUnion do
+      Supports(Result.Container, IwbContainerElementRef, Result);
+  end else
+    Supports(aElement, IwbContainerElementRef, Result);
 end;
 
 initialization

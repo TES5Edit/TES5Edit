@@ -667,16 +667,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
 
@@ -784,10 +777,7 @@ begin
   if not Assigned(aElement) then
     raise Exception.Create('aElement not specified');
 
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
+  Container := GetContainerRefFromUnionOrValue(aElement);
 
   if not Assigned(Container) then
     raise Exception.Create('Container not assigned');
@@ -852,16 +842,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
 
@@ -948,16 +931,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Quest'];
 
@@ -1044,16 +1020,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
 
@@ -1754,13 +1723,9 @@ var
 
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   ArchType := Container.ElementNativeValues['Archtype'];
   if VarIsEmpty(ArchType) then begin
@@ -1802,16 +1767,9 @@ var
   Container     : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   if Integer(Container.ElementNativeValues['Run On']) = 2 then
     Result := 1;
@@ -1822,13 +1780,9 @@ var
   Container     : IwbContainer;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   case Integer(Container.ElementNativeValues['Type']) of
     $00: Result :=1;
@@ -1843,13 +1797,10 @@ var
   DataContainer : IwbDataContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
   if Supports(Container.Container, IwbDataContainer, DataContainer) then begin
     if DataContainer.DateSize in [132, 148] then
       Result := 1;
@@ -1863,10 +1814,9 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   LinksTo := Container.ElementByName['Owner'].LinksTo;
 
@@ -1882,14 +1832,13 @@ var
   Container: IwbContainer;
   i: Int64;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   i := Container.ElementByName['Flags'].NativeValue;
-  if i and $00000080 = 0 then
-    Result := 0
-  else
+  if i and $00000080 <> 0 then
     Result := 1;
 end;
 
@@ -2319,14 +2268,12 @@ function wbCTDACompValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElem
 var
   Container: IwbContainer;
 begin
-//  Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if Integer(Container.ElementByName['Type'].NativeValue) and $04 = 0 then
-    Result := 0
-  else
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
 end;
 
@@ -2336,10 +2283,10 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType1));
@@ -2349,10 +2296,11 @@ function wbCTDAParam2VATSValueParam(aBasePtr: Pointer; aEndPtr: Pointer; const a
 var
   Container : IwbContainer;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Parameter #1'].NativeValue;
 end;
 
@@ -2362,10 +2310,10 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType2));
@@ -3950,10 +3898,11 @@ function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEleme
 var
   Container: IwbContainer;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Type'].NativeValue;
 end;
 
@@ -3963,10 +3912,10 @@ var
   DataContainer : IwbDataContainer;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   if Supports(Container, IwbDataContainer, DataContainer) then
     if DataContainer.DateSize = 8 then
       Result := 1;
@@ -3978,13 +3927,10 @@ var
   DataContainer : IwbDataContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
   if Supports(Container, IwbDataContainer, DataContainer) then
     if DataContainer.DateSize = 8 then
       Exit;

@@ -281,8 +281,6 @@ type
     procedure AfterConstruction; override;
     class function NewInstance: TObject; override;
     procedure FreeInstance; override;
-
-    function Decide: IwbElement; virtual;
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -1090,6 +1088,14 @@ type
   end;
 
   TwbStruct = class(TwbValueBase)
+  protected
+    procedure Init; override;
+    procedure Reset; override;
+
+    function GetElementType: TwbElementType; override;
+  end;
+
+  TwbUnion = class(TwbValueBase)
   protected
     procedure Init; override;
     procedure Reset; override;
@@ -8140,6 +8146,7 @@ begin
           end else case ArrayDef.Element.DefType of
             dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
             dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+            dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
           else
             Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
           end;
@@ -8159,6 +8166,9 @@ begin
         Assert(Assigned(Result));
 
         Result.Assign(Low(Integer), aElement, not aDeepCopy);
+      end;
+      dtUnion: begin
+        inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
       end;
     else
       inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
@@ -8252,6 +8262,7 @@ begin
                 case ArrayDef.Element.DefType of
                   dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                   dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                  dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                 else
                   Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                 end;
@@ -8412,42 +8423,6 @@ begin
   end;
 end;
 
-function ResolveElement(const aValueDef: IwbValueDef; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
-var
-  Internal  : IwbElementInternal;
-  ValueDef  : IwbValueDef;
-  UnionDef  : IwbUnionDef;
-  CanDecide : Boolean;
-begin
-  ValueDef := aValueDef;
-  Result := aElement;
-
-  Supports(aElement, IwbElementInternal, Internal);
-  CanDecide := False;
-  try
-    while Supports(ValueDef, IwbUnionDef, UnionDef) do begin
-      CanDecide := CanDecide or (Assigned(Internal) and Internal.BeginDecide);
-      if CanDecide then
-        Valuedef := UnionDef.Decide(aBasePtr,aEndPtr,aElement)
-      else
-        break;
-    end;
-    if ValueDef <> aValueDef then
-      case ValueDef.DefType of
-        dtArray: begin
-          Result := TwbArray.Create(TwbContainer(aElement).GetContainer, aBasePtr, aEndPtr, ValueDef, '('+aElement.Name+')');
-          TwbElement(Result).SetContainer(TwbContainer(aElement).GetContainer);
-        end;
-        dtStruct: begin
-          Result := TwbStruct.Create(nil, aBasePtr, aEndPtr, ValueDef, '('+aElement.Name+')');
-          TwbElement(Result).SetContainer(TwbContainer(aElement).GetContainer);
-        end;
-      end;
-  finally
-    if CanDecide then
-      Internal.EndDecide;
-  end;
-end;
 
 function TwbSubRecord.CompareExchangeFormID(aOldFormID, aNewFormID: Cardinal): Boolean;
 var
@@ -8487,6 +8462,7 @@ end;
 
 function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
+procedure UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
 function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Boolean; forward;
 
 destructor TwbSubRecord.Destroy;
@@ -8567,6 +8543,7 @@ begin
         srSorted := ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix);
       end;
       dtStruct: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
+      dtUnion:  UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
     else
       srIsFlags := ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self);
       srSorted := srIsFlags;
@@ -8577,6 +8554,7 @@ begin
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+      dtUnion: Element := TwbUnion.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
     end;
@@ -10591,17 +10569,6 @@ begin
   Result := False;
 end;
 
-function TwbElement.Decide: IwbElement;
-var
-  SelfRef  : TwbValueBase;
-begin
-  Result := Self;
-  if GetElementType = etValue then begin
-    SelfRef := Self as TwbValueBase;
-    if Supports(SelfRef.vbValueDef, IwbUnionDef)  then
-      Result := ResolveElement(SelfRef.vbValueDef, SelfRef.dcBasePtr, SelfRef.dcEndPtr, SelfRef);
-  end;
-end;
 
 function CompareLoadOrderSL(List: TStringList; Index1, Index2: Integer): Integer;
 begin
@@ -12143,6 +12110,7 @@ begin
       case ValueDef.DefType of
         dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
             Inc(Cardinal(aBasePtr));
@@ -12223,6 +12191,7 @@ begin
     case ArrayDef.Element.DefType of
       dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
       dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+      dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
     else
       Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
     end;
@@ -12295,6 +12264,7 @@ begin
         case ArrayDef.Element.DefType of
           dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
           dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+          dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
         else
           Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
         end;
@@ -12479,6 +12449,7 @@ begin
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
@@ -12514,6 +12485,64 @@ begin
 end;
 
 procedure TwbStruct.Reset;
+begin
+  ReleaseElements;
+  inherited;
+end;
+
+{ TwbUnion }
+
+procedure UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer);
+var
+  UnionDef   : IwbUnionDef;
+  ValueDef   : IwbValueDef;
+  Element    : IwbElementInternal;
+
+begin
+  UnionDef := aValueDef as IwbUnionDef;
+
+  ValueDef := UnionDef.Decide(aBasePtr, aEndPtr, aContainer);
+
+  case ValueDef.DefType of
+    dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+  else
+    Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer);
+  end;
+
+  if Assigned(Element) then
+    if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
+      with aContainer do begin
+        Assert((LastElement as IwbElementInternal) = Element);
+        RemoveElement(Pred(ElementCount));
+      end;
+    end else
+      Element.SetSortOrder(0);
+
+  UnionDef.AfterLoad(aContainer);
+end;
+
+function TwbUnion.GetElementType: TwbElementType;
+begin
+  Result := etUnion;
+end;
+
+procedure TwbUnion.Init;
+var
+  BasePtr: Pointer;
+begin
+  inherited;
+
+  if GetSkipped then
+    Exit;
+
+  BasePtr := GetDataBasePtr;
+  UnionDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
+end;
+
+procedure TwbUnion.Reset;
 begin
   ReleaseElements;
   inherited;

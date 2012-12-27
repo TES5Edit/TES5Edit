@@ -4758,7 +4758,7 @@ begin
                 //Assert(Cardinal(Container.ElementCount) <= aChildCount);
               end;
             end;
-          etSubRecordArray, etArray, etStruct, etSubRecord, etValue:
+          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion:
             if aChildCount < Cardinal(Container.ElementCount) then
               aChildCount := Container.ElementCount;
         end;
@@ -5011,7 +5011,7 @@ begin
         case Container.ElementType of
           etMainRecord, etSubRecordStruct:
             NodeData.Element := Container.ElementBySortOrder[aIndex];
-          etSubRecordArray, etArray, etStruct, etSubRecord, etValue:
+          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion:
             if aIndex < Cardinal(Container.ElementCount) then
               NodeData.Element := Container.Elements[aIndex];
         end;

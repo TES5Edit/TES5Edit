@@ -1090,16 +1090,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
 
@@ -1186,16 +1179,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Quest'];
 
@@ -1935,14 +1921,13 @@ var
   Container: IwbContainer;
   i: Int64;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   i := Container.ElementByName['Flags'].NativeValue;
-  if i and $00000080 = 0 then
-    Result := 0
-  else
+  if i and $00000080 <> 0 then
     Result := 1;
 end;
 
@@ -1951,10 +1936,10 @@ var
   Container: IwbContainer;
 begin
   Result := 2;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   if Container.DateSize = 64 then Result := 0
   else if Container.DateSize = 32 then Result := 1
 end;
@@ -1966,13 +1951,9 @@ var
 
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   ArchType := Container.ElementNativeValues['Archtype'];
   if VarIsEmpty(ArchType) then begin
@@ -2023,16 +2004,9 @@ var
   Container     : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   if Integer(Container.ElementNativeValues['Run On']) = 2 then
     Result := 1;
@@ -2118,10 +2092,9 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   LinksTo := Container.ElementByName['Owner'].LinksTo;
 
@@ -2228,12 +2201,9 @@ var
 
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
-
 
 
   case Integer(Container.ElementNativeValues['Type']) of
@@ -2251,16 +2221,14 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentExistsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container     : IwbContainer;
+  Container  : IwbContainer;
   MainRecord : IwbMainRecord;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
   while Assigned(Container) and (Container.ElementType <> etMainRecord) do
     Container := Container.Container;
@@ -2276,11 +2244,11 @@ begin
   else if MainRecord.Signature = QUST then
     Result := 4
   else if MainRecord.Signature = SCEN then
-    Result := 1;
+    Result := 5;
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsCounterQuest(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
 
@@ -2299,7 +2267,7 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsCounterPack(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsPackCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
   F             : Integer;
@@ -2329,13 +2297,13 @@ var
   Container: IwbContainer;
   i: Int64;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   i := Container.ElementByName['Flags'].NativeValue;
-  if i and $00000004 <> 0 then Result := 1
-    else Result := 0;
+  if i and $00000004 <> 0 then Result := 1;
 end;
 
 
@@ -2846,15 +2814,13 @@ function wbCTDACompValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElem
 var
   Container: IwbContainer;
 begin
-//  Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   // "use global" flag
-  if Integer(Container.ElementByName['Type'].NativeValue) and $04 = 0 then
-    Result := 0
-  else
+  if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
 end;
 
@@ -2866,10 +2832,9 @@ var
   ParamType: TCTDAFunctionParamType;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
 
@@ -2892,10 +2857,9 @@ var
   ParamType: TCTDAFunctionParamType;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
 
@@ -2910,14 +2874,15 @@ begin
   end;
 end;
 
-function wbCTDAParam2VATSValueParam(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCTDAParam2VATSValueParamDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container : IwbContainer;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Parameter #1'].NativeValue;
 end;
 
@@ -4546,10 +4511,11 @@ function wbTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbE
 var
   Container: IwbContainer;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Type'].NativeValue;
 end;
 
@@ -5081,12 +5047,12 @@ begin
   wbScriptObject := wbUnion('ObjectUnion', wbScriptObjFormatDecider, [
     wbStruct('Object', [
       wbInteger('Unused', itU16),
-      wbInteger('Alias ID', itU16),
+      wbInteger('Alias ID', itS16),
       wbFormID('FormID')
     ]),
     wbStruct('Object', [
       wbFormID('FormID'),
-      wbInteger('Alias ID', itU16),
+      wbInteger('Alias ID', itS16),
       wbInteger('Unused', itU16)
     ])
   ]);
@@ -5114,7 +5080,13 @@ begin
     ]), -2)
   ]);
 
+  wbScriptFragmentsInfo := wbStruct('Script Fragments Info', [
+    wbInteger('Unknown', itS8),
+    wbByteArray('Undecoded')
+  ]);
+
   wbScriptFragmentsPack := wbStruct('Script Fragments Package', [
+    wbInteger('Unknown', itS8),
     wbInteger('Package Fragments Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd',
@@ -5134,10 +5106,11 @@ begin
           wbInteger('Unknown', itS8),
           wbLenString('scriptName', 2),
           wbLenString('fragmentName', 2)
-      ]), [], wbScriptFragmentsCounterPack)
+      ]), [], wbScriptFragmentsPackCounter)
   ]);
 
   wbScriptFragmentsPerk := wbStruct('Script Fragments Perk', [
+    wbInteger('Unknown', itS8),
     wbLenString('fileName', 2),
     wbArray('Perk Fragments',
       wbStruct('Perk Fragment', [
@@ -5150,6 +5123,7 @@ begin
   ]);
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
+    wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
     wbArray('Quest Fragments',
@@ -5160,34 +5134,50 @@ begin
           wbInteger('Unknown', itS8),
           wbLenString('scriptName', 2),
           wbLenString('fragmentName', 2)
-      ]), [], wbScriptFragmentsCounterQuest),
+      ]), [], wbScriptFragmentsQuestCounter),
     wbArray('Aliases', wbStruct('alias', [
       wbInteger('Unknown', itS16),
-      wbInteger('AliasID', itS16),
+      wbInteger('Alias ID', itS16),
       wbInteger('Unknown', itS32),
       wbInteger('Unknown', itS16),
       wbInteger('Alias Object Format', itS16),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
   ]);
-  wbScriptFragments := wbStruct('Script Fragments', [
+
+  wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
     wbInteger('Unknown', itS8),
-    wbUnion('Fragments', wbScriptFragmentDecider, [
-      {00} wbByteArray('Unknown 00'),
-      {01} wbByteArray('Undecoded 01'),
-      {02} wbScriptFragmentsPack,  // It is possible to have a fragment script without fragments! Dump will output error at the moment (see Skyrim.esm 1.8)
-      {03} wbScriptFragmentsPerk,
-      {04} wbScriptFragmentsQuest
-    ])
-  ], cpNormal, false, nil, -1);
+    wbByteArray('Undecoded')
+  ]);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
-    wbArrayS('Scripts', wbScriptEntry, -2),
-    wbScriptFragments
-  ]);
+    wbUnion('', wbScriptFragmentExistsDecider, [
+      wbArrayS('Scripts', wbScriptEntry, -2),
+      wbStruct('Info VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsInfo
+      ]),
+      wbStruct('Pack VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsPack
+      ]),
+      wbStruct('Perk VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsPerk
+      ]),
+      wbStruct('Quest VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsQuest
+      ]),
+      wbStruct('Scene VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsScen
+      ])
+    ])
+  ], cpNormal, false, nil, -1);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -6339,7 +6329,7 @@ begin
         wbFormIDCkNoReach('Base Effect', [MGEF]),
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        wbUnion('VATS Value Param', wbCTDAParam2VATSValueParam, [
+        wbUnion('VATS Value Param', wbCTDAParam2VATSValueParamDecider, [
          { 0} wbFormIDCkNoReach('Weapon', [WEAP]),
          { 1} wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
          { 2} wbFormIDCkNoReach('Target', [NPC_]),

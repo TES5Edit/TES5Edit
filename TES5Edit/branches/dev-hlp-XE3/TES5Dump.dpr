@@ -71,7 +71,7 @@ begin
   end else begin
     Supports(aContainer, IwbContainerElementRef, ContainerRef);
     for i := 0 to Pred(aContainer.ElementCount) do
-      WriteElement(aContainer.Elements[i].Decide, aIndent);
+      WriteElement(aContainer.Elements[i], aIndent);
   end;
 end;
 
@@ -198,13 +198,7 @@ begin
   wbMoreInfoForUnknown := False;
 
   try
-    if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
-      wbGameMode := gmTES5;
-      wbAppName := 'TES5';
-      wbGameName := 'Skyrim';
-      wbLoadBSAs := true;
-      DefineTES5;
-    end else if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+    if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
@@ -216,12 +210,26 @@ begin
       wbGameName := 'Fallout3';
       wbLoadBSAs := false;
       DefineFO3;
+    end else if wbFindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+      WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
+      Exit;
+//      wbGameMode := gmTES3;
+//      wbAppName := 'TES3';
+//      wbGameName := 'Morrowind';
+//      wbLoadBSAs := false;
+//      DefineTES3;
     end else if wbFindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
       wbLoadBSAs := false;
       DefineTES4;
+    end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+      wbGameMode := gmTES5;
+      wbAppName := 'TES5';
+      wbGameName := 'Skyrim';
+      wbLoadBSAs := true;
+      DefineTES5;
     end else begin
       WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
       Exit;
@@ -337,6 +345,7 @@ begin
       wbContainerHandler := wbCreateContainerHandler;
 
     StartTime := Now;
+    ReportProgress('[] Application name : '+wbAppName+' - '+wbGamename);
 
     if wbLoadBSAs then begin
       DataPath := ExtractFilePath(s);
