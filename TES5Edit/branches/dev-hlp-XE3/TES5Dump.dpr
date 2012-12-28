@@ -213,11 +213,11 @@ begin
     end else if wbFindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
       Exit;
-//      wbGameMode := gmTES3;
-//      wbAppName := 'TES3';
-//      wbGameName := 'Morrowind';
-//      wbLoadBSAs := false;
-//      DefineTES3;
+      wbGameMode := gmTES3;
+      wbAppName := 'TES3';
+      wbGameName := 'Morrowind';
+      wbLoadBSAs := false;
+      DefineTES3;
     end else if wbFindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
@@ -356,7 +356,7 @@ begin
       for i := 0 to Masters.Count - 1 do begin
         if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
           s2 := ChangeFileExt(Masters[i], '');
-          if FindFirst(DataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
+          if FindFirst(DataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
             repeat
               ReportProgress('[' + F.Name + '] Loading Resources.');
               wbContainerHandler.AddBSA(DataPath + F.Name);

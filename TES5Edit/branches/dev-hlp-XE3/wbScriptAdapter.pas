@@ -971,6 +971,7 @@ begin
     AddConst(cUnit, 'etValue', ord(etValue));
     AddConst(cUnit, 'etFlag', ord(etFlag));
     AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
+    AddConst(cUnit, 'etUnion', ord(etStringListTerminator));
 
     { TwbDefType }
     AddConst(cUnit, 'dtRecord', ord(dtRecord));

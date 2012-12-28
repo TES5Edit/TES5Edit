@@ -2127,6 +2127,9 @@ var
 function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
 function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContainerElementRef;
 
+var
+  HeaderSignature : TwbSignature = 'TES4';
+  
 
 implementation
 
@@ -6250,15 +6253,17 @@ begin
 
   // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
   // First advance to ourselves :
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if Pos('\ '+ noName, Container.Path) = 0 then
-    FindOurself(Container, noName);
-  if not Assigned(Container) then begin
-    Result := High(Integer);
-    Exit;
+  if Assigned(aElement) then begin
+    if aElement.ElementType = etValue then
+      Container := aElement.Container
+    else
+      Container := aElement as IwbContainer;
+    if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
+        FindOurself(Container, noName);
+    if not Assigned(Container) then begin
+      Result := High(Integer);
+      Exit;
+    end;
   end;
 
   Count := arCount;
@@ -6448,7 +6453,8 @@ begin
       Result := High(Integer);
       Exit;
     end;
-    Inc(Cardinal(aBasePtr), Size);
+    if Assigned(aBasePtr) then
+      Inc(Cardinal(aBasePtr), Size);
     Inc(Result, Size);
   end;
 end;

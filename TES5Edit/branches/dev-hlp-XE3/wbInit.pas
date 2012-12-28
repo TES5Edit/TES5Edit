@@ -29,6 +29,7 @@ uses
   wbInterface,
   wbImplementation,
   wbDefinitionsTES4,
+  wbDefinitionsTES3,
   wbDefinitionsFO3,
   wbDefinitionsFNV,
   wbDefinitionsTES5;
@@ -95,6 +96,15 @@ begin
     wbVWDInTemporary := True;
     wbLoadBSAs := False;
     DefineFO3;
+  end else if FindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+    ShowMessage('TES3 - Morrowind is not supported yet.');
+    Exit;
+    wbGameMode := gmTES3;
+    wbAppName := 'TES3';
+    wbGameName := 'Morrowind';
+    wbLoadBSAs := False;
+    wbAllowInternalEdit := false;
+    DefineTES3;
   end else if FindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
