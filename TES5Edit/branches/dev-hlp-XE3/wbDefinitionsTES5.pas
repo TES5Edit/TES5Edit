@@ -5060,7 +5060,7 @@ begin
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('Name', 2),
     wbInteger('Unknown', itU8),
-    wbArrayS('Properties', wbStructSK([0], 'Property', [
+    wbArray('Properties', wbStructSK([0], 'Property', [
       wbLenString('Name', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
@@ -5141,7 +5141,7 @@ begin
       wbInteger('Unknown', itS32),
       wbInteger('Unknown', itS16),
       wbInteger('Alias Object Format', itS16),
-	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
+	    wbArray('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
   ]);
 
@@ -5155,25 +5155,25 @@ begin
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
     wbUnion('', wbScriptFragmentExistsDecider, [
-      wbArrayS('Scripts', wbScriptEntry, -2),
+      wbArray('Scripts', wbScriptEntry, -2),
       wbStruct('Info VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArray('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsInfo
       ]),
       wbStruct('Pack VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArray('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsPack
       ]),
       wbStruct('Perk VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArray('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsPerk
       ]),
       wbStruct('Quest VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArray('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsQuest
       ]),
       wbStruct('Scene VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArray('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsScen
       ])
     ])
