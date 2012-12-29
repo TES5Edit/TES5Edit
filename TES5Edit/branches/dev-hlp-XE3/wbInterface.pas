@@ -2007,6 +2007,7 @@ var
   wbIgnoreRecords    : TStringList;
   wbGroupOrder       : TStringList;
   wbLoadBSAs         : Boolean{} = True{};
+  wbLoadAllBSAs      : Boolean{} = False{};
   wbBuildRefs        : Boolean{} = True{};
   wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
@@ -6321,8 +6322,9 @@ begin
       while (Count > Index) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
         BasePtr := EndPtr;
         Element := Container.Elements[Index];
-        if not Assigned(Element) then
+        if not Assigned(Element) then begin
           Element := aElement; // If it is too soon, revert to previous way of doing things
+        end;
         Size := arElement.Size[BasePtr, aEndPtr, Element];
         if Size = High(Integer) then begin
           Result := High(Integer);

@@ -2267,6 +2267,72 @@ begin
 end;
 
 {>>> For VMAD <<<}
+function wbScriptFragmentsInfoCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  F             : Integer;
+  Count         : Integer;
+  i             : Integer;
+begin
+  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Pos('Script Fragments Info', Container.Name) <> 1) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  F := Container.ElementByName['Info Fragments Flags'].NativeValue;
+  for i := 0 to 2 do begin
+    if (F and 1) = 1 then
+      Inc(Result);
+    F := F shr 1;
+  end;
+  for i := 3 to 7 do begin
+    if (F and 1) = 1 then begin
+      Inc(Result);
+  WriteLN('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown info VMAD flag bit '+IntToStr(i));
+  end;
+    F := F shr 1;
+  end;
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsSceneCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  F             : Integer;
+  Count         : Integer;
+  i             : Integer;
+begin
+  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Pos('Script Fragments Scene', Container.Name) <> 1) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  F := Container.ElementByName['Scene Fragments Flags'].NativeValue;
+  for i := 0 to 2 do begin
+    if (F and 1) = 1 then
+      Inc(Result);
+    F := F shr 1;
+  end;
+  for i := 3 to 7 do begin
+    if (F and 1) = 1 then begin
+      Inc(Result);
+  WriteLN('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown scene VMAD flag bit '+IntToStr(i));
+  end;
+    F := F shr 1;
+  end;
+end;
+
+{>>> For VMAD <<<}
 function wbScriptFragmentsPackCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -5082,7 +5148,17 @@ begin
 
   wbScriptFragmentsInfo := wbStruct('Script Fragments Info', [
     wbInteger('Unknown', itS8),
-    wbByteArray('Undecoded')
+    wbInteger('Info Fragments Flags', itU8, wbFlags([
+      {1} 'OnBegin',
+      {2} 'OnEnd'
+    ])),
+    wbLenString('fileName', 2),
+    wbArray('Info Fragments',  // Do NOT sort, ordered OnDegin, OnEnd
+      wbStruct('Info Fragment', [
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsInfoCounter)
   ]);
 
   wbScriptFragmentsPack := wbStruct('Script Fragments Package', [
@@ -5095,9 +5171,9 @@ begin
     wbLenString('fileName', 2),
     wbArray('Package Fragments',  // Do NOT sort, ordered OnDegin, OnEnd, OnChange
       wbStruct('Package Fragment', [
-          wbInteger('Unknown', itS8),
-          wbLenString('scriptName', 2),
-          wbLenString('fragmentName', 2)
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsPackCounter)
   ]);
 
@@ -5106,11 +5182,11 @@ begin
     wbLenString('fileName', 2),
     wbArray('Perk Fragments',
       wbStruct('Perk Fragment', [
-          wbInteger('Fragment Index', itU16),
-          wbInteger('Unknown', itS16),
-          wbInteger('Unknown', itS8),
-          wbLenString('scriptName', 2),
-          wbLenString('fragmentName', 2)
+        wbInteger('Fragment Index', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
       ]), -2)
   ]);
 
@@ -5120,12 +5196,12 @@ begin
     wbLenString('fileName', 2),
     wbArray('Quest Fragments',
       wbStruct('Quest Fragment', [
-          wbInteger('Quest Stage Index', itU16),
-          wbInteger('Unknown', itS16),
-          wbInteger('Unknown', itS32),
-          wbInteger('Unknown', itS8),
-          wbLenString('scriptName', 2),
-          wbLenString('fragmentName', 2)
+        wbInteger('Quest Stage Index', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS32),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsQuestCounter),
     wbArray('Aliases', wbStruct('alias', [
       wbInteger('Unknown', itS16),
@@ -5139,7 +5215,30 @@ begin
 
   wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
     wbInteger('Unknown', itS8),
-    wbByteArray('Undecoded')
+    wbInteger('Scene Fragments Flags', itU8, wbFlags([
+      {1} 'OnBegin',
+      {2} 'OnEnd'
+    ])),
+    wbLenString('fileName', 2),
+    wbArray('Scene Fragments',  // Do NOT sort, ordered OnDegin, OnEnd
+      wbStruct('Scene Fragment', [
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsSceneCounter),
+    wbArray('Phase Fragments',
+      wbStruct('Phase Fragment', [
+        wbInteger('Phase Flag', itU8, wbFlags([
+          {1} 'OnStart',
+          {2} 'OnCompletion'
+        ])),
+        wbInteger('Phase Index', itU8),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS8),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), -2)
   ]);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}

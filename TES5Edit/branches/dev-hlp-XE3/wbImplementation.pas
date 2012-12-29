@@ -1553,7 +1553,7 @@ begin
     raise Exception.Create('Only top level group records can be added to files');
   Signature := TwbSignature(GroupRecord.GroupLabel);
   if not wbGroupOrder.Find(Signature, Dummy) then
-    raise Exception.Create(Signature + 'is not a valid group lable');
+    raise Exception.Create(Signature + 'is not a valid group label');
   Result := GetGroupBySignature(Signature);
   if not Assigned(Result) then begin
     Result := TwbGroupRecord.Create(Self, Signature);
@@ -3547,9 +3547,9 @@ begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit;
-  if not Assigned(cntElements) then
+  if not Assigned(cntElements) or (aIndex>=Length(cntElements)) then begin // Using the wrong contained array at the time
     Result := nil
-  else
+  end else
     Result := IInterface(cntElements[aIndex]) as IwbElement;
 end;
 

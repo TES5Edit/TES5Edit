@@ -266,31 +266,22 @@ begin
 
     if wbFindCmdLineParam('xr', s) then
       RecordToSkip.CommaText := s
-    else begin
-//    RecordToSkip.Add('LAND');
-//    RecordToSkip.Add('REGN');
-//    RecordToSkip.Add('PGRD');
-//      RecordToSkip.Add('SCEN');
-//      RecordToSkip.Add('PACK');
-//      RecordToSkip.Add('PERK');
-//      RecordToSkip.Add('NAVI');
-//      RecordToSkip.Add('CELL');
-//      RecordToSkip.Add('WRLD');
-//      RecordToSkip.Add('REFR');
+    else if wbFindCmdLineSwitch('xbloat') then begin
+      RecordToSkip.Add('REFR');
     end;
 
     if wbFindCmdLineParam('xg', s) then
       GroupToSkip.CommaText := s
-    else begin
-//    GroupToSkip.Add('LAND');
-//    GroupToSkip.Add('REGN');
-//    GroupToSkip.Add('PGRD');
-//      GroupToSkip.Add('SCEN');
-//      GroupToSkip.Add('PACK');
-//      GroupToSkip.Add('PERK');
-//      GroupToSkip.Add('NAVI');
-//      GroupToSkip.Add('CELL');
-//      GroupToSkip.Add('WRLD');
+    else if wbFindCmdLineSwitch('xbloat') then begin
+      GroupToSkip.Add('LAND');
+      GroupToSkip.Add('REGN');
+      GroupToSkip.Add('PGRD');
+      GroupToSkip.Add('SCEN');
+      GroupToSkip.Add('PACK');
+      GroupToSkip.Add('PERK');
+      GroupToSkip.Add('NAVI');
+      GroupToSkip.Add('CELL');
+      GroupToSkip.Add('WRLD');
     end;
 
     if wbFindCmdLineParam('l', s) and (wbGameMode = gmTES5) then
@@ -323,12 +314,12 @@ begin
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
       WriteLn(ErrOutput, '             ', 'decompressed and processed.');
-//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-//      WriteLn(ErrOutput, '             ', 'following default value applies:');
-//      WriteLn(ErrOutput, '             ', 'REFR');
+      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
+      WriteLn(ErrOutput, '-xbloat      ', 'the following value applies:');
+      WriteLn(ErrOutput, '             ', '  REFR');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-//      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
-//      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
+      WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
+      WriteLn(ErrOutput, '             ', '  LAND,REGN, PGRD, SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
@@ -345,7 +336,13 @@ begin
       wbContainerHandler := wbCreateContainerHandler;
 
     StartTime := Now;
-    ReportProgress('[] Application name : '+wbAppName+' - '+wbGamename);
+    ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename);
+    if Assigned(Dumpgroups) then
+      ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
+    if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
+      ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
+    if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
+      ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
 
     if wbLoadBSAs then begin
       DataPath := ExtractFilePath(s);
@@ -354,15 +351,37 @@ begin
       Masters.Add(ExtractFileName(s));
 
       for i := 0 to Masters.Count - 1 do begin
-        if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-          s2 := ChangeFileExt(Masters[i], '');
-          if FindFirst(DataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
-            repeat
-              ReportProgress('[' + F.Name + '] Loading Resources.');
-              wbContainerHandler.AddBSA(DataPath + F.Name);
-            until FindNext(F) <> 0;
-          finally
-            SysUtils.FindClose(F);
+        if wbLoadAllBSAs then begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+            s2 := ChangeFileExt(Masters[i], '');
+            if FindFirst(DataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
+              repeat
+                ReportProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(DataPath + F.Name);
+              until FindNext(F) <> 0;
+            finally
+              SysUtils.FindClose(F);
+            end;
+          end;
+        end else begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+            s2 := ChangeFileExt(Masters[i], '');
+            if FindFirst(DataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
+              repeat
+                ReportProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(DataPath + F.Name);
+              until FindNext(F) <> 0;
+            finally
+              SysUtils.FindClose(F);
+            end;
+            if FindFirst(DataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
+              repeat
+                ReportProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(DataPath + F.Name);
+              until FindNext(F) <> 0;
+            finally
+              SysUtils.FindClose(F);
+            end;
           end;
         end;
       end;
