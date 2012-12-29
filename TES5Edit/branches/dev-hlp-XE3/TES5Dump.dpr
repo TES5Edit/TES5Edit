@@ -202,13 +202,13 @@ begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
-      wbLoadBSAs := false;
+      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineFNV;
     end else if wbFindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
-      wbLoadBSAs := false;
+      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineFO3;
     end else if wbFindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
@@ -222,7 +222,7 @@ begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
-      wbLoadBSAs := false;
+      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineTES4;
     end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
       wbGameMode := gmTES5;
@@ -259,16 +259,15 @@ begin
       DumpGroups.Sort;
     end;
 
+    wbLoadAllBSAs := wbFindCmdLineSwitch('allbsa');
+
     if wbFindCmdLineSwitch('more') then
       wbMoreInfoForUnknown:= True
     else
       wbMoreInfoForUnknown:= False;
 
     if wbFindCmdLineParam('xr', s) then
-      RecordToSkip.CommaText := s
-    else if wbFindCmdLineSwitch('xbloat') then begin
-      RecordToSkip.Add('REFR');
-    end;
+      RecordToSkip.CommaText := s;
 
     if wbFindCmdLineParam('xg', s) then
       GroupToSkip.CommaText := s
@@ -313,18 +312,19 @@ begin
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
-      WriteLn(ErrOutput, '             ', 'decompressed and processed.');
-      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-      WriteLn(ErrOutput, '-xbloat      ', 'the following value applies:');
-      WriteLn(ErrOutput, '             ', '  REFR');
+      WriteLn(ErrOutput, '             ', '  decompressed and processed.');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
       WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
-      WriteLn(ErrOutput, '             ', '  LAND,REGN, PGRD, SCEN, PACK, PERK, NAVI, CELL, WRLD');
+      WriteLn(ErrOutput, '             ', '  -xg:LAND, REGN, PGRD, SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
-      WriteLn(ErrOutput, '             ', 'Default language is English');
+      WriteLn(ErrOutput, '             ', '  Default language is English');
+      WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
+      WriteLn(ErrOutput, '             ', ' (plugin.bsa and plugin - interface.bsa)');
+      WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
+      WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
       WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');

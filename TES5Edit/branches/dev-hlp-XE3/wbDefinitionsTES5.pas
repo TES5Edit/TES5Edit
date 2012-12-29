@@ -2012,6 +2012,55 @@ begin
     Result := 1;
 end;
 
+function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container   : IwbContainer;
+  GroupRecord : IwbGroupRecord;
+  SubRecord   : IwbMainRecord;
+  Element     : IwbElement;
+  II          : integer;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+  while Assigned(Container) and (Container.ElementType <> etsubRecord) do
+    Container := Container.Container;
+
+  if not Supports(Container, IwbSubRecord, SubRecord) then
+    Exit;
+
+  Element := SubRecord.ElementByName['Is Island'];
+  if not Assigned(Element) then
+    Exit;
+
+  Result := Element.NativeValue;
+end;
+
+function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container   : IwbContainer;
+  GroupRecord : IwbGroupRecord;
+  SubRecord   : IwbMainRecord;
+  Element     : IwbElement;
+  II          : integer;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+  while Assigned(Container) and (Container.ElementType <> etsubRecord) do
+    Container := Container.Container;
+
+  if not Supports(Container, IwbSubRecord, SubRecord) then
+    Exit;
+
+  Element := SubRecord.ElementByName['Parent Worldspace'];
+  if not Assigned(Element) then
+    Exit;
+
+  if (Element.NativeValue = 0) then
+    Result := 1;
+end;
+
 function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -2198,7 +2247,6 @@ end;
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
-
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -8036,29 +8084,37 @@ begin
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbByteArray('Unknown')
-//        wbArray('Island', wbStruct('Data', [
-//          wbFloat('Min X'),
-//          wbFloat('Min Y'),
-//          wbFloat('Min Z'),
-//          wbFloat('Max X'),
-//          wbFloat('Max Y'),
-//          wbFloat('Max Z'),
-//          wbArray('Triangles',
-//            wbStruct('Triangle', [
-//              wbArray('Vertices', wbInteger('Vertex', itS16), 3)
-//            ])
-//          , -1),
-//          wbArray('Vertices', wbStruct('Vertex', [
-//            wbFloat('X'),
-//            wbFloat('Y'),
-//            wbFloat('Z')
-//          ]), -1)
-//        ]), -1),
-
-//        wbByteArray('Unknown', 4),
-//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-//        wbByteArray('Cell/Grid', 4)
+        wbUnion('', wbNAVIIslandDataDecider, [
+          wbStruct('Unused', [
+          ]),
+          wbStruct('Island Data', [
+              wbFloat('Min X'),
+              wbFloat('Min Y'),
+              wbFloat('Min Z'),
+              wbFloat('Max X'),
+              wbFloat('Max Y'),
+              wbFloat('Max Z'),
+              wbArray('Triangles',
+                wbStruct('Triangle', [
+                  wbArray('Vertices', wbInteger('Vertex', itS16), 3)
+                ])
+              , -1),
+              wbArray('Vertices', wbStruct('Vertex', [
+                wbFloat('X'),
+                wbFloat('Y'),
+                wbFloat('Z')
+              ]), -1)
+          ])
+        ]),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+        wbUnion('Parent', wbNAVIParentDecider, [
+          wbStruct('Coordinates', [
+            wbInteger('Grid X', itS16),
+            wbInteger('Grid Y', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ])
       ])
     ),
     wbStruct(NVPP, 'Preferred Pathing', [
@@ -8068,7 +8124,8 @@ begin
         wbInteger('Index/Node', itU32)
       ]), -1)
     ]),
-    wbUnknown(NVSI)
+//    wbUnknown(NVSI)
+    wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
   ]);
 
   wbRecord(NAVM, 'Navigation Mesh', [
@@ -8079,12 +8136,11 @@ begin
       //wbByteArray('Parent Data', 8),
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
       wbUnion('Parent', wbNVNMParentDecider, [
-//        no containers in wbUnion :(
-//        wbStruct('Coordinates', [
-//          wbInteger('Grid X', itS16),
-//          wbInteger('Grid Y', itS16)
-//        ]),
-        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
+        wbStruct('Coordinates', [
+          wbInteger('Grid X', itS16),
+          wbInteger('Grid Y', itS16)
+        ]),
+//        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
 
