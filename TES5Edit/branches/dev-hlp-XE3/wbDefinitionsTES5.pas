@@ -1940,8 +1940,8 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.DateSize = 64 then Result := 0
-  else if Container.DateSize = 32 then Result := 1
+  if Container.DataSize = 64 then Result := 0
+  else if Container.DataSize = 32 then Result := 1
 end;
 
 function wbMGEFFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2080,7 +2080,7 @@ end;
 //  else
 //    Container := aElement as IwbContainer;
 //  if Supports(Container.Container, IwbDataContainer, DataContainer) then begin
-//    if DataContainer.DateSize in [132, 148] then
+//    if DataContainer.DataSize in [132, 148] then
 //      Result := 1;
 //  end;
 //end;
@@ -3895,8 +3895,8 @@ end;
 //
 //    TypeFlags := Container.ElementNativeValues['Type'];
 //    if (TypeFlags and $02) <> 0 then begin
-//      if Container.DateSize = 20 then
-//        Container.DateSize := 28;
+//      if Container.DataSize = 20 then
+//        Container.DataSize := 28;
 //      Container.ElementNativeValues['Type'] := TypeFlags and not $02;
 //      Container.ElementEditValues['Run On'] := 'Target';
 //    end;
@@ -5092,16 +5092,8 @@ begin
       {2} 'OnEnd',
       {4} 'OnChange'
     ])),
-			//      {0} 'none',
-			//      {1} 'OnBegin',
-			//      {2} 'OnEnd',
-			//      {3} 'OnBegin OnEnd ordered Begin then End in the following Package Fragments array',
-			//      {4} 'OnChange',
-			//      {5} 'OnBegin OnChange ordered Begin then Change',
-			//      {6} 'OnEnd OnChange ordered End then Change',
-			//      {7} 'OnBegin OnEnd OnChange ordered Begin then End then Change',
     wbLenString('fileName', 2),
-    wbArray('Package Fragments',
+    wbArray('Package Fragments',  // Do NOT sort, ordered OnDegin, OnEnd, OnChange
       wbStruct('Package Fragment', [
           wbInteger('Unknown', itS8),
           wbLenString('scriptName', 2),

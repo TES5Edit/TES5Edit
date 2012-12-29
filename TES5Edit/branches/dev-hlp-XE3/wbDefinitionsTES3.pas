@@ -661,7 +661,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.DateSize = 16 then
+  if Container.DataSize = 16 then
     Result := 1;
 end;
 
@@ -674,7 +674,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.DateSize = 4 then
+  if Container.DataSize = 4 then
     Result := 0;
 end;
 
@@ -687,7 +687,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.DateSize = 4 then
+  if Container.DataSize = 4 then
     Result := 1;
 end;
 
@@ -1669,7 +1669,7 @@ begin
       Exit;
 
     if not Container.ElementExists['PGAG'] then
-      Container.Add('PGAG').DateSize := (Points.ElementCount + 7) div 8;
+      Container.Add('PGAG').DataSize := (Points.ElementCount + 7) div 8;
 
     MainRecord.IsCompressed := True;
 

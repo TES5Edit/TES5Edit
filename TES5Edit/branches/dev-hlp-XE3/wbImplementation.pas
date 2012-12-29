@@ -3536,7 +3536,7 @@ begin
     if Supports(cntElements[i], IwbDataContainer, DataContainer) and DataContainer.DontSave then
       Continue;
 
-    Inc(Result, cntElements[i].DateSize);
+    Inc(Result, cntElements[i].DataSize);
   end;
 end;
 
@@ -12090,7 +12090,9 @@ begin
     end else
       ArrSize := 0;
   end else
-    if VarSize then
+    if (ArrSize < 1) and Assigned(ArrayDef.CountCallback) then
+      ArrSize := ArrayDef.CountCallback(aBasePtr, aEndPtr, aContainer)
+    else if VarSize then
       ArrSize := High(Integer);
 
   if ArrSize > 0 then

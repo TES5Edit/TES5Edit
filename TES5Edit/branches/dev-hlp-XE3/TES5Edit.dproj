@@ -58,12 +58,22 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <UsePackages>true</UsePackages>
         <Manifest_File>None</Manifest_File>
-        <DCC_ExeOutput>d:\games\Skyrim</DCC_ExeOutput>
+        <DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="wbInit.pas"/>
+        <DCCReference Include="wbBSA.pas"/>
+        <DCCReference Include="wbHelpers.pas"/>
+        <DCCReference Include="wbInterface.pas"/>
+        <DCCReference Include="wbImplementation.pas"/>
+        <DCCReference Include="wbDefinitionsFO3.pas"/>
+        <DCCReference Include="wbDefinitionsFNV.pas"/>
+        <DCCReference Include="wbDefinitionsTES3.pas"/>
+        <DCCReference Include="wbDefinitionsTES4.pas"/>
+        <DCCReference Include="wbDefinitionsTES5.pas"/>
         <DCCReference Include="frmViewMain.pas">
             <Form>frmMain</Form>
         </DCCReference>
@@ -79,8 +89,6 @@
         <DCCReference Include="EditWarningFrm.pas">
             <Form>frmEditWarning</Form>
         </DCCReference>
-        <DCCReference Include="wbBSA.pas"/>
-        <DCCReference Include="wbHelpers.pas"/>
         <DCCReference Include="frmWaitForm.pas">
             <Form>frmWait</Form>
         </DCCReference>

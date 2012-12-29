@@ -1802,7 +1802,7 @@ begin
   if not Assigned(Container) then Exit;
 
   if Supports(Container.Container, IwbDataContainer, DataContainer) then begin
-    if DataContainer.DateSize in [132, 148] then
+    if DataContainer.DataSize in [132, 148] then
       Result := 1;
   end;
 end;
@@ -3260,8 +3260,8 @@ begin
 
     TypeFlags := Container.ElementNativeValues['Type'];
     if (TypeFlags and $02) <> 0 then begin
-      if Container.DateSize = 20 then
-        Container.DateSize := 28;
+      if Container.DataSize = 20 then
+        Container.DataSize := 28;
       Container.ElementNativeValues['Type'] := TypeFlags and not $02;
       Container.ElementEditValues['Run On'] := 'Target';
     end;
@@ -3917,7 +3917,7 @@ begin
   if not Assigned(Container) then Exit;
 
   if Supports(Container, IwbDataContainer, DataContainer) then
-    if DataContainer.DateSize = 8 then
+    if DataContainer.DataSize = 8 then
       Result := 1;
 end;
 
@@ -3932,7 +3932,7 @@ begin
   if not Assigned(Container) then Exit;
 
   if Supports(Container, IwbDataContainer, DataContainer) then
-    if DataContainer.DateSize = 8 then
+    if DataContainer.DataSize = 8 then
       Exit;
   Result := Container.ElementByName['Type'].NativeValue + 1;
 end;

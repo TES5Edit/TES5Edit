@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.27 EXPERIMENTAL';
+  VersionString               = '3.0.28 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -443,7 +443,7 @@ type
     property ConflictPriority: TwbConflictPriority
       read GetConflictPriority;
 
-    property DateSize: Integer
+    property DataSize: Integer
       read GetDataSize
       write SetDataSize;
 
@@ -671,7 +671,7 @@ type
       read GetDataBasePtr;
     property DataEndPtr: Pointer
       read GetDataEndPtr;
-    property DateSize: Integer
+    property DataSize: Integer
       read GetDataSize;
 
     property DontCompare: Boolean
@@ -1173,6 +1173,7 @@ type
     function GetCount: Integer;
     function GetElementLabel(aIndex: Integer): string;
     function GetSorted: Boolean;
+    function GetCountCallBack: TwbCountCallback;
 
     property Element: IwbValueDef
       read GetElement;
@@ -1184,6 +1185,9 @@ type
 
     property Sorted: Boolean
       read GetSorted;
+
+    property CountCallBack: TwbCountCallback
+      read GetCountCallback;
   end;
 
   IwbStructDef = interface(IwbValueDef)
@@ -3207,6 +3211,7 @@ type
     function GetCount: Integer;
     function GetElementLabel(aIndex: Integer): string;
     function GetSorted: Boolean;
+    function GetCountCallBack: TwbCountCallback;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -4982,7 +4987,7 @@ function TwbSubRecordDef.CanHandle(aSignature     : TwbSignature;
 begin
   Result := inherited CanHandle(aSignature, aDataContainer);
   if Result and srSizeMatch and Assigned(aDataContainer) and Assigned(srValue) then
-    Result := aDataContainer.DateSize = srValue.Size[nil, nil, nil];
+    Result := aDataContainer.DataSize = srValue.Size[nil, nil, nil];
 end;
 
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
@@ -6194,6 +6199,11 @@ begin
   Result := arCount;
 end;
 
+function TwbArrayDef.GetCountCallBack: TwbCountCallback;
+begin
+  Result := arCountCallBack;
+end;
+
 function TwbArrayDef.GetDefType: TwbDefType;
 begin
   Result := dtArray;
@@ -6254,10 +6264,7 @@ begin
   // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
   // First advance to ourselves :
   if Assigned(aElement) then begin
-    if aElement.ElementType = etValue then
-      Container := aElement.Container
-    else
-      Container := aElement as IwbContainer;
+    Container := GetContainerFromUnion(aElement);
     if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
         FindOurself(Container, noName);
     if not Assigned(Container) then begin
