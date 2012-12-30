@@ -2296,7 +2296,7 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsQuestDontShow(const aElement: IwbElement): Boolean;
+function wbScriptFragmentsDontShow(const aElement: IwbElement): Boolean;
 var
   Container: IwbContainer;
 begin
@@ -5222,7 +5222,7 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsInfoCounter)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
   wbScriptFragmentsPack := wbStruct('Script Fragments Package', [
     wbInteger('Unknown', itS8),
@@ -5238,7 +5238,7 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsPackCounter)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
   wbScriptFragmentsPerk := wbStruct('Script Fragments Perk', [
     wbInteger('Unknown', itS8),
@@ -5251,7 +5251,7 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), -2)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
     wbInteger('Unknown', itS8),
@@ -5274,7 +5274,7 @@ begin
       wbInteger('Alias Object Format', itS16),
 	    wbArray('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
-  ], cpNormal, false, wbScriptFragmentsQuestDontShow, 0);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
     wbInteger('Unknown', itS8),
@@ -5302,7 +5302,7 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), -2)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [

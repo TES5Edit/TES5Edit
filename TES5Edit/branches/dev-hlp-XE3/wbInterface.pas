@@ -6283,7 +6283,6 @@ begin
         Prefix := 2
     else
       Prefix := 4;
-    Result := Prefix;
     if Assigned(aBasePtr) then begin
       case Prefix of
         1: begin
@@ -6299,6 +6298,7 @@ begin
              Inc(PCardinal(aBasePtr));
            end;
       end;
+      Result := Prefix;
     end else
       Count := 0;
   end else begin
@@ -9594,20 +9594,21 @@ end;
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   i: Integer;
+  Size: Integer;
 begin
   if not Assigned(aBasePtr) then begin
     Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];
-    if Result <> High(Integer) then
+    if Result > 0 then
       for i := 1 to High(udMembers) do
-        if udMembers[i].Size[aBasePtr, aEndPtr, aElement] <> Result then begin
-          if Assigned(aBasePtr) then begin
-            Result := High(Integer);
-            Exit;
-          end else begin
-            if Result < udMembers[i].Size[aBasePtr, aEndPtr, aElement] then
-              Result := udMembers[i].Size[aBasePtr, aEndPtr, aElement];
-          end;
-        end;
+        if Result <> High(Integer) then begin
+          Size := udMembers[i].Size[aBasePtr, aEndPtr, aElement];
+          if Size = 0 then begin // No valid value can be found
+            Result := 0;
+            Break;
+          end else if Result < Size then
+            Result := Size;
+        end else
+          break;
   end else
      Result := Decide(aBasePtr, aEndPtr, aElement).Size[aBasePtr, aEndPtr, aElement];
 end;
