@@ -2296,6 +2296,19 @@ begin
 end;
 
 {>>> For VMAD <<<}
+function wbScriptFragmentsQuestDontShow(const aElement: IwbElement): Boolean;
+var
+  Container: IwbContainer;
+begin
+  Result := True;
+  if Assigned(aElement) then
+    if Supports(aElement, IwbContainer, Container) then
+      if Container.ElementCount > 0 then
+        if Assigned(Container.Elements[0]) then
+          Result := VarIsClear(Container.Elements[0].NativeValue);
+end;
+
+{>>> For VMAD <<<}
 function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -2341,7 +2354,8 @@ begin
   for i := 3 to 7 do begin
     if (F and 1) = 1 then begin
       Inc(Result);
-  WriteLN('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown info VMAD flag bit '+IntToStr(i));
+    if Assigned(wbProgressCallback) then
+      wbProgressCallback('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown info VMAD flag bit '+IntToStr(i));
   end;
     F := F shr 1;
   end;
@@ -2374,7 +2388,8 @@ begin
   for i := 3 to 7 do begin
     if (F and 1) = 1 then begin
       Inc(Result);
-  WriteLN('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown scene VMAD flag bit '+IntToStr(i));
+  if Assigned(wbProgressCallback) then
+      wbProgressCallback('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown scene VMAD flag bit '+IntToStr(i));
   end;
     F := F shr 1;
   end;
@@ -5259,7 +5274,7 @@ begin
       wbInteger('Alias Object Format', itS16),
 	    wbArray('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
-  ]);
+  ], cpNormal, false, wbScriptFragmentsQuestDontShow, 0);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
     wbInteger('Unknown', itS8),
