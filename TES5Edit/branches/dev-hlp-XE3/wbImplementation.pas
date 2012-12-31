@@ -374,7 +374,7 @@ type
 
     function ResolveElementName(aName: string; out aRemainingName: string; aCanCreate: Boolean = False): IwbElement; virtual;
 
-    procedure AddElement(const aElement: IwbElement);
+    procedure AddElement(const aElement: IwbElement); virtual;
     procedure InsertElement(aPosition: Integer; const aElement: IwbElement);
     function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; virtual;
     function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload;
@@ -1289,6 +1289,8 @@ type
     function GetGroupLabel: Cardinal;
     procedure SetGroupLabel(aLabel: Cardinal);
     function GetChildrenOf: IwbMainRecord;
+
+    procedure AddElement(const aElement: IwbElement); override;
   end;
 
   IwbSubRecordArrayInternal = interface(IwbSubRecordArray)
@@ -9236,6 +9238,30 @@ begin
     Result := s;
 end;
 
+procedure TwbGroupRecord.AddElement(const aElement: IwbElement);
+var
+  DialGroup : IwbGroupRecord;
+  Container : IwbContainer;
+  FormID    : Cardinal;
+  DialRec   : IwbMainRecord;
+  i         : Integer;
+begin
+  if esUnsaved in aElement.ElementStates then  // Let's not penalised too much loading time.
+    if TwbSignature(grStruct.grsLabel) = 'DIAL' then  // Issue 86: https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=86
+      if Supports(aElement, IwbGroupRecord, DialGroup) then // The DIAL GRUP must immediatly follow corresponding DIAL MainRecord.
+        if DialGroup.GroupType = 7 then
+          if Supports(Self, IwbContainer, Container) then
+            if Container.ElementCount > 0 then
+              for i := 0 to Pred(Container.ElementCount) - 1 do  // If we are reading the plugins and at the end don't bother moving data around.
+                if Supports(Container.Elements[i], IwbMainRecord, DialRec) then
+                  if DialRec.Signature = 'DIAL' then
+                    if DialRec.FormID = DialGroup.GroupLabel then begin
+                      InsertElement(i+1, aElement);
+                      Exit;
+                    end;
+    inherited;
+end;
+
 function TwbGroupRecord.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   MainRecord   : IwbMainRecord;
@@ -9655,6 +9681,7 @@ begin
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
   BasePtr.grsUnknown := 0;
+  Include(eStates, esUnsaved);
   Create(aContainer, Pointer(BasePtr), nil, nil);
   SetModified(True);
   InvalidateStorage;

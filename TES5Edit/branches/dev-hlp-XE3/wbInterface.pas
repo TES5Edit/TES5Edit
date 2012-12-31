@@ -908,6 +908,8 @@ type
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
 
+    procedure AddElement(const aElement: IwbElement);
+
     property GroupType: Integer
       read GetGroupType;
     property GroupLabel: Cardinal
