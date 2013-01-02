@@ -3,7 +3,7 @@
         <ProjectGuid>{12317C9C-736E-45A4-8CB7-E43FF92DD93C}</ProjectGuid>
         <MainSource>TES5Edit.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <AppType>Application</AppType>
         <FrameworkType>VCL</FrameworkType>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
@@ -50,17 +50,30 @@
         <DCC_K>false</DCC_K>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Release>28</VerInfo_Release>
+        <Manifest_File>None</Manifest_File>
+        <Icon_MainIcon>..\Trunk-uploaded\TES5Edit_Icon.ico</Icon_MainIcon>
+        <VerInfo_MajorVer>3</VerInfo_MajorVer>
+        <UsePackages>true</UsePackages>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.28.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterEU;ProductVersion=3.0.28;Comments=</VerInfo_Keys>
+        <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
         <DCC_DebugInformation>false</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <VerInfo_MajorVer>1</VerInfo_MajorVer>
+        <VerInfo_Release>0</VerInfo_Release>
+        <DCC_ExeOutput>.\Release</DCC_ExeOutput>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
+        <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
+        <BCC_DebugLineNumbers>true</BCC_DebugLineNumbers>
+        <UsePackages>true</UsePackages>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterEU;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <Manifest_File>None</Manifest_File>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
-        <VerInfo_PreRelease>true</VerInfo_PreRelease>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>

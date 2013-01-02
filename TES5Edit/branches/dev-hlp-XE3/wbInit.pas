@@ -128,6 +128,11 @@ begin
     Exit;
   end;
 
+  if FindCmdLineSwitch('report') then
+    wbReportMode := (DebugHook <> 0);
+  if FindCmdLineSwitch('MoreInfoForIndex') then
+    wbMoreInfoForIndex := true;
+
   if FindCmdLineSwitch('fixup') then
     wbAllowInternalEdit := True
   else if FindCmdLineSwitch('nofixup') then

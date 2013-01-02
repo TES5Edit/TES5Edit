@@ -56,6 +56,7 @@ var
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
   wbMoreInfoForUnknown: Boolean = False;
+  wbMoreInfoForIndex: Boolean = False;
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean = False;
   wbForceNewHeader: boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
@@ -1602,7 +1603,8 @@ function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
-                       aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                       aAfterLoad : TwbAfterLoadCallback = nil;
+                       aAfterSet  : TwbAfterSetCallback = nil;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil)
@@ -1652,6 +1654,14 @@ function wbArray(const aName          : string;
                        aDontShow      : TwbDontShowCallback = nil)
                                       : IwbArrayDef; overload;
 
+function wbArray(const aName          : string;
+                 const aElement       : IwbValueDef;
+                       aCountCallback : TwbCountCallback;
+                       aPriority      : TwbConflictPriority = cpNormal;
+                       aRequired      : Boolean = False;
+                       aDontShow      : TwbDontShowCallback = nil)
+                                      : IwbArrayDef; overload;
+
 function wbRArray(const aName     : string;
                   const aElement  : IwbRecordMemberDef;
                         aPriority : TwbConflictPriority = cpNormal;
@@ -1675,7 +1685,8 @@ function wbArrayS(const aName      : string;
                         aCount     : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbArrayDef; overload;
 
@@ -1695,7 +1706,8 @@ function wbArrayS(const aSignature : TwbSignature;
                   const aLabels    : array of string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 
@@ -1704,7 +1716,8 @@ function wbArrayS(const aName      : string;
                   const aLabels    : array of string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbArrayDef; overload;
 
@@ -3973,6 +3986,17 @@ function wbArray(const aName          : string;
                                       : IwbArrayDef; overload;
 begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow);
+end;
+
+function wbArray(const aName          : string;
+                 const aElement       : IwbValueDef;
+                       aCountCallback : TwbCountCallback;
+                       aPriority      : TwbConflictPriority = cpNormal;
+                       aRequired      : Boolean = False;
+                       aDontShow      : TwbDontShowCallback = nil)
+                                      : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow);
 end;
 
 {--- wbArrayS - list of identical elements - gets sorted ----------------------}
@@ -6347,6 +6371,9 @@ begin
         BasePtr := EndPtr;
         Element := Container.Elements[Index];
         if not Assigned(Element) then begin
+          if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
+            wbProgressCallback('Debug: ['+ Container.Path +'] Index ' + IntToStr(Index) + ' of ' + IntToStr(Count) + ' greater than max '+
+              IntToStr(Container.ElementCount-1));
           Element := aElement; // If it is too soon, revert to previous way of doing things
         end;
         Size := arElement.Size[BasePtr, aEndPtr, Element];

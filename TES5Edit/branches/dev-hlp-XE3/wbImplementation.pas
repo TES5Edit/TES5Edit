@@ -3551,6 +3551,9 @@ begin
 
   DoInit;
   if not Assigned(cntElements) or (aIndex>=Length(cntElements)) then begin // Using the wrong contained array at the time
+    if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
+      wbProgressCallback('Debugger: ['+ IwbElement(Self).Path +'] Index ' + IntToStr(aIndex) + ' greater than max '+
+        IntToStr(Length(cntElements)-1));
     Result := nil
   end else
     Result := IInterface(cntElements[aIndex]) as IwbElement;
@@ -12542,9 +12545,10 @@ end;
 
 function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags;
 var
-  UnionDef   : IwbUnionDef;
-  ValueDef   : IwbValueDef;
-  Element    : IwbElementInternal;
+  UnionDef : IwbUnionDef;
+  ValueDef : IwbValueDef;
+  ArrayDef : IwbArrayDef;
+  Element  : IwbElementInternal;
 
 begin
   Result := ufNone;
@@ -12554,7 +12558,7 @@ begin
 
   case ValueDef.DefType of
     dtArray: begin
-      if wbSortSubRecords and IwbArrayDef(ValueDef).Sorted then
+      if wbSortSubRecords and Supports(ValueDef, IwbArrayDef, ArrayDef) and ArrayDef.Sorted then
         Result := ufSortedArray
       else
         Result := ufArray;
