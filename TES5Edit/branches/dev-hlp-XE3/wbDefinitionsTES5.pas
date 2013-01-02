@@ -5216,7 +5216,7 @@ begin
       {2} 'OnEnd'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Info Fragments',  // Do NOT sort, ordered OnDegin, OnEnd
+    wbArray('Info Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
       wbStruct('Info Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
@@ -5232,7 +5232,7 @@ begin
       {4} 'OnChange'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Package Fragments',  // Do NOT sort, ordered OnDegin, OnEnd, OnChange
+    wbArray('Package Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
       wbStruct('Package Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
@@ -5266,7 +5266,7 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsQuestCounter),
-    wbArray('Aliases', wbStruct('alias', [
+    wbArray('Aliases', wbStruct('Alias', [
       wbInteger('Unknown', itS16),
       wbInteger('Alias ID', itS16),
       wbInteger('Unknown', itS32),
@@ -5283,7 +5283,7 @@ begin
       {2} 'OnEnd'
     ])),
     wbLenString('fileName', 2),
-    wbArray('Scene Fragments',  // Do NOT sort, ordered OnDegin, OnEnd
+    wbArray('Scene Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
       wbStruct('Scene Fragment', [
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
@@ -5308,7 +5308,7 @@ begin
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
-    wbUnion('VMAD union', wbScriptFragmentExistsDecider, [
+    wbUnion('Data', wbScriptFragmentExistsDecider, [
       wbArray('Scripts', wbScriptEntry, -2),
       wbStruct('Info VMAD', [
         wbArray('Scripts', wbScriptEntry, -2),
@@ -12080,7 +12080,7 @@ begin
 
       {--- Objects ---}
       wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, STAT, LTEX]),
+        wbFormIDCk('Object', [TREE, STAT, LTEX, MSTT]),
         wbInteger('Parent Index', itU16, wbHideFFFF),
         wbByteArray('Unknown', 2),
         wbFloat('Density'),
