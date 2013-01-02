@@ -1598,6 +1598,15 @@ function wbFloat(const aName       : string = 'Unknown';
                        aDefault    : Extended = 0.0)
                                    : IwbFloatDef; overload;
 
+function wbFloat(const aName       : string;
+                       aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
+                       aDontShow   : TwbDontShowCallback;
+                       aAfterSet   : TwbAfterSetCallback = nil;
+                       aNormalizer : TwbFloatNormalizer = nil;
+                       aDefault    : Extended = 0.0)
+                                   : IwbFloatDef; overload;
+
 {--- wbArray - list of identical elements -------------------------------------}
 function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
@@ -2182,7 +2191,7 @@ function StrToSignature(const s: string): TwbSignature;
 var
   t: AnsiString;
 begin
-  t := s;
+  t := AnsiString(s);
   if Length(t) >= 4 then
     Result := PwbSignature(@t[1])^
   else
@@ -3192,7 +3201,8 @@ type
   public
     constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
                  const aName       : string;
-                       aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                       aAfterLoad  : TwbAfterLoadCallback;
+                       aAfterSet   : TwbAfterSetCallback;
                        aScale      : Extended;
                        aDigits     : Integer;
                        aDontShow   : TwbDontShowCallback;
@@ -3902,6 +3912,18 @@ function wbFloat(const aName       : string = 'Unknown';
                                    : IwbFloatDef; overload;
 begin
   Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault);
+end;
+
+function wbFloat(const aName       : string;
+                       aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
+                       aDontShow   : TwbDontShowCallback;
+                       aAfterSet   : TwbAfterSetCallback = nil;
+                       aNormalizer : TwbFloatNormalizer = nil;
+                       aDefault    : Extended = 0.0)
+                                   : IwbFloatDef; overload;
+begin
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault);
 end;
 
 {--- wbArray - list of identical elements -------------------------------------}
@@ -7282,7 +7304,7 @@ end;
 
 procedure TwbStringDef.FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 begin
-  FromStringNative(aBasePtr, aEndPtr, aElement, TransformString(aValue, aTransformType, aElement));
+  FromStringNative(aBasePtr, aEndPtr, aElement, TransformString(AnsiString(aValue), aTransformType, aElement));
 end;
 
 function TwbStringDef.GetDefType: TwbDefType;
@@ -7398,7 +7420,8 @@ end;
 constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
                                aRequired   : Boolean;
                          const aName       : string;
-                               aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                               aAfterLoad  : TwbAfterLoadCallback;
+                               aAfterSet   : TwbAfterSetCallback;
                                aScale      : Extended;
                                aDigits     : Integer;
                                aDontShow   : TwbDontShowCallback;
@@ -7656,7 +7679,7 @@ begin
   if aValue = '' then
     Result := Cardinal(Empty)
   else begin
-    s := aValue;
+    s := AnsiString(aValue);
     if Length(s) <> 4 then
       raise Exception.Create('The value must be exactly 4 characters');
 
@@ -9442,7 +9465,7 @@ end;
 function TwbIntegerDefFormater.CompareExchangeFormID(var aInt: Int64;
   aOldFormID, aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
 begin
-
+  Result := False; // ? Should be overriden
 end;
 
 procedure TwbIntegerDefFormater.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters);
@@ -9929,6 +9952,8 @@ begin
     1: Size := PByte(aBasePtr)^ + Prefix;
     2: Size := PWord(aBasePtr)^ + Prefix;
     4: Size := PCardinal(aBasePtr)^ + Prefix;
+  else
+    Size := 0; // Just to remove the Hint
   end;
   if Len < Size then begin
     if wbCheckExpectedBytes then
@@ -9962,7 +9987,7 @@ var
   p       : Pointer;
   s       : AnsiString;
 begin
-  s := aValue;
+  s := AnsiString(aValue);
   Len := Length(s);
 //  if (Prefix < 4) and (Len >= (Cardinal(1) shl (Prefix*8))) then
 //    raise Exception.Create('String length overflow');
@@ -10014,6 +10039,8 @@ begin
       1: Len := PByte(aBasePtr)^ + Prefix;
       2: Len := PWord(aBasePtr)^ + Prefix;
       4: Len := PCardinal(aBasePtr)^ + Prefix;
+    else
+      Len := 0;
     end;
 
     if Len < Result then
@@ -10056,6 +10083,8 @@ begin
          Size := PCardinal(aBasePtr)^;
          Inc(PCardinal(aBasePtr));
        end;
+  else
+    Size := 0;
   end;
   Dec(Len, Prefix);
 
@@ -10156,14 +10185,12 @@ begin
 end;
 
 function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
-var
-  ID: Cardinal;
 begin
   if Assigned(aElement._File) and aElement._File.IsLocalized then begin
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
       Result := '<Error: lstring ID should be Int32 value>'
     else
-      Result := wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement)
+      Result := AnsiString(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement))
   end else
     Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
 end;
@@ -10182,7 +10209,7 @@ begin
         if Strings[i] = '' then
           Delete(i);
       end;
-      Result := Text;
+      Result := AnsiString(Text);
     finally
       Free;
     end;
@@ -10214,7 +10241,6 @@ procedure TwbStringMgefCodeDef.FindUsedMasters(aBasePtr, aEndPtr: Pointer; const
 var
   s        : AnsiString;
   MgefCode : PCardinal;
-  i        : Integer;
 begin
   s := ToStringNative(aBasePtr, aEndPtr, aElement);
 
@@ -10314,22 +10340,22 @@ begin
                 FileID := MgefCode and $000000FF;
 
                 if FileID >= _File.MasterCount then
-                  Result := _File.Name
+                  Result := AnsiString(_File.Name)
                 else
-                  Result := _File.Masters[FileID].Name;
+                  Result := AnsiString(_File.Masters[FileID].Name);
 
-                Result := Result + ':' + IntToStr((MgefCode and not $800000FF) shr 8);
+                Result := Result + ':' + AnsiString(IntToStr((MgefCode and not $800000FF) shr 8));
 
                 Exit;
               end;
             end;
           end;
-          Result := IntToHex64(MgefCode, 8);
+          Result := AnsiString(IntToHex64(MgefCode, 8));
           if aTransformType = ttToString then
             Result := Result + ' <Warning: Effect Code is neither alphanumeric nor dynamic>';
         end;
       end else if aTransformType = ttToString then
-        Result := Result + ' <Warning: Expected 4 bytes but found ' + IntToStr(Length(s)) + '>';
+        Result := Result + AnsiString(' <Warning: Expected 4 bytes but found ' + IntToStr(Length(s)) + '>');
     end;
     ttFromEditValue, ttFromNativeValue: begin
       Result := Trim(s);
@@ -10413,8 +10439,8 @@ begin
 end;
 
 function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
-begin
-  if aElement.ElementType = etUnion then begin
+begin  // Should change the name to GetContainerFromUnionOrValue :)
+  if (aElement.ElementType = etUnion) or (aElement.ElementType = etValue) then begin
     Result := aElement.Container;
     while Result.ElementType = etUnion do
       Result := Result.Container

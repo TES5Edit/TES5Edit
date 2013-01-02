@@ -1825,7 +1825,6 @@ end;
 procedure wbMGEFFAssocItemAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainer;
-  Archtype  : Variant;
   Element   : IwbElement;
 begin
   if not Assigned(aElement) then Exit;
@@ -1928,13 +1927,12 @@ var
   Container: IwbContainer;
   i: Int64;
 begin
+  Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
   i := Container.ElementByName['Flags'].NativeValue;
-  if i and $00000080 = 0 then
-    Result := 0
-  else
+  if i and $00000080 <> 0 then
     Result := 1;
 end;
 
@@ -3480,9 +3478,9 @@ procedure wbPACKAfterLoad(const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
   MainRecord    : IwbMainRecord;
-  OldContainer  : IwbContainerElementRef;
+//  OldContainer  : IwbContainerElementRef;
   NewContainer  : IwbContainerElementRef;
-  //NewContainer2 : IwbContainerElementRef;
+//  NewContainer2 : IwbContainerElementRef;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then

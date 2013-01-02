@@ -18,18 +18,26 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, ComCtrls, StdCtrls, VirtualTrees, wbInterface, Menus,
-  Math, wbImplementation, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  ShellAPI,
+  Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
+  Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
+  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.jpeg,
+  VirtualTrees,
+  VTEditors,
+  VirtualEditTree,
+  wbInterface,
+  wbImplementation,
   wbBSA,
   wbNifScanner,
-  Direct3D9, D3DX9,
-  wbHelpers, VirtualEditTree, VTEditors,
-{$IFDEF DX3D}
-  RenderUnit, Direct3D9, D3DX9, DXUT,
-{$ENDIF}
-  AppEvnts, dxGDIPlusClasses,
-  wbLocalization, JvComponentBase, JvInterpreter, System.Actions;
+  wbHelpers,
+  wbLocalization,
+  Direct3D9,
+  D3DX9,
+  {$IFDEF DX3D}
+  RenderUnit,
+  DXUT,
+  {$ENDIF}
+  JvComponentBase,
+  JvInterpreter;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -784,8 +792,10 @@ implementation
 
 uses
   Colors, Mask,
+  {$IFNDEF LiteVersion}
   cxVTEditors,
-  ShlObj, Registry, StrUtils,
+  {$ENDIF}
+  ShlObj, Registry, StrUtils, Types, UITypes,
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
@@ -3863,7 +3873,7 @@ begin
       fs.Seek(0, soFromEnd);
     end else
       fs := TFileStream.Create(s, fmCreate);
-    txt := mmoMessages.Lines.Text + #13#10;
+    txt := AnsiString(Copy(mmoMessages.Lines.Text, 1, 253)) + #13#10;
     fs.WriteBuffer(txt[1], Length(txt));
   finally
     if Assigned(fs) then
@@ -10803,12 +10813,13 @@ procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
 var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
+  i                           : Integer;
 
+  {$IFNDEF LiteVersion}
   TextLink                    : TcxTextEditLink;
   ComboLink                   : TcxComboEditLink;
   CheckComboLink              : TcxCheckComboEditLink;
-
-  i                           : Integer;
+  {$ENDIF}
 begin
   if Column < 1 then
     Exit;
@@ -10828,6 +10839,7 @@ begin
   if not Assigned(Element) then
     Exit;
 
+  {$IFNDEF LiteVersion}
   case Element.EditType of
     etDefault: begin
       TextLink := TcxTextEditLink.Create;
@@ -10862,6 +10874,7 @@ begin
       CheckComboLink.Properties.DropDownAutoWidth := True;
     end;
   end;
+  {$ENDIF}
 end;
 
 procedure TfrmMain.vstViewDblClick(Sender: TObject);

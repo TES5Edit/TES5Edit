@@ -206,6 +206,7 @@ begin
     wbTranslationMode := True;
   end else
     wbDontSave := True;
+  wbApplicationTitle := wbApplicationTitle {$IFDEF LiteVersion}+' Lite'{$ENDIF};
 
   {nxAppDataSubdirVista := wbAppName;
   if wbTranslationMode then

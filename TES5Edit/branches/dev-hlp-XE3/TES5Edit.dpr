@@ -21,9 +21,15 @@ uses
   Forms,
   Dialogs,
   SysUtils,
+  Colors,
+  VTEditors,
+  {$IFNDEF LiteVersion}
+  cxVTEditors,
+  {$ENDIF}
   wbInit in 'wbInit.pas',
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
+  wbScriptAdapter in 'wbScriptAdapter.pas',
   wbInterface in 'wbInterface.pas',
   wbImplementation in 'wbImplementation.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
@@ -39,7 +45,6 @@ uses
   frmWaitForm in 'frmWaitForm.pas' {frmWait},
   frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization},
   frmLocalizePluginForm in 'frmLocalizePluginForm.pas' {frmLocalizePlugin},
-  wbScriptAdapter in 'wbScriptAdapter.pas',
   frmScriptForm in 'frmScriptForm.pas' {frmScript},
   frmOptionsForm in 'frmOptionsForm.pas' {frmOptions},
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer};

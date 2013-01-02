@@ -6645,7 +6645,7 @@ var
   FoundOne : Boolean;
 
   SelfRef  : IwbContainerElementRef;
-  EditorID : IwbElement;
+//  EditorID : IwbElement;
 begin
   mrBaseRecordID := 0;
   Exclude(mrStates, mrsBaseRecordChecked);
@@ -9266,7 +9266,6 @@ procedure TwbGroupRecord.AddElement(const aElement: IwbElement);
 var
   DialGroup : IwbGroupRecord;
   Container : IwbContainer;
-  FormID    : Cardinal;
   DialRec   : IwbMainRecord;
   i         : Integer;
 begin
