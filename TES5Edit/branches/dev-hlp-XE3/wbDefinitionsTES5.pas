@@ -5173,13 +5173,13 @@ begin
     {15} 'Array of Bool'
   ]);
 
-  wbScriptObject := wbUnion('ObjectUnion', wbScriptObjFormatDecider, [
-    wbStruct('Object', [
+  wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
+    wbStruct('Object v2', [
       wbInteger('Unused', itU16),
       wbInteger('Alias ID', itS16),
       wbFormID('FormID')
     ]),
-    wbStruct('Object', [
+    wbStruct('Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias ID', itS16),
       wbInteger('Unused', itU16)
@@ -5308,7 +5308,7 @@ begin
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
-    wbUnion('', wbScriptFragmentExistsDecider, [
+    wbUnion('VMAD union', wbScriptFragmentExistsDecider, [
       wbArray('Scripts', wbScriptEntry, -2),
       wbStruct('Info VMAD', [
         wbArray('Scripts', wbScriptEntry, -2),

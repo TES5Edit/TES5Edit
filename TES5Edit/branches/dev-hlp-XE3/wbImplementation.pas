@@ -601,6 +601,7 @@ type
     procedure SetDataSize(aSize: Integer); override;
     function GetDontCompare: Boolean;
     function GetDontSave: Boolean;
+    function IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
 
     {--- IwbDataContainerInternal ---}
     procedure UpdateStorageFromElements; virtual;
@@ -8460,9 +8461,17 @@ begin
   SetToDefault;
 end;
 
+type
+  TwbUnionFlags = (
+    ufNone,
+    ufArray,
+    ufSortedArray,
+    ufFlags
+  );
+
 function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
-procedure UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
+function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
 function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Boolean; forward;
 
 destructor TwbSubRecord.Destroy;
@@ -8543,7 +8552,19 @@ begin
         srSorted := ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix);
       end;
       dtStruct: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
-      dtUnion:  UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
+      dtUnion:  begin
+        case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
+          ufArray: srIsArray := True;
+          ufSortedArray: begin
+            srIsArray := True;
+            srSorted := True;
+          end;
+          ufFlags: begin
+            srIsFlags := True;
+            srSorted := True;
+          end;
+        end;
+      end;
     else
       srIsFlags := ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self);
       srSorted := srIsFlags;
@@ -12519,24 +12540,31 @@ end;
 
 { TwbUnion }
 
-procedure UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer);
+function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags;
 var
   UnionDef   : IwbUnionDef;
   ValueDef   : IwbValueDef;
   Element    : IwbElementInternal;
 
 begin
+  Result := ufNone;
   UnionDef := aValueDef as IwbUnionDef;
 
   ValueDef := UnionDef.Decide(aBasePtr, aEndPtr, aContainer);
 
   case ValueDef.DefType of
-    dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    dtArray: begin
+      if wbSortSubRecords and IwbArrayDef(ValueDef).Sorted then
+        Result := ufSortedArray
+      else
+        Result := ufArray;
+      Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    end;
     dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
   else
     Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer);
+    if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer) then Result := ufFlags;
   end;
 
   if Assigned(Element) then
@@ -12665,7 +12693,7 @@ begin
   i := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
   if i = Cardinal(High(Integer)) then
     aBasePtr := aEndPtr
-  else
+  else if Assigned(aBasePtr) then
     Inc(Cardinal(aBasePtr), i);
 end;
 
@@ -13285,6 +13313,17 @@ begin
   Result := False;
 end;
 
+function TwbDataContainer.IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
+begin
+  Result := False;
+  if Cardinal(aBasePtr) >= Cardinal(dcBasePtr) then
+    if Cardinal(aBasePtr) < Cardinal(dcEndPtr) then
+      if Cardinal(aEndPtr) > Cardinal(dcBasePtr) then
+        if Cardinal(aEndPtr) <= Cardinal(dcEndPtr) then
+          if Cardinal(aBasePtr)+anOffset < Cardinal(dcEndPtr) then
+            Result := True;
+end;
+
 procedure TwbDataContainer.MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 var
   SizeNeeded    : Cardinal;
@@ -13593,8 +13632,14 @@ begin
 end;
 
 function TwbValueBase.GetDisplayName: string;
+var
+  Resolved: IwbValueDef;
 begin
-  Result := Resolve(vbValueDef, GetDataBasePtr, GetDataEndPtr, Self).Name;
+  Resolved := Resolve(vbValueDef, GetDataBasePtr, GetDataEndPtr, Self);
+  if (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
+    Result := vbValueDef.Name
+  else
+     Result := Resolved.Name;
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
 end;

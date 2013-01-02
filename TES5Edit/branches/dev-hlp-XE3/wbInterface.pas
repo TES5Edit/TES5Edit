@@ -187,6 +187,19 @@ type
     dtEmpty
   );
 
+var
+  dtNonValues : set of TwbDefType = [
+    dtRecord,
+    dtSubRecord,
+    dtSubRecordArray,
+    dtSubRecordStruct,
+    dtSubRecordUnion,
+    dtArray,
+    dtStruct,
+    dtUnion
+  ];
+
+type
   IwbDef = interface;
 
   TwbDefs = array of IwbDef;
@@ -666,6 +679,7 @@ type
     function GetDataSize: Integer;
     function GetDontCompare: Boolean;
     function GetDontSave: Boolean;
+    function IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
 
     property DataBasePtr: Pointer
       read GetDataBasePtr;
@@ -1484,7 +1498,8 @@ function wbUnion(const aName     : string;
                  const aMembers  : array of IwbValueDef;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil)
+                       aDontShow : TwbDontShowCallback = nil;
+                       aAfterSet : TwbAfterSetCallback = nil)
                                  : IwbUnionDef; overload;
 
 
@@ -1913,7 +1928,8 @@ function wbFormID(const aSignature : TwbSignature;
 function wbFormID(const aName      : string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbIntegerDef; overload;
 
 function wbFormIDCk(const aSignature : TwbSignature;
@@ -1939,7 +1955,8 @@ function wbFormIDCk(const aName      : string;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil)
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
                                      : IwbIntegerDef; overload;
 
 function wbFormIDCkNoReach(const aName      : string;
@@ -2523,7 +2540,8 @@ type
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
                  const aName      : string;
-                       aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                       aAfterLoad : TwbAfterLoadCallback;
+                       aAfterSet  : TwbAfterSetCallback;
                        aDontShow  : TwbDontShowCallback);
 
     {--- IwbDef ---}
@@ -2865,7 +2883,8 @@ type
                  const aName     : string;
                        aDecider  : TwbUnionDecider;
                  const aMembers  : array of IwbValueDef;
-                       aDontShow : TwbDontShowCallback);
+                       aDontShow : TwbDontShowCallback;
+                       aAfterSet : TwbAfterSetCallback = nil);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3733,10 +3752,11 @@ function wbUnion(const aName     : string;
                  const aMembers  : array of IwbValueDef;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil)
+                       aDontShow : TwbDontShowCallback = nil;
+                       aAfterSet : TwbAfterSetCallback = nil)
                                  : IwbUnionDef; overload;
 begin
-  Result := TwbUnionDef.Create(aPriority, aRequired, aName, aDecider, aMembers, aDontShow);
+  Result := TwbUnionDef.Create(aPriority, aRequired, aName, aDecider, aMembers, aDontShow, aAfterSet);
 end;
 
 
@@ -4334,10 +4354,11 @@ end;
 function wbFormID(const aName     : string;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
+                        aDontShow : TwbDontShowCallback = nil;
+                        aAfterSet : TwbAfterSetCallback = nil)
                                   : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormID, aPriority, aRequired, aDontShow);
+  Result := wbInteger(aName, itU32, wbFormID, aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
 function wbFormIDCk(const aSignature : TwbSignature;
@@ -4369,10 +4390,11 @@ function wbFormIDCk(const aName      : string;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil)
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
                                      : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormID(aValidRefs, aPersistent), aPriority, aRequired, aDontShow);
+  Result := wbInteger(aName, itU32, wbFormID(aValidRefs, aPersistent), aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
 function wbFormIDCkNoReach(const aName      : string;
@@ -9501,11 +9523,12 @@ constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
                          const aName     : string;
                                aDecider  : TwbUnionDecider;
                          const aMembers  : array of IwbValueDef;
-                               aDontShow : TwbDontShowCallback);
+                               aDontShow : TwbDontShowCallback;
+                               aAfterSet : TwbAfterSetCallback);
 var
   i: Integer;
 begin
-  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow);
+  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow);
   udDecider := aDecider;
   SetLength(udMembers, Length(aMembers));
   for I := Low(udMembers) to High(udMembers) do begin
