@@ -1410,7 +1410,6 @@ var
   s: string;
 begin
   s := aString + '00000000';
-  Result := 0;
   if s[1] = '1' then begin
     if s[2] = '1' then begin
       if s[3] = '1' then begin
@@ -1944,10 +1943,14 @@ begin
   else if Container.DataSize = 32 then Result := 1
 end;
 
-function wbMGEFFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbMGEFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
   Archtype      : Variant;
+  DataContainer : IwbDataContainer;
+  Element       : IwbElement;
+const
+  OffsetArchtype = 56;
 
 begin
   Result := 0;
@@ -1955,16 +1958,17 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  ArchType := Container.ElementNativeValues['Archtype'];
-  if VarIsEmpty(ArchType) then begin
-    aBasePtr := Pointer(Cardinal(aBasePtr) + 56);
-    if Cardinal(aEndPtr) >= (Cardinal(aBasePtr) + 4) then
+  VarClear(ArchType);
+  Element := Container.ElementByName['Archtype'];
+  if Assigned(Element) then
+    ArchType := Element.NativeValue
+  else if Supports(Container, IwbDataContainer, DataContainer) and
+          DataContainer.IsValidOffset(aBasePtr, aEndPtr, OffsetArchtype) then begin // we are part a proper structure
+      aBasePtr := Pointer(Cardinal(aBasePtr) + OffsetArchtype);
       ArchType := PCardinal(aBasePtr)^;
-  end;
+    end;
 
-  if VarIsEmpty(ArchType) then
-    Result := 1
-  else
+  if not VarIsEmpty(ArchType) then
     case Integer(ArchType) of
       12: Result := 1; // Light
       17: Result := 2; // Bound Item
@@ -1979,25 +1983,63 @@ begin
     end;
 end;
 
-{ Needs revision for Skyrim }
-//procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-//var
-//  Container: IwbContainerElementRef;
-//begin
-//  if VarSameValue(aOldValue, aNewValue) then
-//    Exit;
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    Exit;
-//  Container.ElementNativeValues['..\Assoc. Item'] := 0;
-//  case Integer(aNewValue) of
-//    11: Container.ElementNativeValues['..\Actor Value'] := 48;//Invisibility
-//    12: Container.ElementNativeValues['..\Actor Value'] := 49;//Chameleon
-//    24: Container.ElementNativeValues['..\Actor Value'] := 47;//Paralysis
-//    36: Container.ElementNativeValues['..\Actor Value'] := 51;//Turbo
-//  else
-//    Container.ElementNativeValues['..\Actor Value'] := -1;
-//  end;
-//end;
+procedure wbMGEFAssocItemAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Element   : IwbElement;
+begin
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  if (aNewValue <> 0) then begin
+    Element := Container.ElementByName['Archtype'];
+    if Assigned(Element) and (Element.NativeValue = 0) then
+        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
+          // I assume this will alo protect Second AV Weight (The two actor values are after ArchType)
+  end;
+end;
+
+procedure wbMGEFAV2WeightAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Element   : IwbElement;
+begin
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  if (aNewValue <> -1) then begin
+    Element := Container.ElementByName['Archtype'];
+    if Assigned(Element) and (Element.NativeValue = 0) then
+        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
+  end;
+end;
+
+procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container: IwbContainerElementRef;
+begin
+  if VarSameValue(aOldValue, aNewValue) then
+    Exit;
+  if not Supports(aElement, IwbContainerElementRef, Container) then
+    Exit;
+  if (aNewValue < $FF) and (aOldValue < $FF) then begin
+    Container.ElementNativeValues['..\Assoc. Item'] := 0;
+    case Integer(aNewValue) of
+      06: Container.ElementNativeValues['..\Actor Value'] := 00;//Agression
+      07: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+      08: Container.ElementNativeValues['..\Actor Value'] := 00;//Agression
+      11: Container.ElementNativeValues['..\Actor Value'] := 54;//Invisibility
+      21: Container.ElementNativeValues['..\Actor Value'] := 53;//Paralysis
+      24: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+      38: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+      42: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+    else
+      Container.ElementNativeValues['..\Actor Value'] := -1;
+    end;
+    Container.ElementNativeValues['..\Second Actor Value'] := -1;
+    Container.ElementNativeValues['..\Second AV Weight'] := -1;
+  end;
+end;
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -2015,10 +2057,8 @@ end;
 function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container   : IwbContainer;
-  GroupRecord : IwbGroupRecord;
   SubRecord   : IwbMainRecord;
   Element     : IwbElement;
-  II          : integer;
 begin
   Result := 0;
 
@@ -2039,10 +2079,8 @@ end;
 function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container   : IwbContainer;
-  GroupRecord : IwbGroupRecord;
   SubRecord   : IwbMainRecord;
   Element     : IwbElement;
-  II          : integer;
 begin
   Result := 0;
 
@@ -2177,8 +2215,8 @@ function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
 var
   rEDID      : IwbRecord;
   s          : string;
-  _File      : IwbFile;
-  MainRecord : IwbMainRecord;
+//  _File      : IwbFile;
+//  MainRecord : IwbMainRecord;
 const
   OrderedList = 'OrderedList';
 begin
@@ -2244,6 +2282,7 @@ begin
     Result := 1;
 end;
 
+{>>> For VMAD <<<}
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -2252,7 +2291,6 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
-
 
   case Integer(Container.ElementNativeValues['Type']) of
      1: Result := 1;
@@ -2332,7 +2370,6 @@ function wbScriptFragmentsInfoCounter(aBasePtr: Pointer; aEndPtr: Pointer; const
 var
   Container     : IwbContainer;
   F             : Integer;
-  Count         : Integer;
   i             : Integer;
 begin
   Result := 0;
@@ -2366,7 +2403,6 @@ function wbScriptFragmentsSceneCounter(aBasePtr: Pointer; aEndPtr: Pointer; cons
 var
   Container     : IwbContainer;
   F             : Integer;
-  Count         : Integer;
   i             : Integer;
 begin
   Result := 0;
@@ -2400,7 +2436,6 @@ function wbScriptFragmentsPackCounter(aBasePtr: Pointer; aEndPtr: Pointer; const
 var
   Container     : IwbContainer;
   F             : Integer;
-  Count         : Integer;
   i             : Integer;
 begin
   Result := 0;
@@ -4240,7 +4275,7 @@ procedure wbREFRAfterLoad(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
-  BaseRecord : IwbMainRecord;
+//  BaseRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4353,9 +4388,8 @@ var
   Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
   HasWater     : Boolean;
-  IsInterior   : Boolean;
+//  IsInterior   : Boolean;
   i            : Integer;
-  w            : Single;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4373,7 +4407,7 @@ begin
     if not Container.ElementExists['DATA'] then
       Exit;
 
-    IsInterior := (Container.ElementNativeValues['DATA'] and 1) <> 0;
+//    IsInterior := (Container.ElementNativeValues['DATA'] and 1) <> 0;
     HasWater := (Container.ElementNativeValues['DATA'] and 2) <> 0;
 
     if HasWater then begin
@@ -8155,7 +8189,6 @@ begin
           wbInteger('Grid X', itS16),
           wbInteger('Grid Y', itS16)
         ]),
-//        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
 
@@ -10241,7 +10274,7 @@ begin
     {44} 'Disguise',
     {45} 'Grab Actor',
     {46} 'Vampire Lord'
-  ]), cpNormal, False, nil{, wbMGEFArchtypeAfterSet});
+  ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet);
 
   wbMGEFData := wbRStruct('Magic Effect Data', [
     wbStruct(DATA, 'Data', [
@@ -10280,8 +10313,8 @@ begin
 				{0x80000000}  'Unknown 32'
 			])),
       wbFloat('Base Cost'),
-      wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-        wbFormID('Unknown', cpIgnore),
+      wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
+        wbFormID('Unused', cpIgnore),
         wbFormIDCk('Assoc. Item', [LIGH, NULL]),
         wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
         wbFormIDCk('Assoc. Item', [NPC_, NULL]),
@@ -10290,7 +10323,7 @@ begin
         wbFormIDCk('Assoc. Item', [RACE, NULL]),
         wbFormIDCk('Assoc. Item', [ENCH, NULL]),
         wbFormIDCk('Assoc. Item', [KYWD, NULL])
-      ]),
+      ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbInteger('Magic Skill', itS32, wbActorValueEnum),
       wbInteger('Resist Value', itS32, wbActorValueEnum),
       wbByteArray('Unknown', 4),
@@ -10305,7 +10338,7 @@ begin
       ]),
       wbFloat('Taper Curve'),
       wbFloat('Taper Duration'),
-      wbFloat('Second AV Weight'),
+      wbFloat('Second AV Weight', cpNormal, False, nil, wbMGEFAV2WeightAfterSet),
       wbMGEFType,
       wbActorValue,
       wbFormIDCk('Projectile', [PROJ, NULL]),
