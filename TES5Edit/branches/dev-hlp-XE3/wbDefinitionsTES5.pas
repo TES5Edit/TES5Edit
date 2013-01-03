@@ -5278,7 +5278,7 @@ begin
     wbInteger('Unknown', itS8),
     wbLenString('fileName', 2),
     wbArrayS('Perk Fragments',
-      wbStruct('Perk Fragment', [
+      wbStructSK([0], 'Perk Fragment', [
         wbInteger('Fragment Index', itU16),
         wbInteger('Unknown', itS16),
         wbInteger('Unknown', itS8),
@@ -5292,7 +5292,7 @@ begin
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
     wbArrayS('Quest Fragments',
-      wbStruct('Quest Fragment', [
+      wbStructSK([0], 'Quest Fragment', [
         wbInteger('Quest Stage Index', itU16),
         wbInteger('Unknown', itS16),
         wbInteger('Unknown', itS32),
@@ -5306,7 +5306,7 @@ begin
       wbInteger('Unknown', itS32),
       wbInteger('Unknown', itS16),
       wbInteger('Alias Object Format', itS16),
-	    wbArray('Alias Scripts', wbScriptEntry, -2)
+	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
