@@ -8133,7 +8133,7 @@ begin
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbUnion('', wbNAVIIslandDataDecider, [
+        wbUnion('Island', wbNAVIIslandDataDecider, [
           wbStruct('Unused', [
           ]),
           wbStruct('Island Data', [
