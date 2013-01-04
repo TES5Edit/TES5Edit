@@ -948,6 +948,10 @@ begin
   Value := StrToInt64Def(Args.Values[0], Args.Values[1]);
 end;
 
+procedure JvInterpreter_StrToFloatDef(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := StrToFloatDef(Args.Values[0], Args.Values[1]);
+end;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 const
@@ -1110,6 +1114,7 @@ begin
     AddFunction('SysUtils', 'IntToHex64', JvInterpreter_IntToHex64, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'StrToInt64', JvInterpreter_StrToInt64, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'StrToInt64Def', JvInterpreter_StrToInt64Def, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('SysUtils', 'StrToFloatDef', JvInterpreter_StrToFloatDef, 2, [varEmpty, varEmpty], varEmpty);
 
     // add missing JvInterpreter code
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);

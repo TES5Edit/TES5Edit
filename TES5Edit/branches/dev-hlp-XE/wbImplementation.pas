@@ -8610,7 +8610,7 @@ begin
         srDef.HasUnusedData;
       {$IFDEF DBGSUBREC}
       if Assigned(wbProgressCallback) then
-        wbProgressCallback('<Warning: Unused data in: ' + GetPath + '>');
+        wbProgressCallback('<Warning: Unused data in: ' + GetFullPath + '>');
       {$ENDIF}
     end;
   end;

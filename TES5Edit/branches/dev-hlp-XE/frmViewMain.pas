@@ -3875,7 +3875,7 @@ begin
       fs.Seek(0, soFromEnd);
     end else
       fs := TFileStream.Create(s, fmCreate);
-    txt := AnsiString(Copy(mmoMessages.Lines.Text, 1, 253)) + #13#10;
+    txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
     fs.WriteBuffer(txt[1], Length(txt));
   finally
     if Assigned(fs) then
@@ -5518,10 +5518,10 @@ begin
     PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
 
-//    for i := Low(Selection) to High(Selection) do
-//      vstNav.IterateSubtree(Selection[i], ClearConflict, nil);
+    PostResetActiveTree;
     InvalidateElementsTreeView(NoNodes);
-    //PostResetActiveTree;
+    Application.ProcessMessages;
+    pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
   end;
