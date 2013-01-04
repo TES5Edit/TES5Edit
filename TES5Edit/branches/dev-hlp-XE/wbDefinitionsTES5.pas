@@ -5223,7 +5223,7 @@ begin
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('Name', 2),
     wbInteger('Unknown', itU8),
-    wbArrayS('Properties', wbStructSK([0], 'Property', [
+    wbArray('Properties', wbStructSK([0], 'Property', [
       wbLenString('Name', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
@@ -11712,7 +11712,7 @@ begin
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA], False, cpNormal, True),
+                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL], False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
