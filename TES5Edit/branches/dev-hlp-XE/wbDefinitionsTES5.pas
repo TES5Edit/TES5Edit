@@ -7900,7 +7900,7 @@ begin
 
   wbRecord(AACT, 'Action', [
     wbEDID,
-    wbCNAMReq
+    wbCNAM
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -8809,7 +8809,7 @@ begin
     wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [1], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
-      wbString(PNAM, 'Pose Matching', 0, cpNormal, True),
+      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
@@ -11835,8 +11835,8 @@ begin
       wbFloat('Fade 1.35+/-'),
       wbByteArray('Unknown', 4),
       wbFloat('Shadow Depth Bias'),
-      wbByteArray('Unknown', 4)
-    ]),
+      wbByteArray('Unknown', 4) // optional
+    ], cpNormal, False, nil, 4),
 		wbStruct(XALP, 'Alpha', [
       wbInteger('Cutoff', itU8),
       wbInteger('Base', itU8)
