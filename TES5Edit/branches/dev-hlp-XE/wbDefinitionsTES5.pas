@@ -5223,7 +5223,7 @@ begin
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('Name', 2),
     wbInteger('Unknown', itU8),
-    wbArray('Properties', wbStructSK([0], 'Property', [
+    wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('Name', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
@@ -5324,7 +5324,7 @@ begin
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsSceneCounter),
     wbArray('Phase Fragments',
-      wbStruct('Phase Fragment', [
+      wbStructSK([0, 1], 'Phase Fragment', [
         wbInteger('Phase Flag', itU8, wbFlags([
           {1} 'OnStart',
           {2} 'OnCompletion'
@@ -5343,27 +5343,27 @@ begin
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
     wbUnion('Data', wbScriptFragmentExistsDecider, [
-      wbArray('Scripts', wbScriptEntry, -2),
+      wbArrayS('Scripts', wbScriptEntry, -2),
       wbStruct('Info VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsInfo
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Pack VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsPack
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Perk VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsPerk
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Quest VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsQuest
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Scene VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsScen
-      ])
+      ], cpNormal, False, nil, 0)
     ])
   ], cpNormal, false, nil, -1);
 
@@ -5887,7 +5887,7 @@ begin
   ], [], cpNormal, False, nil, True);
 
   wbSounds := wbRStruct('Sound', [
-    wbFormIDCk(YNAM, 'Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(YNAM, 'Pick Up', [SNDR, SOUN]),	// How to make YNAM optional ? Happens for some ingredients in skyrim.esm
     wbFormIDCk(ZNAM, 'Drop', [SNDR, SOUN])
   ], [], cpNormal, False, nil, True);
 
@@ -7423,7 +7423,7 @@ begin
     wbMODL,
     wbDEST,
     wbRStruct('Sound', [
-      wbFormIDCk(SNAM, 'Open', [SOUN, SNDR]),
+      wbFormIDCk(SNAM, 'Open', [SOUN, SNDR]),	// How to make SNAM optional ?
       wbFormIDCk(ANAM, 'Close', [SOUN, SNDR]),
       wbFormIDCk(BNAM, 'Loop', [SOUN, SNDR])
     ], [], cpNormal, False, nil, True),
@@ -8348,7 +8348,7 @@ begin
     wbMODL,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbStruct(DATA, 'Data', [
+    wbStruct(DATA, 'Data', [  // Contradicted by FireStormExplosion02 [EXPL:000877F9]
       wbFormIDCk('Light', [LIGH, NULL]),
       wbFormIDCk('Sound 1', [SNDR, NULL]),
       wbFormIDCk('Sound 2', [SNDR, NULL]),
@@ -8770,7 +8770,7 @@ begin
         // 1: EPFD=float
         // 2: EPFD=float,float
         // 3: EPFD=LVLI
-        // 4: EPFD=SPEL, EPF2=lstring, EPFT3=int32 flags
+        // 4: EPFD=SPEL, EPF2=lstring, EPF3=int32 flags
         // 5: EPFD=SPEL
         // 6: EPFD=string
         // 7: EPFD=lstring
@@ -8807,9 +8807,9 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
     wbMODL,
-    wbRStructsSK('Body Parts', 'Body Part', [1], [
+    wbRStructsSK('Body Parts', 'Body Part', [1, 0], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
-      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
+      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),	// Never set in skyrim.esm, so I added a secondary key
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
@@ -9221,7 +9221,7 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbByteArray('Unknown', 32),
+      wbByteArray('Unknown', 32),		// WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
       wbStruct('Fog Color Far', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),

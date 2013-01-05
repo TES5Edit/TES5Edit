@@ -12189,7 +12189,9 @@ begin
 
       Dec(ArrSize);
       if ArrSize = 0 then
-        Break;
+        Break
+      { else if not (not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr)))) then
+        wbProgressCallback('Error: not enough data for array. Elements remaining are '+IntToStr(ArrSize)) Silently fails = called at an invalid time };
     end;
 
   if (ValueDef.DefType = dtString) and (ValueDef.IsVariableSize) then

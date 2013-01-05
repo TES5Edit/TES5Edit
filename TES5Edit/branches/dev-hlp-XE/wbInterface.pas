@@ -4090,7 +4090,8 @@ function wbArrayS(const aName      : string;
                   const aLabels    : array of string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbArrayDef; overload;
 begin
@@ -4108,8 +4109,8 @@ function wbStructSK(const aSignature           : TwbSignature;
                           aRequired            : Boolean = False;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterLoad           : TwbAfterLoadCallback = nil;
+                          aAfterSet            : TwbAfterSetCallback = nil)
                                                : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
@@ -4130,16 +4131,16 @@ begin
   Result := wbSubRecord(aSignatures, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbStructSK(const aSortKey  : array of Integer;
-                    const aName     : string;
-                    const aMembers  : array of IwbValueDef;
-                          aPriority : TwbConflictPriority = cpNormal;
-                          aRequired : Boolean = False;
-                          aDontShow : TwbDontShowCallback = nil;
+function wbStructSK(const aSortKey             : array of Integer;
+                    const aName                : string;
+                    const aMembers             : array of IwbValueDef;
+                          aPriority            : TwbConflictPriority = cpNormal;
+                          aRequired            : Boolean = False;
+                          aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
-                                    : IwbStructDef; overload;
+                          aAfterLoad           : TwbAfterLoadCallback = nil;
+                          aAfterSet            : TwbAfterSetCallback = nil)
+                                               : IwbStructDef; overload;
 begin
   Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
 end;
@@ -6300,14 +6301,16 @@ end;
 
 function TwbArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Prefix    : Integer;
-  Count     : Integer;
-  Index     : Integer; // Used instead of count for easier debugging output.
-  Size      : Integer;
-  BasePtr   : Pointer;
-  EndPtr    : Pointer;
-  Container : IwbContainer;
-  Element   : IwbElement;
+  Prefix        : Integer;
+  Count         : Integer;
+  Index         : Integer; // Used instead of count for easier debugging output.
+  Size          : Integer;
+  BasePtr       : Pointer;
+  EndPtr        : Pointer;
+  Container     : IwbContainer;
+  Element       : IwbElement;
+  DataContainer : IwbDataContainer;
+  KnownSize     : Boolean;
 
   procedure FindOurself(theContainer: IwbContainer; aName: String);
   var
@@ -6319,7 +6322,7 @@ var
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
-          if (Pos(aName, aContainer.Name) = 1) then begin
+          if SameText(aName, aContainer.Name) then begin
             Container := aContainer;
             break;
           end else
@@ -6387,26 +6390,42 @@ begin
   if Count > 0 then
     if arElement.IsVariableSize then begin
 
+      if Container.ElementCount = Count then begin
+        KnownSize := True;
+        for Index := 0 to Pred(Container.ElementCount) do begin
+          Element := Container.Elements[Index];
+          if Supports(Element, IwbDataContainer, DataContainer) then begin
+            Size := Cardinal(DataContainer.DataEndPtr)-Cardinal(DataContainer.DataBasePtr);
+            Inc(Result, Size);
+          end else begin
+            KnownSize := False;
+            Break;
+          end;
+        end;
+      end else
+        KnownSize := False;
+
       EndPtr := aBasePtr;
       Index := 0;
-      while (Count > Index) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
-        BasePtr := EndPtr;
-        Element := Container.Elements[Index];
-        if not Assigned(Element) then begin
-          if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
-            wbProgressCallback('Debug: ['+ Container.Path +'] Index ' + IntToStr(Index) + ' of ' + IntToStr(Count) + ' greater than max '+
-              IntToStr(Container.ElementCount-1));
-          Element := aElement; // If it is too soon, revert to previous way of doing things
+      if not KnownSize then
+        while (Count > Index) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
+          BasePtr := EndPtr;
+          Element := Container.Elements[Index];
+          if not Assigned(Element) then begin
+            if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
+              wbProgressCallback('Debug: ['+ Container.Path +'] Index ' + IntToStr(Index) + ' of ' + IntToStr(Count) + ' greater than max '+
+                IntToStr(Container.ElementCount-1));
+            Element := aElement; // If it is too soon, revert to previous way of doing things
+          end;
+          Size := arElement.Size[BasePtr, aEndPtr, Element];
+          if Size = High(Integer) then begin
+            Result := High(Integer);
+            Exit;
+          end;
+          Inc(Cardinal(EndPtr), Size);
+          Inc(Result, Size);
+          Inc(Index);
         end;
-        Size := arElement.Size[BasePtr, aEndPtr, Element];
-        if Size = High(Integer) then begin
-          Result := High(Integer);
-          Exit;
-        end;
-        Inc(Cardinal(EndPtr), Size);
-        Inc(Result, Size);
-        Inc(Index);
-      end;
 
     end else begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
@@ -9684,8 +9703,9 @@ begin
             Result := Size;
         end else
           break;
-  end else
-     Result := Decide(aBasePtr, aEndPtr, aElement).Size[aBasePtr, aEndPtr, aElement];
+  end else begin
+    Result := Decide(aBasePtr, aEndPtr, aElement).Size[aBasePtr, aEndPtr, aElement];
+  end;
 end;
 
 procedure TwbUnionDef.Report(const aParents: TwbDefPath);

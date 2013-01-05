@@ -7531,7 +7531,7 @@ begin
 
     PostAddMessage('[Removing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', Removed Records: ' + IntToStr(RemovedCount) +
-      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
