@@ -706,7 +706,6 @@ var
   wbICON: IwbSubRecordStructDef;
   wbICONReq: IwbSubRecordStructDef;
   wbICO2: IwbSubRecordStructDef;
-  wbSounds: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbVatsValueFunctionEnum: IwbEnumDef;
@@ -5752,7 +5751,7 @@ begin
       ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
     ], []),
 
     {--- Leveled Actor ----}
@@ -5884,11 +5883,6 @@ begin
   wbICO2 := wbRStruct('Icon 2 (female)', [
     wbString(ICO2, 'Large Icon filename'),
     wbString(MIC2, 'Small Icon filename')
-  ], [], cpNormal, False, nil, True);
-
-  wbSounds := wbRStruct('Sound', [
-    wbFormIDCk(YNAM, 'Pick Up', [SNDR, SOUN]),	// How to make YNAM optional ? Happens for some ingredients in skyrim.esm
-    wbFormIDCk(ZNAM, 'Drop', [SNDR, SOUN])
   ], [], cpNormal, False, nil, True);
 
   wbVatsValueFunctionEnum :=
@@ -6624,7 +6618,8 @@ begin
     wbMODL,
     wbDEST,
     wbICON,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbETYP,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
@@ -6663,7 +6658,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbDESC,
     wbKSIZ,
     wbKWDAs,
@@ -6714,7 +6710,8 @@ begin
     wbBODT,
     wbBOD2,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
@@ -6783,7 +6780,8 @@ begin
     wbICON,
     wbLString(DESC, 'Book Text', 0, cpNormal, True),
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -7422,11 +7420,9 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbRStruct('Sound', [
-      wbFormIDCk(SNAM, 'Open', [SOUN, SNDR]),	// How to make SNAM optional ?
-      wbFormIDCk(ANAM, 'Close', [SOUN, SNDR]),
-      wbFormIDCk(BNAM, 'Loop', [SOUN, SNDR])
-    ], [], cpNormal, False, nil, True),
+    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
+    wbFormIDCk(ANAM, 'Sound - Close', [SOUN, SNDR]),
+    wbFormIDCk(BNAM, 'Sound - Loop', [SOUN, SNDR]),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       '',
       'Automatic',
@@ -8102,7 +8098,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbICON,
@@ -8807,7 +8804,7 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
     wbMODL,
-    wbRStructsSK('Body Parts', 'Body Part', [1, 0], [
+    wbRStructsSK('Body Parts', 'Body Part', [2], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(PNAM, 'Pose Matching', 0, cpNormal, False),	// Never set in skyrim.esm, so I added a secondary key
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
@@ -9933,7 +9930,8 @@ begin
     wbMODL,
     wbICON,
     wbETYP,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -9963,7 +9961,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
@@ -10400,7 +10399,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -10417,7 +10417,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbInteger(QUAL, 'Quality', itS32, wbEnum([], [
       0, 'Novice',
       1, 'Apprentice',
@@ -12252,7 +12253,8 @@ begin
     wbDESC,
     wbMODL,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbStruct(DATA, 'Item', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -12468,7 +12470,8 @@ begin
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbDESC,
