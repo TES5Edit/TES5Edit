@@ -5291,10 +5291,10 @@ begin
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
     wbArrayS('Quest Fragments',
-      wbStructSK([0], 'Quest Fragment', [
-        wbInteger('Quest Stage Index', itU16),
+      wbStructSK([0, 2], 'Quest Fragment', [
+        wbInteger('Quest Stage', itU16),
         wbInteger('Unknown', itS16),
-        wbInteger('Unknown', itS32),
+        wbInteger('Quest Stage Index', itS32),
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
@@ -8806,7 +8806,7 @@ begin
     wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [2], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
-      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),	// Never set in skyrim.esm, so I added a secondary key
+      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),

@@ -12498,7 +12498,10 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
-    if Assigned(aBasePtr) and (i >= OptionalFromElement) and ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, aContainer] > Cardinal(aEndPtr)) ) then begin
+    if Assigned(aBasePtr) and (i >= OptionalFromElement) and
+       ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or
+           ((ValueDef.Size[aBasePtr, aEndPtr, aContainer]<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
+           (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, aContainer] > Cardinal(aEndPtr))) ) then begin
       aEndPtr := aBasePtr;
       ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
       if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then

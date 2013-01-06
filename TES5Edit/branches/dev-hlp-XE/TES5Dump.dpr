@@ -61,7 +61,7 @@ begin
   if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType = 0 then begin
-        if Assigned(DumpGroups) and not DumpGroups.Find(TwbSignature(GroupRecord.GroupLabel), i) then
+        if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
         ReportProgress('Dumping: ' + GroupRecord.Name);
       end;
@@ -87,7 +87,7 @@ begin
   if Assigned(DumpGroups) and (aElement.ElementType = etGroupRecord) then
     if Supports(aElement, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType = 0 then
-        if not DumpGroups.Find(TwbSignature(GroupRecord.GroupLabel), i) then
+        if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
   Name := aElement.Name;

@@ -4176,29 +4176,29 @@ begin
   Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
 end;
 
-function wbStruct(const aSignature : TwbSignature;
-                  const aName      : string;
-                  const aMembers   : array of IwbValueDef;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
-                                   : IwbSubRecordDef; overload;
+function wbStruct(const aSignature           : TwbSignature;
+                  const aName                : string;
+                  const aMembers             : array of IwbValueDef;
+                        aPriority            : TwbConflictPriority = cpNormal;
+                        aRequired            : Boolean = False;
+                        aDontShow            : TwbDontShowCallback = nil;
+                        aOptionalFromElement : Integer = -1;
+                        aAfterLoad           : TwbAfterLoadCallback = nil;
+                        aAfterSet            : TwbAfterSetCallback = nil)
+                                             : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbStruct('', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbStruct(const aName     : string;
-                  const aMembers  : array of IwbValueDef;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
-                                  : IwbStructDef; overload;
+function wbStruct(const aName                : string;
+                  const aMembers             : array of IwbValueDef;
+                        aPriority            : TwbConflictPriority = cpNormal;
+                        aRequired            : Boolean = False;
+                        aDontShow            : TwbDontShowCallback = nil;
+                        aOptionalFromElement : Integer = -1;
+                        aAfterLoad           : TwbAfterLoadCallback = nil;
+                        aAfterSet            : TwbAfterSetCallback = nil)
+                                             : IwbStructDef; overload;
 begin
   Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
 end;
@@ -6341,6 +6341,8 @@ begin
     Container := GetContainerFromUnion(aElement);
     if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
         FindOurself(Container, noName);
+    if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
+        Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
     if not Assigned(Container) then begin
       Result := High(Integer);
       Exit;
