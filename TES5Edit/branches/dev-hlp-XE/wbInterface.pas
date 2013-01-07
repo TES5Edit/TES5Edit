@@ -123,6 +123,7 @@ type
     );
 
   TConflictAllSet = set of TConflictAll;
+  TConflictAllColors = array[TConflictAll] of TColor;
 
   TConflictThis = (
     ctUnknown,
@@ -140,7 +141,35 @@ type
     );
 
   TConflictThisSet = set of TConflictThis;
+  TConflictThisColors = array[TConflictThis] of TColor;
 
+var
+  wbColorConflictAll: TConflictAllColors = (
+    clDefault, // caUnknown
+    clDefault, // caOnlyOne
+    clLime,    // caNoCoflict
+    clYellow,  // caConflictBenign
+    clYellow,  // caOverride
+    clRed,     // caConflict
+    clFuchsia  // caConflictCritical
+  );
+
+  wbColorConflictThis: TConflictThisColors = (
+    clWindowText, // ctUnknown
+    clWindowText, // ctIgnored
+    clMedGray,    // ctNotDefined
+    clDkGray,     // ctIdenticalToMaster
+    clWindowText, // ctOnlyOne
+    clLtGray,     // ctHiddenByModGroup
+    clPurple,     // ctMaster
+    clWindowText, // ctConflictBenign
+    clGreen,      // ctOverride
+    clOlive,      // ctIdenticalToMasterWinsConflict
+    clOrange,     // ctConflictWins
+    clRed         // ctConflictLoses
+  );
+
+type
   TwbConflictPriority = (
     cpIgnore,
     cpBenign,
@@ -2435,12 +2464,14 @@ end;
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;
 begin
-  Result := clDefault;
+  //Result := clDefault;
+  Result := wbColorConflictAll[aConflictAll];
 end;
 
 function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 begin
-  case aConflictThis of
+  Result := wbColorConflictThis[aConflictThis];
+  {case aConflictThis of
     ctMaster:
       Result := clPurple;
     ctIdenticalToMaster:
@@ -2460,9 +2491,8 @@ begin
   else
     //Result := clBlack;
     Result := clWindowText;
-  end;
+  end;}
 end;
-
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
 begin

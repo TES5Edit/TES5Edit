@@ -3242,6 +3242,10 @@ begin
   wbUDRSetZValue := Settings.ReadFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
   wbUDRSetMSTT := Settings.ReadBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
   wbUDRSetMSTTValue := Settings.ReadInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+  for ConflictThis := Low(TConflictThis) to High(TConflictThis) do
+    wbColorConflictThis[ConflictThis] := Settings.ReadInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ConflictThis)), Integer(wbColorConflictThis[ConflictThis]));
+  for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
+    wbColorConflictAll[ConflictAll] := Settings.ReadInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ConflictAll)), Integer(wbColorConflictAll[ConflictAll]));
 
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
   mniViewHideNoConflict.Checked := HideNoConflict;
@@ -9004,6 +9008,9 @@ begin
 end;
 
 procedure TfrmMain.mniNavOptionsClick(Sender: TObject);
+var
+  ct: TConflictThis;
+  ca: TConflictAll;
 begin
   with TfrmOptions.Create(Self) do try
 
@@ -9051,6 +9058,10 @@ begin
     Settings.WriteFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
     Settings.WriteBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
     Settings.WriteInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+    for ct := Low(TConflictThis) to High(TConflictThis) do
+      Settings.WriteInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ct)), Integer(wbColorConflictThis[ct]));
+    for ca := Low(TConflictAll) to High(TConflictAll) do
+      Settings.WriteInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ca)), Integer(wbColorConflictAll[ca]));
     Settings.UpdateFile;
 
   finally
@@ -10702,14 +10713,18 @@ begin
           Factor := Factor + 0.015;
       end;
 
-      case NodeDatas[Column].ConflictAll of
+      if NodeDatas[Column].ConflictAll >= caNoConflict then
+        TargetCanvas.Brush.Color := Lighter(ConflictAllToColor(NodeDatas[Column].ConflictAll), Factor)
+      else
+        Exit;
+      {case NodeDatas[Column].ConflictAll of
         caNoConflict: TargetCanvas.Brush.Color := Lighter(clLime, Factor);
         caOverride, caConflictBenign: TargetCanvas.Brush.Color := Lighter(clYellow, Factor);
         caConflict: TargetCanvas.Brush.Color := Lighter(clRed, Factor);
         caConflictCritical: TargetCanvas.Brush.Color := Lighter(clFuchsia, Factor);
       else
         Exit;
-      end;
+      end;}
 
       TargetCanvas.FillRect(CellRect);
 
@@ -10727,14 +10742,19 @@ begin
   if NodeDatas[0].ConflictAll = caUnknown then
     Assert(False);
 
-  case NodeDatas[0].ConflictAll of
+  if NodeDatas[0].ConflictAll >= caNoConflict then
+    ItemColor := Lighter(ConflictAllToColor(NodeDatas[0].ConflictAll), 0.85)
+  else
+    Exit;
+
+  {case NodeDatas[0].ConflictAll of
     caNoConflict: ItemColor := Lighter(clLime, 0.85);
     caOverride, caConflictBenign: ItemColor := Lighter(clYellow, 0.85);
     caConflict: ItemColor := Lighter(clRed, 0.85);
     caConflictCritical: ItemColor := Lighter(clFuchsia, 0.85);
   else
     Exit;
-  end;
+  end;}
   EraseAction := eaColor;
 end;
 
@@ -11213,12 +11233,14 @@ begin
     if ActiveRecords[0].ConflictAll = caUnknown then
       Assert(False);
 
-    case ActiveRecords[0].ConflictAll of
+    if ActiveRecords[0].ConflictAll >= caNoConflict then
+      Sender.Background := Lighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85);
+    {case ActiveRecords[0].ConflictAll of
       caNoConflict: Sender.Background := Lighter(clLime, 0.85);
       caOverride, caConflictBenign: Sender.Background := Lighter(clYellow, 0.85);
       caConflict: Sender.Background := Lighter(clRed, 0.85);
       caConflictCritical: Sender.Background := Lighter(clFuchsia, 0.85);
-    end;
+    end;}
     PaintInfo.TargetCanvas.Brush.Color := Sender.Background;
     Sender.Font.Color := ConflictThisToColor(
       ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis);
@@ -11476,14 +11498,18 @@ begin
       end;
     end;
 
-    case NodeData.ConflictAll of
+    if NodeData.ConflictAll >= caNoConflict then
+      ItemColor := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+    else
+      Exit;
+   { case NodeData.ConflictAll of
       caNoConflict: ItemColor := Lighter(clLime, 0.85);
       caOverride, caConflictBenign: ItemColor := Lighter(clYellow, 0.85);
       caConflict: ItemColor := Lighter(clRed, 0.85);
       caConflictCritical: ItemColor := Lighter(clFuchsia, 0.85);
     else
       Exit;
-    end;
+    end;}
 
     EraseAction := eaColor;
 
@@ -11503,14 +11529,18 @@ begin
       if Element.ElementType <> etMainRecord then
         Element := nil;
 
-    case NodeData.ConflictAll of
+    if NodeData.ConflictAll >= caNoConflict then
+      lblPath.Color := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+    else
+      lblPath.Color := vstNav.Color;
+    {case NodeData.ConflictAll of
       caNoConflict: lblPath.Color := Lighter(clLime, 0.85);
       caOverride, caConflictBenign: lblPath.Color := Lighter(clYellow, 0.85);
       caConflict: lblPath.Color := Lighter(clRed, 0.85);
       caConflictCritical: lblPath.Color := Lighter(clFuchsia, 0.85);
     else
       lblPath.Color := vstNav.Color;
-    end;
+    end;}
 
     lblPath.Font.Color := ConflictThisToColor(NodeData.ConflictThis);
 
@@ -11942,7 +11972,6 @@ procedure TfrmMain.vstNavPaintText(Sender: TBaseVirtualTree;
 var
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  Color                       : TColor;
 begin
   TargetCanvas.Font.Color := clWindowText;
   if wbLoaderDone then begin
@@ -11985,8 +12014,7 @@ begin
         TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsUnderline];
     end;
 
-    Color := ConflictThisToColor(NodeData.ConflictThis);
-    TargetCanvas.Font.Color := Color;
+    TargetCanvas.Font.Color := ConflictThisToColor(NodeData.ConflictThis);
   end;
 end;
 
