@@ -5162,11 +5162,11 @@ begin
   ]);
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
-  wbFULL := wbLString(FULL, 'Name', 0, cpTranslate);
-  wbFULLActor := wbLString(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
-  wbFULLReq := wbLString(FULL, 'Name', 0, cpNormal, True);
-  wbDESC := wbLString(DESC, 'Description', 0, cpTranslate);
-  wbDESCReq := wbLString(DESC, 'Description', 0, cpTranslate, True);
+  wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
+  wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
+  wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpNormal, True);
+  wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
+  wbDESCReq := wbLStringKC(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
 
   wbOBND := wbStruct(OBND, 'Object Bounds', [
@@ -6778,7 +6778,7 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbLString(DESC, 'Book Text', 0, cpNormal, True),
+    wbLStringKC(DESC, 'Book Text', 0, cpNormal, True),
     wbDEST,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),

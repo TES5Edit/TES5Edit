@@ -1436,6 +1436,23 @@ function wbStringLC(const aName      : string;
                           aAfterSet  : TwbAfterSetCallback = nil)
                                      : IwbStringDef; overload;
 
+function wbStringKC(const aSignature : TwbSignature;
+                    const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbSubRecordDef; overload;
+
+function wbStringKC(const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+
 function wbLString(const aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
@@ -1446,6 +1463,23 @@ function wbLString(const aSignature : TwbSignature;
                                      : IwbSubRecordDef; overload;
 
 function wbLString(const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+
+function wbLStringKC(const aSignature : TwbSignature;
+                    const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbSubRecordDef; overload;
+
+function wbLStringKC(const aName      : string;
                           aSize      : Integer = 0;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -2996,6 +3030,11 @@ type
     function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; override;
   end;
 
+  TwbStringKCDef = class(TwbStringDef)  // Keep Case
+  protected
+    function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
+  end;
+
   TwbStringMgefCodeDef = class(TwbStringDef)
   protected
     function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; override;
@@ -3018,6 +3057,11 @@ type
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; override;
     procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+  end;
+
+  TwbLStringKCDef = class(TwbLStringDef)
+  protected
+    function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
   end;
 
   TwbLenStringDef = class(TwbValueDef, IwbLenStringDef)
@@ -3691,6 +3735,29 @@ begin
   Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
 end;
 
+function wbStringKC(const aSignature : TwbSignature;
+                    const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+end;
+
+function wbStringKC(const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+begin
+  Result := TwbStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+end;
+
 function wbLString(const  aSignature : TwbSignature;
                     const aName      : string;
                           aSize      : Integer = 0;
@@ -3712,6 +3779,29 @@ function wbLString(const  aName      : string;
                                      : IwbStringDef; overload;
 begin
   Result := TwbLStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+end;
+
+function wbLStringKC(const  aSignature : TwbSignature;
+                    const aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbLStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+end;
+
+function wbLStringKC(const  aName      : string;
+                          aSize      : Integer = 0;
+                          aPriority  : TwbConflictPriority = cpNormal;
+                          aRequired  : Boolean = False;
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aAfterSet  : TwbAfterSetCallback = nil)
+                                     : IwbStringDef; overload;
+begin
+  Result := TwbLStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
 end;
 
 function wbStringMgefCode(const aSignature : TwbSignature;
@@ -7381,7 +7471,7 @@ end;
 
 function TwbStringDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
-  Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
+  Result := UpperCase(ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey));
 end;
 
 function TwbStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -10134,11 +10224,11 @@ end;
 
 function TwbFastStringList.CompareStrings(const S1, S2: string): Integer;
 begin
-  {$IFDEF DCC6OrLater}
+  {x$IFDEF DCC6OrLater}
   if CaseSensitive then
     Result := CompareStr(S1, S2)
   else
-  {$ENDIF}
+  {x$ENDIF}
     Result := CompareText(S1, S2);
 end;
 
@@ -10154,9 +10244,9 @@ end;
 procedure TwbFastStringListCS.AfterConstruction;
 begin
   inherited;
-  {$IFDEF DCC6OrLater}
+  {x$IFDEF DCC6OrLater}
   CaseSensitive := True;
-  {$ENDIF}
+  {x$ENDIF}
 end;
 
 { TwbStringLCDef }
@@ -10478,6 +10568,22 @@ begin
       Supports(Result.Container, IwbContainerElementRef, Result);
   end else
     Supports(aElement, IwbContainerElementRef, Result);
+end;
+
+{ TwbStringKCDef }
+
+function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement; aExtended: Boolean): string;
+begin
+  Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
+end;
+
+{ TwbLStringKCDef }
+
+function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement; aExtended: Boolean): string;
+begin
+  Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
 
 initialization
