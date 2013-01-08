@@ -223,11 +223,11 @@ end;
 
 function TnxFastStringList.CompareStrings(const S1, S2: string): Integer;
 begin
-  {$IFDEF DCC6OrLater}
+  {x$IFDEF DCC6OrLater}
   if CaseSensitive then
     Result := CompareStr(S1, S2)
   else
-  {$ENDIF}
+  {x$ENDIF}
     Result := CompareText(S1, S2);
 end;
 
@@ -243,9 +243,9 @@ end;
 procedure TnxFastStringListCS.AfterConstruction;
 begin
   inherited;
-  {$IFDEF DCC6OrLater}
+  {x$IFDEF DCC6OrLater}
   CaseSensitive := True;
-  {$ENDIF}
+  {x$ENDIF}
 end;
 
 end.

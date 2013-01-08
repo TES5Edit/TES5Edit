@@ -706,7 +706,6 @@ var
   wbICON: IwbSubRecordStructDef;
   wbICONReq: IwbSubRecordStructDef;
   wbICO2: IwbSubRecordStructDef;
-  wbSounds: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbVatsValueFunctionEnum: IwbEnumDef;
@@ -2007,7 +2006,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
-  if (aNewValue <> -1) then begin
+  if (aNewValue <> 0.0) then begin
     Element := Container.ElementByName['Archtype'];
     if Assigned(Element) and (Element.NativeValue = 0) then
         Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
@@ -2037,7 +2036,7 @@ begin
       Container.ElementNativeValues['..\Actor Value'] := -1;
     end;
     Container.ElementNativeValues['..\Second Actor Value'] := -1;
-    Container.ElementNativeValues['..\Second AV Weight'] := -1;
+    Container.ElementNativeValues['..\Second AV Weight'] := 0.0;
   end;
 end;
 
@@ -5163,11 +5162,11 @@ begin
   ]);
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
-  wbFULL := wbLString(FULL, 'Name', 0, cpTranslate);
-  wbFULLActor := wbLString(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
-  wbFULLReq := wbLString(FULL, 'Name', 0, cpNormal, True);
-  wbDESC := wbLString(DESC, 'Description', 0, cpTranslate);
-  wbDESCReq := wbLString(DESC, 'Description', 0, cpTranslate, True);
+  wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
+  wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
+  wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpNormal, True);
+  wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
+  wbDESCReq := wbLStringKC(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
 
   wbOBND := wbStruct(OBND, 'Object Bounds', [
@@ -5292,10 +5291,10 @@ begin
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
     wbArrayS('Quest Fragments',
-      wbStructSK([0], 'Quest Fragment', [
-        wbInteger('Quest Stage Index', itU16),
+      wbStructSK([0, 2], 'Quest Fragment', [
+        wbInteger('Quest Stage', itU16),
         wbInteger('Unknown', itS16),
-        wbInteger('Unknown', itS32),
+        wbInteger('Quest Stage Index', itS32),
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
@@ -5324,7 +5323,7 @@ begin
         wbLenString('fragmentName', 2)
       ]), [], wbScriptFragmentsSceneCounter),
     wbArray('Phase Fragments',
-      wbStruct('Phase Fragment', [
+      wbStructSK([0, 1], 'Phase Fragment', [
         wbInteger('Phase Flag', itU8, wbFlags([
           {1} 'OnStart',
           {2} 'OnCompletion'
@@ -5343,27 +5342,27 @@ begin
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
     wbUnion('Data', wbScriptFragmentExistsDecider, [
-      wbArray('Scripts', wbScriptEntry, -2),
+      wbArrayS('Scripts', wbScriptEntry, -2),
       wbStruct('Info VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsInfo
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Pack VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsPack
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Perk VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsPerk
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Quest VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsQuest
-      ]),
+      ], cpNormal, False, nil, 0),
       wbStruct('Scene VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2),
         wbScriptFragmentsScen
-      ])
+      ], cpNormal, False, nil, 0)
     ])
   ], cpNormal, false, nil, -1);
 
@@ -5752,7 +5751,7 @@ begin
       ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
     ], []),
 
     {--- Leveled Actor ----}
@@ -5884,11 +5883,6 @@ begin
   wbICO2 := wbRStruct('Icon 2 (female)', [
     wbString(ICO2, 'Large Icon filename'),
     wbString(MIC2, 'Small Icon filename')
-  ], [], cpNormal, False, nil, True);
-
-  wbSounds := wbRStruct('Sound', [
-    wbFormIDCk(YNAM, 'Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Drop', [SNDR, SOUN])
   ], [], cpNormal, False, nil, True);
 
   wbVatsValueFunctionEnum :=
@@ -6624,7 +6618,8 @@ begin
     wbMODL,
     wbDEST,
     wbICON,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbETYP,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
@@ -6663,7 +6658,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbDESC,
     wbKSIZ,
     wbKWDAs,
@@ -6714,7 +6710,8 @@ begin
     wbBODT,
     wbBOD2,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
@@ -6781,9 +6778,10 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbLString(DESC, 'Book Text', 0, cpNormal, True),
+    wbLStringKC(DESC, 'Book Text', 0, cpNormal, True),
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -7422,11 +7420,9 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbRStruct('Sound', [
-      wbFormIDCk(SNAM, 'Open', [SOUN, SNDR]),
-      wbFormIDCk(ANAM, 'Close', [SOUN, SNDR]),
-      wbFormIDCk(BNAM, 'Loop', [SOUN, SNDR])
-    ], [], cpNormal, False, nil, True),
+    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
+    wbFormIDCk(ANAM, 'Sound - Close', [SOUN, SNDR]),
+    wbFormIDCk(BNAM, 'Sound - Loop', [SOUN, SNDR]),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       '',
       'Automatic',
@@ -7900,7 +7896,7 @@ begin
 
   wbRecord(AACT, 'Action', [
     wbEDID,
-    wbCNAMReq
+    wbCNAM
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -8102,7 +8098,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbICON,
@@ -8133,7 +8130,7 @@ begin
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbUnion('', wbNAVIIslandDataDecider, [
+        wbUnion('Island', wbNAVIIslandDataDecider, [
           wbStruct('Unused', [
           ]),
           wbStruct('Island Data', [
@@ -8348,7 +8345,7 @@ begin
     wbMODL,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbStruct(DATA, 'Data', [
+    wbStruct(DATA, 'Data', [  // Contradicted by FireStormExplosion02 [EXPL:000877F9]
       wbFormIDCk('Light', [LIGH, NULL]),
       wbFormIDCk('Sound 1', [SNDR, NULL]),
       wbFormIDCk('Sound 2', [SNDR, NULL]),
@@ -8770,7 +8767,7 @@ begin
         // 1: EPFD=float
         // 2: EPFD=float,float
         // 3: EPFD=LVLI
-        // 4: EPFD=SPEL, EPF2=lstring, EPFT3=int32 flags
+        // 4: EPFD=SPEL, EPF2=lstring, EPF3=int32 flags
         // 5: EPFD=SPEL
         // 6: EPFD=string
         // 7: EPFD=lstring
@@ -8807,9 +8804,9 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
     wbMODL,
-    wbRStructsSK('Body Parts', 'Body Part', [1], [
+    wbRStructsSK('Body Parts', 'Body Part', [2], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
-      wbString(PNAM, 'Pose Matching', 0, cpNormal, True),
+      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
@@ -9221,7 +9218,7 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbByteArray('Unknown', 32),
+      wbByteArray('Unknown', 32),		// WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
       wbStruct('Fog Color Far', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
@@ -9933,7 +9930,8 @@ begin
     wbMODL,
     wbICON,
     wbETYP,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -9963,7 +9961,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
@@ -10400,7 +10399,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -10417,7 +10417,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbInteger(QUAL, 'Quality', itS32, wbEnum([], [
       0, 'Novice',
       1, 'Apprentice',
@@ -10627,7 +10628,7 @@ begin
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime faction', [FACT], False, cpNormal, False),
     wbFormIDCk(FTST, 'Head texture', [TXST], False, cpNormal, False),
-    wbStruct(QNAM, 'Texture lightning', [
+    wbStruct(QNAM, 'Texture lighting', [
       wbFloat('Red'),
       wbFloat('Green'),
       wbFloat('Blue')
@@ -11712,7 +11713,7 @@ begin
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA], False, cpNormal, True),
+                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL], False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
@@ -11835,8 +11836,8 @@ begin
       wbFloat('Fade 1.35+/-'),
       wbByteArray('Unknown', 4),
       wbFloat('Shadow Depth Bias'),
-      wbByteArray('Unknown', 4)
-    ]),
+      wbByteArray('Unknown', 4) // optional
+    ], cpNormal, False, nil, 4),
 		wbStruct(XALP, 'Alpha', [
       wbInteger('Cutoff', itU8),
       wbInteger('Base', itU8)
@@ -12252,7 +12253,8 @@ begin
     wbDESC,
     wbMODL,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbStruct(DATA, 'Item', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -12468,7 +12470,8 @@ begin
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbDESC,

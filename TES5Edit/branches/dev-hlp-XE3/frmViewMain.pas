@@ -791,7 +791,8 @@ implementation
 {$R *.dfm}
 
 uses
-  Colors, Mask,
+  Colors,
+  Mask,
   {$IFNDEF LiteVersion}
   cxVTEditors,
   {$ENDIF}
@@ -1267,10 +1268,10 @@ var
 //  IgnoreConflicts             : Boolean;
   FoundAny                    : Boolean;
 begin
-  if aSiblingCompare then
-    Priority := cpBenign
-  else
-    Priority := cpNormal;
+//  if aSiblingCompare then
+//    Priority := cpBenign
+//  else
+//    Priority := cpNormal;
 //  IgnoreConflicts := False;
   FoundAny := False;
   OverallConflictThis := ctUnknown;
@@ -3240,6 +3241,10 @@ begin
   wbUDRSetZValue := Settings.ReadFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
   wbUDRSetMSTT := Settings.ReadBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
   wbUDRSetMSTTValue := Settings.ReadInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+  for ConflictThis := Low(TConflictThis) to High(TConflictThis) do
+    wbColorConflictThis[ConflictThis] := Settings.ReadInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ConflictThis)), Integer(wbColorConflictThis[ConflictThis]));
+  for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
+    wbColorConflictAll[ConflictAll] := Settings.ReadInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ConflictAll)), Integer(wbColorConflictAll[ConflictAll]));
 
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
   mniViewHideNoConflict.Checked := HideNoConflict;
@@ -3628,11 +3633,11 @@ var
   UndeletedCount              : Cardinal;
   DeletedNAVM                 : Cardinal;
   StartTick                   : Cardinal;
-  i, n                        : Integer;
+  i {, n}                     : Integer;
   MainRecord, LinksToRecord   : IwbMainRecord;
   Element                     : IwbElement;
   Position                    : TD3DXVector3;
-  Cntr, Cntr2                 : IwbContainerElementRef;
+  Cntr {, Cntr2}              : IwbContainerElementRef;
 begin
   if not wbEditAllowed then
     Exit;
@@ -3873,7 +3878,7 @@ begin
       fs.Seek(0, soFromEnd);
     end else
       fs := TFileStream.Create(s, fmCreate);
-    txt := AnsiString(Copy(mmoMessages.Lines.Text, 1, 253)) + #13#10;
+    txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
     fs.WriteBuffer(txt[1], Length(txt));
   finally
     if Assigned(fs) then
@@ -5414,7 +5419,7 @@ var
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
   StartTick                   : Cardinal;
-  Element                     : IwbElement;
+//  Element                     : IwbElement;
   jvi                         : TJvInterpreterProgram;
   Scr                         : string;
   i                           : integer;
@@ -5516,10 +5521,10 @@ begin
     PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
 
-//    for i := Low(Selection) to High(Selection) do
-//      vstNav.IterateSubtree(Selection[i], ClearConflict, nil);
+    PostResetActiveTree;
     InvalidateElementsTreeView(NoNodes);
-    //PostResetActiveTree;
+    Application.ProcessMessages;
+    pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
   end;
@@ -6354,7 +6359,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
   EditValue                   : string;
-  StringDef                   : IwbStringDef;
+//  StringDef                   : IwbStringDef;
   IntegerDef                  : IwbIntegerDef;
   Flags                       : IwbFlagsDef;
   i, StringID                 : Integer;
@@ -7188,15 +7193,15 @@ end;
 
 procedure TfrmMain.mniNavTestClick(Sender: TObject);
 var
-  _File : IwbFile;
+  _File   : IwbFile;
   Records : array of IwbMainRecord;
-  BaseRecord: IwbMainRecord;
-  i, j : Integer;
-  FormID, FileID: Cardinal;
-  s: string;
-  ContainerRef : IwbContainerElementRef;
-  Allowed: TStringList;
-  Silent: TStringList;
+  i {, j} : Integer;
+  s       : string;
+  Allowed : TStringList;
+  Silent  : TStringList;
+//  BaseRecord: IwbMainRecord;
+//  FormID, FileID: Cardinal;
+//  ContainerRef : IwbContainerElementRef;
 begin
   _File := Files[2];
   SetLength(Records, _File.RecordCount);
@@ -7529,7 +7534,7 @@ begin
 
     PostAddMessage('[Removing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', Removed Records: ' + IntToStr(RemovedCount) +
-      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -8675,7 +8680,7 @@ begin
                           for i := Low(Cells[x,y]) to High(Cells[x,y]) do begin
 
                             Node2 := Cells[x,y,i];
-                            NodeData2 := vstNav.GetNodeData(Node2);
+                            {NodeData2 :=} vstNav.GetNodeData(Node2);
                             vstNav.MoveTo(Node2, Node, amAddChildFirst, False);
                             if not FoundAny then begin
                               FoundAny := True;
@@ -9002,6 +9007,9 @@ begin
 end;
 
 procedure TfrmMain.mniNavOptionsClick(Sender: TObject);
+var
+  ct: TConflictThis;
+  ca: TConflictAll;
 begin
   with TfrmOptions.Create(Self) do try
 
@@ -9049,6 +9057,10 @@ begin
     Settings.WriteFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
     Settings.WriteBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
     Settings.WriteInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+    for ct := Low(TConflictThis) to High(TConflictThis) do
+      Settings.WriteInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ct)), Integer(wbColorConflictThis[ct]));
+    for ca := Low(TConflictAll) to High(TConflictAll) do
+      Settings.WriteInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ca)), Integer(wbColorConflictAll[ca]));
     Settings.UpdateFile;
 
   finally
@@ -10700,14 +10712,18 @@ begin
           Factor := Factor + 0.015;
       end;
 
-      case NodeDatas[Column].ConflictAll of
+      if NodeDatas[Column].ConflictAll >= caNoConflict then
+        TargetCanvas.Brush.Color := Lighter(ConflictAllToColor(NodeDatas[Column].ConflictAll), Factor)
+      else
+        Exit;
+      {case NodeDatas[Column].ConflictAll of
         caNoConflict: TargetCanvas.Brush.Color := Lighter(clLime, Factor);
         caOverride, caConflictBenign: TargetCanvas.Brush.Color := Lighter(clYellow, Factor);
         caConflict: TargetCanvas.Brush.Color := Lighter(clRed, Factor);
         caConflictCritical: TargetCanvas.Brush.Color := Lighter(clFuchsia, Factor);
       else
         Exit;
-      end;
+      end;}
 
       TargetCanvas.FillRect(CellRect);
 
@@ -10725,14 +10741,19 @@ begin
   if NodeDatas[0].ConflictAll = caUnknown then
     Assert(False);
 
-  case NodeDatas[0].ConflictAll of
+  if NodeDatas[0].ConflictAll >= caNoConflict then
+    ItemColor := Lighter(ConflictAllToColor(NodeDatas[0].ConflictAll), 0.85)
+  else
+    Exit;
+
+  {case NodeDatas[0].ConflictAll of
     caNoConflict: ItemColor := Lighter(clLime, 0.85);
     caOverride, caConflictBenign: ItemColor := Lighter(clYellow, 0.85);
     caConflict: ItemColor := Lighter(clRed, 0.85);
     caConflictCritical: ItemColor := Lighter(clFuchsia, 0.85);
   else
     Exit;
-  end;
+  end;}
   EraseAction := eaColor;
 end;
 
@@ -10808,17 +10829,25 @@ begin
   Allowed := False;
 end;
 
+Type
+  TwbComboEditLink = class(TComboEditLink)
+    function CreateEditControl: TWinControl; override;
+    procedure SetBounds(R: TRect); override;
+  end;
+
 procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
 var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
-  i                           : Integer;
 
   {$IFNDEF LiteVersion}
+  i                           : Integer;
   TextLink                    : TcxTextEditLink;
   ComboLink                   : TcxComboEditLink;
   CheckComboLink              : TcxCheckComboEditLink;
+  {$ELSE}
+  ComboLink                   : TwbComboEditLink;
   {$ENDIF}
 begin
   if Column < 1 then
@@ -10839,8 +10868,8 @@ begin
   if not Assigned(Element) then
     Exit;
 
-  {$IFNDEF LiteVersion}
   case Element.EditType of
+  {$IFNDEF LiteVersion}
     etDefault: begin
       TextLink := TcxTextEditLink.Create;
       EditLink := TextLink;
@@ -10873,8 +10902,19 @@ begin
 //      CheckComboLink.Properties.DropDownSizeable := True;
       CheckComboLink.Properties.DropDownAutoWidth := True;
     end;
-  end;
+    {$ELSE}
+    etComboBox: begin
+      ComboLink := TwbComboEditLink.Create(Self);
+      EditLink := ComboLink;
+      if Element.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := Element.ElementID;
+        EditInfoCache := Element.EditInfo;
+      end;
+      ComboLink.PickList.CommaText := EditInfoCache;
+      ComboLink.Sorted := True;
+    end;
   {$ENDIF}
+  end;
 end;
 
 procedure TfrmMain.vstViewDblClick(Sender: TObject);
@@ -11192,12 +11232,14 @@ begin
     if ActiveRecords[0].ConflictAll = caUnknown then
       Assert(False);
 
-    case ActiveRecords[0].ConflictAll of
+    if ActiveRecords[0].ConflictAll >= caNoConflict then
+      Sender.Background := Lighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85);
+    {case ActiveRecords[0].ConflictAll of
       caNoConflict: Sender.Background := Lighter(clLime, 0.85);
       caOverride, caConflictBenign: Sender.Background := Lighter(clYellow, 0.85);
       caConflict: Sender.Background := Lighter(clRed, 0.85);
       caConflictCritical: Sender.Background := Lighter(clFuchsia, 0.85);
-    end;
+    end;}
     PaintInfo.TargetCanvas.Brush.Color := Sender.Background;
     Sender.Font.Color := ConflictThisToColor(
       ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis);
@@ -11455,14 +11497,18 @@ begin
       end;
     end;
 
-    case NodeData.ConflictAll of
+    if NodeData.ConflictAll >= caNoConflict then
+      ItemColor := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+    else
+      Exit;
+   { case NodeData.ConflictAll of
       caNoConflict: ItemColor := Lighter(clLime, 0.85);
       caOverride, caConflictBenign: ItemColor := Lighter(clYellow, 0.85);
       caConflict: ItemColor := Lighter(clRed, 0.85);
       caConflictCritical: ItemColor := Lighter(clFuchsia, 0.85);
     else
       Exit;
-    end;
+    end;}
 
     EraseAction := eaColor;
 
@@ -11482,14 +11528,18 @@ begin
       if Element.ElementType <> etMainRecord then
         Element := nil;
 
-    case NodeData.ConflictAll of
+    if NodeData.ConflictAll >= caNoConflict then
+      lblPath.Color := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+    else
+      lblPath.Color := vstNav.Color;
+    {case NodeData.ConflictAll of
       caNoConflict: lblPath.Color := Lighter(clLime, 0.85);
       caOverride, caConflictBenign: lblPath.Color := Lighter(clYellow, 0.85);
       caConflict: lblPath.Color := Lighter(clRed, 0.85);
       caConflictCritical: lblPath.Color := Lighter(clFuchsia, 0.85);
     else
       lblPath.Color := vstNav.Color;
-    end;
+    end;}
 
     lblPath.Font.Color := ConflictThisToColor(NodeData.ConflictThis);
 
@@ -11921,7 +11971,6 @@ procedure TfrmMain.vstNavPaintText(Sender: TBaseVirtualTree;
 var
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  Color                       : TColor;
 begin
   TargetCanvas.Font.Color := clWindowText;
   if wbLoaderDone then begin
@@ -11964,8 +12013,7 @@ begin
         TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsUnderline];
     end;
 
-    Color := ConflictThisToColor(NodeData.ConflictThis);
-    TargetCanvas.Font.Color := Color;
+    TargetCanvas.Font.Color := ConflictThisToColor(NodeData.ConflictThis);
   end;
 end;
 
@@ -13007,5 +13055,28 @@ begin
   frmMain.PostAddMessage('[PluggyLink] terminated');
 end;
 
+
+{ TwbComboEditLink }
+
+function TwbComboEditLink.CreateEditControl: TWinControl;
+begin
+  Result := inherited;
+//  TComboBox(Result).Parent := TForm(FOwner);
+end;
+
+procedure TwbComboEditLink.SetBounds(R: TRect);
+var
+  H : Integer;
+begin  // Let's show from 1 to 32 lines to pick from
+  H := PickList.Count;
+  if H > 32 then
+    H := 32
+   else if H < 1 then
+     H := 1;
+  H := H * TComboBox(FEdit).Font.Height ;
+  R.Bottom := R.Bottom + Abs(H);
+
+  inherited;
+end;
 
 end.

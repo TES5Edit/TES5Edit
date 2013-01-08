@@ -1416,8 +1416,10 @@ end;
 
 function CompareSortKeys(Item1, Item2: Pointer): Integer;
 var
-  SortKey1: string;
-  SortKey2: string;
+  SortKey1   : string;
+  SortKey2   : string;
+//  Container1 : IwbContainer;
+//  Container2 : IwbContainer;
 begin
   if Item1 = Item2 then begin
     Result := 0;
@@ -1442,7 +1444,16 @@ begin
           Result := CmpW32(
             Cardinal((IwbElement(Item1) as IwbSubRecord).DataBasePtr),
             Cardinal((IwbElement(Item2) as IwbSubRecord).DataBasePtr)
-          );
+          ){
+        else try
+          if Supports(IwbElement(Item1), IwbContainer, Container1) and Supports(IwbElement(Item2), IwbContainer, Container2) then
+            Result := CmpW32(
+              Cardinal((Container1 as TwbContainer).cntElements),  // Arbitrary value that should not change during the sort
+              Cardinal((Container2 as TwbContainer).cntElements)
+            );
+        except
+          // If an Element supporting IwbContainer could NOT be a TwbContainer
+        end};
       end;
     end;
   end;
@@ -8427,7 +8438,6 @@ begin
   end;
 end;
 
-
 function TwbSubRecord.CompareExchangeFormID(aOldFormID, aNewFormID: Cardinal): Boolean;
 var
   SelfRef     : IwbContainerElementRef;
@@ -8600,7 +8610,7 @@ begin
         srDef.HasUnusedData;
       {$IFDEF DBGSUBREC}
       if Assigned(wbProgressCallback) then
-        wbProgressCallback('<Warning: Unused data in: ' + GetPath + '>');
+        wbProgressCallback('<Warning: Unused data in: ' + GetFullPath + '>');
       {$ENDIF}
     end;
   end;
@@ -10617,7 +10627,6 @@ begin
   Result := False;
 end;
 
-
 function CompareLoadOrderSL(List: TStringList; Index1, Index2: Integer): Integer;
 begin
   if Index1 = Index2 then begin
@@ -12180,7 +12189,9 @@ begin
 
       Dec(ArrSize);
       if ArrSize = 0 then
-        Break;
+        Break
+      { else if not (not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr)))) then
+        wbProgressCallback('Error: not enough data for array. Elements remaining are '+IntToStr(ArrSize)) Silently fails = called at an invalid time };
     end;
 
   if (ValueDef.DefType = dtString) and (ValueDef.IsVariableSize) then
@@ -12487,7 +12498,10 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
-    if Assigned(aBasePtr) and (i >= OptionalFromElement) and ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, aContainer] > Cardinal(aEndPtr)) ) then begin
+    if Assigned(aBasePtr) and (i >= OptionalFromElement) and
+       ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or
+           ((ValueDef.Size[aBasePtr, aEndPtr, aContainer]<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
+           (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, aContainer] > Cardinal(aEndPtr))) ) then begin
       aEndPtr := aBasePtr;
       ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
       if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
