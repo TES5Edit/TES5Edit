@@ -2239,6 +2239,8 @@ function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContain
 var
   HeaderSignature : TwbSignature = 'TES4';
   
+//var
+//  indentS: String = '[-] : ';
 
 implementation
 
@@ -3320,6 +3322,7 @@ type
 
     {---IwbValueDef---}
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
     function GetIsVariableSize: Boolean; override;
     function GetCanBeZeroSize: Boolean; override;
@@ -6438,6 +6441,7 @@ var
   Element       : IwbElement;
   DataContainer : IwbDataContainer;
   KnownSize     : Boolean;
+//  aElementPath  : String;
 
   procedure FindOurself(theContainer: IwbContainer; aName: String);
   var
@@ -6461,6 +6465,12 @@ var
 begin
   Result := 0;
   Prefix := 0;
+//  indentS := indentS + '   ';
+//  if not Assigned(aElement) then
+//    aElementPath := 'NO ELEMENT'
+//  else
+//    aElementPath := aElement.FullPath;
+//  wbProgressCallback(indentS+'__>     '+noName+' : '+aElementPath+'     '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aEndPtr), 8));
 
   // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
   // First advance to ourselves :
@@ -6472,6 +6482,8 @@ begin
         Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
     if not Assigned(Container) then begin
       Result := High(Integer);
+//      wbProgressCallback(indentS+'<<_     '+noName+' : '+aElementPath+'     '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aEndPtr), 8));
+//      Delete(indentS, Length(indentS)-2, 3);
       Exit;
     end;
   end;
@@ -6512,6 +6524,8 @@ begin
 
     if (Count < 1) and not Assigned(arCountCallback) then begin
       Result := High(Integer);
+//      wbProgressCallback(indentS+'<<_     '+noName+' : '+aElementPath+'     '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aEndPtr), 8));
+//      Delete(indentS, Length(indentS)-2, 3);
       Exit;
     end;
   end;
@@ -6549,10 +6563,13 @@ begin
           Size := arElement.Size[BasePtr, aEndPtr, Element];
           if Size = High(Integer) then begin
             Result := High(Integer);
+//            wbProgressCallback(indentS+'<<_     '+noName+' : '+aElement.Path+'     '+IntToHex(Cardinal(BasePtr), 8)+' '+IntToHex(Cardinal(EndPtr), 8));
+//            Delete(indentS, Length(indentS)-2, 3);
             Exit;
           end;
           Inc(Cardinal(EndPtr), Size);
           Inc(Result, Size);
+//          wbProgressCallback(indentS+'Size of '+ noName +'['+IntToStr(Index)+'] ('+ IntToStr(Size)+')='+IntToStr(Result)+' '+IntToHex(Cardinal(BasePtr), 8)+'-'+IntToHex(Cardinal(EndPtr), 8));
           Inc(Index);
         end;
 
@@ -6560,7 +6577,11 @@ begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
       if Size < High(Integer) then
         Result := (Count * Size) + Prefix;
+//      wbProgressCallback(indentS+'Size of '+ noName +'['+IntToStr(Count)+'] ('+ IntToStr(Size)+')='+IntToStr(Result)+' '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aBasePtr)+Result, 8));
     end;
+//  wbProgressCallback(indentS+'Size of '+ noName +'='+IntToStr(Result)+' ('+IntToHex(Result, 4)+') '+IntToHex(Cardinal(aBasePtr)+Result-Prefix, 8));
+//  wbProgressCallback(indentS+'<__     '+noName+' : '+aElementPath+'     '+IntToHex(Cardinal(aBasePtr), 8)+' '+IntToHex(Cardinal(aEndPtr), 8));
+//  Delete(indentS, Length(indentS)-2, 3);
 end;
 
 function TwbArrayDef.GetSorted: Boolean;
@@ -6585,6 +6606,26 @@ begin
   end;
 
   defReported := True;
+end;
+
+function TwbArrayDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement; aExtended: Boolean): string;
+var
+  DataContainer : IwbDataContainer;
+  p             : PByte;
+begin
+  if GetSorted or not Supports(Self, IwbDataContainer, DataContainer) then
+    Result := inherited
+  else with DataContainer do
+    begin
+      Result := '';
+      p := DataBasePtr;
+      while Cardinal(p) < Cardinal(DataEndPtr) do begin
+        Result := Result + IntToHex64(p^, 2) + ' ';
+        Inc(p);
+      end;
+      SetLength(Result, Length(Result) - 1);
+    end;
 end;
 
 function TwbArrayDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
@@ -6681,16 +6722,21 @@ var
   Size : Integer;
 begin
   Result := 0;
+//  indentS := indentS+'   ';
   for i := Low(stMembers) to High(stMembers) do begin
     Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
     if Size = High(Integer) then begin
       Result := High(Integer);
       Exit;
     end;
+//    wbProgressCallback(IndentS+'Size of '+ noName +'.stMembers['+IntToStr(i)+'] ('+ stMembers[i].Name +'='+ IntToStr(Size) +')='+ IntToStr(Result+Size)+'    '+IntToHex(Cardinal(aBasePtr), 8)+':'+IntToHex(Cardinal(aEndPtr), 8));
     if Assigned(aBasePtr) then
       Inc(Cardinal(aBasePtr), Size);
     Inc(Result, Size);
   end;
+//  wbProgressCallback(IndentS+'Size of '+ noName +'='+ IntToStr(Result));
+//  wbProgressCallback(IndentS+'========');
+//  Delete(indentS, Length(indentS)-2, 3);
 end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;
@@ -9848,15 +9894,22 @@ end;
 
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i: Integer;
-  Size: Integer;
+  i    : Integer;
+  Size : Integer;
+//  aElementPath : String;
 begin
+//  if Assigned(aElement) then
+//    aElementPath := aElement.FullPath
+//  else
+//    aElementPath := 'NO ELEMENT';
   if not Assigned(aBasePtr) then begin
     Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];
+//    wbProgressCallback(indentS+'Size of "'+ noName +'".[0]='+IntToStr(Result)+'    '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aEndPtr), 8));
     if Result > 0 then
       for i := 1 to High(udMembers) do
         if Result <> High(Integer) then begin
           Size := udMembers[i].Size[aBasePtr, aEndPtr, aElement];
+//          wbProgressCallback(IndentS+'Size of "'+ noName +'".['+IntToStr(i)+']='+IntToStr(Size)+'    '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aEndPtr), 8));
           if Size = 0 then begin // No valid value can be found
             Result := 0;
             Break;
@@ -9864,8 +9917,11 @@ begin
             Result := Size;
         end else
           break;
+//    wbProgressCallback(IndentS+'Size of "'+ noName +'"='+IntToStr(Result)+ ' ('+aElementPath+')    '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aEndPtr), 8));
+//    wbProgressCallback(IndentS+'********');
   end else begin
     Result := Decide(aBasePtr, aEndPtr, aElement).Size[aBasePtr, aEndPtr, aElement];
+//    wbProgressCallback(IndentS+'Size of "'+ noName +'"='+IntToStr(Result)+ ' ('+aElementPath+')    '+IntToHex(Cardinal(aBasePtr), 8)+'-'+IntToHex(Cardinal(aEndPtr), 8));
   end;
 end;
 
