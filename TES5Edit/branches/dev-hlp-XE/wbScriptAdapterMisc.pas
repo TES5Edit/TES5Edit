@@ -92,6 +92,20 @@ begin
   Value := StrToFloatDef(Args.Values[0], Args.Values[1]);
 end;
 
+procedure JvInterpreter_DirectoryExists(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := DirectoryExists(Args.Values[0]);
+end;
+
+procedure JvInterpreter_FileExists(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := FileExists(Args.Values[0]);
+end;
+
+procedure JvInterpreter_ForceDirectories(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := ForceDirectories(Args.Values[0]);
+end;
 
 { TBinaryReader }
 
@@ -192,6 +206,9 @@ begin
     AddFunction('SysUtils', 'StrToInt64', JvInterpreter_StrToInt64, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'StrToInt64Def', JvInterpreter_StrToInt64Def, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'StrToFloatDef', JvInterpreter_StrToFloatDef, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('SysUtils', 'DirectoryExists', JvInterpreter_DirectoryExists, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'FileExists', JvInterpreter_FileExists, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'ForceDirectories', JvInterpreter_ForceDirectories, 1, [varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
