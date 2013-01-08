@@ -9809,8 +9809,8 @@ end;
 
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i: Integer;
-  Size: Integer;
+  i    : Integer;
+  Size : Integer;
 begin
   if not Assigned(aBasePtr) then begin
     Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];

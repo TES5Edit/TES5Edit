@@ -12837,7 +12837,7 @@ begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be edited.');
 
-  if aValue <> GetEditValue then begin
+  if (not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr)) or (aValue <> GetEditValue) then begin
     OldValue := GetNativeValue;
     vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
     if vIsFlags and (csInit in cntStates) then begin
