@@ -9809,8 +9809,8 @@ end;
 
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i: Integer;
-  Size: Integer;
+  i    : Integer;
+  Size : Integer;
 begin
   if not Assigned(aBasePtr) then begin
     Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];
@@ -10144,7 +10144,7 @@ begin
     4: PCardinal(p)^ := Len;
   end;
   p := Pointer(Cardinal(p) + Prefix);
-  if Len > 1 then
+  if Len > 0 then
     Move(s[1], p^, Len);
 end;
 

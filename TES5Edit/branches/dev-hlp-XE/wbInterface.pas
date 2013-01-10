@@ -10144,7 +10144,7 @@ begin
     4: PCardinal(p)^ := Len;
   end;
   p := Pointer(Cardinal(p) + Prefix);
-  if Len > 1 then
+  if Len > 0 then
     Move(s[1], p^, Len);
 end;
 

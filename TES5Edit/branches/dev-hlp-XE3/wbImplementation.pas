@@ -12298,7 +12298,13 @@ begin
       dcDataEndPtr := @EmptyPtr;
       Exclude(dcFlags, dcfStorageInvalid);
       if ArrayDef.ElementCount < 0 then
-        RequestStorageChange(p, q, ArrayDef.Size[nil, nil, nil]);
+        case ArrayDef.ElementCount of
+          -1: RequestStorageChange(p, q, 4);
+          -2: RequestStorageChange(p, q, 2);
+        else
+          RequestStorageChange(p, q, 1);
+        end;
+
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);
@@ -12837,7 +12843,7 @@ begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be edited.');
 
-  if aValue <> GetEditValue then begin
+  if (not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr)) or (aValue <> GetEditValue) then begin
     OldValue := GetNativeValue;
     vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
     if vIsFlags and (csInit in cntStates) then begin

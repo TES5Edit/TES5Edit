@@ -12298,7 +12298,13 @@ begin
       dcDataEndPtr := @EmptyPtr;
       Exclude(dcFlags, dcfStorageInvalid);
       if ArrayDef.ElementCount < 0 then
-        RequestStorageChange(p, q, -(ArrayDef.ElementCount));
+        case ArrayDef.ElementCount of
+          -1: RequestStorageChange(p, q, 4);
+          -2: RequestStorageChange(p, q, 2);
+        else
+          RequestStorageChange(p, q, 1);
+        end;
+
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);

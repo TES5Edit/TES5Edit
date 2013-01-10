@@ -5345,6 +5345,7 @@ var
   _File               : IwbFile;
   Node                : PVirtualNode;
   NodeData            : PNavNodeData;
+  i                   : Integer;
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
     Value := wbGameMode;
@@ -5368,6 +5369,17 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
+  end else
+  if SameText(Identifier, 'FileByLoadOrder') then begin
+    if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
+      for i := Low(Files) to High(Files) do
+        if Files[i].LoadOrder = Integer(Args.Values[0]) then begin
+          Value := Files[i];
+          Break;
+        end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
   end else
   if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
     AddNewFile(_File);
@@ -5404,7 +5416,6 @@ begin
         Value := True;
       end;
     end;
-    //InvalidateElementsTreeView(NoNodes);
     Done := True;
   end;
 end;
