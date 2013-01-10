@@ -12298,7 +12298,7 @@ begin
       dcDataEndPtr := @EmptyPtr;
       Exclude(dcFlags, dcfStorageInvalid);
       if ArrayDef.ElementCount < 0 then
-        RequestStorageChange(p, q, ArrayDef.Size[nil, nil, nil]);
+        RequestStorageChange(p, q, -(ArrayDef.ElementCount));
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);
