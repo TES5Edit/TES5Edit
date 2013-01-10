@@ -3,7 +3,7 @@ object frmLocalizePlugin: TfrmLocalizePlugin
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Localize plugin'
-  ClientHeight = 351
+  ClientHeight = 83
   ClientWidth = 592
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,6 +14,9 @@ object frmLocalizePlugin: TfrmLocalizePlugin
   OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
+  DesignSize = (
+    592
+    83)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -24,9 +27,9 @@ object frmLocalizePlugin: TfrmLocalizePlugin
     AutoSize = False
     Caption = 
       'Localization process will create strings files with localizable ' +
-      'strings and replace their values in plugin with indexes. Strings' +
-      ' can be optionally translated into another language using a pair' +
-      's of existing strings files as a vocabulary.'
+      'strings and replace their values in plugin with indexes. Use oth' +
+      'er specialized utilities like StrEdit to translate generated str' +
+      'ings files.'
     WordWrap = True
   end
   object gbTranslation: TGroupBox
@@ -36,6 +39,7 @@ object frmLocalizePlugin: TfrmLocalizePlugin
     Height = 257
     Enabled = False
     TabOrder = 0
+    Visible = False
     object Label2: TLabel
       Left = 16
       Top = 15
@@ -74,24 +78,29 @@ object frmLocalizePlugin: TfrmLocalizePlugin
     Height = 17
     Caption = 'Translation'
     TabOrder = 1
+    Visible = False
     OnClick = cbTranslationClick
   end
   object btnOK: TButton
     Left = 206
-    Top = 319
+    Top = 51
     Width = 75
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = 'Localize'
     ModalResult = 1
     TabOrder = 2
+    ExplicitTop = 319
   end
   object btnCancel: TButton
     Left = 304
-    Top = 319
+    Top = 51
     Width = 75
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 3
+    ExplicitTop = 319
   end
 end
