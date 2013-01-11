@@ -8156,8 +8156,8 @@ begin
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
         wbUnion('Parent', wbNAVIParentDecider, [
           wbStruct('Coordinates', [
-            wbInteger('Grid X', itS16),
-            wbInteger('Grid Y', itS16)
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
           ]),
           wbFormIDCk('Parent Cell', [CELL])
         ])
@@ -8183,8 +8183,8 @@ begin
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
       wbUnion('Parent', wbNVNMParentDecider, [
         wbStruct('Coordinates', [
-          wbInteger('Grid X', itS16),
-          wbInteger('Grid Y', itS16)
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
         ]),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
@@ -12345,7 +12345,7 @@ begin
     wbUnknown(PNAM),
     wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
-    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, NULL]),
+    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
