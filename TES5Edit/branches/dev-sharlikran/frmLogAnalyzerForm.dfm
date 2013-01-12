@@ -144,7 +144,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
         end
         item
           Position = 1
-          Width = 469
+          Width = 473
           WideText = 'Name'
         end
         item

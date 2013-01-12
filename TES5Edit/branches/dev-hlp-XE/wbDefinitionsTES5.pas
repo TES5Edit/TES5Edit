@@ -8238,9 +8238,9 @@ begin
       wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
       wbUnknown
     ]),
-    wbUnknown(ONAM),
-    wbUnknown(PNAM),
-    wbUnknown(NNAM)
+    wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
+    wbArrayS(PNAM, 'Unknown', wbByteArray('Unknown', 4)),
+    wbArrayS(NNAM, 'Unknown', wbByteArray('Unknown', 4))
   ], False, wbNAVMAddInfo);
 
 //------------------------------------------------------------------------------
@@ -10604,9 +10604,9 @@ begin
         'Enchanting'
       ]),
       //wbByteArray('Unknown', 4),
-      wbInteger('Health?', itU16),
-      wbInteger('Magicka?', itU16),
-      wbInteger('Stamina?', itU16),
+      wbInteger('Health', itU16),
+      wbInteger('Magicka', itU16),
+      wbInteger('Stamina', itU16),
       wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Far away model distance'),
       wbInteger('Geared up weapons', itU8),

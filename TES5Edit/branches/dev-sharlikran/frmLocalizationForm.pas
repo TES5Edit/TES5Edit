@@ -85,10 +85,10 @@ begin
 end;
 
 procedure TfrmLocalization.pmuStringsPopup(Sender: TObject);
-var
-  Data: PTreeData;
+//var
+//  Data: PTreeData;
 begin
-  Data := vetStrings.GetNodeData(vetStrings.FocusedNode);
+  {Data :=} vetStrings.GetNodeData(vetStrings.FocusedNode);
 
   mniFileExport.Visible :=  vetStrings.FocusedNode.Parent = vetStrings.RootNode;
 end;

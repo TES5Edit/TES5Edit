@@ -706,7 +706,6 @@ var
   wbICON: IwbSubRecordStructDef;
   wbICONReq: IwbSubRecordStructDef;
   wbICO2: IwbSubRecordStructDef;
-  wbSounds: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbVatsValueFunctionEnum: IwbEnumDef;
@@ -738,6 +737,11 @@ var
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbUnionDef;
   wbScriptFragments: IwbStructDef;
+  wbScriptFragmentsQuest: IwbStructDef;
+  wbScriptFragmentsInfo: IwbStructDef;
+  wbScriptFragmentsPack: IwbStructDef;
+  wbScriptFragmentsPerk: IwbStructDef;
+  wbScriptFragmentsScen: IwbStructDef;
   wbEntryPointsEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
   wbPLDT: IwbSubRecordDef;
@@ -1085,16 +1089,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
 
@@ -1181,16 +1178,9 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Supports(aElement.Container, IwbContainerElementRef, Container)
-  else
-    Supports(aElement, IwbContainerElementRef, Container);
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
 
   Param1 := Container.ElementByName['Quest'];
 
@@ -1419,7 +1409,6 @@ var
   s: string;
 begin
   s := aString + '00000000';
-  Result := 0;
   if s[1] = '1' then begin
     if s[2] = '1' then begin
       if s[3] = '1' then begin
@@ -1930,14 +1919,13 @@ var
   Container: IwbContainer;
   i: Int64;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   i := Container.ElementByName['Flags'].NativeValue;
-  if i and $00000080 = 0 then
-    Result := 0
-  else
+  if i and $00000080 <> 0 then
     Result := 1;
 end;
 
@@ -1946,39 +1934,40 @@ var
   Container: IwbContainer;
 begin
   Result := 2;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if Container.DateSize = 64 then Result := 0
-  else if Container.DateSize = 32 then Result := 1
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  if Container.DataSize = 64 then Result := 0
+  else if Container.DataSize = 32 then Result := 1
 end;
 
-function wbMGEFFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbMGEFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
   Archtype      : Variant;
+  DataContainer : IwbDataContainer;
+  Element       : IwbElement;
+const
+  OffsetArchtype = 56;
 
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
-  if not Assigned(Container) then
-    Exit;
-
-  ArchType := Container.ElementNativeValues['Archtype'];
-  if VarIsEmpty(ArchType) then begin
-    aBasePtr := Pointer(Cardinal(aBasePtr) + 56);
-    if Cardinal(aEndPtr) >= (Cardinal(aBasePtr) + 4) then
+  VarClear(ArchType);
+  Element := Container.ElementByName['Archtype'];
+  if Assigned(Element) then
+    ArchType := Element.NativeValue
+  else if Supports(Container, IwbDataContainer, DataContainer) and
+          DataContainer.IsValidOffset(aBasePtr, aEndPtr, OffsetArchtype) then begin // we are part a proper structure
+      aBasePtr := Pointer(Cardinal(aBasePtr) + OffsetArchtype);
       ArchType := PCardinal(aBasePtr)^;
-  end;
+    end;
 
-  if VarIsEmpty(ArchType) then
-    Result := 1
-  else
+  if not VarIsEmpty(ArchType) then
     case Integer(ArchType) of
       12: Result := 1; // Light
       17: Result := 2; // Bound Item
@@ -1993,43 +1982,119 @@ begin
     end;
 end;
 
-{ Needs revision for Skyrim }
-//procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-//var
-//  Container: IwbContainerElementRef;
-//begin
-//  if VarSameValue(aOldValue, aNewValue) then
-//    Exit;
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    Exit;
-//  Container.ElementNativeValues['..\Assoc. Item'] := 0;
-//  case Integer(aNewValue) of
-//    11: Container.ElementNativeValues['..\Actor Value'] := 48;//Invisibility
-//    12: Container.ElementNativeValues['..\Actor Value'] := 49;//Chameleon
-//    24: Container.ElementNativeValues['..\Actor Value'] := 47;//Paralysis
-//    36: Container.ElementNativeValues['..\Actor Value'] := 51;//Turbo
-//  else
-//    Container.ElementNativeValues['..\Actor Value'] := -1;
-//  end;
-//end;
+procedure wbMGEFAssocItemAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Element   : IwbElement;
+begin
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  if (aNewValue <> 0) then begin
+    Element := Container.ElementByName['Archtype'];
+    if Assigned(Element) and (Element.NativeValue = 0) then
+        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
+          // I assume this will alo protect Second AV Weight (The two actor values are after ArchType)
+  end;
+end;
+
+procedure wbMGEFAV2WeightAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Element   : IwbElement;
+begin
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  if (aNewValue <> 0.0) then begin
+    Element := Container.ElementByName['Archtype'];
+    if Assigned(Element) and (Element.NativeValue = 0) then
+        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
+  end;
+end;
+
+procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container: IwbContainerElementRef;
+begin
+  if VarSameValue(aOldValue, aNewValue) then
+    Exit;
+  if not Supports(aElement, IwbContainerElementRef, Container) then
+    Exit;
+  if (aNewValue < $FF) and (aOldValue < $FF) then begin
+    Container.ElementNativeValues['..\Assoc. Item'] := 0;
+    case Integer(aNewValue) of
+      06: Container.ElementNativeValues['..\Actor Value'] := 00;//Agression
+      07: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+      08: Container.ElementNativeValues['..\Actor Value'] := 00;//Agression
+      11: Container.ElementNativeValues['..\Actor Value'] := 54;//Invisibility
+      21: Container.ElementNativeValues['..\Actor Value'] := 53;//Paralysis
+      24: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+      38: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+      42: Container.ElementNativeValues['..\Actor Value'] := 01;//Confidence
+    else
+      Container.ElementNativeValues['..\Actor Value'] := -1;
+    end;
+    Container.ElementNativeValues['..\Second Actor Value'] := -1;
+    Container.ElementNativeValues['..\Second AV Weight'] := 0.0;
+  end;
+end;
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   if Integer(Container.ElementNativeValues['Run On']) = 2 then
+    Result := 1;
+end;
+
+function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container   : IwbContainer;
+  SubRecord   : IwbMainRecord;
+  Element     : IwbElement;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+  while Assigned(Container) and (Container.ElementType <> etsubRecord) do
+    Container := Container.Container;
+
+  if not Supports(Container, IwbSubRecord, SubRecord) then
+    Exit;
+
+  Element := SubRecord.ElementByName['Is Island'];
+  if not Assigned(Element) then
+    Exit;
+
+  Result := Element.NativeValue;
+end;
+
+function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container   : IwbContainer;
+  SubRecord   : IwbMainRecord;
+  Element     : IwbElement;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+  while Assigned(Container) and (Container.ElementType <> etsubRecord) do
+    Container := Container.Container;
+
+  if not Supports(Container, IwbSubRecord, SubRecord) then
+    Exit;
+
+  Element := SubRecord.ElementByName['Parent Worldspace'];
+  if not Assigned(Element) then
+    Exit;
+
+  if (Element.NativeValue = 0) then
     Result := 1;
 end;
 
@@ -2101,7 +2166,7 @@ end;
 //  else
 //    Container := aElement as IwbContainer;
 //  if Supports(Container.Container, IwbDataContainer, DataContainer) then begin
-//    if DataContainer.DateSize in [132, 148] then
+//    if DataContainer.DataSize in [132, 148] then
 //      Result := 1;
 //  end;
 //end;
@@ -2113,10 +2178,9 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   LinksTo := Container.ElementByName['Owner'].LinksTo;
 
@@ -2150,8 +2214,8 @@ function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
 var
   rEDID      : IwbRecord;
   s          : string;
-  _File      : IwbFile;
-  MainRecord : IwbMainRecord;
+//  _File      : IwbFile;
+//  MainRecord : IwbMainRecord;
 const
   OrderedList = 'OrderedList';
 begin
@@ -2209,8 +2273,7 @@ begin
   while Assigned(Container) and (Container.ElementType <> etSubRecord) do
     Container := Container.Container;
 
-  if not Assigned(Container) then
-    Exit;
+  if not Assigned(Container) then Exit;
 
   ObjFormat := Container.ElementNativeValues['Object Format'];
 
@@ -2218,36 +2281,14 @@ begin
     Result := 1;
 end;
 
+{>>> For VMAD <<<}
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
-
-  procedure FindProperty(theContainer: IwbContainer);
-  var
-    i           : Integer;
-    Element     : IwbElement;
-    aContainer  : IwbContainer;
-  begin
-    if Assigned(theContainer) and (Pos('Property #', theContainer.Name)<>1) then begin
-      for i := 0 to Pred(theContainer.ElementCount) do begin
-        Element := theContainer.Elements[i];
-        if Supports(Element, IwbContainer, aContainer) then
-          if (Pos('Property #', aContainer.Name) = 1) then begin
-            Container := aContainer;
-            break;
-          end else
-            FindProperty(aContainer);
-      end;
-    end;
-  end;
-
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  FindProperty(Container);
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
   case Integer(Container.ElementNativeValues['Type']) of
@@ -2264,28 +2305,154 @@ begin
   end;
 end;
 
-{>>> For VMAD, Unused <<<}
-function wbScriptFragmentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+{>>> For VMAD <<<}
+function wbScriptFragmentExistsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+  MainRecord : IwbMainRecord;
 begin
   Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Container.ElementType <> etMainRecord) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  Supports(Container, IwbMainRecord, MainRecord);
+  if MainRecord.Signature = INFO then
+    Result := 1
+  else if MainRecord.Signature = PACK then
+    Result := 2
+  else if MainRecord.Signature = PERK then
+    Result := 3
+  else if MainRecord.Signature = QUST then
+    Result := 4
+  else if MainRecord.Signature = SCEN then
+    Result := 5;
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsDontShow(const aElement: IwbElement): Boolean;
+var
+  Container: IwbContainer;
+begin
+  Result := True;
+  if Assigned(aElement) then
+    if Supports(aElement, IwbContainer, Container) then
+      if Container.ElementCount > 0 then
+        if Assigned(Container.Elements[0]) then
+          Result := VarIsClear(Container.Elements[0].NativeValue);
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
 
 begin
+  Result := 0;
   if aElement.ElementType = etValue then
     Container := aElement.Container
   else
     Container := aElement as IwbContainer;
   if not Assigned(Container) then Exit;
-  if Container.Name = 'Fragments' then
+  while Assigned(Container) and (Pos('Script Fragments Quest', Container.Name) <> 1) do
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
   Result := Integer(Container.ElementNativeValues['fragmentCount']);
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsInfoCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  F             : Integer;
+  i             : Integer;
+begin
+  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Pos('Script Fragments Info', Container.Name) <> 1) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  F := Container.ElementByName['Info Fragments Flags'].NativeValue;
+  for i := 0 to 2 do begin
+    if (F and 1) = 1 then
+      Inc(Result);
+    F := F shr 1;
+  end;
+  for i := 3 to 7 do begin
+    if (F and 1) = 1 then begin
+      Inc(Result);
+    if Assigned(wbProgressCallback) then
+      wbProgressCallback('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown info VMAD flag bit '+IntToStr(i));
+  end;
+    F := F shr 1;
+  end;
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsSceneCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  F             : Integer;
+  i             : Integer;
+begin
+  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Pos('Script Fragments Scene', Container.Name) <> 1) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  F := Container.ElementByName['Scene Fragments Flags'].NativeValue;
+  for i := 0 to 2 do begin
+    if (F and 1) = 1 then
+      Inc(Result);
+    F := F shr 1;
+  end;
+  for i := 3 to 7 do begin
+    if (F and 1) = 1 then begin
+      Inc(Result);
+  if Assigned(wbProgressCallback) then
+      wbProgressCallback('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown scene VMAD flag bit '+IntToStr(i));
+  end;
+    F := F shr 1;
+  end;
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsPackCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  F             : Integer;
+  i             : Integer;
+begin
+  Result := 0;
+  if aElement.ElementType = etValue then
+    Container := aElement.Container
+  else
+    Container := aElement as IwbContainer;
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Pos('Script Fragments Pack', Container.Name) <> 1) do
+    Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  F := Container.ElementByName['Package Fragments Flags'].NativeValue;
+  for i := 0 to 7 do begin
+    if (F and 1) = 1 then
+      Inc(Result);
+    F := F shr 1;
+  end;
 end;
 
 function wbBOOKTeachesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2293,13 +2460,13 @@ var
   Container: IwbContainer;
   i: Int64;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   i := Container.ElementByName['Flags'].NativeValue;
-  if i and $00000004 <> 0 then Result := 1
-    else Result := 0;
+  if i and $00000004 <> 0 then Result := 1;
 end;
 
 
@@ -2810,15 +2977,13 @@ function wbCTDACompValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElem
 var
   Container: IwbContainer;
 begin
-//  Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   // "use global" flag
-  if Integer(Container.ElementByName['Type'].NativeValue) and $04 = 0 then
-    Result := 0
-  else
+  if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
 end;
 
@@ -2830,10 +2995,9 @@ var
   ParamType: TCTDAFunctionParamType;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
 
@@ -2856,10 +3020,9 @@ var
   ParamType: TCTDAFunctionParamType;
 begin
   Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
 
@@ -2874,14 +3037,15 @@ begin
   end;
 end;
 
-function wbCTDAParam2VATSValueParam(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCTDAParam2VATSValueParamDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container : IwbContainer;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Parameter #1'].NativeValue;
 end;
 
@@ -3894,8 +4058,8 @@ end;
 //
 //    TypeFlags := Container.ElementNativeValues['Type'];
 //    if (TypeFlags and $02) <> 0 then begin
-//      if Container.DateSize = 20 then
-//        Container.DateSize := 28;
+//      if Container.DataSize = 20 then
+//        Container.DataSize := 28;
 //      Container.ElementNativeValues['Type'] := TypeFlags and not $02;
 //      Container.ElementEditValues['Run On'] := 'Target';
 //    end;
@@ -4110,7 +4274,7 @@ procedure wbREFRAfterLoad(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
-  BaseRecord : IwbMainRecord;
+//  BaseRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4223,9 +4387,8 @@ var
   Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
   HasWater     : Boolean;
-  IsInterior   : Boolean;
+//  IsInterior   : Boolean;
   i            : Integer;
-  w            : Single;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4243,7 +4406,7 @@ begin
     if not Container.ElementExists['DATA'] then
       Exit;
 
-    IsInterior := (Container.ElementNativeValues['DATA'] and 1) <> 0;
+//    IsInterior := (Container.ElementNativeValues['DATA'] and 1) <> 0;
     HasWater := (Container.ElementNativeValues['DATA'] and 2) <> 0;
 
     if HasWater then begin
@@ -4510,10 +4673,11 @@ function wbTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbE
 var
   Container: IwbContainer;
 begin
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Type'].NativeValue;
 end;
 
@@ -4998,11 +5162,11 @@ begin
   ]);
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
-  wbFULL := wbLString(FULL, 'Name', 0, cpTranslate);
-  wbFULLActor := wbLString(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
-  wbFULLReq := wbLString(FULL, 'Name', 0, cpNormal, True);
-  wbDESC := wbLString(DESC, 'Description', 0, cpTranslate);
-  wbDESCReq := wbLString(DESC, 'Description', 0, cpTranslate, True);
+  wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
+  wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
+  wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpNormal, True);
+  wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
+  wbDESCReq := wbLStringKC(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
 
   wbOBND := wbStruct(OBND, 'Object Bounds', [
@@ -5042,15 +5206,15 @@ begin
     {15} 'Array of Bool'
   ]);
 
-  wbScriptObject := wbUnion('ObjectUnion', wbScriptObjFormatDecider, [
-    wbStruct('Object', [
+  wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
+    wbStruct('Object v2', [
       wbInteger('Unused', itU16),
-      wbInteger('Alias ID', itU16),
+      wbInteger('Alias ID', itS16),
       wbFormID('FormID')
     ]),
-    wbStruct('Object', [
+    wbStruct('Object v1', [
       wbFormID('FormID'),
-      wbInteger('Alias ID', itU16),
+      wbInteger('Alias ID', itS16),
       wbInteger('Unused', itU16)
     ])
   ]);
@@ -5064,47 +5228,143 @@ begin
       wbInteger('Unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbByteArray('Unknown', 0, cpIgnore),
-        {01} wbScriptObject, {>>> should be wbScriptObject, but not shown at all??? <<<}
-        {02} wbLenString('String', 2), {>>> bugged? <<<}
+        {01} wbScriptObject,
+        {02} wbLenString('String', 2),
         {03} wbInteger('Int32', itU32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
         {11} wbArray('Array of Object', wbScriptObject, -1),
-        {12} wbArray('Array of String', wbLenString('Element', 2), -1), // {>>> probably won't work too <<<}
+        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
         {13} wbArray('Array of Int32', wbInteger('Element', itU32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
-    ]), -2) // comment propertyCount when -2
+    ]), -2)
   ]);
 
-  wbScriptFragments := wbStruct('Script Fragments', [
-    wbInteger('SF Unknown', itS8),
+  wbScriptFragmentsInfo := wbStruct('Script Fragments Info', [
+    wbInteger('Unknown', itS8),
+    wbInteger('Info Fragments Flags', itU8, wbFlags([
+      {1} 'OnBegin',
+      {2} 'OnEnd'
+    ])),
+    wbLenString('fileName', 2),
+    wbArray('Info Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
+      wbStruct('Info Fragment', [
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsInfoCounter)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
+
+  wbScriptFragmentsPack := wbStruct('Script Fragments Package', [
+    wbInteger('Unknown', itS8),
+    wbInteger('Package Fragments Flags', itU8, wbFlags([
+      {1} 'OnBegin',
+      {2} 'OnEnd',
+      {4} 'OnChange'
+    ])),
+    wbLenString('fileName', 2),
+    wbArray('Package Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
+      wbStruct('Package Fragment', [
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsPackCounter)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
+
+  wbScriptFragmentsPerk := wbStruct('Script Fragments Perk', [
+    wbInteger('Unknown', itS8),
+    wbLenString('fileName', 2),
+    wbArrayS('Perk Fragments',
+      wbStructSK([0], 'Perk Fragment', [
+        wbInteger('Fragment Index', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), -2)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
+
+  wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
+    wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16),
     wbLenString('fileName', 2),
-    wbArray('Fragments', wbStruct('fragment', [
-      wbInteger('Quest Stage Index', itU16),
+    wbArrayS('Quest Fragments',
+      wbStructSK([0, 2], 'Quest Fragment', [
+        wbInteger('Quest Stage', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Quest Stage Index', itS32),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), wbScriptFragmentsQuestCounter),
+    wbArrayS('Aliases', wbStruct('Alias', [
       wbInteger('Unknown', itS16),
+      wbInteger('Alias ID', itS16),
       wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS8),
-      wbLenString('scriptName', 2),
-      wbLenString('fragmentName', 2)
-    ]), [], wbScriptFragmentsCounter),
-    wbUnknown
-  ]);
+      wbInteger('Unknown', itS16),
+      wbInteger('Alias Object Format', itS16),
+	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
+	  ]), -2)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
+
+  wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
+    wbInteger('Unknown', itS8),
+    wbInteger('Scene Fragments Flags', itU8, wbFlags([
+      {1} 'OnBegin',
+      {2} 'OnEnd'
+    ])),
+    wbLenString('fileName', 2),
+    wbArray('Scene Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
+      wbStruct('Scene Fragment', [
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), [], wbScriptFragmentsSceneCounter),
+    wbArray('Phase Fragments',
+      wbStructSK([0, 1], 'Phase Fragment', [
+        wbInteger('Phase Flag', itU8, wbFlags([
+          {1} 'OnStart',
+          {2} 'OnCompletion'
+        ])),
+        wbInteger('Phase Index', itU8),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS8),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), -2)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
-    {>>>
-    For some reason when property type is String
-    and VMAD has fragments section(?), wbScriptEntry gets bugged on that property
-    Example: Skyrim.esm Quest [00091F1A] <dunLabyrinthian> "Labyrinthian"
-    <<<}
-    wbArrayS('Scripts', wbScriptEntry, -2), // comment scriptCount and Script1 when -2
-    wbScriptFragments
-  ]);
+    wbUnion('Data', wbScriptFragmentExistsDecider, [
+      wbArrayS('Scripts', wbScriptEntry, -2),
+      wbStruct('Info VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsInfo
+      ], cpNormal, False, nil, 0),
+      wbStruct('Pack VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsPack
+      ], cpNormal, False, nil, 0),
+      wbStruct('Perk VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsPerk
+      ], cpNormal, False, nil, 0),
+      wbStruct('Quest VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsQuest
+      ], cpNormal, False, nil, 0),
+      wbStruct('Scene VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbScriptFragmentsScen
+      ], cpNormal, False, nil, 0)
+    ])
+  ], cpNormal, false, nil, -1);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -5491,7 +5751,7 @@ begin
       ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
     ], []),
 
     {--- Leveled Actor ----}
@@ -5623,11 +5883,6 @@ begin
   wbICO2 := wbRStruct('Icon 2 (female)', [
     wbString(ICO2, 'Large Icon filename'),
     wbString(MIC2, 'Small Icon filename')
-  ], [], cpNormal, False, nil, True);
-
-  wbSounds := wbRStruct('Sound', [
-    wbFormIDCk(YNAM, 'Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Drop', [SNDR, SOUN])
   ], [], cpNormal, False, nil, True);
 
   wbVatsValueFunctionEnum :=
@@ -6256,7 +6511,7 @@ begin
         wbFormIDCkNoReach('Base Effect', [MGEF]),
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        wbUnion('VATS Value Param', wbCTDAParam2VATSValueParam, [
+        wbUnion('VATS Value Param', wbCTDAParam2VATSValueParamDecider, [
          { 0} wbFormIDCkNoReach('Weapon', [WEAP]),
          { 1} wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
          { 2} wbFormIDCkNoReach('Target', [NPC_]),
@@ -6363,7 +6618,8 @@ begin
     wbMODL,
     wbDEST,
     wbICON,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbETYP,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
@@ -6402,7 +6658,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbDESC,
     wbKSIZ,
     wbKWDAs,
@@ -6453,7 +6710,8 @@ begin
     wbBODT,
     wbBOD2,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
@@ -6520,9 +6778,10 @@ begin
     wbFULL,
     wbMODL,
     wbICON,
-    wbLString(DESC, 'Book Text', 0, cpNormal, True),
+    wbLStringKC(DESC, 'Book Text', 0, cpNormal, True),
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -7161,11 +7420,9 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbRStruct('Sound', [
-      wbFormIDCk(SNAM, 'Open', [SOUN, SNDR]),
-      wbFormIDCk(ANAM, 'Close', [SOUN, SNDR]),
-      wbFormIDCk(BNAM, 'Loop', [SOUN, SNDR])
-    ], [], cpNormal, False, nil, True),
+    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
+    wbFormIDCk(ANAM, 'Sound - Close', [SOUN, SNDR]),
+    wbFormIDCk(BNAM, 'Sound - Loop', [SOUN, SNDR]),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       '',
       'Automatic',
@@ -7639,7 +7896,7 @@ begin
 
   wbRecord(AACT, 'Action', [
     wbEDID,
-    wbCNAMReq
+    wbCNAM
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -7841,7 +8098,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbICON,
@@ -7872,29 +8130,37 @@ begin
           wbFormIDCk('Door Ref', [REFR])
         ]), -1),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbByteArray('Unknown')
-//        wbArray('Island', wbStruct('Data', [
-//          wbFloat('Min X'),
-//          wbFloat('Min Y'),
-//          wbFloat('Min Z'),
-//          wbFloat('Max X'),
-//          wbFloat('Max Y'),
-//          wbFloat('Max Z'),
-//          wbArray('Triangles',
-//            wbStruct('Triangle', [
-//              wbArray('Vertices', wbInteger('Vertex', itS16), 3)
-//            ])
-//          , -1),
-//          wbArray('Vertices', wbStruct('Vertex', [
-//            wbFloat('X'),
-//            wbFloat('Y'),
-//            wbFloat('Z')
-//          ]), -1)
-//        ]), -1),
-
-//        wbByteArray('Unknown', 4),
-//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-//        wbByteArray('Cell/Grid', 4)
+        wbUnion('Island', wbNAVIIslandDataDecider, [
+          wbStruct('Unused', [
+          ]),
+          wbStruct('Island Data', [
+              wbFloat('Min X'),
+              wbFloat('Min Y'),
+              wbFloat('Min Z'),
+              wbFloat('Max X'),
+              wbFloat('Max Y'),
+              wbFloat('Max Z'),
+              wbArray('Triangles',
+                wbStruct('Triangle', [
+                  wbArray('Vertices', wbInteger('Vertex', itS16), 3)
+                ])
+              , -1),
+              wbArray('Vertices', wbStruct('Vertex', [
+                wbFloat('X'),
+                wbFloat('Y'),
+                wbFloat('Z')
+              ]), -1)
+          ])
+        ]),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+        wbUnion('Parent', wbNAVIParentDecider, [
+          wbStruct('Coordinates', [
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ])
       ])
     ),
     wbStruct(NVPP, 'Preferred Pathing', [
@@ -7904,7 +8170,8 @@ begin
         wbInteger('Index/Node', itU32)
       ]), -1)
     ]),
-    wbArrayS(NVSI, 'Unknown', wbByteArray('Unknown' ,4))
+//    wbUnknown(NVSI)
+    wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
   ]);
 
   wbRecord(NAVM, 'Navigation Mesh', [
@@ -7915,12 +8182,10 @@ begin
       //wbByteArray('Parent Data', 8),
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
       wbUnion('Parent', wbNVNMParentDecider, [
-//        no containers in wbUnion :(
-//        wbStruct('Coordinates', [
-//          wbInteger('Grid X', itS16),
-//          wbInteger('Grid Y', itS16)
-//        ]),
-        wbInteger('Coordinates', itU32, wbShortXYtoStr, wbStrtoShortXY),
+        wbStruct('Coordinates', [
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
+        ]),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
 
@@ -8080,7 +8345,7 @@ begin
     wbMODL,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbStruct(DATA, 'Data', [
+    wbStruct(DATA, 'Data', [  // Contradicted by FireStormExplosion02 [EXPL:000877F9]
       wbFormIDCk('Light', [LIGH, NULL]),
       wbFormIDCk('Sound 1', [SNDR, NULL]),
       wbFormIDCk('Sound 2', [SNDR, NULL]),
@@ -8502,7 +8767,7 @@ begin
         // 1: EPFD=float
         // 2: EPFD=float,float
         // 3: EPFD=LVLI
-        // 4: EPFD=SPEL, EPF2=lstring, EPFT3=int32 flags
+        // 4: EPFD=SPEL, EPF2=lstring, EPF3=int32 flags
         // 5: EPFD=SPEL
         // 6: EPFD=string
         // 7: EPFD=lstring
@@ -8539,9 +8804,9 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
     wbMODL,
-    wbRStructsSK('Body Parts', 'Body Part', [1], [
+    wbRStructsSK('Body Parts', 'Body Part', [2], [
       wbLString(BPTN, 'Part Name', 0, cpNormal, True),
-      wbString(PNAM, 'Pose Matching', 0, cpNormal, True),
+      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
@@ -8953,7 +9218,7 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbByteArray('Unknown', 32),
+      wbByteArray('Unknown', 32),		// WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
       wbStruct('Fog Color Far', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
@@ -9665,7 +9930,8 @@ begin
     wbMODL,
     wbICON,
     wbETYP,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -9695,7 +9961,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
@@ -10006,7 +10273,7 @@ begin
     {44} 'Disguise',
     {45} 'Grab Actor',
     {46} 'Vampire Lord'
-  ]), cpNormal, False, nil{, wbMGEFArchtypeAfterSet});
+  ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet);
 
   wbMGEFData := wbRStruct('Magic Effect Data', [
     wbStruct(DATA, 'Data', [
@@ -10045,8 +10312,8 @@ begin
 				{0x80000000}  'Unknown 32'
 			])),
       wbFloat('Base Cost'),
-      wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-        wbFormID('Unknown', cpIgnore),
+      wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
+        wbFormID('Unused', cpIgnore),
         wbFormIDCk('Assoc. Item', [LIGH, NULL]),
         wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
         wbFormIDCk('Assoc. Item', [NPC_, NULL]),
@@ -10055,7 +10322,7 @@ begin
         wbFormIDCk('Assoc. Item', [RACE, NULL]),
         wbFormIDCk('Assoc. Item', [ENCH, NULL]),
         wbFormIDCk('Assoc. Item', [KYWD, NULL])
-      ]),
+      ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbInteger('Magic Skill', itS32, wbActorValueEnum),
       wbInteger('Resist Value', itS32, wbActorValueEnum),
       wbByteArray('Unknown', 4),
@@ -10070,7 +10337,7 @@ begin
       ]),
       wbFloat('Taper Curve'),
       wbFloat('Taper Duration'),
-      wbFloat('Second AV Weight'),
+      wbFloat('Second AV Weight', cpNormal, False, nil, wbMGEFAV2WeightAfterSet),
       wbMGEFType,
       wbActorValue,
       wbFormIDCk('Projectile', [PROJ, NULL]),
@@ -10132,7 +10399,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -10149,7 +10417,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbInteger(QUAL, 'Quality', itS32, wbEnum([], [
       0, 'Novice',
       1, 'Apprentice',
@@ -10359,7 +10628,7 @@ begin
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime faction', [FACT], False, cpNormal, False),
     wbFormIDCk(FTST, 'Head texture', [TXST], False, cpNormal, False),
-    wbStruct(QNAM, 'Texture lightning', [
+    wbStruct(QNAM, 'Texture lighting', [
       wbFloat('Red'),
       wbFloat('Green'),
       wbFloat('Blue')
@@ -11444,7 +11713,7 @@ begin
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA], False, cpNormal, True),
+                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL], False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
@@ -11567,8 +11836,8 @@ begin
       wbFloat('Fade 1.35+/-'),
       wbByteArray('Unknown', 4),
       wbFloat('Shadow Depth Bias'),
-      wbByteArray('Unknown', 4)
-    ]),
+      wbByteArray('Unknown', 4) // optional
+    ], cpNormal, False, nil, 4),
 		wbStruct(XALP, 'Alpha', [
       wbInteger('Cutoff', itU8),
       wbInteger('Base', itU8)
@@ -11845,7 +12114,7 @@ begin
 
       {--- Objects ---}
       wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, STAT, LTEX]),
+        wbFormIDCk('Object', [TREE, STAT, LTEX, MSTT]),
         wbInteger('Parent Index', itU16, wbHideFFFF),
         wbByteArray('Unknown', 2),
         wbFloat('Density'),
@@ -11984,7 +12253,8 @@ begin
     wbDESC,
     wbMODL,
     wbDEST,
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbStruct(DATA, 'Item', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -12075,7 +12345,7 @@ begin
     wbUnknown(PNAM),
     wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
-    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, NULL]),
+    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
@@ -12200,7 +12470,8 @@ begin
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbSounds,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
     wbDESC,

@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 275
+  ClientHeight = 313
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,23 +14,26 @@ object frmOptions: TfrmOptions
   KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    275)
+    313)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 233
+    Height = 265
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
+      ExplicitHeight = 205
       object Label2: TLabel
         Left = 24
         Top = 107
@@ -95,6 +98,7 @@ object frmOptions: TfrmOptions
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
+      ExplicitHeight = 205
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -159,25 +163,84 @@ object frmOptions: TfrmOptions
         TabOrder = 6
       end
     end
+    object tsColors: TTabSheet
+      Caption = 'Colors'
+      ImageIndex = 2
+      ExplicitLeft = 8
+      ExplicitTop = 31
+      ExplicitHeight = 205
+      object Label3: TLabel
+        Left = 16
+        Top = 16
+        Width = 89
+        Height = 13
+        Caption = 'Conflict Color Font'
+      end
+      object Label4: TLabel
+        Left = 16
+        Top = 80
+        Width = 123
+        Height = 13
+        Caption = 'Conflict Color Background'
+      end
+      object clbConflictThis: TColorBox
+        Left = 223
+        Top = 35
+        Width = 114
+        Height = 22
+        Style = [cbStandardColors, cbExtendedColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+        TabOrder = 0
+        OnChange = clbConflictThisChange
+      end
+      object cbConflictThis: TComboBox
+        Left = 16
+        Top = 35
+        Width = 201
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 1
+        OnChange = cbConflictThisChange
+      end
+      object cbConflictAll: TComboBox
+        Left = 16
+        Top = 99
+        Width = 201
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 2
+        OnChange = cbConflictAllChange
+      end
+      object clbConflictAll: TColorBox
+        Left = 223
+        Top = 99
+        Width = 114
+        Height = 22
+        Style = [cbStandardColors, cbExtendedColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+        TabOrder = 3
+        OnChange = clbConflictAllChange
+      end
+    end
   end
   object btnOK: TButton
     Left = 302
-    Top = 242
+    Top = 280
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
+    ExplicitTop = 242
   end
   object btnCancel: TButton
     Left = 383
-    Top = 242
+    Top = 280
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+    ExplicitTop = 242
   end
 end
