@@ -351,6 +351,8 @@ type
     function GetReferenceFile: IwbFile;
     function GetSortOrder: Integer;
     procedure SetSortOrder(aSortOrder: Integer);
+    function GetMemoryOrder: Integer;
+    procedure SetMemoryOrder(aSortOrder: Integer);
     procedure BuildRef;
     function CompareExchangeFormID(aOldFormID: Cardinal; aNewFormID: Cardinal): Boolean;
     function GetEditValue: string;
@@ -477,6 +479,9 @@ type
     property ValueDef: IwbValueDef
       read GetValueDef;
 
+    property MemoryOrder: Integer
+      read GetMemoryOrder
+      write SetMemoryOrder;
     property SortPriority: Integer
       read GetSortPriority;
     property SortOrder: Integer
@@ -526,6 +531,7 @@ type
     function GetElementCount: Integer;
     function GetElementByName(const aName: string): IwbElement;
     function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
+    function GetElementByMemoryOrder(aSortOrder: Integer): IwbElement;
     function GetElementBySignature(const aSignature: TwbSignature): IwbElement;
     function GetElementBySortOrder(aSortOrder: Integer): IwbElement;
     function GetAdditionalElementCount: Integer;
@@ -591,6 +597,8 @@ type
       read GetElementByName;
     property RecordBySignature[const aSignature: TwbSignature]: IwbRecord
       read GetRecordBySignature;
+    property ElementByMemoryOrder[aSortOrder: Integer]: IwbElement
+      read GetElementByMemoryOrder;
     property ElementBySignature[const aSignature: TwbSignature]: IwbElement
       read GetElementBySignature;
     property ElementBySortOrder[aSortOrder: Integer]: IwbElement

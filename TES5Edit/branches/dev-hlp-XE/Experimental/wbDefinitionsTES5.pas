@@ -8173,8 +8173,8 @@ begin
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
         wbUnion('Parent', wbNAVIParentDecider, [
           wbStruct('Coordinates', [
-            wbInteger('Grid X', itS16),
-            wbInteger('Grid Y', itS16)
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
           ]),
           wbFormIDCk('Parent Cell', [CELL])
         ])
@@ -8200,8 +8200,8 @@ begin
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
       wbUnion('Parent', wbNVNMParentDecider, [
         wbStruct('Coordinates', [
-          wbInteger('Grid X', itS16),
-          wbInteger('Grid Y', itS16)
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
         ]),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
@@ -8255,9 +8255,9 @@ begin
       wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
       wbUnknown
     ]),
-    wbUnknown(ONAM),
-    wbUnknown(PNAM),
-    wbUnknown(NNAM)
+    wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
+    wbArrayS(PNAM, 'Unknown', wbByteArray('Unknown', 4)),
+    wbArrayS(NNAM, 'Unknown', wbByteArray('Unknown', 4))
   ], False, wbNAVMAddInfo);
 
 //------------------------------------------------------------------------------
@@ -8723,7 +8723,7 @@ begin
     ], cpNormal, True{, nil, 4}),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
 
-    wbRStructsSK('Effects', 'Effect', [0, 1, 2, 3], [
+    wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
@@ -8764,7 +8764,7 @@ begin
         ])
       ], cpNormal, True),
 
-      wbRStructsSK('Perk Conditions', 'Perk Condition', [0, 1], [
+      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
         wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
         wbCTDAsReq
       ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow}),
@@ -10621,9 +10621,9 @@ begin
         'Enchanting'
       ]),
       //wbByteArray('Unknown', 4),
-      wbInteger('Health?', itU16),
-      wbInteger('Magicka?', itU16),
-      wbInteger('Stamina?', itU16),
+      wbInteger('Health', itU16),
+      wbInteger('Magicka', itU16),
+      wbInteger('Stamina', itU16),
       wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Far away model distance'),
       wbInteger('Geared up weapons', itU8),
@@ -12362,7 +12362,7 @@ begin
     wbUnknown(PNAM),
     wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
-    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, NULL]),
+    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
