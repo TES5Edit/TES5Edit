@@ -8340,6 +8340,7 @@ begin
 
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
+    wbVMAD, // Only For Testing
     wbOBNDReq,
     wbFULL,
     wbMODL,
