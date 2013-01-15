@@ -5208,14 +5208,14 @@ begin
 
   wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStruct('Object v2', [
-      wbInteger('Unused', itU16),
+      wbInteger('Unknown', itU16),
       wbInteger('Alias ID', itS16),
       wbFormID('FormID')
     ]),
     wbStruct('Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias ID', itS16),
-      wbInteger('Unused', itU16)
+      wbInteger('Unknown', itU16)
     ])
   ]);
 

@@ -3266,13 +3266,13 @@ end;
 
 function TwbContainer.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
-  Container : IwbContainer;
+  Container  : IwbContainer;
   uContainer : IwbContainer;
   sElement   : IwbElement;
   BasePtr    : Pointer;
-  i         : Integer;
-  SelfRef   : IwbContainerElementRef;
-  ValueDef  : IwbValueDef;
+  i          : Integer;
+  SelfRef    : IwbContainerElementRef;
+  ValueDef   : IwbValueDef;
   UnionDef   : IwbUnionDef;
 begin
   Result := nil;
@@ -3308,10 +3308,14 @@ begin
             sElement := Container.Elements[i];
             if (sElement.ElementType = etUnion) and
                Supports(cntElements[i], IwbContainer, uContainer) and
-               Supports(uContainer.GetValueDef, IwbUnionDef, UnionDef) and
-               (uContainer.ElementCount = 0) then begin
-              BasePtr := nil;
-              UnionDoInit(UnionDef, uContainer, BasePtr, nil);
+               Supports(uContainer.GetValueDef, IwbUnionDef, UnionDef) then begin
+              if (uContainer.ElementCount = 1) then begin // At this point it is usually the default choice set by default
+                uContainer.RemoveElement(0);
+              end;
+              if (uContainer.ElementCount = 0) then begin
+                BasePtr := nil;
+                UnionDoInit(UnionDef, uContainer, BasePtr, nil);
+              end;
             end;
             if (not aOnlySK or GetIsInSK(cntElements[i].SortOrder)) and cntElements[i].CanAssign(Low(Integer), sElement, False) then
               cntElements[i].Assign(Low(Integer), sElement, aOnlySK);
@@ -4778,6 +4782,7 @@ begin
 
             if Assigned(Element) then try
               Element.SortOrder := aIndex;
+              Element.MemoryOrder := aIndex;
               if IsAdd and Assigned(aElement) then
                 Element.Assign(Low(Integer), aElement, aOnlySK)
               else if IsAddChild then
@@ -12430,7 +12435,6 @@ begin
         else
           RequestStorageChange(p, q, 1);
         end;
-
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);
