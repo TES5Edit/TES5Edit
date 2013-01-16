@@ -2376,6 +2376,7 @@ var
   QustFlags      : IwbElement;
   FormIDs        : array of Cardinal;
   FileStream     : TFileStream;
+  NeedSeq        : Boolean;
   p, s           : string;
 begin
   SelectedNodes := vstNav.GetSortedSelection(True);
@@ -2403,8 +2404,9 @@ begin
         for n := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
             QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-            if Assigned(QustFlags) then
-              if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
+            // include SGE quests which are new or set SGE flag on master quest
+            if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then
+              if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
                 SetLength(FormIDs, Succ(Length(FormIDs)));
                 FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
               end;
