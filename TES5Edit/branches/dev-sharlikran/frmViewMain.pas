@@ -3745,7 +3745,7 @@ begin
                   Element.NativeValue := wbUDRSetScaleValue;
             end;
 
-            if wbUDRSetMSTT then begin
+            if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
               Element := ElementBySignature['NAME'];
               if Assigned(Element) then
                 if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then

@@ -7933,7 +7933,7 @@ var
 begin
   Result := False;
 
-  if (aInt < $800) or (aInt = $FFFFFFFF) and IsValid('ACVA') then
+  if {(aInt < $800) or} (aInt = $FFFFFFFF) and IsValid('ACVA') then // Allows source to be reserverd as this does NOT change the record itself
     Exit;
 
   if Assigned(aElement) then begin

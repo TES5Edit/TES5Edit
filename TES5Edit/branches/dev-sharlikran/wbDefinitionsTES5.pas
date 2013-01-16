@@ -5208,14 +5208,14 @@ begin
 
   wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStruct('Object v2', [
-      wbInteger('Unused', itU16),
+      wbInteger('Unknown', itU16),
       wbInteger('Alias ID', itS16),
       wbFormID('FormID')
     ]),
     wbStruct('Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias ID', itS16),
-      wbInteger('Unused', itU16)
+      wbInteger('Unknown', itU16)
     ])
   ]);
 
@@ -9890,13 +9890,14 @@ begin
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
         wbInteger('Emotion Value', itU32),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
+        wbByteArray('Unused', 4),
+        wbInteger('Response number', itU8),
+        wbByteArray('Unused', 3),
         wbFormIDCk('Sound', [SNDR, NULL]),
         wbInteger('Flags', itU8, wbFlags([
           'Use Emotion Animation'
         ])),
-        wbByteArray('Unknown', 3)
+        wbByteArray('Unused', 3)
       ]),
       wbLString(NAM1, 'Response Text', 0),
       wbString(NAM2, 'Script Notes', 0),
