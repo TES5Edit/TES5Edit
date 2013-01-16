@@ -33,7 +33,6 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitHeight = 205
       object Label2: TLabel
         Left = 24
         Top = 107
@@ -95,10 +94,17 @@ object frmOptions: TfrmOptions
         Caption = '[FO3/FNV] Sort FLST'
         TabOrder = 5
       end
+      object cbSimpleRecords: TCheckBox
+        Left = 16
+        Top = 172
+        Width = 281
+        Height = 17
+        Caption = 'Simple records (LAND, NAVI, NAVM). Requires restart.'
+        TabOrder = 6
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitHeight = 205
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -166,9 +172,6 @@ object frmOptions: TfrmOptions
     object tsColors: TTabSheet
       Caption = 'Colors'
       ImageIndex = 2
-      ExplicitLeft = 8
-      ExplicitTop = 31
-      ExplicitHeight = 205
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -230,7 +233,6 @@ object frmOptions: TfrmOptions
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
-    ExplicitTop = 242
   end
   object btnCancel: TButton
     Left = 383
@@ -241,6 +243,5 @@ object frmOptions: TfrmOptions
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 242
   end
 end

@@ -42,7 +42,7 @@ threadvar
 
 var
   wbDisplayLoadOrderFormID : Boolean;
-  wbSimpleLAND : Boolean = False;
+  wbSimpleRecords : Boolean = True;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
   wbHideUnused : Boolean{} = True;{}

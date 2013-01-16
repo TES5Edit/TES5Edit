@@ -3517,7 +3517,7 @@ begin
     {3} 'Top Right'
   ]);
 
-  if wbSimpleLAND then begin
+  if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),

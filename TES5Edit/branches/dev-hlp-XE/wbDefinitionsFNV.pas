@@ -7791,7 +7791,7 @@ begin
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
       'Allow Default Dialog',
       'Female'
-    ]), cpNormal, True)
+    ]), cpNormal, False)
   ]);
 
   wbRecord(IPCT, 'Impact', [
@@ -8210,7 +8210,7 @@ begin
     {3} 'Top Right'
   ]);
 
-  if wbSimpleLAND then begin
+  if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
