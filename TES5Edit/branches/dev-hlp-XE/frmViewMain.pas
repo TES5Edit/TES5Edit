@@ -264,6 +264,7 @@ type
     mniNavLogAnalyzer: TMenuItem;
     mniNavOther: TMenuItem;
     N13: TMenuItem;
+    mniRefByMarkModified: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -463,6 +464,7 @@ type
     procedure JvInterpreterProgram1GetValue(Sender: TObject; Identifier: string;
       var Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
+    procedure mniRefByMarkModifiedClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -2282,9 +2284,10 @@ var
           PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
         end else
         // unsafe to copy VMAD subrecords to merged patch until they are decoded
-        if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
-          PostAddMessage('Error: Can''t merge for the winning record with scripts ' + MainRecord.Name);
-        end else begin
+        {if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
+          PostAddMessage('Notice: Can''t merge for the winning record with scripts ' + MainRecord.Name);
+        end else}
+        begin
           TargetRecord := nil;
           for l := Low(aListNames) to High(aListNames) do
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
@@ -2376,7 +2379,6 @@ var
   QustFlags      : IwbElement;
   FormIDs        : array of Cardinal;
   FileStream     : TFileStream;
-  NeedSeq        : Boolean;
   p, s           : string;
 begin
   SelectedNodes := vstNav.GetSortedSelection(True);
@@ -5650,6 +5652,29 @@ begin
     Sender = mniRefByDeepCopyOverrideInto,
     Elements);
 
+  vstNav.Invalidate;
+end;
+
+procedure TfrmMain.mniRefByMarkModifiedClick(Sender: TObject);
+var
+  MainRecords                 : TDynMainRecords;
+  i                           : Integer;
+begin
+  if not wbEditAllowed then
+    Exit;
+  if wbTranslationMode then
+    Exit;
+  if not EditWarn then
+    Exit;
+
+  UserWasActive := True;
+
+  MainRecords := GetRefBySelectionAsMainRecords;
+
+  for i := Low(MainRecords) to High(MainRecords) do
+    MainRecords[i].MarkModifiedRecursive;
+
+  MainRecords := nil;
   vstNav.Invalidate;
 end;
 
@@ -9456,6 +9481,7 @@ begin
   mniRefByCopyAsNewInto.Visible := mniRefByCopyOverrideInto.Visible and not ByRefSelectionIncludesNonCopyNewRecords(Selected);
   mniRefByCopyDisabledOverrideInto.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByRemove.Visible := mniRefByCopyOverrideInto.Visible;
+  mniRefByMarkModified.Visible := mniRefByCopyOverrideInto.Visible;
 
   if mniRefByDeepCopyOverrideInto.Visible and ByRefSelectionIncludesOnlyDeepCopyRecords(Selected) then
     mniRefByCopyOverrideInto.Visible := False;
