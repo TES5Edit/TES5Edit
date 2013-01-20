@@ -9283,7 +9283,7 @@ end;
 
 function TwbValueDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
-  Result := ToString(aBasePtr, aEndPtr, aElement);
+  Result := UpperCase(ToString(aBasePtr, aEndPtr, aElement));
 end;
 
 { TwbSubRecordStructSKDef }
