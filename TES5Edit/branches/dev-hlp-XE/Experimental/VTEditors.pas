@@ -222,6 +222,8 @@ type
     procedure SetEditText(const Value: WideString); override;
     procedure PrepareEditControl; override;
     procedure KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState); override;
+  public
+    procedure PopupSetBounds;
   end;
 
   TDateEditLink = class(TCustomEditLink)
@@ -274,6 +276,7 @@ uses
   TypInfo,
   Types,
   Math,
+  JvCheckListBox,
   JvComboBox;
 
 var
@@ -1379,10 +1382,26 @@ end;
 
 type
   TcheckLinkComboBox = class(TJvCheckedComboBox)
+  private
+    FMinWidth: Integer;
+  protected
+    procedure CreatePopup; override;
+  public
     function GetDroppedDown: Boolean;
     procedure SetDroppedDown(aValue: Boolean);
     property DroppedDown: Boolean read GetDroppedDown write SetDroppedDown;
+    property MinWidth: Integer read FMinWidth write FMinWidth;
   end;
+
+procedure TcheckLinkComboBox.CreatePopup;
+begin
+  inherited;
+  if FMinWidth > 0 then
+    with FPopup do begin
+      Left := Self.Left;
+      Width := FMinWidth;
+    end;
+end;
 
 function TcheckLinkComboBox.GetDroppedDown: Boolean;
 begin
@@ -1448,6 +1467,19 @@ begin
   Result := s;
 end;
 
+procedure TcheckComboEditLink.PopupSetBounds;
+var
+  w: Integer;
+  i: Integer;
+begin
+  w := 0;
+  for i := 0 to Pred(PickList.Count) do
+    if Length(PickList[i])>w then
+      w := Length(PickList[i]);
+  with TcheckLinkComboBox(EditControl) do
+    MinWidth := w * Font.Size;
+end;
+
 procedure TcheckComboEditLink.PrepareEditControl;
 begin
   inherited;
@@ -1459,6 +1491,8 @@ begin
     OnKeyPress := nil;
     OnChange := nil;
     Ctl3D := False;
+    PopupSetBounds;
+    PopupDropdown(False);
   end;
 end;
 
