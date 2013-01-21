@@ -264,6 +264,7 @@ type
     mniNavLogAnalyzer: TMenuItem;
     mniNavOther: TMenuItem;
     N13: TMenuItem;
+    mniRefByMarkModified: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -463,6 +464,7 @@ type
     procedure JvInterpreterProgram1GetValue(Sender: TObject; Identifier: string;
       var Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
+    procedure mniRefByMarkModifiedClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -2282,9 +2284,10 @@ var
           PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
         end else
         // unsafe to copy VMAD subrecords to merged patch until they are decoded
-        if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
-          PostAddMessage('Error: Can''t merge for the winning record with scripts ' + MainRecord.Name);
-        end else begin
+        {if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
+          PostAddMessage('Notice: Can''t merge for the winning record with scripts ' + MainRecord.Name);
+        end else}
+        begin
           TargetRecord := nil;
           for l := Low(aListNames) to High(aListNames) do
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
@@ -2403,8 +2406,9 @@ begin
         for n := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
             QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-            if Assigned(QustFlags) then
-              if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
+            // include SGE quests which are new or set SGE flag on master quest
+            if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then
+              if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
                 SetLength(FormIDs, Succ(Length(FormIDs)));
                 FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
               end;
@@ -3234,6 +3238,7 @@ begin
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
+  wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -5647,6 +5652,29 @@ begin
     Sender = mniRefByDeepCopyOverrideInto,
     Elements);
 
+  vstNav.Invalidate;
+end;
+
+procedure TfrmMain.mniRefByMarkModifiedClick(Sender: TObject);
+var
+  MainRecords                 : TDynMainRecords;
+  i                           : Integer;
+begin
+  if not wbEditAllowed then
+    Exit;
+  if wbTranslationMode then
+    Exit;
+  if not EditWarn then
+    Exit;
+
+  UserWasActive := True;
+
+  MainRecords := GetRefBySelectionAsMainRecords;
+
+  for i := Low(MainRecords) to High(MainRecords) do
+    MainRecords[i].MarkModifiedRecursive;
+
+  MainRecords := nil;
   vstNav.Invalidate;
 end;
 
@@ -9030,6 +9058,7 @@ begin
     cbHideNeverShow.Checked := wbHideNeverShow;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
+    cbSimpleRecords.Checked := wbSimpleRecords;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9047,6 +9076,7 @@ begin
     wbHideNeverShow := cbHideNeverShow.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
+    wbSimpleRecords := cbSimpleRecords.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9061,6 +9091,7 @@ begin
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
+    Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -9450,6 +9481,7 @@ begin
   mniRefByCopyAsNewInto.Visible := mniRefByCopyOverrideInto.Visible and not ByRefSelectionIncludesNonCopyNewRecords(Selected);
   mniRefByCopyDisabledOverrideInto.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByRemove.Visible := mniRefByCopyOverrideInto.Visible;
+  mniRefByMarkModified.Visible := mniRefByCopyOverrideInto.Visible;
 
   if mniRefByDeepCopyOverrideInto.Visible and ByRefSelectionIncludesOnlyDeepCopyRecords(Selected) then
     mniRefByCopyOverrideInto.Visible := False;

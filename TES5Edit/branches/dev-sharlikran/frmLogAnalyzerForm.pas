@@ -647,7 +647,8 @@ begin
     end;
   end;
   // sort plugins by load order
-	QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
+  if Length(LogPlugins) > 0 then
+  	QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
 end;
 
 procedure TfrmLogAnalyzer.btnAnalyzeClick(Sender: TObject);
