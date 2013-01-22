@@ -20,13 +20,13 @@ Threads:
 [*] [url="http://www.creationkit.com/Skyrim_Dirty_Plugins_List"]TES5Edit Skyrim Dirty Plugins List[/url]
 [/list]
 
-Gopher's first video [url="http://www.youtube.com/watch?v=UOQO2S6HDBw"]TES5EDIT : Cleaning your mods[/url] covers important cleaning aspects of TES5Edit and I look forward to more helful videos from him.
+Gopher's first video [url="http://www.youtube.com/watch?v=UOQO2S6HDBw"]TES5EDIT : Cleaning your mods[/url] covers important cleaning aspects of TES5Edit and I look forward to more helpful videos from him.
 
-I will be updateing this post as time goes on to bring attention to certain things.  However, what needs to be kept up to date are the CK Wiki pages that have been started.  They contain detailed information that simply doesn't need to be keep up to date here.  For now the screen shots don't match the text in the TES5Edit Mod Cleaning Tutorial because I'm working on it.  It does however show accurately what needs to be happening when you clean a plugin.  It shows how to use the colors to easily distinguish between a Regualr Edit and a Dirty Edit.  It will have more info as time goes on and new pages as well.
+I will be updating this post as time goes on to bring attention to certain things.  However, what needs to be kept up to date are the CK Wiki pages that have been started.  They contain detailed information that simply doesn't need to be keep up to date here.  For now the screen shots don't match the text in the TES5Edit Mod Cleaning Tutorial because I'm working on it.  It does however show accurately what needs to be happening when you clean a plugin.  It shows how to use the colors to easily distinguish between a Regular Edit and a Dirty Edit.  It will have more info as time goes on and new pages as well.
 
 [size="4"][color="#00BFFF"][url="http://skyrim.nexusmods.com/mods/25859/"]TES5Edit 3.0.26 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
 
-[size="4"][color="#FF0000"]This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Feel free to ask about plugin cleaning in the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/"][RELz] TES5Edit Plugin Cleaning Emporium[/url][/color].  If you require technical assistance the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1425425-relz-tes5edit/"][RELz] TES5Edit[/url][/color] thread is best for that.  As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
+[size="4"][color="#FF0000"]This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Feel free to ask about plugin cleaning in the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/"][RELz] TES5Edit Plugin Cleaning Emporium[/url][/color].  If you require technical assistance the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1436132-relz-tes5edit/"][RELz] TES5Edit[/url][/color] thread is best for that.  As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
 
 [size="4"][color="#FF0000"]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
 
@@ -148,7 +148,4 @@ Update the [url="http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit"]
 
 [size="4"][color="#FF8C00"]Known Issues:[/color][/size]
 
-[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 59:[/url] FNVEdit: "Copy as Override" on some dialogs
-[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 60:[/url] FNVEdit: "Copy as Override" on a Base Effect associated to a script.
-[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 63:[/url] TES4Edit: 3.0.23 throws an assertion failure when cleaning PGRD records from files.
-[url="http://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=51"]Issue 69:[/url] TES5Edit: Adding items to a leveled list does not increase LLCT count.
+TBA
