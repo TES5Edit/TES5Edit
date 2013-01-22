@@ -7983,7 +7983,6 @@ begin
   wbRecord(IDLM, 'Idle Marker', [
     wbEDID,
     wbOBNDReq,
-    wbMODL,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
       'Unknown 1',
@@ -7993,7 +7992,8 @@ begin
     ]), cpNormal, False),
     wbInteger(IDLC, 'Animation Count', itU8),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
-    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, False)
+    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, False),
+    wbMODL
   ]);
 
   wbRecord(PROJ, 'Projectile', [
