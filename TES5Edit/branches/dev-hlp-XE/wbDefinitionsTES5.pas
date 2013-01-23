@@ -5220,22 +5220,22 @@ begin
   ]);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
-    wbLenString('Name', 2),
+    wbLenString('scriptName', 2),
     wbInteger('Unknown', itU8),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
-      wbLenString('Name', 2),
+      wbLenString('propertyName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbByteArray('Unknown', 0, cpIgnore),
         {01} wbScriptObject,
         {02} wbLenString('String', 2),
-        {03} wbInteger('Int32', itU32),
+        {03} wbInteger('Int32', itS32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
         {11} wbArray('Array of Object', wbScriptObject, -1),
         {12} wbArray('Array of String', wbLenString('Element', 2), -1),
-        {13} wbArray('Array of Int32', wbInteger('Element', itU32), -1),
+        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
