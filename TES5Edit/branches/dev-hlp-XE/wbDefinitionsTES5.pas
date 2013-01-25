@@ -5207,12 +5207,12 @@ begin
   ]);
 
   wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
-    wbStruct('Object v2', [
+    wbStructSK([1], 'Object v2', [
       wbInteger('Unknown', itU16),
       wbInteger('Alias ID', itS16),
       wbFormID('FormID')
     ]),
-    wbStruct('Object v1', [
+    wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias ID', itS16),
       wbInteger('Unknown', itU16)
@@ -5299,10 +5299,12 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), wbScriptFragmentsQuestCounter),
+    // 00092A49
     wbArrayS('Aliases', wbStructSK([1], 'Alias', [
-      wbInteger('Unknown', itS16),
+      wbScriptObject,
+      {wbInteger('Unknown', itS16),
       wbInteger('Alias ID', itS16),
-      wbFormIDCk('Quest', [QUST, NULL]),
+      wbFormID('Reference'),}
       wbInteger('Version', itS16),
       wbInteger('Object Format', itS16),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
