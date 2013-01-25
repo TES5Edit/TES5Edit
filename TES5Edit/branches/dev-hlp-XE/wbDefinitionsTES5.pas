@@ -5299,12 +5299,12 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), wbScriptFragmentsQuestCounter),
-    wbArrayS('Aliases', wbStruct('Alias', [
+    wbArrayS('Aliases', wbStructSK([1], 'Alias', [
       wbInteger('Unknown', itS16),
       wbInteger('Alias ID', itS16),
-      wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS16),
-      wbInteger('Alias Object Format', itS16),
+      wbFormIDCk('Quest', [QUST, NULL]),
+      wbInteger('Version', itS16),
+      wbInteger('Object Format', itS16),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
   ], cpNormal, false, wbScriptFragmentsDontShow);
