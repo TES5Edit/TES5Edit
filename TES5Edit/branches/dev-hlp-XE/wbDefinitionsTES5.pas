@@ -5299,12 +5299,8 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), wbScriptFragmentsQuestCounter),
-    // 00092A49
-    wbArrayS('Aliases', wbStructSK([1], 'Alias', [
+    wbArrayS('Aliases', wbStructSK([0], 'Alias', [
       wbScriptObject,
-      {wbInteger('Unknown', itS16),
-      wbInteger('Alias ID', itS16),
-      wbFormID('Reference'),}
       wbInteger('Version', itS16),
       wbInteger('Object Format', itS16),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
