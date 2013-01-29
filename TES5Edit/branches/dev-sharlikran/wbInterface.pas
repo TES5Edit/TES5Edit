@@ -2156,7 +2156,7 @@ var
   wbSizeOfMainRecordStruct : Integer;
 
 type
-  TwbGameMode = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
+  TwbGameMode = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmTES5Saves);
 
 var
   wbGameMode : TwbGameMode;
