@@ -7505,7 +7505,7 @@ begin
       wbFloat('Edge Effect - Alpha Fade Out Time'),
       wbFloat('Edge Effect - Persistent Alpha Ratio'),
       wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-      wbFloat('Edge Effect - Alpha Pusle Frequency'),
+      wbFloat('Edge Effect - Alpha Pulse Frequency'),
       wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
       wbFloat('Edge Effect - Full Alpha Ratio'),
       wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
