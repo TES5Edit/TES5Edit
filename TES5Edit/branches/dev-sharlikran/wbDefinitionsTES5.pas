@@ -7772,8 +7772,8 @@ begin
       {02} wbInteger('End Hour', itU16),
       {02} wbInteger('Radius', itU16),
       {02} wbByteArray('Unknown 1', 2),
-             wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
-             wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
+           wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
+           wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
       {02} wbByteArray('Unknown 2', 2)
       ]),
     wbPLVD,
