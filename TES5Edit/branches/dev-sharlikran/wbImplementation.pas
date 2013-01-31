@@ -36,6 +36,7 @@ var
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
+function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -543,7 +544,7 @@ type
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings);
 
-    procedure Scan;
+    procedure Scan; virtual;
     procedure SortRecords;
     procedure SortRecordsByEditorID;
 
@@ -554,6 +555,12 @@ type
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   public
     destructor Destroy; override;
+  end;
+
+  TwbSaveFile = class(TwbFile)
+  protected
+    procedure Scan; override;
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   end;
 
   TwbDataContainerFlag = (
@@ -13068,6 +13075,26 @@ begin
   end;
 end;
 
+function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
+var
+  FileName: string;
+  i: Integer;
+begin
+  if ExtractFilePath(aFileName) = '' then
+    FileName := ExpandFileName('.\'+aFileName)
+  else
+    FileName := ExpandFileName(aFileName);
+
+  if FilesMap.Find(FileName, i) then
+    Result := IwbFile(Pointer(FilesMap.Objects[i]))
+  else begin
+    Result := TwbSaveFile.Create(FileName, aLoadOrder, aCompareTo, False);
+    SetLength(Files, Succ(Length(Files)));
+    Files[High(Files)] := Result;
+    FilesMap.AddObject(FileName, Pointer(Result));
+  end;
+end;
+
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 var
   FileName : string;
@@ -14457,6 +14484,31 @@ const
   WRLD : TwbSignature = 'WRLD';
   CELL : TwbSignature = 'CELL';
   DIAL : TwbSignature = 'DIAL';
+
+{ TwbSaveFile }
+
+constructor TwbSaveFile.CreateNew(const aFileName: string; aLoadOrder: Integer);
+begin
+  Include(flStates, fsIsNew);
+  flLoadOrder := aLoadOrder;
+  flFileName := aFileName;
+end;
+
+procedure TwbSaveFile.Scan;
+var
+  CurrentPtr  : Pointer;
+  SelfRef     : IwbContainerElementRef;
+
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  flProgress('Start processing');
+
+  CurrentPtr := flView;
+  TwbStruct.Create(Self, CurrentPtr, flEndPtr, StructSave, '', False);
+
+  flProgress('Processing completed');
+  flLoadFinished := True;
+end;
 
 initialization
   wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);

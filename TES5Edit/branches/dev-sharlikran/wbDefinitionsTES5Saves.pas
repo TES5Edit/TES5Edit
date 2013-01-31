@@ -12805,6 +12805,334 @@ begin
   ]);
 end;
 
+function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then
+    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
+      Element := Container.ElementByPath['Header\Screenshot Width'];
+      if Assigned(Element) then begin
+        Result := Element.NativeValue;
+        Element := Container.ElementByPath['Header\Screenshot Height'];
+        if Assigned(Element) then begin
+          Result := 3 * Result * Element.NativeValue;
+        end;
+      end;
+    end;
+end;
+
+function GlobalData1Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then
+    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
+      Element := Container.ElementByPath['File Location Table\Global Data Table 1 Count'];
+      if Assigned(Element) then begin
+        Result := Element.NativeValue;
+      end;
+    end;
+end;
+
+function GlobalData2Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+  // To be done
+end;
+
+function GlobalData3Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+  // To be done
+end;
+
+function ChangeFormCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+  // To be done
+end;
+
+function GlobalDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      if aType < 9 then // 0 to 8 = 9
+        Result := aType + 1
+      else if aType < 1000 then  // 100 to 114 = 15
+        Result := aType - 100 + 9 + 1
+      else  // 1000 to 1005 = 6
+        Result := aType - 1000 + 9 + 15 + 1;
+    end;
+  end;
+end;
+
+function ChangedFormsDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  // we have to set Element to the array element ChangedForms[i] so Type is valid
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      aType := Element.NativeValue shr 6;
+      case aType of
+        0: Result := 0;
+        1: Result := 1;
+        2: Result := 2;
+      else
+        Result := 3;
+      end;
+    end;
+  end;
+end;
+
+function ChangedFormsDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  // we have to set Element to the array element ChangedForms[i] so Type is valid
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue and $3F;
+    end;
+  end;
+end;
+
+function ChangedFormsDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  // we have to set Element to the array element ChangedForms[i] so Length is valid
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Length'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
+procedure DefineTES5SavesS;  // This is all based on current UESP and HexDump
+var
+  wbHeader : IwbStructDef;
+  wbFileLocationTable : IwbStructDef;
+  wbGlobalData: IwbStructDef;
+  wbChangedForms: IwbStructDef;
+  wbChangedFormsData: IwbUnionDef;
+  wbRefID : IwbIntegerDef;
+begin
+  wbHeader := wbStruct('Header', [
+    wbInteger('Version', itU32),
+    wbInteger('Save Number', itU32),
+    wbLenString('Player Name', 2),
+    wbInteger('Player Level', itU32),
+    wbLenString('Save Cell', 2),
+    wbLenString('Save Date', 2),
+    wbLenString('Player Race Editor ID', 2),
+    wbInteger('Player Sex', itU16, wbSexEnum),
+    wbFloat('Player Current Experience'),
+    wbFloat('Player LevelUp Experience'),
+    wbByteArray('Save Time', 8),
+    wbInteger('Screenshot Width', itU32),
+    wbInteger('Screenshot Height', itU32)
+  ]);
+  wbFileLocationTable := wbStruct('File Location Table', [
+    wbInteger('RefID Array Count Offset', itU32),
+    wbInteger('Unknown Table Offset', itU32),
+    wbInteger('Global Data Table 1 Offset', itU32),
+    wbInteger('Global Data Table 2 Offset', itU32),
+    wbInteger('Changed Forms Offset', itU32),
+    wbInteger('Global Data Table 3 Offset', itU32),
+    wbInteger('Global Data Table 1 Count', itU32),
+    wbInteger('Global Data Table 2 Count', itU32),
+    wbInteger('Global Data Table 3 Count', itU32),
+    wbInteger('Changed Forms Count', itU32),
+    wbArray('Unused', wbInteger('', itU32), 15)
+  ]);
+  wbGlobalData := wbStruct('Global Data', [
+    wbInteger('Type', itU32),
+    wbUnion('Data', GlobalDataDecider, [
+      wbArray('Unknown Type', wbInteger('', itU8)),
+      // 0 to 8
+      wbArray('Misc Stats', wbInteger('', itU8)),
+      wbArray('Player Location', wbInteger('', itU8)),
+      wbArray('TES', wbInteger('', itU8)),
+      wbArray('Global Variables', wbInteger('', itU8)),
+      wbArray('Created Objects', wbInteger('', itU8)),
+      wbArray('Effects', wbInteger('', itU8)),
+      wbArray('Weather', wbInteger('', itU8)),
+      wbArray('Audio', wbInteger('', itU8)),
+      wbArray('Sky Cells', wbInteger('', itU8)),
+      // 100 to 114
+      wbArray('Process List', wbInteger('', itU8)),
+      wbArray('Combat', wbInteger('', itU8)),
+      wbArray('Interface', wbInteger('', itU8)),
+      wbArray('Actor Causes', wbInteger('', itU8)),
+      wbArray('Unknown 104', wbInteger('', itU8)),
+      wbArray('Detection Manager', wbInteger('', itU8)),
+      wbArray('Location MetaData', wbInteger('', itU8)),
+      wbArray('Quest Static Data', wbInteger('', itU8)),
+      wbArray('Story Teller', wbInteger('', itU8)),
+      wbArray('Magic Favorites', wbInteger('', itU8)),
+      wbArray('Player Controls', wbInteger('', itU8)),
+      wbArray('Story Event Manager', wbInteger('', itU8)),
+      wbArray('Ingredient Shared', wbInteger('', itU8)),
+      wbArray('Menu Controls', wbInteger('', itU8)),
+      wbArray('Menu Topic Manager', wbInteger('', itU8)),
+      // 1000 to 1005
+      wbArray('Temp Effects', wbInteger('', itU8)),
+      wbArray('Papyrus', wbInteger('', itU8)),
+      wbArray('Anim Objects', wbInteger('', itU8)),
+      wbArray('Timers', wbInteger('', itU8)),
+      wbArray('Synchronized Animations', wbInteger('', itU8)),
+      wbArray('Main', wbInteger('', itU8))
+    ])
+  ]);
+  wbChangedFormsData := wbUnion('', ChangedFormsDataDecider, [
+    // We have to reference the possible type of form here (from UESP:)
+    {
+       0 = 63 (REFR)
+       1 = 64 (ACHR)
+       2 = 65 (PMIS)
+       3 = 67 (PGRE)
+       4 = 68 (PBEA)
+       5 = 69 (PFLA)
+       6 = 62 (CELL)
+       7 = 78 (INFO)
+       8 = 79 (QUST)
+       9 = 45 (NPC_)
+       10 = 25 (ACTI)
+       11 = 26 (TACT)
+       12 = 27 (ARMO)
+       13 = 28 (BOOK)
+       14 = 29 (CONT)
+       15 = 30 (DOOR)
+       16 = 31 (INGR)
+       17 = 32 (LIGH)
+       18 = 33 (MISC)
+       19 = 34 (APPA)
+       20 = 35 (STAT)
+       21 = 37 (MSTT)
+       22 = 42 (FURN)
+       23 = 43 (WEAP)
+       24 = 44 (AMMO)
+       25 = 47 (KEYM)
+       26 = 48 (ALCH)
+       27 = 49 (IDLM)
+       28 = 50 (NOTE)
+       29 = 105 (ECZN)
+       30 = 10 (CLAS)
+       31 = 11 (FACT)
+       32 = 81 (PACK)
+       33 = 75 (NAVM)
+       34 = 120 (WOOP)
+       35 = 19 (MGEF)
+       36 = 115 (SMQN)
+       37 = 124 (SCEN)
+       38 = 106 (LCTN)
+       39 = 123 (RELA)
+       40 = 72 (PHZD)
+       41 = 71 (PBAR)
+       42 = 70 (PCON)
+       43 = 93 (FLST)
+       44 = 46 (LVLN)
+       45 = 55 (LVLI)
+       46 = 84 (LVSP)
+       47 = 66 (PARW)
+       48 = 22 (ENCH)
+    }
+  ]);
+//  wbRefID := wbInteger('RefID', itU24);
+//  wbChangedForms := wbStruct('Changed Forms', [
+//    wbRefID,
+//    wbInteger('Change Flags', itU32 {, wbFlags([
+//      Looks like there will be work to do here
+//    ])}),
+//    wbInteger('Type', itU8),  // We need a specific ToString for that
+//    wbInteger('Version', itU8),
+//    wbUnion('Datas', ChangedFormsDataLengthDecider, [
+//      wbStruct('', [
+//        wbInteger('Length', itU8),
+//        wbInteger('Uncompressed Length', itU8),
+//        wbArray('Data', wbInteger('', itU8), ChangedFormsDataCounter)
+//      ]),
+//      wbStruct('', [
+//        wbInteger('Length', itU16),
+//        wbInteger('Uncompressed Length', itU16),
+//        wbArray('Data', wbInteger('', itU8), ChangedFormsDataCounter)
+//      ]),
+//      wbStruct('', [
+//        wbInteger('Length', itU32),
+//        wbInteger('Uncompressed Length', itU32),
+//        wbArray('Data', wbInteger('', itU8), ChangedFormsDataCounter)
+//      ]),
+//      wbUnknown() // If the type is invalid
+//    ])
+//  ]);
+  StructSave := wbStruct('Save File', [
+    wbString('Magic', 13),
+    wbInteger('Header Size', itU32),
+    wbHeader,
+    wbArray('Screenshot Data', wbInteger('Pixel', itU8), [], ScreenShotDataCounter),
+    wbInteger('Form Version', itU8),
+    wbInteger('PluginInfo Size', itU32),
+    wbArray('Plugins', wbLenString('PluginName', 2), -4),
+//    wbFileLocationTable,
+//    wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
+//    wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter),
+//    wbArray('Change Form', wbChangedForms, [], ChangeFormCounter),
+//    wbArray('Global Data 3', wbGlobalData, [], GlobalData3Counter),
+//    wbArray('FormIDs', wbRefID, -2),
+//    wbArray('Visited Worldspace', wbRefID, -2),
+//    wbInteger('Unknown Table Size', itU32),
+//    wbArray('Unknown Table', wbString('Unknown'), -2)
+    wbUnknown()
+  ]);
+end;
+
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
 procedure DefineTES5Savesp;
 begin
@@ -12967,6 +13295,7 @@ begin
   DefineTES5Savesn;
   DefineTES5Saveso;
   DefineTES5Savesp;
+  DefineTES5SavesS;  // s for Saves
   DefineTES5Savesq;
 end;
 

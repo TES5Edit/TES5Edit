@@ -2246,6 +2246,7 @@ function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContain
 
 var
   HeaderSignature : TwbSignature = 'TES4';
+  StructSave      : IwbStructDef; // Temporary Hack I hope...
   
 
 implementation
@@ -10610,16 +10611,14 @@ end;
 
 { TwbStringKCDef }
 
-function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement; aExtended: Boolean): string;
+function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
 
 { TwbLStringKCDef }
 
-function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement; aExtended: Boolean): string;
+function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
