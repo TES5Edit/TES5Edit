@@ -186,6 +186,7 @@ type
   PwbSignature = ^TwbSignature;
   TwbSignature = array[0..3] of AnsiChar;
   TwbSignatures = array of TwbSignature;
+  TwbSaveMagic = string;
 
   TwbIntType = (
     itU8,
@@ -299,6 +300,7 @@ type
   IwbNamedDef = interface;
   IwbValueDef = interface;
   IwbMainRecord = interface;
+  IwbSaveRecord = interface;
 
   TwbElementState = (
     esModified,
@@ -938,6 +940,14 @@ type
     property ConflictThis: TConflictThis
       read GetConflictThis
       write SetConflictThis;
+  end;
+
+  IwbSaveRecord = interface(IwbDataContainer)
+    ['{F06FD5E2-621D-4422-BA00-CB3CA72B3693}']
+    function GetMagic: TwbSaveMagic;
+
+    property Magic: TwbSaveMagic
+      read GetMagic;
   end;
 
   TDynElements = array of IwbElement;
@@ -1590,6 +1600,13 @@ function wbByteArray(const aName      : string = 'Unknown';
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbByteArrayDef; overload;
+
+function wbByteArray(const aName          : string;
+                           aCountCallback : TwbCountCallback;
+                           aPriority      : TwbConflictPriority = cpNormal;
+                           aRequired      : Boolean = False;
+                           aDontShow      : TwbDontShowCallback = nil)
+                                          : IwbByteArrayDef; overload;
 
 function wbUnknown(const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
@@ -2246,7 +2263,8 @@ function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContain
 
 var
   HeaderSignature : TwbSignature = 'TES4';
-  StructSave      : IwbStructDef; // Temporary Hack I hope...
+  HeaderMagic     : TwbSaveMagic = 'TESV_SAVEGAME';
+  StructSaveDef   : IwbStructDef; // Temporary Hack I hope...
   
 
 implementation
@@ -3153,14 +3171,16 @@ type
     FoundLString            : Integer;
     NotFoundLString         : Integer;
 
-    IsEmpty                : Integer;
-    IsNotEmpty             : Integer;
+    IsEmpty                 : Integer;
+    IsNotEmpty              : Integer;
+    CountCallback           : TwbCountCallBack;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority : TwbConflictPriority; aRequired: Boolean;
                  const aName     : string;
                        aSize     : Cardinal;
-                       aDontShow : TwbDontShowCallback);
+                       aDontShow      : TwbDontShowCallback;
+                       aCountCallback : TwbCountCallback = nil);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3932,6 +3952,16 @@ function wbByteArray(const aName     : string = 'Unknown';
                                      : IwbByteArrayDef; overload;
 begin
   Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow);
+end;
+
+function wbByteArray(const aName          : string;
+                           aCountCallback : TwbCountCallback;
+                           aPriority      : TwbConflictPriority = cpNormal;
+                           aRequired      : Boolean = False;
+                           aDontShow      : TwbDontShowCallback = nil)
+                                          : IwbByteArrayDef; overload;
+begin
+  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, 0, aDontShow, aCountCallback);
 end;
 
 function wbUnknown(const aSignature : TwbSignature;
@@ -8637,12 +8667,14 @@ begin
     Self.Create(defPriority, defRequired, noName, badSize, noDontShow).defRoot := aSource;
 end;
 
-constructor TwbByteArrayDef.Create(aPriority : TwbConflictPriority; aRequired: Boolean;
-                             const aName     : string;
-                                   aSize     : Cardinal;
-                                   aDontShow : TwbDontShowCallback);
+constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority; aRequired: Boolean;
+                             const aName          : string;
+                                   aSize          : Cardinal;
+                                   aDontShow      : TwbDontShowCallback;
+                                   aCountCallback : TwbCountCallback);
 begin
   badSize := aSize;
+  CountCallback := aCountCallback;
   inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow);
 end;
 
@@ -8716,7 +8748,10 @@ end;
 
 function TwbByteArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := badSize;
+  if Assigned(CountCallback) then
+    Result := CountCallback(aBasePtr, aEndPtr, aElement)
+  else
+    Result := badSize;
   if (Result = 0) and Assigned(aBasePtr) then
     Result := High(Integer);
 end;

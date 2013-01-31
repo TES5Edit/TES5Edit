@@ -1113,6 +1113,11 @@ type
     function GetElementType: TwbElementType; override;
   end;
 
+  TwbSaveStruct = class(TwbStruct, IwbSaveRecord)
+  protected
+    function GetMagic: TwbSaveMagic;
+  end;
+
   TwbUnion = class(TwbValueBase)
   protected
     function CompareExchangeFormID(aOldFormID: Cardinal; aNewFormID: Cardinal): Boolean; override;
@@ -14497,6 +14502,7 @@ end;
 procedure TwbSaveFile.Scan;
 var
   CurrentPtr  : Pointer;
+  Header      : IwbSaveRecord;
   SelfRef     : IwbContainerElementRef;
 
 begin
@@ -14504,10 +14510,30 @@ begin
   flProgress('Start processing');
 
   CurrentPtr := flView;
-  TwbStruct.Create(Self, CurrentPtr, flEndPtr, StructSave, '', False);
+  TwbSaveStruct.Create(Self, CurrentPtr, flEndPtr, StructSaveDef, '', False);
+
+  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Header.Magic <> HeaderMagic then
+    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"', [HeaderMagic, String(Header.Magic), flFileName]);
 
   flProgress('Processing completed');
   flLoadFinished := True;
+end;
+
+{ TwbSaveStruct }
+
+function TwbSaveStruct.GetMagic: TwbSaveMagic;
+var
+  Element : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := '';
+  if not Supports(Self, IwbContainer, Container) or (Container.ElementCount < 1) then Exit;
+  Element := Container.Elements[0];
+  if Assigned(Element) then
+    Result := Element.NativeValue;
 end;
 
 initialization

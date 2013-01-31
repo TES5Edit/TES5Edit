@@ -13112,11 +13112,11 @@ begin
 //      wbUnknown() // If the type is invalid
 //    ])
 //  ]);
-  StructSave := wbStruct('Save File', [
+  StructSaveDef := wbStruct('Save File', [
     wbString('Magic', 13),
     wbInteger('Header Size', itU32),
     wbHeader,
-    wbArray('Screenshot Data', wbInteger('Pixel', itU8), [], ScreenShotDataCounter),
+    wbByteArray('Screenshot Data', ScreenShotDataCounter),
     wbInteger('Form Version', itU8),
     wbInteger('PluginInfo Size', itU32),
     wbArray('Plugins', wbLenString('PluginName', 2), -4),
