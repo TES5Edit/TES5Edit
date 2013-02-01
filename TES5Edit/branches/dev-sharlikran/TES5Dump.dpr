@@ -238,7 +238,8 @@ begin
       wbLoadBSAs := true;
       DefineTES5;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
+      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5, TES5Saves to');
+      WriteLn(ErrOutput, 'select mode.');
       Exit;
     end;
 
