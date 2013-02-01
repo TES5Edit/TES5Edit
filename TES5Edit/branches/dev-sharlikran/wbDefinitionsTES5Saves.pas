@@ -13253,11 +13253,11 @@ begin
     wbString('Magic', 13),
     wbInteger('Header Size', itU32),
     wbHeader,
+    {>>> Can we use the same command Dump doe to supress this, so it's hidden.    <<<}
+    {>>> Can the same filter options used to filter out certain records.          <<<}
     wbByteArray('Screenshot Data', ScreenShotDataCounter),
     wbInteger('Form Version', itU8),
     wbInteger('PluginInfo Size', itU32),
-    {>>> Can we use the same command Dump doe to supress this, so it's hidden.    <<<}
-    {>>> Can the same filter options used to filter out certain records.          <<<}
     wbArray('Plugins', wbLenString('PluginName', 2), -4),
     wbFileLocationTable,
     wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
