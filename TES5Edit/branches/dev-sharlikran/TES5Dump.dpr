@@ -296,6 +296,13 @@ begin
     else
       wbLanguage := 'English';
 
+    if wbFindCmdLineParam('bts', s) then
+      BytesToSkip := StrToInt64Def(s, BytesToSkip);
+    if wbFindCmdLineParam('btd', s) then
+      BytesToDump := StrToInt64Def(s, BytesToDump);
+    if wbFindCmdLineParam('btg', s) then
+      BytesToGroup := StrToInt64Def(s, BytesToGroup);
+
     s := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
@@ -310,6 +317,7 @@ begin
 
     if NeedsSyntaxInfo or (ParamCount < 1) or wbFindCmdLineSwitch('?') or wbFindCmdLineSwitch('help') then begin
       WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
+      WriteLn(ErrOutput, '  or     '+wbAppName+'Saves [options] inputfile');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
       WriteLn(ErrOutput);
@@ -334,6 +342,10 @@ begin
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
       WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
       WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Saves mode ONLY', ' not for general use');
+      WriteLn(ErrOutput, '-bts         ', 'BytesToSkip  = number of undecoded bytes to skip, default = 0');
+      WriteLn(ErrOutput, '-btd         ', 'BytesToDump  = number of undecoded bytes to dump as unknown, default = all');
+      WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
       WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
       WriteLn(ErrOutput, '             ', '');
@@ -351,6 +363,11 @@ begin
       ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
     if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
+
+    if BytesToSkip>0 then
+      ReportProgress('['+s+']   BytesToSkip : '+IntToStr(BytesToSkip));
+    if BytesToDump<$FFFFFFFF then
+      ReportProgress('['+s+']   BytesToDump : '+IntToStr(BytesToDump));
 
     if wbLoadBSAs then begin
       DataPath := ExtractFilePath(s);

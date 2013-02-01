@@ -2265,6 +2265,9 @@ var
   HeaderSignature : TwbSignature = 'TES4';
   HeaderMagic     : TwbSaveMagic = 'TESV_SAVEGAME';
   StructSaveDef   : IwbStructDef; // Temporary Hack I hope...
+  BytesToSkip     : Cardinal = 0;
+  BytesToDump     : Cardinal = $FFFFFFFF;
+  BytesToGroup    : Cardinal = 4;
   
 
 implementation
@@ -3176,9 +3179,9 @@ type
     CountCallback           : TwbCountCallBack;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority : TwbConflictPriority; aRequired: Boolean;
-                 const aName     : string;
-                       aSize     : Cardinal;
+    constructor Create(aPriority      : TwbConflictPriority; aRequired: Boolean;
+                 const aName          : string;
+                       aSize          : Cardinal;
                        aDontShow      : TwbDontShowCallback;
                        aCountCallback : TwbCountCallback = nil);
 
@@ -6502,7 +6505,7 @@ begin
         FindOurself(Container, noName);
     if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
         Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
-    if not Assigned(Container) then begin
+    if not Assigned(Container) and (not SameText(noName, 'Unused') or not wbHideUnused) then begin
       Result := High(Integer);
       Exit;
     end;

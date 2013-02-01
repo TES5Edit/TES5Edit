@@ -12850,21 +12850,63 @@ begin
 end;
 
 function GlobalData2Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
 begin
   Result := 0;
-  // To be done
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then
+    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
+      Element := Container.ElementByPath['File Location Table\Global Data Table 2 Count'];
+      if Assigned(Element) then begin
+        Result := Element.NativeValue;
+      end;
+    end;
 end;
 
 function GlobalData3Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
 begin
   Result := 0;
-  // To be done
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then
+    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
+      Element := Container.ElementByPath['File Location Table\Global Data Table 3 Count'];
+      if Assigned(Element) then begin
+        Result := Element.NativeValue;
+      end;
+    end;
 end;
 
-function ChangeFormCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ChangedFormsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
 begin
   Result := 0;
-  // To be done
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then
+    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
+      Element := Container.ElementByPath['File Location Table\Changed Forms Count'];
+      if Assigned(Element) then begin
+        Result := Element.NativeValue;
+      end;
+    end;
 end;
 
 function GlobalDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -12876,20 +12918,21 @@ begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Element := aElement;
-  while Assigned(Element.Container) do
+  while (Pos('Global Data ', Element.Name)=0) and Assigned(Element.Container) do
     Element := Element.Container;
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
     if Assigned(Element) then begin
       aType := Element.NativeValue;
-      if aType < 9 then // 0 to 8 = 9
+      if (aType >= 0) and (aType <= 8) then // 0 to 8 = 9
         Result := aType + 1
-      else if aType < 1000 then  // 100 to 114 = 15
+      else if (aType >= 100) and (aType <= 114) then  // 100 to 114 = 15
         Result := aType - 100 + 9 + 1
-      else  // 1000 to 1005 = 6
+      else  if (aType >= 1000) and (aType <= 1005) then // 1000 to 1005 = 6
         Result := aType - 1000 + 9 + 15 + 1;
     end;
+    if Result <> 0 then Result := 0; // debuging and temporary
   end;
 end;
 
@@ -12955,6 +12998,57 @@ begin
   end;
 end;
 
+function SkipCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := BytesToSkip;
+end;
+
+function DumpCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  if BytesToDump = $FFFFFFFF then
+    Result := ( Cardinal(aEndPtr) - Cardinal(aBasePtr) ) div BytesToGroup
+  else
+    Result := BytesToDump div BytesToGroup;
+end;
+
+function UnknownTypeDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+
+  procedure FindOurself(aContainer: IwbContainer);
+  var
+    i          : Integer;
+    tContainer : IwbContainer;
+  begin
+    for i := 0 to Pred(aContainer.ElementCount) do
+      if SameText(aContainer.Elements[i].Name, 'Unknown Type') then begin
+        Element := aContainer.Elements[i];
+        break;
+      end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
+        FindOurself(tContainer);
+  end;
+
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while (Pos('Unknown Type', Element.Name)=0) and Assigned(Element.Container) do
+    Element := Element.Container;
+  if (Pos('Unknown Type', Element.Name)=0) then begin // try again in reverse
+    Element := aElement;
+    if Supports(Element, IwbContainer, Container) then
+      FindOurself(Container);
+  end;
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['DataLength'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
 procedure DefineTES5SavesS;  // This is all based on current UESP and HexDump
 var
   wbHeader : IwbStructDef;
@@ -12995,40 +13089,68 @@ begin
   wbGlobalData := wbStruct('Global Data', [
     wbInteger('Type', itU32),
     wbUnion('Data', GlobalDataDecider, [
-      wbArray('Unknown Type', wbInteger('', itU8)),
+      wbStruct('Unknown Type', [
+        wbInteger('DataLength', itU32),
+        wbByteArray('Unknown', UnknownTypeDataCounter)
+      ]),
       // 0 to 8
-      wbArray('Misc Stats', wbInteger('', itU8)),
-      wbArray('Player Location', wbInteger('', itU8)),
-      wbArray('TES', wbInteger('', itU8)),
-      wbArray('Global Variables', wbInteger('', itU8)),
-      wbArray('Created Objects', wbInteger('', itU8)),
-      wbArray('Effects', wbInteger('', itU8)),
-      wbArray('Weather', wbInteger('', itU8)),
-      wbArray('Audio', wbInteger('', itU8)),
-      wbArray('Sky Cells', wbInteger('', itU8)),
+      wbStruct('Misc Stats Struct', [
+        wbByteArray('Unknown', 4),
+        wbArray('Misc Stats', wbStruct('Misc Stat',[
+          wbLenString('Misc Stat Name', 2),
+          wbInteger('Category', itU8, wbEnum([
+            '0 = General',
+            '1 = Quest',
+            '2 = Combat',
+            '3 = Magic',
+            '4 = Crafting',
+            '5 = Crime',
+            '6 = Perks?'
+          ])),
+          wbInteger('Value', itU32)
+        ]), -1)
+      ]),
+      wbStruct('Player Location Struct', [
+        wbInteger('DataLength', itU32),
+        wbByteArray('WorldSpace 1', 3),
+        wbInteger('Coord X', itS32),
+        wbInteger('Coord Y', itS32),
+        wbByteArray('WorldSpace 2', 3),
+        wbFloat('Pos X'),
+        wbFloat('Pos Y'),
+        wbFloat('Pos Z'),
+        wbByteArray('Unknown', 4)
+      ]),
+      wbArray('TES', wbInteger('', itU8), -2),
+      wbArray('Global Variables', wbInteger('', itU8), -2),
+      wbArray('Created Objects', wbInteger('', itU8), -2),
+      wbArray('Effects', wbInteger('', itU8), -2),
+      wbArray('Weather', wbInteger('', itU8), -2),
+      wbArray('Audio', wbInteger('', itU8), -2),
+      wbArray('Sky Cells', wbInteger('', itU8), -2),
       // 100 to 114
-      wbArray('Process List', wbInteger('', itU8)),
-      wbArray('Combat', wbInteger('', itU8)),
-      wbArray('Interface', wbInteger('', itU8)),
-      wbArray('Actor Causes', wbInteger('', itU8)),
-      wbArray('Unknown 104', wbInteger('', itU8)),
-      wbArray('Detection Manager', wbInteger('', itU8)),
-      wbArray('Location MetaData', wbInteger('', itU8)),
-      wbArray('Quest Static Data', wbInteger('', itU8)),
-      wbArray('Story Teller', wbInteger('', itU8)),
-      wbArray('Magic Favorites', wbInteger('', itU8)),
-      wbArray('Player Controls', wbInteger('', itU8)),
-      wbArray('Story Event Manager', wbInteger('', itU8)),
-      wbArray('Ingredient Shared', wbInteger('', itU8)),
-      wbArray('Menu Controls', wbInteger('', itU8)),
-      wbArray('Menu Topic Manager', wbInteger('', itU8)),
+      wbArray('Process List', wbInteger('', itU8), -2),
+      wbArray('Combat', wbInteger('', itU8), -2),
+      wbArray('Interface', wbInteger('', itU8), -2),
+      wbArray('Actor Causes', wbInteger('', itU8), -2),
+      wbArray('Unknown 104', wbInteger('', itU8), -2),
+      wbArray('Detection Manager', wbInteger('', itU8), -2),
+      wbArray('Location MetaData', wbInteger('', itU8), -2),
+      wbArray('Quest Static Data', wbInteger('', itU8), -2),
+      wbArray('Story Teller', wbInteger('', itU8), -2),
+      wbArray('Magic Favorites', wbInteger('', itU8), -2),
+      wbArray('Player Controls', wbInteger('', itU8), -2),
+      wbArray('Story Event Manager', wbInteger('', itU8), -2),
+      wbArray('Ingredient Shared', wbInteger('', itU8), -2),
+      wbArray('Menu Controls', wbInteger('', itU8), -2),
+      wbArray('Menu Topic Manager', wbInteger('', itU8), -2),
       // 1000 to 1005
-      wbArray('Temp Effects', wbInteger('', itU8)),
-      wbArray('Papyrus', wbInteger('', itU8)),
-      wbArray('Anim Objects', wbInteger('', itU8)),
-      wbArray('Timers', wbInteger('', itU8)),
-      wbArray('Synchronized Animations', wbInteger('', itU8)),
-      wbArray('Main', wbInteger('', itU8))
+      wbArray('Temp Effects', wbInteger('', itU8), -2),
+      wbArray('Papyrus', wbInteger('', itU8), -2),
+      wbArray('Anim Objects', wbInteger('', itU8), -2),
+      wbArray('Timers', wbInteger('', itU8), -2),
+      wbArray('Synchronized Animations', wbInteger('', itU8), -2),
+      wbArray('Main', wbInteger('', itU8), -2)
     ])
   ]);
   {<<< The RefID is already defined.  We can use the existing constants defined. <<<}
@@ -13137,9 +13259,9 @@ begin
     {>>> Can we use the same command Dump doe to supress this, so it's hidden.    <<<}
     {>>> Can the same filter options used to filter out certain records.          <<<}
     wbArray('Plugins', wbLenString('PluginName', 2), -4),
-//    wbFileLocationTable,
-//    wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
-//    wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter),
+    wbFileLocationTable,
+    wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
+    wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter),
 //    wbArray('Change Form', wbChangedForms, [], ChangeFormCounter),
 //    wbArray('Global Data 3', wbGlobalData, [], GlobalData3Counter),
 //    wbArray('FormIDs', wbRefID, -2),
@@ -13156,18 +13278,9 @@ begin
       {>>> I want to output this in Bytes of 4 and then use a BeyondCompare To See    <<<}
       {>>> When the change occurs                                                     <<<}
 //-------------------------------------------------------------------------------------------
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 4),
-      WbByteArray('Unknown', 0)
+      wbByteArray('Unused', SkipCounter), // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
+      wbArray('Remaining',  WbByteArray('Unknown', BytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+//    wbUnknown()
   ]);
 end;
 
