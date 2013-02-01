@@ -6446,7 +6446,7 @@ var
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
-    if Assigned(theContainer) and (Pos(aName, theContainer.Name)<>1) then begin
+    if Assigned(theContainer) and (not SameText(aName, theContainer.Name)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
@@ -6471,7 +6471,7 @@ begin
         FindOurself(Container, noName);
     if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
         Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
-    if not Assigned(Container) then begin
+    if not Assigned(Container) and (not SameText(noName, 'Unused') or not wbHideUnused) then begin
       Result := High(Integer);
       Exit;
     end;
@@ -10610,16 +10610,14 @@ end;
 
 { TwbStringKCDef }
 
-function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement; aExtended: Boolean): string;
+function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
 
 { TwbLStringKCDef }
 
-function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement; aExtended: Boolean): string;
+function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
