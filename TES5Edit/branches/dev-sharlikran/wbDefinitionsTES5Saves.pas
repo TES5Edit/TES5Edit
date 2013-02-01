@@ -13031,6 +13031,21 @@ begin
       wbArray('Main', wbInteger('', itU8))
     ])
   ]);
+  {<<< The RefID is already defined.  We can use the existing constants defined. <<<}
+  {<<< That should allow easier reference to the pre existing routines.          <<<}
+  {
+   ALFR : TwbSignature = 'ALFR';
+   ALID : TwbSignature = 'ALID';
+   ALLS : TwbSignature = 'ALLS';
+   ALNA : TwbSignature = 'ALNA';
+   ALNT : TwbSignature = 'ALNT';
+   ALPC : TwbSignature = 'ALPC';
+   ALRT : TwbSignature = 'ALRT';
+   ALSP : TwbSignature = 'ALSP';
+   ALST : TwbSignature = 'ALST';
+   ALUA : TwbSignature = 'ALUA';
+   }
+
   wbChangedFormsData := wbUnion('', ChangedFormsDataDecider, [
     // We have to reference the possible type of form here (from UESP:)
     {
@@ -13119,6 +13134,8 @@ begin
     wbByteArray('Screenshot Data', ScreenShotDataCounter),
     wbInteger('Form Version', itU8),
     wbInteger('PluginInfo Size', itU32),
+    {>>> Can we use the same command Dump doe to supress this, so it's hidden.    <<<}
+    {>>> Can the same filter options used to filter out certain records.          <<<}
     wbArray('Plugins', wbLenString('PluginName', 2), -4),
 //    wbFileLocationTable,
 //    wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
@@ -13129,7 +13146,28 @@ begin
 //    wbArray('Visited Worldspace', wbRefID, -2),
 //    wbInteger('Unknown Table Size', itU32),
 //    wbArray('Unknown Table', wbString('Unknown'), -2)
-    wbUnknown()
+//-------------------------------------------------------------------------------------------
+      {>>> How can I insert something here to find the remaining data and divide by 4 <<<}
+      {>>> For I = 1 to RestOfData                                                    <<<}
+      {>>> Begin                                                                      <<<}
+      {>>>   wbArray('Plugins', WbByteArray('Unknown', 4)),                           <<<}
+      {>>> End;                                                                       <<<}
+      {>>> WbUnknown() to catch the remaining bytes that are less than 4              <<<}
+      {>>> I want to output this in Bytes of 4 and then use a BeyondCompare To See    <<<}
+      {>>> When the change occurs                                                     <<<}
+//-------------------------------------------------------------------------------------------
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 4),
+      WbByteArray('Unknown', 0)
   ]);
 end;
 
