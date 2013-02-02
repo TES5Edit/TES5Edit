@@ -106,6 +106,8 @@ var
   wbRotationFactor : Extended = 180/Pi;
   wbRotationScale : Integer = 4;
 
+  wbDumpOffset : Boolean = False;
+
 //  wbRotationFactor : Extended = 1;
 //  wbRotationScale : Integer = 6;
 
@@ -196,7 +198,8 @@ type
     itU32,
     itS32,
     itU64,
-    itS64
+    itS64,
+    itU24
   );
 
   TwbDefType = (
@@ -1300,8 +1303,16 @@ type
       read GetEditInfo;
   end;
 
+  IwbDumpIntegerDefFormater = interface(IwbIntegerDefFormater)
+    ['{71C4A255-B983-488C-9837-0A720132348C}']
+  end;
+
   IwbFormID = interface(IwbIntegerDefFormater)
     ['{71C4A255-B983-488C-9837-0A720132348A}']
+  end;
+
+  IwbRefID = interface(IwbFormID)
+    ['{71C4A255-B983-488C-9837-0A720132348B}']
   end;
 
   IwbFormIDChecked = interface(IwbFormID)
@@ -2007,6 +2018,17 @@ function wbEmpty(const aName      : string;
                        aDontShow  : TwbDontShowCallback = nil;
                        aSorted    : Boolean = False)
                                   : IwbValueDef; overload;
+
+function wbRefID: IwbRefID; overload;
+
+function wbRefID(const aName      : string;
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aAfterSet  : TwbAfterSetCallback = nil)
+                                  : IwbIntegerDef; overload;
+
+function wbDumpInteger : IwbIntegerDefFormater; overload;
 
 function wbFormID: IwbFormID; overload;
 
@@ -3433,6 +3455,13 @@ type
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; virtual;
   end;
 
+  TwbDumpIntegerDefFormater = class(TwbIntegerDefFormater, IwbDumpIntegerDefFormater)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
   TwbFormID = class(TwbIntegerDefFormater, IwbFormID)
   protected
     FoundSignatures: TStringList;
@@ -3471,6 +3500,12 @@ type
     function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64; override;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters); override;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
+  end;
+
+  TwbRefID = class(TwbFormID, IwbRefID)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
   end;
 
   TwbFormIDChecked = class(TwbFormID, IwbFormIDChecked)
@@ -4491,6 +4526,35 @@ function wbEmpty(const aName      : string;
                                   : IwbValueDef;
 begin
   Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted);
+end;
+
+function wbDumpInteger : IwbIntegerDefFormater;
+begin
+  Result := TwbDumpIntegerDefFormater.Create(cpNormal, False);
+end;
+
+var
+  _RefID: IwbRefID;
+
+function wbRefID: IwbRefID;
+begin
+  if wbReportMode then
+    Result := TwbRefID.Create(cpNormal, False)
+  else begin
+    if not Assigned(_RefID) then
+      _RefID := TwbRefID.Create(cpNormal, False);
+    Result := _RefID;
+  end;
+end;
+
+function wbRefID(const aName     : string;
+                       aPriority : TwbConflictPriority = cpNormal;
+                       aRequired : Boolean = False;
+                       aDontShow : TwbDontShowCallback = nil;
+                       aAfterSet : TwbAfterSetCallback = nil)
+                                 : IwbIntegerDef; overload;
+begin
+  Result := wbInteger(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
 var
@@ -5875,6 +5939,28 @@ begin
   defReported := True;
 end;
 
+function ReadInteger24(aBasePtr: pointer): Int64;
+var
+  Buffer : array[0..3] of Byte;
+begin
+  Result := 0;
+  Buffer[3] := 0;
+  Buffer[2] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[1] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[0] := PShortInt(aBasePtr)^;
+  Move(Buffer, Result, SizeOf(Result));
+end;
+
+procedure WriteInteger24(aBasePtr: pointer; aValue: Int64);
+var
+  Buffer : array[0..3] of Byte;
+begin
+  Move(aValue, Buffer, SizeOf(aValue));
+  PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  PByte(aBasePtr)^ := Buffer[0];
+end;
+
 { TwbIntegerDef }
 
 procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer;
@@ -5883,7 +5969,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   if Assigned(inFormater) then
@@ -5892,6 +5978,7 @@ begin
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
+        itU24: Value := ReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -5927,7 +6014,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   Result := '';
@@ -5940,6 +6027,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6013,7 +6101,7 @@ procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
@@ -6021,6 +6109,7 @@ begin
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
     itS16: PSmallInt(aBasePtr)^ := aValue;
+    itU24: WriteInteger24(aBasePtr, aValue);
     itU32: PCardinal(aBasePtr)^ := aValue;
     itS32: PLongInt(aBasePtr)^ := aValue;
     itU64: PInt64(aBasePtr)^ := aValue;
@@ -6033,7 +6122,7 @@ end;
 procedure TwbIntegerDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
@@ -6041,6 +6130,7 @@ begin
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
     itS16: PSmallInt(aBasePtr)^ := aValue;
+    itU24: WriteInteger24(aBasePtr, aValue);
     itU32: PCardinal(aBasePtr)^ := aValue;
     itS32: PLongInt(aBasePtr)^ := aValue;
     itU64: PInt64(aBasePtr)^ := aValue;
@@ -6092,7 +6182,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   Result := nil;
@@ -6102,6 +6192,7 @@ begin
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
+        itU24: Value := ReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6125,6 +6216,7 @@ begin
     itS8:  Result := SizeOf(ShortInt);
     itU16: Result := SizeOf(Word);
     itS16: Result := SizeOf(SmallInt);
+    itU24: Result := 3*SizeOf(Byte);
     itU32: Result := SizeOf(Cardinal);
     itS32: Result := SizeOf(LongInt);
     itU64: Result := SizeOf(Int64);
@@ -6201,7 +6293,7 @@ var
   Value : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
@@ -6213,6 +6305,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6235,7 +6328,7 @@ var
   Len         : Cardinal;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
@@ -6246,6 +6339,7 @@ begin
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
+      itU24: Result := ReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6258,7 +6352,7 @@ end;
 function TwbIntegerDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   if Cardinal(aEndPtr) - Cardinal(aBasePtr) < ExpectedLen[inType] then
@@ -6268,6 +6362,7 @@ begin
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
+      itU24: Result := ReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6283,7 +6378,7 @@ var
   Value : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
@@ -6295,6 +6390,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6325,7 +6421,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3
   );
 begin
   Result := '';
@@ -6338,6 +6434,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -10661,6 +10758,42 @@ end;
 function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
+end;
+
+{ TwbRefID }
+
+function TwbRefID.ToString(aInt: Int64; const aElement: IwbElement): string;
+var
+  key        : Integer;
+  val        : Integer;
+begin
+  // First two bits are the key:
+  key := aInt shr 22;
+  val := aInt and $003FFFFF;
+  case key of
+    0: if val = 0 then
+         Result := '[00000000] NULL'
+       else
+         Result := '['+IntToHex64(val-1, 8)+'] Index in FormIDarray';
+    1: Result := '['+IntToHex64(val, 8)+'] Skyrim.esm FormID';
+    2: Result := '[FF'+IntToHex64(val, 6)+'] Created FormID';
+    else
+      Result := '['+IntToHex64(aInt, 8)+']  <Error: bad key for RefID '+IntToStr(key)+'>';
+  end;
+  Result := IntToStr(aInt)+' '+Result;
+  Used(aElement, Result);
+end;
+
+{ TwbDumpIntegerDefFormater }
+
+function TwbDumpIntegerDefFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex64(aInt, 8);
+end;
+
+function TwbDumpIntegerDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToStr(aInt) + ' [' + IntToHex64(aInt, 8) + ']';
 end;
 
 initialization

@@ -12805,6 +12805,60 @@ begin
   ]);
 end;
 
+{ TES5saves }
+
+function FindElement(aName: String; aElement: IwbElement): IwbElement;
+var
+  Container : IwbContainer;
+
+  procedure FindOurself(aName: String; aContainer: IwbContainer; var aElement: IwbElement);
+  var
+    i          : Integer;
+    tContainer : IwbContainer;
+  begin
+    for i := 0 to Pred(aContainer.ElementCount) do
+      if SameText(aContainer.Elements[i].Name, aName) then begin
+        aElement := aContainer.Elements[i];
+        break;
+      end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
+        FindOurself(aName, tContainer, aElement);
+  end;
+
+begin
+  Result := aElement;
+  while (Pos(aName, Result.Name)=0) and Assigned(Result.Container) do
+    Result := Result.Container;
+  if (Pos(aName, Result.Name)=0) then begin // try again in reverse
+    Result := aElement;
+    if Supports(Result, IwbContainer, Container) then
+      FindOurself(aName, Container, Result);
+  end;
+end;
+
+function SaveVersionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then begin
+    Element := Container.ElementByPath['Save File\Form Version'];
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      case aType of
+        64: Result := 1;
+        73: Result := 2;
+      end;
+    end;
+  end;
+end;
+
 function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
@@ -12829,7 +12883,7 @@ begin
     end;
 end;
 
-function GlobalDataCounter(aIndex: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function FileLocationTableCountCounter(aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
@@ -12842,11 +12896,16 @@ begin
 
   if Supports(Element, IwbContainer, Container) then
     if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
-      Element := Container.ElementByPath['File Location Table\Global Data Table '+IntToStr(aIndex)+' Count'];
+      Element := Container.ElementByPath['File Location Table\'+aName+' Count'];
       if Assigned(Element) then begin
         Result := Element.NativeValue;
       end;
     end;
+end;
+
+function GlobalDataCounter(aIndex: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := FileLocationTableCountCounter('Global Data Table '+IntToStr(aIndex), aBasePtr, aEndPtr, aElement);
 end;
 
 function GlobalData1Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -12861,27 +12920,12 @@ end;
 
 function GlobalData3Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := GlobalDataCounter(3, aBasePtr, aEndPtr, aElement);
+  Result := GlobalDataCounter(3, aBasePtr, aEndPtr, aElement) + 1;  // +1 due to the bug as seen on UESP
 end;
 
 function ChangedFormsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element : IwbElement;
-  Container: IwbDataContainer;
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := aElement;
-  while Assigned(Element.Container) do
-    Element := Element.Container;
-
-  if Supports(Element, IwbContainer, Container) then
-    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
-      Element := Container.ElementByPath['File Location Table\Changed Forms Count'];
-      if Assigned(Element) then begin
-        Result := Element.NativeValue;
-      end;
-    end;
+  Result := FileLocationTableCountCounter('Changed Forms', aBasePtr, aEndPtr, aElement);
 end;
 
 function GlobalDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -12907,11 +12951,11 @@ begin
       else  if (aType >= 1000) and (aType <= 1005) then // 1000 to 1005 = 6
         Result := aType - 1000 + 9 + 15 + 1;
     end;
-    if Result > 1 then Result := 0; //Others are not decoded yet
+    if Result > 2 then Result := 0; //Others are not decoded yet
   end;
 end;
 
-function ChangedFormsDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
   Element : IwbElement;
@@ -12919,8 +12963,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := aElement;
-  // we have to set Element to the array element ChangedForms[i] so Type is valid
+  Element := FindElement('Changed Form', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
@@ -12937,15 +12980,14 @@ begin
   end;
 end;
 
-function ChangedFormsDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ChangedFormDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := aElement;
-  // we have to set Element to the array element ChangedForms[i] so Type is valid
+  Element := FindElement('Changed Form', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
@@ -12955,15 +12997,14 @@ begin
   end;
 end;
 
-function ChangedFormsDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ChangedFormDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := aElement;
-  // we have to set Element to the array element ChangedForms[i] so Length is valid
+  Element := FindElement('Changed Form Data', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Length'];
@@ -12986,20 +13027,7 @@ begin
     Result := BytesToDump div BytesToGroup + 1;
 end;
 
-procedure FindOurself(aContainer: IwbContainer; var aElement: IwbElement);
-var
-  i          : Integer;
-  tContainer : IwbContainer;
-begin
-  for i := 0 to Pred(aContainer.ElementCount) do
-    if SameText(aContainer.Elements[i].Name, 'Unknown Type') then begin
-      aElement := aContainer.Elements[i];
-      break;
-    end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
-      FindOurself(tContainer, aElement);
-end;
-
-function UnknownTypeDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function DataLengthCounter(aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aModifier: Integer = 0): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
@@ -13007,82 +13035,61 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := aElement;
-  while (Pos('Unknown Type', Element.Name)=0) and Assigned(Element.Container) do
-    Element := Element.Container;
-  if (Pos('Unknown Type', Element.Name)=0) then begin // try again in reverse
-    Element := aElement;
-    if Supports(Element, IwbContainer, Container) then
-      FindOurself(Container, Element);
-  end;
+  Element := FindElement(aName, aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['DataLength'];
     if Assigned(Element) then begin
       Result := Element.NativeValue;
+      case aModifier of
+        1: Result := Result div BytesToGroup;
+        2: Result := Result mod BytesToGroup;
+      end;
     end;
   end;
+end;
+
+function UnknownTypeDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := DataLengthCounter('Unknown Type', aBasePtr, aEndPtr, aElement);
 end;
 
 function UnknownTypeDataQuartetCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbDataContainer;
-
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := aElement;
-  while (Pos('Unknown Type', Element.Name)=0) and Assigned(Element.Container) do
-    Element := Element.Container;
-  if (Pos('Unknown Type', Element.Name)=0) then begin // try again in reverse
-    Element := aElement;
-    if Supports(Element, IwbContainer, Container) then
-      FindOurself(Container, Element);
-  end;
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['DataLength'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue div BytesToGroup;
-    end;
-  end;
+  Result := DataLengthCounter('Unknown Type', aBasePtr, aEndPtr, aElement, 1);
 end;
 
 function UnknownTypeDataQuartetRemainderCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbDataContainer;
-
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := aElement;
-  while (Pos('Unknown Type', Element.Name)=0) and Assigned(Element.Container) do
-    Element := Element.Container;
-  if (Pos('Unknown Type', Element.Name)=0) then begin // try again in reverse
-    Element := aElement;
-    if Supports(Element, IwbContainer, Container) then
-      FindOurself(Container, Element);
-  end;
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['DataLength'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue mod BytesToGroup;
-    end;
-  end;
+  Result := DataLengthCounter('Unknown Type', aBasePtr, aEndPtr, aElement, 2);
 end;
+
+function PapyrusDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := DataLengthCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement);
+end;
+
+function PapyrusDataQuartetCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := DataLengthCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement, 1);
+end;
+
+function PapyrusDataQuartetRemainderCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := DataLengthCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement, 2);
+end;
+
 
 procedure DefineTES5SavesS;  // This is all based on current UESP and HexDump
 var
-  wbHeader : IwbStructDef;
+  wbHeader            : IwbStructDef;
   wbFileLocationTable : IwbStructDef;
-  wbGlobalData: IwbStructDef;
-  wbChangedForms: IwbStructDef;
-  wbChangedFormsData: IwbUnionDef;
-  wbRefID : IwbIntegerDef;
+  wbGlobalData        : IwbStructDef;
+  wbChangedForm       : IwbStructDef;
+  wbChangedFormData   : IwbUnionDef;
+  wbNull              : IwbValueDef;
 begin
+  wbNull := wbStruct('Unused', []);
   wbHeader := wbStruct('Header', [
     wbInteger('Version', itU32),
     wbInteger('Save Number', itU32),
@@ -13098,6 +13105,7 @@ begin
     wbInteger('Screenshot Width', itU32),
     wbInteger('Screenshot Height', itU32)
   ]);
+
   wbFileLocationTable := wbStruct('File Location Table', [
     wbInteger('RefID Array Count Offset', itU32),
     wbInteger('Unknown Table Offset', itU32),
@@ -13111,6 +13119,7 @@ begin
     wbInteger('Changed Forms Count', itU32),
     wbArray('Unused', wbInteger('', itU32), 15)
   ]);
+
   wbGlobalData := wbStruct('Global Data', [
     wbInteger('Type', itU32),
     wbUnion('Data', GlobalDataDecider, [
@@ -13137,16 +13146,21 @@ begin
           wbInteger('Value', itU32)
         ]), -1)
       ]),
-      wbStruct('Player Location Struct', [
-        wbInteger('DataLength', itU32),
-        wbByteArray('WorldSpace 1', 3),
-        wbInteger('Coord X', itS32),
-        wbInteger('Coord Y', itS32),
-        wbByteArray('WorldSpace 2', 3),
-        wbFloat('Pos X'),
-        wbFloat('Pos Y'),
-        wbFloat('Pos Z'),
-        wbByteArray('Unknown', 4)
+      wbStruct('Player Location Struct', [  // Seems to be 30 bytes in version 64 and 31 in version 73
+        wbInteger('DataLength', itU32)
+        ,wbByteArray('Unknown', 4)
+        ,wbRefID('WorldSpace 1')
+        ,wbInteger('Coord X', itS32)
+        ,wbInteger('Coord Y', itS32)
+        ,wbRefID('WorldSpace 2')
+        ,wbFloat('Pos X')
+        ,wbFloat('Pos Y')
+        ,wbFloat('Pos Z')
+        ,wbUnion('Added data', SaveVersionDecider, [
+          wbNull
+          ,wbNull
+          ,wbByteArray('Unknown', 1)
+        ])
       ]),
       wbArray('TES', wbInteger('', itU8), -2),
       wbArray('Global Variables', wbInteger('', itU8), -2),
@@ -13173,13 +13187,19 @@ begin
       wbArray('Menu Topic Manager', wbInteger('', itU8), -2),
       // 1000 to 1005
       wbArray('Temp Effects', wbInteger('', itU8), -2),
-      wbArray('Papyrus', wbInteger('', itU8), -2),
+      wbStruct('Papyrus Struct', [
+        wbInteger('DataLength', itU32)
+//        ,wbByteArray('Unknown', PapyrusDataCounter)  // Single line
+        ,wbArray('Unknown Data', wbByteArray('Unknown', BytesToGroup), PapyrusDataQuartetCounter) // per Quartet
+        ,wbByteArray('Unknown', PapyrusDataQuartetRemainderCounter)
+      ]),
       wbArray('Anim Objects', wbInteger('', itU8), -2),
       wbArray('Timers', wbInteger('', itU8), -2),
       wbArray('Synchronized Animations', wbInteger('', itU8), -2),
       wbArray('Main', wbInteger('', itU8), -2)
     ])
   ]);
+
   {<<< The RefID is already defined.  We can use the existing constants defined. <<<}
   {<<< That should allow easier reference to the pre existing routines.          <<<}
   {
@@ -13195,7 +13215,7 @@ begin
    ALUA : TwbSignature = 'ALUA';
    }
 
-  wbChangedFormsData := wbUnion('', ChangedFormsDataDecider, [
+  wbChangedFormData := wbUnion('', ChangedFormDataDecider, [
     // We have to reference the possible type of form here (from UESP:)
     {
        0 = 63 (REFR)
@@ -13249,54 +13269,55 @@ begin
        48 = 22 (ENCH)
     }
   ]);
-//  wbRefID := wbInteger('RefID', itU24);
-//  wbChangedForms := wbStruct('Changed Forms', [
-//    wbRefID,
-//    wbInteger('Change Flags', itU32 {, wbFlags([
-//      Looks like there will be work to do here
-//    ])}),
-//    wbInteger('Type', itU8),  // We need a specific ToString for that
-//    wbInteger('Version', itU8),
-//    wbUnion('Datas', ChangedFormsDataLengthDecider, [
-//      wbStruct('', [
-//        wbInteger('Length', itU8),
-//        wbInteger('Uncompressed Length', itU8),
-//        wbArray('Data', wbInteger('', itU8), ChangedFormsDataCounter)
-//      ]),
-//      wbStruct('', [
-//        wbInteger('Length', itU16),
-//        wbInteger('Uncompressed Length', itU16),
-//        wbArray('Data', wbInteger('', itU8), ChangedFormsDataCounter)
-//      ]),
-//      wbStruct('', [
-//        wbInteger('Length', itU32),
-//        wbInteger('Uncompressed Length', itU32),
-//        wbArray('Data', wbInteger('', itU8), ChangedFormsDataCounter)
-//      ]),
-//      wbUnknown() // If the type is invalid
-//    ])
-//  ]);
+
+  wbChangedForm := wbStruct('Changed Form', [
+    wbRefID('RefID'),
+    wbInteger('Change Flags', itU32 {, wbFlags([
+      Looks like there will be work to do here
+    ])}),
+    wbInteger('Type', itU8),  // We need a specific ToString for that
+    wbInteger('Version', itU8),
+    wbUnion('Datas', ChangedFormDataLengthDecider, [
+      wbStruct('Changed Form Data', [
+        wbInteger('Length', itU8),
+        wbInteger('Uncompressed Length', itU8),
+        wbByteArray('Data', ChangedFormDataCounter)
+      ]),
+      wbStruct('Changed Form Data', [
+        wbInteger('Length', itU16),
+        wbInteger('Uncompressed Length', itU16),
+        wbByteArray('Data', ChangedFormDataCounter)
+      ]),
+      wbStruct('Changed Form Data', [
+        wbInteger('Length', itU32),
+        wbInteger('Uncompressed Length', itU32),
+        wbByteArray('Data', ChangedFormDataCounter)
+      ]),
+      wbUnknown() // If the type is invalid
+    ])
+  ]);
+
   StructSaveDef := wbStruct('Save File', [
-    wbString('Magic', 13),
-    wbInteger('Header Size', itU32),
-    wbHeader,
+    wbString('Magic', 13)
+    ,wbInteger('Header Size', itU32)
+    ,wbHeader
     {>>> Can we use the same command Dump doe to supress this, so it's hidden.    <<<}
     {>>> Can the same filter options used to filter out certain records.          <<<}
-    wbByteArray('Screenshot Data', ScreenShotDataCounter),
-    wbInteger('Form Version', itU8),
-    wbInteger('PluginInfo Size', itU32),
-    wbArray('Plugins', wbLenString('PluginName', 2), -4),
-    wbFileLocationTable,
-    wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
-    wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter),
-//    wbArray('Change Form', wbChangedForms, [], ChangedFormsCounter),
-//    wbArray('Global Data 3', wbGlobalData, [], GlobalData3Counter),
-//    wbArray('FormIDs', wbRefID, -2),
-//    wbArray('Visited Worldspace', wbRefID, -2),
-//    wbInteger('Unknown Table Size', itU32),
-//    wbArray('Unknown Table', wbString('Unknown'), -2)
-      wbByteArray('Unused', SkipCounter), // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
-      wbArray('Remaining',  WbByteArray('Unknown', BytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+    ,wbByteArray('Screenshot Data', ScreenShotDataCounter)
+    ,wbInteger('Form Version', itU8)
+    ,wbInteger('PluginInfo Size', itU32)
+    ,wbArray('Plugins', wbLenString('PluginName', 2), -4)
+    ,wbFileLocationTable
+    ,wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter)
+    ,wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter)
+    ,wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter)
+    ,wbArray('Global Data 3', wbGlobalData, [], GlobalData3Counter)
+    ,wbArray('FormIDs', wbFormID('FormID', cpFormID), -1)
+    ,wbArray('Visited Worldspace', wbFormID('FormID', cpFormID), -1)
+    ,wbInteger('Unknown Table Size', itU32)
+    ,wbArray('Unknown Table', wbLenString('Unknown', 2), -1)
+//    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
+//    ,wbArray('Remaining',  WbByteArray('Unknown', BytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 end;
 

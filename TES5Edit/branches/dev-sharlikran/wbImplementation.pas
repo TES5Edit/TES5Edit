@@ -13848,6 +13848,12 @@ begin
     Result := vbValueDef.Name
   else
      Result := Resolved.Name;
+  // something for Dump: Displaying the size in {} and the array count in []
+  if (Resolved.DefType in dtNonValues) and wbDumpOffset then
+    Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr), 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr), 8) +
+      ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
+  if (Resolved.DefType = dtArray) and wbDumpOffset then
+    Result := Result + ' [' + IntToStr((Self as TwbArray).GetElementCount) + ']';
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
 end;
