@@ -3176,7 +3176,8 @@ type
 
     IsEmpty                 : Integer;
     IsNotEmpty              : Integer;
-    CountCallback           : TwbCountCallBack;
+
+    badCountCallback           : TwbCountCallBack;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority      : TwbConflictPriority; aRequired: Boolean;
@@ -6480,7 +6481,7 @@ var
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
-    if Assigned(theContainer) and (Pos(aName, theContainer.Name)<>1) then begin
+    if Assigned(theContainer) and (not SameText(aName, theContainer.Name)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
@@ -8667,7 +8668,7 @@ end;
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbByteArrayDef do
-    Self.Create(defPriority, defRequired, noName, badSize, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack).defRoot := aSource;
 end;
 
 constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority; aRequired: Boolean;
@@ -8677,7 +8678,7 @@ constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority; aRequir
                                    aCountCallback : TwbCountCallback);
 begin
   badSize := aSize;
-  CountCallback := aCountCallback;
+  badCountCallback := aCountCallback;
   inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow);
 end;
 
@@ -8751,12 +8752,13 @@ end;
 
 function TwbByteArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if Assigned(CountCallback) then
-    Result := CountCallback(aBasePtr, aEndPtr, aElement)
-  else
+  if Assigned(badCountCallback) then
+    Result := badCountCallback(aBasePtr, aEndPtr, aElement)
+  else begin
     Result := badSize;
   if (Result = 0) and Assigned(aBasePtr) then
     Result := High(Integer);
+  end;
 end;
 
 procedure TwbByteArrayDef.Report(const aParents: TwbDefPath);

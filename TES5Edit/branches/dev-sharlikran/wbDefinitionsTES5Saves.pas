@@ -12829,7 +12829,7 @@ begin
     end;
 end;
 
-function GlobalData1Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function GlobalDataCounter(aIndex: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
@@ -12842,51 +12842,26 @@ begin
 
   if Supports(Element, IwbContainer, Container) then
     if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
-      Element := Container.ElementByPath['File Location Table\Global Data Table 1 Count'];
+      Element := Container.ElementByPath['File Location Table\Global Data Table '+IntToStr(aIndex)+' Count'];
       if Assigned(Element) then begin
         Result := Element.NativeValue;
       end;
     end;
+end;
+
+function GlobalData1Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := GlobalDataCounter(1, aBasePtr, aEndPtr, aElement);
 end;
 
 function GlobalData2Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element : IwbElement;
-  Container: IwbDataContainer;
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := aElement;
-  while Assigned(Element.Container) do
-    Element := Element.Container;
-
-  if Supports(Element, IwbContainer, Container) then
-    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
-      Element := Container.ElementByPath['File Location Table\Global Data Table 2 Count'];
-      if Assigned(Element) then begin
-        Result := Element.NativeValue;
-      end;
-    end;
+  Result := GlobalDataCounter(2, aBasePtr, aEndPtr, aElement);
 end;
 
 function GlobalData3Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element : IwbElement;
-  Container: IwbDataContainer;
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := aElement;
-  while Assigned(Element.Container) do
-    Element := Element.Container;
-
-  if Supports(Element, IwbContainer, Container) then
-    if Supports(Container.Elements[0], IwbDataContainer, Container) then begin
-      Element := Container.ElementByPath['File Location Table\Global Data Table 3 Count'];
-      if Assigned(Element) then begin
-        Result := Element.NativeValue;
-      end;
-    end;
+  Result := GlobalDataCounter(3, aBasePtr, aEndPtr, aElement);
 end;
 
 function ChangedFormsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -12932,7 +12907,7 @@ begin
       else  if (aType >= 1000) and (aType <= 1005) then // 1000 to 1005 = 6
         Result := aType - 1000 + 9 + 15 + 1;
     end;
-    if Result <> 0 then Result := 0; // debuging and temporary
+    if Result > 1 then Result := 0; //Others are not decoded yet
   end;
 end;
 
@@ -13006,28 +12981,28 @@ end;
 function DumpCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if BytesToDump = $FFFFFFFF then
-    Result := ( Cardinal(aEndPtr) - Cardinal(aBasePtr) ) div BytesToGroup
+    Result := ( Cardinal(aEndPtr) - Cardinal(aBasePtr) ) div BytesToGroup + 1
   else
-    Result := BytesToDump div BytesToGroup;
+    Result := BytesToDump div BytesToGroup + 1;
+end;
+
+procedure FindOurself(aContainer: IwbContainer; var aElement: IwbElement);
+var
+  i          : Integer;
+  tContainer : IwbContainer;
+begin
+  for i := 0 to Pred(aContainer.ElementCount) do
+    if SameText(aContainer.Elements[i].Name, 'Unknown Type') then begin
+      aElement := aContainer.Elements[i];
+      break;
+    end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
+      FindOurself(tContainer, aElement);
 end;
 
 function UnknownTypeDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
-
-  procedure FindOurself(aContainer: IwbContainer);
-  var
-    i          : Integer;
-    tContainer : IwbContainer;
-  begin
-    for i := 0 to Pred(aContainer.ElementCount) do
-      if SameText(aContainer.Elements[i].Name, 'Unknown Type') then begin
-        Element := aContainer.Elements[i];
-        break;
-      end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
-        FindOurself(tContainer);
-  end;
 
 begin
   Result := 0;
@@ -13038,13 +13013,63 @@ begin
   if (Pos('Unknown Type', Element.Name)=0) then begin // try again in reverse
     Element := aElement;
     if Supports(Element, IwbContainer, Container) then
-      FindOurself(Container);
+      FindOurself(Container, Element);
   end;
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['DataLength'];
     if Assigned(Element) then begin
       Result := Element.NativeValue;
+    end;
+  end;
+end;
+
+function UnknownTypeDataQuartetCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while (Pos('Unknown Type', Element.Name)=0) and Assigned(Element.Container) do
+    Element := Element.Container;
+  if (Pos('Unknown Type', Element.Name)=0) then begin // try again in reverse
+    Element := aElement;
+    if Supports(Element, IwbContainer, Container) then
+      FindOurself(Container, Element);
+  end;
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['DataLength'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue div BytesToGroup;
+    end;
+  end;
+end;
+
+function UnknownTypeDataQuartetRemainderCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while (Pos('Unknown Type', Element.Name)=0) and Assigned(Element.Container) do
+    Element := Element.Container;
+  if (Pos('Unknown Type', Element.Name)=0) then begin // try again in reverse
+    Element := aElement;
+    if Supports(Element, IwbContainer, Container) then
+      FindOurself(Container, Element);
+  end;
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['DataLength'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue mod BytesToGroup;
     end;
   end;
 end;
@@ -13091,11 +13116,13 @@ begin
     wbUnion('Data', GlobalDataDecider, [
       wbStruct('Unknown Type', [
         wbInteger('DataLength', itU32),
-        wbByteArray('Unknown', UnknownTypeDataCounter)
+//        wbByteArray('Unknown', UnknownTypeDataCounter)  // Single line
+        wbArray('Unknown Data', wbByteArray('Unknown', BytesToGroup), UnknownTypeDataQuartetCounter), // per Quartet
+        wbByteArray('Unknown', UnknownTypeDataQuartetRemainderCounter)
       ]),
       // 0 to 8
       wbStruct('Misc Stats Struct', [
-        wbByteArray('Unknown', 4),
+        wbByteArray('DataLength', 4),
         wbArray('Misc Stats', wbStruct('Misc Stat',[
           wbLenString('Misc Stat Name', 2),
           wbInteger('Category', itU8, wbEnum([
@@ -13262,25 +13289,14 @@ begin
     wbFileLocationTable,
     wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
     wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter),
-//    wbArray('Change Form', wbChangedForms, [], ChangeFormCounter),
+//    wbArray('Change Form', wbChangedForms, [], ChangedFormsCounter),
 //    wbArray('Global Data 3', wbGlobalData, [], GlobalData3Counter),
 //    wbArray('FormIDs', wbRefID, -2),
 //    wbArray('Visited Worldspace', wbRefID, -2),
 //    wbInteger('Unknown Table Size', itU32),
 //    wbArray('Unknown Table', wbString('Unknown'), -2)
-//-------------------------------------------------------------------------------------------
-      {>>> How can I insert something here to find the remaining data and divide by 4 <<<}
-      {>>> For I = 1 to RestOfData                                                    <<<}
-      {>>> Begin                                                                      <<<}
-      {>>>   wbArray('Plugins', WbByteArray('Unknown', 4)),                           <<<}
-      {>>> End;                                                                       <<<}
-      {>>> WbUnknown() to catch the remaining bytes that are less than 4              <<<}
-      {>>> I want to output this in Bytes of 4 and then use a BeyondCompare To See    <<<}
-      {>>> When the change occurs                                                     <<<}
-//-------------------------------------------------------------------------------------------
       wbByteArray('Unused', SkipCounter), // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
       wbArray('Remaining',  WbByteArray('Unknown', BytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
-//    wbUnknown()
   ]);
 end;
 
