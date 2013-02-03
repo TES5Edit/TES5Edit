@@ -12994,6 +12994,28 @@ begin
     if Assigned(Element) then begin
       Result := Element.NativeValue and $3F;
     end;
+    if Result > 0 then Result := 0;
+  end;
+end;
+
+function ChangedFormDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('CForm Data', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Uncompressed Length'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+    Element := Container.ElementByName['Length'];
+    if Assigned(Element) then begin
+      CompressedSize := Element.NativeValue;
+    end;
   end;
 end;
 
@@ -13004,13 +13026,19 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form Data', aElement);
+  Element := FindElement('CForm Data', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Length'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
+    Element := Container.ElementByName['Uncompressed Length'];
+    if Assigned(Element) then
+      if Element.NativeValue >0 then
+        Result := Element.NativeValue
+      else begin
+        Element := Container.ElementByName['Length'];
+        if Assigned(Element) then begin
+          Result := Element.NativeValue;
+        end;
+      end;
   end;
 end;
 
@@ -13079,6 +13107,23 @@ begin
   Result := DataLengthCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement, 2);
 end;
 
+function StringTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Papyrus Struct', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['String Table Count'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue - 1; // The table is one member short, Referenced bug.
+    end;
+  end;
+end;
+
 
 procedure DefineTES5SavesS;  // This is all based on current UESP and HexDump
 var
@@ -13088,6 +13133,9 @@ var
   wbChangedForm       : IwbStructDef;
   wbChangedFormData   : IwbUnionDef;
   wbNull              : IwbValueDef;
+  wbChangeFlags       : IwbIntegerDef;
+  wbChangeTypes       : IwbEnumDef;
+  wbQuestFlags        : IwbIntegerDef;
 begin
   wbNull := wbStruct('Unused', []);
   wbHeader := wbStruct('Header', [
@@ -13200,98 +13248,133 @@ begin
     ])
   ]);
 
-  {<<< The RefID is already defined.  We can use the existing constants defined. <<<}
-  {<<< That should allow easier reference to the pre existing routines.          <<<}
-  {
-   ALFR : TwbSignature = 'ALFR';
-   ALID : TwbSignature = 'ALID';
-   ALLS : TwbSignature = 'ALLS';
-   ALNA : TwbSignature = 'ALNA';
-   ALNT : TwbSignature = 'ALNT';
-   ALPC : TwbSignature = 'ALPC';
-   ALRT : TwbSignature = 'ALRT';
-   ALSP : TwbSignature = 'ALSP';
-   ALST : TwbSignature = 'ALST';
-   ALUA : TwbSignature = 'ALUA';
-   }
+  wbChangeFlags := wbInteger('Change Flags', itU32 , wbFlags([
+    'CHANGE_FORM_FLAGS',
+    'CHANGE_QUEST_FLAGS / CHANGE_REFR_MOVE',
+    'CHANGE_REFR_HAVOK_MOVE',
+    'CHANGE_REFR_CELL_CHANGED',
+    'CHANGE_REFR_SCALE',
+    'CHANGE_REFR_INVENTORY',
+    'CHANGE_REFR_EXTRA_OWNERSHIP',
+    'CHANGE_REFR_BASEOBJECT',
+    'UnnamedFlag_8',
+    'UnnamedFlag_9',
+    'CHANGE_OBJECT_EXTRA_ITEM_DATA',
+    'UnnamedFlag_11',
+    'CHANGE_OBJECT_EXTRA_LOCK',
+    'UnnamedFlag_13',
+    'UnnamedFlag_14',
+    'UnnamedFlag_15',
+    'UnnamedFlag_16',
+    'UnnamedFlag_17',
+    'UnnamedFlag_18',
+    'UnnamedFlag_19',
+    'UnnamedFlag_20',
+    'CHANGE_OBJECT_EMPTY',
+    'UnnamedFlag_22',
+    'CHANGE_OBJECT_OPEN_STATE',
+    'UnnamedFlag_24',
+    'CHANGE_REFR_PROMOTED',
+    'CHANGE_QUEST_ALREADY_RUN / CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN',
+    'CHANGE_QUEST_INSTANCES / CHANGE_REFR_LEVELED_INVENTORY',
+    'CHANGE_QUEST_RUNDATA / CHANGE_REFR_ANIMATION',
+    'CHANGE_QUEST_OBJECTIVES / CHANGE_REFR_EXTRA_ENCOUNTER_ZONE',
+    'UnnamedFlag_30',
+    'CHANGE_QUEST_STAGES / CHANGE_REFR_EXTRA_GAME_ONLY'
+  ]));
 
-  wbChangedFormData := wbUnion('', ChangedFormDataDecider, [
-    // We have to reference the possible type of form here (from UESP:)
-    {
-       0 = 63 (REFR)
-       1 = 64 (ACHR)
-       2 = 65 (PMIS)
-       3 = 67 (PGRE)
-       4 = 68 (PBEA)
-       5 = 69 (PFLA)
-       6 = 62 (CELL)
-       7 = 78 (INFO)
-       8 = 79 (QUST)
-       9 = 45 (NPC_)
-       10 = 25 (ACTI)
-       11 = 26 (TACT)
-       12 = 27 (ARMO)
-       13 = 28 (BOOK)
-       14 = 29 (CONT)
-       15 = 30 (DOOR)
-       16 = 31 (INGR)
-       17 = 32 (LIGH)
-       18 = 33 (MISC)
-       19 = 34 (APPA)
-       20 = 35 (STAT)
-       21 = 37 (MSTT)
-       22 = 42 (FURN)
-       23 = 43 (WEAP)
-       24 = 44 (AMMO)
-       25 = 47 (KEYM)
-       26 = 48 (ALCH)
-       27 = 49 (IDLM)
-       28 = 50 (NOTE)
-       29 = 105 (ECZN)
-       30 = 10 (CLAS)
-       31 = 11 (FACT)
-       32 = 81 (PACK)
-       33 = 75 (NAVM)
-       34 = 120 (WOOP)
-       35 = 19 (MGEF)
-       36 = 115 (SMQN)
-       37 = 124 (SCEN)
-       38 = 106 (LCTN)
-       39 = 123 (RELA)
-       40 = 72 (PHZD)
-       41 = 71 (PBAR)
-       42 = 70 (PCON)
-       43 = 93 (FLST)
-       44 = 46 (LVLN)
-       45 = 55 (LVLI)
-       46 = 84 (LVSP)
-       47 = 66 (PARW)
-       48 = 22 (ENCH)
-    }
+  wbChangeTypes := wb6of8Enum([
+    ' 0 = 63 (REFR)',
+    ' 1 = 64 (ACHR)',
+    ' 2 = 65 (PMIS)',
+    ' 3 = 67 (PGRE)',
+    ' 4 = 68 (PBEA)',
+    ' 5 = 69 (PFLA)',
+    ' 6 = 62 (CELL)',
+    ' 7 = 78 (INFO)',
+    ' 8 = 79 (QUST)',
+    ' 9 = 45 (NPC_)',
+    '10 = 25 (ACTI)',
+    '11 = 26 (TACT)',
+    '12 = 27 (ARMO)',
+    '13 = 28 (BOOK)',
+    '14 = 29 (CONT)',
+    '15 = 30 (DOOR)',
+    '16 = 31 (INGR)',
+    '17 = 32 (LIGH)',
+    '18 = 33 (MISC)',
+    '19 = 34 (APPA)',
+    '20 = 35 (STAT)',
+    '21 = 37 (MSTT)',
+    '22 = 42 (FURN)',
+    '23 = 43 (WEAP)',
+    '24 = 44 (AMMO)',
+    '25 = 47 (KEYM)',
+    '26 = 48 (ALCH)',
+    '27 = 49 (IDLM)',
+    '28 = 50 (NOTE)',
+    '29 = 105 (ECZN)',
+    '30 = 10 (CLAS)',
+    '31 = 11 (FACT)',
+    '32 = 81 (PACK)',
+    '33 = 75 (NAVM)',
+    '34 = 120 (WOOP)',
+    '35 = 19 (MGEF)',
+    '36 = 115 (SMQN)',
+    '37 = 124 (SCEN)',
+    '38 = 106 (LCTN)',
+    '39 = 123 (RELA)',
+    '40 = 72 (PHZD)',
+    '41 = 71 (PBAR)',
+    '42 = 70 (PCON)',
+    '43 = 93 (FLST)',
+    '44 = 46 (LVLN)',
+    '45 = 55 (LVLI)',
+    '46 = 84 (LVSP)',
+    '47 = 66 (PARW)',
+    '48 = 22 (ENCH)'
+  ]);
+
+  wbQuestFlags := wbInteger('Flags', itU16, wbFlags([
+    {0x0001} 'Start Game Enabled',
+    {0x0002} 'Unknown 2',
+    {0x0004} 'Unknown 3',
+    {0x0008} 'Allow repeated stages',
+    {0x0010} 'Unknown 5',
+    {0x0020} 'Unknown 6',
+    {0x0040} 'Unknown 7',
+    {0x0080} 'Unknown 8',
+    {0x0100} 'Run Once',
+    {0x0200} 'Exclude from dialogue export',
+    {0x0400} 'Warn on alias fill failure',
+    {0x0800} 'Unknown 12',
+    {0x1000} 'Unknown 13'
+  ]));
+
+  wbChangedFormData := wbUnion('Changed Form union', ChangedFormDataDecider, [
+    wbByteArray('Undecoded Data', ChangedFormDataCounter)
   ]);
 
   wbChangedForm := wbStruct('Changed Form', [
     wbRefID('RefID'),
-    wbInteger('Change Flags', itU32 {, wbFlags([
-      Looks like there will be work to do here
-    ])}),
-    wbInteger('Type', itU8),  // We need a specific ToString for that
+    wbChangeFlags,
+    wbInteger('Type', itU8, wbChangeTypes),
     wbInteger('Version', itU8),
     wbUnion('Datas', ChangedFormDataLengthDecider, [
-      wbStruct('Changed Form Data', [
+      wbStruct('CForm Data', [
         wbInteger('Length', itU8),
         wbInteger('Uncompressed Length', itU8),
-        wbByteArray('Data', ChangedFormDataCounter)
+        wbStructZ('Small Struct', ChangedFormDataSizer, [ wbChangedFormData ])
       ]),
-      wbStruct('Changed Form Data', [
+      wbStruct('CForm Data', [
         wbInteger('Length', itU16),
         wbInteger('Uncompressed Length', itU16),
-        wbByteArray('Data', ChangedFormDataCounter)
+        wbStructZ('Medium Struct', ChangedFormDataSizer, [ wbChangedFormData ])
       ]),
-      wbStruct('Changed Form Data', [
+      wbStruct('CForm Data', [
         wbInteger('Length', itU32),
         wbInteger('Uncompressed Length', itU32),
-        wbByteArray('Data', ChangedFormDataCounter)
+        wbStructZ('Large Struct', ChangedFormDataSizer, [ wbChangedFormData ])
       ]),
       wbUnknown() // If the type is invalid
     ])
@@ -13303,7 +13386,7 @@ begin
     ,wbHeader
     {>>> Can we use the same command Dump doe to supress this, so it's hidden.    <<<}
     {>>> Can the same filter options used to filter out certain records.          <<<}
-    ,wbByteArray('Screenshot Data', ScreenShotDataCounter)
+    ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
     ,wbArray('Plugins', wbLenString('PluginName', 2), -4)

@@ -1107,10 +1107,15 @@ type
 
   TwbStruct = class(TwbValueBase)
   protected
+    szCompressedSize   : Integer;
+    szUncompressedSize : Cardinal;
     procedure Init; override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
+    procedure DecompressIfNeeded;
+    function GetIsCompressed: Boolean;
+    property IsCompressed: Boolean read GetIsCompressed;
   end;
 
   TwbSaveStruct = class(TwbStruct, IwbSaveRecord)
@@ -12689,6 +12694,8 @@ begin
   if GetSkipped then
     Exit;
 
+  DecompressIfNeeded;
+
   BasePtr := GetDataBasePtr;
   StructDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
 end;
@@ -12702,6 +12709,40 @@ procedure TwbStruct.Reset;
 begin
   ReleaseElements;
   inherited;
+end;
+
+procedure TwbStruct.DecompressIfNeeded;
+begin
+  if IsCompressed then try
+    InitDataPtr; // reset...
+
+    SetLength(dcDataStorage, szUncompressedSize );
+
+    DecompressToUserBuf(
+      Pointer(Cardinal(dcDataBasePtr)),
+      GetDataSize,
+      @dcDataStorage[0],
+      PCardinal(dcDataBasePtr)^
+    );
+
+    dcDataEndPtr := Pointer( Cardinal(@dcDataStorage[0]) + szUncompressedSize );
+    dcDataBasePtr := @dcDataStorage[0];
+  except
+    dcDataBasePtr := nil;
+    dcDataEndPtr := nil;
+  end;
+end;
+
+function TwbStruct.GetIsCompressed: Boolean;
+var
+  szDef : IwbStructZDef;
+begin
+  if (szCompressedSize = 0) then
+    if Supports(Self.vbValueDef, IwbStructZDef, szDef)  then
+      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize)
+    else
+      szCompressedSize := -1;
+  Result := szUncompressedSize <> 0
 end;
 
 { TwbUnion }
@@ -13849,10 +13890,10 @@ begin
   else
      Result := Resolved.Name;
   // something for Dump: Displaying the size in {} and the array count in []
-  if (Resolved.DefType in dtNonValues) and wbDumpOffset then
-    Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr), 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr), 8) +
+  if (Resolved.DefType in dtNonValues) and (wbDumpOffset>1) then
+    Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
       ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
-  if (Resolved.DefType = dtArray) and wbDumpOffset then
+  if (Resolved.DefType = dtArray) and (wbDumpOffset>0) then
     Result := Result + ' [' + IntToStr((Self as TwbArray).GetElementCount) + ']';
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
@@ -14514,6 +14555,8 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
+
+  wbBaseOffset := Cardinal(flView);
 
   CurrentPtr := flView;
   TwbSaveStruct.Create(Self, CurrentPtr, flEndPtr, StructSaveDef, '', False);

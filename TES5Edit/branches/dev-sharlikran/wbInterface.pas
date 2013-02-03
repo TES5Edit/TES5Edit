@@ -106,7 +106,8 @@ var
   wbRotationFactor : Extended = 180/Pi;
   wbRotationScale : Integer = 4;
 
-  wbDumpOffset : Boolean = False;
+  wbDumpOffset : Integer = 1;
+  wbBaseOffset : Cardinal = 0;
 
 //  wbRotationFactor : Extended = 1;
 //  wbRotationScale : Integer = 6;
@@ -1019,6 +1020,7 @@ type
   TwbUnionDecider = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
   TwbCountCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+  TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -1269,6 +1271,11 @@ type
     property OptionalFromElement: Integer read GetOptionalFromElement;
   end;
 
+  IwbStructZDef = interface(IwbStructDef) // Compressible structure !!! NOT SAFE FOR EDIT AT THE MOMEMNT !!!
+    ['{9B20A03C-BC3F-433A-9781-E46BD5C660AA}']
+    function GetSizing(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
+  end;
+
   IwbIntegerDefFormater = interface(IwbDef)
     ['{56A6EB7B-3A90-4F09-8E80-D7399569DFCC}']
 
@@ -1358,6 +1365,10 @@ type
       read GetName;
     property NameCount: Integer
       read GetNameCount;
+  end;
+
+  Iwb6of8EnumDef = interface(IwbEnumDef)
+    ['{A3AFE02E-F72D-4E0E-BC56-219F7EE2B565}']
   end;
 
   IwbCallbackDef = interface(IwbIntegerDefFormater)
@@ -1923,6 +1934,17 @@ function wbStruct(const aName      : string;
                         aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbStructDef; overload;
 
+function wbStructZ(const aName                : string;
+                         aSizing              : TwbSizeCallback;
+                   const aMembers             : array of IwbValueDef;
+                         aPriority            : TwbConflictPriority = cpNormal;
+                         aRequired            : Boolean = False;
+                         aDontShow            : TwbDontShowCallback = nil;
+                         aOptionalFromElement : Integer = -1;
+                         aAfterLoad           : TwbAfterLoadCallback = nil;
+                         aAfterSet            : TwbAfterSetCallback = nil)
+                                              : IwbStructDef; overload;
+
 function wbRStruct(const aName           : string;
                    const aMembers        : array of IwbRecordMemberDef;
                    const aSkipSigs       : array of TwbSignature;
@@ -2029,6 +2051,9 @@ function wbRefID(const aName      : string;
                                   : IwbIntegerDef; overload;
 
 function wbDumpInteger : IwbIntegerDefFormater; overload;
+
+function wb6of8Enum(const aNames : array of string)
+                                 : Iwb6of8EnumDef; overload;
 
 function wbFormID: IwbFormID; overload;
 
@@ -3426,6 +3451,26 @@ type
     function GetOptionalFromElement: Integer;
   end;
 
+  TwbStructZDef = class(TwbStructDef, IwbStructZDef)
+  private
+    szSizeCallback: TwbSizeCallback;
+  protected
+    constructor Clone(const aSource: TwbDef); override;
+    constructor Create(aPriority            : TwbConflictPriority;
+                       aRequired            : Boolean;
+                 const aName                : string;
+                 const aMembers             : array of IwbValueDef;
+                 const aSortKey             : array of Integer;
+                 const aExSortKey           : array of Integer;
+                       aOptionalFromElement : Integer;
+                       aDontShow            : TwbDontShowCallback;
+                       aAfterLoad           : TwbAfterLoadCallback;
+                       aAfterSet            : TwbAfterSetCallback;
+                       aSizeCallBack        : TwbSizeCallback);
+  public
+    function GetSizing(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
+  end;
+
   TwbIntegerDefFormater = class(TwbDef, IwbIntegerDefFormater)
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -3642,6 +3687,13 @@ type
     {---IwbEnumDef---}
     function GetName(aIndex: Integer): string;
     function GetNameCount: Integer;
+  end;
+
+  Twb6of8EnumDef = class(TwbEnumDef, Iwb6of8EnumDef)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
   end;
 
   TwbDivDef = class(TwbIntegerDefFormater)
@@ -4402,6 +4454,21 @@ begin
 end;
 
 
+function wbStructZ(const aName                : string;
+                         aSizing              : TwbSizeCallback;
+                   const aMembers             : array of IwbValueDef;
+                         aPriority            : TwbConflictPriority = cpNormal;
+                         aRequired            : Boolean = False;
+                         aDontShow            : TwbDontShowCallback = nil;
+                         aOptionalFromElement : Integer = -1;
+                         aAfterLoad           : TwbAfterLoadCallback = nil;
+                         aAfterSet            : TwbAfterSetCallback = nil)
+                                              : IwbStructDef; overload;
+begin
+  Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing);
+end;
+
+
 function wbRStruct(const aName           : string;
                    const aMembers        : array of IwbRecordMemberDef;
                    const aSkipSigs       : array of TwbSignature;
@@ -4531,6 +4598,11 @@ end;
 function wbDumpInteger : IwbIntegerDefFormater;
 begin
   Result := TwbDumpIntegerDefFormater.Create(cpNormal, False);
+end;
+
+function wb6of8Enum(const aNames : array of string) : Iwb6of8EnumDef;
+begin
+  Result := Twb6of8EnumDef.Create(aNames, []);
 end;
 
 var
@@ -6808,8 +6880,16 @@ function TwbStructDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbEle
 var
   i    : Integer;
   Size : Integer;
+  szDef : IwbStructZDef;
 begin
   Result := 0;
+  if Supports(Self, IwbStructZDef, szDef) then begin
+    szDef.GetSizing(aBasePtr, aEndPtr, aElement, Size);
+    if Size>0 then begin
+      Inc(Result, Size);
+      Exit;
+    end;
+  end;
   for i := Low(stMembers) to High(stMembers) do begin
     Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
     if Size = High(Integer) then begin
@@ -8853,8 +8933,8 @@ begin
     Result := badCountCallback(aBasePtr, aEndPtr, aElement)
   else begin
     Result := badSize;
-  if (Result = 0) and Assigned(aBasePtr) then
-    Result := High(Integer);
+    if (Result = 0) and Assigned(aBasePtr) then
+      Result := High(Integer);
   end;
 end;
 
@@ -10794,6 +10874,65 @@ end;
 function TwbDumpIntegerDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
 begin
   Result := IntToStr(aInt) + ' [' + IntToHex64(aInt, 8) + ']';
+end;
+
+{ TwbStructZDef }
+
+constructor TwbStructZDef.Clone(const aSource: TwbDef);
+begin
+  with aSource as TwbStructDef do
+    Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
+      stExSortKey, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet, szSizeCallback).defRoot := aSource;
+end;
+
+constructor TwbStructZDef.Create(aPriority: TwbConflictPriority;
+                                 aRequired: Boolean;
+                           const aName: string;
+                           const aMembers: array of IwbValueDef;
+                           const aSortKey, aExSortKey: array of Integer;
+                                 aOptionalFromElement: Integer;
+                                 aDontShow: TwbDontShowCallback;
+                                 aAfterLoad: TwbAfterLoadCallback;
+                                 aAfterSet: TwbAfterSetCallback;
+                                 aSizeCallBack: TwbSizeCallback);
+begin
+  szSizeCallback := aSizeCallback;
+  inherited Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
+end;
+
+function TwbStructZDef.GetSizing(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
+begin
+  if Assigned(szSizeCallback) then
+    Result := szSizeCallback(aBasePtr, aEndPtr, aElement, CompressedSize)
+  else begin
+    CompressedSize := -1;
+    Result := 0;
+  end;
+end;
+
+{ Twb6of8EnumDef }
+
+function Twb6of8EnumDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex64(aInt, 2);
+end;
+
+function Twb6of8EnumDef.ToString(aInt: Int64; const aElement: IwbElement): string;
+var
+  key : Integer;
+  val : Integer;
+begin
+  key := aInt shr 6;
+  val := aInt and $3f;
+  if val>=Length(enNames) then
+    Result := 'Bad enum index: ' + IntToStr(val) + ' [' + IntToHex64(val, 2) + ']'
+  else
+    Result := enNames[val];
+  case key of
+    0: Result := Result + ' Small size';
+    1: Result := Result + ' Medium size';
+    2: Result := Result + ' Large size';
+  end;
 end;
 
 initialization
