@@ -36,7 +36,6 @@ var
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
-function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -544,7 +543,7 @@ type
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings);
 
-    procedure Scan; virtual;
+    procedure Scan;
     procedure SortRecords;
     procedure SortRecordsByEditorID;
 
@@ -555,12 +554,6 @@ type
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   public
     destructor Destroy; override;
-  end;
-
-  TwbSaveFile = class(TwbFile)
-  protected
-    procedure Scan; override;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   end;
 
   TwbDataContainerFlag = (
@@ -1107,20 +1100,10 @@ type
 
   TwbStruct = class(TwbValueBase)
   protected
-    szCompressedSize   : Integer;
-    szUncompressedSize : Cardinal;
     procedure Init; override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
-    procedure DecompressIfNeeded;
-    function GetIsCompressed: Boolean;
-    property IsCompressed: Boolean read GetIsCompressed;
-  end;
-
-  TwbSaveStruct = class(TwbStruct, IwbSaveRecord)
-  protected
-    function GetMagic: TwbSaveMagic;
   end;
 
   TwbUnion = class(TwbValueBase)
@@ -12694,8 +12677,6 @@ begin
   if GetSkipped then
     Exit;
 
-  DecompressIfNeeded;
-
   BasePtr := GetDataBasePtr;
   StructDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
 end;
@@ -12709,40 +12690,6 @@ procedure TwbStruct.Reset;
 begin
   ReleaseElements;
   inherited;
-end;
-
-procedure TwbStruct.DecompressIfNeeded;
-begin
-  if IsCompressed then try
-    InitDataPtr; // reset...
-
-    SetLength(dcDataStorage, szUncompressedSize );
-
-    DecompressToUserBuf(
-      Pointer(Cardinal(dcDataBasePtr)),
-      GetDataSize,
-      @dcDataStorage[0],
-      PCardinal(dcDataBasePtr)^
-    );
-
-    dcDataEndPtr := Pointer( Cardinal(@dcDataStorage[0]) + szUncompressedSize );
-    dcDataBasePtr := @dcDataStorage[0];
-  except
-    dcDataBasePtr := nil;
-    dcDataEndPtr := nil;
-  end;
-end;
-
-function TwbStruct.GetIsCompressed: Boolean;
-var
-  szDef : IwbStructZDef;
-begin
-  if (szCompressedSize = 0) then
-    if Supports(Self.vbValueDef, IwbStructZDef, szDef)  then
-      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize)
-    else
-      szCompressedSize := -1;
-  Result := szUncompressedSize <> 0
 end;
 
 { TwbUnion }
@@ -13115,26 +13062,6 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
-  end;
-end;
-
-function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
-var
-  FileName: string;
-  i: Integer;
-begin
-  if ExtractFilePath(aFileName) = '' then
-    FileName := ExpandFileName('.\'+aFileName)
-  else
-    FileName := ExpandFileName(aFileName);
-
-  if FilesMap.Find(FileName, i) then
-    Result := IwbFile(Pointer(FilesMap.Objects[i]))
-  else begin
-    Result := TwbSaveFile.Create(FileName, aLoadOrder, aCompareTo, False);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -13889,12 +13816,6 @@ begin
     Result := vbValueDef.Name
   else
      Result := Resolved.Name;
-  // something for Dump: Displaying the size in {} and the array count in []
-  if (Resolved.DefType in dtNonValues) and (wbDumpOffset>1) then
-    Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
-      ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
-  if (Resolved.DefType = dtArray) and (wbDumpOffset>0) then
-    Result := Result + ' [' + IntToStr((Self as TwbArray).GetElementCount) + ']';
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
 end;
@@ -14536,54 +14457,6 @@ const
   WRLD : TwbSignature = 'WRLD';
   CELL : TwbSignature = 'CELL';
   DIAL : TwbSignature = 'DIAL';
-
-{ TwbSaveFile }
-
-constructor TwbSaveFile.CreateNew(const aFileName: string; aLoadOrder: Integer);
-begin
-  Include(flStates, fsIsNew);
-  flLoadOrder := aLoadOrder;
-  flFileName := aFileName;
-end;
-
-procedure TwbSaveFile.Scan;
-var
-  CurrentPtr  : Pointer;
-  Header      : IwbSaveRecord;
-  SelfRef     : IwbContainerElementRef;
-
-begin
-  SelfRef := Self as IwbContainerElementRef;
-  flProgress('Start processing');
-
-  wbBaseOffset := Cardinal(flView);
-
-  CurrentPtr := flView;
-  TwbSaveStruct.Create(Self, CurrentPtr, flEndPtr, StructSaveDef, '', False);
-
-  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveRecord, Header) then
-    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
-
-  if Header.Magic <> HeaderMagic then
-    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"', [HeaderMagic, String(Header.Magic), flFileName]);
-
-  flProgress('Processing completed');
-  flLoadFinished := True;
-end;
-
-{ TwbSaveStruct }
-
-function TwbSaveStruct.GetMagic: TwbSaveMagic;
-var
-  Element : IwbElement;
-  Container : IwbContainer;
-begin
-  Result := '';
-  if not Supports(Self, IwbContainer, Container) or (Container.ElementCount < 1) then Exit;
-  Element := Container.Elements[0];
-  if Assigned(Element) then
-    Result := Element.NativeValue;
-end;
 
 initialization
   wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);
