@@ -91,10 +91,10 @@ begin
         if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
-  Name := aElement.Name;
+  Name := aElement.DisplayName;
   Value := aElement.Value;
 
-  if (Name <> '') or (Value <> '') then begin
+  if ((Name <> '') or (Value <> '')) and (Pos('Hidden: ', Name)<>1) then begin
     if not wbReportMode then
       Write(aIndent, Name);
     aIndent := aIndent + '  ';
@@ -107,7 +107,7 @@ begin
     end;
   end;
 
-  if Supports(aElement, IwbContainer, Container) then
+  if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then
     WriteContainer(Container, aIndent);
 end;
 

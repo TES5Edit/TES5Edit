@@ -13124,6 +13124,72 @@ begin
   end;
 end;
 
+function Unknown1Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Papyrus Struct', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Count1'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
+function Unknown2Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Papyrus Struct', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Count2'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue and $0000FFFF;
+    end;
+  end;
+end;
+
+function Unknown2AsListCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+type
+  PUnknown2Record = ^TUnknown2Record;
+  TUnknown2Record = packed record
+    next      : PUnknown2Record;
+    Unknown04 : Cardinal;
+    Unknown08 : Word;
+    RefID     : array[0..2] of Byte;
+    Unknown0B : Byte;
+  end;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+  BasePtr   : PUnknown2Record;
+
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Papyrus Struct', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Unknown1 array'];
+    if Supports(Element, IwbDataContainer, Container) then begin
+      BasePtr := Pointer(Cardinal(Container.GetDataBasePtr)+Container.DataSize);
+      Result := 1;
+      while Assigned(BasePtr^.next) do begin
+        Inc(Result);
+        Inc(BasePtr);
+      end;
+    end;
+  end;
+end;
 
 procedure DefineTES5SavesS;  // This is all based on current UESP and HexDump
 var
@@ -13136,6 +13202,8 @@ var
   wbChangeFlags       : IwbIntegerDef;
   wbChangeTypes       : IwbEnumDef;
   wbQuestFlags        : IwbIntegerDef;
+  wbUnknown1          : IwbStructDef;
+  wbUnknown2          : IwbStructDef;
 begin
   wbNull := wbStruct('Unused', []);
   wbHeader := wbStruct('Header', [
@@ -13166,6 +13234,19 @@ begin
     wbInteger('Global Data Table 3 Count', itU32),
     wbInteger('Changed Forms Count', itU32),
     wbArray('Unused', wbInteger('', itU32), 15)
+  ]);
+
+  wbUnknown1 := wbStruct('Unknown1 Struct', [
+    wbArray('Values', wbInteger('Value', itU32, wbDumpInteger), -1)
+    ,wbInteger('OtherValue', itU32, wbDumpInteger)
+  ]);
+
+  wbUnknown2 := wbStruct('Unknown2 Struct', [
+    wbInteger('Next', itU32, wbDumpInteger)
+    ,wbInteger('Unknown', itU32, wbDumpInteger)
+    ,wbInteger('Unknown', itS16, wbDumpInteger)
+    ,wbRefID('RefID')
+    ,wbInteger('Unknown', itU8, wbDumpInteger)
   ]);
 
   wbGlobalData := wbStruct('Global Data', [
@@ -13237,6 +13318,13 @@ begin
       wbArray('Temp Effects', wbInteger('', itU8), -2),
       wbStruct('Papyrus Struct', [
         wbInteger('DataLength', itU32)
+        ,wbInteger('Unknown', itU16, wbDumpInteger)
+//        ,wbInteger('String Table Count', itU32)
+//        ,wbArray('Strings Table', wbLenString('String', 2), StringTableCounter)
+//        ,wbInteger('Count1', itU32, wbDumpInteger)
+//        ,wbInteger('CountX', itU32, wbDumpInteger)
+//        ,wbArray('Unknown1 array', wbUnknown1, Unknown1Counter)
+//        ,wbArray('Unknown2 list', wbUnknown2, Unknown2AsListCounter)
 //        ,wbByteArray('Unknown', PapyrusDataCounter)  // Single line
         ,wbArray('Unknown Data', wbByteArray('Unknown', BytesToGroup), PapyrusDataQuartetCounter) // per Quartet
         ,wbByteArray('Unknown', PapyrusDataQuartetRemainderCounter)
