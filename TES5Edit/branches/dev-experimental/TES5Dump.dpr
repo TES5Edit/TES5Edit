@@ -31,6 +31,7 @@ uses
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
+  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas',
   wbImplementation in 'wbImplementation.pas',
   wbInterface in 'wbInterface.pas',
   wbLocalization in 'wbLocalization.pas',
@@ -90,10 +91,10 @@ begin
         if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
-  Name := aElement.Name;
+  Name := aElement.DisplayName;
   Value := aElement.Value;
 
-  if (Name <> '') or (Value <> '') then begin
+  if ((Name <> '') or (Value <> '')) and (Pos('Hidden: ', Name)<>1) then begin
     if not wbReportMode then
       Write(aIndent, Name);
     aIndent := aIndent + '  ';
@@ -106,7 +107,7 @@ begin
     end;
   end;
 
-  if Supports(aElement, IwbContainer, Container) then
+  if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then
     WriteContainer(Container, aIndent);
 end;
 
@@ -224,6 +225,13 @@ begin
       wbGameName := 'Oblivion';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineTES4;
+    end else if wbFindCmdLineSwitch('TES5Saves') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 9), 'TES5Saves') then begin
+      wbGameMode := gmTES5Saves;
+      wbAppName := 'TES5Saves';
+      wbGameName := 'Skyrim Saves';
+      wbLoadBSAs := false;
+      wbSortSubRecords := True;
+      DefineTES5saves;
     end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
@@ -231,7 +239,8 @@ begin
       wbLoadBSAs := true;
       DefineTES5;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
+      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5, TES5Saves to');
+      WriteLn(ErrOutput, 'select mode.');
       Exit;
     end;
 
@@ -283,10 +292,15 @@ begin
       GroupToSkip.Add('WRLD');
     end;
 
-    if wbFindCmdLineParam('l', s) and (wbGameMode = gmTES5) then
+    if wbFindCmdLineParam('l', s) and ((wbGameMode = gmTES5) or (wbGameMode = gmTES5Saves)) then
       wbLanguage := s
     else
       wbLanguage := 'English';
+
+    if wbFindCmdLineParam('bts', s) then
+      BytesToSkip := StrToInt64Def(s, BytesToSkip);
+    if wbFindCmdLineParam('btd', s) then
+      BytesToDump := StrToInt64Def(s, BytesToDump);
 
     s := ParamStr(ParamCount);
 
@@ -302,6 +316,7 @@ begin
 
     if NeedsSyntaxInfo or (ParamCount < 1) or wbFindCmdLineSwitch('?') or wbFindCmdLineSwitch('help') then begin
       WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
+      WriteLn(ErrOutput, '  or     '+wbAppName+'Saves [options] inputfile');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
       WriteLn(ErrOutput);
@@ -326,6 +341,10 @@ begin
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
       WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
       WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Saves mode ONLY', ' not for general use');
+      WriteLn(ErrOutput, '-bts         ', 'BytesToSkip  = number of undecoded bytes to skip, default = 0');
+      WriteLn(ErrOutput, '-btd         ', 'BytesToDump  = number of undecoded bytes to dump as unknown, default = all');
+      WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
       WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
       WriteLn(ErrOutput, '             ', '');
@@ -343,6 +362,11 @@ begin
       ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
     if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
+
+    if BytesToSkip>0 then
+      ReportProgress('['+s+']   BytesToSkip : '+IntToStr(BytesToSkip));
+    if BytesToDump<$FFFFFFFF then
+      ReportProgress('['+s+']   BytesToDump : '+IntToStr(BytesToDump));
 
     if wbLoadBSAs then begin
       DataPath := ExtractFilePath(s);
@@ -392,7 +416,10 @@ begin
 
     wbDataPath := DataPath;
 
-    _File := wbFile(s);
+    if Pos('SAVES', UpperCase(wbAppName))>0 then
+      _File := wbSaveFile(s)
+    else
+      _File := wbFile(s);
 
     ReportProgress('Finished loading record. Starting Dump.');
 

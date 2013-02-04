@@ -20,7 +20,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, ShellAPI, pngimage,
+  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.jpeg,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
@@ -799,7 +799,7 @@ uses
   cxVTEditors,
   {$ENDIF}
   ShlObj, Registry, StrUtils, Types,
-  //UITypes,
+  UITypes,
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
@@ -1726,7 +1726,7 @@ function TfrmMain.CheckAppPath: string;
 const
   //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
   ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe');
 var
   s: string;
 begin
@@ -2848,6 +2848,13 @@ begin
     PluginsFileName := ParamStr(1);
     if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
       PluginsFileName := '';
+    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
+      if ParamCount >= 2 then begin
+        TheGameIniFileName := ParamStr(2);
+        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
+          TheGameIniFileName := '';
+      end;
+    end;
   end;
 
   if PluginsFileName = '' then begin
@@ -5886,6 +5893,7 @@ var
     rlNewRecord: IwbMainRecord;
     rlReferencedBy : TDynMainRecords;
   end;
+  ForceOldRecord              : Boolean;
 begin
   ReplaceList := nil;
   l := 0;
@@ -5921,8 +5929,8 @@ begin
         SetLength(ReplaceList, CSV.Count);
         for i := 1 to Pred(CSV.Count) do begin //ignore first line
           Line.CommaText := CSV[i];
-          if Line.Count <> 7 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(Line.Count)+' found.');
+          if (Line.Count < 7) or (Line.Count > 8) then begin
+            AddMessage('Skipping line '+IntToStr(i+1)+': 7 or 8 values expected but '+IntToStr(Line.Count)+' found.');
             Continue;
           end;
 
@@ -5975,6 +5983,16 @@ begin
             Continue;
           end;
 
+          forceOldRecord := False;
+          s := Trim(Line[7]);
+          j := StrToIntDef(s, 0);
+          if (j < 0) or (j > 1) then begin
+            AddMessage('Skipping line '+IntToStr(i+1)+': Flag always rename oldRecord "'+s+'" is not in the valid range (0/1).');
+            Continue;
+          end else
+            if j = 1 then
+              forceOldRecord := True;
+
           s := Trim(Line[0]);
           if not SameText(OldRecord.Signature, s) then
             AddMessage('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+OldRecord.Signature+'" vs. "'+s+'")".');
@@ -5997,6 +6015,13 @@ begin
             RefRecord := OldRecord.ReferencedBy[j];
             if _File.Equals(RefRecord._File) then begin
               ReferencedBy[k] := RefRecord;
+              Inc(k);
+            end;
+          end;
+
+          if (k < 1) and ForceOldRecord then begin
+            if _File.Equals(OldRecord._File) then begin
+              ReferencedBy[k] := OldRecord;
               Inc(k);
             end;
           end;
@@ -10548,7 +10573,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim');
+    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim', 'Skyrim');
 begin
   if not wbLoaderDone then
     Exit;
@@ -10875,8 +10900,10 @@ end;
 
 Type
   TwbComboEditLink = class(TComboEditLink)
-    function CreateEditControl: TWinControl; override;
     procedure SetBounds(R: TRect); override;
+  end;
+
+  TwbCheckComboEditLink = class(TcheckComboEditLink)
   end;
 
 procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
@@ -10892,6 +10919,7 @@ var
   CheckComboLink              : TcxCheckComboEditLink;
   {$ELSE}
   ComboLink                   : TwbComboEditLink;
+  CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
   if Column < 1 then
@@ -10956,6 +10984,15 @@ begin
       end;
       ComboLink.PickList.CommaText := EditInfoCache;
       ComboLink.Sorted := True;
+    end;
+    etCheckComboBox: begin
+      CheckComboLink := TwbCheckComboEditLink.Create;
+      EditLink := CheckComboLink;
+      if Element.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := Element.ElementID;
+        EditInfoCache := Element.EditInfo;
+      end;
+      CheckComboLink.PickList.CommaText := EditInfoCache;
     end;
   {$ENDIF}
   end;
@@ -13101,12 +13138,6 @@ end;
 
 
 { TwbComboEditLink }
-
-function TwbComboEditLink.CreateEditControl: TWinControl;
-begin
-  Result := inherited;
-//  TComboBox(Result).Parent := TForm(FOwner);
-end;
 
 procedure TwbComboEditLink.SetBounds(R: TRect);
 var

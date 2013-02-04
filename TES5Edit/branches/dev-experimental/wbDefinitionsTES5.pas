@@ -665,7 +665,7 @@ var
   wbWardStateEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
-  wbHeadPartIndexEnum: IwbEnumDef;
+//  wbHeadPartIndexEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
@@ -8252,8 +8252,7 @@ begin
           wbInteger('Index/Node', itU32)
         ]), -1)
       ]),
-      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-      wbUnknown(NVSI)
+      wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
     ]);
 
     wbRecord(NAVM, 'Navigation Mesh', [
@@ -8314,12 +8313,9 @@ begin
         wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
         wbUnknown
       ]),
-	  //wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
-      //wbArrayS(PNAM, 'Unknown', wbByteArray('Unknown', 4)),
-      //wbArrayS(NNAM, 'Unknown', wbByteArray('Unknown', 4))
-      wbUnknown(ONAM),
-      wbUnknown(PNAM),
-      wbUnknown(NNAM)
+	  wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
+      wbArrayS(PNAM, 'Unknown', wbByteArray('Unknown', 4)),
+      wbArrayS(NNAM, 'Unknown', wbByteArray('Unknown', 4))
     ], False, wbNAVMAddInfo);
 
   end;
