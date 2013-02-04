@@ -5207,35 +5207,35 @@ begin
   ]);
 
   wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
-    wbStruct('Object v2', [
-      wbInteger('Unused', itU16),
+    wbStructSK([1], 'Object v2', [
+      wbInteger('Unknown', itU16),
       wbInteger('Alias ID', itS16),
       wbFormID('FormID')
     ]),
-    wbStruct('Object v1', [
+    wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias ID', itS16),
-      wbInteger('Unused', itU16)
+      wbInteger('Unknown', itU16)
     ])
   ]);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
-    wbLenString('Name', 2),
+    wbLenString('scriptName', 2),
     wbInteger('Unknown', itU8),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
-      wbLenString('Name', 2),
+      wbLenString('propertyName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbByteArray('Unknown', 0, cpIgnore),
         {01} wbScriptObject,
         {02} wbLenString('String', 2),
-        {03} wbInteger('Int32', itU32),
+        {03} wbInteger('Int32', itS32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
         {11} wbArray('Array of Object', wbScriptObject, -1),
         {12} wbArray('Array of String', wbLenString('Element', 2), -1),
-        {13} wbArray('Array of Int32', wbInteger('Element', itU32), -1),
+        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
@@ -5299,12 +5299,10 @@ begin
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
       ]), wbScriptFragmentsQuestCounter),
-    wbArrayS('Aliases', wbStruct('Alias', [
-      wbInteger('Unknown', itS16),
-      wbInteger('Alias ID', itS16),
-      wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS16),
-      wbInteger('Alias Object Format', itS16),
+    wbArrayS('Aliases', wbStructSK([0], 'Alias', [
+      wbScriptObject,
+      wbInteger('Version', itS16),
+      wbInteger('Object Format', itS16),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
   ], cpNormal, false, wbScriptFragmentsDontShow);
@@ -7507,7 +7505,7 @@ begin
       wbFloat('Edge Effect - Alpha Fade Out Time'),
       wbFloat('Edge Effect - Persistent Alpha Ratio'),
       wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-      wbFloat('Edge Effect - Alpha Pusle Frequence'),
+      wbFloat('Edge Effect - Alpha Pulse Frequency'),
       wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
       wbFloat('Edge Effect - Full Alpha Ratio'),
       wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
@@ -7774,8 +7772,8 @@ begin
       {02} wbInteger('End Hour', itU16),
       {02} wbInteger('Radius', itU16),
       {02} wbByteArray('Unknown 1', 2),
-             wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
-             wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
+           wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
+           wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
       {02} wbByteArray('Unknown 2', 2)
       ]),
     wbPLVD,
@@ -7983,7 +7981,6 @@ begin
   wbRecord(IDLM, 'Idle Marker', [
     wbEDID,
     wbOBNDReq,
-    wbMODL,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
       'Unknown 1',
@@ -7993,7 +7990,8 @@ begin
     ]), cpNormal, False),
     wbInteger(IDLC, 'Animation Count', itU8),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
-    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, False)
+    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, False),
+    wbMODL
   ]);
 
   wbRecord(PROJ, 'Projectile', [
@@ -8112,28 +8110,112 @@ begin
     wbFormIDCk(NAM0, 'Linked To', [SLGM])
   ]);
 
-	wbRecord(NAVI, 'Navigation Mesh Info Map', [
-    wbEDID,
-    wbInteger(NVER, 'Version', itU32),
-    wbRArray('Navigation Map Infos',
-      wbStruct(NVMI, 'Navigation Map Info', [
-        wbFormIDCk('Navigation Mesh', [NAVM]),
-        wbByteArray('Unknown', 4),
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z'),
-        wbInteger('Preferred Merges Flag', itU32),
-        wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Linked Doors', wbStruct('Door', [
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Door Ref', [REFR])
-        ]), -1),
-        wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbUnion('Island', wbNAVIIslandDataDecider, [
-          wbStruct('Unused', [
+  if wbSimpleRecords then begin
+
+    wbRecord(NAVI, 'Navigation Mesh Info Map', [
+      wbEDID,
+      wbInteger(NVER, 'Version', itU32),
+      wbRArray('Navigation Map Infos',
+        wbStruct(NVMI, 'Navigation Map Info', [
+          wbFormIDCk('Navigation Mesh', [NAVM]),
+          wbByteArray('Data', 20),
+          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
+          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
+          wbArray('Linked Doors', wbStruct('Door', [
+            wbByteArray('Unknown', 4),
+            wbFormIDCk('Door Ref', [REFR])
+          ]), -1),
+          wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
+          wbUnion('Island', wbNAVIIslandDataDecider, [
+            wbStruct('Unused', [
+            ]),
+            wbStruct('Island Data', [
+              wbByteArray('Unknown', 24),
+              wbArray('Triangles', wbByteArray('Triangle', 6), -1),
+              wbArray('Verticies', wbByteArray('Vertex', 12), -1)
+            ])
           ]),
-          wbStruct('Island Data', [
+          wbByteArray('Unknown', 4),
+          wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+          wbUnion('Parent', wbNAVIParentDecider, [
+            wbStruct('Coordinates', [
+              wbInteger('Grid Y', itS16),
+              wbInteger('Grid X', itS16)
+            ]),
+            wbFormIDCk('Parent Cell', [CELL])
+          ])
+        ])
+      ),
+      wbStruct(NVPP, 'Preferred Pathing', [
+        wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
+        wbArray('NavMesh Tree?', wbStruct('', [
+          wbFormIDCk('NavMesh', [NAVM]),
+          wbInteger('Index/Node', itU32)
+        ]), -1)
+      ]),
+      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
+      wbUnknown(NVSI)
+    ]);
+
+    wbRecord(NAVM, 'Navigation Mesh', [
+      wbEDID,
+      wbStruct(NVNM, 'Geometry', [
+        wbByteArray('Unknown', 8),
+        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+        wbUnion('Parent', wbNVNMParentDecider, [
+          wbStruct('Coordinates', [
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ]),
+        wbArray('Vertices', wbByteArray('Vertex', 12), -1),
+        wbArray('Triangles', wbByteArray('Triangle', 16), -1),
+        wbArray('External Connections',
+          wbStruct('Connection', [
+            wbByteArray('Unknown', 4),
+            wbFormIDCk('Mesh', [NAVM]),
+            wbInteger('Triangle', itS16)
+          ])
+        , -1),
+        wbArray('Door Triangles',
+          wbStruct('Door Triangle', [
+            wbInteger('Triangle before door', itS16),
+            wbByteArray('Unknown', 4),
+            wbFormIDCk('Door', [REFR])
+          ])
+        , -1),
+        wbUnknown
+      ]),
+      wbUnknown(ONAM),
+      wbUnknown(PNAM),
+      wbUnknown(NNAM)
+    ], False, wbNAVMAddInfo);
+
+  end else begin
+
+    wbRecord(NAVI, 'Navigation Mesh Info Map', [
+      wbEDID,
+      wbInteger(NVER, 'Version', itU32),
+      wbRArray('Navigation Map Infos',
+        wbStruct(NVMI, 'Navigation Map Info', [
+          wbFormIDCk('Navigation Mesh', [NAVM]),
+          wbByteArray('Unknown', 4),
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z'),
+          wbInteger('Preferred Merges Flag', itU32),
+          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
+          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
+          wbArray('Linked Doors', wbStruct('Door', [
+            wbByteArray('Unknown', 4),
+            wbFormIDCk('Door Ref', [REFR])
+          ]), -1),
+          wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
+          wbUnion('Island', wbNAVIIslandDataDecider, [
+            wbStruct('Unused', [
+            ]),
+            wbStruct('Island Data', [
               wbFloat('Min X'),
               wbFloat('Min Y'),
               wbFloat('Min Z'),
@@ -8150,188 +8232,97 @@ begin
                 wbFloat('Y'),
                 wbFloat('Z')
               ]), -1)
+            ])
+          ]),
+          wbByteArray('Unknown', 4),
+          wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+          wbUnion('Parent', wbNAVIParentDecider, [
+            wbStruct('Coordinates', [
+              wbInteger('Grid Y', itS16),
+              wbInteger('Grid X', itS16)
+            ]),
+            wbFormIDCk('Parent Cell', [CELL])
           ])
-        ]),
+        ])
+      ),
+      wbStruct(NVPP, 'Preferred Pathing', [
+        wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
+        wbArray('NavMesh Tree?', wbStruct('', [
+          wbFormIDCk('NavMesh', [NAVM]),
+          wbInteger('Index/Node', itU32)
+        ]), -1)
+      ]),
+      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
+      wbUnknown(NVSI)
+    ]);
+
+    wbRecord(NAVM, 'Navigation Mesh', [
+      wbEDID,
+      wbStruct(NVNM, 'Geometry', [
+        wbInteger('Unknown', itU32),
         wbByteArray('Unknown', 4),
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-        wbUnion('Parent', wbNAVIParentDecider, [
+        wbUnion('Parent', wbNVNMParentDecider, [
           wbStruct('Coordinates', [
-            wbInteger('Grid X', itS16),
-            wbInteger('Grid Y', itS16)
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
           ]),
           wbFormIDCk('Parent Cell', [CELL])
-        ])
-      ])
-    ),
-    wbStruct(NVPP, 'Preferred Pathing', [
-      wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-      wbArray('NavMesh Tree?', wbStruct('', [
-        wbFormIDCk('NavMesh', [NAVM]),
-        wbInteger('Index/Node', itU32)
-      ]), -1)
-    ]),
-//    wbUnknown(NVSI)
-    wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-  ]);
-
-  wbRecord(NAVM, 'Navigation Mesh', [
-    wbEDID,
-    wbStruct(NVNM, 'Geometry', [
-      wbInteger('Unknown', itU32),
-      wbByteArray('Unknown', 4),
-      //wbByteArray('Parent Data', 8),
-      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-      wbUnion('Parent', wbNVNMParentDecider, [
-        wbStruct('Coordinates', [
-          wbInteger('Grid X', itS16),
-          wbInteger('Grid Y', itS16)
         ]),
-        wbFormIDCk('Parent Cell', [CELL])
+        wbArray('Vertices', wbStruct('Vertex', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]), -1),
+        wbArray('Triangles',
+          wbStruct('Triangle', [
+            wbArray('Vertices', wbInteger('Vertex', itS16), 3),
+            wbArray('Edges', wbInteger('Triangle', itS16), [
+              '0 <-> 1',
+              '1 <-> 2',
+              '2 <-> 0'
+            ]),
+            wbByteArray('Cover Marker?', 2),
+            wbInteger('Cover Edge #1 Flags', itU8),
+            wbInteger('Cover Edge #2 Flags', itU8)
+          ])
+        , -1),
+        wbArray('External Connections',
+          wbStruct('Connection', [
+            wbByteArray('Unknown', 4),
+            wbFormIDCk('Mesh', [NAVM]),
+            wbInteger('Triangle', itS16)
+          ])
+        , -1),
+        wbArray('Door Triangles',
+          wbStruct('Door Triangle', [
+            wbInteger('Triangle before door', itS16),
+            wbByteArray('Unknown', 4),
+            wbFormIDCk('Door', [REFR])
+          ])
+        , -1),
+        wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
+        wbInteger('Divisor?', itU32),
+        wbFloat('Max X Distance'),
+        wbFloat('Max Y Distance'),
+        wbFloat('Min X'),
+        wbFloat('Min Y'),
+        wbFloat('Min Z'),
+        wbFloat('Max X'),
+        wbFloat('Max Y'),
+        wbFloat('Max Z'),
+        wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
+        wbUnknown
       ]),
+	  //wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
+      //wbArrayS(PNAM, 'Unknown', wbByteArray('Unknown', 4)),
+      //wbArrayS(NNAM, 'Unknown', wbByteArray('Unknown', 4))
+      wbUnknown(ONAM),
+      wbUnknown(PNAM),
+      wbUnknown(NNAM)
+    ], False, wbNAVMAddInfo);
 
-      wbArray('Vertices', wbStruct('Vertex', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]), -1),
-
-      wbArray('Triangles',
-        wbStruct('Triangle', [
-          wbArray('Vertices', wbInteger('Vertex', itS16), 3),
-          wbArray('Edges', wbInteger('Triangle', itS16), [
-            '0 <-> 1',
-            '1 <-> 2',
-            '2 <-> 0'
-          ]),
-          wbByteArray('Cover Marker?', 2),
-          wbInteger('Cover Edge #1 Flags', itU8),
-          wbInteger('Cover Edge #2 Flags', itU8)
-        ])
-      , -1),
-
-      wbArray('External Connections',
-        wbStruct('Connection', [
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Mesh', [NAVM]),
-          wbInteger('Triangle', itS16)
-        ])
-      , -1),
-
-      wbArray('Door Triangles',
-        wbStruct('Door Triangle', [
-          wbInteger('Triangle before door', itS16),
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Door', [REFR])
-        ])
-      , -1),
-
-      wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
-      wbInteger('Divisor?', itU32),
-      wbFloat('Max X Distance'),
-      wbFloat('Max Y Distance'),
-      wbFloat('Min X'),
-      wbFloat('Min Y'),
-      wbFloat('Min Z'),
-      wbFloat('Max X'),
-      wbFloat('Max Y'),
-      wbFloat('Max Z'),
-      wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
-      wbUnknown
-    ]),
-    wbUnknown(ONAM),
-    wbUnknown(PNAM),
-    wbUnknown(NNAM)
-  ], False, wbNAVMAddInfo);
-
-//------------------------------------------------------------------------------
-// Begin Old NAVM
-//------------------------------------------------------------------------------
-//  wbRecord(NAVM, 'Navigation Mesh', [
-//    wbEDID,
-//    wbInteger(NVER, 'Version', itU32),
-//    wbStruct(DATA, '', [
-//      wbFormIDCk('Cell', [CELL]),
-//      wbInteger('Vertex Count', itU32),
-//      wbInteger('Triangle Count', itU32),
-//      wbInteger('External Connections Count', itU32),
-//      wbInteger('NVCA Count', itU32),
-//      wbInteger('Doors Count', itU32)
-//    ]),
-//    wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
-//      wbFloat('X'),
-//      wbFloat('Y'),
-//      wbFloat('Z')
-//    ])),
-//    wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
-//      wbArray('Vertices', wbInteger('Vertex', itS16), 3),
-//      wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
-//        '0 <-> 1',
-//        '1 <-> 2',
-//        '2 <-> 0'
-//      ]),
-//      wbInteger('Flags', itU32, wbFlags([
-//        'Triangle #0 Is External',
-//        'Triangle #1 Is External',
-//        'Triangle #2 Is External',
-//        'Unknown 4',
-//        'Unknown 5',
-//        'Unknown 6',
-//        'Unknown 7',
-//        'Unknown 8',
-//        'Unknown 9',
-//        'Unknown 10',
-//        'Unknown 11',
-//        'Unknown 12',
-//        'Unknown 13',
-//        'Unknown 14',
-//        'Unknown 15',
-//        'Unknown 16',
-//        'Unknown 17',
-//        'Unknown 18',
-//        'Unknown 19',
-//        'Unknown 20',
-//        'Unknown 21',
-//        'Unknown 22',
-//        'Unknown 23',
-//        'Unknown 24',
-//        'Unknown 25',
-//        'Unknown 26',
-//        'Unknown 27',
-//        'Unknown 28',
-//        'Unknown 29',
-//        'Unknown 30',
-//        'Unknown 31',
-//        'Unknown 32'
-//      ]))
-//    ])),
-//    wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)),
-//    wbArray(NVDP, 'Doors', wbStruct('Door', [
-//      wbFormIDCk('Reference', [REFR]),
-//      wbInteger('Unknown', itU16),
-//      wbByteArray('Unknown', 2)
-//    ])),
-//    wbStruct(NVGD, 'Unknown', [
-//      wbUnknown
-//      wbByteArray('Unknown', 4),
-//      wbFloat('Unknown'),
-//      wbFloat('Unknown'),
-//      wbFloat('Unknown'),
-//      wbFloat('Unknown'),
-//      wbFloat('Unknown'),
-//      wbFloat('Unknown'),
-//      wbFloat('Unknown'),
-//      wbFloat('Unknown'),
-//      wbArray('Unknown', wbArray('Unknown', wbInteger('Unknown', itU16), -2))
-//    ]),
-//    wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-//      wbByteArray('Unknown', 4),
-//      wbFormIDCk('Navigation Mesh', [NAVM], False, cpBenign),
-//      wbInteger('Triangle', itU16, nil, cpBenign)
-//    ]))
-//  ], False, wbNAVMAddInfo);
-//------------------------------------------------------------------------------
-// End Old NAVM
-//------------------------------------------------------------------------------
+  end;
 
 end;
 
@@ -9889,13 +9880,14 @@ begin
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
         wbInteger('Emotion Value', itU32),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4),
+        wbByteArray('Unused', 4),
+        wbInteger('Response number', itU8),
+        wbByteArray('Unused', 3),
         wbFormIDCk('Sound', [SNDR, NULL]),
         wbInteger('Flags', itU8, wbFlags([
           'Use Emotion Animation'
         ])),
-        wbByteArray('Unknown', 3)
+        wbByteArray('Unused', 3)
       ]),
       wbLString(NAM1, 'Response Text', 0),
       wbString(NAM2, 'Script Notes', 0),
@@ -9978,7 +9970,7 @@ begin
     {3} 'Top Right'
   ]);
 
-  if wbSimpleLAND then begin
+  if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
@@ -10533,9 +10525,9 @@ begin
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
-    wbDEST,
     wbSPCT,
     wbSPLOs,
+    wbDEST,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
@@ -10604,9 +10596,9 @@ begin
         'Enchanting'
       ]),
       //wbByteArray('Unknown', 4),
-      wbInteger('Health?', itU16),
-      wbInteger('Magicka?', itU16),
-      wbInteger('Stamina?', itU16),
+      wbInteger('Health', itU16),
+      wbInteger('Magicka', itU16),
+      wbInteger('Stamina', itU16),
       wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Far away model distance'),
       wbInteger('Geared up weapons', itU8),
@@ -12289,7 +12281,7 @@ begin
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
       wbInteger('Number of Records', itU32),
-      wbByteArray('Next Object ID', 4)
+      wbInteger('Next Object ID', itU32)
     ], cpNormal, True),
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
     wbByteArray(DELE, 'Unknown', 0, cpIgnore),
@@ -12345,7 +12337,7 @@ begin
     wbUnknown(PNAM),
     wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
-    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, NULL]),
+    wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),

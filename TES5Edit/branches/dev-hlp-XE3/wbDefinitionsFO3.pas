@@ -6773,8 +6773,8 @@ begin
     ]),
     wbArray(NVEX, 'External Connections', wbStruct('Connection', [
       wbByteArray('Unknown', 4),
-      wbFormIDCk('Navigation Mesh', [NAVM], False, cpBenign),
-      wbInteger('Triangle', itU16, nil, cpBenign)
+      wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
+      wbInteger('Triangle', itU16, nil, cpNormal)
     ]))
   ], False, wbNAVMAddInfo);
 
@@ -7817,7 +7817,7 @@ begin
     {3} 'Top Right'
   ]);
 
-  if wbSimpleLAND then begin
+  if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),

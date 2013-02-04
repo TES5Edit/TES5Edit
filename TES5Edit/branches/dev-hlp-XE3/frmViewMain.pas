@@ -32,10 +32,10 @@ uses
   wbLocalization,
   Direct3D9,
   D3DX9,
-  {$IFDEF DX3D}
+{$IFDEF DX3D}
   RenderUnit,
   DXUT,
-  {$ENDIF}
+{$ENDIF}
   JvComponentBase,
   JvInterpreter;
 
@@ -264,6 +264,7 @@ type
     mniNavLogAnalyzer: TMenuItem;
     mniNavOther: TMenuItem;
     N13: TMenuItem;
+    mniRefByMarkModified: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -463,6 +464,7 @@ type
     procedure JvInterpreterProgram1GetValue(Sender: TObject; Identifier: string;
       var Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
+    procedure mniRefByMarkModifiedClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -796,7 +798,8 @@ uses
   {$IFNDEF LiteVersion}
   cxVTEditors,
   {$ENDIF}
-  ShlObj, Registry, StrUtils, Types, UITypes,
+  ShlObj, Registry, StrUtils, Types,
+  UITypes,
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
@@ -2281,9 +2284,10 @@ var
           PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
         end else
         // unsafe to copy VMAD subrecords to merged patch until they are decoded
-        if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
-          PostAddMessage('Error: Can''t merge for the winning record with scripts ' + MainRecord.Name);
-        end else begin
+        {if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
+          PostAddMessage('Notice: Can''t merge for the winning record with scripts ' + MainRecord.Name);
+        end else}
+        begin
           TargetRecord := nil;
           for l := Low(aListNames) to High(aListNames) do
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
@@ -2402,8 +2406,9 @@ begin
         for n := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
             QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-            if Assigned(QustFlags) then
-              if (QustFlags.NativeValue and 1 > 0) and not Assigned(MainRecord.Master) then begin
+            // include SGE quests which are new or set SGE flag on master quest
+            if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then
+              if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
                 SetLength(FormIDs, Succ(Length(FormIDs)));
                 FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
               end;
@@ -2843,6 +2848,13 @@ begin
     PluginsFileName := ParamStr(1);
     if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
       PluginsFileName := '';
+    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
+      if ParamCount >= 2 then begin
+        TheGameIniFileName := ParamStr(2);
+        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
+          TheGameIniFileName := '';
+      end;
+    end;
   end;
 
   if PluginsFileName = '' then begin
@@ -3233,6 +3245,7 @@ begin
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
+  wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -3744,7 +3757,7 @@ begin
                   Element.NativeValue := wbUDRSetScaleValue;
             end;
 
-            if wbUDRSetMSTT then begin
+            if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
               Element := ElementBySignature['NAME'];
               if Assigned(Element) then
                 if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
@@ -5649,6 +5662,29 @@ begin
   vstNav.Invalidate;
 end;
 
+procedure TfrmMain.mniRefByMarkModifiedClick(Sender: TObject);
+var
+  MainRecords                 : TDynMainRecords;
+  i                           : Integer;
+begin
+  if not wbEditAllowed then
+    Exit;
+  if wbTranslationMode then
+    Exit;
+  if not EditWarn then
+    Exit;
+
+  UserWasActive := True;
+
+  MainRecords := GetRefBySelectionAsMainRecords;
+
+  for i := Low(MainRecords) to High(MainRecords) do
+    MainRecords[i].MarkModifiedRecursive;
+
+  MainRecords := nil;
+  vstNav.Invalidate;
+end;
+
 procedure TfrmMain.mniRefByRemoveClick(Sender: TObject);
 var
   MainRecords                 : TDynMainRecords;
@@ -5857,6 +5893,7 @@ var
     rlNewRecord: IwbMainRecord;
     rlReferencedBy : TDynMainRecords;
   end;
+  ForceOldRecord              : Boolean;
 begin
   ReplaceList := nil;
   l := 0;
@@ -5892,8 +5929,8 @@ begin
         SetLength(ReplaceList, CSV.Count);
         for i := 1 to Pred(CSV.Count) do begin //ignore first line
           Line.CommaText := CSV[i];
-          if Line.Count <> 7 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(Line.Count)+' found.');
+          if (Line.Count < 7) or (Line.Count > 8) then begin
+            AddMessage('Skipping line '+IntToStr(i+1)+': 7 or 8 values expected but '+IntToStr(Line.Count)+' found.');
             Continue;
           end;
 
@@ -5946,6 +5983,16 @@ begin
             Continue;
           end;
 
+          forceOldRecord := False;
+          s := Trim(Line[7]);
+          j := StrToIntDef(s, 0);
+          if (j < 0) or (j > 1) then begin
+            AddMessage('Skipping line '+IntToStr(i+1)+': Flag always rename oldRecord "'+s+'" is not in the valid range (0/1).');
+            Continue;
+          end else
+            if j = 1 then
+              forceOldRecord := True;
+
           s := Trim(Line[0]);
           if not SameText(OldRecord.Signature, s) then
             AddMessage('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+OldRecord.Signature+'" vs. "'+s+'")".');
@@ -5968,6 +6015,13 @@ begin
             RefRecord := OldRecord.ReferencedBy[j];
             if _File.Equals(RefRecord._File) then begin
               ReferencedBy[k] := RefRecord;
+              Inc(k);
+            end;
+          end;
+
+          if (k < 1) and ForceOldRecord then begin
+            if _File.Equals(OldRecord._File) then begin
+              ReferencedBy[k] := OldRecord;
               Inc(k);
             end;
           end;
@@ -9029,6 +9083,7 @@ begin
     cbHideNeverShow.Checked := wbHideNeverShow;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
+    cbSimpleRecords.Checked := wbSimpleRecords;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9046,6 +9101,7 @@ begin
     wbHideNeverShow := cbHideNeverShow.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
+    wbSimpleRecords := cbSimpleRecords.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9060,6 +9116,7 @@ begin
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
+    Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -9449,6 +9506,7 @@ begin
   mniRefByCopyAsNewInto.Visible := mniRefByCopyOverrideInto.Visible and not ByRefSelectionIncludesNonCopyNewRecords(Selected);
   mniRefByCopyDisabledOverrideInto.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByRemove.Visible := mniRefByCopyOverrideInto.Visible;
+  mniRefByMarkModified.Visible := mniRefByCopyOverrideInto.Visible;
 
   if mniRefByDeepCopyOverrideInto.Visible and ByRefSelectionIncludesOnlyDeepCopyRecords(Selected) then
     mniRefByCopyOverrideInto.Visible := False;
@@ -10842,8 +10900,10 @@ end;
 
 Type
   TwbComboEditLink = class(TComboEditLink)
-    function CreateEditControl: TWinControl; override;
     procedure SetBounds(R: TRect); override;
+  end;
+
+  TwbCheckComboEditLink = class(TcheckComboEditLink)
   end;
 
 procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
@@ -10859,6 +10919,7 @@ var
   CheckComboLink              : TcxCheckComboEditLink;
   {$ELSE}
   ComboLink                   : TwbComboEditLink;
+  CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
   if Column < 1 then
@@ -10923,6 +10984,15 @@ begin
       end;
       ComboLink.PickList.CommaText := EditInfoCache;
       ComboLink.Sorted := True;
+    end;
+    etCheckComboBox: begin
+      CheckComboLink := TwbCheckComboEditLink.Create;
+      EditLink := CheckComboLink;
+      if Element.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := Element.ElementID;
+        EditInfoCache := Element.EditInfo;
+      end;
+      CheckComboLink.PickList.CommaText := EditInfoCache;
     end;
   {$ENDIF}
   end;
@@ -13068,12 +13138,6 @@ end;
 
 
 { TwbComboEditLink }
-
-function TwbComboEditLink.CreateEditControl: TWinControl;
-begin
-  Result := inherited;
-//  TComboBox(Result).Parent := TForm(FOwner);
-end;
 
 procedure TwbComboEditLink.SetBounds(R: TRect);
 var

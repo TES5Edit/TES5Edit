@@ -20,8 +20,7 @@ uses
   Windows,
   SysUtils,
   DXtypes,
-  Direct3D9,
-  Colors;
+  Direct3D9;
 
 type
   TSubsetInfo = record

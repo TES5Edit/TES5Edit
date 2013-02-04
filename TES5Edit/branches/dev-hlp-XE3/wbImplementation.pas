@@ -131,6 +131,8 @@ type
     ['{556DF03C-2723-46FC-99C6-F50BB5E66F86}']
     procedure SetContainer(const aContainer: IwbContainer);
     procedure SetSortOrder(aIndex: Integer);
+    procedure SetMemoryOrder(aIndex: Integer);
+    function GetMemoryOrder: Integer;
     procedure SetModified(aValue: Boolean);
     procedure SetInternalModified(aValue: Boolean);
     function GetCountedRecordCount: Cardinal;
@@ -148,6 +150,10 @@ type
       read GetModified
       write SetModified;
 
+    property MemoryOrder: Integer
+      read GetMemoryOrder
+      write SetMemoryOrder;
+
     property InternalModified: Boolean
       write SetInternalModified;
   end;
@@ -156,6 +162,7 @@ type
   protected
     eContainer       : Pointer{IwbContainer}; //weak reference
     eSortOrder       : Integer;
+    eMemoryOrder     : Integer;
     eStates          : TwbElementStates;
     eSortKey         : string;
     eExtendedSortKey : string;
@@ -181,6 +188,8 @@ type
     procedure InvalidateParentStorage; virtual;
     function Reached: Boolean; virtual;
     function LinksToParent: Boolean; virtual;
+    procedure SetMemoryOrder(aIndex: Integer);
+    function GetMemoryOrder: Integer;
 
     function BeginDecide: Boolean;
     procedure EndDecide;
@@ -357,6 +366,7 @@ type
     function GetElementCount: Integer;
     function GetElementByName(const aName: string): IwbElement;
     function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
+    function GetElementByMemoryOrder(aSortOrder: Integer): IwbElement;
     function GetElementBySignature(const aSignature: TwbSignature): IwbElement;
     function GetElementBySortOrder(aSortOrder: Integer): IwbElement;
     function GetAdditionalElementCount: Integer; virtual;
@@ -1098,6 +1108,7 @@ type
 
   TwbUnion = class(TwbValueBase)
   protected
+    function CompareExchangeFormID(aOldFormID: Cardinal; aNewFormID: Cardinal): Boolean; override;
     procedure Init; override;
     procedure Reset; override;
 
@@ -3111,6 +3122,19 @@ begin
   Exclude(eStates, esUnsaved);
 end;
 
+type
+  TwbUnionFlags = (
+    ufNone,
+    ufArray,
+    ufSortedArray,
+    ufFlags
+  );
+
+function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
+procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
+function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
+function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Boolean; forward;
+
 { TwbContainer }
 
 function TwbContainer.Add(const aName: string; aSilent: Boolean): IwbElement;
@@ -3145,13 +3169,42 @@ end;
 procedure TwbContainer.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 var
   i: Integer;
+  j: Integer;
+  k: Integer;
+  l: Integer;
+  m: Integer;
+  n: Integer;
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit;
-  for i := Low(cntElements) to High(cntElements) do
-    cntElements[i].InformStorage(aBasePtr, aEndPtr);
+  m := Low(Integer);
+  for l := Low(cntElements) to High(cntElements) do
+    if cntElements[l].MemoryOrder > m then
+      m := cntElements[l].MemoryOrder;
+  for l := Low(cntElements) to High(cntElements) do
+    if cntElements[l].MemoryOrder = Low(Integer) then begin
+      cntElements[l].MemoryOrder := m + 1;
+      Inc(m);
+    end;
+  m := Low(Integer);
+  k := Low(Integer);
+  for i := Low(cntElements) to High(cntElements) do begin
+    n := k;
+    j := High(Integer);
+    for l := Low(cntElements) to High(cntElements) do begin
+      if (m<cntElements[l].MemoryOrder) and (cntElements[l].MemoryOrder < j) then begin
+        k := l;
+        j := cntElements[l].MemoryOrder;
+      end;
+    end;
+    Assert(k <= High(cntElements));
+    Assert(k >= Low(cntElements));
+    Assert(k <> n);
+    m := cntElements[k].MemoryOrder;
+    cntElements[k].InformStorage(aBasePtr, aEndPtr);
+  end;
 end;
 
 procedure TwbContainer.InsertElement(aPosition: Integer; const aElement: IwbElement);
@@ -3213,10 +3266,14 @@ end;
 
 function TwbContainer.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
-  Container : IwbContainer;
-  i         : Integer;
-  SelfRef   : IwbContainerElementRef;
-  ValueDef  : IwbValueDef;
+  Container  : IwbContainer;
+  uContainer : IwbContainer;
+  sElement   : IwbElement;
+  BasePtr    : Pointer;
+  i          : Integer;
+  SelfRef    : IwbContainerElementRef;
+  ValueDef   : IwbValueDef;
+  UnionDef   : IwbUnionDef;
 begin
   Result := nil;
 
@@ -3246,9 +3303,23 @@ begin
             ValueDef.CanAssign(aIndex, aElement.ValueDef)
           )
         ) then
-          for i := Low(cntElements) to High(cntElements) do
-            if (not aOnlySK or GetIsInSK(cntElements[i].SortOrder)) and cntElements[i].CanAssign(Low(Integer), Container.Elements[i], False) then
-              cntElements[i].Assign(Low(Integer), Container.Elements[i], aOnlySK);
+          for i := Low(cntElements) to High(cntElements) do begin
+            // if we have a union, we cannot progress until the union has been resolved and its cntElements is populated
+            sElement := Container.Elements[i];
+            if (sElement.ElementType = etUnion) and
+               Supports(cntElements[i], IwbContainer, uContainer) and
+               Supports(uContainer.GetValueDef, IwbUnionDef, UnionDef) then begin
+              if (uContainer.ElementCount = 1) then begin // At this point it is usually the default choice set by default
+                uContainer.RemoveElement(0);
+              end;
+              if (uContainer.ElementCount = 0) then begin
+                BasePtr := nil;
+                UnionDoInit(UnionDef, uContainer, BasePtr, nil);
+              end;
+            end;
+            if (not aOnlySK or GetIsInSK(cntElements[i].SortOrder)) and cntElements[i].CanAssign(Low(Integer), sElement, False) then
+              cntElements[i].Assign(Low(Integer), sElement, aOnlySK);
+          end;
     end;
 
   end;
@@ -3410,6 +3481,8 @@ begin
 end;
 
 procedure TwbContainer.DoInit;
+var
+  i: Integer;
 begin
   if csInit in cntStates then
     Exit;
@@ -3419,6 +3492,8 @@ begin
     Include(cntStates, csInitOnce);
     Init;
     Include(cntStates, csInitDone);
+    for i := Low(cntElements) to High(cntElements) do
+      cntElements[i].MemoryOrder := i;
   finally
     Exclude(cntStates, csInitializing);
   end;
@@ -3610,6 +3685,22 @@ begin
     Result := Element
   else if Supports(Element, IwbContainerElementRef, Container) then
     Result := Container.ElementByPath[Path];
+end;
+
+function TwbContainer.GetElementByMemoryOrder(aSortOrder: Integer): IwbElement;
+var
+  i: integer;
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit;
+  Dec(aSortOrder, GetAdditionalElementCount);
+  Result := nil;
+  for i := Low(cntElements) to High(cntElements) do
+    if cntElements[i].MemoryOrder = aSortOrder then begin
+      Result := IInterface(cntElements[i]) as IwbElement;
+      Exit;
+    end;
 end;
 
 function TwbContainer.GetElementBySignature(const aSignature: TwbSignature): IwbElement;
@@ -3907,12 +3998,43 @@ end;
 procedure TwbContainer.MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 var
   i: Integer;
+  j: Integer;
+  k: Integer;
+  l: Integer;
+  m: Integer;
+  n: Integer;
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
+
   DoInit;
-  for i := Low(cntElements) to High(cntElements) do
-    cntElements[i].MergeStorage(aBasePtr, aEndPtr);
+  m := Low(Integer);
+  for l := Low(cntElements) to High(cntElements) do
+    if cntElements[l].MemoryOrder > m then
+      m := cntElements[l].MemoryOrder;
+  for l := Low(cntElements) to High(cntElements) do
+    if cntElements[l].MemoryOrder = Low(Integer) then begin
+      cntElements[l].MemoryOrder := m + 1;
+      Inc(m);
+    end;
+  m := Low(Integer);
+  k := Low(Integer);
+  for i := Low(cntElements) to High(cntElements) do begin
+    n := k;
+    j := High(Integer);
+    for l := Low(cntElements) to High(cntElements) do begin
+      if (m<cntElements[l].MemoryOrder) and (cntElements[l].MemoryOrder < j) then begin
+        k := l;
+        j := cntElements[l].MemoryOrder;
+      end;
+    end;
+    Assert(k <= High(cntElements));
+    Assert(k >= Low(cntElements));
+    if k = n then
+      Assert(k <> n);
+    m := cntElements[k].MemoryOrder;
+    cntElements[k].MergeStorage(aBasePtr, aEndPtr);
+  end;
 end;
 
 procedure TwbContainer.MoveElementDown(const aElement: IwbElement);
@@ -4606,6 +4728,7 @@ begin
       with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
+        SetMemoryOrder(Low(Integer));
         _AddRef; _Release;
       end;
 
@@ -4659,6 +4782,7 @@ begin
 
             if Assigned(Element) then try
               Element.SortOrder := aIndex;
+              Element.MemoryOrder := aIndex;
               if IsAdd and Assigned(aElement) then
                 Element.Assign(Low(Integer), aElement, aOnlySK)
               else if IsAddChild then
@@ -4930,7 +5054,7 @@ begin
   Exclude(mrStates, mrsBaseRecordChecked);
 
   Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
-  if Result and (csRefsBuild in cntStates) then
+  if {Result and} (csRefsBuild in cntStates) then // if you changed to an already existing FormID
     BuildRef;
 end;
 
@@ -5095,6 +5219,7 @@ begin
   with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
     Include(dcFlags, dcfDontSave);
     SetSortOrder(-1);
+    SetMemoryOrder(Low(Integer));
     _AddRef; _Release;
   end;
 end;
@@ -5162,6 +5287,7 @@ begin
     with TwbRecordHeaderStruct.Create(Self, CurrentPtr, Pointer( Cardinal(CurrentPtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
+      SetMemoryOrder(Low(Integer));
       _AddRef; _Release;
     end;
   end;
@@ -5285,6 +5411,7 @@ begin
     end;
 
     (cntElements[CurrentRecPos] as IwbElementInternal).SetSortOrder(CurrentDefPos);
+    (cntElements[CurrentRecPos] as IwbElementInternal).SetMemoryOrder(CurrentDefPos);
     Include(PresentRecords, CurrentDefPos);
     LastElementForMember[CurrentDefPos] := cntElements[CurrentRecPos];
 
@@ -7347,6 +7474,7 @@ begin
       with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
+        SetMemoryOrder(Low(Integer));
         _AddRef; _Release;
       end;
 
@@ -8473,19 +8601,6 @@ begin
   RequestStorageChange(BasePtr, EndPtr, GetDataSize);
   SetToDefault;
 end;
-
-type
-  TwbUnionFlags = (
-    ufNone,
-    ufArray,
-    ufSortedArray,
-    ufFlags
-  );
-
-function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
-procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
-function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
-function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Boolean; forward;
 
 destructor TwbSubRecord.Destroy;
 begin
@@ -10143,6 +10258,7 @@ begin
   case grStruct.grsGroupType of
     0: begin
       SetSortOrder(wbGetGroupOrder(PwbSignature(@grStruct.grsLabel)^));
+      SetMemoryOrder(wbGetGroupOrder(PwbSignature(@grStruct.grsLabel)^));
     end;
   end;
 
@@ -10701,6 +10817,7 @@ end;
 constructor TwbElement.Create(const aContainer: IwbContainer);
 begin
   eSortOrder := High(Integer);
+  eMemoryOrder := Low(Integer);
   inherited Create;
   if Assigned(aContainer) then
     aContainer.AddElement(Self);
@@ -10921,6 +11038,11 @@ end;
 function TwbElement.GetLinksTo: IwbElement;
 begin
   Result := nil;
+end;
+
+function TwbElement.GetMemoryOrder: Integer;
+begin
+  Result := eMemoryOrder;
 end;
 
 function TwbElement.GetModified: Boolean;
@@ -11299,6 +11421,11 @@ begin
   finally
     wbEndInternalEdit;
   end;
+end;
+
+procedure TwbElement.SetMemoryOrder(aIndex: Integer);
+begin
+  eMemoryOrder := aIndex;
 end;
 
 procedure TwbElement.SetModified(aValue: Boolean);
@@ -11777,6 +11904,7 @@ begin
       end;
 
       Element.SetSortOrder(CurrentDefPos);
+      Element.SetMemoryOrder(CurrentDefPos);
 
     end;
   end;
@@ -11967,6 +12095,7 @@ begin
       end;
 
       Element.SetSortOrder(CurrentDefPos);
+      Element.SetMemoryOrder(CurrentDefPos);
 
       Inc(CurrentDefPos);
     end;
@@ -12298,13 +12427,14 @@ begin
       dcDataEndPtr := @EmptyPtr;
       Exclude(dcFlags, dcfStorageInvalid);
       if ArrayDef.ElementCount < 0 then
-        case ArrayDef.ElementCount of
+        if aElement.DataSize > 0 then begin
+          RequestStorageChange(p, q, aElement.DataSize);
+        end else case ArrayDef.ElementCount of
           -1: RequestStorageChange(p, q, 4);
           -2: RequestStorageChange(p, q, 2);
         else
           RequestStorageChange(p, q, 1);
         end;
-
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);
@@ -12529,8 +12659,10 @@ begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
       end;
-    end else
+    end else begin
       Element.SetSortOrder(i);
+      Element.SetMemoryOrder(i);
+    end;
   end;
 
   StructDef.AfterLoad(aContainer);
@@ -12596,10 +12728,28 @@ begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
       end;
-    end else
+    end else begin
       Element.SetSortOrder(0);
+      Element.SetMemoryOrder(0);
+    end;
 
   UnionDef.AfterLoad(aContainer);
+end;
+
+function TwbUnion.CompareExchangeFormID(aOldFormID, aNewFormID: Cardinal): Boolean;
+var
+  SelfRef     : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    Result := ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) or Result;
 end;
 
 function TwbUnion.GetElementType: TwbElementType;
@@ -13019,6 +13169,7 @@ begin
   fIndex      := aIndex;
   inherited Create(aContainer);
   SetSortOrder(aIndex);
+  SetMemoryOrder(aIndex);
 end;
 
 function TwbFlag.GetConflictPriority: TwbConflictPriority;
@@ -13317,8 +13468,10 @@ begin
       if not (dcfDontMerge in dcFlags) then
         Inc(Cardinal(aBasePtr), SizeNeeded);
     end else
-      if Cardinal(aBasePtr) - Cardinal(BasePtr) <> SizeNeeded then
-        Assert( Cardinal(aBasePtr) - Cardinal(BasePtr) = SizeNeeded);
+      if Cardinal(aBasePtr) - Cardinal(BasePtr) > SizeNeeded then // we overwrote something
+        Assert( Cardinal(aBasePtr) - Cardinal(BasePtr) = SizeNeeded)
+      else // Adjust size of data not initialized yet
+        Cardinal(aBasePtr) := Cardinal(BasePtr) + SizeNeeded;
 
     dcDataBasePtr := BasePtr;
     dcDataEndPtr := aBasePtr;

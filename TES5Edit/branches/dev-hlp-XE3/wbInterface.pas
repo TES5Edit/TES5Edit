@@ -42,7 +42,7 @@ threadvar
 
 var
   wbDisplayLoadOrderFormID : Boolean;
-  wbSimpleLAND : Boolean = False;
+  wbSimpleRecords : Boolean = True;
   wbFixupPGRD : Boolean = False;
   wbIKnowWhatImDoing : Boolean = False;
   wbHideUnused : Boolean{} = True;{}
@@ -351,6 +351,8 @@ type
     function GetReferenceFile: IwbFile;
     function GetSortOrder: Integer;
     procedure SetSortOrder(aSortOrder: Integer);
+    function GetMemoryOrder: Integer;
+    procedure SetMemoryOrder(aSortOrder: Integer);
     procedure BuildRef;
     function CompareExchangeFormID(aOldFormID: Cardinal; aNewFormID: Cardinal): Boolean;
     function GetEditValue: string;
@@ -477,6 +479,9 @@ type
     property ValueDef: IwbValueDef
       read GetValueDef;
 
+    property MemoryOrder: Integer
+      read GetMemoryOrder
+      write SetMemoryOrder;
     property SortPriority: Integer
       read GetSortPriority;
     property SortOrder: Integer
@@ -526,6 +531,7 @@ type
     function GetElementCount: Integer;
     function GetElementByName(const aName: string): IwbElement;
     function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
+    function GetElementByMemoryOrder(aSortOrder: Integer): IwbElement;
     function GetElementBySignature(const aSignature: TwbSignature): IwbElement;
     function GetElementBySortOrder(aSortOrder: Integer): IwbElement;
     function GetAdditionalElementCount: Integer;
@@ -591,6 +597,8 @@ type
       read GetElementByName;
     property RecordBySignature[const aSignature: TwbSignature]: IwbRecord
       read GetRecordBySignature;
+    property ElementByMemoryOrder[aSortOrder: Integer]: IwbElement
+      read GetElementByMemoryOrder;
     property ElementBySignature[const aSignature: TwbSignature]: IwbElement
       read GetElementBySignature;
     property ElementBySortOrder[aSortOrder: Integer]: IwbElement
@@ -6438,7 +6446,7 @@ var
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
-    if Assigned(theContainer) and (Pos(aName, theContainer.Name)<>1) then begin
+    if Assigned(theContainer) and (not SameText(aName, theContainer.Name)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
@@ -6463,7 +6471,7 @@ begin
         FindOurself(Container, noName);
     if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
         Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
-    if not Assigned(Container) then begin
+    if not Assigned(Container) and (not SameText(noName, 'Unused') or not wbHideUnused) then begin
       Result := High(Integer);
       Exit;
     end;
@@ -7925,7 +7933,7 @@ var
 begin
   Result := False;
 
-  if (aInt < $800) or (aInt = $FFFFFFFF) and IsValid('ACVA') then
+  if {(aInt < $800) or} (aInt = $FFFFFFFF) and IsValid('ACVA') then // Allows source to be reserverd as this does NOT change the record itself
     Exit;
 
   if Assigned(aElement) then begin
@@ -8651,7 +8659,7 @@ begin
         Inc(i);
       '0'..'9', 'a'..'f', 'A'..'F': begin
         if i = Length(aValue) then
-          raise Exception.Create('Unexpected and of value');
+          raise Exception.Create('Unexpected end of value. Single digit in hexadecimal pair');
         if aValue[Succ(i)] in ['0'..'9', 'a'..'f', 'A'..'F'] then begin
           Bytes[j] := StrToInt('$'+Copy(aValue,i, 2));
           Inc(j);
@@ -9275,7 +9283,7 @@ end;
 
 function TwbValueDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
-  Result := ToString(aBasePtr, aEndPtr, aElement);
+  Result := UpperCase(ToString(aBasePtr, aEndPtr, aElement));
 end;
 
 { TwbSubRecordStructSKDef }
@@ -10602,16 +10610,14 @@ end;
 
 { TwbStringKCDef }
 
-function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement; aExtended: Boolean): string;
+function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
 
 { TwbLStringKCDef }
 
-function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement; aExtended: Boolean): string;
+function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
