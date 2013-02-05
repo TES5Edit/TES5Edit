@@ -12032,12 +12032,12 @@ begin
         49, 'Falkreath Castle',
         50, 'Falkreath Capitol',
         51, 'Dawnstar Castle',
-        52, 'Dawnstar Capitol'
+        52, 'Dawnstar Capitol',
         53, 'DLC02 - Temple of Miraak',
-        54, 'DLC02 - Raven Rock'
-        55, 'DLC02 - Beast Stone'
-        56, 'DLC02 - Tel Mithryn'
-        57, 'DLC02 - To Skyrim'
+        54, 'DLC02 - Raven Rock',
+        55, 'DLC02 - Beast Stone',
+        56, 'DLC02 - Tel Mithryn',
+        57, 'DLC02 - To Skyrim',
         58, 'DLC02 - To Solstheim'
       ]), cpNormal, True)
     ], []),
