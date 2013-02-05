@@ -1,0 +1,3 @@
+Compatibility Patch For your Mod
+
+Hello I have been working on plugins that were made before the Construction Kit or, Plugins with out of order subrecords and invalid FormIDs. I have made a patch to [url="http://skyrim.nexusmods.com/mods/26230"]your mod[/url]. Please contact me if you would like to host the file yourself. I can remove the mod. Also, if I have offended you, please contact me in a PM before moderating the file.

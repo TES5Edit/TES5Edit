@@ -8153,7 +8153,8 @@ begin
           wbInteger('Index/Node', itU32)
         ]), -1)
       ]),
-      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
+      //wbArray(NVSI, 'Unknown', wbFormID('NAVI Unk FormID'))
+      //wbArray(NVSI, 'Unknown', wbByteArray('Unknown', 4))
       wbUnknown(NVSI)
     ]);
 
@@ -8187,6 +8188,12 @@ begin
         , -1),
         wbUnknown
       ]),
+      //wbArray(ONAM, 'Unknown', wbFormID('NAVM Unk FormID'))
+      //wbArray(PNAM, 'Unknown', wbFormID('NAVM Unk FormID'))
+      //wbArray(NNAM, 'Unknown', wbFormID('NAVM Unk FormID'))
+      //wbArray(ONAM, 'Unknown', wbByteArray('Unknown', 4))
+      //wbArray(PNAM, 'Unknown', wbByteArray('Unknown', 4))
+      //wbArray(NNAM, 'Unknown', wbByteArray('Unknown', 4))
       wbUnknown(ONAM),
       wbUnknown(PNAM),
       wbUnknown(NNAM)
