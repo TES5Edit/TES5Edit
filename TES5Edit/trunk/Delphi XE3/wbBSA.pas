@@ -261,8 +261,8 @@ var
   i, j   : Integer;
   OldPos : Int64;
   NewPos : Int64;
-  FileCount : Cardinal;
-  totalFolderNameLength : Cardinal;
+//  FileCount : Cardinal;
+//  totalFolderNameLength : Cardinal;
   totalFileNameLength : Cardinal;
 begin
   if bfStream.ReadSignature <> 'BSA' then
@@ -275,8 +275,8 @@ begin
     raise Exception.Create(bfFileName + ' has unexpected Offset: ' + IntToStr(bfOffset) );
   bfFlags := bfStream.ReadCardinal;
   SetLength(bfFolders, bfStream.ReadCardinal);
-  FileCount := bfStream.ReadCardinal; //skip file count
-  totalFolderNameLength := bfStream.ReadCardinal; //skip totalFolderNameLength
+  {FileCount := } bfStream.ReadCardinal; //skip file count
+  {totalFolderNameLength := } bfStream.ReadCardinal; //skip totalFolderNameLength
   totalFileNameLength := bfStream.ReadCardinal; //skip totalFileNameLength
   bfFileFlags := bfStream.ReadCardinal;
   OldPos := bfStream.Position;

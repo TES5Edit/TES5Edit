@@ -61,7 +61,7 @@ begin
   if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType = 0 then begin
-        if Assigned(DumpGroups) and not DumpGroups.Find(TwbSignature(GroupRecord.GroupLabel), i) then
+        if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
         ReportProgress('Dumping: ' + GroupRecord.Name);
       end;
@@ -87,7 +87,7 @@ begin
   if Assigned(DumpGroups) and (aElement.ElementType = etGroupRecord) then
     if Supports(aElement, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType = 0 then
-        if not DumpGroups.Find(TwbSignature(GroupRecord.GroupLabel), i) then
+        if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
   Name := aElement.Name;
@@ -198,30 +198,38 @@ begin
   wbMoreInfoForUnknown := False;
 
   try
-    if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
-      wbGameMode := gmTES5;
-      wbAppName := 'TES5';
-      wbGameName := 'Skyrim';
-      wbLoadBSAs := true;
-      DefineTES5;
-    end else if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+    if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
-      wbLoadBSAs := false;
+      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineFNV;
     end else if wbFindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
-      wbLoadBSAs := false;
+      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineFO3;
+    end else if wbFindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+      WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
+      Exit;
+      wbGameMode := gmTES3;
+      wbAppName := 'TES3';
+      wbGameName := 'Morrowind';
+      wbLoadBSAs := false;
+      DefineTES3;
     end else if wbFindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
-      wbLoadBSAs := false;
+      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineTES4;
+    end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+      wbGameMode := gmTES5;
+      wbAppName := 'TES5';
+      wbGameName := 'Skyrim';
+      wbLoadBSAs := true;
+      DefineTES5;
     end else begin
       WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
       Exit;
@@ -251,38 +259,28 @@ begin
       DumpGroups.Sort;
     end;
 
+    wbLoadAllBSAs := wbFindCmdLineSwitch('allbsa');
+
     if wbFindCmdLineSwitch('more') then
       wbMoreInfoForUnknown:= True
     else
       wbMoreInfoForUnknown:= False;
 
     if wbFindCmdLineParam('xr', s) then
-      RecordToSkip.CommaText := s
-    else begin
-//    RecordToSkip.Add('LAND');
-//    RecordToSkip.Add('REGN');
-//    RecordToSkip.Add('PGRD');
-//      RecordToSkip.Add('SCEN');
-//      RecordToSkip.Add('PACK');
-//      RecordToSkip.Add('PERK');
-//      RecordToSkip.Add('NAVI');
-//      RecordToSkip.Add('CELL');
-//      RecordToSkip.Add('WRLD');
-//      RecordToSkip.Add('REFR');
-    end;
+      RecordToSkip.CommaText := s;
 
     if wbFindCmdLineParam('xg', s) then
       GroupToSkip.CommaText := s
-    else begin
-//    GroupToSkip.Add('LAND');
-//    GroupToSkip.Add('REGN');
-//    GroupToSkip.Add('PGRD');
-//      GroupToSkip.Add('SCEN');
-//      GroupToSkip.Add('PACK');
-//      GroupToSkip.Add('PERK');
-//      GroupToSkip.Add('NAVI');
-//      GroupToSkip.Add('CELL');
-//      GroupToSkip.Add('WRLD');
+    else if wbFindCmdLineSwitch('xbloat') then begin
+      GroupToSkip.Add('LAND');
+      GroupToSkip.Add('REGN');
+      GroupToSkip.Add('PGRD');
+      GroupToSkip.Add('SCEN');
+      GroupToSkip.Add('PACK');
+      GroupToSkip.Add('PERK');
+      GroupToSkip.Add('NAVI');
+      GroupToSkip.Add('CELL');
+      GroupToSkip.Add('WRLD');
     end;
 
     if wbFindCmdLineParam('l', s) and (wbGameMode = gmTES5) then
@@ -314,18 +312,19 @@ begin
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
-      WriteLn(ErrOutput, '             ', 'decompressed and processed.');
-//      WriteLn(ErrOutput, '             ', 'decompressed and processed. When not specified the');
-//      WriteLn(ErrOutput, '             ', 'following default value applies:');
-//      WriteLn(ErrOutput, '             ', 'REFR');
+      WriteLn(ErrOutput, '             ', '  decompressed and processed.');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-//      WriteLn(ErrOutput, '             ', 'When not specified the following default value applies:');
-//      WriteLn(ErrOutput, '             ', 'SCEN, PACK, PERK, NAVI, CELL, WRLD');
+      WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
+      WriteLn(ErrOutput, '             ', '  -xg:LAND, REGN, PGRD, SCEN, PACK, PERK, NAVI, CELL, WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
-      WriteLn(ErrOutput, '             ', 'Default language is English');
+      WriteLn(ErrOutput, '             ', '  Default language is English');
+      WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
+      WriteLn(ErrOutput, '             ', ' (plugin.bsa and plugin - interface.bsa)');
+      WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
+      WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
       WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
@@ -337,6 +336,13 @@ begin
       wbContainerHandler := wbCreateContainerHandler;
 
     StartTime := Now;
+    ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename);
+    if Assigned(Dumpgroups) then
+      ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
+    if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
+      ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
+    if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
+      ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
 
     if wbLoadBSAs then begin
       DataPath := ExtractFilePath(s);
@@ -345,15 +351,37 @@ begin
       Masters.Add(ExtractFileName(s));
 
       for i := 0 to Masters.Count - 1 do begin
-        if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-          s2 := ChangeFileExt(Masters[i], '');
-          if FindFirst(DataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
-            repeat
-              ReportProgress('[' + F.Name + '] Loading Resources.');
-              wbContainerHandler.AddBSA(DataPath + F.Name);
-            until FindNext(F) <> 0;
-          finally
-            SysUtils.FindClose(F);
+        if wbLoadAllBSAs then begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+            s2 := ChangeFileExt(Masters[i], '');
+            if FindFirst(DataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
+              repeat
+                ReportProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(DataPath + F.Name);
+              until FindNext(F) <> 0;
+            finally
+              SysUtils.FindClose(F);
+            end;
+          end;
+        end else begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+            s2 := ChangeFileExt(Masters[i], '');
+            if FindFirst(DataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
+              repeat
+                ReportProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(DataPath + F.Name);
+              until FindNext(F) <> 0;
+            finally
+              SysUtils.FindClose(F);
+            end;
+            if FindFirst(DataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
+              repeat
+                ReportProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(DataPath + F.Name);
+              until FindNext(F) <> 0;
+            finally
+              SysUtils.FindClose(F);
+            end;
           end;
         end;
       end;

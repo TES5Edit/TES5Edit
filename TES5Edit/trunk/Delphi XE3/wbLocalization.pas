@@ -130,12 +130,15 @@ begin
   try
     fs := TFileStream.Create(aFileName, fmOpenRead or fmShareDenyNone);
     GetMem(Buffer, fs.Size);
-    fs.ReadBuffer(Buffer^, fs.Size);
-    fStream.WriteBuffer(Buffer^, fs.Size);
-    fStream.Position := 0;
-    ReadDirectory(fStream);
+    try
+      fs.ReadBuffer(Buffer^, fs.Size);
+      fStream.WriteBuffer(Buffer^, fs.Size);
+      fStream.Position := 0;
+      ReadDirectory(fStream);
+    finally
+      if Assigned(Buffer) then FreeMem(Buffer);
+    end;
   finally
-    if Assigned(Buffer) then FreeMem(Buffer);
     FreeAndNil(fs);
     FreeAndNil(fStream);
   end;
@@ -221,7 +224,7 @@ const z: Byte = 0;
 var
   s: RawByteString;
 begin
-  s := aString;
+  s := RawByteString(aString);
   aStream.WriteBuffer(s[1], length(s));
   aStream.WriteBuffer(z, SizeOf(z));
 end;
@@ -232,7 +235,7 @@ var
   s: RawByteString;
   l: Cardinal;
 begin
-  s := aString;
+  s := RawByteString(aString);
   l := length(s) + SizeOf(z);
   aStream.WriteBuffer(l, SizeOf(Cardinal));
   aStream.WriteBuffer(s[1], length(s));
@@ -485,7 +488,7 @@ procedure TwbLocalizationHandler.LoadForFile(aFileName: string);
 var
   ls: TwbLStringType;
   s: string;
-  i: integer;
+//  i: integer;
   res: TDynResources;
 begin
   if not Assigned(wbContainerHandler) then
