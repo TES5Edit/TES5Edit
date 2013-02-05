@@ -32,10 +32,10 @@ uses
   wbLocalization,
   Direct3D9,
   D3DX9,
-{$IFDEF DX3D}
+  {$IFDEF DX3D}
   RenderUnit,
   DXUT,
-{$ENDIF}
+  {$ENDIF}
   JvComponentBase,
   JvInterpreter;
 

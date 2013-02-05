@@ -83,7 +83,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.28.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDup by ElminsterEU;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <Debugger_RunParams>-dg:WRLD P:\local\Steam\SteamApps\common\skyrim\Data\Dawnguard.esm</Debugger_RunParams>
+        <Debugger_RunParams></Debugger_RunParams>
         <DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
     </PropertyGroup>
     <ItemGroup>

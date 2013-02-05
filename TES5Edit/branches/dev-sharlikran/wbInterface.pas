@@ -8873,7 +8873,7 @@ begin
         Inc(i);
       '0'..'9', 'a'..'f', 'A'..'F': begin
         if i = Length(aValue) then
-          raise Exception.Create('Unexpected and of value');
+          raise Exception.Create('Unexpected end of value. Single digit in hexadecimal pair');
         if aValue[Succ(i)] in ['0'..'9', 'a'..'f', 'A'..'F'] then begin
           Bytes[j] := StrToInt('$'+Copy(aValue,i, 2));
           Inc(j);

@@ -120,6 +120,7 @@
         <DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
+			<DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
         <DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;LiteVersion;$(DCC_Define)</DCC_Define>
         <DCC_MapFile>3</DCC_MapFile>
         <ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
@@ -236,11 +237,10 @@
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName">xxEdit from ElminsterEU</VersionInfoKeys>
-                    <VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.0.28</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\10.0\Bpl\VirtualTreesD17.bpl">Virtual Treeview runtime package</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>

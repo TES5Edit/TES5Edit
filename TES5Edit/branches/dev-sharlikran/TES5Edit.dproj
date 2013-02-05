@@ -82,6 +82,22 @@
 			<DCCReference Include="frmWaitForm.pas">
 				<Form>frmWait</Form>
 			</DCCReference>
+			<DCCReference Include="frmLocalizationForm.pas">
+				<Form>frmLocalization</Form>
+			</DCCReference>
+			<DCCReference Include="frmLocalizePluginForm.pas">
+				<Form>frmLocalizePlugin</Form>
+			</DCCReference>
+			<DCCReference Include="wbScriptAdapter.pas"/>
+			<DCCReference Include="frmScriptForm.pas">
+				<Form>frmScript</Form>
+			</DCCReference>
+			<DCCReference Include="frmOptionsForm.pas">
+				<Form>frmOptions</Form>
+			</DCCReference>
+			<DCCReference Include="frmLogAnalyzerForm.pas">
+				<Form>frmLogAnalyzer</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

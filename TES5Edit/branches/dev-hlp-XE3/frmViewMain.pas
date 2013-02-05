@@ -20,7 +20,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, ShellAPI, pngimage,
+  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.jpeg,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
@@ -799,7 +799,7 @@ uses
   cxVTEditors,
   {$ENDIF}
   ShlObj, Registry, StrUtils, Types,
-  //UITypes,
+  UITypes,
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
@@ -2848,6 +2848,13 @@ begin
     PluginsFileName := ParamStr(1);
     if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
       PluginsFileName := '';
+    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
+      if ParamCount >= 2 then begin
+        TheGameIniFileName := ParamStr(2);
+        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
+          TheGameIniFileName := '';
+      end;
+    end;
   end;
 
   if PluginsFileName = '' then begin

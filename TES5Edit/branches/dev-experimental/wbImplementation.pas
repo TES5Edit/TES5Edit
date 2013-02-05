@@ -67,9 +67,9 @@ var
 
 function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
-  MainRecord                  : IwbMainRecord;
-  Container                   : IwbContainer;
-  Target                      : IwbElement;
+  MainRecord  : IwbMainRecord;
+  Container   : IwbContainer;
+  Target      : IwbElement;
 begin
   Container := aSource.Container;
   if Assigned(Container) then begin

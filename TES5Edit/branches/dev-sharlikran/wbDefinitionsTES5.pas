@@ -665,7 +665,7 @@ var
   wbWardStateEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
-  wbHeadPartIndexEnum: IwbEnumDef;
+//  wbHeadPartIndexEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
@@ -2538,7 +2538,7 @@ type
 
 const
   {>> N means New, V means verified that the name has not changed <<<}
-  wbCTDAFunctions : array[0..391] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..394] of TCTDAFunction = (
 {N} (Index:   0; Name: 'GetWantBlocking'),
 {V} (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
 {V} (Index:   5; Name: 'GetLocked'),
@@ -2930,7 +2930,10 @@ const
 {N} (Index: 724; Name: 'EffectWasDualCast'),
 {N} (Index: 725; Name: 'GetKnockedStateEnum'),
 {N} (Index: 726; Name: 'DoesNotExist'),
-{N} (Index: 731; Name: 'CanFlyHere')
+{N} (Index: 730; Name: 'IsOnFlyingMount'),
+{N} (Index: 731; Name: 'CanFlyHere'),
+{N} (Index: 732; Name: 'IsFlyingMountPatrolQueud'),
+{N} (Index: 733; Name: 'IsFlyingMountFastTravelling')
   );
 var
   wbCTDAFunctionEditInfo: string;
@@ -5080,7 +5083,8 @@ begin
     {87} 'Mod Ingredients Harvested',
     {88} 'Mod Spell Range (Target Loc.)',
     {89} 'Mod Potions Created',
-    {90} 'Mod Lockpicking Key Reward Chance'
+    {90} 'Mod Lockpicking Key Reward Chance',
+    {91} 'Allow Mount Actor'
   ]);
 
   wbLocationEnum := wbEnum([

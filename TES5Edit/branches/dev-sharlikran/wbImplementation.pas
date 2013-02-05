@@ -67,9 +67,9 @@ var
 
 function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
-  MainRecord                  : IwbMainRecord;
-  Container                   : IwbContainer;
-  Target                      : IwbElement;
+  MainRecord  : IwbMainRecord;
+  Container   : IwbContainer;
+  Target      : IwbElement;
 begin
   Container := aSource.Container;
   if Assigned(Container) then begin
@@ -13883,6 +13883,7 @@ end;
 function TwbValueBase.GetDisplayName: string;
 var
   Resolved: IwbValueDef;
+  Container: IwbDataContainer;
 begin
   Resolved := Resolve(vbValueDef, GetDataBasePtr, GetDataEndPtr, Self);
   if (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
@@ -13893,8 +13894,8 @@ begin
   if (Resolved.DefType in dtNonValues) and (wbDumpOffset>1) then
     Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
       ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
-  if (Resolved.DefType = dtArray) and (wbDumpOffset>0) then
-    Result := Result + ' [' + IntToStr((Self as TwbArray).GetElementCount) + ']';
+  if (Resolved.DefType = dtArray) and (wbDumpOffset>0) and Supports(Self, IwbDataContainer, Container) then
+    Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
 end;

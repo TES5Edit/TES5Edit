@@ -10904,7 +10904,6 @@ Type
   end;
 
   TwbCheckComboEditLink = class(TcheckComboEditLink)
-//    procedure SetBounds(R: TRect); override;
   end;
 
 procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
@@ -10994,20 +10993,6 @@ begin
         EditInfoCache := Element.EditInfo;
       end;
       CheckComboLink.PickList.CommaText := EditInfoCache;
-//      with TStringList.Create do try
-//        CommaText := Element.EditInfo;
-//        for i := 0 to Pred(Count) do
-//          CheckComboLink.Properties.Items.AddCheckItem(Strings[i]);
-//        CheckComboLink.Properties.DropDownRows := Count;
-//        if CheckComboLink.Properties.DropDownRows > 32 then
-//          CheckComboLink.Properties.DropDownRows := 32;
-//      finally
-//        Free;
-//      end;
-//      CheckComboLink.Properties.Delimiter := ', ';
-//      CheckComboLink.Properties.ShowEmptyText := False;
-////      CheckComboLink.Properties.DropDownSizeable := True;
-//      CheckComboLink.Properties.DropDownAutoWidth := True;
     end;
   {$ENDIF}
   end;
@@ -13168,22 +13153,5 @@ begin  // Let's show from 1 to 32 lines to pick from
 
   inherited;
 end;
-
-{ TwbChkComboEditLink }
-
-//procedure TwbCheckComboEditLink.SetBounds(R: TRect);
-////var
-////  H : Integer;
-//begin  // Let's show from 1 to 32 lines to pick from
-////  H := PickList.Count;
-////  if H > 32 then
-////    H := 32
-////   else if H < 1 then
-////     H := 1;
-////  H := H * TComboBox(FEdit).Font.Height ;
-////  R.Bottom := R.Bottom + Abs(H);
-//
-//  inherited;
-//end;
 
 end.

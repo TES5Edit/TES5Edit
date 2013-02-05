@@ -665,7 +665,7 @@ var
   wbWardStateEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
-  wbHeadPartIndexEnum: IwbEnumDef;
+//  wbHeadPartIndexEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
@@ -2538,7 +2538,7 @@ type
 
 const
   {>> N means New, V means verified that the name has not changed <<<}
-  wbCTDAFunctions : array[0..391] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..394] of TCTDAFunction = (
 {N} (Index:   0; Name: 'GetWantBlocking'),
 {V} (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
 {V} (Index:   5; Name: 'GetLocked'),
@@ -2930,7 +2930,10 @@ const
 {N} (Index: 724; Name: 'EffectWasDualCast'),
 {N} (Index: 725; Name: 'GetKnockedStateEnum'),
 {N} (Index: 726; Name: 'DoesNotExist'),
-{N} (Index: 731; Name: 'CanFlyHere')
+{N} (Index: 730; Name: 'IsOnFlyingMount'),
+{N} (Index: 731; Name: 'CanFlyHere'),
+{N} (Index: 732; Name: 'IsFlyingMountPatrolQueud'),
+{N} (Index: 733; Name: 'IsFlyingMountFastTravelling')
   );
 var
   wbCTDAFunctionEditInfo: string;
@@ -5080,7 +5083,8 @@ begin
     {87} 'Mod Ingredients Harvested',
     {88} 'Mod Spell Range (Target Loc.)',
     {89} 'Mod Potions Created',
-    {90} 'Mod Lockpicking Key Reward Chance'
+    {90} 'Mod Lockpicking Key Reward Chance',
+    {91} 'Allow Mount Actor'
   ]);
 
   wbLocationEnum := wbEnum([
@@ -12992,7 +12996,7 @@ begin
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
     if Assigned(Element) then begin
-      Result := Element.NativeValue and $3F;
+      Result := 1 + (Element.NativeValue and $3F);
     end;
     if Result > 0 then Result := 0;
   end;
@@ -13042,6 +13046,32 @@ begin
   end;
 end;
 
+function ChangedFormRemainingDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+  Total : Integer;
+  FCType : Integer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Changed Form', aElement);
+
+  Total := ChangedFormDataCounter(aBasePtr, aEndPtr, aElement);
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      FCType := Element.NativeValue and $3F;
+      case FCType of
+        8: begin
+             if ChangedFlag01Decider(aBasePtr, aEndPtr, aElement) = 1 then Dec(Total, SizeOf(Cardinal));
+           end;
+      end;
+    end;
+  end;
+  Result := Total;
+end;
+
 function SkipCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := BytesToSkip;
@@ -13077,6 +13107,36 @@ begin
   end;
 end;
 
+function DataLengthRemainderCounter(aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aModifier: Integer = 0): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+  EasC      : IwbDataContainer;
+  Origin    : Cardinal;
+  Consumed   : Cardinal;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement(aName, aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['DataLength'];
+    if Assigned(Element) and Supports(Element, IwbDataContainer, EasC) then begin
+      Result := Element.NativeValue + SizeOf(Cardinal);
+      Origin := Cardinal(EasC.DataBasePtr);
+      Element := Container.ElementByName['Remainder'];
+      if Assigned(Element) and Supports(Element, IwbDataContainer, EasC) then begin
+        Consumed := Cardinal(EasC.DataBasePtr) - Origin;
+        Result := Result - Consumed;
+        case aModifier of
+          1: Result := Result div BytesToGroup;
+          2: Result := Result mod BytesToGroup;
+        end;
+      end;
+    end;
+  end;
+end;
+
 function UnknownTypeDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := DataLengthCounter('Unknown Type', aBasePtr, aEndPtr, aElement);
@@ -13092,19 +13152,19 @@ begin
   Result := DataLengthCounter('Unknown Type', aBasePtr, aEndPtr, aElement, 2);
 end;
 
-function PapyrusDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function PapyrusDataRemainderCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := DataLengthCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement);
+  Result := DataLengthRemainderCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement);
 end;
 
 function PapyrusDataQuartetCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := DataLengthCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement, 1);
+  Result := DataLengthRemainderCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement, 1);
 end;
 
 function PapyrusDataQuartetRemainderCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := DataLengthCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement, 2);
+  Result := DataLengthRemainderCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement, 2);
 end;
 
 function StringTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -13319,14 +13379,14 @@ begin
       wbStruct('Papyrus Struct', [
         wbInteger('DataLength', itU32)
         ,wbInteger('Unknown', itU16, wbDumpInteger)
-//        ,wbInteger('String Table Count', itU32)
-//        ,wbArray('Strings Table', wbLenString('String', 2), StringTableCounter)
-//        ,wbInteger('Count1', itU32, wbDumpInteger)
-//        ,wbInteger('CountX', itU32, wbDumpInteger)
-//        ,wbArray('Unknown1 array', wbUnknown1, Unknown1Counter)
-//        ,wbArray('Unknown2 list', wbUnknown2, Unknown2AsListCounter)
-//        ,wbByteArray('Unknown', PapyrusDataCounter)  // Single line
-        ,wbArray('Unknown Data', wbByteArray('Unknown', BytesToGroup), PapyrusDataQuartetCounter) // per Quartet
+        ,wbInteger('String Table Count', itU32)
+        ,wbArray('Strings Table', wbLenString('String', 2), StringTableCounter)
+        ,wbInteger('Count1', itU32, wbDumpInteger)
+        ,wbInteger('CountX', itU32, wbDumpInteger)
+        ,wbArray('Unknown1 array', wbUnknown1, Unknown1Counter)
+        ,wbArray('Unknown2 list', wbUnknown2, Unknown2AsListCounter)
+//        ,wbByteArray('Remainder', PapyrusDataRemainderCounter)  // Single line
+        ,wbArray('Remainder', wbByteArray('Unknown', BytesToGroup), PapyrusDataQuartetCounter) // per Quartet
         ,wbByteArray('Unknown', PapyrusDataQuartetRemainderCounter)
       ]),
       wbArray('Anim Objects', wbInteger('', itU8), -2),
