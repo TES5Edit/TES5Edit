@@ -110,6 +110,9 @@ function Darker(Color: TColor; Amount: Double = 0.5): TColor;
 
 implementation
 
+uses
+  UITypes;
+
 function RGBTripleToCol( ACol: TRGBTriple ): TColor;
   begin
 	result := ACol.rgbtRed * 65536;
