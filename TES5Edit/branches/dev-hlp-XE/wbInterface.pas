@@ -1361,6 +1361,7 @@ type
   IwbResourceContainer = interface(IInterface)
     ['{023EA9C4-19B5-4587-B298-559EEF8F224E}']
     function OpenResource(const aFileName: string): IwbResource;
+    function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
   end;
 
@@ -1388,6 +1389,7 @@ type
     procedure AddBSA(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
+    function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
   end;
 

@@ -7,7 +7,8 @@ uses
   SysUtils,
   Variants,
   wbInterface,
-  wbImplementation;
+  wbImplementation,
+  wbBSA;
 
 implementation
 

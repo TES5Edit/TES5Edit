@@ -4353,37 +4353,6 @@ begin
   end;
 end;
 
-{>>>Needs Revision for Skyrim<<<}
-//procedure wbINFOAfterLoad(const aElement: IwbElement);
-//var
-//  Container  : IwbContainerElementRef;
-//  MainRecord : IwbMainRecord;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    if not Supports(aElement, IwbMainRecord, MainRecord) then
-//      Exit;
-//
-//    if MainRecord.IsDeleted then
-//      Exit;
-//
-//    if (Integer(Container.ElementNativeValues['DATA\Flags 1']) and $80) = 0 then
-//      Container.RemoveElement('DNAM');
-//
-//    Container.RemoveElement('SNDD');
-//
-//    if Container.ElementNativeValues['DATA\Type'] = 3 {Persuasion} then
-//      Container.ElementNativeValues['DATA\Type'] := 0 {Topic};
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
-
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
@@ -4421,17 +4390,6 @@ begin
       if Container.ElementExists['XCLW'] then
         Container.ElementEditValues['XCLW'] := '-2147483648.000000';
     end;
-
-//    if not Container.ElementExists['XCLW'] then begin
-//      Container.Add('XCLW', True);
-//      Container.ElementEditValues['XCLW'] := '-2147483648.000000';
-//    end;
-//
-//    if not HasWater then
-//      Container.ElementEditValues['XCLW'] := '-2147483648.000000';
-
-//    if IsInterior then
-//      Container.ElementEditValues['XCLW'] := '0.000000';
 
     if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
       for i:= Pred(Container2.ElementCount) downto 0 do

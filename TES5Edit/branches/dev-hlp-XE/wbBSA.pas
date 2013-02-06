@@ -51,7 +51,7 @@ type
     procedure AddBSA(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
-
+    function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
   end;
 
@@ -89,6 +89,7 @@ type
   protected
     {---IwbResourceContainer---}
     function OpenResource(const aFileName: string): IwbResource;
+    function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBSAFile---}
@@ -123,6 +124,7 @@ type
   protected
     {---IwbResourceContainer---}
     function OpenResource(const aFileName: string): IwbResource;
+    function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbFolder---}
@@ -180,6 +182,18 @@ begin
       Inc(j);
   end;
   SetLength(Result, j);
+end;
+
+function TwbContainerHandler.ResourceExists(const aFileName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := Low(chContainers) to High(chContainers) do
+    if chContainers[i].ResourceExists(aFileName) then begin
+      Result := True;
+      Exit;
+    end;
 end;
 
 function TwbContainerHandler.ResolveHash(const aHash: Int64): TDynStrings;
@@ -254,6 +268,19 @@ begin
       if Map.Find(lName, j) then
         with Files[Integer(Map.Objects[j])] do
           Result := TwbBSAResource.Create(Self, Size, Offset);
+end;
+
+function TwbBSAFile.ResourceExists(const aFileName: string): Boolean;
+var
+  lPath, lName: string;
+  i: Integer;
+begin
+  Result := False;
+  lPath := ExtractFilePath(aFileName);
+  SetLength(lPath, Pred(Length(lPath)));
+  lName := ExtractFileName(aFileName);
+  if bfFolderMap.Find(lPath, i) then
+    Result := bfFolders[Integer(bfFolderMap.Objects[i])].Map.IndexOf(lName) <> -1;
 end;
 
 procedure TwbBSAFile.ReadDirectory;
@@ -431,9 +458,14 @@ function TwbFolder.OpenResource(const aFileName: string): IwbResource;
 var
   s: string;
 begin
-  s := fPath+aFileName;
+  s := fPath + aFileName;
   if FileExists(s) then
     Result := TwbFolderResource.Create(Self, s);
+end;
+
+function TwbFolder.ResourceExists(const aFileName: string): Boolean;
+begin
+  Result := FileExists(fPath + aFileName);
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);
