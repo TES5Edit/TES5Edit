@@ -53,6 +53,8 @@ type
     function OpenResource(const aFileName: string): TDynResources;
     function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
+    function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
   TwbBSAFileRec = record
@@ -88,6 +90,7 @@ type
     procedure ReadDirectory;
   protected
     {---IwbResourceContainer---}
+    function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
@@ -123,6 +126,7 @@ type
     fPath : string;
   protected
     {---IwbResourceContainer---}
+    function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
@@ -205,10 +209,55 @@ begin
     chContainers[i].ResolveHash(aHash, Result);
 end;
 
+function TwbContainerHandler.ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := Low(chContainers) to High(chContainers) do
+    if chContainers[i].ResourceExists(aFileName) then begin
+      Inc(Result);
+      if Assigned(aContainers) then
+        aContainers.Add(chContainers[i].Name);
+    end;
+end;
+
+procedure TwbContainerHandler.ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+var
+  aDir: string;
+  aData: TBytes;
+  res: TDynResources;
+begin
+  if aPathOut = '' then
+    raise Exception.Create('Destination path is not specified');
+
+  res := wbContainerHandler.OpenResource(aFileName);
+
+  if Length(res) = 0 then
+    raise Exception.Create('Resource doesn''t exist');
+
+  if (aContainerIndex = -1) or (aContainerIndex > High(res)) or (aContainerIndex < Low(res)) then
+    aContainerIndex := High(res);
+  aData := res[aContainerIndex].GetData;
+
+  aDir := IncludeTrailingPathDelimiter(aPathOut) + ExtractFilePath(aFileName);
+  if not DirectoryExists(aDir) then
+    if not ForceDirectories(aDir) then
+      raise Exception.Create('Unable to create destination directory ' + aDir);
+
+  // exception handled outside
+  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do begin
+    WriteBuffer(aData[0], length(aData));
+    Free;
+  end;
+end;
+
+
 { TwbBSAFile }
 
 constructor TwbBSAFile.Create(const aFileName: string);
 begin
+  bfFileName := aFileName;
   bfStream := TwbFileStream.Create(aFileName, fmOpenRead or fmShareDenyWrite);
   ReadDirectory;
 end;
@@ -252,6 +301,11 @@ end;
 function TwbBSAFile.GetFileName: string;
 begin
   Result := bfFileName;
+end;
+
+function TwbBSAFile.GetName: string;
+begin
+  Result := GetFileName;
 end;
 
 function TwbBSAFile.OpenResource(const aFileName: string): IwbResource;
@@ -452,6 +506,11 @@ end;
 function TwbFolder.GetPathName: string;
 begin
   Result := fPath;
+end;
+
+function TwbFolder.GetName: string;
+begin
+  Result := GetPathName;
 end;
 
 function TwbFolder.OpenResource(const aFileName: string): IwbResource;

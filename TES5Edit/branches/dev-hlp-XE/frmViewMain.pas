@@ -3236,6 +3236,7 @@ begin
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
@@ -5355,6 +5356,10 @@ var
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
     Value := wbGameMode;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
+    Value := wbLoadBSAs;
     Done := True;
   end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
@@ -9059,6 +9064,7 @@ begin
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSimpleRecords.Checked := wbSimpleRecords;
+    edColumnWidth.Text := IntToStr(wbColumnWidth);
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9077,6 +9083,7 @@ begin
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
+    wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9092,6 +9099,7 @@ begin
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
+    Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -10131,7 +10139,7 @@ begin
           Clear;
           with Add do begin
             Text := '';
-            Width := 200;
+            Width := wbColumnWidth;
             Options := Options - [coDraggable];
             Options := Options + [coFixed];
           end;
@@ -10139,7 +10147,7 @@ begin
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
-              Width := 200;
+              Width := wbColumnWidth;
               MinWidth := 5;
               MaxWidth := 3000;
               Options := Options - [coAllowclick, coDraggable];
@@ -10245,7 +10253,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
               Options := Options - [coDraggable];
               Options := Options + [coFixed];
             end;
@@ -10253,7 +10261,7 @@ begin
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
-                Width := 200;
+                Width := wbColumnWidth;
                 MinWidth := 5;
                 MaxWidth := 3000;
                 Options := Options - [coAllowclick, coDraggable];
@@ -10288,7 +10296,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
             end;
           finally
             EndUpdate;
@@ -10537,7 +10545,7 @@ begin
     end else if mniViewColumnWidthFitText.Checked then
       vstView.Header.AutoFitColumns(False)
     else begin
-      ColWidth := 200;
+      ColWidth := wbColumnWidth;
       for i := 0 to Pred(vstView.Header.Columns.Count) do
         vstView.Header.Columns[i].Width := ColWidth;
     end;
@@ -11231,7 +11239,7 @@ begin
       Exit;
     if Column = 0 then
       if Shift = [ssShift] then begin
-        ColWidth := 200;
+        ColWidth := wbColumnWidth;
         for i := 0 to Pred(vstView.Header.Columns.Count) do
           vstView.Header.Columns[i].Width := ColWidth;
       end else case Button of
