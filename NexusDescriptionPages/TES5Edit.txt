@@ -1,0 +1,166 @@
+[color=#00BFFF]TES5Edit 3.0.28 EXPERIMENTAL by ElminsterAU. Updated for Skyrim by Hlp, Zilav and Sharlikran.[/color]
+
+[color=#FF0000]This is the seventh update of TES5Edit and is still being updated.  The current version provides support for Dragonborn DLC, improved routines for cleaning Master Files and Plugins, as well as better VMAD support.  However, it should still be considered experimental.  Make backups of your plugins and report any issues in the official Bethesda thread.  If you have never used TES5Edit, Wiki Pages and basic videos are available.
+
+With the release of 3.0.28 we need to remind you that we only support version 1.8 of Skyrim and version 3.0.28 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
+
+TES5EDIT: Merge Patches
+[youtube]9pi5u2qwdxg[/youtube]
+
+Cleaning Plugins and Master Files: Updated for Dragonborn
+[youtube]Flh0EMn-CbQ[/youtube]
+
+Other Informative Videos can be found on my [url=http://www.youtube.com/user/Sharlikran/videos?flow=list&view=0&sort=dd]YouTube chanel[/url].
+
+[color=#FF0000]Note: These are all a work in Progress.[/color]
+
+[color=#00BFFF]Updates on CK Wiki Pages:[/color]
+[list]
+[*] [url=http://www.creationkit.com/Category:TES5Edit]TES5Edit[/url]
+[*] [url=http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit]TES5Edit Cleaning Guide[/url]
+[*] [url=http://www.creationkit.com/Skyrim_TES5Edit_Mod_Cleaning_Tutorial]TES5Edit Mod Cleaning Tutorial[/url]
+[*] [url=http://www.creationkit.com/Skyrim_Dirty_Plugins_List]TES5Edit Skyrim Dirty Plugins List[/url]
+[/list]
+
+[url=http://forums.bethsoft.com/topic/1440522-relz-tes5edit/]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
+[url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
+
+[color=#00BFFF]Important DirectX Information:[/color]
+
+If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  [url=http://www.microsoft.com/en-us/download/details.aspx?id=8109]DirectX End-User Runtimes (June 2010)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes (March 2008)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url].  (make sure to install it after unpacking it)
+
+[color=#00BFFF]Future of TES5Edit:[/color]
+
+We appreciate all the thanks and support from the community.  Hlp recently volunteered and was responsible for the additional updates to the VMAD routines.  Although they look good please keep backups of your plugins and report any errors with VMAD.  Zilav has some updates planed that will improve the Check for Errors routine so that it includes checking for assets.  The additional function will check for meshes, textures, pex scripts, seq files (if needed), and will search BSA files as well.  This will help end users check to see if all required assets are present.  When files are missing especially scripts, that can lead to undetected issues, malfunctions with the plugin, and CTDs.
+
+Although we welcome suggestions for improving TES5Edit automation is not one of them.  We do not plan on adding an automated way to clean multiple plugins or access to TES5Edit from the command line.  Currently cleaning a plugin involves indexing over a million references at times.  When only the required plugins are loaded then the cleaning is accurate.  If unnecessary plugins are involved those become part of the index and could cause the plugin to lose important and required data.  We understand the need for unattended automation at times.  However, without human intervention too many issues during the cleaning process would go unnoticed and make troubleshooting game issues related to plugins even more difficult then it already is.
+
+As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  Editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls may be possible.  However, please create your own separate thread apart from the official Bethesda developmental thread for TES5Edit.
+
+[color=#00BFFF]Trouble shooting plugins:[/color]
+
+Detecting issues with plugins is a big concern.  Nobody wants to start their game over due to constant crashes to desktop.  Detecting issues with plugins is very difficult and is unique depending on the other plugins in your load order.  Recently I had two plugins that I felt were not related to the cause of my own crash to desktop while in the character creation menu.  However, after uninstalling those plugins I was able to create a new character and experience uninterrupted game play.  I know many of you look to the TES5Edit development team for guidance but we are not modders.  We rarely use the Construction Kit unless we need to test the data in the records of the plugins.  As noted by FlaFlada (slightly revised) who posted on my YouTube channel: The main points if having issues are 1. Dirty mods. 2. Leveled list issues. 3. Improper mod placement.  The solutions are 1.Clean all mods except Skyrim.esm and Unofficial patches using TES5Edit. 2. Let BOSS sort your mods. 3. make a bashed patch using Wrye Bash.  And in this order: Update mods, activate plugins, BOSS sort mods, clean mods, create patches with TES5Edit, delete duplicate records in any user created patches already handled by Wrye Bash, drag bashed patch BELOW additional user created patches, rebuild Bash Patch. If issues persist contact mod makers.
+
+Contacting the mod authors is probably the last thing you should do after encountering an issue.  Unfortunately it's the first thing most people do.  As authors of TES5Edit we understand that there may be a lot of information to absorb for new users but give it time.  It took us time to inform ourselves about everything so you can't expect to understand it in a day.  I myself still look to the community and modders for advice and information to make sure I provide the most accurate guidance and information.  Telling us or a mod author that you can't read walls of text you can't comprehend doesn't help you at all when asking for help.  Most authors don't have the time to compile compatibility lists of plugins and list in detail how to manage your load order.  Questions like, "Is this updated for Skyrim 1.8?", "Is this compatible with [Insert Plugin Here]?", are easily answered by reading the documentation (if provided) or reading the description page.  I myself will be referring people more and more to community based resources, videos, and documentation so that I can work more directly with improving TES5Edit, updating Wrye Bash, updating plugins for Skyrim, and helping the BOSS team when possible.  For that reason I will be increasingly less understanding when it comes to questions that have been asked and answered before.
+
+[color=#00BFFF]Previous versions such as FO3Edit, FNVEdit, TES4Edit:[/color]
+
+We understand that sometimes updates to programs break things.  Please use the updates with caution.  However, please use them and then report issues so we can improve the program.  Our goal is to make all versions as bug free as possible and introduce new features that are useful for the modding community for all the Bethesda games this utility supports.
+
+[color=#00BFFF]TES5Edit Updates:[/color]
+
+[color=#FF0000]With each new version of TES5Edit you may want to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.[/color]
+
+[color=#00BFFF]Version 3.0.28 contains the following changes:[/color]
+
+- [TES5] Papyrus (VMAD subrecord) support and other misc record updates including Dragonborn DLC
+- [TES5] "Next Object ID" error when copying records
+- Text fields in records are case sensitive when matching
+- Ability to change references to FormID < 800h
+- Changeable conflict colors and default column width in options
+- "Simple records" option for concise displaying of LAND, NAVM and NAVI records (excluding references). On by default to speed up xEdit, customizable in options
+- Improved scripting functions, new demo scripts
+
+[color=#00BFFF]Version 3.0.27 contains the following changes:[/color]
+
+- [TES5] Updated dialog subtypes for patch 1.8
+- Localize/delocalize utf8 strings. Translation is disabled, highly recommended to use StrEdit or other specialized tools instead
+- Search by FormID/EditorID skips hidden elements
+
+
+[color=#00BFFF]Version 3.0.26 contains the following changes:[/color]
+
+- 3.0.26 includes the changes in 3.0.25
+- TES5Edit 3.0.25 was removed from Nexus because of potential issues caused by converting BODT to BOD2.  Sorry if that version caused any issues for anyone.
+- [TES5] BODT is unchanged (Caused issues with Dawnguard.esm)
+- [TES5] Fixed bug in RACE with sorted biped object names. If you modified race records with previous versions, drag & drop biped object names from master to restore them.
+- Additional internal functions accessible from scripts
+- New demo scripts in the Edit Scripts Folder
+- Install the Edit Scripts folder in the same place as the xxxEdit.exe.
+
+[color=#00BFFF]Version 3.0.25 contains the following changes:[/color]
+
+- [TES5] Impact data set IPDS is now sorted
+- [TES5] Added DEST data to ALCH (for "Destructible bottles")
+- [TES5] BODT subrecord is autoreplaced with BOD2 in ARMA, ARMO and RACE records to conform CK 1.8 format
+- [TES5] Additional decoding in WRLD and RACE for new data saved with CK 1.8
+- [TES5] Added back records to Merged Patch (removed in 3.0.24) but only when the winning record has no scripts
+- [FNV] Updated missing INFO flags
+- [TES4] Fixed error when copying SPEL record
+- Pascal-based scripting system and "Apply Script" menu (check available demo scripts on how to)
+- "Options" menu
+- "Analyze Log" menu, currently supports
+  * Skyrim papyrus log
+  * Oblivion RuntimeScriptProfiler log http://www.oblivion.nexusmods.com/mods/41863
+- Moved several not so often used menus to the "Other" submenu (Build ref/reachable, Merged Parch, Seq File, Localization, etc.)
+- Full expand key modifier changed to ALT
+
+[color=#00BFFF]Version 3.0.24 contains the following changes:[/color]
+
+[color=#FF0000]NOTE Changes to Merged Patch: 3.0.24 of TES5Edit only adds Containers and Leveled Lists to Merged Patches.[/color]
+
+- [TES5] Updated load order handling when plugins.txt is empty and no BOSS info is available
+- [TES5] Fixed event name definition in QUST
+- [TES5] CELL water level fixup for better conflicts detection
+- [TES5] Autoremoving legacy RNAMs from WRLD; empty keywords from NPC_, ARMO, AMMO, WEAP, ALCH, MISC
+- [TES5] Removed NPC_, ARMO, AMMO, WEAP records from Merged Patch (unsafe to copy possible scripts to a new plugin)
+- [FO3] No sorting of DIAL groups
+- [FO3/FNV] Fixed record definition for ragdolls which crashed game after cleaning several DLCs
+- Copy "Compare to" selected file to the game's data folder if it is not there
+- Improved registry handling on x64 systems
+- Hold CTRL key when expanding a node for full expand
+
+[color=#00BFFF]Version 3.0.23 contains the following changes:[/color]
+
+- [TES5] Merged patch updated for Skyrim, currently it merges:
+  * Leveled NPCs, Items, Spells
+  * NPC: Items, Spells, Head Parts, Factions
+  * Race: Hairs, Eyes, Spells
+  * Containers
+  * Relations
+  * Form Lists
+  * Keywords on: Armor, Weapon, Ammo, NPC
+- [TES5/FNV/FO3] When performing UDR there will be a warning message for deleted NavMeshes.
+- [TES5] Updated record definitions.
+  * BPDT was sorted by a localized name which is inconsistent for different languages (now sorted by a node name)
+  * NPC's tints are now sorted by tint index for better conflicts detection
+  * QUST aliases are no longer sorted by index
+  * QUST stages are now sorted by stage index
+  * Improved NavMeshes (thanks to Divstator)
+- [TES5] FaceFX phonemes where empty after copying RACE record.
+- [TES5] Fixed bugs when copying RACE and QUST (empty model was created for RACE; QUST location aliases were turning into ref ones).
+- [TES5] Create start-enabled quests sequence SEQ file (you can select several files at once).
+- [TES5] Improved error checking.
+- [FNV] CHAL record was missing some challenge types from Dead Money DLC.
+- [FNV] Disabled DIAL sorting, was causing errors when copying INFO records.
+- No autosaves when "you know what you are doing".
+- Compare with external tool option in Edit window.
+- "Apply Filter for Cleaning" menu. Note that xEdit saves filter settings when you press OK button in filter window, so if you clean plugin and exit the program, your filter settings will be preserved.
+- Filter option for deleted records.
+- Saving messages to [TES5/FNV/FO3/TES4]Edit_log.txt upon exit.
+- Fixed minor bug when Edit can't find game's folder. If your registry settings is invalid due to a Steam bug and Edit is unable to find your game, put it in the game's root folder where the game executable file is (Oblivion.exe, TESV.exe, etc).
+- Reason: The game's Registry entry is missing. This happens to a lot of people, because Steam likes to remove it whenever the game is updated or its game cache is verified. Run the game's launcher to add the Registry entry back again.
+
+[color=#00BFFF]Version 3.0.22 contains the following changes:[/color]
+
+- Skyrim Support.
+- New exceptions handler.
+- Optional backups in a separate directory.
+- Remember position and state of the main window.
+- Fixed bug when editing with Shift+DblClick.
+- [All] Wrye Bash ghosted plugins (*.esp.ghost) in plugin selection window.
+- [ALL] FLST form list is no longer sorted.
+- [ALL] EDID affects conflict detection.
+- [TES5] Localization editor, plugin localization/delocalization with optional translation.
+- [TES5] -l:language command line switch to chose default localization files.
+- [TES5] Adding missed plugin files from plugins.txt/loadorder.txt to the end of plugins list.
+- [FNV] WeaponModKit IMOD record support for various subrecords.
+- [FNV] PLD2 subrecord is no longer removed in package.
+- [FNV/FO3] Quest stage signed value overflow fix.
+- [Oblivion] Fixed ownership record order in CELL.
+- [Oblivion] Snowy weather definition fix (thanks to Arthmoor).
+
+ToDo List:
+
+Update Miax’s Tome of FO3Edit to be TES5Edit's documentation.
+Update NAVM, NAVI, and their subrecords.

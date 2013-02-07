@@ -82,6 +82,7 @@ Version 3 no longer requires the original mod, and the Eyepatch is  properly ass
 [color=#FF0000]Not Accepting PMs at this time.[/color]
 
 [url=http://skyrim.nexusmods.com/mods/5540]Fortify enchanting necklace[/url] -- jimhsu
+[color=#FF0000]Hosted with permission from author.[/color]
 
 [url=http://skyrim.nexusmods.com/mods/6348]Frostmourne and Lich Kings Armor[/url] -- by jojjo
 [color=#FF0000]Hosted with permission from author.[/color]
@@ -124,6 +125,8 @@ Niire's Compatibility patches:
 
 CaoMengde777's Compatibility Patches:
 [url=http://www.curse.com/mods/skyrim/caos-tools-trade-new-spells]Cao's Tools of the Trade + new spells + Rocket Launcher[/url]
+[url=http://www.curse.com/mods/skyrim/caos-inventory-packs]Cao's Inventory Packs aka Bags of Holding[/url]
+[url=http://www.curse.com/mods/skyrim/caos-perk-ranks-overhaul]Cao's Advanced Perk Ranks[/url]
 
 [url=http://skyrim.nexusmods.com/mods/12553]Dovahkiin Hideout[/url] -- by Shawkab [color=#FF0000]Install only one of the three Dovahkiin Hideout Patches![/color]
 [color=#FFA500]Remove all items before installing[/color]
