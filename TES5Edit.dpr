@@ -19,29 +19,39 @@ program TES5Edit;
 
 uses
   madExcept,
-  wbInit,
   Forms,
   Dialogs,
   SysUtils,
-  wbInterface,
-  wbImplementation,
-  wbDefinitionsTES4,
-  wbDefinitionsFO3,
-  wbDefinitionsFNV,
+  Colors,
+  VirtualTrees in 'VirtualTrees.pas',
+  VTEditors in 'VTEditors.pas',
+  VirtualEditTree in 'VirtualEditTree.pas',
+  {$IFNDEF LiteVersion}
+  cxVTEditors,
+  {$ENDIF}
+  wbInit in 'wbInit.pas',
+  wbBSA in 'wbBSA.pas',
+  wbHelpers in 'wbHelpers.pas',
+  wbScriptAdapter in 'wbScriptAdapter.pas',
+  wbInterface in 'wbInterface.pas',
+  wbImplementation in 'wbImplementation.pas',
+  wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
+  wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
+  wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
   FileSelectFrm in 'FileSelectFrm.pas' {frmFileSelect},
   ViewElementsFrm in 'ViewElementsFrm.pas' {frmViewElements},
   EditWarningFrm in 'EditWarningFrm.pas' {frmEditWarning},
-  wbBSA in 'wbBSA.pas',
-  wbHelpers in 'wbHelpers.pas',
   frmWaitForm in 'frmWaitForm.pas' {frmWait},
   frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization},
   frmLocalizePluginForm in 'frmLocalizePluginForm.pas' {frmLocalizePlugin},
-  wbScriptAdapter in 'wbScriptAdapter.pas',
   frmScriptForm in 'frmScriptForm.pas' {frmScript},
   frmOptionsForm in 'frmOptionsForm.pas' {frmOptions},
-  frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer};
+  frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer},
+  wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas';
 
 {$R *.res}
 

@@ -51,8 +51,10 @@ type
     procedure AddBSA(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
-
+    function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
+    function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
   TwbBSAFileRec = record
@@ -88,7 +90,9 @@ type
     procedure ReadDirectory;
   protected
     {---IwbResourceContainer---}
+    function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
+    function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBSAFile---}
@@ -122,7 +126,9 @@ type
     fPath : string;
   protected
     {---IwbResourceContainer---}
+    function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
+    function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbFolder---}
@@ -182,6 +188,18 @@ begin
   SetLength(Result, j);
 end;
 
+function TwbContainerHandler.ResourceExists(const aFileName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := Low(chContainers) to High(chContainers) do
+    if chContainers[i].ResourceExists(aFileName) then begin
+      Result := True;
+      Exit;
+    end;
+end;
+
 function TwbContainerHandler.ResolveHash(const aHash: Int64): TDynStrings;
 var
   i: Integer;
@@ -191,10 +209,55 @@ begin
     chContainers[i].ResolveHash(aHash, Result);
 end;
 
+function TwbContainerHandler.ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := Low(chContainers) to High(chContainers) do
+    if chContainers[i].ResourceExists(aFileName) then begin
+      Inc(Result);
+      if Assigned(aContainers) then
+        aContainers.Add(chContainers[i].Name);
+    end;
+end;
+
+procedure TwbContainerHandler.ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+var
+  aDir: string;
+  aData: TBytes;
+  res: TDynResources;
+begin
+  if aPathOut = '' then
+    raise Exception.Create('Destination path is not specified');
+
+  res := wbContainerHandler.OpenResource(aFileName);
+
+  if Length(res) = 0 then
+    raise Exception.Create('Resource doesn''t exist');
+
+  if (aContainerIndex = -1) or (aContainerIndex > High(res)) or (aContainerIndex < Low(res)) then
+    aContainerIndex := High(res);
+  aData := res[aContainerIndex].GetData;
+
+  aDir := IncludeTrailingPathDelimiter(aPathOut) + ExtractFilePath(aFileName);
+  if not DirectoryExists(aDir) then
+    if not ForceDirectories(aDir) then
+      raise Exception.Create('Unable to create destination directory ' + aDir);
+
+  // exception handled outside
+  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do begin
+    WriteBuffer(aData[0], length(aData));
+    Free;
+  end;
+end;
+
+
 { TwbBSAFile }
 
 constructor TwbBSAFile.Create(const aFileName: string);
 begin
+  bfFileName := aFileName;
   bfStream := TwbFileStream.Create(aFileName, fmOpenRead or fmShareDenyWrite);
   ReadDirectory;
 end;
@@ -240,6 +303,11 @@ begin
   Result := bfFileName;
 end;
 
+function TwbBSAFile.GetName: string;
+begin
+  Result := GetFileName;
+end;
+
 function TwbBSAFile.OpenResource(const aFileName: string): IwbResource;
 var
   lPath, lName: string;
@@ -256,13 +324,26 @@ begin
           Result := TwbBSAResource.Create(Self, Size, Offset);
 end;
 
+function TwbBSAFile.ResourceExists(const aFileName: string): Boolean;
+var
+  lPath, lName: string;
+  i: Integer;
+begin
+  Result := False;
+  lPath := ExtractFilePath(aFileName);
+  SetLength(lPath, Pred(Length(lPath)));
+  lName := ExtractFileName(aFileName);
+  if bfFolderMap.Find(lPath, i) then
+    Result := bfFolders[Integer(bfFolderMap.Objects[i])].Map.IndexOf(lName) <> -1;
+end;
+
 procedure TwbBSAFile.ReadDirectory;
 var
   i, j   : Integer;
   OldPos : Int64;
   NewPos : Int64;
-  FileCount : Cardinal;
-  totalFolderNameLength : Cardinal;
+//  FileCount : Cardinal;
+//  totalFolderNameLength : Cardinal;
   totalFileNameLength : Cardinal;
 begin
   if bfStream.ReadSignature <> 'BSA' then
@@ -275,8 +356,8 @@ begin
     raise Exception.Create(bfFileName + ' has unexpected Offset: ' + IntToStr(bfOffset) );
   bfFlags := bfStream.ReadCardinal;
   SetLength(bfFolders, bfStream.ReadCardinal);
-  FileCount := bfStream.ReadCardinal; //skip file count
-  totalFolderNameLength := bfStream.ReadCardinal; //skip totalFolderNameLength
+  {FileCount := } bfStream.ReadCardinal; //skip file count
+  {totalFolderNameLength := } bfStream.ReadCardinal; //skip totalFolderNameLength
   totalFileNameLength := bfStream.ReadCardinal; //skip totalFileNameLength
   bfFileFlags := bfStream.ReadCardinal;
   OldPos := bfStream.Position;
@@ -427,13 +508,23 @@ begin
   Result := fPath;
 end;
 
+function TwbFolder.GetName: string;
+begin
+  Result := GetPathName;
+end;
+
 function TwbFolder.OpenResource(const aFileName: string): IwbResource;
 var
   s: string;
 begin
-  s := fPath+aFileName;
+  s := fPath + aFileName;
   if FileExists(s) then
     Result := TwbFolderResource.Create(Self, s);
+end;
+
+function TwbFolder.ResourceExists(const aFileName: string): Boolean;
+begin
+  Result := FileExists(fPath + aFileName);
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);

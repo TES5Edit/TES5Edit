@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 275
+  ClientHeight = 313
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,17 +14,19 @@ object frmOptions: TfrmOptions
   KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    275)
+    313)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 233
+    Height = 265
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
@@ -42,6 +44,13 @@ object frmOptions: TfrmOptions
           'reduce loading time greatly. Otherwise you'#39'll see "no localizati' +
           'on" text everywhere.'
         WordWrap = True
+      end
+      object Label5: TLabel
+        Left = 16
+        Top = 208
+        Width = 64
+        Height = 13
+        Caption = 'Column width'
       end
       object cbIKnow: TCheckBox
         Left = 304
@@ -91,6 +100,21 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = '[FO3/FNV] Sort FLST'
         TabOrder = 5
+      end
+      object cbSimpleRecords: TCheckBox
+        Left = 16
+        Top = 172
+        Width = 281
+        Height = 17
+        Caption = 'Simple records (LAND, NAVI, NAVM). Requires restart.'
+        TabOrder = 6
+      end
+      object edColumnWidth: TEdit
+        Left = 86
+        Top = 204
+        Width = 51
+        Height = 21
+        TabOrder = 7
       end
     end
     object tsCleaning: TTabSheet
@@ -159,10 +183,64 @@ object frmOptions: TfrmOptions
         TabOrder = 6
       end
     end
+    object tsColors: TTabSheet
+      Caption = 'Colors'
+      ImageIndex = 2
+      object Label3: TLabel
+        Left = 16
+        Top = 16
+        Width = 89
+        Height = 13
+        Caption = 'Conflict Color Font'
+      end
+      object Label4: TLabel
+        Left = 16
+        Top = 80
+        Width = 123
+        Height = 13
+        Caption = 'Conflict Color Background'
+      end
+      object clbConflictThis: TColorBox
+        Left = 223
+        Top = 35
+        Width = 114
+        Height = 22
+        Style = [cbStandardColors, cbExtendedColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+        TabOrder = 0
+        OnChange = clbConflictThisChange
+      end
+      object cbConflictThis: TComboBox
+        Left = 16
+        Top = 35
+        Width = 201
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 1
+        OnChange = cbConflictThisChange
+      end
+      object cbConflictAll: TComboBox
+        Left = 16
+        Top = 99
+        Width = 201
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 2
+        OnChange = cbConflictAllChange
+      end
+      object clbConflictAll: TColorBox
+        Left = 223
+        Top = 99
+        Width = 114
+        Height = 22
+        Style = [cbStandardColors, cbExtendedColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+        TabOrder = 3
+        OnChange = clbConflictAllChange
+      end
+    end
   end
   object btnOK: TButton
     Left = 302
-    Top = 242
+    Top = 280
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -172,7 +250,7 @@ object frmOptions: TfrmOptions
   end
   object btnCancel: TButton
     Left = 383
-    Top = 242
+    Top = 280
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

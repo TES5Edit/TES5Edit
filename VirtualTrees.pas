@@ -12302,8 +12302,8 @@ var
   I: TColumnIndex;
   NewWidth: Integer;
   {>>>}
-  OldWidth: Integer;
-  Delta: Integer;
+//  OldWidth: Integer;
+//  Delta: Integer;
   {<<<}
 begin
   Result := False;
