@@ -1,18 +1,14 @@
-  // FormID+prefixed array assertion debug
-  //12226
-  // error 3109 4787 4727 13066 13325 3889
-  // 13132
 unit wbScriptAdapter;
 
 interface
 
 uses
-  Windows,
   Classes,
   SysUtils,
   Variants,
   wbInterface,
-  wbImplementation;
+  wbImplementation,
+  wbBSA;
 
 implementation
 
@@ -33,7 +29,8 @@ uses
   JvInterpreter_Forms,
   JvInterpreter_Graphics,
   JvInterpreter_Menus,
-  JvInterpreter;
+  JvInterpreter,
+  wbScriptAdapterMisc;
 
 { TElement }
 
@@ -879,73 +876,21 @@ begin
 end;
 
 
-{ Missing code }
+{ wbContainerHandler }
 
-procedure Pascal_Inc(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbContainerHandler_ResourceExists(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Inc(Args.Values[0]);
+  Value := wbContainerHandler.ResourceExists(Args.Values[0]);
 end;
 
-procedure Pascal_Dec(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbContainerHandler_ResourceCount(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Dec(Args.Values[0]);
+  Value := wbContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
 end;
 
-procedure TStrings_Read_Delimiter(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := TStrings(Args.Obj).Delimiter;
-end;
-
-procedure TStrings_Write_Delimiter(const Value: Variant; Args: TJvInterpreterArgs);
-begin
-  if length(string(Value)) > 0 then
-    TStrings(Args.Obj).Delimiter := string(Value)[1];
-end;
-
-procedure TStrings_Write_StrictDelimiter(const Value: Variant; Args: TJvInterpreterArgs);
-begin
-  TStrings(Args.Obj).StrictDelimiter := Value;
-end;
-
-procedure TStrings_Read_DelimitedText(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := TStrings(Args.Obj).DelimitedText;
-end;
-
-procedure TStrings_Write_DelimitedText(const Value: Variant; Args: TJvInterpreterArgs);
-begin
-  TStrings(Args.Obj).DelimitedText := Value;
-end;
-
-procedure JvInterpreter_SameText(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := SameText(string(Args.Values[0]), string(Args.Values[1]));
-end;
-
-procedure JvInterpreter_StringReplace(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  rf: TReplaceFlags;
-  f: byte;
-begin
-  f := V2S(Args.Values[2]);
-  if (f and ord(rfReplaceAll)) > 0 then rf := rf + [rfReplaceAll];
-  if (f and ord(rfIgnoreCase)) > 0 then rf := rf + [rfIgnoreCase];
-  Value := StringReplace(Args.Values[0], Args.Values[1], Args.Values[2], rf);
-end;
-
-procedure JvInterpreter_IntToHex64(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := IntToHex64(Args.Values[0], Args.Values[1]);
-end;
-
-procedure JvInterpreter_StrToInt64(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := StrToInt64(Args.Values[0]);
-end;
-
-procedure JvInterpreter_StrToInt64Def(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := StrToInt64Def(Args.Values[0], Args.Values[1]);
+  wbContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
 end;
 
 
@@ -965,12 +910,13 @@ begin
     AddConst(cUnit, 'etSubRecord', ord(etSubRecord));
     AddConst(cUnit, 'etSubRecordStruct', ord(etSubRecordStruct));
     AddConst(cUnit, 'etSubRecordArray', ord(etSubRecordArray));
-    AddConst(cUnit, 'etSubRecordUnion', ord(atSubRecordUnion));
+    AddConst(cUnit, 'etSubRecordUnion', ord(etSubRecordUnion));
     AddConst(cUnit, 'etArray', ord(etArray));
     AddConst(cUnit, 'etStruct', ord(etStruct));
     AddConst(cUnit, 'etValue', ord(etValue));
     AddConst(cUnit, 'etFlag', ord(etFlag));
     AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
+    AddConst(cUnit, 'etUnion', ord(etUnion));
 
     { TwbDefType }
     AddConst(cUnit, 'dtRecord', ord(dtRecord));
@@ -1036,7 +982,7 @@ begin
     AddFunction(cUnit, 'ElementByIndex', IwbContainer_ElementByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'ElementExists', IwbContainer_ElementExists, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'LastElement', IwbContainer_LastElement, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'IndexOf', IwbContainer_LastElement, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'IndexOf', IwbContainer_IndexOf, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'Add', IwbContainer_Add, 3, [varEmpty, varString, varBoolean], varEmpty);
     AddFunction(cUnit, 'AddElement', IwbContainer_AddElement, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'InsertElement', IwbContainer_InsertElement, 3, [varEmpty, varInteger, varEmpty], varEmpty);
@@ -1096,33 +1042,17 @@ begin
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
 
-    // missing funcs from JvInterpreter
-    //AddConst('Windows', 'IDOK', IDOK);
-    AddConst(cUnit, 'rfReplaceAll', Ord(rfReplaceAll));
-    AddConst(cUnit, 'rfIgnoreCase', Ord(rfIgnoreCase));
-    AddConst(cUnit, 'LowInteger', Low(Integer));
-    AddConst(cUnit, 'HighInteger', High(Integer));
-    AddFunction(cUnit, 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
-    AddFunction(cUnit, 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
-    AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
-    AddFunction('SysUtils', 'StringReplace', JvInterpreter_StringReplace, 4, [varString, varString, varString, varEmpty], varEmpty);
-    AddFunction('SysUtils', 'IntToHex64', JvInterpreter_IntToHex64, 2, [varEmpty, varEmpty], varEmpty);
-    AddFunction('SysUtils', 'StrToInt64', JvInterpreter_StrToInt64, 1, [varEmpty], varEmpty);
-    AddFunction('SysUtils', 'StrToInt64Def', JvInterpreter_StrToInt64Def, 2, [varEmpty, varEmpty], varEmpty);
-
-    // add missing JvInterpreter code
-    AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
-    AddSet(TStrings, 'Delimiter', TStrings_Write_Delimiter, 0, [varEmpty]);
-    AddSet(TStrings, 'StrictDelimiter', TStrings_Write_StrictDelimiter, 0, [varEmpty]);
-    AddGet(TStrings, 'DelimitedText', TStrings_Read_DelimitedText, 0, [varEmpty], varEmpty);
-    AddSet(TStrings, 'DelimitedText', TStrings_Write_DelimitedText, 0, [varEmpty]);
-
+    { wbContainerHandler }
+    AddFunction(cUnit, 'ResourceExists', IwbContainerHandler_ResourceExists, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceCount', IwbContainerHandler_ResourceCount, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceCopy', IwbContainerHandler_ResourceCopy, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
 
 procedure Init;
 begin
   RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  wbScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_System.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_SysUtils.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Classes.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);

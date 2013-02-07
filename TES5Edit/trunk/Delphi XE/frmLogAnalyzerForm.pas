@@ -56,7 +56,7 @@ type
     LogEntries: array of TLogEntry;
     LogPlugins: array of TLogEntry;
     ProcessLog: function (const aFileName: String): Boolean of object;
-    function FormIDFromString(s: String): String;
+//    function FormIDFromString(s: String): String;
     function BracketedFormIDFromString(s: String; Brackets: string = '()'): String;
     function RecordByFormID(FormID: Cardinal): IwbMainRecord;
     procedure BuildPluginsList;
@@ -392,20 +392,20 @@ begin
     Result := False;
 end;
 
-function TfrmLogAnalyzer.FormIDFromString(s: String): String;
-var
-  i: integer;
-  f: string;
-begin
-  Result := '';
-  for i := 1 to Length(s) - 7 do begin
-    f := Copy(s, i, 8);
-    if IsHexStr(f) then begin
-      Result := f;
-      Exit;
-    end;
-  end;
-end;
+//function TfrmLogAnalyzer.FormIDFromString(s: String): String;
+//var
+//  i: integer;
+//  f: string;
+//begin
+//  Result := '';
+//  for i := 1 to Length(s) - 7 do begin
+//    f := Copy(s, i, 8);
+//    if IsHexStr(f) then begin
+//      Result := f;
+//      Exit;
+//    end;
+//  end;
+//end;
 
 function TfrmLogAnalyzer.BracketedFormIDFromString(s: String; Brackets: string = '()'): String;
 var
@@ -433,6 +433,8 @@ var
   elem: IwbElement;
 begin
   Result := True;
+  IsError := False;
+  IsWarning := False;
 
   // skip papyrus timestamp
   txt := trim(Copy(aData, 27, Length(aData)));
@@ -645,7 +647,8 @@ begin
     end;
   end;
   // sort plugins by load order
-	QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
+  if Length(LogPlugins) > 0 then
+  	QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
 end;
 
 procedure TfrmLogAnalyzer.btnAnalyzeClick(Sender: TObject);

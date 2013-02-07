@@ -29,6 +29,7 @@ uses
   wbInterface,
   wbImplementation,
   wbDefinitionsTES4,
+  wbDefinitionsTES3,
   wbDefinitionsFO3,
   wbDefinitionsFNV,
   wbDefinitionsTES5;
@@ -95,6 +96,15 @@ begin
     wbVWDInTemporary := True;
     wbLoadBSAs := False;
     DefineFO3;
+  end else if FindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+    ShowMessage('TES3 - Morrowind is not supported yet.');
+    Exit;
+    wbGameMode := gmTES3;
+    wbAppName := 'TES3';
+    wbGameName := 'Morrowind';
+    wbLoadBSAs := False;
+    wbAllowInternalEdit := false;
+    DefineTES3;
   end else if FindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
@@ -117,6 +127,11 @@ begin
     ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
     Exit;
   end;
+
+  if FindCmdLineSwitch('report') then
+    wbReportMode := (DebugHook <> 0);
+  if FindCmdLineSwitch('MoreInfoForIndex') then
+    wbMoreInfoForIndex := true;
 
   if FindCmdLineSwitch('fixup') then
     wbAllowInternalEdit := True
@@ -182,7 +197,7 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := False;
     wbBuildRefs := False;
-  end else if FindCmdLineSwitch('edit') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'Edit.exe') then begin
+  end else if FindCmdLineSwitch('edit') or (Pos('Edit', ExtractFileName(ParamStr(0)))>0) then begin
     wbApplicationTitle := wbAppName + 'Edit ' + VersionString;
     wbEditAllowed := True;
   end else if FindCmdLineSwitch('translate') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'Trans.exe') then begin
@@ -191,6 +206,9 @@ begin
     wbTranslationMode := True;
   end else
     wbDontSave := True;
+  {$IFDEF LiteVersion}
+  wbApplicationTitle := wbApplicationTitle +' Lite';
+  {$ENDIF}
 
   {nxAppDataSubdirVista := wbAppName;
   if wbTranslationMode then
