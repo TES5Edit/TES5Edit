@@ -61,12 +61,12 @@
 		</PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <Manifest_File>None</Manifest_File>
-        <VerInfo_Release>28</VerInfo_Release>
+        <VerInfo_Release>29</VerInfo_Release>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.28.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDup by ElminsterEU;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.29.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDup by ElminsterAU;ProductVersion=3.0.29.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -78,11 +78,11 @@
         <Manifest_File>None</Manifest_File>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
-        <VerInfo_Release>28</VerInfo_Release>
+        <VerInfo_Release>29</VerInfo_Release>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.28.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDup by ElminsterEU;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.29.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.29;Comments=</VerInfo_Keys>
         <Debugger_RunParams></Debugger_RunParams>
 			<DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
 		</PropertyGroup>

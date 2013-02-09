@@ -3161,8 +3161,8 @@ type
     FoundLString            : Integer;
     NotFoundLString         : Integer;
 
-    IsEmpty                : Integer;
-    IsNotEmpty             : Integer;
+    IsEmpty                 : Integer;
+    IsNotEmpty              : Integer;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority : TwbConflictPriority; aRequired: Boolean;
