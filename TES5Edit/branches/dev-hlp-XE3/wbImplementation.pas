@@ -12438,15 +12438,15 @@ begin
           case ArrayDef.ElementCount of
             -1: begin
                   RequestStorageChange(p, q, 4);
-                  PCardinal(q)^ := 0;
+                  PCardinal(p)^ := 0;
                 end;
             -2: begin
                   RequestStorageChange(p, q, 2);
-                  PWord(q)^:= 0;
+                  PWord(p)^:= 0;
                 end
           else
             RequestStorageChange(p, q, 1);
-            PByte(q)^ := 0;
+            PByte(p)^ := 0;
           end;
       NotifyChanged;
 
