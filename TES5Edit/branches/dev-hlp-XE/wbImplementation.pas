@@ -12438,11 +12438,11 @@ begin
           case ArrayDef.ElementCount of
             -1: begin
                   RequestStorageChange(p, q, 4);
-                  PInt64(q)^ := 0;
+                  PCardinal(q)^ := 0;
                 end;
             -2: begin
                   RequestStorageChange(p, q, 2);
-                  PCardinal(q)^:= 0;
+                  PWord(q)^:= 0;
                 end
           else
             RequestStorageChange(p, q, 1);
