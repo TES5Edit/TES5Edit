@@ -1360,8 +1360,13 @@ type
 
   IwbResourceContainer = interface(IInterface)
     ['{023EA9C4-19B5-4587-B298-559EEF8F224E}']
+    function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
+    function ResourceExists(const aFileName: string): Boolean;
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
+
+    property Name: string
+      read GetName;
   end;
 
   IwbFolder = interface(IwbResourceContainer)
@@ -1389,6 +1394,9 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     function ResolveHash(const aHash: Int64): TDynStrings;
+    function ResourceExists(const aFileName: string): Boolean;
+    function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
 function wbRecord(const aSignature      : TwbSignature;
@@ -2124,6 +2132,7 @@ var
   wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
   wbLoaderError      : Boolean;
+  wbColumnWidth      : Integer = 200;
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;

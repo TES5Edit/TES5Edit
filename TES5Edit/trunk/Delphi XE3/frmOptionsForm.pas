@@ -36,6 +36,8 @@ type
     cbConflictAll: TComboBox;
     clbConflictAll: TColorBox;
     cbSimpleRecords: TCheckBox;
+    Label5: TLabel;
+    edColumnWidth: TEdit;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
