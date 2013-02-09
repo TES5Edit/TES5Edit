@@ -49,7 +49,7 @@ begin
   // here we shoud check for availability of NewFormID, but it will generate error and abort anyway if that happens
   // ...
 
-  AddMessage(Format('Changing FormID from [%s] to [%s] on %s', [IntToHex64(OldFormID, 8), IntToHex64(NewFormID, 8), Name(e)]));
+  //AddMessage(Format('Changing FormID from [%s] to [%s] on %s', [IntToHex64(OldFormID, 8), IntToHex64(NewFormID, 8), Name(e)]));
   
   // the record in question might originate from master file
   m := MasterOrSelf(e);

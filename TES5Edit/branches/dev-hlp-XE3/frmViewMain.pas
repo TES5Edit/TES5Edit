@@ -32,10 +32,10 @@ uses
   wbLocalization,
   Direct3D9,
   D3DX9,
-{$IFDEF DX3D}
+  {$IFDEF DX3D}
   RenderUnit,
   DXUT,
-{$ENDIF}
+  {$ENDIF}
   JvComponentBase,
   JvInterpreter;
 
@@ -2848,13 +2848,6 @@ begin
     PluginsFileName := ParamStr(1);
     if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
       PluginsFileName := '';
-    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
-      if ParamCount >= 2 then begin
-        TheGameIniFileName := ParamStr(2);
-        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
-          TheGameIniFileName := '';
-      end;
-    end;
   end;
 
   if PluginsFileName = '' then begin
@@ -3243,6 +3236,7 @@ begin
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
@@ -5362,6 +5356,10 @@ var
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
     Value := wbGameMode;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
+    Value := wbLoadBSAs;
     Done := True;
   end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
@@ -9066,6 +9064,7 @@ begin
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSimpleRecords.Checked := wbSimpleRecords;
+    edColumnWidth.Text := IntToStr(wbColumnWidth);
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9084,6 +9083,7 @@ begin
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
+    wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9099,6 +9099,7 @@ begin
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
+    Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -10138,7 +10139,7 @@ begin
           Clear;
           with Add do begin
             Text := '';
-            Width := 200;
+            Width := wbColumnWidth;
             Options := Options - [coDraggable];
             Options := Options + [coFixed];
           end;
@@ -10146,7 +10147,7 @@ begin
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
-              Width := 200;
+              Width := wbColumnWidth;
               MinWidth := 5;
               MaxWidth := 3000;
               Options := Options - [coAllowclick, coDraggable];
@@ -10252,7 +10253,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
               Options := Options - [coDraggable];
               Options := Options + [coFixed];
             end;
@@ -10260,7 +10261,7 @@ begin
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
-                Width := 200;
+                Width := wbColumnWidth;
                 MinWidth := 5;
                 MaxWidth := 3000;
                 Options := Options - [coAllowclick, coDraggable];
@@ -10295,7 +10296,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
             end;
           finally
             EndUpdate;
@@ -10544,7 +10545,7 @@ begin
     end else if mniViewColumnWidthFitText.Checked then
       vstView.Header.AutoFitColumns(False)
     else begin
-      ColWidth := 200;
+      ColWidth := wbColumnWidth;
       for i := 0 to Pred(vstView.Header.Columns.Count) do
         vstView.Header.Columns[i].Width := ColWidth;
     end;
@@ -10882,8 +10883,10 @@ end;
 
 Type
   TwbComboEditLink = class(TComboEditLink)
-    function CreateEditControl: TWinControl; override;
     procedure SetBounds(R: TRect); override;
+  end;
+
+  TwbCheckComboEditLink = class(TcheckComboEditLink)
   end;
 
 procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
@@ -10899,6 +10902,7 @@ var
   CheckComboLink              : TcxCheckComboEditLink;
   {$ELSE}
   ComboLink                   : TwbComboEditLink;
+  CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
   if Column < 1 then
@@ -10963,6 +10967,15 @@ begin
       end;
       ComboLink.PickList.CommaText := EditInfoCache;
       ComboLink.Sorted := True;
+    end;
+    etCheckComboBox: begin
+      CheckComboLink := TwbCheckComboEditLink.Create;
+      EditLink := CheckComboLink;
+      if Element.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := Element.ElementID;
+        EditInfoCache := Element.EditInfo;
+      end;
+      CheckComboLink.PickList.CommaText := EditInfoCache;
     end;
   {$ENDIF}
   end;
@@ -11238,7 +11251,7 @@ begin
       Exit;
     if Column = 0 then
       if Shift = [ssShift] then begin
-        ColWidth := 200;
+        ColWidth := wbColumnWidth;
         for i := 0 to Pred(vstView.Header.Columns.Count) do
           vstView.Header.Columns[i].Width := ColWidth;
       end else case Button of
@@ -13108,12 +13121,6 @@ end;
 
 
 { TwbComboEditLink }
-
-function TwbComboEditLink.CreateEditControl: TWinControl;
-begin
-  Result := inherited;
-//  TComboBox(Result).Parent := TForm(FOwner);
-end;
 
 procedure TwbComboEditLink.SetBounds(R: TRect);
 var

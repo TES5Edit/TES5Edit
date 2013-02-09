@@ -107,6 +107,11 @@ begin
   Value := ForceDirectories(Args.Values[0]);
 end;
 
+procedure JvInterpreter_CopyFile(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := CopyFile(PWideChar(String(Args.Values[0])), PWideChar(String(Args.Values[1])), Args.Values[2]);
+end;
+
 { TBinaryReader }
 
 procedure TBinaryReader_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -209,6 +214,7 @@ begin
     AddFunction('SysUtils', 'DirectoryExists', JvInterpreter_DirectoryExists, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'FileExists', JvInterpreter_FileExists, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'ForceDirectories', JvInterpreter_ForceDirectories, 1, [varEmpty], varEmpty);
+    AddFunction('Windows', 'CopyFile', JvInterpreter_CopyFile, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);

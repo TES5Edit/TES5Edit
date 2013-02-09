@@ -12395,6 +12395,7 @@ var
   Element: IwbElement;
   ArrayDef: IwbArrayDef;
   Container: IwbContainer;
+  DataContainer: IwbDataContainer;
   s: string;
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -12429,12 +12430,25 @@ begin
       if ArrayDef.ElementCount < 0 then
         if aElement.DataSize > 0 then begin
           RequestStorageChange(p, q, aElement.DataSize);
-        end else case ArrayDef.ElementCount of
-          -1: RequestStorageChange(p, q, 4);
-          -2: RequestStorageChange(p, q, 2);
-        else
-          RequestStorageChange(p, q, 1);
-        end;
+          if Supports(aElement, IwbDataContainer, DataContainer) then begin
+            q := DataContainer.DataBasePtr;
+            Move(q^, p^, aElement.DataSize);
+          end;
+        end else
+          case ArrayDef.ElementCount of
+            -1: begin
+                  RequestStorageChange(p, q, 4);
+                  PCardinal(q)^ := 0;
+                end;
+            -2: begin
+                  RequestStorageChange(p, q, 2);
+                  PWord(q)^:= 0;
+                end
+          else
+            RequestStorageChange(p, q, 1);
+            PByte(q)^ := 0;
+          end;
+      NotifyChanged;
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);

@@ -7,7 +7,8 @@ uses
   SysUtils,
   Variants,
   wbInterface,
-  wbImplementation;
+  wbImplementation,
+  wbBSA;
 
 implementation
 
@@ -875,6 +876,24 @@ begin
 end;
 
 
+{ wbContainerHandler }
+
+procedure IwbContainerHandler_ResourceExists(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbContainerHandler.ResourceExists(Args.Values[0]);
+end;
+
+procedure IwbContainerHandler_ResourceCount(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
+end;
+
+procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 const
   cUnit = 'Dummy';
@@ -1022,6 +1041,11 @@ begin
     AddFunction(cUnit, 'HasGroup', IwbFile_HasGroup, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
+
+    { wbContainerHandler }
+    AddFunction(cUnit, 'ResourceExists', IwbContainerHandler_ResourceExists, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceCount', IwbContainerHandler_ResourceCount, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceCopy', IwbContainerHandler_ResourceCopy, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
 
