@@ -20,7 +20,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.jpeg,
+  AppEvnts, ShellAPI, pngimage,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
@@ -32,10 +32,10 @@ uses
   wbLocalization,
   Direct3D9,
   D3DX9,
-  {$IFDEF DX3D}
+{$IFDEF DX3D}
   RenderUnit,
   DXUT,
-  {$ENDIF}
+{$ENDIF}
   JvComponentBase,
   JvInterpreter;
 
@@ -799,7 +799,7 @@ uses
   cxVTEditors,
   {$ENDIF}
   ShlObj, Registry, StrUtils, Types,
-  UITypes,
+  //UITypes,
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
@@ -807,6 +807,19 @@ uses
 
 var
   NoNodes                     : TNodeArray;
+
+function Displayable(aSignature: TwbSignature): String;
+var
+  Sig : TwbSignature;
+  i   : Integer;
+begin
+  Sig := aSignature;
+  for i := Low(Sig) to High(Sig) do
+    if Ord(Sig[i]) < 32 then
+      Sig[i] := AnsiChar( Ord('a') + Ord(Sig[i]) );
+
+  Result := Sig;
+end;
 
 function GetFormIDCallback(const aElement: IwbElement): Cardinal;
 var
@@ -1726,7 +1739,7 @@ function TfrmMain.CheckAppPath: string;
 const
   //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
   ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe');
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
 var
   s: string;
 begin
@@ -1891,10 +1904,12 @@ end;
 
 procedure TfrmMain.mniNavCompareToClick(Sender: TObject);
 var
-  _File                       : IwbFile;
-var
-  NodeData                    : PNavNodeData;
-  CompareFile                 : string;
+  _File        : IwbFile;
+  NodeData     : PNavNodeData;
+  CompareFile  : string;
+  s            : String;
+  i            : Integer;
+  Temporary    : Boolean;
 begin
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
@@ -1909,11 +1924,24 @@ begin
       Exit;
 
     CompareFile := FileName;
-    // copy selected file to Data directory if it is not there
+    // copy selected file to Data directory without overwriting an existing file
     if not SameText(ExtractFilePath(CompareFile), DataPath) then begin
-      CompareFile := DataPath + ExtractFileName(CompareFile);
+      s := DataPath + ExtractFileName(CompareFile);
+      if FileExists(s) then // Finds a unique name
+        for i := 0 to 255 do begin
+          s := DataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+          if not FileExists(s) then Break;
+        end;
+      if FileExists(s) then begin
+        wbProgressCallback('Could not copy '+FileName+' into '+DataPath);
+        Exit;
+      end;
+      CompareFile := s;
       CopyFile(PChar(FileName), PChar(CompareFile), false);
-    end;
+      // We need to propagate a flag to mark the copy temporary, so it can be deleted on close
+      Temporary := True;
+    end else
+      Temporary := False;
 
   end;
 
@@ -3243,6 +3271,7 @@ begin
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
@@ -5362,6 +5391,10 @@ var
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
     Value := wbGameMode;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
+    Value := wbLoadBSAs;
     Done := True;
   end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
@@ -9084,6 +9117,7 @@ begin
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSimpleRecords.Checked := wbSimpleRecords;
+    edColumnWidth.Text := IntToStr(wbColumnWidth);
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9102,6 +9136,7 @@ begin
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
+    wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9117,6 +9152,7 @@ begin
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
+    Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -10156,7 +10192,7 @@ begin
           Clear;
           with Add do begin
             Text := '';
-            Width := 200;
+            Width := wbColumnWidth;
             Options := Options - [coDraggable];
             Options := Options + [coFixed];
           end;
@@ -10164,7 +10200,7 @@ begin
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
-              Width := 200;
+              Width := wbColumnWidth;
               MinWidth := 5;
               MaxWidth := 3000;
               Options := Options - [coAllowclick, coDraggable];
@@ -10270,7 +10306,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
               Options := Options - [coDraggable];
               Options := Options + [coFixed];
             end;
@@ -10278,7 +10314,7 @@ begin
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
-                Width := 200;
+                Width := wbColumnWidth;
                 MinWidth := 5;
                 MaxWidth := 3000;
                 Options := Options - [coAllowclick, coDraggable];
@@ -10313,7 +10349,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
             end;
           finally
             EndUpdate;
@@ -10562,7 +10598,7 @@ begin
     end else if mniViewColumnWidthFitText.Checked then
       vstView.Header.AutoFitColumns(False)
     else begin
-      ColWidth := 200;
+      ColWidth := wbColumnWidth;
       for i := 0 to Pred(vstView.Header.Columns.Count) do
         vstView.Header.Columns[i].Width := ColWidth;
     end;
@@ -10573,7 +10609,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim', 'Skyrim');
+    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim');
 begin
   if not wbLoaderDone then
     Exit;
@@ -11248,7 +11284,7 @@ begin
         if Integer(Node.Index) >= i then
           with (Element.Def as IwbRecordDef).Members[Integer(Node.Index) - i] do begin
             if DefType = dtSubRecord then
-              CellText := DefaultSignature + ' - ' + GetName
+              CellText := Displayable(DefaultSignature) + ' - ' + GetName
             else
               CellText := GetName;
           end
@@ -11268,7 +11304,7 @@ begin
       Exit;
     if Column = 0 then
       if Shift = [ssShift] then begin
-        ColWidth := 200;
+        ColWidth := wbColumnWidth;
         for i := 0 to Pred(vstView.Header.Columns.Count) do
           vstView.Header.Columns[i].Width := ColWidth;
       end else case Button of

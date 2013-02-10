@@ -45,6 +45,13 @@ object frmOptions: TfrmOptions
           'on" text everywhere.'
         WordWrap = True
       end
+      object Label5: TLabel
+        Left = 16
+        Top = 208
+        Width = 64
+        Height = 13
+        Caption = 'Column width'
+      end
       object cbIKnow: TCheckBox
         Left = 304
         Top = 15
@@ -101,6 +108,13 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Simple records (LAND, NAVI, NAVM). Requires restart.'
         TabOrder = 6
+      end
+      object edColumnWidth: TEdit
+        Left = 86
+        Top = 204
+        Width = 51
+        Height = 21
+        TabOrder = 7
       end
     end
     object tsCleaning: TTabSheet

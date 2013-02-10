@@ -36,7 +36,6 @@ var
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
-function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -555,12 +554,6 @@ type
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   public
     destructor Destroy; override;
-  end;
-
-  TwbSaveFile = class(TwbFile)
-  protected
-    procedure Scan; override;
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   end;
 
   TwbDataContainerFlag = (
@@ -1107,20 +1100,10 @@ type
 
   TwbStruct = class(TwbValueBase)
   protected
-    szCompressedSize   : Integer;
-    szUncompressedSize : Cardinal;
     procedure Init; override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
-    procedure DecompressIfNeeded;
-    function GetIsCompressed: Boolean;
-    property IsCompressed: Boolean read GetIsCompressed;
-  end;
-
-  TwbSaveStruct = class(TwbStruct, IwbSaveRecord)
-  protected
-    function GetMagic: TwbSaveMagic;
   end;
 
   TwbUnion = class(TwbValueBase)
@@ -1130,6 +1113,9 @@ type
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
+    procedure MasterCountUpdated(aOld, aNew: Byte); override;
+    procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
   end;
 
   TwbRecordHeaderStruct = class(TwbStruct)
@@ -10174,8 +10160,6 @@ procedure TwbGroupRecord.MasterCountUpdated(aOld, aNew: Byte);
 var
   FileID: Integer;
 begin
-  inherited;
-
   if grStruct.grsGroupType in [1, 6..10] then begin
     if grStruct.grsLabel <> 0 then begin
       FileID := grStruct.grsLabel shr 24;
@@ -10186,6 +10170,8 @@ begin
       end;
     end;
   end;
+
+  inherited;
 end;
 
 procedure TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TBytes);
@@ -12412,6 +12398,7 @@ var
   Element: IwbElement;
   ArrayDef: IwbArrayDef;
   Container: IwbContainer;
+  DataContainer: IwbDataContainer;
   s: string;
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -12446,12 +12433,17 @@ begin
       if ArrayDef.ElementCount < 0 then
         if aElement.DataSize > 0 then begin
           RequestStorageChange(p, q, aElement.DataSize);
+          if Supports(aElement, IwbDataContainer, DataContainer) then begin
+            q := DataContainer.DataBasePtr;
+            Move(q^, p^, aElement.DataSize);
+          end;
         end else case ArrayDef.ElementCount of
           -1: RequestStorageChange(p, q, 4);
           -2: RequestStorageChange(p, q, 2);
         else
           RequestStorageChange(p, q, 1);
         end;
+      NotifyChanged;
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);
@@ -12694,8 +12686,6 @@ begin
   if GetSkipped then
     Exit;
 
-  DecompressIfNeeded;
-
   BasePtr := GetDataBasePtr;
   StructDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
 end;
@@ -12709,40 +12699,6 @@ procedure TwbStruct.Reset;
 begin
   ReleaseElements;
   inherited;
-end;
-
-procedure TwbStruct.DecompressIfNeeded;
-begin
-  if IsCompressed then try
-    InitDataPtr; // reset...
-
-    SetLength(dcDataStorage, szUncompressedSize );
-
-    DecompressToUserBuf(
-      Pointer(Cardinal(dcDataBasePtr)),
-      GetDataSize,
-      @dcDataStorage[0],
-      PCardinal(dcDataBasePtr)^
-    );
-
-    dcDataEndPtr := Pointer( Cardinal(@dcDataStorage[0]) + szUncompressedSize );
-    dcDataBasePtr := @dcDataStorage[0];
-  except
-    dcDataBasePtr := nil;
-    dcDataEndPtr := nil;
-  end;
-end;
-
-function TwbStruct.GetIsCompressed: Boolean;
-var
-  szDef : IwbStructZDef;
-begin
-  if (szCompressedSize = 0) then
-    if Supports(Self.vbValueDef, IwbStructZDef, szDef)  then
-      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize)
-    else
-      szCompressedSize := -1;
-  Result := szUncompressedSize <> 0
 end;
 
 { TwbUnion }
@@ -12821,6 +12777,54 @@ begin
 
   BasePtr := GetDataBasePtr;
   UnionDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
+end;
+
+procedure TwbUnion.MasterCountUpdated(aOld, aNew: Byte);
+var
+  SelfRef     : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited MasterCountUpdated(aOld, aNew);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+end;
+
+procedure TwbUnion.MasterIndicesUpdated(const aOld, aNew: TBytes);
+var
+  SelfRef    : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited MasterIndicesUpdated(aOld, aNew);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+end;
+
+procedure TwbUnion.FindUsedMasters(aMasters: PwbUsedMasters);
+var
+  SelfRef    : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited FindUsedMasters(aMasters);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.FindUsedMasters(GetDataBasePtr, dcDataEndPtr, Self, aMasters);
 end;
 
 procedure TwbUnion.Reset;
@@ -13115,26 +13119,6 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
-  end;
-end;
-
-function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
-var
-  FileName: string;
-  i: Integer;
-begin
-  if ExtractFilePath(aFileName) = '' then
-    FileName := ExpandFileName('.\'+aFileName)
-  else
-    FileName := ExpandFileName(aFileName);
-
-  if FilesMap.Find(FileName, i) then
-    Result := IwbFile(Pointer(FilesMap.Objects[i]))
-  else begin
-    Result := TwbSaveFile.Create(FileName, aLoadOrder, aCompareTo, False);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -14537,53 +14521,6 @@ const
   WRLD : TwbSignature = 'WRLD';
   CELL : TwbSignature = 'CELL';
   DIAL : TwbSignature = 'DIAL';
-
-{ TwbSaveFile }
-
-constructor TwbSaveFile.CreateNew(const aFileName: string; aLoadOrder: Integer);
-begin
-  Include(flStates, fsIsNew);
-  flLoadOrder := aLoadOrder;
-  flFileName := aFileName;
-end;
-
-procedure TwbSaveFile.Scan;
-var
-  CurrentPtr  : Pointer;
-  Header      : IwbSaveRecord;
-  SelfRef     : IwbContainerElementRef;
-begin
-  SelfRef := Self as IwbContainerElementRef;
-  flProgress('Start processing');
-
-  wbBaseOffset := Cardinal(flView);
-
-  CurrentPtr := flView;
-  TwbSaveStruct.Create(Self, CurrentPtr, flEndPtr, StructSaveDef, '', False);
-
-  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveRecord, Header) then
-    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
-
-  if Header.Magic <> HeaderMagic then
-    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"', [HeaderMagic, String(Header.Magic), flFileName]);
-
-  flProgress('Processing completed');
-  flLoadFinished := True;
-end;
-
-{ TwbSaveStruct }
-
-function TwbSaveStruct.GetMagic: TwbSaveMagic;
-var
-  Element : IwbElement;
-  Container : IwbContainer;
-begin
-  Result := '';
-  if not Supports(Self, IwbContainer, Container) or (Container.ElementCount < 1) then Exit;
-  Element := Container.Elements[0];
-  if Assigned(Element) then
-    Result := Element.NativeValue;
-end;
 
 initialization
   wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);

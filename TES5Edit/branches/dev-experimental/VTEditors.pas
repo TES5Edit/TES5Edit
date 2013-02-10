@@ -13,7 +13,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls,
-  Buttons, ExtCtrls, ComCtrls, Vcl.Samples.Spin,
+  Buttons, ExtCtrls, ComCtrls, Spin,
   VirtualTrees;
 
 {$I Compilers.inc}
@@ -952,9 +952,9 @@ function TDateEditLink.GetEditText: WideString;
 var
   Sep: Char;
 begin
-  Sep := FormatSettings.DateSeparator;
+  Sep := SysUtils.DateSeparator;
   try
-    if FDateSeparator <> #0 then FormatSettings.DateSeparator := FDateSeparator;
+    if FDateSeparator <> #0 then SysUtils.DateSeparator := FDateSeparator;
       if FDateFormat <> '' then
         Result := FormatDateTime(FDateFormat, TDateTimePicker(EditControl).DateTime)
       else
@@ -963,7 +963,7 @@ begin
           dtkTime: Result := TimeToStr(TDateTimePicker(EditControl).DateTime);
         end;
   finally
-    FormatSettings.DateSeparator := Sep;
+    SysUtils.DateSeparator := Sep;
   end;
 end;
 
@@ -974,18 +974,18 @@ var
 begin
   if Value <> '' then
   try
-    DF := FormatSettings.ShortDateFormat;
-    Sep := FormatSettings.DateSeparator;
+    DF := ShortDateFormat;
+    Sep := SysUtils.DateSeparator;
     try
-      if FDateFormat <> '' then FormatSettings.ShortDateFormat := FDateFormat;
-      if FDateSeparator <> #0 then FormatSettings.DateSeparator := FDateSeparator;
+      if FDateFormat <> '' then ShortDateFormat := FDateFormat;
+      if FDateSeparator <> #0 then SysUtils.DateSeparator := FDateSeparator;
       case FKind of
         dtkDate: TDateTimePicker(EditControl).Date := StrToDate(Value);
         dtkTime: TDateTimePicker(EditControl).Time := StrToTime(Value);
       end;
     finally
-      FormatSettings.ShortDateFormat := DF;
-      FormatSettings.DateSeparator := Sep;
+      ShortDateFormat := DF;
+      SysUtils.DateSeparator := Sep;
     end;
   except
   end;
