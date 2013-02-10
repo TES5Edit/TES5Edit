@@ -71,7 +71,7 @@ object frmLocalization: TfrmLocalization
         end
         item
           Position = 1
-          Width = 229
+          Width = 225
           WideText = 'Text'
         end>
     end
