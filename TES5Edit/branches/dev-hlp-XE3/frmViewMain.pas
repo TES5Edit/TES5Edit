@@ -20,7 +20,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.jpeg,
+  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.pngimage,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
