@@ -32,10 +32,10 @@ uses
   wbLocalization,
   Direct3D9,
   D3DX9,
-  {$IFDEF DX3D}
+{$IFDEF DX3D}
   RenderUnit,
   DXUT,
-  {$ENDIF}
+{$ENDIF}
   JvComponentBase,
   JvInterpreter;
 
@@ -807,6 +807,19 @@ uses
 
 var
   NoNodes                     : TNodeArray;
+
+function Displayable(aSignature: TwbSignature): String;
+var
+  Sig : TwbSignature;
+  i   : Integer;
+begin
+  Sig := aSignature;
+  for i := Low(Sig) to High(Sig) do
+    if Ord(Sig[i]) < 32 then
+      Sig[i] := AnsiChar( Ord('a') + Ord(Sig[i]) );
+
+  Result := Sig;
+end;
 
 function GetFormIDCallback(const aElement: IwbElement): Cardinal;
 var
@@ -11231,7 +11244,7 @@ begin
         if Integer(Node.Index) >= i then
           with (Element.Def as IwbRecordDef).Members[Integer(Node.Index) - i] do begin
             if DefType = dtSubRecord then
-              CellText := DefaultSignature + ' - ' + GetName
+              CellText := Displayable(DefaultSignature) + ' - ' + GetName
             else
               CellText := GetName;
           end
