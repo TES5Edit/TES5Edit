@@ -2118,11 +2118,16 @@ begin
   MainRecord := GroupRecord.ChildrenOf;
 
   if not Assigned(MainRecord) then
+    Exit
+  else if (MainRecord.Signature<>CELL) then begin
+    wbProgressCallback('Parent of a NVNM is not identified as a CELL');
+    Assert(MainRecord.Signature=CELL); // Better an exception than to destroy the plugin.
     Exit;
+  end;
 
   rDATA := MainRecord.RecordBySignature['DATA'];
 
-  if not Assigned(MainRecord) then
+  if not Assigned(rData) then
     Exit;
 
   i := rData.NativeValue;

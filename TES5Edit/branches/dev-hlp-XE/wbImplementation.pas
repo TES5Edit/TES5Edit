@@ -1113,6 +1113,9 @@ type
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
+    procedure MasterCountUpdated(aOld, aNew: Byte); override;
+    procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
   end;
 
   TwbRecordHeaderStruct = class(TwbStruct)
@@ -10157,8 +10160,6 @@ procedure TwbGroupRecord.MasterCountUpdated(aOld, aNew: Byte);
 var
   FileID: Integer;
 begin
-  inherited;
-
   if grStruct.grsGroupType in [1, 6..10] then begin
     if grStruct.grsLabel <> 0 then begin
       FileID := grStruct.grsLabel shr 24;
@@ -10169,6 +10170,8 @@ begin
       end;
     end;
   end;
+
+  inherited;
 end;
 
 procedure TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TBytes);
@@ -12782,6 +12785,54 @@ begin
 
   BasePtr := GetDataBasePtr;
   UnionDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
+end;
+
+procedure TwbUnion.MasterCountUpdated(aOld, aNew: Byte);
+var
+  SelfRef     : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited MasterCountUpdated(aOld, aNew);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+end;
+
+procedure TwbUnion.MasterIndicesUpdated(const aOld, aNew: TBytes);
+var
+  SelfRef    : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited MasterIndicesUpdated(aOld, aNew);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+end;
+
+procedure TwbUnion.FindUsedMasters(aMasters: PwbUsedMasters);
+var
+  SelfRef    : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited FindUsedMasters(aMasters);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.FindUsedMasters(GetDataBasePtr, dcDataEndPtr, Self, aMasters);
 end;
 
 procedure TwbUnion.Reset;
