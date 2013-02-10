@@ -2118,11 +2118,16 @@ begin
   MainRecord := GroupRecord.ChildrenOf;
 
   if not Assigned(MainRecord) then
+    Exit
+  else if (MainRecord.Signature<>CELL) then begin
+    wbProgressCallback('Parent of a NVNM is not identified as a CELL');
+    Assert(MainRecord.Signature=CELL); // Better an exception than to destroy the plugin.
     Exit;
+  end;
 
   rDATA := MainRecord.RecordBySignature['DATA'];
 
-  if not Assigned(MainRecord) then
+  if not Assigned(rData) then
     Exit;
 
   i := rData.NativeValue;
@@ -7776,8 +7781,8 @@ begin
       {02} wbInteger('End Hour', itU16),
       {02} wbInteger('Radius', itU16),
       {02} wbByteArray('Unknown 1', 2),
-             wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
-             wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
+           wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
+           wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
       {02} wbByteArray('Unknown 2', 2)
       ]),
     wbPLVD,
@@ -10525,9 +10530,9 @@ begin
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
-    wbDEST,
     wbSPCT,
     wbSPLOs,
+    wbDEST,
     wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
@@ -12028,7 +12033,13 @@ begin
         49, 'Falkreath Castle',
         50, 'Falkreath Capitol',
         51, 'Dawnstar Castle',
-        52, 'Dawnstar Capitol'
+        52, 'Dawnstar Capitol',
+        53, 'DLC02 - Temple of Miraak',
+        54, 'DLC02 - Raven Rock',
+        55, 'DLC02 - Beast Stone',
+        56, 'DLC02 - Tel Mithryn',
+        57, 'DLC02 - To Skyrim',
+        58, 'DLC02 - To Solstheim'
       ]), cpNormal, True)
     ], []),
     {--- Attach reference ---}
@@ -13021,6 +13032,72 @@ begin
       CompressedSize := Element.NativeValue;
     end;
   end;
+end;
+
+function ChangedFlagXXDecider(aMask: Cardinal; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Changed Form', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Change Flags'];
+    if Assigned(Element) then
+      Result := (Element.NativeValue and aMask);
+  end;
+end;
+
+function ChangedFlagBitXXDecider(aMask: Cardinal; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  if ChangedFlagXXDecider(aMask, aBasePtr, aEndPtr, aElement) = aMask then Result := 1 else Result := 0;
+end;
+
+function ChangedFlag00Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000001, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag01Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000002, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag02Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000004, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag03Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000008, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag04Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000010, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag05Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000020, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag06Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000040, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag07Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000080, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag08Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000100, aBasePtr, aEndPtr, aElement);
 end;
 
 function ChangedFormDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;

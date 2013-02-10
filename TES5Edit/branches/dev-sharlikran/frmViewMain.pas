@@ -20,7 +20,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, ShellAPI, pngimage,
+  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.pngimage,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
@@ -799,7 +799,7 @@ uses
   cxVTEditors,
   {$ENDIF}
   ShlObj, Registry, StrUtils, Types,
-  //UITypes,
+  UITypes,
   wbScriptAdapter,
   FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
   frmLocalizationForm, frmLocalizePluginForm,
@@ -807,6 +807,19 @@ uses
 
 var
   NoNodes                     : TNodeArray;
+
+function Displayable(aSignature: TwbSignature): String;
+var
+  Sig : TwbSignature;
+  i   : Integer;
+begin
+  Sig := aSignature;
+  for i := Low(Sig) to High(Sig) do
+    if Ord(Sig[i]) < 32 then
+      Sig[i] := AnsiChar( Ord('a') + Ord(Sig[i]) );
+
+  Result := Sig;
+end;
 
 function GetFormIDCallback(const aElement: IwbElement): Cardinal;
 var
@@ -1891,10 +1904,12 @@ end;
 
 procedure TfrmMain.mniNavCompareToClick(Sender: TObject);
 var
-  _File                       : IwbFile;
-var
-  NodeData                    : PNavNodeData;
-  CompareFile                 : string;
+  _File        : IwbFile;
+  NodeData     : PNavNodeData;
+  CompareFile  : string;
+  s            : String;
+  i            : Integer;
+  Temporary    : Boolean;
 begin
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
@@ -1909,11 +1924,24 @@ begin
       Exit;
 
     CompareFile := FileName;
-    // copy selected file to Data directory if it is not there
+    // copy selected file to Data directory without overwriting an existing file
     if not SameText(ExtractFilePath(CompareFile), DataPath) then begin
-      CompareFile := DataPath + ExtractFileName(CompareFile);
+      s := DataPath + ExtractFileName(CompareFile);
+      if FileExists(s) then // Finds a unique name
+        for i := 0 to 255 do begin
+          s := DataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+          if not FileExists(s) then Break;
+        end;
+      if FileExists(s) then begin
+        wbProgressCallback('Could not copy '+FileName+' into '+DataPath);
+        Exit;
+      end;
+      CompareFile := s;
       CopyFile(PChar(FileName), PChar(CompareFile), false);
-    end;
+      // We need to propagate a flag to mark the copy temporary, so it can be deleted on close
+      Temporary := True;
+    end else
+      Temporary := False;
 
   end;
 
@@ -2848,6 +2876,13 @@ begin
     PluginsFileName := ParamStr(1);
     if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
       PluginsFileName := '';
+    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
+      if ParamCount >= 2 then begin
+        TheGameIniFileName := ParamStr(2);
+        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
+          TheGameIniFileName := '';
+      end;
+    end;
   end;
 
   if PluginsFileName = '' then begin
@@ -3236,6 +3271,7 @@ begin
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
@@ -5357,6 +5393,10 @@ begin
     Value := wbGameMode;
     Done := True;
   end else
+  if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
+    Value := wbLoadBSAs;
+    Done := True;
+  end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
     Value := ProgramPath;
     Done := True;
@@ -5886,6 +5926,7 @@ var
     rlNewRecord: IwbMainRecord;
     rlReferencedBy : TDynMainRecords;
   end;
+  ForceOldRecord              : Boolean;
 begin
   ReplaceList := nil;
   l := 0;
@@ -5921,8 +5962,8 @@ begin
         SetLength(ReplaceList, CSV.Count);
         for i := 1 to Pred(CSV.Count) do begin //ignore first line
           Line.CommaText := CSV[i];
-          if Line.Count <> 7 then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(Line.Count)+' found.');
+          if (Line.Count < 7) or (Line.Count > 8) then begin
+            AddMessage('Skipping line '+IntToStr(i+1)+': 7 or 8 values expected but '+IntToStr(Line.Count)+' found.');
             Continue;
           end;
 
@@ -5975,6 +6016,16 @@ begin
             Continue;
           end;
 
+          forceOldRecord := False;
+          s := Trim(Line[7]);
+          j := StrToIntDef(s, 0);
+          if (j < 0) or (j > 1) then begin
+            AddMessage('Skipping line '+IntToStr(i+1)+': Flag always rename oldRecord "'+s+'" is not in the valid range (0/1).');
+            Continue;
+          end else
+            if j = 1 then
+              forceOldRecord := True;
+
           s := Trim(Line[0]);
           if not SameText(OldRecord.Signature, s) then
             AddMessage('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+OldRecord.Signature+'" vs. "'+s+'")".');
@@ -5997,6 +6048,13 @@ begin
             RefRecord := OldRecord.ReferencedBy[j];
             if _File.Equals(RefRecord._File) then begin
               ReferencedBy[k] := RefRecord;
+              Inc(k);
+            end;
+          end;
+
+          if (k < 1) and ForceOldRecord then begin
+            if _File.Equals(OldRecord._File) then begin
+              ReferencedBy[k] := OldRecord;
               Inc(k);
             end;
           end;
@@ -9059,6 +9117,7 @@ begin
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSimpleRecords.Checked := wbSimpleRecords;
+    edColumnWidth.Text := IntToStr(wbColumnWidth);
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9077,6 +9136,7 @@ begin
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
+    wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9092,6 +9152,7 @@ begin
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
+    Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -10131,7 +10192,7 @@ begin
           Clear;
           with Add do begin
             Text := '';
-            Width := 200;
+            Width := wbColumnWidth;
             Options := Options - [coDraggable];
             Options := Options + [coFixed];
           end;
@@ -10139,7 +10200,7 @@ begin
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
-              Width := 200;
+              Width := wbColumnWidth;
               MinWidth := 5;
               MaxWidth := 3000;
               Options := Options - [coAllowclick, coDraggable];
@@ -10245,7 +10306,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
               Options := Options - [coDraggable];
               Options := Options + [coFixed];
             end;
@@ -10253,7 +10314,7 @@ begin
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
-                Width := 200;
+                Width := wbColumnWidth;
                 MinWidth := 5;
                 MaxWidth := 3000;
                 Options := Options - [coAllowclick, coDraggable];
@@ -10288,7 +10349,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := 200;
+              Width := wbColumnWidth;
             end;
           finally
             EndUpdate;
@@ -10537,7 +10598,7 @@ begin
     end else if mniViewColumnWidthFitText.Checked then
       vstView.Header.AutoFitColumns(False)
     else begin
-      ColWidth := 200;
+      ColWidth := wbColumnWidth;
       for i := 0 to Pred(vstView.Header.Columns.Count) do
         vstView.Header.Columns[i].Width := ColWidth;
     end;
@@ -10548,7 +10609,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim');
+    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim', 'Skyrim');
 begin
   if not wbLoaderDone then
     Exit;
@@ -10875,8 +10936,10 @@ end;
 
 Type
   TwbComboEditLink = class(TComboEditLink)
-    function CreateEditControl: TWinControl; override;
     procedure SetBounds(R: TRect); override;
+  end;
+
+  TwbCheckComboEditLink = class(TcheckComboEditLink)
   end;
 
 procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
@@ -10892,6 +10955,7 @@ var
   CheckComboLink              : TcxCheckComboEditLink;
   {$ELSE}
   ComboLink                   : TwbComboEditLink;
+  CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
   if Column < 1 then
@@ -10956,6 +11020,15 @@ begin
       end;
       ComboLink.PickList.CommaText := EditInfoCache;
       ComboLink.Sorted := True;
+    end;
+    etCheckComboBox: begin
+      CheckComboLink := TwbCheckComboEditLink.Create;
+      EditLink := CheckComboLink;
+      if Element.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := Element.ElementID;
+        EditInfoCache := Element.EditInfo;
+      end;
+      CheckComboLink.PickList.CommaText := EditInfoCache;
     end;
   {$ENDIF}
   end;
@@ -11211,7 +11284,7 @@ begin
         if Integer(Node.Index) >= i then
           with (Element.Def as IwbRecordDef).Members[Integer(Node.Index) - i] do begin
             if DefType = dtSubRecord then
-              CellText := DefaultSignature + ' - ' + GetName
+              CellText := Displayable(DefaultSignature) + ' - ' + GetName
             else
               CellText := GetName;
           end
@@ -11231,7 +11304,7 @@ begin
       Exit;
     if Column = 0 then
       if Shift = [ssShift] then begin
-        ColWidth := 200;
+        ColWidth := wbColumnWidth;
         for i := 0 to Pred(vstView.Header.Columns.Count) do
           vstView.Header.Columns[i].Width := ColWidth;
       end else case Button of
@@ -13101,12 +13174,6 @@ end;
 
 
 { TwbComboEditLink }
-
-function TwbComboEditLink.CreateEditControl: TWinControl;
-begin
-  Result := inherited;
-//  TComboBox(Result).Parent := TForm(FOwner);
-end;
 
 procedure TwbComboEditLink.SetBounds(R: TRect);
 var

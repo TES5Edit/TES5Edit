@@ -300,8 +300,6 @@ begin
       BytesToSkip := StrToInt64Def(s, BytesToSkip);
     if wbFindCmdLineParam('btd', s) then
       BytesToDump := StrToInt64Def(s, BytesToDump);
-    if wbFindCmdLineParam('btg', s) then
-      BytesToGroup := StrToInt64Def(s, BytesToGroup);
 
     s := ParamStr(ParamCount);
 
