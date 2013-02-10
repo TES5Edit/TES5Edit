@@ -2123,6 +2123,7 @@ begin
     wbProgressCallback('Parent of a NVNM is not identified as a CELL');
     Assert(MainRecord.Signature=CELL); // Better an exception than to destroy the plugin.
     Exit;
+  end;
 
   rDATA := MainRecord.RecordBySignature['DATA'];
 
