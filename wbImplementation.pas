@@ -12437,20 +12437,12 @@ begin
             q := DataContainer.DataBasePtr;
             Move(q^, p^, aElement.DataSize);
           end;
-        end else
-          case ArrayDef.ElementCount of
-            -1: begin
-                  RequestStorageChange(p, q, 4);
-                  PCardinal(p)^ := 0;
-                end;
-            -2: begin
-                  RequestStorageChange(p, q, 2);
-                  PWord(p)^:= 0;
-                end
-          else
-            RequestStorageChange(p, q, 1);
-            PByte(p)^ := 0;
-          end;
+        end else case ArrayDef.ElementCount of
+          -1: RequestStorageChange(p, q, 4);
+          -2: RequestStorageChange(p, q, 2);
+        else
+          RequestStorageChange(p, q, 1);
+        end;
       NotifyChanged;
 
       for i := 0 to Pred(Container.ElementCount) do
