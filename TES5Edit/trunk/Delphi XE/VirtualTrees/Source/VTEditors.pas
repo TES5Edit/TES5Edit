@@ -12,7 +12,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, VirtualTrees, Buttons, ExtCtrls, ComCtrls, Spin;
+  StdCtrls,
+  Buttons, ExtCtrls, ComCtrls, Spin,
+  VirtualTrees;
 
 {$I Compilers.inc}
 
@@ -257,7 +259,9 @@ procedure GetEditLinkClasses(Strings: TStrings);
 
 implementation
 
-uses TypInfo;
+uses
+  TypInfo,
+  Types;
 
 {$IFNDEF DELPHI_5_UP}
 

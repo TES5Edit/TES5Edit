@@ -1113,6 +1113,9 @@ type
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
+    procedure MasterCountUpdated(aOld, aNew: Byte); override;
+    procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
   end;
 
   TwbRecordHeaderStruct = class(TwbStruct)
@@ -10157,8 +10160,6 @@ procedure TwbGroupRecord.MasterCountUpdated(aOld, aNew: Byte);
 var
   FileID: Integer;
 begin
-  inherited;
-
   if grStruct.grsGroupType in [1, 6..10] then begin
     if grStruct.grsLabel <> 0 then begin
       FileID := grStruct.grsLabel shr 24;
@@ -10169,6 +10170,8 @@ begin
       end;
     end;
   end;
+
+  inherited;
 end;
 
 procedure TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TBytes);
@@ -12395,6 +12398,7 @@ var
   Element: IwbElement;
   ArrayDef: IwbArrayDef;
   Container: IwbContainer;
+  DataContainer: IwbDataContainer;
   s: string;
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -12429,12 +12433,25 @@ begin
       if ArrayDef.ElementCount < 0 then
         if aElement.DataSize > 0 then begin
           RequestStorageChange(p, q, aElement.DataSize);
-        end else case ArrayDef.ElementCount of
-          -1: RequestStorageChange(p, q, 4);
-          -2: RequestStorageChange(p, q, 2);
-        else
-          RequestStorageChange(p, q, 1);
-        end;
+          if Supports(aElement, IwbDataContainer, DataContainer) then begin
+            q := DataContainer.DataBasePtr;
+            Move(q^, p^, aElement.DataSize);
+          end;
+        end else
+          case ArrayDef.ElementCount of
+            -1: begin
+                  RequestStorageChange(p, q, 4);
+                  PCardinal(p)^ := 0;
+                end;
+            -2: begin
+                  RequestStorageChange(p, q, 2);
+                  PWord(p)^:= 0;
+                end
+          else
+            RequestStorageChange(p, q, 1);
+            PByte(p)^ := 0;
+          end;
+      NotifyChanged;
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);
@@ -12768,6 +12785,54 @@ begin
 
   BasePtr := GetDataBasePtr;
   UnionDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
+end;
+
+procedure TwbUnion.MasterCountUpdated(aOld, aNew: Byte);
+var
+  SelfRef     : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited MasterCountUpdated(aOld, aNew);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+end;
+
+procedure TwbUnion.MasterIndicesUpdated(const aOld, aNew: TBytes);
+var
+  SelfRef    : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited MasterIndicesUpdated(aOld, aNew);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+end;
+
+procedure TwbUnion.FindUsedMasters(aMasters: PwbUsedMasters);
+var
+  SelfRef    : IwbContainerElementRef;
+  ResolvedDef : IwbValueDef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit;
+
+  inherited FindUsedMasters(aMasters);
+
+  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  if Assigned(ResolvedDef) then
+    ResolvedDef.FindUsedMasters(GetDataBasePtr, dcDataEndPtr, Self, aMasters);
 end;
 
 procedure TwbUnion.Reset;
