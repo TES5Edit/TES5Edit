@@ -1,15 +1,16 @@
-﻿[size="5"][color="#00BFFF"][url="http://skyrim.nexusmods.com/mods/25859/"]TES5Edit 3.0.26 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
+﻿[size="5"][color="#00BFFF"][url="http://skyrim.nexusmods.com/mods/25859/"]TES5Edit 3.0.28 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
 
-[size="4"][color="#FF0000"]This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Feel free to ask about plugin cleaning in the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/"][RELz] TES5Edit Plugin Cleaning Emporium[/url][/color].  If you require technical assistance the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1436132-relz-tes5edit/"][RELz] TES5Edit[/url][/color] thread is best for that.  As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
+[size="4"][color="#FF0000"]This is a an experimental release of TES5Edit. If you don't know what TES5Edit is, you probably shouldn't be using it yet.  Although we have put a great deal of work into it be aware of what you are doing.  Feel free to ask about plugin cleaning in the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/"][RELz] TES5Edit Plugin Cleaning Emporium[/url][/color].  If you require technical assistance the official [color="#00BFFF"][url="http://forums.bethsoft.com/topic/1440522-relz-tes5edit/"][RELz] TES5Edit[/url][/color] thread is best for that.  As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
 
 [size="4"][color="#FF0000"]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
 
-[size="4"][color="#FF8C00"]TES5Edit 3.0.26 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url="http://skyrim.nexusmods.com/users/156622"]Zilav[/url], Hlp, and [url="http://skyrim.nexusmods.com/users/4147439"]Sharlikran[/url].[/color][/size]
+[size="4"][color="#FF8C00"]TES5Edit 3.0.28 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url="http://skyrim.nexusmods.com/users/156622"]Zilav[/url], Hlp, and [url="http://skyrim.nexusmods.com/users/4147439"]Sharlikran[/url].[/color][/size]
 
-[size="4"][b][color="#00BFFF"]If possible please post in the Bethesda forum: [url="http://forums.bethsoft.com/topic/1436132-relz-tes5edit/"][RELz] TES5Edit[/url][/color][/size][/b]
+[size="4"][b][color="#00BFFF"]If possible please post in the Bethesda forum: [url="http://forums.bethsoft.com/topic/1440522-relz-tes5edit/"][RELz] TES5Edit[/url][/color][/size][/b]
 
 Threads:
 [spoiler]
+[topic='1436132']Thread 12[/topic]
 [topic='1430849']Thread 11[/topic]
 [topic='1425425']Thread 10[/topic]
 [topic='1420676']Thread 9[/topic]
@@ -48,6 +49,26 @@ Fallout3 [url="http://fallout3.nexusmods.com/mods/8629"]Training Manual[/url] fo
 [color="#FF8C00"]Important for Older Systems:[/color]
 If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  The most current (March 2008) version can be found here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=35"]DirectX End-User Runtime Web Installer[/url] 
 or here: [url="http://www.microsoft.com/en-us/download/details.aspx?id=23611"]DirectX End-User Runtimes Redistributable[/url] (make sure to install it after unpacking it).
+
+[color=#00BFFF]TES5Edit Updates:[/color]
+
+[color=#FF0000]With each new version of TES5Edit you may want to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.[/color]
+
+[color=#00BFFF]Version 3.0.28 contains the following changes:[/color]
+
+- [TES5] Papyrus (VMAD subrecord) support and other misc record updates including Dragonborn DLC
+- [TES5] "Next Object ID" error when copying records
+- Text fields in records are case sensitive when matching
+- Ability to change references to FormID < 800h
+- Changeable conflict colors and default column width in options
+- "Simple records" option for concise displaying of LAND, NAVM and NAVI records (excluding references). On by default to speed up xEdit, customizable in options
+- Improved scripting functions, new demo scripts
+
+[color=#00BFFF]Version 3.0.27 contains the following changes:[/color]
+
+- [TES5] Updated dialog subtypes for patch 1.8
+- Localize/delocalize utf8 strings. Translation is disabled, highly recommended to use StrEdit or other specialized tools instead
+- Search by FormID/EditorID skips hidden elements
 
 [size="4"][color="#FF8C00"]Version 3.0.26 contains the following changes:[/color][/size]
 [list]
