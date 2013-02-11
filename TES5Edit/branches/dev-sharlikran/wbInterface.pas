@@ -6899,16 +6899,17 @@ begin
       Exit;
     end;
   end;
-  for i := Low(stMembers) to High(stMembers) do begin
-    Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
-    if Size = High(Integer) then begin
-      Result := High(Integer);
-      Exit;
+  for i := Low(stMembers) to High(stMembers) do
+    if Assigned(aBasePtr) and (Cardinal(aBasePtr) < Cardinal(aEndPtr)) then begin  // if aBasePtr >= aEndPtr then no allocation (or error)
+      Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
+      if Size = High(Integer) then begin
+        Result := High(Integer);
+        Exit;
+      end;
+      if Assigned(aBasePtr) then
+        Inc(Cardinal(aBasePtr), Size);
+      Inc(Result, Size);
     end;
-    if Assigned(aBasePtr) then
-      Inc(Cardinal(aBasePtr), Size);
-    Inc(Result, Size);
-  end;
 end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;

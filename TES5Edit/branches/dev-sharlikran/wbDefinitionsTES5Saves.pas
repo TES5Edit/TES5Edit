@@ -8322,9 +8322,9 @@ begin
         wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
         wbUnknown
       ]),
-	  wbArrayS(ONAM, 'Unknown', wbByteArray('Unknown', 4)),
-      wbArrayS(PNAM, 'Unknown', wbByteArray('Unknown', 4)),
-      wbArrayS(NNAM, 'Unknown', wbByteArray('Unknown', 4))
+      wbUnknown(ONAM),
+      wbUnknown(PNAM),
+      wbUnknown(NNAM)
     ], False, wbNAVMAddInfo);
 
   end;
