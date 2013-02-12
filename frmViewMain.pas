@@ -1908,10 +1908,9 @@ end;
 
 procedure TfrmMain.mniNavCompareToClick(Sender: TObject);
 var
-  _File                       : IwbFile;
-var
-  NodeData                    : PNavNodeData;
-  CompareFile                 : string;
+  _File        : IwbFile;
+  NodeData     : PNavNodeData;
+  CompareFile  : string;
 begin
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
@@ -10898,8 +10897,10 @@ end;
 
 Type
   TwbComboEditLink = class(TComboEditLink)
-    function CreateEditControl: TWinControl; override;
     procedure SetBounds(R: TRect); override;
+  end;
+
+  TwbCheckComboEditLink = class(TcheckComboEditLink)
   end;
 
 procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
@@ -13124,12 +13125,6 @@ end;
 
 
 { TwbComboEditLink }
-
-function TwbComboEditLink.CreateEditControl: TWinControl;
-begin
-  Result := inherited;
-//  TComboBox(Result).Parent := TForm(FOwner);
-end;
 
 procedure TwbComboEditLink.SetBounds(R: TRect);
 var
