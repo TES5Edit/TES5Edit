@@ -10916,6 +10916,7 @@ var
   CheckComboLink              : TcxCheckComboEditLink;
   {$ELSE}
   ComboLink                   : TwbComboEditLink;
+  CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
   if Column < 1 then
@@ -10980,6 +10981,15 @@ begin
       end;
       ComboLink.PickList.CommaText := EditInfoCache;
       ComboLink.Sorted := True;
+    end;
+    etCheckComboBox: begin
+      CheckComboLink := TwbCheckComboEditLink.Create;
+      EditLink := CheckComboLink;
+      if Element.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := Element.ElementID;
+        EditInfoCache := Element.EditInfo;
+      end;
+      CheckComboLink.PickList.CommaText := EditInfoCache;
     end;
   {$ENDIF}
   end;
