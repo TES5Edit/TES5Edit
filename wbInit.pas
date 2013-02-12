@@ -26,6 +26,8 @@ implementation
 uses
   SysUtils,
   Dialogs,
+  ShlObj,
+  IniFiles,
   wbInterface,
   wbImplementation,
   wbDefinitionsTES4,
@@ -33,7 +35,6 @@ uses
   wbDefinitionsFO3,
   wbDefinitionsFNV,
   wbDefinitionsTES5;
-  //nxExeConst;
 
 function wbFindCmdLineParam(const aSwitch     : string;
                             const aChars      : TSysCharSet;
@@ -75,6 +76,30 @@ begin
   Result := wbFindCmdLineParam(aSwitch, ['-', '/'], True, aValue);
 end;
 
+// several ini settings should be read before record definitions
+// they make affect definitions like wbSimpleRecords
+// and should be overridden by command line parameters
+procedure ReadSettings;
+var
+  AppData, SettingsFileName: string;
+  Settings: TMemIniFile;
+begin
+  SetLength(AppData, 260);
+  SHGetSpecialFolderPath(0, PChar(AppData), CSIDL_LOCAL_APPDATA, True);
+  SetLength(AppData, StrLen(PChar(AppData)));
+  if (AppData <> '') then
+    AppData := IncludeTrailingBackslash(AppData);
+
+  SettingsFileName := AppData + wbGameName + '\Plugins.' + LowerCase(wbAppName) + 'viewsettings';
+  try
+    Settings := TMemIniFile.Create(SettingsFileName);
+    wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
+    wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+  finally
+    Settings.Free;
+  end;
+end;
+
 procedure wbDoInit;
 var
   s: string;
@@ -87,6 +112,7 @@ begin
     wbGameName := 'FalloutNV';
     wbVWDInTemporary := True;
     wbLoadBSAs := False;
+    ReadSettings;
     DefineFNV;
   end else
   if FindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
@@ -95,6 +121,7 @@ begin
     wbGameName := 'Fallout3';
     wbVWDInTemporary := True;
     wbLoadBSAs := False;
+    ReadSettings;
     DefineFO3;
   end else if FindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
     ShowMessage('TES3 - Morrowind is not supported yet.');
@@ -104,6 +131,7 @@ begin
     wbGameName := 'Morrowind';
     wbLoadBSAs := False;
     wbAllowInternalEdit := false;
+    ReadSettings;
     DefineTES3;
   end else if FindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
     wbGameMode := gmTES4;
@@ -111,6 +139,7 @@ begin
     wbGameName := 'Oblivion';
     wbLoadBSAs := True;
     wbAllowInternalEdit := false;
+    ReadSettings;
     DefineTES4;
   end else if FindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
     wbGameMode := gmTES5;
@@ -122,6 +151,7 @@ begin
     wbVWDInTemporary := True;
     wbLoadBSAs := True; // localization won't work otherwise
     wbHideIgnored := False; // to show Form Version
+    ReadSettings;
     DefineTES5;
   end else begin
     ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
@@ -207,20 +237,8 @@ begin
   end else
     wbDontSave := True;
   {$IFDEF LiteVersion}
-  wbApplicationTitle := wbApplicationTitle +' Lite';
+  wbApplicationTitle := wbApplicationTitle + ' Lite';
   {$ENDIF}
-
-  {nxAppDataSubdirVista := wbAppName;
-  if wbTranslationMode then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Trans'
-  else if wbMasterRestore then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterRestore'
-  else if wbMasterUpdate then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'MasterUpdate'
-  else if wbEditAllowed then
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'Edit'
-  else
-    nxAppDataSubdirVista := nxAppDataSubdirVista + 'View';}
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
@@ -230,4 +248,5 @@ end;
 
 initialization
   wbDoInit;
+
 end.

@@ -842,7 +842,7 @@ procedure DoRename;
 var
   i                           : Integer;
   s                           : string;
-  b, f, t                     : string;
+  b, f, t, e                  : string;
   OrgDate                     : Integer;
 begin
   wbFileForceClosed;
@@ -881,8 +881,12 @@ begin
       f := DataPath + s;
       if not RenameFile(f, t) then
         MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
-      else
-        FileSetDate(t, OrgDate);
+      else begin
+        // restore timestamp on a new file
+        e := ExtractFileExt(t);
+        if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.ghost') then
+          FileSetDate(t, OrgDate);
+      end;
     end;
 end;
 
@@ -3250,9 +3254,7 @@ begin
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
-  wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
-  wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
