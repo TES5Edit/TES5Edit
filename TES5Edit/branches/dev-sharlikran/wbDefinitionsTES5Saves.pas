@@ -12966,7 +12966,7 @@ begin
       else  if (aType >= 1000) and (aType <= 1005) then // 1000 to 1005 = 6
         Result := aType - 1000 + 9 + 15 + 1;
     end;
-    if Result > 2 then Result := 0; //Others are not decoded yet
+    if (Result <> (1001-1000+9+15+1)) and (Result > 2) then Result := 0; //Others are not decoded yet
   end;
 end;
 
@@ -13009,7 +13009,7 @@ begin
     if Assigned(Element) then begin
       Result := 1 + (Element.NativeValue and $3F);
     end;
-    if Result > 0 then Result := 0;
+    if (Result > 9) and (Result > 0) then Result := 0;
   end;
 end;
 
@@ -13098,6 +13098,121 @@ end;
 function ChangedFlag08Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := ChangedFlagBitXXDecider($00000100, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag09Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000200, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag10Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000400, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag11Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000800, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag12Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00001000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag13Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00002000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag14Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00004000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag15Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00008000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag16Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00010000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag17Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00020000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag18Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00040000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag19Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00080000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag20Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00100000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag21Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00200000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag22Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00400000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag23Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00800000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag24Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($01000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag25Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($02000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag26Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($04000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag27Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($08000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag28Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($10000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag29Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($20000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag30Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($40000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag31Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($80000000, aBasePtr, aEndPtr, aElement);
 end;
 
 function ChangedFormDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -13576,8 +13691,21 @@ begin
     {0x1000} 'Unknown 13'
   ]));
 
-  wbChangedFormData := wbUnion('Changed Form union', ChangedFormDataDecider, [
-    wbByteArray('Undecoded Data', ChangedFormDataCounter)
+  wbChangedFormData := wbUnion('CForm Union', ChangedFormDataDecider, [
+    wbByteArray('Undecoded Data00', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data01', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data02', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data03', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data04', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data05', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data06', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data07', ChangedFormDataCounter)
+    ,wbByteArray('Undecoded Data08', ChangedFormDataCounter)
+    ,wbStruct('Change Quest Data', [
+       wbUnion('Change Quest Flag', ChangedFlag01Decider, [wbNull, wbQuestFlags ])
+      ,wbByteArray('Undecoded Data09', ChangedFormRemainingDataCounter)
+    ])
+    ,wbByteArray('Undecoded Data10', ChangedFormDataCounter)
   ]);
 
   wbChangedForm := wbStruct('Changed Form', [

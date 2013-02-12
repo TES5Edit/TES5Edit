@@ -8219,8 +8219,7 @@ begin
           wbInteger('Index/Node', itU32)
         ]), -1)
       ]),
-      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-      wbUnknown(NVSI)
+      wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
     ]);
 
     wbRecord(NAVM, 'Navigation Mesh', [

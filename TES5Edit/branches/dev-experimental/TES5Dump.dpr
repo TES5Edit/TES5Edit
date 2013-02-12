@@ -326,10 +326,6 @@ begin
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
       WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
       WriteLn(ErrOutput, '             ', '');
-      WriteLn(ErrOutput, 'Saves mode ONLY', ' not for general use');
-      WriteLn(ErrOutput, '-bts         ', 'BytesToSkip  = number of undecoded bytes to skip, default = 0');
-      WriteLn(ErrOutput, '-btd         ', 'BytesToDump  = number of undecoded bytes to dump as unknown, default = all');
-      WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
       WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
       WriteLn(ErrOutput, '             ', '');

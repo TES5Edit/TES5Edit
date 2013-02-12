@@ -213,6 +213,20 @@ type
     property AutoCompleteMode: TAutoCompleteMode read FAutoCompleteMode write FAutoCompleteMode default acNone;
   end;
 
+  TcheckComboEditLink = class;
+
+  TcheckComboEditLink = class(TComboEditLink)
+  protected
+    function CreateEditControl: TWinControl; override;
+    function GetEditText: WideString; override;
+    procedure SetEditText(const Value: WideString); override;
+    procedure PrepareEditControl; override;
+    procedure KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState); override;
+  public
+    procedure SetBounds(R: TRect); override;
+    procedure PopupSetBounds;
+  end;
+
   TDateEditLink = class(TCustomEditLink)
   protected {private}
     FDateFormat: string;
@@ -261,26 +275,10 @@ implementation
 
 uses
   TypInfo,
-  Types;
-
-{$IFNDEF DELPHI_5_UP}
-
-function AnsiSameText(const S1, S2: string): Boolean;
-begin
-  Result := CompareString(LOCALE_USER_DEFAULT, NORM_IGNORECASE, PChar(S1),
-    Length(S1), PChar(S2), Length(S2)) = 2;
-end;
-
-procedure FreeAndNil(var Obj);
-var
-  P: TObject;
-begin
-  P := TObject(Obj);
-  TObject(Obj) := nil;
-  P.Free;
-end;
-
-{$ENDIF}
+  Types,
+  Math,
+  JvCheckListBox,
+  JvComboBox;
 
 var
   LinkClasses: TStringList = nil;
@@ -1381,6 +1379,150 @@ begin
     TCheckbox(EditControl).State := cbGrayed
   else
     TCheckbox(EditControl).Checked := False;
+end;
+
+{ TcheckLinkComboBox }
+
+type
+  TcheckLinkComboBox = class(TJvCheckedComboBox)
+  private
+    FMinWidth: Integer;
+  protected
+    procedure CreatePopup; override;
+  public
+    function GetDroppedDown: Boolean;
+    procedure SetDroppedDown(aValue: Boolean);
+    property DroppedDown: Boolean read GetDroppedDown write SetDroppedDown;
+    property MinWidth: Integer read FMinWidth write FMinWidth;
+  end;
+
+procedure TcheckLinkComboBox.CreatePopup;
+begin
+  inherited;
+  if FMinWidth > 0 then
+    with FPopup do begin
+      Width := FMinWidth;
+    end;
+end;
+
+function TcheckLinkComboBox.GetDroppedDown: Boolean;
+begin
+  Result := LongBool(SendMessage(Handle, CB_GETDROPPEDSTATE, 0, 0));
+end;
+
+procedure TcheckLinkComboBox.SetDroppedDown(aValue: Boolean);
+var
+  R: TRect;
+begin
+  SendMessage(Handle, CB_SHOWDROPDOWN, Longint(aValue), 0);
+  R := ClientRect;
+  InvalidateRect(Handle, R, True);
+end;
+
+{ TcheckComboEditLink }
+
+function TcheckComboEditLink.CreateEditControl: TWinControl;
+begin
+  Result := TcheckLinkComboBox.Create(nil);
+  with TcheckLinkComboBox(Result) do begin
+    DropDownLines := Min(33, PickList.Count+1);
+    Ctl3D := False;
+  end;
+end;
+
+procedure TcheckComboEditLink.KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    VK_RETURN:
+      if (FStyle = csSimple) or not TcheckLinkComboBox(EditControl).DroppedDown then
+      begin
+        Tree.EndEditNode;
+        Key := 0;
+      end;
+    VK_ESCAPE:
+      if (FStyle = csSimple) or not TcheckLinkComboBox(EditControl).DroppedDown then
+      begin
+        Tree.CancelEditNode;
+        Key := 0;
+      end;
+  end;
+end;
+
+function TcheckComboEditLink.GetEditText: WideString;
+var
+ i: Integer;
+ s: String;
+ t: String;
+begin
+  s := '';
+  t := '';
+  with TcheckLinkComboBox(EditControl) do if PickList.Count > 0 then begin
+    for i := 0 to Pred(PickList.Count) do
+      if Checked[i] then begin
+        s := s + '1';
+        if t>'' then t := t+',';
+        t := t + PickList[i];
+      end else
+        s := s+'0';
+    EditText := t;
+  end;
+  Result := s;
+end;
+
+procedure TcheckComboEditLink.PopupSetBounds;
+var
+  w: Integer;
+  i: Integer;
+begin
+  w := 0;
+  for i := 0 to Pred(PickList.Count) do
+    if Length(PickList[i])>w then
+      w := Length(PickList[i]);
+  with TcheckLinkComboBox(EditControl) do
+    MinWidth := w * Font.Size;
+end;
+
+procedure TcheckComboEditLink.PrepareEditControl;
+begin
+  inherited;
+  with TcheckLinkComboBox(EditControl) do
+  begin
+    Sorted := FSorted;
+    Style := FStyle;
+    Items := FPickList;
+    OnKeyPress := nil;
+    OnChange := nil;
+    Ctl3D := False;
+    PopupSetBounds;
+    PopupDropdown(False);
+  end;
+end;
+
+procedure TcheckComboEditLink.SetEditText(const Value: WideString);
+var
+ i: Integer;
+ s: String;
+ t: String;
+begin
+  s := Value;
+  t := '';
+  i := 0;
+  with TcheckLinkComboBox(EditControl) do if PickList.Count > 0 then begin
+    while (i<PickList.Count) and (Length(s)>i) do begin
+      Checked[i] := (s[i+1] = '1');
+      if Checked[i] then begin
+        if t>'' then t := t +',';
+        t := t + PickList[i];
+      end;
+      Inc(i);
+    end;
+    EditText := t;
+  end;
+end;
+
+procedure TcheckComboEditLink.SetBounds(R: TRect);
+begin
+  inherited SetBounds(R);
 end;
 
 initialization

@@ -12,14 +12,6 @@
 
 *******************************************************************************}
 
-{>>>
-  Anything written here is a temp hack for dump to show lstrings.
-  The purpose is to make it work without large modifications to wbInterface or
-  other core files.
-  It doesn't free memory.
-  Needs complete rewrite for TES5Edit.
-<<<}
-
 unit wbLocalization;
 
 interface
@@ -77,7 +69,8 @@ type
 
   TwbLocalizationHandler = class
   private
-    lFiles: TStrings;
+    lFiles       : TStrings;
+    fReuseDup    : boolean;
   protected
     function Get(Index: Integer): TwbLocalizationFile;
     function GetStringsPath: string;
@@ -85,6 +78,7 @@ type
     NoTranslate: boolean;
     property _Files[Index: Integer]: TwbLocalizationFile read Get; default;
     property StringsPath: string read GetStringsPath;
+    property ReuseDup: Boolean read fReuseDup write fReuseDup;
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
@@ -379,6 +373,7 @@ end;
 constructor TwbLocalizationHandler.Create;
 begin
   lFiles := TwbFastStringListCS.CreateSorted;
+  fReuseDup := false;
   NoTranslate := false;
 end;
 
@@ -488,7 +483,6 @@ procedure TwbLocalizationHandler.LoadForFile(aFileName: string);
 var
   ls: TwbLStringType;
   s: string;
-//  i: integer;
   res: TDynResources;
 begin
   if not Assigned(wbContainerHandler) then
@@ -561,13 +555,15 @@ begin
         ID := wblf[ls].NextID;
     end;
 
-    // detect a duplicate string
     ls := LocalizedValueDecider(aElement);
-    idx := wblf[ls].fStrings.IndexOf(aValue);
-    if idx = -1 then
-      wblf[LocalizedValueDecider(aElement)].AddString(ID, aValue)
-    else
-      ID := Cardinal(wblf[ls].fStrings.Objects[idx]);
+
+    // detect a duplicate string
+    if ReuseDup then begin
+      idx := wblf[ls].fStrings.IndexOf(aValue);
+      if idx <> -1 then ID := Cardinal(wblf[ls].fStrings.Objects[idx]) else
+        wblf[ls].AddString(ID, aValue);
+    end else
+      wblf[ls].AddString(ID, aValue);
 
     Result := ID;
   finally
@@ -595,7 +591,7 @@ begin
   end;
 
   if not _Files[idx].IDExists(ID) then
-    // strings doesn't exist, create new
+    // string doesn't exist, create new
     Result := AddValue(aValue, aElement)
   else
     // modify existing

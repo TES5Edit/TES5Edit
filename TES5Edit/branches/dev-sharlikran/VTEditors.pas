@@ -178,7 +178,7 @@ type
 
   IComboCustomDraw = interface ['{3B63A965-89BB-4C1E-988C-DE61726F0C82}']
     procedure ComboDrawItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-    procedure ComboMeasureItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; var Height: Integer);
+    procedure ComboMeasureItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; var Height: Integer); 
   end;
 
   TComboEditLink = class(TCustomEditLink)
@@ -215,42 +215,16 @@ type
 
   TcheckComboEditLink = class;
 
-//  IcheckComboCustomDraw = interface ['{3B63A965-89BB-4C1E-988C-DE61726F0C83}'] // set manually, should generate but I don't remember how
-//    procedure ComboDrawItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-//    procedure ComboMeasureItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; var Height: Integer);
-//  end;
-
   TcheckComboEditLink = class(TComboEditLink)
-//  protected {private}
-//    FStyle: TComboBoxStyle;
-//    FPickList: TStringList;
-//    FAutoCompleteMode: TAutoCompleteMode;
-//    FSorted: Boolean;
-//    procedure EditKeyPress(Sender: TObject; var Key: Char);
-//    procedure EditChange(Sender: TObject);
-//    procedure DoAutoComplete(var Key: Char);
-//    function GetPickList: TStrings;
-//    procedure SetPickList(const Value: TStrings);
   protected
     function CreateEditControl: TWinControl; override;
     function GetEditText: WideString; override;
     procedure SetEditText(const Value: WideString); override;
     procedure PrepareEditControl; override;
     procedure KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState); override;
-//    procedure ComboDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState); override;
-//    procedure ComboMeasureItem(Control: TWinControl; Index: Integer; var Height: Integer); override;
   public
-//    constructor Create(AOwner: TPersistent); override;
-//    constructor Create(const AList: string; AStyle: TComboBoxStyle; ASorted: Boolean = False); overload;
-//    constructor Create(APickList: TStrings; AStyle: TComboBoxStyle; ASorted: Boolean = False); overload;
-//    destructor Destroy; override;
     procedure SetBounds(R: TRect); override;
     procedure PopupSetBounds;
-//  published
-//    property Style: TComboBoxStyle read FStyle write FStyle default csDropDown;
-//    property Sorted: Boolean read FSorted write FSorted default False;
-//    property PickList: TStrings read GetPickList write SetPickList;
-//    property AutoCompleteMode: TAutoCompleteMode read FAutoCompleteMode write FAutoCompleteMode default acNone;
   end;
 
   TDateEditLink = class(TCustomEditLink)
@@ -305,25 +279,6 @@ uses
   Math,
   JvCheckListBox,
   JvComboBox;
-
-{x$IFNDEF DELPHI_5_UP}
-
-//function AnsiSameText(const S1, S2: string): Boolean;
-//begin
-//  Result := CompareString(LOCALE_USER_DEFAULT, NORM_IGNORECASE, PChar(S1),
-//    Length(S1), PChar(S2), Length(S2)) = 2;
-//end;
-//
-//procedure FreeAndNil(var Obj);
-//var
-//  P: TObject;
-//begin
-//  P := TObject(Obj);
-//  TObject(Obj) := nil;
-//  P.Free;
-//end;
-
-{x$ENDIF}
 
 var
   LinkClasses: TStringList = nil;
@@ -1466,30 +1421,6 @@ end;
 
 { TcheckComboEditLink }
 
-//constructor TcheckComboEditLink.Create(AOwner: TPersistent);
-//begin
-//  inherited Create(AOwner);
-//  FPickList := TStringList.Create;
-//end;
-//
-//constructor TcheckComboEditLink.Create(const AList: string; AStyle: TComboBoxStyle; ASorted: Boolean = False);
-//begin
-//  Create(nil);
-//  FSorted := ASorted;
-//  FStyle := AStyle;
-//  FPickList.CommaText := AList;
-//  FAutoCompleteMode := acComplete;
-//end;
-//
-//constructor TchkecComboEditLink.Create(APickList: TStrings; AStyle: TComboBoxStyle; ASorted: Boolean = False);
-//begin
-//  Create(nil);
-//  FSorted := ASorted;
-//  FStyle := AStyle;
-//  FAutoCompleteMode := acComplete;
-//  if Assigned(APickList) then FPickList.AddStrings(APickList);
-//end;
-
 function TcheckComboEditLink.CreateEditControl: TWinControl;
 begin
   Result := TcheckLinkComboBox.Create(nil);
@@ -1499,12 +1430,6 @@ begin
   end;
 end;
 
-//destructor TcheckComboEditLink.Destroy;
-//begin
-//  FreeAndNil(FPickList);
-//  inherited;
-//end;
-//
 procedure TcheckComboEditLink.KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key of
@@ -1522,22 +1447,6 @@ begin
       end;
   end;
 end;
-
-//procedure TcheckComboEditLink.ComboDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-//var
-//  I: IcheckComboCustomDraw;
-//begin
-//  if Supports(FOwnerInterface, IcheckComboCustomDraw, I) then
-//    I.ComboDrawItem(Self, TcheckLinkComboBox(Control), Index, Rect, State);
-//end;
-//
-//procedure TcheckComboEditLink.ComboMeasureItem(Control: TWinControl; Index: Integer; var Height: Integer);
-//var
-//  I: IcheckComboCustomDraw;
-//begin
-//  if Supports(FOwnerInterface, IcheckComboCustomDraw, I) then
-//    I.ComboMeasureItem(Self, TcheckLinkComboBox(Control), Index, Height);
-//end;
 
 function TcheckComboEditLink.GetEditText: WideString;
 var
@@ -1615,86 +1524,6 @@ procedure TcheckComboEditLink.SetBounds(R: TRect);
 begin
   inherited SetBounds(R);
 end;
-
-//procedure TcheckComboEditLink.EditKeyPress(Sender: TObject; var Key: Char);
-//begin
-//  DoAutoComplete(Key);
-//end;
-//
-//procedure TcheckComboEditLink.DoAutoComplete(var Key: Char);
-//var
-//  S, S1: string;
-//  I, St, L: Integer;
-//begin
-//  if (FStyle in [csDropDown, csSimple]) and (Key in [#32 .. #255]) then
-//    with TcheckLinkComboBox(EditControl) do
-//      case FAutoCompleteMode of
-//        acComplete:
-//          begin
-//            St := SelStart;
-//            S := Copy(Text, 1, St) + Key;
-//            L := Length(S);
-//            with FPickList do
-//              for I := 0 to Count - 1 do
-//                if AnsiSameText(Copy(Strings[I], 1, L), S) then
-//                begin
-//                  S1 := S + Copy(Strings[I], Length(S) + 1, MaxInt);
-//                  TcheckLinkComboBox(EditControl).Text := S1;
-//                  SelStart := St + 1;
-//                  SelLength := Length(S1) - St;
-//                  Key := #0;
-//                  Exit;
-//                end;
-//          end;
-//      end;
-//end;
-//
-//procedure TcheckComboEditLink.EditChange(Sender: TObject);
-//var
-//  S: string;
-//  I, St, Sl, L: Integer;
-//  List: TStringList;
-//begin
-//  if (FStyle in [csDropDown, csSimple]) then
-//    with TcheckLinkComboBox(EditControl) do
-//      case FAutoCompleteMode of
-//        acLimit:
-//          begin
-//            S := Text;
-//            L := Length(S);
-//            St := SelStart;
-//            Sl := SelLength;
-//            List := TStringList.Create;
-//            try
-//              if L = 0 then
-//                List.AddStrings(FPickList)
-//              else
-//              begin
-//                with FPickList do
-//                  for I := 0 to Count - 1 do
-//                    if AnsiSameText(Copy(Strings[I], 1, L), S) then
-//                      List.Add(Strings[I]);
-//                end;
-//              if not Items.Equals(List) then Items.Assign(List);
-//              TcheckLinkComboBox(EditControl).Text := S;
-//              SelStart := St;
-//              SelLength := Sl;
-//            finally
-//              List.Free;
-//            end;
-//          end;
-//      end;
-//end;
-//
-//function TcheckComboEditLink.GetPickList: TStrings;
-//begin
-//  Result := FPickList;
-//end;
-//
-//procedure TcheckComboEditLink.SetPickList(const Value: TStrings);
-//begin
-//  FPickList.Assign(Value);
-//end;
 
 initialization
 

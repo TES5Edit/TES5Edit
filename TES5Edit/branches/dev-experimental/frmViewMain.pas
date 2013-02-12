@@ -842,7 +842,7 @@ procedure DoRename;
 var
   i                           : Integer;
   s                           : string;
-  b, f, t                     : string;
+  b, f, t, e                  : string;
   OrgDate                     : Integer;
 begin
   wbFileForceClosed;
@@ -881,8 +881,12 @@ begin
       f := DataPath + s;
       if not RenameFile(f, t) then
         MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
-      else
-        FileSetDate(t, OrgDate);
+      else begin
+        // restore timestamp on a new file
+        e := ExtractFileExt(t);
+        if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.ghost') then
+          FileSetDate(t, OrgDate);
+      end;
     end;
 end;
 
@@ -2874,14 +2878,14 @@ begin
   PluginsFileName := '';
   if ParamCount >= 1 then begin
     PluginsFileName := ParamStr(1);
-    if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
-      PluginsFileName := '';
     if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
       if ParamCount >= 2 then begin
         TheGameIniFileName := ParamStr(2);
         if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
           TheGameIniFileName := '';
       end;
+    if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
+      PluginsFileName := '';
     end;
   end;
 
@@ -3272,9 +3276,7 @@ begin
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
-  wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
-  wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
