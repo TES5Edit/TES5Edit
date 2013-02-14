@@ -3436,6 +3436,7 @@ type
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbIntegerDefFormater---}
+    function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
@@ -7919,6 +7920,34 @@ end;
 function TwbFormID.CanContainFormIDs: Boolean;
 begin
   Result := True;
+end;
+
+function TwbFormID.Check(aInt: Int64;
+  const aElement: IwbElement): string;
+var
+  _File: IwbFile;
+  MainRecord: IwbMainRecord;
+begin
+  Result := '';
+
+  if Assigned(aElement) then begin
+    _File := aElement._File;
+    if Assigned(_File) then begin
+      try
+        MainRecord := _File.RecordByFormID[aInt, True];
+        if Assigned(MainRecord) then
+          Exit;
+      except
+        on E: Exception do begin
+          Result := E.Message;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+
+  if aInt > $800 then
+    Result := '['+IntToHex64(aInt,8)+'] <Error: Could not be resolved>';
 end;
 
 function TwbFormID.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
