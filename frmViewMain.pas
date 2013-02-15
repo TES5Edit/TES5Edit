@@ -463,6 +463,8 @@ type
     procedure mniNavOptionsClick(Sender: TObject);
     procedure JvInterpreterProgram1GetValue(Sender: TObject; Identifier: string;
       var Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
+    procedure JvInterpreterProgram1GetUnitSource(UnitName: string; var Source: string;
+      var Done: Boolean);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
     procedure mniRefByMarkModifiedClick(Sender: TObject);
   protected
@@ -5445,6 +5447,23 @@ begin
   end;
 end;
 
+procedure TfrmMain.JvInterpreterProgram1GetUnitSource(UnitName: string;
+  var Source: string; var Done: Boolean);
+var
+  sl: TStringList;
+  UnitFile: string;
+begin
+  UnitFile := ProgramPath + 'Edit Scripts\' + UnitName + '.pas';
+  sl := TStringList.Create;
+  try
+    sl.LoadFromFile(UnitFile);
+    Source := sl.Text;
+    Done := True;
+  finally
+    sl.Free;
+  end;
+end;
+
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 const
   sJustWait                   = 'Applying script. Please wait...';
@@ -5478,6 +5497,7 @@ begin
   jvi := TJvInterpreterProgram.Create(Self);
   try
     jvi.OnGetValue := JvInterpreterProgram1GetValue;
+    jvi.OnGetUnitSource := JvInterpreterProgram1GetUnitSource;
     jvi.Pas.Text := Scr;
     jvi.Compile;
 
