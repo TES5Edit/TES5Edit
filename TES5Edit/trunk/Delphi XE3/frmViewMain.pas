@@ -1910,9 +1910,9 @@ end;
 
 procedure TfrmMain.mniNavCompareToClick(Sender: TObject);
 var
-  _File                       : IwbFile;
-  NodeData                    : PNavNodeData;
-  CompareFile                 : string;
+  _File        : IwbFile;
+  NodeData     : PNavNodeData;
+  CompareFile  : string;
 begin
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
