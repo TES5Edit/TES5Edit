@@ -6689,7 +6689,7 @@ var
 begin
   Result := 0;
   for i := Low(stMembers) to High(stMembers) do
-    if Assigned(aBasePtr) and (Cardinal(aBasePtr) < Cardinal(aEndPtr)) then begin  // if aBasePtr >= aEndPtr then no allocation (or error)
+    { if Assigned(aBasePtr) and (Cardinal(aBasePtr) < Cardinal(aEndPtr)) then} begin  // if aBasePtr >= aEndPtr then no allocation (or error) ROLLED BACK due to issue with cleaning DAWNGUARD
       Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
       if Size = High(Integer) then begin
         Result := High(Integer);
