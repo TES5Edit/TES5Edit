@@ -6694,89 +6694,121 @@ begin
     )
   ]);
 
-  wbRecord(NAVM, 'Navigation Mesh', [
-    wbEDID,
-    wbInteger(NVER, 'Version', itU32),
-    wbStruct(DATA, '', [
-      wbFormIDCk('Cell', [CELL]),
-      wbInteger('Vertex Count', itU32),
-      wbInteger('Triangle Count', itU32),
-      wbInteger('External Connections Count', itU32),
-      wbInteger('NVCA Count', itU32),
-      wbInteger('Doors Count', itU32)
-    ]),
-    wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ])),
-    wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
-      wbArray('Vertices', wbInteger('Vertex', itS16), 3),
-      wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
-        '0 <-> 1',
-        '1 <-> 2',
-        '2 <-> 0'
+  if wbSimpleRecords then begin
+
+    wbRecord(NAVM, 'Navigation Mesh', [
+      wbEDID,
+      wbInteger(NVER, 'Version', itU32),
+      wbStruct(DATA, '', [
+        wbFormIDCk('Cell', [CELL]),
+        wbInteger('Vertex Count', itU32),
+        wbInteger('Triangle Count', itU32),
+        wbInteger('External Connections Count', itU32),
+        wbInteger('NVCA Count', itU32),
+        wbInteger('Doors Count', itU32)
       ]),
-      wbInteger('Flags', itU32, wbFlags([
-        'Triangle #0 Is External',
-        'Triangle #1 Is External',
-        'Triangle #2 Is External',
-        'Unknown 4',
-        'Unknown 5',
-        'Unknown 6',
-        'Unknown 7',
-        'Unknown 8',
-        'Unknown 9',
-        'Unknown 10',
-        'Unknown 11',
-        'Unknown 12',
-        'Unknown 13',
-        'Unknown 14',
-        'Unknown 15',
-        'Unknown 16',
-        'Unknown 17',
-        'Unknown 18',
-        'Unknown 19',
-        'Unknown 20',
-        'Unknown 21',
-        'Unknown 22',
-        'Unknown 23',
-        'Unknown 24',
-        'Unknown 25',
-        'Unknown 26',
-        'Unknown 27',
-        'Unknown 28',
-        'Unknown 29',
-        'Unknown 30',
-        'Unknown 31',
-        'Unknown 32'
+      wbByteArray(NVVX, 'Vertices'),
+      wbByteArray(NVTR, 'Triangles'),
+      wbByteArray(NVCA, 'Unknown'),
+      wbArray(NVDP, 'Doors', wbStruct('Door', [
+        wbFormIDCk('Reference', [REFR]),
+        wbInteger('Unknown', itU16),
+        wbByteArray('Unused', 2)
+      ])),
+      wbByteArray(NVGD, 'Unknown'),
+      wbArray(NVEX, 'External Connections', wbStruct('Connection', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
+        wbInteger('Triangle', itU16, nil, cpNormal)
       ]))
-    ])),
-    wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)),
-    wbArray(NVDP, 'Doors', wbStruct('Door', [
-      wbFormIDCk('Reference', [REFR]),
-      wbInteger('Unknown', itU16),
-      wbByteArray('Unused', 2)
-    ])),
-    wbStruct(NVGD, 'Unknown', [
-//      wbUnknown
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbArray('Unknown', wbArray('Unknown', wbInteger('Unknown', itU16), -2))
-    ]),
-    wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-      wbByteArray('Unknown', 4),
-      wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
-      wbInteger('Triangle', itU16, nil, cpNormal)
-    ]))
-  ], False, wbNAVMAddInfo);
+    ], False, wbNAVMAddInfo);
+
+  end else begin
+
+    wbRecord(NAVM, 'Navigation Mesh', [
+      wbEDID,
+      wbInteger(NVER, 'Version', itU32),
+      wbStruct(DATA, '', [
+        wbFormIDCk('Cell', [CELL]),
+        wbInteger('Vertex Count', itU32),
+        wbInteger('Triangle Count', itU32),
+        wbInteger('External Connections Count', itU32),
+        wbInteger('NVCA Count', itU32),
+        wbInteger('Doors Count', itU32)
+      ]),
+      wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ])),
+      wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
+        wbArray('Vertices', wbInteger('Vertex', itS16), 3),
+        wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
+          '0 <-> 1',
+          '1 <-> 2',
+          '2 <-> 0'
+        ]),
+        wbInteger('Flags', itU32, wbFlags([
+          'Triangle #0 Is External',
+          'Triangle #1 Is External',
+          'Triangle #2 Is External',
+          'Unknown 4',
+          'Unknown 5',
+          'Unknown 6',
+          'Unknown 7',
+          'Unknown 8',
+          'Unknown 9',
+          'Unknown 10',
+          'Unknown 11',
+          'Unknown 12',
+          'Unknown 13',
+          'Unknown 14',
+          'Unknown 15',
+          'Unknown 16',
+          'Unknown 17',
+          'Unknown 18',
+          'Unknown 19',
+          'Unknown 20',
+          'Unknown 21',
+          'Unknown 22',
+          'Unknown 23',
+          'Unknown 24',
+          'Unknown 25',
+          'Unknown 26',
+          'Unknown 27',
+          'Unknown 28',
+          'Unknown 29',
+          'Unknown 30',
+          'Unknown 31',
+          'Unknown 32'
+        ]))
+      ])),
+      wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)),
+      wbArray(NVDP, 'Doors', wbStruct('Door', [
+        wbFormIDCk('Reference', [REFR]),
+        wbInteger('Unknown', itU16),
+        wbByteArray('Unused', 2)
+      ])),
+      wbStruct(NVGD, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbArray('Unknown', wbArray('Unknown', wbInteger('Unknown', itU16), -2))
+      ]),
+      wbArray(NVEX, 'External Connections', wbStruct('Connection', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
+        wbInteger('Triangle', itU16, nil, cpNormal)
+      ]))
+    ], False, wbNAVMAddInfo);
+
+  end;
 
   wbRecord(PGRE, 'Placed Grenade', [
     wbEDID,

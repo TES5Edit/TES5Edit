@@ -9104,6 +9104,10 @@ end;
 
 procedure TwbSubRecord.PrepareSave;
 begin
+  if wbDelayLoadRecords then
+    if not (esModified in eStates) then
+      Exit;
+
   CheckCount;
   CheckTerminator;
   inherited;
