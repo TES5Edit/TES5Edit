@@ -6783,17 +6783,21 @@ var
   Size  : Integer;
 begin
   Result := 0;
-  for i := Low(stMembers) to High(stMembers) do
-    if Assigned(aBasePtr) and (Cardinal(aBasePtr) < Cardinal(aEndPtr)) then begin  // if aBasePtr >= aEndPtr then no allocation (or error)
-      Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
-      if Size = High(Integer) then begin
-        Result := High(Integer);
-        Exit;
+    if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
+      wbProgressCallback('Found a struct with negative size!'+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
+    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
+      Result := 0;
+    end else
+      for i := Low(stMembers) to High(stMembers) do begin
+        Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
+        if Size = High(Integer) then begin
+          Result := High(Integer);
+          Break;
+        end;
+        if Assigned(aBasePtr) then
+          Inc(Cardinal(aBasePtr), Size);
+        Inc(Result, Size);
       end;
-      if Assigned(aBasePtr) then
-        Inc(Cardinal(aBasePtr), Size);
-      Inc(Result, Size);
-    end;
 end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;
@@ -7584,7 +7588,9 @@ end;
 
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if sdSize > 0 then
+  if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+    Result := 0
+  else if sdSize > 0 then
     Result := sdSize
   else begin
     if aBasePtr = nil then
@@ -10320,7 +10326,9 @@ function TwbLenStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: Iwb
 var
   Len : Integer;
 begin
-  if Assigned(aBasePtr) then begin
+  if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+    Result := 0
+  else if Assigned(aBasePtr) then begin
     Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
     if Result < Prefix then
       Exit;
@@ -10468,7 +10476,9 @@ end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if Assigned(aElement._File) and aElement._File.IsLocalized then
+  if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+    Result := 0
+  else if Assigned(aElement._File) and aElement._File.IsLocalized then
     Result := 4
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);

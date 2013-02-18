@@ -5197,12 +5197,13 @@ begin
   if mrStruct.mrsFlags.IsCompressed then try
     SetLength(mrDataStorage, PCardinal(dcDataBasePtr)^ );
 
-    DecompressToUserBuf(
-      Pointer( Cardinal(dcDataBasePtr) + SizeOf(Cardinal) ),
-      mrStruct.mrsDataSize - SizeOf(Cardinal),
-      @mrDataStorage[0],
-      PCardinal(dcDataBasePtr)^
-    );
+    if (PCardinal(dcDataBasePtr)^ > 0) then  // This is to avoid an exception on compressed deleted record (at least in Dawnguard)
+      DecompressToUserBuf(
+        Pointer( Cardinal(dcDataBasePtr) + SizeOf(Cardinal) ),
+        mrStruct.mrsDataSize - SizeOf(Cardinal),
+        @mrDataStorage[0],
+        PCardinal(dcDataBasePtr)^
+      );
 
     dcDataEndPtr := Pointer( Cardinal(@mrDataStorage[0]) + PCardinal(dcDataBasePtr)^ );
     dcDataBasePtr := @mrDataStorage[0];

@@ -13009,7 +13009,7 @@ begin
     if Assigned(Element) then begin
       Result := 1 + (Element.NativeValue and $3F);
     end;
-    if (Result > 9) and (Result > 0) then Result := 0;
+    if (Result > 10) and (Result > 0) then Result := 0;
   end;
 end;
 
