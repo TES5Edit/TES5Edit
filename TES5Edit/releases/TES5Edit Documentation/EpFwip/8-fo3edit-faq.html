@@ -1,0 +1,1176 @@
+﻿<!DOCTYPE HTML>
+
+<html>
+
+<head>
+	<title>Miax's Tome of FO3Edit</title>
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<script type="text/javascript" src="js/lib/jquery.js"></script>
+	<script type="text/javascript" src="js/lib/jcarousellite.js"></script>
+	<script type="text/javascript" src="js/t5e.js"></script>
+
+</head>
+
+<body>
+	<div class="toc">
+		<div class="global">
+			<h2>Main Table of Contents</h2>
+
+			<ul class="first">
+				<li><a href="index.html">1. Introduction</a></li>
+				<li><a href="2-overview.html">2. Overview</a></li>
+				<li><a href="3-master-update-and-master-restore.html">3. Master Update and Master Restore</a></li>
+				<li><a href="4-conflict-detection-and-resolution.html">4. Conflict Detection and Resolution</a></li>
+				<li><a href="5-mod-cleaning-and-error-checking.html">5. Mod Cleaning and Error Checking</a></li>
+				<li><a href="6-managing-mod-files.html">6. Managing Mod Files</a></li>
+				<li><a href="7-mod-utilities.html">7. Mod Utilities</a></li>
+				<li><a href="8-fo3edit-faq.html">8. FO3Edit FAQ</a></li>
+				<li><a href="9-appendix.html">9. Appendix</a></li>
+				<li><a href="10-cheat-sheets-and-quick-reference-charts.html">10. Cheat Sheets and Quick Reference Charts</a></li>
+
+			</ul>
+
+		</div><!--/.global-->
+
+		<div class="local">
+			<h3>Section Table of Contents</h3>
+
+			<ul class="second">
+				<li><a href="#s_8-1">8.1 Overview</a></li>
+				<li>
+					<a href="#s_8-2">8.2 Beginner Questions</a>
+
+					<ul class="third">
+						<li><a href="#s_8-2-1">8.2.1 "What mods do I select when I first load FO3Edit?"</a></li>
+						<li><a href="#s_8-2-2">8.2.2 "Appling conflict filters shows almost every mod has conflicts!"</a></li>
+						<li><a href="#s_8-2-3">8.2.3 "Should I make changes to the mods if there is a conflict?"</a></li>
+						<li><a href="#s_8-2-4">8.2.4 "Where in the load-order should my patch plug-in be placed?"</a></li>
+						<li><a href="#s_8-2-5">8.2.5 "What does the patch plug-in really do for my Fallout3 load order?"</a></li>
+						<li><a href="#s_8-2-6">8.2.6 "Does FO3Edit MasterUpdate correct the white face bug?"</a></li>
+						<li><a href="#s_8-2-7">8.2.7 "What version of Fallout3 edit do I need FO3Edit for?"</a></li>
+						<li><a href="#s_8-2-8">8.2.8 "Does FO3Edit fix the Enclave radio broken by the Broken Steel DLC?"</a></li>
+						<li><a href="#s_8-2-9">8.2.9 "What happens if I can? get rid of my conflicts?"</a></li>
+						<li><a href="#s_8-2-10">8.2.10 "What if I get an error about, "Record XXXX is not contained in a group"?"</a></li>
+						<li><a href="#s_8-2-11">8.2.11 "Does MasterRemove remove the ONAM records added by MasterUpdate?"</a></li>
+						<li><a href="#s_8-2-12">8.2.12 "Can I run MasterUpdate one-mod-at-a-time, to check them out?"</a></li>
+						<li><a href="#s_8-2-13">8.2.13 "What"s with all these backup files building-up in my Data directory?"</a></li>
+						<li><a href="#s_8-2-14">8.2.14 "How many mods can F03Edit load?"</a></li>
+						<li><a href="#s_8-2-15">8.2.15 "Will MasterUpdate work if I have 200+ mods?"</a></li>
+						<li><a href="#s_8-2-16">8.2.16 "After Filtering for conflicts, I don? see anything on the Left-hand side!"</a></li>
+						<li><a href="#s_8-2-17">8.2.17 "Why does the Change Confirmation window force me to wait?!"</a></li>
+						<li><a href="#s_8-2-18">8.2.18 "I deleted a plug-in file but FO3Edit seems to think it? still there?"</a></li>
+						<li><a href="#s_8-2-19">8.2.19 "How do I start the master update mode?"</a></li>
+						<li><a href="#s_8-2-20">8.2.20 "Should I make a new merged patch if I change my load order in FOMM?"</a></li>
+						<li><a href="#s_8-2-21">8.2.21 "I am having problems getting FO3Edit to work on Vista"</a></li>
+						<li><a href="#s_8-2-22">8.2.22 "After FO3Edit loads, I can? get the context menu on the left to load!"</a></li>
+
+					</ul>
+
+				</li>
+				<li>
+					<a href="#s_8-3">8.3 Intermediate Questions</a>
+
+					<ul class="third">
+						<li><a href="#s_8-3-1">8.3.1 "Should I clean all of the mods that I use including FOOK, FWE, MMM, etc?"</a></li>
+						<li><a href="#s_8-3-2">8.3.2 "Is there a function that pops up if you double click something?"</a></li>
+						<li><a href="#s_8-3-3">8.3.3 "Difference between 'copy as override' and 'deep copy as override'?"</a></li>
+						<li><a href="#s_8-3-4">8.3.4 "Replicating a dialogue block with all topic blocks that belong to it"</a></li>
+						<li><a href="#s_8-3-5">8.3.5 "Having troubles updating stuff from one mod version to another"</a></li>
+					<li><a href="#s_8-3-6">8.3.6 "How do I convert an ESP into an ESM?"</a></li>
+						<li><a href="#s_8-3-7">8.3.7 "Why should I "clean" my mod? It works just fine how it is!"</a></li>
+						<li><a href="#s_8-3-8">8.3.8 "Many of my NPCs in-game has stark white-faces!?"</a></li>
+						<li><a href="#s_8-3-9">8.3.9 "I have FOOK and get a load error like this, did I do something wrong?"</a></li>
+						<li><a href="#s_8-3-10">8.3.10 "I found records that I"ve changed don"t exist in Fallout3.esm!"</a></li>
+						<li><a href="#s_8-3-11">8.3.11 "How do I reverse MasterUpdate so I can edit my ESP in the GECK?"</a></li>
+						<li><a href="#s_8-3-12">8.3.12 "How can I see individual records from a mod?"</a></li>
+						<li><a href="#s_8-3-13">8.3.13 "How do I view all of the references in a mod, not just conflicts?"</a></li>
+						<li><a href="#s_8-3-14">8.3.14 "I cleaned my mod and am getting CTDs with NAVM errors?"</a></li>
+						<li><a href="#s_8-3-15">8.3.15 "How do I reverse an un-intended change"</a></li>
+
+					</ul>
+
+				</li>
+				<li>
+					<a href="#s_8-4">8.4 Advanced Questions</a>
+
+					<ul class="third">
+						<li><a href="#s_8-4-1">8.4.1 "What is Fallout3.Hardcoded.esp?"</a></li>
+						<li><a href="#s_8-4-2">8.4.2 "Can I have a plug-in that references another plug-in as its master?"</a></li>
+						<li><a href="#s_8-4-3">8.4.3 "Can I remove the delay between clicking an entry and the edit box"</a></li>
+						<li><a href="#s_8-4-4">8.4.4 "Is there a "Goto" option in the context menu for pulling-up a FormID?"</a></li>
+						<li><a href="#s_8-4-5">8.4.5 "Can you help me with the Optcodes for IsInCombat?"</a></li>
+						<li><a href="#s_8-4-6">8.4.6 "During the loading process, I notice some of the mods show Errors"</a></li>
+						<li><a href="#s_8-4-7">8.4.7 "Is there a way to look up the records opt-codes?"</a></li>
+						<li><a href="#s_8-4-8">8.4.8 "is "HasPerk" available in the CTDAs?"</a></li>
+						<li><a href="#s_8-4-9">8.4.9 "Can we edit text in the expanded windows?"</a></li>
+						<li><a href="#s_8-4-10">8.4.10 "Where can I learn more about FLST Lists?"</a></li>
+						<li><a href="#s_8-4-11">8.4.11 "Can we list the mod index for each master/Plug-in loaded in the dump?"</a></li>
+						<li><a href="#s_8-4-12">8.4.12 "I have a lot of house-mods that are conflicting, how do I fix this?"</a></li>
+						<li><a href="#s_8-4-13">8.4.13 "Will FO3Edit merge the Eyes, Hairs, Mouth pieces, etc?"</a></li>
+						<li><a href="#s_8-4-14">8.4.14 "Can I merge destruction-data into my patch plug-in?"</a></li>
+
+					</ul>
+
+				</li>
+
+			</ul>
+
+		</div><!--/.local-->
+
+	</div><!--/.toc-->
+
+	<section id="8-fo3edit-faq">
+		<h1>8. FO3Edit FAQ</h1>
+
+		<button class="ctrl-all" onclick="toggle_all(this);">Collapse All</button>
+
+		<div class="content clearfix">
+
+			<div class="level-2" id="s_8-1">
+				<h2 class="ctrl">8.1 Overview</h2>
+
+				<div class="content">
+					<p>The idea behind the FAQ is to make it easier for you to find the <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> information that you need, without having to read this entire manual &#8211; that could put anyone into a coma. As I really don&#8217;t want the hassle of law suits, it is in both of our best interest that this tutorial is simple to navigate and quick to find resolution to the tasks at hand.</p>
+
+					<p>FAQ Navigation really means using the FAQ to direct you to the right cell (section) of the document that describes what you need to do. In some cases, the FAQ itself will be all the help that is required. In other cases, you may want/need to learn the process at depth. Each Question/Answer combination has a teleport XMarker that you can activate by holding down Control and Left-Clicking on the XMarker with your mouse. Activating the XMarker will teleport you to the appropriate cell in the document for further details.</p>
+
+					<p>The FAQ is divided into Beginner, Intermediate and Advanced sections to better organize the questions, and further insulate your brain from over-exposure to technical documentation. The idea being that most users should start in the Beginner section and advance forward until find the answers you seek. If you do not find the answers you were looking for, please post them in the <a href="http://www.bethsoft.com/bgsforums/index.php?showforum=46),">Bethesda GECK Forum</a> so that we can update the FAQ.</p>
+
+					<p class="Note"><strong>Note:</strong>All Acquisition and Installation questions are covered in Chapter 2 above.</p>
+
+				</div><!--/.content-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_8-2">
+				<h2 class="ctrl">8.2 Beginner Questions</h2>
+
+				<div class="content">
+					<p>The Beginner FAQ covers two key functions of FO3Edit; Conflict Detection / Resolution and Master Update Mode (<abbr title="Master Update Mode">MUM</abbr>). As these are the two most heavily used functions of FO3Edit, we focus beginners on these processes and questions. We start with <abbr title="Master Update Mode">MUM</abbr> and end with Conflict Detection / Resolution.</p>
+
+					<div class="level-3" id="s_8-2-1">
+						<h3 class="ctrl">8.2.1 &#8220;What mods do I select when I first load FO3Edit?&#8221;</h3>
+
+						<div class="content">
+						<p><strong>Question:</strong> When loading FO3Edit, do I select all of the mods at once and apply a filter or does it need to be done individually?</p>
+
+						<p>Two Answers here, depending on what your trying to accomplish:</p>
+
+						<p><strong>Answer:</strong> If you&#8217;re <a href="4-conflict-detection-and-resolution.html#s_4-9">de-conflicting your mods</a> so that you can play crash-free, then you want to select All of the mods (with the single exception of any previous patch plug-in you created, you don&#8217;t want to load that if you&#8217;re building a new patch plug-in).</p>
+
+						<p><strong>Answer:</strong> If you&#8217;re <a href="5-mod-cleaning-and-error-checking.html">cleaning your mod</a> or wanting to modify/work on just your own mod, then; Right-click in the load-window and choose, &#8220;Select None&#8221;. Then find your mod in the list and just select that mod. The loader will automatically pick-up any <abbr title="Elder Scrolls Master">ESM</abbr> master files that your mod depends on. The section on <a href="5-mod-cleaning-and-error-checking.html">Mod Cleaning and Error Checking</a> will describe the process at depth.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-2">
+						<h3 class="ctrl">8.2.2 &#8220;Appling conflict filters shows almost every mod has conflicts!&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> When I apply my conflict detection filter, almost all of the mods in my list have Red backgrounds! Am I totally conflicted here?</p>
+
+							<p><strong>Answer:</strong> Red isn't necessarily bad, although it does point you to conflicts. With that many mods, a <a href="4-conflict-detection-and-resolution.html#s_4-8">merged patch Plug-in</a> is a must. Following the instructions in the section on <a href="4-conflict-detection-and-resolution.html#s_4-6">Patch Plug-ins</a>, and you should see that all of the intended edits will be playing nicer with each other. The chapter on <a href="4-conflict-detection-and-resolution.html">Conflict Detection and Resolution</a> will show you the differences.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-3">
+						<h3 class="ctrl">8.2.3 &#8220;Should I make changes to the mods if there is a conflict?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> When <a href="4-conflict-detection-and-resolution.html">de-conflicting my mod</a>, is it okay to drag/drop changes into the mod with a conflict, or just edit the field in the mod to fix the conflict right in that mod file?</p>
+
+							<p><strong>Answer:</strong> No, you shouldn't be modifying mods you didn't create yourself like that or you'll just get into trouble the next time one of these mods is updated. Instead you should use &quot;copy as override into&quot; a new Plug-in on the currently winning record version and then drag n' drop the changes from all other record versions together. <a href="4-conflict-detection-and-resolution.html#s_4-6">Creating a patch plug-in</a> which can be loaded after all the conflicting mods to resolve these conflicts. The chapter on <a href="4-conflict-detection-and-resolution.html">Conflict Detection and Resolution</a> will show you the differences.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-4">
+						<h3 class="ctrl">8.2.4 &#8220; Where in the load-order should my patch plug-in be placed?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Where in the load-order should my patch plug-in be placed?</p>
+
+							<p><strong>Answer:</strong> Yes your <a href="4-conflict-detection-and-resolution.html#s_4-6">merged-patch</a> loads last, and the masters (.<abbr title="Elder-Scrolls Master File">ESM</abbr> files) which it patches (.esm's and .esp's) will be automatically added. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-5">
+						<h3 class="ctrl">8.2.5 &#8220; What does the patch plug-in really do for my Fallout3 load order?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> What does the patch plug-in really do for my Fallout3 load order? Do I really need to go through this trouble to create one?</p>
+
+							<p><strong>Answer:</strong> If you run more than 25 mods, you really do need to create a patch plug-in in most cases. What the patch does is to join edits to a mod in such a way that both edits will work on the same thing.</p>
+
+							<p>Say for example mod #1 says you'll find raiders with flamers and mod #2 adds rocket launchers to them instead. If mod #2 loads last, it will be the conflict winner and you'll find raiders with flamers. <a href="4-conflict-detection-and-resolution.html#s_4-6">If you use a patch Plug-in</a>, you'll find raiders with both flamers and rocket launchers. It doesn&#8217;t always work out this smoothly, but it does in most cases. For an in-depth discussion see the chapter on <a href="4-conflict-detection-and-resolution.html">Conflict Detection and Resolution</a>. To get into the Wasteland Fast, you can do this most easily by <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a>.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-6">
+						<h3 class="ctrl">8.2.6 &#8220; Does FO3Edit MasterUpdate correct the white face bug?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Does FO3Edit MasterUpdate correct the white face bug? It is the only one I have been able to find since trying this - it is great otherwise.</p>
+
+							<p><strong>Answer:</strong> Reports we got during testing seems to indicate that <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> fixes the white face bug. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-7">
+						<h3 class="ctrl">8.2.7 &#8220; What version of Fallout3 edit do I need FO3Edit for?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Do I need to run FO3Edit under Fallout3 v1.4 first and then apply the v1.5 patch?</p>
+
+							<p><strong>Answer:</strong> No you don't need to reinstall. All you need to do is to make sure that you run <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> after any change to your load order. You can run FO3Edit under any version of Fallout3. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-8">
+						<h3 class="ctrl">8.2.8 &#8220; Does FO3Edit fix Enclave radio broken by the Broken Steel?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Can the MasterUpdate using FO3Edit cause Enclave radio to come back on air during broken steel?</p>
+
+							<p><strong>Answer:</strong> I'm pretty sure I've heard about people complaining about this here on the Forum before I ever released <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> even for testing. I would guess it's one of (many) bugs in BrokenSteel.esm or a conflict with some other mod you've installed. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-9">
+						<h3 class="ctrl">8.2.9 &#8220; What happens if I can&#8217;t get rid of my conflicts?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> What happens if I still have mod conflicts in-game even after creating a patch Plug-in and running MasterUpdate mode (i.e. &#8220;Modding-Up&#8221;)?</p>
+
+							<p><strong>Answer:</strong> There is frankly nothing that FO3Edit can do different in <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a>, all it does is turn everything into a master and creates the necessary ONAM records for the masters to talk back and forth. Any problems that show up after patching up to 1.5 and running <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> are the result of either:</p>
+
+							<ol>
+								<li>General bugs in Patch release your running.</li>
+
+								<li>A problem specific to how masters are handled.</li>
+
+								<li>A module file that's broken in some way (which might show up more or at all because 1.5+<abbr title="Elder-Scrolls Master File">ESM</abbr> is now doing something RIGHT at the engine
+								level).</li>
+
+								<li>Conflicts between installed modules (ditto)</li>
+
+								<li>Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly before playing.</li>
+
+								<li>See the chapter on <a href="4-conflict-detection-and-resolution.html">Conflict Detection and Resolution</a> if you&#8217;re still stuck for instructions
+								on how to &#8220;Slay the Bug&#8221;.</li>
+							</ol>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-10">
+						<h3 class="ctrl">8.2.10 &#8220;I get an error, &#8216;Record XXXX is not contained in a group&#8217;? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> What should I do when I get an error during loading FO3Edit like this:</p>
+
+							<p>&quot;Record fBloodSplatterFadeStart [GMST:080304D5] is not contained in a group.&quot; and I had to disable it to get the master update to complete. Is this something I've done wrong with load order or some sort of conflict, or something that needs to be reported to the mod author to correct in the esp?</p>
+
+							<p><strong>Answer:</strong> As I said before, there are still many mods out there that have been hacked together in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> and are not actually structurally valid Fallout 3 module files.</p>
+
+							<p>Important with such mods: Do NOT just disable it, run <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> and then ENABLE it again. <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> will only work correctly if it has processed ALL the modules you load into your game. This is an all or nothing deal.</p>
+
+							<p>Any module that gives trouble during loading or saving in FO3Edit/ <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> is BROKEN anyway and should never be loaded into any game, no matter if it's as Plug-in into pre-1.5 or ESMified into 1.5.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-11">
+						<h3 class="ctrl">8.2.11 &#8220;Does MasterRemove remove the ONAM records added by MasterUpdate?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> A question about MasterRestore mode: does it remove the ONAM records added by MasterUpdate?, or are the ONAM records harmless on Plug-in files?</p>
+
+							<p><strong>Answer:</strong> When with <a href="3-master-update-and-master-restore.html#s_3-3">MasterRestore</a> the <abbr title="Elder Scrolls Master">ESM</abbr> flag is turned off, the ONAM's automatically go away. &quot;Yes&quot; and &quot;Yes, as far as I know&quot;.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-12">
+						<h3 class="ctrl">8.2.12 &#8220;Can I run MasterUpdate one-mod-at-a-time, to check them out? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Is there any downside to checking one mod in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>, and then running <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a>. Then after it's finished, and there's no errors, checking the next mod in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> and running MasterUpdate again? Doing it mod by mod like that until eventually they're all checked?</p>
+
+							<p><strong>Answer:</strong> No, that should be fine as long as you don&#8217;t Play the game in-between these steps. <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> MUST be run with your full mod-list checked before you play. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-13">
+						<h3 class="ctrl">8.2.13 &#8220;What&#8217;s with all these backup files building-up in my Data directory? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I've been getting a lot of 0/1kb insertmodnamehere.esp save/backup files in my data folder. What exactly are these?</p>
+
+							<p><strong>Answer:</strong> When FO3Edit/ <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> saves a file, it first writes a new file with .esp/m.save.&lt;datetime&gt; as extension. When you then close the program (and in case of <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a>, only if there weren't any errors when saving any of the files) then the existing original module files are renamed to .esp/m.backup.&lt;datetime&gt; and the newest .esp/m.save.&lt;datetime&gt; file for each module is renamed to .esp/m. These can be deleted without worry of harming your game or mods, and are purely for backup purposes.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-14">
+						<h3 class="ctrl">8.2.14 &#8220; How many mods can F03Edit load?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> How many mods can F03Edit load? I can't seem to get but just half of my mods loaded at one time. I have over 170 mod to edit am I missing something or doing something wrong?</p>
+
+							<p><strong>Answer:</strong> You can have 256 total mods in Fallout3 and FO3Edit, one more then the game engine itself. However, FO3Edit is uses a lot of memory to load entire mod lists and compare everything &#8211; and that goes up the more mods you add. If you find that you cannot run FO3Edit with a huge number of mods, check to see that your computer is not running out of memory. FO3Edit will warn you that memory is exhausted in most cases.</p>
+
+							<p>I have made FO3Edit work successfully with close to 200 mods loaded on a Windows XP machine with 3 gigs of Ram. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly before playing.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-15">
+						<h3 class="ctrl">8.2.15 &#8220; Will MasterUpdate work if I have 200+ mods?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> With the MasterUpdate function, can I use this if I have lots of mods (esp and esm files) installed and have never done the MasterUpdate before? Or does it have to be started with a fresh game install and then performed one mod at a time? Hopefully my question makes sense.</p>
+
+							<p><strong>Answer:</strong> There is no problem running <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> with a large number of mods. If you currently have a large setup that works correctly under pre-1.5, you can just run <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> on it, patch to 1.5, remove the fake patch if you use it, and everything should work. <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> mode also takes less Ram then when doing conflict detection with FO3Edit itself. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly before playing.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-16">
+						<h3 class="ctrl">8.2.16 &#8220; After Filtering for conflicts, I don&#8217;t see anything on the Left-hand side!&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> After I run FO3Edit, and after filtering for conflict detection, if there's nothing on the left side, does that mean my load order is fine?</p>
+
+							<p><strong>Answer:</strong> Yes if you ran through the <a href="4-conflict-detection-and-resolution.html">conflict resolution process</a> and get no red or yellow coloring, you&#8217;re clean! Nice work!</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-17">
+						<h3 class="ctrl">8.2.17 &#8220; Why does the Change Confirmation window force me to wait?!&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> When I first make changes to a mod, I get a huge timed warning that forces me to wait before allowing me to click Yes. Is there any way to turn the three-second modify warning off?</p>
+
+							<p><strong>Answer:</strong> Yes, but it's there for a reason. Also, the 3 second delay gets reduced by a few fractions of a second every time you confirm that dialog till after a while it's completely gone.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-18">
+						<h3 class="ctrl">8.2.18 &#8220; I deleted a plug-in file but FO3Edit seems to think it&#8217;s still there?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I deleted a plug-in file but FO3Edit seems to think it&#8217;s still there? When FO3Edit load itself, I see the messages about &quot;Error: Active Plug-in List contains nonexistent file &quot;merged.esp&quot;&quot;. I'm absolutely sure- I remove this ESP from load order and from disk with help of <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>. What&#8217;s the deal?</p>
+
+							<p><strong>Answer:</strong> That means that you deleted the file from disk, but it's still listed as an active Plug-in in your Plugins.txt (see the message log for the location of that file). The Plugins.txt file is used by the game engine to decide which modules to load.</p>
+
+							<p>Any listed module which doesn't exist in the file system is just ignored by the game engine (and FO3Edit). So there is nothing to worry about with that error message. It has no further consequences. If you want to remove the error message, edit the Plugins.txt file and remove its entry from that file. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly before playing.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-19">
+						<h3 class="ctrl">8.2.19 &#8220; How do I start the master update mode?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> How do I start the master update mode? Do I just load FO3MasterUpdate.exe and it does it automatically? I didn't see any special options after right clicking any mods.</p>
+
+							<p><strong>Answer:</strong> If you renamed your FO3Edit.exe to FO3MasterUpdate.exe, then all you need to do is start it. <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> should run through and do its work automatically.</p>
+
+							<p>If you get an --= All Done =-- at the end of the log you are fine and ready to play after closing the program. However if you get an --= Error =-- then you need to read the log closely and resolve whatever is the problem till you get the All Done.</p>
+
+							<p>Do not make any changes to your load order (activating/deactivating/moving any modules) between running <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> and playing the game. If you do make changes to your load order, run <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> again. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-20">
+						<h3 class="ctrl">8.2.20 &#8220; Should I make a new merged patch if I change my load order in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr> ?&#8221;</a></h3>
+
+						<div class="content">
+							<p><a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><strong>Question:</strong> So if I make a new load order in</a> <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>, should I make a new merged patch as well right?</p>
+
+							<p><strong>Answer:</strong> That is correct, if you change the load order you need to create a new merged patch so that the data is always kept in the right order. Failure to do this can result in CTD&#8217;s. That&#8217;s why Patch Plug-in&#8217;s should be a last resort and not automatically what you do to resolve conflicts.</p>
+
+							<p>The best practice is to create a patch plug-in once you are reasonably sure that your load-order is settled and static for your current game/character. After you start playing, altering the load order can result in problems for that character, so it&#8217;s best to put the effort into a patch plug-in once you&#8217;re ready to start seriously gaming OR if you have serious conflicts that can&#8217;t be resolved by changing the load-order alone. Make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-21">
+						<h3 class="ctrl">8.2.21 &#8220; I am having problems getting FO3Edit to work on Vista &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I am having problems getting FO3Edit to work on Vista in the Program Files folder. Am I doing something wrong?</p>
+
+							<p><strong>Answer:</strong> It is possible to install the game to the Program Files folder under Vista , but you have to deal with the UAC security first. You have three options:</p>
+
+							<p>1.Disable the UAC completely, but this will leave your system more vulnerable.</p>
+
+							<p>2.Install in a folder not controlled by UAC.</p>
+
+							<p>3.A much better way to solve the problem (of write-redirection to the VirtualStore) is to simply give the &quot;Users&quot; group &quot;Full Control&quot; of the Fallout 3 folder.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-2-22">
+						<h3 class="ctrl">8.2.22 &#8220; After FO3Edit loads, I can&#8217;t get the context menu on the left to load!&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> After FO3Edit loads, I can&#8217;t get the context menu on the left-hand side to load up! I can right-click in the right-window, but the left window gives me nothing. What&#8217;s up with that?&#8221;</p>
+
+							<p><strong>Answer:</strong> In these cases there is actually a problem with your files or your load-order, and FO3Edit is unable to process them. Exit FO3Edit and use <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> to check/correct any load-order issues. Make sure your patch plug-ins (if you have one) loads last as well and re-run FO3Edit. See the <a href="2-overview.html#s_2-3">Interface Tour</a> to gain a better understanding of the views.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a class="prev" class="up">Previous Section</a><a href="#" class="top" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_8-3">
+				<h2 class="ctrl">8.3 Intermediate Questions</h2>
+
+				<div class="content">
+					<div class="level-3" id="s_8-3-1">
+						<h3 class="ctrl">8.3.1 &#8220; Should I clean all of the mods that I use including FOOK, FWE, MMM, etc?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Should I clean all of the mods that I use including FOOK, FWE, MMM, etc?</p>
+
+							<p><strong>Answer:</strong> No, you should only clean a mod that you own or are on a team that owns. If you think that a mod is very dirty and should be cleaned, the best approach is to recommend it to the mod author on the forums. See the section on <a href="5-mod-cleaning-and-error-checking.html">Mod Cleaning and Error Checking</a> for more information</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-2">
+						<h3 class="ctrl">8.3.2 &#8220; Is there a function that pops up if you double click something?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Is there a function to the window that pops up if you double click something? There doesn't seem to be a way to edit anything in that window.</p>
+
+							<p><strong>Answer:</strong> Yes, it makes it possible to read long texts like script source. See the section on <a href="7-mod-utilities.html#s_7-4">Adding and Editing References</a> for more information.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-3">
+						<h3 class="ctrl">8.3.3 &#8220;D ifference between 'copy as override' and 'deep copy as override'?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> What is the difference between 'copy as override' and 'deep copy as override'?</p>
+
+							<p><strong>Answer:</strong> If you copy a DIAL record as override it only copies that DIAL record, if you use &quot;deep copy&quot; as override then it also copies all the INFO records underneath. See the section on creating a <a href="4-conflict-detection-and-resolution.html#s_4-7">Manual Patch Plug-in</a> for examples of how to use Overrides and Deep Overrides.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-4">
+						<h3 class="ctrl">8.3.4 &#8220; Replicating a dialogue block with all topic blocks that belong to it&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> What if I want to replicate a dialogue block with all topic blocks that belong to it?</p>
+
+							<p><strong>Answer:</strong> You need to get a copy of a DIAL and all INFO records under it as new records using the following:</p>
+
+							<ol>
+								<li>Use &quot;Deep Copy as Overrride into...&quot;.</li>
+
+								<li>Go to the override copy of the DIAL record (you can just CTRL+Click on the &quot;Record Header \ FormID&quot; field of the override
+								copy in the detail view)</li>
+
+								<li>Select that record in the navigation tree view.</li>
+
+								<li>Press F2 (opens the change FormID dialog)</li>
+
+								<li>Backspace (clears the FormID)</li>
+
+								<li>Enter (shows the dialog again with a newly generated unique FormID)</li>
+
+								<li>Enter (confirms the change)</li>
+
+								<li>Repeat for the INFO records (Cursor Down, F2, Backspace, Enter, Enter, repeat)</li>
+
+								<li>See the section on creating a <a href="4-conflict-detection-and-resolution.html#s_4-7">Manual Patch Plug-in</a> for examples of similar actions using Copy as
+								Override / Deep Override Into.</li>
+							</ol>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-5">
+						<h3 class="ctrl">8.3.5 &#8220;Having troubles updating stuff from one mod version to another &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I am running into issues trying to update stuff from one version of a mod to another.</p>
+
+							<p><strong>Answer:</strong> For comparing / moving data between 2 versions of the same mod:</p>
+
+							<ol>
+								<li>When starting FO3Edit, only load ONE of the 2 versions.</li>
+
+								<li>Select the file in the navigation tree view.</li>
+
+								<li>context menu -&gt; Compare to</li>
+
+								<li>select the 2nd file in the file open dialog (it needs to be in the data folder for this to work currently)</li>
+
+								<li>the 2nd file now gets loaded with the same load order index as the first file</li>
+
+								<li>See the section on creating a <a href="4-conflict-detection-and-resolution.html#s_4-7">Manual Patch Plug-in</a> for examples of similar actions using Copy as
+								Override / Deep Override Into.</li>
+							</ol>
+
+							<p>Doing that FO3Edit would have recognized the records in the 2 modules as being overrides of each other which would have simplified copying stuff around a lot. Also see the section on <a href="6-managing-mod-files.html#s_6-7">Comparing Two Versions of a Mod</a> for examples of how to compare them efficiently.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-6">
+						<h3 class="ctrl">8.3.6 &#8220;How do I convert an ESP into an <abbr title="Elder-Scrolls Master File">ESM</abbr>? &#8221;</h3>
+
+							<div class="content">
+									<p><strong>Question:</strong> I'm trying to turn an esp into an esm using FO3Edit, but I can't seem to find a way to save the file as an esm or &quot;convert&quot; it as it were. I know that there is a way to do it, I believe there's supposed to be a copy into... function, yet I can't seem to find it.</p>
+
+							<p><strong>Answer:</strong> Look at the File Header. Set the <abbr title="Elder Scrolls Master">ESM</abbr> Record Flag. Save. You are done. The file extensions do not matter for the game engine. But if you want you can now rename your file from .esp to .esm. See the section on <a href="6-managing-mod-files.html#s_6-5">Converting a Plugin into a Master</a> for a detailed description.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-7">
+						<h3 class="ctrl">8.3.7 &#8220; Why should I &#8220;clean&#8221; my mod? It works just fine how it is!&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Why should I &#8220;clean&#8221; my mod? It works just fine how it is!</p>
+
+							<p><strong>Answer:</strong> The large majority of mods currently in circulation are unfortunately in rather appalling condition, with dirty edits, deleted references, unintended changes, you name it. GECK makes it very easy for these things to slip in. Even worse, there are still a significant number of mods out there which have been hacked together in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> or even hex editors that in no way shape or form conform to the implicit rules of the FO3 module file format. See the chapter on <a href="5-mod-cleaning-and-error-checking.html">Mod Cleaning and Error Checking</a> for a detailed description of how this is done.</p>
+
+							<p>What is needed from all mod authors is a concentrated effort to clean up their mods and in general minimize the number of vanilla records they touch to reduce conflict potential.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-8">
+						<h3 class="ctrl">8.3.8 &#8220; Many of my NPCs in-game has stark white-faces!?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Many of my NPCs in-game has stark white-faces! Did FO3Edit do this?</p>
+
+							<p><strong>Answer:</strong> The white face bug is Not fixed by FO3Edit. The bug that FO3Edit fixes is the white BODY bug. To fix the white face bug, you have to edit your fallout.ini and add this line below the [General] statement:</p>
+
+							<p>bLoadFaceGenHeadEGTFiles=1</p>
+
+							<p>Also make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-9">
+						<h3 class="ctrl">8.3.9 &#8220; I have FOOK and get a load error like this, did I do something wrong?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I have FOOK and get a load error like this, did I do something wrong?</p>
+
+							<p>&#8220;[00:20] Background Loader: Error: record LVLI contains unexpected (or out of order) sub record LVLI 494C564C&#8221;</p>
+
+							<p><strong>Answer:</strong> Nothing you or FO3Edit did wrong. I'm aware for some time now that FOOK 1.6 contains this broken deleted record. Besides being broken, it shouldn't have been deleted in the first place and can cause CTDs.</p>
+
+							<p>You can fix it with FO3Edit by loading FOOK.esp (as you are obviously doing) then going to that record (enter 0002968D into the FormID search edit above the navigation tree view and press enter) and then REMOVE that record from FOOK.esp. Make sure that you are removing it from the right file! (It should have the &quot;Deleted&quot; Record Flag set in FOOK.esp). Also make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-10">
+						<h3 class="ctrl">8.3.10 &#8220;I found records that I&#8217;ve changed don&#8217;t exist in Fallout3.esm! &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> When opening an esp in FO3Edit, it shows that of all the iXPReward**** records I&#8217;ve changed, that these ones do not exist in fallout3.esm. The other Game Settings I&#8217;ve edited show the yellow/green colors of &quot;override without conflict&quot;, but these 5 are simply black on white, as if these are brand new settings. Is this a bug in FO3Edit?</p>
+
+							<p><strong>Answer:</strong> No it is not. The default values for the different GMSTs are hardcoded in the exe (both GECK and game engine). GMST sub records in Fallout3.esm are only present for the GMSTs that have been overridden by the game designers from their hardcoded default values (which were set by the programmers in source code).</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-11">
+						<h3 class="ctrl">8.3.11 &#8220;How do I reverse MasterUpdate so I can edit my ESP in the GECK? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I checked the OP for instructions on how to reverse FO3MasterUpdate... how is it done?</p>
+
+							<p><strong>Answer:</strong> Either run <a href="3-master-update-and-master-restore.html#s_3-3">FO3MasterRestore.exe</a> (preferred) or revert to the last backup made when <a href="3-master-update-and-master-restore.html">MasterUpdate</a> ran last. Also make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-12">
+						<h3 class="ctrl">8.3.12 &#8220; How can I see individual records from a mod?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> How can I see individual records from a mod?</p>
+
+							<p><strong>Answer:</strong> By navigating that tree view you can look at every single record in any of your modules. Once a record has been selected the detailed contents of that record is shown on the right side. The detail view shows all versions of the selected record from all modules which contain it. See the <a href="2-overview.html#s_2-3-7">Right-Side View Tab</a> tour for details.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-13">
+						<h3 class="ctrl">8.3.13 &#8220;How do I view all of the references in a mod, not just conflicts? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> When I load the ESP I've been working with, which depends on 2 ESMs (Fallout3 of course, and BHRM--Bobblehead Remove and Move), neither the ESP, nor the additional <abbr title="Elder-Scrolls Master File">ESM</abbr>, will show me everything until I tell it to filter some of the extraneous information out. How do I view all of the references?</p>
+
+							<p><strong>Answer:</strong> In the <a href="2-overview.html#s_2-3-7">Right-Side View Tab</a>, right click and make sure &quot;hide no conflict rows&quot; is unchecked.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-14">
+						<h3 class="ctrl">8.3.14 &#8220;I cleaned my mod and am getting CTDs with NAVM errors? &#8221;</h3>
+
+							<div class="content">
+								<p><strong>Question:</strong> I just cleaned my mod and am having CTD&#8217;s and all sorts of errors with NAVM records? Did the cleaning process break my mod?</p>
+
+						<p><strong>Answer:</strong> NAVM and NAVI records work together in that the NAVI is an index of sorts for the NAVM records. Thus if the cleaning process removes any NAVM records, you must update the NAVI data as well. Thus after any cleaning which touches NAVM records you will have to simply Load and Re-Save the file GECK so that the NAVI records are re-built (which the GECK does automatically when you save). After saving, run MasterUpdate and you should be good to go. Also make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-3-15">
+						<h3 class="ctrl">8.3.15 &#8220;How do I reverse an un-intended change ?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I made some un-intended changes to the main game files and don&#8217;t know how to un-do those changes so that the original versions return. How is this done?</p>
+
+							<p><strong>Answer:</strong> Normally the word &quot;remove&quot; is used to describe removing a record from a module (in which case, if it was an override record, the original will &quot;shine through&quot; again). While &quot;delete&quot; normally refers to setting the &quot;Deleted&quot; flag on a record (in which case this &quot;deleted&quot; record will hide away whatever original record it overrides).</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a class="prev" class="up">Previous Section</a><a href="#" class="top" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_8-4">
+				<h2 class="ctrl">8.4 Advanced Questions</h2>
+
+				<div class="content">
+					<div class="level-3" id="s_8-4-1">
+						<h3 class="ctrl">8.4.1 &#8220; What is Fallout3.Hardcoded.esp?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> What is Fallout3.Hardcoded.esp?</p>
+
+							<p><strong>Answer:</strong> This file contains some records which are hardcoded in GECK and the game engine (not contained in Fallout3.esm) but referenced from records in Fallout3.esm. PlaneMarker and PortalMarker STAT records to name just one example. The Fallout3.Hardcoded.esp must be in the same folder as the FO3Edit.exe and NOT in the Data folder. The game engine or GECK will never see that file and never load it.</p>
+
+							<p>When you start GECK without loading Fallout3.esm, you can see that there are some records already defined. The reason is that these records are hardcoded in the exe already. Some of these records are overridden in Fallout3.esm. Some others are not. But Fallout3.esm contains records with references to some of these hardcoded records that are not being overridden.</p>
+
+							<p>If you now load Fallout3.esm alone in FO3Edit, which doesn't have these &quot;hardcoded&quot; records in the exe itself like GECK. Then it appears as if Fallout3.esm contains a lot of invalid references. This is where Fallout3.Hardcoded.esp comes in. It contains all the hardcoded records which are not overridden in Fallout3.esm already. By loading this esp at the same load order ID as Fallout3.esm it is as if these records were defined in Fallout3.esm.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-2">
+						<h3 class="ctrl">8.4.2 &#8220;Can I have a plug-in that references another plug-in as its master?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Can I have a plug-in that references another plug-in as its master? FO3Edit seems to do this, but I don&#8217;t see how to do it in the GECK.</p>
+
+							<p><strong>Answer:</strong> FO3Edit can handle Plug-ins (.esp) having other Plug-ins as master. GECK can not, so such a file can no longer be simply opened in GECK. See the section on <a href="6-managing-mod-files.html#s_6-2">Adding Masters to a Plug-in</a> for more details.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-3">
+						<h3 class="ctrl">8.4.3 &#8220;Can I remove the delay between clicking an entry and the edit box ?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> When trying to Edit a cell, there is a delay between clicking an entry the second time and having the edit-box appear. Can this delay be removed?</p>
+
+							<p><strong>Answer:</strong> Just use F2. I'm not quite sure where that delay comes from (but probably has to wait until the system wide configured double click time expires to be sure it's a single click and not a double click).</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-4">
+						<h3 class="ctrl">8.4.4 &#8220;Is there a &#8220;Goto&#8221; option in the context menu for pulling-up a FormID? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> For sub-records which are form IDs, it would be great to have a 'go to' option in the context menu which would then just select that form ID in the tree view.</p>
+
+							<p><strong>Answer:</strong> Hold CTRL down, and then click. Also, for fields where the text doesn't fit, hold SHIFT down and move the mouse over them to get a tooltip with the full text.</p>
+
+							<p>With the Ctrl+Click, you can do that any number of times and then simply return to where you came from with the little back and forward buttons in the top right corner. If you have a mouse with more then 2 keys you can also use the &quot;back&quot; and &quot;forward&quot; keys on your mouse.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-5">
+						<h3 class="ctrl">8.4.5 &#8220;Can you help me with the Optcodes for IsInCombat? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> I've just got a query about how we're supposed to input conditions. I'm trying to make a perk that works when you activate something out of combat, but I can't seem to input the &quot;IsInCombat&quot; function. I've tried using the opcode from this list, and I've tried converting the opcode to decimal, but it doesn't display the name.</p>
+
+							<p><strong>Answer:</strong> You have to cut off the first 1. So 1121 is 121 -&gt; 289 -&gt; IsInCombat. Just tested and works fine. The first 0/1 is for console/nonconsole. Also, there&#8217;s a minor typo in the PRKC label. It's not Index, it controls the reference the CTDA is called on.</p>
+
+							<p>0 = player</p>
+
+							<p>1 = current weapon/activation target</p>
+
+							<p>2 = hit target (for combat)</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-6">
+						<h3 class="ctrl">8.4.6 &#8220; During the loading process, I notice some of the mods show Errors&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> During the background loading process, I notice some of the mods show Errors, but FO3Edit seems to load them anyway.</p>
+
+							<p><strong>Answer:</strong> Many files that have been hacked together using <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> or even a Hex Editor are not conforming exactly to this standard structure and FO3Edit will reject saving such a file (or depending on how severe the problem is might even reject loading such a file). I'd suggest loading it in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>, running the sanitize spell, resaving it and then try FO3Edit on it again. Sanitize will at least fix the missing group problem that FO3Edit doesn't like.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-7">
+						<h3 class="ctrl">8.4.7 &#8220; Is there a way to look up the records opt-codes?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Is there a way to look up the records opt-codes?</p>
+
+							<p><strong>Answer:</strong> The numbers there are the opcodes for the functions used. The full list of functions is here: http://fose.silverlock.org/Fallout3Commands.html.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-8">
+						<h3 class="ctrl">8.4.8 &#8220; is &quot;HasPerk&quot; available in the CTDAs?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Shortcut question: is &quot;HasPerk&quot; (which IS a script command) available as far as you know, in the CTDAs?</p>
+
+							<p><strong>Answer:</strong> Those numbers are in hexcode, you need to drop the first 1, and then convert the last 3 digits to decimal. So on that list, GetPermAV is 11EF. You drop the 1 to make it 1EF, then convert that to decimal, which gives 495. To make your life easier, HasPerk is 449.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-9">
+						<h3 class="ctrl">8.4.9 &#8220; Can we edit text in the expanded windows?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Can we edit text in the expanded windows? I'm trying to write a script and it's a bit inconvenient to write it in notepad and copy-paste across.</p>
+
+							<p><strong>Answer:</strong> This works by double clicking while holding the shift key.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-10">
+						<h3 class="ctrl">8.4.10 &#8220; Where can I learn more about FLST Lists?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Where can I learn more about FLST Lists?</p>
+
+							<p><strong>Answer:</strong> An advanced discussion can be found on the <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=971140">Bethesda Forums</a>.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-11">
+						<h3 class="ctrl">8.4.11 &#8220; Can we list the mod index for each master/Plug-in loaded in the dump?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Would it be possible to list the mod index for each master/Plug-in loaded (included the module specified) in the dump? Then you could determine a record's module directly from its FormID.</p>
+
+							<p><strong>Answer:</strong> Different then what FO3Edit is showing you, the dump is NOT showing load order corrected FormIDs. You see the FormIDs as they are stored in the file. Which means that the MAST sub records from the TES4 file header directly give you all the information you need to map FormIDs to files. e.g. if there are 3 MAST sub records then FormIDs starting with 00, 01 and 02 belong to these 3 files in that order, everything starting with 03 (or higher!) belongs to the file you are dumping.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-12">
+						<h3 class="ctrl">8.4.12 &#8220;I have a lot of house-mods that are conflicting, how do I fix this? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> My load list is smaller than most here, but I have a large selection of houses that were causing problems, as well as a few others like the vertibird that would crash if you left it and walked away. How do I fix this?</p>
+
+							<p><strong>Answer:</strong> First, check if any of your active modules are NOT masters. You can see that easily in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> if any of them are not shown in bold. If yes, run FO3MasterUpdate again and see if the problem if gone.</p>
+
+							<p>If not, determine the FormID of the problematic character(s). Then start FO3Edit and don't make any changes to the to-be-loaded modules. Now put the FormID into the FormID search box (above the navigation tree view) and hit enter. Check if that record is touched by any of you installed mods. Also check the NPC record that the ACHR is based on (you can hold down CTRL and then click on the NAME field to jump to that record). Also make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-13">
+						<h3 class="ctrl">8.4.13 &#8220;W ill FO3Edit merge the Eyes, Hairs, Mouth pieces, etc?&#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> When merging patches that modify facial characteristics, will FO3Edit merge the Eyes, Hairs, Mouth pieces, etc?</p>
+
+							<p><strong>Answer:</strong> Important with that: eyes and hairs are merged, the rest not. So if you (or anyone) have a mod which makes changes to something other then hairs or eyes, load that mod last so that the hair and eye changes get merged into it.</p>
+
+							<p>So that means that TK's eyelash mod has to be last since it mods a lot of the head parts (like merging the whole mouth to make an open slot for the eyelashes). Also make sure you are <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> correctly.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_8-4-14">
+						<h3 class="ctrl">8.4.14 &#8220;Can I merge destruction-data into my patch plug-in? &#8221;</h3>
+
+						<div class="content">
+							<p><strong>Question:</strong> Is it possible to get the destruction data that I created for my mod into the merged patch or should I just do it by hand?</p>
+
+							<p><strong>Answer:</strong> Destruction data is not one of the things handled by the merged patch function, so you will need to add those elements by-hand to the patch Plug-in.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_8-4" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a class="prev" class="up">Previous Section</a><a href="#" class="top" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+		</div><!--/.content-->
+
+		<div class="section-nav">
+			<a href="7-mod-utilities.html" class="prev">&laquo; Previous Page</a><a href="9-appendix.html" class="next">Next Page &raquo;</a>
+
+		</div><!--/.section-nav-->
+
+	</section>
+
+</body>
+</html>

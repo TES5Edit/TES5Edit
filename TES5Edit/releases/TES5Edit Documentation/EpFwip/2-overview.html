@@ -1,0 +1,570 @@
+﻿<!DOCTYPE HTML>
+
+<html>
+
+<head>
+	<title>Miax's Tome of FO3Edit</title>
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<script type="text/javascript" src="js/lib/jquery.js"></script>
+	<script type="text/javascript" src="js/lib/jcarousellite.js"></script>
+	<script type="text/javascript" src="js/t5e.js"></script>
+
+</head>
+
+<body>
+	<div class="toc">
+		<div class="global">
+			<h2>Main Table of Contents</h2>
+
+			<ul class="first">
+				<li><a href="index.html">1. Introduction</a></li>
+				<li><a href="2-overview.html">2. Overview</a></li>
+				<li><a href="3-master-update-and-master-restore.html">3. Master Update and Master Restore</a></li>
+				<li><a href="4-conflict-detection-and-resolution.html">4. Conflict Detection and Resolution</a></li>
+				<li><a href="5-mod-cleaning-and-error-checking.html">5. Mod Cleaning and Error Checking</a></li>
+				<li><a href="6-managing-mod-files.html">6. Managing Mod Files</a></li>
+				<li><a href="7-mod-utilities.html">7. Mod Utilities</a></li>
+				<li><a href="8-fo3edit-faq.html">8. FO3Edit FAQ</a></li>
+				<li><a href="9-appendix.html">9. Appendix</a></li>
+				<li><a href="10-cheat-sheets-and-quick-reference-charts.html">10. Cheat Sheets and Quick Reference Charts</a></li>
+
+			</ul>
+
+		</div><!--/.global-->
+
+		<div class="local">
+			<h3>Section Table of Contents</h3>
+
+			<ul class="second">
+				<li><a href="#s_2-1">2.1 Introducing FO3Edit</a></li>
+				<li>
+					<a href="#s_2-2">2.2 Acquisition and Installation</a>
+
+					<ul class="third">
+						<li><a href="#s_2-2-1">2.2.1 Downloading FO3Edit from Fallout3 Nexus</a></li>
+						<li><a href="#s_2-2-2">2.2.2 DirectX and Requirements</a></li>
+						<li><a href="#s_2-2-3">2.2.3 Windows Vista and UAC Security</a></li>
+						<li><a href="#s_2-2-4">2.2.4 Starting FO3Edit</a></li>
+
+					</ul>
+
+				</li>
+				<li>
+					<a href="#s_2-3">2.3 Tour of User Interface</a>
+
+					<ul class="third">
+						<li><a href="#s_2-3-1">2.3.1 Master/Plug-in Selection View"</a></li>
+						<li><a href="#s_2-3-2">2.3.2 Left-Side Panel</a></li>
+						<li><a href="#s_2-3-3">2.3.3 Main Context Menu</a></li>
+						<li><a href="#s_2-3-4">2.3.4 Right-Side Information Tab</a></li>
+						<li><a href="#s_2-3-5">2.3.5 Right-Side Messages Tab</a></li>
+						<li><a href="#s_2-3-6">2.3.6 Right-Side References Tab</a></li>
+						<li><a href="#s_2-3-7">2.3.7 Right-Side View Tab</a></li>
+						<li><a href="#s_2-3-8">2.3.8 Filter Menu</a></li>
+					</ul>
+
+				</li>
+				<li><a href="#s_2-4">2.4 Saving and Confirmation</a></li>
+				<li><a href="#s_2-5">2.5 Quick Tips and Shortcuts</a></li>
+
+			</ul>
+
+		</div><!--/.local-->
+
+	</div><!--/.toc-->
+
+	<section id="_Toc237480231">
+		<h1>2. Overview</h1>
+
+
+		<div class="content clearfix">
+			<button class="ctrl-all" onclick="toggle_all(this);">Collapse All</button>
+			
+			<div class="level-2" id="s_2-1">
+				<h2 class="ctrl">2.1 Introducing FO3Edit</h2>
+
+				<div class="content">
+					<p><a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> is an advanced graphical module viewer/editor and conflict detector, with many additional functions that make it akin to a Swiss-army knife for modders and mod-authors alike. The primary function of FO3Edit is to help you spot conflicts between mods and resolve them, as well as to prepare your mod-list for a smooth run-time with <a href="3-master-update-and-master-restore.html">Master Update Mode (MUM)</a>.</p>
+
+					<p><a href="3-master-update-and-master-restore.html"><abbr title="Master Update Mode">MUM</abbr></a> resolves some bugs with Fallout3 and improves mod compatibility during run-time by turning all mod files into masters (<abbr title="Elder-Scrolls Master File">ESM</abbr>) and creating the special ONAM records that allow the mod files to work together smoothly. The process of <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a> involves using both <a href="3-master-update-and-master-restore.html"><abbr title="Master Update Mode">MUM</abbr></a> and a Merged-Patch to create the best-possible compatibility situation.</p>
+
+					<p>For the mod author FO3Edit provides the capability of viewing mod files at great depth, cleaning mod files of extraneous and duplicated records, merging mods together, changing ESPs to ESMs and scanning references in mod files for reach ability, form errors and specific references. These functions are very important to mod authors in the Fallout3 environment, as they will clean the mod of un-intended changes, erroneous records and potential conflicts with other mainstream mods that players run.</p>
+
+					<p>Thus whether you use mods to enhance your Fallout3 experience or create mods for others to enjoy, using FO3Edit is both a wise investment in time and a beneficial act for the modding community. Authors who clean and prepare their mods with FO3Edit will experience fewer conflict and compatibility problems once published, and Players who <a href="4-conflict-detection-and-resolution.html">de-conflict</a> and <a href="3-master-update-and-master-restore.html"><abbr title="Master Update Mode">MUM</abbr></a>ify their load-orders will be <a href="3-master-update-and-master-restore.html#s_3-4">Modding-Up</a>, and are much less likely to experience crashes and head-aches. In general the use of FO3Edit can only improve the inter-operability of all mods, and this can only be a good thing.</p>
+
+					<p>If I have not convinced you by now to invest an evening to learn how to use FO3Edit, then you should be sacked and have a live Nuka-grenade stuffed down your trousers. If however you wish to do the right thing by the modding community, grab a coffee and let&#8217;s get to work! FO3Edit is not a difficult tool to use, but it does require that your CPU (brain) be involved in the process, and that is what this tutorial is designed to teach.</p>
+
+				</div><!--/.content-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_2-2">
+				<h2 class="ctrl">2.2 Acquisition and Installation</h2>
+
+
+				<div class="content">
+					<button class="ctrl-all" onclick="toggle_all(this);">Collapse All</button>
+
+					<div class="level-3" id="s_2-2-1">
+						<h3 class="ctrl">2.2.1 Downloading FO3Edit from Fallout3 Nexus</h3>
+
+						<div class="content">
+							<p>FO3Edit works on Windows XP, Vista and Windows 7, other platforms or Windows simulators may or may not work and are not officially supported. FO3Edit is available for download from Fallout3 Nexus, one of the most outstanding sources for Fallout3 and Oblivion content. Click Here to <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FastLink</a> or use the following URL in your browser: <u style="display:inline-block">http://www.fallout3nexus.com/downloads/file.php?id=637</u></p>
+
+							<div class="p-img">
+								<div class="carousel">
+									<ul>
+										<li class="img">
+											<figure>
+												<img  height="490" src="img/image002.jpg" width="576">
+												<figcaption>Image caption 1</figcaption>
+
+											</figure>
+
+										</li>
+
+										<li class="img">
+											<figure>
+												<img  height="490" src="img/image002.jpg" width="576">
+												<figcaption>Image caption 2</figcaption>
+
+											</figure>
+
+										</li>
+
+										<li class="img">
+											<figure>
+												<img  height="490" src="img/image002.jpg" width="576">
+												<figcaption>Image caption 3</figcaption>
+
+											</figure>
+
+										</li>
+
+									</ul>
+
+									<div class="controls">
+										<span class="carousel-prev btn">&laquo;</span>&nbsp;<span class="carousel-next btn">&raquo;</span>
+
+									</div>
+
+								</div><!--/carousel-->
+
+								<p>The following page will display from the Fallout3 Nexus site. You will need to first click on, &#8220;Files&#8221; to display the list of FO3Edit versions. Once loaded, check the Version number in the upper-right corner (B) to ensure you download the most current revision. Then click on that revision of FO3Edit in the Mail Files section (C).</p>
+
+							</div>
+
+							<p>Once you download the program, you will need an archive extraction tool that can handle 7-Zip files (.7z), such as 7-Zip, which is available at: <a href="http://www.7-zip.org/">http://www.7-zip.org/</a></p>
+
+
+							<div class="p-img">
+								<p class="img"><img  height="434" src="img/image004.jpg" width="578"></p>
+
+								<p>Once the archive is open, you will need to extract the FO3Edit files into the right place in order for it to function. That place is the Fallout3\ directory, where the Fallout3.exe program is installed. Do Not install into the Fallout3\Data directory or the program will not function correctly as shown below.</p>
+
+							</div>
+
+							<p>Note: the FO3Edit package also contains a special file called <em>&#8220;Fallout3.&shy;Hardcoded.&shy;keep.&shy;this.&shy;with.&shy;the.&shy;exe.&shy;and.&shy;otherwise.&shy;ignore.&shy;it.&shy;I.&shy;really.&shy;mean.&shy;it.&shy;dat&#8221;</em>. This file needs to be in the same folder as the FO3Edit.exe. It contains records which are hardcoded in the Fallout3 game engine.</p>
+
+							<p>What makes these special is that the records are referenced in Fallout3.esm but are NOT contained in Fallout3.esm (they are in the binary). FO3Edit automatically loads fallout3.hardcoded.esp&#8230; at the same load order index [00] as Fallout3.esm so that these hardcoded values can be used in conflict detection and resolution. You shouldn&#8217;t touch this file until your ready to un-install.</p>
+
+							<p>The fallout3.hardcoded.esp simply needs to be in the same folder as the FO3Edit.exe. FO3Edit automatically loads fallout3.hardcoded.esp at the same load order index [00] as Fallout3.esm so that these hardcoded values show up as coming from, &#8220;Fallout3.exe&#8221; while working in FO3Edit.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-2-2">
+						<h3 class="ctrl">2.2.2 DirectX and Requirements</h3>
+
+						<div class="content">
+							<p>With FO3Edit installed let&#8217;s review some system parameters and drivers that you will need in order to successfully operate the tool. FO3Edit requires current DirectX drivers from Microsoft. You can tell if your system is up-to-spec by simply launching the tool. If FO3Edit loads and presents you with a Master/Plug-in Selector view, your good to go but you can skip this next step. If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to at <em>least</em> the March 2008 Version.</p>
+
+							<p>The most current DirectX version can be found here: DirectX End-User <a href="http://www.microsoft.com/downloads/details.aspx?familyid=2DA43D38-DB71-4C1B-BC6A-9B6652CD92A3&amp;displaylang=en">Runtime Web Installer</a>;<br> Or here: DirectX End-User <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=740ac79a-5b72-447d-84f9-ee6407ed1a91&amp;DisplayLang=en">Runtimes Redistributable</a> (install it after unpacking it).</p>
+
+							<p>Once DirectX is installed, you should be able launch the FO3Edit application successfully. If you still get errors, please report them to Miaximus or ElminsterEU.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-2-1" class="up">Previous Section</a><a href="#s_2-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-2-3">
+						<h3 class="ctrl">2.2.3 Windows Vista and UAC Security</h3>
+
+						<div class="content">
+							<p>The UAC Security feature of Vista protects the Program Files directory from un-authorized access. Unfortunately this also causes problems for FO3Edit and Fallout3, and requires some manual intervention on your part to resolve. You have 3 options for dealing with UAC Security: </p>
+
+							<ol>
+								<li>Disable the UAC completely, but this will leave your system more vulnerable. (not recommended)</li>
+								<li>Install Fallout3 and FO3Edit in the C:\Games\Fallout3 folder, which is not controlled by UAC and will prevent conflicts. (recommended)</li>
+								<li>Assign the &quot;Users&quot; group &quot;Full Control&quot; of the Fallout 3 folder in UAC, which will prevent UAC from causing problems.</li>
+
+							</ol>
+
+							<p>Any of the above options will work, though it is probably a better option to install Fallout3 and FO3Edit into C:\Games\Fallout3 directory and avoid the Program Files directory all-together. That leaves your system secure and averts the UAC problem for Fallout3.</p>
+
+							<p>If you are unable to get past the UAC restrictions, post the details of the problem to the Fallout3 GECK forum for additional assistance. If all went well with the install, you should be able to successfully run FO3Edit.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-2-2" class="up">Previous Section</a><a href="#s_2-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-2-4">
+						<h3 class="ctrl">2.2.4 Starting FO3Edit</h3>
+
+						<div class="content">
+							<p>When started it will automatically find your Fallout 3 Data directory via the system registry (not by where it was installed). If you immediately get errors indicating that FO3Edit can&#8217;t find the Fallout3 files, it means you moved the files to another directory after installing FO3Edit. You need to re-install the Fallout 3 Game again and place it into whatever directory you want as part of the install process.</p>
+
+							<p>If FO3Edit starts, you get a dialog to select which modules you want to load with the current selection from your Plugins.txt as default value. This order will have been set by <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>, and cannot be changed in FO3Edit. If you need to change your load order, close FO3Edit and change the load-order in <abbr title="Fallout Mod Manager">FOMM</abbr>, then re-launch FO3Edit.</p>
+
+							<p>Select the mods that you want to load into FO3Edit, which can be All (for conflict detection) or just one if your working on a specific mod-file. Once you have confirmed that dialog the selected modules will start loading in the background. Depending on your system it should take 30 seconds to a few minutes (!) for all modules to load. You can follow the progress in the message window. (Don't panic if it seems to freeze, it just takes time).</p>
+
+							<div class="p-img">
+								<p class="img"><img  height="494" src="img/image006.jpg" width="547"></p>
+
+								<p>The tree view on the left side now shows all active modules in their correct load order. By navigating that tree view you can look at every single record in any of your modules. An example of a successful launch of FO3Edit is shown below, though you may also see additional error information if errors were found during start-up.</p>
+
+							</div>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-2-3" class="up">Previous Section</a><a href="#s_2-2" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_2-1" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_2-3">
+				<h2 class="ctrl">2.3 Tour of User Interface</h2>
+
+
+				<div class="content">
+					<p>This section of the manual will take you on a brief tour of <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> to introduce you to the different views and screens that you will be working with. This tour is designed for beginner-level users, and does not discuss the functionality of the views at any depth just yet. The tour is recommended for all levels of user, especially if you have not used FO3Edit within the last several months as there have been many updates.</p>
+
+					<button class="ctrl-all" onclick="toggle_all(this);">Collapse All</button>
+					
+					<div class="level-3" id="s_2-3-1">
+						<h3 class="ctrl">2.3.1 Master/Plug-in Selection View</h3>
+
+						<div class="content">
+							<div class="p-img">
+								<p class="img"><img  height="474" src="img/image008.jpg" width="532"></p>
+
+								<p>The Master/Plug-in Selection view is presented to you when FO3Edit is first launched, and allows you to select/un-select the mods that you want FO3Edit to load. You can also Right-Click in open space to access more options, such as &#8220;Select All&#8221; or &#8220;Select None&#8221;.</p>
+
+							</div>
+
+							<p>To change the load-order of mods, close FO3Edit and open <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>. Change the load-order as desired, close <abbr title="Fallout Mod Manager">FOMM</abbr> and re-open FO3Edit.</p>
+
+							<p>There is an additional option you can use to quickly load a single mod &#8211; simply Double-Click on a mod file in the list. Double-clicking a mod will automatically un-select all other mod files, and will load the selected mod file. It&#8217;s a short-cut to loading single mods.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-3-2">
+						<h3 class="ctrl">2.3.2 Left-Side Panel</h3>
+
+						<div class="content">
+							<div class="p-img">
+								<p class="img"><img  height="561" src="img/image010.jpg" width="576"></p>
+
+								<p>The Left-Hand side of the main FO3Edit view is the most heavily used in FO3Edit, containing both a higher-archical data-tree structure for all references as well as the main context menu. It also contains a status bar and search boxes for hunting-down specific FormIDs or EditorIDs as shown below:</p>
+							</div>
+
+							<p>The main context menu (B) contains all of the major FO3Edit functions, including Filters, Reference hunts, Error checking, Removing Extraneous content and many more. There are also several functions that do not apply to Fallout3, such as Generate Object LOD. We will discuss each of the important options for Fallout3 in the tutorials below.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3-1" class="up">Previous Section</a><a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-3-3">
+						<h3 class="ctrl">2.3.3 Main Context Menu</h3>
+
+						<div class="content">
+							<div class="p-img">
+								<p class="img"><img  height="584" src="img/image012.jpg" width="697"></p>
+
+								<p>The main context menu is accessed by Right-clicking in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a>, and acts as the main navigation and function selection point for FO3Edit. As such, much time and explanation is provided on how to utilize this menu, as well as a Reference Chart (shown below) to help illustrate what each function does.</p>
+
+							</div>
+
+							<p>There are some functions such as, &#8220;Generate Object LOD&#8221; and the &#8220;Set VWD for all REFR&#8230;&#8221; options that only work on Oblivion, and should not be used with Fallout3. With some functions you will be presented with additional options, while with others such as &#8220;Check for Errors&#8221;, the output is sent to the <a href="#s_2-3-5">Messages Tab</a> (or other tabs with other functions).</p>
+
+							<p>Each of these functions is described in-detail within the tutorial, and Quick Links to those detailed sections can be found in the list below for easy-access. Additional description is provided below for each function on the main context menu.</p>
+
+							<p><a href="6-managing-mod-files.html#s_6-7">Compare To</a> &#8211; Loads another module at the same load order index as the one under the cursor when you right clicked. Works very well to compare 2 different versions of the same module against each other.</p>
+
+							<p><a href="4-conflict-detection-and-resolution.html#s_4-3">Apply Filter</a> &#8211; This function will present you with the <a href="2-overview.html#s_2-3-8">Filter Menu</a>, where you can select options on how you want to filter (restrict) the data shown in FO3Edit.</p>
+
+							<p><a href="2-overview.html#s_2-3-3">Remove Filter</a> &#8211; This function will remove the current filter, so that all loaded-data will be presented and processed.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-2">Building Reference Info</a> &#8211; This function will build reference information for the currently select mod, which can be used after extensive changes are made.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-3">Building Reachable Info</a> &#8211; This function scans all references in a selected mod and will determine which are reachable (by the player in-game) from those that cannot ever be reached or accessed by the player. This function takes into account the totality of all loaded modules (looking only at the contents of the winning version of each record). So it's possible for the reachable status to be different for a record, depending on which other modules you've loaded.</p>
+
+							<p><a href="5-mod-cleaning-and-error-checking.html">Checking for Errors</a> &#8211; This function is used to check for reports any case where the information in the module file does not match the FO3Edit record definitions. This is Not a check for missing references, physical or data errors &#8211; that is done during the loading process with results available in the <a href="#s_2-3-5">Messages Tab</a>.</p>
+
+							<p><a href="5-mod-cleaning-and-error-checking.html#s_5-4">Checking for Circular Leveled Lists</a> &#8211; Leveled Lists can reference other Leveled Lists, it's possible in this case to build a circular reference (with as little as 2 leveled lists directly referencing each other, or any number of additional leveled lists in the chain). When the game engine then tries to resolve that leveled lists down to a particular item/creature/NPC it can get caught in the endless loop and crash.</p>
+
+							<p><a href="6-managing-mod-files.html#s_6-3">Renumbering FormIDs</a> &#8211; This function will re-number all references in a selected mod file, starting from a number that you specify. This function does not in any way resolve conflicts, and should be used only if you know exactly what you are doing (as it will result in incompatiblities with existing save games and any module which uses this module as a master). This function was implemented for the BetterCities team, so that they could assign non-overlapping FormIDs to each of their city specific esp's, to prevent the need for changing FormIDs when merging the city-specific esp's into the alternative &quot;full&quot; esp which contains all cities.</p>
+
+							<p><a href="5-mod-cleaning-and-error-checking.html#s_5-2-3">Un-deleting and Disabling References</a> &#8211; This function is used to un-delete any references in a selected mod file that were deleted in a previous edit, and instead mark them as &#8220;disabled&#8221;. That will ensure that no conflicts occur if another mod depends on the object being deleted, and setting it to &#8220;disabled&#8221; will ensure that the original intent of the mod author (to remove the object from the game) is true as the player will never see a disabled object. More on this in the section on <a href="5-mod-cleaning-and-error-checking.html">Mod Cleaning</a>.</p>
+
+							<p><a href="5-mod-cleaning-and-error-checking.html#s_5-2-1">Removing &#8220;Identical To Master&#8221; Records</a> &#8211; This function will remove any record in a selected mod file that are identical to a record in the master files. This happens often when using the GECK, that some scripts or objects get marked as &#8220;modified&#8221; even though no changes were made. This bloats a mod file and makes it vulnerable to conflicts with other mods. More on this in the section on <a href="5-mod-cleaning-and-error-checking.html">Mod Cleaning</a>.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-7">Applying Scripts Into</a> &#8211; This function is used to apply a script(s) into a specific reference, and writes the resulting new or override records into the specified module.</p>
+
+							<p><a href="4-conflict-detection-and-resolution.html#s_4-8">Creating a Merged Patch</a> &#8211; This function is used to build the foundation of a merged patch-file, resulting in a new mod file using a name you select. More on this in the section on <a href="4-conflict-detection-and-resolution.html">Mod Conflict Resolution</a>.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-8">Set VWD for all REFR with VWD Mesh in this file</a> &#8211; This function only works with Oblivion, and should not be used for Fallout3 mods under any circumstances.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-8">Set VWD for all REFR with VWD Mesh copy as override</a> - This function only works with Oblivion, and should not be used for Fallout3 mods under any circumstances.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-8">Generate Object LOD</a> &#8211; This function only works with Oblivion, and should not be used for Fallout3 mods under any circumstances.</p>
+
+							<p><a href="6-managing-mod-files.html#s_6-3">Add (Reference)</a> &#8211; What exactly that menu shows you is depending on the context, if you right click on a file node you will get a list of all groups that don't exist yet, if you right click on a group you get a list of all records that can be added to it and so on. And yes, this can be used to add new records, so you can basically build a mod from scratch with it.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-5">Mark Modified</a> &#8211; It will mark the currently selected node and all child nodes as modified. To minimize the chance that FO3Edit breaks something that it doesn't fully understand when saving, only records that are marked as modified are assembled field by field, sub record by sub record. Any record or even complete group that is not marked as modified is simply copied unchanged as a blob of bytes from the old module file into the newly saved one.</p>
+
+							<p><a href="6-managing-mod-files.html#s_6-2">Add Masters</a> &#8211; This adds a new master to the MAST sub record in the file header and correctly renumbers the FormIDs in the module. This function is also used to create an <abbr title="Elder-Scrolls Master File">ESM</abbr>/ESP pair from a single ESP plug-in.</p>
+
+							<p><a href="5-mod-cleaning-and-error-checking.html#s_5-2-2">Sort Masters</a> &#8211; This function will sort the global load-order of master files to match the order of global load order.</p>
+
+							<p><a href="5-mod-cleaning-and-error-checking.html#s_5-2-4">Clean Masters</a> &#8211; This function will scan a Plug-in for Master <abbr title="Elder Scrolls Master">ESM</abbr> dependencies, determine if any Masters are un-used by the plug-in and remove them.</p>
+
+							<p><a href="7-mod-utilities.html#s_7-6">Copy Idle Animations Into</a> &#8211; This function is used to copy all of the idle animations from one skeleton to another, which replicating monsters.</p>
+
+							<p><a href="6-managing-mod-files.html#s_6-7">Hidden</a>&#8211; This function hides the selected mod file(s) or references from further view/processing by FO3Edit.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3-2" class="up">Previous Section</a><a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-3-4">
+						<h3 class="ctrl">2.3.4 Right-Side Information Tab</h3>
+
+						<div class="content">
+
+							<div class="p-img">
+								<p class="img"><img  height="547" src="img/image014.jpg" width="576"></p>
+
+								<p>The Information Tab holds a textural version of the FO3Edit help guide, including basic information on mod conflict resolution, instructions on using <a href="3-master-update-and-master-restore.html">Master Update Mode</a> and a legend on <a href="4-conflict-detection-and-resolution.html#s_4-4">how to interpret the color-scheme</a> of text and background. You can reference this tab at any time as a cheat-sheet of sorts on how to use FO3Edit.</p>
+
+							</div>
+
+							<p>You can also capture any/all sections of the help information by Right-Clicking in the view-pane (A) and selecting one of the textural options presented to you.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3-3" class="up">Previous Section</a><a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-3-5">
+						<h3 class="ctrl">2.3.5 Right-Side Messages Tab</h3>
+
+						<div class="content">
+							<div class="p-img">
+								<p class="img"><img  height="527" src="img/image016.jpg" width="576"></p>
+
+								<p>The Messages Tab acts like a running log-file of what FO3Edit is doing in response to your actions. When you first load FO3Edit, the Messages Tab is displayed by default so that you can watch the loading process in real-time. This is important as any Errors in the mod files such as missing references, missing files or dirty-edits to a mod file done in a hex-editor can all result in errors. Most of these will be harmless to Fallout3, but some are lethal and you can see them all in the Messages Tab while they are loaded into FO3Edit. The view below shows an example:</p>
+
+							</div>
+
+							<p>Any actions that you take which result in changes to the files, such as Saving, will also print their output into the Messages Tab. Thus it is important to check this tab often while working in FO3Edit, as there are cases in which a mod file won&#8217;t save due to errors &#8211; and you want to know about that as soon as a problem occurs.</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3-4" class="up">Previous Section</a><a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-3-6">
+						<h3 class="ctrl">2.3.6 Right-Side References Tab</h3>
+
+						<div class="content">
+
+							<div class="p-img">
+								<p class="img"><img  height="528" src="img/image018.jpg" width="576"></p>
+
+								<p>The References Tab is used to locate all occurrences of a particular reference such as Soda Bottles, Projectiles and Explosions. If you select a reference in the Left-Hand window, such as the &#8220;Glass Explosion&#8221; from the <a href="http://www.fallout3nexus.com/downloads/file.php?id=1904">Destroyable Environments</a> Mod by <a href="http://www.fallout3nexus.com/modules/members/index.php?id=173512">Bigkid7834</a>, where every occurrence of that Glass Explosion in the in the game is displayed.</p>
+
+							</div>
+
+							<p>You can also Left-Click on any reference in the Referenced By view to present a copy/remove menu. Here you can literally delete the reference of the object out of the mod, or copy it into another mod (perhaps a patch plug-in, discussed in detail in the chapter on <a href="4-conflict-detection-and-resolution.html">Conflict Detection and Resolution</a>. These functions are especially useful for gaining a high-level understanding of what the mod contains, and where references can be found (a task which can be exceedingly difficult in the GECK).</p>
+
+							<p>You can also double click entries in that list to directly jump to that record (and switch to the View tab), you can then use the backward button in the top right corner or on your mouse (if it got more then 2 buttons).</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3-5" class="up">Previous Section</a><a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-3-7">
+						<h3 class="ctrl">2.3.7 Right-Side View Tab</h3>
+
+						<div class="content">
+							<div class="p-img">
+								<p class="img"><img  height="527" src="img/image020.jpg" width="576"></p>
+
+								<p>The View Tab is used to display the details about any record that you click-select in the Left-Side Panel. The View Tab is where most of the work of conflict resolution takes place. Each mod that has a copy/version of a selected record is shown in the view with its own Column. This way, all of the mods that have a version of the same record can be shown side-by-side to more easily navigated and spot conflicts. The screenshot below high-lights details about the View Tab.</p>
+
+							</div>
+
+							<p>We discuss this view at depth in the chapter on <a href="4-conflict-detection-and-resolution.html">Conflict Detection and Resolution</a>, but for now it&#8217;s only important to understand its high-level function and how to navigate to it. As in the Referenced-By Tab, within the View Tab you can Right-click on any reference to receive an additional context menu. You can edit and remove any entry, as well as tell FO3Edit what kind of view your looking for; with or without de-conflicted rows (rows without a conflict of any kind).</p>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3-6" class="up">Previous Section</a><a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+					<div class="level-3" id="s_2-3-8">
+						<h3 class="ctrl">2.3.8 Filter Menu</h3>
+
+						<div class="content">
+							<div class="p-img">
+								<p class="img"><img  height="408" src="img/image022.jpg" width="574"></p>
+
+								<p>The Filter view is used for several purposes in FO3Edit; from conflict resolution to mod cleaning to reference viewing and reach ability data &#8211; all are achieved by activating a FO3Edit Filter. The Filters essentially work to restrict what data you see in FO3Edit to just what you want to see or are working on, and in some cases data is parsed (such as in conflict detection). When trying to <a href="4-conflict-detection-and-resolution.html">de-conflict a list of mods</a>, the Filter is used to show you only the records that show a conflict &#8211; leaving the un-conflicted rows invisible.</p>
+							</div>
+
+							<div class="p-img">
+								<p class="img"><img  height="198" src="img/image024.jpg" width="385"></p>
+
+								<p>As you can see there are dozens of different options you can select in the filter view. Not to worry though, we will give you the correct filter options to select for each of the functions you perform with FO3Edit. For now it is only important to recognize this as the Filter View, which gives you unprecedented viewing access to mods files. You can Apply and Remove Filters from the main context menu as shown below:</p>
+
+							</div>
+
+						</div><!--/.content-->
+
+						<div class="level-nav">
+							<a href="#s_2-3-7" class="up">Previous Section</a><a href="#s_2-3" class="top">Top of this Group</a>
+
+						</div><!--/.level-nav-->
+
+					</div><!--/.level-3-->
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_2-2" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_2-4">
+				<h2 class="ctrl">2.4 Saving and Confirmation</h2>
+
+				<div class="content">
+					<div class="p-img">
+						<p class="img"><img  height="499" src="img/image026.jpg" width="575"></p>
+
+						<p>You can save your changes at any time by pressing, &#8220;Alt&#8221; and &#8220;S&#8221;, and when you exit FO3Edit (if there are changes to save). If you have not saved for while, <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> may also remind you that it&#8217;s a good time to save. When the, &#8220;Save changed files&#8221; window is presented, click on the mods you want to save. The screenshot below illustrates this process:</p>
+					</div>
+
+					<p>The output of each save is available in the Right-hand Messages Tab. It is important to check this, as sometimes errors in a mod file can prevent you from successfully saving it.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_2-3" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_2-5">
+				<h2 class="ctrl">2.5 Quick Tips and Shortcuts</h2>
+
+				<div class="content">
+					<p>There are several important keyboard short-cuts that can make your usage of <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> more efficient with less key-strokes for some common functions.</p>
+
+					<ul class="no-bullet">
+						<li><strong>Ctrl+S:</strong> Opens the Save Files dialog.</li>
+						<li><strong>Ctrl+click on a FormID in the right side pane:</strong> Jump to the selected Record in the tree view.</li>
+						<li><strong>Double click on an entry in the Referenced By tab:</strong> Jump to the selected Record in the tree view.</li>
+						<li><strong>Press F2 with the mouse over a field in the right side pane:</strong> Edit the field in the pane view immediately.</li>
+						<li><strong>Press F2 with the mouse over a record in the tree view:</strong> Edit the Form ID of the selected Record.</li>
+
+					</ul>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_2-4" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+		</div><!--/.content-->
+
+		<div class="section-nav">
+			<a href="index.html" class="prev">&laquo; Previous Page</a><a href="3-master-update-and-master-restore.html" class="next">Next Page &raquo;</a>
+
+		</div><!--/.section-nav-->
+
+	</section>
+
+</body>
+</html>

@@ -1,0 +1,462 @@
+﻿<!DOCTYPE HTML>
+
+<html>
+<head>
+	<title>Miax's Tome of FO3Edit</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<script type="text/javascript" src="js/lib/jquery.js"></script>
+	<script type="text/javascript" src="js/lib/jcarousellite.js"></script>
+	<script type="text/javascript" src="js/t5e.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="_toc.html" -->
+
+	<ul class="second">
+		<li><a href="#s_7-1">7.1 Overview</a></li>
+
+		<li><a href="#s_7-2">7.2 Building Reference Information</a></li>
+
+		<li><a href="#s_7-3">7.3 Building Reachable Information</a></li>
+
+		<li><a href="#s_7-4">7.4 Changing and Adding References</a></li>
+
+		<li><a href="#s_7-5">7.5 Marking Nodes as Modified</a></li>
+
+		<li><a href="#s_7-6">7.6 Copying and Replicating Idle Animations</a></li>
+
+		<li><a href="#s_7-7">7.7 Applying Scripts Into</a></li>
+
+		<li><a href="#s_7-8">7.8 Deprecated Functions</a></li>
+	</ul>
+	</div><!--/.local-->
+</div><!--/.toc-->
+
+	<section id="_Toc237480281">
+		<h1>7. Mod Utilities</h1>
+
+		<button class="ctrl-all" onclick="toggle_allthis;">Collapse All</button>
+
+		<div class="content clearfix">
+			<div class="level-2" id="s_7-1">
+				<h2 class="ctrl">7.1 Overview</h2>
+				
+				<div class="content">
+					<p>The mod utilities are a collection of functions that have been added to <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> over the years for both Oblivion and Fallout3 that can aid mod authors in several areas. The next sections review these functions and describe how to utilize them.</p>
+					
+				</div><!--/.content-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_7-2">
+				<h2 class="ctrl">7.2 Building Reference Information</h2>
+				
+				<div class="content">
+					<p>Building reference information is a common task that is often performed behind the scenes by <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>, and essentially finds all instances of a &#8220;Thing&#8221; in the game. Be it a script, NPC or a toilet, the build reference info function will show you all of them across the mod files loaded into FO3Edit. In this section we feature <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=484105">Xodarap&#8217;s</a> <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">Fallout Overhaul</a> (XFO) mod, which is known as one of the bigger, stable mods that changes that make your gaming experience much more challenging and immersive (I use this myself, so I had to feature Xodaraps fine work!)</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="309" src="img/image262.jpg" width="576"></p>
+						<p>For our example of building reference information, there are a couple of choices to consider; If you are trying to find All instances of that Thing, then load all of the mod files when loading FO3Edit. If however you are looking for instances of a Thing in a single mod-file, then you&#8217;ll only want to load that mod-file as shown in the screenshot below:</p>
+					
+					</div>
+
+					<p>Here we start the action by Right-clicking in the open white-space of the Master/Plugin Selection window (A) which presents a small context menu. From this menu choose, &#8220;Select None&#8221; (B) to clear all check marks. Then you can select just the <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a> mod we want to load (C) and click, &#8220;OK&#8221; to bring it up into FO3Edit.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="384" src="img/image264.jpg" width="499"></p>
+						<p>Once FO3Edit is loaded, you will be presented with a screenshot similar to that below. There you can see the three mods loaded, the <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a> stand-alone version and its two masters. To build reference information, Right-click on the <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a> entry in the Left-side Panel (A) which will present the main context menu. Select, &#8220;Build Reference Info&#8221; (B) from this menu as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="266" src="img/image266.jpg" width="238"></p>
+						<p>This will present you with a new window for, &#8220;Building reference information&#8221;, where you can select the master files or other mod files that you want to build reference information for (A). If you are looking through all mod files, make sure that you select everything (you can also use the Right-click, &#8220;Select None&#8221; method to quickly check them all:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="249" src="img/image268.jpg" width="575"></p>
+						<p>This process can take some time depending on how many mods you are building reference information for. Fortunately there is a status indicator in the top window (A) that shows you the time elapsed during parsing as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="231" src="img/image270.jpg" width="576"></p>
+						<p>Note how there is a new Tab at the bottom the <a href="2-overview.html#s_2-3-6">Referenced By Tab</a>, which displays the output of our reference check. As shown above, the <a href="2-overview.html#s_2-3-5">Messages Tab</a> shows the overall outcome of the function, while the screenshot below shows you the <a href="2-overview.html#s_2-3-6">Referenced By Tab</a> and its output.</p>
+					
+					</div>
+
+					<p>In this case we Left-clicked on the Drink Toilet record in <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a>, and can see very instance of the toilet in the <a href="2-overview.html#s_2-3-6">Referenced By Tab</a>. Each row in the output shows you extensive information about the reference, the cell it&#8217;s placed in, the name of the location, it&#8217;s FormID, etc. You can run this function for any time in any mod that you wish!</p>
+					
+				</div><!--/.content-->
+				
+				<div class="level-nav">
+					<a href="#s_7-1" class="up">Previous Section</a><a href="#s_7-2" class="top">Top of this Section</a>
+					
+				</div><!--/.level-nav-->
+				
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_7-3">
+				<h2 class="ctrl">7.3 Building Reachable Information</h2>
+				
+				<div class="content">
+					<p>For our example of building reference information, there are a couple of choices to consider; If you are trying to find All instances of that Thing, then load all of the mod files when loading <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>. If however you are looking for instances of a Thing in a single mod-file, then you&#8217;ll only want to load that mod-file instead of the entire list. Some important notes about the &quot;Build Reachable Info&quot; function:</p>
+					
+					<ul>
+						<li>After you've run that function, you'll see that some records are displayed stricken-through. These records are considered to be &quot;not reachable&quot;.</li>
+						<li>There are some limits to this. The &quot;not reachable&quot; classification is only true if you:
+							<ul>
+								<li>Start a new game with exactly the mods you've currently loaded.</li>
+								<li>Do not use the console in any way.</li>
+								<li>There are no <a href="http://www.fallout3nexus.com/downloads/file.php?id=4888"><abbr title="Fallout Script Extender">FOSE</abbr></a> scripts involved that use some dirty tricks to get hold of a reference to something without that something showing up in the SCRO's of the script.</li>
+								
+							</ul>
+							
+						</li>
+						
+					</ul>
+
+					<p>Also the meaning of &quot;reachable&quot; is sometimes a bit gray. For example; For Activator's, Statics, Weapons, Armor, and so on &#8220;reachable&#8221; means that the player character should be able to get somewhere from where he can see the object and/or somehow get it into his inventory. For Quests it means that the quest either starts enabled or that there is probably some way how it can become enabled or at least that somewhere the variables belonging to the quest script get accessed. For DIAL's and INFO's it means that it's probably possible to select the topic somewhere or hear the response somewhere. For CELL's and WRLD's it means that the player character is probably somehow able to enter it.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="258" src="img/image271.jpg" width="481"></p>
+						<p>Start the action by Right-clicking in the open white-space of the Master/Plugin Selection window (A), which will present a small context menu. From this menu choose, &#8220;Select None&#8221; (B) to clear all check marks. Then you can select just the <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a> mod we want to load (C) and click, &#8220;OK&#8221; to bring it up into FO3Edit as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="423" src="img/image273.jpg" width="558"></p>
+						<p>Once loaded, Right-click on the mod to build reachable info for (A) to render the main context menu. Select, &#8220;Build reachable info&#8221; from the menu to run the function as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="166" src="img/image275.jpg" width="575"></p>
+						<p>As with the <a href="7-mod-utilities.html#s_7-2">Build Reference Information</a> function, the build reach ability function may take some time to process all of the records depending on how many mods you are loading for the comparison. The status bar at the very top will give you indication of how far along the function is during parsing as shown below. The <a href="2-overview.html#s_2-3-5">Messages Tab</a> shows the log-file output as it happens, and overall this function can take some time to complete:</p>
+					
+					</div>
+
+					<p>Be aware that half-way through the process, the Elapsed Time clock on top will appear to stop, and FO3Edit will appear to be frozen or locked-up. In truth the Elapsed Clock only counts through half of the Build Reachable Info function, so be patient &#8211; the process will complete within a minute or two.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="245" src="img/image277.jpg" width="575"></p>
+						<p>Once the Build Reachable Info function is complete, you will see the, &#8220;All done!&#8221; notice in the <a href="2-overview.html#s_2-3-5">Messages Tab</a> (A) along with log file output. <a href="2-overview.html#s_2-3-2">The Left-side Panel</a> shows all of the records in the mod with Green Text, Yellow Background (B) as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="246" src="img/image279.jpg" width="575"></p>
+						<p>We&#8217;re not quite done yet, next we need to apply a Filter to remove all records from the view except those that are considered, &#8220;Unreachable&#8221;. To do this, Right-click on the mod in the <a href="2-overview.html#s_2-3-2">Left-side Panel</a> (A), and select, &#8220;Apply Filter&#8221; from the main context menu:</p>
+					
+					</div>
+
+					<p>Once Apply Filter is selected, the main Filter window view will be presented as shown below, where you can apply the Reachable Info Filter.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="410" src="img/image281.jpg" width="575"></p>
+						<p>The screenshot below illustrates the Reachable Info filter settings that you will need to set; this time just two, &#8220;by not reachable status&#8221; (A) and &#8220;only not reachable&#8221; (B). Then select, &#8220;Filter&#8221; (C) to apply the new filter settings as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="217" src="img/image283.jpg" width="575"></p>
+						<p>This filter should not take very long to process, perhaps several seconds. Below an example is shown of the <a href="2-overview.html#s_2-3-5">Messages Tab</a> output, indicating the result of the filter (B). You can also see the stricken-through records (A) that are not reachable by the player:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="408" src="img/image285.jpg" width="576"></p>
+						<p>The final results of the Build Reachable Info function are shown in the screenshot below via the <a href="2-overview.html#s_2-3-7">View Tab</a> (A) and <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> (C), where the stricken-through records are shown with horizontal lines through the text. These stricken-through records are those which are not considered, &#8220;Reachable&#8221; by the player-character in-game. You can click-open any of the record headings in the <a href="2-overview.html#s_2-3-2">Left-side Panel</a> to see the un-reachable records by category as shown in the screenshot below:</p>
+					
+					</div>
+
+					<p>Note that in the FormLists you might see some things marked as unreachable which do technically have an effect on the player character. For example, the repair lists will show up as unreachable. The reason for that is that if the repair-list was marked as reachable, it would automatically mark all contained records as reachable. But that's not really right. Just because something can possibly be used to repair an object that the character has doesn't meant that this something can actually ever be acquired by the player. So really, for FormLists the reachable status doesn't mean much either way.</p>
+
+					<p>Outside of FormLists, there shouldn't be any false negatives (meaning something marked as unreachable which has an influence on the game). There can be false positives (something marked as reachable while it's not). e.g. it's possible for a CELL to be considered reachable even though the only way to get there is through a door which can only be opened with a key and the key is not reachable.</p>
+
+					<p>For an INFO record to be reachable even though non of the conditions attached to the responses could ever possible be true. Or the quest that the INFO belongs to will never be enabled. For any type of object could be reachable even though it's just used in a GetIsID check in some script (not in a CTDA, objects referenced from conditions never become reachable through that).</p>
+
+					<p>Overall, even with all these shortcomings and gray areas, if someone ends up being marked as not reachable, that's a very strong indication that the particular thing will not normally effect the game.</p>
+					
+				</div><!--/.content-->
+				
+				<div class="level-nav">
+					<a href="#s_7-2" class="up">Previous Section</a><a href="#s_7-3" class="top">Top of this Section</a>
+					
+				</div><!--/.level-nav-->
+				
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_7-4">
+				<h2 class="ctrl">7.4 Changing and Adding References</h2>
+				
+				<div class="content">
+					<p>One of the less-used features of <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> allows you to actually insert to records (items, scripts, NPCs, etc) into a mod-file directly from FO3Edit. The GECK is of course the preferred method of adding new things to your mod, but in certain circumstances it is easier or simpler to add the thing directly to the file without the GECK. This function saw its most use just prior to the release of the GECK, when there was no tool to use for such purposes. Now with the GECK in play, there is less of a need for this capability, but it still exists in FO3Edit and is documented for cases in which you want to add references directly to the game.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="279" src="img/image287.jpg" width="576"></p>
+						<p>In this section we feature <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=7327">Martigen&#8217;s</a> <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">Marts Mutant Mod (MMM)</a>, which is one of the very best mods created for Fallout3. The screenshot below starts the action, in which we Right-click in open space somewhere in the Master/Plugin Selection window (A), then choose, &#8220;Select None&#8221; to un-check all of the entries. Now check-off the mod you want to change (C), and click, &#8220;OK&#8221; to load it into FO3Edit (D) as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="265" src="img/image289.jpg" width="571"></p>
+						<p>Once loaded, the screenshot below shows you the expected results. Here we see that only <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> is loaded (A), along with its Master file references. The <a href="2-overview.html#s_2-3-5">Messages Tab</a> shows the outcome of the load, and any errors that may persist (B) as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="290" src="img/image291.jpg" width="575"></p>
+						<p>With our mod loaded and on the operating table, it&#8217;s time to start changing and added records! The first example below is of a reference change, in which we alter the Flags used on our test NPC, Lucky Harith (He is just THE man, so I had to feature him). The screenshot below illustrates the process:</p>
+					
+					</div>
+
+					<p>We start by opening-up the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> record tree for <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> to the location where we want to change things (A), and choose Lucky Harith with a Left-Mouse Click (B). To edit a record, Right-click it&#8217;s entry in the <a href="2-overview.html#s_2-3-7">View Tab</a> (C) to render a small context menu, then select, &#8220;Edit&#8221; (D) to open the edit context menu as shown above.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="336" src="img/image293.jpg" width="225"></p>
+						<p>The, &#8220;Edit Value&#8221; window will now be presented, allowing you to check/select any flags that you want Lucky Harith to have added to them. As we just can&#8217;t let Lucky down, we&#8217;ll give him an Essential flag so that he never dies! Check-mark the Essential flag row in the window (A) and select, &#8220;OK&#8221; to set the flagging (B) as shown:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="290" src="img/image295.jpg" width="575"></p>
+						<p>Once OK is selected, you are taken back to the main View Tab where you can see the new flags set (A). Note that the Flagging is also now in Bold, indicating that they have been marked as changed and will thus be saved as shown below:</p>
+					
+					</div>
+
+					<p>Also note that the reference Text (B) and the record entry (C) are also both in Bold Text, marking them as changed for saving. See how easy that was!?!</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="290" src="img/image297.jpg" width="575"></p>
+						<p>To add a new reference into a record, the process is very similar. Let&#8217;s keep with Lucky Harith, and add some Rad-X to his inventory so that he&#8217;s ready for everything! To do this, start by Left-Clicking the record you want to change (A) in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a>, then Right-click the row in the <a href="2-overview.html#s_2-3-7">View Tab</a> adjacent to the type of record you want to add. In this case we&#8217;re adding an item, so to the right of, &#8220;Items&#8221; in the <a href="2-overview.html#s_2-3-7">View Tab</a> is where you want to Right-click (B). A small context window will render, select, &#8220;Add&#8221; (C) as shown:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="198" src="img/image299.jpg" width="576"></p>
+						<p>Once you click, &#8220;Add&#8221;, a new blank item entry will be added into the <a href="2-overview.html#s_2-3-7">View Tab</a> (A) next to the item reference (B). Also note it shows with a Yellow background (A).</p>
+					
+					</div>
+
+					<p>Initially all new items get added as a &#8220;NULL&#8221; (RefID 00000000) which is obviously not right. Once added you will need to change (Edit) the new item to turn it into the Rad-X item that we want to give to Lucky Harith.<br> <br></p>
+
+					<div class="p-img">
+						<p class="img"><img  height="198" src="img/image301.jpg" width="576"></p>
+						<p>To transform our new NULL item into Rad-X, we first Right-click on the new item (A) and click on which renders a small context menu. Select &#8220;Edit&#8221; (B) from the menu as shown:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="133" src="img/image303.jpg" width="576"></p>
+						<p>This will pull-up a small, &#8220;Edit Value&#8221; window as shown below. Here you can input the FormID of the Rad-X item, which is, &#8220;00015168&#8221;. Enter that into the value field (A) and click, &#8220;OK&#8221; to apply the value (B):</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="290" src="img/image305.jpg" width="575"></p>
+						<p>Once done, note below that our NULL item has magically turned into Rad-X! I bet Lucky Harith has never felt so safe! (B). Also note the text is in Bold, marking it for saving. You can also edit other values about the object as needed (such as count, etc) as shown:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="235" src="img/image307.jpg" width="257" /></p>
+						<p>The last thing we need to do is save our changes! You can do this via either selecting, &#8220;Alt-S&#8221; and/or close FO3Edit to render the, &#8220;Save changed files&#8221; window. Here you can select/check any mod you want to save (A), and click, &#8220;OK&#8221; to save the files (B) as shown in the screenshot below:</p>
+					
+					</div>
+
+					<p>Note that different kinds of records will require different actions when adding new references, as scripts are different from items which are different from NPCs. You can take some time and explore the different types of additions as needed.</p>
+					
+				</div><!--/.content-->
+				
+				<div class="level-nav">
+					<a href="#s_7-3" class="up">Previous Section</a><a href="#s_7-4" class="top">Top of this Section</a>
+					
+				</div><!--/.level-nav-->
+				
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_7-5">
+				<h2 class="ctrl">7.5 Marking Nodes as Modified</h2>
+				
+				<div class="content">
+					<div class="p-img">
+						<p class="img"><img  height="397" src="img/image309.jpg" width="473"></p>
+						<p>This function is used by mod authors to mark certain records as having been modified, which means they will be saved when you press, &#8220;Alt-S&#8221; or exit <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>. This is sometimes necessary when a mod author wants to force an update of a particular records or group of records to save even though FO3Edit registers to change. The process is one-step as shown in the screenshot below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="251" src="img/image311.jpg" width="481"></p>
+						<p>The screenshot below shows the results, in which the record that was Marked as Modified now has Bold text (A). This record will now be saved when you exit.</p>
+					
+					</div>
+					
+				</div><!--/.content-->
+				
+				<div class="level-nav">
+					<a href="#s_7-4" class="up">Previous Section</a><a href="#s_7-5" class="top">Top of this Section</a>
+					
+				</div><!--/.level-nav-->
+				
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_7-6">
+				<h2 class="ctrl">7.6 Copying and Replicating Idle Animations</h2>
+				
+				<div class="content">
+					<p>Copying and Replicating Idle Animations is a specialized function that was written for <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=7327">Martigen</a> in support of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">Marts Mutant Mod (MMM)</a>. What the function does is to copy a set of NPC idle animations from a list of available animations into an NPC. In this way, the process of creating new NPCs is dramatically improved and much less prone to errors when assigning idle animations. This process describes how that function works, and is clearly geared towards the mod author.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="296" src="img/image313.jpg" width="575"></p>
+						<p>To start the action, launch <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> and Right-click in open space somewhere in the window (A) to render a small context menu. Select, &#8220;Apply None&#8221; (B) from this menu to de-select everything. You can then Left-click the check box for just the mod you want to copy idle animations into (C), and then, &#8220;OK&#8221; to load it (D). As this function was written by <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=380528">Elminster</a> for <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=7327">Martigen</a>, we of course will feature <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> in this section as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="204" src="img/image315.jpg" width="575"></p>
+						<p>Once loaded FO3Edit presents the typical output as shown below, in which <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> and its master file references are the only record-trees shown in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> (A):</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="408" src="img/image317.jpg" width="575"></p>
+						<p>Next we&#8217;ll want top open <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> up in the Left-Side Panel by Left-clicking on the record tree (A and B). This will expose the interior of the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> plug-in, and allow you to select the NPC that you want to copy Idle Animations into (C). Right-click on this NPC (C) to render the main context menu, then select, &#8220;Copy Idle Animations into&#8230;&#8221; as shown:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="194" src="img/image319.jpg" width="369"></p>
+						<p>You will be presented with the classic FO3Edit warning window, harkening doom upon the universe should you dare attempt to tamper with this mod file! Indeed, you should not change other people&#8217;s mod files as a general rule. We are only changing <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> for the purposes of this tutorial; just don&#8217;t save it when you&#8217;re done eh?</p>
+						
+						<p>If you dare, select, &#8220;Yes I&#8217;m absolutely sure&#8221; to continue.</p>
+						
+					</div>
+
+
+					<div class="p-img">
+						<p class="img"><img  height="409" src="img/image321.jpg" width="398"></p>
+						<p>Next you will be presented with the, &#8220;Which Idles do you want to copy?&#8221; window, which offers the master selection of available idle animations that you can choose from. Do not ask me how to create these idle animations, as I do not know. You can ask <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=7327">Martigen</a> in the forums about this, but I recommend strong doses of Rad-X first or he may simply morph you into a night-ghoul for daring to bother him. Otherwise, take the wise choice and select one of the available groups of idle animations to copy (A) and the click, &#8220;OK&#8221; to load them into the buffer (B) as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="200" src="img/image323.jpg" width="459"></p>
+						<p>You will now be presented with a series of small Edit Box windows, which are used to customize the naming of these idle animations and thus prevent duplicates. The first window asks for a new Model Prefix (A) &#8211; which allows you to specify a new model-name for these animations as shown below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="209" src="img/image325.jpg" width="419"></p>
+						<p>The next EditorID window allows you to Remove a portion of the current idle animations name in the new versions your creating (A). This is Optional, click &#8220;OK&#8221; either way.</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="210" src="img/image327.jpg" width="420"></p>
+						<p>The next EditorID Prefix window allows you to add a new unique name to the Beginning of each animation name (A). This you should use, pick something unique to your mod:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="214" src="img/image329.jpg" width="428"></p>
+						<p>The last EditorID Suffix window allows you to add something to the End of each animation name (A), which again is Optional. Click, &#8220;OK&#8221; either way to finish:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="316" src="img/image331.jpg" width="387"></p>
+						<p>Finally we reach the last step, in which a window is presented with the available loaded mod-files that you can copy these idle animations into. For the purposes of this demo we chose <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a>&#8217;s Master file (A), as shown in the screenshot below:</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="325" src="img/image333.jpg" width="576"></p>
+						<p>Selecting, &#8220;OK&#8221; (B) will execute the paste command and place the new idle animations into the mod file you specified. The screenshot below illustrates a typical result, in which both the File Header and Idle Animation record headings show with Bold text (indicating that they have changed and are thus marked as modified for saving):</p>
+					
+						<p>Opening the Idle Animation record tree in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> (B) will reveal the newly-copied animations as shown below.</p>
+
+					</div>
+
+
+					<div class="p-img">
+						<p class="img"><img  height="400" src="img/image335.jpg" width="440"></p>
+						<p>The output screenshots below illustrate both the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> results (below) and the <a href="2-overview.html#s_2-3-7">View Tab</a> output for each new animation (bottom). Note how each animation that was copied now carries the new Prefix, &#8220;Animations&#8221; (B) as well as the new Suffix, &#8220;mmm&#8221; (C) that we chose in the four EditorID windows.</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="293" src="img/image337.jpg" width="653"></p>
+						<p>Note below the details about each idle animation as shown in the <a href="2-overview.html#s_2-3-7">View Tab</a> (B). Each animation includes many variables and details that would be time consuming and error-prone to do by hand. This Copy Idle Animations function automates the process.</p>
+					
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="248" src="img/image339.jpg" width="233"></p>
+						<p>The final step is to save our hard work! Either pressing, &#8220;Alt-S&#8221; or closing the FO3Edit program with present you with the Save changed files window as shown below. Simply ensure that the mod you worked on is checked (A), and press, &#8220;OK&#8221; to Save. (Don&#8217;t try this at home kids!):</p>
+					
+					</div>
+
+					<p>Note again that you should not be changing MMM or any other mod that you did not create. This function is purely for mod authors in creating their own mods which require many new NPCs, for which this function can automation part of the work.</p>
+				</div><!--/.content-->
+				
+				<div class="level-nav">
+					<a href="#s_7-5" class="up">Previous Section</a><a href="#s_7-6" class="top">Top of this Section</a>
+					
+				</div><!--/.level-nav-->
+				
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_7-7">
+				<h2 class="ctrl">7.7 Applying Scripts Into</h2>
+				
+				<div class="content">
+					<p>Download this: <a href="http://fallout3nexus.com/downloads/file.php?id=1904">http://fallout3nexus.com/downloads/file.php?id=1904</a><br> It makes use of this function. If you have still questions about it afterward feel free to ask again.</p>
+
+					<p>NEED MORE INFO!</p>
+					
+					</div><!--/.content-->
+				
+				<div class="level-nav">
+					<a href="#s_7-6" class="up">Previous Section</a>
+					
+				</div><!--/.level-nav-->
+				
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_7-8">
+				<h2 class="ctrl">7.8 Deprecated Functions</h2>
+				
+				<div class="content">
+					<p>There are three options in the main context menu that were built for Oblivion and were carried-forward into the Fallout3 version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>. These functions may still work for Oblivion, but they do not work for Fallout3 and are considered Deprecated functions which should not be used for any reason. You may even crash FO3Edit by trying to run them. These functions that are deprecated for Fallout3 are:</p>
+
+					<ul>
+						<li>Object LOD</li>
+						<li>Set VWD for all REFR with VWD Mesh in this file</li>
+						<li>Set VWD for all REFR with VWD Mesh copy as override&#8230;</li>
+						
+					</ul>
+					
+				</div><!--/.content-->
+				
+				<div class="level-nav">
+					<a href="#s_7-7" class="up">Previous Section</a>
+					
+				</div><!--/.level-nav-->
+				
+			</div><!--/.level-2-->
+
+		</div><!--/.content-->
+		
+		<div class="section-nav">
+			<a href="6-managing-mod-files.html" class="prev">&laquo; Previous Page</a><a href="8-fo3edit-faq.html" class="next">Next Page &raquo;</a>
+			
+		</div><!--/.section-nav-->
+
+	</section>
+
+</body>
+</html>

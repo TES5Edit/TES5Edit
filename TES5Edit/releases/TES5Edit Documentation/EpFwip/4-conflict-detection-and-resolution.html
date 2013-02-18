@@ -1,0 +1,542 @@
+﻿<!DOCTYPE HTML>
+
+<html>
+
+<head>
+	<title>Miax's Tome of FO3Edit</title>
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<script type="text/javascript" src="js/lib/jquery.js"></script>
+	<script type="text/javascript" src="js/lib/jcarousellite.js"></script>
+	<script type="text/javascript" src="js/t5e.js"></script>
+
+</head>
+
+<body>
+	<div class="toc">
+		<div class="global">
+			<h2>Main Table of Contents</h2>
+
+			<ul class="first">
+				<li><a href="index.html">1. Introduction</a></li>
+				<li><a href="2-overview.html">2. Overview</a></li>
+				<li><a href="3-master-update-and-master-restore.html">3. Master Update and Master Restore</a></li>
+				<li><a href="4-conflict-detection-and-resolution.html">4. Conflict Detection and Resolution</a></li>
+				<li><a href="5-mod-cleaning-and-error-checking.html">5. Mod Cleaning and Error Checking</a></li>
+				<li><a href="6-managing-mod-files.html">6. Managing Mod Files</a></li>
+				<li><a href="7-mod-utilities.html">7. Mod Utilities</a></li>
+				<li><a href="8-fo3edit-faq.html">8. FO3Edit FAQ</a></li>
+				<li><a href="9-appendix.html">9. Appendix</a></li>
+				<li><a href="10-cheat-sheets-and-quick-reference-charts.html">10. Cheat Sheets and Quick Reference Charts</a></li>
+
+			</ul>
+
+		</div><!--/.global-->
+
+		<div class="local">
+			<h3>Section Table of Contents</h3>
+
+			<ul class="second">
+				<li><a href="#s_4-1">4.1 Overview</a></li>
+				<li><a href="#s_4-2">4.2 Differences between Conflicts and Overrides</a></li>
+				<li><a href="#s_4-3">4.3 Applying Conflict Filters</a></li>
+				<li><a href="#s_4-4">4.4 Color Schemas and Display Order</a></li>
+				<li><a href="#s_4-5">4.5 The Conflict Resolution Process</a></li>
+				<li><a href="#s_4-6">4.6 Understanding Patch Plug-ins and Merged Patches</a></li>
+				<li><a href="#s_4-7">4.7 Creating a Patch Plug-in (Manual Method)</a></li>
+				<li><a href="#s_4-8">4.8 Creating a Merged Patch (Automatic Method)</a></li>
+				<li><a href="#s_4-9">4.9 The Conflict Detection Algorithm</a></li>
+
+			</ul>
+
+		</div><!--/.local-->
+
+	</div><!--/.toc-->
+	
+	<section id="_Toc237480254">
+		<h1>4. Conflict Detection and Resolution</h1>
+
+		<button class="ctrl-all" onclick="toggle_all(this);">Collapse All</button>
+
+		<div class="content clearfix">
+			<div class="level-2" id="s_4-1">
+				<h2 class="ctrl">4.1 Overview</h2>
+
+				<div class="content">
+					<p>One of the primary roles of <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> is for conflict detection and resolution, so that multiple mods that modify the same records can work together successfully. Conflicts and Overrides are not always bad, and in fact the entire idea of &#8220;modding&#8221; is to make changes to the game that replace (and thus create a conflict or override for) the original records that came with Fallout3. That is why our goal is to detect conflicts, determine their nature and resolve the bad conflicts while leaving good changes in place.</p>
+
+					<p>The name of the game with Conflicts Resolution is load-order, as Fallout3 will count the last record loaded as the winner of any conflict between files. For example, two mods are added to the load-order; ModA and ModB. ModA changes the color of a standard lantern from a Neutral color to a Warmer color. ModB changes the radius of the same lantern by 50%, making it brighter. If ModA loads before ModB, the changes made to the lantern by ModA get over-written by ModB (which still thinks the lantern has a Neutral color). This is a bad conflict, and overcoming them is the focus of this chapter.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="418" src="img/image054.jpg" width="575"></p>
+
+						<p>Negative or bad conflicts can also occur when mods make radical changes to the same world cell as the example below shows, while others can result in missing references, features in-game and even game crashes. The picture below is a poster-child example of how mods can fight over the same space and result in a bad change to the game:</p>
+
+					</div>
+
+					<p>Some conflicts are very apparent in-game such as in the example above, while others are hidden and only reveal themselves via crashes or when mods don&#8217;t work right. In the worst case scenario Fallout3 will crash more often, sometimes constantly. These are the conflicts that we need to detect and resolve, while leaving the bulk of the good/intended conflicts and overrides left un-changed. We discuss the process in depth below.</p>
+
+				</div><!--/.content-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-2">
+				<h2 class="ctrl">4.2 Differences between Conflicts and Overrides</h2>
+
+				<div class="content">
+					<p>There is a huge difference between a &quot;conflict&quot; and an &quot;override&quot;. There are mods which override changes from a master file, such as changing the level cap. If for example, ModA changes the level cap to 40 from the default, this over-rides the level 20 cap in the Fallout3 master files and is a normal. Overrides are not conflicting in any way. Overrides show up in <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> with a Yellow background color and Green text color. In most cases you don&#8217;t need to do anything with Overrides.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="367" src="img/image056.jpg" width="576"></p>
+
+						<p>To get a <strong><em>conflict</em></strong> you need to have the same FormID defined in at least 3 modules, a master, and 2 overrides. The conflict arises when the two overrides change different aspects of the same record, so that when the mods are loaded by Fallout3, the last-mod loaded overrides the changes of the first-mod. Thus the last loaded mod is the, &#8220;Conflict Winner&#8221; while the first mod, whose changes were overridden, is the, &#8220;Conflict Loser&#8221;. Conflict Losers will show up with a red background, red text. The screenshot below illustrates the differences as seen in FO3Edit:</p>
+
+					</div>
+
+					<p>In all this it's important to say, it's perfectly possible for 10 modules to override the same record without a single conflict, as long as the last loaded version of that record includes all the changes from the 10 other modules. That's what creating Patch Plug-ins is all about, and the process starts with applying a Filter.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-1" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-3">
+				<h2 class="ctrl">4.3 Applying Conflict Filters</h2>
+
+				<div class="content">
+					<p>The application of Filters is the primary means of conflict detection for <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>. When you apply a filter, the loaded mod data in FO3Edit is parsed and analyzed via a complex algorithm (described below) to detect all conflicts and overrides. The list of mods in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> changes color (text and background) based on conflict status of each, and the results are shown in the <a href="2-overview.html#s_2-3-7">View Tab</a> which also changes color (text and background). The color-schema matches throughout FO3Edit, so you won&#8217;t have to memorize more than one (described in detail below).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="520" src="img/image058.jpg" width="576"></p>
+
+						<p>To begin, Right-click in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> and select, &#8220;Apply Filter&#8221; as shown in Step 1 and 2 below:</p>
+
+					</div>
+
+					<p>The Filter window will now be presented, allowing you to check and un-check options according to the screenshot below (which are the settings for conflict detection).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="412" src="img/image060.jpg" width="575"></p>
+
+						<p>In the example screenshot below of the Filter window, the options A-E are the Only options that should be checked, after which you can click, &#8220;Apply&#8221; (F) to start the filter.</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="121" src="img/image062.jpg" width="575"></p>
+
+						<p>Once you click on Filter (F), FO3Edit will filter and analyze all of the loaded mods against the conflict-detection algorithm. This may take some time depending on how many mods you have loaded and how robust your computer is. The progress is shown in the upper-right corner of FO3Edit as the screenshot below illustrates:</p>
+
+					</div>
+
+					<p>FO3Edit also keeps track of how long the filter takes to apply. If you run 100+ mods, it can take several minutes to process all of the data. Conflict detection is not simply based on the existence of multiple records for the same FormID in different modules but instead performs a comparison of the parsed sub-record data via an algorithm.</p>
+
+					<p>As such the conflict detection process requires a lot of memory, and systems with less than 2 Gigabytes of RAM may suffer. If you receive an, &#8220;Out of Memory&#8221; error, then your computer does not have enough memory to process the number of mods you have chosen. Upgrade your computer or reduce the number of mods you run.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="318" src="img/image064.jpg" width="575"></p>
+
+						<p>The screenshot below illustrates how FO3Edit will look once the conflict detection process is complete. Note the [Filtering done] block in the <a href="2-overview.html#s_2-3-5">Messages Tab</a> below (A), indicating both the success of the conflict filtering process as well as record and time statistics about the filtration result. The screenshot below shows a typical outcome:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="257" src="img/image066.jpg" width="576"></p>
+
+						<p>The mods-list in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> changes as the filter adjusts the text color and background color based on conflict status. The <a href="2-overview.html#s_2-3-7">View Tab</a> will show the actual conflicts, but only when you select on a record in the <a href="2-overview.html#s_2-3-7">Left-Side Panel</a> as shown below:</p>
+
+					</div>
+
+					<p>With that you now understand how to detect for conflicts with FO3Edit and where to look at the data. You&#8217;re now ready to learn about colors and display order. Understanding the color schemes behind the text and backgrounds is critical to understanding the conflicts, and how to resolve them.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-2" class="up">Previous Section</a><a href="#s_4-3" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-4">
+				<h2 class="ctrl">4.4 Color Schemas and Display Order</h2>
+
+				<div class="content">
+					<div class="p-img">
+						<p class="img"><img  height="246" src="img/image068.jpg" width="370"></p>
+
+						<p>Understanding the color schema is key to understanding <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>. The color coding schema is designed to make the process as simple and efficient as possible. The legend below will introduce you to the basic color schema:</p>
+
+					</div>
+
+					<p>The same color schema is used for the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> as well as in the <a href="2-overview.html#s_2-3-7">Right-Hand View Tab</a>, which shows the actual conflicts. This is done for consistency, with the text/background color of the left-hand mod-list determined by the conflicts in the right-hand window. There are many cases in which the status shows a conflict has occurred (red background), but that no action needs to be taken.</p>
+
+					<p>There also is the case when a module contains a record that is identical to the master (which is usually un-intentional). If you have this module loaded alone the record will show up with a Green Background (signaling, no conflict) and Grey Text (identical to master). Named, &#8220;dirty edits&#8221;, these can be purged with the <a href="5-mod-cleaning-and-error-checking.html#s_5-2">Mod Cleaning Process</a>.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="181" src="img/image070.jpg" width="575"></p>
+
+						<p>The sample below shows both the color schema and the display-order together to better illustrate how conflict detection works. FO3Edit displays each conflict in the order that the files are loaded ( <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>&#8217;s load order), with the first mod loaded listed on the Left (Purple) and the last mod loaded listed on the Right (Orange).</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="543" src="img/image072.jpg" width="576"></p>
+
+						<p>All conflicts are ordered this way, with any mods loaded in-between either in a conflict state (Red) or that is identical to the master (Grey) as described above. The Load Order Workflow chart below is designed to help you understand the different color-combinations that you will encounter when de-conflicting mods. The FO3Edit display order as shown above was transposed into the vertical diagram below to help better illustrate how FO3Edit determines conflict winners and losers:</p>
+
+					</div>
+
+					<p>As the chart above illustrates, the last-file loaded is always the conflict winner and ultimately determines what loads into Fallout3. In this example <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> and <a href="http://www.fallout3nexus.com/downloads/file.php?id=2761">FWE</a> both got lucky that the <a href="http://www.fallout3nexus.com/downloads/file.php?id=2781">RoadWardens</a> mod shared the same Flagging, or they would have been conflict losers to the Flagging set by <a href="http://www.fallout3nexus.com/downloads/file.php?id=2781">RoadWardens</a>. Not all of the mods were winners however, as <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> Flagging conflicted with <a href="http://www.fallout3nexus.com/downloads/file.php?id=2781">RoadWardens</a> and lost the Conflict, meaning the Essential and Respawn flags are not set in-game.</p>
+
+					<p>The <a href="http://www.fallout3nexus.com/downloads/file.php?id=4968">FOIP (Fallout Interoperability Patch)</a>was designed to merge changes made in <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a>, <a href="http://www.fallout3nexus.com/downloads/file.php?id=2761">FWE</a> and <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a> into merged patches that load last (after <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a>, <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a>, <a href="http://www.fallout3nexus.com/downloads/file.php?id=2761">FWE</a>, etc) and resolve all conflicts between them. However all that work can be lost if a mod that loads later has different flagging, which is why conflict detection is important for all mod users.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="571" src="img/image074.jpg" width="576"></p>
+
+						<p>The load-order workflow below shows an example of a serious script-conflict that results in some mods breaking or even crashing Fallout3:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="64" src="img/image076.jpg" width="570"></p>
+
+						<p>In this example, there is a 5-way conflict over a single NPC script. <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a>, <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a>, <a href="http://www.fallout3nexus.com/downloads/file.php?id=1663">The Yard</a>, Broken Steel and the Fallout3 master all lose this conflict, and their version of the RL3SCRIPT will not be loaded into Fallout3 at run-time. For mods like <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a> and <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a>, this conflict will break the mod&#8217;s functionality as critical script changes will not be there when the mod expects them to be. In FO3Edit the example above looks like the screenshot below (with conflict winner on the right), which should tie everything together that we just reviewed:</p>
+
+					</div>
+
+					<p>The next question is how do we fix it and resolve the conflicts?</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-3" class="up">Previous Section</a><a href="#s_4-4" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-5">
+				<h2 class="ctrl">4.5 The Conflict Resolution Process</h2>
+
+				<div class="content">
+					<p>Conflict Resolution is really a simple process that you repeat multiple times for each conflict in your load-order. It is also the point at which your CPU (brain) gets involved in the process, as determining the action to take for each specific conflict requires your input. There are really only four options available to us for conflict resolution:</p>
+
+					<ol>
+						<li><span class="leader">Do nothing at all</span> - Often times conflicts are not harmful to the game and/or may not be something important-enough for you to care about.</li>
+
+						<li><span class="leader">Change the Load Order</span> - where often times simply adjust the order in which the mods load can resolve the conflict to your satisfaction.</li>
+
+						<li><span class="leader">Add the records to a patch plug-in</span> - for cases in which the mods are important and the conflicts can&#8217;t be resolved with load-order.</li>
+
+						<li><span class="leader">Remove one of the offending Mods</span> - if two mods simply cannot get along because of massive conflicts, one of them may have to go.</li>
+					</ol>
+
+					<div class="p-img">
+						<p class="img"><img  height="362" src="img/image078.jpg" width="484"></p>
+
+						<p>Overall the best thing to do is change your load order or nothing at all if the conflict isn&#8217;t concerning, as that require the least effort. Adding records to a patch plug-in where conflicts can&#8217;t be resolved is the next step, and in most cases will resolve the conflict definitively. Very rarely will you need to un-load one of the mods. The process is illustrated in the figure below:</p>
+
+					</div>
+
+					<p>Several examples are provided below to illustrate this process with real mod data. The process above is intentionally designed to be as simple as possible, and after practice you will find that it goes very fast and becomes almost second nature.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="297" src="img/image080.jpg" width="576"></p>
+
+						<p>In this example a record that has been selected in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a>, shows its detailed contents in the Right-hand <a href="2-overview.html#s_2-3-7">View Tab</a>, which includes all versions of the selected record from all modules which contain it. The right-most column ( <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a>) is the module that loads last, which becomes the version of the record that Fallout 3 loads into the game. The screenshot below illustrates an example of a conflict between mods:</p>
+
+					</div>
+
+					<p>After clicking-open the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3080">Megaton Contracts</a> mod and its Non-Player Character tree, we notice that Jericho has a conflict (red text, red background). By clicking on Jericho , the right-hand <a href="2-overview.html#s_2-3-7">View Tab</a> gets populated with every mod that has a reference to Jericho , and sorts them by conflict winner. The right-most column (B) is the winner in all cases, which in our example means that the <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a> mod wins-out over the <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> mod (A) and poor Jericho ends up being non-essential (he&#8217;s just a raider washout anyway!).</p>
+
+					<p>In this example the Level-cap for Jericho is also conflicted. We see that Fallout3.esm sets the level cap to 20, but Broken-Steel over-rides this and sets it to 30. However several other mods still have the level-cap set at 20 (probably un-intentionally), which conflicts with the change that Broken Steel is trying to make. Ultimately the conflict-winner is <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a> (E), which sets the level-cap back to 20 and leaves poor Jericho high-and-dry.</p>
+
+					<p>Also important to note in this example is the mods with Grey Text / Red Background - signifying that the record is identical to the Fallout3.esm master file - and is thus redundant. At least three mods in the load order have this, &#8220;Identical to Master&#8221; condition for Jericho &#8217;s level cap, and should have been cleaned-out by the mod authors.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="280" src="img/image082.jpg" width="453"></p>
+
+						<p>In this case we do need to take action to resolve the conflicts, or Jericho will never see level 30 and will be destined to become Radroach food. The question is, &#8220;Can we resolve this conflict by simply changing the mod load-order in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>?&#8221; Let&#8217;s find out, start by closing <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> and opening <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>. Simply changing the load-order in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> can often resolve conflicts. In this example, by dragging the <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> mod down below the <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a> mod, we force <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> to load last so it will be the conflict winner:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="277" src="img/image084.jpg" width="576"></p>
+
+						<p>Closing <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> (to save the load order), re-opening FO3Edit with the new load order and applying a conflict Filter yields the following results:</p>
+
+					</div>
+
+					<p>Notice how on the left that Jericho &#8217;s essential flag conflict is now resolved, because we swapped the load order so that <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> came after <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a>. This worked because <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> had all of the same flags on Jericho that <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a> had plus the additional Essential flag. By forcing <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> to load last, the conflict is effectively resolved because Jericho gets all of the flags that each mod intended for him.</p>
+
+					<p>This conflict resolution did not unfortunately fix our level-cap problem, and loading the Broken Steel.esm file last is not an option. To resolve this conflict, we need to create a patch plug-in. The patch plug-in always loads last in the mod-list order, so that the records we copy into it will win all conflicts and solve poor Jericho &#8217;s problems.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-4" class="up">Previous Section</a><a href="#s_4-5" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-6">
+				<h2 class="ctrl">4.6 Understanding Patch Plug-ins and Merged Patches</h2>
+
+				<div class="content">
+					<p>There are two methods by which you can create a patch plug-in to resolve conflicts; by hand or using the automatic merged patch tool. The recommend best-practice with patch Plug-ins is that you use the automatic merged patch creation tool, after which you review the merged patch and add/remove/correct anything that the automatic tool did not change to your satisfaction. This is necessary because there is often not one &#8220;correct&#8221; answer to which mod should win a conflict over the same record, and sometimes what is normally deemed correct will not be to your personal liking. We describe the manual patch Plug-in creation process first, and then show you how <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> creates one automatically.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-5" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-7">
+				<h2 class="ctrl">4.7 Creating a Patch Plug-in (Manual Method)</h2>
+
+				<div class="content">
+					<div class="p-img">
+						<p class="img"><img  height="413" src="img/image086.jpg" width="576"></p>
+
+						<p>To create a patch plug-in, you must have already created your conflict detection filter (Section 4.3). To create the new patch Plug-in, you right-click on a conflicted record (A) and select, &#8220;Copy as override&#8221; (B). This will open the file selection window, where you can choose, &#8220;&lt;new file&gt;&#8221; (E) by either double-clicking it or by checking it&#8217;s button and clicking, &#8220;OK&#8221;. This will present you with a, &#8220;New Module File&#8221; window as shown on the next page, where you can select the name of your new patch plug-in.</p>
+
+					</div>
+
+					<p class="Note"><strong>Note:</strong> Note: You can, &#8220;Copy as Override&#8221; into any mod as well as &lt;new file&gt;, but we highly recommend that you only modify your own mods!</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="287" src="img/image088.jpg" width="575"></p>
+
+						<p>The New Module File window allows you to choose any name for your patch plug-in, after which you will be prompted to add the mod-name as a master from which you copied the record. The screenshot below illustrates the process:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="241" src="img/image090.jpg" width="524"></p>
+
+						<p>Once confirmed, <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> will add <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a> as the master-file of your new patch plug-in. This happens because we chose the Jericho reference from <a href="http://www.fallout3nexus.com/downloads/file.php?id=1925">FO3Phalanx</a> when we did the, &#8220;Copy as override into&#8230;&#8221;. If we had chosen <a href="http://www.fallout3nexus.com/downloads/file.php?id=867">BetterCaravans</a> instead, it would set that as the master file for our patch plug-in instead. This ensures that when you copy a reference into your patch plug-in, any data needed for it from the original mod file can be accessed by Fallout3 at run time. Once complete, you will see:</p>
+
+					</div>
+
+					<p>Note how your new patch plug-in, &#8220;MyPatchPlug-in.esp&#8221;, has been created and now occupies the right-most column, making it the conflict winner. Also note that BetterCaravans is now in conflict because the Essential flag has not yet been moved over, as well as the level-cap and quest key. Now that our patch Plug-in has been created, we can correct all of the conflicts on poor Jericho (but does he <em>Deserve</em> it?!?)</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="264" src="img/image092.jpg" width="576"></p>
+
+						<p>We can now literally &#8216;drag n&#8217; drop&#8217; each of these items into our new patch plug-in. We do this operation more than any other in FO3Edit when making a plug-in, as once the initial creation step is complete, its simply a matter of dragging all of the overrides that we want into the patch plug-in as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="264" src="img/image094.jpg" width="576"></p>
+
+						<p>Note that for the key we dragged it from the top-level, &#8220;Item&#8221; entry for that record, and not from the key item row itself. The Item row is the root-level for this particular object (including its Count variable, etc). As such FO3Edit will only let you &#8220;drag&#8221; from the correct row-level, so you don&#8217;t have to worry about getting it wrong! The screenshot below shows the result, with the key now replicated into our patch plug-in.</p>
+
+						<p>A few notes here;<br>
+						Text color changed to Green, indicating the conflict is resolved!<br>
+						The Essential flag and level-cap still need to be Drag n&#8217; Dropped.</p>
+
+					</div>
+
+
+					<div class="p-img">
+						<p class="img"><img  height="169" src="img/image096.jpg" width="575"></p>
+
+						<p>Next we finish dragging the conflict rows into our patch plug-in to resolve the Essential flag conflict, using the same method as we did above:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="146" src="img/image098.jpg" width="576"></p>
+
+						<p>The screenshot below shows the results, with the Essential flag now replicated into our patch plug-in. The last thing we need to do is correct the level-cap conflict with Broken Steel, so we can get Jericho up to the maximum ruthlessness. We could drag n&#8217; drop this from the Broken Steel master entry, but instead let&#8217;s illustrate the edit function. Simply right-click on the value in your patch plug-in (A) and select, &#8220;Edit&#8221; (B) as shown:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="254" src="img/image100.jpg" width="575"></p>
+
+						<p>Once you select, &#8220;Edit&#8221;, you will be presented with an Edit dialogue window, where you can type in the level that you want. Some fields will instead show you a list of Flags that you can check/un-check, all depending on what type of record you are editing. The last screenshot below shows the final result, with Jericho ready to kick some ass!</p>
+
+					</div>
+
+					<p>This example illustrates the dangers of making changes willy-nilly when patching manually, and why this method is ultimately better at resolving conflicts that the automated merged-patch. The merged-patch will produce a nearly crash-free game very quickly, but some subtle features of mods will inevitably not work. By manually patching and understanding each change, we can solve for these conflicts to our own satisfaction. Whether you retain the essential flag or remove it, is a player-by-player personal decision for what you want form your gaming experience.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="476" src="img/image102.jpg" width="403"></p>
+
+						<p>The final step is to save your patch plug-in, so we don&#8217;t loose all our hard work! The most convenient way is to hit, &#8220;Alt-S&#8221;, which will present you with a save window as shown below:</p>
+
+					</div>
+
+					<p>The, &#8220;Save Changed Files&#8221; view will present you with all of the mod files that have changed since the last save or boot up. This is handy, as you can un-check any files that you do not want to save, giving you finer control and ensuring you don&#8217;t accidentally save a mod file that is not your own. Ensure that our, &#8220;MyPatchPlug-in&#8221; is checked (A), and click, &#8220;OK&#8221; (B) to save your Plug-in.</p>
+
+					<p>You can get confirmation that the save was successful by clicking on the <a href="2-overview.html#s_2-3-5">Messages Tab</a> (C), where you will see a, &#8220;Done Saving&#8221; message. If there was any problem with the save, you would see an Error message instead.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-6" class="up">Previous Section</a><a href="#s_4-7" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-8">
+				<h2 class="ctrl">4.8 Creating a Merged Patch (Automatic Method)</h2>
+
+				<div class="content">
+					<p>FO3Edit provides an automatic method of generated a merged patch, which is the same as a patch Plug-in but contains resolved conflicts from All of the loaded mods. This will greatly speed the conflict resolution process, as most of the common types of conflicts are automatically merged into the patch Plug-in. It's very unlikely that the generated patch is going to be any worse then using the originally conflicting mods without the patch would be, and as such this method is recommended for everyone that runs mods.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="537" src="img/image104.jpg" width="424"></p>
+
+						<p>What this merge function is doing is nothing more and nothing less then what <a href="http://wrye.ufrealms.net/Wrye%20Bash.html">Wrye Bash</a> has been doing for <a href="http://www.elderscrolls.com/home/home.php">TES4 (Oblivion)</a> for years now. The functionality is specifically not aimed at modders making pre-generated patches and distributing them. The whole point of such a list merger is to generate a merged patch that is custom built for a specific load order (yours).However not every load-order conflict can be anticipated, and too often mod authors create messy plug-ins that create unforeseen outcomes. That&#8217;s why it is important to review each of the overrides that the merged function creates. The screenshot below shows you how to start the action:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="204" src="img/image106.jpg" width="576"></p>
+
+						<p>The Merged Patch function should take several seconds to complete, after which the Messages Tab will reveal the outcome as shown below:</p>
+
+					</div>
+
+					<p>Notice how the Merged Patch automatically creates our Patch Plug-in, and assigns all of the mods in our load-order as masters to it. This is important, as it allows you to drag n&#8217; drop any record into it, and ensures maximum compatibility across your mod list. The screenshot above shows you how <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> creates the entire record tree (1), and where the logfile output is shown in the <a href="2-overview.html#s_2-3-5">Messages Tab</a> (2).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="304" src="img/image108.jpg" width="576"></p>
+
+						<p>The screenshot below shows you the <a href="2-overview.html#s_2-3-7">View Tab</a> of our newly-created merged patch, which you can see by selecting and clicking on a record from the tree:</p>
+
+					</div>
+
+					<p>Notice how the text is Green throughout, with a Yellow background. This signifies an override with no conflict. This will not always be the case as the next series of screenshots will illustrate, which is why the next step after creating the merged patch is to review each of the changes just as the screenshot above shows. Simply click-open each record-type, and then click on each record to see its results in the <a href="2-overview.html#s_2-3-7">View Tab</a>.</p>
+
+					<p>Under the, &#8220;Faction&#8221; category we notice the, &#8220;Raider Faction&#8221;, seems to have a conflict still. When clicking open the record, the problem is revealed in that the <a href="http://www.fallout3nexus.com/downloads/file.php?id=1804">Death Canyon</a> mod has erased the name of the faction! Surely this was an un-intentional change by the mod author, which was thankfully overridden by our merged patch. None the less the mod author should be contacted in such cases via the forums about the issue so that they can fix it.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="249" src="img/image110.jpg" width="575"></p>
+
+						<p>For the purposes of our load-order, this is an example of a conflict that we will, &#8220;Do Nothing About&#8221;. We don&#8217;t need to worry, as our patch Plug-in has the Raider Faction name in-tact and there won&#8217;t be a problem in-game.</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="321" src="img/image112.jpg" width="575"></p>
+
+						<p>The screenshot below shows another example of a conflict that persists after the creation of the merged patch:</p>
+
+					</div>
+
+					<p>In this case the problem is more serious, and we will want to correct it in our patch by drag n&#8217; dropping the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> values into our patch plug-in ( <a href="4-conflict-detection-and-resolution.html#s_4-7">and you know how now!</a>).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="322" src="img/image114.jpg" width="576"></p>
+
+						<p>The screenshot below shows another conflict between <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a> and the <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a> <a href="http://www.fallout3nexus.com/downloads/file.php?id=4968">FOIP (Fallout Interoperability Patch)</a> patch, but in this case we don&#8217;t need to do anything. The conflict is clearly intentional, and the fact that we have the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3211">MMM</a>- <a href="http://www.fallout3nexus.com/downloads/file.php?id=334">XFO</a> <a href="http://www.fallout3nexus.com/downloads/file.php?id=4968">FOIP (Fallout Interoperability Patch)</a> patch installed last offers confidence that this is an intentional situation that we can safely leave alone.</p>
+
+					</div>
+
+					<p>The examples provided above will give you a broad taste of the kinds of conflicts and overrides you will run into when creating a merged patch. Reviewing the changes can take as little as 10 or 15 minutes, compared to the hours of work it would take to create the patch plug-in by hand. That is why the recommendation is to use the Automatic method to create a merged patch, and then use your manual patching skills to correct any problems you find in the merged patch. That will produce the best patch plug-in for your mod-list, and ensure the smoothest gaming experience possible.</p>
+
+					<p>Now it&#8217;s time for you to take the reigns and do some serious conflict resolution while the knowledge is still fresh in your brain. Take your own mod-list and create a merged patch just as described in this chapter, then manually de-conflict it. It will give you some real-world exercise in conflict resolution, and will help your own game at the same time!</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-7" class="up">Previous Section</a><a href="#s_4-8" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_4-9">
+				<h2 class="ctrl">4.9 The Conflict Detection Algorithm</h2>
+
+				<div class="content">
+					<p>To round-out our discussion on conflict detection and resolution, we have included the main algorithm (in textural, descriptive form) for your reference. You do not have to read this unless you have an interest in the internal mechanism of how <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> determines a conflict/override from un-conflicted records.</p>
+
+					<p class="Note"><strong>Note:</strong> The Surgeon General has declared that reading code without a blood/caffeine content of 0.20 may be
+						hazardous to your sanity.</p>
+
+					<p>FO3Edit uses a complex algorithm that parses the mod sub-record data at depth, and performs a number of operations on the data to detect conflicts and overrides. While you do not have to memorize this, the main conflict-detection algorithm is described below for reference (and those brave enough to noodle it out):</p>
+
+					<ol>
+						<li>FO3Edit makes a list with all entries from the master record, and designates this as the, &#8220;TargetList&#8221;.</li>
+
+						<li>FO3Edit Loops and repeats the following for each existing override record:
+							<ol>
+								<li>FO3Edit determines the file containing this override record, and designates it as, &#8220;CurrentFile&#8221;.</li>
+								<li>FO3Edit makes a list with all entries from that override record, and designates it as, &#8220;CurrentList&#8221;.</li>
+								<li>FO3Edit goes through the list of master files for CurrentFile, from last to first, and stops when the first is found containing an override for this record, designated as, &#8220;CurrentMaster&#8221;.</li>
+								<li>FO3Edit makes a list with all entries from CurrentMaster, and designates it as &#8220;CurrentMasterList&#8221;.</li>
+								<li>FO3Edit goes over CurrentList and CurrentMasterList, for each entry that:
+									<ul>
+										<li>+ Exists only in CurrentList, adds this entry to TargetList if not yet present.</li>
+										<li>+ Exists only in CurrentMasterList, removes this entry from TargetList if present.</li>
+
+									</ul>
+
+								</li>
+
+							</ol>
+
+						</li>
+
+						<li>FO3Edit then makes a list with all entries from the winning override record, and designates it as, &#8220;WinningList&#8221;.</li>
+
+						<li>FO3Edit then compares TargetList and WinningList, and if different:
+							<ol>
+								<li>FO3Edit copies the currently winning record as override into the new file, designated as, &#8220;TargetRecord&#8221;.</li>
+								<li>FO3Edit then removes all list entries from &#8220;TargetRecord&#8221;.</li>
+								<li>FO3Edit goes over TargetList and for each entry add a new entry to the &#8220;TargetRecord.&#8221;</li>
+
+							</ol>
+
+						</li>
+
+						<li>FO3Edit then makes the master list (as it applies to leveled list entries) which is also important to understand what's going on:
+							<ol>
+								<li>For each entry, FO3Edit generates a string representation including: Level, Reference, Count, Item Condition, Owner, and Owner Rank.</li>
+								<li>FO3Edit sorts the generated list of strings.</li>
+								<li>FO3Edit walks over the sorted list, add numbers to duplicated entries, and so suppose you have a list: A, B, B, C, D, D after this step it will be A#0, B#0, B#1, C#0, D#0, D#1.</li>
+
+							</ol>
+
+						</li>
+
+					</ol>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_4-8" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+		</div><!--/.content-->
+
+		<div class="section-nav">
+			<a href="3-master-update-and-master-restore.html" class="prev">&laquo; Previous Page</a><a href="5-mod-cleaning-and-error-checking.html" class="next">Next Page &raquo;</a>
+
+		</div><!--/.section-nav-->
+
+	</section>
+
+</body>
+</html>
