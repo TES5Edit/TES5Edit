@@ -4,6 +4,8 @@ program TESVESSE;
 
 uses
   Forms,
+  System.UITypes,
+  System.Types,
   uMain in 'uMain.pas' {fMain},
   VTAccessibilityFactory in 'Units\VTAccessibilityFactory.pas',
   Helper in 'Units\Helper.pas',
