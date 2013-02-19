@@ -5,7 +5,7 @@ unit HexEdit;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, ExtCtrls, StdCtrls, Forms;
+  Windows, Messages, System.SysUtils, Classes, Graphics, Controls, ExtCtrls, StdCtrls, Forms;
 
 type
   TEditorArea = (eaNone, eaAddress, eaDigits, eaText);
@@ -260,7 +260,7 @@ type
     FMouseWheelAccumulator: Integer;
     FOptions: TEditOptions;
     FRedoList: TChangeList;
-    FScrollBars: TScrollStyle;
+    FScrollBars: System.UITypes.TScrollStyle;
     FScrollDeltaX: Integer;
     FScrollDeltaY: Integer;
     FScrollSpeed: Cardinal;
@@ -312,7 +312,7 @@ type
     procedure SetModified(Value: Boolean);
     procedure SetOptions(const Value: TEditOptions);
     procedure SetReadOnly(Value: Boolean);
-    procedure SetScrollBars(Value: TScrollStyle);
+    procedure SetScrollBars(Value: System.UITypes.TScrollStyle);
     procedure SetScrollSpeed(Value: Cardinal);
     procedure SetSelEnd(Value: TEditorSelection);
     procedure SetSelLength(Value: TEditorSelection);
@@ -442,7 +442,7 @@ type
     property Modified: Boolean read GetModified write SetModified;
     property Options: TEditOptions read FOptions write SetOptions stored IsOptionsStored;
     property ReadOnly: Boolean read GetReadOnly write SetReadOnly default False;
-    property ScrollBars: TScrollStyle read FScrollBars write SetScrollBars default ssBoth;
+    property ScrollBars: System.UITypes.TScrollStyle read FScrollBars write SetScrollBars default ssBoth;
     property ScrollSpeed: Cardinal read FScrollSpeed write SetScrollSpeed default cScrollSpeedDef;
     property SelEnd: TEditorSelection read FSelEnd write SetSelEnd;
     property SelLength: TEditorSelection read GetSelLength write SetSelLength;
@@ -577,7 +577,7 @@ begin
     SetLength(T, Length(S));
   j := 0;
   for i := 1 to Length(S) do
-    if not CharInSetEx(S[i], [#9, #32]) then
+    if not CharInSet(S[i], [#9, #32]) then
     begin
       k := DigitToBin(S[i]);
       if k >= 0 then
@@ -3786,7 +3786,7 @@ begin
   end;
 end;
 
-procedure TCustomHexEditor.SetScrollBars(Value: TScrollStyle);
+procedure TCustomHexEditor.SetScrollBars(Value: System.UITypes.TScrollStyle);
 begin
   if Value <> FScrollBars then
   begin
