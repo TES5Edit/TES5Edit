@@ -1,6 +1,7 @@
-@ECHO OFF
+REM @ECHO OFF
 DEL /S *.dcu
 DEL /S *.bak
+DEL *.res
 DEL *.drc
 DEL *.cfg
 DEL *.ident*
@@ -9,5 +10,5 @@ DEL Resource.Res
 RMDIR /S /Q __history
 RMDIR /S /Q Forms\__history
 RMDIR /S /Q Units\__history
-sr /B- *.exe
-upx --best --keep-resource=11 *.exe
+REM sr /B- *.exe
+REM upx --best --keep-resource=11 *.exe
