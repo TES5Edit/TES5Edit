@@ -35,7 +35,8 @@ var
   SubRecordOrderList     : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
+function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
+  IsTemporary: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -550,7 +551,7 @@ type
     procedure AddMaster(const aFileName: string); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
 
-    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean);
+    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   public
     destructor Destroy; override;
@@ -1994,8 +1995,10 @@ begin
   end;
 end;
 
-constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean);
+constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
 begin
+  if IsTemporary then
+    Include(flStates, fsIsTemporary);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
     if SameText(ExtractFileName(aFileName), wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
@@ -2181,6 +2184,12 @@ begin
     CloseHandle(flFileHandle);
     flFileHandle := INVALID_HANDLE_VALUE;
   end;
+  if fsIsTemporary in flStates then
+    try
+      DeleteFile(Self.flFileName);
+    except
+      wbProgressCallback('Could not delete temporary file '+flFileName);
+    end;
 end;
 
 procedure TwbFile.flOpenFile;
@@ -4011,33 +4020,39 @@ begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit;
-  m := Low(Integer);
-  for l := Low(cntElements) to High(cntElements) do
-    if cntElements[l].MemoryOrder > m then
-      m := cntElements[l].MemoryOrder;
-  for l := Low(cntElements) to High(cntElements) do
-    if cntElements[l].MemoryOrder = Low(Integer) then begin
-      cntElements[l].MemoryOrder := m + 1;
-      Inc(m);
-    end;
-  m := Low(Integer);
-  k := Low(Integer);
-  for i := Low(cntElements) to High(cntElements) do begin
-    n := k;
-    j := High(Integer);
-    for l := Low(cntElements) to High(cntElements) do begin
-      if (m<cntElements[l].MemoryOrder) and (cntElements[l].MemoryOrder < j) then begin
-        k := l;
-        j := cntElements[l].MemoryOrder;
+   If GetElementType in SortedElementTypes then
+    begin
+      m := Low(Integer);
+      for l := Low(cntElements) to High(cntElements) do
+        if cntElements[l].MemoryOrder > m then
+          m := cntElements[l].MemoryOrder;
+      for l := Low(cntElements) to High(cntElements) do
+        if cntElements[l].MemoryOrder = Low(Integer) then begin
+          cntElements[l].MemoryOrder := m + 1;
+          Inc(m);
+        end;
+      m := Low(Integer);
+      k := Low(Integer);
+      for i := Low(cntElements) to High(cntElements) do begin
+        n := k;
+        j := High(Integer);
+        for l := Low(cntElements) to High(cntElements) do begin
+          if (m<cntElements[l].MemoryOrder) and (cntElements[l].MemoryOrder < j) then begin
+            k := l;
+            j := cntElements[l].MemoryOrder;
+          end;
+        end;
+        Assert(k <= High(cntElements));
+        Assert(k >= Low(cntElements));
+        if k = n then
+          Assert(k <> n);
+        m := cntElements[k].MemoryOrder;
+        cntElements[k].MergeStorage(aBasePtr, aEndPtr);
       end;
-    end;
-    Assert(k <= High(cntElements));
-    Assert(k >= Low(cntElements));
-    if k = n then
-      Assert(k <> n);
-    m := cntElements[k].MemoryOrder;
-    cntElements[k].MergeStorage(aBasePtr, aEndPtr);
-  end;
+    end
+  else
+    for l := Low(cntElements) to High(cntElements) do
+      cntElements[l].MergeStorage(aBasePtr, aEndPtr);
 end;
 
 procedure TwbContainer.MoveElementDown(const aElement: IwbElement);
@@ -5180,12 +5195,13 @@ begin
   if mrStruct.mrsFlags.IsCompressed then try
     SetLength(mrDataStorage, PCardinal(dcDataBasePtr)^ );
 
-    DecompressToUserBuf(
-      Pointer( Cardinal(dcDataBasePtr) + SizeOf(Cardinal) ),
-      mrStruct.mrsDataSize - SizeOf(Cardinal),
-      @mrDataStorage[0],
-      PCardinal(dcDataBasePtr)^
-    );
+    if (PCardinal(dcDataBasePtr)^ > 0) then  // This is to avoid an exception on compressed deleted record (at least in Dawnguard)
+      DecompressToUserBuf(
+        Pointer( Cardinal(dcDataBasePtr) + SizeOf(Cardinal) ),
+        mrStruct.mrsDataSize - SizeOf(Cardinal),
+        @mrDataStorage[0],
+        PCardinal(dcDataBasePtr)^
+      );
 
     dcDataEndPtr := Pointer( Cardinal(@mrDataStorage[0]) + PCardinal(dcDataBasePtr)^ );
     dcDataBasePtr := @mrDataStorage[0];
@@ -13109,7 +13125,8 @@ begin
   FilesMap.Clear;
 end;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
+function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
+  IsTemporary: Boolean = False): IwbFile;
 var
   FileName: string;
   i: Integer;
@@ -13122,7 +13139,7 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False);
+    Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));

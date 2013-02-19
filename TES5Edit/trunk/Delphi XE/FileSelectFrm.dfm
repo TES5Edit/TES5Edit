@@ -61,6 +61,7 @@ object frmFileSelect: TfrmFileSelect
     Top = 582
     Width = 97
     Height = 17
+    Anchors = [akLeft, akBottom]
     Caption = 'Backup plugins'
     Checked = True
     State = cbChecked

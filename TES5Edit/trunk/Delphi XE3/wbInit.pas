@@ -93,10 +93,13 @@ begin
   SettingsFileName := AppData + wbGameName + '\Plugins.' + LowerCase(wbAppName) + 'viewsettings';
   try
     Settings := TMemIniFile.Create(SettingsFileName);
-    wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
-    wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+    try
+      wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
+      wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+    finally
+      Settings.Free;
+    end;
   finally
-    Settings.Free;
   end;
 end;
 
