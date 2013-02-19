@@ -1414,6 +1414,16 @@ type
     procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
+var
+  SortedElementTypes : set of TwbElementType = [
+    etFile,
+    etMainRecord,
+    etGroupRecord,
+    etSubRecord,
+    etSubRecordArray,
+    etArray
+  ];
+
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
                   const aMembers        : array of IwbRecordMemberDef;

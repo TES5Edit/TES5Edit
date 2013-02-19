@@ -637,7 +637,8 @@ type
     fsIsCompareLoad,
     fsOnlyHeader,
     fsIsHardcoded,
-    fsIsGameMaster
+    fsIsGameMaster,
+    fsIsTemporary
   );
 
   TwbFileStates = set of TwbFileState;
@@ -1430,6 +1431,16 @@ type
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
+
+var
+  SortedElementTypes : set of TwbElementType = [
+    etFile,
+    etMainRecord,
+    etGroupRecord,
+    etSubRecord,
+    etSubRecordArray,
+    etArray
+  ];
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
@@ -10922,7 +10933,7 @@ end;
 
 function TwbDumpIntegerDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
 begin
-  Result := IntToStr(aInt) + ' [' + IntToHex64(aInt, 8) + ']';
+  Result := IntToStr(aInt) + ' [' + IntToHex64(aInt, 8) + '] ['+IntToStr(aInt and $03)+':'+IntToStr(aInt shr 2)+']';
 end;
 
 { TwbStructZDef }

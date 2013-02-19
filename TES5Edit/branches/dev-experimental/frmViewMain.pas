@@ -678,11 +678,12 @@ type
     ltDataPath: string;
     ltMaster: string;
     ltFiles: array of IwbFile;
+    ltTemporary: Boolean;
 
     procedure Execute; override;
   public
-    constructor Create(var aList: TStringList); overload;
-    constructor Create(aFileName: string; aMaster: string; aLoadOrder: Integer); overload;
+    constructor Create(var aList: TStringList; IsTemporary: Boolean = False); overload;
+    constructor Create(aFileName: string; aMaster: string; aLoadOrder: Integer; IsTemporary: Boolean = False); overload;
     destructor Destroy; override;
   end;
 
@@ -1957,7 +1958,7 @@ begin
   SetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
-  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder);
+  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, Temporary);
 end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
@@ -12688,23 +12689,25 @@ end;
 
 { TLoaderThread }
 
-constructor TLoaderThread.Create(var aList: TStringList);
+constructor TLoaderThread.Create(var aList: TStringList; IsTemporary: Boolean = False);
 begin
   ltDataPath := DataPath;
   ltMaster := '';
   ltLoadList := aList;
   aList := nil;
+  ltTemporary := IsTemporary;
   inherited Create(False);
   FreeOnTerminate := True;
 end;
 
-constructor TLoaderThread.Create(aFileName: string; aMaster: string; aLoadOrder: Integer);
+constructor TLoaderThread.Create(aFileName: string; aMaster: string; aLoadOrder: Integer; IsTemporary: Boolean = False);
 begin
   ltLoadOrderOffset := aLoadOrder;
   ltDataPath := '';
   ltLoadList := TStringList.Create;
   ltLoadList.Add(aFileName);
   ltMaster := aMaster;
+  ltTemporary := IsTemporary;
   inherited Create(False);
   FreeOnTerminate := True;
 end;
@@ -12788,7 +12791,7 @@ begin
 
       for i := 0 to Pred(ltLoadList.Count) do begin
         LoaderProgress('loading "' + ltLoadList[i] + '"...');
-        _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster);
+        _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster, ltTemporary);
         if wbEditAllowed and not wbTranslationMode then begin
           SetLength(ltFiles, Succ(Length(ltFiles)));
           ltFiles[High(ltFiles)] := _File;
