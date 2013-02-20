@@ -48,12 +48,6 @@ begin
   Value := Assigned(V2O(Args.Values[0]));
 end;
 
-procedure AddMessage(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  if Assigned(wbProgressCallback) and (VarIsStr(Args.Values[0])) then
-    wbProgressCallback(Args.Values[0]);
-end;
-
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbTestWrite := True;
@@ -904,6 +898,8 @@ begin
     AddConst(cUnit, 'gmTES5', ord(gmTES5));
     AddConst(cUnit, 'gmFO3', ord(gmFO3));
     AddConst(cUnit, 'gmFNV', ord(gmFNV));
+
+    { TwbElementType }
     AddConst(cUnit, 'etFile', ord(etFile));
     AddConst(cUnit, 'etMainRecord', ord(etMainRecord));
     AddConst(cUnit, 'etGroupRecord', ord(etGroupRecord));
@@ -936,8 +932,31 @@ begin
     AddConst(cUnit, 'dtUnion', ord(dtUnion));
     AddConst(cUnit, 'dtEmpty', ord(dtEmpty));
 
+    { TConflictThis }
+    AddConst(cUnit, 'ctUnknown', ord(ctUnknown));
+    AddConst(cUnit, 'ctIgnored', ord(ctIgnored));
+    AddConst(cUnit, 'ctNotDefined', ord(ctNotDefined));
+    AddConst(cUnit, 'ctIdenticalToMaster', ord(ctIdenticalToMaster));
+    AddConst(cUnit, 'ctOnlyOne', ord(ctOnlyOne));
+    AddConst(cUnit, 'ctHiddenByModGroup', ord(ctHiddenByModGroup));
+    AddConst(cUnit, 'ctMaster', ord(ctMaster));
+    AddConst(cUnit, 'ctConflictBenign', ord(ctConflictBenign));
+    AddConst(cUnit, 'ctOverride', ord(ctOverride));
+    AddConst(cUnit, 'ctIdenticalToMasterWinsConflict', ord(ctIdenticalToMasterWinsConflict));
+    AddConst(cUnit, 'ctConflictWins', ord(ctConflictWins));
+    AddConst(cUnit, 'ctConflictLoses', ord(ctConflictLoses));
+
+    { TConflictAll }
+    AddConst(cUnit, 'caUnknown', ord(caUnknown));
+    AddConst(cUnit, 'caOnlyOne', ord(caOnlyOne));
+    AddConst(cUnit, 'caNoConflict', ord(caNoConflict));
+    AddConst(cUnit, 'caConflictBenign', ord(caConflictBenign));
+    AddConst(cUnit, 'caOverride', ord(caOverride));
+    AddConst(cUnit, 'caConflict', ord(caConflict));
+    AddConst(cUnit, 'caConflictCritical', ord(caConflictCritical));
+
+
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'AddMessage', AddMessage, 1, [varString], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
 
     { IwbElement }
