@@ -40,7 +40,7 @@ type
     lbRange: TLabel;
     edWString: TEdit;
     edFloat: TEdit;
-    tsMain, tsScreen, tsData, tsInteger, tsReadCalc, tsString, tsFloat, tsFlags, tsGD01, tsGD02: TTabSheet;
+    tsMain, tsScreen, tsData, tsInteger, tsReadCalc, tsString, tsFloat, tsFlags, tsGD01, tsGD02, tsGD32: TTabSheet;
     tvFlags: TTreeView;
     pcGD01: TPageControl;
     tsGD01General, tsGD01Quest, tsGD01Combat, tsGD01Magic, tsGD01Crafting, tsGD01Crime: TTabSheet;
@@ -59,6 +59,8 @@ type
     pnForms: TPanel;
     pnGD04: TPanel;
     sdCSVSave: TSaveDialog;
+    pnGD32Background: TPanel;
+    tvPapyrus: TTreeView;
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure spSplitMoved(Sender: TObject);
@@ -103,13 +105,15 @@ type
     procedure tsGD04Show(Sender: TObject);
     procedure lvGD04Edited(Sender: TObject; Item: TListItem; var S: string);
     procedure sgHeaderDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+    procedure tsGD32Show(Sender: TObject);
     procedure tsFormsShow(Sender: TObject);
     procedure lvFormsData(Sender: TObject; Item: TListItem);
     procedure lvFormsColumnClick(Sender: TObject; Col: TListColumn);
     procedure lvFormsDblClick(Sender: TObject);
   private
     odOpen: TExOpenDialog;
-    vtStructure: TVirtualStringTree;                 sFileName: string;
+    vtStructure: TVirtualStringTree;
+    sFileName: string;
     ESSFile: TESSFile;
     bBreak: Boolean;
     BufNode: PVirtualNode;
@@ -1309,6 +1313,7 @@ var
   MyData: PMyRec;
   iValue: uInt32;
   rValue: TRefID;
+  fValue: float;
 begin
   if not IsVista and (tsGD02.Tag = 0) then
   begin
@@ -1325,11 +1330,12 @@ begin
     begin
       iPos := 0;
       iValue := 0;
-      for i := 0 to 7 do
+      fValue := 0.0;
+      for i := 0 to 8 do
       begin
         iAddress := iPos;
         case i of
-          1, 6:
+          1, 4:
           begin
             if iPos > 0 then
               rValue := Read_RefID(TBytes(MyData^._Pointer^), iPos);
@@ -1338,9 +1344,46 @@ begin
               begin
                 Caption := RefIDToHex(rValue);
                 Data := @(TBytes(MyData^._Pointer^)[iAddress]);
-                SubItems.Add('unknown RefID');
+                case i of
+                  1: SubItems.Add('worldSpace1');
+                  4: SubItems.Add('worldSpace2');
+                else
+                  SubItems.Add('unknown RefID');
+                end;
               end;
           end;
+          5..7:
+          begin
+            if iPos > 0 then
+              fValue := Read_float32(TBytes(MyData^._Pointer^), iPos);
+            if iPos > 0 then
+              with lvGD02.Items.Add do
+              begin
+                Caption := FloatToStr(fValue);
+                Data := @(TBytes(MyData^._Pointer^)[iAddress]);
+                case i of
+                  5: SubItems.Add('posX');
+                  6: SubItems.Add('posY');
+                  7: SubItems.Add('posZ');
+                else
+                  SubItems.Add('unknown float');
+                end;
+              end;
+          end;
+          8:
+          begin
+            if (iPos > 0) and (iPos < MyData^._Size) then
+            begin
+              iValue := Read_uint8(TBytes(MyData^._Pointer^), iPos);
+              if iPos > 0 then
+                with lvGD02.Items.Add do
+                begin
+                  Caption := IntToStr(iValue);
+                  Data := @(TBytes(MyData^._Pointer^)[iAddress]);
+                  SubItems.Add('unk');
+                end;
+            end
+          end
           else
           begin
             if (iPos > 0) or (i = 0) then
@@ -1350,7 +1393,12 @@ begin
               begin
                 Caption := IntToStr(iValue);
                 Data := @(TBytes(MyData^._Pointer^)[iAddress]);
-                SubItems.Add('unknown uint32');
+                case i of
+                  2: SubItems.Add('coorX');
+                  3: SubItems.Add('coorY');
+                else
+                  SubItems.Add('unknown uint32');
+                end;
               end;
           end;
         end;
@@ -1365,6 +1413,147 @@ begin
     end;
   end;
   lvGD02.Columns[0].Width := lvGD02.Columns[0].Width + 1;
+  BufNode := nil;
+end; {$IF Defined(USEREGION)}{$ENDREGION}{$IFEND}
+
+procedure TfMain.tsGD32Show(Sender: TObject);
+{$IF Defined(USEREGION)}{$REGION 'tsGD04Show'}{$IFEND}
+var
+  tnParent, tnChild: TTreeNode;
+  iPos, iCount, iCount1, iCount2, i, j: Integer;
+  MyData: PMyRec;
+  iValue: integer;
+  rValue: TRefID;
+  wsValue: wstring;
+begin
+  with tvPapyrus do
+  begin
+    Items.Clear;
+    if BufNode <> nil then
+    begin
+      MyData := vtStructure.GetNodeData(BufNode);
+      if Assigned(MyData) and (MyData^._Type = btGlobal) and (MyData^._Size > 0) then
+      begin
+        iPos := 0;
+        iValue := Read_uint16(TBytes(MyData^._Pointer^), iPos);
+        if iPos > 0 then
+        begin
+          Items.Add(nil, 'unknown: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 4) + ']');
+          iCount := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+          if iPos > 0 then
+          begin
+            Items.Add(nil, 'string count: ' + IntToStr(iCount - 1));
+            tnParent := Items.Add(nil, 'strings');
+            for i := 1 to iCount - 1 do
+            begin
+              iValue := iPos;
+              if iPos > 0 then
+                wsValue := Read_wstring(TBytes(MyData^._Pointer^), iPos);
+              if iPos > 0 then
+                Items.AddChild(tnParent, '[0x' + IntToHex(iValue, 8) + '] ' {+ IntToStr(i) + ': '} + wstringToString(wsValue));
+            end;
+          end;
+        end;
+        iCount1 := -1;
+        if iPos > 0 then
+        begin
+          iCount := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+          if iPos > 0 then
+          begin
+            Items.Add(nil, 'value count: ' + IntToStr(iCount));
+            iValue := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+            if iPos > 0 then
+            begin
+              Items.Add(nil, 'unknown: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 8) + ']');
+              tnParent := Items.Add(nil, 'values');
+              for i := 0 to iCount - 1 do
+              begin
+                if iPos > 0 then
+                  iCount2 := Read_uint32(TBytes(MyData^._Pointer^), iPos)
+                else
+                  iCount2 := 0;
+                if iPos > 0 then
+                begin
+                  tnChild := Items.AddChild(tnParent, 'values [0x' + IntToHex(iPos, 8) + '] ' + {IntToStr(i) + ': ' +} 'count ' + IntToStr(iCount2 + 1));
+                  for j := 0 to iCount2 do
+                  begin
+                    if iPos > 0 then
+                      iValue := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+                    if iPos > 0 then
+                      Items.AddChild(tnChild, IntToStr(j + 1) + ': ' + IntToStr(iValue));
+                    iCount1 := iValue;
+                  end;
+                end;
+              end;
+            end;
+          end;
+        end;
+        if (iPos > 0) and (iCount1 > 0) then
+        begin
+          tnParent := Items.Add(nil, 'unknown count: ' + IntToStr(iCount1));
+          for i := 0 to iCount1 - 1 do
+          begin
+            tnChild := Items.AddChild(tnParent, 'unknown ' + ' [0x' + IntToHex(iPos, 8) + '] ' + IntToStr(i));
+            if iPos > 0 then
+              iValue := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+            if iPos > 0 then
+              Items.AddChild(tnChild, 'unknown uint32: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 8) + ']');
+            if iPos > 0 then
+              iValue := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+            if iPos > 0 then
+              Items.AddChild(tnChild, 'unknown uint32: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 8) + ']');
+            if iPos > 0 then
+              iValue := Read_uint16(TBytes(MyData^._Pointer^), iPos);
+            if iPos > 0 then
+              Items.AddChild(tnChild, 'unknown uint16: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 4) + ']');
+            if iPos > 0 then
+              rValue := Read_RefID(TBytes(MyData^._Pointer^), iPos);
+            if iPos > 0 then
+              Items.AddChild(tnChild, 'unknown RefID: ' + RefIDToString(rValue));
+            if iPos > 0 then
+              iValue := Read_uint8(TBytes(MyData^._Pointer^), iPos);
+            if iPos > 0 then
+              Items.AddChild(tnChild, 'unknown uint8: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 2) + ']');
+          end;
+        end;
+//        if iPos > 0 then
+//        begin
+//          iValue := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+//          if iPos > 0 then
+//          begin
+//            Items.Add(nil, 'unknown: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 8) + ']');
+//            iCount := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+//            if iPos > 0 then
+//            begin
+//              tnParent := Items.Add(nil, 'unknown count: ' + IntToStr(iCount));
+//              for i := 0 to iCount1 - 1 do
+//              begin
+//                tnChild := Items.AddChild(tnParent, 'unknown ' + ' [0x' + IntToHex(iPos, 8) + '] ' + IntToStr(i));
+//                if iPos > 0 then
+//                  iValue := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+//                if iPos > 0 then
+//                  Items.AddChild(tnChild, 'unknown uint32: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 8) + ']');
+//                if iPos > 0 then
+//                  iValue := Read_uint8(TBytes(MyData^._Pointer^), iPos);
+//                if iPos > 0 then
+//                  Items.AddChild(tnChild, 'unknown uint8: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 2) + ']');
+//                if iPos > 0 then
+//                  iValue := Read_uint16(TBytes(MyData^._Pointer^), iPos);
+//                if iPos > 0 then
+//                  Items.AddChild(tnChild, 'unknown uint16: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 4) + ']');
+//                if iPos > 0 then
+//                  iValue := Read_uint32(TBytes(MyData^._Pointer^), iPos);
+//                if iPos > 0 then
+//                  Items.AddChild(tnChild, 'unknown uint32: ' + IntToStr(iValue) + ' [0x' + IntToHex(iValue, 8) + ']');
+//              end;
+//            end;
+//          end;
+//        end;
+//        if MyData^._Size <> iPos then
+//          MessageBox(Handle, 'Not all data are parsed', 'Warning', MB_OK or MB_ICONWARNING);
+      end;
+    end;
+  end;
   BufNode := nil;
 end; {$IF Defined(USEREGION)}{$ENDREGION}{$IFEND}
 
@@ -1420,7 +1609,6 @@ begin
   lvGD04.Columns[0].Width := lvGD04.Columns[0].Width + 1;
   BufNode := nil;
 end; {$IF Defined(USEREGION)}{$ENDREGION}{$IFEND}
-
 procedure TfMain.tsIntegerShow(Sender: TObject);
 {$IF Defined(USEREGION)}{$REGION 'tsIntegerShow'}{$IFEND}
 var
@@ -1652,20 +1840,34 @@ begin
               if Node^.Parent <> nil then
               begin
                 case Node^.Parent^.Index of
-                  8:  begin
-                        case Node^.Index of
-                          0: pcEditors.ActivePage := tsGD01;
-                          1: pcEditors.ActivePage := tsGD02;
-                          3: pcEditors.ActivePage := tsGD04;
-                          else
-                            bShow := False;
-                        end;
-                        if bShow then
-                        begin
-                          Expanded[Node] := True;
-                          BufNode := GetChild(Node, 2);
-                        end;
-                      end
+                  8:
+                  begin
+                    case Node^.Index of
+                      0: pcEditors.ActivePage := tsGD01;
+                      1: pcEditors.ActivePage := tsGD02;
+                      3: pcEditors.ActivePage := tsGD04;
+                      else
+                        bShow := False;
+                    end;
+                    if bShow then
+                    begin
+                      Expanded[Node] := True;
+                      BufNode := GetChild(Node, 2);
+                    end;
+//                  end;
+//                  11:
+//                  begin
+//                    case Node^.Index of
+//                      1: pcEditors.ActivePage := tsGD32;
+//                      else
+//                        bShow := False;
+//                    end;
+//                    if bShow then
+//                    begin
+//                      Expanded[Node] := True;
+//                      BufNode := GetChild(Node, 2);
+//                    end;
+                  end
                   else
                     bShow := False;
                 end;
@@ -1745,6 +1947,7 @@ begin
             lvForms.Items.Count := 0;
             SetLength(FormViews, 0);
           end;
+          tvPapyrus.Items.Clear;
         {$IF Defined(USEREGION)}{$ENDREGION}{$IFEND}
       end;
   end;
@@ -1772,6 +1975,8 @@ begin
       tsGD02Show(Self);
     if pcEditors.ActivePageIndex = tsGD04.PageIndex then
       tsGD04Show(Self);
+//    if pcEditors.ActivePageIndex = tsGD32.PageIndex then
+//      tsGD32Show(Self);
   end;
   pcEditors.Visible := bShow;
 end;

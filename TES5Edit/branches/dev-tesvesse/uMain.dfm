@@ -39,6 +39,7 @@ object fMain: TfMain
     Color = 15790320
     Constraints.MinWidth = 300
     TabOrder = 0
+    ExplicitLeft = 0
     DesignSize = (
       1141
       475)
@@ -72,17 +73,13 @@ object fMain: TfMain
       Top = 33
       Width = 1127
       Height = 420
-      ActivePage = tsForms
+      ActivePage = tsGD32
       Anchors = [akLeft, akTop, akRight, akBottom]
       TabOrder = 0
       Visible = False
       object tsMain: TTabSheet
         Caption = 'Main'
         OnShow = tsMainShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object imMain: TImage
           Left = 0
           Top = 0
@@ -119,10 +116,6 @@ object fMain: TfMain
         Caption = 'Screen'
         ImageIndex = 1
         OnShow = tsScreenShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object imScreen: TImage
           Left = 0
           Top = 0
@@ -179,10 +172,6 @@ object fMain: TfMain
       object tsData: TTabSheet
         Caption = 'Data'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnData: TPanel
           Left = 0
           Top = 365
@@ -305,10 +294,6 @@ object fMain: TfMain
         Caption = 'Integer'
         ImageIndex = 4
         OnShow = tsIntegerShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object lbIntDec: TLabel
           Left = 16
           Top = 16
@@ -766,10 +751,6 @@ object fMain: TfMain
       object tsReadCalc: TTabSheet
         Caption = 'ReadCalc'
         ImageIndex = 5
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object lbRODec: TLabel
           Left = 16
           Top = 16
@@ -861,10 +842,6 @@ object fMain: TfMain
       object tsString: TTabSheet
         Caption = 'String'
         ImageIndex = 6
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           1119
           392)
@@ -881,10 +858,6 @@ object fMain: TfMain
       object tsFloat: TTabSheet
         Caption = 'Float'
         ImageIndex = 7
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           1119
           392)
@@ -901,10 +874,6 @@ object fMain: TfMain
       object tsFlags: TTabSheet
         Caption = 'Flags'
         ImageIndex = 8
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object tvFlags: TTreeView
           Left = 0
           Top = 0
@@ -927,10 +896,6 @@ object fMain: TfMain
       object tsGD01: TTabSheet
         Caption = 'GD01'
         ImageIndex = 9
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pcGD01: TPageControl
           Left = 0
           Top = 0
@@ -949,10 +914,6 @@ object fMain: TfMain
           OnDrawTab = pcGD01DrawTab
           object tsGD01General: TTabSheet
             Caption = 'General'
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object lvGD01General: TListView
               Left = 0
               Top = 0
@@ -982,10 +943,6 @@ object fMain: TfMain
           object tsGD01Quest: TTabSheet
             Caption = 'Quest'
             ImageIndex = 1
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object lvGD01Quest: TListView
               Left = 0
               Top = 0
@@ -1015,10 +972,6 @@ object fMain: TfMain
           object tsGD01Combat: TTabSheet
             Caption = 'Combat'
             ImageIndex = 2
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object lvGD01Combat: TListView
               Left = 0
               Top = 0
@@ -1048,10 +1001,6 @@ object fMain: TfMain
           object tsGD01Magic: TTabSheet
             Caption = 'Magic'
             ImageIndex = 3
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object lvGD01Magic: TListView
               Left = 0
               Top = 0
@@ -1081,10 +1030,6 @@ object fMain: TfMain
           object tsGD01Crafting: TTabSheet
             Caption = 'Crafting'
             ImageIndex = 4
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object lvGD01Crafting: TListView
               Left = 0
               Top = 0
@@ -1114,10 +1059,6 @@ object fMain: TfMain
           object tsGD01Crime: TTabSheet
             Caption = 'Crime'
             ImageIndex = 5
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object lvGD01Crime: TListView
               Left = 0
               Top = 0
@@ -1147,10 +1088,6 @@ object fMain: TfMain
           object tsGD01All: TTabSheet
             Caption = 'All'
             ImageIndex = 6
-            ExplicitLeft = 0
-            ExplicitTop = 0
-            ExplicitWidth = 0
-            ExplicitHeight = 0
             object lvGD01All: TListView
               Left = 0
               Top = 0
@@ -1197,10 +1134,6 @@ object fMain: TfMain
       object tsGD02: TTabSheet
         Caption = 'GD02'
         ImageIndex = 10
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object lvGD02: TListView
           Left = 0
           Top = 0
@@ -1211,7 +1144,7 @@ object fMain: TfMain
           Columns = <
             item
               Caption = 'Value'
-              Width = 100
+              Width = 200
             end
             item
               AutoSize = True
@@ -1236,10 +1169,6 @@ object fMain: TfMain
       object tsGD04: TTabSheet
         Caption = 'GD04'
         ImageIndex = 11
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object lvGD04: TListView
           Left = 0
           Top = 0
@@ -1281,6 +1210,35 @@ object fMain: TfMain
           Caption = ' '
           Color = 15790320
           TabOrder = 1
+        end
+      end
+      object tsGD32: TTabSheet
+        Caption = 'GD32'
+        ImageIndex = 12
+        object pnGD32Background: TPanel
+          Left = 0
+          Top = 0
+          Width = 1119
+          Height = 392
+          Align = alClient
+          BevelKind = bkFlat
+          BevelOuter = bvNone
+          TabOrder = 0
+          object tvPapyrus: TTreeView
+            Left = 0
+            Top = 0
+            Width = 1115
+            Height = 388
+            Align = alClient
+            BorderStyle = bsNone
+            Indent = 19
+            ReadOnly = True
+            TabOrder = 0
+            ExplicitLeft = 200
+            ExplicitTop = 120
+            ExplicitWidth = 121
+            ExplicitHeight = 97
+          end
         end
       end
     end

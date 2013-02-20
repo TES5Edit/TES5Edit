@@ -759,10 +759,13 @@ begin
     Move(Buf[FromPos], Result.w, SizeOf(Result.w));
     FromPos := FromPos + SizeOf(Result.w);
     SetLength(Result.s, Result.w);
-    if ((FromPos + Length(Result.s)) <= Length(Buf)) and (Result.w > 0) then
+    if (FromPos + Length(Result.s)) <= Length(Buf) then
     begin
-      Move(Buf[FromPos], Result.s[0], Length(Result.s));
-      FromPos := FromPos + Length(Result.s);
+      if Result.w > 0 then
+      begin
+        Move(Buf[FromPos], Result.s[0], Length(Result.s));
+        FromPos := FromPos + Length(Result.s);
+      end;
       Exit;
     end
   end;
