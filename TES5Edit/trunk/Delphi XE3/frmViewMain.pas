@@ -5385,6 +5385,8 @@ var
   _File               : IwbFile;
   Node                : PVirtualNode;
   NodeData            : PNavNodeData;
+  ConflictThis        : TConflictThis;
+  ConflictAll         : TConflictAll;
   i                   : Integer;
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
@@ -5402,6 +5404,18 @@ begin
   if SameText(Identifier, 'DataPath') and (Args.Count = 0) then begin
     Value := DataPath;
     Done := True;
+  end else
+  if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
+    Value := FilterApplied;
+    Done := True;
+  end else
+  if SameText(Identifier, 'AddMessage') then begin
+    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
+      PostAddMessage(Args.Values[0]);
+      Done := True;
+      Application.ProcessMessages;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
   end else
   if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
     Value := Length(Files);
@@ -5461,6 +5475,44 @@ begin
       end;
     end;
     Done := True;
+  end else
+  if SameText(Identifier, 'ConflictThisForMainRecord') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+      Value := ConflictThis;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ConflictAllForMainRecord') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+      Value := ConflictAll;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ConflictThisForNode') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+      Node := FindNodeForElement(Element);
+      if Assigned(Node) then begin
+        NodeData := vstNav.GetNodeData(Node);
+        Value := NodeData.ConflictThis;
+      end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ConflictAllForNode') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+      Node := FindNodeForElement(Element);
+      if Assigned(Node) then begin
+        NodeData := vstNav.GetNodeData(Node);
+        Value := NodeData.ConflictAll;
+      end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
   end;
 end;
 
