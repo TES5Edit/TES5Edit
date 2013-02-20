@@ -28,6 +28,18 @@ begin
   Dec(Args.Values[0]);
 end;
 
+procedure Pascal_Succ(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  // in JvInterpreter all ordinals are integers
+  Value := Succ(Integer(Args.Values[0]));
+end;
+
+procedure Pascal_Pred(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Pred(Integer(Args.Values[0]));
+end;
+
+
 { TStrings }
 
 procedure TStrings_Read_Delimiter(var Value: Variant; Args: TJvInterpreterArgs);
@@ -212,6 +224,8 @@ begin
     AddConst('SysUtils', 'HighInteger', High(Integer));
     AddFunction('SysUtils', 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
     AddFunction('SysUtils', 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
+    AddFunction('SysUtils', 'Succ', Pascal_Succ, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'Pred', Pascal_Pred, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
     AddFunction('SysUtils', 'StringReplace', JvInterpreter_StringReplace, 4, [varString, varString, varString, varEmpty], varEmpty);
     AddFunction('SysUtils', 'IntToHex64', JvInterpreter_IntToHex64, 2, [varEmpty, varEmpty], varEmpty);
