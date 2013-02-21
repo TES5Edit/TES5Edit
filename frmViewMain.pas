@@ -5393,6 +5393,10 @@ begin
     Value := wbGameMode;
     Done := True;
   end else
+  if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
+    Value := wbGameName;
+    Done := True;
+  end else
   if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
     Done := True;
@@ -10871,14 +10875,6 @@ begin
         TargetCanvas.Brush.Color := Lighter(ConflictAllToColor(NodeDatas[Column].ConflictAll), Factor)
       else
         Exit;
-      {case NodeDatas[Column].ConflictAll of
-        caNoConflict: TargetCanvas.Brush.Color := Lighter(clLime, Factor);
-        caOverride, caConflictBenign: TargetCanvas.Brush.Color := Lighter(clYellow, Factor);
-        caConflict: TargetCanvas.Brush.Color := Lighter(clRed, Factor);
-        caConflictCritical: TargetCanvas.Brush.Color := Lighter(clFuchsia, Factor);
-      else
-        Exit;
-      end;}
 
       TargetCanvas.FillRect(CellRect);
 
@@ -10901,14 +10897,6 @@ begin
   else
     Exit;
 
-  {case NodeDatas[0].ConflictAll of
-    caNoConflict: ItemColor := Lighter(clLime, 0.85);
-    caOverride, caConflictBenign: ItemColor := Lighter(clYellow, 0.85);
-    caConflict: ItemColor := Lighter(clRed, 0.85);
-    caConflictCritical: ItemColor := Lighter(clFuchsia, 0.85);
-  else
-    Exit;
-  end;}
   EraseAction := eaColor;
 end;
 
@@ -11401,12 +11389,6 @@ begin
 
     if ActiveRecords[0].ConflictAll >= caNoConflict then
       Sender.Background := Lighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85);
-    {case ActiveRecords[0].ConflictAll of
-      caNoConflict: Sender.Background := Lighter(clLime, 0.85);
-      caOverride, caConflictBenign: Sender.Background := Lighter(clYellow, 0.85);
-      caConflict: Sender.Background := Lighter(clRed, 0.85);
-      caConflictCritical: Sender.Background := Lighter(clFuchsia, 0.85);
-    end;}
     PaintInfo.TargetCanvas.Brush.Color := Sender.Background;
     Sender.Font.Color := ConflictThisToColor(
       ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis);
@@ -11668,17 +11650,8 @@ begin
       ItemColor := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
     else
       Exit;
-   { case NodeData.ConflictAll of
-      caNoConflict: ItemColor := Lighter(clLime, 0.85);
-      caOverride, caConflictBenign: ItemColor := Lighter(clYellow, 0.85);
-      caConflict: ItemColor := Lighter(clRed, 0.85);
-      caConflictCritical: ItemColor := Lighter(clFuchsia, 0.85);
-    else
-      Exit;
-    end;}
 
     EraseAction := eaColor;
-
   end;
 end;
 
@@ -11699,14 +11672,6 @@ begin
       lblPath.Color := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
     else
       lblPath.Color := vstNav.Color;
-    {case NodeData.ConflictAll of
-      caNoConflict: lblPath.Color := Lighter(clLime, 0.85);
-      caOverride, caConflictBenign: lblPath.Color := Lighter(clYellow, 0.85);
-      caConflict: lblPath.Color := Lighter(clRed, 0.85);
-      caConflictCritical: lblPath.Color := Lighter(clFuchsia, 0.85);
-    else
-      lblPath.Color := vstNav.Color;
-    end;}
 
     lblPath.Font.Color := ConflictThisToColor(NodeData.ConflictThis);
 

@@ -2492,34 +2492,12 @@ end;
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;
 begin
-  //Result := clDefault;
   Result := wbColorConflictAll[aConflictAll];
 end;
 
 function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 begin
   Result := wbColorConflictThis[aConflictThis];
-  {case aConflictThis of
-    ctMaster:
-      Result := clPurple;
-    ctIdenticalToMaster:
-      Result := clDkGray;
-    ctNotDefined:
-      Result := clMedGray;
-    ctHiddenByModGroup:
-      Result := clLtGray;
-    ctOverride:
-      Result := clGreen;
-    ctConflictWins:
-      Result := clOrange;
-    ctIdenticalToMasterWinsConflict:
-      Result := clOlive;
-    ctConflictLoses:
-      Result := clRed;
-  else
-    //Result := clBlack;
-    Result := clWindowText;
-  end;}
 end;
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
