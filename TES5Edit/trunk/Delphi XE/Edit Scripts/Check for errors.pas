@@ -1,5 +1,5 @@
 {
-  Does the same as internal "Check for errors" funtion in xEdit
+  Does the same as internal "Check for errors" function in xEdit
 }
 unit userscript;
 
