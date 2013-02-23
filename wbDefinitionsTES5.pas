@@ -10342,7 +10342,7 @@ begin
       ])),
       wbFormIDCk('Sound', [SNDR])
     ])),
-    wbLString(DNAM, 'Magic Item Description'),
+    wbLStringKC(DNAM, 'Magic Item Description'),
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad});
 
