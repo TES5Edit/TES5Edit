@@ -10092,7 +10092,7 @@ begin
       wbFloat('Y'),
       wbFloat('Z')
     ]),
-    wbString(MOD2, 'Camera Path', 0, cpNormal, True)
+    wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [

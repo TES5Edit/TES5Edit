@@ -10134,7 +10134,7 @@ begin
       wbFloat('Y'),
       wbFloat('Z')
     ]),
-    wbString(MOD2, 'Camera Path', 0, cpNormal, True)
+    wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [
@@ -10384,7 +10384,7 @@ begin
       ])),
       wbFormIDCk('Sound', [SNDR])
     ])),
-    wbLString(DNAM, 'Magic Item Description'),
+    wbLStringKC(DNAM, 'Magic Item Description'),
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad});
 

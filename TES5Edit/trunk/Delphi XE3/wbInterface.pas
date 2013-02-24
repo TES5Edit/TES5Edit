@@ -7482,9 +7482,9 @@ end;
 
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+  {if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
     Result := 0
-  else if sdSize > 0 then
+  else} if sdSize > 0 then
     Result := sdSize
   else begin
     if aBasePtr = nil then
