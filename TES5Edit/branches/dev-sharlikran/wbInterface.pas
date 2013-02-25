@@ -100,6 +100,7 @@ var
   wbReportUnknownEnums: Boolean{} = True{};
   wbReportFormIDNotAllowedReferences: Boolean{} = True{};
   wbReportUnknown: Boolean{} = True{};
+  wbMoreInfoForRequired: Boolean = False;
 
   wbCheckExpectedBytes: Boolean{} = True{};
 

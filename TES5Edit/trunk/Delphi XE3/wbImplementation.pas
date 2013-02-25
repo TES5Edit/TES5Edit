@@ -5482,7 +5482,8 @@ begin
       if wbBeginInternalEdit then try
         for i := 0 to Pred(mrDef.MemberCount) do
           if i in RequiredRecords then begin
-            wbProgressCallback('Adding missing record: ' + mrDef.Members[i].GetName);
+            if wbMoreInfoForRequired  then
+              wbProgressCallback(' ['+IntToHex64(mrFixedFormID, 8)+'] Adding missing record: ' + mrDef.Members[i].GetName);
             Assign(i, nil, False);
           end;
       finally

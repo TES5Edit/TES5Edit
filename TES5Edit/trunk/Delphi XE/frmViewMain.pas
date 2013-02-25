@@ -9677,6 +9677,8 @@ begin
   mniViewHeaderHidden.Checked := esHidden in MainRecord.ElementStates;
   if not ActiveRecords[Column].Element._File.IsEditable then
     Exit;
+  if DebugHook = 0 then //reserve Delete for debugging until we know why it can go "crazy"
+    Exit;
   mniViewHeaderRemove.Visible := True;
 end;
 
