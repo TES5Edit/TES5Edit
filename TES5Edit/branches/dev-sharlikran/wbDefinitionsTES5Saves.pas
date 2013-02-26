@@ -13009,7 +13009,7 @@ begin
     if Assigned(Element) then begin
       Result := 1 + (Element.NativeValue and $3F);
     end;
-    if (Result > 10) and (Result > 0) then Result := 0;
+    if {(Result > 10) and} (Result > 0) then Result := 0;
   end;
 end;
 
@@ -13240,28 +13240,42 @@ end;
 
 function ChangedFormRemainingDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Element : IwbElement;
-  Container: IwbDataContainer;
-  Total : Integer;
-  FCType : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+  EasC      : IwbDataContainer;
+  Origin    : Cardinal;
+  Consumed  : Cardinal;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form', aElement);
+  Element := FindElement('CForm Data', aElement);
 
-  Total := ChangedFormDataCounter(aBasePtr, aEndPtr, aElement);
   if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Type'];
-    if Assigned(Element) then begin
-      FCType := Element.NativeValue and $3F;
-      case FCType of
-        8: begin
-             if ChangedFlag01Decider(aBasePtr, aEndPtr, aElement) = 1 then Dec(Total, SizeOf(Cardinal));
-           end;
+    Element := Container.ElementByName['Uncompressed Length'];
+    if Assigned(Element) and Supports(Element, IwbDataContainer, EasC) then begin
+      Result := Element.NativeValue;
+      if Result = 0 then begin
+        Element := Container.ElementByName['Length'];
+        if Assigned(Element) and Supports(Element, IwbDataContainer, EasC) then begin
+          Result := Element.NativeValue;
+        end;
       end;
     end;
   end;
-  Result := Total;
+
+  if Result > 0 then begin
+    Element := FindElement('CForm Union', aElement);
+    if Supports(Element, IwbDataContainer, Container) and (Container.ElementCount = 1) then begin
+      Origin := Cardinal(Container.DataBasePtr);
+      if Supports(Container.Elements[0], IwbContainer, Container) and (Container.ElementCount > 0) then begin
+        Element := Container.Elements[Pred(Container.ElementCount)];
+        if Assigned(Element) and Supports(Element, IwbDataContainer, EasC) then begin
+          Consumed := Cardinal(EasC.DataBasePtr) - Origin;
+          Result := Result - Consumed;
+        end;
+      end;
+    end;
+  end;
 end;
 
 function SkipCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -13469,7 +13483,16 @@ begin
     wbInteger('Player Sex', itU16, wbSexEnum),
     wbFloat('Player Current Experience'),
     wbFloat('Player LevelUp Experience'),
-    wbByteArray('Save Time', 8),
+    wbStruct('Save Time', [
+      wbInteger('Year', itU8),
+      wbInteger('Month', itU8),
+      wbInteger('Day Of Week', itU8),
+      wbInteger('Day', itU8),
+      wbInteger('Hour', itU8),
+      wbInteger('Minute', itU8),
+      wbInteger('Second', itU8),
+      wbInteger('Millisecond', itU8)
+    ]),
     wbInteger('Screenshot Width', itU32),
     wbInteger('Screenshot Height', itU32)
   ]);
@@ -13489,16 +13512,16 @@ begin
   ]);
 
   wbUnknown1 := wbStruct('Unknown1 Struct', [
+    wbInteger('Unknown', itU32, wbDumpInteger),
     wbArray('Values', wbInteger('Value', itU32, wbDumpInteger), -1)
-    ,wbInteger('OtherValue', itU32, wbDumpInteger)
   ]);
 
   wbUnknown2 := wbStruct('Unknown2 Struct', [
-    wbInteger('Next', itU32, wbDumpInteger)
-    ,wbInteger('Unknown', itU32, wbDumpInteger)
-    ,wbInteger('Unknown', itS16, wbDumpInteger)
-    ,wbRefID('RefID')
-    ,wbInteger('Unknown', itU8, wbDumpInteger)
+    wbInteger('Unknown', itU32, wbDumpInteger),
+    wbInteger('Unknown', itU32, wbDumpInteger),
+    wbInteger('Unknown', itS16, wbDumpInteger),
+    wbRefID('RefID'),
+    wbInteger('Unknown', itU8, wbDumpInteger)
   ]);
 
   wbGlobalData := wbStruct('Global Data', [
@@ -13574,9 +13597,9 @@ begin
         ,wbInteger('String Table Count', itU32)
         ,wbArray('Strings Table', wbLenString('String', 2), StringTableCounter)
         ,wbInteger('Count1', itU32, wbDumpInteger)
-        ,wbInteger('CountX', itU32, wbDumpInteger)
         ,wbArray('Unknown1 array', wbUnknown1, Unknown1Counter)
-        ,wbArray('Unknown2 list', wbUnknown2, Unknown2AsListCounter)
+        ,wbArray('Unknown2 array', wbUnknown2, -1)
+//        ,wbArray('Unknown3 array', wbByteArray('Unknown', 2), -1)
 //        ,wbByteArray('Remainder', PapyrusDataRemainderCounter)  // Single line
         ,wbArray('Remainder', wbByteArray('Unknown', BytesToGroup), PapyrusDataQuartetCounter) // per Quartet
         ,wbByteArray('Unknown', PapyrusDataQuartetRemainderCounter)
