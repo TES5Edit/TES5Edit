@@ -4248,14 +4248,14 @@ begin
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
 
-  if not Supports(MainRecord.ElementBySignature[BODT], IwbContainerElementRef, ContainerBODT) then
-    Exit;
+    if not Supports(MainRecord.ElementBySignature[BODT], IwbContainerElementRef, ContainerBODT) then
+      Exit;
 
-  if Supports(MainRecord.Add('BOD2', True), IwbContainerElementRef, ContainerBOD2) then begin
-     ContainerBOD2.ElementNativeValues['First Person Flags'] := ContainerBODT.ElementNativeValues['First Person Flags'];
-     ContainerBOD2.ElementNativeValues['Armor Type'] := ContainerBODT.ElementNativeValues['Armor Type'];
-     MainRecord.RemoveElement(BODT);
-  end;
+    if Supports(MainRecord.Add('BOD2', True), IwbContainerElementRef, ContainerBOD2) then begin
+       ContainerBOD2.ElementNativeValues['First Person Flags'] := ContainerBODT.ElementNativeValues['First Person Flags'];
+       ContainerBOD2.ElementNativeValues['Armor Type'] := ContainerBODT.ElementNativeValues['Armor Type'];
+       MainRecord.RemoveElement(BODT);
+    end;
 
   finally
     wbEndInternalEdit;
@@ -4269,8 +4269,20 @@ begin
 end;
 
 procedure wbARMAAfterLoad(const aElement: IwbElement);
+var
+  MainRecord    : IwbMainRecord;
 begin
   wbReplaceBODTwithBOD2(aElement);
+  if wbBeginInternalEdit then try
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+    if MainRecord.ElementNativeValues['DNAM\Weight slider - Male'] = 0 then
+      MainRecord.ElementNativeValues['DNAM\Weight slider - Male'] := 2;
+    if MainRecord.ElementNativeValues['DNAM\Weight slider - Female'] = 0 then
+      MainRecord.ElementNativeValues['DNAM\Weight slider - Female'] := 2;
+  finally
+    wbEndInternalEdit;
+  end;
 end;
 
 procedure wbNPCAfterLoad(const aElement: IwbElement);
@@ -4282,7 +4294,6 @@ procedure wbREFRAfterLoad(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
-//  BaseRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4303,14 +4314,6 @@ begin
     end;
 
     Container.RemoveElement('XPTL');
-
-//    Container.RemoveElement('RCLR');
-//
-//    if Container.ElementExists['Ammo'] then begin
-//      BaseRecord := MainRecord.BaseRecord;
-//      if Assigned(BaseRecord) and (BaseRecord.Signature <> 'WEAP') then
-//        Container.RemoveElement('Ammo');
-//    end;
   finally
     wbEndInternalEdit;
   end;
@@ -6702,7 +6705,15 @@ begin
     wbStruct(DNAM, 'Data', [
       wbInteger('Male Priority', itU8),
       wbInteger('Female Priority', itU8),
-      wbByteArray('Unknown', 4),
+      wbInteger('Weight slider - Male', itU8, wbFlags([
+        {0x01} '',
+        {0x02} 'Enabled'
+      ])),
+      wbInteger('Weight slider - Female', itU8, wbFlags([
+        {0x01} '',
+        {0x02} 'Enabled'
+      ])),
+      wbByteArray('Unknown', 2),
       wbInteger('Detection Sound Value', itU8),
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
@@ -6734,7 +6745,7 @@ begin
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO])
-  ], False, nil, cpNormal, False, wbARMOAfterLoad);
+  ], False, nil, cpNormal, False, wbARMAAfterLoad);
 
   wbRecord(BOOK, 'Book', [
     wbEDID,
