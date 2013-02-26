@@ -4269,11 +4269,11 @@ begin
 end;
 
 procedure wbARMAAfterLoad(const aElement: IwbElement);
-var
-  MainRecord    : IwbMainRecord;
+{var
+  MainRecord    : IwbMainRecord;}
 begin
   wbReplaceBODTwithBOD2(aElement);
-  if wbBeginInternalEdit then try
+  {if wbBeginInternalEdit then try
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
     if MainRecord.ElementNativeValues['DNAM\Weight slider - Male'] = 0 then
@@ -4282,7 +4282,7 @@ begin
       MainRecord.ElementNativeValues['DNAM\Weight slider - Female'] := 2;
   finally
     wbEndInternalEdit;
-  end;
+  end;}
 end;
 
 procedure wbNPCAfterLoad(const aElement: IwbElement);
