@@ -2100,11 +2100,13 @@ end;
 
 function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container     : IwbContainer;
-  GroupRecord   : IwbGroupRecord;
-  MainRecord    : IwbMainRecord;
-  rData         : IwbRecord;
-  i: integer;
+  Container   : IwbContainer;
+  Current     : IwbContainer;
+  Parent      : IwbContainer;
+  GroupRecord : IwbGroupRecord;
+  MainRecord  : IwbMainRecord;
+  rData       : IwbRecord;
+  i           : integer;
 begin
   Result := 0;
 
@@ -2115,11 +2117,26 @@ begin
   if not Supports(Container, IwbGroupRecord, GroupRecord) then
     Exit;
 
-  MainRecord := GroupRecord.ChildrenOf;
+  MainRecord := GroupRecord.ChildrenOf;     // This does NOT work while adding master!
 
-  if not Assigned(MainRecord) then
-    Exit
-  else if (MainRecord.Signature<>CELL) then begin
+  if not Assigned(MainRecord) then begin // we expect:
+     //   plugin \ CELL group \ Block \ Sub Block \ CELL
+     //                                           \ CELL Children group \ Permanent children group
+     //                                                                 \ Temporary children group = GroupRecord = Container
+    if Assigned(Container) and (Container.ElementType = etGroupRecord) then
+      Container := Container.Container;
+    if Assigned(Container) and (Container.ElementType = etGroupRecord) then
+      Parent := Container.Container;
+    i := 0;
+    while (i < Parent.ElementCount) and Supports(Parent.Elements[i], IwbContainer, Current) and (Current <> Container) do
+      Inc(i);
+    if (i = 0) or (i = Parent.ElementCount) or not Supports(Parent.Elements[i-1], IwbMainRecord,MainRecord) then begin
+      wbProgressCallback('Parent of a NVNM is not a MainRecord');
+//      Assert(Assigned(MainRecord)); // Better an exception than to destroy the plugin.
+      Exit;
+    end;
+  end;
+  if (MainRecord.Signature<>CELL) then begin
     wbProgressCallback('Parent of a NVNM is not identified as a CELL');
     Assert(MainRecord.Signature=CELL); // Better an exception than to destroy the plugin.
     Exit;
