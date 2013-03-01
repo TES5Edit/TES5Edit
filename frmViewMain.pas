@@ -467,6 +467,8 @@ type
       var Done: Boolean);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
     procedure mniRefByMarkModifiedClick(Sender: TObject);
+    procedure JvInterpreterProgram1SetValue(Sender: TObject; Identifier: string;
+      const Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -637,6 +639,8 @@ type
 
     ComparingSiblings: Boolean;
     CompareRecords: TDynMainRecords;
+
+    ScriptProcessElements: TwbElementTypes;
 
 //    STATsWithWindows: TStringList;
 
@@ -5520,6 +5524,23 @@ begin
   end;
 end;
 
+procedure TfrmMain.JvInterpreterProgram1SetValue(Sender: TObject;
+  Identifier: string; const Value: Variant; Args: TJvInterpreterArgs;
+  var Done: Boolean);
+var
+  i, v: Integer;
+begin
+  if SameText(Identifier, 'ScriptProcessElements') then begin
+    v := V2S(Value);
+    for i := Integer(Low(TwbElementType)) to Integer(High(TwbElementType)) do
+      if (v and (1 shl i)) > 0 then
+        Include(ScriptProcessElements, TwbElementType(i));
+    if ScriptProcessElements = [] then
+      ScriptProcessElements := [etMainRecord];
+    Done := True;
+  end;
+end;
+
 procedure TfrmMain.JvInterpreterProgram1GetUnitSource(UnitName: string;
   var Source: string; var Done: Boolean);
 var
@@ -5570,6 +5591,7 @@ begin
   jvi := TJvInterpreterProgram.Create(Self);
   try
     jvi.OnGetValue := JvInterpreterProgram1GetValue;
+    jvi.OnSetValue := JvInterpreterProgram1SetValue;
     jvi.OnGetUnitSource := JvInterpreterProgram1GetUnitSource;
     jvi.Pas.Text := Scr;
     jvi.Compile;
@@ -5583,6 +5605,7 @@ begin
 
       Enabled := False;
 
+      ScriptProcessElements := [etMainRecord];
       Count := 0;
 
       if jvi.FunctionExists('', 'Initialize') then begin
@@ -5606,7 +5629,7 @@ begin
           NodeData := vstNav.GetNodeData(Node);
 
           if Assigned(NodeData.Element) then
-            if NodeData.Element.ElementType in [etMainRecord] then begin
+            if NodeData.Element.ElementType in ScriptProcessElements then begin
 
               if jvi.FunctionExists('', 'Process') then begin
                 jvi.CallFunction('Process', nil, [NodeData.Element]);

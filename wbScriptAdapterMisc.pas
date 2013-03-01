@@ -78,9 +78,9 @@ var
   rf: TReplaceFlags;
   f: byte;
 begin
-  f := V2S(Args.Values[2]);
-  if (f and ord(rfReplaceAll)) > 0 then rf := rf + [rfReplaceAll];
-  if (f and ord(rfIgnoreCase)) > 0 then rf := rf + [rfIgnoreCase];
+  f := V2S(Args.Values[3]);
+  if (f and (1 shl ord(rfReplaceAll))) > 0 then rf := rf + [rfReplaceAll];
+  if (f and (1 shl ord(rfIgnoreCase))) > 0 then rf := rf + [rfIgnoreCase];
   Value := StringReplace(Args.Values[0], Args.Values[1], Args.Values[2], rf);
 end;
 
