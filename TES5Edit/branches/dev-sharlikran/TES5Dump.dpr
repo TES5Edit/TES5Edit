@@ -225,13 +225,13 @@ begin
       wbGameName := 'Oblivion';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineTES4;
-    end  else if wbFindCmdLineSwitch('TES5Saves') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 9), 'TES5Saves') then begin
+    end else if wbFindCmdLineSwitch('TES5Saves') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 9), 'TES5Saves') then begin
       wbGameMode := gmTES5Saves;
       wbAppName := 'TES5Saves';
       wbGameName := 'Skyrim Saves';
       wbLoadBSAs := false;
       DefineTES5saves;
-    end  else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+    end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
