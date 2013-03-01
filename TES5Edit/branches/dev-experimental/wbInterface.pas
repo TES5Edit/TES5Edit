@@ -300,6 +300,8 @@ type
     etUnion
   );
 
+  TwbElementTypes = set of TwbElementType;
+
   IwbContainer = interface;
   IwbFile = interface;
   IwbNamedDef = interface;

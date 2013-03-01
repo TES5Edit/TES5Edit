@@ -720,7 +720,7 @@ type
     mrsQuickInitDone,
     mrsHasMeshChecked,
     mrsHasMesh,
-    mrIsAddingInLoop
+    mrsNoUpdateRefs
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -2734,7 +2734,7 @@ begin
   j := 0;
   ONAMs := nil;
   if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
-    Include(TwbMainRecord(FileHeader).mrStates, mrIsAddingInLoop);
+    Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     while FileHeader.RemoveElement('ONAM') <> nil do
       ;
     if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
@@ -2810,7 +2810,7 @@ begin
         if j > High(flRecords) then
           Break;
       end;
-    Exclude(TwbMainRecord(FileHeader).mrStates, mrIsAddingInLoop);
+    Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     FileHeader.UpdateRefs;
   end;
 end;
@@ -4973,7 +4973,7 @@ begin
       Exclude(mrStates, mrsBaseRecordChecked);
   end;
   inherited;
-  if not (mrIsAddingInLoop in mrStates) then
+  if not (mrsNoUpdateRefs in mrStates) then
     UpdateRefs;
 end;
 
