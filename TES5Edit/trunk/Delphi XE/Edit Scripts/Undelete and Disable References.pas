@@ -49,7 +49,7 @@ begin
   SetIsDeleted(e, False);
 
   // set persistence flag depending on game
-  if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) or (wbGameMode = gmTES5) and ((Sig = 'ACHR') and (Sig = 'ACRE')) then
+  if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) or (wbGameMode = gmTES5) and ((Sig = 'ACHR') or (Sig = 'ACRE')) then
     SetIsPersistent(e, True)
   else if wbGameMode = gmTES4 then
     SetIsPersistent(e, False);
