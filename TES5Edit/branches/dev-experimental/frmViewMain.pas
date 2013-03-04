@@ -1281,19 +1281,20 @@ end;
 
 function TfrmMain.ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
 var
-  Element                     : IwbElement;
-  CompareElement              : IwbElement;
-  i{, j }                       : Integer;
-  UniqueValues                : TnxFastStringListCS;
+  Element             : IwbElement;
+  CompareElement      : IwbElement;
+  SubRecord           : IwbSubRecord;
+  i{, j }             : Integer;
+  UniqueValues        : TnxFastStringListCS;
 
-  FirstElement                : IwbElement;
-  LastElement                 : IwbElement;
-  SameAsLast                  : Boolean;
-  SameAsFirst                 : Boolean;
-  OverallConflictThis         : TConflictThis;
-  Priority                    : TwbConflictPriority;
-//  IgnoreConflicts             : Boolean;
-  FoundAny                    : Boolean;
+  FirstElement        : IwbElement;
+  LastElement         : IwbElement;
+  SameAsLast          : Boolean;
+  SameAsFirst         : Boolean;
+  OverallConflictThis : TConflictThis;
+  Priority            : TwbConflictPriority;
+//  IgnoreConflicts     : Boolean;
+  FoundAny            : Boolean;
 begin
 //  if aSiblingCompare then
 //    Priority := cpBenign
@@ -1366,6 +1367,13 @@ begin
             (Assigned(Element) <> Assigned(FirstElement)) or
             (Assigned(Element) and not SameStr(Element.SortKey[True], FirstElement.SortKey[True]))
             );
+          if not SameAsFirst and
+             Supports(Element, IwbSubRecord, SubRecord) and
+             not Assigned(FirstElement) and
+             (SubRecord.Signature = 'XLRL') then begin
+            SameAsFirst := True;
+            UniqueValues.Delete(UniqueValues.IndexOf(Element.SortKey[True]));
+          end;
 
           if SameAsFirst then
             aNodeDatas[i].ConflictThis := ctIdenticalToMaster
