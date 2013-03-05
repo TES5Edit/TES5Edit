@@ -5785,7 +5785,7 @@ begin
     ]),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
 		wbFormIDCk(XHOR, 'Horse', [ACHR]),
@@ -6844,7 +6844,7 @@ procedure DefineTES5c;
       wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
+      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
       wbXSCL,
       wbDataPosRot
     ], True, wbPlacedAddInfo);
@@ -11928,7 +11928,7 @@ begin
 
     wbInteger(XCNT, 'Item Count', itS32),
     wbFloat(XCHG, 'Charge'),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [

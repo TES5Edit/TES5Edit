@@ -1283,7 +1283,6 @@ function TfrmMain.ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aN
 var
   Element             : IwbElement;
   CompareElement      : IwbElement;
-  SubRecord           : IwbSubRecord;
   i{, j }             : Integer;
   UniqueValues        : TnxFastStringListCS;
 
@@ -1368,11 +1367,11 @@ begin
             (Assigned(Element) and not SameStr(Element.SortKey[True], FirstElement.SortKey[True]))
             );
           if not SameAsFirst and
-             Supports(Element, IwbSubRecord, SubRecord) and
-             not Assigned(FirstElement) and
-             (SubRecord.Signature = 'XLRL') then begin
-            SameAsFirst := True;
-            UniqueValues.Delete(UniqueValues.IndexOf(Element.SortKey[True]));
+             (Priority = cpBenignIfAdded) and
+             SameAsLast and  // We are not overriden later
+             not Assigned(FirstElement) then begin // The master did not have that element
+            Priority := cpBenign;
+            UniqueValues.Delete(UniqueValues.IndexOf(Element.SortKey[True]));  // Still required to properly mark as ITM
           end;
 
           if SameAsFirst then
