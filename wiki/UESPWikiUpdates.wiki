@@ -1,6 +1,22 @@
 #summary Records updated on the UESPWiki
 
-= Currently updated on the UESPWiki Post 1.8 =
+= Currently updated on the UESPWiki Post 1.9 =
+
+== Top Groups ==
+
+AACT, ACTI, ADDN, ARMA, AMMO, ANIO
+
+== Common Fields ==
+
+BODT, BOD2
+
+== Undefined Records ==
+
+The following records still need more decoding.
+
+NAVM
+
+= Updated on the UESPWiki Pre 1.9 =
 
 == Top Groups ==
 
@@ -12,6 +28,9 @@ NVMI, NVNM, NVPP
 
 == Undefined Records ==
 
+The following records still need more decoding.
+
+NAVM
 
 = Updated on the UESPWiki Pre 1.8 =
 
