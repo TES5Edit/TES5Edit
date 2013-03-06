@@ -4381,11 +4381,11 @@ end;
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
-  Container2   : IwbContainerElementRef;
+//  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
   HasWater     : Boolean;
 //  IsInterior   : Boolean;
-  i            : Integer;
+//  i            : Integer;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4416,13 +4416,13 @@ begin
         Container.ElementEditValues['XCLW'] := '-2147483648.000000';
     end;
 
-    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
-      for i:= Pred(Container2.ElementCount) downto 0 do
-        if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then
-          Container2.RemoveElement(i);
-      if Container2.ElementCount < 1 then
-        Container2.Remove;
-    end;
+//    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
+//      for i := Pred(Container2.ElementCount) downto 0 do
+//        if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then
+//          Container2.RemoveElement(i);
+//      if Container2.ElementCount < 1 then
+//        Container2.Remove;
+//    end;
   finally
     wbEndInternalEdit;
   end;

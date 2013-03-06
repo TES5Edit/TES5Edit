@@ -4311,7 +4311,6 @@ procedure wbREFRAfterLoad(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
-//  BaseRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4332,14 +4331,6 @@ begin
     end;
 
     Container.RemoveElement('XPTL');
-
-//    Container.RemoveElement('RCLR');
-//
-//    if Container.ElementExists['Ammo'] then begin
-//      BaseRecord := MainRecord.BaseRecord;
-//      if Assigned(BaseRecord) and (BaseRecord.Signature <> 'WEAP') then
-//        Container.RemoveElement('Ammo');
-//    end;
   finally
     wbEndInternalEdit;
   end;
@@ -4387,45 +4378,14 @@ begin
   end;
 end;
 
-{>>>Needs Revision for Skyrim<<<}
-//procedure wbINFOAfterLoad(const aElement: IwbElement);
-//var
-//  Container  : IwbContainerElementRef;
-//  MainRecord : IwbMainRecord;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    if not Supports(aElement, IwbMainRecord, MainRecord) then
-//      Exit;
-//
-//    if MainRecord.IsDeleted then
-//      Exit;
-//
-//    if (Integer(Container.ElementNativeValues['DATA\Flags 1']) and $80) = 0 then
-//      Container.RemoveElement('DNAM');
-//
-//    Container.RemoveElement('SNDD');
-//
-//    if Container.ElementNativeValues['DATA\Type'] = 3 {Persuasion} then
-//      Container.ElementNativeValues['DATA\Type'] := 0 {Topic};
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
-
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
-  Container2   : IwbContainerElementRef;
+//  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
   HasWater     : Boolean;
 //  IsInterior   : Boolean;
-  i            : Integer;
+//  i            : Integer;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4456,24 +4416,13 @@ begin
         Container.ElementEditValues['XCLW'] := '-2147483648.000000';
     end;
 
-//    if not Container.ElementExists['XCLW'] then begin
-//      Container.Add('XCLW', True);
-//      Container.ElementEditValues['XCLW'] := '-2147483648.000000';
+//    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
+//      for i := Pred(Container2.ElementCount) downto 0 do
+//        if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then
+//          Container2.RemoveElement(i);
+//      if Container2.ElementCount < 1 then
+//        Container2.Remove;
 //    end;
-//
-//    if not HasWater then
-//      Container.ElementEditValues['XCLW'] := '-2147483648.000000';
-
-//    if IsInterior then
-//      Container.ElementEditValues['XCLW'] := '0.000000';
-
-    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
-      for i:= Pred(Container2.ElementCount) downto 0 do
-        if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then
-          Container2.RemoveElement(i);
-      if Container2.ElementCount < 1 then
-        Container2.Remove;
-    end;
   finally
     wbEndInternalEdit;
   end;
@@ -5836,7 +5785,7 @@ begin
     ]),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
 		wbFormIDCk(XHOR, 'Horse', [ACHR]),
@@ -6895,7 +6844,7 @@ procedure DefineTES5Savesc;
       wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
+      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
       wbXSCL,
       wbDataPosRot
     ], True, wbPlacedAddInfo);
@@ -11979,7 +11928,7 @@ begin
 
     wbInteger(XCNT, 'Item Count', itS32),
     wbFloat(XCHG, 'Charge'),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL]),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [

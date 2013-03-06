@@ -148,7 +148,7 @@ var
   wbColorConflictAll: TConflictAllColors = (
     clDefault, // caUnknown
     clDefault, // caOnlyOne
-    clLime,    // caNoCoflict
+    clLime,    // caNoConflict
     clYellow,  // caConflictBenign
     clYellow,  // caOverride
     clRed,     // caConflict
@@ -173,6 +173,7 @@ var
 type
   TwbConflictPriority = (
     cpIgnore,
+    cpBenignIfAdded,
     cpBenign,
     cpTranslate,
     cpNormal,

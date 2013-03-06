@@ -712,7 +712,8 @@ type
     mrsQuickInit,
     mrsQuickInitDone,
     mrsHasMeshChecked,
-    mrsHasMesh
+    mrsHasMesh,
+    mrsNoUpdateRefs
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -2716,6 +2717,7 @@ begin
   j := 0;
   ONAMs := nil;
   if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
+    Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     while FileHeader.RemoveElement('ONAM') <> nil do
       ;
     if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
@@ -2791,6 +2793,8 @@ begin
         if j > High(flRecords) then
           Break;
       end;
+    Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
+    FileHeader.UpdateRefs;
   end;
 end;
 
@@ -4020,7 +4024,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit;
-   If GetElementType in SortedElementTypes then
+  If GetElementType in SortedElementTypes then
     begin
       m := Low(Integer);
       for l := Low(cntElements) to High(cntElements) do
@@ -4952,7 +4956,8 @@ begin
       Exclude(mrStates, mrsBaseRecordChecked);
   end;
   inherited;
-  UpdateRefs;
+  if not (mrsNoUpdateRefs in mrStates) then
+    UpdateRefs;
 end;
 
 function TwbMainRecord.EnsureChildGroup: IwbGroupRecord;
