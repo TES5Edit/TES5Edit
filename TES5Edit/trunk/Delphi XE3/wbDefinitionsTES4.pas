@@ -1393,12 +1393,12 @@ end;
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
-  Container2   : IwbContainerElementRef;
+//  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
-  i            : Integer;
+//  i            : Integer;
   IsInterior   : Boolean;
   GroupRecord  : IwbGroupRecord;
-  Removed      : Boolean;
+//  Removed      : Boolean;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -1429,19 +1429,19 @@ begin
               Container.ElementNativeValues['DATA'] or 2;
     end;
 
-    Removed := False;
-    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
-      for i:= Pred(Container2.ElementCount) downto 0 do
-        if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then begin
-          if not Removed then begin
-            Removed := True;
-            Container2.MarkModifiedRecursive;
-          end;
-          Container2.RemoveElement(i);
-        end;
-      if Container2.ElementCount < 1 then
-        Container2.Remove;
-    end;
+//    Removed := False;
+//    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
+//      for i:= Pred(Container2.ElementCount) downto 0 do
+//        if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then begin
+//          if not Removed then begin
+//            Removed := True;
+//            Container2.MarkModifiedRecursive;
+//          end;
+//          Container2.RemoveElement(i);
+//        end;
+//      if Container2.ElementCount < 1 then
+//        Container2.Remove;
+//    end;
   finally
     wbEndInternalEdit;
   end;

@@ -1371,7 +1371,7 @@ begin
              SameAsLast and  // We are not overriden later
              not Assigned(FirstElement) then begin // The master did not have that element
             Priority := cpBenign;
-            UniqueValues.Delete(UniqueValues.IndexOf(Element.SortKey[True]));  // Still required to properly mark as ITM
+            SameAsFirst := True;
           end;
 
           if SameAsFirst then
@@ -10501,9 +10501,9 @@ end;
 
 procedure TfrmMain.ShowChangeReferencedBy(OldFormID, NewFormID: Cardinal; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
 var
-  Counter : Integer;
-  i                           : Integer;
-  Error                       : Boolean;
+  Counter    : Integer;
+  i          : Integer;
+  Error      : Boolean;
 begin
   with TfrmFileSelect.Create(nil) do try
     Caption := 'Please select records to update';
