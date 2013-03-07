@@ -12998,6 +12998,12 @@ begin
       Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
       BasePtr := Pointer( Cardinal(aBasePtr) + i );
       Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
+      if wbGameMode = gmTES5Saves then begin
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU6to30)', wbInteger('AsU6to30', itU6to30)), '', True);
+      end;
     end;
   end;
 

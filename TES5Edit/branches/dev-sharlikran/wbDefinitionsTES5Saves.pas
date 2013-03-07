@@ -13344,10 +13344,6 @@ begin
   Result := DataLengthCounter('Unknown Type', aBasePtr, aEndPtr, aElement, 2);
 end;
 
-function PapyrusDataRemainderCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := DataLengthRemainderCounter('Papyrus Struct', aBasePtr, aEndPtr, aElement);
-end;
 
 function PapyrusDataQuartetCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
@@ -13410,35 +13406,37 @@ begin
   end;
 end;
 
-function Unknown2AsListCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-type
-  PUnknown2Record = ^TUnknown2Record;
-  TUnknown2Record = packed record
-    next      : PUnknown2Record;
-    Unknown04 : Cardinal;
-    Unknown08 : Word;
-    RefID     : array[0..2] of Byte;
-    Unknown0B : Byte;
-  end;
-var
-  Element   : IwbElement;
-  Container : IwbDataContainer;
-  BasePtr   : PUnknown2Record;
 
+function CounterCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
+  Element := FindElement('Quest Runtime Data', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Unknown1 array'];
-    if Supports(Element, IwbDataContainer, Container) then begin
-      BasePtr := Pointer(Cardinal(Container.GetDataBasePtr)+Container.DataSize);
-      Result := 1;
-      while Assigned(BasePtr^.next) do begin
-        Inc(Result);
-        Inc(BasePtr);
-      end;
+    Element := Container.ElementByName['Counter'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
+function DivByteBy4Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Change NPC_ Factions', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Factions Length'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue div 4;
     end;
   end;
 end;
@@ -13599,15 +13597,15 @@ begin
 
   wbChangeFlags := wbInteger('Change Flags', itU32 , wbFlags([
     'CHANGE_FORM_FLAGS',
-    'CHANGE_QUEST_FLAGS / CHANGE_REFR_MOVE',
+    'CHANGE_QUEST_FLAGS / CHANGE_REFR_MOVE / CHANGE_ACTOR_BASE_DATA',
     'CHANGE_REFR_HAVOK_MOVE',
-    'CHANGE_REFR_CELL_CHANGED',
+    'CHANGE_REFR_CELL_CHANGED / CHANGE_ACTOR_BASE_AIDATA',
     'CHANGE_REFR_SCALE',
     'CHANGE_REFR_INVENTORY',
-    'CHANGE_REFR_EXTRA_OWNERSHIP',
+    'CHANGE_REFR_EXTRA_OWNERSHIP / CHANGE_ACTOR_BASE_FACTIONS',
     'CHANGE_REFR_BASEOBJECT',
     'UnnamedFlag_8',
-    'UnnamedFlag_9',
+    'CHANGE_NPC_SKILLS',
     'CHANGE_OBJECT_EXTRA_ITEM_DATA',
     'UnnamedFlag_11',
     'CHANGE_OBJECT_EXTRA_LOCK',
@@ -13629,10 +13627,10 @@ begin
     'CHANGE_QUEST_RUNDATA / CHANGE_REFR_ANIMATION',
     'CHANGE_QUEST_OBJECTIVES / CHANGE_REFR_EXTRA_ENCOUNTER_ZONE',
     'UnnamedFlag_30',
-    'CHANGE_QUEST_STAGES / CHANGE_REFR_EXTRA_GAME_ONLY'
+    'CHANGE_QUEST_STAGES / CHANGE_REFR_EXTRA_GAME_ONLY / CHANGE_TOPIC_SAIDONCE / CHANGE_QUEST_NODE_TIME_RUN'
   ]));
 
-  wbChangeTypes := wb6of8Enum([
+  wbChangeTypes := wbKey2Data6Enum([
     ' 0 = 63 (REFR)',
     ' 1 = 64 (ACHR)',
     ' 2 = 65 (PMIS)',
@@ -13703,18 +13701,87 @@ begin
   wbChangedFormData := wbUnion('CForm Union', ChangedFormDataDecider, [
     wbByteArray('Undecoded Data00', ChangedFormDataCounter)
     ,wbByteArray('Undecoded Data01', ChangedFormDataCounter)
-    ,wbByteArray('Undecoded Data02', ChangedFormDataCounter)
+    ,wbStruct('Change Actor Data', [
+      wbUnion('Change Actor Promoted', ChangedFlag25Decider, [wbNull, wbByteArray('Unknown', 40) ]),
+      wbByteArray('Undecoded Data02', ChangedFormRemainingDataCounter)
+    ])
     ,wbByteArray('Undecoded Data03', ChangedFormDataCounter)
     ,wbByteArray('Undecoded Data04', ChangedFormDataCounter)
     ,wbByteArray('Undecoded Data05', ChangedFormDataCounter)
     ,wbByteArray('Undecoded Data06', ChangedFormDataCounter)
     ,wbByteArray('Undecoded Data07', ChangedFormDataCounter)
-    ,wbByteArray('Undecoded Data08', ChangedFormDataCounter)
+    ,wbStruct('Change Info Data', [])
     ,wbStruct('Change Quest Data', [
        wbUnion('Change Quest Flag', ChangedFlag01Decider, [wbNull, wbQuestFlags ])
+//      ,wbUnion('', ChangedFlag26Decider, [
+//         wbNull,
+//         wbInteger('Already Run', itU8)
+//       ])
+//      ,wbUnion('', ChangedFlag27Decider, [
+//         wbNull,
+//         wbInteger('Quest Instance Data', itU8)
+//       ])
+//      ,wbUnion('', ChangedFlag31Decider, [
+//         wbNull,
+//         wbArray('Quest Stage Data', wbByteArray('Unknown', 25), -2)
+//       ])
+      ,wbStruct('Quest Runtime Data', [
+         wbInteger('Unknown', itU8, wbDumpInteger)
+        ,wbInteger('Counter', itU16, wbDumpInteger)
+        ,wbInteger('Unknown', itU8, wbDumpInteger)
+        ,wbInteger('Counter2', itU8, wbDumpInteger)
+        ,wbInteger('Unknown', itU8, wbDumpInteger)
+        ,wbInteger('Unknown', itU8, wbDumpInteger)
+        ,wbInteger('Unknown', itU8, wbDumpInteger)
+        ,wbInteger('Unknown', itU8, wbDumpInteger)
+//        ,wbByteArray('Unknown', 6)
+        ,wbArray('Unknown', wbStruct('Unknown', [
+           wbInteger('Unknown', itU32),
+           wbInteger('Unknown', itU32)
+        ]), CounterCounter)
+        ,wbInteger('Unknown', itU8, wbDumpInteger)
+//        ,wbArray('Unknown', wbStruct('Unknown', [
+//           wbInteger('Unknown', itU8)
+//           ,wbInteger('Unknown', itU32)
+//        ]), Counter2Counter)
+//        ,wbByteArray('Undecoded List09', ChangedFormUntilZeroDataCounter)
+//       ])
+//      ,wbUnion('Quest Instance Data', ChangedFlag27Decider, [
+//         wbNull
+//        ,wbStruct('', [  // Multiple of 7 , no obvious array no obvious list
+//          wbArray('Unknown', wbStruct('', [
+//             wbArray('Unknown', wbByteArray('Unknown', 5), -4)
+//            ,wbByteArray('Unknown', 3)
+//          ]), -1)
+//        ])
+       ])
       ,wbByteArray('Undecoded Data09', ChangedFormRemainingDataCounter)
     ])
-    ,wbByteArray('Undecoded Data10', ChangedFormDataCounter)
+    ,wbStruct('Change NPC_ Data', [
+      wbUnion('Change NPC_ Base Data', ChangedFlag01Decider, [wbNull, wbByteArray('Change NPC_ Base Data', 24)]),
+      wbUnion('Change NPC_ Factions', ChangedFlag06Decider, [wbNull, wbStruct('Change NPC_ Factions', [
+         wbInteger('Factions Length', itU8)
+        ,wbArray('Factions', wbStruct('Faction and Rank', [
+            wbInteger('Faction', itU24, wbRefID)
+           ,wbInteger('Rank', itU8)
+        ]), DivByteBy4Counter)
+      ])]),
+      wbUnion('Change NPC_ AI Data', ChangedFlag03Decider, [wbNull, wbByteArray('Change NPC_ AI Data', 20)]),
+      wbUnion('Change NPC_ Skills', ChangedFlag09Decider, [wbNull, wbArray('Change NPC_ Skills', wbInteger('Skill', itU8), 52)]),
+      wbUnion('Change NPC_ Spell List', ChangedFlag04Decider, [wbNull, wbByteArray('Change NPC_ Spell List', 18)]),
+      wbUnion('Change NPC_ Name', ChangedFlag05Decider, [wbNull, wbByteArray('Change NPC_ Full Name', 5)]),
+      wbUnion('Change NPC_ Race', ChangedFlag25Decider, [wbNull, wbStruct('Change NPC_ Race', [
+        wbInteger('New', itU24, wbRefID),
+        wbInteger('Old', itU24, wbRefID)
+      ])]),
+      wbUnion('Change NPC_ Face', ChangedFlag11Decider, [wbNull, wbByteArray('Change NPC_ Face', 134)]),
+      wbUnion('Change NPC_ Outfit', ChangedFlag12Decider, [wbNull, wbInteger('Change NPC_ Outfit', itU24, wbRefID)]),
+      wbUnion('Change NPC_ Gender', ChangedFlag24Decider, [wbNull, wbInteger('Change NPC_ Gender', itU8)]),
+      wbByteArray('Undecoded Data10', ChangedFormRemainingDataCounter)
+    ])
+    ,wbStruct('Change Quest Node Data', [ // 36
+       wbArray('Base', wbByteArray('Unknown', 4), -1)
+    ])
   ]);
 
   wbChangedForm := wbStruct('Changed Form', [
