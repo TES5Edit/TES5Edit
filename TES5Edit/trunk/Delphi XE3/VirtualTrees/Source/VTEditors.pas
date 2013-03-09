@@ -178,7 +178,7 @@ type
 
   IComboCustomDraw = interface ['{3B63A965-89BB-4C1E-988C-DE61726F0C82}']
     procedure ComboDrawItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-    procedure ComboMeasureItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; var Height: Integer); 
+    procedure ComboMeasureItem(Sender: TComboEditLink; Control: TComboBox; Index: Integer; var Height: Integer);
   end;
 
   TComboEditLink = class(TCustomEditLink)

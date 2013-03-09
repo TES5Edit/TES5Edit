@@ -10200,7 +10200,7 @@ begin
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
         wbInteger('Level', itU16),
         wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
-        wbFormIDCk('Reference', [SPEL]),
+        wbFormIDCk('Reference', [SPEL, LVSP]),
         wbInteger('Count', itU16),
         wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
       ])

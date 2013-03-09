@@ -860,9 +860,10 @@ type
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 
-    {>>> Form Version access  <<<}
     function GetFormVersion: Cardinal;
     procedure SetFormVersion(aFormVersion: Cardinal);
+
+    procedure ChangeFormSignature(aSignature: TwbSignature);
 
     property Version: Cardinal
       read GetFormVersion
@@ -3080,6 +3081,7 @@ type
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
     function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
 
     {---IwbUnionDef---}
     function Decide(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
@@ -3132,6 +3134,7 @@ type
     function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
 
     {---IwbStringDef---}
     function GetStringSize: Integer;
@@ -3206,6 +3209,7 @@ type
     function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
 
   TwbByteArrayDef = class(TwbValueDef, IwbByteArrayDef)
@@ -3259,6 +3263,7 @@ type
     function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
 
   TwbEmptyDef = class(TwbValueDef, IwbEmptyDef)
@@ -6445,7 +6450,7 @@ end;
 
 function TwbIntegerDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
-  Result := ToInt(aBasePtr, aEndPtr, aElement) <> inDefault;
+  Result := not Assigned(aBasePtr) or (ToInt(aBasePtr, aEndPtr, aElement) <> inDefault);
   if Result then
     FromInt(inDefault, aBasePtr, aEndPtr, aElement);
 end;
@@ -7797,6 +7802,14 @@ begin
   Result := sdSize;
 end;
 
+function TwbStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement): Boolean;
+begin
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> '');
+  if Result then
+    FromEditValue(aBasePtr, aEndPtr, aElement, '');
+end;
+
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   {if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
@@ -7964,7 +7977,7 @@ var
   Value: Extended;
 begin
   Value := ToNativeValue(aBasePtr, aEndPtr, aElement);
-  Result := not SingleSameValue(Value, fdDefault);
+  Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault);
   if Result then
     FromNativeValue(aBasePtr, aEndPtr, aElement, fdDefault);
 end;
@@ -9172,6 +9185,23 @@ begin
   defReported := True;
 end;
 
+function TwbByteArrayDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+var
+  Size : Integer;
+  Default : String;
+begin
+  Size := GetSize(aBasePtr, aEndPtr, aElement);
+  if Size > 0  then begin
+    Default := '00';
+    while Length(Default)<(Size*3-1) do
+      Default := Default + ' 00';
+  end else
+    Default := '';
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> Default);
+  if Result then
+    FromEditValue(aBasePtr, aEndPtr, aElement, Default);
+end;
+
 function TwbByteArrayDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement): string;
 begin
@@ -10216,6 +10246,11 @@ begin
   defReported := True;
 end;
 
+function TwbUnionDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+begin
+  Result := Decide(aBasePtr, aEndPtr, aElement).SetToDefault(aBasePtr, aEndPtr, aElement);
+end;
+
 function TwbUnionDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement): string;
 begin
@@ -10556,6 +10591,14 @@ begin
       Result := Len;
   end else
     Result := Prefix;
+end;
+
+function TwbLenStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement): Boolean;
+begin
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> '');
+  if Result then
+    FromEditValue(aBasePtr, aEndPtr, aElement, '');
 end;
 
 function TwbLenStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
