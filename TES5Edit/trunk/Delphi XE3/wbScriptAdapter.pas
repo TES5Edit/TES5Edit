@@ -691,6 +691,17 @@ begin
     Value := MainRecord.CompareExchangeFormID(Cardinal(Args.Values[1]), Cardinal(Args.Values[2]));
 end;
 
+procedure IwbMainRecord_ChangeFormSignature(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+  Signature: TwbSignature;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    Signature := StrToSignature(Args.Values[1]);
+    MainRecord.ChangeFormSignature(Signature);
+  end;
+end;
+
 
 { IwbGroupRecord }
 
@@ -1036,6 +1047,7 @@ begin
     AddFunction(cUnit, 'WinningOverride', IwbMainRecord_WinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ChildGroup', IwbMainRecord_ChildGroup, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CompareExchangeFormID', IwbMainRecord_CompareExchangeFormID, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ChangeFormSignature', IwbMainRecord_ChangeFormSignature, 2, [varEmpty, varEmpty], varEmpty);
 
     { IwbGroupRecord }
     AddFunction(cUnit, 'GroupType', IwbGroupRecord_GroupType, 1, [varEmpty], varEmpty);

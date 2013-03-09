@@ -853,9 +853,10 @@ type
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 
-    {>>> Form Version access  <<<}
     function GetFormVersion: Cardinal;
     procedure SetFormVersion(aFormVersion: Cardinal);
+
+    procedure ChangeFormSignature(aSignature: TwbSignature);
 
     property Version: Cardinal
       read GetFormVersion

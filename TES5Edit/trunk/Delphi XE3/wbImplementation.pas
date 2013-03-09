@@ -885,6 +885,7 @@ type
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
     function GetFormVersion: Cardinal; {>>> Form Version access <<<}
     procedure SetFormVersion(aFormVersion: Cardinal); {>>> Form Version access <<<}
+    procedure ChangeFormSignature(aSignature: TwbSignature);
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
@@ -5985,6 +5986,12 @@ procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
   MakeHeaderWriteable;
   mrStruct.mrsVersion := aFormVersion;
+end;
+
+procedure TwbMainRecord.ChangeFormSignature(aSignature: TwbSignature);
+begin
+  MakeHeaderWriteable;
+  mrStruct.mrsSignature := aSignature;
 end;
 
 function TwbMainRecord.GetGridCell(out aGridCell: TwbGridCell): Boolean;
