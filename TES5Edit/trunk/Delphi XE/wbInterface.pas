@@ -8871,7 +8871,7 @@ var
   Default : String;
 begin
   Size := GetSize(aBasePtr, aEndPtr, aElement);
-  if Size > 0  then begin
+  if (Size > 0) and (Size < High(Integer))  then begin
     Default := '00';
     while Length(Default)<(Size*3-1) do
       Default := Default + ' 00';
