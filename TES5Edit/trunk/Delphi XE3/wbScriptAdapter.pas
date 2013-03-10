@@ -714,12 +714,39 @@ begin
     Value := GroupRecord.GroupType;
 end;
 
+procedure IwbGroupRecord_GroupLabel(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  GroupRecord: IwbGroupRecord;
+begin
+  Value := -1;
+  if Supports(IInterface(Args.Values[0]), IwbGroupRecord, GroupRecord) then
+    Value := GroupRecord.GroupLabel;
+end;
+
 procedure IwbGroupRecord_ChildrenOf(var Value: Variant; Args: TJvInterpreterArgs);
 var
   GroupRecord: IwbGroupRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbGroupRecord, GroupRecord) then
     Value := GroupRecord.ChildrenOf;
+end;
+
+procedure IwbGroupRecord_MainRecordByEditorID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  GroupRecord: IwbGroupRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbGroupRecord, GroupRecord) then
+    Value := GroupRecord. MainRecordByEditorID[string(Args.Values[1])];
+end;
+
+procedure IwbGroupRecord_FindChildGroup(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  GroupRecord: IwbGroupRecord;
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbGroupRecord, GroupRecord) then
+    if Supports(IInterface(Args.Values[2]), IwbMainRecord, MainRecord) then
+      Value := GroupRecord.FindChildGroup(Args.Values[1], MainRecord);
 end;
 
 
@@ -812,7 +839,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if Args.Values[1] < _File.MasterCount then
+    if Args.Values[1] < _File.RecordCount then
       Value := _File.Records[Args.Values[1]];
 end;
 
@@ -1051,7 +1078,10 @@ begin
 
     { IwbGroupRecord }
     AddFunction(cUnit, 'GroupType', IwbGroupRecord_GroupType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GroupLabel', IwbGroupRecord_GroupLabel, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ChildrenOf', IwbGroupRecord_ChildrenOf, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'MainRecordByEditorID', IwbGroupRecord_MainRecordByEditorID, 2, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'FindChildGroup', IwbGroupRecord_FindChildGroup, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { IwbFile }
     AddFunction(cUnit, 'GetFileName', IwbFile_GetFileName, 1, [varEmpty], varEmpty);
