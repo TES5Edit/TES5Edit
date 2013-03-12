@@ -12,71 +12,75 @@ If MOD4 is not present, MOD2 is used for female characters instead.
 ! width="12%" | [[Tes5Mod:File Format Conventions|Type/Size]]
 ! | Info
 |-
-| + || EDID || editorID || zstring || Max ::0x200 bytes, including null terminator.
+| + || || EDID || editorID || zstring || Max ::0x200 bytes, including null terminator.
 |-
-| - || VMAD || scripting info || [[Tes5Mod:Mod_File_Format/VMAD_Field|VMAD]] || scripting
+| - || || VMAD || scripting info || [[Tes5Mod:Mod_File_Format/VMAD_Field|VMAD]] || scripting
 |-
-| - || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]] || Always 12 bytes, even if all 0s
+| - || || OBND || object bounds || [[Tes5Mod:Mod File Format/OBND Field|OBND]] || Always 12 bytes, even if all 0s
 |-
-| - || FULL || full name || lstring || Full (in-game) name
+| - || || FULL || full name || lstring || Full (in-game) name
 |-
-| - || EITM || enchantment || formid || Enchanment ([[Tes5Mod:Mod File Format/ENCH|ENCH]]).  Note there can be only 1 of these.
+| - || || EITM || enchantment || formid || Enchanment ([[Tes5Mod:Mod File Format/ENCH|ENCH]]).  Note there can be only 1 of these.
 |-
-| - || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
+| - || || EAMT || Enchantment Amount || uint16 || Enchantment Amount
 |-{{ThickLine}}
-| + || MOD2 || male model || zstring || Male Models\ relative .nif
-|-
-| - || MO2T || model data || struct || ([[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]])
-|-
-| - || MO2S || alternate textures || [[Tes5Mod:Mod File Format/Alternate Textures|Alternate Textures]] || Used when overriding textures in a nif file with texture sets
-|-
-| - || ICON || Inventory Image || zstring || Inventory Image Filename
-|-
-| - || MICO || Message Immage || zstring || Message Immage Filename
-|-
+| - || || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
 |-{{ThickLine}}
-| - || MOD4 || female model || zstring || Female Models\ relative .nif
+| + || || MOD2 || male model || zstring || Male Models\ relative .nif
 |-
-| - || MO4T || model data || struct || ([[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]])
+| - || || MO2T || model data || struct || ([[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]])
 |-
-| - || MO4S || alternate textures || [[Tes5Mod:Mod File Format/Alternate Textures|Alternate Textures]] || Used when overriding textures in a nif file with texture sets
+| - || || MO2S || alternate textures || [[Tes5Mod:Mod File Format/Alternate Textures|Alternate Textures]] || Used when overriding textures in a nif file with texture sets
 |-
-| - || ICO2 || Inventory Image || zstring || Female Inventory Image Filename
+| - || || ICON || Inventory Image || zstring || Inventory Image Filename
 |-
-| - || MIC2 || Message Immage || zstring || Female Message Immage Filename
+| - || || MICO || Message Immage || zstring || Message Immage Filename
 |-
 |-{{ThickLine}}
-| + || BODT || Body Template || [[Tes5Mod:Mod File Format/BODT_Field|BODT]] || 12-byte struct Body Template
+| - || || MOD4 || female model || zstring || Female Models\ relative .nif
 |-
-| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
+| - || || MO4T || model data || struct || ([[Tes5Mod:Mod File Format/Model_Textures_Field|MODT]])
 |-
-| + || YNAM || pickupSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when picked up
+| - || || MO4S || alternate textures || [[Tes5Mod:Mod File Format/Alternate Textures|Alternate Textures]] || Used when overriding textures in a nif file with texture sets
 |-
-| + || ZNAM || dropSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when dropped
+| - || || ICO2 || Inventory Image || zstring || Female Inventory Image Filename
 |-
-| + || BMCT || Ragdoll || string || Ragdoll Constraint Template
+| - || || MIC2 || Message Immage || zstring || Female Message Immage Filename
 |-
-| - || ETYP || equip slot || formid || [[Tes5Mod:Mod File Format/EQUP|EQUP]] (only shields)
+|-{{ThickLine}}
+| + || || BODT || Body Template || [[Tes5Mod:Mod File Format/BODT_Field|BODT]] || 12-byte struct Body Template
 |-
-| - || BIDS || bash impact data set || formid || [[Tes5Mod:Mod File Format/IPDS|IPDS]] (only shields)
+| + || 1.6.91 || BOD2 || Body Template || [[Tes5Mod:Mod File Format/BOD2_Field|BOD2]] || 8-byte struct Body Template
+|-{{ThickLine}}
+| - || || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
 |-
-| - || BAMT || bash material || formid || [[Tes5Mod:Mod File Format/MATT|MATT]] (only shields)
+| + || || YNAM || pickupSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when picked up
 |-
-| + || RNAM || unknown || formID || [[Tes5Mod:Mod File Format/RACE|RACE]] (0x19 DefaultRace for most except race-specific skins)
+| + || || ZNAM || dropSound || formid || Sound([[Tes5Mod:Mod File Format/SNDR|SNDR]]) played when dropped
 |-
-| - || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || keyword count
+| + || || BMCT || Ragdoll || string || Ragdoll Constraint Template
 |-
-| - || KWDA || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KWDA]] || formID[KSIZ] || KYWD array
+| - || || ETYP || equip slot || formid || [[Tes5Mod:Mod File Format/EQUP|EQUP]] (only shields)
 |-
-| + || DESC || description || lstring || Usually 0 unless the enchantment isn't standard like Archmage Robes.
+| - || || BIDS || bash impact data set || formid || [[Tes5Mod:Mod File Format/IPDS|IPDS]] (only shields)
 |-
-| * || MODL || armature (model) || formid || Armature [[Tes5Mod:Mod File Format/ARMA|ARMA]] formid.  Required, can use more than 1 either as options (race options) or to cover multiple slots.
+| - || || BAMT || bash material || formid || [[Tes5Mod:Mod File Format/MATT|MATT]] (only shields)
 |-
-| + || DATA || data || struct || 8-byte struct
+| + || || RNAM || unknown || formID || [[Tes5Mod:Mod File Format/RACE|RACE]] (0x19 DefaultRace for most except race-specific skins)
+|-
+| - || || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || keyword count
+|-
+| - || || KWDA || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KWDA]] || formID[KSIZ] || KYWD array
+|-
+| + || || DESC || description || lstring || Usually 0 unless the enchantment isn't standard like Archmage Robes.
+|-
+| * || || MODL || armature (model) || formid || Armature [[Tes5Mod:Mod File Format/ARMA|ARMA]] formid.  Required, can use more than 1 either as options (race options) or to cover multiple slots.
+|-
+| + || || DATA || data || struct || 8-byte struct
 :uint32 Base value
 :float Weight
 |-
-| + || DNAM || armor rating || uint32 || Armor rating * 100
+| + || || DNAM || armor rating || uint32 || Armor rating * 100
 |-
-| + || TNAM || template || formID || Points to another '''ARMO''' record to use as a template
+| + || || TNAM || template || formID || Points to another '''ARMO''' record to use as a template
 |}
