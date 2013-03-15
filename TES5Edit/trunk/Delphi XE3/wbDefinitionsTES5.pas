@@ -12304,7 +12304,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbMODL,
-    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, NULL]),
+    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, LVLI, NULL]),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),
