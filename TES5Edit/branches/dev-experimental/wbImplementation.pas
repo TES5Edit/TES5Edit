@@ -388,7 +388,7 @@ type
     procedure AddElement(const aElement: IwbElement); virtual;
     procedure InsertElement(aPosition: Integer; const aElement: IwbElement);
     function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; virtual;
-    function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload;
+    function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload; virtual;
     function RemoveElement(const aName: string): IwbElement; overload;
     function LastElement: IwbElement;
 
@@ -1348,12 +1348,20 @@ type
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function CanMoveElement: Boolean; override;
+    function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload; override;
+
+    {---IwbContainerElementRef---}
+    procedure PrepareSave; override;
 
     {---IwbSortableContainer---}
     function GetSorted: Boolean;
 
     {--- IwbHasSignature ---}
     function GetSignature: TwbSignature;
+
+    {--- IwbSubRecordArray ---}
+    function GetCounter: TwbSignature;
+    procedure CheckCount;
   end;
 
   TwbSubRecordStruct = class(TwbContainer, IwbHasSignature)
@@ -8529,7 +8537,7 @@ end;
 
 procedure TwbSubRecord.CheckCount;
 var
-  Count    : Cardinal;
+  Count : Cardinal;
 begin
   if srArraySizePrefix < 1 then
     Exit;
@@ -11671,6 +11679,8 @@ begin
     Result := Element;
   end;
 
+  CheckCount;
+
   arcSorted := False;
   if wbSortSubRecords and arcDef.Sorted[IwbContainer(eContainer)] then begin
     if Length(cntElements) > 1 then
@@ -11714,6 +11724,24 @@ end;
 function TwbSubRecordArray.CanMoveElement: Boolean;
 begin
   Result := not arcSorted;
+end;
+
+procedure TwbSubRecordArray.CheckCount;
+var
+  Container : IwbContainer;
+  aRecord   : IwbRecord;
+  i         : Integer;
+begin
+  i := 0;
+  if (GetCounter <> 'NONE') then
+  if Assigned(eContainer) then
+  if Supports(IwbContainer(eContainer), IwbContainer, Container) then
+    while Assigned(Container.Elements[i]) do
+      if Supports(Container.Elements[i], IwbRecord, aRecord) and (aRecord.Signature = GetCounter) then begin
+        Container.Elements[i].NativeValue := Length(cntElements);
+        Break;
+      end else
+        Inc(i);
 end;
 
 function TwbSubRecordArray.CanElementReset: Boolean;
@@ -11808,6 +11836,14 @@ begin
     arcSortInvalid := True;
 end;
 
+function TwbSubRecordArray.GetCounter: TwbSignature;
+begin
+  if Assigned(arcDef) then
+    Result := arcDef.HasCounter
+  else
+   Result := 'NONE';
+end;
+
 function TwbSubRecordArray.GetDef: IwbNamedDef;
 begin
   Result := arcDef;
@@ -11851,6 +11887,18 @@ end;
 function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and (Length(cntElements) > 1);
+end;
+
+procedure TwbSubRecordArray.PrepareSave;
+begin
+  inherited;
+  CheckCount;
+end;
+
+function TwbSubRecordArray.RemoveElement(const aElement: IwbElement; aMarkModified: Boolean): IwbElement;
+begin
+  Result := inherited RemoveElement(aElement, aMarkModified);
+  CheckCount;
 end;
 
 procedure TwbSubRecordArray.SetModified(aValue: Boolean);
@@ -12552,7 +12600,7 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count    : Cardinal;
+  Count : Cardinal;
 begin
   if arrSizePrefix < 1 then
     Exit;
