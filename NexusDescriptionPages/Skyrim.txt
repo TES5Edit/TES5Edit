@@ -1,14 +1,14 @@
-[color=#00BFFF]TES5Edit 3.0.28 EXPERIMENTAL by ElminsterAU. Updated for Skyrim by Hlp, Zilav and Sharlikran.[/color]
+[color=#00BFFF]TES5Edit 3.0.29 EXPERIMENTAL by ElminsterAU. Updated for Skyrim by Hlp, Zilav and Sharlikran.[/color]
 
-[color=#FF0000]This is the seventh update of TES5Edit and is still being updated.  The current version provides support for Dragonborn DLC, improved routines for cleaning Master Files and Plugins, as well as better VMAD support.  However, it should still be considered experimental.  Make backups of your plugins and report any issues in the official Bethesda thread.  If you have never used TES5Edit, Wiki Pages and basic videos are available.
+[color=#FF0000]This is the eighth update of TES5Edit and is still being updated.  However, it should still be considered experimental.  Make backups of your plugins and report any issues in the official Bethesda thread.  If you have never used TES5Edit, Wiki Pages and basic videos are available.
 
-With the release of 3.0.28 we need to remind you that we only support version 1.8 of Skyrim and version 3.0.28 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
+With the release of 3.0.29 we need to remind you that we only support version 1.9 of Skyrim and version 3.0.29 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
 
 TES5EDIT: Merge Patches
 [youtube]9pi5u2qwdxg[/youtube]
 
 Cleaning Plugins and Master Files: Updated for Dragonborn
-[youtube]Flh0EMn-CbQ[/youtube]
+[youtube]wt4W1dZF9IE[/youtube]
 
 Other Informative Videos can be found on my [url=http://www.youtube.com/user/Sharlikran/videos?flow=list&view=0&sort=dd]YouTube chanel[/url].
 
@@ -25,6 +25,11 @@ Other Informative Videos can be found on my [url=http://www.youtube.com/user/Sha
 [url=http://forums.bethsoft.com/topic/1440522-relz-tes5edit/]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
 [url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
 
+[color=#00BFFF]Current Documentation:[/color]
+
+[url=http://fallout3.nexusmods.com/mods/8629]Fallout3 Training Manual[/url] for FO3Edit (applies to all game versions)
+[url=http://newvegas.nexusmods.com/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
+
 [color=#00BFFF]Important DirectX Information:[/color]
 
 If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  [url=http://www.microsoft.com/en-us/download/details.aspx?id=8109]DirectX End-User Runtimes (June 2010)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes (March 2008)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url].  (make sure to install it after unpacking it)
@@ -35,7 +40,7 @@ We appreciate all the thanks and support from the community.  Hlp recently volun
 
 Although we welcome suggestions for improving TES5Edit automation is not one of them.  We do not plan on adding an automated way to clean multiple plugins or access to TES5Edit from the command line.  Currently cleaning a plugin involves indexing over a million references at times.  When only the required plugins are loaded then the cleaning is accurate.  If unnecessary plugins are involved those become part of the index and could cause the plugin to lose important and required data.  We understand the need for unattended automation at times.  However, without human intervention too many issues during the cleaning process would go unnoticed and make troubleshooting game issues related to plugins even more difficult then it already is.
 
-As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  Editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls may be possible.  However, please create your own separate thread apart from the official Bethesda developmental thread for TES5Edit.
+As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  Editing masses of entries, [url=http://forums.bethsoft.com/topic/1425724-merging-mods]merging plugins[/url], and creating compatibility patches for Skyrim overhauls may be possible.  However, please create your own separate thread apart from the official Bethesda developmental thread for TES5Edit.
 
 [color=#00BFFF]Trouble shooting plugins:[/color]
 
@@ -50,6 +55,42 @@ We understand that sometimes updates to programs break things.  Please use the u
 [color=#00BFFF]TES5Edit Updates:[/color]
 
 [color=#FF0000]With each new version of TES5Edit you may want to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.[/color]
+
+[color=#00BFFF]Version 3.0.29 contains the following changes:[/color]
+
+- [url=http://forums.nexusmods.com/index.php?/topic/921884-icons-for-tes5edit/]New Icon[/url] provided by moiman100.
+- [TES5] more information is decoded (Records ARMA, NVSI, MOD2, LVLO).
+- [TES5] Every string value gets own ID when localizing plugin
+- [TES5] Fixed error when copying VMAD scripts using drag & drop
+- issue 104 : Files others than esp and esm (and ghost) are timestamped.
+- issue  88 : Delete from the view pane column title contextual menu is disabled (due to a hard to reproduce bug). This is a workaround, not a fix.
+- issue 119 : [TES5] The CK adds useless XLRL records when reverting a change. Those XLRL are considered benign and the record ITM.
+- issue 110 : Check for errors now checks for invalid FormIDs. Also, new "Check for errors" sample script.
+- Options are processed when they matter, not at the beginning.
+- issue  82 : [TES5] Capitalization fixed in text are being treated as dirty edits. Description fields are case sensitive now.
+Scripting:
+- Scripts can use other scripts with standard pascal "uses" keyword.
+- New functions available.
+- New sample scripts.
+Fixes:
+- Compare to will not overwrite an existing file, nor will it leave temporary files behind.
+- issue 125 : Condition added are no longer empty.
+- issue 121 : Changing FormID of Region causes severe bugs. Reference building is delayed to after the change is done. Non region reference XCLR record are no longer removed.
+- issue 120/118 : Reference not updated while adding a master. Reference lookup during the addition was sometimes unreliable. 
+- issue 117 : Bug in script Undelete and Disable References.pas 
+- issue 112 : Option "Simple Record" malfunctioning.
+- issue 111 : AV when saving subrecords with prefixed arrays. Sizing and memory allocation are done properly during every phase.
+- issue 108 : Very slow saving after editing ESM flag. Background updating limited as much as possible during saves.
+- issue 107 : Copying a quest record causes extraneous script fragment data to be generated. Sizing and memory allocation issue.
+- issue 106 : Error adding a new master to plugin with own navmeshes. Fire Union decider when they can effectively properly work, not before.
+- issue 105 : Overwriting quest fragments or Quest Aliases may produce exceptions. During copy, memory is initialized properly before being used.
+- issue 100 : Voice Type EditorID disappears. Memory sizing issue.
+Known issue:
+- issue 123 : Using Check for errors after sort master, before saving and reloading: the Cell FormID will not be updated. (that is a display issue only).
+- issue 102 : Objects with property names but no assigned values don't display the names. The CK does not save the property name in the plugin in that case so it is correct.
+Misc:
+- issue 115 : "Backup plugin" checkbox anchored to bottom of form.
+- avoid firing some cached exception (to ease debugging).
 
 [color=#00BFFF]Version 3.0.28 contains the following changes:[/color]
 
