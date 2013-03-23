@@ -12304,7 +12304,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbMODL,
-    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, NULL]),
+    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, LVLI, NULL]),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),
@@ -13372,41 +13372,6 @@ begin
   end;
 end;
 
-function Unknown1Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element : IwbElement;
-  Container: IwbDataContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Count1'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
-  end;
-end;
-
-function Unknown2Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element : IwbElement;
-  Container: IwbDataContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Count2'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue and $0000FFFF;
-    end;
-  end;
-end;
-
-
 function CounterCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
@@ -13519,7 +13484,7 @@ begin
       ]),
       // 0 to 8
       wbStruct('Misc Stats Struct', [
-        wbByteArray('DataLength', 4),
+        wbInteger('DataLength', itU32),
         wbArray('Misc Stats', wbStruct('Misc Stat',[
           wbLenString('Misc Stat Name', 2),
           wbInteger('Category', itU8, wbEnum([
@@ -13580,8 +13545,7 @@ begin
         ,wbInteger('Unknown', itU16, wbDumpInteger)
         ,wbInteger('String Table Count', itU32)
         ,wbArray('Strings Table', wbLenString('String', 2), StringTableCounter)
-        ,wbInteger('Count1', itU32, wbDumpInteger)
-        ,wbArray('Unknown1 array', wbUnknown1, Unknown1Counter)
+        ,wbArray('Unknown1 array', wbUnknown1, -1)
         ,wbArray('Unknown2 array', wbUnknown2, -1)
 //        ,wbArray('Unknown3 array', wbByteArray('Unknown', 2), -1)
 //        ,wbByteArray('Remainder', PapyrusDataRemainderCounter)  // Single line

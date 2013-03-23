@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.29 EXPERIMENTAL';
+  VersionString               = '3.0.30 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -1963,8 +1963,8 @@ function wbRUnion(const aName     : string;
                         aDontShow : TwbDontShowCallback = nil)
                                   : IwbSubRecordUnionDef;
 
-{--- wbStructs - array of struct ----------------------------------------------}
-function wbStructs(const aSignature   : TwbSignature;
+{--- wbStructS - array of struct ----------------------------------------------}
+function wbStructS(const aSignature   : TwbSignature;
                    const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
@@ -1973,7 +1973,7 @@ function wbStructs(const aSignature   : TwbSignature;
                          aDontShow    : TwbDontShowCallback = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbStructs(const aName        : string;
+function wbStructS(const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;
@@ -1981,7 +1981,7 @@ function wbStructs(const aName        : string;
                          aDontShow    : TwbDontShowCallback = nil)
                                       : IwbArrayDef; overload;
 
-function wbRStructs(const aName        : string;
+function wbRStructS(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
                     const aSkipSigs    : array of TwbSignature;
@@ -4395,8 +4395,8 @@ begin
   Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow);
 end;
 
-{--- wbStructs - array of struct ----------------------------------------------}
-function wbStructs(const aSignature   : TwbSignature;
+{--- wbStructS - array of struct ----------------------------------------------}
+function wbStructS(const aSignature   : TwbSignature;
                    const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
@@ -4408,7 +4408,7 @@ begin
   Result := wbArray(aSignature, aName, wbStruct(aElementName, aMembers, aPriority), 0, nil, nil, aPriority, aRequired, aDontShow);
 end;
 
-function wbStructs(const aName        : string;
+function wbStructS(const aName        : string;
                    const aElementName : string;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;

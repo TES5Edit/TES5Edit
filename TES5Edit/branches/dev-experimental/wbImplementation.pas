@@ -4419,7 +4419,8 @@ procedure TwbContainer.SortBySortOrder;
 begin
   SetModified(True);
   if Length(cntElements) > 1 then begin
-    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+//    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+    QuickSort(@cntElements[0], Low(cntElements)+GetAdditionalElementCount, High(cntElements), CompareSortOrder);
     InvalidateStorage;
   end;
 end;

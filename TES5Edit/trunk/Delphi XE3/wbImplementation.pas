@@ -8529,7 +8529,7 @@ end;
 
 procedure TwbSubRecord.CheckCount;
 var
-  Count    : Cardinal;
+  Count : Cardinal;
 begin
   if srArraySizePrefix < 1 then
     Exit;
@@ -12552,7 +12552,7 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count    : Cardinal;
+  Count : Cardinal;
 begin
   if arrSizePrefix < 1 then
     Exit;

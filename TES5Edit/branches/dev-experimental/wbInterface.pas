@@ -22,7 +22,7 @@ uses
   D3DX9;
 
 const
-  VersionString               = '3.0.29 EXPERIMENTAL';
+  VersionString               = '3.0.30 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
