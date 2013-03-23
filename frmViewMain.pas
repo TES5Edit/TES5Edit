@@ -1498,20 +1498,20 @@ end;
 
 function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
-  MainRecord                  : IwbMainRecord;
-  MainRecord2                 : IwbMainRecord;
-  Master                      : IwbMainRecord;
-  ReferenceFile               : IwbFile;
-  sl                          : TStringList;
-  i, j                        : Integer;
-  EditorID                    : string;
-  EditorIDPrefixRemove        : string;
-  EditorIDPrefix              : string;
-  EditorIDSuffix              : string;
-  Multiple                    : Boolean;
-  LeveledListEntries          : IwbContainerElementRef;
-  LeveledListEntry            : IwbContainerElementRef;
-  CopiedElement               : IwbElement;
+  MainRecord           : IwbMainRecord;
+  MainRecord2          : IwbMainRecord;
+  Master               : IwbMainRecord;
+  ReferenceFile        : IwbFile;
+  sl                   : TStringList;
+  i, j                 : Integer;
+  EditorID             : string;
+  EditorIDPrefixRemove : string;
+  EditorIDPrefix       : string;
+  EditorIDSuffix       : string;
+  Multiple             : Boolean;
+  LeveledListEntries   : IwbContainerElementRef;
+  LeveledListEntry     : IwbContainerElementRef;
+  CopiedElement        : IwbElement;
 begin
   if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
