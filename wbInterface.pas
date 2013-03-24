@@ -9861,9 +9861,9 @@ begin
     if j <> 0 then
       for i := 1 to High(udMembers) do
         if udMembers[i].Size[nil, nil, nil] <> j then begin
-          j := 0;
+          j := -1;
         end;
-    Result := j > 0;
+    Result := j = -1;
   end;
 end;
 
