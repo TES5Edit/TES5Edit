@@ -202,7 +202,8 @@ type
     itS32,
     itU64,
     itS64,
-    itU24
+    itU24,
+    itU6to30
   );
 
   TwbDefType = (
@@ -1315,6 +1316,10 @@ type
     ['{71C4A255-B983-488C-9837-0A720132348A}']
   end;
 
+  IwbRefID = interface(IwbFormID)
+    ['{71C4A255-B983-488C-9837-0A720132348B}']
+  end;
+
   IwbFormIDChecked = interface(IwbFormID)
     ['{DC7CBC9F-07EC-430B-94EE-ECE1867A2660}']
     function GetSignature(aIndex: Integer): TwbSignature;
@@ -1361,6 +1366,10 @@ type
   end;
 
   IwbKey2Data6EnumDef = interface(IwbEnumDef)
+    ['{A3AFE02E-F72D-4E0E-BC56-219F7EE2B565}']
+  end;
+
+  IwbData6Key2EnumDef = interface(IwbEnumDef)
     ['{A3AFE02E-F72D-4E0E-BC56-219F7EE2B565}']
   end;
 
@@ -2070,10 +2079,22 @@ function wbEmpty(const aName      : string;
                        aSorted    : Boolean = False)
                                   : IwbValueDef; overload;
 
+function wbRefID: IwbRefID; overload;
+
+function wbRefID(const aName      : string;
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aAfterSet  : TwbAfterSetCallback = nil)
+                                  : IwbIntegerDef; overload;
+
 function wbDumpInteger : IwbIntegerDefFormater; overload;
 
 function wbKey2Data6Enum(const aNames : array of string)
                                       : IwbKey2Data6EnumDef; overload;
+
+function wbData6Key2Enum(const aNames : array of string)
+                                      : IwbData6Key2EnumDef; overload;
 
 function wbFormID: IwbFormID; overload;
 
@@ -3527,6 +3548,11 @@ type
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
   end;
 
+  TwbRefID = class(TwbFormID, IwbRefID)
+  protected
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
   TwbFormIDChecked = class(TwbFormID, IwbFormIDChecked)
   protected {private}
     fidcValidRefsArr     : array of TwbSignature;
@@ -3664,6 +3690,13 @@ type
   end;
 
   TwbKey2Data6EnumDef = class(TwbEnumDef, IwbKey2Data6EnumDef)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
+  TwbData6Key2EnumDef = class(TwbEnumDef, IwbData6Key2EnumDef)
   protected
     {---IwbIntegerDefFormater---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4600,6 +4633,35 @@ end;
 function wbKey2Data6Enum(const aNames : array of string) : IwbKey2Data6EnumDef;
 begin
   Result := TwbKey2Data6EnumDef.Create(aNames, []);
+end;
+
+function wbData6Key2Enum(const aNames : array of string) : IwbData6Key2EnumDef;
+begin
+  Result := TwbData6Key2EnumDef.Create(aNames, []);
+end;
+
+var
+  _RefID: IwbRefID;
+
+function wbRefID: IwbRefID;
+begin
+  if wbReportMode then
+    Result := TwbRefID.Create(cpNormal, False)
+  else begin
+    if not Assigned(_RefID) then
+      _RefID := TwbRefID.Create(cpNormal, False);
+    Result := _RefID;
+  end;
+end;
+
+function wbRefID(const aName     : string;
+                       aPriority : TwbConflictPriority = cpNormal;
+                       aRequired : Boolean = False;
+                       aDontShow : TwbDontShowCallback = nil;
+                       aAfterSet : TwbAfterSetCallback = nil)
+                                 : IwbIntegerDef; overload;
+begin
+  Result := wbInteger(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
 var
@@ -6013,6 +6075,75 @@ begin
   PByte(aBasePtr)^ := Buffer[0];
 end;
 
+function ReadIntegerCounterSize(aBasePtr: pointer): Int64;
+var
+  Key : Byte;
+begin
+  if Assigned(aBasePtr) then begin
+    Key := $3 and PShortInt(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+    Result := Key + 1;
+  end else
+    Result := 1; // Minimum size
+end;
+
+function ReadIntegerCounter(aBasePtr: pointer): Int64;
+var
+  Buffer : array[0..3] of Byte;
+  Key    : Byte;
+begin
+  Result := 0;
+  Buffer[3] := 0;
+  Buffer[2] := 0;
+  Buffer[1] := 0;
+  Buffer[0] := 0;
+  Key := $3 and PShortInt(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+  case key of
+    0: Buffer[0] := PShortInt(aBasePtr)^ shr 2; // The 6 remaining bits are the count.
+    1: begin // 6 + 8 bits of count
+      Buffer[1] := PShortInt(aBasePtr)^ shr 2; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      Buffer[0] := PShortInt(aBasePtr)^;
+    end;
+    2: begin // 6 + 16 bits of count
+      Buffer[2] := PShortInt(aBasePtr)^ shr 2; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      Buffer[1] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      Buffer[0] := PShortInt(aBasePtr)^;
+    end;
+    3: begin // Not supposed to exist : zeroed out by the engine
+      Buffer[3] := 0;
+      Buffer[2] := 0;
+      Buffer[1] := 0;
+      Buffer[0] := 0;
+    end;
+  end;
+  Move(Buffer, Result, SizeOf(Result));
+end;
+
+procedure WriteIntegerCounter(aBasePtr: pointer; aValue: Int64);
+var
+  Buffer : array[0..3] of Byte;
+begin
+  Move(aValue, Buffer, SizeOf(aValue));
+  if Buffer[3] > 0 then begin // 4 bytes counter
+    Buffer[3] := (Buffer[3] shl 2 ) or 3;
+    PByte(aBasePtr)^ := Buffer[3]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[0];
+  end else if Buffer[2] > 0 then begin
+    Buffer[2] := (Buffer[3] shl 2 ) or 2;
+    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[0];
+  end else if Buffer[1] > 0 then begin
+    Buffer[1] := (Buffer[1] shl 2 ) or 1;
+    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[0];
+  end else begin
+    Buffer[0] := (Buffer[0] shl 2 ) or 0;
+    PByte(aBasePtr)^ := Buffer[0];
+  end;
+end;
+
 { TwbIntegerDef }
 
 procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer;
@@ -6021,7 +6152,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   if Assigned(inFormater) then
@@ -6035,6 +6166,7 @@ begin
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
         itS64: Value := PInt64(aBasePtr)^;
+        itU6to30: Value := ReadIntegerCounter(aBasePtr);
       else
         {itU8:}  Value := PByte(aBasePtr)^;
       end;
@@ -6066,7 +6198,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Result := '';
@@ -6084,6 +6216,7 @@ begin
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -6153,7 +6286,7 @@ procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
@@ -6166,6 +6299,7 @@ begin
     itS32: PLongInt(aBasePtr)^ := aValue;
     itU64: PInt64(aBasePtr)^ := aValue;
     itS64: PInt64(aBasePtr)^ := aValue;
+    itU6to30: WriteIntegerCounter(aBasePtr, aValue);
   else
     PByte(aBasePtr)^ := aValue;
   end;
@@ -6174,7 +6308,7 @@ end;
 procedure TwbIntegerDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
@@ -6187,6 +6321,7 @@ begin
     itS32: PLongInt(aBasePtr)^ := aValue;
     itU64: PInt64(aBasePtr)^ := aValue;
     itS64: PInt64(aBasePtr)^ := aValue;
+    itU6to30: WriteIntegerCounter(aBasePtr, aValue);
   else
     PByte(aBasePtr)^ := aValue;
   end;
@@ -6234,7 +6369,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Result := nil;
@@ -6249,6 +6384,7 @@ begin
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
         itS64: Value := PInt64(aBasePtr)^;
+        itU6to30: Value := ReadIntegerCounter(aBasePtr);
       else
         {itU8:}  Value := PByte(aBasePtr)^;
       end;
@@ -6273,6 +6409,7 @@ begin
     itS32: Result := SizeOf(LongInt);
     itU64: Result := SizeOf(Int64);
     itS64: Result := SizeOf(Int64);
+    itU6to30: Result := ReadIntegerCounterSize(aBasePtr);
   else
     Result := 0;
   end;
@@ -6345,7 +6482,7 @@ var
   Value : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
@@ -6362,6 +6499,7 @@ begin
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -6380,7 +6518,7 @@ var
   Len         : Cardinal;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
@@ -6396,6 +6534,7 @@ begin
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Result := PInt64(aBasePtr)^;
+      itU6to30: Result := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Result := PByte(aBasePtr)^;
     end;
@@ -6404,7 +6543,7 @@ end;
 function TwbIntegerDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   if Cardinal(aEndPtr) - Cardinal(aBasePtr) < ExpectedLen[inType] then
@@ -6419,6 +6558,7 @@ begin
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Result := PInt64(aBasePtr)^;
+      itU6to30: Result := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Result := PByte(aBasePtr)^;
     end;
@@ -6430,7 +6570,7 @@ var
   Value : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
@@ -6447,6 +6587,7 @@ begin
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -6473,7 +6614,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Result := '';
@@ -6491,6 +6632,7 @@ begin
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -10044,9 +10186,9 @@ begin
     if j <> 0 then
       for i := 1 to High(udMembers) do
         if udMembers[i].Size[nil, nil, nil] <> j then begin
-          j := 0;
+          j := -1;
         end;
-    Result := j > 0;
+    Result := j = -1;
   end;
 end;
 
@@ -10889,6 +11031,30 @@ begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
 end;
 
+{ TwbRefID }
+
+function TwbRefID.ToString(aInt: Int64; const aElement: IwbElement): string;
+var
+  key        : Integer;
+  val        : Integer;
+begin
+  // First two bits are the key:
+  key := aInt shr 22;
+  val := aInt and $003FFFFF;
+  case key of
+    0: if val = 0 then
+         Result := '[00000000] NULL'
+       else
+         Result := '['+IntToHex64(val-1, 8)+'] Index in FormIDarray';
+    1: Result := '['+IntToHex64(val, 8)+'] Skyrim.esm FormID';
+    2: Result := '[FF'+IntToHex64(val, 6)+'] Created FormID';
+    else
+      Result := '['+IntToHex64(aInt, 8)+']  <Error: bad key for RefID '+IntToStr(key)+'>';
+  end;
+  Result := IntToStr(aInt)+' '+Result;
+  Used(aElement, Result);
+end;
+
 { TwbDumpIntegerDefFormater }
 
 function TwbDumpIntegerDefFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
@@ -10923,6 +11089,34 @@ begin
     0: Result := Result + ' Small size';
     1: Result := Result + ' Medium size';
     2: Result := Result + ' Large size';
+  end;
+end;
+
+{ TwbData6Key2EnumDef }
+
+function TwbData6Key2EnumDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex64(aInt, 2);
+end;
+
+function TwbData6Key2EnumDef.ToString(aInt: Int64; const aElement: IwbElement): string;
+var
+  key : Integer;
+begin
+  if aInt < Power(2, 6) then
+    key := 0
+  else if aInt < Power(2, 14) then
+    key := 1
+  else if aInt < Power(2, 22) then
+    key := 2
+  else
+    key := 3;
+  Result := IntToStr(aInt);
+  case key of
+    0: Result := Result + ' Small size';
+    1: Result := Result + ' Medium size';
+    2: Result := Result + ' Large size';
+    3: Result := '0' + ' Null size';
   end;
 end;
 

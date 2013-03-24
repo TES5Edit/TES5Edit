@@ -4699,7 +4699,7 @@ begin
       wbCOED
     ], []);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCNTOs := wbRArrayS('Items', wbCNTO);
+  wbCNTOs := wbRArrayS('Items', wbCNTO, COCT);
 
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
@@ -10155,6 +10155,7 @@ begin
         ]),
 				wbCOED
       ], []),
+    LLCT,
     cpNormal, True),
     wbMODL
   ]);
@@ -10181,7 +10182,8 @@ begin
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
         wbCOED
-      ], [])
+      ], []),
+    LLCT
     )
   ]);
 
@@ -12956,6 +12958,30 @@ begin
   end;
 end;
 
+function ArrayTableEntryOtionalStringDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Array Entry Data', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Array Type'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      case aType of
+        1: Result := 2;
+      else
+        Result := 1;
+      end;
+    end;
+  end;
+end;
+
 function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -13417,8 +13443,9 @@ var
   wbChangeFlags       : IwbIntegerDef;
   wbChangeTypes       : IwbEnumDef;
   wbQuestFlags        : IwbIntegerDef;
-  wbUnknown1          : IwbStructDef;
-  wbUnknown2          : IwbStructDef;
+  wbTypeData          : IwbStructDef;
+  wbObjectTableEntry  : IwbStructDef;
+  wbArrayTableEntry   : IwbStructDef;
 begin
   wbNull := wbStruct('Unused', []);
   wbHeader := wbStruct('Header', [
@@ -13460,17 +13487,37 @@ begin
     wbArray('Unused', wbInteger('', itU32), 15)
   ]);
 
-  wbUnknown1 := wbStruct('Unknown1 Struct', [
-    wbInteger('Unknown', itU32, wbDumpInteger),
-    wbArray('Values', wbInteger('Value', itU32, wbDumpInteger), -1)
+  wbTypeData := wbStruct('SkyrimVM Type Data', [
+    wbInteger('Script Name Index', itU16),
+    wbInteger('Script Type Name Index', itU16),
+    wbArray('Variable Script Pairs', wbStruct('String Indexes', [
+      wbInteger('Variable Name Index', itU16),
+      wbInteger('Variable Type Name Index', itU16)
+    ]), -1)
   ]);
 
-  wbUnknown2 := wbStruct('Unknown2 Struct', [
+  wbObjectTableEntry := wbStruct('Object Table Entry', [
     wbInteger('Unknown', itU32, wbDumpInteger),
-    wbInteger('Unknown', itU32, wbDumpInteger),
-    wbInteger('Unknown', itS16, wbDumpInteger),
-    wbRefID('RefID'),
-    wbInteger('Unknown', itU8, wbDumpInteger)
+    wbInteger('Unknown StringIndex', itU16),    // 004
+    wbStruct('Grouped', [
+      wbInteger('Flag2bits', itU16, wbDumpInteger), // 006
+      wbInteger('Unknown', itS16, wbDumpInteger),   // 008   returned as Dword = Word or (10000 * Flag2bits)
+      wbRefID('RefID')                              // 00A   returned as 0 if unknown is -1/FFFFFFFF
+    ]),
+    wbInteger('Unknown', itU8, wbDumpInteger)   // 00C
+  ]);
+
+  wbArrayTableEntry := wbStruct('Array Entry Data', [
+    wbInteger('Unknown', itU32, wbDumpInteger), // 000
+    wbInteger('Array Type', itU8),              // 004 valid values : 0 to 5, 0B to 10
+    wbUnion('', ArrayTableEntryOtionalStringDecider, [
+      wbInteger('Unknown', itU32, wbDumpInteger),  // 007/00B
+      wbInteger('Unknown', itU32, wbDumpInteger),  // 007/00B
+      wbstruct('', [
+        wbInteger('Name', itU16),       // 005/009
+        wbInteger('Unknown', itU32, wbDumpInteger)  // 007/00B
+      ])
+    ])
   ]);
 
   wbGlobalData := wbStruct('Global Data', [
@@ -13542,12 +13589,13 @@ begin
       wbArray('Temp Effects', wbInteger('', itU8), -2),
       wbStruct('Papyrus Struct', [
         wbInteger('DataLength', itU32)
-        ,wbInteger('Unknown', itU16, wbDumpInteger)
-        ,wbInteger('String Table Count', itU32)
-        ,wbArray('Strings Table', wbLenString('String', 2), StringTableCounter)
-        ,wbArray('Unknown1 array', wbUnknown1, -1)
-        ,wbArray('Unknown2 array', wbUnknown2, -1)
-//        ,wbArray('Unknown3 array', wbByteArray('Unknown', 2), -1)
+        ,wbInteger('SkyrimVM_version', itU16)  // FFFF marks an invalid save, 4 seems current max
+        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2)
+        ,wbArray('Type table for internal VM save data', wbTypeData, -1)  // Type table for internal VM save data
+        ,wbArray('Object Table', wbObjectTableEntry, -1)
+        ,wbInteger('Unknown', itU32)
+        ,wbArrayS('Array Table', wbArrayTableEntry, -1)
+        ,wbArray('Unknown3 array', wbByteArray('Unknown', 4), -1)  // Array Table then Basic Stack Information
 //        ,wbByteArray('Remainder', PapyrusDataRemainderCounter)  // Single line
         ,wbArray('Remainder', wbByteArray('Unknown', BytesToGroup), PapyrusDataQuartetCounter) // per Quartet
         ,wbByteArray('Unknown', PapyrusDataQuartetRemainderCounter)

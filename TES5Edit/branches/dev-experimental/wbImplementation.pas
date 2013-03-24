@@ -12601,7 +12601,12 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count : Cardinal;
+  Count     : Cardinal;
+  Counter   : TwbSignature;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecordArray;
+  aRecord   : IwbRecord;
+  i         : Integer;
 begin
   if arrSizePrefix < 1 then
     Exit;
@@ -12623,6 +12628,20 @@ begin
       2: PWord(GetDataBasePtr)^ := Length(cntElements);
       4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
     end;
+
+  // Other counters added by Skyrim:
+  i := 0;
+  if Supports(Self, IwbSubRecordArray, SubRecord) then begin
+    Counter := SubRecord.Counter;
+    if (Counter <> 'NONE') and Assigned(eContainer) and Supports(eContainer, IwbContainer, Container) then
+      while Assigned(Container.Elements[i]) do
+        if Supports(Container.Elements[i], IwbRecord, aRecord) and (aRecord.Signature = Counter) then begin
+          Container.Elements[i].NativeValue := Length(cntElements);
+          Break;
+        end else
+          Inc(i);
+  end;
+
 end;
 
 procedure TwbArray.CheckTerminator;

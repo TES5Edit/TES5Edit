@@ -93,17 +93,16 @@ begin
   Name := aElement.Name;
   Value := aElement.Value;
 
-  if ((Name <> '') or (Value <> '')) and (Pos('Hidden: ', Name)<>1) then begin
-    if not wbReportMode then
-      Write(aIndent, Name);
+  if (Name <> '') and not wbReportMode then
+    Write(aIndent, Name);
+  if (Name <> '') or (Value <> '') then
     aIndent := aIndent + '  ';
-    if Value <> '' then begin
-      if not wbReportMode then
-        WriteLn(': ', Value);
-    end else begin
-      if not wbReportMode then
-        WriteLn;
-    end;
+  if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
+    if not wbReportMode then
+      WriteLn(': ', Value);
+  end else begin
+    if not wbReportMode then
+      WriteLn;
   end;
 
   if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then

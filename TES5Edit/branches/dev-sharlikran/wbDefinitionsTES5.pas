@@ -4699,7 +4699,7 @@ begin
       wbCOED
     ], []);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCNTOs := wbRArrayS('Items', wbCNTO);
+  wbCNTOs := wbRArrayS('Items', wbCNTO, COCT);
 
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
@@ -10155,6 +10155,7 @@ begin
         ]),
 				wbCOED
       ], []),
+    LLCT,
     cpNormal, True),
     wbMODL
   ]);
@@ -10181,7 +10182,8 @@ begin
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
         wbCOED
-      ], [])
+      ], []),
+    LLCT
     )
   ]);
 
