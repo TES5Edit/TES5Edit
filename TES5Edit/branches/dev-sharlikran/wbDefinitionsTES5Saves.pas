@@ -12958,7 +12958,7 @@ begin
   end;
 end;
 
-function ArrayTableEntryOtionalStringDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ArrayTableEntryOptionalStringDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
   Element : IwbElement;
@@ -12979,6 +12979,175 @@ begin
         Result := 1;
       end;
     end;
+  end;
+end;
+
+var
+  StringTableCount : Integer = -1;
+
+procedure StringTableAfterLoad(const aElement: IwbElement);
+begin
+  if StringTableCount < 0 then begin
+    StringTableCount := (aElement as IwbContainer).ElementCount;
+    InitializeStringTable(aElement as IwbContainer);
+  end;
+end;
+
+var
+  ObjectTableCount : Integer = -1;
+
+procedure ObjectTableAfterLoad(const aElement: IwbElement);
+begin
+  if ObjectTableCount < 0 then begin
+    ObjectTableCount := (aElement as IwbContainer).ElementCount;
+    InitializeObjectTable(aElement as IwbContainer);
+  end;
+end;
+
+var
+  ArrayTableCount : Integer = -1;
+
+procedure ArrayTableAfterLoad(const aElement: IwbElement);
+begin
+  if ArrayTableCount < 0 then begin
+    ArrayTableCount := (aElement as IwbContainer).ElementCount;
+    InitializeArrayTable(aElement as IwbContainer);
+  end;
+end;
+
+function ObjectDataTableValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Variable', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Variable Type'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      case aType of
+         1: Result := 1;
+         2: Result := 2;
+         3: Result := 3;
+         4: Result := 4;
+         5: Result := 5;
+        11: Result := 6;
+        12: Result := 7;
+        13: Result := 8;
+        14: Result := 9;
+        15: Result := 10;
+      end;
+    end;
+  end;
+end;
+
+function ArrayElementsTableValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Element', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Element Type'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      case aType of
+         1: Result := 1;
+         2: Result := 2;
+         3: Result := 3;
+         4: Result := 4;
+         5: Result := 5;
+        11: Result := 6;
+        12: Result := 7;
+        13: Result := 8;
+        14: Result := 9;
+        15: Result := 10;
+      end;
+    end;
+  end;
+end;
+
+function ObjectDataTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+
+begin
+  if ObjectTableCount<0 then begin
+    Result := 0;
+    if not Assigned(aElement) then Exit;
+    Element := FindElement('Papyrus Struct', aElement);
+
+    if Supports(Element, IwbDataContainer, Container) then begin
+      Element := Container.ElementByName['Object Table'];
+      if Supports(Element, IwbDataContainer, Container) then
+        Result := Container.ElementCount;
+    end;
+  end else
+    Result := ObjectTableCount;
+end;
+
+function ArrayElementsTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+
+begin
+  if ArrayTableCount<0 then begin
+    Result := 0;
+    if not Assigned(aElement) then Exit;
+    Element := FindElement('Papyrus Struct', aElement);
+
+    if Supports(Element, IwbDataContainer, Container) then begin
+      Element := Container.ElementByName['Array Table'];
+      if Supports(Element, IwbDataContainer, Container) then
+        Result := Container.ElementCount;
+    end
+  end else
+    Result := ArrayTableCount;
+end;
+
+function ArrayElementsTableElementCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element       : IwbElement;
+  Container     : IwbDataContainer;
+  DataContainer : IwbDataContainer;
+  Handle        : Integer;
+  i             : Integer;
+begin
+  Result := 0;
+  Handle := 0;
+  if not Assigned(aElement) then Exit;
+
+  Element := FindElement('Array Element Entry Data', aElement);
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Array Handle'];
+    if Assigned(Element) then
+      Handle := Element.NativeValue
+    else
+      Exit;
+  end;
+
+  Element := FindElement('Papyrus Struct', aElement);
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Array Table'];
+    if Supports(Element, IwbDataContainer, Container) then
+      for i := 0 to Pred(Container.ElementCount) do
+        if Supports(Container.Elements[i], IwbDataContainer, DataContainer) then
+          if DataContainer.ElementByName['Array Handle'].NativeValue = Handle then begin
+            Result := DataContainer.ElementByName['Count'].NativeValue;
+            Break;
+          end;
   end;
 end;
 
@@ -13393,7 +13562,7 @@ begin
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['String Table Count'];
     if Assigned(Element) then begin
-      Result := Element.NativeValue - 1; // The table is one member short, Referenced bug.
+      Result := Element.NativeValue - 1; // The table is not one member short (Referenced bug) but rather always starts with an empty string.
     end;
   end;
 end;
@@ -13434,18 +13603,21 @@ end;
 
 procedure DefineTES5SavesS;  // This is all based on current UESP and HexDump
 var
-  wbHeader            : IwbStructDef;
-  wbFileLocationTable : IwbStructDef;
-  wbGlobalData        : IwbStructDef;
-  wbChangedForm       : IwbStructDef;
-  wbChangedFormData   : IwbUnionDef;
-  wbNull              : IwbValueDef;
-  wbChangeFlags       : IwbIntegerDef;
-  wbChangeTypes       : IwbEnumDef;
-  wbQuestFlags        : IwbIntegerDef;
-  wbTypeData          : IwbStructDef;
-  wbObjectTableEntry  : IwbStructDef;
-  wbArrayTableEntry   : IwbStructDef;
+  wbHeader                  : IwbStructDef;
+  wbFileLocationTable       : IwbStructDef;
+  wbGlobalData              : IwbStructDef;
+  wbChangedForm             : IwbStructDef;
+  wbChangedFormData         : IwbUnionDef;
+  wbNull                    : IwbValueDef;
+  wbChangeFlags             : IwbIntegerDef;
+  wbChangeTypes             : IwbEnumDef;
+  wbQuestFlags              : IwbIntegerDef;
+  wbTypeData                : IwbStructDef;
+  wbObjectTableEntry        : IwbStructDef;
+  wbArrayTableEntry         : IwbStructDef;
+  wbStackTableEntry         : IwbStructDef;
+  wbObjectDataTableEntry    : IwbStructDef;
+  wbArrayElementsTableEntry : IwbStructDef;
 begin
   wbNull := wbStruct('Unused', []);
   wbHeader := wbStruct('Header', [
@@ -13488,36 +13660,96 @@ begin
   ]);
 
   wbTypeData := wbStruct('SkyrimVM Type Data', [
-    wbInteger('Script Name Index', itU16),
-    wbInteger('Script Type Name Index', itU16),
-    wbArray('Variable Script Pairs', wbStruct('String Indexes', [
-      wbInteger('Variable Name Index', itU16),
-      wbInteger('Variable Type Name Index', itU16)
+    wbInteger('Script Name', itU16, wbStringIndex),
+    wbInteger('Script Type', itU16, wbStringIndex),
+    wbArray('Script Variables', wbStruct('Variable', [
+      wbInteger('Name', itU16, wbStringIndex),
+      wbInteger('Type', itU16, wbStringIndex)
     ]), -1)
   ]);
 
   wbObjectTableEntry := wbStruct('Object Table Entry', [
-    wbInteger('Unknown', itU32, wbDumpInteger),
-    wbInteger('Unknown StringIndex', itU16),    // 004
+    wbInteger('Object Handle', itU32),
+    wbInteger('Name', itU16, wbStringIndex),
     wbStruct('Grouped', [
-      wbInteger('Flag2bits', itU16, wbDumpInteger), // 006
-      wbInteger('Unknown', itS16, wbDumpInteger),   // 008   returned as Dword = Word or (10000 * Flag2bits)
-      wbRefID('RefID')                              // 00A   returned as 0 if unknown is -1/FFFFFFFF
+      wbInteger('Flag2bits', itU16, wbDumpInteger),
+      wbInteger('Unknown', itS16, wbDumpInteger),   // returned as Dword = Word or (10000 * Flag2bits)
+      wbRefID('RefID')                              // returned as 0 if unknown is -1/FFFFFFFF
     ]),
     wbInteger('Unknown', itU8, wbDumpInteger)   // 00C
   ]);
 
-  wbArrayTableEntry := wbStruct('Array Entry Data', [
-    wbInteger('Unknown', itU32, wbDumpInteger), // 000
-    wbInteger('Array Type', itU8),              // 004 valid values : 0 to 5, 0B to 10
-    wbUnion('', ArrayTableEntryOtionalStringDecider, [
-      wbInteger('Unknown', itU32, wbDumpInteger),  // 007/00B
-      wbInteger('Unknown', itU32, wbDumpInteger),  // 007/00B
-      wbstruct('', [
-        wbInteger('Name', itU16),       // 005/009
-        wbInteger('Unknown', itU32, wbDumpInteger)  // 007/00B
-      ])
+  wbObjectDataTableEntry := wbStruct('Object Data Table Entry', [
+    wbInteger('Object Handle', itU32, wbObjectHandle),
+    wbStruct('Script', [
+      wbInteger('Unknown', itU8, wbDumpInteger),
+      wbInteger('Unknown String Index', itU16, wbStringIndex),
+      wbInteger('Unknown', itU32, wbDumpInteger),
+      wbArray('Variables', wbStruct('Variable', [
+        wbInteger('Variable Type', itU8, wbPropTypeEnum),
+        wbUnion('Value', ObjectDataTableValueDecider, [
+          wbNull,
+          wbStruct('Object', [
+            wbInteger('Object Type', itU16, wbStringIndex),
+            wbInteger('Object Handle', itU32, wbObjectHandle)
+          ]),
+          wbInteger('Unknown String Index', itU16, wbStringIndex),
+          wbInteger('Int32', itS32),
+          wbFloat('Float'),
+          wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
+          wbStruct('Object Array', [
+            wbInteger('Name', itU16, wbStringIndex),
+            wbInteger('Array Handle', itU32)
+          ]),
+          wbInteger('String Index Array Handle', itU32),
+          wbInteger('Int32 Array Handle', itU32),
+          wbInteger('Float Array Handle', itU32),
+          wbInteger('Bool Array Handle', itU32)
+        ])
+      ]), -1)
     ])
+  ]);
+
+  wbArrayTableEntry := wbStruct('Array Entry Data', [
+    wbInteger('Array Handle', itU32), // 000
+    wbInteger('Array Type', itU8, wbPropTypeEnum),    // 004 valid values : 0 to 5, 0B to 0F
+    wbUnion('Data', ArrayTableEntryOptionalStringDecider, [
+      wbNull,
+      wbNull,
+      wbInteger('Name', itU16, wbStringIndex)
+    ]),
+    wbInteger('Count', itU32)
+  ]);
+
+  wbArrayElementsTableEntry := wbStruct('Array Element Entry Data', [
+    wbInteger('Array Handle', itU32),
+    wbArray('Array Elements', wbStruct('Element', [
+      wbInteger('Element Type', itU8, wbPropTypeEnum),
+      wbUnion('Value', ArrayElementsTableValueDecider, [
+        wbNull,
+        wbStruct('Object', [
+          wbInteger('Object Type', itU16, wbStringIndex),
+          wbInteger('Object Handle', itU32, wbObjectHandle)
+        ]),
+        wbInteger('Unknown String Index', itU16, wbStringIndex),
+        wbInteger('Int32', itS32),
+        wbFloat('Float'),
+        wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
+        wbStruct('Object Array', [
+          wbInteger('Name', itU16, wbStringIndex),
+          wbInteger('Array Handle', itU32)
+        ]),
+        wbInteger('String Index Array Handle', itU32),
+        wbInteger('Int32 Array Handle', itU32),
+        wbInteger('Float Array Handle', itU32),
+        wbInteger('Bool Array Handle', itU32)
+      ])
+    ]), ArrayElementsTableElementCounter)
+  ]);
+
+  wbStackTableEntry := wbStruct('Stack Entry Data', [
+    wbInteger('Stack ID', itU32, wbDumpInteger),
+    wbInteger('Stack Type', itU8)
   ]);
 
   wbGlobalData := wbStruct('Global Data', [
@@ -13590,12 +13822,19 @@ begin
       wbStruct('Papyrus Struct', [
         wbInteger('DataLength', itU32)
         ,wbInteger('SkyrimVM_version', itU16)  // FFFF marks an invalid save, 4 seems current max
-        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2)
+        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, StringTableAfterLoad)
         ,wbArray('Type table for internal VM save data', wbTypeData, -1)  // Type table for internal VM save data
-        ,wbArray('Object Table', wbObjectTableEntry, -1)
-        ,wbInteger('Unknown', itU32)
-        ,wbArrayS('Array Table', wbArrayTableEntry, -1)
-        ,wbArray('Unknown3 array', wbByteArray('Unknown', 4), -1)  // Array Table then Basic Stack Information
+        ,wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad)
+        ,wbInteger('Unknown', itU32) // I don't where it is from. The engine does not seem to "see" it.
+        ,wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad)
+        ,wbStruct('Stacks', [
+          wbInteger('Unknown', itU32, wbDumpInteger)                // Part of Stack table
+         ,wbArrayS('Stack Table', wbStackTableEntry, -1)
+        ])
+// NOT SAFE YET        ,wbArray('Object Data Table', wbObjectDataTableEntry, ObjectDataTableCounter)
+//        ,wbArrayS('Array Elements Table', wbArrayElementsTableEntry, ArrayElementsTableCounter)
+//        ,wbArray('Unknown3 array', wbByteArray('Unknown', 4), -1)  // Array Table then Basic Stack Information
+////        ,wbUnknown() // skip all the rest
 //        ,wbByteArray('Remainder', PapyrusDataRemainderCounter)  // Single line
         ,wbArray('Remainder', wbByteArray('Unknown', BytesToGroup), PapyrusDataQuartetCounter) // per Quartet
         ,wbByteArray('Unknown', PapyrusDataQuartetRemainderCounter)

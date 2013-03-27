@@ -1326,6 +1326,18 @@ type
     ['{71C4A255-B983-488C-9837-0A720132348C}']
   end;
 
+  IwbStringIndexDefFormater = interface(IwbIntegerDefFormater)
+    ['{71C4A255-B983-488C-9837-0A720132348C}']
+  end;
+
+  IwbObjectHandleDefFormater = interface(IwbIntegerDefFormater)
+    ['{71C4A255-B983-488C-9837-0A720132348C}']
+  end;
+
+  IwbArrayHandleDefFormater = interface(IwbIntegerDefFormater)
+    ['{71C4A255-B983-488C-9837-0A720132348C}']
+  end;
+
   IwbFormID = interface(IwbIntegerDefFormater)
     ['{71C4A255-B983-488C-9837-0A720132348A}']
   end;
@@ -1771,6 +1783,15 @@ function wbArray(const aName     : string;
                        aDontShow : TwbDontShowCallback = nil)
                                  : IwbArrayDef; overload;
 
+function wbArray(const aName     : string;
+                 const aElement  : IwbValueDef;
+                       aCount    : Integer;
+                       aAfterLoad : TwbAfterLoadCallback;
+                       aPriority : TwbConflictPriority = cpNormal;
+                       aRequired : Boolean = False;
+                       aDontShow : TwbDontShowCallback = nil)
+                                 : IwbArrayDef; overload;
+
 function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
@@ -1847,6 +1868,16 @@ function wbArrayS(const aName      : string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbArrayDef; overload;
+
+function wbArrayS(const aName      : string;
+                  const aElement   : IwbValueDef;
+                        aCount     : Integer;
+                        aAfterLoad : TwbAfterLoadCallback;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbArrayDef; overload;
@@ -2115,6 +2146,10 @@ function wbRefID(const aName      : string;
 
 function wbDumpInteger : IwbIntegerDefFormater; overload;
 
+function wbStringIndex : IwbStringIndexDefFormater; overload;
+function wbObjectHandle : IwbObjectHandleDefFormater; overload;
+function wbArrayHandle : IwbArrayHandleDefFormater; overload;
+
 function wbKey2Data6Enum(const aNames : array of string)
                                       : IwbKey2Data6EnumDef; overload;
 
@@ -2382,7 +2417,10 @@ var
   BytesToSkip     : Cardinal = 0;
   BytesToDump     : Cardinal = $FFFFFFFF;
   BytesToGroup    : Cardinal = 4;
-  
+
+procedure InitializeStringTable(aContainer: IwbContainer);
+procedure InitializeObjectTable(aContainer: IwbContainer);
+procedure InitializeArrayTable(aContainer: IwbContainer);
 
 implementation
 
@@ -3554,6 +3592,26 @@ type
 
   TwbDumpIntegerDefFormater = class(TwbIntegerDefFormater, IwbDumpIntegerDefFormater)
   protected
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
+  TwbStringIndexFormater = class(TwbIntegerDefFormater, IwbStringIndexDefFormater)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
+  TwbObjectHandleFormater = class(TwbIntegerDefFormater, IwbObjectHandleDefFormater)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
+  TwbArrayHandleFormater = class(TwbIntegerDefFormater, IwbArrayHandleDefFormater)
+  protected
     {---IwbIntegerDefFormater---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4241,7 +4299,8 @@ function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
-                       aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                       aAfterLoad : TwbAfterLoadCallback = nil;
+                       aAfterSet  : TwbAfterSetCallback = nil;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False;
                         aDontShow : TwbDontShowCallback = nil)
@@ -4259,6 +4318,19 @@ function wbArray(const aName      : string;
                                   : IwbArrayDef; overload;
 begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow);
+end;
+
+
+function wbArray(const aName      : string;
+                 const aElement   : IwbValueDef;
+                       aCount     : Integer;
+                       aAfterLoad : TwbAfterLoadCallback;
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil)
+                                  : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow);
 end;
 
 
@@ -4361,7 +4433,21 @@ function wbArrayS(const aName      : string;
                         aCount     : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet,aDontShow);
+end;
+
+function wbArrayS(const aName      : string;
+                  const aElement   : IwbValueDef;
+                        aCount     : Integer;
+                        aAfterLoad : TwbAfterLoadCallback;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbArrayDef; overload;
 begin
@@ -4696,6 +4782,21 @@ end;
 function wbDumpInteger : IwbIntegerDefFormater;
 begin
   Result := TwbDumpIntegerDefFormater.Create(cpNormal, False);
+end;
+
+function wbStringIndex : IwbStringIndexDefFormater; overload;
+begin
+  Result := TwbStringIndexFormater.Create(cpNormal, False);
+end;
+
+function wbObjectHandle : IwbObjectHandleDefFormater; overload;
+begin
+  Result := TwbObjectHandleFormater.Create(cpNormal, False);
+end;
+
+function wbArrayHandle : IwbArrayHandleDefFormater; overload;
+begin
+  Result := TwbArrayHandleFormater.Create(cpNormal, False);
 end;
 
 function wbKey2Data6Enum(const aNames : array of string) : IwbKey2Data6EnumDef;
@@ -10260,11 +10361,10 @@ begin
 
   if not Result then begin
     j := udMembers[0].Size[nil, nil, nil];
-    if j <> 0 then
-      for i := 1 to High(udMembers) do
-        if udMembers[i].Size[nil, nil, nil] <> j then begin
-          j := -1;
-        end;
+    for i := 1 to High(udMembers) do
+      if udMembers[i].Size[nil, nil, nil] <> j then begin
+        j := -1;
+      end;
     Result := j = -1;
   end;
 end;
@@ -11229,6 +11329,141 @@ begin
     2: Result := Result + ' Large size';
     3: Result := '0' + ' Null size';
   end;
+end;
+
+{ TwbStringIndexFormater }
+
+var
+  sifStringArray : array of String = nil;
+
+procedure InitializeStringTable(aContainer: IwbContainer);
+var
+  i   : Integer;
+begin
+  if Assigned(aContainer) and not assigned(sifStringArray) then begin
+    SetLength(sifStringArray, aContainer.ElementCount);
+    for i := 0 to Pred(aContainer.ElementCount) do
+      sifStringArray[i] := aContainer.Elements[i].NativeValue;
+    wbProgressCallback('  String Index  Table : from '+IntToStr(0)+' to '+IntToStr(aContainer.ElementCount)+' = '+IntToStr(aContainer.ElementCount)+' out of '+IntToStr(aContainer.ElementCount));
+  end;
+end;
+
+function TwbStringIndexFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex(aInt, 4);
+end;
+
+function TwbStringIndexFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
+begin
+  if (aInt >= 0) and (aInt < Length(sifStringArray)) then
+    Result := '[' + IntToHex64(aInt, 8) + '] '+ sifStringArray[aInt]
+  else
+    Result := '[' + IntToHex64(aInt, 8) + '] <no such string>';
+end;
+
+{ TwbObjectHandleFormater }
+
+var
+  ohfObjectHandleBase : Integer;
+  ohfObjectHandleTable : array of Integer = nil;  // stores StringIndex
+
+procedure InitializeObjectTable(aContainer: IwbContainer);
+var
+  i         : Integer;
+  max       : Integer;
+  min       : Integer;
+  val       : Integer;
+  Container : IwbContainer;
+begin
+  if Assigned(aContainer) and not Assigned(ohfObjectHandleTable) then begin
+    Val := (aContainer.Elements[0] as IwbContainer).ElementByName['Object Handle'].NativeValue;
+    min := val;
+    max := val;
+    for i := 1 to Pred(aContainer.ElementCount) do begin
+      Val := (aContainer.Elements[i] as IwbContainer).ElementByName['Object Handle'].NativeValue;
+      if val<min then
+        min := val;
+      if val>max then
+        max := val;
+    end;
+    wbProgressCallback('  Object Handle Table : from '+IntToStr(min)+' to '+IntToStr(max)+' = '+IntToStr(max-min)+' out of '+IntToStr(aContainer.ElementCount));
+    ohfObjectHandleBase := min;
+    SetLength(ohfObjectHandleTable, max - min);
+    for i := 0 to Pred(aContainer.ElementCount) do begin
+      Container := (aContainer.Elements[i] as IwbContainer);
+      val := Container.ElementByName['Object Handle'].NativeValue;
+      ohfObjectHandleTable[val - ohfObjectHandleBase] := Container.ElementByName['Name'].NativeValue;
+    end;
+  end;
+end;
+
+function TwbObjectHandleFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex(aInt, 8);
+end;
+
+function TwbObjectHandleFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
+begin
+  if (aInt >= ohfObjectHandleBase) and ((aInt - ohfObjectHandleBase)< Length(ohfObjectHandleTable)) then begin
+    if ohfObjectHandleTable[aInt - ohfObjectHandleBase] < Length(sifSTringArray) then
+      Result := '[' + IntToHex64(aInt, 8) + '] '+ sifStringArray[ohfObjectHandleTable[aInt - ohfObjectHandleBase]]
+    else
+      Result := '[' + IntToHex64(aInt, 8) + '] <name not found>'
+  end else if aInt = 0 then
+    Result := '[' + IntToHex64(aInt, 8) + '] [empty]'
+  else
+    Result := '[' + IntToHex64(aInt, 8) + '] <no such object>';
+end;
+
+{ TwbArrayHandleFormater }
+
+var
+  ahfArrayHandleBase : Integer;
+  ahfArrayHandleTable : array of Integer = nil;  // stores StringIndex
+
+procedure InitializeArrayTable(aContainer: IwbContainer);
+var
+  i         : Integer;
+  max       : Integer;
+  min       : Integer;
+  val       : Integer;
+  Container : IwbContainer;
+begin
+  if Assigned(aContainer) and not Assigned(ahfArrayHandleTable) then begin
+    Val := (aContainer.Elements[0] as IwbContainer).ElementByName['Array Handle'].NativeValue;
+    min := val;
+    max := val;
+    for i := 1 to Pred(aContainer.ElementCount) do begin
+      Val := (aContainer.Elements[i] as IwbContainer).ElementByName['Array Handle'].NativeValue;
+      if val<min then
+        min := val;
+      if val>max then
+        max := val;
+    end;
+    wbProgressCallback('  Array  Handle Table : from '+IntToStr(min)+' to '+IntToStr(max)+' = '+IntToStr(max-min)+' out of '+IntToStr(aContainer.ElementCount));
+    ahfArrayHandleBase := min;
+    SetLength(ahfArrayHandleTable, max - min);
+    for i := 0 to Pred(aContainer.ElementCount) do begin
+      Container := (aContainer.Elements[i] as IwbContainer);
+      val := Container.ElementByName['Array Handle'].NativeValue;
+      ahfArrayHandleTable[val - ahfArrayHandleBase] := Container.ElementByName['Count'].NativeValue;
+    end;
+  end;
+end;
+
+function TwbArrayHandleFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex(aInt, 8);
+end;
+
+function TwbArrayHandleFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
+begin
+  if (aInt >= ahfArrayHandleBase) and ((aInt - ahfArrayHandleBase)< Length(ahfArrayHandleTable)) then begin
+    Result := '[' + IntToHex64(aInt, 8) + '] Count = '+ IntToStr(ahfArrayHandleTable[aInt - ahfArrayHandleBase]);
+  end else if aInt = 0 then
+    Result := '[' + IntToHex64(aInt, 8) + '] [empty]'
+  else
+    Result := '[' + IntToHex64(aInt, 8) + '] <no such object>';
 end;
 
 initialization
