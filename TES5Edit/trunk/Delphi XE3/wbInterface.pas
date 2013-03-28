@@ -6687,9 +6687,10 @@ begin
   Result := 0;
     if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
       wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
-    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-      Result := 0;
-    end else
+//    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
+//      Result := 0;
+//    end
+    else
       for i := Low(stMembers) to High(stMembers) do begin
         Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
         if Size = High(Integer) then begin
