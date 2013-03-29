@@ -25,7 +25,7 @@ Thanks for all the kind words I am glad to hear that for some this is really rel
 
 [size=4][color=#FF8C00]How To Install:[/color][/size]
 
-Download the author's original mod listed below, then install the esp provided into your data folder and overwrite the old esp or esm files with the ones I have provided.
+Download the author's original mod listed below, unless otherwise specified, then install the esp provided into your data folder and overwrite the old esp or esm files with the ones I have provided.
 
 [size=4][color=#FF8C00]Patches:[/color][/size]
 
@@ -95,6 +95,13 @@ Version 3 no longer requires the original mod, and the Eyepatch is  properly ass
 [url=http://skyrim.nexusmods.com/mods/6236]Bikini Clothes[/url] -- by Snezko
 [color=#FF0000]Hosted with permission from author.[/color]
 [color=#FF0000]Original Mod Not Required.[/color]
+
+[url=http://skyrim.nexusmods.com/mods/7155]Snowy Nightingale Armor[/url] -- by Tandellin
+
+[url=http://skyrim.nexusmods.com/mods/7478]Dark Seraphim Armor[/url] -- by iLily - Hentai - person123456789
+
+[url=http://skyrim.nexusmods.com/mods/14827]Companions Wolf Armor and Ancient Nord Shields[/url] -- by QuickFox
+
 
 Headbomb's Compatibility patches: [color=#FF0000](These do not require original mod)[/color]
 [url=http://skyrim.nexusmods.com/mods/4719]Weapons and Armor Fixes[/url]

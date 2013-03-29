@@ -201,6 +201,16 @@ Misc:
 - [Oblivion] Fixed ownership record order in CELL.
 - [Oblivion] Snowy weather definition fix (thanks to Arthmoor).
 
+[size=4][color=#FF8C00]FAQ:[/color][/size]
+
+Q: I have the following errors with one of my plugins what do I do?
+
+[00:43] Background Loader: Error: record ARMA contains unexpected (or out of order) subrecord MODL
+[00:43] Background Loader: Errors were found in: ShieldofYsgramorDraugrAA [ARMA:01001001]
+[00:43] Background Loader: Contained subrecords: EDID BODT RNAM DNAM MOD2 MO2T MOD3 MO3T MOD4 MO4T MOD5 MO5T SNDD NAM0 NAM1 NAM2 NAM3 MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL 
+
+A: I have seen that occur with plugins made with the ReProccer, NPC Editor, and older buggy versions of TESVSnip.  Usually TESVSnip 4.2 or 4.3.x.  TESVSnip never used the proper compression which is ZLib so the files are improperly compressed or they were left uncompressed.  No matter how the plugin was made it will cause issues durring game play.  You can either continue to use them but they may cause game instability, report the errors to the author so they can be addressed, or uninstall them.
+
 ToDo List:
 
 Update Miax’s Tome of FO3Edit to be TES5Edit's documentation.
