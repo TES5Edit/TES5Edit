@@ -107,7 +107,7 @@ var
   wbRotationFactor : Extended = 180/Pi;
   wbRotationScale : Integer = 4;
 
-  wbDumpOffset : Integer = 1;
+  wbDumpOffset : Integer = 1;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
   wbBaseOffset : Cardinal = 0;
 
 //  wbRotationFactor : Extended = 1;
@@ -348,6 +348,7 @@ type
     function GetSortKey(aExtended: Boolean): string;
     function GetSortPriority: Integer;
     function GetName: string;
+    function GetBaseName: string;
     function GetDisplayName: string;
     function GetShortName: string;
     function GetPath: string;
@@ -415,6 +416,10 @@ type
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
 
+    procedure NextMember;
+    procedure PreviousMember;
+    function CanChangeMember: Boolean;
+
     procedure Tag;
     procedure ResetTags;
     function IsTagged: Boolean;
@@ -446,6 +451,8 @@ type
       read GetElementType;
     property Name: string
       read GetName;
+    property BaseName: string
+      read GetBaseName;
     property DisplayName: string
       read GetDisplayName;
     property ShortName: string
@@ -2420,7 +2427,9 @@ var
 
 procedure InitializeStringTable(aContainer: IwbContainer);
 procedure InitializeObjectTable(aContainer: IwbContainer);
+procedure InitializeObjectDetachedTable(aContainer: IwbContainer);
 procedure InitializeArrayTable(aContainer: IwbContainer);
+function QueryArrayHandleCount(aInt: Int64): Integer;
 
 implementation
 
@@ -6942,11 +6951,11 @@ var
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
-    if Assigned(theContainer) and (not SameText(aName, theContainer.Name)) then begin
+    if Assigned(theContainer) and (not SameText(aName, theContainer.BaseName)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
-          if SameText(aName, aContainer.Name) then begin
+          if SameText(aName, aContainer.BaseName) then begin
             Container := aContainer;
             break;
           end else
@@ -7202,7 +7211,7 @@ end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;
 var
-  i    : Integer;
+  i : Integer;
 begin
   Result := False;
   for i := Low(stMembers) to High(stMembers) do
@@ -10365,6 +10374,7 @@ begin
     for i := 1 to High(udMembers) do
       if udMembers[i].Size[nil, nil, nil] <> j then begin
         j := -1;
+        break;
       end;
     Result := j = -1;
   end;
@@ -11345,7 +11355,6 @@ begin
     SetLength(sifStringArray, aContainer.ElementCount);
     for i := 0 to Pred(aContainer.ElementCount) do
       sifStringArray[i] := aContainer.Elements[i].NativeValue;
-    wbProgressCallback('  String Index  Table : from '+IntToStr(0)+' to '+IntToStr(aContainer.ElementCount)+' = '+IntToStr(aContainer.ElementCount)+' out of '+IntToStr(aContainer.ElementCount));
   end;
 end;
 
@@ -11367,6 +11376,8 @@ end;
 var
   ohfObjectHandleBase : Integer;
   ohfObjectHandleTable : array of Integer = nil;  // stores StringIndex
+  ohfObjectDetachedHandleBase : Integer;
+  ohfObjectDetachedHandleTable : array of Integer = nil;  // stores StringIndex
 
 procedure InitializeObjectTable(aContainer: IwbContainer);
 var
@@ -11387,13 +11398,41 @@ begin
       if val>max then
         max := val;
     end;
-    wbProgressCallback('  Object Handle Table : from '+IntToStr(min)+' to '+IntToStr(max)+' = '+IntToStr(max-min)+' out of '+IntToStr(aContainer.ElementCount));
     ohfObjectHandleBase := min;
-    SetLength(ohfObjectHandleTable, max - min);
+    SetLength(ohfObjectHandleTable, max - min + 1);
     for i := 0 to Pred(aContainer.ElementCount) do begin
       Container := (aContainer.Elements[i] as IwbContainer);
       val := Container.ElementByName['Object Handle'].NativeValue;
       ohfObjectHandleTable[val - ohfObjectHandleBase] := Container.ElementByName['Name'].NativeValue;
+    end;
+  end;
+end;
+
+procedure InitializeObjectDetachedTable(aContainer: IwbContainer);
+var
+  i         : Integer;
+  max       : Integer;
+  min       : Integer;
+  val       : Integer;
+  Container : IwbContainer;
+begin
+  if Assigned(aContainer) and not Assigned(ohfObjectDetachedHandleTable) and (aContainer.ElementCount>0) then begin
+    Val := (aContainer.Elements[0] as IwbContainer).ElementByName['Object Handle'].NativeValue;
+    min := val;
+    max := val;
+    for i := 1 to Pred(aContainer.ElementCount) do begin
+      Val := (aContainer.Elements[i] as IwbContainer).ElementByName['Object Handle'].NativeValue;
+      if val<min then
+        min := val;
+      if val>max then
+        max := val;
+    end;
+    ohfObjectDetachedHandleBase := min;
+    SetLength(ohfObjectDetachedHandleTable, max - min + 1);
+    for i := 0 to Pred(aContainer.ElementCount) do begin
+      Container := (aContainer.Elements[i] as IwbContainer);
+      val := Container.ElementByName['Object Handle'].NativeValue;
+      ohfObjectDetachedHandleTable[val - ohfObjectDetachedHandleBase] := Container.ElementByName['Name'].NativeValue+1;
     end;
   end;
 end;
@@ -11403,31 +11442,42 @@ begin
   Result := IntToHex(aInt, 8);
 end;
 
+function ReadObjectName(aInt: Int64): String;
+var
+  StringIndex: Integer;
+begin
+  Result := '';
+  StringIndex := 0;
+  if (aInt >= ohfObjectHandleBase) and ((aInt - ohfObjectHandleBase) < Length(ohfObjectHandleTable)) then
+    StringIndex := ohfObjectHandleTable[aInt - ohfObjectHandleBase];
+  if (StringIndex = 0) and (aInt >= ohfObjectDetachedHandleBase) and ((aInt - ohfObjectDetachedHandleBase) < Length(ohfObjectDetachedHandleTable)) then
+    StringIndex := ohfObjectDetachedHandleTable[aInt - ohfObjectDetachedHandleBase];
+  if StringIndex > 0 then
+    Result := '[' + IntToHex64(aInt, 8) + '] '+ sifStringArray[StringIndex - 1]
+end;
+
 function TwbObjectHandleFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
 begin
-  if (aInt >= ohfObjectHandleBase) and ((aInt - ohfObjectHandleBase)< Length(ohfObjectHandleTable)) then begin
-    if ohfObjectHandleTable[aInt - ohfObjectHandleBase] < Length(sifSTringArray) then
-      Result := '[' + IntToHex64(aInt, 8) + '] '+ sifStringArray[ohfObjectHandleTable[aInt - ohfObjectHandleBase]]
+  Result := ReadObjectName(aInt);
+  if Result = '' then
+    if aInt = 0 then
+      Result := '[' + IntToHex64(aInt, 8) + '] [empty]'
     else
-      Result := '[' + IntToHex64(aInt, 8) + '] <name not found>'
-  end else if aInt = 0 then
-    Result := '[' + IntToHex64(aInt, 8) + '] [empty]'
-  else
-    Result := '[' + IntToHex64(aInt, 8) + '] <no such object>';
+      Result := '[' + IntToHex64(aInt, 8) + '] <no such object>';
 end;
 
 { TwbArrayHandleFormater }
 
 var
-  ahfArrayHandleBase : Integer;
+  ahfArrayHandleBase : Int64;
   ahfArrayHandleTable : array of Integer = nil;  // stores StringIndex
 
 procedure InitializeArrayTable(aContainer: IwbContainer);
 var
   i         : Integer;
-  max       : Integer;
-  min       : Integer;
-  val       : Integer;
+  max       : Int64;
+  min       : Int64;
+  val       : Int64;
   Container : IwbContainer;
 begin
   if Assigned(aContainer) and not Assigned(ahfArrayHandleTable) then begin
@@ -11436,20 +11486,26 @@ begin
     max := val;
     for i := 1 to Pred(aContainer.ElementCount) do begin
       Val := (aContainer.Elements[i] as IwbContainer).ElementByName['Array Handle'].NativeValue;
-      if val<min then
+      if (val<min) then
         min := val;
-      if val>max then
+      if (val>max) then
         max := val;
     end;
-    wbProgressCallback('  Array  Handle Table : from '+IntToStr(min)+' to '+IntToStr(max)+' = '+IntToStr(max-min)+' out of '+IntToStr(aContainer.ElementCount));
     ahfArrayHandleBase := min;
-    SetLength(ahfArrayHandleTable, max - min);
+    SetLength(ahfArrayHandleTable, max - min + 1);
     for i := 0 to Pred(aContainer.ElementCount) do begin
       Container := (aContainer.Elements[i] as IwbContainer);
       val := Container.ElementByName['Array Handle'].NativeValue;
       ahfArrayHandleTable[val - ahfArrayHandleBase] := Container.ElementByName['Count'].NativeValue;
     end;
   end;
+end;
+
+function QueryArrayHandleCount(aInt: Int64): Integer;
+begin
+  Result := 0;
+  if (aInt >= ahfArrayHandleBase) and ((aInt - ahfArrayHandleBase)< Length(ahfArrayHandleTable)) then
+    Result := ahfArrayHandleTable[aInt - ahfArrayHandleBase];
 end;
 
 function TwbArrayHandleFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
@@ -11477,3 +11533,4 @@ initialization
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
 end.
+

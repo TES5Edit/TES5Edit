@@ -347,6 +347,7 @@ type
     function GetSortKey(aExtended: Boolean): string;
     function GetSortPriority: Integer;
     function GetName: string;
+    function GetBaseName: string;
     function GetDisplayName: string;
     function GetShortName: string;
     function GetPath: string;
@@ -414,6 +415,10 @@ type
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
 
+    procedure NextMember;
+    procedure PreviousMember;
+    function CanChangeMember: Boolean;
+
     procedure Tag;
     procedure ResetTags;
     function IsTagged: Boolean;
@@ -445,6 +450,8 @@ type
       read GetElementType;
     property Name: string
       read GetName;
+    property BaseName: string
+      read GetBaseName;
     property DisplayName: string
       read GetDisplayName;
     property ShortName: string
@@ -6772,11 +6779,11 @@ var
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
-    if Assigned(theContainer) and (not SameText(aName, theContainer.Name)) then begin
+    if Assigned(theContainer) and (not SameText(aName, theContainer.BaseName)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
-          if SameText(aName, aContainer.Name) then begin
+          if SameText(aName, aContainer.BaseName) then begin
             Container := aContainer;
             break;
           end else
@@ -10187,6 +10194,7 @@ begin
     for i := 1 to High(udMembers) do
       if udMembers[i].Size[nil, nil, nil] <> j then begin
         j := -1;
+        break;
       end;
     Result := j = -1;
   end;

@@ -215,6 +215,7 @@ type
     function GetSortKeyInternal(aExtended: Boolean): string; virtual;
     function GetSortPriority: Integer; virtual;
     function GetName: string; virtual;
+    function GetBaseName: string; virtual;
     function GetDisplayName: string; virtual;
     function GetShortName: string; virtual;
     function GetPath: string; virtual;
@@ -280,6 +281,10 @@ type
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
 
+    procedure NextMember;
+    procedure PreviousMember;
+    function CanChangeMember: Boolean;
+
     procedure Tag;
     procedure ResetTags; virtual;
     function IsTagged: Boolean;
@@ -307,6 +312,10 @@ type
     procedure MoveElementDown(const aElement: IwbElement);
     function CanMoveElementUp(const aElement: IwbElement): Boolean;
     function CanMoveElementDown(const aElement: IwbElement): Boolean;
+
+    procedure NextElementMember(const aElement: IwbElement);
+    procedure PreviousElementMember(const aElement: IwbElement);
+    function CanChangeElementMember(const aElement: IwbElement): Boolean;
   end;
 
   TwbContainer = class(TwbElement, IwbContainerElementRef, IwbContainer, IwbContainerInternal)
@@ -419,6 +428,10 @@ type
     function CanMoveElementDown(const aElement: IwbElement): Boolean;
     function CanMoveElement: Boolean; virtual;
 
+    procedure NextElementMember(const aElement: IwbElement);
+    procedure PreviousElementMember(const aElement: IwbElement);
+    function CanChangeElementMember(const aElement: IwbElement): Boolean;
+
     function FindBySortKey(const aSortKey: string; aExtended: Boolean; out aIndex: Integer): Boolean;
 
     procedure AfterConstruction; override;
@@ -477,6 +490,7 @@ type
     function GetFile: IwbFile; override;
     function GetReferenceFile: IwbFile; override;
     function GetName: string; override;
+    function GetBaseName: string; override;
     procedure PrepareSave; override;
     procedure SetModified(aValue: Boolean); override;
 
@@ -1034,6 +1048,7 @@ type
     function GetValueDef: IwbValueDef; override;
 
     function GetName: string; override;
+    function GetBaseName: string; override;
     function GetDisplayName: string; override;
 
     function GetCheck: string; override;
@@ -2320,6 +2335,13 @@ begin
   end;
 end;
 
+function TwbFile.GetBaseName: string;
+begin
+  Result := GetFileName;
+  if fsIsHardcoded in flStates then
+    Result := wbGameName + '.exe';
+end;
+
 function TwbFile.GetElementType: TwbElementType;
 begin
   Result := etFile;
@@ -3423,6 +3445,13 @@ begin
   end;
 end;
 
+function TwbContainer.CanChangeElementMember(const aElement: IwbElement): Boolean;
+var
+  SubRecordArrayDef : IwbSubRecordArrayDef;
+begin
+  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef);
+end;
+
 function TwbContainer.CanMoveElement: Boolean;
 begin
   Result := False;
@@ -4118,6 +4147,57 @@ begin
   TwbContainer(Result).cntElementRefs := 1;
 end;
 
+procedure TwbContainer.NextElementMember(const aElement: IwbElement);
+var
+  ElementIndex      : Integer;
+  ElementDef        : IwbRecordMemberDef;
+  Element           : IwbElement;
+  Container         : IwbContainer;
+  SubRecordArrayDef : IwbSubRecordArrayDef;
+  SubRecordUnionDef : IwbSubRecordUnionDef;
+  RecordDef         : IwbRecordDef;
+  i                 : Integer;
+begin
+  if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
+    Exit;
+  if not CanChangeElementMember(aElement) then
+    Exit;
+  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
+    Exit;
+  if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
+    Exit;
+  if Supports(aElement.Container, IwbContainer, Container) then begin
+    for i := 0 to Pred(RecordDef.MemberCount) do
+      if RecordDef.Members[i].Name = aElement.Name then
+        break;
+    if i < RecordDef.MemberCount then begin
+      RemoveElement(aElement);
+      ElementIndex := (i + 1) mod RecordDef.MemberCount;
+      ElementDef := RecordDef.Members[ElementIndex];
+
+      case ElementDef.DefType of
+        dtSubRecord:
+          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
+        dtSubRecordArray:
+          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
+        dtSubRecordStruct:
+          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
+      else
+        Assert(False);
+      end;
+
+      if Assigned(Element) and Assigned(aElement) then try
+        Element.Assign(Low(Integer), nil, False);
+        if csAsCreatedEmpty in cntStates then
+          Exclude(cntStates, csAsCreatedEmpty);
+      except
+        Element.Container.RemoveElement(Element);
+        raise;
+      end;
+    end;
+  end;
+end;
+
 procedure TwbContainer.NotifyChanged;
 begin
   if csInitializing in cntStates then
@@ -4141,6 +4221,57 @@ begin
   DoInit;
   for i := High(cntElements) downto Low(cntElements) do
     cntElements[i].PrepareSave;
+end;
+
+procedure TwbContainer.PreviousElementMember(const aElement: IwbElement);
+var
+  ElementIndex      : Integer;
+  ElementDef        : IwbRecordMemberDef;
+  Element           : IwbElement;
+  Container         : IwbContainer;
+  SubRecordArrayDef : IwbSubRecordArrayDef;
+  SubRecordUnionDef : IwbSubRecordUnionDef;
+  RecordDef         : IwbRecordDef;
+  i                 : Integer;
+begin
+  if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
+    Exit;
+  if not CanChangeElementMember(aElement) then
+    Exit;
+  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
+    Exit;
+  if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
+    Exit;
+  if Supports(aElement.Container, IwbContainer, Container) then begin
+    for i := 0 to Pred(RecordDef.MemberCount) do
+      if RecordDef.Members[i].Name = aElement.Name then
+        break;
+    if i < RecordDef.MemberCount then begin
+      RemoveElement(aElement);
+      ElementIndex := (i - 1) mod RecordDef.MemberCount;
+      ElementDef := RecordDef.Members[ElementIndex];
+
+      case ElementDef.DefType of
+        dtSubRecord:
+          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
+        dtSubRecordArray:
+          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
+        dtSubRecordStruct:
+          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
+      else
+        Assert(False);
+      end;
+
+      if Assigned(Element) and Assigned(aElement) then try
+        Element.Assign(Low(Integer), nil, False);
+        if csAsCreatedEmpty in cntStates then
+          Exclude(cntStates, csAsCreatedEmpty);
+      except
+        Element.Container.RemoveElement(Element);
+        raise;
+      end;
+    end;
+  end;
 end;
 
 function TwbContainer.Reached: Boolean;
@@ -10768,6 +10899,15 @@ begin
     Result := False;
 end;
 
+function TwbElement.CanChangeMember: Boolean;
+var
+  ContainerInternal : IwbContainerInternal;
+begin
+  Result := Assigned(eContainer) and
+    Supports(IwbContainer(eContainer), IwbContainerInternal, ContainerInternal) and
+    ContainerInternal.CanChangeElementMember(Self);
+end;
+
 function TwbElement.CanContainFormIDs: Boolean;
 begin
   Result := True;
@@ -10906,6 +11046,11 @@ begin
   Assert(FRefCount = 1);
   Assert(eExternalRefs = 1);
   inherited;
+end;
+
+function TwbElement.GetBaseName: string;
+begin
+  Result := GetName;
 end;
 
 function TwbElement.GetCheck: string;
@@ -11346,6 +11491,13 @@ begin
   TwbElement(Result).eExternalRefs := 1;
 end;
 
+procedure TwbElement.NextMember;
+begin
+  if not CanChangeMember then
+    Exit;
+  (IwbContainer(eContainer) as IwbContainerInternal).NextElementMember(Self);
+end;
+
 procedure TwbElement.NotifyChanged;
 begin
   if Assigned(eContainer) then
@@ -11355,6 +11507,13 @@ end;
 procedure TwbElement.PrepareSave;
 begin
   {can be overriden}
+end;
+
+procedure TwbElement.PreviousMember;
+begin
+  if not CanChangeMember then
+    Exit;
+  (IwbContainer(eContainer) as IwbContainerInternal).PreviousElementMember(Self);
 end;
 
 function TwbElement.Reached: Boolean;
@@ -12729,14 +12888,12 @@ end;
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer);
 var
   StructDef: IwbStructDef;
-
   i          : Integer;
   ValueDef   : IwbValueDef;
-
   Element    : IwbElementInternal;
-
   IntegerDef : IwbIntegerDef;
   OptionalFromElement: Integer;
+  Size                : Integer;
 begin
   StructDef := aValueDef as IwbStructDef;
 
@@ -12746,16 +12903,17 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
-    if Assigned(aBasePtr) and (i >= OptionalFromElement) and
-       ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or
-           ((ValueDef.Size[aBasePtr, aEndPtr, aContainer]<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
-           (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, aContainer] > Cardinal(aEndPtr))) ) then begin
-      aEndPtr := aBasePtr;
-      ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
-      if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
-        ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
-      else
-        ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
+    if Assigned(aBasePtr) and (i >= OptionalFromElement) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then begin
+      Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
+      if (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
+         ((Cardinal(aBasePtr) + Size) > Cardinal(aEndPtr)) then begin
+        aEndPtr := aBasePtr;
+        ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
+        if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
+          ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
+        else
+          ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
+        end;
     end;
 
     case ValueDef.DefType of
@@ -13946,6 +14104,11 @@ begin
   Result := True;
 end;
 
+function TwbValueBase.GetBaseName: string;
+begin
+  Result := vbValueDef.Name;
+end;
+
 function TwbValueBase.GetCheck: string;
 var
   SelfRef : IwbContainerElementRef;
@@ -13977,12 +14140,15 @@ begin
   if (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
     Result := vbValueDef.Name
   else
-     Result := Resolved.Name;
+   Result := Resolved.Name;
+  if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
+    Result := Result + ' {' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) + '}';
   // something for Dump: Displaying the size in {} and the array count in []
-  if (Resolved.DefType in dtNonValues) and (wbDumpOffset>1) then
+  //  Triggers a lot of pre calculations
+  if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
     Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
       ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
-  if (Resolved.DefType = dtArray) and (wbDumpOffset>0) and Supports(Self, IwbDataContainer, Container) then
+  if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
     Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;

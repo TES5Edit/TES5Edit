@@ -268,6 +268,8 @@ type
     mniNavOther: TMenuItem;
     N13: TMenuItem;
     mniRefByMarkModified: TMenuItem;
+    mniViewNextMember: TMenuItem;
+    mniViewPreviousMember: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -472,6 +474,8 @@ type
     procedure mniRefByMarkModifiedClick(Sender: TObject);
     procedure JvInterpreterProgram1SetValue(Sender: TObject; Identifier: string;
       const Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
+    procedure mniViewNextMemberClick(Sender: TObject);
+    procedure mniViewPreviousMemberClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -9298,6 +9302,27 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniViewNextMemberClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if Assigned(NodeDatas) then begin
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if Assigned(Element) then begin
+      if not EditWarn then
+        Exit;
+
+      Element.NextMember;
+      PostResetActiveTree;
+    end;
+  end;
+end;
+
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -9766,6 +9791,8 @@ begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
   mniViewEdit.Visible := False;
   mniViewAdd.Visible := False;
+  mniViewNextMember.Visible := False;
+  mniViewPreviousMember.Visible := False;
   mniViewRemove.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
@@ -9797,8 +9824,11 @@ begin
         ((Length(CompareRecords) > 0) and (CompareRecords[0]._File.IsEditable))
         );
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
+      mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
+      mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
     end;
-    mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and TargetElement.CanAssign(TargetIndex, nil, True);
+    mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
+      TargetElement.CanAssign(TargetIndex, nil, True);
   end;
 end;
 
@@ -9827,6 +9857,27 @@ end;
 procedure TfrmMain.PostResetActiveTree;
 begin
   PostMessage(Handle, WM_USER + 3, 0, 0);
+end;
+
+procedure TfrmMain.mniViewPreviousMemberClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if Assigned(NodeDatas) then begin
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if Assigned(Element) then begin
+      if not EditWarn then
+        Exit;
+
+      Element.PreviousMember;
+      PostResetActiveTree;
+    end;
+  end;
 end;
 
 procedure TfrmMain.ReInitTree;
