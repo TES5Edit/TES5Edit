@@ -202,6 +202,7 @@ type
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
+    procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
     function Equals(const aElement: IwbElement): Boolean; reintroduce;
 
     procedure Hide;
@@ -11634,6 +11635,14 @@ end;
 procedure TwbElement.SetEditValue(const aValue: string);
 begin
   raise Exception.Create(GetName + ' can not be edited.');
+end;
+
+procedure TwbElement.SetElementState(aState: TwbElementState; Clear: Boolean);
+begin
+  if Clear then
+    Exclude(eStates, aState)
+  else
+    Include(eStates, aState);
 end;
 
 procedure TwbElement.SetInternalModified(aValue: Boolean);

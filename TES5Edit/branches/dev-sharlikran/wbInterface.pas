@@ -323,7 +323,8 @@ type
     esNotReachable,
     esReachable,
     esTagged,
-    esDeciding
+    esDeciding,
+    esNotSuitableToAddTo
   );
 
   TwbElementStates = set of TwbElementState;
@@ -341,6 +342,7 @@ type
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
+    procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
     function Equals(const aElement: IwbElement): Boolean;
 
     function GetValue: string;
@@ -1261,6 +1263,7 @@ type
     function GetCount: Integer;
     function GetElementLabel(aIndex: Integer): string;
     function GetSorted: Boolean;
+    function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
 
     property Element: IwbValueDef
@@ -1276,6 +1279,9 @@ type
 
     property CountCallBack: TwbCountCallback
       read GetCountCallback;
+
+    property CanAddTo: Boolean
+      read GetCanAddTo;
   end;
 
   IwbStructDef = interface(IwbValueDef)
@@ -1876,7 +1882,8 @@ function wbArrayS(const aName      : string;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aCanAddTo  : Boolean = True)
                                    : IwbArrayDef; overload;
 
 function wbArrayS(const aName      : string;
@@ -3470,6 +3477,7 @@ type
     arElement       : IwbValueDef;
     arLabels        : array of string;
     arSorted        : Boolean;
+    arCanAddTo      : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
 
@@ -3480,7 +3488,8 @@ type
                  const aLabels    : array of string;
                        aSorted    : Boolean;
                        aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                       aDontShow  : TwbDontShowCallback); overload;
+                       aDontShow  : TwbDontShowCallback;
+                       aCanAddTo  : Boolean = True); overload;
 
     constructor Create(aPriority      : TwbConflictPriority;
                        aRequired      : Boolean;
@@ -3490,7 +3499,8 @@ type
                  const aLabels        : array of string;
                        aSorted        : Boolean;
                        aAfterLoad     : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                       aDontShow      : TwbDontShowCallback); overload;
+                       aDontShow      : TwbDontShowCallback;
+                       aCanAddTo      : Boolean = True); overload;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3509,6 +3519,7 @@ type
     function GetCount: Integer;
     function GetElementLabel(aIndex: Integer): string;
     function GetSorted: Boolean;
+    function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
   end;
 
@@ -4342,7 +4353,6 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow);
 end;
 
-
 function wbRArray(const aName     : string;
                   const aElement  : IwbRecordMemberDef;
                         aPriority : TwbConflictPriority = cpNormal;
@@ -4444,10 +4454,11 @@ function wbArrayS(const aName      : string;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aCanAddTo  : Boolean = True)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet,aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aCanAddTo);
 end;
 
 function wbArrayS(const aName      : string;
@@ -4468,7 +4479,8 @@ function wbArrayS(const aName          : string;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
                         aRequired      : Boolean = False;
-                        aAfterLoad     : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad     : TwbAfterLoadCallback = nil;
+                        aAfterSet      : TwbAfterSetCallback = nil;
                         aDontShow      : TwbDontShowCallback = nil)
                                        : IwbArrayDef; overload;
 begin
@@ -6836,7 +6848,8 @@ constructor TwbArrayDef.Create(aPriority  : TwbConflictPriority;
                          const aLabels    : array of string;
                                aSorted    : Boolean;
                                aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                               aDontShow  : TwbDontShowCallback);
+                               aDontShow  : TwbDontShowCallback;
+                               aCanAddTo  : Boolean = True);
 var
   i: Integer;
 begin
@@ -6850,6 +6863,7 @@ begin
   if Assigned(aElement) then
     arElement := (aElement as IwbDefInternal).SetParent(Self) as IwbValueDef;
   arSorted := aSorted;
+  arCanAddTo := aCanAddTo;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
@@ -6873,10 +6887,10 @@ begin
   with aSource as TwbArrayDef do
     if Assigned(arCountCallback) then
       Self.Create(defPriority, defRequired, noName, arElement, arCountCallback,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defRoot := aSource
     else
       Self.Create(defPriority, defRequired, noName, arElement, arCount,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defRoot := aSource;
 end;
 
 constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -6886,11 +6900,18 @@ constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
                                aCountCallback : TwbCountCallback;
                          const aLabels        : array of string;
                                aSorted        : Boolean;
-                               aAfterLoad     : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                               aDontShow      : TwbDontShowCallback);
+                               aAfterLoad     : TwbAfterLoadCallback;
+                               aAfterSet      : TwbAfterSetCallback;
+                               aDontShow      : TwbDontShowCallback;
+                               aCanAddTo      : Boolean = True);
 begin
   arCountCallback := aCountCallback;
-  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet,aDontShow);
+  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet,aDontShow, aCanAddTo);
+end;
+
+function TwbArrayDef.GetCanAddTo: Boolean;
+begin
+  Result := arCanAddTo;
 end;
 
 function TwbArrayDef.GetCanBeZeroSize: Boolean;
@@ -7193,10 +7214,9 @@ begin
   end;
     if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
       wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
-//    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-//      Result := 0;
-//    end
-    else
+    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
+      Result := 0;
+    end else
       for i := Low(stMembers) to High(stMembers) do begin
         Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
         if Size = High(Integer) then begin

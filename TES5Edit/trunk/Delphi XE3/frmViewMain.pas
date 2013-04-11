@@ -2892,8 +2892,15 @@ begin
   PluginsFileName := '';
   if ParamCount >= 1 then begin
     PluginsFileName := ParamStr(1);
+    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
+      if ParamCount >= 2 then begin
+        TheGameIniFileName := ParamStr(2);
+        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
+          TheGameIniFileName := '';
+      end;
     if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
       PluginsFileName := '';
+    end;
   end;
 
   if PluginsFileName = '' then begin
@@ -9756,7 +9763,8 @@ begin
         );
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
     end;
-    mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and TargetElement.CanAssign(TargetIndex, nil, True);
+    mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
+      TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
   end;
 end;
 

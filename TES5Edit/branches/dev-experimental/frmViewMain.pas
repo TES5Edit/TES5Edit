@@ -1519,7 +1519,6 @@ var
   LeveledListEntries   : IwbContainerElementRef;
   LeveledListEntry     : IwbContainerElementRef;
   CopiedElement        : IwbElement;
-  Container            : IwbContainer;
 begin
   if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
@@ -1539,14 +1538,8 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(aElements) to High(aElements) do begin
+    for i := Low(aElements) to High(aElements) do
       aElements[i].ReportRequiredMasters(sl, AsNew);
-      Container := aElements[i].Container;
-      while Assigned(Container) do begin
-        Container.ReportRequiredMasters(sl, AsNew);
-        Container := Container.Container;
-      end;
-    end;
 
     j := 0;
     for i := 0 to Pred(sl.Count) do
@@ -2511,7 +2504,6 @@ var
   NodeData                    : PNavNodeData;
   Elements                    : array of IwbElement;
   ReferenceFile               : IwbFile;
-  Container                   : IwbContainer;
   InjectionSourceFiles        : TDynFiles;
   sl                          : TStringList;
   i, j                        : Integer;
@@ -2553,14 +2545,8 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(Elements) to High(Elements) do begin
+    for i := Low(Elements) to High(Elements) do
       Elements[i].ReportRequiredMasters(sl, False);
-      Container := Elements[i].Container;
-      while Assigned(Container) do begin
-        Container.ReportRequiredMasters(sl, False);
-        Container := Container.Container;
-      end;
-    end;
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
@@ -9828,7 +9814,7 @@ begin
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
-      TargetElement.CanAssign(TargetIndex, nil, True);
+      TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
   end;
 end;
 

@@ -5226,7 +5226,7 @@ begin
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
-    ]), -2)
+    ]), -2, cpNormal, False, nil, nil, nil, False)
   ]);
 
   wbScriptFragmentsInfo := wbStruct('Script Fragments Info', [
@@ -5327,25 +5327,25 @@ begin
     wbInteger('Version', itS16),
     wbInteger('Object Format', itS16),
     wbUnion('Data', wbScriptFragmentExistsDecider, [
-      wbArrayS('Scripts', wbScriptEntry, -2),
+      wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
       wbStruct('Info VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
         wbScriptFragmentsInfo
       ], cpNormal, False, nil, 0),
       wbStruct('Pack VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
         wbScriptFragmentsPack
       ], cpNormal, False, nil, 0),
       wbStruct('Perk VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
         wbScriptFragmentsPerk
       ], cpNormal, False, nil, 0),
       wbStruct('Quest VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
         wbScriptFragmentsQuest
       ], cpNormal, False, nil, 0),
       wbStruct('Scene VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2),
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
         wbScriptFragmentsScen
       ], cpNormal, False, nil, 0)
     ])

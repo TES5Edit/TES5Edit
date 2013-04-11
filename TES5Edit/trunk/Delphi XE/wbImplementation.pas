@@ -201,6 +201,7 @@ type
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
+    procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
     function Equals(const aElement: IwbElement): Boolean; reintroduce;
 
     procedure Hide;
@@ -11451,6 +11452,14 @@ begin
   raise Exception.Create(GetName + ' can not be edited.');
 end;
 
+procedure TwbElement.SetElementState(aState: TwbElementState; Clear: Boolean);
+begin
+  if Clear then
+    Exclude(eStates, aState)
+  else
+    Include(eStates, aState);
+end;
+
 procedure TwbElement.SetInternalModified(aValue: Boolean);
 begin
   wbBeginInternalEdit(True);
@@ -12282,6 +12291,9 @@ var
 begin
   ArrayDef := aValueDef as IwbArrayDef;
   Result := wbSortSubRecords and ArrayDef.Sorted;
+  if not ArrayDef.CanAddTo then
+    aContainer.SetElementState(esNotSuitableToAddTo);
+
   SizePrefix := 0;
 
   i := 0;
