@@ -951,6 +951,7 @@ begin
     AddConst(cUnit, 'etFlag', ord(etFlag));
     AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
     AddConst(cUnit, 'etUnion', ord(etUnion));
+    AddConst(cUnit, 'etStructChapter', ord(etStructChapter));
 
     { TwbDefType }
     AddConst(cUnit, 'dtRecord', ord(dtRecord));
@@ -969,6 +970,7 @@ begin
     AddConst(cUnit, 'dtStruct', ord(dtStruct));
     AddConst(cUnit, 'dtUnion', ord(dtUnion));
     AddConst(cUnit, 'dtEmpty', ord(dtEmpty));
+    AddConst(cUnit, 'dtStructChapter', ord(dtStructChapter));
 
     { TConflictThis }
     AddConst(cUnit, 'ctUnknown', ord(ctUnknown));

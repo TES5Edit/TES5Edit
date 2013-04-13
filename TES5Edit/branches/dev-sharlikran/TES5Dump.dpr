@@ -26,6 +26,7 @@ uses
   Classes,
   SysUtils,
   Windows,
+  System.Win.Registry,
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
@@ -35,7 +36,8 @@ uses
   wbImplementation in 'wbImplementation.pas',
   wbInterface in 'wbInterface.pas',
   wbLocalization in 'wbLocalization.pas',
-  wbBSA in 'wbBSA.pas';
+  wbBSA in 'wbBSA.pas',
+  Zlibex in 'Zlibex.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -43,8 +45,9 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
-  StartTime  : TDateTime;
-  DumpGroups : TStringList;
+  StartTime    : TDateTime;
+  DumpGroups   : TStringList;
+  DumpChapters : TStringList;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -58,6 +61,7 @@ var
   i            : Integer;
   GroupRecord  : IwbGroupRecord;
   ContainerRef : IwbContainerElementRef;
+  SaveElement  : IwbSaveAddressable;
 begin
   if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
@@ -66,6 +70,11 @@ begin
           Exit;
         ReportProgress('Dumping: ' + GroupRecord.Name);
       end;
+  if (wbGameMode in [gmTES5Saves]) and Assigned(DumpChapters) and Supports(aContainer, IwbSaveAddressable, SaveElement) then begin
+    if not DumpChapters.Find(IntToStr(SaveElement.GetType), i) then
+        Exit;
+    ReportProgress('Dumping: ' + aContainer.Name);
+  end;
 
   if aContainer.Skipped then begin
     if not wbReportMode then WriteLn(aIndent, '<contents skipped>');
@@ -179,10 +188,73 @@ begin
 end;
 {==============================================================================}
 
+function CheckAppPath: string;
+const
+  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
+  ExeName : array[TwbGameMode] of string =
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe');
+var
+  s: string;
+begin
+  Result := '';
+  s := ParamStr(0);
+  s := ExtractFilePath(s);
+  while Length(s) > 3 do begin
+    if FileExists(s + ExeName[wbGameMode]) and DirectoryExists(s + 'Data') then begin
+      Result := s;
+      Exit;
+    end;
+    s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
+  end;
+end;
+
+procedure DoInitPath;
+const
+  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
+  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+var
+  ProgramPath  : String;
+  DataPath     : String;
+begin
+  ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+
+  if not wbFindCmdLineParam('D', DataPath) then begin
+    DataPath := CheckAppPath;
+
+    if DataPath = '' then with TRegistry.Create do try
+      RootKey := HKEY_LOCAL_MACHINE;
+
+      if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
+        if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
+          ReportProgress('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
+          if wbGameMode = gmTES5 then
+            ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
+          wbDontSave := True;
+          Exit;
+        end;
+
+      DataPath := ReadString('Installed Path');
+
+      if DataPath = '' then begin
+        ReportProgress('Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
+        if wbGameMode = gmTES5 then
+          ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
+        wbDontSave := True;
+      end;
+    finally
+      Free;
+    end;
+    if DataPath <>'' then
+      DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
+  end else
+    DataPath := IncludeTrailingPathDelimiter(DataPath);
+
+  wbDataPath := DataPath;
+end;
+
 var
   NeedsSyntaxInfo : Boolean;
   s, s2           : string;
-  DataPath        : string;
   i               : integer;
   _File           : IwbFile;
   Masters         : TStringList;
@@ -196,6 +268,7 @@ begin
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
+  StartTime := Now;
 
   try
     if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
@@ -242,6 +315,8 @@ begin
       Exit;
     end;
 
+    DoInitPath;
+
     if not wbFindCmdLineSwitch('q') and not wbReportMode then begin
       WriteLn(ErrOutput, wbAppName, 'Dump ', VersionString);
       WriteLn(ErrOutput);
@@ -266,6 +341,14 @@ begin
       DumpGroups.Sort;
     end;
 
+    if wbFindCmdLineParam('dc', s) then begin
+      DumpChapters := TStringList.Create;
+      DumpChapters.Sorted := True;
+      DumpChapters.Duplicates := dupIgnore;
+      DumpChapters.CommaText := s;
+      DumpChapters.Sort;
+    end;
+
     wbLoadAllBSAs := wbFindCmdLineSwitch('allbsa');
 
     if wbFindCmdLineSwitch('more') then
@@ -288,6 +371,12 @@ begin
       GroupToSkip.Add('NAVI');
       GroupToSkip.Add('CELL');
       GroupToSkip.Add('WRLD');
+    end;
+
+    if wbFindCmdLineParam('xc', s) then
+      ChaptersToSkip.CommaText := s
+    else if wbFindCmdLineSwitch('xcbloat') then begin
+      ChaptersToSkip.Add('Papyrus Struct');
     end;
 
     if wbFindCmdLineParam('l', s) and ((wbGameMode = gmTES5) or (wbGameMode = gmTES5Saves)) then
@@ -338,6 +427,7 @@ begin
       WriteLn(ErrOutput, '             ', ' (plugin.bsa and plugin - interface.bsa)');
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
       WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
+      WriteLn(ErrOutput, '-d:datapath  ', 'Path to the game plugins directory');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Saves mode ONLY', ' not for general use');
       WriteLn(ErrOutput, '-bts         ', 'BytesToSkip  = number of undecoded bytes to skip, default = 0');
@@ -358,6 +448,8 @@ begin
       ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
     if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
+    if Assigned(ChaptersToSkip) and (ChaptersToSkip.Count>0) then
+      ReportProgress('['+s+']   Excluding chapters : '+ChaptersToSkip.CommaText);
     if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
 
@@ -367,7 +459,6 @@ begin
       ReportProgress('['+s+']   BytesToDump : '+IntToStr(BytesToDump));
 
     if wbLoadBSAs then begin
-      DataPath := ExtractFilePath(s);
       Masters := TStringList.Create;
       wbMastersForFile(s, Masters);
       Masters.Add(ExtractFileName(s));
@@ -376,10 +467,10 @@ begin
         if wbLoadAllBSAs then begin
           if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s2 := ChangeFileExt(Masters[i], '');
-            if FindFirst(DataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
+            if FindFirst(wbDataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
               repeat
                 ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(DataPath + F.Name);
+                wbContainerHandler.AddBSA(wbDataPath + F.Name);
               until FindNext(F) <> 0;
             finally
               SysUtils.FindClose(F);
@@ -388,18 +479,18 @@ begin
         end else begin
           if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s2 := ChangeFileExt(Masters[i], '');
-            if FindFirst(DataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
+            if FindFirst(wbDataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
               repeat
                 ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(DataPath + F.Name);
+                wbContainerHandler.AddBSA(wbDataPath + F.Name);
               until FindNext(F) <> 0;
             finally
               SysUtils.FindClose(F);
             end;
-            if FindFirst(DataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
+            if FindFirst(wbDataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
               repeat
                 ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(DataPath + F.Name);
+                wbContainerHandler.AddBSA(wbDataPath + F.Name);
               until FindNext(F) <> 0;
             finally
               SysUtils.FindClose(F);
@@ -408,11 +499,9 @@ begin
         end;
       end;
       FreeAndNil(Masters);
-      ReportProgress('[' + DataPath + '] Setting Resource Path.');
-      wbContainerHandler.AddFolder(DataPath);
+      ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
+      wbContainerHandler.AddFolder(wbDataPath);
     end;
-
-    wbDataPath := DataPath;
 
     if Pos('SAVES', UpperCase(wbAppName))>0 then
       _File := wbSaveFile(s)
@@ -432,7 +521,7 @@ begin
     ReportProgress('All Done.');
   except
     on e: Exception do
-      WriteLn(ErrOutput, 'Unexpected Error: <',e.ClassName, ': ', e.Message,'>');
+      ReportProgress('Unexpected Error: <'+e.ClassName+': '+e.Message+'>');
   end;
   if wbReportMode or (DebugHook <> 0) then
     ReadLn;

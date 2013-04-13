@@ -1519,6 +1519,7 @@ var
   LeveledListEntries   : IwbContainerElementRef;
   LeveledListEntry     : IwbContainerElementRef;
   CopiedElement        : IwbElement;
+  Container            : IwbContainer;
 begin
   if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
@@ -1538,8 +1539,14 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(aElements) to High(aElements) do
+    for i := Low(aElements) to High(aElements) do begin
       aElements[i].ReportRequiredMasters(sl, AsNew);
+      Container := aElements[i].Container;
+      while Assigned(Container) do begin
+        Container.ReportRequiredMasters(sl, AsNew, False);
+        Container := Container.Container;
+      end;
+    end;
 
     j := 0;
     for i := 0 to Pred(sl.Count) do
@@ -2504,6 +2511,7 @@ var
   NodeData                    : PNavNodeData;
   Elements                    : array of IwbElement;
   ReferenceFile               : IwbFile;
+  Container                   : IwbContainer;
   InjectionSourceFiles        : TDynFiles;
   sl                          : TStringList;
   i, j                        : Integer;
@@ -2545,8 +2553,14 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(Elements) to High(Elements) do
+    for i := Low(Elements) to High(Elements) do begin
       Elements[i].ReportRequiredMasters(sl, False);
+      Container := Elements[i].Container;
+      while Assigned(Container) do begin
+        Container.ReportRequiredMasters(sl, False, False);
+        Container := Container.Container;
+      end;
+    end;
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
@@ -4838,7 +4852,7 @@ begin
                 //Assert(Cardinal(Container.ElementCount) <= aChildCount);
               end;
             end;
-          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion:
+          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion, etStructChapter:
             if aChildCount < Cardinal(Container.ElementCount) then
               aChildCount := Container.ElementCount;
         end;
@@ -5091,7 +5105,7 @@ begin
         case Container.ElementType of
           etMainRecord, etSubRecordStruct:
             NodeData.Element := Container.ElementBySortOrder[aIndex];
-          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion:
+          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion, etStructChapter:
             if aIndex < Cardinal(Container.ElementCount) then
               NodeData.Element := Container.Elements[aIndex];
         end;

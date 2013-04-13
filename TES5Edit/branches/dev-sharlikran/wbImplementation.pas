@@ -30,9 +30,10 @@ uses
   Zlibex;
 
 var
-  RecordToSkip : TStringList;
-  GroupToSkip  : TStringList;
-  SubRecordOrderList     : TStringList;
+  RecordToSkip       : TStringList;
+  GroupToSkip        : TStringList;
+  ChaptersToSkip     : TStringList;
+  SubRecordOrderList : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
@@ -198,7 +199,7 @@ type
 
     procedure NotifyChanged; virtual;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); virtual;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); virtual;
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
@@ -350,7 +351,7 @@ type
     function Reached: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
     procedure ResetConflict; override;
     procedure ResetReachable; override;
 
@@ -799,7 +800,7 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     function GetReferenceFile: IwbFile; override;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
     function LinksToParent: Boolean; override;
     function Reached: Boolean; override;
     function GetContainingMainRecord: IwbMainRecord; override;
@@ -1137,9 +1138,27 @@ type
     property IsCompressed: Boolean read GetIsCompressed;
   end;
 
-  TwbSaveStruct = class(TwbStruct, IwbSaveRecord)
+  TwbSaveHeader = class(TwbStruct, IwbSaveHeader)
   protected
     function GetMagic: TwbSaveMagic;
+  end;
+
+  TwbSaveChapter = class(TwbStruct, IwbSaveChapter)
+  end;
+
+  TwbSaveAddressable = class(TwbStruct, IwbSaveAddressable)
+  protected
+    chapterSkipped : Boolean;
+  protected
+    function GetSkipped: Boolean; override;
+    function GetElementType: TwbElementType; override;
+    function GetType: Integer;
+  public
+    constructor Create(const aContainer  : IwbContainer;
+                       const aValueDef   : IwbValueDef;
+                       const aSource     : IwbElement;
+                       const aOnlySK     : Boolean;
+                       const aNameSuffix : string);  reintroduce; overload;
   end;
 
   TwbUnion = class(TwbValueBase)
@@ -3467,7 +3486,8 @@ function TwbContainer.CanChangeElementMember(const aElement: IwbElement): Boolea
 var
   SubRecordArrayDef : IwbSubRecordArrayDef;
 begin
-  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef);
+  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef) and
+    IsElementEditable(Self);
 end;
 
 function TwbContainer.CanMoveElement: Boolean;
@@ -4398,7 +4418,7 @@ begin
   end;
 end;
 
-procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -4406,9 +4426,10 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
   inherited;
-  for i := Low(cntElements) to High(cntElements) do
-    if cntElements[i].CanContainFormIDs then
-      cntElements[i].ReportRequiredMasters(aStrings, aAsNew);
+  if Recursive then
+    for i := Low(cntElements) to High(cntElements) do
+      if cntElements[i].CanContainFormIDs then
+        cntElements[i].ReportRequiredMasters(aStrings, aAsNew, Recursive);
 end;
 
 function TwbContainer.RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement;
@@ -7474,7 +7495,7 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   _File: IwbFile;
 begin
@@ -8481,6 +8502,7 @@ begin
           end else case ArrayDef.Element.DefType of
             dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
             dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+            dtStructChapter: Result := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
             dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
           else
             Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
@@ -8489,7 +8511,7 @@ begin
         CheckCount;
         CheckTerminator;
       end;
-      dtStruct: begin
+      dtStruct, dtStructChapter: begin
         StructDef := srValueDef as IwbStructDef;
 
         Assert(aElement.SortOrder >= 0);
@@ -8597,6 +8619,7 @@ begin
                 case ArrayDef.Element.DefType of
                   dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                   dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                  dtStructChapter: Element := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                   dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                 else
                   Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
@@ -8871,7 +8894,7 @@ begin
         srIsArray := True;
         srSorted := ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix);
       end;
-      dtStruct: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
+      dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
       dtUnion:  begin
         case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
           ufArray: srIsArray := True;
@@ -8895,6 +8918,7 @@ begin
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbSaveAddressable.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       dtUnion: Element := TwbUnion.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
@@ -11574,7 +11598,7 @@ begin
   end;
 end;
 
-procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   Element       : IwbElement;
   ReferenceFile : IwbFile;
@@ -12516,6 +12540,9 @@ var
 begin
   ArrayDef := aValueDef as IwbArrayDef;
   Result := wbSortSubRecords and ArrayDef.Sorted;
+  if not ArrayDef.CanAddTo then
+    aContainer.SetElementState(esNotSuitableToAddTo);
+
   SizePrefix := 0;
 
   i := 0;
@@ -12570,6 +12597,7 @@ begin
       case ValueDef.DefType of
         dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtStructChapter: Element := TwbSaveAddressable.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
@@ -12653,6 +12681,7 @@ begin
     case ArrayDef.Element.DefType of
       dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
       dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+      dtStructChapter: Result := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
       dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
     else
       Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
@@ -12739,6 +12768,7 @@ begin
         case ArrayDef.Element.DefType of
           dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
           dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+          dtStructChapter: Element := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
           dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
         else
           Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
@@ -12920,6 +12950,7 @@ var
   IntegerDef          : IwbIntegerDef;
   OptionalFromElement : Integer;
   Size                : Integer;
+  over                : Boolean;
 begin
   StructDef := aValueDef as IwbStructDef;
 
@@ -12929,22 +12960,27 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
-    if Assigned(aBasePtr) and (i >= OptionalFromElement) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then begin
-      Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
-      if (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
-         ((Cardinal(aBasePtr) + Size) > Cardinal(aEndPtr)) then begin
+    if Assigned(aBasePtr) and (i >= OptionalFromElement) then begin
+      over := (Cardinal(aBasePtr) >= Cardinal(aEndPtr));
+      if not over then begin
+        Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
+        over := (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
+                ((Cardinal(aBasePtr) + Size) >= Cardinal(aEndPtr));
+      end;
+      if over then begin
         aEndPtr := aBasePtr;
         ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
         if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
         else
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
-        end;
+      end;
     end;
 
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbSaveAddressable.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
@@ -13017,7 +13053,7 @@ var
   szDef : IwbStructZDef;
 begin
   if (szCompressedSize = 0) then
-    if Supports(Self.vbValueDef, IwbStructZDef, szDef)  then
+    if Supports(vbValueDef, IwbStructZDef, szDef)  then
       szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize)
     else
       szCompressedSize := -1;
@@ -13048,6 +13084,7 @@ begin
       Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
     dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    dtStructChapter: Element := TwbSaveAddressable.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
   else
     Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
@@ -14359,7 +14396,7 @@ procedure TwbValueBase.InitDataPtr;
 var
   Size : Integer;
 begin
-  if GetDataBasePtr <> nil then begin
+  if (GetDataBasePtr <> nil) and (Cardinal(dcDataEndPtr)>=Cardinal(dcDataBasePtr)) then begin
     Size := vbValueDef.Size[dcDataBasePtr, dcDataEndPtr, Self];
     if Size < High(Integer) then begin
       dcDataEndPtr := Pointer( Cardinal(dcDataBasePtr) + Cardinal(Size) );
@@ -14892,8 +14929,11 @@ end;
 procedure TwbSaveFile.Scan;
 var
   CurrentPtr  : Pointer;
-  Header      : IwbSaveRecord;
+  Header      : IwbSaveHeader;
+  MasterFiles : IwbContainerElementRef;
+  i           : Integer;
   SelfRef     : IwbContainerElementRef;
+  fPath       : String;
 
 begin
   SelfRef := Self as IwbContainerElementRef;
@@ -14902,21 +14942,43 @@ begin
   wbBaseOffset := Cardinal(flView);
 
   CurrentPtr := flView;
-  TwbSaveStruct.Create(Self, CurrentPtr, flEndPtr, StructSaveDef, '', False);
+  TwbSaveHeader.Create(Self, CurrentPtr, flEndPtr, SaveFileHeader, '', False);
 
-  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveRecord, Header) then
+  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
   if Header.Magic <> HeaderMagic then
     raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"', [HeaderMagic, String(Header.Magic), flFileName]);
 
+  if fsOnlyHeader in flStates then
+    Exit;
+
+  MasterFiles := Header.ElementByName['Plugins'] as IwbContainerElementRef;
+  if Assigned(MasterFiles) then
+    for i := 0 to Pred(MasterFiles.ElementCount) do begin
+      fPath := wbDataPath + MasterFiles[i].Value;
+      if FileExists(fPath) then
+        AddMaster(fPath);
+    end;
+
+  if flCompareTo <> '' then
+    AddMaster(flCompareTo);
+  for i := 0 to Pred(SaveFileChapters.MemberCount) do
+    case SaveFileChapters.Members[i].DefType of
+      dtArray: TwbArray.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      dtStruct: TwbStruct.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      dtStructChapter: TwbSaveAddressable.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      dtUnion: TwbUnion.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+    else
+      TwbValue.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+    end;
   flProgress('Processing completed');
   flLoadFinished := True;
 end;
 
 { TwbSaveStruct }
 
-function TwbSaveStruct.GetMagic: TwbSaveMagic;
+function TwbSaveHeader.GetMagic: TwbSaveMagic;
 var
   Element : IwbElement;
   Container : IwbContainer;
@@ -14926,6 +14988,44 @@ begin
   Element := Container.Elements[0];
   if Assigned(Element) then
     Result := Element.NativeValue;
+end;
+
+{ TwbSaveAddressable }
+
+constructor TwbSaveAddressable.Create(const aContainer  : IwbContainer;
+                                  const aValueDef   : IwbValueDef;
+                                  const aSource     : IwbElement;
+                                  const aOnlySK     : Boolean;
+                                  const aNameSuffix : string);
+var
+  Dummy : Integer;
+begin
+  inherited;
+  chapterSkipped := chapterSkipped or ChaptersToSkip.Find(aValueDef.Name, Dummy);
+end;
+
+function TwbSaveAddressable.GetElementType: TwbElementType;
+begin
+  Result := etStructChapter;
+end;
+
+function TwbSaveAddressable.GetSkipped: Boolean;
+begin
+  Result := chapterSkipped;
+end;
+
+function TwbSaveAddressable.GetType: Integer;
+var
+  aElement   : IwbElement;
+  aContainer : IwbContainer;
+begin
+  Result := -1;
+  Supports(Self, IwbContainer, aContainer);
+  aElement := aContainer.ElementByName['Type']; // hardcoded !! BAD !! GlobalData
+  if not Assigned(aElement) then
+    aElement :=  aContainer.ElementByPath['..\..\..\Type']; // hardcoded !! EVEN WORSE !! Changed Form
+  if Assigned(aElement) then
+    Result := aElement.NativeValue;
 end;
 
 initialization
