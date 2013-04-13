@@ -343,6 +343,7 @@ type
     function GetSortKey(aExtended: Boolean): string;
     function GetSortPriority: Integer;
     function GetName: string;
+    function GetBaseName: string;
     function GetDisplayName: string;
     function GetShortName: string;
     function GetPath: string;
@@ -383,7 +384,7 @@ type
     function CanContainFormIDs: Boolean;
     function GetLinksTo: IwbElement;
     function GetNoReach: Boolean;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
@@ -409,6 +410,10 @@ type
     procedure MoveDown;
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
+
+    procedure NextMember;
+    procedure PreviousMember;
+    function CanChangeMember: Boolean;
 
     procedure Tag;
     procedure ResetTags;
@@ -441,6 +446,8 @@ type
       read GetElementType;
     property Name: string
       read GetName;
+    property BaseName: string
+      read GetBaseName;
     property DisplayName: string
       read GetDisplayName;
     property ShortName: string
@@ -1607,7 +1614,7 @@ function wbUnion(const aName     : string;
 
 function wbByteArray(const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
@@ -1615,7 +1622,7 @@ function wbByteArray(const aSignature : TwbSignature;
                                       : IwbSubRecordDef; overload;
 
 function wbByteArray(const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
@@ -3143,12 +3150,12 @@ type
 
   TwbByteArrayDef = class(TwbValueDef, IwbByteArrayDef)
   protected {private}
-    badSize                : Cardinal;
+    badSize                : Int64;
 
     FoundFormIDAtOffSet    : array of Integer;
     NotFoundFormIDAtOffSet : array of Integer;
     SignaturesAtOffSet     : array of TStringList;
-    FormIDsAtOffSetFoundIn  : array of TStringList;
+    FormIDsAtOffSetFoundIn : array of TStringList;
 
     FoundFloatAtOffSet     : array of Integer;
     NotFoundFloatAtOffSet  : array of Integer;
@@ -3931,7 +3938,7 @@ end;
 
 function wbByteArray(const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
@@ -3942,7 +3949,7 @@ begin
 end;
 
 function wbByteArray(const aName     : string = 'Unknown';
-                           aSize     : Cardinal = 0;
+                           aSize     : Int64 = 0;
                            aPriority : TwbConflictPriority = cpNormal;
                            aRequired : Boolean = False;
                            aDontShow : TwbDontShowCallback = nil)
@@ -6477,11 +6484,11 @@ var
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
-    if Assigned(theContainer) and (not SameText(aName, theContainer.Name)) then begin
+    if Assigned(theContainer) and (not SameText(aName, theContainer.BaseName)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
-          if SameText(aName, aContainer.Name) then begin
+          if SameText(aName, aContainer.BaseName) then begin
             Container := aContainer;
             break;
           end else
@@ -6709,26 +6716,26 @@ var
   Size  : Integer;
 begin
   Result := 0;
-    if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
-      wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
-    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-      Result := 0;
-    end else
-      for i := Low(stMembers) to High(stMembers) do begin
-        Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
-        if Size = High(Integer) then begin
-          Result := High(Integer);
-          Break;
-        end;
-        if Assigned(aBasePtr) then
-          Inc(Cardinal(aBasePtr), Size);
-        Inc(Result, Size);
+  if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
+    wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
+  else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
+    Result := 0;
+  end else
+    for i := Low(stMembers) to High(stMembers) do begin
+      Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
+      if Size = High(Integer) then begin
+        Result := High(Integer);
+        Break;
       end;
+      if Assigned(aBasePtr) then
+        Inc(Cardinal(aBasePtr), Size);
+      Inc(Result, Size);
+    end;
 end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;
 var
-  i    : Integer;
+  i : Integer;
 begin
   Result := False;
   for i := Low(stMembers) to High(stMembers) do
@@ -9885,6 +9892,7 @@ begin
     for i := 1 to High(udMembers) do
       if udMembers[i].Size[nil, nil, nil] <> j then begin
         j := -1;
+        break;
       end;
     Result := j = -1;
   end;
@@ -10739,3 +10747,4 @@ initialization
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
 end.
+

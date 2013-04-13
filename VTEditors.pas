@@ -13,7 +13,10 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls,
-  Buttons, ExtCtrls, ComCtrls, Spin,
+  Buttons,
+  ExtCtrls,
+  ComCtrls,
+  {Vcl.Samples.}Spin,
   VirtualTrees;
 
 {$I Compilers.inc}

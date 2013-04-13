@@ -34,7 +34,8 @@ uses
   wbImplementation in 'wbImplementation.pas',
   wbInterface in 'wbInterface.pas',
   wbLocalization in 'wbLocalization.pas',
-  wbBSA in 'wbBSA.pas';
+  wbBSA in 'wbBSA.pas',
+  Zlibex in 'Zlibex.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -196,6 +197,7 @@ begin
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
+  StartTime := Now;
 
   try
     if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
@@ -407,7 +409,7 @@ begin
     ReportProgress('All Done.');
   except
     on e: Exception do
-      WriteLn(ErrOutput, 'Unexpected Error: <',e.ClassName, ': ', e.Message,'>');
+      ReportProgress('Unexpected Error: <'+e.ClassName+': '+e.Message+'>');
   end;
   if wbReportMode or (DebugHook <> 0) then
     ReadLn;
