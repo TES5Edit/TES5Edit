@@ -20,7 +20,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, ShellAPI, pngimage,
+  AppEvnts, 
+//  System.Actions, 
+  ShellAPI, 
+  {Vcl.Imaging.}pngimage,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
@@ -265,6 +268,8 @@ type
     mniNavOther: TMenuItem;
     N13: TMenuItem;
     mniRefByMarkModified: TMenuItem;
+    mniViewNextMember: TMenuItem;
+    mniViewPreviousMember: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -469,6 +474,8 @@ type
     procedure mniRefByMarkModifiedClick(Sender: TObject);
     procedure JvInterpreterProgram1SetValue(Sender: TObject; Identifier: string;
       const Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
+    procedure mniViewNextMemberClick(Sender: TObject);
+    procedure mniViewPreviousMemberClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -1512,6 +1519,7 @@ var
   LeveledListEntries   : IwbContainerElementRef;
   LeveledListEntry     : IwbContainerElementRef;
   CopiedElement        : IwbElement;
+  Container            : IwbContainer;
 begin
   if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
@@ -1531,8 +1539,14 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(aElements) to High(aElements) do
+    for i := Low(aElements) to High(aElements) do begin
       aElements[i].ReportRequiredMasters(sl, AsNew);
+      Container := aElements[i].Container;
+      while Assigned(Container) do begin
+        Container.ReportRequiredMasters(sl, AsNew, False);
+        Container := Container.Container;
+      end;
+    end;
 
     j := 0;
     for i := 0 to Pred(sl.Count) do
@@ -2497,6 +2511,7 @@ var
   NodeData                    : PNavNodeData;
   Elements                    : array of IwbElement;
   ReferenceFile               : IwbFile;
+  Container                   : IwbContainer;
   InjectionSourceFiles        : TDynFiles;
   sl                          : TStringList;
   i, j                        : Integer;
@@ -2538,8 +2553,14 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(Elements) to High(Elements) do
+    for i := Low(Elements) to High(Elements) do begin
       Elements[i].ReportRequiredMasters(sl, False);
+      Container := Elements[i].Container;
+      while Assigned(Container) do begin
+        Container.ReportRequiredMasters(sl, False, False);
+        Container := Container.Container;
+      end;
+    end;
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
@@ -9263,6 +9284,27 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniViewNextMemberClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if Assigned(NodeDatas) then begin
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if Assigned(Element) then begin
+      if not EditWarn then
+        Exit;
+
+      Element.NextMember;
+      PostResetActiveTree;
+    end;
+  end;
+end;
+
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -9731,6 +9773,8 @@ begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
   mniViewEdit.Visible := False;
   mniViewAdd.Visible := False;
+  mniViewNextMember.Visible := False;
+  mniViewPreviousMember.Visible := False;
   mniViewRemove.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
@@ -9762,6 +9806,8 @@ begin
         ((Length(CompareRecords) > 0) and (CompareRecords[0]._File.IsEditable))
         );
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
+      mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
+      mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
@@ -9793,6 +9839,27 @@ end;
 procedure TfrmMain.PostResetActiveTree;
 begin
   PostMessage(Handle, WM_USER + 3, 0, 0);
+end;
+
+procedure TfrmMain.mniViewPreviousMemberClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if Assigned(NodeDatas) then begin
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if Assigned(Element) then begin
+      if not EditWarn then
+        Exit;
+
+      Element.PreviousMember;
+      PostResetActiveTree;
+    end;
+  end;
 end;
 
 procedure TfrmMain.ReInitTree;
