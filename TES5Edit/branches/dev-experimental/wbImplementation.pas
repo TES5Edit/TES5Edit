@@ -197,7 +197,7 @@ type
 
     procedure NotifyChanged; virtual;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); virtual;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); virtual;
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
@@ -349,7 +349,7 @@ type
     function Reached: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
     procedure ResetConflict; override;
     procedure ResetReachable; override;
 
@@ -792,7 +792,7 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     function GetReferenceFile: IwbFile; override;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
     function LinksToParent: Boolean; override;
     function Reached: Boolean; override;
     function GetContainingMainRecord: IwbMainRecord; override;
@@ -3450,7 +3450,8 @@ function TwbContainer.CanChangeElementMember(const aElement: IwbElement): Boolea
 var
   SubRecordArrayDef : IwbSubRecordArrayDef;
 begin
-  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef);
+  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef) and
+    IsElementEditable(Self);
 end;
 
 function TwbContainer.CanMoveElement: Boolean;
@@ -4381,7 +4382,7 @@ begin
   end;
 end;
 
-procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -4389,9 +4390,10 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
   inherited;
-  for i := Low(cntElements) to High(cntElements) do
-    if cntElements[i].CanContainFormIDs then
-      cntElements[i].ReportRequiredMasters(aStrings, aAsNew);
+  if Recursive then
+    for i := Low(cntElements) to High(cntElements) do
+      if cntElements[i].CanContainFormIDs then
+        cntElements[i].ReportRequiredMasters(aStrings, aAsNew, Recursive);
 end;
 
 function TwbContainer.RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement;
@@ -7457,7 +7459,7 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   _File: IwbFile;
 begin
@@ -11557,7 +11559,7 @@ begin
   end;
 end;
 
-procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   Element       : IwbElement;
   ReferenceFile : IwbFile;
@@ -12906,6 +12908,7 @@ var
   IntegerDef          : IwbIntegerDef;
   OptionalFromElement : Integer;
   Size                : Integer;
+  over                : Boolean;
 begin
   StructDef := aValueDef as IwbStructDef;
 
@@ -12915,17 +12918,21 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
-    if Assigned(aBasePtr) and (i >= OptionalFromElement) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then begin
-      Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
-      if (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
-         ((Cardinal(aBasePtr) + Size) > Cardinal(aEndPtr)) then begin
+    if Assigned(aBasePtr) and (i >= OptionalFromElement) then begin
+      over := (Cardinal(aBasePtr) >= Cardinal(aEndPtr));
+      if not over then begin
+        Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
+        over := (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
+                ((Cardinal(aBasePtr) + Size) >= Cardinal(aEndPtr));
+      end;
+      if over then begin
         aEndPtr := aBasePtr;
         ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
         if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
         else
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
-        end;
+      end;
     end;
 
     case ValueDef.DefType of

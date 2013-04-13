@@ -107,7 +107,7 @@ var
   wbRotationFactor : Extended = 180/Pi;
   wbRotationScale : Integer = 4;
 
-  wbDumpOffset : Integer = 0;
+  wbDumpOffset : Integer = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
   wbBaseOffset : Cardinal = 0;
 
 //  wbRotationFactor : Extended = 1;
@@ -390,7 +390,7 @@ type
     function CanContainFormIDs: Boolean;
     function GetLinksTo: IwbElement;
     function GetNoReach: Boolean;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
@@ -1322,7 +1322,7 @@ type
   end;
 
   IwbDumpIntegerDefFormater = interface(IwbIntegerDefFormater)
-    ['{71C4A255-B983-488C-9837-0A720132348C}']
+    ['{9767F3EF-0E6F-45FB-AC9F-31A9B4312760}']
   end;
 
   IwbFormID = interface(IwbIntegerDefFormater)
@@ -1330,7 +1330,7 @@ type
   end;
 
   IwbRefID = interface(IwbFormID)
-    ['{71C4A255-B983-488C-9837-0A720132348B}']
+    ['{F6EEAFDD-5AD7-4DB3-BF45-5D5DB53465D4}']
   end;
 
   IwbFormIDChecked = interface(IwbFormID)
@@ -1379,11 +1379,11 @@ type
   end;
 
   IwbKey2Data6EnumDef = interface(IwbEnumDef)
-    ['{A3AFE02E-F72D-4E0E-BC56-219F7EE2B565}']
+    ['{A74C58CC-6280-4143-B72B-4AD4F68A9957}']
   end;
 
   IwbData6Key2EnumDef = interface(IwbEnumDef)
-    ['{A3AFE02E-F72D-4E0E-BC56-219F7EE2B565}']
+    ['{AC7F99C9-9DF1-43BB-9052-6AD4B69E706F}']
   end;
 
   IwbCallbackDef = interface(IwbIntegerDefFormater)
@@ -1642,7 +1642,7 @@ function wbUnion(const aName     : string;
 
 function wbByteArray(const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
@@ -1650,7 +1650,7 @@ function wbByteArray(const aSignature : TwbSignature;
                                       : IwbSubRecordDef; overload;
 
 function wbByteArray(const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
@@ -3234,12 +3234,12 @@ type
 
   TwbByteArrayDef = class(TwbValueDef, IwbByteArrayDef)
   protected {private}
-    badSize                : Cardinal;
+    badSize                : Int64;
 
     FoundFormIDAtOffSet    : array of Integer;
     NotFoundFormIDAtOffSet : array of Integer;
     SignaturesAtOffSet     : array of TStringList;
-    FormIDsAtOffSetFoundIn  : array of TStringList;
+    FormIDsAtOffSetFoundIn : array of TStringList;
 
     FoundFloatAtOffSet     : array of Integer;
     NotFoundFloatAtOffSet  : array of Integer;
@@ -4050,7 +4050,7 @@ end;
 
 function wbByteArray(const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
@@ -4061,7 +4061,7 @@ begin
 end;
 
 function wbByteArray(const aName     : string = 'Unknown';
-                           aSize     : Cardinal = 0;
+                           aSize     : Int64 = 0;
                            aPriority : TwbConflictPriority = cpNormal;
                            aRequired : Boolean = False;
                            aDontShow : TwbDontShowCallback = nil)
@@ -7035,21 +7035,21 @@ var
   Size  : Integer;
 begin
   Result := 0;
-    if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
-      wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
-    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-      Result := 0;
-    end else
-      for i := Low(stMembers) to High(stMembers) do begin
-        Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
-        if Size = High(Integer) then begin
-          Result := High(Integer);
-          Break;
-        end;
-        if Assigned(aBasePtr) then
-          Inc(Cardinal(aBasePtr), Size);
-        Inc(Result, Size);
+  if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
+    wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
+  else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
+    Result := 0;
+  end else
+    for i := Low(stMembers) to High(stMembers) do begin
+      Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
+      if Size = High(Integer) then begin
+        Result := High(Integer);
+        Break;
       end;
+      if Assigned(aBasePtr) then
+        Inc(Cardinal(aBasePtr), Size);
+      Inc(Result, Size);
+    end;
 end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;
@@ -9049,8 +9049,9 @@ end;
 
 procedure TwbByteArrayDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 var
-  Bytes: array of Byte;
-  i, j: Integer;
+  Bytes  : array of Byte;
+  i, j   : Integer;
+  Prefix : Integer;
 begin
   SetLength(Bytes, Length(aValue) div 2);
   i := 1;
@@ -9076,28 +9077,43 @@ begin
 
   SetLength(Bytes, j);
 
-  if (badSize <> 0) then
+  case badSize of
+    -1 : Prefix := SizeOf(Cardinal);
+    -2 : Prefix := SizeOf(Word);
+    -4 : Prefix := SizeOf(Byte);
+  else
+    Prefix := 0;
+  end;
+  if (badSize > 0) then
     SetLength(Bytes, badSize);
 
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, Length(Bytes));
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, Length(Bytes)+Prefix);
 
   if Length(Bytes) > 0 then
-    Move(Bytes[0], aBasePtr^, Length(Bytes));
+    Move(Bytes[0], Pointer(Cardinal(aBasePtr)+Prefix)^, Length(Bytes));
 end;
 
 procedure TwbByteArrayDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 var
-  Bytes: TBytes;
+  Bytes  : TBytes;
+  Prefix : Integer;
 begin
   Bytes := aValue;
 
-  if (badSize <> 0) then
+  case badSize of
+    -1 : Prefix := SizeOf(Cardinal);
+    -2 : Prefix := SizeOf(Word);
+    -4 : Prefix := SizeOf(Byte);
+  else
+    Prefix := 0;
+  end;
+  if (badSize > 0) then
     SetLength(Bytes, badSize);
 
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, Length(Bytes));
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, Length(Bytes)+Prefix);
 
   if Length(Bytes) > 0 then
-    Move(Bytes[0], aBasePtr^, Length(Bytes));
+    Move(Bytes[0], Pointer(Cardinal(aBasePtr)+Prefix)^, Length(Bytes));
 end;
 
 function TwbByteArrayDef.GetDefType: TwbDefType;
@@ -9112,7 +9128,7 @@ end;
 
 function TwbByteArrayDef.GetIsVariableSize: Boolean;
 begin
-  Result := badSize = 0;
+  Result := badSize <= 0;
 end;
 
 function TwbByteArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -9121,8 +9137,14 @@ begin
     Result := badCountCallback(aBasePtr, aEndPtr, aElement)
   else begin
     Result := badSize;
-    if (Result = 0) and Assigned(aBasePtr) then
-      Result := High(Integer);
+    if Assigned(aBasePtr) then
+      case Result of
+        -1 : Result := PCardinal(aBasePtr)^+SizeOf(Cardinal);
+        -2 : Result := PWord(aBasePtr)^+SizeOf(Word);
+        -4 : Result := PByte(aBasePtr)^+SizeOf(Byte);
+         0 : Result := High(Integer);
+      end
+    else if Result < 0 then Result := 0;
   end;
 end;
 
@@ -9248,6 +9270,11 @@ function TwbByteArrayDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElemen
 var
   Bytes: TBytes;
 begin
+  case badSize of
+    -1 : aBasePtr := Pointer(Cardinal(aBasePtr)+SizeOf(Cardinal));
+    -2 : aBasePtr := Pointer(Cardinal(aBasePtr)+SizeOf(Word));
+    -4 : aBasePtr := Pointer(Cardinal(aBasePtr)+SizeOf(Byte));
+  end;
   SetLength(Bytes, Cardinal(aEndPtr) - Cardinal(aBasePtr));
   if Length(Bytes) > 0 then
     Move(aBasePtr^, Bytes[0], Length(Bytes));
@@ -9277,6 +9304,11 @@ var
   f, f2: Single;
 begin
   Result := '';
+  case badSize of
+    -1 : aBasePtr := Pointer(Cardinal(aBasePtr)+SizeOf(Cardinal));
+    -2 : aBasePtr := Pointer(Cardinal(aBasePtr)+SizeOf(Word));
+    -4 : aBasePtr := Pointer(Cardinal(aBasePtr)+SizeOf(Byte));
+  end;
   p := aBasePtr;
   while Cardinal(p) < Cardinal(aEndPtr) do begin
     Result := Result + IntToHex64(p^, 2) + ' ';
@@ -11161,3 +11193,4 @@ initialization
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
 end.
+
