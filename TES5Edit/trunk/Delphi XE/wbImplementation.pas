@@ -12855,7 +12855,7 @@ begin
       if not over then begin
         Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
         over := (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
-                ((Cardinal(aBasePtr) + Size) >= Cardinal(aEndPtr));
+                ((Cardinal(aBasePtr) + Size) > Cardinal(aEndPtr));
       end;
       if over then begin
         aEndPtr := aBasePtr;
