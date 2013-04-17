@@ -302,6 +302,7 @@ begin
       wbAppName := 'TES5Saves';
       wbGameName := 'Skyrim Saves';
       wbLoadBSAs := false;
+      wbDumpOffset := 1;
       DefineTES5saves;
     end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
       wbGameMode := gmTES5;

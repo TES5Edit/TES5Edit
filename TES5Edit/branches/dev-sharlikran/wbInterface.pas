@@ -107,7 +107,7 @@ var
   wbRotationFactor : Extended = 180/Pi;
   wbRotationScale : Integer = 4;
 
-  wbDumpOffset : Integer = 1;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
+  wbDumpOffset : Integer = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
   wbBaseOffset : Cardinal = 0;
 
 //  wbRotationFactor : Extended = 1;

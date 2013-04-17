@@ -13493,6 +13493,69 @@ begin
   end;
 end;
 
+function VersionGreaterThan1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aVersion  : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Papyrus Struct', aElement);
+  Assert(Element.BaseName='Papyrus Struct');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Save File Version'];
+    if Assigned(Element) then begin
+      aVersion :=Element.NativeValue;
+      if (1 < aVersion) then
+        Result := 1;
+    end;
+  end;
+end;
+
+function VersionGreaterThan3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aVersion  : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Papyrus Struct', aElement);
+  Assert(Element.BaseName='Papyrus Struct');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Save File Version'];
+    if Assigned(Element) then begin
+      aVersion :=Element.NativeValue;
+      if (3 < aVersion) then
+        Result := 1;
+    end;
+  end;
+end;
+
+function VersionGreaterThan4Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aVersion  : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Papyrus Struct', aElement);
+  Assert(Element.BaseName='Papyrus Struct');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Save File Version'];
+    if Assigned(Element) then begin
+      aVersion :=Element.NativeValue;
+      if (4 < aVersion) then
+        Result := 1;
+    end;
+  end;
+end;
+
 function FunctionTypeAndFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aValue    : Integer;
@@ -13574,6 +13637,61 @@ begin
         if Element.NativeValue > 0 then
           Result := 1;
     end;
+  end;
+end;
+
+function FunctorDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aValue    : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Functor', aElement);
+  Assert(Element.BaseName='Functor');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      aValue := Element.NativeValue;
+      if (aValue >= 0) or (aValue<25) then
+        Result := aValue+1;
+    end;
+  end;
+end;
+
+function FirstCountCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Dual RefID Table', aElement);
+  Assert(Element.BaseName='Dual RefID Table');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['First Count'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function SecondCountCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Dual RefID Table', aElement);
+  Assert(Element.BaseName='Dual RefID Table');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Second Count'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
   end;
 end;
 
@@ -14063,6 +14181,9 @@ var
   wbQueuedUnbindDataEntry    : IwbStructDef;
   wbStackTimeUpdateOffset    : IwbStructDef;
   wbObjectTimeUpdateOffset   : IwbStructDef;
+  wbFunctor                  : IwbStructDef;
+  wbFunctors                 : IwbStructDef;
+  wbUnknown0900              : IwbArrayDef;
 begin
   wbNull := wbStruct('Unused', []);
   wbTypeData := wbStruct('SkyrimVM Type Data', [
@@ -14352,6 +14473,208 @@ begin
     ,wbRefID('RefID')
   ]);
 
+  wbFunctor := wbStruct('Functor', [
+    wbInteger('Type', itU8, wbEnum([
+      'MoveTo',
+      'MoveToOwnEditorLoc',
+      'DamageObject',
+      'Enable',
+      'Disable',
+      'Delete',
+      'SetPosition',
+      'SetAngle',
+      'SetMotionType',
+      'NonLatentDelete',
+      'MoveToPackLoc',
+      'SetScale',
+      'DropObject',
+      'Tether',
+      'AttachAshPile',
+      'AddRemoveConstraint',
+      'ForceAddRemoveRagdoll',
+      'ApplyHavokImpulse',
+      'Reset',
+      'SendPlayerToJail',
+      'AddItem',
+      'Resurrect',
+      'Cast',
+      'ScrollCast',
+      'RemoveItem'
+    ])),
+    wbUnion('Data', FunctorDecider, [
+      wbStruct('MoveTo', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU8),
+        wbUnion('Unknown', VersionGreaterThan1Decider, [
+          wbNull,
+          wbInteger('Unknown', itU8)
+        ])
+      ]),
+      wbStruct('MoveToOwnEditorLoc / Delete / NonLatentDelete', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID')
+      ]),
+      wbStruct('DamageObject / SetScale', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32)
+      ]),
+      wbStruct('Enable / Disable', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('Enable / Disable', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('MoveToOwnEditorLoc / Delete / NonLatentDelete', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID')
+      ]),
+      wbStruct('SetPosition / SetAngle', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32)
+      ]),
+      wbStruct('SetPosition / SetAngle', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32)
+      ]),
+      wbStruct('SetMotionType', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU8),
+        wbInteger('Unknown', itU8),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('MoveToOwnEditorLoc / Delete / NonLatentDelete', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID')
+      ]),
+      wbStruct('MoveToPackLoc', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID')
+      ]),
+      wbStruct('DamageObject / SetScale', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32)
+      ]),
+      wbStruct('DropObject', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32)
+      ]),
+      wbStruct('Tether', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID')
+      ]),
+      wbStruct('AttachAshPile', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID')
+      ]),
+      wbStruct('AddRemoveConstraint', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbLenString('Unknown'),
+        wbLenString('Unknown'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('ForceAddRemoveRagdoll', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('ApplyHavokImpulse', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32)
+      ]),
+      wbStruct('Reset', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID')
+      ]),
+      wbStruct('SendPlayerToJail', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('AddItem', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('Resurrect', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID')
+      ]),
+      wbStruct('Cast', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbRefID('RefID')
+      ]),
+      wbStruct('ScrollCast', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbRefID('RefID')
+      ]),
+      wbStruct('RemoveItem', [
+        wbInteger('Unknown', itU32),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbRefID('RefID'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU8)
+      ])
+    ])
+  ]);
+
+  wbFunctors := wbStruct('Functors', [
+    wbArray('First Functor Table', wbFunctor, -1),
+    wbArray('Second Functor Table', wbFunctor, -1),
+    wbArray('Third Functor Table', wbFunctor, -1),
+    wbArray('Fourth Functor Table', wbFunctor, -1)
+  ]);
+
+  wbUnknown0900 := wbArray('Unknown0900', wbStruct('Unknown', [
+    wbInteger('Boolean', itU8, wbEnum(['False', 'True'])),
+    wbInteger('Unknown', itU32),
+    wbInteger('Unknown', itU32)
+   ]), -1);
+
   wbGlobalData := wbStructC('Global Data', GlobalDataSizer, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
@@ -14435,7 +14758,7 @@ begin
           wbNull,
           wbInteger('Unknown', itU32)
         ])
-        ,wbArray('Unknown', wbInteger('Unknown', itU32), -1)
+        ,wbArray('Unknown0', wbInteger('Unknown', itU32), -1)
         ,wbUnion('Version >= 4', VMVersionDecider, [
           wbNull,
           wbNull,
@@ -14452,7 +14775,90 @@ begin
             ,wbArray('Third Stack Time Update Table', wbStackTimeUpdateOffset, -1)
             ,wbArray('First Object Time Update Table', wbObjectTimeUpdateOffset, -1)
             ,wbArray('Second Object Time Update Table', wbObjectTimeUpdateOffset, -1)
-            ,wbArray('Unknown', wbLenString('Unknown', 4), -1)
+            ,wbArray('Unknown01', wbLenString('Unknown', 4), -1)
+            ,wbFunctors    // Untested, no suitable save found
+            ,wbArray('Unknown02', wbStruct('Unknown', [
+               wbRefID('RefID')
+              ,wbRefID('RefID')
+              ,wbInteger('Unknown', itU8) // Should be less than 3
+              ,wbInteger('Unknown', itU8) // Should also be less than 3, would be skipped if previous greater than 2
+            ]), -1)    // Untested, no suitable save found
+            ,wbArray('Unknown03', wbStruct('Unknown', [
+               wbInteger('Unknown', itU16)  // Check for String Index
+              ,wbInteger('Unknown', itU16)
+              ,wbRefID('RefID')
+            ]), -1)
+            ,wbUnion('Unknown04', VersionGreaterThan3Decider, [
+               wbNull
+              ,wbArray('Unknown040', wbStruct('Unknown', [
+                 wbInteger('Unknown', itU16)  // Check for String Index
+                ,wbInteger('Unknown', itU16)
+                ,wbRefID('RefID')
+              ]), -1)
+            ])
+            ,wbUnion('Unknown', VersionGreaterThan4Decider, [
+               wbNull
+              ,wbArray('Unknown05', wbStruct('Unknown', [
+                 wbInteger('Unknown', itU16)  // Check for String Index
+                ,wbInteger('Unknown', itU16)
+                ,wbRefID('RefID')
+                ,wbStruct('Dual RefID Table', [
+                  wbInteger('First Count', itU32)
+                  ,wbInteger('Second Count', itU32)
+                  ,wbArray('Unknown050', wbRefID('RefID'), FirstCountCounter)
+                  ,wbArray('Unknown051', wbRefID('RefID'), SecondCountCounter)
+                ])
+              ]), -1)
+            ])
+            ,wbArray('Unknown06', wbStruct('Unknown', [
+               wbRefID('RefID')
+              ,wbInteger('Unknown', itU8)
+            ]), -1)
+            ,wbArray('Unknown07', wbStruct('Unknown', [
+               wbRefID('RefID')
+              ,wbArray('Unknown070', wbStruct('Unknown', [
+                 wbLenString('Unknown')
+                ,wbArray('Unknown0700', wbStruct('Unknown', [
+                   wbInteger('Unknown', itU32)
+                  ,wbInteger('Unknown', itU32)
+                 ]), -1)
+                ,wbArray('Unknown0701', wbStruct('Unknown', [
+                   wbInteger('Unknown', itU16)  // Check for String Index
+                  ,wbInteger('Unknown', itU16)
+                  ,wbRefID('RefID')
+                 ]), -1)
+               ]), -1)
+             ]), -1)
+           ,wbArray('Unknown08', wbStruct('Unknown', [
+              wbInteger('Unknown', itU32)
+             ,wbInteger('Unknown', itU32)
+            ]), -1)
+           ,wbStruct('Unknown', [
+              wbArray('Unknown090', wbStruct('Unknown', [
+                wbRefID('RefID')
+               ,wbUnknown0900
+             ]), -1)
+             ,wbArray('Unknown091', wbStruct('Unknown', [
+                wbRefID('RefID')
+               ,wbArray('Unknown0910', wbStruct('Unknown', [
+                  wbInteger('Unknown', itU32)
+                 ,wbArray('Unknown09100', wbInteger('Unknown', itU32), -1)
+                 ,wbArray('Unknown09101', wbStruct('Unknown', [
+                    wbInteger('Unknown', itU32)
+                   ,wbInteger('Unknown', itU8, wbEnum(['False', 'True']))
+                  ]), -1)
+                 ,wbInteger('Unknown', itU32)
+                ]), -1)
+             ]), -1)
+             ,wbArray('Unknown092', wbStruct('Unknown', [
+                wbRefID('RefID')
+               ,wbUnknown0900
+             ]), -1)
+            ])
+           ,wbArray('Unknown0B', wbStruct('Unknown', [
+              wbInteger('Unknown', itU32)
+             ,wbArray('Unknown0B0', wbInteger('Unknown', itU32), -1)
+           ]), -1)
           ])
         ])
       ]),
