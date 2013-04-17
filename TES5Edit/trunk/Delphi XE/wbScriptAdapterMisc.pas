@@ -341,8 +341,8 @@ begin
     AddSet(TCheckListBox, 'Header', TCheckListBox_Write_Header, 1, [varNull]);
     AddGet(TCheckListBox, 'ItemEnabled', TCheckListBox_Read_ItemEnabled, 1, [varEmpty], varEmpty);
     AddSet(TCheckListBox, 'ItemEnabled', TCheckListBox_Write_ItemEnabled, 1, [varNull]);
-    AddGet(TCheckListBox, 'AllowGreyed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
-    AddSet(TCheckListBox, 'AllowGreyed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
+    AddGet(TCheckListBox, 'AllowGrayed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
+    AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
   end;
 end;
 
