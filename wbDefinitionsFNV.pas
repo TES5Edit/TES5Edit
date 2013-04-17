@@ -10587,7 +10587,18 @@ begin
     wbMODL,
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    wbByteArray(PNAM, 'Unused', 0, cpIgnore),
+    //wbByteArray(PNAM, 'Unused', 0, cpIgnore),
+    wbArray(PNAM, 'Cloud Layer Color',
+      wbArray('Layer',
+        wbStruct('Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unused', 1)
+        ]),
+        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
+      ),
+    4),
     wbArray(NAM0, 'Colors by Types/Times',
       wbArray('Type',
         wbStruct('Time', [

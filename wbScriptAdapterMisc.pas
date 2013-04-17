@@ -14,6 +14,7 @@ uses
   Classes,
   SysUtils,
   Variants,
+  CheckLst,
   wbInterface;
 
 { Missing code }
@@ -214,6 +215,70 @@ begin
   TBinaryWriter(Args.Obj).Write(Single(Args.Values[0]));
 end;
 
+{ TCheckListBox }
+
+procedure TCheckListBox_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TCheckListBox.Create(V2O(Args.Values[0]) as TComponent));
+end;
+
+procedure TCheckListBox_CheckAll(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCheckListBox(Args.Obj).CheckAll(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCheckListBox_Read_Checked(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCheckListBox(Args.Obj).Checked[Args.Values[0]];
+end;
+
+procedure TCheckListBox_Write_Checked(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCheckListBox(Args.Obj).Checked[Args.Values[0]] := Value;
+end;
+
+procedure TCheckListBox_Read_State(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCheckListBox(Args.Obj).State[Args.Values[0]];
+end;
+
+procedure TCheckListBox_Write_State(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCheckListBox(Args.Obj).State[Args.Values[0]] := Value;
+end;
+
+procedure TCheckListBox_Read_Header(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCheckListBox(Args.Obj).Header[Args.Values[0]];
+end;
+
+procedure TCheckListBox_Write_Header(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCheckListBox(Args.Obj).Header[Args.Values[0]] := Value;
+end;
+
+procedure TCheckListBox_Read_ItemEnabled(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCheckListBox(Args.Obj).State[Args.Values[0]];
+end;
+
+procedure TCheckListBox_Write_ItemEnabled(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCheckListBox(Args.Obj).State[Args.Values[0]] := Value;
+end;
+
+procedure TCheckListBox_Read_AllowGrayed(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCheckListBox(Args.Obj).AllowGrayed;
+end;
+
+procedure TCheckListBox_Write_AllowGrayed(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCheckListBox(Args.Obj).AllowGrayed := Value;
+end;
+
+
+
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
   with JvInterpreterAdapter do begin
@@ -263,6 +328,21 @@ begin
     AddGet(TBinaryWriter, 'Create', TBinaryWriter_Create, 1, [varEmpty], varEmpty);
     AddGet(TBinaryWriter, 'Write', TBinaryWriter_Write, 1, [varEmpty], varEmpty);
     AddGet(TBinaryWriter, 'WriteSingle', TBinaryWriter_WriteSingle, 1, [varEmpty], varEmpty);
+
+    { TCheckListBox }
+    AddClass('StdCtrls', TCheckListBox, 'TCheckListBox');
+    AddGet(TCheckListBox, 'Create', TCheckListBox_Create, 1, [varEmpty], varEmpty);
+    AddGet(TCheckListBox, 'CheckAll', TCheckListBox_CheckAll, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCheckListBox, 'Checked', TCheckListBox_Read_Checked, 1, [varEmpty], varEmpty);
+    AddSet(TCheckListBox, 'Checked', TCheckListBox_Write_Checked, 1, [varNull]);
+    AddGet(TCheckListBox, 'State', TCheckListBox_Read_State, 1, [varEmpty], varEmpty);
+    AddSet(TCheckListBox, 'State', TCheckListBox_Write_State, 1, [varNull]);
+    AddGet(TCheckListBox, 'Header', TCheckListBox_Read_Header, 1, [varEmpty], varEmpty);
+    AddSet(TCheckListBox, 'Header', TCheckListBox_Write_Header, 1, [varNull]);
+    AddGet(TCheckListBox, 'ItemEnabled', TCheckListBox_Read_ItemEnabled, 1, [varEmpty], varEmpty);
+    AddSet(TCheckListBox, 'ItemEnabled', TCheckListBox_Write_ItemEnabled, 1, [varNull]);
+    AddGet(TCheckListBox, 'AllowGreyed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
+    AddSet(TCheckListBox, 'AllowGreyed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
   end;
 end;
 
