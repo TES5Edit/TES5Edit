@@ -86,7 +86,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.30.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.30;Comments=</VerInfo_Keys>
-        <Debugger_RunParams>-TES5Saves -btd:256 &quot;C:\Users\Hugues\Documents\My Games\Skyrim\Saves\toto.ess&quot;</Debugger_RunParams>
+        <Debugger_RunParams> -TES5Saves -bsa -xcbloat &quot;C:\Users\Hugues\Documents\My Games\Skyrim\Saves\T000.ess&quot;</Debugger_RunParams>
         <DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
     </PropertyGroup>
     <ItemGroup>

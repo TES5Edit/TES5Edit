@@ -1051,6 +1051,7 @@ type
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
   TwbCountCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
+  TwbExtractInfoCallback = function: Integer;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -2451,15 +2452,17 @@ function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
 function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContainerElementRef;
 
 var
-  HeaderSignature  : TwbSignature = 'TES4';
-  HeaderMagic      : TwbSaveMagic = 'TESV_SAVEGAME';
-  SaveFileHeader   : IwbStructDef; // Temporary Hack I hope...
-  SaveFileChapters : IwbStructDef; // Temporary Hack I hope...
-  BytesToSkip      : Cardinal = 0;
-  BytesToDump      : Cardinal = $FFFFFFFF;
-  BytesToGroup     : Cardinal = 4;
+  HeaderSignature       : TwbSignature = 'TES4';
+  HeaderMagic           : TwbSaveMagic = 'TESV_SAVEGAME';
+  SaveFileHeader        : IwbStructDef; // Temporary Hack I hope...
+  SaveFileChapters      : IwbStructDef; // Temporary Hack I hope...
+  BytesToSkip           : Cardinal = 0;
+  BytesToDump           : Cardinal = $FFFFFFFF;
+  BytesToGroup          : Cardinal = 4;
+  wbExtractInfoCallback : TwbExtractInfoCallback;
 
 procedure InitializeStringTable(aContainer: IwbContainer);
+procedure InitializeRefIDTable(aContainer: IwbContainer);
 procedure InitializeObjectTable(aContainer: IwbContainer);
 procedure InitializeObjectDetachedTable(aContainer: IwbContainer);
 procedure InitializeArrayTable(aContainer: IwbContainer);
@@ -2474,6 +2477,9 @@ uses
   AnsiStrings,
   TypInfo,
   wbLocalization;
+
+var
+  sifRefIDArray : array of Cardinal = nil;
 
 function StrToSignature(const s: string): TwbSignature;
 var
@@ -11372,9 +11378,11 @@ begin
   case key of
     0: if val = 0 then
          Result := '[00000000] NULL'
+       else if val < Length(sifRefIDArray) then
+         Result := inherited ToString(sifRefIDArray[val - 1], aElement)
        else
          Result := '['+IntToHex64(val-1, 8)+'] Index in FormIDarray';
-    1: Result := '['+IntToHex64(val, 8)+'] Skyrim.esm FormID';
+    1: Result := inherited ToString(val, aElement); // '['+IntToHex64(val, 8)+'] Skyrim.esm FormID';
     2: Result := '[FF'+IntToHex64(val, 6)+'] Created FormID';
     else
       Result := '['+IntToHex64(aInt, 8)+']  <Error: bad key for RefID '+IntToStr(key)+'>';
@@ -11445,6 +11453,17 @@ begin
     1: Result := Result + ' Medium size';
     2: Result := Result + ' Large size';
     3: Result := '0' + ' Null size';
+  end;
+end;
+
+procedure InitializeRefIDTable(aContainer: IwbContainer);
+var
+  i   : Integer;
+begin
+  if Assigned(aContainer) and not assigned(sifRefIDArray) then begin
+    SetLength(sifRefIDArray, aContainer.ElementCount);
+    for i := 0 to Pred(aContainer.ElementCount) do
+      sifRefIDArray[i] := aContainer.Elements[i].NativeValue;
   end;
 end;
 

@@ -72,9 +72,14 @@ begin
       end;
   if (wbGameMode in [gmTES5Saves]) and Assigned(DumpChapters) and Supports(aContainer, IwbSaveAddressable, SaveElement) then begin
     if not DumpChapters.Find(IntToStr(SaveElement.GetType), i) then
-        Exit;
+      Exit;
     ReportProgress('Dumping: ' + aContainer.Name);
   end;
+  if (wbGameMode in [gmTES5Saves]) and Assigned(ChaptersToSkip) and Supports(aContainer, IwbSaveAddressable, SaveElement) then
+    if ChaptersToSkip.Find(IntToStr(SaveElement.GetType), i) then begin
+      ReportProgress('Skiping: ' + aContainer.Name);
+      Exit;
+    end;
 
   if aContainer.Skipped then begin
     if not wbReportMode then WriteLn(aIndent, '<contents skipped>');
@@ -166,16 +171,16 @@ begin
           if (length(s)>(length(aSwitch)+2)) and (s[Length(aSwitch) + 2] = ':') then begin
             aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
             Result := True;
+            Exit;
           end;
-          Exit;
         end;
       end else
         if AnsiCompareStr(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
           if s[Length(aSwitch) + 2] = ':' then begin
             aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
             Result := True;
+            Exit;
           end;
-          Exit;
         end;
   end;
 end;
@@ -300,9 +305,8 @@ begin
     end else if wbFindCmdLineSwitch('TES5Saves') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 9), 'TES5Saves') then begin
       wbGameMode := gmTES5Saves;
       wbAppName := 'TES5Saves';
-      wbGameName := 'Skyrim Saves';
-      wbLoadBSAs := false;
-      wbDumpOffset := 1;
+      wbGameName := 'Skyrim';
+      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineTES5saves;
     end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
       wbGameMode := gmTES5;
@@ -377,7 +381,7 @@ begin
     if wbFindCmdLineParam('xc', s) then
       ChaptersToSkip.CommaText := s
     else if wbFindCmdLineSwitch('xcbloat') then begin
-      ChaptersToSkip.Add('Papyrus Struct');
+      ChaptersToSkip.Add('1001');
     end;
 
     if wbFindCmdLineParam('l', s) and ((wbGameMode = gmTES5) or (wbGameMode = gmTES5Saves)) then
@@ -389,6 +393,9 @@ begin
       BytesToSkip := StrToInt64Def(s, BytesToSkip);
     if wbFindCmdLineParam('btd', s) then
       BytesToDump := StrToInt64Def(s, BytesToDump);
+
+    if wbFindCmdLineParam('do', s) then
+      wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
 
     s := ParamStr(ParamCount);
 
@@ -429,13 +436,23 @@ begin
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
       WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
       WriteLn(ErrOutput, '-d:datapath  ', 'Path to the game plugins directory');
+      WriteLn(ErrOutput, '-do:value    ', 'Dump objects offsets and size and/or array count');
+      WriteLn(ErrOutput, '             ', '  -do:0 nothing');
+      WriteLn(ErrOutput, '             ', '  -do:1 starting offset');
+      WriteLn(ErrOutput, '             ', '  -do:2 starting offset and array count  PERFORMANCE PENALTY');
+      WriteLn(ErrOutput, '             ', '  -do:3 starting and ending offset, size and array count  PERFORMANCE PENALTY');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Saves mode ONLY', ' not for general use');
       WriteLn(ErrOutput, '-bts         ', 'BytesToSkip  = number of undecoded bytes to skip, default = 0');
       WriteLn(ErrOutput, '-btd         ', 'BytesToDump  = number of undecoded bytes to dump as unknown, default = all');
+      WriteLn(ErrOutput, '-dc:IDlist   ', 'If specified, only process those chapters');
+      WriteLn(ErrOutput, '-xc:IDlist   ', 'Excludes chapters from being processed');
+      WriteLn(ErrOutput, '-xcloat      ', 'The following value applies:');
+      WriteLn(ErrOutput, '             ', '  -xc:1001');
+      WriteLn(ErrOutput, '             ', '    1001 is the ID of Papyrus data the largest part of the save.');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
-      WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
+      WriteLn(ErrOutput, '  TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
@@ -449,15 +466,19 @@ begin
       ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
     if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
-    if Assigned(ChaptersToSkip) and (ChaptersToSkip.Count>0) then
-      ReportProgress('['+s+']   Excluding chapters : '+ChaptersToSkip.CommaText);
     if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
 
+    if Assigned(DumpChapters) then
+      ReportProgress('['+s+']   Dumping chapters : '+DumpChapters.CommaText);
+    if Assigned(ChaptersToSkip) and (ChaptersToSkip.Count>0) then
+      ReportProgress('['+s+']   Excluding chapters : '+ChaptersToSkip.CommaText);
     if BytesToSkip>0 then
       ReportProgress('['+s+']   BytesToSkip : '+IntToStr(BytesToSkip));
     if BytesToDump<$FFFFFFFF then
       ReportProgress('['+s+']   BytesToDump : '+IntToStr(BytesToDump));
+    if wbDumpOffset>0 then
+      ReportProgress('['+s+']   Dump Offset mode : '+IntToStr(wbDumpOffset));
 
     if wbLoadBSAs then begin
       Masters := TStringList.Create;
@@ -466,7 +487,7 @@ begin
 
       for i := 0 to Masters.Count - 1 do begin
         if wbLoadAllBSAs then begin
-          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5, gmTES5Saves]) then begin
             s2 := ChangeFileExt(Masters[i], '');
             if FindFirst(wbDataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
               repeat
@@ -478,7 +499,7 @@ begin
             end;
           end;
         end else begin
-          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5, gmTES5Saves]) then begin
             s2 := ChangeFileExt(Masters[i], '');
             if FindFirst(wbDataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
               repeat

@@ -559,7 +559,7 @@ type
     procedure InjectMainRecord(aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(aRecord: IwbMainRecord);
     procedure ForceClosed;
-    procedure GetMasters(aMasters: TStrings);
+    procedure GetMasters(aMasters: TStrings); virtual;
 
     procedure Scan; virtual;
     procedure SortRecords;
@@ -578,6 +578,7 @@ type
   protected
     procedure Scan; override;
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
+    procedure GetMasters(aMasters: TStrings); override;
   end;
 
   TwbDataContainerFlag = (
@@ -2399,8 +2400,7 @@ begin
   Result := flStates;
 end;
 
-function TwbFile.GetGroupBySignature(
-  const aSignature: TwbSignature): IwbGroupRecord;
+function TwbFile.GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
 var
   SelfRef: IwbContainerElementRef;
   i: Integer;
@@ -13254,36 +13254,37 @@ begin
     t := ValueDef.Name;
     if t = '' then
       t := aContainer.Def.Name;
-    if SameText(t, 'Unknown') then for i := 0 to 3 do begin
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
-      if wbGameMode = gmTES5Saves then begin
+    if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) then
+      for i := 0 to 3 do begin
         BasePtr := Pointer( Cardinal(aBasePtr) + i );
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
         BasePtr := Pointer( Cardinal(aBasePtr) + i );
-        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU6to30)', wbInteger('AsU6to30', itU6to30)), '', True);
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
+        if wbGameMode in [gmTES5Saves] then begin
+          BasePtr := Pointer( Cardinal(aBasePtr) + i );
+          Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
+          BasePtr := Pointer( Cardinal(aBasePtr) + i );
+          Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU6to30', wbInteger('AsU6to30', itU6to30)), '', True);
+        end;
       end;
-    end;
   end;
 
   i := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
@@ -13525,6 +13526,8 @@ begin
 
   if FilesMap.Find(FileName, i) then
     _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
+  else if wbGameMode in [gmTES5Saves] then
+    _File := TwbSaveFile.Create(FileName, -1, '', True)
   else
     _File := TwbFile.Create(FileName, -1, '', True);
 
@@ -14926,12 +14929,38 @@ begin
   flFileName := aFileName;
 end;
 
+procedure TwbSaveFile.GetMasters(aMasters: TStrings);
+var
+  Header      : IwbSaveHeader;
+  MasterFiles : IwbContainerElementRef;
+  fPath       : String;
+  i           : Integer;
+begin
+  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveHeader, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Header.Magic <> HeaderMagic then
+    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"', [HeaderMagic, String(Header.Magic), flFileName]);
+
+  MasterFiles := Header.ElementByName['Plugins'] as IwbContainerElementRef;
+  if Assigned(MasterFiles) then
+    for i := 0 to Pred(MasterFiles.ElementCount) do begin
+      fPath := wbDataPath + MasterFiles[i].Value;
+      if FileExists(fPath) then
+        aMasters.Add(MasterFiles[i].Value)
+    end;
+
+end;
+
 procedure TwbSaveFile.Scan;
 var
   CurrentPtr  : Pointer;
   Header      : IwbSaveHeader;
   MasterFiles : IwbContainerElementRef;
   i           : Integer;
+  ExtractInfo : Integer;
+  Element     : IwbElement;
+  Container   : IwbContainer;
   SelfRef     : IwbContainerElementRef;
   fPath       : String;
 
@@ -14963,15 +14992,23 @@ begin
 
   if flCompareTo <> '' then
     AddMaster(flCompareTo);
-  for i := 0 to Pred(SaveFileChapters.MemberCount) do
+  if Assigned(wbExtractInfoCallback) then
+    ExtractInfo := wbExtractInfoCallBack
+  else
+    ExtractInfo := -1;
+
+  for i := 0 to Pred(SaveFileChapters.MemberCount) do begin
     case SaveFileChapters.Members[i].DefType of
-      dtArray: TwbArray.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
-      dtStruct: TwbStruct.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
-      dtStructChapter: TwbSaveAddressable.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
-      dtUnion: TwbUnion.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      dtStructChapter: Element := TwbSaveAddressable.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      dtUnion: Element := TwbUnion.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
     else
-      TwbValue.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      Element := TwbValue.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
     end;
+    if (i = ExtractInfo) and Supports(Element, IwbContainer, Container) then
+      with Element as TwbContainer do DoInit;
+  end;
   flProgress('Processing completed');
   flLoadFinished := True;
 end;
@@ -15044,6 +15081,10 @@ initialization
   GroupToSkip := TStringList.Create;
   GroupToSkip.Sorted := True;
   GroupToSkip.Duplicates := dupIgnore;
+
+  ChaptersToSkip := TStringList.Create;
+  ChaptersToSkip.Sorted := True;
+  ChaptersToSkip.Duplicates := dupIgnore;
 
   FilesMap := TStringList.Create;
   FilesMap.Sorted := True;
