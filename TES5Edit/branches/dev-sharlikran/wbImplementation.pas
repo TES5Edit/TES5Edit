@@ -52,6 +52,9 @@ function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: st
 
 implementation
 
+const
+  TheEmptyPlugin = 'emptyPlugin.esp';
+
 type
   TwbMainRecordEntryHeader = record
     mrehGeneration : Cardinal;
@@ -565,7 +568,7 @@ type
     procedure SortRecords;
     procedure SortRecordsByEditorID;
 
-    procedure AddMaster(const aFileName: string); overload;
+    procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
 
     constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
@@ -1574,7 +1577,7 @@ end;
 
 { TwbFile }
 
-procedure TwbFile.AddMaster(const aFileName: string);
+procedure TwbFile.AddMaster(const aFileName: string; isTemporary: Boolean = False);
 var
   _File: IwbFile;
   s : string;
@@ -1588,7 +1591,7 @@ begin
     s := IncludeTrailingPathDelimiter(s);
 
   flProgress('Adding master "' + t + '"');
-  _File := wbFile(s + t);
+  _File := wbFile(s + t, -1, '', isTemporary);
   if wbRequireLoadOrder and (_File.LoadOrder < 0) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
   AddMaster(_File);
@@ -14952,6 +14955,29 @@ begin
 
 end;
 
+function CreateTemporaryCopy(FileName, CompareFile: String): String;
+var
+  s : String;
+  i : Integer;
+
+begin
+  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+    s := wbDataPath + ExtractFileName(CompareFile);
+    if FileExists(s) then // Finds a unique name
+      for i := 0 to 255 do begin
+        s := wbDataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+        if not FileExists(s) then Break;
+      end;
+    if FileExists(s) then begin
+      wbProgressCallback('Could not copy '+FileName+' into '+wbDataPath);
+      Exit;
+    end;
+    CompareFile := s;
+    CopyFile(PChar(FileName), PChar(CompareFile), false);
+  end;
+  Result := CompareFile;
+end;
+
 procedure TwbSaveFile.Scan;
 var
   CurrentPtr  : Pointer;
@@ -14987,7 +15013,12 @@ begin
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].Value;
       if FileExists(fPath) then
-        AddMaster(fPath);
+        AddMaster(fPath)
+      else begin
+        fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        if FileExists(fPath) then
+          AddMaster(CreateTemporaryCopy(fPath, MasterFiles[i].Value), True);
+      end;
     end;
 
   if flCompareTo <> '' then
