@@ -15,6 +15,7 @@ uses
   SysUtils,
   Variants,
   CheckLst,
+  ExtCtrls,
   wbInterface;
 
 { Missing code }
@@ -215,6 +216,7 @@ begin
   TBinaryWriter(Args.Obj).Write(Single(Args.Values[0]));
 end;
 
+
 { TCheckListBox }
 
 procedure TCheckListBox_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -278,6 +280,46 @@ begin
 end;
 
 
+{ TCustomLabeledEdit }
+
+procedure TCustomLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TCustomLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
+end;
+
+procedure TCustomLabeledEdit_Read_EditLabel(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TCustomLabeledEdit(Args.Obj).EditLabel);
+end;
+
+procedure TCustomLabeledEdit_Read_LabelPosition(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomLabeledEdit(Args.Obj).LabelPosition;
+end;
+
+procedure TCustomLabeledEdit_Write_LabelPosition(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomLabeledEdit(Args.Obj).LabelPosition := TLabelPosition(Value);
+end;
+
+procedure TCustomLabeledEdit_Read_LabelSpacing(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomLabeledEdit(Args.Obj).LabelSpacing;
+end;
+
+procedure TCustomLabeledEdit_Write_LabelSpacing(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomLabeledEdit(Args.Obj).LabelSpacing := Value;
+end;
+
+
+{ TLabeledEdit }
+
+procedure TLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
@@ -287,6 +329,11 @@ begin
     AddConst('SysUtils', 'fmCreate', Ord(fmCreate));
     AddConst('SysUtils', 'LowInteger', Low(Integer));
     AddConst('SysUtils', 'HighInteger', High(Integer));
+    AddConst('ExtCtrls', 'lpAbove', Ord(lpAbove));
+    AddConst('ExtCtrls', 'lpBelow', Ord(lpBelow));
+    AddConst('ExtCtrls', 'lpLeft', Ord(lpLeft));
+    AddConst('ExtCtrls', 'lpRight', Ord(lpRight));
+
     AddFunction('SysUtils', 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
     AddFunction('SysUtils', 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
     AddFunction('SysUtils', 'Succ', Pascal_Succ, 1, [varEmpty], varEmpty);
@@ -343,6 +390,22 @@ begin
     AddSet(TCheckListBox, 'ItemEnabled', TCheckListBox_Write_ItemEnabled, 1, [varNull]);
     AddGet(TCheckListBox, 'AllowGrayed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
     AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
+
+    { TCustomLabeledEdit }
+    AddClass('ExtCtrls', TCustomLabeledEdit, 'TCustomLabeledEdit');
+    AddGet(TCustomLabeledEdit, 'Create', TCustomLabeledEdit_Create, 1, [varEmpty], varEmpty);
+    AddGet(TCustomLabeledEdit, 'EditLabel', TCustomLabeledEdit_Read_EditLabel, 0, [varEmpty], varEmpty);
+    AddGet(TCustomLabeledEdit, 'LabelPosition', TCustomLabeledEdit_Read_LabelPosition, 0, [varEmpty], varEmpty);
+    AddSet(TCustomLabeledEdit, 'LabelPosition', TCustomLabeledEdit_Write_LabelPosition, 0, [varEmpty]);
+    AddGet(TCustomLabeledEdit, 'LabelSpacing', TCustomLabeledEdit_Read_LabelSpacing, 0, [varEmpty], varEmpty);
+    AddSet(TCustomLabeledEdit, 'LabelSpacing', TCustomLabeledEdit_Write_LabelSpacing, 0, [varEmpty]);
+
+    { TLabeledEdit }
+    AddClass('ExtCtrls', TLabeledEdit, 'TLabeledEdit');
+    AddGet(TLabeledEdit, 'Create', TLabeledEdit_Create, 1, [varEmpty], varEmpty);
+
+    { TBoundLabel }
+    AddClass('ExtCtrls', TBoundLabel, 'TBoundLabel');
   end;
 end;
 

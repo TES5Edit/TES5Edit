@@ -65,6 +65,15 @@ begin
     Value := Element.Name;
 end;
 
+procedure IwbElement_ShortName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.ShortName;
+end;
+
 procedure IwbElement_Path(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -999,6 +1008,7 @@ begin
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ShortName', IwbElement_ShortName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
