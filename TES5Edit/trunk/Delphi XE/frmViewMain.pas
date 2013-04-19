@@ -270,6 +270,8 @@ type
     mniRefByMarkModified: TMenuItem;
     mniViewNextMember: TMenuItem;
     mniViewPreviousMember: TMenuItem;
+    mniViewHeaderJumpTo: TMenuItem;
+    acScript: TAction;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -476,6 +478,8 @@ type
       const Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
     procedure mniViewNextMemberClick(Sender: TObject);
     procedure mniViewPreviousMemberClick(Sender: TObject);
+    procedure mniViewHeaderJumpToClick(Sender: TObject);
+    procedure acScriptExecute(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -562,6 +566,8 @@ type
 
     function SetAllToMaster: Boolean;
     function RestorePluginsFromMaster: Boolean;
+    procedure ApplyScript(aScript: string);
+    procedure CreateActionsForScripts;
   private
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
@@ -648,6 +654,7 @@ type
     CompareRecords: TDynMainRecords;
 
     ScriptProcessElements: TwbElementTypes;
+    ScriptHotkeys: TStringList;
 
 //    STATsWithWindows: TStringList;
 
@@ -797,6 +804,7 @@ var
 
   DataPath                    : string;
   ProgramPath                 : string;
+  ScriptsPath                 : string;
   MyGamesTheGamePath          : string;
   FilesToRename               : TStringList;
 
@@ -943,6 +951,30 @@ end;
 procedure TfrmMain.acForwardUpdate(Sender: TObject);
 begin
   acForward.Enabled := Assigned(ForwardHistory) and (ForwardHistory.Count > 0);
+end;
+
+procedure TfrmMain.acScriptExecute(Sender: TObject);
+var
+  slScript: TStringList;
+  i: integer;
+  s: string;
+begin
+  if not Assigned(Sender) then
+    Exit;
+
+  i := Pred((Sender as TAction).Tag);
+  if i >= ScriptHotkeys.Count then
+    Exit;
+
+  slScript := TStringList.Create;
+  try
+    slScript.LoadFromFile(ScriptHotkeys[i]);
+    s := slScript.Text;
+  finally
+    slScript.Free;
+  end;
+
+  ApplyScript(s);
 end;
 
 procedure TfrmMain.AddFile(const aFile: IwbFile);
@@ -2743,6 +2775,7 @@ destructor TfrmMain.Destroy;
 begin
   inherited;
   FreeAndNil(NewMessages);
+  FreeAndNil(ScriptHotkeys);
 end;
 
 procedure TfrmMain.DisplayPanelResize(Sender: TObject);
@@ -2833,6 +2866,7 @@ var
   AgeDateTime                 : TDateTime;
 begin
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+  ScriptsPath := ProgramPath + 'Edit Scripts\';
 
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -3341,6 +3375,8 @@ begin
   else
     mniNavHeaderFilesDefault.Checked := True;
   end;
+
+  CreateActionsForScripts;
 end;
 
 procedure TfrmMain.DoneDisplay;
@@ -5556,6 +5592,24 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'JumpTo') and (Args.Count = 2) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      vstNav.EndUpdate;
+      if not vstNav.Enabled then vstNav.Enabled := True;
+      JumpTo(MainRecord, Boolean(Args.Values[1]));
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ApplyFilter') and (Args.Count = 0) then begin
+    FilterPreset := True; // skip filter dialog
+    try
+      mniNavFilterApplyClick(Sender);
+    finally
+      FilterPreset := False;
+      Done := True;
+    end;
   end;
 end;
 
@@ -5573,6 +5627,166 @@ begin
     if ScriptProcessElements = [] then
       ScriptProcessElements := [etMainRecord];
     Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictAll') then begin
+    FilterConflictAll := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictAllSet') then begin
+    FilterConflictAllSet := [];
+    v := V2S(Value);
+    for i := Integer(Low(TConflictAll)) to Integer(High(TConflictAll)) do
+      if (v and (1 shl i)) > 0 then
+        Include(FilterConflictAllSet, TConflictAll(i));
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictThis') then begin
+    FilterConflictThis := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictThisSet') then begin
+    FilterConflictThisSet := [];
+    v := V2S(Value);
+    for i := Integer(Low(TConflictThis)) to Integer(High(TConflictThis)) do
+      if (v and (1 shl i)) > 0 then
+        Include(FilterConflictThisSet, TConflictThis(i));
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByInjectStatus') then begin
+    FilterByInjectStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterInjectStatus') then begin
+    FilterInjectStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByNotReachableStatus') then begin
+    FilterByNotReachableStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterNotReachableStatus') then begin
+    FilterNotReachableStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByReferencesInjectedStatus') then begin
+    FilterByReferencesInjectedStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterReferencesInjectedStatus') then begin
+    FilterReferencesInjectedStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByEditorID') then begin
+    FilterByEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterEditorID') then begin
+    FilterEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByName') then begin
+    FilterByName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterName') then begin
+    FilterName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseEditorID') then begin
+    FilterByBaseEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseEditorID') then begin
+    FilterBaseEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseName') then begin
+    FilterByBaseName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseName') then begin
+    FilterBaseName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterScaledActors') then begin
+    FilterScaledActors := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBySignature') then begin
+    FilterBySignature := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterSignatures') then begin
+    FilterSignatures := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseSignature') then begin
+    FilterByBaseSignature := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseSignatures') then begin
+    FilterBaseSignatures := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByPersistent') then begin
+    FilterByPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterPersistent') then begin
+    FilterPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterUnnecessaryPersistent') then begin
+    FilterUnnecessaryPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterMasterIsTemporary') then begin
+    FilterMasterIsTemporary := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterIsMaster') then begin
+    FilterIsMaster := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterPersistentPosChanged') then begin
+    FilterPersistentPosChanged := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterDeleted') then begin
+    FilterDeleted := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByVWD') then begin
+    FilterByVWD := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterVWD') then begin
+    FilterVWD := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByHasVWDMesh') then begin
+    FilterByHasVWDMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterHasVWDMesh') then begin
+    FilterHasVWDMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FlattenBlocks') then begin
+    FlattenBlocks := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FlattenCellChilds') then begin
+    FlattenCellChilds := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'AssignPersWrldChild') then begin
+    AssignPersWrldChild := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'InheritConflictByParent') then begin
+    InheritConflictByParent := Value;
+    Done := True;
   end;
 end;
 
@@ -5582,7 +5796,7 @@ var
   sl: TStringList;
   UnitFile: string;
 begin
-  UnitFile := ProgramPath + 'Edit Scripts\' + UnitName + '.pas';
+  UnitFile := ScriptsPath + UnitName + '.pas';
   sl := TStringList.Create;
   try
     sl.LoadFromFile(UnitFile);
@@ -5593,7 +5807,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
+procedure TfrmMain.ApplyScript(aScript: string);
 const
   sJustWait                   = 'Applying script. Please wait...';
   sTerminated                 = 'Script terminated itself, Result=';
@@ -5603,32 +5817,21 @@ var
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
   StartTick                   : Cardinal;
-//  Element                     : IwbElement;
   jvi                         : TJvInterpreterProgram;
-  Scr                         : string;
   i                           : integer;
 begin
-  with TfrmScript.Create(Self) do try
-    ScriptsPath := ProgramPath + 'Edit Scripts\';
-    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
+  if Trim(aScript) = '' then
+    Exit;
 
-    if ShowModal <> mrOK then
-      Exit;
-
-    Scr := Script;
-    Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
-    Settings.UpdateFile;
-
-  finally
-    Free;
-  end;
+  Count := 0;
+  ScriptProcessElements := [etMainRecord];
 
   jvi := TJvInterpreterProgram.Create(Self);
   try
     jvi.OnGetValue := JvInterpreterProgram1GetValue;
     jvi.OnSetValue := JvInterpreterProgram1SetValue;
     jvi.OnGetUnitSource := JvInterpreterProgram1GetUnitSource;
-    jvi.Pas.Text := Scr;
+    jvi.Pas.Text := aScript;
     jvi.Compile;
 
     pgMain.ActivePage := tbsMessages;
@@ -5639,9 +5842,7 @@ begin
       wbStartTime := Now;
 
       Enabled := False;
-
-      ScriptProcessElements := [etMainRecord];
-      Count := 0;
+      PostAddMessage('Applying script...');
 
       if jvi.FunctionExists('', 'Initialize') then begin
         jvi.CallFunction('Initialize', nil, []);
@@ -5703,18 +5904,83 @@ begin
       vstNav.EndUpdate;
       Enabled := True;
       Caption := Application.Title;
+      PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
+        ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     end;
 
-    PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
-
-    PostResetActiveTree;
     InvalidateElementsTreeView(NoNodes);
-    Application.ProcessMessages;
-    pgMain.ActivePage := tbsMessages;
+    vstNav.Invalidate;
+    //Application.ProcessMessages;
+    //pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
   end;
+end;
+
+procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
+var
+  Scr: string;
+begin
+  with TfrmScript.Create(Self) do try
+    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
+    if ShowModal <> mrOK then
+      Exit;
+    Scr := Script;
+    Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
+    Settings.UpdateFile;
+    CreateActionsForScripts;
+  finally
+    Free;
+  end;
+  ApplyScript(Scr);
+end;
+
+procedure TfrmMain.CreateActionsForScripts;
+const
+  HotkeyToken = 'Hotkey: ';
+var
+  scr, s               : string;
+  F                    : TSearchRec;
+  slScript             : TStringList;
+  i                    : integer;
+  ShortCut             : TShortCut;
+  Action               : TAction;
+begin
+  if not Assigned(ScriptHotkeys) then
+    ScriptHotkeys := TStringList.Create;
+
+  ScriptHotkeys.Clear;
+  for i := Pred(ActionList1.ActionCount) downto 0 do
+    if ActionList1.Actions[i].Tag > 0 then
+      ActionList1.Actions[i].Free;
+
+  if FindFirst(ScriptsPath + '*.pas', faAnyFile, F) = 0 then try
+    slScript := TStringList.Create;
+    repeat
+      scr := ScriptsPath + F.Name;
+      slScript.LoadFromFile(scr);
+      for i := 0 to Pred(slScript.Count) do begin
+        s := Trim(slScript[i]);
+        if SameText(Copy(s, 1, Length(HotkeyToken)), HotkeyToken) then begin
+          s := Copy(s, Succ(Length(HotkeyToken)), Length(s));
+          ShortCut := TextToShortCut(s);
+          if ShortCut <> 0 then begin
+            Action := TAction.Create(Self);
+            Action.ActionList := ActionList1;
+            Action.OnExecute := acScriptExecute;
+            Action.ShortCut := ShortCut;
+            ScriptHotkeys.Add(scr);
+            Action.Tag := ScriptHotkeys.Count;
+          end;
+          Break;
+        end;
+      end;
+    until FindNext(F) <> 0;
+  finally
+    FindClose(F);
+    FreeAndNil(slScript);
+  end;
+
 end;
 
 procedure TfrmMain.mniViewHideNoConflictClick(Sender: TObject);
@@ -6798,6 +7064,24 @@ begin
     MainRecord.Show;
   PostResetActiveTree;
   InvalidateElementsTreeView(NoNodes);
+end;
+
+procedure TfrmMain.mniViewHeaderJumpToClick(Sender: TObject);
+var
+  Column                      : TColumnIndex;
+  Element                     : IwbElement;
+  MainRecord                  : IwbMainRecord;
+begin
+  Column := vstView.Header.Columns.PopupIndex;
+  if Column < 1 then
+    Exit;
+  Dec(Column);
+  if Column > High(ActiveRecords) then
+    Exit;
+  Element := ActiveRecords[Column].Element;
+  if not Supports(Element, IwbMainRecord, MainRecord) then
+    Exit;
+  JumpTo(MainRecord, True);
 end;
 
 procedure TfrmMain.mniViewHeaderRemoveClick(Sender: TObject);
@@ -9727,6 +10011,7 @@ begin
   mniViewHeaderCopyAsWrapper.Visible := False;
   mniViewHeaderRemove.Visible := False;
   mniViewHeaderHidden.Visible := False;
+  mniViewHeaderJumpTo.Visible := False;
   if not wbEditAllowed then
     Exit;
   if wbTranslationMode then
@@ -9752,6 +10037,7 @@ begin
   );
   mniViewHeaderCopyAsWrapper.Visible := (MainRecord.Signature = 'LVLC') or (MainRecord.Signature = 'LVLI') or (MainRecord.Signature = 'LVSP') or (MainRecord.Signature = 'LVLN');
 
+  mniViewHeaderJumpTo.Visible := True;
   mniViewHeaderHidden.Visible := True;
   mniViewHeaderHidden.Checked := esHidden in MainRecord.ElementStates;
   if not ActiveRecords[Column].Element._File.IsEditable then

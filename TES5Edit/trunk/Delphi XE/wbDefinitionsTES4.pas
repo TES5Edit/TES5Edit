@@ -3424,7 +3424,7 @@ begin
           [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP,
            INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
            FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
-           LVLC, CSTY, WRLD, SCPT, BSGN, TREE, NULL]),
+           LVLC, CSTY, WRLD, SCPT, BSGN, TREE, ENCH, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
