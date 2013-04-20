@@ -5480,6 +5480,10 @@ begin
     Value := ProgramPath;
     Done := True;
   end else
+  if SameText(Identifier, 'ScriptsPath') and (Args.Count = 0) then begin
+    Value := ScriptsPath;
+    Done := True;
+  end else
   if SameText(Identifier, 'DataPath') and (Args.Count = 0) then begin
     Value := DataPath;
     Done := True;
@@ -5964,12 +5968,12 @@ begin
         if SameText(Copy(s, 1, Length(HotkeyToken)), HotkeyToken) then begin
           s := Copy(s, Succ(Length(HotkeyToken)), Length(s));
           ShortCut := TextToShortCut(s);
-          if ShortCut <> 0 then begin
+          if (ShortCut <> 0) and (ScriptHotkeys.IndexOfObject(TObject(ShortCut)) = -1) then begin
             Action := TAction.Create(Self);
             Action.ActionList := ActionList1;
             Action.OnExecute := acScriptExecute;
             Action.ShortCut := ShortCut;
-            ScriptHotkeys.Add(scr);
+            ScriptHotkeys.AddObject(scr, TObject(ShortCut));
             Action.Tag := ScriptHotkeys.Count;
           end;
           Break;
