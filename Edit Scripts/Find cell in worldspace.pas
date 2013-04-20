@@ -1,5 +1,5 @@
 {
-  Find cell by X,Y coordinates.
+  Find exterior cell by X,Y grid coordinates.
   
   Hotkey: Ctrl+Shift+F
 }
@@ -16,8 +16,7 @@ begin
   y := StrToIntDef(YVal, 0);
   BlockName := Format('Block %d, %d', [(x + 32) div 32 - 1, (y + 32) div 32 - 1]);
   SubBlockName := Format('Sub-Block %d, %d', [(x + 8) div 8 - 1, (y + 8) div 8 - 1]);
-  AddMessage(BlockName);
-  AddMessage(SubBlockName);
+
   // traverse mods
   for modidx := 0 to FileCount - 1 do begin
     f := FileByIndex(modidx);
@@ -33,7 +32,6 @@ begin
       // traverse Blocks
       for blockidx := 0 to ElementCount(wrldgrup) - 1 do begin
         block := ElementByIndex(wrldgrup, blockidx);
-        //AddMessage(ShortName(block));
         if ShortName(block) <> BlockName then Continue;
           
         // traverse SubBlocks
@@ -59,16 +57,19 @@ begin
 
       Break;
     end;
-
   end;
+
+  AddMessage('Cell not found!');
 end;
 
 procedure FillWorldspaces(lst: TStrings);
 var
+  sl: TStringList;
   i, j: integer;
   f, wrlds, wrld: IInterface;
   s: string;
 begin
+  sl := TStringList.Create;
   for i := 0 to FileCount - 1 do begin
     f := FileByIndex(i);
     wrlds := GroupBySignature(f, 'WRLD');
@@ -76,13 +77,23 @@ begin
     for j := 0 to ElementCount(wrlds) - 1 do begin
       wrld := ElementByIndex(wrlds, j);
       s := GetElementEditValues(wrld, 'EDID');
-      if (s <> '') and (lst.IndexOf(s) = -1) then
-        if not ElementExists(wrld, 'WNAM') then
-          lst.Add(s);
+      if (s <> '') and (sl.IndexOf(s) = -1) then
+        sl.Add(s);
     end;
   end;
+  sl.Sort;
+  lst.AddStrings(sl);
+  sl.Free;
 end;
 
+procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+    TForm(Sender).ModalResult := mrOk;
+  if Key = VK_ESCAPE then
+    TForm(Sender).ModalResult := mrCancel;
+end;
+  
 procedure OptionsForm;
 var
   frm: TForm;
@@ -95,9 +106,11 @@ begin
   try
     frm.Caption := 'Find cell in worldspace';
     frm.Width := 220;
-    frm.Height := 300;
+    frm.Height := 500;
     frm.Position := poScreenCenter;
     frm.BorderStyle := bsDialog;
+    frm.KeyPreview := True;
+    frm.OnKeyDown := FormKeyDown;
     
     edX := TLabeledEdit.Create(frm);
     edX.Parent := frm;
@@ -120,17 +133,22 @@ begin
     lbWorld.Left := 8;
     lbWorld.Top := 36;
     lbWorld.Width := 200;
-    lbWorld.Height := 200;
+    lbWorld.Height := 400;
     
     FillWorldspaces(lbWorld.Items);
-    if lbWorld.Items.Count > 0 then lbWorld.ItemIndex := 0;
+    if lbWorld.Items.Count > 0 then begin
+      if (wbGameMode = gmTES4) or (wbGameMode = gmTES5) then lbWorld.ItemIndex := lbWorld.Items.IndexOf('Tamriel') else
+      if wbGameMode = gmFO3 then lbWorld.ItemIndex := lbWorld.Items.IndexOf('Wasteland') else
+      if wbGameMode = gmFNV then lbWorld.ItemIndex := lbWorld.Items.IndexOf('WastelandNV') else
+        lbWorld.ItemIndex := 0;
+    end;
 
     btnOk := TButton.Create(frm);
     btnOk.Parent := frm;
     btnOk.Caption := 'OK';
     btnOk.ModalResult := mrOk;
     btnOk.Left := 24;
-    btnOk.Top := 242;
+    btnOk.Top := 442;
     
     btnCancel := TButton.Create(frm);
     btnCancel.Parent := frm;
@@ -150,7 +168,6 @@ end;
 
 function Initialize: Integer;
 begin
-  //JumpTo(RecordByFormID(FileByIndex(0), $162, False), False);
   OptionsForm;
   Result := 1;
 end;
