@@ -53,7 +53,7 @@ function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: st
 implementation
 
 const
-  TheEmptyPlugin = 'emptyPlugin.esp';
+  TheEmptyPlugin = 'EmptyPlugin.esp';
 
 type
   TwbMainRecordEntryHeader = record

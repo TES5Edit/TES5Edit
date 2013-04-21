@@ -10077,8 +10077,7 @@ begin
     wbMODL,
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    //wbByteArray(PNAM, 'Unused', 64, cpIgnore, True),
-    wbArray(PNAM, 'Cloud Layer Color',
+    wbArray(PNAM, 'Cloud Layer Colors',
       wbArray('Layer',
         wbStruct('Color', [
           wbInteger('Red', itU8),
@@ -10099,7 +10098,7 @@ begin
         ]),
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
-      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
+      ['Sky-Upper','Fog','Unused','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Unused']
     , cpNormal, True),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),

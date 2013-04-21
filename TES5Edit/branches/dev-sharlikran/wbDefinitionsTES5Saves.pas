@@ -89,7 +89,7 @@ begin
   end;
 end;
 
-function SaveVersionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
   Element : IwbElement;
@@ -105,13 +105,22 @@ begin
     Element := Container.ElementByPath['Save File Header\Form Version'];
     if Assigned(Element) then begin
       aType := Element.NativeValue;
-      case aType of
-        64: Result := 1;
-        73: Result := 2;
-        74: Result := 3;
+      if aType>aMinimum then
+        Result := 1;
+    end;
       end;
     end;
-  end;
+
+// Seen version checked so far 36*, 64, 73* and 74
+
+function SaveFormVersionGreaterThan35Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+    Result := SaveFormVersionDecider(36, aBasePtr, aEndPtr, aElement);
+end;
+
+function SaveFormVersionGreaterThan72Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+    Result := SaveFormVersionDecider(73, aBasePtr, aEndPtr, aElement);
 end;
 
 function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -960,6 +969,71 @@ begin
   end;
 end;
 
+function Data6Key2Counter(aParent, aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement(aParent, aElement);
+  Assert(Element.BaseName=aParent);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName[aName];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function Unknown1000Counter(aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Data6Key2Counter('Temp Effect', aName, aBasePtr, aEndPtr, aElement);
+end;
+
+function Unknown1000_000Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Data6Key2Counter('Unknown1000_00', 'Unknown1000_000 Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function Unknown1000_01Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Unknown1000Counter('Unknown1000_01 Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function Unknown1000_02Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Unknown1000Counter('Unknown1000_02 Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function Unknown1000_03Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Unknown1000Counter('Unknown1000_03 Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function Unknown1000_00001Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aValue : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Unknown1000_0000', aElement);
+  Assert(Element.BaseName='Unknown1000_0000');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Unknown1000_00000'];
+    if Assigned(Element) then begin
+      aValue := Element.NativeValue;
+      case aValue of
+        0: Result := 0;
+      else
+        Result := 1;
+      end;
+    end;
+  end;
+end;
 function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -1504,42 +1578,42 @@ begin
   ]);
 
   wbCodeOpcodes := wbEnum([
-    {000} 'Noop() MinVMversion=0 MinOtherVersion=6',
-    {001} 'IAdd(String, Integer, Integer) MinVMversion=0 MinOtherVersion=6',
-    {002} 'FAdd(String, Float, Float) MinVMversion=0 MinOtherVersion=6',
-    {003} 'ISubtract(String, Integer, Integer) MinVMversion=0 MinOtherVersion=6',
-    {004} 'FSubtract(String, Float, Float) MinVMversion=0 MinOtherVersion=6',
-    {005} 'IMultiply(String, Integer, Integer) MinVMversion=0 MinOtherVersion=6',
-    {006} 'FMultiply(String, Float, Float) MinVMversion=0 MinOtherVersion=6',
-    {007} 'IDivide(String, Integer, Integer) MinVMversion=0 MinOtherVersion=6',
-    {008} 'FDivide(String, Float, Float) MinVMversion=0 MinOtherVersion=6',
-    {009} 'IMod(String, Integer, Integer) MinVMversion=0 MinOtherVersion=6',
-    {010} 'Not(String, Any) MinVMversion=0 MinOtherVersion=6',
-    {011} 'INegate(String, Integer) MinVMversion=0 MinOtherVersion=6',
-    {012} 'FNegate(String, Float) MinVMversion=0 MinOtherVersion=6',
-    {013} 'Assign(String, Any) MinVMversion=0 MinOtherVersion=6',
-    {014} 'Cast(String, Any) MinVMversion=0 MinOtherVersion=6',
-    {015} 'CompareEQ(String, Any, Any) MinVMversion=0 MinOtherVersion=6',
-    {016} 'CompareLT(String, Any, Any) MinVMversion=0 MinOtherVersion=6',
-    {017} 'CompareLTE(String, Any, Any) MinVMversion=0 MinOtherVersion=6',
-    {018} 'CompareGT(String, Any, Any) MinVMversion=0 MinOtherVersion=6',
-    {019} 'CompareGTE(String, Any, Any) MinVMversion=0 MinOtherVersion=6',
-    {020} 'Jump(Label) MinVMversion=0 MinOtherVersion=6',
-    {021} 'JumpT(Any, Label) MinVMversion=0 MinOtherVersion=6',
-    {022} 'JumpF(Any, Label) MinVMversion=0 MinOtherVersion=6',
-    {023} 'CallMethod(N, String, String, *) MinVMversion=0 MinOtherVersion=6',
-    {024} 'CallParent(N, String, *) MinVMversion=0 MinOtherVersion=6',
-    {025} 'CallStatic(N, N, String, *) MinVMversion=0 MinOtherVersion=6',
-    {026} 'Return(Any) MinVMversion=0 MinOtherVersion=6',
-    {027} 'StrCat(String, Q, Q) MinVMversion=1 MinOtherVersion=0',
-    {028} 'PropGet(N, String, String) MinVMversion=3 MinOtherVersion=0',
-    {029} 'PropSet(N, String, Any) MinVMversion=3 MinOtherVersion=0',
-    {030} 'ArrayCreate(String, U) MinVMversion=3 MinOtherVersion=1',
-    {031} 'ArrayLength(String, String) MinVMversion=3 MinOtherVersion=1',
-    {032} 'ArrayGetElement(String, String, Integer) MinVMversion=3 MinOtherVersion=1',
-    {033} 'ArraySetElement(String, Integer, Any) MinVMversion=3 MinOtherVersion=1',
-    {034} 'ArrayFindElement(String, String, Any, Integer) MinVMversion=3 MinOtherVersion=2',
-    {035} 'ArrayRFindElement(String, String, Any, Integer) MinVMversion=3 MinOtherVersion=2'
+    {000} 'Noop()',
+    {001} 'IAdd(String, Integer, Integer)',
+    {002} 'FAdd(String, Float, Float)',
+    {003} 'ISubtract(String, Integer, Integer)',
+    {004} 'FSubtract(String, Float, Float)',
+    {005} 'IMultiply(String, Integer, Integer)',
+    {006} 'FMultiply(String, Float, Float)',
+    {007} 'IDivide(String, Integer, Integer)',
+    {008} 'FDivide(String, Float, Float)',
+    {009} 'IMod(String, Integer, Integer)',
+    {010} 'Not(String, Any)',
+    {011} 'INegate(String, Integer)',
+    {012} 'FNegate(String, Float)',
+    {013} 'Assign(String, Any)',
+    {014} 'Cast(String, Any)',
+    {015} 'CompareEQ(String, Any, Any)',
+    {016} 'CompareLT(String, Any, Any)',
+    {017} 'CompareLTE(String, Any, Any)',
+    {018} 'CompareGT(String, Any, Any)',
+    {019} 'CompareGTE(String, Any, Any)',
+    {020} 'Jump(Label)',
+    {021} 'JumpT(Any, Label)',
+    {022} 'JumpF(Any, Label)',
+    {023} 'CallMethod(N, String, String, *)',
+    {024} 'CallParent(N, String, *)',
+    {025} 'CallStatic(N, N, String, *)',
+    {026} 'Return(Any)',
+    {027} 'StrCat(String, Q, Q)',
+    {028} 'PropGet(N, String, String)',
+    {029} 'PropSet(N, String, Any)',
+    {030} 'ArrayCreate(String, U)',
+    {031} 'ArrayLength(String, String)',
+    {032} 'ArrayGetElement(String, String, Integer)',
+    {033} 'ArraySetElement(String, Integer, Any)',
+    {034} 'ArrayFindElement(String, String, Any, Integer)',
+    {035} 'ArrayRFindElement(String, String, Any, Integer)'
   ]);
 
   wbCodeParameter := wbStruct('Parameter', [
@@ -1974,10 +2048,8 @@ begin
         ,wbFloat('Pos X')
         ,wbFloat('Pos Y')
         ,wbFloat('Pos Z')
-        ,wbUnion('Added data', SaveVersionDecider, [
+        ,wbUnion('Added data', SaveFormVersionGreaterThan72Decider, [
           wbNull
-          ,wbNull
-          ,wbByteArray('Unknown', 1)
           ,wbByteArray('Unknown', 1)
         ])
       ]),
@@ -2005,7 +2077,62 @@ begin
       wbArray('Menu Controls', wbInteger('', itU8), -2),
       wbArray('Menu Topic Manager', wbInteger('', itU8), -2),
       // 1000 to 1005
-      wbArray('Temp Effects', wbInteger('', itU8), -2),
+      wbStruct('Temp Effect', [
+        wbStruct('Unknown1000_00', [
+          wbInteger('Unknown1000_000 Count', itU6to30),
+          wbArray('Unknown1000_000', wbStruct('Unknown1000_0000', [
+            wbInteger('Unknown1000_00000', itU8),
+            wbUnion('Unknown1000_00001', Unknown1000_00001Decider, [
+              wbRefID('REFR'),
+              wbStruct('Unknown1000_000011', [
+                wbRefID('CELL'),
+                wbInteger('Unknown', itU32)
+              ])
+            ]),
+            wbRefID('Texture Set'),
+            wbRefID('Texture Set'),
+            wbArray('Unknown1000_00002', wbInteger('Unknown', itU32), 3),
+            wbArray('Unknown1000_00003', wbInteger('Unknown', itU32), 3),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32),
+            wbArray('Unknown1000_00004', wbInteger('Unknown', itU32), 4), // Check for float
+            wbInteger('Unknown', itU8),
+            wbInteger('Unknown', itU8),
+            wbInteger('Unknown', itU8),
+            wbInteger('Unknown', itU8),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU8),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU8),
+            wbInteger('Unknown', itU8),
+            wbUnion('Unknown1000_00005', SaveFormVersionGreaterThan35Decider, [
+              wbNull,
+              wbInteger('Unknown', itU32)
+            ])
+          ]), Unknown1000_000Counter)
+        ]),
+        wbInteger('Next ID', itU32),
+        wbInteger('Unknown1000_01 Count', itU6to30),
+        wbArray('Unknown1000_01', wbStruct('Unknown', [
+          wbInteger('Unknown', itU32),
+          wbStruct('Unknown', []) // Needs sample to continue
+        ]), Unknown1000_01Counter),
+        wbInteger('Unknown1000_02 Count', itU6to30),
+        wbArray('Unknown1000_02', wbStruct('Unknown', [
+          wbInteger('Unknown', itU32),
+          wbStruct('Unknown', []) // Needs sample to continue
+        ]), Unknown1000_02Counter),
+        wbInteger('Unknown1000_03 Count', itU6to30),
+        wbArray('Unknown1000_03', wbStruct('Unknown', [
+          wbInteger('Unknown', itU32),
+          wbStruct('Unknown', []) // Needs sample to continue
+        ]), Unknown1000_03Counter)
+      ]),
       wbStruct('Papyrus Struct', [
         wbInteger('SkyrimVM_version', itU16)  // FFFF marks an invalid save, 4 seems current max
         ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, StringTableAfterLoad)
