@@ -6877,7 +6877,7 @@ begin
 
       end else
 
-      if Element._File.IsLocalized and (Element.ValueDef.DefType = dtLString) then begin
+      if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);

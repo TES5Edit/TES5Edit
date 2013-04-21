@@ -6895,7 +6895,7 @@ begin
 
       end else
 
-      if Element._File.IsLocalized and (Element.ValueDef.DefType = dtLString) then begin
+      if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
@@ -7086,6 +7086,24 @@ begin
     MainRecord.Show;
   PostResetActiveTree;
   InvalidateElementsTreeView(NoNodes);
+end;
+
+procedure TfrmMain.mniViewHeaderJumpToClick(Sender: TObject);
+var
+  Column                      : TColumnIndex;
+  Element                     : IwbElement;
+  MainRecord                  : IwbMainRecord;
+begin
+  Column := vstView.Header.Columns.PopupIndex;
+  if Column < 1 then
+    Exit;
+  Dec(Column);
+  if Column > High(ActiveRecords) then
+    Exit;
+  Element := ActiveRecords[Column].Element;
+  if not Supports(Element, IwbMainRecord, MainRecord) then
+    Exit;
+  JumpTo(MainRecord, True);
 end;
 
 procedure TfrmMain.mniViewHeaderRemoveClick(Sender: TObject);
@@ -10015,6 +10033,7 @@ begin
   mniViewHeaderCopyAsWrapper.Visible := False;
   mniViewHeaderRemove.Visible := False;
   mniViewHeaderHidden.Visible := False;
+  mniViewHeaderJumpTo.Visible := False;
   if not wbEditAllowed then
     Exit;
   if wbTranslationMode then
@@ -10040,6 +10059,7 @@ begin
   );
   mniViewHeaderCopyAsWrapper.Visible := (MainRecord.Signature = 'LVLC') or (MainRecord.Signature = 'LVLI') or (MainRecord.Signature = 'LVSP') or (MainRecord.Signature = 'LVLN');
 
+  mniViewHeaderJumpTo.Visible := True;
   mniViewHeaderHidden.Visible := True;
   mniViewHeaderHidden.Checked := esHidden in MainRecord.ElementStates;
   if not ActiveRecords[Column].Element._File.IsEditable then
