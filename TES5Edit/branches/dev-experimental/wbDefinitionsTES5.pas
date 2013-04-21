@@ -4699,7 +4699,7 @@ begin
       wbCOED
     ], []);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCNTOs := wbRArrayS('Items', wbCNTO, COCT);
+  wbCNTOs := wbRArrayS('Items', wbCNTO);
 
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
@@ -6951,7 +6951,7 @@ begin
     ], cpNormal, False, nil, 11),
 
 		wbByteArray(TVDT, 'Unknown', 0, cpNormal),
-		wbByteArray(MHDT, 'Unknown', 0, cpNormal),
+		wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
     wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
@@ -10155,7 +10155,6 @@ begin
         ]),
 				wbCOED
       ], []),
-    LLCT,
     cpNormal, True),
     wbMODL
   ]);
@@ -10182,8 +10181,7 @@ begin
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
         wbCOED
-      ], []),
-    LLCT
+      ], [])
     )
   ]);
 
@@ -12563,7 +12561,7 @@ begin
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
     {>>> END leftover from earlier CK versions <<<}
-    wbByteArray(MHDT, 'Unknown', 0, cpNormal),
+    wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itU16),
