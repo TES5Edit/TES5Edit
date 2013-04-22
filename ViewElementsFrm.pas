@@ -42,6 +42,7 @@ type
   private
     Edits: TList;
     procedure MemoChange(Sender: TObject);
+    procedure MemoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     Settings: TMemIniFile;
     CompareCmdLine: string;
@@ -107,6 +108,7 @@ begin
   Memo.ScrollBars := ssBoth;
   Memo.Modified := False;
   Memo.OnChange := MemoChange;
+  Memo.OnKeyDown := MemoKeyDown;
 
   if aFocused then
     pcView.ActivePage := TabSheet;
@@ -230,6 +232,13 @@ begin
         end;}
       end;
     end;
+end;
+
+procedure TfrmViewElements.MemoKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Key = Ord('A')) and (ssCtrl in Shift) then
+    TMemo(Sender).SelectAll;
 end;
 
 function TfrmViewElements.ShowModal: Integer;
