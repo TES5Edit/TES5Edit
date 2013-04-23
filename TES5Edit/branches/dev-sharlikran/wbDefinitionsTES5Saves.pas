@@ -1447,7 +1447,7 @@ begin
   Result := Data6Key2Counter('Objectives Data', 'Objective Count', aBasePtr, aEndPtr, aElement);
 end;
 
-function QuestRuntimDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function QuestRuntimeDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
@@ -1465,6 +1465,60 @@ begin
   end;
 end;
 
+function QuestRuntimeHasStructDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Runtime Data', aElement);
+  Assert(Element.BaseName='Runtime Data');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['HasStruct'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
+function QuestRuntimeTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('UnknownRA00A001A008S', aElement);
+  Assert(Element.BaseName='UnknownRA00A001A008S');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+      if Result>4 then
+        Result := 0
+      else
+        Inc(Result);
+    end;
+  end;
+end;
+
+function InstanceCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Data6Key2Counter('Instance Data', 'Instance Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function InstanceUnknownIA008SCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Data6Key2Counter('Instance', 'Instance UnknownIA008S Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function InstanceGlobalCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Data6Key2Counter('Instance', 'Instance Global Count', aBasePtr, aEndPtr, aElement);
+end;
 
 function InitialDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -2739,11 +2793,11 @@ begin
         ,wbUnion('Quest Runtime Data', ChangedFlag28Decider, [
            wbNull
           ,wbStruct('Runtime Data', [
-             wbInteger('Unknown', itU8, wbDumpInteger)
+             wbInteger('Unknown', itU8)
             ,wbArray('UnknownRA004', wbStruct('UnknownRA004S', [
-               wbInteger('Unknown', itU32, wbDumpInteger)
+               wbInteger('Unknown', itU32)
               ,wbInteger('Type', itU8)
-              ,wbUnion('UnknownRA004S006', QuestRuntimDataTypeDecider, [
+              ,wbUnion('UnknownRA004S006', QuestRuntimeDataTypeDecider, [
                  wbStruct('UnknownRA004S006U000', [
                    wbRefID('RefID')
                  ])
@@ -2755,18 +2809,54 @@ begin
                  ])
               ])
              ]), -1)
+            ,wbArray('UnknownRA008', wbStruct('UnknownRA008S', [
+               wbInteger('Unknown', itU32)
+              ,wbRefID('Location')
+             ]), -1)
+            ,wbInteger('HasStruct', itU8, wbEnum(['False', 'True']))
+            ,wbUnion('UnknownRA00A', QuestRuntimeHasStructDecider, [
+               wbNull
+              ,wbStruct('UnknownRA00A001', [
+                 wbInteger('Unknown', itU32)
+                ,wbInteger('Unknown', itU32)
+                ,wbArray('UnknownRA00A001A008', wbStruct('UnknownRA00A001A008S', [
+                   wbInteger('Type', itU32)
+                  ,wbUnion('UnknownRA001A008S004', QuestRuntimeTypeDecider, [
+                    wbNull,
+                    wbRefID('TESObjectREFR'),
+                    wbRefID('RefID'),
+                    wbRefID('Location'),
+                    wbInteger('Unknown', itU32),
+                    wbRefID('Keyword')
+                   ])
+                 ]), -1)
+              ])
+            ])
            ])
          ])
-//        ,wbUnion('Quest Instance Data', ChangedFlag27Decider, [
-//           wbNull
-//          ,wbStruct('', [  // Multiple of 7 , no obvious array no obvious list
-//            wbArray('Unknown', wbStruct('', [
-//               wbArray('Unknown', wbByteArray('Unknown', 5), -4)
-//              ,wbByteArray('Unknown', 3)
-//            ]), -1)
-//          ])
-//         ])
-//        ,wbUnion('Quest Already Run', ChangedFlag26Decider, [wbNull, wbInteger('Already Run', itU8, wbEnum(['False', 'True'])])
+        ,wbUnion('Quest Instance Data', ChangedFlag27Decider, [
+           wbNull
+          ,wbStruct('Instance Data', [  // Multiple of 7 , no obvious array no obvious list
+             wbInteger('Unknown', itU32)
+            ,wbInteger('Instance Count', itU6to30)
+            ,wbArray('Instances', wbStruct('Instance', [
+               wbInteger('Unknown', itU32)
+              ,wbInteger('Instance UnknownIA008S Count', itU6to30)
+              ,wbArray('Instance UnknownA008', wbStruct('Instance UnknownA008S', [
+                 wbInteger('Unknown', itU32),
+                 wbRefID('RefID')
+               ]), InstanceUnknownIA008SCounter)
+              ,wbInteger('Instance Global Count', itU6to30)
+              ,wbArray('Instance Globals', wbStruct('Instance Global', [
+                 wbRefID('Global'),
+                 wbFloat('Value')
+               ]), InstanceGlobalCounter)
+              ,wbInteger('Unknown', itU16)
+              ,wbInteger('Unknown', itU8)
+            ]), InstanceCounter)
+           ])
+         ])
+        ,wbUnion('Quest Already Run', ChangedFlag26Decider, [wbNull, wbInteger('Already Run', itU8, wbEnum(['False', 'True']))])
       ])
       ,wbStruct('Change NPC_ Data', [
          wbUnion('Base Data', ChangedFlag01Decider, [wbNull, wbByteArray('Change NPC_ Base Data', 24)])
