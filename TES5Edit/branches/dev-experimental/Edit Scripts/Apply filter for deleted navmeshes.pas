@@ -3,7 +3,9 @@ unit userscript;
 function Initialize: Integer;
 begin
   FilterConflictAll := False;
+  FilterConflictAllSet := [];
   FilterConflictThis := False;
+  FilterConflictThisSet := [];
   FilterByInjectStatus := False;
   FilterInjectStatus := False;
   FilterByNotReachableStatus := False;
@@ -34,8 +36,6 @@ begin
   FilterSignatures := 'NAVM'; // *********************
   FilterByBaseSignature := False;
   FilterBaseSignatures := '';
-  FilterConflictAllSet := [];
-  FilterConflictThisSet := [];
   FlattenBlocks := False;
   FlattenCellChilds := False;
   AssignPersWrldChild := False;

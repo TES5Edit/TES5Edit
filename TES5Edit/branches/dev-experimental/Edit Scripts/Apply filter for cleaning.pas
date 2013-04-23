@@ -42,8 +42,6 @@ begin
   //FilterSignatures := 'ARMO,AMMO,WEAP';
   FilterByBaseSignature := False;
   FilterBaseSignatures := '';
-  FilterConflictAllSet := [];
-  FilterConflictThisSet := [];
   FlattenBlocks := False;
   FlattenCellChilds := False;
   AssignPersWrldChild := False;

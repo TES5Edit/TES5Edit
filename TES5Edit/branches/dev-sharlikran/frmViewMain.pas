@@ -5827,6 +5827,8 @@ begin
   if Trim(aScript) = '' then
     Exit;
 
+  tmrCheckUnsaved.Enabled := False;
+
   Count := 0;
   ScriptProcessElements := [etMainRecord];
 
@@ -5926,6 +5928,7 @@ var
   Scr: string;
 begin
   with TfrmScript.Create(Self) do try
+    Path := ScriptsPath;
     LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
     if ShowModal <> mrOK then
       Exit;

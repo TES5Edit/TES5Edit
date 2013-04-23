@@ -4,15 +4,13 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, JvExControls, JvEditorCommon, JvEditor,
-  JvHLEditor;
+  Dialogs, StdCtrls, ExtCtrls;
 
 const
   sNewScript = '<new script>';
 
 type
   TfrmScript = class(TForm)
-    Editor: TJvHLEditor;
     pnlTop: TPanel;
     Label1: TLabel;
     cmbScripts: TComboBox;
@@ -23,19 +21,22 @@ type
     lblPosition: TLabel;
     btnSave: TButton;
     dlgSave: TSaveDialog;
+    Editor: TMemo;
     procedure FormShow(Sender: TObject);
     procedure cmbScriptsChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure EditorCaretChanged(Sender: TObject; LastCaretX,
-      LastCaretY: Integer);
     procedure btnSaveClick(Sender: TObject);
+    procedure EditorKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure EditorMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
   public
     { Public declarations }
-    ScriptsPath: string;
+    Path: string;
     LastUsedScript: string;
     Script: string;
+    procedure UpdateCaretPos;
     procedure ReadScriptsList;
   end;
 
@@ -56,7 +57,7 @@ begin
 
   s := cmbScripts.Items[cmbScripts.ItemIndex];
   if s = sNewScript then begin
-    dlgSave.InitialDir := ScriptsPath;
+    dlgSave.InitialDir := Path;
     if dlgSave.Execute then begin
       s := dlgSave.FileName;
       s2 := ChangeFileExt(ExtractFileName(s), '');
@@ -69,7 +70,7 @@ begin
     end else
       Exit;
   end else
-    s := ScriptsPath + s + '.pas';
+    s := Path + s + '.pas';
 
 
   with TStringList.Create do try
@@ -94,14 +95,35 @@ begin
   Editor.Lines.Clear;
 
   with TStringList.Create do try
-    LoadFromFile(ScriptsPath + s + '.pas');
+    try LoadFromFile(Path + s + '.pas'); except end;
     Editor.Lines.Text := Text;
     Editor.Modified := False;
     Editor.SetFocus;
-    EditorCaretChanged(Editor, 0, 0);
+    UpdateCaretPos;
   finally
     Free;
   end;
+end;
+
+procedure TfrmScript.UpdateCaretPos;
+var
+  l, c: Word;
+begin
+  l := SendMessage(Editor.Handle, EM_LINEFROMCHAR, -1, 0);
+  c := LoWord(SendMessage(Editor.Handle, EM_GETSEL, 0, 0)) - SendMessage(Editor.Handle, EM_LINEINDEX, -1, 0);
+  lblPosition.Caption := Format('Line:%d Col:%d', [Succ(l), Succ(c)]);
+end;
+
+procedure TfrmScript.EditorMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  UpdateCaretPos;
+end;
+
+procedure TfrmScript.EditorKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  UpdateCaretPos;
 end;
 
 procedure TfrmScript.ReadScriptsList;
@@ -112,7 +134,7 @@ var
 begin
   sl := TStringList.Create;
   try
-    if FindFirst(ScriptsPath + '*.pas', faAnyFile, F) = 0 then try
+    if FindFirst(Path + '*.pas', faAnyFile, F) = 0 then try
       repeat
         if not SameText('_newscript_.pas', F.Name) then
           sl.Add(ChangeFileExt(F.Name, ''));
@@ -131,12 +153,6 @@ begin
   if i = -1 then i := 0;
   cmbScripts.ItemIndex := i;
   cmbScriptsChange(Self);
-end;
-
-procedure TfrmScript.EditorCaretChanged(Sender: TObject; LastCaretX,
-  LastCaretY: Integer);
-begin
-  lblPosition.Caption := Format('Line:%d Col:%d', [Editor.CaretY + 1, Editor.CaretX + 1]);
 end;
 
 procedure TfrmScript.FormClose(Sender: TObject; var Action: TCloseAction);
