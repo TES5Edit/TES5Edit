@@ -91,18 +91,18 @@ begin
         if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
-  Name := aElement.Name;
+  Name := aElement.DisplayName;
   Value := aElement.Value;
 
-  if (Name <> '') and not wbReportMode then
+  if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
     Write(aIndent, Name);
-  if (Name <> '') or (Value <> '') then
+  if ((Name <> '') and (Name <> 'Unused')) or (Value <> '') then
     aIndent := aIndent + '  ';
   if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
     if not wbReportMode then
       WriteLn(': ', Value);
   end else begin
-    if not wbReportMode then
+    if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
       WriteLn;
   end;
 
@@ -157,16 +157,16 @@ begin
           if (length(s)>(length(aSwitch)+2)) and (s[Length(aSwitch) + 2] = ':') then begin
             aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
             Result := True;
+            Exit;
           end;
-          Exit;
         end;
       end else
         if AnsiCompareStr(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
           if s[Length(aSwitch) + 2] = ':' then begin
             aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
             Result := True;
+            Exit;
           end;
-          Exit;
         end;
   end;
 end;

@@ -6081,9 +6081,9 @@ var
 begin
   Result := 0;
   Buffer[3] := 0;
-  Buffer[2] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-  Buffer[1] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-  Buffer[0] := PShortInt(aBasePtr)^;
+  Buffer[2] := PByte(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[1] := PByte(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[0] := PByte(aBasePtr)^;
   Move(Buffer, Result, SizeOf(Result));
 end;
 
@@ -6102,42 +6102,31 @@ var
   Key : Byte;
 begin
   if Assigned(aBasePtr) then begin
-    Key := $3 and PShortInt(aBasePtr)^; // The counter length is coded into the 2 least significant bits
-    Result := Key + 1;
+    Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+    case key of
+      0: Result := 1;
+      1: Result := 2;
+      2: Result := 4;
+    else
+      Result := 1;
+    end
   end else
     Result := 1; // Minimum size
 end;
 
 function ReadIntegerCounter(aBasePtr: pointer): Int64;
 var
-  Buffer : array[0..3] of Byte;
   Key    : Byte;
 begin
   Result := 0;
-  Buffer[3] := 0;
-  Buffer[2] := 0;
-  Buffer[1] := 0;
-  Buffer[0] := 0;
-  Key := $3 and PShortInt(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+  Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
   case key of
-    0: Buffer[0] := PShortInt(aBasePtr)^ shr 2; // The 6 remaining bits are the count.
-    1: begin // 6 + 8 bits of count
-      Buffer[1] := PShortInt(aBasePtr)^ shr 2; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-      Buffer[0] := PShortInt(aBasePtr)^;
-    end;
-    2: begin // 6 + 16 bits of count
-      Buffer[2] := PShortInt(aBasePtr)^ shr 2; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-      Buffer[1] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-      Buffer[0] := PShortInt(aBasePtr)^;
-    end;
-    3: begin // Not supposed to exist : zeroed out by the engine
-      Buffer[3] := 0;
-      Buffer[2] := 0;
-      Buffer[1] := 0;
-      Buffer[0] := 0;
-    end;
+    0: Move(PByte(aBasePtr)^,     Result, 1); // The 6 remaining bits are the count.
+    1: Move(PWord(aBasePtr)^,     Result, 2); // 6 + 8 bits of count
+    2: Move(PCardinal(aBasePtr)^, Result, 4); // 6 + 24 bits of count
+    3: ; // Not supposed to exist : zeroed out by the engine
   end;
-  Move(Buffer, Result, SizeOf(Result));
+  Result := Result shr 2;
 end;
 
 procedure WriteIntegerCounter(aBasePtr: pointer; aValue: Int64);
@@ -6168,8 +6157,7 @@ end;
 
 { TwbIntegerDef }
 
-procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement);
+procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 var
   Value       : Int64;
 const
@@ -6213,8 +6201,7 @@ begin
   Result := Assigned(inFormater) and (inFormater.CanContainFormIDs);
 end;
 
-function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): string;
+function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   Len         : Cardinal;
   Value       : Int64;
@@ -6304,8 +6291,7 @@ begin
   FromInt(i, aBasePtr, aEndPtr, aElement);
 end;
 
-procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement);
+procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
     1, 1, 2, 2, 4, 4, 8, 8, 3, 1
@@ -6385,8 +6371,7 @@ begin
   Result := wbIsInternalEdit or (not Assigned(inFormater) or inFormater.IsEditable[ToInt(aBasePtr, aEndPtr, aElement), aElement]);
 end;
 
-function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): IwbElement;
+function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
 var
   Value       : Int64;
 const
@@ -6662,7 +6647,7 @@ begin
       Result := inFormater.ToString(Value, aElement)
     else
       Result := IntToStr(Value);
-    if Len > ExpectedLen[inType] then begin
+    if (Len > ExpectedLen[inType]) and not (inType in [itU6to30]) then begin
       if wbCheckExpectedBytes then
         Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [ExpectedLen[inType] , Len])
     end;
@@ -6797,21 +6782,25 @@ var
   DataContainer : IwbDataContainer;
   KnownSize     : Boolean;
 
-  procedure FindOurself(theContainer: IwbContainer; aName: String);
+  function FindOurself(theContainer: IwbContainer; aName: String): Boolean;
   var
     i           : Integer;
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
+    Result := False;
     if Assigned(theContainer) and (not SameText(aName, theContainer.BaseName)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
           if SameText(aName, aContainer.BaseName) then begin
             Container := aContainer;
+            Result := true;
             break;
-          end else
-            FindOurself(aContainer, aName);
+          end else if FindOurself(aContainer, aName) then begin
+            Result := True;
+            break;
+          end;
       end;
     end;
   end;
@@ -9142,6 +9131,7 @@ begin
         -1 : Result := PCardinal(aBasePtr)^+SizeOf(Cardinal);
         -2 : Result := PWord(aBasePtr)^+SizeOf(Word);
         -4 : Result := PByte(aBasePtr)^+SizeOf(Byte);
+      -255 : Result := 0; // Explicitly null for wbNull (displays better in unions)
          0 : Result := High(Integer);
       end
     else if Result < 0 then Result := 0;
