@@ -126,6 +126,7 @@ type
     caConflictCritical
     );
 
+  TByteSet = set of Byte;
   TConflictAllSet = set of TConflictAll;
   TConflictAllColors = array[TConflictAll] of TColor;
 
@@ -1051,7 +1052,6 @@ type
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
   TwbCountCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
-  TwbExtractInfoCallback = function: Integer;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -1357,6 +1357,10 @@ type
 
   IwbStringIndexDefFormater = interface(IwbIntegerDefFormater)
     ['{E5049087-757A-48CD-99D7-B5769B948FFE}']
+  end;
+
+  IwbWorldspaceIndexDefFormater = interface(IwbIntegerDefFormater)
+    ['{7975AE3C-F022-4ddb-892B-33903DBEDB48}']
   end;
 
   IwbObjectHandleDefFormater = interface(IwbIntegerDefFormater)
@@ -2187,9 +2191,10 @@ function wbRefID(const aName      : string;
 
 function wbDumpInteger : IwbIntegerDefFormater; overload;
 
-function wbStringIndex : IwbStringIndexDefFormater; overload;
-function wbObjectHandle : IwbObjectHandleDefFormater; overload;
-function wbArrayHandle : IwbArrayHandleDefFormater; overload;
+function wbStringIndex     : IwbStringIndexDefFormater; overload;
+function wbWorldspaceIndex : IwbWorldspaceIndexDefFormater; overload;
+function wbObjectHandle    : IwbObjectHandleDefFormater; overload;
+function wbArrayHandle     : IwbArrayHandleDefFormater; overload;
 
 function wbKey2Data6Enum(const aNames : array of string)
                                       : IwbKey2Data6EnumDef; overload;
@@ -2452,16 +2457,17 @@ function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
 function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContainerElementRef;
 
 var
-  HeaderSignature       : TwbSignature = 'TES4';
-  HeaderMagic           : TwbSaveMagic = 'TESV_SAVEGAME';
-  SaveFileHeader        : IwbStructDef; // Temporary Hack I hope...
-  SaveFileChapters      : IwbStructDef; // Temporary Hack I hope...
-  BytesToSkip           : Cardinal = 0;
-  BytesToDump           : Cardinal = $FFFFFFFF;
-  BytesToGroup          : Cardinal = 4;
-  wbExtractInfoCallback : TwbExtractInfoCallback;
+  HeaderSignature   : TwbSignature = 'TES4';
+  HeaderMagic       : TwbSaveMagic = 'TESV_SAVEGAME';
+  SaveFileHeader    : IwbStructDef; // Temporary Hack I hope...
+  SaveFileChapters  : IwbStructDef; // Temporary Hack I hope...
+  BytesToSkip       : Cardinal = 0;
+  BytesToDump       : Cardinal = $FFFFFFFF;
+  BytesToGroup      : Cardinal = 4;
+  wbExtractInfo     : ^TByteSet;
 
 procedure InitializeStringTable(aContainer: IwbContainer);
+procedure InitializeWorldspaceTable(aContainer: IwbContainer);
 procedure InitializeRefIDTable(aContainer: IwbContainer);
 procedure InitializeObjectTable(aContainer: IwbContainer);
 procedure InitializeObjectDetachedTable(aContainer: IwbContainer);
@@ -3654,6 +3660,13 @@ type
   end;
 
   TwbStringIndexFormater = class(TwbIntegerDefFormater, IwbStringIndexDefFormater)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
+  TwbWorldspaceIndexFormater = class(TwbIntegerDefFormater, IwbWorldspaceIndexDefFormater)
   protected
     {---IwbIntegerDefFormater---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4858,6 +4871,11 @@ end;
 function wbStringIndex : IwbStringIndexDefFormater; overload;
 begin
   Result := TwbStringIndexFormater.Create(cpNormal, False);
+end;
+
+function wbWorldspaceIndex : IwbWorldspaceIndexDefFormater; overload;
+begin
+  Result := TwbWorldspaceIndexFormater.Create(cpNormal, False);
 end;
 
 function wbObjectHandle : IwbObjectHandleDefFormater; overload;
@@ -6299,9 +6317,9 @@ var
 begin
   Result := 0;
   Buffer[3] := 0;
-  Buffer[2] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-  Buffer[1] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-  Buffer[0] := PShortInt(aBasePtr)^;
+  Buffer[2] := PByte(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[1] := PByte(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[0] := PByte(aBasePtr)^;
   Move(Buffer, Result, SizeOf(Result));
 end;
 
@@ -6320,42 +6338,31 @@ var
   Key : Byte;
 begin
   if Assigned(aBasePtr) then begin
-    Key := $3 and PShortInt(aBasePtr)^; // The counter length is coded into the 2 least significant bits
-    Result := Key + 1;
+    Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+    case key of
+      0: Result := 1;
+      1: Result := 2;
+      2: Result := 4;
+    else
+      Result := 1;
+    end
   end else
     Result := 1; // Minimum size
 end;
 
 function ReadIntegerCounter(aBasePtr: pointer): Int64;
 var
-  Buffer : array[0..3] of Byte;
   Key    : Byte;
 begin
   Result := 0;
-  Buffer[3] := 0;
-  Buffer[2] := 0;
-  Buffer[1] := 0;
-  Buffer[0] := 0;
-  Key := $3 and PShortInt(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+  Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
   case key of
-    0: Buffer[0] := PShortInt(aBasePtr)^ shr 2; // The 6 remaining bits are the count.
-    1: begin // 6 + 8 bits of count
-      Buffer[1] := PShortInt(aBasePtr)^ shr 2; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-      Buffer[0] := PShortInt(aBasePtr)^;
-    end;
-    2: begin // 6 + 16 bits of count
-      Buffer[2] := PShortInt(aBasePtr)^ shr 2; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-      Buffer[1] := PShortInt(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-      Buffer[0] := PShortInt(aBasePtr)^;
-    end;
-    3: begin // Not supposed to exist : zeroed out by the engine
-      Buffer[3] := 0;
-      Buffer[2] := 0;
-      Buffer[1] := 0;
-      Buffer[0] := 0;
-    end;
+    0: Move(PByte(aBasePtr)^,     Result, 1); // The 6 remaining bits are the count.
+    1: Move(PWord(aBasePtr)^,     Result, 2); // 6 + 8 bits of count
+    2: Move(PCardinal(aBasePtr)^, Result, 4); // 6 + 24 bits of count
+    3: ; // Not supposed to exist : zeroed out by the engine
   end;
-  Move(Buffer, Result, SizeOf(Result));
+  Result := Result shr 2;
 end;
 
 procedure WriteIntegerCounter(aBasePtr: pointer; aValue: Int64);
@@ -6386,8 +6393,7 @@ end;
 
 { TwbIntegerDef }
 
-procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement);
+procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 var
   Value       : Int64;
 const
@@ -6431,8 +6437,7 @@ begin
   Result := Assigned(inFormater) and (inFormater.CanContainFormIDs);
 end;
 
-function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): string;
+function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   Len         : Cardinal;
   Value       : Int64;
@@ -6522,8 +6527,7 @@ begin
   FromInt(i, aBasePtr, aEndPtr, aElement);
 end;
 
-procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement);
+procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
     1, 1, 2, 2, 4, 4, 8, 8, 3, 1
@@ -6603,8 +6607,7 @@ begin
   Result := wbIsInternalEdit or (not Assigned(inFormater) or inFormater.IsEditable[ToInt(aBasePtr, aEndPtr, aElement), aElement]);
 end;
 
-function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): IwbElement;
+function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
 var
   Value       : Int64;
 const
@@ -6883,7 +6886,7 @@ begin
       Result := inFormater.ToString(Value, aElement)
     else
       Result := IntToStr(Value);
-    if Len > ExpectedLen[inType] then begin
+    if (Len > ExpectedLen[inType]) and not (inType in [itU6to30]) then begin
       if wbCheckExpectedBytes then
         Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [ExpectedLen[inType] , Len])
     end;
@@ -7017,23 +7020,26 @@ var
   Element       : IwbElement;
   DataContainer : IwbDataContainer;
   KnownSize     : Boolean;
-//  aElementPath  : String;
 
-  procedure FindOurself(theContainer: IwbContainer; aName: String);
+  function FindOurself(theContainer: IwbContainer; aName: String): Boolean;
   var
     i           : Integer;
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
+    Result := False;
     if Assigned(theContainer) and (not SameText(aName, theContainer.BaseName)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
           if SameText(aName, aContainer.BaseName) then begin
             Container := aContainer;
+            Result := true;
             break;
-          end else
-            FindOurself(aContainer, aName);
+          end else if FindOurself(aContainer, aName) then begin
+            Result := True;
+            break;
+          end;
       end;
     end;
   end;
@@ -7150,8 +7156,8 @@ begin
     end else begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
       if Size < High(Integer) then begin
-        if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
-          wbProgressCallback('Found an array with negative size! '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+        if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size*Count) then begin
+          wbProgressCallback('Found an array with negative size! '+IntToHex64(Cardinal(aBasePtr)+Size*Count, 8)+
             ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
           Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
           Exit;
@@ -9402,6 +9408,7 @@ begin
         -1 : Result := PCardinal(aBasePtr)^+SizeOf(Cardinal);
         -2 : Result := PWord(aBasePtr)^+SizeOf(Word);
         -4 : Result := PByte(aBasePtr)^+SizeOf(Byte);
+      -255 : Result := 0; // Explicitly null for wbNull (displays better in unions)
          0 : Result := High(Integer);
       end
     else if Result < 0 then Result := 0;
@@ -11665,6 +11672,35 @@ begin
     CompressedSize := -1;
     Result := 0;
   end;
+end;
+
+{ TwbWorldspaceIndexFormater }
+
+var
+  sifWorldspaceArray : array of IwbElement = nil;
+
+procedure InitializeWorldspaceTable(aContainer: IwbContainer);
+var
+  i   : Integer;
+begin
+  if Assigned(aContainer) and not assigned(sifWorldspaceArray) then begin
+    SetLength(sifWorldspaceArray, aContainer.ElementCount);
+    for i := 0 to Pred(aContainer.ElementCount) do
+      sifWorldspaceArray[i] := aContainer.Elements[i];
+  end;
+end;
+
+function TwbWorldspaceIndexFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex(aInt, 4);
+end;
+
+function TwbWorldspaceIndexFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
+begin
+  if (aInt > 0) and (aInt <= Length(sifWorldspaceArray)) then
+    Result := '[' + IntToHex64(aInt, 8) + '] '+ sifWorldspaceArray[aInt-1].Value
+  else
+    Result := '[' + IntToHex64(aInt, 8) + '] <no such worldspace>';
 end;
 
 initialization

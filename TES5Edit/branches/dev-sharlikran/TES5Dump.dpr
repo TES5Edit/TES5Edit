@@ -108,15 +108,15 @@ begin
   Name := aElement.DisplayName;
   Value := aElement.Value;
 
-  if (Name <> '') and not wbReportMode then
+  if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
     Write(aIndent, Name);
-  if (Name <> '') or (Value <> '') then
+  if ((Name <> '') and (Name <> 'Unused')) or (Value <> '') then
     aIndent := aIndent + '  ';
   if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
     if not wbReportMode then
       WriteLn(': ', Value);
   end else begin
-    if not wbReportMode then
+    if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
       WriteLn;
   end;
 

@@ -4668,6 +4668,9 @@ begin
 end;
 
 procedure DefineTES5a;
+var
+  wbRecordFlagsEnum : IwbFlagsDef;
+
 begin
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32);
@@ -4844,7 +4847,7 @@ begin
     ])
   ]);
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbRecordFlagsEnum := wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
@@ -4874,7 +4877,7 @@ begin
     {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
     {0x00000800}'InitiallyDisabled',
     {0x00001000}'Ignored',
-    {0x00002000}'Unknown 14',
+    {0x00002000}'ActorChanged',
     {0x00004000}'Unknown 15',
     {>>> 0x00008000 STAT: Has Distant LOD <<<}
     {0x00008000}'VWD',
@@ -4891,7 +4894,7 @@ begin
     {0x00080000}'CantWait HasCurrents',
     {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
     {0x00100000}'IgnoreObjectInteraction',
-    {0x00200000}'Unknown 22',
+    {0x00200000}'(Used by in Memory Changed Form)',
     {0x00400000}'Unknown 23',
     {>>> 0x00800000 ACTI: Is Marker <<<}
     {0x00800000}'IsMarker',
@@ -4913,7 +4916,8 @@ begin
     {0x40000000}'NavMeshGround NoRespawn',
     {>>> 0x80000000 REFR: MultiBound <<<}
     {0x80000000}'MultiBound'
-  ]));
+  ]);
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbRecordFlagsEnum);
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
     {0x00000001}'Unknown 1',

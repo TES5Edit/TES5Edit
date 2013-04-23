@@ -32,8 +32,9 @@ uses
   wbDefinitionsTES5;
 
 var
-  wbSexEnum: IwbEnumDef;
-  wbPropTypeEnum: IwbEnumDef;
+  wbSexEnum         : IwbEnumDef;
+  wbPropTypeEnum    : IwbEnumDef;
+  wbRecordFlagsEnum : IwbFlagsDef;
 
 procedure DefineTES5SavesA;
 begin
@@ -57,6 +58,78 @@ begin
   ]);
 
   wbSexEnum := wbEnum(['Male','Female']);
+
+  wbRecordFlagsEnum := wbFlags([
+    {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
+    {0x00000001}'ESM',
+    {0x00000002}'Unknown 2',
+    {>>> 0x00000004 ARMO: Not playable <<<}
+    {0x00000004}'NotPlayable',
+    {0x00000008}'Unknown 4',
+    {0x00000010}'Unknown 5',
+    {0x00000020}'Deleted',
+    {>>> 0x00000040 ACTI: Has Tree LOD <<<}
+    {>>> 0x00000040 REGN: Border Region <<<}
+    {>>> 0x00000040 STAT: Has Tree LOD <<<}
+    {>>> 0x00000040 REFR: Hidden From Local Map <<<}
+    {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
+    {>>> 0x00000080 TES4: Localized <<<}
+    {>>> 0x00000080 PHZD: Turn Off Fire <<<}
+    {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
+    {>>> 0x00000080 STAT: Add-on LOD Object <<<}
+    {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
+    {>>> 0x00000100 ACTI: Must Update Anims <<<}
+    {>>> 0x00000100 REFR: Inaccessible <<<}
+    {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
+    {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
+    {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
+    {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
+    {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
+    {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
+    {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
+    {0x00000800}'InitiallyDisabled',
+    {0x00001000}'Ignored',
+    {0x00002000}'Unknown 14',
+    {0x00004000}'Unknown 15',
+    {>>> 0x00008000 STAT: Has Distant LOD <<<}
+    {0x00008000}'VWD',
+    {>>> 0x00010000 ACTI: Random Animation Start <<<}
+    {>>> 0x00010000 REFR light: Never fades <<<}
+    {0x00010000}'RandomAnimationStart NeverFades',
+    {>>> 0x00020000 ACTI: Dangerous <<<}
+    {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
+    {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
+    {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
+    {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
+    {0x00040000}'Compressed',
+    {>>> 0x00080000 STAT: Has Currents <<<}
+    {0x00080000}'CantWait HasCurrents',
+    {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
+    {0x00100000}'IgnoreObjectInteraction',
+    {0x00200000}'Used by In Memory Changed Form',
+    {0x00400000}'Unknown 23',
+    {>>> 0x00800000 ACTI: Is Marker <<<}
+    {0x00800000}'IsMarker',
+    {0x01000000}'Unknown 25',
+    {>>> 0x02000000 ACTI: Obstacle <<<}
+    {>>> 0x02000000 REFR: No AI Acquire <<<}
+    {0x02000000}'Obstacle NoAIAcquire',
+    {>>> 0x04000000 ACTI: Filter <<<}
+    {0x04000000}'NavMeshFilter',
+    {>>> 0x08000000 ACTI: Bounding Box <<<}
+    {0x08000000}'NavMeshBoundingBox',
+    {>>> 0x10000000 STAT: Show in World Map <<<}
+    {0x10000000}'MustExitToTalk ShowInWorldMap',
+    {>>> 0x20000000 ACTI: Child Can Use <<<}
+    {>>> 0x20000000 REFR: Don't Havok Settle <<<}
+    {0x20000000}'ChildCanUse DontHavokSettle',
+    {>>> 0x40000000 ACTI: GROUND <<<}
+    {>>> 0x40000000 REFR: NoRespawn <<<}
+    {0x40000000}'NavMeshGround NoRespawn',
+    {>>> 0x80000000 REFR: MultiBound <<<}
+    {0x80000000}'MultiBound'
+  ]);
+
 end;
 
 { TES5saves }
@@ -65,17 +138,22 @@ function FindElement(aName: String; aElement: IwbElement): IwbElement;
 var
   Container : IwbContainer;
 
-  procedure FindOurself(aName: String; aContainer: IwbContainer; var aElement: IwbElement);
+  function FindOurself(aName: String; aContainer: IwbContainer; var aElement: IwbElement): Boolean;
   var
     i          : Integer;
     tContainer : IwbContainer;
   begin
+    Result := False;
     for i := 0 to Pred(aContainer.ElementCount) do
       if SameText(aContainer.Elements[i].BaseName, aName) then begin
         aElement := aContainer.Elements[i];
+        Result := True;
         break;
       end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
-        FindOurself(aName, tContainer, aElement);
+        if FindOurself(aName, tContainer, aElement) then begin
+          Result := True;
+          break;
+        end;
   end;
 
 begin
@@ -108,10 +186,32 @@ begin
       if aType>aMinimum then
         Result := 1;
     end;
-      end;
-    end;
+  end;
+end;
 
-// Seen version checked so far 36*, 64, 73* and 74
+function SaveFormVersion55Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then begin
+    Element := Container.ElementByPath['Save File Header\Form Version'];
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      if aType = 55 then
+        Result := 1;
+    end;
+  end;
+end;
+
+// Seen version checked so far 36*, 55, 64, 73* and 74
 
 function SaveFormVersionGreaterThan35Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
@@ -252,6 +352,17 @@ begin
   if StringTableCount < 0 then begin
     StringTableCount := (aElement as IwbContainer).ElementCount;
     InitializeStringTable(aElement as IwbContainer);
+  end;
+end;
+
+var
+  WorldspaceTableCount : Integer = -1;
+
+procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
+begin
+  if WorldspaceTableCount < 0 then begin
+    WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
+    InitializeWorldspaceTable(aElement as IwbContainer);
   end;
 end;
 
@@ -1034,6 +1145,7 @@ begin
     end;
   end;
 end;
+
 function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -1077,7 +1189,7 @@ begin
     if Assigned(Element) then begin
       Result := 1 + aType;
     end;
-    if (Result <> 2) and (Result > 0) then
+    if (Result > 9) and (Result > 0) then
       Result := 0;
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
@@ -1119,13 +1231,14 @@ begin
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Change Flags'];
     if Assigned(Element) then
-      Result := (Element.NativeValue and aMask);
+      if (Element.NativeValue and aMask)<>0 then
+        Result := 1;
   end;
 end;
 
 function ChangedFlagBitXXDecider(aMask: Cardinal; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if ChangedFlagXXDecider(aMask, aBasePtr, aEndPtr, aElement) = aMask then Result := 1 else Result := 0;
+  Result := ChangedFlagXXDecider(aMask, aBasePtr, aEndPtr, aElement);
 end;
 
 function ChangedFlag00Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1141,6 +1254,11 @@ end;
 function ChangedFlag02Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := ChangedFlagBitXXDecider($00000004, aBasePtr, aEndPtr, aElement);
+end;
+
+function ChangedFlag01or02Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($00000006, aBasePtr, aEndPtr, aElement);
 end;
 
 function ChangedFlag03Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1258,6 +1376,11 @@ begin
   Result := ChangedFlagBitXXDecider($02000000, aBasePtr, aEndPtr, aElement);
 end;
 
+function ChangedFlag03or25Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($02000008, aBasePtr, aEndPtr, aElement);
+end;
+
 function ChangedFlag26Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := ChangedFlagBitXXDecider($04000000, aBasePtr, aEndPtr, aElement);
@@ -1283,9 +1406,101 @@ begin
   Result := ChangedFlagBitXXDecider($40000000, aBasePtr, aEndPtr, aElement);
 end;
 
+function ChangedFlag29or30Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := ChangedFlagBitXXDecider($40000000, aBasePtr, aEndPtr, aElement);
+end;
+
 function ChangedFlag31Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := ChangedFlagBitXXDecider($80000000, aBasePtr, aEndPtr, aElement);
+end;
+
+function IsActorPlayerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  anID      : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Changed Form', aElement);
+  Assert(Element.BaseName='Changed Form');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['RefID'];
+    if Assigned(Element) then begin
+      anID := Element.NativeValue;
+      if (anID and $3F) = $14 then
+        Result := 1;
+    end;
+  end;
+end;
+
+function StageDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Data6Key2Counter('Stages Data', 'Stage Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function ObjectiveDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Data6Key2Counter('Objectives Data', 'Objective Count', aBasePtr, aEndPtr, aElement);
+end;
+
+function QuestRuntimDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('UnknownRA004S', aElement);
+  Assert(Element.BaseName='UnknownRA004S');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
+
+function InitialDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType     : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Changed Form', aElement);
+  Assert(Element.BaseName='Changed Form');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      if aType = 6 then // CELL
+        if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) and
+           (ChangedFlag29Decider(aBasePtr, aEndPtr, aElement)<>0) then
+          Result := 1
+        else if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) and
+                (ChangedFlag28Decider(aBasePtr, aEndPtr, aElement)<>0) then
+          Result := 2
+        else if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) then
+          Result := 3;
+      if aType in [0,1,2,3,4,5,40,41,42] then begin  // REFR or descendant
+        Element := Container.ElementByName['RefID'];
+        if Assigned(Element) and (Element.NativeValue>=$FF000000) then // Form is Constructed
+          Result := 5
+        else if (ChangedFlag03or25Decider(aBasePtr, aEndPtr, aElement)<>0) then
+          Result := 6
+        else if (ChangedFlag01or02Decider(aBasePtr, aEndPtr, aElement)<>0) then
+          Result := 4;
+      end;
+    end;
+  end;
 end;
 
 function ChangedFormDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1339,17 +1554,15 @@ begin
   end;
 
   if Result > 0 then begin
-    Element := FindElement('CForm Union', aElement);
-    Assert(Element.BaseName='CForm Union');
+    Element := FindElement('Changed Form Data', aElement);
+    Assert(Element.BaseName='Changed Form Data');
 
-    if Supports(Element, IwbDataContainer, Container) and (Container.ElementCount = 1) then begin
+    if Supports(Element, IwbDataContainer, Container) and (Container.ElementCount = 4) then begin
       Origin := Cardinal(Container.DataBasePtr);
-      if Supports(Container.Elements[0], IwbContainer, Container) and (Container.ElementCount > 0) then begin
-        Element := Container.Elements[Pred(Container.ElementCount)];
-        if Assigned(Element) and Supports(Element, IwbDataContainer, EasC) then begin
-          Consumed := Cardinal(EasC.DataBasePtr) - Origin;
-          Result := Result - Consumed;
-        end;
+      Element := Container.Elements[3];
+      if Assigned(Element) and Supports(Element, IwbDataContainer, EasC) then begin
+        Consumed := Cardinal(EasC.DataBasePtr) - Origin;
+        Result := Result - Consumed;
       end;
     end;
   end;
@@ -1468,7 +1681,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Change NPC_ Factions', aElement);
+  Element := FindElement('Factions', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Factions Length'];
@@ -1499,7 +1712,7 @@ var
   wbFileLocationTable        : IwbStructDef;
   wbGlobalData               : IwbStructDef;
   wbChangedForm              : IwbStructDef;
-  wbChangedFormData          : IwbUnionDef;
+  wbChangedFormData          : IwbStructDef;
   wbNull                     : IwbValueDef;
   wbChangeFlags              : IwbIntegerDef;
   wbChangeTypes              : IwbEnumDef;
@@ -1527,9 +1740,19 @@ var
   wbFunctor                  : IwbStructDef;
   wbFunctors                 : IwbStructDef;
   wbUnknown0900              : IwbArrayDef;
+  wbInitialDataType01        : IwbStructDef;
+  wbInitialDataType02        : IwbStructDef;
+  wbInitialDataType03        : IwbStructDef;
+  wbInitialDataType04        : IwbStructDef;
+  wbInitialDataType05        : IwbStructDef;
+  wbInitialDataType06        : IwbStructDef;
+  wbInitialDataType          : IwbUnionDef;
+  wbExtraDataChanges         : IwbStructDef;
+  wbREFRChanges              : IwbStructDef;
+  wbACHRChanges              : IwbStructDef;
 begin
-  wbNull := wbStruct('Unused', []);
-  wbTypeData := wbStruct('SkyrimVM Type Data', [
+  wbNull := wbByteArray('Unused', -255);
+  wbTypeData := wbStruct('SkyrimVM Type Data', [      // UESP : scriptInstance
     wbInteger('Script Name', itU16, wbStringIndex),
     wbInteger('Script Type', itU16, wbStringIndex),
     wbArray('Script Variables', wbStruct('Variable', [
@@ -1538,7 +1761,7 @@ begin
     ]), -1)
   ]);
 
-  wbObjectTableEntry := wbStruct('Object Table Entry', [
+  wbObjectTableEntry := wbStruct('Object Table Entry', [  // UESP : reference
     wbInteger('Object Handle', itU32),
     wbInteger('Name', itU16, wbStringIndex),
     wbStruct('Grouped', [
@@ -1549,7 +1772,7 @@ begin
     wbInteger('Unknown', itU8, wbDumpInteger)
   ]);
 
-  wbObjectDetachedTableEntry := wbStruct('Object Table Entry', [
+  wbObjectDetachedTableEntry := wbStruct('Object Table Entry', [   // UESP : detachedReference
     wbInteger('Object Handle', itU32),
     wbInteger('Name', itU16, wbStringIndex)
   ]);
@@ -1656,7 +1879,7 @@ begin
     wbArray('Codes', wbCode, -2)
   ]);
 
-  wbObjectDataTableEntry := wbStruct('Object Data Table Entry', [
+  wbObjectDataTableEntry := wbStruct('Object Data Table Entry', [  //  UESP: scriptData
     wbInteger('Object Handle', itU32, wbObjectHandle),
     wbStruct('Script', [
       wbInteger('Unknown Flags', itU8),
@@ -1670,7 +1893,7 @@ begin
     ])
   ]);
 
-  wbArrayTableEntry := wbStruct('Array Entry Data', [
+  wbArrayTableEntry := wbStruct('Array Entry Data', [  // UESP: arrayInfo
     wbInteger('Array Handle', itU32),
     wbInteger('Array Type', itU8, wbPropTypeEnum),    // valid values : 0 to 5, 0B to 0F
     wbUnion('Data', ArrayTableEntryOptionalStringDecider, [
@@ -1681,7 +1904,7 @@ begin
     wbInteger('Count', itU32)
   ]);
 
-  wbArrayElementsTableEntry := wbStruct(ArrayContentEntryData, [
+  wbArrayElementsTableEntry := wbStruct(ArrayContentEntryData, [   // UESP: arrayData
     wbInteger('Array Handle', itU32),
     wbArrayS('Elements', wbvariable, ArrayElementsTableElementCounter)
   ]);
@@ -1707,11 +1930,11 @@ begin
     ])
   ]);
 
-  wbStackTableDataEntry := wbStruct('Stack Data Entry Data', [
+  wbStackTableDataEntry := wbStruct('Stack Data Entry Data', [ // UESP: activeScriptData
     wbInteger('Stack ID', itU32),
     wbStruct('Stack', [
-      wbInteger('Unknown', itU8),  // Should be lower than 9
-      wbInteger('Unknown', itU8),  // Should be lower than 3
+      wbInteger('Unknown', itU8),  // Should be lower than 9    UESP: Major version
+      wbInteger('Unknown', itU8),  // Should be lower than 3    UESP: Minor version
       wbVariable,
       wbInteger('Extra Flag', itU8),
       wbInteger('Unknown', itU8, wbDumpInteger),  // Should be lower than 3 also
@@ -2134,19 +2357,19 @@ begin
         ]), Unknown1000_03Counter)
       ]),
       wbStruct('Papyrus Struct', [
-        wbInteger('SkyrimVM_version', itU16)  // FFFF marks an invalid save, 4 seems current max
-        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, StringTableAfterLoad)
-        ,wbArray('Type table for internal VM save data', wbTypeData, -1)  // Type table for internal VM save data
-        ,wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad)
-        ,wbArray('Detached Object Table', wbObjectDetachedTableEntry, -1, ObjectDetachedTableAfterLoad)
-        ,wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad)
+        wbInteger('SkyrimVM_version', itU16)  // FFFF marks an invalid save, 4 seems current max     UESP: header
+        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, StringTableAfterLoad)  // UESP strings
+        ,wbArray('Type table for internal VM save data', wbTypeData, -1)  // Type table for internal VM save data  USEP:script
+        ,wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad)  // UESP: scriptInstance
+        ,wbArray('Detached Object Table', wbObjectDetachedTableEntry, -1, ObjectDetachedTableAfterLoad) // UESP: reference
+        ,wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad) // UESP: arrayInfo
         ,wbStruct('Stacks', [
-          wbInteger('Unknown', itU32, wbDumpInteger)                // Part of Stack table
-         ,wbArrayS('Stack Table', wbStackTableEntry, -1, StackTableAfterLoad)
+          wbInteger('Next Active Script ID', itU32, wbDumpInteger)                // Part of Stack table
+         ,wbArrayS('Stack Table', wbStackTableEntry, -1, StackTableAfterLoad) // UESP: activeScript
         ])
-        ,wbArray('Object Data Table', wbObjectDataTableEntry, ObjectDataTableCounter)
-        ,wbArray('Array Content Table', wbArrayElementsTableEntry, ArrayContentTableCounter)
-        ,wbArray('Stack Content Table', wbStackTableDataEntry, StackContentTableCounter)
+        ,wbArray('Object Data Table', wbObjectDataTableEntry, ObjectDataTableCounter)     // UESP: scriptData
+        ,wbArray('Array Content Table', wbArrayElementsTableEntry, ArrayContentTableCounter) // UESP: arrayData
+        ,wbArray('Stack Content Table', wbStackTableDataEntry, StackContentTableCounter)  // UESP: activeScriptData
         ,wbArray('Function Message Table', wbFunctionMessageDataEntry, -1)
         ,wbArray('First Suspended Stack Table', wbSuspendedStackDataEntry, -1)
         ,wbArray('Second Suspended Stack Table', wbSuspendedStackDataEntry, -1)
@@ -2319,55 +2542,55 @@ begin
   ]));
 
   wbChangeTypes := wbKey2Data6Enum([
-    ' 0 = 63 (REFR)',
-    ' 1 = 64 (ACHR)',
-    ' 2 = 65 (PMIS)',
-    ' 3 = 67 (PGRE)',
-    ' 4 = 68 (PBEA)',
-    ' 5 = 69 (PFLA)',
-    ' 6 = 62 (CELL)',
-    ' 7 = 78 (INFO)',
-    ' 8 = 79 (QUST)',
-    ' 9 = 45 (NPC_)',
-    '10 = 25 (ACTI)',
-    '11 = 26 (TACT)',
-    '12 = 27 (ARMO)',
-    '13 = 28 (BOOK)',
-    '14 = 29 (CONT)',
-    '15 = 30 (DOOR)',
-    '16 = 31 (INGR)',
-    '17 = 32 (LIGH)',
-    '18 = 33 (MISC)',
-    '19 = 34 (APPA)',
-    '20 = 35 (STAT)',
-    '21 = 37 (MSTT)',
-    '22 = 42 (FURN)',
-    '23 = 43 (WEAP)',
-    '24 = 44 (AMMO)',
-    '25 = 47 (KEYM)',
-    '26 = 48 (ALCH)',
-    '27 = 49 (IDLM)',
-    '28 = 50 (NOTE)',
-    '29 = 105 (ECZN)',
-    '30 = 10 (CLAS)',
-    '31 = 11 (FACT)',
-    '32 = 81 (PACK)',
-    '33 = 75 (NAVM)',
-    '34 = 120 (WOOP)',
-    '35 = 19 (MGEF)',
-    '36 = 115 (SMQN)',
-    '37 = 124 (SCEN)',
-    '38 = 106 (LCTN)',
-    '39 = 123 (RELA)',
-    '40 = 72 (PHZD)',
-    '41 = 71 (PBAR)',
-    '42 = 70 (PCON)',
-    '43 = 93 (FLST)',
-    '44 = 46 (LVLN)',
-    '45 = 55 (LVLI)',
-    '46 = 84 (LVSP)',
-    '47 = 66 (PARW)',
-    '48 = 22 (ENCH)'
+    ' 0 REFR',
+    ' 1 ACHR',
+    ' 2 PMIS',
+    ' 3 PGRE',
+    ' 4 PBEA',
+    ' 5 PFLA',
+    ' 6 CELL',
+    ' 7 INFO',
+    ' 8 QUST',
+    ' 9 NPC_',
+    '10 ACTI',
+    '11 TACT',
+    '12 ARMO',
+    '13 BOOK',
+    '14 CONT',
+    '15 DOOR',
+    '16 INGR',
+    '17 LIGH',
+    '18 MISC',
+    '19 APPA',
+    '20 STAT',
+    '21 MSTT',
+    '22 FURN',
+    '23 WEAP',
+    '24 AMMO',
+    '25 KEYM',
+    '26 ALCH',
+    '27 IDLM',
+    '28 NOTE',
+    '29 ECZN',
+    '30 CLAS',
+    '31 FACT',
+    '32 PACK',
+    '33 NAVM',
+    '34 WOOP',
+    '35 MGEF',
+    '36 SMQN',
+    '37 SCEN',
+    '38 LCTN',
+    '39 RELA',
+    '40 PHZD',
+    '41 PBAR',
+    '42 PCON',
+    '43 FLST',
+    '44 LVLN',
+    '45 LVLI',
+    '46 LVSP',
+    '47 PARW',
+    '48 ENCH'
   ]);
 
   wbQuestFlags := wbInteger('Flags', itU16, wbFlags([
@@ -2386,90 +2609,189 @@ begin
     {0x1000} 'Unknown 13'
   ]));
 
-  wbChangedFormData := wbUnion('CForm Union', ChangedFormDataDecider, [
-    wbByteArray('Undecoded Data00', ChangedFormDataCounter)
-    ,wbByteArray('Undecoded Data01', ChangedFormDataCounter)
-    ,wbStruct('Change Actor Data', [
-      wbUnion('Change Actor Promoted', ChangedFlag25Decider, [wbNull, wbByteArray('Unknown', 40) ]),
-      wbByteArray('Undecoded Data02', ChangedFormRemainingDataCounter)
-    ])
-    ,wbByteArray('Undecoded Data03', ChangedFormDataCounter)
-    ,wbByteArray('Undecoded Data04', ChangedFormDataCounter)
-    ,wbByteArray('Undecoded Data05', ChangedFormDataCounter)
-    ,wbByteArray('Undecoded Data06', ChangedFormDataCounter)
-    ,wbByteArray('Undecoded Data07', ChangedFormDataCounter)
-    ,wbStruct('Change Info Data', [])
-    ,wbStruct('Change Quest Data', [
-       wbUnion('Change Quest Flag', ChangedFlag01Decider, [wbNull, wbQuestFlags ])
-//      ,wbUnion('', ChangedFlag26Decider, [
-//         wbNull,
-//         wbInteger('Already Run', itU8)
-//       ])
-//      ,wbUnion('', ChangedFlag27Decider, [
-//         wbNull,
-//         wbInteger('Quest Instance Data', itU8)
-//       ])
-//      ,wbUnion('', ChangedFlag31Decider, [
-//         wbNull,
-//         wbArray('Quest Stage Data', wbByteArray('Unknown', 25), -2)
-//       ])
-      ,wbStruct('Quest Runtime Data', [
-         wbInteger('Unknown', itU8, wbDumpInteger)
-        ,wbInteger('Counter', itU16, wbDumpInteger)
-        ,wbInteger('Unknown', itU8, wbDumpInteger)
-        ,wbInteger('Counter2', itU8, wbDumpInteger)
-        ,wbInteger('Unknown', itU8, wbDumpInteger)
-        ,wbInteger('Unknown', itU8, wbDumpInteger)
-        ,wbInteger('Unknown', itU8, wbDumpInteger)
-        ,wbInteger('Unknown', itU8, wbDumpInteger)
-//        ,wbByteArray('Unknown', 6)
-        ,wbArray('Unknown', wbStruct('Unknown', [
-           wbInteger('Unknown', itU32),
-           wbInteger('Unknown', itU32)
-        ]), CounterCounter)
-        ,wbInteger('Unknown', itU8, wbDumpInteger)
-//        ,wbArray('Unknown', wbStruct('Unknown', [
-//           wbInteger('Unknown', itU8)
-//           ,wbInteger('Unknown', itU32)
-//        ]), Counter2Counter)
-//        ,wbByteArray('Undecoded List09', ChangedFormUntilZeroDataCounter)
-//       ])
-//      ,wbUnion('Quest Instance Data', ChangedFlag27Decider, [
-//         wbNull
-//        ,wbStruct('', [  // Multiple of 7 , no obvious array no obvious list
-//          wbArray('Unknown', wbStruct('', [
-//             wbArray('Unknown', wbByteArray('Unknown', 5), -4)
-//            ,wbByteArray('Unknown', 3)
-//          ]), -1)
-//        ])
+  wbInitialDataType01 := wbStruct('Detached CELL CHANGE_CELL_EXTERIOR_CHAR', [
+    wbInteger('Worldspace Index', itU16, wbWorldspaceIndex),  // index into Worldspace table
+    wbInteger('Unknown', itU8),
+    wbInteger('Unknown', itU8),
+    wbInteger('Unknown', itU32)
+	]);
+
+  wbInitialDataType02 := wbStruct('Detached CELL CHANGE_CELL_EXTERIOR_SHORT', [
+    wbInteger('Unknown', itU16),
+    wbInteger('Unknown', itU16),
+    wbInteger('Unknown', itU16),
+    wbInteger('Unknown', itU32)
+	]);
+
+  wbInitialDataType03 := wbStruct('Detached CELL', [
+    wbInteger('Unknown', itU32)
+	]);
+
+  wbInitialDataType04 := wbStruct('Reference moved', [
+    wbRefID('Cell/Worldspace'),
+    wbFloat('PosX'),
+    wbFloat('PosY'),
+    wbFloat('PosZ'),
+    wbFloat('RotX'),
+    wbFloat('RotY'),
+    wbFloat('RotZ')
+	]);
+
+  wbInitialDataType05 := wbStruct('Contructed Reference', [
+    wbRefID('Cell/Worldspace'),
+    wbFloat('PosX'),
+    wbFloat('PosY'),
+    wbFloat('PosZ'),
+    wbFloat('RotX'),
+    wbFloat('RotY'),
+    wbFloat('RotZ'),
+    wbInteger('Unknown', itU8),
+    wbRefID('RefID')
+	]);
+
+  wbInitialDataType06 := wbStruct('Reference Changed Cell or Promoted', [
+    wbRefID('Cell/Worldspace'),
+    wbFloat('PosX'),
+    wbFloat('PosY'),
+    wbFloat('PosZ'),
+    wbFloat('RotX'),
+    wbFloat('RotY'),
+    wbFloat('RotZ'),
+    wbRefID('RefID'),
+    wbInteger('Unknown', itS16),
+    wbInteger('Unknown', itS16)
+	]);
+
+  wbInitialDataType := wbUnion('Initial Data Type', InitialDataTypeDecider, [
+    wbNull,
+    wbInitialDataType01,
+    wbInitialDataType02,
+    wbInitialDataType03,
+    wbInitialDataType03,
+    wbInitialDataType05,
+    wbInitialDataType06
+  ]);
+
+  wbExtraDataChanges := wbStruct('ExtraData', [
+  ]);
+
+  wbREFRChanges := wbStruct('Reference data', [
+     wbUnion('Base Object', ChangedFlag07Decider, [wbNull, wbRefID('New Base Form')])
+    ,wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbFloat('Scale')])   // Exception for Save Version 55 NOT DECODED
+    ,wbExtraDataChanges
+  ]);
+  wbACHRChanges := wbStruct('Change Actor Data', [  // Field names based on SKSE
+     wbInteger('Unknown', itU32)
+    ,wbInteger('flags1', itU32)
+    ,wbREFRChanges
+    ]);
+
+  wbChangedFormData := wbStruct('Changed Form Data', [
+    wbInitialDataType,
+    wbUnion('CForm Flags', ChangedFlag00Decider, [wbNull, wbStruct('Change Form Flags', [
+        wbInteger('Mask Invert Flags', itU32, wbRecordFlagsEnum),
+        wbInteger('Mask Set unk010', itU16)
+      ])
+    ]),
+    wbUnion('CForm Union', ChangedFormDataDecider, [
+	     wbNull
+      ,wbREFRChanges
+      ,wbUnion('Actor Type', IsActorPlayerDecider, [
+         wbACHRChanges
+        ,wbStruct('PlayerRef', [
+           wbACHRChanges
+         ])
        ])
-      ,wbByteArray('Undecoded Data09', ChangedFormRemainingDataCounter)
-    ])
-    ,wbStruct('Change NPC_ Data', [
-      wbUnion('Change NPC_ Base Data', ChangedFlag01Decider, [wbNull, wbByteArray('Change NPC_ Base Data', 24)]),
-      wbUnion('Change NPC_ Factions', ChangedFlag06Decider, [wbNull, wbStruct('Change NPC_ Factions', [
-         wbInteger('Factions Length', itU8)
-        ,wbArray('Factions', wbStruct('Faction and Rank', [
-            wbInteger('Faction', itU24, wbRefID)
-           ,wbInteger('Rank', itU8)
-        ]), DivByteBy4Counter)
-      ])]),
-      wbUnion('Change NPC_ AI Data', ChangedFlag03Decider, [wbNull, wbByteArray('Change NPC_ AI Data', 20)]),
-      wbUnion('Change NPC_ Skills', ChangedFlag09Decider, [wbNull, wbArray('Change NPC_ Skills', wbInteger('Skill', itU8), 52)]),
-      wbUnion('Change NPC_ Spell List', ChangedFlag04Decider, [wbNull, wbByteArray('Change NPC_ Spell List', 18)]),
-      wbUnion('Change NPC_ Name', ChangedFlag05Decider, [wbNull, wbByteArray('Change NPC_ Full Name', 5)]),
-      wbUnion('Change NPC_ Race', ChangedFlag25Decider, [wbNull, wbStruct('Change NPC_ Race', [
-        wbInteger('New', itU24, wbRefID),
-        wbInteger('Old', itU24, wbRefID)
-      ])]),
-      wbUnion('Change NPC_ Face', ChangedFlag11Decider, [wbNull, wbByteArray('Change NPC_ Face', 134)]),
-      wbUnion('Change NPC_ Outfit', ChangedFlag12Decider, [wbNull, wbInteger('Change NPC_ Outfit', itU24, wbRefID)]),
-      wbUnion('Change NPC_ Gender', ChangedFlag24Decider, [wbNull, wbInteger('Change NPC_ Gender', itU8)]),
-      wbByteArray('Undecoded Data10', ChangedFormRemainingDataCounter)
-    ])
-    ,wbStruct('Change Quest Node Data', [ // 36
-       wbArray('Base', wbByteArray('Unknown', 4), -1)
-    ])
+      ,wbStruct('Projectile Missile Data', [
+       ])
+      ,wbStruct('Projectile Grenade Data', [
+       ])
+      ,wbStruct('PBEA Data', [
+       ])
+      ,wbStruct('Projectile Flame Data', [
+       ])
+      ,wbStruct('Cell Data', [
+       ])
+      ,wbStruct('Change Info Data', [ {no data} ])
+      ,wbStruct('Change Quest Data', [
+         wbUnion('Quest Flag', ChangedFlag01Decider, [wbNull, wbQuestFlags])
+        ,wbUnion('Quest Script Delay', ChangedFlag02Decider, [wbNull, wbInteger('Script Delay', itU32)])
+        ,wbUnion('Quest Stages Data', ChangedFlag31Decider, [
+           wbNull,
+           wbStruct('Stages Data', [
+             wbInteger('Stage Count', itU6to30),
+             wbArray('Stages', wbStruct('Stage', [
+               wbInteger('Stage ID', itU16),
+               wbInteger('Sets Flag bit 0', itU8, wbEnum(['False', 'True']))
+             ]), StageDataCounter)
+           ])
+         ])
+        ,wbUnion('Quest Objectives Data', ChangedFlag29Decider, [
+           wbNull,
+           wbStruct('Objectives Data', [
+             wbInteger('Objective Count', itU6to30),
+             wbArray('Objectives', wbStruct('Objective', [
+               wbInteger('Objective ID', itU32),
+               wbInteger('Objective Dqtq (Byte)', itU32)
+             ]), ObjectiveDataCounter)
+           ])
+         ])
+        ,wbUnion('Quest Runtime Data', ChangedFlag28Decider, [
+           wbNull
+          ,wbStruct('Runtime Data', [
+             wbInteger('Unknown', itU8, wbDumpInteger)
+            ,wbArray('UnknownRA004', wbStruct('UnknownRA004S', [
+               wbInteger('Unknown', itU32, wbDumpInteger)
+              ,wbInteger('Type', itU8)
+              ,wbUnion('UnknownRA004S006', QuestRuntimDataTypeDecider, [
+                 wbStruct('UnknownRA004S006U000', [
+                   wbRefID('RefID')
+                 ])
+                ,wbStruct('UnknownRA004S006U001', [
+                   wbRefID('RefID')
+                  ,wbRefID('BoundObject')
+                  ,wbRefID('Location')
+                  ,wbRefID('Location')
+                 ])
+              ])
+             ]), -1)
+           ])
+         ])
+//        ,wbUnion('Quest Instance Data', ChangedFlag27Decider, [
+//           wbNull
+//          ,wbStruct('', [  // Multiple of 7 , no obvious array no obvious list
+//            wbArray('Unknown', wbStruct('', [
+//               wbArray('Unknown', wbByteArray('Unknown', 5), -4)
+//              ,wbByteArray('Unknown', 3)
+//            ]), -1)
+//          ])
+//         ])
+//        ,wbUnion('Quest Already Run', ChangedFlag26Decider, [wbNull, wbInteger('Already Run', itU8, wbEnum(['False', 'True'])])
+      ])
+      ,wbStruct('Change NPC_ Data', [
+         wbUnion('Base Data', ChangedFlag01Decider, [wbNull, wbByteArray('Change NPC_ Base Data', 24)])
+        ,wbUnion('Factions', ChangedFlag06Decider, [wbNull, wbStruct('Change NPC_ Factions', [
+           wbInteger('Factions Length', itU8)
+          ,wbArray('Factions and Ranks', wbStruct('Faction and Rank', [
+              wbInteger('Faction', itU24, wbRefID)
+             ,wbInteger('Rank', itU8)
+          ]), DivByteBy4Counter)
+        ])])
+        ,wbUnion('AI Data', ChangedFlag03Decider, [wbNull, wbByteArray('Change NPC_ AI Data', 20)])
+        ,wbUnion('Skills', ChangedFlag09Decider, [wbNull, wbArray('Change NPC_ Skills', wbInteger('Skill', itU8), 52)])
+        ,wbUnion('Spell List', ChangedFlag04Decider, [wbNull, wbByteArray('Change NPC_ Spell List', 18)])
+        ,wbUnion('Name', ChangedFlag05Decider, [wbNull, wbByteArray('Change NPC_ Full Name', 5)])
+        ,wbUnion('Race', ChangedFlag25Decider, [wbNull, wbStruct('Change NPC_ Race', [
+          wbInteger('New', itU24, wbRefID),
+          wbInteger('Old', itU24, wbRefID)
+        ])])
+        ,wbUnion('Face', ChangedFlag11Decider, [wbNull, wbByteArray('Change NPC_ Face', 134)])
+        ,wbUnion('Outfit', ChangedFlag12Decider, [wbNull, wbRefID('Change NPC_ Outfit')])
+        ,wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbInteger('Change NPC_ Gender', itU8)])
+      ])
+      ,wbStruct('Change Quest Node Data', [])
+    ]),
+    wbByteArray('Undecoded Data', ChangedFormRemainingDataCounter)
   ]);
 
   wbChangedForm := wbStruct('Changed Form', [
@@ -2480,7 +2802,7 @@ begin
     wbUnion('Datas', ChangedFormDataLengthDecider, [
       wbStruct('CForm Data', [
         wbInteger('Length', itU8),
-        wbInteger('Uncompressed Length', itU8),
+        wbInteger('Uncompressed Length', itU8),   // added post save game version 50
         wbStructZ('Small Struct', ChangedFormDataSizer, [ wbChangedFormData ])
       ]),
       wbStruct('CForm Data', [
@@ -2553,7 +2875,7 @@ begin
     ,wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter)
     ,wbArray('Global Data 3', wbGlobalData, [], GlobalData3Counter)
     ,wbArray('FormIDs', wbFormID('FormID', cpFormID), -1, RefIDTableAfterLoad)
-    ,wbArray('Visited Worldspace', wbFormID('FormID', cpFormID), -1)
+    ,wbArray('Visited Worldspace', wbFormID('FormID', cpFormID), -1, WorldspaceTableAfterLoad)
     ,wbInteger('Unknown Table Size', itU32)
     ,wbArray('Unknown Table', wbLenString('Unknown', 2), -1)
 //    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
@@ -2561,17 +2883,15 @@ begin
   ]);
 end;
 
-function ExtractInfo: Integer; // One of SaveFileChapters that should be initialized before dumping to get more information
-begin
-  Result := 4; // FormIDs
-end;
+var
+  ExtractInfo: TByteSet = [4, 5]; // SaveFileChapters that should be initialized before dumping to get more information
 
 procedure DefineTES5Saves;
 begin
   DefineTES5;
   DefineTES5SavesA;
   DefineTES5SavesS;  // s for Saves
-  wbExtractInfoCallback := ExtractInfo;
+  wbExtractInfo := @ExtractInfo;
 end;
 
 initialization

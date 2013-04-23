@@ -11945,6 +11945,7 @@ var
   aRecord   : IwbRecord;
   i         : Integer;
 begin
+  // Other counters added by Skyrim:
   i := 0;
   if (GetCounter <> 'NONE') then
   if Assigned(eContainer) then
@@ -14984,7 +14985,7 @@ var
   Header      : IwbSaveHeader;
   MasterFiles : IwbContainerElementRef;
   i           : Integer;
-  ExtractInfo : Integer;
+  ExtractInfo : TByteSet;
   Element     : IwbElement;
   Container   : IwbContainer;
   SelfRef     : IwbContainerElementRef;
@@ -15023,10 +15024,11 @@ begin
 
   if flCompareTo <> '' then
     AddMaster(flCompareTo);
-  if Assigned(wbExtractInfoCallback) then
-    ExtractInfo := wbExtractInfoCallBack
+
+  if Assigned(wbExtractInfo) then
+    ExtractInfo := wbExtractInfo^
   else
-    ExtractInfo := -1;
+    ExtractInfo := [];
 
   for i := 0 to Pred(SaveFileChapters.MemberCount) do begin
     case SaveFileChapters.Members[i].DefType of
@@ -15037,9 +15039,10 @@ begin
     else
       Element := TwbValue.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
     end;
-    if (i = ExtractInfo) and Supports(Element, IwbContainer, Container) then
+    if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
       with Element as TwbContainer do DoInit;
   end;
+
   flProgress('Processing completed');
   flLoadFinished := True;
 end;
@@ -15095,6 +15098,8 @@ begin
   if Assigned(aElement) then
     Result := aElement.NativeValue;
 end;
+
+{ TwbSaveChapter }
 
 initialization
   wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);
