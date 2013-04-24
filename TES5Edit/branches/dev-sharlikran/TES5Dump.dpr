@@ -26,7 +26,7 @@ uses
   Classes,
   SysUtils,
   Windows,
-  System.Win.Registry,
+  Registry,
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',

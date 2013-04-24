@@ -7,7 +7,7 @@
 		<AppType>Application</AppType>
 		<FrameworkType>VCL</FrameworkType>
 		<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-        <ProjectVersion>14.3</ProjectVersion>
+		<ProjectVersion>13.4</ProjectVersion>
 		<Platform Condition="'$(Platform)'==''">Win32</Platform>
 		<TargetedPlatforms>1</TargetedPlatforms>
 		<Platform>Win32</Platform>
@@ -58,7 +58,7 @@
 		<DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
 		<DCC_COMPARING_SIGNED_UNSIGNED>false</DCC_COMPARING_SIGNED_UNSIGNED>
 		<Manifest_File>None</Manifest_File>
-        <DCC_UsePackage>vclx;vcl;VclSmp;rtl;vclimg;svnui;svn;bdertl;TeeUI;TeeDB;Tee;vclactnband;vcldb;dbrtl;vcldbx;vcltouch;xmlrtl;dsnap;dsnapcon;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DbxClientDriver;DataSnapClient;dbxcds;DataSnapServer;AzureCloud;DBXInterBaseDriver;DBXMySQLDriver;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;dxCoreRS17;cxLibraryRS17;cxEditorsRS17;$(DCC_UsePackage)</DCC_UsePackage>
+		<DCC_UsePackage>vclx;vcl;VclSmp;rtl;vclimg;svnui;svn;bdertl;TeeUI;TeeDB;Tee;vclactnband;vcldb;dbrtl;vcldbx;vcltouch;xmlrtl;dsnap;dsnapcon;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DbxClientDriver;DataSnapClient;dbxcds;DataSnapServer;AzureCloud;DBXInterBaseDriver;DBXMySQLDriver;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;dxCoreRS17;cxLibraryRS17;cxEditorsRS17;$(DCC_UsePackage)</DCC_UsePackage>
 		<VerInfo_Locale>3081</VerInfo_Locale>
 		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 		<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;FMX;System.Win;$(DCC_Namespace)</DCC_Namespace>
@@ -127,10 +127,6 @@
 		<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Cfg_4_Win32)'!=''">
-        <BCC_DebugLineNumbers>true</BCC_DebugLineNumbers>
-        <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
-        <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
-        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 		<VerInfo_PreRelease>true</VerInfo_PreRelease>
 		<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 		<VerInfo_Release>30</VerInfo_Release>
@@ -191,7 +187,7 @@
 			<Form>frmLogAnalyzer</Form>
 		</DCCReference>
 		<DCCReference Include="wbScriptAdapterMisc.pas"/>
-        <None Include="Profiling\AQtimeModule1.aqt"/>
+		<DCCReference Include="wbNifScanner.pas"/>
 		<BuildConfiguration Include="Debug">
 			<Key>Cfg_2</Key>
 			<CfgParent>Base</CfgParent>
@@ -246,8 +242,8 @@
 					<VersionInfoKeys Name="Comments"/>
 				</VersionInfoKeys>
 				<Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+					<Excluded_Packages Name="$(BDSBIN)\dclofficexp150.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 				</Excluded_Packages>
 			</Delphi.Personality>
 			<Platforms>

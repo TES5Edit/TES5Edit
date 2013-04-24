@@ -110,8 +110,10 @@ function Darker(Color: TColor; Amount: Double = 0.5): TColor;
 
 implementation
 
+{$IFNDEF VER220}
 uses
   UITypes;
+{$ENDIF VER220}
 
 function RGBTripleToCol( ACol: TRGBTriple ): TColor;
   begin

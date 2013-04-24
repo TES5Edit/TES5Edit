@@ -187,6 +187,7 @@
 			<Form>frmLogAnalyzer</Form>
 		</DCCReference>
 		<DCCReference Include="wbScriptAdapterMisc.pas"/>
+		<DCCReference Include="wbNifScanner.pas"/>
 		<BuildConfiguration Include="Debug">
 			<Key>Cfg_2</Key>
 			<CfgParent>Base</CfgParent>

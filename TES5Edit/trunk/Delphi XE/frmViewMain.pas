@@ -20,10 +20,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, 
-//  System.Actions, 
-  ShellAPI, 
-  {Vcl.Imaging.}pngimage,
+  AppEvnts,
+  ShellAPI,
+  Actions,
+  pngimage,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
@@ -35,10 +35,10 @@ uses
   wbLocalization,
   Direct3D9,
   D3DX9,
-{$IFDEF DX3D}
+  {$IFDEF DX3D}
   RenderUnit,
   DXUT,
-{$ENDIF}
+  {$ENDIF DX3D}
   JvComponentBase,
   JvInterpreter;
 
@@ -820,12 +820,23 @@ uses
   {$IFNDEF LiteVersion}
   cxVTEditors,
   {$ENDIF}
-  ShlObj, Registry, StrUtils, Types,
-  //UITypes,
+  ShlObj,
+  Registry,
+  StrUtils,
+  Types,
+  {$IFNDEF VER220}
+  UITypes,
+  {$ENDIF VER220}
   wbScriptAdapter,
-  FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
-  frmLocalizationForm, frmLocalizePluginForm,
-  frmScriptForm, frmLogAnalyzerForm, frmOptionsForm;
+  FilterOptionsFrm,
+  FileSelectFrm,
+  ViewElementsFrm,
+  EditWarningFrm,
+  frmLocalizationForm,
+  frmLocalizePluginForm,
+  frmScriptForm,
+  frmLogAnalyzerForm,
+  frmOptionsForm;
 
 var
   NoNodes                     : TNodeArray;

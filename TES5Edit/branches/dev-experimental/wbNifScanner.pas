@@ -19,7 +19,9 @@ interface
 uses
   Windows,
   SysUtils,
-//  DXtypes,
+  {$IFNDEF VER220}
+  DXtypes,
+  {$ENDIF VER220}
   Direct3D9;
 
 type
