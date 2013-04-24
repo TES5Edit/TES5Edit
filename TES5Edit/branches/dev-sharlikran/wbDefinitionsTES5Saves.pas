@@ -110,7 +110,7 @@ begin
     {0x00400000}'Unknown 23',
     {>>> 0x00800000 ACTI: Is Marker <<<}
     {0x00800000}'IsMarker',
-    {0x01000000}'Unknown 25',
+    {0x01000000}'Unknown 25', // Initialized to (REFR.Destructible.unk004 is not null)
     {>>> 0x02000000 ACTI: Obstacle <<<}
     {>>> 0x02000000 REFR: No AI Acquire <<<}
     {0x02000000}'Obstacle NoAIAcquire',
@@ -1189,10 +1189,42 @@ begin
     if Assigned(Element) then begin
       Result := 1 + aType;
     end;
-    if (Result > 9) and (Result > 0) then
+    if (Result > 9) then
       Result := 0;
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
+  end;
+end;
+
+function ChangedFormFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  OffsetType = 4;
+var
+  aType     : Variant;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Changed Form', aElement);
+  Assert(Element.BaseName='Changed Form');
+
+  VarClear(aType);
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Archtype'];
+    if Assigned(Element) then
+      aType := Element.NativeValue
+    else if Container.IsValidOffset(aBasePtr, aEndPtr, OffsetType) then begin // we are part a proper structure
+        aBasePtr := Pointer(Cardinal(aBasePtr) + OffsetType);
+        aType := PByte(aBasePtr)^;
+      end;
+
+    if not VarIsEmpty(aType) then begin
+      aType := aType and $3F;
+      Result := 1 + aType;
+      if (Result > 11) then
+        Result := 0;
+    end;
   end;
 end;
 
@@ -1447,15 +1479,15 @@ begin
   Result := Data6Key2Counter('Objectives Data', 'Objective Count', aBasePtr, aEndPtr, aElement);
 end;
 
-function QuestRuntimeDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function QuestRuntimeAliasTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('UnknownRA004S', aElement);
-  Assert(Element.BaseName='UnknownRA004S');
+  Element := FindElement('Alias', aElement);
+  Assert(Element.BaseName='Alias');
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
@@ -1465,7 +1497,7 @@ begin
   end;
 end;
 
-function QuestRuntimeHasStructDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function QuestRuntimeHasEventDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
@@ -1476,22 +1508,22 @@ begin
   Assert(Element.BaseName='Runtime Data');
 
   if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['HasStruct'];
+    Element := Container.ElementByName['Has Event'];
     if Assigned(Element) then begin
       Result := Element.NativeValue;
     end;
   end;
 end;
 
-function QuestRuntimeTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function QuestRuntimeParamTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('UnknownRA00A001A008S', aElement);
-  Assert(Element.BaseName='UnknownRA00A001A008S');
+  Element := FindElement('Param', aElement);
+  Assert(Element.BaseName='Param');
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
@@ -1510,9 +1542,9 @@ begin
   Result := Data6Key2Counter('Instance Data', 'Instance Count', aBasePtr, aEndPtr, aElement);
 end;
 
-function InstanceUnknownIA008SCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function InstanceAliasCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := Data6Key2Counter('Instance', 'Instance UnknownIA008S Count', aBasePtr, aEndPtr, aElement);
+  Result := Data6Key2Counter('Instance', 'Instance Alias Count', aBasePtr, aEndPtr, aElement);
 end;
 
 function InstanceGlobalCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1768,7 +1800,14 @@ var
   wbChangedForm              : IwbStructDef;
   wbChangedFormData          : IwbStructDef;
   wbNull                     : IwbValueDef;
-  wbChangeFlags              : IwbIntegerDef;
+  wbChangeQuestFlags         : IwbIntegerDef;
+  wbChangeREFRFlags          : IwbIntegerDef;
+  wbChangeActorFlags         : IwbIntegerDef;
+  wbChangeInfoFlags         : IwbIntegerDef;
+  wbChangeQuestNodeFlags     : IwbIntegerDef;
+  wbChangeDefaultFlags       : IwbIntegerDef;
+  wbChangeObjectFlags        : IwbIntegerDef;
+  wbChangeFlags              : IwbUnionDef;
   wbChangeTypes              : IwbEnumDef;
   wbQuestFlags               : IwbIntegerDef;
   wbTypeData                 : IwbStructDef;
@@ -2560,16 +2599,86 @@ begin
     ,wbByteArray('Unknown', DataQuartetRemainderCounter)
   ]);
 
-  wbChangeFlags := wbInteger('Change Flags', itU32 , wbFlags([
+  wbChangeQuestFlags := wbInteger('Change Quest Flags', itU32 , wbFlags([
     'CHANGE_FORM_FLAGS',
-    'CHANGE_QUEST_FLAGS / CHANGE_REFR_MOVE / CHANGE_ACTOR_BASE_DATA',
+    'CHANGE_QUEST_FLAGS',
+    'CHANGE_QUEST_SCRIPTDELAY',
+    'UnnamedFlag_03',
+    'UnnamedFlag_04',
+    'UnnamedFlag_05',
+    'UnnamedFlag_06',
+    'UnnamedFlag_07',
+    'UnnamedFlag_08',
+    'UnnamedFlag_09',
+    'UnnamedFlag_10',
+    'UnnamedFlag_11',
+    'UnnamedFlag_12',
+    'UnnamedFlag_13',
+    'UnnamedFlag_14',
+    'UnnamedFlag_15',
+    'UnnamedFlag_16',
+    'UnnamedFlag_17',
+    'UnnamedFlag_18',
+    'UnnamedFlag_19',
+    'UnnamedFlag_20',
+    'UnnamedFlag_21',
+    'UnnamedFlag_22',
+    'UnnamedFlag_23',
+    'UnnamedFlag_24',
+    'UnnamedFlag_25',
+    'CHANGE_QUEST_ALREADY_RUN',
+    'CHANGE_QUEST_INSTANCES',
+    'CHANGE_QUEST_RUNDATA',
+    'CHANGE_QUEST_OBJECTIVES',
+    'UnnamedFlag_30',
+    'CHANGE_QUEST_STAGES'
+  ]));
+
+  wbChangeREFRFlags := wbInteger('Change Reference Flags', itU32 , wbFlags([
+    'CHANGE_FORM_FLAGS',
+    'CHANGE_REFR_MOVE',
     'CHANGE_REFR_HAVOK_MOVE',
-    'CHANGE_REFR_CELL_CHANGED / CHANGE_ACTOR_BASE_AIDATA',
+    'CHANGE_REFR_CELL_CHANGED',
     'CHANGE_REFR_SCALE',
     'CHANGE_REFR_INVENTORY',
-    'CHANGE_REFR_EXTRA_OWNERSHIP / CHANGE_ACTOR_BASE_FACTIONS',
+    'CHANGE_REFR_EXTRA_OWNERSHIP',
     'CHANGE_REFR_BASEOBJECT',
-    'UnnamedFlag_8',
+    'UnnamedFlag_08',
+    'UnnamedFlag_09',
+    'CHANGE_OBJECT_EXTRA_ITEM_DATA',
+    'UnnamedFlag_11',
+    'CHANGE_OBJECT_EXTRA_LOCK',
+    'UnnamedFlag_13',
+    'UnnamedFlag_14',
+    'UnnamedFlag_15',
+    'UnnamedFlag_16',
+    'UnnamedFlag_17',
+    'UnnamedFlag_18',
+    'UnnamedFlag_19',
+    'UnnamedFlag_20',
+    'CHANGE_OBJECT_EMPTY',
+    'UnnamedFlag_22',
+    'CHANGE_OBJECT_OPEN_STATE',
+    'UnnamedFlag_24',
+    'CHANGE_REFR_PROMOTED',
+    'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN',
+    'CHANGE_REFR_LEVELED_INVENTORY',
+    'CHANGE_REFR_ANIMATION',
+    'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE',
+    'UnnamedFlag_30',
+    'CHANGE_REFR_EXTRA_GAME_ONLY'
+  ]));
+
+  wbChangeActorFlags := wbInteger('Change Flags', itU32 , wbFlags([
+    'CHANGE_FORM_FLAGS',
+    'CHANGE_ACTOR_BASE_DATA',
+    'CHANGE_REFR_HAVOK_MOVE',
+    'CHANGE_ACTOR_BASE_AIDATA',
+    'UnnamedFlag_04',
+    'CHANGE_REFR_INVENTORY',
+    'CHANGE_ACTOR_BASE_FACTIONS',
+    'CHANGE_REFR_BASEOBJECT',
+    'UnnamedFlag_08',
     'CHANGE_NPC_SKILLS',
     'CHANGE_OBJECT_EXTRA_ITEM_DATA',
     'UnnamedFlag_11',
@@ -2587,13 +2696,169 @@ begin
     'CHANGE_OBJECT_OPEN_STATE',
     'UnnamedFlag_24',
     'CHANGE_REFR_PROMOTED',
-    'CHANGE_QUEST_ALREADY_RUN / CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN',
-    'CHANGE_QUEST_INSTANCES / CHANGE_REFR_LEVELED_INVENTORY',
-    'CHANGE_QUEST_RUNDATA / CHANGE_REFR_ANIMATION',
-    'CHANGE_QUEST_OBJECTIVES / CHANGE_REFR_EXTRA_ENCOUNTER_ZONE',
+    'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN',
+    'CHANGE_REFR_LEVELED_INVENTORY',
+    'CHANGE_REFR_ANIMATION',
+    'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE',
     'UnnamedFlag_30',
     'CHANGE_QUEST_STAGES / CHANGE_REFR_EXTRA_GAME_ONLY / CHANGE_TOPIC_SAIDONCE / CHANGE_QUEST_NODE_TIME_RUN'
   ]));
+
+  wbChangeObjectFlags := wbInteger('Change Flags', itU32 , wbFlags([
+    'UnnamedFlag_00',
+    'UnnamedFlag_01',
+    'UnnamedFlag_02',
+    'UnnamedFlag_03',
+    'UnnamedFlag_04',
+    'UnnamedFlag_05',
+    'UnnamedFlag_06',
+    'UnnamedFlag_07',
+    'UnnamedFlag_08',
+    'UnnamedFlag_09',
+    'CHANGE_OBJECT_EXTRA_ITEM_DATA',
+    'UnnamedFlag_11',
+    'CHANGE_OBJECT_EXTRA_LOCK',
+    'UnnamedFlag_13',
+    'UnnamedFlag_14',
+    'UnnamedFlag_15',
+    'UnnamedFlag_16',
+    'UnnamedFlag_17',
+    'UnnamedFlag_18',
+    'UnnamedFlag_19',
+    'UnnamedFlag_20',
+    'CHANGE_OBJECT_EMPTY',
+    'UnnamedFlag_22',
+    'CHANGE_OBJECT_OPEN_STATE',
+    'UnnamedFlag_24',
+    'UnnamedFlag_25',
+    'UnnamedFlag_26',
+    'UnnamedFlag_27',
+    'UnnamedFlag_28',
+    'UnnamedFlag_29',
+    'UnnamedFlag_30',
+    'UnnamedFlag_30',
+    'UnnamedFlag_31'
+  ]));
+
+  wbChangeInfoFlags := wbInteger('Change Topic Info Flags', itU32 , wbFlags([
+    'UnnamedFlag_00',
+    'UnnamedFlag_01',
+    'UnnamedFlag_02',
+    'UnnamedFlag_03',
+    'UnnamedFlag_04',
+    'UnnamedFlag_05',
+    'UnnamedFlag_06',
+    'UnnamedFlag_07',
+    'UnnamedFlag_08',
+    'UnnamedFlag_09',
+    'UnnamedFlag_10',
+    'UnnamedFlag_11',
+    'UnnamedFlag_12',
+    'UnnamedFlag_13',
+    'UnnamedFlag_14',
+    'UnnamedFlag_15',
+    'UnnamedFlag_16',
+    'UnnamedFlag_17',
+    'UnnamedFlag_18',
+    'UnnamedFlag_19',
+    'UnnamedFlag_20',
+    'UnnamedFlag_21',
+    'UnnamedFlag_22',
+    'UnnamedFlag_23',
+    'UnnamedFlag_24',
+    'UnnamedFlag_25',
+    'UnnamedFlag_26',
+    'UnnamedFlag_27',
+    'UnnamedFlag_28',
+    'UnnamedFlag_29',
+    'UnnamedFlag_30',
+    'CHANGE_TOPIC_SAIDONCE'
+  ]));
+
+  wbChangeQuestNodeFlags := wbInteger('Change Quest Node Flags', itU32 , wbFlags([
+    'UnnamedFlag_00',
+    'UnnamedFlag_01',
+    'UnnamedFlag_02',
+    'UnnamedFlag_03',
+    'UnnamedFlag_04',
+    'UnnamedFlag_05',
+    'UnnamedFlag_06',
+    'UnnamedFlag_07',
+    'UnnamedFlag_08',
+    'UnnamedFlag_09',
+    'UnnamedFlag_10',
+    'UnnamedFlag_11',
+    'UnnamedFlag_12',
+    'UnnamedFlag_13',
+    'UnnamedFlag_14',
+    'UnnamedFlag_15',
+    'UnnamedFlag_16',
+    'UnnamedFlag_17',
+    'UnnamedFlag_18',
+    'UnnamedFlag_19',
+    'UnnamedFlag_20',
+    'UnnamedFlag_21',
+    'UnnamedFlag_22',
+    'UnnamedFlag_23',
+    'UnnamedFlag_24',
+    'UnnamedFlag_25',
+    'UnnamedFlag_26',
+    'UnnamedFlag_27',
+    'UnnamedFlag_28',
+    'UnnamedFlag_29',
+    'UnnamedFlag_30',
+    'CHANGE_QUEST_NODE_TIME_RUN'
+  ]));
+
+  wbChangeDefaultFlags := wbInteger('Change Flags', itU32 , wbFlags([
+    'UnnamedFlag_00',
+    'UnnamedFlag_01',
+    'UnnamedFlag_02',
+    'UnnamedFlag_03',
+    'UnnamedFlag_04',
+    'UnnamedFlag_05',
+    'UnnamedFlag_06',
+    'UnnamedFlag_07',
+    'UnnamedFlag_08',
+    'UnnamedFlag_09',
+    'UnnamedFlag_10',
+    'UnnamedFlag_11',
+    'UnnamedFlag_12',
+    'UnnamedFlag_13',
+    'UnnamedFlag_14',
+    'UnnamedFlag_15',
+    'UnnamedFlag_16',
+    'UnnamedFlag_17',
+    'UnnamedFlag_18',
+    'UnnamedFlag_19',
+    'UnnamedFlag_20',
+    'UnnamedFlag_21',
+    'UnnamedFlag_22',
+    'UnnamedFlag_23',
+    'UnnamedFlag_24',
+    'UnnamedFlag_25',
+    'UnnamedFlag_26',
+    'UnnamedFlag_27',
+    'UnnamedFlag_28',
+    'UnnamedFlag_29',
+    'UnnamedFlag_30',
+    'UnnamedFlag_31'
+  ]));
+
+  wbChangeFlags := wbUnion('Change Flags', ChangedFormFlagsDecider, [
+    wbChangeDefaultFlags,
+    wbChangeREFRFlags,
+    wbChangeActorFlags,
+    wbChangeDefaultFlags,
+    wbChangeDefaultFlags,
+    wbChangeDefaultFlags,
+    wbChangeDefaultFlags,
+    wbChangeDefaultFlags,
+    wbChangeInfoFlags,
+    wbChangeQuestFlags,
+    wbChangeDefaultFlags,
+    wbChangeQuestNodeFlags
+  ]);
 
   wbChangeTypes := wbKey2Data6Enum([
     ' 0 REFR',
@@ -2766,7 +3031,7 @@ begin
        ])
       ,wbStruct('Cell Data', [
        ])
-      ,wbStruct('Change Info Data', [ {no data} ])
+      ,wbNull  // 'Change Info Data'
       ,wbStruct('Change Quest Data', [
          wbUnion('Quest Flag', ChangedFlag01Decider, [wbNull, wbQuestFlags])
         ,wbUnion('Quest Script Delay', ChangedFlag02Decider, [wbNull, wbInteger('Script Delay', itU32)])
@@ -2786,7 +3051,7 @@ begin
              wbInteger('Objective Count', itU6to30),
              wbArray('Objectives', wbStruct('Objective', [
                wbInteger('Objective ID', itU32),
-               wbInteger('Objective Dqtq (Byte)', itU32)
+               wbInteger('Objective Status (Byte)', itU32, wbFlags(['Displayed', 'Completed']))
              ]), ObjectiveDataCounter)
            ])
          ])
@@ -2794,34 +3059,33 @@ begin
            wbNull
           ,wbStruct('Runtime Data', [
              wbInteger('Unknown', itU8)
-            ,wbArray('UnknownRA004', wbStruct('UnknownRA004S', [
-               wbInteger('Unknown', itU32)
-              ,wbInteger('Type', itU8)
-              ,wbUnion('UnknownRA004S006', QuestRuntimeDataTypeDecider, [
-                 wbStruct('UnknownRA004S006U000', [
-                   wbRefID('RefID')
-                 ])
-                ,wbStruct('UnknownRA004S006U001', [
-                   wbRefID('RefID')
-                  ,wbRefID('BoundObject')
-                  ,wbRefID('Location')
-                  ,wbRefID('Location')
+            ,wbArray('Aliases', wbStruct('Alias', [
+               wbInteger('Alias ID', itU32)
+              ,wbInteger('Type', itU8)  // Should be either optional or filled at runtime, more saves needed
+              ,wbUnion('Alias Data', QuestRuntimeAliasTypeDecider, [
+                 wbRefID('Alias Ref')
+                ,wbStruct('Alias Type 1', [
+                   wbRefID('New Reference')
+                  ,wbRefID('BaseForm BoundObject')
+                  ,wbRefID('Reference Location')
+                  ,wbRefID('Starting Location')
+                  ,wbRefID('BGSLocationRefType')
                  ])
               ])
              ]), -1)
-            ,wbArray('UnknownRA008', wbStruct('UnknownRA008S', [
-               wbInteger('Unknown', itU32)
+            ,wbArray('Locations', wbStruct('Location', [
+               wbInteger('Location ID', itU32)
               ,wbRefID('Location')
              ]), -1)
-            ,wbInteger('HasStruct', itU8, wbEnum(['False', 'True']))
-            ,wbUnion('UnknownRA00A', QuestRuntimeHasStructDecider, [
+            ,wbInteger('Has Event', itU8, wbEnum(['False', 'True']))
+            ,wbUnion('Event', QuestRuntimeHasEventDecider, [
                wbNull
-              ,wbStruct('UnknownRA00A001', [
-                 wbInteger('Unknown', itU32)
-                ,wbInteger('Unknown', itU32)
-                ,wbArray('UnknownRA00A001A008', wbStruct('UnknownRA00A001A008S', [
+              ,wbStruct('Event Data', [
+                 wbInteger('Stack ID', itU32)
+                ,wbStringMgefCode('Code', 4)
+                ,wbArray('Params', wbStruct('Param', [
                    wbInteger('Type', itU32)
-                  ,wbUnion('UnknownRA001A008S004', QuestRuntimeTypeDecider, [
+                  ,wbUnion('Value', QuestRuntimeParamTypeDecider, [
                     wbNull,
                     wbRefID('TESObjectREFR'),
                     wbRefID('RefID'),
@@ -2840,12 +3104,12 @@ begin
              wbInteger('Unknown', itU32)
             ,wbInteger('Instance Count', itU6to30)
             ,wbArray('Instances', wbStruct('Instance', [
-               wbInteger('Unknown', itU32)
-              ,wbInteger('Instance UnknownIA008S Count', itU6to30)
-              ,wbArray('Instance UnknownA008', wbStruct('Instance UnknownA008S', [
-                 wbInteger('Unknown', itU32),
+               wbInteger('Unknown', itU32)                                          // Instance.unk000
+              ,wbInteger('Instance Alias Count', itU6to30)
+              ,wbArray('Instance Aliases', wbStruct('Instance Alias', [
+                 wbInteger('Alias ID', itU32),
                  wbRefID('RefID')
-               ]), InstanceUnknownIA008SCounter)
+               ]), InstanceAliasCounter)
               ,wbInteger('Instance Global Count', itU6to30)
               ,wbArray('Instance Globals', wbStruct('Instance Global', [
                  wbRefID('Global'),
