@@ -27,6 +27,7 @@ uses
   Math,
   Variants,
   wbInterface,
+  wbSaveInterface,
   wbImplementation,
   wbLocalization,
   wbDefinitionsTES5;
@@ -35,6 +36,9 @@ var
   wbSexEnum         : IwbEnumDef;
   wbPropTypeEnum    : IwbEnumDef;
   wbRecordFlagsEnum : IwbFlagsDef;
+
+var // forward type directives
+  wbChangeTypes : IwbEnumDef;
 
 procedure DefineTES5SavesA;
 begin
@@ -345,13 +349,13 @@ begin
 end;
 
 var
-  StringTableCount : Integer = -1;
+  VMTypeCount : Integer = -1;
 
-procedure StringTableAfterLoad(const aElement: IwbElement);
+procedure VMTypeAfterLoad(const aElement: IwbElement);
 begin
-  if StringTableCount < 0 then begin
-    StringTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeStringTable(aElement as IwbContainer);
+  if VMTypeCount < 0 then begin
+    VMTypeCount := (aElement as IwbContainer).ElementCount;
+    InitializeVMTypeArray(aElement as IwbContainer);
   end;
 end;
 
@@ -362,7 +366,7 @@ procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
 begin
   if WorldspaceTableCount < 0 then begin
     WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeWorldspaceTable(aElement as IwbContainer);
+    InitializeSaveWorldspaceArray(aElement as IwbContainer);
   end;
 end;
 
@@ -373,38 +377,38 @@ procedure RefIDTableAfterLoad(const aElement: IwbElement);
 begin
   if RefIDTableCount < 0 then begin
     RefIDTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeRefIDTable(aElement as IwbContainer);
+    InitializeSaveRefIDArray(aElement as IwbContainer);
   end;
 end;
 
 var
-  ObjectTableCount : Integer = -1;
-  ObjectDetachedTableCount : Integer = -1;
+  VMObjectArrayCount         : Integer = -1;
+  VMObjectDetachedArrayCount : Integer = -1;
 
 procedure ObjectTableAfterLoad(const aElement: IwbElement);
 begin
-  if ObjectTableCount < 0 then begin
-    ObjectTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeObjectTable(aElement as IwbContainer);
+  if VMObjectArrayCount < 0 then begin
+    VMObjectArrayCount := (aElement as IwbContainer).ElementCount;
+    InitializeVMObjectArray(aElement as IwbContainer);
   end;
 end;
 
 procedure ObjectDetachedTableAfterLoad(const aElement: IwbElement);
 begin
-  if ObjectDetachedTableCount < 0 then begin
-    ObjectDetachedTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeObjectDetachedTable(aElement as IwbContainer);
+  if VMObjectDetachedArrayCount < 0 then begin
+    VMObjectDetachedArrayCount := (aElement as IwbContainer).ElementCount;
+    InitializeVMObjectDetachedArray(aElement as IwbContainer);
   end;
 end;
 
 var
-  ArrayTableCount : Integer = -1;
+  VMArrayTableCount : Integer = -1;
 
 procedure ArrayTableAfterLoad(const aElement: IwbElement);
 begin
-  if ArrayTableCount < 0 then begin
-    ArrayTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeArrayTable(aElement as IwbContainer);
+  if VMArrayTableCount < 0 then begin
+    VMArrayTableCount := (aElement as IwbContainer).ElementCount;
+    InitializeVMArrayTable(aElement as IwbContainer);
   end;
 end;
 
@@ -521,7 +525,7 @@ var
   Container : IwbDataContainer;
 
 begin
-  if ObjectTableCount<0 then begin
+  if VMObjectArrayCount<0 then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
     sElement := FindElement('Papyrus Struct', aElement);
@@ -538,7 +542,7 @@ begin
         Inc(Result, Container.ElementCount);
     end;
   end else
-    Result := ObjectTableCount+ObjectDetachedTableCount;
+    Result := VMObjectArrayCount+VMObjectDetachedArrayCount;
 end;
 
 function ArrayContentTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -547,7 +551,7 @@ var
   Container : IwbDataContainer;
 
 begin
-  if ArrayTableCount<0 then begin
+  if VMArrayTableCount<0 then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
     Element := FindElement('Papyrus Struct', aElement);
@@ -559,7 +563,7 @@ begin
         Result := Container.ElementCount;
     end
   end else
-    Result := ArrayTableCount;
+    Result := VMArrayTableCount;
 end;
 
 function StackContentTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -609,7 +613,7 @@ begin
       Exit;
   end;
 
-  if ArrayTableCount<0 then begin
+  if VMArrayTableCount<0 then begin
     Element := FindElement('Papyrus Struct', aElement);
     Assert(Element.BaseName='Papyrus Struct');
 
@@ -624,7 +628,7 @@ begin
             end;
     end;
   end else
-    Result := QueryArrayHandleCount(Handle);
+    Result := QueryCountForVMArrayHandle(Handle);
 end;
 
 function ObjectDataTableEntryExtraDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1146,28 +1150,166 @@ begin
   end;
 end;
 
+function GlobalDataGetChapterType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element    : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := -1;
+  if Supports(aElement, IwbContainer, Container) then
+    Element := Container.ElementByName['Type'];
+  if Assigned(Element) then
+    Result := Element.NativeValue;
+end;
+
+function GlobalDataGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+var
+  Element    : IwbElement;
+  Container : IwbContainer;
+begin
+  if Supports(aElement, IwbContainer, Container) then
+    Element :=  Container.ElementByPath['Type'];
+  if Assigned(aElement) then
+    begin
+      Result := Element.Value;
+      if (Pos(' ', Result)>0) and (Length(Result)>1) then
+        Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
+      if (Pos(' ', Result)>0) and (Length(Result)>1) then
+        Result := Copy(Result, 1, Pos(' ', Result)-1);
+    end
+  else
+    Result := IntToStr(GlobalDataGetChapterType(aBasePtr, aEndPtr, aElement));
+end;
+
+function ChangedFormGetRawType(var aElement: IwbElement): Integer;
+const
+  OffsetType = 7;
+var
+  Container : IwbDataContainer;
+  BasePtr   : Pointer;
+begin
+  Result := -1;
+  if not Assigned(aElement) then Exit;
+  aElement := FindElement('Changed Form', aElement);
+  Assert(aElement.BaseName='Changed Form');
+
+  if Supports(aElement, IwbDataContainer, Container) then begin
+    {aElement :=  Container.ElementByName['Type'];
+    if Assigned(aElement) then
+      Result := aElement.NativeValue
+    else} with Container do if IsValidOffset(DataBasePtr, DataEndPtr, OffsetType) then begin // we are part a proper structure
+        BasePtr := Pointer(Cardinal(DataBasePtr) + OffsetType);
+        Result := PByte(BasePtr)^;
+      end;
+  end;
+end;
+
+function GlobalDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
+begin
+  CompressedSize := PCardinal(Pointer(Cardinal(aBasePtr)+SizeOf(cardinal)))^ + 2*SizeOf(Cardinal);
+  Result := CompressedSize;
+end;
+
+function ChangedFormDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
+const
+  OffsetLength = 9;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+  BasePtr    : Pointer;
+  SizeLength : Integer;
+  aType      : Integer;
+begin
+  Result := 0;
+  Element := aElement;
+  aType := ChangedFormGetRawType(Element);
+
+  if (aType >= 0) and Supports(Element, IwbDataContainer, Container) then begin
+    BasePtr := Container.DataBasePtr;
+    SizeLength := aType shr 6;
+    Element := Container.ElementByPath['Datas\CForm Data\Uncompressed Length'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength+SizeLength+1) then begin // we are part a proper structure
+      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength + SizeLength + 1);
+      case SizeLength of
+        0: Result := PByte(aBasePtr)^;
+        1: Result := PWord(aBasePtr)^;
+        2: Result := PCardinal(aBasePtr)^;
+      end;
+    end;
+    Element := Container.ElementByPath['Datas\CForm Data\Length'];
+    if Assigned(Element) then begin
+      CompressedSize := Element.NativeValue;
+    end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength) then begin // we are part a proper structure
+      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength);
+      case sizeLength of
+        0: CompressedSize := PByte(aBasePtr)^;
+        1: CompressedSize := PWord(aBasePtr)^;
+        2: CompressedSize := PCardinal(aBasePtr)^;
+      end;
+    end;
+  end else
+    CompressedSize := 0;
+end;
+
+function ChangedFormSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
+var
+  Struct : IwbStructCDef;
+  i      : Integer;
+  Size   : Int64;
+begin
+  CompressedSize := 0;
+  if Assigned(aElement) and Supports(aElement.ValueDef, IwbStructCDef, Struct) then
+    for i := 0 to Pred(Struct.MemberCount) do begin
+      Size := Struct.Members[i].Size[aBasePtr, aEndPtr, aElement];
+      if Size<>High(Integer) then begin
+        aBasePtr := Pointer(Cardinal(aBasePtr) + Size);
+        Inc(CompressedSize, Size);
+      end;
+    end;
+  Result := 0;
+end;
+
+function ChangedFormGetChapterType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+begin
+  Element := aElement;
+  Result := ChangedFormGetRawType(Element);
+  if Result >=0 then
+    Result := Result and $3F;
+end;
+
+function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+var
+  aType : Integer;
+begin
+  aType := ChangedFormGetChapterType(aBasePtr, aEndPtr, aElement);
+  if (aType>=0) and (aType < wbChangeTypes.NameCount) then
+    Result := wbChangeTypes.Names[aType];
+  if (Pos(' ', Result)>0) and (Length(Result)>1) then
+    Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
+  if (Pos(' ', Result)>0) and (Length(Result)>1) then
+    Result := Copy(Result, 1, Pos(' ', Result)-1);
+  if Length(Result)=0 then
+    Result := IntToStr(aType);
+end;
+
 function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
   Element : IwbElement;
-  Container: IwbDataContainer;
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form', aElement);
-  Assert(Element.BaseName='Changed Form');
+  Result := 3;
+  Element := aElement;
+  aType := ChangedFormGetRawType(Element) shr 6;
 
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Type'];
-    if Assigned(Element) then begin
-      aType := Element.NativeValue shr 6;
-      case aType of
-        0: Result := 0;
-        1: Result := 1;
-        2: Result := 2;
-      else
-        Result := 3;
-      end;
+  if aType>=0 then begin
+    case aType of
+      0: Result := 0;
+      1: Result := 1;
+      2: Result := 2;
     end;
   end;
 end;
@@ -1178,76 +1320,33 @@ var
   Element   : IwbElement;
   Container : IwbDataContainer;
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form', aElement);
-  Assert(Element.BaseName='Changed Form');
+  Element := aElement;
+  Result := ChangedFormGetRawType(Element);
 
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Type'];
-    aType := Element.NativeValue and $3F;
-    if Assigned(Element) then begin
-      Result := 1 + aType;
-    end;
+  if (Result>=0) and Supports(Element, IwbDataContainer, Container) then begin
+    Result := 1 + (Result and $3F);
     if (Result > 9) then
       Result := 0;
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
-  end;
+  end else
+    Result := 0;
 end;
 
 function ChangedFormFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-const
-  OffsetType = 4;
 var
-  aType     : Variant;
   Element   : IwbElement;
   Container : IwbDataContainer;
 begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form', aElement);
-  Assert(Element.BaseName='Changed Form');
+  Element := aElement;
+  Result := ChangedFormGetRawType(Element);
 
-  VarClear(aType);
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Archtype'];
-    if Assigned(Element) then
-      aType := Element.NativeValue
-    else if Container.IsValidOffset(aBasePtr, aEndPtr, OffsetType) then begin // we are part a proper structure
-        aBasePtr := Pointer(Cardinal(aBasePtr) + OffsetType);
-        aType := PByte(aBasePtr)^;
-      end;
-
-    if not VarIsEmpty(aType) then begin
-      aType := aType and $3F;
-      Result := 1 + aType;
-      if (Result > 11) then
-        Result := 0;
-    end;
-  end;
-end;
-
-function ChangedFormDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
-var
-  Element : IwbElement;
-  Container: IwbDataContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement('CForm Data', aElement);
-  Assert(Element.BaseName='CForm Data');
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Uncompressed Length'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
-    Element := Container.ElementByName['Length'];
-    if Assigned(Element) then begin
-      CompressedSize := Element.NativeValue;
-    end;
-  end;
+  if (Result>=0) and Supports(Element, IwbDataContainer, Container) then begin
+    Result := 1 + (Result and $3F);
+    if (Result > 11) then
+      Result := 0;
+  end else
+    Result := 0;
 end;
 
 function ChangedFlagXXDecider(aMask: Cardinal; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1559,32 +1658,27 @@ var
   Container : IwbDataContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form', aElement);
-  Assert(Element.BaseName='Changed Form');
+  Element := aElement;
+  aType := ChangedFormGetRawType(Element) and $3f;
 
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Type'];
-    if Assigned(Element) then begin
-      aType := Element.NativeValue;
-      if aType = 6 then // CELL
-        if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) and
-           (ChangedFlag29Decider(aBasePtr, aEndPtr, aElement)<>0) then
-          Result := 1
-        else if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) and
-                (ChangedFlag28Decider(aBasePtr, aEndPtr, aElement)<>0) then
-          Result := 2
-        else if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) then
-          Result := 3;
-      if aType in [0,1,2,3,4,5,40,41,42] then begin  // REFR or descendant
-        Element := Container.ElementByName['RefID'];
-        if Assigned(Element) and (Element.NativeValue>=$FF000000) then // Form is Constructed
-          Result := 5
-        else if (ChangedFlag03or25Decider(aBasePtr, aEndPtr, aElement)<>0) then
-          Result := 6
-        else if (ChangedFlag01or02Decider(aBasePtr, aEndPtr, aElement)<>0) then
-          Result := 4;
-      end;
+  if (aType>=0) and Supports(Element, IwbDataContainer, Container) then begin
+    if aType = 6 then // CELL
+      if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) and
+         (ChangedFlag29Decider(aBasePtr, aEndPtr, aElement)<>0) then
+        Result := 1
+      else if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) and
+              (ChangedFlag28Decider(aBasePtr, aEndPtr, aElement)<>0) then
+        Result := 2
+      else if (ChangedFlag30Decider(aBasePtr, aEndPtr, aElement)<>0) then
+        Result := 3;
+    if aType in [0,1,2,3,4,5,40,41,42] then begin  // REFR or descendant
+      Element := Container.ElementByName['RefID'];
+      if Assigned(Element) and (Element.NativeValue>=$FF000000) then // Form is Constructed
+        Result := 5
+      else if (ChangedFlag03or25Decider(aBasePtr, aEndPtr, aElement)<>0) then
+        Result := 6
+      else if (ChangedFlag01or02Decider(aBasePtr, aEndPtr, aElement)<>0) then
+        Result := 4;
     end;
   end;
 end;
@@ -1656,21 +1750,15 @@ end;
 
 function SkipCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := BytesToSkip;
+  Result := wbBytesToSkip;
 end;
 
 function DumpCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if BytesToDump = $FFFFFFFF then
-    Result := ( Cardinal(aEndPtr) - Cardinal(aBasePtr) ) div BytesToGroup + 1
+  if wbBytesToDump = $FFFFFFFF then
+    Result := ( Cardinal(aEndPtr) - Cardinal(aBasePtr) ) div wbBytesToGroup + 1
   else
-    Result := BytesToDump div BytesToGroup + 1;
-end;
-
-function GlobalDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
-begin
-  Result := PCardinal(Pointer(Cardinal(aBasePtr)+SizeOf(cardinal)))^ + 2*SizeOf(Cardinal);
-  CompressedSize := Result;
+    Result := wbBytesToDump div wbBytesToGroup + 1;
 end;
 
 function DataLengthCounter(aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aModifier: Integer = 0): Integer;
@@ -1689,8 +1777,8 @@ begin
     if Assigned(Element) then begin
       Result := Element.NativeValue;
       case aModifier of
-        1: Result := Result div BytesToGroup;
-        2: Result := Result mod BytesToGroup;
+        1: Result := Result div wbBytesToGroup;
+        2: Result := Result mod wbBytesToGroup;
       end;
     end;
   end;
@@ -1719,8 +1807,8 @@ begin
         Consumed := Cardinal(EasC.DataBasePtr) - Origin;
         Result := Result - Consumed;
         case aModifier of
-          1: Result := Result div BytesToGroup;
-          2: Result := Result mod BytesToGroup;
+          1: Result := Result div wbBytesToGroup;
+          2: Result := Result mod wbBytesToGroup;
         end;
       end;
     end;
@@ -1808,7 +1896,6 @@ var
   wbChangeDefaultFlags       : IwbIntegerDef;
   wbChangeObjectFlags        : IwbIntegerDef;
   wbChangeFlags              : IwbUnionDef;
-  wbChangeTypes              : IwbEnumDef;
   wbQuestFlags               : IwbIntegerDef;
   wbTypeData                 : IwbStructDef;
   wbVariable                 : IwbStructDef;
@@ -1846,17 +1933,17 @@ var
 begin
   wbNull := wbByteArray('Unused', -255);
   wbTypeData := wbStruct('SkyrimVM Type Data', [      // UESP : scriptInstance
-    wbInteger('Script Name', itU16, wbStringIndex),
-    wbInteger('Script Type', itU16, wbStringIndex),
+    wbInteger('Script Name', itU16, wbVMType),
+    wbInteger('Script Type', itU16, wbVMType),
     wbArray('Script Variables', wbStruct('Variable', [
-      wbInteger('Name', itU16, wbStringIndex),
-      wbInteger('Type', itU16, wbStringIndex)
+      wbInteger('Name', itU16, wbVMType),
+      wbInteger('Type', itU16, wbVMType)
     ]), -1)
   ]);
 
   wbObjectTableEntry := wbStruct('Object Table Entry', [  // UESP : reference
     wbInteger('Object Handle', itU32),
-    wbInteger('Name', itU16, wbStringIndex),
+    wbInteger('Name', itU16, wbVMType),
     wbStruct('Grouped', [
       wbInteger('Flag2bits', itU16, wbDumpInteger),
       wbInteger('Unknown', itS16, wbDumpInteger),   // returned as Dword = Word or (10000 * Flag2bits)
@@ -1867,7 +1954,7 @@ begin
 
   wbObjectDetachedTableEntry := wbStruct('Object Table Entry', [   // UESP : detachedReference
     wbInteger('Object Handle', itU32),
-    wbInteger('Name', itU16, wbStringIndex)
+    wbInteger('Name', itU16, wbVMType)
   ]);
 
   wbVariable := wbStruct('Variable', [
@@ -1875,15 +1962,15 @@ begin
     wbUnion('Value', VariableDecider, [
       wbInteger('Int32', itS32),
       wbStruct('Object', [
-        wbInteger('Object Type', itU16, wbStringIndex),
-        wbInteger('Object Handle', itU32, wbObjectHandle)
+        wbInteger('Object Type', itU16, wbVMType),
+        wbInteger('Object Handle', itU32, wbVMObjectHandle)
       ]),
-      wbInteger('String', itU16, wbStringIndex),
+      wbInteger('String', itU16, wbVMType),
       wbInteger('Int32', itU32),
       wbFloat('Float'),
       wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
       wbStruct('Object Array', [
-        wbInteger('Object Type', itU16, wbStringIndex),
+        wbInteger('Object Type', itU16, wbVMType),
         wbInteger('Array Handle', itU32)
       ]),
       wbInteger('String Array Handle', itU32),
@@ -1936,8 +2023,8 @@ begin
     wbInteger('Type', itU8, wbDumpInteger),  // Lower than 8 and lower than 5
     wbUnion('Value', CodeParameterTypeValueDecider, [
       wbNull,
-      wbInteger('Object Type', itU16, wbStringIndex),
-      wbInteger('String', itU16, wbStringIndex),
+      wbInteger('Object Type', itU16, wbVMType),
+      wbInteger('String', itU16, wbVMType),
       wbInteger('Unsigned Integer', itU32),
       wbFloat('Float'),
       wbInteger('Boolean', itU8, wbEnum(['False', 'True']))
@@ -1957,32 +2044,32 @@ begin
   ]);
 
   wbFunction := wbStruct('Function', [
-    wbInteger('Return Type', itU16, wbStringIndex),
-    wbInteger('DocString', itU16, wbStringIndex),
+    wbInteger('Return Type', itU16, wbVMType),
+    wbInteger('DocString', itU16, wbVMType),
     wbInteger('User Flags', itU32, wbDumpInteger),
     wbInteger('Flags', itU8, wbDumpInteger),
     wbArray('Parameters', wbStruct('Parameter', [
-      wbInteger('Name', itU16, wbStringIndex),
-      wbInteger('Type', itU16, wbStringIndex)
+      wbInteger('Name', itU16, wbVMType),
+      wbInteger('Type', itU16, wbVMType)
     ]), -2),
     wbArray('Locals', wbStruct('Local', [
-      wbInteger('Name', itU16, wbStringIndex),
-      wbInteger('Type', itU16, wbStringIndex)
+      wbInteger('Name', itU16, wbVMType),
+      wbInteger('Type', itU16, wbVMType)
     ]), -2),
     wbArray('Codes', wbCode, -2)
   ]);
 
   wbObjectDataTableEntry := wbStruct('Object Data Table Entry', [  //  UESP: scriptData
-    wbInteger('Object Handle', itU32, wbObjectHandle),
+    wbInteger('Object Handle', itU32, wbVMObjectHandle),
     wbStruct('Script', [
       wbInteger('Unknown Flags', itU8),
-      wbInteger('String Index', itU16, wbStringIndex),
+      wbInteger('Type', itU16, wbVMType),
       wbInteger('Unknown', itU32, wbDumpInteger),
       wbUnion('Unknown', ObjectDataTableEntryExtraDecider, [
         wbNull,
         wbInteger('Unknown', itU32, wbDumpInteger)
       ]),
-      wbArray('Variables', wbVariable, -1)
+      wbArray('Members', wbVariable, -1)
     ])
   ]);
 
@@ -1992,7 +2079,7 @@ begin
     wbUnion('Data', ArrayTableEntryOptionalStringDecider, [
       wbNull,
       wbNull,
-      wbInteger('Name', itU16, wbStringIndex)
+      wbInteger('Name', itU16, wbVMType)
     ]),
     wbInteger('Count', itU32)
   ]);
@@ -2061,12 +2148,12 @@ begin
             wbInteger('Function Type', itU8),
             wbInteger('Function Type', itU8)
           ]),
-          wbInteger('Unknown', itU16, wbStringIndex),
-          wbInteger('Unknown', itU16, wbStringIndex),
-          wbInteger('Unknown', itU16, wbStringIndex),
+          wbInteger('Unknown', itU16, wbVMType),
+          wbInteger('Unknown', itU16, wbVMType),
+          wbInteger('Unknown', itU16, wbVMType),
           wbUnion('Unknown', FunctionTypeAndFlagsDecider, [ // (version < 2 or Function Type = 0) and not Flags bit 0
             wbNull,
-            wbInteger('Unknown', itU16, wbStringIndex)
+            wbInteger('Unknown', itU16, wbVMType)
           ]),
           wbInteger('Unknown', itU8, wbDumpInteger),
           wbInteger('Unknown', itU8, wbDumpInteger),
@@ -2086,8 +2173,8 @@ begin
 
   wbUnknownS1 := wbStruct('Unknown', [  // Shared between Function message and Suspended Stack
     wbInteger('Unknown', itU8, wbDumpInteger),  // lower than 4
-    wbInteger('Unknown', itU16, wbStringIndex),
-    wbInteger('Unknown', itU16, wbStringIndex),
+    wbInteger('Unknown', itU16, wbVMType),
+    wbInteger('Unknown', itU16, wbVMType),
     wbVariable,
     wbArray('Variables', wbVariable, -1)
   ]);
@@ -2334,7 +2421,7 @@ begin
     wbInteger('Unknown', itU32)
    ]), -1);
 
-  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, [
+  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
     wbUnion('Data', GlobalDataDecider, [
@@ -2451,7 +2538,7 @@ begin
       ]),
       wbStruct('Papyrus Struct', [
         wbInteger('SkyrimVM_version', itU16)  // FFFF marks an invalid save, 4 seems current max     UESP: header
-        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, StringTableAfterLoad)  // UESP strings
+        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, VMTypeAfterLoad)  // UESP strings
         ,wbArray('Type table for internal VM save data', wbTypeData, -1)  // Type table for internal VM save data  USEP:script
         ,wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad)  // UESP: scriptInstance
         ,wbArray('Detached Object Table', wbObjectDetachedTableEntry, -1, ObjectDetachedTableAfterLoad) // UESP: reference
@@ -2460,7 +2547,7 @@ begin
           wbInteger('Next Active Script ID', itU32, wbDumpInteger)                // Part of Stack table
          ,wbArrayS('Stack Table', wbStackTableEntry, -1, StackTableAfterLoad) // UESP: activeScript
         ])
-        ,wbArray('Object Data Table', wbObjectDataTableEntry, ObjectDataTableCounter)     // UESP: scriptData
+        ,wbArray('Object Data Table', wbObjectDataTableEntry, ObjectDataTableCounter)     // UESP: scriptData and referenceData
         ,wbArray('Array Content Table', wbArrayElementsTableEntry, ArrayContentTableCounter) // UESP: arrayData
         ,wbArray('Stack Content Table', wbStackTableDataEntry, StackContentTableCounter)  // UESP: activeScriptData
         ,wbArray('Function Message Table', wbFunctionMessageDataEntry, -1)
@@ -2595,7 +2682,7 @@ begin
       wbStruct('Main', []) // Empty
     ])
 //    ,wbByteArray('Remainder', DataRemainderCounter)  // Single line
-    ,wbArray('Remainder', wbByteArray('Unknown', BytesToGroup), DataQuartetCounter) // per Quartet
+    ,wbArray('Remainder', wbByteArray('Unknown', wbBytesToGroup), DataQuartetCounter) // per Quartet
     ,wbByteArray('Unknown', DataQuartetRemainderCounter)
   ]);
 
@@ -2929,7 +3016,7 @@ begin
   ]));
 
   wbInitialDataType01 := wbStruct('Detached CELL CHANGE_CELL_EXTERIOR_CHAR', [
-    wbInteger('Worldspace Index', itU16, wbWorldspaceIndex),  // index into Worldspace table
+    wbInteger('Worldspace Index', itU16, wbSaveWorldspaceIndex),  // index into Worldspace table
     wbInteger('Unknown', itU8),
     wbInteger('Unknown', itU8),
     wbInteger('Unknown', itU32)
@@ -3081,7 +3168,7 @@ begin
             ,wbUnion('Event', QuestRuntimeHasEventDecider, [
                wbNull
               ,wbStruct('Event Data', [
-                 wbInteger('Stack ID', itU32)
+                 wbInteger('Some ID', itU32)
                 ,wbStringMgefCode('Code', 4)
                 ,wbArray('Params', wbStruct('Param', [
                    wbInteger('Type', itU32)
@@ -3148,30 +3235,37 @@ begin
     wbByteArray('Undecoded Data', ChangedFormRemainingDataCounter)
   ]);
 
-  wbChangedForm := wbStruct('Changed Form', [
-    wbRefID('RefID'),
-    wbChangeFlags,
-    wbInteger('Type', itU8, wbChangeTypes),
-    wbInteger('Version', itU8),
-    wbUnion('Datas', ChangedFormDataLengthDecider, [
-      wbStruct('CForm Data', [
-        wbInteger('Length', itU8),
-        wbInteger('Uncompressed Length', itU8),   // added post save game version 50
-        wbStructZ('Small Struct', ChangedFormDataSizer, [ wbChangedFormData ])
-      ]),
-      wbStruct('CForm Data', [
-        wbInteger('Length', itU16),
-        wbInteger('Uncompressed Length', itU16),
-        wbStructZ('Medium Struct', ChangedFormDataSizer, [ wbChangedFormData ])
-      ]),
-      wbStruct('CForm Data', [
-        wbInteger('Length', itU32),
-        wbInteger('Uncompressed Length', itU32),
-        wbStructZ('Large Struct', ChangedFormDataSizer, [ wbChangedFormData ])
-      ]),
-      wbUnknown() // If the type is invalid
-    ])
-  ]);
+  wbChangedForm := wbStructC('Changed Form',
+    ChangedFormSizer,
+    ChangedFormGetChapterType,
+    ChangedFormGetChapterTypeName,
+    [
+      wbRefID('RefID'),
+      wbChangeFlags,
+      wbInteger('Type', itU8, wbChangeTypes),
+      wbInteger('Version', itU8),
+      wbUnion('Datas', ChangedFormDataLengthDecider, [
+        wbStruct('CForm Data', [
+          wbInteger('Length', itU8),
+          wbInteger('Uncompressed Length', itU8),   // added post save game version 50
+          wbStructZ('Small Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+            [ wbChangedFormData ])
+        ]),
+        wbStruct('CForm Data', [
+          wbInteger('Length', itU16),
+          wbInteger('Uncompressed Length', itU16),
+          wbStructZ('Medium Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+            [ wbChangedFormData ])
+        ]),
+        wbStruct('CForm Data', [
+          wbInteger('Length', itU32),
+          wbInteger('Uncompressed Length', itU32),
+          wbStructZ('Large Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+            [ wbChangedFormData ])
+        ]),
+        wbUnknown() // If the type is invalid
+      ])
+    ]);
 
   wbHeader := wbStruct('Header', [
     wbInteger('Version', itU32),
@@ -3212,18 +3306,18 @@ begin
     wbByteArray('Unused', 15 * 4)
   ]);
 
-  SaveFileHeader := wbStruct('Save File Header', [
+  wbFileHeader := wbStruct('Save File Header', [
      wbString('Magic', 13)
     ,wbInteger('Header Size', itU32)
     ,wbHeader
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArray('Plugins', wbLenString('PluginName', 2), -4)
+    ,wbArray(wbFilePlugins, wbLenString('PluginName', 2), -4)
     ,wbFileLocationTable
   ]);
 
-  SaveFileChapters := wbStruct('Save File Chapters', [
+  wbFileChapters := wbStruct('Save File Chapters', [
      wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter)
     ,wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter)
     ,wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter)
@@ -3242,10 +3336,12 @@ var
 
 procedure DefineTES5Saves;
 begin
+  wbFileMagic := 'TESV_SAVEGAME';
+  wbExtractInfo := @ExtractInfo;
+  wbFilePlugins := 'Plugins';
   DefineTES5;
   DefineTES5SavesA;
-  DefineTES5SavesS;  // s for Saves
-  wbExtractInfo := @ExtractInfo;
+  DefineTES5SavesS;
 end;
 
 initialization

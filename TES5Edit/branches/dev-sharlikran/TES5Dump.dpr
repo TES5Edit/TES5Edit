@@ -27,17 +27,18 @@ uses
   SysUtils,
   Windows,
   Registry,
+  Zlibex in 'Zlibex.pas',
+  wbBSA in 'wbBSA.pas',
+  wbInterface in 'wbInterface.pas',
+  wbSaveInterface in 'wbSaveInterface.pas',
+  wbImplementation in 'wbImplementation.pas',
+  wbLocalization in 'wbLocalization.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
-  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas',
-  wbImplementation in 'wbImplementation.pas',
-  wbInterface in 'wbInterface.pas',
-  wbLocalization in 'wbLocalization.pas',
-  wbBSA in 'wbBSA.pas',
-  Zlibex in 'Zlibex.pas';
+  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -51,7 +52,7 @@ var
 
 procedure ReportProgress(const aStatus: string);
 begin
-  WriteLn(ErrOutput, FormatDateTime('<nn:ss.zzz>', Now - StartTime), ' ', aStatus);
+  WriteLn(ErrOutput, FormatDateTime('<hh:nn:ss.zzz>', Now - StartTime), ' ', aStatus);
 end;
 
 procedure WriteElement(aElement: IwbElement; aIndent: string = ''); forward;
@@ -61,23 +62,23 @@ var
   i            : Integer;
   GroupRecord  : IwbGroupRecord;
   ContainerRef : IwbContainerElementRef;
-  SaveElement  : IwbSaveAddressable;
+  Chapter      : IwbChapter;
 begin
-  if (aContainer.ElementType = etGroupRecord) then
+  if (wbToolSource in [tsPlugins]) then if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType = 0 then begin
         if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
         ReportProgress('Dumping: ' + GroupRecord.Name);
       end;
-  if (wbGameMode in [gmTES5Saves]) and Assigned(DumpChapters) and Supports(aContainer, IwbSaveAddressable, SaveElement) then begin
-    if not DumpChapters.Find(IntToStr(SaveElement.GetType), i) then
+  if (wbToolSource in [tsSaves]) and Assigned(DumpChapters) and Supports(aContainer, IwbChapter, Chapter) then begin
+    if not DumpChapters.Find(IntToStr(Chapter.ChapterType), i) then
       Exit;
     ReportProgress('Dumping: ' + aContainer.Name);
   end;
-  if (wbGameMode in [gmTES5Saves]) and Assigned(ChaptersToSkip) and Supports(aContainer, IwbSaveAddressable, SaveElement) then
-    if ChaptersToSkip.Find(IntToStr(SaveElement.GetType), i) then begin
-      ReportProgress('Skiping: ' + aContainer.Name);
+  if (wbToolSource in [tsSaves]) and Assigned(ChaptersToSkip) and Supports(aContainer, IwbChapter, Chapter) then
+    if ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
+      ReportProgress('Skiping: ' + Chapter.ChapterTypeName);
       Exit;
     end;
 
@@ -197,7 +198,7 @@ function CheckAppPath: string;
 const
   //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
   ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe');
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
 var
   s: string;
 begin
@@ -257,6 +258,21 @@ begin
   wbDataPath := DataPath;
 end;
 
+function isMode(aMode: String): Boolean;
+begin
+  Result := wbFindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
+end;
+
+function isFormatValid(aFormatName: String): Boolean;
+begin
+  if Uppercase(aFormatName) = 'UESP' then
+    Result := False
+  else if Uppercase(aFormatName) = 'UESP' then
+    Result := False
+  else
+    Result := False;
+end;
+
 var
   NeedsSyntaxInfo : Boolean;
   s, s2           : string;
@@ -276,17 +292,52 @@ begin
   StartTime := Now;
 
   try
-    if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+    if isMode('Saves') then begin
+      wbToolSource := tsSaves;
+      wbSourceName := 'Saves';
+    end else begin // defaults to plugin
+      wbToolSource := tsPlugins;
+      wbSourceName := 'Plugins';
+    end;
+
+    if isMode('Export') then begin
+      wbToolMode := tmExport;
+      wbToolName := 'Export';
+    end else if isMode('Dump') then begin
+      wbToolMode := tmDump;
+      wbToolName := 'Dump';
+    end else begin
+      WriteLn(ErrOutput, 'Application name must contain Dump or Export to select mode.');
+      Exit;
+    end;
+
+    if isMode('FNV') then begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineFNV;
-    end else if wbFindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
+    end else if isMode('FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineFO3;
     end else if wbFindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
@@ -295,27 +346,48 @@ begin
       wbAppName := 'TES3';
       wbGameName := 'Morrowind';
       wbLoadBSAs := false;
+      if not (wbToolMode in []) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in []) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineTES3;
-    end else if wbFindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
+    end else if isMode('TES4') then begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineTES4;
-    end else if wbFindCmdLineSwitch('TES5Saves') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 9), 'TES5Saves') then begin
-      wbGameMode := gmTES5Saves;
-      wbAppName := 'TES5Saves';
-      wbGameName := 'Skyrim';
-      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
-      DefineTES5saves;
-    end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+    end else if isMode('TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
       wbLoadBSAs := true;
-      DefineTES5;
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
+      case wbToolSource of
+        tsSaves:   DefineTES5Saves;
+        tsPlugins: DefineTES5;
+      end;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5, TES5Saves to');
+      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to');
       WriteLn(ErrOutput, 'select mode.');
       Exit;
     end;
@@ -323,7 +395,7 @@ begin
     DoInitPath;
 
     if not wbFindCmdLineSwitch('q') and not wbReportMode then begin
-      WriteLn(ErrOutput, wbAppName, 'Dump ', VersionString);
+      WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString);
       WriteLn(ErrOutput);
 
       WriteLn(ErrOutput, 'This Program is subject to the Mozilla Public License');
@@ -384,15 +456,15 @@ begin
       ChaptersToSkip.Add('1001');
     end;
 
-    if wbFindCmdLineParam('l', s) and ((wbGameMode = gmTES5) or (wbGameMode = gmTES5Saves)) then
+    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5]) then
       wbLanguage := s
     else
       wbLanguage := 'English';
 
     if wbFindCmdLineParam('bts', s) then
-      BytesToSkip := StrToInt64Def(s, BytesToSkip);
+      wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
     if wbFindCmdLineParam('btd', s) then
-      BytesToDump := StrToInt64Def(s, BytesToDump);
+      wbBytesToDump := StrToInt64Def(s, wbBytesToDump);
 
     if wbFindCmdLineParam('do', s) then
       wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
@@ -400,20 +472,29 @@ begin
     s := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
-    if (ParamCount >= 1) and not FileExists(s) then begin
+    if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
       if s[1] in ['-', '/'] then
         WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
       else
         WriteLn(ErrOutput, 'Can''t find the file "',s,'". Please check the command line parameters.');
       WriteLn;
       NeedsSyntaxInfo := True;
+    end else if (wbToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
+      if s[1] in ['-', '/'] then
+        WriteLn(ErrOutput, 'No format was specified. Please check the command line parameters.')
+      else
+        WriteLn(ErrOutput, 'Cannot handle the format "',s,'". Please check the command line parameters.');
+      WriteLn;
+      NeedsSyntaxInfo := True;
     end;
 
     if NeedsSyntaxInfo or (ParamCount < 1) or wbFindCmdLineSwitch('?') or wbFindCmdLineSwitch('help') then begin
       WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
-      WriteLn(ErrOutput, '  or     '+wbAppName+'Saves [options] inputfile');
+      WriteLn(ErrOutput, '  or     '+wbAppName+'Export [options] format');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
+      WriteLn(ErrOutput);
+      WriteLn(ErrOutput, wbAppName + 'Dump -Saves will load the specified ess files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the game directory.');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, 'You can use the normal redirect mechanism to send the output to a file.');
       WriteLn(ErrOutput, 'e.g. "'+wbAppName+'Dump '+wbGameName+'.esm > '+wbGameName+'.txt"');
@@ -421,13 +502,6 @@ begin
       WriteLn(ErrOutput, 'Currently supported options:');
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
-      WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
-      WriteLn(ErrOutput, '             ', '  decompressed and processed.');
-      WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-      WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
-      WriteLn(ErrOutput, '             ', '  -xg:LAND, REGN, PGRD, SCEN, PACK, PERK, NAVI, CELL, WRLD');
-      WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
-      WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
       WriteLn(ErrOutput, '             ', '  Default language is English');
@@ -441,13 +515,24 @@ begin
       WriteLn(ErrOutput, '             ', '  -do:1 starting offset');
       WriteLn(ErrOutput, '             ', '  -do:2 starting offset and array count  PERFORMANCE PENALTY');
       WriteLn(ErrOutput, '             ', '  -do:3 starting and ending offset, size and array count  PERFORMANCE PENALTY');
-      WriteLn(ErrOutput, '             ', '');
-      WriteLn(ErrOutput, 'Saves mode ONLY', ' not for general use');
       WriteLn(ErrOutput, '-bts         ', 'BytesToSkip  = number of undecoded bytes to skip, default = 0');
       WriteLn(ErrOutput, '-btd         ', 'BytesToDump  = number of undecoded bytes to dump as unknown, default = all');
-      WriteLn(ErrOutput, '-dc:IDlist   ', 'If specified, only process those chapters');
-      WriteLn(ErrOutput, '-xc:IDlist   ', 'Excludes chapters from being processed');
-      WriteLn(ErrOutput, '-xcloat      ', 'The following value applies:');
+      WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Plugin mode ONLY');
+      WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
+      WriteLn(ErrOutput, '             ', '  decompressed and processed.');
+      WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
+      WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
+      WriteLn(ErrOutput, '             ', '  -xg:LAND,REGN,PGRD,SCEN,PACK,PERK,NAVI,CELL,WRLD');
+      WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
+      WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
+      WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Saves mode ONLY');
+//TBD      WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top ChangedForm type from being processed');
+//TBD      WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed ChangedForm type');
+      WriteLn(ErrOutput, '-dc:GlobalDataIDlist   ', 'If specified, only process those global data ID');
+      WriteLn(ErrOutput, '-xc:GlobalDataIDlist   ', 'Excludes those global data from being processed');
+      WriteLn(ErrOutput, '-xcbloat     ', 'The following value applies:');
       WriteLn(ErrOutput, '             ', '  -xc:1001');
       WriteLn(ErrOutput, '             ', '    1001 is the ID of Papyrus data the largest part of the save.');
       WriteLn(ErrOutput, '             ', '');
@@ -461,7 +546,8 @@ begin
       wbContainerHandler := wbCreateContainerHandler;
 
     StartTime := Now;
-    ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename);
+    ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename+
+      ' Mode:'+wbToolName+' Source:'+wbSourceName);
     if Assigned(Dumpgroups) then
       ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
     if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
@@ -473,10 +559,10 @@ begin
       ReportProgress('['+s+']   Dumping chapters : '+DumpChapters.CommaText);
     if Assigned(ChaptersToSkip) and (ChaptersToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding chapters : '+ChaptersToSkip.CommaText);
-    if BytesToSkip>0 then
-      ReportProgress('['+s+']   BytesToSkip : '+IntToStr(BytesToSkip));
-    if BytesToDump<$FFFFFFFF then
-      ReportProgress('['+s+']   BytesToDump : '+IntToStr(BytesToDump));
+    if wbBytesToSkip>0 then
+      ReportProgress('['+s+']   BytesToSkip : '+IntToStr(wbBytesToSkip));
+    if wbBytesToDump<$FFFFFFFF then
+      ReportProgress('['+s+']   BytesToDump : '+IntToStr(wbBytesToDump));
     if wbDumpOffset>0 then
       ReportProgress('['+s+']   Dump Offset mode : '+IntToStr(wbDumpOffset));
 
@@ -487,7 +573,7 @@ begin
 
       for i := 0 to Masters.Count - 1 do begin
         if wbLoadAllBSAs then begin
-          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5, gmTES5Saves]) then begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s2 := ChangeFileExt(Masters[i], '');
             if FindFirst(wbDataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
               repeat
@@ -499,7 +585,7 @@ begin
             end;
           end;
         end else begin
-          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5, gmTES5Saves]) then begin
+          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s2 := ChangeFileExt(Masters[i], '');
             if FindFirst(wbDataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
               repeat
@@ -525,10 +611,7 @@ begin
       wbContainerHandler.AddFolder(wbDataPath);
     end;
 
-    if Pos('SAVES', UpperCase(wbAppName))>0 then
-      _File := wbSaveFile(s)
-    else
-      _File := wbFile(s);
+    _File := wbFile(s, -1, '', False, True);  // Only the first file can be something other than a plugin
 
     ReportProgress('Finished loading record. Starting Dump.');
 

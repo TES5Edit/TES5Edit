@@ -1814,7 +1814,7 @@ function TfrmMain.CheckAppPath: string;
 const
   //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
   ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe');
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
 var
   s: string;
 begin
@@ -11092,7 +11092,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim', 'Skyrim');
+    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion', 'Skyrim');
 begin
   if not wbLoaderDone then
     Exit;

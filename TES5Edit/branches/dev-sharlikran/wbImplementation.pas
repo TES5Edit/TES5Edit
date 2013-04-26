@@ -37,8 +37,7 @@ var
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False): IwbFile;
-function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
+  IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -577,7 +576,7 @@ type
     destructor Destroy; override;
   end;
 
-  TwbSaveFile = class(TwbFile)
+  TwbFileSource = class(TwbFile)
   protected
     procedure Scan; override;
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
@@ -1142,21 +1141,19 @@ type
     property IsCompressed: Boolean read GetIsCompressed;
   end;
 
-  TwbSaveHeader = class(TwbStruct, IwbSaveHeader)
+  TwbFileHeader = class(TwbStruct, IwbFileHeader)
   protected
-    function GetMagic: TwbSaveMagic;
+    function GetFileMagic: TwbFileMagic;
   end;
 
-  TwbSaveChapter = class(TwbStruct, IwbSaveChapter)
-  end;
-
-  TwbSaveAddressable = class(TwbStruct, IwbSaveAddressable)
+  TwbChapter = class(TwbStruct, IwbChapter)
   protected
-    chapterSkipped : Boolean;
+    cChapterSkipped : Boolean;
   protected
     function GetSkipped: Boolean; override;
     function GetElementType: TwbElementType; override;
-    function GetType: Integer;
+    function GetChapterType: Integer;
+    function GetChapterTypeName: String;
   public
     constructor Create(const aContainer  : IwbContainer;
                        const aValueDef   : IwbValueDef;
@@ -2087,7 +2084,7 @@ begin
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
-  Header := TwbMainRecord.Create(Self, HeaderSignature, 0);
+  Header := TwbMainRecord.Create(Self, wbHeaderSignature, 0);
   if wbGameMode = gmFNV then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.32'
   else if wbGameMode = gmFO3 then
@@ -2495,8 +2492,8 @@ begin
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.Signature <> HeaderSignature then
-    raise Exception.CreateFmt('Expected header signature '+HeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
+  if Header.Signature <> wbHeaderSignature then
+    raise Exception.CreateFmt('Expected header signature '+wbHeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
 
   MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
@@ -2628,7 +2625,7 @@ begin
 
   if Assigned(aElement) then
     case aElement.ElementType of
-      etMainRecord: Result := (aElement as IwbMainRecord).Signature <> HeaderSignature; {can't remove the file header}
+      etMainRecord: Result := (aElement as IwbMainRecord).Signature <> wbHeaderSignature; {can't remove the file header}
       etGroupRecord: Result := True;
     else
       Assert(False);
@@ -2697,7 +2694,7 @@ begin
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
 
   FileHeader := cntElements[0] as IwbMainRecord;
-  if FileHeader.Signature <> HeaderSignature then
+  if FileHeader.Signature <> wbHeaderSignature then
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
 
   HEDR := FileHeader.RecordBySignature['HEDR'];
@@ -2752,7 +2749,7 @@ begin
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
 
   FileHeader := cntElements[0] as IwbMainRecord;
-  if FileHeader.Signature <> HeaderSignature then
+  if FileHeader.Signature <> wbHeaderSignature then
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
 
   HEDR := FileHeader.RecordBySignature['HEDR'];
@@ -2954,7 +2951,7 @@ begin
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.Signature <> HeaderSignature then
+  if Header.Signature <> wbHeaderSignature then
     raise Exception.CreateFmt('Expected header signature TES4, found %s in file "%s"', [String(Header.Signature), flFileName]);
 
   if fsOnlyHeader in flStates then
@@ -7168,7 +7165,7 @@ var
   _File       : IwbFile;
   GroupRecord : IwbGroupRecord;
 begin
-  if GetSignature = HeaderSignature then begin
+  if GetSignature = wbHeaderSignature then begin
     if not Supports(GetContainer, IwbFile, _File) then
       raise Exception.Create('File Header record '+GetName+' must be contained directly in the file.');
     if GetFormID <> 0 then
@@ -8505,7 +8502,7 @@ begin
           end else case ArrayDef.Element.DefType of
             dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
             dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-            dtStructChapter: Result := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+            dtStructChapter: Result := TwbChapter.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
             dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
           else
             Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
@@ -8622,7 +8619,7 @@ begin
                 case ArrayDef.Element.DefType of
                   dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                   dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                  dtStructChapter: Element := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                  dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                   dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                 else
                   Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
@@ -8921,7 +8918,7 @@ begin
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-      dtStructChapter: Element := TwbSaveAddressable.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       dtUnion: Element := TwbUnion.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
@@ -12601,7 +12598,7 @@ begin
       case ValueDef.DefType of
         dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
-        dtStructChapter: Element := TwbSaveAddressable.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
@@ -12685,7 +12682,7 @@ begin
     case ArrayDef.Element.DefType of
       dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
       dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-      dtStructChapter: Result := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+      dtStructChapter: Result := TwbChapter.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
       dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
     else
       Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
@@ -12772,7 +12769,7 @@ begin
         case ArrayDef.Element.DefType of
           dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
           dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-          dtStructChapter: Element := TwbSaveAddressable.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+          dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
           dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
         else
           Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
@@ -12984,7 +12981,7 @@ begin
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtStructChapter: Element := TwbSaveAddressable.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
@@ -13088,7 +13085,7 @@ begin
       Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
     dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    dtStructChapter: Element := TwbSaveAddressable.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
   else
     Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
@@ -13282,7 +13279,7 @@ begin
         Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
         BasePtr := Pointer( Cardinal(aBasePtr) + i );
         Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
-        if wbGameMode in [gmTES5Saves] then begin
+        if wbToolSource in [tsSaves] then begin
           BasePtr := Pointer( Cardinal(aBasePtr) + i );
           Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
           BasePtr := Pointer( Cardinal(aBasePtr) + i );
@@ -13477,7 +13474,7 @@ begin
 end;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
 var
   FileName: string;
   i: Integer;
@@ -13490,27 +13487,10 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
-  end;
-end;
-
-function wbSaveFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''): IwbFile;
-var
-  FileName: string;
-  i: Integer;
-begin
-  if ExtractFilePath(aFileName) = '' then
-    FileName := ExpandFileName('.\'+aFileName)
-  else
-    FileName := ExpandFileName(aFileName);
-
-  if FilesMap.Find(FileName, i) then
-    Result := IwbFile(Pointer(FilesMap.Objects[i]))
-  else begin
-    Result := TwbSaveFile.Create(FileName, aLoadOrder, aCompareTo, False);
+    if isPrimary and (wbToolSource in [tsSaves]) then
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, isTemporary)
+    else
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -13530,8 +13510,8 @@ begin
 
   if FilesMap.Find(FileName, i) then
     _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-  else if wbGameMode in [gmTES5Saves] then
-    _File := TwbSaveFile.Create(FileName, -1, '', True)
+  else if wbToolSource in [tsSaves] then
+    _File := TwbFileSource.Create(FileName, -1, '', True)
   else
     _File := TwbFile.Create(FileName, -1, '', True);
 
@@ -14488,7 +14468,7 @@ begin
         MainRecordInternal.MakeHeaderWriteable;
 
         if Flags.IsESM then
-          if MainRecordInternal.Signature <> HeaderSignature then
+          if MainRecordInternal.Signature <> wbHeaderSignature then
             Flags.SetESM(False);
 
         if Flags.IsDeleted <> MainRecordInternal.mrStruct.mrsFlags.IsDeleted then begin
@@ -14924,29 +14904,30 @@ const
   CELL : TwbSignature = 'CELL';
   DIAL : TwbSignature = 'DIAL';
 
-{ TwbSaveFile }
+{ TwbFileSource }
 
-constructor TwbSaveFile.CreateNew(const aFileName: string; aLoadOrder: Integer);
+constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer);
 begin
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
 end;
 
-procedure TwbSaveFile.GetMasters(aMasters: TStrings);
+procedure TwbFileSource.GetMasters(aMasters: TStrings);
 var
-  Header      : IwbSaveHeader;
+  Header      : IwbFileHeader;
   MasterFiles : IwbContainerElementRef;
   fPath       : String;
   i           : Integer;
 begin
-  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveHeader, Header) then
+  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.Magic <> HeaderMagic then
-    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"', [HeaderMagic, String(Header.Magic), flFileName]);
+  if Header.FileMagic <> wbFileMagic then
+    raise Exception.CreateFmt('Expected File Magic %s, found %s in file "%s"',
+      [wbFileMagic, String(Header.FileMagic), flFileName]);
 
-  MasterFiles := Header.ElementByName['Plugins'] as IwbContainerElementRef;
+  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].Value;
@@ -14979,10 +14960,10 @@ begin
   Result := CompareFile;
 end;
 
-procedure TwbSaveFile.Scan;
+procedure TwbFileSource.Scan;
 var
   CurrentPtr  : Pointer;
-  Header      : IwbSaveHeader;
+  Header      : IwbFileHeader;
   MasterFiles : IwbContainerElementRef;
   i           : Integer;
   ExtractInfo : TByteSet;
@@ -14998,24 +14979,25 @@ begin
   wbBaseOffset := Cardinal(flView);
 
   CurrentPtr := flView;
-  TwbSaveHeader.Create(Self, CurrentPtr, flEndPtr, SaveFileHeader, '', False);
+  TwbFileHeader.Create(Self, CurrentPtr, flEndPtr, wbFileHeader, '', False);
 
-  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbSaveHeader, Header) then
+  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.Magic <> HeaderMagic then
-    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"', [HeaderMagic, String(Header.Magic), flFileName]);
+  if Header.FileMagic <> wbFileMagic then
+    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"',
+      [wbFileMagic, String(Header.FileMagic), flFileName]);
 
   if fsOnlyHeader in flStates then
     Exit;
 
-  MasterFiles := Header.ElementByName['Plugins'] as IwbContainerElementRef;
+  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].Value;
       if FileExists(fPath) then
         AddMaster(fPath)
-      else begin
+      else if wbUseFalsePlugins then begin
         fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
           AddMaster(CreateTemporaryCopy(fPath, MasterFiles[i].Value), True);
@@ -15030,14 +15012,14 @@ begin
   else
     ExtractInfo := [];
 
-  for i := 0 to Pred(SaveFileChapters.MemberCount) do begin
-    case SaveFileChapters.Members[i].DefType of
-      dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
-      dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
-      dtStructChapter: Element := TwbSaveAddressable.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
-      dtUnion: Element := TwbUnion.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+  for i := 0 to Pred(wbFileChapters.MemberCount) do begin
+    case wbFileChapters.Members[i].DefType of
+      dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+      dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+      dtStructChapter: Element := TwbChapter.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+      dtUnion: Element := TwbUnion.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
     else
-      Element := TwbValue.Create(Self, currentPtr, flEndPtr, SaveFileChapters.Members[i], '');
+      Element := TwbValue.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
     end;
     if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
       with Element as TwbContainer do DoInit;
@@ -15047,9 +15029,9 @@ begin
   flLoadFinished := True;
 end;
 
-{ TwbSaveStruct }
+{ TwbFileHeader }
 
-function TwbSaveHeader.GetMagic: TwbSaveMagic;
+function TwbFileHeader.GetFileMagic: TwbFileMagic;
 var
   Element : IwbElement;
   Container : IwbContainer;
@@ -15061,45 +15043,50 @@ begin
     Result := Element.NativeValue;
 end;
 
-{ TwbSaveAddressable }
+{ TwbChapter }
 
-constructor TwbSaveAddressable.Create(const aContainer  : IwbContainer;
-                                  const aValueDef   : IwbValueDef;
-                                  const aSource     : IwbElement;
-                                  const aOnlySK     : Boolean;
-                                  const aNameSuffix : string);
+constructor TwbChapter.Create(const aContainer  : IwbContainer;
+                              const aValueDef   : IwbValueDef;
+                              const aSource     : IwbElement;
+                              const aOnlySK     : Boolean;
+                              const aNameSuffix : string);
 var
   Dummy : Integer;
 begin
+  if Assigned(aValueDef) then
+    Assert(Supports(aValueDef, IwbStructCDef));
   inherited;
-  chapterSkipped := chapterSkipped or ChaptersToSkip.Find(aValueDef.Name, Dummy);
+  cChapterSkipped := cChapterSkipped or ChaptersToSkip.Find(aValueDef.Name, Dummy);
 end;
 
-function TwbSaveAddressable.GetElementType: TwbElementType;
+function TwbChapter.GetChapterType: Integer;
+var
+  Struct : IwbStructCDef;
+begin
+  Result := -1;
+  if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
+    Result := Struct.GetChapterType(dcBasePtr, dcEndPtr, Self);
+end;
+
+function TwbChapter.GetChapterTypeName: String;
+var
+  Struct : IwbStructCDef;
+begin
+  if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
+    Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self))
+  else
+    Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self));
+end;
+
+function TwbChapter.GetElementType: TwbElementType;
 begin
   Result := etStructChapter;
 end;
 
-function TwbSaveAddressable.GetSkipped: Boolean;
+function TwbChapter.GetSkipped: Boolean;
 begin
-  Result := chapterSkipped;
+  Result := cChapterSkipped;
 end;
-
-function TwbSaveAddressable.GetType: Integer;
-var
-  aElement   : IwbElement;
-  aContainer : IwbContainer;
-begin
-  Result := -1;
-  Supports(Self, IwbContainer, aContainer);
-  aElement := aContainer.ElementByName['Type']; // hardcoded !! BAD !! GlobalData
-  if not Assigned(aElement) then
-    aElement :=  aContainer.ElementByPath['..\..\..\Type']; // hardcoded !! EVEN WORSE !! Changed Form
-  if Assigned(aElement) then
-    Result := aElement.NativeValue;
-end;
-
-{ TwbSaveChapter }
 
 initialization
   wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);

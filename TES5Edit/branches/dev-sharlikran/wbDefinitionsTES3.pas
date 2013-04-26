@@ -1882,7 +1882,7 @@ end;
 
 procedure DefineTES3;
 begin
-  HeaderSignature := 'TES3';
+  wbHeaderSignature := 'TES3';
   
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',

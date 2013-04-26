@@ -7,7 +7,7 @@
 		<AppType>Application</AppType>
 		<FrameworkType>VCL</FrameworkType>
 		<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-        <ProjectVersion>14.3</ProjectVersion>
+		<ProjectVersion>13.4</ProjectVersion>
 		<Platform Condition="'$(Platform)'==''">Win32</Platform>
 		<TargetedPlatforms>1</TargetedPlatforms>
 		<Platform>Win32</Platform>
@@ -242,8 +242,8 @@
 					<VersionInfoKeys Name="Comments"/>
 				</VersionInfoKeys>
 				<Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+					<Excluded_Packages Name="$(BDSBIN)\dclofficexp150.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 				</Excluded_Packages>
 			</Delphi.Personality>
 			<Platforms>
