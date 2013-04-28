@@ -54,7 +54,7 @@ object frmOptions: TfrmOptions
       end
       object cbIKnow: TCheckBox
         Left = 304
-        Top = 15
+        Top = 38
         Width = 137
         Height = 17
         Caption = 'I know what I am doing'
@@ -115,6 +115,14 @@ object frmOptions: TfrmOptions
         Width = 51
         Height = 21
         TabOrder = 7
+      end
+      object cbAutoSave: TCheckBox
+        Left = 304
+        Top = 15
+        Width = 81
+        Height = 17
+        Caption = 'Auto save'
+        TabOrder = 8
       end
     end
     object tsCleaning: TTabSheet

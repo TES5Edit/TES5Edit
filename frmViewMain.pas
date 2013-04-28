@@ -588,6 +588,7 @@ type
     ForceTerminate: Boolean;
     ModGroups: TStringList;
     Settings: TMemIniFile;
+    AutoSave: Boolean;
 
     FilterPreset: Boolean; // new: flag to skip filter window
     FilterApplied: Boolean;
@@ -2899,6 +2900,7 @@ begin
   wbHideUnused := True;
   wbFlagsAsArray := True;
   wbRequireLoadOrder := True;
+  AutoSave := False;
 
   vstNav.NodeDataSize := SizeOf(TNavNodeData);
   vstView.DragImageKind := diDragColumnOnly;
@@ -3351,6 +3353,8 @@ begin
   FlattenCellChilds := Settings.ReadBool('Filter', 'FlattenCellChilds', False);
   AssignPersWrldChild := Settings.ReadBool('Filter', 'AssignPersWrldChild', False);
   InheritConflictByParent := Settings.ReadBool('Filter', 'InheritConflictByParent', True);
+
+  AutoSave := Settings.ReadBool('Options', 'AutoSave', AutoSave);
 
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
@@ -4004,6 +4008,8 @@ begin
       fs.Seek(0, soFromEnd);
     end else
       fs := TFileStream.Create(s, fmCreate);
+    if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+      fs.Size := 0;
     txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
     fs.WriteBuffer(txt[1], Length(txt));
   finally
@@ -5931,6 +5937,7 @@ begin
     //pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
+    tmrCheckUnsaved.Enabled := True;
   end;
 end;
 
@@ -9532,6 +9539,7 @@ begin
     cbSortFLST.Checked := wbSortFLST;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
+    cbAutoSave.Checked := AutoSave;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9551,6 +9559,7 @@ begin
     wbSortFLST := cbSortFLST.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
+    AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9560,6 +9569,7 @@ begin
     wbUDRSetMSTT := cbUDRSetMSTT.Checked;
     wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
 
+    Settings.WriteBool('Options', 'AutoSave', AutoSave);
     Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
     Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
@@ -11097,6 +11107,9 @@ begin
     end;
 
   end;
+
+  if not AutoSave then
+    Exit;
 
   if vstView.IsEditing then
     Exit;
