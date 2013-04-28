@@ -11074,7 +11074,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim');
+    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion', 'Skyrim');
 begin
   if not wbLoaderDone then
     Exit;

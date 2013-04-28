@@ -30,9 +30,9 @@ uses
   Zlibex;
 
 var
-  RecordToSkip : TStringList;
-  GroupToSkip  : TStringList;
-  SubRecordOrderList     : TStringList;
+  RecordToSkip       : TStringList;
+  GroupToSkip        : TStringList;
+  SubRecordOrderList : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
@@ -4545,7 +4545,8 @@ procedure TwbContainer.SortBySortOrder;
 begin
   SetModified(True);
   if Length(cntElements) > 1 then begin
-    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+//    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+    QuickSort(@cntElements[0], Low(cntElements)+GetAdditionalElementCount, High(cntElements), CompareSortOrder);
     InvalidateStorage;
   end;
 end;
@@ -13106,30 +13107,31 @@ begin
     t := ValueDef.Name;
     if t = '' then
       t := aContainer.Def.Name;
-    if SameText(t, 'Unknown') then for i := 0 to 3 do begin
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
-    end;
+    if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) then
+      for i := 0 to 3 do begin
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
+      end;
   end;
 
   i := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
