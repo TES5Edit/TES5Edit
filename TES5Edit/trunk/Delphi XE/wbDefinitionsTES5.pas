@@ -11917,7 +11917,7 @@ begin
     wbStruct(XNDP, 'Navigation Door Link', [
       wbFormIDCk('Navigation Mesh', [NAVM]),
       wbInteger('Teleport Marker Triangle', itS16),
-      wbByteArray('Unknown', 2)
+      wbByteArray('Unused', 2, cpIgnore)
     ]),
 
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
