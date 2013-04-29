@@ -6845,6 +6845,7 @@ procedure DefineTES5c;
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+      wbXLOD,
       wbXSCL,
       wbDataPosRot
     ], True, wbPlacedAddInfo);
@@ -12030,6 +12031,7 @@ begin
     ], []),
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbXLOD,
     wbDataPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
