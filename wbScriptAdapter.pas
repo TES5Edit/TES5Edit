@@ -929,6 +929,11 @@ begin
   Value := wbContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
 end;
 
+procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbContainerHandler.ResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+end;
+
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
@@ -1113,9 +1118,10 @@ begin
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
 
-    { wbContainerHandler }
+    { IwbContainerHandler }
     AddFunction(cUnit, 'ResourceExists', IwbContainerHandler_ResourceExists, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCount', IwbContainerHandler_ResourceCount, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceList', IwbContainerHandler_ResourceList, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCopy', IwbContainerHandler_ResourceCopy, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
