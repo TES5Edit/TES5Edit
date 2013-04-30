@@ -16,6 +16,7 @@ uses
   Variants,
   CheckLst,
   ExtCtrls,
+  ShellApi,
   wbInterface;
 
 { Missing code }
@@ -130,6 +131,18 @@ procedure JvInterpreter_StringOfChar(var Value: Variant; Args: TJvInterpreterArg
 begin
   if Length(String(Args.Values[0])) > 0 then
     Value := StringOfChar(String(Args.Values[0])[1], Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_ShellExecute(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  ShellExecute(
+    Args.Values[0],
+    PWideChar(String(Args.Values[1])),
+    PWideChar(String(Args.Values[2])),
+    PWideChar(String(Args.Values[3])),
+    PWideChar(String(Args.Values[4])),
+    Args.Values[5]
+  );
 end;
 
 
@@ -333,6 +346,18 @@ begin
     AddConst('ExtCtrls', 'lpBelow', Ord(lpBelow));
     AddConst('ExtCtrls', 'lpLeft', Ord(lpLeft));
     AddConst('ExtCtrls', 'lpRight', Ord(lpRight));
+    AddConst('Windows', 'SW_HIDE', Ord(SW_HIDE));
+    AddConst('Windows', 'SW_MAXIMIZE', Ord(SW_MAXIMIZE));
+    AddConst('Windows', 'SW_MINIMIZE', Ord(SW_MINIMIZE));
+    AddConst('Windows', 'SW_RESTORE', Ord(SW_RESTORE));
+    AddConst('Windows', 'SW_SHOW', Ord(SW_SHOW));
+    AddConst('Windows', 'SW_SHOWDEFAULT', Ord(SW_SHOWDEFAULT));
+    AddConst('Windows', 'SW_SHOWMAXIMIZED', Ord(SW_SHOWMAXIMIZED));
+    AddConst('Windows', 'SW_SHOWMINIMIZED', Ord(SW_SHOWMINIMIZED));
+    AddConst('Windows', 'SW_SHOWMINNOACTIVE', Ord(SW_SHOWMINNOACTIVE));
+    AddConst('Windows', 'SW_SHOWNA', Ord(SW_SHOWNA));
+    AddConst('Windows', 'SW_SHOWNOACTIVATE', Ord(SW_SHOWNOACTIVATE));
+    AddConst('Windows', 'SW_SHOWNORMAL', Ord(SW_SHOWNORMAL));
 
     AddFunction('SysUtils', 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
     AddFunction('SysUtils', 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
@@ -349,6 +374,7 @@ begin
     AddFunction('SysUtils', 'ForceDirectories', JvInterpreter_ForceDirectories, 1, [varEmpty], varEmpty);
     AddFunction('System', 'StringOfChar', JvInterpreter_StringOfChar, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Windows', 'CopyFile', JvInterpreter_CopyFile, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
