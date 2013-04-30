@@ -5509,6 +5509,10 @@ begin
     Value := FilterApplied;
     Done := True;
   end else
+  if SameText(Identifier, 'frmMain') and (Args.Count = 0) then begin
+    Value := O2V(frmMain);
+    Done := True;
+  end else
   if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       PostAddMessage(Args.Values[0]);

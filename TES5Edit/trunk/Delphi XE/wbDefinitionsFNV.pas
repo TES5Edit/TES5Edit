@@ -5633,7 +5633,7 @@ begin
       {0x01} 'Is Interior Cell',
       {0x02} 'Has water',
       {0x04} 'Invert Fast Travel behavior',
-      {0x08} 'Force hide land (exterior cell) / Oblivion interior (interior cell)',
+      {0x08} 'No LOD Water',
       {0x10} '',
       {0x20} 'Public place',
       {0x40} 'Hand changed',
