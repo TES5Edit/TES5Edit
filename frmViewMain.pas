@@ -272,6 +272,7 @@ type
     mniViewPreviousMember: TMenuItem;
     mniViewHeaderJumpTo: TMenuItem;
     acScript: TAction;
+    mniViewOpenFrom: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -480,6 +481,7 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
+    procedure mniViewOpenFromClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -656,6 +658,8 @@ type
 
     ScriptProcessElements: TwbElementTypes;
     ScriptHotkeys: TStringList;
+
+    OpenFromAsset: string;
 
 //    STATsWithWindows: TStringList;
 
@@ -2729,7 +2733,7 @@ begin
   slESP := TStringList.Create;
   try
     for i := 0 to List.Count - 1 do begin
-      IsESM := SameText(ExtractFileExt(List[i]), '.esm');
+      IsESM := IsFileESM(List[i]);
       if IsESM then
         slESM.Add(List[i])
       else
@@ -2753,8 +2757,8 @@ var
   FileDateTime1               : TDateTime;
   FileDateTime2               : TDateTime;
 begin
-  IsESM1 := SameText(ExtractFileExt(List[Index1]), '.esm');
-  IsESM2 := SameText(ExtractFileExt(List[Index2]), '.esm');
+  IsESM1 := IsFileESM(List[Index1]);
+  IsESM2 := IsFileESM(List[Index2]);
 
   if IsESM1 = IsESM2 then begin
 
@@ -2864,6 +2868,47 @@ begin
 end;
 
 procedure TfrmMain.DoInit;
+
+  // remove comments, empty lines and missing files from list
+  procedure FixLoadList(sl: TStrings);
+  var
+    i, j: integer;
+    s: string;
+  begin
+    for i := Pred(sl.Count) downto 0 do begin
+      s := Trim(sl.Strings[i]);
+      j := Pos('#', s);
+      if j > 0 then
+        System.Delete(s, j, High(Integer));
+      s := Trim(s);
+      if (s = '') or not FileExists(DataPath + s) then begin
+        sl.Delete(i);
+        Continue;
+      end;
+    end;
+  end;
+
+  // add missing plugin files to list
+  procedure AddMissingToLoadList(sl: TStrings);
+  var
+    F: TSearchRec;
+  begin
+    if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
+      repeat
+        if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
+          if SameText(F.Name, wbGameName + '.hardcoded.esp') then
+            DeleteFile(DataPath + F.Name)
+          else
+          if FindMatchText(sl, F.Name) < 0 then
+            sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+        end;
+      until FindNext(F) <> 0;
+    finally
+      FindClose(F);
+    end;
+  end;
+
+
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
@@ -3022,61 +3067,56 @@ begin
 
       with TfrmFileSelect.Create(nil) do try
 
-        if wbGameMode = gmTES5 then begin
-          // Skyrim doesn't use timestamps anymore, only plugins.txt
-          // check if there is a BOSS plugins list present and use it
+        {
+           *** Load order handling for Skyrim ***
+           Plugins are sorted by the order in plugins.txt
+           1. Load plugins list from plugins file
+           2. Add missing files from BOSS list loadorder.txt
+           3. Add missing files from Data folder
+        }
+        if wbGameMode in [gmTES5] then begin
+          sl.LoadFromFile(PluginsFileName);
+          FixLoadList(sl);
+          // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
+          // even if not present in plugins.txt
+          j := FindMatchText(sl, 'Skyrim.esm');
+          if j = -1 then sl.Insert(0, 'Skyrim.esm');
+          j := FindMatchText(sl, 'Update.esm');
+          if j = -1 then sl.Insert(1, 'Update.esm');
+
           s := ExtractFilePath(PluginsFileName) + 'loadorder.txt';
           if FileExists(s) then begin
             AddMessage('Found BOSS load order list: ' + s);
-            sl.LoadFromFile(s)
-          end else
-            sl.LoadFromFile(PluginsFileName);
-
-          for i := Pred(sl.Count) downto 0 do begin
-            s := Trim(sl.Strings[i]);
-            j := Pos('#', s);
-            if j > 0 then
-              System.Delete(s, j, High(Integer));
-            s := Trim(s);
-            if (s = '') or not FileExists(DataPath + s) then begin
-              sl.Delete(i);
-              Continue;
+            sl2 := TStringList.Create;
+            try
+              sl2.LoadFromFile(s);
+              // skip first line "Skyrim.esm" in BOSS list
+              for i := 1 to Pred(sl2.Count) do begin
+                j := FindMatchText(sl, sl2[i]);
+                // if plugin exists in plugins file, skip
+                if j <> -1 then Continue;
+                // otherwise insert it after position of previous plugin
+                j := FindMatchText(sl, sl2[i-1]);
+                if j <> -1 then
+                  sl.Insert(j+1, sl2[i]);
+              end;
+            finally
+              sl2.Free;
             end;
           end;
-        end;
+          AddMissingToLoadList(sl);
+          PluginListGroupESM(sl)
+        end
 
-        // plugins list for Oblivion, Fallout3, FNV with timestamps
-        // Skyrim: add missing plugins that are in Data folder
-        if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
-          repeat
-            s := ExtractFileExt(F.Name);
-            if SameText(s, '.esm') or SameText(s, '.esp') or ContainsText(F.Name, '.esp.ghost') then begin
-              if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-                DeleteFile(DataPath + F.Name)
-              else
-              if FindMatchText(sl, F.Name) < 0 then
-                sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
-            end;
-          until FindNext(F) <> 0;
-        finally
-          FindClose(F);
-        end;
-
-        if wbGameMode = gmTES5 then begin
-          // Skyrim: load order is no longer sorted by timestamp
-          PluginListGroupESM(sl);
-
-          // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
-          // even if plugins.txt is empty
-          j := FindMatchText(sl, 'Skyrim.esm');
-          if j > 0 then
-            sl.Move(j, 0);
-
-          j := FindMatchText(sl, 'Update.esm');
-          if j > 1 then
-            sl.Move(j, 1);
-        end else
+        else
+        {
+           *** Load order handling for Oblivion, Fallout3 and New Vegas ***
+           Plugins are sorted by timestamps
+        }
+        begin
+          AddMissingToLoadList(sl);
           sl.CustomSort(PluginListCompare);
+        end;
 
         if wbMasterUpdate and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
           Age := Integer(sl.Objects[0]);
@@ -9621,6 +9661,26 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
+var
+  From, FileName, TempPath: string;
+begin
+  From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  if SameText(From, 'data\') then
+    FileName := DataPath + OpenFromAsset
+  // extract file from BSA
+  else begin
+    FileName := ProgramPath + 'Temp\' + From + '\' + OpenFromAsset;
+    if not FileExists(FileName) then begin
+      TempPath := ExtractFilePath(FileName);
+      if ForceDirectories(TempPath) then
+        wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
+    end;
+  end;
+  if FileExists(FileName) then
+    ShellExecute(Handle, 'open', PWideChar(FileName), nil, nil, SW_SHOW);
+end;
+
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -10083,9 +10143,12 @@ procedure TfrmMain.pmuViewPopup(Sender: TObject);
 var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
+  Value, s                    : string;
+  sl                          : TStringList;
+  MenuItem                    : TMenuItem;
 
   TargetNode                  : PVirtualNode;
-  TargetIndex                 : Integer;
+  TargetIndex, i              : Integer;
   TargetElement               : IwbElement;
 begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
@@ -10093,6 +10156,7 @@ begin
   mniViewAdd.Visible := False;
   mniViewNextMember.Visible := False;
   mniViewPreviousMember.Visible := False;
+  mniViewOpenFrom.Visible := False;
   mniViewRemove.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
@@ -10126,6 +10190,44 @@ begin
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
+      // open file menu
+      if Assigned(Element) then
+         Value := Element.EditValue;
+      if Length(Value) > 4 then begin
+        s := ExtractFileExt(Value);
+        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') then begin
+          if Value[1] = '\' then
+            Delete(Value, 1, 1);
+          if SameText(Copy(Value, 1, 5), 'data\') then
+            Delete(Value, 1, 5);
+          if SameText(s, '.nif') and not SameText(Copy(Value, 1, 7), 'meshes\') then
+            Value := 'meshes\' + Value
+          else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
+            Value := 'textures\' + Value
+          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') then
+            Value := 'sound\' + Value;
+          mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
+          if mniViewOpenFrom.Visible then begin
+            mniViewOpenFrom.Clear;
+            sl := TStringList.Create;
+            try
+              wbContainerHandler.ResourceCount(Value, sl);
+              for i := 0 to Pred(sl.Count) do begin
+                MenuItem := TMenuItem.Create(mniViewOpenFrom);
+                s := ExtractFileName(sl[i]);
+                if s = '' then s := 'Data\';
+                MenuItem.Caption := s;
+                MenuItem.Tag := i; // container index
+                MenuItem.OnClick := mniViewOpenFromClick;
+                mniViewOpenFrom.Add(MenuItem);
+              end;
+              OpenFromAsset := Value;
+            finally
+              sl.Free;
+            end;
+          end;
+        end;
+      end;
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
