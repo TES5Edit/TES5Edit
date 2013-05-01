@@ -211,6 +211,19 @@ Q: I have the following errors with one of my plugins what do I do?
 
 A: I have seen that occur with plugins made with the ReProccer, NPC Editor, and older buggy versions of TESVSnip.  Usually TESVSnip 4.2 or 4.3.x.  TESVSnip never used the proper compression which is ZLib so the files are improperly compressed or they were left uncompressed.  No matter how the plugin was made it will cause issues durring game play.  You can either continue to use them but they may cause game instability, report the errors to the author so they can be addressed, or uninstall them.
 
+Q: I get have the following Errors when cleaning the official Bethesda Plugins.  Should I be worried about them?
+
+[size=2]<Warning: Unused data in: \ [00] Skyrim.esm \ [58] GRUP Top "WRLD" \ [11] GRUP World Children of CWTestHold "Avoidance Exterior" [WRLD:0001B44A] \ [2] GRUP Exterior Cell Block 0, 0 \ [0] GRUP Exterior Cell Sub-Block 0, 0 \ [18] TestCWHoldStart [CELL:0001B513] (in CWTestHold "Avoidance Exterior" [WRLD:0001B44A] at 0,0) \ [3] DATA - Flags>
+<Warning: Unused data in: \ [00] Skyrim.esm \ [58] GRUP Top "WRLD" \ [11] GRUP World Children of CWTestHold "Avoidance Exterior" [WRLD:0001B44A] \ [0] [CELL:0001B4C6] (in CWTestHold "Avoidance Exterior" [WRLD:0001B44A] at 0,0) \ [2] DATA - Flags>[/size]
+
+A: Those are just warnings.  Some of the Bethesda records contain older outdated information from initial release.  They are 2 old cell records in Skyrim.esm using oblivion like flags. (1 byte instead of 2)  Those records will be overwritten with the proper values by other Bethesda Files or mods made with the Construction Kit.
+
+Q: How do I force TES5Edit to save a file?
+A: CTRL+S
+
+Q: I am getting random crashes.  I see that you don't troubleshoot plugins but can you offer any advice?
+A: Nothing more then the typical stuff: 1) Disable all SkyProc type plugins such as ReProccer, ASIS, AV, and such because they are not made with the CK. 2) 
+
 ToDo List:
 
 Update Miax’s Tome of FO3Edit to be TES5Edit's documentation.
