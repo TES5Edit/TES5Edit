@@ -2968,7 +2968,6 @@ begin
 
       with TfrmFileSelect.Create(nil) do try
 
-        sl.LoadFromFile(wbPluginsFileName);
         if wbGameMode in [gmTES5] then begin
           {
              *** Load order handling for Skyrim ***
@@ -2977,6 +2976,7 @@ begin
              2. Add missing files from BOSS list loadorder.txt
              3. Add missing files from Data folder
           }
+          sl.LoadFromFile(wbPluginsFileName);
           FixLoadList(sl);
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
