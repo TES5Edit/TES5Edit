@@ -180,6 +180,11 @@ begin
 end;
 {==============================================================================}
 
+function isMode(aMode: String): Boolean;
+begin
+  Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
+end;
+
 var
   NeedsSyntaxInfo : Boolean;
   s, s2           : string;
@@ -200,19 +205,19 @@ begin
   StartTime := Now;
 
   try
-    if wbFindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+    if isMode('FNV') then begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineFNV;
-    end else if wbFindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
+    end else if isMode('FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineFO3;
-    end else if wbFindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+    end else if isMode('TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
       Exit;
       wbGameMode := gmTES3;
@@ -220,20 +225,20 @@ begin
       wbGameName := 'Morrowind';
       wbLoadBSAs := false;
       DefineTES3;
-    end else if wbFindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
+    end else if isMode('TES4') then begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
       wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
       DefineTES4;
-    end else if wbFindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+    end else if isMode('TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
       wbLoadBSAs := true;
       DefineTES5;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to select mode.');
+      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, TES4, TES5 to select game.');
       Exit;
     end;
 

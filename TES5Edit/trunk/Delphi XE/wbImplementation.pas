@@ -343,7 +343,7 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
-    procedure SortBySortOrder;
+    procedure SortBySortOrder; virtual;
     procedure CreatedEmpty;
 
     function Reached: Boolean; override;
@@ -646,6 +646,7 @@ type
     function GetSignature: TwbSignature;
     procedure ScanData; virtual; abstract;
     procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); virtual;
+    procedure SortBySortOrder; override;
   public
     class function CreateForPtr(var aPtr            : Pointer;
                                     aEndPtr         : Pointer;
@@ -4628,6 +4629,15 @@ end;
 procedure TwbRecord.InformPrevMainRecord(const aPrevMainRecord: IwbMainRecord);
 begin
   {can be overriden}
+end;
+
+procedure TwbRecord.SortBySortOrder;
+begin
+  SetModified(True);
+  if Length(cntElements) > 1 then begin
+    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+    InvalidateStorage;
+  end;
 end;
 
 function TwbRecord.GetSignature: TwbSignature;

@@ -103,13 +103,18 @@ begin
   end;
 end;
 
+function isMode(aMode: String): Boolean;
+begin
+  Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
+end;
+
 procedure wbDoInit;
 var
   s: string;
 begin
   wbReportMode := False;
 
-  if FindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+  if IsMode('FNV') then begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
@@ -117,8 +122,7 @@ begin
     wbLoadBSAs := False;
     ReadSettings;
     DefineFNV;
-  end else
-  if FindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
+  end else if IsMode('FO3') then begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
@@ -126,7 +130,7 @@ begin
     wbLoadBSAs := False;
     ReadSettings;
     DefineFO3;
-  end else if FindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+  end else if IsMode('TES3') then begin
     ShowMessage('TES3 - Morrowind is not supported yet.');
     Exit;
     wbGameMode := gmTES3;
@@ -136,7 +140,7 @@ begin
     wbAllowInternalEdit := false;
     ReadSettings;
     DefineTES3;
-  end else if FindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
+  end else if IsMode('TES4') then begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
@@ -144,7 +148,7 @@ begin
     wbAllowInternalEdit := false;
     ReadSettings;
     DefineTES4;
-  end else if FindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+  end else if IsMode('TES5') then begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
@@ -157,7 +161,7 @@ begin
     ReadSettings;
     DefineTES5;
   end else begin
-    ShowMessage('Application name must start with FNV, FO3, TES4 or TES5 to select mode.');
+    ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
     Exit;
   end;
 
@@ -182,7 +186,7 @@ begin
     wbShowInternalEdit := False;
 
   wbApplicationTitle := wbAppName + 'View ' + VersionString;
-  if FindCmdLineSwitch('lodgen') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'LODGen.exe') then begin
+  if IsMode('lodgen') then begin
     if wbGameMode <> gmTES4 then begin
       ShowMessage('LODGen mode is only possible for TES4.');
       Exit;
@@ -197,7 +201,7 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := True;
     wbBuildRefs := False;
-  end else if FindCmdLineSwitch('masterupdate') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'MasterUpdate.exe') then begin
+  end else if IsMode('masterupdate') then begin
     if not (wbGameMode in [gmFO3, gmFNV]) then begin
       ShowMessage('MasterUpdate mode is only possible for FO3 and FNV.');
       Exit;
@@ -216,7 +220,7 @@ begin
       wbMasterUpdateFixPersistence := True
     else if FindCmdLineSwitch('NoFixPersistence') then
       wbMasterUpdateFixPersistence := False;
-  end else if FindCmdLineSwitch('masterrestore') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'MasterRestore.exe') then begin
+  end else if IsMode('masterrestore') then begin
     if not (wbGameMode in [gmFO3, gmFNV]) then begin
       ShowMessage('MasterRestore mode is only possible for FO3 and FNV.');
       Exit;
@@ -230,10 +234,10 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := False;
     wbBuildRefs := False;
-  end else if FindCmdLineSwitch('edit') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'Edit.exe') then begin
+  end else if IsMode('edit') then begin
     wbApplicationTitle := wbAppName + 'Edit ' + VersionString;
     wbEditAllowed := True;
-  end else if FindCmdLineSwitch('translate') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'Trans.exe') then begin
+  end else if IsMode('translate') then begin
     wbApplicationTitle := wbAppName + 'Trans ' + VersionString;
     wbEditAllowed := True;
     wbTranslationMode := True;
