@@ -148,11 +148,7 @@ end;
 
 
 {==============================================================================}
-function wbFindCmdLineSwitch(const aSwitch: string): Boolean;
-begin
-  Result := FindCmdLineSwitch(aSwitch, ['-', '/'], True);
-end;
-{------------------------------------------------------------------------------}
+
 function wbFindCmdLineParam(const aSwitch     : string;
                             const aChars      : TSysCharSet;
                                   aIgnoreCase : Boolean;
@@ -260,7 +256,7 @@ end;
 
 function isMode(aMode: String): Boolean;
 begin
-  Result := wbFindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
+  Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
 end;
 
 function isFormatValid(aFormatName: String): Boolean;
@@ -315,7 +311,7 @@ begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
-      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       if not (wbToolMode in [tmDump]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
@@ -329,7 +325,7 @@ begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
-      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       if not (wbToolMode in [tmDump]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
@@ -339,7 +335,7 @@ begin
         Exit;
       end;
       DefineFO3;
-    end else if wbFindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+    end else if isMode('TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
       Exit;
       wbGameMode := gmTES3;
@@ -359,7 +355,7 @@ begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
-      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       if not (wbToolMode in [tmDump]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
@@ -387,14 +383,13 @@ begin
         tsPlugins: DefineTES5;
       end;
     end else begin
-      WriteLn(ErrOutput, 'Application name must start with FNV, FO3, TES4, TES5 to');
-      WriteLn(ErrOutput, 'select mode.');
+      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, TES4, TES5 to select game.');
       Exit;
     end;
 
     DoInitPath;
 
-    if not wbFindCmdLineSwitch('q') and not wbReportMode then begin
+    if not FindCmdLineSwitch('q') and not wbReportMode then begin
       WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString);
       WriteLn(ErrOutput);
 
@@ -426,9 +421,9 @@ begin
       DumpChapters.Sort;
     end;
 
-    wbLoadAllBSAs := wbFindCmdLineSwitch('allbsa');
+    wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
 
-    if wbFindCmdLineSwitch('more') then
+    if FindCmdLineSwitch('more') then
       wbMoreInfoForUnknown:= True
     else
       wbMoreInfoForUnknown:= False;
@@ -438,7 +433,7 @@ begin
 
     if wbFindCmdLineParam('xg', s) then
       GroupToSkip.CommaText := s
-    else if wbFindCmdLineSwitch('xbloat') then begin
+    else if FindCmdLineSwitch('xbloat') then begin
       GroupToSkip.Add('LAND');
       GroupToSkip.Add('REGN');
       GroupToSkip.Add('PGRD');
@@ -452,7 +447,7 @@ begin
 
     if wbFindCmdLineParam('xc', s) then
       ChaptersToSkip.CommaText := s
-    else if wbFindCmdLineSwitch('xcbloat') then begin
+    else if FindCmdLineSwitch('xcbloat') then begin
       ChaptersToSkip.Add('1001');
     end;
 
@@ -488,7 +483,7 @@ begin
       NeedsSyntaxInfo := True;
     end;
 
-    if NeedsSyntaxInfo or (ParamCount < 1) or wbFindCmdLineSwitch('?') or wbFindCmdLineSwitch('help') then begin
+    if NeedsSyntaxInfo or (ParamCount < 1) or FindCmdLineSwitch('?') or FindCmdLineSwitch('help') then begin
       WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
       WriteLn(ErrOutput, '  or     '+wbAppName+'Export [options] format');
       WriteLn(ErrOutput);
@@ -615,7 +610,7 @@ begin
 
     ReportProgress('Finished loading record. Starting Dump.');
 
-    if wbFindCmdLineSwitch('check') and not wbReportMode then
+    if FindCmdLineSwitch('check') and not wbReportMode then
       CheckForErrors(0, _File)
     else
       WriteContainer(_File);

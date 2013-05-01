@@ -114,6 +114,11 @@ var
 //  wbRotationScale : Integer = 6;
 
   wbDataPath: string;
+  wbTheGameIniFileName : String;
+  wbProgramPath        : string;
+  wbScriptsPath        : string;
+  wbMyGamesTheGamePath : string;
+  wbPluginsFileName    : String;
 
 type
   TConflictAll = (
@@ -1445,6 +1450,7 @@ type
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
+    procedure ResourceList(const aList: TStrings);
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     property Name: string
@@ -1478,6 +1484,7 @@ type
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+    procedure ResourceList(const aContainerName: string; aContainers: TStrings);
     procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
@@ -1805,14 +1812,14 @@ function wbArray(const aName     : string;
                        aDontShow : TwbDontShowCallback = nil)
                                  : IwbArrayDef; overload;
 
-function wbArray(const aName     : string;
-                 const aElement  : IwbValueDef;
-                       aCount    : Integer;
+function wbArray(const aName      : string;
+                 const aElement   : IwbValueDef;
+                       aCount     : Integer;
                        aAfterLoad : TwbAfterLoadCallback;
-                       aPriority : TwbConflictPriority = cpNormal;
-                       aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil)
-                                 : IwbArrayDef; overload;
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil)
+                                  : IwbArrayDef; overload;
 
 function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
@@ -2357,7 +2364,7 @@ var
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport);
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate);
   TwbToolSource = (tsPlugins, tsSaves);
 
 var

@@ -24,6 +24,8 @@ function wbDistance(const a, b: TD3DXVector3): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
+function IsFileESM(const aFileName: string): Boolean;
+function IsFileESP(const aFileName: string): Boolean;
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -208,6 +210,23 @@ begin
       Exit;
   Result := -1;
 end;
+
+function IsFileESM(const aFileName: string): Boolean;
+const
+  ghostesm = '.esm.ghost';
+begin
+  Result := SameText(ExtractFileExt(aFileName), '.esm') or
+    SameText(Copy(aFileName, Length(aFileName) - Length(ghostesm) + 1, Length(ghostesm)), ghostesm)
+end;
+
+function IsFileESP(const aFileName: string): Boolean;
+const
+  ghostesp = '.esp.ghost';
+begin
+  Result := SameText(ExtractFileExt(aFileName), '.esp') or
+    SameText(Copy(aFileName, Length(aFileName) - Length(ghostesp) + 1, Length(ghostesp)), ghostesp)
+end;
+
 
 { TnxFastStringList }
 
