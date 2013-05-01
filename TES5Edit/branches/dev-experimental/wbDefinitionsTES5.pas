@@ -6849,6 +6849,7 @@ procedure DefineTES5c;
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+      wbXLOD,
       wbXSCL,
       wbDataPosRot
     ], True, wbPlacedAddInfo);
@@ -11923,7 +11924,7 @@ begin
     wbStruct(XNDP, 'Navigation Door Link', [
       wbFormIDCk('Navigation Mesh', [NAVM]),
       wbInteger('Teleport Marker Triangle', itS16),
-      wbByteArray('Unknown', 2)
+      wbByteArray('Unused', 2, cpIgnore)
     ]),
 
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
@@ -12036,6 +12037,7 @@ begin
     ], []),
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbXLOD,
     wbDataPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 

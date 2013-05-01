@@ -54,6 +54,7 @@ type
     function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+    procedure ResourceList(const aContainerName: string; aList: TStrings);
     procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
@@ -93,6 +94,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
+    procedure ResourceList(const aList: TStrings);
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBSAFile---}
@@ -129,6 +131,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
+    procedure ResourceList(const aList: TStrings);
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbFolder---}
@@ -219,6 +222,17 @@ begin
       Inc(Result);
       if Assigned(aContainers) then
         aContainers.Add(chContainers[i].Name);
+    end;
+end;
+
+procedure TwbContainerHandler.ResourceList(const aContainerName: string; aList: TStrings);
+var
+  i: Integer;
+begin
+  for i := Low(chContainers) to High(chContainers) do
+    if SameText(chContainers[i].Name, aContainerName) then begin
+      chContainers[i].ResourceList(aList);
+      Break;
     end;
 end;
 
@@ -335,6 +349,17 @@ begin
   lName := ExtractFileName(aFileName);
   if bfFolderMap.Find(lPath, i) then
     Result := bfFolders[Integer(bfFolderMap.Objects[i])].Map.IndexOf(lName) <> -1;
+end;
+
+procedure TwbBSAFile.ResourceList(const aList: TStrings);
+var
+  i, j: Integer;
+begin
+  if not Assigned(aList) then
+    Exit;
+  for i := Low(bfFolders) to High(bfFolders) do with bfFolders[i] do
+    for j := Low(Files) to High(Files) do
+      aList.Add(Name + '\' + Files[j].Name);
 end;
 
 procedure TwbBSAFile.ReadDirectory;
@@ -525,6 +550,13 @@ end;
 function TwbFolder.ResourceExists(const aFileName: string): Boolean;
 begin
   Result := FileExists(fPath + aFileName);
+end;
+
+procedure TwbFolder.ResourceList(const aList: TStrings);
+begin
+  if not Assigned(aList) then
+    Exit;
+  // TO DO: recursively scan all folders...
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);

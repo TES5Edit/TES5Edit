@@ -38,6 +38,7 @@ type
     cbSimpleRecords: TCheckBox;
     Label5: TLabel;
     edColumnWidth: TEdit;
+    cbAutoSave: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
