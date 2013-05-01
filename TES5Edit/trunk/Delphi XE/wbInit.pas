@@ -230,7 +230,7 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := False;
     wbBuildRefs := False;
-  end else if FindCmdLineSwitch('edit') or (Pos('Edit', ExtractFileName(ParamStr(0)))>0) then begin
+  end else if FindCmdLineSwitch('edit') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'Edit.exe') then begin
     wbApplicationTitle := wbAppName + 'Edit ' + VersionString;
     wbEditAllowed := True;
   end else if FindCmdLineSwitch('translate') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'Trans.exe') then begin
