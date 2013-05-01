@@ -10141,15 +10141,16 @@ end;
 
 procedure TfrmMain.pmuViewPopup(Sender: TObject);
 var
-  NodeDatas                   : PViewNodeDatas;
-  Element                     : IwbElement;
-  Value, s                    : string;
-  sl                          : TStringList;
-  MenuItem                    : TMenuItem;
-
-  TargetNode                  : PVirtualNode;
-  TargetIndex, i              : Integer;
-  TargetElement               : IwbElement;
+  NodeDatas     : PViewNodeDatas;
+  Element       : IwbElement;
+  Value         : string;
+  s             : string;
+  sl            : TStringList;
+  MenuItem      : TMenuItem;
+  TargetNode    : PVirtualNode;
+  TargetIndex   : Integer;
+  i             : Integer;
+  TargetElement : IwbElement;
 begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
   mniViewEdit.Visible := False;
@@ -10192,7 +10193,9 @@ begin
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       // open file menu
       if Assigned(Element) then
-         Value := Element.EditValue;
+         Value := Element.EditValue
+      else
+        Value := '';
       if Length(Value) > 4 then begin
         s := ExtractFileExt(Value);
         if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') then begin

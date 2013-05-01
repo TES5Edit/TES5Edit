@@ -114,7 +114,7 @@ var
 begin
   wbReportMode := False;
 
-  if IsMode('FNV') then begin
+  if isMode('FNV') then begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
@@ -122,7 +122,7 @@ begin
     wbLoadBSAs := False;
     ReadSettings;
     DefineFNV;
-  end else if IsMode('FO3') then begin
+  end else if isMode('FO3') then begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
@@ -130,7 +130,7 @@ begin
     wbLoadBSAs := False;
     ReadSettings;
     DefineFO3;
-  end else if IsMode('TES3') then begin
+  end else if isMode('TES3') then begin
     ShowMessage('TES3 - Morrowind is not supported yet.');
     Exit;
     wbGameMode := gmTES3;
@@ -140,7 +140,7 @@ begin
     wbAllowInternalEdit := false;
     ReadSettings;
     DefineTES3;
-  end else if IsMode('TES4') then begin
+  end else if isMode('TES4') then begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
@@ -148,7 +148,7 @@ begin
     wbAllowInternalEdit := false;
     ReadSettings;
     DefineTES4;
-  end else if IsMode('TES5') then begin
+  end else if isMode('TES5') then begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
@@ -186,7 +186,7 @@ begin
     wbShowInternalEdit := False;
 
   wbApplicationTitle := wbAppName + 'View ' + VersionString;
-  if IsMode('lodgen') then begin
+  if isMode('lodgen') then begin
     if wbGameMode <> gmTES4 then begin
       ShowMessage('LODGen mode is only possible for TES4.');
       Exit;
@@ -201,7 +201,7 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := True;
     wbBuildRefs := False;
-  end else if IsMode('masterupdate') then begin
+  end else if isMode('masterupdate') then begin
     if not (wbGameMode in [gmFO3, gmFNV]) then begin
       ShowMessage('MasterUpdate mode is only possible for FO3 and FNV.');
       Exit;
@@ -220,7 +220,7 @@ begin
       wbMasterUpdateFixPersistence := True
     else if FindCmdLineSwitch('NoFixPersistence') then
       wbMasterUpdateFixPersistence := False;
-  end else if IsMode('masterrestore') then begin
+  end else if isMode('masterrestore') then begin
     if not (wbGameMode in [gmFO3, gmFNV]) then begin
       ShowMessage('MasterRestore mode is only possible for FO3 and FNV.');
       Exit;
@@ -234,10 +234,10 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := False;
     wbBuildRefs := False;
-  end else if IsMode('edit') then begin
+  end else if isMode('edit') then begin
     wbApplicationTitle := wbAppName + 'Edit ' + VersionString;
     wbEditAllowed := True;
-  end else if IsMode('translate') then begin
+  end else if isMode('translate') then begin
     wbApplicationTitle := wbAppName + 'Trans ' + VersionString;
     wbEditAllowed := True;
     wbTranslationMode := True;
