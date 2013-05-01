@@ -186,7 +186,7 @@ function wbFindCmdLineParam(const aSwitch : string;
                               out aValue  : string)
                                           : Boolean; overload;
 begin
-  Result := wbFindCmdLineParam(aSwitch, ['-', '/'], True, aValue);
+  Result := wbFindCmdLineParam(aSwitch, SwitchChars, True, aValue);
 end;
 {==============================================================================}
 
@@ -212,11 +212,11 @@ end;
 
 procedure DoInitPath;
 const
-  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+  sBethRegKey   = '\SOFTWARE\Bethesda Softworks\';
+  sBethRegKey64 = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
-  ProgramPath  : String;
-  DataPath     : String;
+  ProgramPath : String;
+  DataPath    : String;
 begin
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
@@ -231,7 +231,6 @@ begin
           ReportProgress('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
           if wbGameMode = gmTES5 then
             ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
-          wbDontSave := True;
           Exit;
         end;
 
@@ -241,7 +240,6 @@ begin
         ReportProgress('Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
         if wbGameMode = gmTES5 then
           ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
-        wbDontSave := True;
       end;
     finally
       Free;
@@ -468,14 +466,14 @@ begin
 
     NeedsSyntaxInfo := False;
     if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
-      if s[1] in ['-', '/'] then
+      if s[1] in SwitchChars then
         WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
       else
         WriteLn(ErrOutput, 'Can''t find the file "',s,'". Please check the command line parameters.');
       WriteLn;
       NeedsSyntaxInfo := True;
     end else if (wbToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
-      if s[1] in ['-', '/'] then
+      if s[1] in SwitchChars then
         WriteLn(ErrOutput, 'No format was specified. Please check the command line parameters.')
       else
         WriteLn(ErrOutput, 'Cannot handle the format "',s,'". Please check the command line parameters.');

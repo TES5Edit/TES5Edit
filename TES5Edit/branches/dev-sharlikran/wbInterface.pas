@@ -72,16 +72,8 @@ var
   wbUDRSetMSTT: Boolean = True;
   wbUDRSetMSTTValue: Int64 = $0000003B; { XMarker }
 
-  wbMasterUpdate: Boolean;
-  wbMasterUpdateDone: Boolean;
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
-  wbDontSave: Boolean;
-  wbDontBackup: Boolean{} = False;{}
-  wbMasterRestore: Boolean;
-
-  wbLODGen: Boolean;
-
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
@@ -113,12 +105,7 @@ var
 //  wbRotationFactor : Extended = 1;
 //  wbRotationScale : Integer = 6;
 
-  wbDataPath: string;
-  wbTheGameIniFileName : String;
-  wbProgramPath        : string;
-  wbScriptsPath        : string;
-  wbMyGamesTheGamePath : string;
-  wbPluginsFileName    : String;
+  wbDataPath : string;
 
 type
   TConflictAll = (
@@ -7254,7 +7241,6 @@ begin
     wbProgressCallback('Found a struct with a negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+
       ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-    Result := 0;
   end else
     for i := Low(stMembers) to High(stMembers) do begin
       Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
