@@ -2995,16 +2995,10 @@ begin
               // hlp: I have seen (and done) edits to loadorder.txt which had something other than skyrim.esm as the first entry :)
               //   was trying to work around an issue with "OBMM" at the time if I remember correctly
               FixLoadList(sl2, True);
-              if (sl2.Count>0) and SameText('Skyrim.esm', sl2[0]) then
-                if (sl2.Count>0) and SameText('Update.esm', sl2[0]) then
-                  j := 2
-                else
-                  j := 1
+              if (sl2.Count>0) and (SameText('Skyrim.esm', sl2[0]) or SameText('Update.esm', sl2[0])) then
+                j := 1
               else
-                if (sl2.Count>0) and SameText('Update.esm', sl2[0]) then
-                  j := 1
-                else
-                  j := 0;
+                j := 0;
 
               for i := j to Pred(sl2.Count) do begin
                 j := FindMatchText(sl, sl2[i]);
