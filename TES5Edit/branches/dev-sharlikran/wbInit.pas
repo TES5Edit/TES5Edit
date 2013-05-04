@@ -262,14 +262,14 @@ begin
 
   wbEditAllowed := True;
   wbDontSave    := False;
-  if isMode('Edit') then begin
-    wbToolMode    := tmEdit;
-    wbToolName    := 'Edit';
-  end else if isMode('View') then begin
+  if isMode('View') then begin
     wbToolMode    := tmView;
     wbToolName    := 'View';
     wbEditAllowed := False;
     wbDontSave    := True;
+  end else if isMode('Edit') then begin
+    wbToolMode    := tmEdit;
+    wbToolName    := 'Edit';
   end else if isMode('MasterUpdate') then begin
     wbToolMode    := tmMasterUpdate;
     wbToolName    := 'MasterUpdate';
