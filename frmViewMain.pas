@@ -22,6 +22,7 @@ uses
   Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
   AppEvnts,
   ShellAPI,
+  IOUtils,
   Actions,
   pngimage,
   VirtualTrees,
@@ -809,6 +810,7 @@ var
 
   DataPath                    : string;
   ProgramPath                 : string;
+  wbTempPath                  : string;
   ScriptsPath                 : string;
   MyGamesTheGamePath          : string;
   FilesToRename               : TStringList;
@@ -2968,6 +2970,7 @@ begin
 
   ModGroups := TStringList.Create;
 
+  wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit');
   DataPath := CheckAppPath;
 
   if DataPath = '' then with TRegistry.Create do try
@@ -4056,6 +4059,7 @@ begin
     if Assigned(fs) then
       FreeAndNil(fs);
   end;
+  DeleteDirectory(wbTempPath); // remove temp folder
 
   BackHistory := nil;
   ForwardHistory := nil;
@@ -9666,13 +9670,14 @@ var
   From, FileName, TempPath: string;
 begin
   From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  if SameText(From, 'data\') then
-    FileName := DataPath + OpenFromAsset
-  // extract file from BSA
-  else begin
-    FileName := ProgramPath + 'Temp\' + From + '\' + OpenFromAsset;
+  if not SameText(ExtractFileExt(From), '.bsa') then begin
+    FileName := DataPath + OpenFromAsset;
+    From := 'Data';
+  end else begin
+    // extract file from BSA
+    TempPath := wbTempPath + From + '\';
+    FileName := TempPath + OpenFromAsset;
     if not FileExists(FileName) then begin
-      TempPath := ExtractFilePath(FileName);
       if ForceDirectories(TempPath) then
         wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
     end;
@@ -10198,7 +10203,7 @@ begin
         Value := '';
       if Length(Value) > 4 then begin
         s := ExtractFileExt(Value);
-        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') then begin
+        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') or SameText(s, '.mp3') then begin
           if Value[1] = '\' then
             Delete(Value, 1, 1);
           if SameText(Copy(Value, 1, 5), 'data\') then
@@ -10207,8 +10212,10 @@ begin
             Value := 'meshes\' + Value
           else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
             Value := 'textures\' + Value
-          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') then
-            Value := 'sound\' + Value;
+          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'sound\' + Value
+          else if SameText(s, '.mp3') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'music\' + Value;
           mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
           if mniViewOpenFrom.Visible then begin
             mniViewOpenFrom.Clear;
@@ -10218,7 +10225,7 @@ begin
               for i := 0 to Pred(sl.Count) do begin
                 MenuItem := TMenuItem.Create(mniViewOpenFrom);
                 s := ExtractFileName(sl[i]);
-                if s = '' then s := 'Data\';
+                if s = '' then s := 'Data\' + Value;
                 MenuItem.Caption := s;
                 MenuItem.Tag := i; // container index
                 MenuItem.OnClick := mniViewOpenFromClick;

@@ -17,7 +17,7 @@ unit wbHelpers;
 interface
 
 uses
-  Classes,
+  Classes, ShellAPI,
   wbInterface, Direct3D9, D3DX9, DXTypes;
 
 function wbDistance(const a, b: TD3DXVector3): Single; overload
@@ -26,6 +26,7 @@ function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Si
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
 function IsFileESM(const aFileName: string): Boolean;
 function IsFileESP(const aFileName: string): Boolean;
+procedure DeleteDirectory(const DirName: string);
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -227,6 +228,16 @@ begin
     SameText(Copy(aFileName, Length(aFileName) - Length(ghostesp) + 1, Length(ghostesp)), ghostesp)
 end;
 
+procedure DeleteDirectory(const DirName: string);
+var
+  FileOp: TSHFileOpStruct;
+begin
+  FillChar(FileOp, SizeOf(FileOp), 0);
+  FileOp.wFunc := FO_DELETE;
+  FileOp.pFrom := PChar(DirName+#0);//double zero-terminated
+  FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
+  SHFileOperation(FileOp);
+end;
 
 { TnxFastStringList }
 
