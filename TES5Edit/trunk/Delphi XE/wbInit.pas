@@ -234,6 +234,10 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := False;
     wbBuildRefs := False;
+  end else if isMode('view') then begin
+    wbApplicationTitle := wbAppName + 'View ' + VersionString;
+    wbEditAllowed := False;
+    wbDontSave := True;
   end else if isMode('edit') then begin
     wbApplicationTitle := wbAppName + 'Edit ' + VersionString;
     wbEditAllowed := True;
