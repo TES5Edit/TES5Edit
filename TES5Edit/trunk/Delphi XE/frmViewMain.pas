@@ -17,9 +17,25 @@ unit frmViewMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
-  Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
+  Windows,
+  Messages,
+  SysUtils,
+  Variants,
+  Classes,
+  Graphics,
+  Controls,
+  Forms,
+  Dialogs,
+  ExtCtrls,
+  ComCtrls,
+  StdCtrls,
+  Menus,
+  Math,
+  IniFiles,
+  TypInfo,
+  ActiveX,
+  Buttons,
+  ActnList,
   AppEvnts,
   ShellAPI,
   IOUtils,
@@ -28,12 +44,6 @@ uses
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
-  wbInterface,
-  wbImplementation,
-  wbBSA,
-  wbNifScanner,
-  wbHelpers,
-  wbLocalization,
   Direct3D9,
   D3DX9,
   {$IFDEF DX3D}
@@ -41,7 +51,14 @@ uses
   DXUT,
   {$ENDIF DX3D}
   JvComponentBase,
-  JvInterpreter;
+  JvInterpreter,
+  wbInterface,
+  wbImplementation,
+  wbBSA,
+  wbNifScanner,
+  wbHelpers,
+  wbInit,
+  wbLocalization;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -2924,6 +2941,8 @@ var
   Age                         : Integer;
   AgeDateTime                 : TDateTime;
 begin
+  while not wbInitDone do;
+
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
   ScriptsPath := ProgramPath + 'Edit Scripts\';
 
@@ -2999,7 +3018,7 @@ begin
     Free;
   end;
 
-  AddMessage(wbAppName + 'Edit ' + VersionString + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+  AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
   DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
   wbDataPath := DataPath;
@@ -3082,8 +3101,8 @@ begin
           FixLoadList(sl);
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
-          j := FindMatchText(sl, 'Skyrim.esm');
-          if j = -1 then sl.Insert(0, 'Skyrim.esm');
+          j := FindMatchText(sl, wbGameName+'.esm');
+          if j = -1 then sl.Insert(0, wbGameName+'.esm');
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
 
