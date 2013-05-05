@@ -17,7 +17,8 @@ unit wbInit;
 interface
 
 var
-  wbApplicationTitle: string;
+  wbApplicationTitle : string;
+  wbInitDone         : Boolean = False;
 
 procedure wbDoInit;
 
@@ -255,6 +256,8 @@ begin
     wbFixupPGRD := True;
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
+
+  wbInitDone := True;
 end;
 
 initialization
