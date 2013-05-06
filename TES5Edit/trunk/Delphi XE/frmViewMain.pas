@@ -2907,21 +2907,29 @@ procedure TfrmMain.DoInit;
     end;
   end;
 
-  // add missing plugin files to list
+  // add missing plugin files to list sorted by timestamps
   procedure AddMissingToLoadList(sl: TStrings);
   var
-    F: TSearchRec;
+    F     : TSearchRec;
+    slNew : TStringList;
   begin
     if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
-      repeat
-        if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
-          if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-            DeleteFile(DataPath + F.Name)
-          else
-          if FindMatchText(sl, F.Name) < 0 then
-            sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
-        end;
-      until FindNext(F) <> 0;
+      slNew := TStringList.Create;
+      try
+        repeat
+          if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
+            if SameText(F.Name, wbGameName + '.hardcoded.esp') then
+              DeleteFile(DataPath + F.Name)
+            else
+            if FindMatchText(sl, F.Name) < 0 then
+              slNew.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+          end;
+        until FindNext(F) <> 0;
+        slNew.CustomSort(PluginListCompare);
+        sl.AddStrings(slNew);
+      finally
+        slNew.Free;
+      end;
     finally
       FindClose(F);
     end;
@@ -2941,7 +2949,7 @@ var
   Age                         : Integer;
   AgeDateTime                 : TDateTime;
 begin
-  while not wbInitDone do;
+  while not wbInitDone do Sleep(10);
 
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
   ScriptsPath := ProgramPath + 'Edit Scripts\';
@@ -3137,7 +3145,6 @@ begin
         }
         begin
           AddMissingToLoadList(sl);
-          sl.CustomSort(PluginListCompare);
         end;
 
         if wbMasterUpdate and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
@@ -5554,6 +5561,10 @@ begin
   end else
   if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
+    Value := O2V(wbRecordDefMap);
     Done := True;
   end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
