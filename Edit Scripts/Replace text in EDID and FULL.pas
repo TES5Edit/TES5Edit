@@ -33,8 +33,6 @@ begin
 end;
 
 function Process(e: IInterface): integer;
-var
-  EditorID: IInterface;
 begin
   SearchAndReplace(ElementBySignature(e, 'EDID'), StrSearch, StrReplace);
   SearchAndReplace(ElementBySignature(e, 'FULL'), StrSearch, StrReplace);
