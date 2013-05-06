@@ -86,10 +86,12 @@ begin
 end;
 
 const
-  UESPWikiTable = '{| class="wikitable" width="100%"'+#13+#10+
-    '! width="20%" | Name'+#13+#10+
-    '! width="20%" | [[Tes5Mod:File Format Conventions|Type/Size]]'+#13+#10+
-    '! width="60%" | Info';
+  UESPWikiTable = '{| class="wikitable" border="1" width="100%"'+#13+#10+
+  '! width="3%" | [[Tes5Mod:File Format Conventions|C]]'+#13+#10+
+  '! width="10%" | SubRecord'+#13+#10+
+  '! width="15%" | Name'+#13+#10+
+  '! width="15%" | [[Tes5Mod:File Format Conventions|Type/Size]]'+#13+#10+
+  '! width="57%" | Info';
   UESPWikiClose ='|}'+#13+#10;
 
 function AnchorProfile(aFormat: TExportFormat; aIndent, aProfile: String; useProfile: Boolean; aName, aType: String): String;
