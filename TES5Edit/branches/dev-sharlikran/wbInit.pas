@@ -22,6 +22,7 @@ var
   wbProgramPath        : string;
   wbScriptsPath        : string;
   wbBackupPath         : string;
+  wbTempPath           : string;
   wbMyGamesTheGamePath : string;
   wbPluginsFileName    : String;
   wbSettingsFileName   : string;
@@ -30,6 +31,8 @@ var
   wbMasterUpdateDone : Boolean;
   wbDontSave         : Boolean;
   wbDontBackup       : Boolean = False;
+  wbInitDone         : Boolean = False;
+  wbRemoveTempPath   : Boolean = True;
 
 procedure wbDoInit;
 
@@ -42,6 +45,7 @@ uses
   ShellApi,
   Dialogs,
   ShlObj,
+  IOUtils,
   IniFiles,
   wbInterface,
   wbImplementation,
@@ -152,6 +156,11 @@ begin
   if not wbFindCmdLineParam('S', wbScriptsPath) then
     wbScriptsPath := wbProgramPath + 'Edit Scripts\';
 
+  if not wbFindCmdLineParam('T', wbTempPath) then
+    wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
+  else
+    wbRemoveTempPath := not DirectoryExists(wbTempPath);
+
   if not wbFindCmdLineParam('D', wbDataPath) then begin
     wbDataPath := CheckAppPath;
 
@@ -239,17 +248,10 @@ begin
     Result := False;
 end;
 
-var
-  InitDone : Boolean = False;
-
 procedure wbDoInit;
 var
   s: string;
 begin
-  if InitDone then
-    Exit;
-  InitDone := True;
-
   wbReportMode := False;
 
   if isMode('Saves') then begin
@@ -450,8 +452,11 @@ begin
     wbFixupPGRD := True;
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
+
+  wbInitDone := True;
 end;
 
 initialization
   wbDoInit;
+
 end.

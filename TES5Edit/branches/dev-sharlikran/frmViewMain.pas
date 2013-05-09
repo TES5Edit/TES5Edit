@@ -2858,21 +2858,29 @@ procedure TfrmMain.DoInit;
     end;
   end;
 
-  // add missing plugin files to list
+  // add missing plugin files to list sorted by timestamps
   procedure AddMissingToLoadList(sl: TStrings);
   var
-    F: TSearchRec;
+    F     : TSearchRec;
+    slNew : TStringList;
   begin
-    if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
-      repeat
-        if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
-          if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-            DeleteFile(wbDataPath + F.Name)
-          else
-          if FindMatchText(sl, F.Name) < 0 then
-            sl.AddObject(F.Name, TObject(FileAge(wbDataPath + F.Name)));
-        end;
-      until FindNext(F) <> 0;
+    if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
+      slNew := TStringList.Create;
+      try
+        repeat
+          if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
+            if SameText(F.Name, wbGameName + '.hardcoded.esp') then
+              DeleteFile(DataPath + F.Name)
+            else
+            if FindMatchText(sl, F.Name) < 0 then
+              slNew.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+          end;
+        until FindNext(F) <> 0;
+        slNew.CustomSort(PluginListCompare);
+        sl.AddStrings(slNew);
+      finally
+        slNew.Free;
+      end;
     finally
       FindClose(F);
     end;
@@ -2888,7 +2896,9 @@ var
   AgeDateTime  : TDateTime;
 
 begin
-  SetDoubleBuffered(Self);
+  while not wbInitDone do Sleep(10);
+
+   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
 
@@ -2931,9 +2941,8 @@ begin
 
   ModGroups := TStringList.Create;
 
-  wbDoInit;
 
-  AddMessage(wbAppName + wbToolName+' ' + VersionString + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+  AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
   AddMessage('Using '+wbGameName+' Data Path: ' + wbDataPath);
 
@@ -2968,20 +2977,20 @@ begin
 
       with TfrmFileSelect.Create(nil) do try
 
+        {
+           *** Load order handling for Skyrim ***
+           Plugins are sorted by the order in plugins.txt
+           1. Load plugins list from plugins file
+           2. Add missing files from BOSS list loadorder.txt
+           3. Add missing files from Data folder
+        }
         if wbGameMode in [gmTES5] then begin
-          {
-             *** Load order handling for Skyrim ***
-             Plugins are sorted by the order in plugins.txt
-             1. Load plugins list from plugins file
-             2. Add missing files from BOSS list loadorder.txt
-             3. Add missing files from Data folder
-          }
           sl.LoadFromFile(wbPluginsFileName);
           FixLoadList(sl);
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
-          j := FindMatchText(sl, 'Skyrim.esm');
-          if j = -1 then sl.Insert(0, 'Skyrim.esm');
+          j := FindMatchText(sl, wbGameName+'.esm');
+          if j = -1 then sl.Insert(0, wbGameName+'.esm');
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
 
@@ -2992,10 +3001,8 @@ begin
             try
               sl2.LoadFromFile(s);
               // skip first line "Skyrim.esm" in BOSS list
-              // hlp: I have seen (and done) edits to loadorder.txt which had something other than skyrim.esm as the first entry :)
-              //   was trying to work around an issue with "OBMM" at the time if I remember correctly
               FixLoadList(sl2, True);
-              if (sl2.Count>0) and (SameText('Skyrim.esm', sl2[0]) or SameText('Update.esm', sl2[0])) then
+              if (sl2.Count>0) and (SameText(wbGameName+'.esm', sl2[0]) or SameText('Update.esm', sl2[0])) then
                 j := 1
               else
                 j := 0;
@@ -3021,13 +3028,15 @@ begin
           end;
           AddMissingToLoadList(sl);
           PluginListGroupESM(sl)
-        end else begin
-          {
-             *** Load order handling for Oblivion, Fallout3 and New Vegas ***
-             Plugins are sorted by timestamps
-          }
+        end
+
+        else
+        {
+           *** Load order handling for Oblivion, Fallout3 and New Vegas ***
+           Plugins are sorted by timestamps
+        }
+        begin
           AddMissingToLoadList(sl);
-          sl.CustomSort(PluginListCompare);
         end;
 
         if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
@@ -3968,6 +3977,8 @@ begin
     if Assigned(fs) then
       FreeAndNil(fs);
   end;
+  if wbRemoveTempPath then
+    DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
   BackHistory := nil;
   ForwardHistory := nil;
@@ -5443,6 +5454,10 @@ begin
   end else
   if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
+    Value := O2V(wbRecordDefMap);
     Done := True;
   end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
@@ -9596,13 +9611,14 @@ var
   From, FileName, TempPath: string;
 begin
   From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  if SameText(From, 'data\') then
-    FileName := wbDataPath + OpenFromAsset
-  // extract file from BSA
-  else begin
-    FileName := wbProgramPath + 'Temp\' + From + '\' + OpenFromAsset;
+  if not SameText(ExtractFileExt(From), '.bsa') then begin
+    FileName := wbDataPath + OpenFromAsset;
+    From := 'Data';
+  end else begin
+    // extract file from BSA
+    TempPath := wbTempPath + From + '\';
+    FileName := TempPath + OpenFromAsset;
     if not FileExists(FileName) then begin
-      TempPath := ExtractFilePath(FileName);
       if ForceDirectories(TempPath) then
         wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
     end;
@@ -10128,7 +10144,7 @@ begin
         Value := '';
       if Length(Value) > 4 then begin
         s := ExtractFileExt(Value);
-        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') then begin
+        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') or SameText(s, '.mp3') then begin
           if Value[1] = '\' then
             Delete(Value, 1, 1);
           if SameText(Copy(Value, 1, 5), 'data\') then
@@ -10137,8 +10153,10 @@ begin
             Value := 'meshes\' + Value
           else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
             Value := 'textures\' + Value
-          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') then
-            Value := 'sound\' + Value;
+          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'sound\' + Value
+          else if SameText(s, '.mp3') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'music\' + Value;
           mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
           if mniViewOpenFrom.Visible then begin
             mniViewOpenFrom.Clear;
@@ -10148,7 +10166,7 @@ begin
               for i := 0 to Pred(sl.Count) do begin
                 MenuItem := TMenuItem.Create(mniViewOpenFrom);
                 s := ExtractFileName(sl[i]);
-                if s = '' then s := 'Data\';
+                if s = '' then s := 'Data\' + Value;
                 MenuItem.Caption := s;
                 MenuItem.Tag := i; // container index
                 MenuItem.OnClick := mniViewOpenFromClick;

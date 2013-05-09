@@ -671,6 +671,20 @@ begin
   end;
 end;
 
+function CheckParamPath: string; // for Dump, do we have bsa in the same directory
+var
+  s: string;
+  F : TSearchRec;
+begin
+  Result := '';
+  s := ParamStr(ParamCount);
+  s := ChangeFileExt(s, '*.bsa');
+  if FindFirst(s, faAnyfile, F)=0 then begin
+    Result := ExtractFilePath(ParamStr(ParamCount));
+    SysUtils.FindClose(F);
+  end;
+end;
+
 procedure DoInitPath;
 const
   sBethRegKey   = '\SOFTWARE\Bethesda Softworks\';
@@ -850,6 +864,8 @@ begin
     end;
 
     DoInitPath;
+    if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
+      wbDataPath := CheckParamPath;
 
     if FindCmdLineSwitch('report') then
       wbReportMode := True

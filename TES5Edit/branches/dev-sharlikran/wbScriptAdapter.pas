@@ -54,6 +54,22 @@ begin
   wbForceNewHeader := True;
 end;
 
+procedure GetRecordDefNames(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  sl: TStrings;
+  i: integer;
+begin
+  sl := TStrings(V2O(Args.Values[0]));
+
+  if not Assigned(sl) then
+    Exit;
+
+  for i := 0 to Pred(wbRecordDefMap.Count) do
+    with IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])) do
+      sl.Add(DefaultSignature + ' - ' + GetName);
+end;
+
+
 { IwbElement }
 
 procedure IwbElement_Name(var Value: Variant; Args: TJvInterpreterArgs);
@@ -499,6 +515,15 @@ begin
     Value := MainRecord.FormID;
 end;
 
+procedure IwbMainRecord_EditorID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.EditorID;
+end;
+
 procedure IwbMainRecord_FixedFormID(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
@@ -690,6 +715,14 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
     Value := MainRecord.WinningOverride;
+end;
+
+procedure IwbMainRecord_HighestOverrideOrSelf(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.HighestOverrideOrSelf[Integer(Args.Values[1])];
 end;
 
 procedure IwbMainRecord_CompareExchangeFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1012,6 +1045,7 @@ begin
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
+    AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
@@ -1067,6 +1101,7 @@ begin
     { IwbMainRecord }
     AddFunction(cUnit, 'Signature', IwbMainRecord_Signature, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FormID', IwbMainRecord_FormID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'EditorID', IwbMainRecord_EditorID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FixedFormID', IwbMainRecord_FixedFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrderFormID', IwbMainRecord_GetLoadOrderFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetLoadOrderFormID', IwbMainRecord_SetLoadOrderFormID, 2, [varEmpty, varEmpty], varEmpty);
@@ -1089,6 +1124,7 @@ begin
     AddFunction(cUnit, 'IsMaster', IwbMainRecord_IsMaster, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'IsWinningOverride', IwbMainRecord_IsWinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'WinningOverride', IwbMainRecord_WinningOverride, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'HighestOverrideOrSelf', IwbMainRecord_HighestOverrideOrSelf, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ChildGroup', IwbMainRecord_ChildGroup, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CompareExchangeFormID', IwbMainRecord_CompareExchangeFormID, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ChangeFormSignature', IwbMainRecord_ChangeFormSignature, 2, [varEmpty, varEmpty], varEmpty);
