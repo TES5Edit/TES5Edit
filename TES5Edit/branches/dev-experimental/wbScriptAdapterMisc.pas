@@ -14,33 +14,58 @@ uses
   Classes,
   SysUtils,
   Variants,
-  CheckLst,
+  StdCtrls,
   ExtCtrls,
+  CheckLst,
   ShellApi,
+  IniFiles,
+  Registry,
+  Math,
   wbInterface;
 
 { Missing code }
 
-procedure Pascal_Inc(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_Inc(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Inc(Args.Values[0]);
 end;
 
-procedure Pascal_Dec(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_Dec(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Dec(Args.Values[0]);
 end;
 
-procedure Pascal_Succ(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_Succ(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   // in JvInterpreter all ordinals are integers
   Value := Succ(Integer(Args.Values[0]));
 end;
 
-procedure Pascal_Pred(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_Pred(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := Pred(Integer(Args.Values[0]));
 end;
+
+procedure JvInterpreter_Frac(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Extended(Frac(Args.Values[0]));
+end;
+
+procedure JvInterpreter_Int(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Extended(Int(Args.Values[0]));
+end;
+
+procedure JvInterpreter_Floor(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Floor(Extended(Args.Values[0]));
+end;
+
+procedure JvInterpreter_Ceil(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Ceil(Extended(Args.Values[0]));
+end;
+
 
 
 { TStrings }
@@ -334,6 +359,125 @@ begin
 end;
 
 
+{ TCustomIniFile }
+
+procedure TCustomIniFile_ReadString(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomIniFile(Args.Obj).ReadString(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCustomIniFile_ReadInteger(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomIniFile(Args.Obj).ReadInteger(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCustomIniFile_ReadFloat(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomIniFile(Args.Obj).ReadFloat(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCustomIniFile_ReadBool(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomIniFile(Args.Obj).ReadBool(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCustomIniFile_WriteString(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).WriteString(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCustomIniFile_WriteInteger(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).WriteInteger(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCustomIniFile_WriteFloat(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).WriteFloat(Args.Values[0], Args.Values[1], Args.Values[2]);
+end;
+
+procedure TCustomIniFile_WriteBool(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).WriteBool(Args.Values[0], Args.Values[1], Args.Values[2])
+end;
+
+procedure TCustomIniFile_DeleteKey(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).DeleteKey(Args.Values[0], Args.Values[1]);
+end;
+
+procedure TCustomIniFile_EraseSection(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).EraseSection(Args.Values[0]);
+end;
+
+procedure TCustomIniFile_SectionExists(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomIniFile(Args.Obj).SectionExists(Args.Values[0]);
+end;
+
+procedure TCustomIniFile_ValueExists(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomIniFile(Args.Obj).ValueExists(Args.Values[0], Args.Values[1]);
+end;
+
+procedure TCustomIniFile_ReadSection(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).ReadSection(Args.Values[0], TStrings(V2O(Args.Values[1])));
+end;
+
+procedure TCustomIniFile_ReadSections(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).ReadSections(TStrings(V2O(Args.Values[0])));
+end;
+
+procedure TCustomIniFile_ReadSectionValues(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).ReadSectionValues(Args.Values[0], TStrings(V2O(Args.Values[1])));
+end;
+
+procedure TCustomIniFile_UpdateFile(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomIniFile(Args.Obj).UpdateFile;
+end;
+
+
+{ TIniFile }
+
+procedure TIniFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TIniFile.Create(String(Args.Values[0])));
+end;
+
+
+{ TMemIniFile }
+
+procedure TMemIniFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TMemIniFile.Create(String(Args.Values[0])));
+end;
+
+procedure TMemIniFile_GetStrings(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TMemIniFile(Args.Obj).GetStrings(TStrings(V2O(Args.Values[0])));
+end;
+
+procedure TMemIniFile_SetStrings(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TMemIniFile(Args.Obj).SetStrings(TStrings(V2O(Args.Values[0])));
+end;
+
+
+{ TRegistryIniFile }
+
+procedure TRegistryIniFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TRegistryIniFile.Create(String(Args.Values[0])));
+end;
+
+
+
+
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
   with JvInterpreterAdapter do begin
@@ -346,6 +490,9 @@ begin
     AddConst('ExtCtrls', 'lpBelow', Ord(lpBelow));
     AddConst('ExtCtrls', 'lpLeft', Ord(lpLeft));
     AddConst('ExtCtrls', 'lpRight', Ord(lpRight));
+    AddConst('StdCtrls', 'cbChecked', Ord(cbChecked));
+    AddConst('StdCtrls', 'cbUnchecked', Ord(cbUnchecked));
+    AddConst('StdCtrls', 'cbGrayed', Ord(cbGrayed));
     AddConst('Windows', 'SW_HIDE', Ord(SW_HIDE));
     AddConst('Windows', 'SW_MAXIMIZE', Ord(SW_MAXIMIZE));
     AddConst('Windows', 'SW_MINIMIZE', Ord(SW_MINIMIZE));
@@ -359,10 +506,14 @@ begin
     AddConst('Windows', 'SW_SHOWNOACTIVATE', Ord(SW_SHOWNOACTIVATE));
     AddConst('Windows', 'SW_SHOWNORMAL', Ord(SW_SHOWNORMAL));
 
-    AddFunction('SysUtils', 'Inc', Pascal_Inc, 1, [varByRef], varEmpty);
-    AddFunction('SysUtils', 'Dec', Pascal_Dec, 1, [varByRef], varEmpty);
-    AddFunction('SysUtils', 'Succ', Pascal_Succ, 1, [varEmpty], varEmpty);
-    AddFunction('SysUtils', 'Pred', Pascal_Pred, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'Inc', JvInterpreter_Inc, 1, [varByRef], varEmpty);
+    AddFunction('SysUtils', 'Dec', JvInterpreter_Dec, 1, [varByRef], varEmpty);
+    AddFunction('SysUtils', 'Succ', JvInterpreter_Succ, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'Pred', JvInterpreter_Pred, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'Frac', JvInterpreter_Frac, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'Int', JvInterpreter_Int, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Floor', JvInterpreter_Floor, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Ceil', JvInterpreter_Ceil, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
     AddFunction('SysUtils', 'StringReplace', JvInterpreter_StringReplace, 4, [varString, varString, varString, varEmpty], varEmpty);
     AddFunction('SysUtils', 'IntToHex64', JvInterpreter_IntToHex64, 2, [varEmpty, varEmpty], varEmpty);
@@ -406,14 +557,14 @@ begin
     AddClass('StdCtrls', TCheckListBox, 'TCheckListBox');
     AddGet(TCheckListBox, 'Create', TCheckListBox_Create, 1, [varEmpty], varEmpty);
     AddGet(TCheckListBox, 'CheckAll', TCheckListBox_CheckAll, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
-    AddGet(TCheckListBox, 'Checked', TCheckListBox_Read_Checked, 1, [varEmpty], varEmpty);
-    AddSet(TCheckListBox, 'Checked', TCheckListBox_Write_Checked, 1, [varNull]);
-    AddGet(TCheckListBox, 'State', TCheckListBox_Read_State, 1, [varEmpty], varEmpty);
-    AddSet(TCheckListBox, 'State', TCheckListBox_Write_State, 1, [varNull]);
-    AddGet(TCheckListBox, 'Header', TCheckListBox_Read_Header, 1, [varEmpty], varEmpty);
-    AddSet(TCheckListBox, 'Header', TCheckListBox_Write_Header, 1, [varNull]);
-    AddGet(TCheckListBox, 'ItemEnabled', TCheckListBox_Read_ItemEnabled, 1, [varEmpty], varEmpty);
-    AddSet(TCheckListBox, 'ItemEnabled', TCheckListBox_Write_ItemEnabled, 1, [varNull]);
+    AddIGet(TCheckListBox, 'Checked', TCheckListBox_Read_Checked, 1, [varEmpty], varEmpty);
+    AddISet(TCheckListBox, 'Checked', TCheckListBox_Write_Checked, 1, [varNull]);
+    AddIGet(TCheckListBox, 'State', TCheckListBox_Read_State, 1, [varEmpty], varEmpty);
+    AddISet(TCheckListBox, 'State', TCheckListBox_Write_State, 1, [varNull]);
+    AddIGet(TCheckListBox, 'Header', TCheckListBox_Read_Header, 1, [varEmpty], varEmpty);
+    AddISet(TCheckListBox, 'Header', TCheckListBox_Write_Header, 1, [varNull]);
+    AddIGet(TCheckListBox, 'ItemEnabled', TCheckListBox_Read_ItemEnabled, 1, [varEmpty], varEmpty);
+    AddISet(TCheckListBox, 'ItemEnabled', TCheckListBox_Write_ItemEnabled, 1, [varNull]);
     AddGet(TCheckListBox, 'AllowGrayed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
     AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
 
@@ -432,6 +583,40 @@ begin
 
     { TBoundLabel }
     AddClass('ExtCtrls', TBoundLabel, 'TBoundLabel');
+
+    { TCustomIniFile }
+    AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');
+    AddGet(TCustomIniFile, 'ReadString', TCustomIniFile_ReadString, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'ReadInteger', TCustomIniFile_ReadInteger, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'ReadFloat', TCustomIniFile_ReadFloat, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'ReadBool', TCustomIniFile_ReadBool, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'WriteString', TCustomIniFile_WriteString, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'WriteInteger', TCustomIniFile_WriteInteger, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'WriteFloat', TCustomIniFile_WriteFloat, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'WriteBool', TCustomIniFile_WriteBool, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'DeleteKey', TCustomIniFile_DeleteKey, 2, [varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'EraseSection', TCustomIniFile_EraseSection, 1, [varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'SectionExists', TCustomIniFile_SectionExists, 1, [varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'ValueExists', TCustomIniFile_ValueExists, 2, [varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'ReadSection', TCustomIniFile_ReadSection, 2, [varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'ReadSections', TCustomIniFile_ReadSections, 1, [varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'ReadSectionValues', TCustomIniFile_ReadSectionValues, 2, [varEmpty, varEmpty], varEmpty);
+    AddGet(TCustomIniFile, 'UpdateFile', TCustomIniFile_UpdateFile, 0, [varEmpty], varEmpty);
+
+    { TIniFile }
+    AddClass('IniFiles', TIniFile, 'TIniFile');
+    AddGet(TIniFile, 'Create', TIniFile_Create, 1, [varEmpty], varEmpty);
+
+    { TMemIniFile }
+    AddClass('IniFiles', TMemIniFile, 'TMemIniFile');
+    AddGet(TMemIniFile, 'Create', TMemIniFile_Create, 1, [varEmpty], varEmpty);
+    AddGet(TMemIniFile, 'GetStrings', TMemIniFile_GetStrings, 1, [varEmpty], varEmpty);
+    AddGet(TMemIniFile, 'SetStrings', TMemIniFile_SetStrings, 1, [varEmpty], varEmpty);
+
+    { TRegistryIniFile }
+    AddClass('Registry', TRegistryIniFile, 'TRegistryIniFile');
+    AddGet(TRegistryIniFile, 'Create', TRegistryIniFile_Create, 1, [varEmpty], varEmpty);
+
   end;
 end;
 

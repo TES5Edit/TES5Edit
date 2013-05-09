@@ -7201,7 +7201,6 @@ begin
   end;
   if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then begin // if aBasePtr >= aEndPtr then no allocation (or error)
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-    Result := 0;
   end else
     for i := Low(stMembers) to High(stMembers) do begin
       Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];

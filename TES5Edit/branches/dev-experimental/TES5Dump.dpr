@@ -30,7 +30,6 @@ uses
   Zlibex in 'Zlibex.pas',
   wbBSA in 'wbBSA.pas',
   wbInterface in 'wbInterface.pas',
-  wbSaveInterface in 'wbSaveInterface.pas',
   wbImplementation in 'wbImplementation.pas',
   wbLocalization in 'wbLocalization.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
@@ -173,7 +172,7 @@ function wbFindCmdLineParam(const aSwitch : string;
                               out aValue  : string)
                                           : Boolean; overload;
 begin
-  Result := wbFindCmdLineParam(aSwitch, ['-', '/'], True, aValue);
+  Result := wbFindCmdLineParam(aSwitch, SwitchChars, True, aValue);
 end;
 {==============================================================================}
 
@@ -197,13 +196,27 @@ begin
   end;
 end;
 
+function CheckParamPath: string; // for Dump, do we have bsa in the same directory
+var
+  s: string;
+  F : TSearchRec;
+begin
+  Result := '';
+  s := ParamStr(ParamCount);
+  s := ChangeFileExt(s, '*.bsa');
+  if FindFirst(s, faAnyfile, F)=0 then begin
+    Result := ExtractFilePath(ParamStr(ParamCount));
+    SysUtils.FindClose(F);
+  end;
+end;
+
 procedure DoInitPath;
 const
-  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+  sBethRegKey   = '\SOFTWARE\Bethesda Softworks\';
+  sBethRegKey64 = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
-  ProgramPath  : String;
-  DataPath     : String;
+  ProgramPath : String;
+  DataPath    : String;
 begin
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
@@ -218,7 +231,6 @@ begin
           ReportProgress('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
           if wbGameMode = gmTES5 then
             ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
-          wbDontSave := True;
           Exit;
         end;
 
@@ -228,7 +240,6 @@ begin
         ReportProgress('Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
         if wbGameMode = gmTES5 then
           ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
-        wbDontSave := True;
       end;
     finally
       Free;
@@ -369,6 +380,8 @@ begin
     end;
 
     DoInitPath;
+    if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
+      wbDataPath := CheckParamPath;
 
     if not FindCmdLineSwitch('q') and not wbReportMode then begin
       WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString);
@@ -430,14 +443,14 @@ begin
 
     NeedsSyntaxInfo := False;
     if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
-      if s[1] in ['-', '/'] then
+      if s[1] in SwitchChars then
         WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
       else
         WriteLn(ErrOutput, 'Can''t find the file "',s,'". Please check the command line parameters.');
       WriteLn;
       NeedsSyntaxInfo := True;
     end else if (wbToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
-      if s[1] in ['-', '/'] then
+      if s[1] in SwitchChars then
         WriteLn(ErrOutput, 'No format was specified. Please check the command line parameters.')
       else
         WriteLn(ErrOutput, 'Cannot handle the format "',s,'". Please check the command line parameters.');

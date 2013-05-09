@@ -17,22 +17,33 @@ unit frmViewMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
-  Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
+  Windows,
+  Messages,
+  SysUtils,
+  Variants,
+  Classes,
+  Graphics,
+  Controls,
+  Forms,
+  Dialogs,
+  ExtCtrls,
+  ComCtrls,
+  StdCtrls,
+  Menus,
+  Math,
+  IniFiles,
+  TypInfo,
+  ActiveX,
+  Buttons,
+  ActnList,
   AppEvnts,
   ShellAPI,
+  IOUtils,
   Actions,
   pngimage,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
-  wbInterface,
-  wbImplementation,
-  wbBSA,
-  wbNifScanner,
-  wbHelpers,
-  wbLocalization,
   Direct3D9,
   D3DX9,
   {$IFDEF DX3D}
@@ -40,7 +51,14 @@ uses
   DXUT,
   {$ENDIF DX3D}
   JvComponentBase,
-  JvInterpreter;
+  JvInterpreter,
+  wbInterface,
+  wbImplementation,
+  wbBSA,
+  wbNifScanner,
+  wbHelpers,
+  wbInit,
+  wbLocalization;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -809,6 +827,7 @@ var
 
   DataPath                    : string;
   ProgramPath                 : string;
+  wbTempPath                  : string;
   ScriptsPath                 : string;
   MyGamesTheGamePath          : string;
   FilesToRename               : TStringList;
@@ -2390,12 +2409,7 @@ var
 
         if IsFaultyOrderedList then begin
           PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
-        end else
-        // unsafe to copy VMAD subrecords to merged patch until they are decoded
-        {if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
-          PostAddMessage('Notice: Can''t merge for the winning record with scripts ' + MainRecord.Name);
-        end else}
-        begin
+        end else begin
           TargetRecord := nil;
           for l := Low(aListNames) to High(aListNames) do
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
@@ -2888,21 +2902,29 @@ procedure TfrmMain.DoInit;
     end;
   end;
 
-  // add missing plugin files to list
+  // add missing plugin files to list sorted by timestamps
   procedure AddMissingToLoadList(sl: TStrings);
   var
-    F: TSearchRec;
+    F     : TSearchRec;
+    slNew : TStringList;
   begin
     if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
-      repeat
-        if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
-          if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-            DeleteFile(DataPath + F.Name)
-          else
-          if FindMatchText(sl, F.Name) < 0 then
-            sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
-        end;
-      until FindNext(F) <> 0;
+      slNew := TStringList.Create;
+      try
+        repeat
+          if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
+            if SameText(F.Name, wbGameName + '.hardcoded.esp') then
+              DeleteFile(DataPath + F.Name)
+            else
+            if FindMatchText(sl, F.Name) < 0 then
+              slNew.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+          end;
+        until FindNext(F) <> 0;
+        slNew.CustomSort(PluginListCompare);
+        sl.AddStrings(slNew);
+      finally
+        slNew.Free;
+      end;
     finally
       FindClose(F);
     end;
@@ -2916,12 +2938,13 @@ var
   i, j, k                     : Integer;
   s                           : string;
   sl, sl2                     : TStringList;
-//  F                           : TSearchRec;
   ConflictAll                 : TConflictAll;
   ConflictThis                : TConflictThis;
   Age                         : Integer;
   AgeDateTime                 : TDateTime;
 begin
+  while not wbInitDone do Sleep(10);
+
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
   ScriptsPath := ProgramPath + 'Edit Scripts\';
 
@@ -2968,6 +2991,7 @@ begin
 
   ModGroups := TStringList.Create;
 
+  wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit');
   DataPath := CheckAppPath;
 
   if DataPath = '' then with TRegistry.Create do try
@@ -2996,7 +3020,7 @@ begin
     Free;
   end;
 
-  AddMessage(wbAppName + 'Edit ' + VersionString + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+  AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
   DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
   wbDataPath := DataPath;
@@ -3079,8 +3103,8 @@ begin
           FixLoadList(sl);
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
-          j := FindMatchText(sl, 'Skyrim.esm');
-          if j = -1 then sl.Insert(0, 'Skyrim.esm');
+          j := FindMatchText(sl, wbGameName+'.esm');
+          if j = -1 then sl.Insert(0, wbGameName+'.esm');
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
 
@@ -3115,7 +3139,6 @@ begin
         }
         begin
           AddMissingToLoadList(sl);
-          sl.CustomSort(PluginListCompare);
         end;
 
         if wbMasterUpdate and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
@@ -4056,6 +4079,7 @@ begin
     if Assigned(fs) then
       FreeAndNil(fs);
   end;
+  DeleteDirectory(wbTempPath); // remove temp folder
 
   BackHistory := nil;
   ForwardHistory := nil;
@@ -5531,6 +5555,10 @@ begin
   end else
   if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
+    Value := O2V(wbRecordDefMap);
     Done := True;
   end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
@@ -9684,13 +9712,14 @@ var
   From, FileName, TempPath: string;
 begin
   From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  if SameText(From, 'data\') then
-    FileName := DataPath + OpenFromAsset
-  // extract file from BSA
-  else begin
-    FileName := ProgramPath + 'Temp\' + From + '\' + OpenFromAsset;
+  if not SameText(ExtractFileExt(From), '.bsa') then begin
+    FileName := DataPath + OpenFromAsset;
+    From := 'Data';
+  end else begin
+    // extract file from BSA
+    TempPath := wbTempPath + From + '\';
+    FileName := TempPath + OpenFromAsset;
     if not FileExists(FileName) then begin
-      TempPath := ExtractFilePath(FileName);
       if ForceDirectories(TempPath) then
         wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
     end;
@@ -10216,7 +10245,7 @@ begin
         Value := '';
       if Length(Value) > 4 then begin
         s := ExtractFileExt(Value);
-        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') then begin
+        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') or SameText(s, '.mp3') then begin
           if Value[1] = '\' then
             Delete(Value, 1, 1);
           if SameText(Copy(Value, 1, 5), 'data\') then
@@ -10225,8 +10254,10 @@ begin
             Value := 'meshes\' + Value
           else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
             Value := 'textures\' + Value
-          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') then
-            Value := 'sound\' + Value;
+          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'sound\' + Value
+          else if SameText(s, '.mp3') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'music\' + Value;
           mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
           if mniViewOpenFrom.Visible then begin
             mniViewOpenFrom.Clear;
@@ -10236,7 +10267,7 @@ begin
               for i := 0 to Pred(sl.Count) do begin
                 MenuItem := TMenuItem.Create(mniViewOpenFrom);
                 s := ExtractFileName(sl[i]);
-                if s = '' then s := 'Data\';
+                if s = '' then s := 'Data\' + Value;
                 MenuItem.Caption := s;
                 MenuItem.Tag := i; // container index
                 MenuItem.OnClick := mniViewOpenFromClick;

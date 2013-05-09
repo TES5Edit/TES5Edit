@@ -17,7 +17,8 @@ unit wbInit;
 interface
 
 var
-  wbApplicationTitle: string;
+  wbApplicationTitle : string;
+  wbInitDone         : Boolean = False;
 
 procedure wbDoInit;
 
@@ -73,7 +74,7 @@ function wbFindCmdLineParam(const aSwitch : string;
                               out aValue  : string)
                                           : Boolean; overload;
 begin
-  Result := wbFindCmdLineParam(aSwitch, ['-', '/'], True, aValue);
+  Result := wbFindCmdLineParam(aSwitch, SwitchChars, True, aValue);
 end;
 
 // several ini settings should be read before record definitions
@@ -255,6 +256,8 @@ begin
     wbFixupPGRD := True;
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
+
+  wbInitDone := True;
 end;
 
 initialization

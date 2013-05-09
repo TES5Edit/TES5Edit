@@ -32,16 +32,16 @@ end;
 
 function Process(e: IInterface): integer;
 var
-  EditorID: IInterface;
+  elEditorID: IInterface;
 begin
   Result := 0;
   //AddMessage('Processing: ' + Name(e));
-  EditorID := ElementByName(e, 'EDID - Editor ID');
-  if Assigned(EditorID) then begin
+  elEditorID := ElementByName(e, 'EDID - Editor ID');
+  if Assigned(elEditorID) then begin
     if DoPrepend then
-      SetEditValue(EditorID, s + GetEditValue(EditorID))
+      SetEditValue(elEditorID, s + GetEditValue(elEditorID))
     else
-      SetEditValue(EditorID, GetEditValue(EditorID) + s);
+      SetEditValue(elEditorID, GetEditValue(elEditorID) + s);
   end;
 end;
 

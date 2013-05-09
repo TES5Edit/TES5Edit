@@ -39,6 +39,14 @@ implementation
 uses
   zlibEx;
 
+const
+  { https://github.com/Ethatron/bsaopt/blob/master/io/bsa.C }
+  BSAHEADER_VERSION_OB = $67; // Oblivion
+  BSAHEADER_VERSION_SK = $68; // Fallout3, Skyrim
+  BSAARCHIVE_COMPRESSFILES = $0004; // Whether the files are compressed in archive (invert file's compression flag)
+  BSAARCHIVE_PREFIXFULLFILENAMES = $0100; // Whether the name is prefixed to the data?
+  BSAFILE_COMPRESS = $40000000; // Whether the file is compressed
+
 type
   TwbContainerHandler = class(TInterfacedObject, IwbContainerHandler)
   private
@@ -245,7 +253,7 @@ begin
   if aPathOut = '' then
     raise Exception.Create('Destination path is not specified');
 
-  res := wbContainerHandler.OpenResource(aFileName);
+  res := OpenResource(aFileName);
 
   if Length(res) = 0 then
     raise Exception.Create('Resource doesn''t exist');
@@ -260,8 +268,9 @@ begin
       raise Exception.Create('Unable to create destination directory ' + aDir);
 
   // exception handled outside
-  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do begin
+  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
     WriteBuffer(aData[0], length(aData));
+  finally
     Free;
   end;
 end;
@@ -292,12 +301,14 @@ var
   IsCompressed : Boolean;
   Buffer       : TBytes;
 begin
-  IsCompressed := (aSize and (1 shl 30)) <> 0;
+  IsCompressed := (aSize and BSAFILE_COMPRESS) <> 0;
   if IsCompressed then
-    aSize := aSize and not (1 shl 30);
-  if (bfFlags and $04) <> 0 then
+    aSize := aSize and not BSAFILE_COMPRESS;
+  if (bfFlags and BSAARCHIVE_COMPRESSFILES) <> 0 then
     IsCompressed := not IsCompressed;
   bfStream.Position := aOffset;
+  if (bfVersion = BSAHEADER_VERSION_SK) and ((bfFlags and BSAARCHIVE_PREFIXFULLFILENAMES) <> 0) then
+    aSize := aSize - Length(bfStream.ReadStringLen);
   if IsCompressed then begin
     SetLength(Result, bfStream.ReadCardinal);
     if (Length(Result) > 0) and (aSize > 4) then begin
@@ -374,7 +385,7 @@ begin
   if bfStream.ReadSignature <> 'BSA' then
     raise Exception.Create(bfFileName + ' is not a valid BSA file');
   bfVersion := bfStream.ReadCardinal;
-  if not bfVersion in [103, 104] then
+  if not bfVersion in [BSAHEADER_VERSION_OB, BSAHEADER_VERSION_SK] then
     raise Exception.Create(bfFileName + ' has unknown version: ' + IntToStr(bfVersion) );
   bfOffset := bfStream.ReadCardinal;
   if bfOffset <> $24 then
@@ -400,10 +411,10 @@ begin
       Offset := bfStream.ReadCardinal;
     end;
   end;
-  bfFolderMap := TStringList.Create;
+  bfFolderMap := TwbFastStringList.Create;
   for i := Low(bfFolders) to High(bfFolders) do with bfFolders[i] do begin
     bfFolderMap.AddObject(Name, TObject(i));
-    Map := TStringList.Create;
+    Map := TwbFastStringList.Create;
     for j := Low(Files) to High(Files) do with Files[j] do begin
       Name := bfStream.ReadStringTerm;
       Map.AddObject(Name, TObject(j));
@@ -467,7 +478,7 @@ begin
   ReadBuffer(s[1], Len);
   SetLength(s, Pred(Length(s)));
   Result := s;
-  Result := StringCache[StringCache.Add(Result)];
+  //Result := StringCache[StringCache.Add(Result)];
 end;
 
 function TwbFileStream.ReadStringTerm: string;
@@ -483,7 +494,7 @@ begin
   until s[i] = #0;
   SetLength(s, Pred(i));
   Result := s;
-  Result := StringCache[StringCache.Add(Result)];
+  //Result := StringCache[StringCache.Add(Result)];
 end;
 
 procedure TwbFileStream.WriteCardinal(aCardinal: Cardinal);
@@ -595,7 +606,7 @@ begin
 end;
 
 initialization
-  StringCache := TStringList.Create;
+  StringCache := TwbFastStringList.Create;
   StringCache.Sorted := True;
   StringCache.Duplicates := dupIgnore;
 end.
