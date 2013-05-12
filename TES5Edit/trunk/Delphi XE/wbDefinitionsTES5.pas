@@ -7446,7 +7446,7 @@ begin
     '',
     'Add',
     'Subtract',
-    'Reverse Subrtact',
+    'Reverse Subtract',
     'Minimum',
     'Maximum'
   ]);
@@ -8128,7 +8128,7 @@ begin
             wbStruct('Island Data', [
               wbByteArray('Unknown', 24),
               wbArray('Triangles', wbByteArray('Triangle', 6), -1),
-              wbArray('Verticies', wbByteArray('Vertex', 12), -1)
+              wbArray('Vertices', wbByteArray('Vertex', 12), -1)
             ])
           ]),
           wbByteArray('Unknown', 4),
