@@ -9088,13 +9088,15 @@ begin
     {>>> Seen in Open Cities <<<}
     wbArray(RCSR, 'ActorBase Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbStruct(ACEC, 'BaseActor Encounter Reference', [
-      wbFormIDCk('Location', [WRLD, CELL]),
-      wbArray('Coordinates', wbStruct('', [
-        wbInteger('Grid X', itS16),
-        wbInteger('Grid Y', itS16)
-      ]))
-    ]),
+    wbRArray('BaseActor Encounter Reference',
+      wbStruct(ACEC, 'Unknown', [
+        wbFormIDCk('Location', [WRLD, CELL]),
+        wbArray('Coordinates', wbStruct('', [
+          wbInteger('Grid X', itS16),
+          wbInteger('Grid Y', itS16)
+        ]))
+      ])
+    ),
     wbRArray('Location Encounter Reference',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
@@ -9131,7 +9133,7 @@ begin
       wbInteger('Grid Y', itS16)
     ])),
 
-    wbFull,
+    wbFULL,
     wbKSIZ,
     wbKWDAs,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
