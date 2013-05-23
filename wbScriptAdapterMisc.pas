@@ -14,6 +14,7 @@ uses
   Classes,
   SysUtils,
   Variants,
+  Controls,
   StdCtrls,
   ExtCtrls,
   CheckLst,
@@ -661,6 +662,10 @@ begin
     AddConst('StdCtrls', 'cbChecked', Ord(cbChecked));
     AddConst('StdCtrls', 'cbUnchecked', Ord(cbUnchecked));
     AddConst('StdCtrls', 'cbGrayed', Ord(cbGrayed));
+    AddConst('Controls', 'akLeft', Ord(akLeft));
+    AddConst('Controls', 'akRight', Ord(akRight));
+    AddConst('Controls', 'akTop', Ord(akTop));
+    AddConst('Controls', 'akBottom', Ord(akBottom));
     AddConst('Windows', 'SW_HIDE', Ord(SW_HIDE));
     AddConst('Windows', 'SW_MAXIMIZE', Ord(SW_MAXIMIZE));
     AddConst('Windows', 'SW_MINIMIZE', Ord(SW_MINIMIZE));
