@@ -29,6 +29,7 @@ type
     procedure EditorKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure EditorMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
   public
@@ -163,6 +164,13 @@ begin
     Script := Editor.Lines.Text;
     LastUsedScript := cmbScripts.Items[cmbScripts.ItemIndex];
   end;
+end;
+
+procedure TfrmScript.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+    ModalResult := mrCancel;
 end;
 
 procedure TfrmScript.FormShow(Sender: TObject);

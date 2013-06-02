@@ -290,7 +290,6 @@ type
     mniViewPreviousMember: TMenuItem;
     mniViewHeaderJumpTo: TMenuItem;
     acScript: TAction;
-    mniViewOpenFrom: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -499,7 +498,6 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
-    procedure mniViewOpenFromClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -676,8 +674,6 @@ type
 
     ScriptProcessElements: TwbElementTypes;
     ScriptHotkeys: TStringList;
-
-    OpenFromAsset: string;
 
 //    STATsWithWindows: TStringList;
 
@@ -4085,7 +4081,8 @@ begin
     if Assigned(fs) then
       FreeAndNil(fs);
   end;
-  DeleteDirectory(wbTempPath); // remove temp folder
+  if DirectoryExists(wbTempPath)  then
+    DeleteDirectory(wbTempPath); // remove temp folder
 
   BackHistory := nil;
   ForwardHistory := nil;
@@ -5943,7 +5940,8 @@ begin
       wbStartTime := Now;
 
       Enabled := False;
-      PostAddMessage('Applying script...');
+      AddMessage('Applying script...');
+      Application.ProcessMessages;
 
       if jvi.FunctionExists('', 'Initialize') then begin
         jvi.CallFunction('Initialize', nil, []);
@@ -9695,7 +9693,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
+{procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
 var
   From, FileName, TempPath: string;
 begin
@@ -9715,7 +9713,7 @@ begin
   if FileExists(FileName) then
     ShellExecute(Handle, 'open', PWideChar(FileName), nil, nil, SW_SHOW);
 end;
-
+}
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -10178,13 +10176,8 @@ procedure TfrmMain.pmuViewPopup(Sender: TObject);
 var
   NodeDatas     : PViewNodeDatas;
   Element       : IwbElement;
-  Value         : string;
-  s             : string;
-  sl            : TStringList;
-  MenuItem      : TMenuItem;
   TargetNode    : PVirtualNode;
   TargetIndex   : Integer;
-  i             : Integer;
   TargetElement : IwbElement;
 begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
@@ -10192,7 +10185,6 @@ begin
   mniViewAdd.Visible := False;
   mniViewNextMember.Visible := False;
   mniViewPreviousMember.Visible := False;
-  mniViewOpenFrom.Visible := False;
   mniViewRemove.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
@@ -10227,7 +10219,7 @@ begin
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       // open file menu
-      if Assigned(Element) then
+      {if Assigned(Element) then
          Value := Element.EditValue
       else
         Value := '';
@@ -10267,7 +10259,7 @@ begin
             end;
           end;
         end;
-      end;
+      end;}
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
