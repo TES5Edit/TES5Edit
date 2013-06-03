@@ -1,4 +1,4 @@
-FO3Edit 3.0.28 EXPERIMENTAL by ElminsterAU updates by Zilav, Hlp and Sharlikran.
+FO3Edit 3.0.30 EXPERIMENTAL by ElminsterAU updates by Zilav, Hlp and Sharlikran.
 
 This is a an experimental release of FO3Edit. If you don't know what FO3Edit is, you probably shouldn't be using it yet. Although we have put a great deal of work into it be aware of what you are doing. Ask questions in the official Bethesda thread "TES5Edit Plugin Cleaning Emporium" or "[RELz] TES5Edit" As always backup you plugins, save games, and use with caution. (at your own risk)
 
@@ -14,6 +14,69 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
 FO3Edit Updates:
 
 With each new version of FO3Edit it is STRONGLY recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect. 
+
+Version 3.0.30 contains the following changes:
+
+- Added Prev/NextMember for Record union. Use after adding a new one to select the apropriate.
+- Search for required master extended upward.
+- Added a second command line parameter to specify the game's ini file location. 
+- Ctrl+A to select all in editor window.
+- "Jump to" option in record's header popup menu.
+- Enable/disable autosaves in options.
+- Log file is overwritten at 3MB.
+- [xDump] Fatal exceptions are reported through ReportProgress to have a timestamp. It might be useful to track down the issue.
+- [TES5] Blocks adding new script property and new scripts. Please use CK to create them.
+- [TES4/TES5/FO3/FNV] Record definitions update (number of ITM counts may change).
+Scripting:
+- New scripts added.
+- New scripting functions (including regular expressions).
+- New UI controls (TLabeledEdit, TCheckListBox).
+- Scripts can be accessed with hotkeys (Ctrl+Shift+F to call a new find cell script demo).
+- Removed syntax highlighter from script editor.
+Fixes:
+- Variable size detection corrected.
+- Out of bounds detection corrected.
+- Issues 125, 126, 129, 128 (128 was "worked around").
+Misc:
+- Code modified for compatibility with both Delphi XE and XE3 in the same source files.
+- Added BaseName property so unsorted arrays can contain structured unions.
+- ByteArray length increased to 64 bits.
+  
+Version 3.0.29 contains the following changes:
+
+- New Icon provided by moiman100.
+- [TES5] more information is decoded (Records ARMA, NVSI, MOD2, LVLO).
+- [TES5] Every string value gets own ID when localizing plugin
+- [TES5] Fixed error when copying VMAD scripts using drag & drop
+- issue 104 : Files others than esp and esm (and ghost) are timestamped.
+- issue  88 : Delete from the view pane column title contextual menu is disabled (due to a hard to reproduce bug). This is a workaround, not a fix.
+- issue 119 : [TES5] The CK adds useless XLRL records when reverting a change. Those XLRL are considered benign and the record ITM.
+- issue 110 : Check for errors now checks for invalid FormIDs. Also, new "Check for errors" sample script.
+- Options are processed when they matter, not at the beginning.
+- issue  82 : [TES5] Capitalization fixed in text are being treated as dirty edits. Description fields are case sensitive now.
+Scripting:
+- Scripts can use other scripts with standard pascal "uses" keyword.
+- New functions available.
+- New sample scripts.
+Fixes:
+- Compare to will not overwrite an existing file, nor will it leave temporary files behind.
+- issue 125 : Condition added are no longer empty.
+- issue 121 : Changing FormID of Region causes severe bugs. Reference building is delayed to after the change is done. Non region reference XCLR record are no longer removed.
+- issue 120/118 : Reference not updated while adding a master. Reference lookup during the addition was sometimes unreliable. 
+- issue 117 : Bug in script Undelete and Disable References.pas 
+- issue 112 : Option "Simple Record" malfunctioning.
+- issue 111 : AV when saving subrecords with prefixed arrays. Sizing and memory allocation are done properly during every phase.
+- issue 108 : Very slow saving after editing ESM flag. Background updating limited as much as possible during saves.
+- issue 107 : Copying a quest record causes extraneous script fragment data to be generated. Sizing and memory allocation issue.
+- issue 106 : Error adding a new master to plugin with own navmeshes. Fire Union decider when they can effectively properly work, not before.
+- issue 105 : Overwriting quest fragments or Quest Aliases may produce exceptions. During copy, memory is initialized properly before being used.
+- issue 100 : Voice Type EditorID disappears. Memory sizing issue.
+Known issue:
+- issue 123 : Using Check for errors after sort master, before saving and reloading: the Cell FormID will not be updated. (that is a display issue only).
+- issue 102 : Objects with property names but no assigned values don't display the names. The CK does not save the property name in the plugin in that case so it is correct.
+Misc:
+- issue 115 : "Backup plugin" checkbox anchored to bottom of form.
+- avoid firing some cached exception (to ease debugging).
 
 Version 3.0.28 contains the following changes:
 
