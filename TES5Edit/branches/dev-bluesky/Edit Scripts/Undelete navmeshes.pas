@@ -81,7 +81,7 @@ begin
   // place navmesh below the ground (change Z on all vertices)
   // currently only for Skyrim
   if wbGameMode = gmTES5 then begin
-    vertices := ElementByPath(e, 'NVNM - 几何学\顶点');
+    vertices := ElementByPath(e, 'NVNM - Geometry\顶点');
     for i := 0 to ElementCount(vertices) - 1 do
       SetElementNativeValues(ElementByIndex(vertices, v), 'Z', -30000);
   end;

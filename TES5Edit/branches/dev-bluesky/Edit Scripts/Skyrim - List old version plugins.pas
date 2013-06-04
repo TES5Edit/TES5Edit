@@ -1,5 +1,5 @@
-﻿{
-  列表显示旧版插件。
+{
+  List old version plugins for Skyrim.
 }
 unit UserScript;
 
@@ -26,8 +26,8 @@ begin
       Continue;
     
     tes4 := ElementByIndex(plugin, 0);
-    if GetElementNativeValues(tes4, 'HEDR\版本') < CheckVersion then
-      AddMessage(Format('旧版本 %s 插件 %s', [GetElementEditValues(tes4, 'HEDR\版本'), s]));
+    if GetElementNativeValues(tes4, 'HEDR\Version') < CheckVersion then
+      AddMessage(Format('Old version %s plugin %s', [GetElementEditValues(tes4, 'HEDR\Version'), s]));
 
   end;
 

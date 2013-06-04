@@ -1,8 +1,8 @@
-﻿{
-  插件翻译，适用 Fallout3 和 New Vegas.
-  从已翻译的 Mod 中创建词典然后用于其他插件的翻译。
-  翻译时，匹配字典的所有字符串都会被替换掉。
-  添加词典时，插件必须有一个源语言的 Master 文件。
+{
+  Plugin translator for Fallout3 and New Vegas.
+  Build dictionary from translated mods and translate other mods using it.
+  When translating, every string value is replaced matching pair from dictionary.
+  When adding to dictionary, plugin must have a master file in original language.
 }
 unit UserScript;
 
@@ -74,7 +74,7 @@ begin
   end else
     
   if f = 'BPTD' then begin
-    entries := ElementByName(e, '身体部分');
+    entries := ElementByName(e, 'Body Parts');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
       HandleElement(ElementBySignature(entry, 'BPTN'), sl); // body part name
@@ -82,7 +82,7 @@ begin
   end else
 
   if f = 'INFO' then begin
-    entries := ElementByName(e, '回复');
+    entries := ElementByName(e, 'Responses');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
       HandleElement(ElementBySignature(entry, 'NAM1'), sl); // response text
@@ -92,7 +92,7 @@ begin
   end else
 
   if f = 'FACT' then begin
-    entries := ElementByName(e, '等级');
+    entries := ElementByName(e, 'Ranks');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
       HandleElement(ElementBySignature(entry, 'MNAM'), sl); // male rank
@@ -107,7 +107,7 @@ begin
   end else
 
   if f = 'MESG' then begin
-    entries := ElementByName(e, '菜单按钮');
+    entries := ElementByName(e, 'Menu Buttons');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
       HandleElement(ElementBySignature(entry, 'ITXT'), sl); // button text
@@ -115,28 +115,28 @@ begin
   end else
 
   if f = 'NOTE' then begin
-    if GetElementEditValues(e, 'DATA') = '文本' then
-      HandleElement(ElementByPath(e, 'TNAM\文本'), sl); // note text
+    if GetElementEditValues(e, 'DATA') = 'Text' then
+      HandleElement(ElementByPath(e, 'TNAM\Text'), sl); // note text
   end else
 
   if f = 'PERK' then begin
-    entries := ElementByName(e, '效果');
+    entries := ElementByName(e, 'Effects');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
-      HandleElement(ElementByPath(entry, '记录点函数参数\EPF2'), sl); // button label
+      HandleElement(ElementByPath(entry, 'Entry Point Function Parameters\EPF2'), sl); // button label
     end;
   end else
 
   if f = 'QUST' then begin
-    entries := ElementByName(e, '目标');
+    entries := ElementByName(e, 'Objectives');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
       HandleElement(ElementBySignature(entry, 'NNAM'), sl); // objective description
     end;
-    entries := ElementByName(e, '阶段');
+    entries := ElementByName(e, 'Stages');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
-      entries2 := ElementByName(entry, '日志记录');
+      entries2 := ElementByName(entry, 'Log Entries');
       for j := 0 to ElementCount(entries2) - 1 do begin
         entry2 := ElementByIndex(entries2, j);
         HandleElement(ElementBySignature(entry2, 'CNAM'), sl); // log entry
@@ -145,7 +145,7 @@ begin
   end else
   
   if f = 'REGN' then begin
-    entries := ElementByName(e, '边缘数据记录');
+    entries := ElementByName(e, 'Region Data Entries');
     for i := 0 to ElementCount(entries) - 1 do begin
       entry := ElementByIndex(entries, i);
       HandleElement(ElementBySignature(entry, 'RDMP'), sl); // map name
@@ -166,8 +166,8 @@ begin
   end else
 
   if f = 'REFR' then begin
-    if ElementExists(e, '地图标记') then
-      HandleElement(ElementByPath(e, '地图标记\FULL'), sl); // marker name
+    if ElementExists(e, 'Map Marker') then
+      HandleElement(ElementByPath(e, 'Map Marker\FULL'), sl); // marker name
   end;
 end;
 
@@ -176,7 +176,7 @@ function Initialize: integer;
 var
   i: integer;
 begin
-  i := MessageDlg('翻译 [YES] 或者添加到词典 [NO]？', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+  i := MessageDlg('Translate [YES] or add to dictionary [NO]?', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
   if i = mrYes then bTranslate := True else
     if i = mrNo then bTranslate := False else
       begin
@@ -289,7 +289,7 @@ begin
         sl.Add(slLang1[i]);
         sl.Add(slLang2[i]);
       end;
-      AddMessage('正在保存词典到 ' + DictionaryFile);
+      AddMessage('Saving dictionary to ' + DictionaryFile);
       sl.SaveToFile(DictionaryFile);
     end;
   end;

@@ -1,5 +1,5 @@
-﻿{
-  计算衍生中使用的 baseforms 数量。
+{
+  Counts how much baseforms are used in references
 }
 unit UserScript;
 

@@ -1,5 +1,5 @@
-﻿{
-  导出 SCPT 记录到 XML 文件 (支持 Oblivion, Fallout 3 和 New Vegas)
+{
+  Export SCPT records to XML file (for Oblivion, Fallout 3 and New Vegas)
 }
 unit UserScript;
 
@@ -11,7 +11,7 @@ begin
   sl := TStringList.Create;
   sl.Add('<?xml version="1.0" encoding="Windows-1252"?>');
   sl.Add('<scripts>');
-  AddMessage('正在创建脚本列表，请稍后');
+  AddMessage('Building scripts list, please wait');
 end;
 
 function Process(e: IInterface): integer;
@@ -32,11 +32,11 @@ begin
   sl.Add('</scripts>');
   dlgSave := TSaveDialog.Create(nil);
   dlgSave.Options := dlgSave.Options + [ofOverwritePrompt];
-  dlgSave.Filter := 'XML 文件 (*.xml)|*.xml';
+  dlgSave.Filter := 'XML files (*.xml)|*.xml';
   dlgSave.InitialDir := DataPath;
   dlgSave.FileName := 'scripts.xml';
   if dlgSave.Execute then begin
-    AddMessage('正在保存 ' + dlgSave.FileName);
+    AddMessage('Saving ' + dlgSave.FileName);
     sl.SaveToFile(dlgSave.FileName);
   end;
   dlgSave.Free;

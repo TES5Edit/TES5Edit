@@ -1,6 +1,6 @@
-﻿{
-  转换所选 BOOK 记录为 SCRL 记录。
-  FormIDs 不发生变化。
+{
+  Convert selected BOOK records to SCRL records.
+  FormIDs are unchanged.
 }
 
 unit UserScript;
@@ -38,9 +38,9 @@ begin
   SetElementEditValues(r, 'EDID', GetElementEditValues(e, 'EDID'));
   SetElementEditValues(r, 'FULL', GetElementEditValues(e, 'FULL'));
   SetElementEditValues(r, 'DESC', GetElementEditValues(e, 'DESC'));
-  SetElementEditValues(r, '模型\MODL', GetElementEditValues(e, '模型\MODL'));
-  SetElementEditValues(r, 'DATA\价值', GetElementEditValues(e, 'DATA\价值'));
-  SetElementEditValues(r, 'DATA\重量', GetElementEditValues(e, 'DATA\重量'));
+  SetElementEditValues(r, 'Model\MODL', GetElementEditValues(e, 'Model\MODL'));
+  SetElementEditValues(r, 'DATA\Value', GetElementEditValues(e, 'DATA\Value'));
+  SetElementEditValues(r, 'DATA\Weight', GetElementEditValues(e, 'DATA\Weight'));
   
   formid := GetLoadOrderFormID(e);
   RemoveNode(e);

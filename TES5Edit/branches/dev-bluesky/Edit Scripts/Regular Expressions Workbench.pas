@@ -1,6 +1,6 @@
-﻿{
-  用来创建于测试 PCRE 正则表达式。
-  使用方法展示。
+{
+  Script to create and test PCRE regular expressions.
+  Demonstrates how to use them.
 }
 unit userscript;
 

@@ -1,11 +1,11 @@
-﻿{
-  从 sound descriptors 移除频差。
+{
+  Remove frequence variance from sound descriptors.
 }
 unit UserScript;
 
 function Process(e: IInterface): integer;
 begin
-  SetElementEditValues(e, 'BNAM\% 频差', '0');
+  SetElementEditValues(e, 'BNAM\% Frequency Variance', '0');
 end;
 
 end.

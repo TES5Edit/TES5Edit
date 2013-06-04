@@ -1,5 +1,5 @@
-﻿{
-  设置 HavokDontSettle 标志 到 BOOK 记录的衍生
+{
+  Set HavokDontSettle flag on references of BOOK records
 }
 unit UserScript;
 
@@ -11,7 +11,7 @@ begin
   if Signature(LinksTo(ElementBySignature(e, 'NAME'))) <> 'BOOK' then
     Exit;
   
-  SetElementNativeValues(e, '记录头\记录标志', GetElementNativeValues(e, '记录头\记录标志') or $20000000);
+  SetElementNativeValues(e, 'Record Header\Record Flags', GetElementNativeValues(e, 'Record Header\Record Flags') or $20000000);
 end;
 
 end.

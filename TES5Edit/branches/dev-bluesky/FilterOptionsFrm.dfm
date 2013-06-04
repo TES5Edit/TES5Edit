@@ -191,7 +191,7 @@
     Top = 475
     Width = 145
     Height = 17
-    Caption = '根据 persistence'
+    Caption = '判断固定'
     TabOrder = 19
   end
   object cbPersistent: TCheckBox
@@ -199,7 +199,7 @@
     Top = 498
     Width = 156
     Height = 17
-    Caption = '仅 persistent'
+    Caption = '仅固定'
     TabOrder = 20
   end
   object cbUnnecessaryPersistent: TCheckBox
@@ -207,7 +207,7 @@
     Top = 521
     Width = 307
     Height = 17
-    Caption = '仅可能但不必要的 persistent'
+    Caption = '仅可能但不必要的固定'
     TabOrder = 21
   end
   object cbMasterIsTemporary: TCheckBox
@@ -215,7 +215,7 @@
     Top = 544
     Width = 187
     Height = 17
-    Caption = '仅当 Master 不是 persistent'
+    Caption = '仅当 Master 非固定'
     TabOrder = 22
   end
   object cbByVWD: TCheckBox
@@ -330,7 +330,7 @@
     Top = 590
     Width = 157
     Height = 17
-    Caption = '简化 Cell Children 显示'
+    Caption = '简化子场景显示'
     TabOrder = 36
   end
   object cbAssignPersWrldChild: TCheckBox
@@ -338,7 +338,7 @@
     Top = 613
     Width = 277
     Height = 17
-    Caption = '分配 Persistent Worldspace Children 到 Cell'
+    Caption = '分配固定子世界空间到场景'
     TabOrder = 37
   end
   object cbScaledActors: TCheckBox
@@ -346,7 +346,7 @@
     Top = 602
     Width = 95
     Height = 17
-    Caption = '含 scale 的角色'
+    Caption = '设置范围的角色'
     TabOrder = 38
   end
   object cbDeleted: TCheckBox

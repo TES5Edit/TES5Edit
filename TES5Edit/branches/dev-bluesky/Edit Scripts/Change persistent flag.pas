@@ -1,6 +1,6 @@
-﻿{
-  修改所选衍生的固定标志。
-  折叠与展开以显示修改。
+{
+  Change persistent flag on selected references.
+  Collapse and expand cell group to see changes.
 }
 unit UserScript;
 
@@ -11,7 +11,7 @@ function Initialize: integer;
 var
   i: integer;
 begin
-  i := MessageDlg('设置 [YES] 或者清除 [NO] 固定标志？', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+  i := MessageDlg('Set [YES] or clear [NO] Persistent flag?', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
   if i = mrYes then bPersistent := true else
     if i = mrNo then bPersistent := false else begin
       Result := 1;

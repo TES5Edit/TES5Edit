@@ -1,7 +1,7 @@
-﻿{
-  放置 Master 衍生到相同场景，作为覆盖衍生。
-  必须应用到要覆盖的衍生，而不是 Master ！
-  整合万 FNV 插件后，用来修正场景放置。
+{
+  Put master references in the same cell as overriding references.
+  Must be applied to overriding references, not to master!
+  To correct cell placements after merging with FNVPlugin.
 }
 unit UserScript;
 

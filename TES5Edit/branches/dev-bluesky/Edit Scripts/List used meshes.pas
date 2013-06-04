@@ -1,5 +1,5 @@
-﻿{
-  输出所选记录使用的模型。
+{
+  Output meshes used in selected records
 }
 unit UserScript;
 
