@@ -1,5 +1,5 @@
-{
-  List [FormIDCount] allocated FormIDs starting from [FormIDStart]
+﻿{
+  列表显示 [FormIDStart] 到 [FormIDCount] 的所有表单序号。
 }
 unit UserScript;
 

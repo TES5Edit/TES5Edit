@@ -1,6 +1,6 @@
-{
-  Outputs records that have FORMID of 0.
-  Can be used to search for corrupted plugins.
+﻿{
+  输出表单序号为 0 的记录。
+  用来查找已损坏的插件。
 }
 unit UserScript;
 

@@ -1,4 +1,4 @@
-{
+﻿{
   Shows all references from cells which have provided location type LCTN
 }
 unit UserScript;

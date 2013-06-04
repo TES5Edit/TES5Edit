@@ -1,6 +1,6 @@
 ﻿{
-  List forms with load order 00 from containers, leveled lists and references
-  Used for Skywind project
+  显示来源于容器、等级列表和衍生的加载顺序为00的表单。
+  用于 Skywind 项目
 }
 unit UserScript;
 

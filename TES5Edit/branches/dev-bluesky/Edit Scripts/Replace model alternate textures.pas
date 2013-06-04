@@ -1,5 +1,5 @@
-{
-  Find and replace texture sets in models alternate textures
+﻿{
+  查找并替换模型替换材质的材质集
 }
 unit userscript;
 
@@ -20,13 +20,13 @@ var
   mods, t: IInterface;
   i, idx: integer;
 begin
-  mods := ElementByPath(e, 'Model\MODS');
+  mods := ElementByPath(e, '模型\MODS');
   if not Assigned(mods) then Exit;
   for i := 0 to ElementCount(mods) - 1 do begin
     t := ElementByIndex(mods, i);
-    idx := slOld.IndexOf(GetElementEditValues(t, 'New Texture'));
+    idx := slOld.IndexOf(GetElementEditValues(t, '新版材质'));
     if idx <> -1 then
-      SetElementEditValues(t, 'New Texture', slNew[idx]);
+      SetElementEditValues(t, '新版材质', slNew[idx]);
   end;
 end;
 

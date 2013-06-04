@@ -1,7 +1,7 @@
 ﻿{
-  WORK IN PROGRESS!
+  制作中！
   
-  Script to merge plugins.
+  插件整合。
 }
 unit UserScript;
 
@@ -28,11 +28,11 @@ end;
 // Called when OK is pressed
 procedure Merger(BaseFile, MergedFile: IInterface);
 begin
-  AddMessage(Format('Merging "%s" into "%s"...', [GetFileName(MergedFile), GetFileName(BaseFile)]));
+  AddMessage(Format('正在整合 "%s" 到 "%s"...', [GetFileName(MergedFile), GetFileName(BaseFile)]));
   
   // check that the masters are the same for both plugins
   if not CheckMasters(BaseFile, MergedFile) then begin
-    MessageDlg('Both plugins must have the same masters!', mtError, [mbOk], 0);
+    MessageDlg('两个插件存在相同 Master ！', mtError, [mbOk], 0);
     Exit;
   end;
   
@@ -54,7 +54,7 @@ var
 begin
   frmMerge := TForm.Create(nil);
   try
-    frmMerge.Caption := 'Select files to merge';
+    frmMerge.Caption := '选择要整合的插件';
     frmMerge.Width := 400;
     frmMerge.Height := 300;
     frmMerge.Position := poScreenCenter;
@@ -98,13 +98,13 @@ begin
     lbl1.Parent := frmMerge;
     lbl1.Top := cbFile1.Top - 16;
     lbl1.Left := cbFile1.Left;
-    lbl1.Caption := 'Base plugin (merge into)';
+    lbl1.Caption := '基础插件 (整合进去)';
     
     lbl2 := TLabel.Create(frmMerge);
     lbl2.Parent := frmMerge;
     lbl2.Top := cbFile2.Top - 16;
     lbl2.Left := cbFile2.Left;
-    lbl2.Caption := 'Merged plugin (merge from)';
+    lbl2.Caption := '被整合插件 (整合自)';
 
     if frmMerge.ShowModal = mrOk then
       Merger(FileByIndex(cbFile1.ItemIndex), FileByIndex(cbFile2.ItemIndex));

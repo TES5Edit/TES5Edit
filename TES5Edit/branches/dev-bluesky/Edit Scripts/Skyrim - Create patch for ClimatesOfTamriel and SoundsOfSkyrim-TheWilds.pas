@@ -1,4 +1,4 @@
-{
+﻿{
   Create patch plugin that will contain weather changes
   from Climates of Tamriel and sound changes from Sounds of Skyrim - The Wilds.
 }
@@ -34,7 +34,7 @@ begin
   entries := ElementByName(r, 'Region Data Entries');
   for i := 0 to ElementCount(entries) - 1 do begin
     e := ElementByIndex(entries, i);
-    if GetElementEditValues(e, 'RDAT\Type') = 'Sound' then begin
+    if GetElementEditValues(e, 'RDAT\类型') = 'Sound' then begin
       Result := e;
       Exit;
     end;

@@ -1,7 +1,7 @@
 ﻿{
   通过脚本运行“请求清理筛选”。
 
-  快捷键：Ctrl+Shift+C
+  Hotkey: Ctrl+Shift+C
 }
 unit userscript;
 

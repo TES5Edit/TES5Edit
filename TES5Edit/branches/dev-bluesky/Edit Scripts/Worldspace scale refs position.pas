@@ -1,5 +1,5 @@
 ﻿{
-  Scale references position relative to (CenterX, CenterY) point by ScaleXY factor.
+  根据 ScaleXY 将衍生位置调整到相关中心点。
   脚本必须应用到 worldspace 。
 }
 unit userscript;

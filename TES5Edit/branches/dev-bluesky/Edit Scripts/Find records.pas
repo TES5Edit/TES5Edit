@@ -1,5 +1,5 @@
 ﻿{
-  Find records in selection.
+  查找所选的记录。
   
   Hotkey: Ctrl+F
 }
@@ -79,7 +79,7 @@ var
 begin
   frm := TForm.Create(nil);
   try
-    frm.Caption := 'Find records';
+    frm.Caption := '查找记录';
     frm.Width := 650;
     frm.Height := 400;
     frm.Position := poScreenCenter;
@@ -98,31 +98,31 @@ begin
     mnRecords := TPopupMenu.Create(frm);
     lbRecords.PopupMenu := mnRecords;
     MenuItem := TMenuItem.Create(mnRecords);
-    MenuItem.Caption := 'Select &All';
+    MenuItem.Caption := '全部(&A)';
     MenuItem.OnClick := SelectAllClick;
     mnRecords.Items.Add(MenuItem);
     MenuItem := TMenuItem.Create(mnRecords);
-    MenuItem.Caption := 'Select &None';
+    MenuItem.Caption := '全不(&N)';
     MenuItem.OnClick := SelectNoneClick;
     mnRecords.Items.Add(MenuItem);
   
     chkHas := TCheckBox.Create(frm);
     chkHas.Parent := frm;
-    chkHas.Caption := 'Has Element(s)';
+    chkHas.Caption := '存在元素';
     chkHas.Left := 260;
     chkHas.Top := 8;
 
     edHas := TLabeledEdit.Create(frm);
     edHas.Parent := frm;
     edHas.LabelPosition := lpAbove;
-    edHas.EditLabel.Caption := 'List of names as they appear when viewing record separated by comma';
+    edHas.EditLabel.Caption := '使用逗号分隔多个记录名';
     edHas.Left := chkHas.Left + 16;
     edHas.Top := chkHas.Top + 36;
     edHas.Width := 350;
 
     btnFind := TButton.Create(frm);
     btnFind.Parent := frm;
-    btnFind.Caption := 'Find all records';
+    btnFind.Caption := '查找所有记录';
     btnFind.ModalResult := mrOk;
     btnFind.Width := 130;
     btnFind.Left := 260;
@@ -130,7 +130,7 @@ begin
     
     btnJump := TButton.Create(frm);
     btnJump.Parent := frm;
-    btnJump.Caption := 'Jump to first matched';
+    btnJump.Caption := '跳到第一个匹配';
     btnJump.ModalResult := mrYes;
     btnJump.Width := 130;
     btnJump.Left := btnFind.Left + btnFind.Width + 16;
@@ -195,7 +195,7 @@ begin
     Result := 1;
   end else
   if findRecords = '' then begin
-    AddMessage('No records selected.');
+    AddMessage('未选择记录。');
     Result := 1;
   end;
   
@@ -234,10 +234,10 @@ end;
 function Finalize: Integer;
 begin
   if slFound.Count > 0 then begin
-    if MessageDlg(Format('Found %d records. Show them in messages?', [slFound.Count]), mtConfirmation, [mbYes, mbCancel], 0) = mrYes then
+    if MessageDlg(Format('找到 %d 记录，显示在日志？', [slFound.Count]), mtConfirmation, [mbYes, mbCancel], 0) = mrYes then
       AddMessage(slFound.Text);
   end else
-    AddMessage('No matching records found.');
+    AddMessage('未找到匹配结果。');
 
   CleanUp;
 end;

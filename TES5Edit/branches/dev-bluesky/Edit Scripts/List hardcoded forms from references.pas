@@ -1,5 +1,5 @@
-{
-  Shows a list of FormIDs < 800h from selected references
+﻿{
+  列表显示所选衍生中表单序号 < 800h 的数据
 }
 unit userscript;
 

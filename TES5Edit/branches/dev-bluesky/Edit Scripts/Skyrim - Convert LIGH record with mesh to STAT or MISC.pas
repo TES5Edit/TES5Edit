@@ -1,7 +1,7 @@
-{
-  Convert LIGH record with mesh to
-  1) STAT: duplicate mesh to a new STAT record and duplicate all references and point them to that STAT
-  2) MISC: convert LIGH record to MISC (LIGH is removed, references redirected to the newly created MISC)
+﻿{
+  转换含模型的 LIGH 记录为
+  1) STAT: 重复的模型为 STAT 记录，并复制所有衍生然后指定他们到该 STAT
+  2) MISC: 转换 LIGH 记录为 MISC (LIGH 会被移除，衍生重定向到新建的 MISC)
 }
 
 unit UserScript;
@@ -45,7 +45,7 @@ begin
   if Signature(e) <> 'LIGH' then
     Exit;
   
-  if not ElementExists(e, 'Model') then
+  if not ElementExists(e, '模型') then
     Exit;
 
   r := wbCopyElementToFile(baserecord, GetFile(e), True, True);
@@ -60,17 +60,17 @@ begin
   if SameText(oldid, newid) then newid := newid + 'LIGH';
 
   SetElementEditValues(r, 'EDID', newid);
-  SetElementEditValues(r, 'Model\MODL', GetElementEditValues(e, 'Model\MODL'));
+  SetElementEditValues(r, '模型\MODL', GetElementEditValues(e, '模型\MODL'));
   if Signature(r) = 'MISC' then begin
     SetElementEditValues(r, 'FULL', GetElementEditValues(e, 'EDID'));
-    SetElementEditValues(r, 'DATA\Value', '1');
-    SetElementEditValues(r, 'DATA\Weight', '1');
+    SetElementEditValues(r, 'DATA\价值', '1');
+    SetElementEditValues(r, 'DATA\重量', '1');
     formid := GetLoadOrderFormID(e);
     RemoveNode(e);
     SetLoadOrderFormID(r, formid);
   end else begin
     // remove mesh from LIGH
-    RemoveElement(e, 'Model');
+    RemoveElement(e, '模型');
     // copy references for STAT
     for i := 0 to ReferencedByCount(e) - 1 do begin
       // copy reference and point to STAT

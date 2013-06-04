@@ -1,9 +1,8 @@
-{
-  Create a list of faces from OCO plugin and assign them randomly
-  to selected NPC records according to race and gender.
-  NPCs of unknown races (not in OCO) are skipped.
-  NPCs with the same FormIDs as in OCO will receive their faces from OCO plugin.
-  Hairs and eyes (and everything else) are not modified.
+﻿{
+  从 OCO 插件创建脸部列表，并根据种族和性别随机分配到所选NPC记录。 
+  未知种族（OCO 中不存在的）NPC将被跳过。
+  表单序号与 OCO 相同的 NPC 则直接复制 OCO 插件的脸部数据。
+  发型与眼睛（和其他）不会被修改。
 }
 unit UserScript;
 
@@ -48,7 +47,7 @@ begin
         // build unique race + gender key string
         race := GetElementEditValues(npc, 'RNAM');
         if race = '' then Continue;
-        if GetElementNativeValues(npc, 'ACBS\Flags') and 1 > 0 then race := race + ' Female'
+        if GetElementNativeValues(npc, 'ACBS\标志') and 1 > 0 then race := race + ' Female'
           else race := race + ' Male';
         arNPC[npccount] := npc;
         // check if key string already exists, or add a new one
@@ -111,7 +110,7 @@ begin
     if race = '' then
       Exit;
       
-    if GetElementNativeValues(e, 'ACBS\Flags') and 1 > 0 then race := race + ' Female'
+    if GetElementNativeValues(e, 'ACBS\标志') and 1 > 0 then race := race + ' Female'
       else race := race + ' Male';
 
     idx := slRace.IndexOf(race);
@@ -124,7 +123,7 @@ begin
   end;
 
   // copy facegen data
-  ElementAssign(ElementByPath(e, 'FaceGen Data'), LowInteger, ElementByPath(arNPC[idx], 'FaceGen Data'), False);
+  ElementAssign(ElementByPath(e, '脸部生成数据'), LowInteger, ElementByPath(arNPC[idx], '脸部生成数据'), False);
   ElementAssign(ElementByPath(e, 'FNAM'), LowInteger, ElementByPath(arNPC[idx], 'FNAM'), False); // just in case
 end;
 

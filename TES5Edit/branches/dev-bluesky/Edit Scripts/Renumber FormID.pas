@@ -1,5 +1,5 @@
-{
-  Renumber FormIDs of selected records starting from provided value
+﻿{
+  修改所选记录的表单序号，起始于输入的数值
 }
 unit UserScript;
 
@@ -25,7 +25,7 @@ begin
 
   if NewFormID = 0 then begin
     Result := 1;
-    s := InputBox('Enter', 'New starting FormID', IntToHex64(OldFormID, 8));
+    s := InputBox('输入', '新起始表单序号', IntToHex64(OldFormID, 8));
     if s = '' then
       Exit;
     NewFormID := StrToInt64('$' + s);
@@ -39,7 +39,7 @@ begin
   // here we shoud check for availability of NewFormID, but it will generate error and abort anyway if that happens
   // ...
 
-  AddMessage(Format('Changing FormID from [%s] to [%s] on %s', [IntToHex64(OldFormID, 8), IntToHex64(NewFormID, 8), Name(e)]));
+  AddMessage(Format('正在修改表单序号 [%s] 为 [%s] 位于 %s', [IntToHex64(OldFormID, 8), IntToHex64(NewFormID, 8), Name(e)]));
   
   // the record in question might originate from master file
   m := MasterOrSelf(e);

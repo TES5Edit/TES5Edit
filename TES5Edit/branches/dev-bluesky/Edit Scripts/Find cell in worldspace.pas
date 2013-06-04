@@ -1,5 +1,5 @@
 ﻿{
-  Find exterior cell by X,Y grid coordinates.
+  根据 X,Y 网格坐标查找室外场景。
   
   Hotkey: Ctrl+Shift+F
 }
@@ -59,7 +59,7 @@ begin
     end;
   end;
 
-  AddMessage('Cell not found!');
+  AddMessage('未找到场景！');
 end;
 
 procedure FillWorldspaces(lst: TStrings);
@@ -104,7 +104,7 @@ var
 begin
   frm := TForm.Create(nil);
   try
-    frm.Caption := 'Find cell in worldspace';
+    frm.Caption := '查找世界空间的场景';
     frm.Width := 220;
     frm.Height := 500;
     frm.Position := poScreenCenter;

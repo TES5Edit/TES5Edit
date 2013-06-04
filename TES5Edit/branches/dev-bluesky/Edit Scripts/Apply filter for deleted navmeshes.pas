@@ -1,4 +1,4 @@
-unit userscript;
+﻿unit userscript;
 
 function Initialize: Integer;
 begin

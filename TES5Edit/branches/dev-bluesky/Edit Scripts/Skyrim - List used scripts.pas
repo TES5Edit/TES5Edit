@@ -1,6 +1,6 @@
-{
-  Build a list of used scripts in selected records and generate report.
-  Also check for script's existence in loaded BSAs or game's Data\Scripts folder.
+﻿{
+  检查所选记录中未使用的脚本并生成报告。
+  同时检查脚本是否存在于 BSAs 或者游戏 Data\Scripts 目录。
 }
 unit UserScript;
 
@@ -24,7 +24,7 @@ begin
     else
       Exit;
 
-  if Name(e) = 'scriptName' then begin
+  if Name(e) = '脚本' then begin
     s := GetEditValue(e);
     i := slScripts.IndexOf(s); 
     if i = -1 then begin

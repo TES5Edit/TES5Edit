@@ -1,4 +1,4 @@
-{
+﻿{
   Script to copy only book's content from the last overridden record.
   Other fields are unchanged.
 }
