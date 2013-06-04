@@ -1,9 +1,9 @@
-object frmEditWarning: TfrmEditWarning
+ï»¿object frmEditWarning: TfrmEditWarning
   Left = 0
   Top = 0
   BorderIcons = []
   BorderStyle = bsNone
-  Caption = 'ÔÙ¿¼ÂÇÒ»ÏÂ...'
+  Caption = 'å†è€ƒè™‘ä¸€ä¸‹...'
   ClientHeight = 291
   ClientWidth = 556
   Color = clBtnFace
@@ -856,7 +856,7 @@ object frmEditWarning: TfrmEditWarning
           Align = alTop
           Alignment = taCenter
           AutoSize = False
-          Caption = '¾¯¸æ£¡'
+          Caption = 'è­¦å‘Šï¼'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -32
@@ -881,11 +881,11 @@ object frmEditWarning: TfrmEditWarning
           Font.Name = 'Tahoma'
           Font.Style = []
           Lines.Strings = (
-            'ÄúÕı´òËã±à¼­ÎÄ¼ş¡£'
+            'æ‚¨æ­£æ‰“ç®—ç¼–è¾‘æ–‡ä»¶ã€‚'
             ''
-            'ÄÄÅÂÄúÖ»ÓĞÄÇÃ´Ò»µãµã»³ÒÉ×Ô¼º²Ù×÷µÄ¿ÉĞĞĞÔ£¬Ò²ÇëÄúÏÖÔÚÂíÉÏÖĞÖ¹¡£'
+            'å“ªæ€•æ‚¨åªæœ‰é‚£ä¹ˆä¸€ç‚¹ç‚¹æ€€ç–‘è‡ªå·±æ“ä½œçš„å¯è¡Œæ€§ï¼Œä¹Ÿè¯·æ‚¨ç°åœ¨é©¬ä¸Šä¸­æ­¢ã€‚'
             ''
-            'ÄúÈ·¶¨Òª¼ÌĞøÂğ£¿')
+            'æ‚¨ç¡®å®šè¦ç»§ç»­å—ï¼Ÿ')
           ParentColor = True
           ParentFont = False
           ReadOnly = True
@@ -910,7 +910,7 @@ object frmEditWarning: TfrmEditWarning
           Top = 3
           Width = 270
           Height = 36
-          Caption = 'ÊÇµÄ(&Y)£¬ÎÒºÜÇå³ş×Ô¼ºÔÚ¸ÉÂğ'
+          Caption = 'æ˜¯çš„(&Y)ï¼Œæˆ‘å¾ˆæ¸…æ¥šè‡ªå·±åœ¨å¹²å—'
           Enabled = False
           ModalResult = 1
           TabOrder = 0
@@ -1088,7 +1088,7 @@ object frmEditWarning: TfrmEditWarning
           Width = 270
           Height = 36
           Margins.Bottom = 0
-          Caption = 'àÅ(&N).. ÎÒÔÙ¿¼ÂÇÒ»ÏÂ°É'
+          Caption = 'å—¯(&N).. æˆ‘å†è€ƒè™‘ä¸€ä¸‹å§'
           Default = True
           ModalResult = 3
           TabOrder = 1

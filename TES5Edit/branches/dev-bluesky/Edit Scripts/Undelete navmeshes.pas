@@ -1,10 +1,9 @@
-{
-  WORK IN PROGRESS! DO NOT USE ON REAL PLUGINS!
-  Only for Fallout 3 and New Vegas.
-  Script tries to undelete and disable navmeshes since they can't be
-  handled like other UDR references.
+﻿{
+  制作中！请勿在实际插件中使用！
+  仅供 Fallout 3 和 New Vegas。
+  修复 navmeshes 的 UDR 数据，因为 navmeshes 的 UDR 处理方式与其他记录不同。
 
-  We need a very clever modder to finish it.
+  需要一个更聪明的 modder 来完成此工作。
 }
 unit UserScript;
 
@@ -25,7 +24,7 @@ begin
   if Signature(e) <> 'NAVM' then
     Exit;
   
-  AddMessage('Undeleting: ' + Name(e));
+  AddMessage('正在修复：' + Name(e));
   
   // Find NVMI entry in NAVI for undeleted mesh
   f := GetFile(e);
@@ -34,7 +33,7 @@ begin
     
   navi := GroupBySignature(f, 'NAVI');
   if not Assigned(navi) then begin
-    AddMessage('No NAVI group found');
+    AddMessage('未找到 NAVI 群组');
     Exit;
   end;
   
@@ -44,29 +43,29 @@ begin
     // get master NAVI record because NAVI record in plugin doesn't have NVMI for deleted navmesh
     navi := Master(navi);
   end else begin
-    AddMessage('NAVI group must have 1 record');
+    AddMessage('NAVI 群组必须有 1 记录');
     Exit;
   end;
 
   if not Assigned(navi) then begin
-    AddMessage('No master NAVI record found');
+    AddMessage('未找到 master NAVI 记录');
     Exit;
   end;
 
-  nvmis := ElementByName(navi, 'Navigation Map Infos');
+  nvmis := ElementByName(navi, '导航地图信息');
   if not Assigned(nvmis) then
     Exit;
     
   for i := 0 to ElementCount(nvmis) - 1 do begin
     entry := ElementByIndex(nvmis, i);
-    if GetElementNativeValues(entry, 'Navigation Mesh') = FormID(e) then begin
+    if GetElementNativeValues(entry, '导航模型') = FormID(e) then begin
       nvmi := entry;
       Break;
     end;
   end;
   
   if Assigned(nvmi) then begin
-    AddMessage('Found NVMI subrecord in NAVI');
+    AddMessage('在 NAVI 中找到 NVMI 子记录');
   end;
   
   // now we need to do something here with NAVI...
@@ -82,7 +81,7 @@ begin
   // place navmesh below the ground (change Z on all vertices)
   // currently only for Skyrim
   if wbGameMode = gmTES5 then begin
-    vertices := ElementByPath(e, 'NVNM - Geometry\Vertices');
+    vertices := ElementByPath(e, 'NVNM - 几何学\顶点');
     for i := 0 to ElementCount(vertices) - 1 do
       SetElementNativeValues(ElementByIndex(vertices, v), 'Z', -30000);
   end;
@@ -92,7 +91,7 @@ end;
 
 function Finalize: integer;
 begin
-  AddMessage('Undeleted navmeshes: ' + IntToStr(UndeletedCount));
+  AddMessage('已修复 navmeshes ：' + IntToStr(UndeletedCount));
 end;
 
 end.

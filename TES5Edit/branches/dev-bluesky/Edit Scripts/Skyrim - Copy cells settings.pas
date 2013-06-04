@@ -1,4 +1,4 @@
-{
+﻿{
   Copy CELL records from selected plugin(s) to a new file to preserve their settings.
   Can be used for lighting overhauls. Select lighting plugins with Ctrl+Click in TES5Edit
   and apply this script. Created new patch file must be loaded last and recreated every

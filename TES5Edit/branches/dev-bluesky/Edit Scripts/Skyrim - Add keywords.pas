@@ -1,4 +1,4 @@
-{
+﻿{
   This script will add keywords to the keywords list of selected weapons.
   Almost no practical use, just a demo.
 }

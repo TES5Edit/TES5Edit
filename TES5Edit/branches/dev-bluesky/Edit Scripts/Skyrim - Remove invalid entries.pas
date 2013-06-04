@@ -1,4 +1,4 @@
-{
+﻿{
   Remove invalid items/spells/npcs from containers and leveled lists
 }
 unit UserScript;
@@ -47,11 +47,11 @@ begin
   
   // containers
   if s = 'CONT' then
-    RemoveInvalidEntries(e, 'Items', 'CNTO\Item', 'COCT')
+    RemoveInvalidEntries(e, '物品', 'CNTO\物品', 'COCT')
   else
   // leveled items, npcs and spells
   if (s = 'LVLI') or (s = 'LVLN') or (s = 'LVSP') then
-    RemoveInvalidEntries(e, 'Leveled List Entries', 'LVLO\Reference', 'LLCT');
+    RemoveInvalidEntries(e, '等级列表记录', 'LVLO\衍生', 'LLCT');
 
 end;
 

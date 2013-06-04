@@ -17,13 +17,16 @@ unit wbHelpers;
 interface
 
 uses
-  Classes,
+  Classes, ShellAPI,
   wbInterface, Direct3D9, D3DX9, DXTypes;
 
 function wbDistance(const a, b: TD3DXVector3): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
+function IsFileESM(const aFileName: string): Boolean;
+function IsFileESP(const aFileName: string): Boolean;
+procedure DeleteDirectory(const DirName: string);
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -94,10 +97,10 @@ begin
   aMainRecord.Tag;
 
   if Supports(aMainRecord, IwbContainerElementRef, CER) then begin
-    if Supports(CER.ElementByName['Leveled List Entries'], IwbContainerElementRef, LLE) then begin
+    if Supports(CER.ElementByName['等级列表记录'], IwbContainerElementRef, LLE) then begin
       for i := 0 to Pred(LLE.ElementCount) do
         if Supports(LLE.Elements[i], IwbContainerElementRef, LVLO) then begin
-          if Supports(LVLO.ElementByName['Reference'], IwbContainerElementRef, Reference) then begin
+          if Supports(LVLO.ElementByName['衍生'], IwbContainerElementRef, Reference) then begin
             if Supports(Reference.LinksTo, IwbMainRecord, MainRecord) then begin
               if (MainRecord.Signature = aMainRecord.Signature) then begin
                 MainRecord := MainRecord.WinningOverride;
@@ -207,6 +210,33 @@ begin
     if SameText(Strings[Result], Str) then
       Exit;
   Result := -1;
+end;
+
+function IsFileESM(const aFileName: string): Boolean;
+const
+  ghostesm = '.esm.ghost';
+begin
+  Result := SameText(ExtractFileExt(aFileName), '.esm') or
+    SameText(Copy(aFileName, Length(aFileName) - Length(ghostesm) + 1, Length(ghostesm)), ghostesm)
+end;
+
+function IsFileESP(const aFileName: string): Boolean;
+const
+  ghostesp = '.esp.ghost';
+begin
+  Result := SameText(ExtractFileExt(aFileName), '.esp') or
+    SameText(Copy(aFileName, Length(aFileName) - Length(ghostesp) + 1, Length(ghostesp)), ghostesp)
+end;
+
+procedure DeleteDirectory(const DirName: string);
+var
+  FileOp: TSHFileOpStruct;
+begin
+  FillChar(FileOp, SizeOf(FileOp), 0);
+  FileOp.wFunc := FO_DELETE;
+  FileOp.pFrom := PChar(DirName+#0);//double zero-terminated
+  FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
+  SHFileOperation(FileOp);
 end;
 
 { TnxFastStringList }

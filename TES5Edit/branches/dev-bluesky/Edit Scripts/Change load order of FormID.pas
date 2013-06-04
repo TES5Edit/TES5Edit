@@ -1,7 +1,8 @@
-{
-  Change FormID load order of selected records.
-  Built-in xEdit function "Change FormID" available in menu assigns
-  new formid, this script only changes load order part of formid.
+﻿{
+  
+  修改表单序号的加载顺序部分。
+  内置的右键菜单命令“修改表单序号”分配新的表单。
+  此脚本仅修改表单序号的加载顺序部分。
 }
 unit UserScript;
 
@@ -17,7 +18,7 @@ begin
   
   if NewLoadOrder = -1 then begin
     Result := 1;
-    if not InputQuery('Enter', 'New hexadecimal load order', s) then 
+    if not InputQuery('输入', '以十六进制定义新的加载顺序', s) then 
       Exit;
     if s = '' then
       Exit;

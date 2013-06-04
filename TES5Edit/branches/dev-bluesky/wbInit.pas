@@ -17,7 +17,8 @@ unit wbInit;
 interface
 
 var
-  wbApplicationTitle: string;
+  wbApplicationTitle : string;
+  wbInitDone         : Boolean = False;
 
 procedure wbDoInit;
 
@@ -103,13 +104,18 @@ begin
   end;
 end;
 
+function isMode(aMode: String): Boolean;
+begin
+  Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
+end;
+
 procedure wbDoInit;
 var
   s: string;
 begin
   wbReportMode := False;
 
-  if FindCmdLineSwitch('FNV') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FNV') then begin
+  if isMode('FNV') then begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
@@ -117,8 +123,7 @@ begin
     wbLoadBSAs := False;
     ReadSettings;
     DefineFNV;
-  end else
-  if FindCmdLineSwitch('FO3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 3), 'FO3') then begin
+  end else if isMode('FO3') then begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
@@ -126,7 +131,7 @@ begin
     wbLoadBSAs := False;
     ReadSettings;
     DefineFO3;
-  end else if FindCmdLineSwitch('TES3') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES3') then begin
+  end else if isMode('TES3') then begin
     ShowMessage('TES3 - Morrowind 暂时不受支持。');
     Exit;
     wbGameMode := gmTES3;
@@ -136,7 +141,7 @@ begin
     wbAllowInternalEdit := false;
     ReadSettings;
     DefineTES3;
-  end else if FindCmdLineSwitch('TES4') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES4') then begin
+  end else if isMode('TES4') then begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
@@ -144,7 +149,7 @@ begin
     wbAllowInternalEdit := false;
     ReadSettings;
     DefineTES4;
-  end else if FindCmdLineSwitch('TES5') or SameText(Copy(ExtractFileName(ParamStr(0)), 1, 4), 'TES5') then begin
+  end else if isMode('TES5') then begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
@@ -157,7 +162,7 @@ begin
     ReadSettings;
     DefineTES5;
   end else begin
-    ShowMessage('程序必须定义模式为 FNV, FO3, TES4 或者 TES5 才可以启动。');
+    ShowMessage('程序名必须包含 FNV, FO3, TES4 或者 TES5 才可以启动。');
     Exit;
   end;
 
@@ -182,7 +187,7 @@ begin
     wbShowInternalEdit := False;
 
   wbApplicationTitle := wbAppName + 'View ' + VersionString;
-  if FindCmdLineSwitch('lodgen') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'LODGen.exe') then begin
+  if isMode('lodgen') then begin
     if wbGameMode <> gmTES4 then begin
       ShowMessage('LODGen 模式仅对 TES4 有效。');
       Exit;
@@ -197,7 +202,7 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := True;
     wbBuildRefs := False;
-  end else if FindCmdLineSwitch('masterupdate') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'MasterUpdate.exe') then begin
+  end else if isMode('masterupdate') then begin
     if not (wbGameMode in [gmFO3, gmFNV]) then begin
       ShowMessage('MasterUpdate 模式仅对 FO3 和 FNV 有效。');
       Exit;
@@ -216,7 +221,7 @@ begin
       wbMasterUpdateFixPersistence := True
     else if FindCmdLineSwitch('NoFixPersistence') then
       wbMasterUpdateFixPersistence := False;
-  end else if FindCmdLineSwitch('masterrestore') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'MasterRestore.exe') then begin
+  end else if isMode('masterrestore') then begin
     if not (wbGameMode in [gmFO3, gmFNV]) then begin
       ShowMessage('MasterRestore 模式仅对 FO3 和 FNV 有效。');
       Exit;
@@ -230,10 +235,14 @@ begin
     wbShowInternalEdit := False;
     wbLoadBSAs := False;
     wbBuildRefs := False;
-  end else if FindCmdLineSwitch('edit') or (Pos('Edit', ExtractFileName(ParamStr(0)))>0) then begin
+  end else if isMode('view') then begin
+    wbApplicationTitle := wbAppName + 'View ' + VersionString;
+    wbEditAllowed := False;
+    wbDontSave := True;
+  end else if isMode('edit') then begin
     wbApplicationTitle := wbAppName + 'Edit ' + VersionString;
     wbEditAllowed := True;
-  end else if FindCmdLineSwitch('translate') or SameText(ExtractFileName(ParamStr(0)), wbAppName + 'Trans.exe') then begin
+  end else if isMode('translate') then begin
     wbApplicationTitle := wbAppName + 'Trans ' + VersionString;
     wbEditAllowed := True;
     wbTranslationMode := True;
@@ -247,6 +256,8 @@ begin
     wbFixupPGRD := True;
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
+
+  wbInitDone := True;
 end;
 
 initialization

@@ -1,4 +1,4 @@
-{*******************************************************************************
+ï»¿{*******************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -17,27 +17,48 @@ unit frmViewMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, ComCtrls, StdCtrls, Menus,
-  Math, IniFiles, TypInfo, ActiveX, Buttons, ActnList,
-  AppEvnts, System.Actions, ShellAPI, Vcl.Imaging.pngimage,
+  Windows,
+  Messages,
+  SysUtils,
+  Variants,
+  Classes,
+  Graphics,
+  Controls,
+  Forms,
+  Dialogs,
+  ExtCtrls,
+  ComCtrls,
+  StdCtrls,
+  Menus,
+  Math,
+  IniFiles,
+  TypInfo,
+  ActiveX,
+  Buttons,
+  ActnList,
+  AppEvnts,
+  ShellAPI,
+  IOUtils,
+  Actions,
+  pngimage,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
+  Direct3D9,
+  D3DX9,
+  {$IFDEF DX3D}
+  RenderUnit,
+  DXUT,
+  {$ENDIF DX3D}
+  JvComponentBase,
+  JvInterpreter,
   wbInterface,
   wbImplementation,
   wbBSA,
   wbNifScanner,
   wbHelpers,
-  wbLocalization,
-  Direct3D9,
-  D3DX9,
-{$IFDEF DX3D}
-  RenderUnit,
-  DXUT,
-{$ENDIF}
-  JvComponentBase,
-  JvInterpreter;
+  wbInit,
+  wbLocalization;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -265,6 +286,10 @@ type
     mniNavOther: TMenuItem;
     N13: TMenuItem;
     mniRefByMarkModified: TMenuItem;
+    mniViewNextMember: TMenuItem;
+    mniViewPreviousMember: TMenuItem;
+    mniViewHeaderJumpTo: TMenuItem;
+    acScript: TAction;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -469,6 +494,10 @@ type
     procedure mniRefByMarkModifiedClick(Sender: TObject);
     procedure JvInterpreterProgram1SetValue(Sender: TObject; Identifier: string;
       const Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
+    procedure mniViewNextMemberClick(Sender: TObject);
+    procedure mniViewPreviousMemberClick(Sender: TObject);
+    procedure mniViewHeaderJumpToClick(Sender: TObject);
+    procedure acScriptExecute(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -555,6 +584,8 @@ type
 
     function SetAllToMaster: Boolean;
     function RestorePluginsFromMaster: Boolean;
+    procedure ApplyScript(aScript: string);
+    procedure CreateActionsForScripts;
   private
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
@@ -575,6 +606,7 @@ type
     ForceTerminate: Boolean;
     ModGroups: TStringList;
     Settings: TMemIniFile;
+    AutoSave: Boolean;
 
     FilterPreset: Boolean; // new: flag to skip filter window
     FilterApplied: Boolean;
@@ -641,6 +673,7 @@ type
     CompareRecords: TDynMainRecords;
 
     ScriptProcessElements: TwbElementTypes;
+    ScriptHotkeys: TStringList;
 
 //    STATsWithWindows: TStringList;
 
@@ -790,6 +823,8 @@ var
 
   DataPath                    : string;
   ProgramPath                 : string;
+  wbTempPath                  : string;
+  ScriptsPath                 : string;
   MyGamesTheGamePath          : string;
   FilesToRename               : TStringList;
 
@@ -805,12 +840,23 @@ uses
   {$IFNDEF LiteVersion}
   cxVTEditors,
   {$ENDIF}
-  ShlObj, Registry, StrUtils, Types,
+  ShlObj,
+  Registry,
+  StrUtils,
+  Types,
+  {$IFNDEF VER220}
   UITypes,
+  {$ENDIF VER220}
   wbScriptAdapter,
-  FilterOptionsFrm, FileSelectFrm, ViewElementsFrm, EditWarningFrm,
-  frmLocalizationForm, frmLocalizePluginForm,
-  frmScriptForm, frmLogAnalyzerForm, frmOptionsForm;
+  FilterOptionsFrm,
+  FileSelectFrm,
+  ViewElementsFrm,
+  EditWarningFrm,
+  frmLocalizationForm,
+  frmLocalizePluginForm,
+  frmScriptForm,
+  frmLogAnalyzerForm,
+  frmOptionsForm;
 
 var
   NoNodes                     : TNodeArray;
@@ -837,7 +883,7 @@ begin
 
   Result := 0;
 
-  if InputQuery('ĞÂ FormID', 'ÇëÒÔ16½øÖÆÊäÈëĞÂµÄ FormID £¬Àı£º0404CC43¡£ÒªÇóÇ°Á½Î»Îª²å¼ş¼ÓÔØË³Ğò¡£', s) then try
+  if InputQuery('æ–°è¡¨å•åºå·', 'è¯·ä»¥16è¿›åˆ¶è¾“å…¥æ–°çš„è¡¨å•åºå·ï¼Œä¾‹ï¼š0404CC43ã€‚è¦æ±‚å‰ä¸¤ä½ä¸ºæ’ä»¶åŠ è½½é¡ºåºã€‚', s) then try
     Result := StrToInt64('$' + s);
   except
     on E: Exception do
@@ -873,13 +919,13 @@ begin
       if not wbDontBackup then begin
         // backup original file
         if not RenameFile(f, t) then begin
-          MessageBox(0, PChar('ÎŞ·¨ÖØÃüÃû "' + f + '" Îª "' + t + '".'), '´íÎó', 0);
+          MessageBox(0, PChar('æ— æ³•é‡å‘½å "' + f + '" ä¸º "' + t + '".'), 'é”™è¯¯', 0);
           Continue;
         end;
       end else
         // remove original file
         if not SysUtils.DeleteFile(f) then begin
-          MessageBox(0, PChar('ÎŞ·¨É¾³ı "' + f + '".'), '´íÎó', 0);
+          MessageBox(0, PChar('æ— æ³•åˆ é™¤ "' + f + '".'), 'é”™è¯¯', 0);
           Continue;
         end;
       // rename temp save file to original
@@ -887,7 +933,7 @@ begin
       s := FilesToRename.ValueFromIndex[i];
       f := DataPath + s;
       if not RenameFile(f, t) then
-        MessageBox(0, PChar('ÎŞ·¨ÖØÃüÃû "' + f + '" Îª "' + t + '".'), '´íÎó', 0)
+        MessageBox(0, PChar('æ— æ³•é‡å‘½å "' + f + '" ä¸º "' + t + '".'), 'é”™è¯¯', 0)
       else begin
         // restore timestamp on a new file
         e := ExtractFileExt(t);
@@ -938,6 +984,30 @@ begin
   acForward.Enabled := Assigned(ForwardHistory) and (ForwardHistory.Count > 0);
 end;
 
+procedure TfrmMain.acScriptExecute(Sender: TObject);
+var
+  slScript: TStringList;
+  i: integer;
+  s: string;
+begin
+  if not Assigned(Sender) then
+    Exit;
+
+  i := Pred((Sender as TAction).Tag);
+  if i >= ScriptHotkeys.Count then
+    Exit;
+
+  slScript := TStringList.Create;
+  try
+    slScript.LoadFromFile(ScriptHotkeys[i]);
+    s := slScript.Text;
+  finally
+    slScript.Free;
+  end;
+
+  ApplyScript(s);
+end;
+
 procedure TfrmMain.AddFile(const aFile: IwbFile);
 begin
   SetLength(Files, Succ(Length(Files)));
@@ -968,13 +1038,13 @@ begin
   aFile := nil;
   Result := False;
   s := '';
-  if InputQuery('ĞÂ½¨ÎÄ¼ş', 'ÊäÈëÎÄ¼şÃû£¬²»°üÀ¨ºó×ºÃû£º', s) then begin
+  if InputQuery('æ–°å»ºæ–‡ä»¶', 'è¾“å…¥æ–‡ä»¶åï¼Œä¸åŒ…æ‹¬åç¼€åï¼š', s) then begin
     Result := True;
     if s = '' then
       Exit;
     s := s + '.esp';
     if FileExists(DataPath + s) then begin
-      ShowMessage('ÒÑ´æÔÚÍ¬ÃûÎÄ¼ş¡£');
+      ShowMessage('å·²å­˜åœ¨åŒåæ–‡ä»¶ã€‚');
       Exit;
     end;
 
@@ -1025,11 +1095,11 @@ begin
 
       for i := 0 to Pred(sl.Count) do
         if IwbFile(Pointer(sl.Objects[i])).LoadOrder >= aTargetFile.LoadOrder then
-          raise Exception.Create('ÇëÇóµÄ Master ÎÄ¼ş "' + sl[i] + '" ÎŞ·¨Ìí¼Óµ½ "' + aTargetFile.FileName + '"£¬ÒòÎªËüµÄ¼ÓÔØË³Ğò¸ü¸ß¡£');
+          raise Exception.Create('è¯·æ±‚çš„ Master æ–‡ä»¶ "' + sl[i] + '" æ— æ³•æ·»åŠ åˆ° "' + aTargetFile.FileName + '"ï¼Œå› ä¸ºå®ƒçš„åŠ è½½é¡ºåºæ›´é«˜ã€‚');
 
-      Result := MessageDlg('Èç¹ûÒª¼ÌĞø£¬ÒÔÏÂÎÄ¼ş±ØĞëÌí¼Óµ½ "' +
-        aTargetFile.FileName + '" ²¢×÷Îª Master £º'#13#13 + sl.Text +
-        #13'ÄúÈ·¶¨Òª¼ÌĞøÂğ£¿', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+      Result := MessageDlg('å¦‚æœè¦ç»§ç»­ï¼Œä»¥ä¸‹æ–‡ä»¶å¿…é¡»ä½œä¸º Master æ·»åŠ åˆ° "' +
+        aTargetFile.FileName + '" :'#13#13 + sl.Text +
+        #13'æ‚¨ç¡®å®šè¦ç»§ç»­å—ï¼Ÿ', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 
       sl.Sorted := False;
       sl.CustomSort(CompareLoadOrder);
@@ -1066,11 +1136,11 @@ begin
 
       for i := 0 to Pred(sl.Count) do
         if IwbFile(Pointer(sl.Objects[i])).LoadOrder >= aTargetFile.LoadOrder then
-          raise Exception.Create('ÇëÇóµÄ Master ÎÄ¼ş "' + sl[i] + '" ÎŞ·¨Ìí¼Óµ½ "' + aTargetFile.FileName + '"£¬ÒòÎªËüµÄ¼ÓÔØË³Ğò¸ü¸ß¡£');
+          raise Exception.Create('è¯·æ±‚çš„ Master æ–‡ä»¶ "' + sl[i] + '" æ— æ³•æ·»åŠ åˆ° "' + aTargetFile.FileName + '"ï¼Œå› ä¸ºå®ƒçš„åŠ è½½é¡ºåºæ›´é«˜ã€‚');
 
-      Result := MessageDlg('Èç¹ûÒª¼ÌĞø£¬ÒÔÏÂÎÄ¼ş±ØĞëÌí¼Óµ½ "' +
-        aTargetFile.FileName + '" ²¢×÷Îª Master £º'#13#13 + sl.Text +
-        #13'ÄúÈ·¶¨Òª¼ÌĞøÂğ£¿', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+      Result := MessageDlg('å¦‚æœè¦ç»§ç»­ï¼Œä»¥ä¸‹æ–‡ä»¶å¿…é¡»ä½œä¸º Master æ·»åŠ åˆ° "' +
+        aTargetFile.FileName + '" :'#13#13 + sl.Text +
+        #13'æ‚¨ç¡®å®šè¦ç»§ç»­å—ï¼Ÿ', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 
       sl.Sorted := False;
       sl.CustomSort(CompareLoadOrder);
@@ -1173,13 +1243,13 @@ begin
       _File := Files[i];
       if not (csRefsBuild in _File.ContainerStates) then begin
         pgMain.ActivePage := tbsMessages;
-        wbCurrentAction := 'ÕıÔÚÉú³É ' + _File.Name + ' µÄÒıÓÃĞÅÏ¢¡£';
+        wbCurrentAction := 'æ­£åœ¨ç”Ÿæˆ ' + _File.Name + ' çš„å¼•ç”¨ä¿¡æ¯ã€‚';
         AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
         Application.ProcessMessages;
         _File.BuildRef;
       end;
     end;
-    AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] È«²¿Íê³É£¡');
+    AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å…¨éƒ¨å®Œæˆï¼');
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
@@ -1478,7 +1548,7 @@ const
 begin
   if Supports(aElement, IwbMainRecord, MainRecord) then begin
 
-    LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
+    LeveledListEntries := MainRecord.ElementByName['ç­‰çº§åˆ—è¡¨è®°å½•'] as IwbContainerElementRef;
     Assert(Assigned(LeveledListEntries));
 
     for i := 0 to Pred(LeveledListEntries.ElementCount) do
@@ -1491,7 +1561,7 @@ begin
     for i := Low(Entries) to High(Entries) do
       for j := Low(Counts) to High(Counts) do begin
         LeveledListEntry := LeveledListEntries.Assign(Low(Integer), Entries[i], False) as IwbContainerElementRef;
-        LeveledListEntry.ElementByName['Count'].NativeValue := Counts[j];
+        LeveledListEntry.ElementByName['æ•°é‡'].NativeValue := Counts[j];
       end;
   end;
 end;
@@ -1512,6 +1582,7 @@ var
   LeveledListEntries   : IwbContainerElementRef;
   LeveledListEntry     : IwbContainerElementRef;
   CopiedElement        : IwbElement;
+  Container            : IwbContainer;
 begin
   if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
@@ -1531,8 +1602,14 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(aElements) to High(aElements) do
+    for i := Low(aElements) to High(aElements) do begin
       aElements[i].ReportRequiredMasters(sl, AsNew);
+      Container := aElements[i].Container;
+      while Assigned(Container) do begin
+        Container.ReportRequiredMasters(sl, AsNew, False);
+        Container := Container.Container;
+      end;
+    end;
 
     j := 0;
     for i := 0 to Pred(sl.Count) do
@@ -1570,11 +1647,11 @@ begin
           EditorID := MainRecord.EditorID;
           repeat
             if AsWrapper then begin
-              if not InputQuery('EditorID', 'ÇëÊäÈë·â×°¸±±¾µÄ EditorID', EditorID) then
+              if not InputQuery('EditorID', 'è¯·è¾“å…¥å°è£…å‰¯æœ¬çš„ç¼–è¾‘å™¨æ ‡è¯†', EditorID) then
                 Exit;
             end
             else begin
-              if not InputQuery('EditorID', 'ÇëĞŞ¸Ä EditorID', EditorID) then
+              if not InputQuery('EditorID', 'è¯·ä¿®æ”¹ç¼–è¾‘å™¨æ ‡è¯†', EditorID) then
                 Exit;
             end;
             if EditorID = '' then
@@ -1582,9 +1659,9 @@ begin
             if not SameText(EditorID, MainRecord.EditorID) then
               Break;
             if AsWrapper then
-              ShowMessage('ÄúĞèÒª¸ø·â×°¸±±¾¶¨Òå²»Í¬µÄ EditorID¡£')
-            else if MessageDlg('ÄúÈ·¶¨²»ÒªĞŞ¸Ä EditorID Âğ£¿' +
-              'EditorID ³åÍ»»áµ¼ÖÂ²å¼şÔÚ CS ¼ÓÔØÖĞ³öÏÖ´íÎóĞÅÏ¢¡£',
+              ShowMessage('æ‚¨éœ€è¦ç»™å°è£…å‰¯æœ¬å®šä¹‰ä¸åŒçš„ç¼–è¾‘å™¨æ ‡è¯†ã€‚')
+            else if MessageDlg('æ‚¨ç¡®å®šä¸è¦ä¿®æ”¹ç¼–è¾‘å™¨æ ‡è¯†å—ï¼Ÿ' +
+              'ç¼–è¾‘å™¨æ ‡è¯†å†²çªä¼šå¯¼è‡´æ’ä»¶åœ¨ CS åŠ è½½ä¸­å‡ºç°é”™è¯¯ä¿¡æ¯ã€‚',
               mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
               Break;
           until False;
@@ -1593,33 +1670,33 @@ begin
       else begin
         if AsWrapper then
           if aElements[0].ElementType <> etMainRecord then
-            raise Exception.Create('ÎŞ·¨·â×°Õû¸öÈº×é');
+            raise Exception.Create('æ— æ³•å°è£…æ•´ä¸ªç¾¤ç»„');
 
         if AsNew or AsWrapper then
           repeat
-            if not InputQuery('EditorID Ç°×º', 'ÇëÊäÈëÓ¦¸Ã´Ó EditorID ÖĞÒÆ³ıµÄÇ°×º', EditorIDPrefixRemove) then
+            if not InputQuery('ç¼–è¾‘å™¨æ ‡è¯†å‰ç¼€', 'è¯·è¾“å…¥éœ€è¦ä»ç¼–è¾‘å™¨æ ‡è¯†ä¸­ç§»é™¤çš„å‰ç¼€', EditorIDPrefixRemove) then
               Exit;
-            if not InputQuery('EditorID Ç°×º', 'ÇëÊäÈëÓ¦¸ÃÌí¼Óµ½ EditorID µÄÇ°×º', EditorIDPrefix) then
+            if not InputQuery('ç¼–è¾‘å™¨æ ‡è¯†å‰ç¼€', 'è¯·è¾“å…¥éœ€è¦æ·»åŠ åˆ°ç¼–è¾‘å™¨æ ‡è¯†çš„å‰ç¼€', EditorIDPrefix) then
               Exit;
-            if not InputQuery('EditorID ºó×º', 'ÇëÊäÈëÓ¦¸ÃÌí¼Óµ½ EditorID µÄºó×º', EditorIDSuffix) then
+            if not InputQuery('ç¼–è¾‘å™¨æ ‡è¯†åç¼€', 'è¯·è¾“å…¥éœ€è¦æ·»åŠ åˆ°ç¼–è¾‘å™¨æ ‡è¯†çš„åç¼€', EditorIDSuffix) then
               Exit;
             if (EditorIDPrefix <> '') or (EditorIDSuffix <> '') then
               Break;
             if AsWrapper then
-              ShowMessage('Çë¶¨ÒåÇ°×º»òÕßºó×º¡£')
-            else if MessageDlg('ÄúÈ·¶¨²»ÒªĞŞ¸Ä EditorID Âğ£¿' +
-              'EditorID ³åÍ»»áµ¼ÖÂ²å¼şÔÚ CS ¼ÓÔØÖĞ³öÏÖ´íÎóĞÅÏ¢¡£',
+              ShowMessage('è¯·å®šä¹‰å‰ç¼€æˆ–è€…åç¼€ã€‚')
+            else if MessageDlg('æ‚¨ç¡®å®šä¸è¦ä¿®æ”¹ç¼–è¾‘å™¨æ ‡è¯†å—ï¼Ÿ' +
+              'ç¼–è¾‘å™¨æ ‡è¯†å†²çªä¼šå¯¼è‡´æ’ä»¶åœ¨ CS åŠ è½½ä¸­å‡ºç°é”™è¯¯ä¿¡æ¯ã€‚',
               mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
               Break;
           until False;
       end;
 
-      CheckListBox1.AddItem('<ĞÂ½¨ÎÄ¼ş>', nil);
+      CheckListBox1.AddItem('<æ–°å»ºæ–‡ä»¶>', nil);
 
       if Multiple then
-        Caption := 'Ñ¡ÔñÏ£ÍûÌí¼Ó¼ÇÂ¼µÄÎÄ¼ş'
+        Caption := 'é€‰æ‹©å¸Œæœ›æ·»åŠ è®°å½•çš„æ–‡ä»¶'
       else
-        Caption := 'Ñ¡ÔñÏ£ÍûÌí¼Ó¼ÇÂ¼µÄÎÄ¼ş';
+        Caption := 'é€‰æ‹©å¸Œæœ›æ·»åŠ è®°å½•çš„æ–‡ä»¶';
 
       ShowModal;
 
@@ -1648,14 +1725,14 @@ begin
                 MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '') as IwbMainRecord;
                 Assert(Assigned(MainRecord));
                 MainRecord.Assign(Low(Integer), nil, False);
-                LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
+                LeveledListEntries := MainRecord.ElementByName['ç­‰çº§åˆ—è¡¨è®°å½•'] as IwbContainerElementRef;
                 Assert(Assigned(LeveledListEntries));
                 Assert(LeveledListEntries.ElementCount = 1);
                 LeveledListEntry := LeveledListEntries.Elements[0] as IwbContainerElementRef;
                 Assert(Assigned(LeveledListEntry));
-                LeveledListEntry.ElementByName['Reference'].EditValue := MainRecord2.EditValue;
-                LeveledListEntry.ElementByName['Count'].EditValue := '1';
-                LeveledListEntry.ElementByName['Level'].EditValue := '1';
+                LeveledListEntry.ElementByName['è¡ç”Ÿ'].EditValue := MainRecord2.EditValue;
+                LeveledListEntry.ElementByName['æ•°é‡'].EditValue := '1';
+                LeveledListEntry.ElementByName['ç­‰çº§'].EditValue := '1';
                 MainRecord.EditorID := EditorID;
                 Result[j] := MainRecord;
               end;
@@ -1676,7 +1753,7 @@ begin
                   end;
                 except
                   on E: Exception do
-                    AddMessage('¸´ÖÆ '+aElements[j].Name+' Ê±·¢Éú´íÎó£º'+E.Message);
+                    AddMessage('å¤åˆ¶ '+aElements[j].Name+' æ—¶å‘ç”Ÿé”™è¯¯ï¼š'+E.Message);
                 end;
             end else begin
               MainRecord := nil;
@@ -1730,26 +1807,26 @@ begin
   for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
     ReferencedBy[i] := ActiveMaster.ReferencedBy[i];
 
-  if InputQuery('ĞÂ FormID', 'ÇëÒÔÊ®Áù½øÖÆÊıÊäÈëĞÂµÄ FormID £¬Àı£º0404CC43¡£Ç°Á½Î»Êı±ØĞë·ûºÏ²å¼şµÄ¼ÓÔØË³Ğò¡£', s) then try
+  if InputQuery('æ–°è¡¨å•åºå·', 'è¯·ä»¥åå…­è¿›åˆ¶æ•°è¾“å…¥æ–°çš„è¡¨å•åºå·ï¼Œä¾‹ï¼š0404CC43ã€‚å‰ä¸¤ä½æ•°å¿…é¡»ç¬¦åˆæ’ä»¶çš„åŠ è½½é¡ºåºã€‚', s) then try
     NewFormID := StrToInt64('$' + s);
     if NewFormID = 0 then
-      raise Exception.Create('00000000 ²»ÊÇÓĞĞ§µÄ FormID');
+      raise Exception.Create('00000000 ä¸æ˜¯æœ‰æ•ˆçš„è¡¨å•åºå·');
     if NewFormID = $14 then
-      raise Exception.Create('00000014 ²»ÊÇÓĞĞ§µÄ FormID');
+      raise Exception.Create('00000014 ä¸æ˜¯æœ‰æ•ˆçš„è¡¨å•åºå·');
 
     OldFormID := MainRecord.LoadOrderFormID;
     if NewFormID = OldFormID then begin
-      ShowMessage('Ç°ºóÁ½´ÎµÄ FormID ÊÇÒ»ÑùµÄ');
+      ShowMessage('å‰åä¸¤æ¬¡çš„è¡¨å•åºå·æ˜¯ä¸€æ ·çš„');
       Exit;
     end;
 
     if Length(ReferencedBy) > 0 then
       ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, False)
     else
-      raise Exception.Create('ÎŞÆäËû¼ÇÂ¼ÒıÓÃ´Ë¼ÇÂ¼');
+      raise Exception.Create('æ— å…¶ä»–è®°å½•å¼•ç”¨æ­¤è®°å½•');
   except
     on E: Exception do
-      ShowMessage('´íÎó£º' + E.Message);
+      ShowMessage('é”™è¯¯ï¼š' + E.Message);
   end;
 end;
 
@@ -1792,7 +1869,7 @@ begin
       Result := CheckForErrors(aIndent + 1, Container.Elements[i]) or Result;
 
   if Result and (Error = '') then begin
-    wbProgressCallback(StringOfChar(' ', aIndent * 2) + 'ÒÔÉÏ´íÎóÎ»ÓÚ£º' + aElement.Name);
+    wbProgressCallback(StringOfChar(' ', aIndent * 2) + 'ä»¥ä¸Šé”™è¯¯ä½äºï¼š' + aElement.Name);
   end;
 end;
 
@@ -1864,16 +1941,16 @@ begin
       NodeData := vstNav.GetNodeData(Nodes[i]);
       if Assigned(NodeData) then
         if Assigned(NodeData.Container) then begin
-          wbCurrentAction := 'ÕıÔÚ¼ì²é ' + NodeData.Container.Name + ' µÄ´íÎó';
+          wbCurrentAction := 'æ­£åœ¨æ£€æŸ¥ ' + NodeData.Container.Name + ' çš„é”™è¯¯';
           wbProgressCallback(wbCurrentAction);
           CheckForErrors(0, NodeData.Container)
         end else if Assigned(NodeData.Element) then begin
-          wbCurrentAction := 'ÕıÔÚ¼ì²é ' + NodeData.Element.Name + ' µÄ´íÎó';
+          wbCurrentAction := 'æ­£åœ¨æ£€æŸ¥ ' + NodeData.Element.Name + ' çš„é”™è¯¯';
           wbProgressCallback(wbCurrentAction);
           CheckForErrors(0, NodeData.Element);
         end;
     end;
-    wbProgressCallback('È«²¿Íê³É£¡');
+    wbProgressCallback('å…¨éƒ¨å®Œæˆï¼');
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
@@ -1951,7 +2028,7 @@ begin
           if not FileExists(s) then Break;
         end;
       if FileExists(s) then begin
-        wbProgressCallback('ÎŞ·¨¸´ÖÆ '+FileName+' µ½ '+DataPath);
+        wbProgressCallback('æ— æ³•å¤åˆ¶ '+FileName+' åˆ° '+DataPath);
         Exit;
       end;
       CompareFile := s;
@@ -2028,7 +2105,7 @@ begin
       with TfrmFileSelect.Create(nil) do try
 
         CheckListBox1.Items.Assign(sl);
-        Caption := 'ÄúÏëÒª¸´ÖÆÄÄ¸ö Idle £¿';
+        Caption := 'æ‚¨æƒ³è¦å¤åˆ¶å“ªä¸ª Idle ï¼Ÿ';
 
         ShowModal;
 
@@ -2043,7 +2120,7 @@ begin
             NewModelPrefix := OldModelPrefix;
 
             repeat
-              if not InputQuery('Ä£ĞÍÇ°×º', 'ÇëĞŞ¸ÄÄ£ĞÍµÄÇ°×º', NewModelPrefix) then
+              if not InputQuery('æ¨¡å‹å‰ç¼€', 'è¯·ä¿®æ”¹æ¨¡å‹çš„å‰ç¼€', NewModelPrefix) then
                 Exit;
             until not SameText(OldModelPrefix, NewModelPrefix);
 
@@ -2327,7 +2404,7 @@ var
         end;
 
         if IsFaultyOrderedList then begin
-          PostAddMessage('´íÎó£ºÎŞ·¨ÕûºÏ´æÔÚ´íÎóµÄ¼ÓÔØÁĞ±í ' + Master.Name);
+          PostAddMessage('é”™è¯¯ï¼šæ— æ³•æ•´åˆå­˜åœ¨é”™è¯¯çš„åŠ è½½åˆ—è¡¨ ' + Master.Name);
         end else
         // unsafe to copy VMAD subrecords to merged patch until they are decoded
         {if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
@@ -2394,21 +2471,21 @@ begin
 
   ResetAllTags;
   for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
-    CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
-    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
-    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['LVLI'], ['ç­‰çº§åˆ—è¡¨è®°å½•'], ['LLCT - æ•°é‡']);
+    CheckGroup(GroupBySignature['LVLC'], ['ç­‰çº§åˆ—è¡¨è®°å½•'], ['LLCT - æ•°é‡']);
+    CheckGroup(GroupBySignature['LVLN'], ['ç­‰çº§åˆ—è¡¨è®°å½•'], ['LLCT - æ•°é‡']);
+    CheckGroup(GroupBySignature['LVSP'], ['ç­‰çº§åˆ—è¡¨è®°å½•'], ['LLCT - æ•°é‡']);
+    CheckGroup(GroupBySignature['CONT'], ['ç‰©å“'], ['COCT - æ•°é‡']);
+    CheckGroup(GroupBySignature['FACT'], ['å…³ç³»'], []);
+    CheckGroup(GroupBySignature['RACE'], ['HNAM - å‘å‹', 'ENAM - çœ¼ç›', 'é­”æ³•'], ['', '', 'SPCT - æ•°é‡']);
+    CheckGroup(GroupBySignature['FLST'], ['è¡¨å•åºå·'], [], True);
+    CheckGroup(GroupBySignature['CREA'], ['ç‰©å“', 'æ´¾ç³»'], ['COCT - æ•°é‡', '']);
+    CheckGroup(GroupBySignature['NPC_'], ['ç‰©å“', 'æ´¾ç³»', 'å¤´éƒ¨éƒ¨åˆ†', 'é­”æ³•', 'å¤©èµ‹', 'KWDA - å…³é”®å­—'], ['COCT - æ•°é‡', '', '', 'SPCT - æ•°é‡', 'PRKZ - å¤©èµ‹æ•°é‡', 'KSIZ - å…³é”®å­—æ•°é‡']);
+    CheckGroup(GroupBySignature['ALCH'], ['KWDA - å…³é”®å­—'], ['KSIZ - å…³é”®å­—æ•°é‡']);
+    CheckGroup(GroupBySignature['MISC'], ['KWDA - å…³é”®å­—'], ['KSIZ - å…³é”®å­—æ•°é‡']);
+    CheckGroup(GroupBySignature['WEAP'], ['KWDA - å…³é”®å­—'], ['KSIZ - å…³é”®å­—æ•°é‡']);
+    CheckGroup(GroupBySignature['ARMO'], ['KWDA - å…³é”®å­—'], ['KSIZ - å…³é”®å­—æ•°é‡']);
+    CheckGroup(GroupBySignature['AMMO'], ['KWDA - å…³é”®å­—'], ['KSIZ - å…³é”®å­—æ•°é‡']);
   end;
 
   TargetFile.CleanMasters;
@@ -2451,10 +2528,10 @@ begin
       if Assigned(Group) then begin
         for n := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
-            QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
+            QustFlags := MainRecord.ElementByPath['DNAM - General\æ ‡å¿—'];
             // include SGE quests which are new or set SGE flag on master quest
             if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then
-              if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
+              if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\æ ‡å¿—'] and 1 = 0) then begin
                 SetLength(FormIDs, Succ(Length(FormIDs)));
                 FormIDs[High(FormIDs)] := MainRecord.FixedFormID;
               end;
@@ -2462,17 +2539,17 @@ begin
       end;
 
       if Length(FormIDs) = 0 then
-        PostAddMessage('Ìø¹ı£º' + _File.FileName + ' ²»ĞèÒªĞòÁĞÎÄ¼ş')
+        PostAddMessage('è·³è¿‡ï¼š' + _File.FileName + ' ä¸éœ€è¦åºåˆ—æ–‡ä»¶')
       else try
         try
           p := DataPath + 'Seq\';
           if not DirectoryExists(p) then
             if not ForceDirectories(p) then
-              raise Exception.Create('ÎŞ·¨ÔÚ Data Ä¿Â¼ÖĞ´´½¨ SEQ Ä¿Â¼');
+              raise Exception.Create('æ— æ³•åœ¨ Data ç›®å½•ä¸­åˆ›å»º SEQ ç›®å½•');
           s := p + ChangeFileExt(_File.FileName, '.seq');
           FileStream := TFileStream.Create(s, fmCreate);
           FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
-          PostAddMessage('ÒÑ´´½¨£º' + s);
+          PostAddMessage('å·²åˆ›å»ºï¼š' + s);
           Inc(j);
         finally
           if Assigned(FileStream) then
@@ -2480,7 +2557,7 @@ begin
         end;
       except
         on e: Exception do begin
-          PostAddMessage('´íÎó£ºÎŞ·¨´´½¨ ' + s + ', ' + E.Message);
+          PostAddMessage('é”™è¯¯ï¼šæ— æ³•åˆ›å»º ' + s + ', ' + E.Message);
           Exit;
         end;
       end;
@@ -2488,7 +2565,7 @@ begin
       Inc(Count);
     end;
   end;
-  PostAddMessage('[Íê³É´´½¨ SEQ ÎÄ¼ş] ´¦ÀíµÄ²å¼ş£º' + IntToStr(Count) + ' ´´½¨µÄĞòÁĞÎÄ¼ş£º' + IntToStr(j));
+  PostAddMessage('[å®Œæˆåˆ›å»º SEQ æ–‡ä»¶] å¤„ç†çš„æ’ä»¶ï¼š' + IntToStr(Count) + ' åˆ›å»ºçš„åºåˆ—æ–‡ä»¶ï¼š' + IntToStr(j));
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -2497,6 +2574,7 @@ var
   NodeData                    : PNavNodeData;
   Elements                    : array of IwbElement;
   ReferenceFile               : IwbFile;
+  Container                   : IwbContainer;
   InjectionSourceFiles        : TDynFiles;
   sl                          : TStringList;
   i, j                        : Integer;
@@ -2538,15 +2616,21 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(Elements) to High(Elements) do
+    for i := Low(Elements) to High(Elements) do begin
       Elements[i].ReportRequiredMasters(sl, False);
+      Container := Elements[i].Container;
+      while Assigned(Container) do begin
+        Container.ReportRequiredMasters(sl, False, False);
+        Container := Container.Container;
+      end;
+    end;
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
         wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '','');
         if Elements[j].RemoveInjected(False) then begin
           pgMain.ActivePage := tbsMessages;
-          AddMessage('×¢Èëµ½ '+Elements[j].Name+' µÄÒıÓÃÎŞ·¨ÍêÈ«×Ô¶¯ÒÆ³ı¡£');
+          AddMessage('æ³¨å…¥åˆ° '+Elements[j].Name+' çš„å¼•ç”¨æ— æ³•å®Œå…¨è‡ªåŠ¨ç§»é™¤ã€‚');
         end;
       end;
   finally
@@ -2664,7 +2748,7 @@ begin
   slESP := TStringList.Create;
   try
     for i := 0 to List.Count - 1 do begin
-      IsESM := SameText(ExtractFileExt(List[i]), '.esm');
+      IsESM := IsFileESM(List[i]);
       if IsESM then
         slESM.Add(List[i])
       else
@@ -2688,8 +2772,8 @@ var
   FileDateTime1               : TDateTime;
   FileDateTime2               : TDateTime;
 begin
-  IsESM1 := SameText(ExtractFileExt(List[Index1]), '.esm');
-  IsESM2 := SameText(ExtractFileExt(List[Index2]), '.esm');
+  IsESM1 := IsFileESM(List[Index1]);
+  IsESM2 := IsFileESM(List[Index2]);
 
   if IsESM1 = IsESM2 then begin
 
@@ -2722,6 +2806,7 @@ destructor TfrmMain.Destroy;
 begin
   inherited;
   FreeAndNil(NewMessages);
+  FreeAndNil(ScriptHotkeys);
 end;
 
 procedure TfrmMain.DisplayPanelResize(Sender: TObject);
@@ -2743,7 +2828,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   try
-    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Éú³ÉÆ÷£º¿ªÊ¼¹¤×÷');
+    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD ç”Ÿæˆå™¨ï¼šå¼€å§‹å·¥ä½œ');
 
     Worldspaces := nil;
     for i := Low(Files) to High(Files) do begin
@@ -2784,11 +2869,11 @@ begin
         end;
       except
         on E: Exception do begin
-          frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Éú³ÉÆ÷£º<´íÎó£º'+E.Message+'>');
+          frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD ç”Ÿæˆå™¨ï¼š<é”™è¯¯ï¼š'+E.Message+'>');
           raise;
         end;
       end;
-      frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Éú³ÉÆ÷£ºÒÑÍê³É£¨ÏÖÔÚÄú¿ÉÒÔ¹Ø±Õ±¾³ÌĞò£©');
+      frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD ç”Ÿæˆå™¨ï¼šå·²å®Œæˆï¼ˆç°åœ¨æ‚¨å¯ä»¥å…³é—­æœ¬ç¨‹åºï¼‰');
     finally
       Self.Caption := Application.Title;
     end;
@@ -2798,6 +2883,55 @@ begin
 end;
 
 procedure TfrmMain.DoInit;
+
+  // remove comments, empty lines and missing files from list
+  procedure FixLoadList(sl: TStrings);
+  var
+    i, j: integer;
+    s: string;
+  begin
+    for i := Pred(sl.Count) downto 0 do begin
+      s := Trim(sl.Strings[i]);
+      j := Pos('#', s);
+      if j > 0 then
+        System.Delete(s, j, High(Integer));
+      s := Trim(s);
+      if (s = '') or not FileExists(DataPath + s) then begin
+        sl.Delete(i);
+        Continue;
+      end;
+    end;
+  end;
+
+  // add missing plugin files to list sorted by timestamps
+  procedure AddMissingToLoadList(sl: TStrings);
+  var
+    F     : TSearchRec;
+    slNew : TStringList;
+  begin
+    if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
+      slNew := TStringList.Create;
+      try
+        repeat
+          if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
+            if SameText(F.Name, wbGameName + '.hardcoded.esp') then
+              DeleteFile(DataPath + F.Name)
+            else
+            if FindMatchText(sl, F.Name) < 0 then
+              slNew.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+          end;
+        until FindNext(F) <> 0;
+        slNew.CustomSort(PluginListCompare);
+        sl.AddStrings(slNew);
+      finally
+        slNew.Free;
+      end;
+    finally
+      FindClose(F);
+    end;
+  end;
+
+
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
@@ -2811,7 +2945,10 @@ var
   Age                         : Integer;
   AgeDateTime                 : TDateTime;
 begin
+  while not wbInitDone do Sleep(10);
+
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+  ScriptsPath := ProgramPath + 'Edit Scripts\';
 
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -2833,6 +2970,7 @@ begin
   wbHideUnused := True;
   wbFlagsAsArray := True;
   wbRequireLoadOrder := True;
+  AutoSave := False;
 
   vstNav.NodeDataSize := SizeOf(TNavNodeData);
   vstView.DragImageKind := diDragColumnOnly;
@@ -2855,6 +2993,7 @@ begin
 
   ModGroups := TStringList.Create;
 
+  wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit');
   DataPath := CheckAppPath;
 
   if DataPath = '' then with TRegistry.Create do try
@@ -2862,9 +3001,9 @@ begin
 
     if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
       if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
-        AddMessage('´íÎó£ºÎŞ·¨´ò¿ª×¢²á±í¼üÖµ£º' + sBethRegKey + wbGameName + '\');
+        AddMessage('é”™è¯¯ï¼šæ— æ³•æ‰“å¼€æ³¨å†Œè¡¨é”®å€¼ï¼š' + sBethRegKey + wbGameName + '\');
         if wbGameMode = gmTES5 then
-          AddMessage('¸üĞÂ Steam ºóÈİÒ×³öÏÖ´ËÎÊÌâ£¬ÇëÖØĞÂÔËĞĞ Launcher ĞŞ¸´»òÕßÔËĞĞ×¢²á±í²¹¶¡¡£');
+          AddMessage('æ›´æ–° Steam åå®¹æ˜“å‡ºç°æ­¤é—®é¢˜ï¼Œè¯·é‡æ–°è¿è¡Œ Launcher ä¿®å¤æˆ–è€…è¿è¡Œæ³¨å†Œè¡¨è¡¥ä¸ã€‚');
         wbDontSave := True;
         Exit;
       end;
@@ -2872,9 +3011,9 @@ begin
     DataPath := ReadString('Installed Path');
 
     if DataPath = '' then begin
-      AddMessage('´íÎó£ºÎŞ·¨ÅĞ¶Ï '+wbGameName+' °²×°Â·¾¶£¬²»´æÔÚ "Installed Path" ¼üÖµ¡£');
+      AddMessage('é”™è¯¯ï¼šæ— æ³•åˆ¤æ–­ '+wbGameName+' å®‰è£…è·¯å¾„ï¼Œä¸å­˜åœ¨ "Installed Path" é”®å€¼ã€‚');
       if wbGameMode = gmTES5 then
-        AddMessage('¸üĞÂ Steam ºóÈİÒ×³öÏÖ´ËÎÊÌâ£¬ÇëÖØĞÂÔËĞĞ Launcher ĞŞ¸´¡£');
+        AddMessage('æ›´æ–° Steam åå®¹æ˜“å‡ºç°æ­¤é—®é¢˜ï¼Œè¯·é‡æ–°è¿è¡Œ Launcher ä¿®å¤ã€‚');
       wbDontSave := True;
       Exit;
     end;
@@ -2883,23 +3022,30 @@ begin
     Free;
   end;
 
-  AddMessage(wbAppName + 'Edit ' + VersionString + ' ÕıÔÚÆô¶¯½ø³Ì ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+  AddMessage(wbApplicationTitle + ' æ­£åœ¨å¯åŠ¨è¿›ç¨‹ ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
   DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
   wbDataPath := DataPath;
-  AddMessage('Ê¹ÓÃ '+wbGameName+' Data Â·¾¶£º' + DataPath);
+  AddMessage('ä½¿ç”¨ '+wbGameName+' Data è·¯å¾„ï¼š' + DataPath);
 
   PluginsFileName := '';
   if ParamCount >= 1 then begin
     PluginsFileName := ParamStr(1);
+    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
+      if ParamCount >= 2 then begin
+        TheGameIniFileName := ParamStr(2);
+        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
+          TheGameIniFileName := '';
+      end;
     if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
       PluginsFileName := '';
+    end;
   end;
 
   if PluginsFileName = '' then begin
     PluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
     if PluginsFileName = '' then begin
-      AddMessage('´íÎó£ºÎŞ·¨ÅĞ¶Ï local application data Â·¾¶');
+      AddMessage('é”™è¯¯ï¼šæ— æ³•åˆ¤æ–­ local application data è·¯å¾„');
       Exit;
     end;
 
@@ -2909,7 +3055,7 @@ begin
   if TheGameIniFileName = '' then begin
     TheGameIniFileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
     if TheGameIniFileName = '' then begin
-      AddMessage('´íÎó£ºÎŞ·¨ÅĞ¶Ï my documents Â·¾¶');
+      AddMessage('é”™è¯¯ï¼šæ— æ³•åˆ¤æ–­ my documents è·¯å¾„');
       Exit;
     end;
 
@@ -2919,17 +3065,17 @@ begin
       TheGameIniFileName := MyGamesTheGamePath + wbGameName + '.ini'
     else
       TheGameIniFileName := MyGamesTheGamePath + 'Fallout.ini';
-    AddMessage('Ê¹ÓÃ ini ÎÄ¼ş£º' + TheGameIniFileName);
+    AddMessage('ä½¿ç”¨ ini æ–‡ä»¶ï¼š' + TheGameIniFileName);
 
     if not FileExists(TheGameIniFileName) then begin
-      AddMessage('´íÎó£ºÕÒ²»µ½ ini');
+      AddMessage('é”™è¯¯ï¼šæ‰¾ä¸åˆ° ini');
       Exit;
     end;
   end;
 
   SettingsFileName := ChangeFileExt(PluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
 
-  AddMessage('Ê¹ÓÃÅäÖÃÎÄ¼ş£º' + SettingsFileName);
+  AddMessage('ä½¿ç”¨é…ç½®æ–‡ä»¶ï¼š' + SettingsFileName);
 
   Settings := TMemIniFile.Create(SettingsFileName);
 
@@ -2939,7 +3085,7 @@ begin
   Height := Settings.ReadInteger(Name, 'Height', Height);
   WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
 
-  AddMessage('¼ÓÔØÒÑ¼¤»î²å¼şÁĞ±í£º' + PluginsFileName);
+  AddMessage('åŠ è½½å·²æ¿€æ´»æ’ä»¶åˆ—è¡¨ï¼š' + PluginsFileName);
 
   try
     sl := TStringList.Create;
@@ -2947,61 +3093,55 @@ begin
 
       with TfrmFileSelect.Create(nil) do try
 
-        if wbGameMode = gmTES5 then begin
-          // Skyrim doesn't use timestamps anymore, only plugins.txt
-          // check if there is a BOSS plugins list present and use it
+        {
+           *** Load order handling for Skyrim ***
+           Plugins are sorted by the order in plugins.txt
+           1. Load plugins list from plugins file
+           2. Add missing files from BOSS list loadorder.txt
+           3. Add missing files from Data folder
+        }
+        if wbGameMode in [gmTES5] then begin
+          sl.LoadFromFile(PluginsFileName);
+          FixLoadList(sl);
+          // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
+          // even if not present in plugins.txt
+          j := FindMatchText(sl, wbGameName+'.esm');
+          if j = -1 then sl.Insert(0, wbGameName+'.esm');
+          j := FindMatchText(sl, 'Update.esm');
+          if j = -1 then sl.Insert(1, 'Update.esm');
+
           s := ExtractFilePath(PluginsFileName) + 'loadorder.txt';
           if FileExists(s) then begin
-            AddMessage('ÕÒµ½ BOSS ÅÅĞòÁĞ±í£º' + s);
-            sl.LoadFromFile(s)
-          end else
-            sl.LoadFromFile(PluginsFileName);
-
-          for i := Pred(sl.Count) downto 0 do begin
-            s := Trim(sl.Strings[i]);
-            j := Pos('#', s);
-            if j > 0 then
-              System.Delete(s, j, High(Integer));
-            s := Trim(s);
-            if (s = '') or not FileExists(DataPath + s) then begin
-              sl.Delete(i);
-              Continue;
+            AddMessage('æ‰¾åˆ° BOSS æ’åºåˆ—è¡¨ï¼š' + s);
+            sl2 := TStringList.Create;
+            try
+              sl2.LoadFromFile(s);
+              // skip first line "Skyrim.esm" in BOSS list
+              for i := 1 to Pred(sl2.Count) do begin
+                j := FindMatchText(sl, sl2[i]);
+                // if plugin exists in plugins file, skip
+                if j <> -1 then Continue;
+                // otherwise insert it after position of previous plugin
+                j := FindMatchText(sl, sl2[i-1]);
+                if j <> -1 then
+                  sl.Insert(j+1, sl2[i]);
+              end;
+            finally
+              sl2.Free;
             end;
           end;
+          AddMissingToLoadList(sl);
+          PluginListGroupESM(sl)
+        end
+
+        else
+        {
+           *** Load order handling for Oblivion, Fallout3 and New Vegas ***
+           Plugins are sorted by timestamps
+        }
+        begin
+          AddMissingToLoadList(sl);
         end;
-
-        // plugins list for Oblivion, Fallout3, FNV with timestamps
-        // Skyrim: add missing plugins that are in Data folder
-        if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
-          repeat
-            s := ExtractFileExt(F.Name);
-            if SameText(s, '.esm') or SameText(s, '.esp') or ContainsText(F.Name, '.esp.ghost') then begin
-              if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-                DeleteFile(DataPath + F.Name)
-              else
-              if FindMatchText(sl, F.Name) < 0 then
-                sl.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
-            end;
-          until FindNext(F) <> 0;
-        finally
-          FindClose(F);
-        end;
-
-        if wbGameMode = gmTES5 then begin
-          // Skyrim: load order is no longer sorted by timestamp
-          PluginListGroupESM(sl);
-
-          // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
-          // even if plugins.txt is empty
-          j := FindMatchText(sl, 'Skyrim.esm');
-          if j > 0 then
-            sl.Move(j, 0);
-
-          j := FindMatchText(sl, 'Update.esm');
-          if j > 1 then
-            sl.Move(j, 1);
-        end else
-          sl.CustomSort(PluginListCompare);
 
         if wbMasterUpdate and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
           Age := Integer(sl.Objects[0]);
@@ -3029,7 +3169,7 @@ begin
 
           j := CheckListBox1.Items.IndexOf(s);
           if j < 0 then
-            AddMessage('×¢Òâ£ºÒÑ¼¤»î²å¼şÁĞ±íÖĞ³öÏÖ²»´æÔÚµÄÎÄ¼ş "' + s + '"')
+            AddMessage('æ³¨æ„ï¼šå·²æ¿€æ´»æ’ä»¶åˆ—è¡¨ä¸­å‡ºç°ä¸å­˜åœ¨çš„æ–‡ä»¶ "' + s + '"')
           else
             CheckListBox1.Checked[j] := True;
         end;
@@ -3088,7 +3228,7 @@ begin
         with TfrmFileSelect.Create(nil) do try
 
           if (not wbEditAllowed) or wbTranslationMode then begin
-            Caption := 'Ìø¹ıÕâĞ©¼ÇÂ¼£º';
+            Caption := 'è·³è¿‡è¿™äº›è®°å½•ï¼š';
 
             sl2 := TStringList.Create;
             try
@@ -3137,7 +3277,7 @@ begin
                   end;
 
                   if sl2.Count < 2 then begin
-                    AddMessage('ºöÂÔ ModGroup ' + ModGroups[i] + '£º¼¤»îµÄ²å¼şÊıÄ¿Ğ¡ÓÚ 2');
+                    AddMessage('å¿½ç•¥ ModGroup ' + ModGroups[i] + 'ï¼šæ¿€æ´»çš„æ’ä»¶æ•°ç›®å°äº 2');
                     ModGroups.Delete(i);
                   end
                   else begin
@@ -3145,7 +3285,7 @@ begin
                     for j := 1 to Pred(sl2.Count) do begin
                       if Integer(sl2.Objects[j]) <= k then begin
                         sl2.Clear;
-                        AddMessage('ºöÂÔ ModGroup ' + ModGroups[i] + '£º²å¼şÃ»ÓĞÕıÈ·ÅÅĞò');
+                        AddMessage('å¿½ç•¥ ModGroup ' + ModGroups[i] + 'ï¼šæ’ä»¶æ²¡æœ‰æ­£ç¡®æ’åº');
                         ModGroups.Delete(i);
                         Break;
                       end;
@@ -3169,7 +3309,7 @@ begin
 
       if ModGroups.Count > 0 then begin
         with TfrmFileSelect.Create(nil) do try
-          Caption := 'Ñ¡Ôñ ModGroups';
+          Caption := 'é€‰æ‹© ModGroups';
 
           sl2 := TStringList.Create;
           try
@@ -3209,7 +3349,7 @@ begin
     end;
   except
     on E: Exception do begin
-      AddMessage('´íÎó£º¶ÁÈ¡²å¼şÁĞ±íÊ±·¢Éú´íÎó<' + E.ClassName + ': ' + E.Message + '>');
+      AddMessage('é”™è¯¯ï¼šè¯»å–æ’ä»¶åˆ—è¡¨æ—¶å‘ç”Ÿé”™è¯¯<' + E.ClassName + ': ' + E.Message + '>');
       Exit;
     end;
   end;
@@ -3279,6 +3419,8 @@ begin
   AssignPersWrldChild := Settings.ReadBool('Filter', 'AssignPersWrldChild', False);
   InheritConflictByParent := Settings.ReadBool('Filter', 'InheritConflictByParent', True);
 
+  AutoSave := Settings.ReadBool('Options', 'AutoSave', AutoSave);
+
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
@@ -3313,6 +3455,8 @@ begin
   else
     mniNavHeaderFilesDefault.Checked := True;
   end;
+
+  CreateActionsForScripts;
 end;
 
 procedure TfrmMain.DoneDisplay;
@@ -3675,7 +3819,7 @@ end;
 
 procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
 const
-  sJustWait                   = 'ÕıÔÚĞŞ¸´ UDR Êı¾İ£¬ÇëÉÔºó...';
+  sJustWait                   = 'æ­£åœ¨ä¿®å¤ UDR æ•°æ®ï¼Œè¯·ç¨å...';
 var
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
@@ -3722,7 +3866,7 @@ begin
     AssignPersWrldChild or
     not InheritConflictByParent then begin
 
-    MessageDlg('Èç¹ûÒªÊ¹ÓÃ´Ë¹¦ÄÜ£¬ÔÚÇëÇóÉ¸Ñ¡Ê±Äú*Ö»*ÄÜ¼¤»î¡°¼Ì³Ğ×Ô¸¸ÏµµÄ³åÍ»×´Ì¬¡±¡£', mtError, [mbOk], 0);
+    MessageDlg('å¦‚æœè¦ä½¿ç”¨æ­¤åŠŸèƒ½ï¼Œåœ¨è¯·æ±‚ç­›é€‰æ—¶æ‚¨*åª*èƒ½æ¿€æ´»â€œç»§æ‰¿è‡ªçˆ¶ç³»çš„å†²çªçŠ¶æ€â€ã€‚', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -3751,7 +3895,7 @@ begin
 
         if Supports(NodeData.Element, IwbMainRecord, MainRecord) then with MainRecord do begin
           if IsEditable and
-             (IsDeleted or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\Reference'] <> $14) ) and
+             (IsDeleted or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\è¡ç”Ÿ'] <> $14) ) and
              (
                (Signature = 'REFR') or
                (Signature = 'PGRE') or
@@ -3770,7 +3914,7 @@ begin
           if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
             IsDeleted := True;
             IsDeleted := False;
-            PostAddMessage('³·ÏúÉ¾³ı£º' + MainRecord.Name);
+            PostAddMessage('æ’¤é”€åˆ é™¤ï¼š' + MainRecord.Name);
             if (wbGameMode in [gmFO3, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
               IsPersistent := True
             else if wbGameMode = gmTES4 then
@@ -3780,12 +3924,12 @@ begin
                 Position.z := wbUDRSetZValue;
                 SetPosition(Position);
               end;
-            RemoveElement('Enable Parent');
+            RemoveElement('å¯ç”¨æ ¹æº');
             RemoveElement('XTEL');
             IsInitiallyDisabled := True;
             if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
-              Cntr.ElementNativeValues['Reference'] := $14;
-              Cntr.ElementNativeValues['Flags'] := 1;
+              Cntr.ElementNativeValues['è¡ç”Ÿ'] := $14;
+              Cntr.ElementNativeValues['æ ‡å¿—'] := 1;
             end;
 
             if wbUDRSetScale then begin
@@ -3821,9 +3965,9 @@ begin
         Node := NextNode;
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
-          Caption := sJustWait + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-            ' ÒÑÒÆ³ı¼ÇÂ¼£º' + IntToStr(UndeletedCount) +
-            ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Caption := sJustWait + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+            ' å·²ç§»é™¤è®°å½•ï¼š' + IntToStr(UndeletedCount) +
+            ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
@@ -3835,11 +3979,11 @@ begin
       Enabled := True;
     end;
 
-    PostAddMessage('[UDR ĞŞ¸´Íê³É] ' + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-      ', ÒÑĞŞ¸´¼ÇÂ¼£º' + IntToStr(UndeletedCount) +
-      ', ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime));
+    PostAddMessage('[UDR ä¿®å¤å®Œæˆ] ' + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+      ', å·²ä¿®å¤è®°å½•ï¼š' + IntToStr(UndeletedCount) +
+      ', æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime));
     if DeletedNAVM > 0 then
-      PostAddMessage('<¾¯¸æ£º²å¼ş´æÔÚ ' + IntToStr(DeletedNAVM) + ' ¸ö±»É¾³ıµÄ NavMeshes £¬ÕâÊÇÎŞ·¨³·ÏúÉ¾³ıµÄ>');
+      PostAddMessage('<è­¦å‘Šï¼šæ’ä»¶å­˜åœ¨ ' + IntToStr(DeletedNAVM) + ' ä¸ªè¢«åˆ é™¤çš„ NavMeshes ï¼Œè¿™æ˜¯æ— æ³•æ’¤é”€åˆ é™¤çš„>');
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -3891,7 +4035,7 @@ begin
   Action := caFree;
   if LoaderStarted and not wbLoaderDone then begin
     ForceTerminate := True;
-    Caption := 'µÈ´ıºóÌ¨³ÌĞòÖÕÖ¹...';
+    Caption := 'ç­‰å¾…åå°ç¨‹åºç»ˆæ­¢...';
     Enabled := False;
     try
       while not wbLoaderDone do begin
@@ -3929,12 +4073,16 @@ begin
       fs.Seek(0, soFromEnd);
     end else
       fs := TFileStream.Create(s, fmCreate);
+    if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+      fs.Size := 0;
     txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
     fs.WriteBuffer(txt[1], Length(txt));
   finally
     if Assigned(fs) then
       FreeAndNil(fs);
   end;
+  if DirectoryExists(wbTempPath)  then
+    DeleteDirectory(wbTempPath); // remove temp folder
 
   BackHistory := nil;
   ForwardHistory := nil;
@@ -3961,7 +4109,7 @@ begin
       frmMain.PostAddMessage(s);
   if LastUpdate + 500 < GetTickCount then begin
     if wbCurrentAction <> '' then
-      frmMain.Caption := '['+wbCurrentAction+'] ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+      frmMain.Caption := '['+wbCurrentAction+'] æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
     Application.ProcessMessages;
     LastUpdate := GetTickCount;
   end;
@@ -4128,9 +4276,9 @@ var
     i          : Integer;
   begin
     if StartTick + 500 < GetTickCount then begin
-      Caption := 'ÕıÔÚÉ¨ÃèÒıÓÃ£º' + aWorldspace.Name + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(TotalCount) +
-        ' ÒÑÕÒµ½ÒıÓÃ£º' + IntToStr(Count) +
-        ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+      Caption := 'æ­£åœ¨æ‰«æå¼•ç”¨ï¼š' + aWorldspace.Name + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(TotalCount) +
+        ' å·²æ‰¾åˆ°å¼•ç”¨ï¼š' + IntToStr(Count) +
+        ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
       StartTick := GetTickCount;
     end;
@@ -4187,24 +4335,24 @@ begin
   Rule := rSkip;
   if SameText(s, 'Replace') then begin
     Rule := rReplace;
-    s := 'ÕıÔÚÌæ»»';
+    s := 'æ­£åœ¨æ›¿æ¢';
   end else if SameText(s, 'Clear') then begin
     Rule := rClear;
-    s := 'ÕıÔÚÇå³ı';
+    s := 'æ­£åœ¨æ¸…é™¤';
   end else if not SameText(s, 'Skip') then begin
-    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] <¾¯¸æ£ºÎ´Öª¹æÔò "'+s+'"> Worldspace Ìø¹ı²»´¦Àí¡£');
-    s := 'ÕıÔÚÌø¹ı';
+    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] <è­¦å‘Šï¼šæœªçŸ¥è§„åˆ™ "'+s+'"> Worldspace è·³è¿‡ä¸å¤„ç†ã€‚');
+    s := 'æ­£åœ¨è·³è¿‡';
   end else
-    s := 'ÕıÔÚÌø¹ı';
+    s := 'æ­£åœ¨è·³è¿‡';
 
-  frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Éú³ÉÆ÷£º'+s+' ' + Master.Name);
+  frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD ç”Ÿæˆå™¨ï¼š'+s+' ' + Master.Name);
 
   if Rule = rSkip then
     Exit;
 
   if Rule > rClear then begin
-    Caption := 'ÕıÔÚÉ¨ÃèÒıÓÃ£º' + aWorldspace.Name + ' ÒÑ´¦Àí¼ÇÂ¼£º0 '+
-      'ÒÑÕÒµ½ÒıÓÃ£º0 ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Caption := 'æ­£åœ¨æ‰«æå¼•ç”¨ï¼š' + aWorldspace.Name + ' å·²å¤„ç†è®°å½•ï¼š0 '+
+      'å·²æ‰¾åˆ°å¼•ç”¨ï¼š0 æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
     Application.ProcessMessages;
     StartTick := GetTickCount;
 
@@ -4219,15 +4367,15 @@ begin
 
     {only keep the newest version of each}
     if Length(REFRs) > 1 then begin
-      Caption := 'ÕıÔÚÅÅĞòÒıÓÃ£º' + aWorldspace.Name +
-        ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+      Caption := 'æ­£åœ¨æ’åºå¼•ç”¨ï¼š' + aWorldspace.Name +
+        ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
 
       QuickSort(@REFRs[0], Low(REFRs), High(REFRs), CompareElementsFormIDAndLoadOrder);
 
-      Caption := 'ÕıÔÚÒÆ³ı¸±±¾£º' + aWorldspace.Name + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(0) +
-        ' ÒÑÕÒµ½¶ÀÁ¢ÒıÓÃ£º' + IntToStr(0) +
-        ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+      Caption := 'æ­£åœ¨ç§»é™¤å‰¯æœ¬ï¼š' + aWorldspace.Name + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(0) +
+        ' å·²æ‰¾åˆ°ç‹¬ç«‹å¼•ç”¨ï¼š' + IntToStr(0) +
+        ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
       StartTick := GetTickCount;
 
@@ -4241,9 +4389,9 @@ begin
         if ForceTerminate then
           Abort;
         if StartTick + 500 < GetTickCount then begin
-          Caption := 'ÕıÔÚÒÆ³ı¸±±¾£º' + aWorldspace.Name + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(i) +
-            ' ÒÑÕÒµ½¶ÀÁ¢ÒıÓÃ£º' + IntToStr(j) +
-            ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Caption := 'æ­£åœ¨ç§»é™¤å‰¯æœ¬ï¼š' + aWorldspace.Name + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(i) +
+            ' å·²æ‰¾åˆ°ç‹¬ç«‹å¼•ç”¨ï¼š' + IntToStr(j) +
+            ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
@@ -4256,9 +4404,9 @@ begin
     MinY := MaxSingle;
     MaxY := -MaxSingle;
 
-    Caption := 'ÕıÔÚÉ¸Ñ¡VWDÒıÓÃ£º' + aWorldspace.Name + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(0) +
-      ' Æ¥Åä¼ÇÂ¼£º' + IntToStr(0) +
-      ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Caption := 'æ­£åœ¨ç­›é€‰VWDå¼•ç”¨ï¼š' + aWorldspace.Name + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(0) +
+      ' åŒ¹é…è®°å½•ï¼š' + IntToStr(0) +
+      ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
     Application.ProcessMessages;
     StartTick := GetTickCount;
 
@@ -4288,7 +4436,7 @@ begin
 
                 if (x < -10000000.0) or (x > 10000000.0) or
                    (y < -10000000.0) or (y > 10000000.0) then
-                  raise Exception.Create('·½Î»³¬³öÏŞÖÆ');
+                  raise Exception.Create('æ–¹ä½è¶…å‡ºé™åˆ¶');
 
                 if X < MinX then
                   MinX := x;
@@ -4318,16 +4466,16 @@ begin
             Inc(j);
           except
             on E: Exception do
-              frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Éú³ÉÆ÷£º<Error while processing ' + REFRs[i].Name+': '+E.Message + '>');
+              frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD ç”Ÿæˆå™¨ï¼š<Error while processing ' + REFRs[i].Name+': '+E.Message + '>');
           end;
         end;
 
         if ForceTerminate then
           Abort;
         if StartTick + 500 < GetTickCount then begin
-          Caption := 'ÕıÔÚÉ¸Ñ¡VWDÒıÓÃ£º' + aWorldspace.Name + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(i) +
-            ' Æ¥Åä¼ÇÂ¼£º' + IntToStr(Succ(j)) +
-            ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Caption := 'æ­£åœ¨ç­›é€‰VWDå¼•ç”¨ï¼š' + aWorldspace.Name + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(i) +
+            ' åŒ¹é…è®°å½•ï¼š' + IntToStr(Succ(j)) +
+            ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
@@ -4361,8 +4509,8 @@ begin
   ForceDirectories(DataPath + 'DistantLOD\');
 
   i := 0;
-  Caption := 'ÕıÔÚÉ¾³ı¾É .lod ÎÄ¼ş£º' + aWorldspace.Name + ' ÒÑ´¦ÀíÎÄ¼ş£º' + IntToStr(i) +
-    ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+  Caption := 'æ­£åœ¨åˆ é™¤æ—§ .lod æ–‡ä»¶ï¼š' + aWorldspace.Name + ' å·²å¤„ç†æ–‡ä»¶ï¼š' + IntToStr(i) +
+    ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
   Application.ProcessMessages;
   StartTick := GetTickCount;
 
@@ -4375,8 +4523,8 @@ begin
       Inc(i);
 
       if StartTick + 500 < GetTickCount then begin
-        Caption := 'ÕıÔÚÉ¾³ı¾É .lod ÎÄ¼ş£º' + aWorldspace.Name + ' ÒÑ´¦ÀíÎÄ¼ş£º' + IntToStr(i) +
-          ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+        Caption := 'æ­£åœ¨åˆ é™¤æ—§ .lod æ–‡ä»¶ï¼š' + aWorldspace.Name + ' å·²å¤„ç†æ–‡ä»¶ï¼š' + IntToStr(i) +
+          ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
         Application.ProcessMessages;
         StartTick := GetTickCount;
       end;
@@ -4392,8 +4540,8 @@ begin
   if Rule > rClear then begin
     CmpStream := TwbFileStream.Create(DataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp', fmCreate);
     try
-      Caption := 'ÕıÔÚ·ÖÅäÒıÓÃµ½³¡¾°£º' + aWorldspace.Name + ' ´¦ÀíµÄÒıÓÃ£º' + IntToStr(0) +
-        ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+      Caption := 'æ­£åœ¨åˆ†é…å¼•ç”¨åˆ°åœºæ™¯ï¼š' + aWorldspace.Name + ' å¤„ç†çš„å¼•ç”¨ï¼š' + IntToStr(0) +
+        ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
       StartTick := GetTickCount;
 
@@ -4407,15 +4555,15 @@ begin
           if ForceTerminate then
             Abort;
           if StartTick + 500 < GetTickCount then begin
-            Caption := 'ÕıÔÚ·ÖÅäÒıÓÃµ½³¡¾°£º' + aWorldspace.Name + ' ´¦ÀíµÄÒıÓÃ£º' + IntToStr(i) +
-              ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+            Caption := 'æ­£åœ¨åˆ†é…å¼•ç”¨åˆ°åœºæ™¯ï¼š' + aWorldspace.Name + ' å¤„ç†çš„å¼•ç”¨ï¼š' + IntToStr(i) +
+              ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
             Application.ProcessMessages;
             StartTick := GetTickCount;
           end;
         end;
 
-      Caption := 'ÕıÔÚÉú³É .lod ÎÄ¼ş£º' + aWorldspace.Name + ' ´¦ÀíµÄ³¡¾°£º' + IntToStr(0) +
-        ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+      Caption := 'æ­£åœ¨ç”Ÿæˆ .lod æ–‡ä»¶ï¼š' + aWorldspace.Name + ' å¤„ç†çš„åœºæ™¯ï¼š' + IntToStr(0) +
+        ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
       StartTick := GetTickCount;
 
@@ -4493,8 +4641,8 @@ begin
           end;
 
           if StartTick + 500 < GetTickCount then begin
-            Caption := 'ÕıÔÚÉú³É .lod ÎÄ¼ş£º' + aWorldspace.Name + ' ´¦ÀíµÄ³¡¾°£º' + IntToStr(i * Length(Cells[i]) + j) +
-              ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+            Caption := 'æ­£åœ¨ç”Ÿæˆ .lod æ–‡ä»¶ï¼š' + aWorldspace.Name + ' å¤„ç†çš„åœºæ™¯ï¼š' + IntToStr(i * Length(Cells[i]) + j) +
+              ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
             Application.ProcessMessages;
             StartTick := GetTickCount;
           end;
@@ -4749,7 +4897,7 @@ begin
 
   if (NonSortedCount > 0) and (SortedCount > 0) then begin
     if Assigned(FirstContainer) then
-      PostAddMessage('¾¯¸æ£ºÕıÔÚ±È½ÏÅÅĞòÓëÎ´ÅÅĞòÈë¿Ú£¬À´Ô´ÓÚ "' + FirstContainer.Path + '" Î»ÓÚ "'+FirstContainer.ContainingMainRecord.Name+'"');
+      PostAddMessage('è­¦å‘Šï¼šæ­£åœ¨æ¯”è¾ƒæ’åºä¸æœªæ’åºå…¥å£ï¼Œæ¥æºäº "' + FirstContainer.Path + '" ä½äº "'+FirstContainer.ContainingMainRecord.Name+'"');
     SortedCount := 0;
   end;
 
@@ -4818,7 +4966,7 @@ begin
               aChildCount := (Container.Def as IwbRecordDef).MemberCount;
               Inc(aChildCount, Container.AdditionalElementCount);
               if Cardinal(Container.ElementCount) > aChildCount then begin
-                PostAddMessage('´íÎó£ºContainer.ElementCount {'+IntToStr(Container.ElementCount)+'} > aChildCount {'+IntToStr(aChildCount)+'} for ' + Container.Path + ' in ' + Container.ContainingMainRecord.Name);
+                PostAddMessage('é”™è¯¯ï¼šContainer.ElementCount {'+IntToStr(Container.ElementCount)+'} > aChildCount {'+IntToStr(aChildCount)+'} for ' + Container.Path + ' in ' + Container.ContainingMainRecord.Name);
                 for j := 0 to Pred(Container.ElementCount) do
                 PostAddMessage('  #'+IntToStr(j)+': ' + Container.Elements[j].Name);
                 //Assert(Cardinal(Container.ElementCount) <= aChildCount);
@@ -5313,7 +5461,7 @@ begin
 
       with TfrmFileSelect.Create(Self) do try
 
-        Caption := 'ÄúÏ£Íû¸´ÖÆ´ËÊıÖµµ½ÄÄ¸ö¼ÇÂ¼ÖĞ£¿';
+        Caption := 'æ‚¨å¸Œæœ›å¤åˆ¶æ­¤æ•°å€¼åˆ°å“ªä¸ªè®°å½•ä¸­ï¼Ÿ';
 
         for i := Low(MainRecords) to High(MainRecords) do begin
           CheckListBox1.AddItem(MainRecords[i].Name, nil);
@@ -5369,7 +5517,7 @@ begin
           CheckListBox1.Items.Delete(j);
       end;
 
-      Caption := 'ÄúÏëÒªÌí¼ÓÄÄ¸ö Master £¿';
+      Caption := 'æ‚¨æƒ³è¦æ·»åŠ å“ªä¸ª Master ï¼Ÿ';
 
       ShowModal;
 
@@ -5412,8 +5560,16 @@ begin
     Value := wbLoadBSAs;
     Done := True;
   end else
+  if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
+    Value := O2V(wbRecordDefMap);
+    Done := True;
+  end else
   if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
     Value := ProgramPath;
+    Done := True;
+  end else
+  if SameText(Identifier, 'ScriptsPath') and (Args.Count = 0) then begin
+    Value := ScriptsPath;
     Done := True;
   end else
   if SameText(Identifier, 'DataPath') and (Args.Count = 0) then begin
@@ -5422,6 +5578,10 @@ begin
   end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
     Value := FilterApplied;
+    Done := True;
+  end else
+  if SameText(Identifier, 'frmMain') and (Args.Count = 0) then begin
+    Value := O2V(frmMain);
     Done := True;
   end else
   if SameText(Identifier, 'AddMessage') then begin
@@ -5528,6 +5688,24 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'JumpTo') and (Args.Count = 2) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      vstNav.EndUpdate;
+      if not vstNav.Enabled then vstNav.Enabled := True;
+      JumpTo(MainRecord, Boolean(Args.Values[1]));
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ApplyFilter') and (Args.Count = 0) then begin
+    FilterPreset := True; // skip filter dialog
+    try
+      mniNavFilterApplyClick(Sender);
+    finally
+      FilterPreset := False;
+      Done := True;
+    end;
   end;
 end;
 
@@ -5545,6 +5723,166 @@ begin
     if ScriptProcessElements = [] then
       ScriptProcessElements := [etMainRecord];
     Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictAll') then begin
+    FilterConflictAll := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictAllSet') then begin
+    FilterConflictAllSet := [];
+    v := V2S(Value);
+    for i := Integer(Low(TConflictAll)) to Integer(High(TConflictAll)) do
+      if (v and (1 shl i)) > 0 then
+        Include(FilterConflictAllSet, TConflictAll(i));
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictThis') then begin
+    FilterConflictThis := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictThisSet') then begin
+    FilterConflictThisSet := [];
+    v := V2S(Value);
+    for i := Integer(Low(TConflictThis)) to Integer(High(TConflictThis)) do
+      if (v and (1 shl i)) > 0 then
+        Include(FilterConflictThisSet, TConflictThis(i));
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByInjectStatus') then begin
+    FilterByInjectStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterInjectStatus') then begin
+    FilterInjectStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByNotReachableStatus') then begin
+    FilterByNotReachableStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterNotReachableStatus') then begin
+    FilterNotReachableStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByReferencesInjectedStatus') then begin
+    FilterByReferencesInjectedStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterReferencesInjectedStatus') then begin
+    FilterReferencesInjectedStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByEditorID') then begin
+    FilterByEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterEditorID') then begin
+    FilterEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByName') then begin
+    FilterByName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterName') then begin
+    FilterName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseEditorID') then begin
+    FilterByBaseEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseEditorID') then begin
+    FilterBaseEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseName') then begin
+    FilterByBaseName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseName') then begin
+    FilterBaseName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterScaledActors') then begin
+    FilterScaledActors := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBySignature') then begin
+    FilterBySignature := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterSignatures') then begin
+    FilterSignatures := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseSignature') then begin
+    FilterByBaseSignature := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseSignatures') then begin
+    FilterBaseSignatures := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByPersistent') then begin
+    FilterByPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterPersistent') then begin
+    FilterPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterUnnecessaryPersistent') then begin
+    FilterUnnecessaryPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterMasterIsTemporary') then begin
+    FilterMasterIsTemporary := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterIsMaster') then begin
+    FilterIsMaster := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterPersistentPosChanged') then begin
+    FilterPersistentPosChanged := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterDeleted') then begin
+    FilterDeleted := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByVWD') then begin
+    FilterByVWD := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterVWD') then begin
+    FilterVWD := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByHasVWDMesh') then begin
+    FilterByHasVWDMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterHasVWDMesh') then begin
+    FilterHasVWDMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FlattenBlocks') then begin
+    FlattenBlocks := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FlattenCellChilds') then begin
+    FlattenCellChilds := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'AssignPersWrldChild') then begin
+    AssignPersWrldChild := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'InheritConflictByParent') then begin
+    InheritConflictByParent := Value;
+    Done := True;
   end;
 end;
 
@@ -5554,7 +5892,7 @@ var
   sl: TStringList;
   UnitFile: string;
 begin
-  UnitFile := ProgramPath + 'Edit Scripts\' + UnitName + '.pas';
+  UnitFile := ScriptsPath + UnitName + '.pas';
   sl := TStringList.Create;
   try
     sl.LoadFromFile(UnitFile);
@@ -5565,42 +5903,33 @@ begin
   end;
 end;
 
-procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
+procedure TfrmMain.ApplyScript(aScript: string);
 const
-  sJustWait                   = 'ÕıÔÚÓ¦ÓÃ½Å±¾£¬ÇëÉÔºó...';
-  sTerminated                 = '½Å±¾×ÔĞĞÖÕÖ¹£¬·µ»Ø½á¹û£º';
+  sJustWait                   = 'æ­£åœ¨åº”ç”¨è„šæœ¬ï¼Œè¯·ç¨å...';
+  sTerminated                 = 'è„šæœ¬è‡ªè¡Œç»ˆæ­¢ï¼Œè¿”å›ç»“æœï¼š';
 var
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
   StartTick                   : Cardinal;
-//  Element                     : IwbElement;
   jvi                         : TJvInterpreterProgram;
-  Scr                         : string;
   i                           : integer;
 begin
-  with TfrmScript.Create(Self) do try
-    ScriptsPath := ProgramPath + 'Edit Scripts\';
-    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
+  if Trim(aScript) = '' then
+    Exit;
 
-    if ShowModal <> mrOK then
-      Exit;
+  tmrCheckUnsaved.Enabled := False;
 
-    Scr := Script;
-    Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
-    Settings.UpdateFile;
-
-  finally
-    Free;
-  end;
+  Count := 0;
+  ScriptProcessElements := [etMainRecord];
 
   jvi := TJvInterpreterProgram.Create(Self);
   try
     jvi.OnGetValue := JvInterpreterProgram1GetValue;
     jvi.OnSetValue := JvInterpreterProgram1SetValue;
     jvi.OnGetUnitSource := JvInterpreterProgram1GetUnitSource;
-    jvi.Pas.Text := Scr;
+    jvi.Pas.Text := aScript;
     jvi.Compile;
 
     pgMain.ActivePage := tbsMessages;
@@ -5611,9 +5940,8 @@ begin
       wbStartTime := Now;
 
       Enabled := False;
-
-      ScriptProcessElements := [etMainRecord];
-      Count := 0;
+      AddMessage('æ­£åœ¨åº”ç”¨è„šæœ¬...');
+      Application.ProcessMessages;
 
       if jvi.FunctionExists('', 'Initialize') then begin
         jvi.CallFunction('Initialize', nil, []);
@@ -5655,8 +5983,8 @@ begin
             Node := NextNode;
 
           if StartTick + 500 < GetTickCount then begin
-            Caption := sJustWait + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-              ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+            Caption := sJustWait + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+              ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
             Application.ProcessMessages;
             StartTick := GetTickCount;
           end;
@@ -5675,18 +6003,85 @@ begin
       vstNav.EndUpdate;
       Enabled := True;
       Caption := Application.Title;
+      PostAddMessage('[è„šæœ¬åº”ç”¨å®Œæˆ]' + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+        ', æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime));
     end;
 
-    PostAddMessage('[Apply Script done] ' + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-      ', ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime));
-
-    PostResetActiveTree;
     InvalidateElementsTreeView(NoNodes);
-    Application.ProcessMessages;
-    pgMain.ActivePage := tbsMessages;
+    vstNav.Invalidate;
+    //Application.ProcessMessages;
+    //pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
+    tmrCheckUnsaved.Enabled := True;
   end;
+end;
+
+procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
+var
+  Scr: string;
+begin
+  with TfrmScript.Create(Self) do try
+    Path := ScriptsPath;
+    LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
+    if ShowModal <> mrOK then
+      Exit;
+    Scr := Script;
+    Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
+    Settings.UpdateFile;
+    CreateActionsForScripts;
+  finally
+    Free;
+  end;
+  ApplyScript(Scr);
+end;
+
+procedure TfrmMain.CreateActionsForScripts;
+const
+  HotkeyToken = 'Hotkey: ';
+var
+  scr, s               : string;
+  F                    : TSearchRec;
+  slScript             : TStringList;
+  i                    : integer;
+  ShortCut             : TShortCut;
+  Action               : TAction;
+begin
+  if not Assigned(ScriptHotkeys) then
+    ScriptHotkeys := TStringList.Create;
+
+  ScriptHotkeys.Clear;
+  for i := Pred(ActionList1.ActionCount) downto 0 do
+    if ActionList1.Actions[i].Tag > 0 then
+      ActionList1.Actions[i].Free;
+
+  if FindFirst(ScriptsPath + '*.pas', faAnyFile, F) = 0 then try
+    slScript := TStringList.Create;
+    repeat
+      scr := ScriptsPath + F.Name;
+      slScript.LoadFromFile(scr);
+      for i := 0 to Pred(slScript.Count) do begin
+        s := Trim(slScript[i]);
+        if SameText(Copy(s, 1, Length(HotkeyToken)), HotkeyToken) then begin
+          s := Copy(s, Succ(Length(HotkeyToken)), Length(s));
+          ShortCut := TextToShortCut(s);
+          if (ShortCut <> 0) and (ScriptHotkeys.IndexOfObject(TObject(ShortCut)) = -1) then begin
+            Action := TAction.Create(Self);
+            Action.ActionList := ActionList1;
+            Action.OnExecute := acScriptExecute;
+            Action.ShortCut := ShortCut;
+            ScriptHotkeys.AddObject(scr, TObject(ShortCut));
+            Action.Tag := ScriptHotkeys.Count;
+          end;
+          Break;
+        end;
+      end;
+    until FindNext(F) <> 0;
+  finally
+    FindClose(F);
+    FreeAndNil(slScript);
+  end;
+
 end;
 
 procedure TfrmMain.mniViewHideNoConflictClick(Sender: TObject);
@@ -5938,7 +6333,7 @@ begin
       Break
     end;
   if MMMESM < 1 then
-    raise Exception.Create('ÎŞ·¨ÕÒµ½ Mart''s Monster Mod.esm');
+    raise Exception.Create('æ— æ³•æ‰¾åˆ° Mart''s Monster Mod.esm');
 
   if Supports(Files[MMMESM].GroupBySignature['SCPT'], IwbContainerElementRef, Group) then
     for j := 0 to Pred(Group.ElementCount) do
@@ -5953,13 +6348,13 @@ begin
           CSNPCBanditBoss := MainRecord;
 
   if not Assigned(CSNPC) then
-    raise Exception.Create('ÎŞ·¨ÕÒµ½ CSNPC ½Å±¾');
+    raise Exception.Create('æ— æ³•æ‰¾åˆ° CSNPC è„šæœ¬');
   if not Assigned(CSNPC) then
-    raise Exception.Create('ÎŞ·¨ÕÒµ½ CSNPCBoss ½Å±¾');
+    raise Exception.Create('æ— æ³•æ‰¾åˆ° CSNPCBoss è„šæœ¬');
   if not Assigned(CSNPC) then
-    raise Exception.Create('ÎŞ·¨ÕÒµ½ CSNPCBandit ½Å±¾');
+    raise Exception.Create('æ— æ³•æ‰¾åˆ° CSNPCBandit è„šæœ¬');
   if not Assigned(CSNPC) then
-    raise Exception.Create('ÎŞ·¨ÕÒµ½ CSNPCBanditBoss ½Å±¾');
+    raise Exception.Create('æ— æ³•æ‰¾åˆ° CSNPCBanditBoss è„šæœ¬');
 
   CSNPCID           := IntToHex64(CSNPC.LoadOrderFormID, 8);
   CSNPCBossID       := IntToHex64(CSNPCBoss.LoadOrderFormID, 8);
@@ -6064,72 +6459,72 @@ begin
         for i := 1 to Pred(CSV.Count) do begin //ignore first line
           Line.CommaText := CSV[i];
           if Line.Count <> 7 then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£ºÔ¤²â 7 ¸öÊıÖµ£¬µ«ÕÒµ½ '+IntToStr(Line.Count)+' ¸ö¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šé¢„æµ‹ 7 ä¸ªæ•°å€¼ï¼Œä½†æ‰¾åˆ° '+IntToStr(Line.Count)+' ä¸ªã€‚');
             Continue;
           end;
 
           s := Trim(Line[1]);
           OldMaster := FindFile(s);
           if not Assigned(OldMaster) then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£º¾É Master "'+s+'" Î´¼ÓÔØ¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ—§ Master "'+s+'" æœªåŠ è½½ã€‚');
             Continue;
           end else if OldMaster.LoadOrder < 0 then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£º¾É Master "'+s+'" Î´¶¨Òå¼ÓÔØË³Ğò¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ—§ Master "'+s+'" æœªå®šä¹‰åŠ è½½é¡ºåºã€‚');
             Continue;
           end;
 
           s := Trim(Line[5]);
           NewMaster := FindFile(s);
           if not Assigned(NewMaster) then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£ºĞÂ Master "'+s+'" Î´¼ÓÔØ¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ–° Master "'+s+'" æœªåŠ è½½ã€‚');
             Continue;
           end else if NewMaster.LoadOrder < 0 then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£ºĞÂ Master "'+s+'" Î´¶¨Òå¼ÓÔØË³Ğò¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ–° Master "'+s+'" æœªå®šä¹‰åŠ è½½é¡ºåºã€‚');
             Continue;
           end;
 
           s := Trim(Line[2]);
           j := StrToIntDef(s, -1);
           if (j < 0) or (j > $FFFFFF) then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£º¾É FormID "'+s+'" ²»ÔÚÓĞĞ§·¶Î§ÄÚ¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ—§è¡¨å•åºå· "'+s+'" ä¸åœ¨æœ‰æ•ˆèŒƒå›´å†…ã€‚');
             Continue;
           end;
           OldRecord := OldMaster.RecordByFormID[(Cardinal(OldMaster.LoadOrder) shl 24) or Cardinal(j), True];
           if not Assigned(OldRecord) then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£ºFormID Îª "'+s+'" µÄ¾É¼ÇÂ¼ÔÚ¾É Master "'+OldMaster.FileName+'" ÖĞÎ´ÕÒµ½¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šè¡¨å•åºå·ä¸º "'+s+'" çš„æ—§è®°å½•åœ¨æ—§ Master "'+OldMaster.FileName+'" ä¸­æœªæ‰¾åˆ°ã€‚');
             Continue;
           end;
 
           s := Trim(Line[6]);
           j := StrToIntDef(s, -1);
           if (j < 0) or (j > $FFFFFF) then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£ºĞÂ FormID "'+s+'" ²»ÔÚÓĞĞ§·¶Î§ÄÚ¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ–°è¡¨å•åºå· "'+s+'" ä¸åœ¨æœ‰æ•ˆèŒƒå›´å†…ã€‚');
             Continue;
           end;
           NewRecord := NewMaster.RecordByFormID[(Cardinal(NewMaster.LoadOrder) shl 24) or Cardinal(j), True];
           if not Assigned(NewRecord) then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£ºFormID Îª "'+s+'" µÄ¾É¼ÇÂ¼ÔÚĞÂ Master "'+NewMaster.FileName+'" ÖĞÎ´ÕÒµ½¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šè¡¨å•åºå·ä¸º "'+s+'" çš„æ—§è®°å½•åœ¨æ–° Master "'+NewMaster.FileName+'" ä¸­æœªæ‰¾åˆ°ã€‚');
             Continue;
           end;
 
           if OldRecord.Equals(NewRecord) then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£ºĞÂ¾É¼ÇÂ¼ÍêÈ«ÏàÍ¬¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ–°æ—§è®°å½•å®Œå…¨ç›¸åŒã€‚');
             Continue;
           end;
 
           s := Trim(Line[0]);
           if not SameText(OldRecord.Signature, s) then
-            AddMessage('¾¯¸æĞĞ'+IntToStr(i+1)+'£º¾É¼ÇÂ¼²»´æÔÚÔ¤²âµÄÇ©Ãû("'+OldRecord.Signature+'" vs. "'+s+'")"¡£');
+            AddMessage('è­¦å‘Šè¡Œ'+IntToStr(i+1)+'ï¼šæ—§è®°å½•ä¸å­˜åœ¨é¢„æµ‹çš„ç­¾å("'+OldRecord.Signature+'" vs. "'+s+'")"ã€‚');
           if not SameText(NewRecord.Signature, s) then
-            AddMessage('¾¯¸æĞĞ'+IntToStr(i+1)+'£ºĞÂ¼ÇÂ¼²»´æÔÚÔ¤²âµÄÇ©Ãû("'+NewRecord.Signature+'" vs. "'+s+'")"¡£');
+            AddMessage('è­¦å‘Šè¡Œ'+IntToStr(i+1)+'ï¼šæ–°è®°å½•ä¸å­˜åœ¨é¢„æµ‹çš„ç­¾å("'+NewRecord.Signature+'" vs. "'+s+'")"ã€‚');
 
           s := Trim(Line[3]);
           if not SameText(OldRecord.EditorID, s) then
-            AddMessage('¾¯¸æĞĞ'+IntToStr(i+1)+'£º¾É¼ÇÂ¼²»´æÔÚÔ¤²âµÄ EditorID ("'+OldRecord.EditorID+'" vs. "'+s+'")"¡£');
+            AddMessage('è­¦å‘Šè¡Œ'+IntToStr(i+1)+'ï¼šæ—§è®°å½•ä¸å­˜åœ¨é¢„æµ‹çš„ç¼–è¾‘å™¨æ ‡è¯†("'+OldRecord.EditorID+'" vs. "'+s+'")"ã€‚');
 
           s := Trim(Line[4]);
           if not SameText(NewRecord.EditorID, s) then
-            AddMessage('¾¯¸æĞĞ'+IntToStr(i+1)+'£ºĞÂ¼ÇÂ¼²»´æÔÚÔ¤²âµÄ EditorID ("'+NewRecord.EditorID+'" vs. "'+s+'")"¡£');
+            AddMessage('è­¦å‘Šè¡Œ'+IntToStr(i+1)+'ï¼šæ–°è®°å½•ä¸å­˜åœ¨é¢„æµ‹çš„ç¼–è¾‘å™¨æ ‡è¯†("'+NewRecord.EditorID+'" vs. "'+s+'")"ã€‚');
 
           ReferencedBy := nil;
           SetLength(ReferencedBy, OldRecord.ReferencedByCount);
@@ -6146,7 +6541,7 @@ begin
           SetLength(ReferencedBy, k);
 
           if k < 1 then begin
-            AddMessage('Ìø¹ıĞĞ'+IntToStr(i+1)+'£º¾É¼ÇÂ¼ "'+OldRecord.Name+'" ÔÚÎÄ¼ş "'+_File.Name+'" ÖĞ²»´æÔÚÒıÓÃ¼ÇÂ¼¡£');
+            AddMessage('è·³è¿‡è¡Œ'+IntToStr(i+1)+'ï¼šæ—§è®°å½• "'+OldRecord.Name+'" åœ¨æ–‡ä»¶ "'+_File.Name+'" ä¸­ä¸å­˜åœ¨å¼•ç”¨è®°å½•ã€‚');
             Continue;
           end;
 
@@ -6182,7 +6577,7 @@ begin
         ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlReferencedBy, True);
         RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False];
         if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
-          AddMessage('ÕıÔÚĞŞ¸Ä FormID ['+IntToHex64(RefRecord.LoadOrderFormID, 8)+'] Îª ['+IntToHex(rlNewRecord.LoadOrderFormID, 8)+']');
+          AddMessage('æ­£åœ¨ä¿®æ”¹è¡¨å•åºå· ['+IntToHex64(RefRecord.LoadOrderFormID, 8)+'] ä¸º ['+IntToHex(rlNewRecord.LoadOrderFormID, 8)+']');
           RefRecord.LoadOrderFormID := rlNewRecord.LoadOrderFormID;
         end;
       end;
@@ -6205,7 +6600,7 @@ begin
     for i := Low(Files) to High(Files) do begin
       _File := Files[i];
       if not (csRefsBuild in _File.ContainerStates) then begin
-        wbCurrentAction := 'ÕıÔÚ´´½¨ ' + _File.Name + ' µÄÒıÓÃĞÅÏ¢';
+        wbCurrentAction := 'æ­£åœ¨åˆ›å»º ' + _File.Name + ' çš„å¼•ç”¨ä¿¡æ¯';
         AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
         Application.ProcessMessages;
         _File.BuildRef;
@@ -6214,12 +6609,12 @@ begin
     end;
     for i := Low(Files) to High(Files) do begin
       _File := Files[i];
-      wbCurrentAction := 'ÕıÔÚ´´½¨ ' + _File.Name + ' µÄ¿ÉÓÃĞÅÏ¢';
+      wbCurrentAction := 'æ­£åœ¨åˆ›å»º ' + _File.Name + ' çš„å¯ç”¨ä¿¡æ¯';
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
       Application.ProcessMessages;
       _File.BuildReachable;
     end;
-    AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] È«²¿Íê³É£¡');
+    AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å…¨éƒ¨å®Œæˆï¼');
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
@@ -6234,7 +6629,7 @@ var
   //  wbStartTime                   : TDateTime;
 begin
   with TfrmFileSelect.Create(nil) do try
-    Caption := 'ÕıÔÚ´´½¨ÒıÓÃĞÅÏ¢£º';
+    Caption := 'æ­£åœ¨åˆ›å»ºå¼•ç”¨ä¿¡æ¯ï¼š';
 
     for i := Low(Files) to High(Files) do
       if not (csRefsBuild in Files[i].ContainerStates) then
@@ -6242,7 +6637,7 @@ begin
     CheckListBox1.Sorted := True;
 
     if CheckListBox1.Count = 0 then begin
-      ShowMessage('µ±Ç°²»´æÔÚ²»º¬ÓĞÒıÓÃĞÅÏ¢µÄÎÄ¼ş');
+      ShowMessage('å½“å‰ä¸å­˜åœ¨ä¸å«æœ‰å¼•ç”¨ä¿¡æ¯çš„æ–‡ä»¶');
       Exit;
     end;
 
@@ -6258,12 +6653,12 @@ begin
         if CheckListBox1.Checked[i] then begin
           pgMain.ActivePage := tbsMessages;
           _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-          wbCurrentAction := 'ÕıÔÚ´´½¨ ' + _File.Name + ' µÄÒıÓÃĞÅÏ¢';
+          wbCurrentAction := 'æ­£åœ¨åˆ›å»º ' + _File.Name + ' çš„å¼•ç”¨ä¿¡æ¯';
           AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
           Application.ProcessMessages;
           _File.BuildRef;
         end;
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] È«²¿Íê³É£¡');
+      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å…¨éƒ¨å®Œæˆï¼');
     finally
       wbCurrentAction := '';
       Caption := Application.Title;
@@ -6418,7 +6813,7 @@ begin
 
     with TfrmFileSelect.Create(Self) do try
 
-      Caption := 'Ñ¡ÔñÒ»¸öÄ¿±êÎÄ¼ş';
+      Caption := 'é€‰æ‹©ä¸€ä¸ªç›®æ ‡æ–‡ä»¶';
 
       _File := NodeData.Element._File;
 
@@ -6437,7 +6832,7 @@ begin
           if CheckListBox1.Checked[i] then begin
             FoundNone := False;
             if Assigned(_File) then begin
-              ShowMessage('Çë½öÑ¡ÔñÒ»¸öÄ¿±êÎÄ¼ş¡£');
+              ShowMessage('è¯·ä»…é€‰æ‹©ä¸€ä¸ªç›®æ ‡æ–‡ä»¶ã€‚');
               _File := nil;
               Break;
             end;
@@ -6477,18 +6872,18 @@ begin
     if not Assigned(_File) then begin
 
       s := IntToHex64(OldFormID, 8);
-      if InputQuery('ĞÂ FormID', 'ÇëÒÔÊ®Áù½øÖÆÊıÊäÈëĞÂµÄ FormID £¬Àı£º0404CC43¡£Ç°Á½Î»Êı±ØĞë·ûºÏ²å¼şµÄ¼ÓÔØË³Ğò¡£', s) then begin
+      if InputQuery('æ–°è¡¨å•åºå·', 'è¯·ä»¥åå…­è¿›åˆ¶æ•°è¾“å…¥æ–°çš„è¡¨å•åºå· ï¼Œä¾‹ï¼š0404CC43ã€‚å‰ä¸¤ä½æ•°å¿…é¡»ç¬¦åˆæ’ä»¶çš„åŠ è½½é¡ºåºã€‚', s) then begin
 
         if s = '' then begin
           s := IntToHex64(MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID), 8);
-          if not InputQuery('ÒÑÉú³ÉĞÂ FormID', 'Çë²å¼şĞÂÉú³ÉµÄ FormID ¡£Ç°Á½Î»Êı±ØĞë·ûºÏ²å¼şµÄ¼ÓÔØË³Ğò¡£', s) then
+          if not InputQuery('å·²ç”Ÿæˆæ–°è¡¨å•åºå·', 'è¯·æ’ä»¶æ–°ç”Ÿæˆçš„è¡¨å•åºå· ã€‚å‰ä¸¤ä½æ•°å¿…é¡»ç¬¦åˆæ’ä»¶çš„åŠ è½½é¡ºåºã€‚', s) then
             Exit;
         end;
         NewFormID := StrToInt64('$' + s);
         if NewFormID = 0 then
-          raise Exception.Create('00000000 ²»ÊÇÓĞĞ§µÄ FormID');
+          raise Exception.Create('00000000 ä¸æ˜¯æœ‰æ•ˆçš„è¡¨å•åºå·');
         if NewFormID = $14 then
-          raise Exception.Create('00000014 ²»ÊÇÓĞĞ§µÄ FormID');
+          raise Exception.Create('00000014 ä¸æ˜¯æœ‰æ•ˆçš„è¡¨å•åºå·');
       end else
         Exit;
 
@@ -6505,14 +6900,14 @@ begin
 
     pgMain.ActivePage := tbsMessages;
 
-    AddMessage('ÕıÔÚĞŞ¸Ä FormID ['+IntToHex64(OldFormID, 8)+'] in file "'+MainRecord._File.FileName+'" to ['+IntToHex(NewFormID, 8)+']');
+    AddMessage('æ­£åœ¨ä¿®æ”¹è¡¨å•åºå· ['+IntToHex64(OldFormID, 8)+'] in file "'+MainRecord._File.FileName+'" to ['+IntToHex(NewFormID, 8)+']');
 
     Master := MainRecord.MasterOrSelf;
     SetLength(ReferencedBy, Master.ReferencedByCount);
     for i := 0 to Pred(Master.ReferencedByCount) do
       ReferencedBy[i] := Master.ReferencedBy[i];
 
-    AddMessage('¼ÇÂ¼ÒıÓÃ³ö '+IntToStr(Length(ReferencedBy))+' ¸öÆäËû¼ÇÂ¼');
+    AddMessage('è®°å½•å¼•ç”¨å‡º '+IntToStr(Length(ReferencedBy))+' ä¸ªå…¶ä»–è®°å½•');
     try
       MainRecord.LoadOrderFormID := NewFormID;
 
@@ -6525,14 +6920,14 @@ begin
         ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, Assigned(_File) );
     except
       on E: Exception do begin
-        AddMessage('´íÎó£º' + E.Message);
+        AddMessage('é”™è¯¯ï¼š' + E.Message);
         AnyErrors := True;
       end;
     end;
   end;
   if AnyErrors then begin
     pgMain.ActivePage := tbsMessages;
-    AddMessage('!!! ·¢Éú´íÎó¡£Ç¿ÁÒ½¨ÒéÖ±½ÓÍË³ö£¬²»Òª±£´æ¡£ÒòÎª²¿·ÖÄÚÈİ¿ÉÄÜÒÑ±»ĞŞ¸Ä !!!');
+    AddMessage('!!! å‘ç”Ÿé”™è¯¯ã€‚å¼ºçƒˆå»ºè®®ç›´æ¥é€€å‡ºï¼Œä¸è¦ä¿å­˜ã€‚å› ä¸ºå±€éƒ¨å†…å®¹å¯èƒ½å·²è¢«ä¿®æ”¹ !!!');
   end;
 end;
 
@@ -6560,7 +6955,7 @@ begin
       if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
-          Caption := 'ĞŞ¸ÄÊıÖµ';
+          Caption := 'ä¿®æ”¹æ•°å€¼';
 
           for i := 0 to Pred(Flags.FlagCount) do begin
             CheckListBox1.AddItem(Flags.Flags[i], nil);
@@ -6579,7 +6974,7 @@ begin
 
       end else
 
-      if Element._File.IsLocalized and (Element.ValueDef.DefType = dtLString) then begin
+      if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
@@ -6593,7 +6988,7 @@ begin
         vstView.Invalidate;
         Exit;
       end else
-        if not InputQuery('ĞŞ¸ÄÊıÖµ', 'ÇëĞŞ¸ÄÊıÖµ£º', EditValue) then
+        if not InputQuery('ä¿®æ”¹æ•°å€¼', 'è¯·ä¿®æ”¹æ•°å€¼ï¼š', EditValue) then
           Exit;
 
       Element.EditValue := EditValue;
@@ -6676,11 +7071,11 @@ begin
         EditorID := MainRecord.EditorID;
         repeat
           if AsWrapper then begin
-            if not InputQuery('EditorID', 'ÇëÊäÈë·â×°¸±±¾µÄ EditorID ¡£', EditorID) then
+            if not InputQuery('ç¼–è¾‘å™¨æ ‡è¯†', 'è¯·è¾“å…¥å°è£…å‰¯æœ¬çš„ç¼–è¾‘å™¨æ ‡è¯†ã€‚', EditorID) then
               Exit;
           end
           else begin
-            if not InputQuery('EditorID', 'ÇëĞŞ¸Ä EditorID', EditorID) then
+            if not InputQuery('ç¼–è¾‘å™¨æ ‡è¯†', 'è¯·ä¿®æ”¹ç¼–è¾‘å™¨æ ‡è¯†', EditorID) then
               Exit;
           end;
           if EditorID = '' then
@@ -6688,20 +7083,20 @@ begin
           if not SameText(EditorID, MainRecord.EditorID) then
             Break;
           if AsWrapper then begin
-            ShowMessage('ÄúĞèÒª¸ø·â×°¸±±¾¶¨Òå²»Í¬µÄ EditorID¡£');
+            ShowMessage('æ‚¨éœ€è¦ç»™å°è£…å‰¯æœ¬å®šä¹‰ä¸åŒçš„ç¼–è¾‘å™¨æ ‡è¯†ã€‚');
           end
           else begin
-            if MessageDlg('ÄúÈ·¶¨²»ÒªĞŞ¸Ä EditorID Âğ£¿' +
-              'EditorID ³åÍ»»áµ¼ÖÂ²å¼şÔÚ CS ¼ÓÔØÖĞ³öÏÖ´íÎóĞÅÏ¢¡£',
+            if MessageDlg('æ‚¨ç¡®å®šä¸è¦ä¿®æ”¹ç¼–è¾‘å™¨æ ‡è¯†å—ï¼Ÿ' +
+              'ç¼–è¾‘å™¨æ ‡è¯†å†²çªä¼šå¯¼è‡´æ’ä»¶åœ¨ CS åŠ è½½ä¸­å‡ºç°é”™è¯¯ä¿¡æ¯ã€‚',
               mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
               Break;
           end;
         until False;
       end;
 
-      CheckListBox1.AddItem('<ĞÂ½¨ÎÄ¼ş>', nil);
+      CheckListBox1.AddItem('<æ–°å»ºæ–‡ä»¶>', nil);
 
-      Caption := 'Ñ¡ÔñÏ£ÍûÌí¼Ó¼ÇÂ¼µÄÎÄ¼ş';
+      Caption := 'é€‰æ‹©å¸Œæœ›æ·»åŠ è®°å½•çš„æ–‡ä»¶';
 
       ShowModal;
 
@@ -6723,14 +7118,14 @@ begin
               MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '') as IwbMainRecord;
               Assert(Assigned(MainRecord));
               MainRecord.Assign(Low(Integer), nil, False);
-              LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
+              LeveledListEntries := MainRecord.ElementByName['ç­‰çº§åˆ—è¡¨è®°å½•'] as IwbContainerElementRef;
               Assert(Assigned(LeveledListEntries));
               Assert(LeveledListEntries.ElementCount = 1);
               LeveledListEntry := LeveledListEntries.Elements[0] as IwbContainerElementRef;
               Assert(Assigned(LeveledListEntry));
-              LeveledListEntry.ElementByName['Reference'].EditValue := MainRecord2.EditValue;
-              LeveledListEntry.ElementByName['Count'].EditValue := '1';
-              LeveledListEntry.ElementByName['Level'].EditValue := '1';
+              LeveledListEntry.ElementByName['è¡ç”Ÿ'].EditValue := MainRecord2.EditValue;
+              LeveledListEntry.ElementByName['æ•°é‡'].EditValue := '1';
+              LeveledListEntry.ElementByName['ç­‰çº§'].EditValue := '1';
               MainRecord.EditorID := EditorID;
             end;
           end;
@@ -6772,6 +7167,24 @@ begin
   InvalidateElementsTreeView(NoNodes);
 end;
 
+procedure TfrmMain.mniViewHeaderJumpToClick(Sender: TObject);
+var
+  Column                      : TColumnIndex;
+  Element                     : IwbElement;
+  MainRecord                  : IwbMainRecord;
+begin
+  Column := vstView.Header.Columns.PopupIndex;
+  if Column < 1 then
+    Exit;
+  Dec(Column);
+  if Column > High(ActiveRecords) then
+    Exit;
+  Element := ActiveRecords[Column].Element;
+  if not Supports(Element, IwbMainRecord, MainRecord) then
+    Exit;
+  JumpTo(MainRecord, True);
+end;
+
 procedure TfrmMain.mniViewHeaderRemoveClick(Sender: TObject);
 var
   Column                      : TColumnIndex;
@@ -6799,7 +7212,7 @@ begin
   if not EditWarn then
     Exit;
 
-  DialogResult := MessageDlg('È·¶¨´ÓÎÄ¼ş ' + Element._File.FileName + ' ÖĞÓÀ¾ÃÉ¾³ı ' + Element.Name + ' £¿', mtConfirmation, [mbYes, mbNo], 0);
+  DialogResult := MessageDlg('ç¡®å®šä»æ–‡ä»¶ ' + Element._File.FileName + ' ä¸­æ°¸ä¹…åˆ é™¤ ' + Element.Name + ' ï¼Ÿ', mtConfirmation, [mbYes, mbNo], 0);
 
   if DialogResult <> mrYes then
     Exit;
@@ -6886,7 +7299,7 @@ begin
     for i := Low(WorldSpaces) to High(WorldSpaces) do
       CheckListBox1.AddItem(WorldSpaces[i].Name, TObject(Integer(WorldSpaces[i])));
     CheckListBox1.Sorted := True;
-    Caption := 'Ñ¡Ôñ Worldspaces';
+    Caption := 'é€‰æ‹© Worldspaces';
     ShowModal;
 
     wbStartTime := Now;
@@ -6940,7 +7353,7 @@ begin
           if Race = '' then
             Continue;
 
-          if Supports(MainRecord.ElementByName['Items'], IwbContainerElementRef, Container) then
+          if Supports(MainRecord.ElementByName['ç‰©å“'], IwbContainerElementRef, Container) then
             for k := 0 to Pred(Container.ElementCount) do
               if Supports(Container.Elements[k], IwbContainerElementRef, Container2) then
                 if Container2.ElementCount = 2 then begin
@@ -6952,7 +7365,7 @@ begin
                           Container2.Elements[0].EditValue := IntToHex64(FormID, 8);
                         except
                           on E: Exception do
-                            PostAddMessage('¸üĞÂ '+MainRecord.Name+' µÄ¼ÇÂ¼ '+MainRecord2.Name+' Ê±·¢Éú´íÎó£º'+ E.Message);
+                            PostAddMessage('æ›´æ–° '+MainRecord.Name+' çš„è®°å½• '+MainRecord2.Name+' æ—¶å‘ç”Ÿé”™è¯¯ï¼š'+ E.Message);
                         end;
                       end;
                   end;
@@ -6989,15 +7402,15 @@ begin
     NodeData := vstNav.GetNodeData(Selection[0]);
     Element := NodeData.Element;
     if ContainsChilds then
-      DialogResult := MessageDlg('È·¶¨ÓÀ¾ÃÉ¾³ı ' + Element.Name + ' ¼°ÆäËùÓĞÄÚÈİ£¿', mtWarning, [mbYes, mbNo], 0)
+      DialogResult := MessageDlg('ç¡®å®šæ°¸ä¹…åˆ é™¤ ' + Element.Name + ' åŠå…¶æ‰€æœ‰å†…å®¹ï¼Ÿ', mtWarning, [mbYes, mbNo], 0)
     else
-      DialogResult := MessageDlg('È·¶¨ÓÀ¾ÃÉ¾³ı ' + Element.Name + ' £¿', mtConfirmation, [mbYes, mbNo], 0);
+      DialogResult := MessageDlg('ç¡®å®šæ°¸ä¹…åˆ é™¤ ' + Element.Name + ' ï¼Ÿ', mtConfirmation, [mbYes, mbNo], 0);
   end
   else begin
     if ContainsChilds then
-      DialogResult := MessageDlg('È·¶¨ÓÀ¾ÃÉ¾³ıËùÑ¡ ' + IntToStr(Length(Selection)) + ' ¸ö¼ÇÂ¼ÖĞËùÓĞ¿ÉÉ¾³ıµÄ¼ÇÂ¼¼°ÆäËùÓĞÄÚÈİ£¿', mtWarning, [mbYes, mbNo], 0)
+      DialogResult := MessageDlg('ç¡®å®šæ°¸ä¹…åˆ é™¤æ‰€é€‰ ' + IntToStr(Length(Selection)) + ' ä¸ªè®°å½•ä¸­æ‰€æœ‰å¯åˆ é™¤çš„è®°å½•åŠå…¶æ‰€æœ‰å†…å®¹ï¼Ÿ', mtWarning, [mbYes, mbNo], 0)
     else
-      DialogResult := MessageDlg('È·¶¨ÓÀ¾ÃÉ¾³ıËùÑ¡ ' + IntToStr(Length(Selection)) + ' ¸ö¼ÇÂ¼ÖĞËùÓĞ¿ÉÉ¾³ıµÄ¼ÇÂ¼£¿', mtConfirmation, [mbYes, mbNo], 0);
+      DialogResult := MessageDlg('ç¡®å®šæ°¸ä¹…åˆ é™¤æ‰€é€‰ ' + IntToStr(Length(Selection)) + ' ä¸ªè®°å½•ä¸­æ‰€æœ‰å¯åˆ é™¤çš„è®°å½•ï¼Ÿ', mtConfirmation, [mbYes, mbNo], 0);
   end;
 
   if DialogResult <> mrYes then
@@ -7050,7 +7463,7 @@ end;
 
 procedure TfrmMain.mniNavSetVWDAutoClick(Sender: TObject);
 const
-  sJustWait                   = 'ÕıÔÚ¶¨ÒåVWDµ½ËùÓĞº¬VWDÄ£ĞÍµÄREFR¡£ÇëÉÔºó...';
+  sJustWait                   = 'æ­£åœ¨å®šä¹‰VWDåˆ°æ‰€æœ‰å«VWDæ¨¡å‹çš„REFRã€‚è¯·ç¨å...';
 var
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
@@ -7120,9 +7533,9 @@ begin
         Node := NextNode;
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
-          Caption := sJustWait + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-            ' ÒÑĞŞ¸Ä¼ÇÂ¼£º' + IntToStr(ChangeCount) +
-            ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Caption := sJustWait + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+            ' å·²ä¿®æ”¹è®°å½•ï¼š' + IntToStr(ChangeCount) +
+            ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
@@ -7134,9 +7547,9 @@ begin
       Enabled := True;
     end;
 
-    AddMessage('[¶¨ÒåVWDµ½ËùÓĞº¬VWDÄ£ĞÍµÄREFR] ' + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-      ' ÒÑĞŞ¸Ä¼ÇÂ¼£º' + IntToStr(ChangeCount) +
-      ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime));
+    AddMessage('[å®šä¹‰VWDåˆ°æ‰€æœ‰å«VWDæ¨¡å‹çš„REFR] ' + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+      ' å·²ä¿®æ”¹è®°å½•ï¼š' + IntToStr(ChangeCount) +
+      ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime));
     vstNav.Invalidate;
   finally
     vstNav.EndUpdate;
@@ -7154,7 +7567,7 @@ end;
 
 procedure TfrmMain.mniNavSetVWDAutoIntoClick(Sender: TObject);
 const
-  sJustWaitScan               = 'ÕıÔÚÉ¨Ãè²»º¬VWD±êÖ¾µ«º¬VWDÄ£ĞÍµÄREFR¡£ÇëÉÔºó...';
+  sJustWaitScan               = 'æ­£åœ¨æ‰«æä¸å«VWDæ ‡å¿—ä½†å«VWDæ¨¡å‹çš„REFRã€‚è¯·ç¨å...';
 var
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
@@ -7247,7 +7660,7 @@ begin
           MainRecord2.HasVisibleWhenDistantMesh then begin
 
           if MainRecord.HasErrors then
-            AddMessage('[¶¨ÒåVWDµ½ËùÓĞº¬VWDÄ£ĞÍµÄREFR] Ìø¹ı£º' + MainRecord.Name)
+            AddMessage('[å®šä¹‰VWDåˆ°æ‰€æœ‰å«VWDæ¨¡å‹çš„REFR] è·³è¿‡ï¼š' + MainRecord.Name)
           else begin
             if j <> i then
               Elements[j] := Elements[i];
@@ -7453,9 +7866,9 @@ begin
   Allowed.Add('DATA - Position/Rotation');
   Allowed.Add('NAME - Base');
   Allowed.Add('Record Header');
-  Allowed.Add('Cell');
+  Allowed.Add('åœºæ™¯');
   Allowed.Add('XSCL - Scale');
-  Allowed.Add('XRGD - Ragdoll Data');
+  Allowed.Add('XRGD - å¸ƒå¨ƒå¨ƒæ•°æ®');
   Allowed.Add('XEMI - Emittance');
   Allowed.Add('XSED - SpeedTree Seed');
   Allowed.Add('EDID - Editor ID');
@@ -7463,17 +7876,17 @@ begin
 
   Silent := TStringList.Create;
   Silent.Sorted := True;
-  Silent.Add('Reflected/Refracted By');
+  Silent.Add('åå°„/æŠ˜å°„');
   Silent.Add('XLOD - Distant LOD Data');
-  Silent.Add('Ownership');
-  Silent.Add('XNDP - Navigation Door Link');
-  Silent.Add('XTEL - Teleport Destination');
-  Silent.Add('XLOC - Lock Data');
+  Silent.Add('æ‰€æœ‰æƒ');
+  Silent.Add('XNDP - å¯¼èˆªé—¨è¿æ¥');
+  Silent.Add('XTEL - ä¼ é€ç›®çš„åœ°');
+  Silent.Add('XLOC - é”æ•°æ®');
   Silent.Add('XLKR - Linked Reference');
-  Silent.Add('Patrol Data');
-  Silent.Add('Activate Parents');
+  Silent.Add('å·¡é€»æ•°æ®');
+  Silent.Add('æ¿€æ´»æ ¹æº');
   Silent.Add('ONAM - Open by Default');
-  Silent.Add('XACT - Action Flag');
+  Silent.Add('XACT - åŠ¨ä½œæ ‡è®°');
   {
   for i := low(Records) to high(Records) do begin
     BaseRecord := Records[i].BaseRecord;
@@ -7597,7 +8010,7 @@ end;
 
 procedure TfrmMain.mniNavRemoveIdenticalToMasterClick(Sender: TObject);
 const
-  sJustWait                   = 'ÕıÔÚÇåÀí ITM Êı¾İ¡£ÇëÉÔºó...';
+  sJustWait                   = 'æ­£åœ¨æ¸…ç† ITM æ•°æ®ã€‚è¯·ç¨å...';
 var
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
@@ -7641,7 +8054,7 @@ begin
     AssignPersWrldChild or
     not InheritConflictByParent then begin
 
-    MessageDlg('Èç¹ûÒªÊ¹ÓÃ´Ë¹¦ÄÜ£¬ÔÚÇëÇóÉ¸Ñ¡Ê±Äú*Ö»*ÄÜ¼¤»î¡°¼Ì³Ğ×Ô¸¸ÏµµÄ³åÍ»×´Ì¬¡±¡£', mtError, [mbOk], 0);
+    MessageDlg('å¦‚æœè¦ä½¿ç”¨æ­¤åŠŸèƒ½ï¼Œåœ¨è¯·æ±‚ç­›é€‰æ—¶æ‚¨*åª*èƒ½æ¿€æ´»â€œç»§æ‰¿è‡ªçˆ¶ç³»çš„å†²çªçŠ¶æ€â€ã€‚', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -7683,9 +8096,9 @@ begin
             MainRecord := nil;
 
             if not NodeData.Element.IsRemoveable then
-              PostAddMessage('ÎŞ·¨ÒÆ³ı£º' + NodeData.Element.Name)
+              PostAddMessage('æ— æ³•ç§»é™¤ï¼š' + NodeData.Element.Name)
             else begin
-              PostAddMessage('ÕıÔÚÒÆ³ı£º' + NodeData.Element.Name);
+              PostAddMessage('æ­£åœ¨ç§»é™¤ï¼š' + NodeData.Element.Name);
               if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
                 NodeData.Container.Remove;
               NodeData.Element.Remove;
@@ -7700,9 +8113,9 @@ begin
         Node := NextNode;
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
-          Caption := sJustWait + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-            ' ÒÑÒÆ³ı¼ÇÂ¼£º' + IntToStr(RemovedCount) +
-            ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Caption := sJustWait + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+            ' å·²ç§»é™¤è®°å½•ï¼š' + IntToStr(RemovedCount) +
+            ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
@@ -7714,9 +8127,9 @@ begin
       Enabled := True;
     end;
 
-    PostAddMessage('[ITM ÇåÀíÍê³É] ' + ' ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-      ', ÒÑÒÆ³ı¼ÇÂ¼£º' + IntToStr(RemovedCount) +
-      ', ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
+    PostAddMessage('[ITM æ¸…ç†å®Œæˆ] ' + ' å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+      ', å·²ç§»é™¤è®°å½•ï¼š' + IntToStr(RemovedCount) +
+      ', æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -8072,9 +8485,9 @@ begin
 
   try
     if fLocalize then
-      Caption := 'ÕıÔÚ±¾µØ»¯¼ÇÂ¼¡£ÇëÉÔºó...'
+      Caption := 'æ­£åœ¨æœ¬åœ°åŒ–è®°å½•ã€‚è¯·ç¨å...'
     else
-      Caption := 'ÕıÔÚÈ¡Ïû±¾µØ»¯¼ÇÂ¼¡£ÇëÉÔºó...';
+      Caption := 'æ­£åœ¨å–æ¶ˆæœ¬åœ°åŒ–è®°å½•ã€‚è¯·ç¨å...';
     pgMain.ActivePage := tbsMessages;
 
     StartTick := GetTickCount;
@@ -8082,7 +8495,7 @@ begin
     Enabled := false;
 
     if fTranslate then begin
-      PostAddMessage('[ÕıÔÚ´¦Àí] ÕıÔÚ´´½¨·­ÒëË÷Òı...');
+      PostAddMessage('[æ­£åœ¨å¤„ç†] æ­£åœ¨åˆ›å»ºç¿»è¯‘ç´¢å¼•...');
 
       lFrom := TwbFastStringList.Create;
       lTo := TwbFastStringList.Create;
@@ -8103,16 +8516,16 @@ begin
       end;
 
       if lFrom.Count <> lTo.Count then begin
-        PostAddMessage('[´íÎó] ´Ê»ã±íÖĞ×Ö·û´®µÄÊıÁ¿²»Æ¥Åä¡£Çë¼ì²é²ÎÊıÔÙÖØĞÂÔËĞĞ¡£');
+        PostAddMessage('[é”™è¯¯] è¯æ±‡è¡¨ä¸­å­—ç¬¦ä¸²çš„æ•°é‡ä¸åŒ¹é…ã€‚è¯·æ£€æŸ¥å‚æ•°å†é‡æ–°è¿è¡Œã€‚');
         Exit;
       end;
     end;
 
 
-    PostAddMessage('[ÕıÔÚ´¦Àí] ÕıÔÚÊÕ¼¯¿É±¾µØ»¯ÊıÖµ...');
+    PostAddMessage('[æ­£åœ¨å¤„ç†] æ­£åœ¨æ”¶é›†å¯æœ¬åœ°åŒ–æ•°å€¼...');
     GatherLStrings(_File, lstrings);
 
-    PostAddMessage('[ÕıÔÚ´¦Àí] ÕıÔÚ´¦Àí²Ù×÷...');
+    PostAddMessage('[æ­£åœ¨å¤„ç†] æ­£åœ¨å¤„ç†æ“ä½œ...');
     for i := Low(lstrings) to High(lstrings) do begin
 
       Element := lstrings[i];
@@ -8157,10 +8570,10 @@ begin
 
     wbLocalizationHandler.NoTranslate := false;
     Enabled := true;
-    PostAddMessage('[´¦ÀíÍê³É] ' +
-      ' ¿É±¾µØ»¯×Ö·û´®£º' + IntToStr(Length(lstrings)) +
-      ' ÒÑ·­Òë£º' + IntToStr(Translated) +
-      ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime));
+    PostAddMessage('[å¤„ç†å®Œæˆ] ' +
+      ' å¯æœ¬åœ°åŒ–å­—ç¬¦ä¸²ï¼š' + IntToStr(Length(lstrings)) +
+      ' å·²ç¿»è¯‘ï¼š' + IntToStr(Translated) +
+      ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime));
     Caption := Application.Title;
 
     // that "(de)localization" is a very dirty hack which can probably lead
@@ -8266,9 +8679,9 @@ begin
   s := '';
   repeat
     if s <> '' then
-      ShowMessage('"'+s+'" ²»ÊÇÓĞĞ§µÄ start FormID.');
+      ShowMessage('"'+s+'" ä¸æ˜¯æœ‰æ•ˆçš„èµ·ç‚¹è¡¨å•åºå·.');
 
-    if not InputQuery('ÆğÊ¼ÓÚ...', 'ÇëÒÔÊ®Áù½øÖÆÊäÈëĞÂ FormID µÄÆğµã£¬Àı£º200000¡£Ö»ĞèÒªÊäÈëºóÃæ6Î»Êı¡£', s) then
+    if not InputQuery('èµ·å§‹äº...', 'è¯·ä»¥åå…­è¿›åˆ¶è¾“å…¥æ–°è¡¨å•åºå·çš„èµ·ç‚¹ï¼Œä¾‹ï¼š200000ã€‚åªéœ€è¦è¾“å…¥åé¢6ä½æ•°ã€‚', s) then
       Exit;
 
     StartFormID := StrToInt64Def('$' + s, 0);
@@ -8304,8 +8717,8 @@ begin
   Enabled := False;
   try
     j := 0;
-    Caption := '[ÕıÔÚĞŞ¸Ä FormIDs] ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(0) +
-      ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Caption := '[æ­£åœ¨ä¿®æ”¹è¡¨å•åºå·] å·²å¤„ç†è®°å½•ï¼š' + IntToStr(0) +
+      ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
     for k := High(MainRecords) downto Low(MainRecords) do begin
       MainRecord := MainRecords[k];
       OldFormID := MainRecord.LoadOrderFormID;
@@ -8323,14 +8736,14 @@ begin
 
       pgMain.ActivePage := tbsMessages;
 
-      AddMessage('ÕıÔÚĞŞ¸ÄÎÄ¼ş '+MainRecord._File.FileName+' µÄ FormID ['+IntToHex64(OldFormID, 8)+'] Îª ['+IntToHex(NewFormID, 8)+']');
+      AddMessage('æ­£åœ¨ä¿®æ”¹æ–‡ä»¶ '+MainRecord._File.FileName+' çš„è¡¨å•åºå· ['+IntToHex64(OldFormID, 8)+'] ä¸º ['+IntToHex(NewFormID, 8)+']');
 
       Master := MainRecord.MasterOrSelf;
       SetLength(ReferencedBy, Master.ReferencedByCount);
       for i := 0 to Pred(Master.ReferencedByCount) do
         ReferencedBy[i] := Master.ReferencedBy[i];
 
-      AddMessage('¼ÇÂ¼ÒıÓÃ³ö '+IntToStr(Length(ReferencedBy))+' ¸öÆäËû¼ÇÂ¼¡£');
+      AddMessage('è®°å½•å¼•ç”¨å‡º '+IntToStr(Length(ReferencedBy))+' ä¸ªå…¶ä»–è®°å½•ã€‚');
       try
         SetLength(Overrides, MainRecord.OverrideCount);
         for l := 0 to Pred(MainRecord.OverrideCount) do
@@ -8350,14 +8763,14 @@ begin
           ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, True );
       except
         on E: Exception do begin
-          AddMessage('´íÎó£º' + E.Message);
+          AddMessage('é”™è¯¯ï¼š' + E.Message);
           AnyErrors := True;
         end;
       end;
 
       if StartTick + 500 < GetTickCount then begin
-        Caption := '[ÕıÔÚĞŞ¸Ä FormIDs] ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(High(MainRecords) - k) +
-          ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+        Caption := '[æ­£åœ¨ä¿®æ”¹è¡¨å•åºå·] å·²å¤„ç†è®°å½•ï¼š' + IntToStr(High(MainRecords) - k) +
+          ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
         Application.ProcessMessages;
         StartTick := GetTickCount;
         if ForceTerminate then
@@ -8365,10 +8778,10 @@ begin
       end;
     end;
     if Supports(_File.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then
-      MainRecord.ElementNativeValues['HEDR\Next Object ID'] := (Succ(EndFormID) and $FFFFFF);
+      MainRecord.ElementNativeValues['HEDR\ä¸‹ä¸ªç‰©ä½“åºå·'] := (Succ(EndFormID) and $FFFFFF);
     if AnyErrors then begin
       pgMain.ActivePage := tbsMessages;
-      AddMessage('!!! ·¢Éú´íÎó¡£Ç¿ÁÒ½¨ÒéÖ±½ÓÍË³ö£¬²»Òª±£´æ¡£ÒòÎª²¿·ÖÄÚÈİ¿ÉÄÜÒÑ±»ĞŞ¸Ä !!!');
+      AddMessage('!!! å‘ç”Ÿé”™è¯¯ã€‚å¼ºçƒˆå»ºè®®ç›´æ¥é€€å‡ºï¼Œä¸è¦ä¿å­˜ã€‚å› ä¸ºéƒ¨åˆ†å†…å®¹å¯èƒ½å·²è¢«ä¿®æ”¹ !!!');
     end;
   finally
     Dec(wbShowStartTime);
@@ -8437,7 +8850,7 @@ begin
     Exit;
   if Assigned(MainRecord.RecordBySignature['XLOC']) then
     Exit;
-  if Assigned(MainRecord.ElementByName['Map Marker']) then
+  if Assigned(MainRecord.ElementByName['åœ°å›¾æ ‡è®°']) then
     Exit;
   if Assigned(MainRecord.RecordBySignature['XRTM']) then
     Exit;
@@ -8467,7 +8880,7 @@ end;
 
 procedure TfrmMain.mniNavFilterApplyClick(Sender: TObject);
 const
-  sJustWait                   = 'ÕıÔÚÉ¸Ñ¡£¬ÇëÉÔºó... (ÊÇµÄ£¬ÕâĞèÒªÍ¦³¤Ê±¼äµÄ£¬ÄÍĞÄµÈ°É£¡)';
+  sJustWait                   = 'æ­£åœ¨ç­›é€‰ï¼Œè¯·ç¨å... (æ˜¯çš„ï¼Œè¿™éœ€è¦æŒºé•¿æ—¶é—´çš„ï¼Œè€å¿ƒç­‰å§ï¼)';
 var
   Node, NextNode              : PVirtualNode;
   NodeData                    : PNavNodeData;
@@ -8926,8 +9339,8 @@ begin
         Node := NextNode;
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
-          Caption := sJustWait + ' [Pass 1] ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-            ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Caption := sJustWait + ' [Pass 1] å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+            ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
@@ -9095,8 +9508,8 @@ begin
         Node := NextNode;
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
-          Caption := sJustWait + ' [Pass 2] ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-            ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Caption := sJustWait + ' [Pass 2] å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+            ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
@@ -9108,11 +9521,11 @@ begin
 
     for i := Low(Files) to High(Files) do
       if (FileFiltered[i] > 0) and (FileFiltered[i] < Files[i].RecordCount) then
-        PostAddMessage(Format('[%s] ÒÑÉ¸Ñ¡ %.0n/%.0n ¼ÇÂ¼',
+        PostAddMessage(Format('[%s] å·²ç­›é€‰ %.0n/%.0n è®°å½•',
           [Files[i].FileName, Min(Files[i].RecordCount, FileFiltered[i]) + 0.0, Files[i].RecordCount + 0.0]));
 
-    PostAddMessage('[É¸Ñ¡Íê³É] ' + 'ÒÑ´¦Àí¼ÇÂ¼£º' + IntToStr(Count) +
-      ' ³ÖĞøÊ±¼ä£º' + FormatDateTime('nn:ss', Now - wbStartTime));
+    PostAddMessage('[ç­›é€‰å®Œæˆ] ' + 'å·²å¤„ç†è®°å½•ï¼š' + IntToStr(Count) +
+      ' æŒç»­æ—¶é—´ï¼š' + FormatDateTime('nn:ss', Now - wbStartTime));
     FilterApplied := True;
   finally
     vstNav.EndUpdate;
@@ -9202,6 +9615,7 @@ begin
     cbSortFLST.Checked := wbSortFLST;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
+    cbAutoSave.Checked := AutoSave;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -9221,6 +9635,7 @@ begin
     wbSortFLST := cbSortFLST.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
+    AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -9230,6 +9645,7 @@ begin
     wbUDRSetMSTT := cbUDRSetMSTT.Checked;
     wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
 
+    Settings.WriteBool('Options', 'AutoSave', AutoSave);
     Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
     Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
@@ -9256,6 +9672,48 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniViewNextMemberClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if Assigned(NodeDatas) then begin
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if Assigned(Element) then begin
+      if not EditWarn then
+        Exit;
+
+      Element.NextMember;
+      PostResetActiveTree;
+    end;
+  end;
+end;
+
+{procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
+var
+  From, FileName, TempPath: string;
+begin
+  From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  if not SameText(ExtractFileExt(From), '.bsa') then begin
+    FileName := DataPath + OpenFromAsset;
+    From := 'Data';
+  end else begin
+    // extract file from BSA
+    TempPath := wbTempPath + From + '\';
+    FileName := TempPath + OpenFromAsset;
+    if not FileExists(FileName) then begin
+      if ForceDirectories(TempPath) then
+        wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
+    end;
+  end;
+  if FileExists(FileName) then
+    ShellExecute(Handle, 'open', PWideChar(FileName), nil, nil, SW_SHOW);
+end;
+}
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -9565,9 +10023,9 @@ begin
     (Element._File.LoadOrder > 0);
   if mniNavLocalizationSwitch.Visible then
     if Element._File.IsLocalized then
-      mniNavLocalizationSwitch.Caption := 'È¡Ïû±¾µØ»¯²å¼ş'
+      mniNavLocalizationSwitch.Caption := 'å–æ¶ˆæœ¬åœ°åŒ–æ’ä»¶'
     else
-      mniNavLocalizationSwitch.Caption := '±¾µØ»¯²å¼ş';
+      mniNavLocalizationSwitch.Caption := 'æœ¬åœ°åŒ–æ’ä»¶';
 
   if wbGameMode = gmTES5 then begin
     mniNavLocalizationLanguage.Clear;
@@ -9589,14 +10047,14 @@ begin
   if wbGameMode = gmTES5 then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
-    MenuItem.Caption := 'Papyrus ÈÕÖ¾';
+    MenuItem.Caption := 'Papyrus æ—¥å¿—';
     MenuItem.Tag := Integer(ltTES5Papyrus);
     mniNavLogAnalyzer.Add(MenuItem);
   end else
   if wbGameMode = gmTES4 then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
-    MenuItem.Caption := 'RuntimeScriptProfiler OBSE Extension ÈÕÖ¾';
+    MenuItem.Caption := 'RuntimeScriptProfiler OBSE Extension æ—¥å¿—';
     MenuItem.Tag := Integer(ltTES4RuntimeScriptProfiler);
     mniNavLogAnalyzer.Add(MenuItem);
   end;
@@ -9678,6 +10136,7 @@ begin
   mniViewHeaderCopyAsWrapper.Visible := False;
   mniViewHeaderRemove.Visible := False;
   mniViewHeaderHidden.Visible := False;
+  mniViewHeaderJumpTo.Visible := False;
   if not wbEditAllowed then
     Exit;
   if wbTranslationMode then
@@ -9703,6 +10162,7 @@ begin
   );
   mniViewHeaderCopyAsWrapper.Visible := (MainRecord.Signature = 'LVLC') or (MainRecord.Signature = 'LVLI') or (MainRecord.Signature = 'LVSP') or (MainRecord.Signature = 'LVLN');
 
+  mniViewHeaderJumpTo.Visible := True;
   mniViewHeaderHidden.Visible := True;
   mniViewHeaderHidden.Checked := esHidden in MainRecord.ElementStates;
   if not ActiveRecords[Column].Element._File.IsEditable then
@@ -9714,16 +10174,17 @@ end;
 
 procedure TfrmMain.pmuViewPopup(Sender: TObject);
 var
-  NodeDatas                   : PViewNodeDatas;
-  Element                     : IwbElement;
-
-  TargetNode                  : PVirtualNode;
-  TargetIndex                 : Integer;
-  TargetElement               : IwbElement;
+  NodeDatas     : PViewNodeDatas;
+  Element       : IwbElement;
+  TargetNode    : PVirtualNode;
+  TargetIndex   : Integer;
+  TargetElement : IwbElement;
 begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
   mniViewEdit.Visible := False;
   mniViewAdd.Visible := False;
+  mniViewNextMember.Visible := False;
+  mniViewPreviousMember.Visible := False;
   mniViewRemove.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
@@ -9755,8 +10216,53 @@ begin
         ((Length(CompareRecords) > 0) and (CompareRecords[0]._File.IsEditable))
         );
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
+      mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
+      mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
+      // open file menu
+      {if Assigned(Element) then
+         Value := Element.EditValue
+      else
+        Value := '';
+      if Length(Value) > 4 then begin
+        s := ExtractFileExt(Value);
+        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') or SameText(s, '.mp3') then begin
+          if Value[1] = '\' then
+            Delete(Value, 1, 1);
+          if SameText(Copy(Value, 1, 5), 'data\') then
+            Delete(Value, 1, 5);
+          if SameText(s, '.nif') and not SameText(Copy(Value, 1, 7), 'meshes\') then
+            Value := 'meshes\' + Value
+          else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
+            Value := 'textures\' + Value
+          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'sound\' + Value
+          else if SameText(s, '.mp3') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
+            Value := 'music\' + Value;
+          mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
+          if mniViewOpenFrom.Visible then begin
+            mniViewOpenFrom.Clear;
+            sl := TStringList.Create;
+            try
+              wbContainerHandler.ResourceCount(Value, sl);
+              for i := 0 to Pred(sl.Count) do begin
+                MenuItem := TMenuItem.Create(mniViewOpenFrom);
+                s := ExtractFileName(sl[i]);
+                if s = '' then s := 'Data\' + Value;
+                MenuItem.Caption := s;
+                MenuItem.Tag := i; // container index
+                MenuItem.OnClick := mniViewOpenFromClick;
+                mniViewOpenFrom.Add(MenuItem);
+              end;
+              OpenFromAsset := Value;
+            finally
+              sl.Free;
+            end;
+          end;
+        end;
+      end;}
     end;
-    mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and TargetElement.CanAssign(TargetIndex, nil, True);
+    mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
+      TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
   end;
 end;
 
@@ -9785,6 +10291,27 @@ end;
 procedure TfrmMain.PostResetActiveTree;
 begin
   PostMessage(Handle, WM_USER + 3, 0, 0);
+end;
+
+procedure TfrmMain.mniViewPreviousMemberClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if Assigned(NodeDatas) then begin
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if Assigned(Element) then begin
+      if not EditWarn then
+        Exit;
+
+      Element.PreviousMember;
+      PostResetActiveTree;
+    end;
+  end;
 end;
 
 procedure TfrmMain.ReInitTree;
@@ -9898,7 +10425,7 @@ begin
   try
     for i := Low(Files) to High(Files) do begin
       _File := Files[i];
-      wbCurrentAction := 'ÖØÖÃÎÄ¼ş ' + _File.Name +' µÄ±êÇ©¡£';
+      wbCurrentAction := 'é‡ç½®æ–‡ä»¶ ' + _File.Name +' çš„æ ‡ç­¾ã€‚';
       Application.ProcessMessages;
       _File.ResetTags;
     end;
@@ -9916,7 +10443,7 @@ begin
   Result := False;
   for i := Low(Files) to High(Files) do with Files[i] do
     if IsESM and (not (fsIsHardcoded in FileStates)) and SameText(ExtractFileExt(FileName), '.esp') then begin
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ÕıÔÚÒÆ³ı ESM ±êÖ¾£º' + FileName);
+      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] æ­£åœ¨ç§»é™¤ ESM æ ‡å¿—ï¼š' + FileName);
       IsESM := False;
       Result := True;
     end;
@@ -9956,7 +10483,7 @@ begin
         SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
       end;
 
-    Caption := '±£´æÒÑĞŞ¸ÄÎÄ¼ş£º';
+    Caption := 'ä¿å­˜å·²ä¿®æ”¹æ–‡ä»¶ï¼š';
     cbBackup.Visible := True;
     if Assigned(Settings) then
       cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
@@ -9993,7 +10520,7 @@ begin
             try
               FileStream := TFileStream.Create(DataPath + s, fmCreate);
               try
-                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ÕıÔÚ±£´æ£º' + s);
+                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] æ­£åœ¨ä¿å­˜ï¼š' + s);
                 _LFile.WriteToStream(FileStream);
                 SavedAny := True;
               finally
@@ -10003,7 +10530,7 @@ begin
             except
               on E: Exception do begin
                 AnyErrors := True;
-                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ±£´æ ' + s + ' Ê±³ö´í£º' + E.Message);
+                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ä¿å­˜ ' + s + ' æ—¶å‡ºé”™ï¼š' + E.Message);
               end;
             end;
 
@@ -10024,7 +10551,7 @@ begin
             //try
               FileStream := TFileStream.Create(DataPath + s, fmCreate);
               try
-                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ÕıÔÚ±£´æ£º' + s);
+                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] æ­£åœ¨ä¿å­˜ï¼š' + s);
                 _File.WriteToStream(FileStream);
                 SavedAny := True;
               finally
@@ -10059,9 +10586,9 @@ begin
     end;
 
     if AnyErrors then
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ·¢Éú´íÎó¡£ÖÁÉÙÓĞÒ»¸öÎÄ¼şÎ´±£´æ¡£');
+      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å‘ç”Ÿé”™è¯¯ã€‚è‡³å°‘æœ‰ä¸€ä¸ªæ–‡ä»¶æœªä¿å­˜ã€‚');
     if SavedAny then
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Íê³É±£´æ¡£');
+      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å®Œæˆä¿å­˜ã€‚');
     if AnyErrors then
       Abort;
   finally
@@ -10326,7 +10853,7 @@ begin
   Result := False;
   for i := Low(Files) to High(Files) do with Files[i] do
     if (not IsESM) and (not (fsIsHardcoded in FileStates)) then begin
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ÕıÔÚÉèÖÃ ESM ±êÖ¾£º' + FileName);
+      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] æ­£åœ¨è®¾ç½® ESM æ ‡å¿—ï¼š' + FileName);
       IsESM := True;
       Result := True;
     end else begin
@@ -10467,7 +10994,7 @@ var
   Error      : Boolean;
 begin
   with TfrmFileSelect.Create(nil) do try
-    Caption := 'ÇëÑ¡ÔñÒª¸üĞÂµÄ¼ÇÂ¼';
+    Caption := 'è¯·é€‰æ‹©è¦æ›´æ–°çš„è®°å½•';
 
     Counter := 0;
     for i := Low(ReferencedBy) to High(ReferencedBy) do begin
@@ -10481,7 +11008,7 @@ begin
 
     if Counter <= 0 then begin
       if not aSilent then
-        ShowMessage('Ò»¹²ÓĞ ' + IntToStr(Length(ReferencedBy)) + ' ¸ö¼ÇÂ¼ÒıÓÃÁË FormID ' + IntToHex64(OldFormID, 8) + ' µ«Ã»ÓĞÒ»¸öÊÇÎ»ÓÚ¿É±à¼­ÎÄ¼şÄÚ¡£');
+        ShowMessage('ä¸€å…±æœ‰ ' + IntToStr(Length(ReferencedBy)) + ' ä¸ªè®°å½•å¼•ç”¨äº†è¡¨å•åºå· ' + IntToHex64(OldFormID, 8) + ' ä½†æ²¡æœ‰ä¸€ä¸ªæ˜¯ä½äºå¯ç¼–è¾‘æ–‡ä»¶å†…ã€‚');
       Exit;
     end;
 
@@ -10505,18 +11032,18 @@ begin
           Inc(Counter)
       except
         on E: Exception do begin
-          AddMessage('¸üĞÂ ' + CheckListBox1.Items[i] + ' µÄ FomrID Ê±·¢Éú´íÎó£º' + E.Message);
+          AddMessage('æ›´æ–° ' + CheckListBox1.Items[i] + ' çš„ FomrID æ—¶å‘ç”Ÿé”™è¯¯ï¼š' + E.Message);
           Error := True;
         end;
       end;
 
-      AddMessage(IntToStr(Counter) + '/'+IntToStr(Length(ReferencedBy))+' ÒıÓÃ FormID ['+IntToHex64(OldFormID, 8)+'] µÄ¼ÇÂ¼ÒÑ¸üĞÂµ½ ['+IntToHex64(NewFormID, 8)+']');
+      AddMessage(IntToStr(Counter) + '/'+IntToStr(Length(ReferencedBy))+' å¼•ç”¨è¡¨å•åºå· ['+IntToHex64(OldFormID, 8)+'] çš„è®°å½•å·²æ›´æ–°åˆ° ['+IntToHex64(NewFormID, 8)+']');
 
       if not aSilent then begin
         if Error then
-          ShowMessage('ÖÁÉÙÓĞÒ»¸ö¼ÇÂ¼Ã»ÓĞ³É¹¦¸üĞÂ¡£ÏêÏ¸´íÎóĞÅÏ¢Çë²é¿´ÈÕÖ¾¡£');
+          ShowMessage('è‡³å°‘æœ‰ä¸€ä¸ªè®°å½•æ²¡æœ‰æˆåŠŸæ›´æ–°ã€‚è¯¦ç»†é”™è¯¯ä¿¡æ¯è¯·æŸ¥çœ‹æ—¥å¿—ã€‚');
 
-        Caption := 'ÒÔÏÂ¼ÇÂ¼ÒÑ³É¹¦¸üĞÂ£º';
+        Caption := 'ä»¥ä¸‹è®°å½•å·²æˆåŠŸæ›´æ–°ï¼š';
 
         ShowModal;
       end;
@@ -10593,7 +11120,7 @@ begin
   Signature := StrToSignature(Copy((Sender as TComponent).Name, 4, 4));
   with TfrmFileSelect.Create(nil) do try
 
-    Caption := 'Ñ¡ÔñÒª±È½ÏµÄÎÄ¼ş';
+    Caption := 'é€‰æ‹©è¦æ¯”è¾ƒçš„æ–‡ä»¶';
 
     sl2 := TStringList.Create;
     try
@@ -10695,7 +11222,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Morrowind', 'Oblivion', 'Skyrim');
+    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion', 'Skyrim');
 begin
   if not wbLoaderDone then
     Exit;
@@ -10709,13 +11236,16 @@ begin
       RateNoticeGiven := 2;
       Settings.WriteInteger('Usage', 'RateNoticeGiven', RateNoticeGiven);
       Settings.UpdateFile;
-      ShowMessage('ÄúÊ¹ÓÃ±¾³ÌĞòÒÑ¾­ÓĞÒ»¶ÎÊ±¼äÁË¡£'#13#13 +
-        'Èç¹ûÄú¾õµÃ´Ë³ÌĞòºÜÓĞÓÃ£¬Çëµ½±¾³ÌĞòÔÚ'+SiteName[wbGameMode]+' NexusµÄÏÂÔØÒ³Í¶ÎÒÒ»Æ±£¬¶Ô´ËÎÒ»áºÜ¸Ğ¼¤µÄ¡£'#13#13 +
-        'Èç¹ûÄúÒÑ¾­Í¶¹ıÆ±ÁË£¬ÎÒÔÚÕâ±ßÏÈ¸ĞĞ»ÄúµÄÖ§³Ö¡£Èç¹ûÄú¶ÔÓÚ±¾³ÌĞò»¹ÓĞÆäËû½¨ÒéµÄ£¬Ò²Çë´óµ¨ÏòÎÒÌá³ö¡£'+
-        'Äú¿ÉÒÔÔÚ Bethesda Game Studios ÂÛÌ³ÕÒµ½ÎÒ»òÕß±¾³ÌĞòµÄÌÖÂÛÌû¡£');
+      ShowMessage('æ‚¨ä½¿ç”¨æœ¬ç¨‹åºå·²ç»æœ‰ä¸€æ®µæ—¶é—´äº†ã€‚'#13#13 +
+        'å¦‚æœæ‚¨è§‰å¾—æ­¤ç¨‹åºå¾ˆæœ‰ç”¨ï¼Œè¯·åˆ°æœ¬ç¨‹åºåœ¨'+SiteName[wbGameMode]+' Nexusçš„ä¸‹è½½é¡µæŠ•æˆ‘ä¸€ç¥¨ï¼Œå¯¹æ­¤æˆ‘ä¼šå¾ˆæ„Ÿæ¿€çš„ã€‚'#13#13 +
+        'å¦‚æœæ‚¨å·²ç»æŠ•è¿‡ç¥¨äº†ï¼Œæˆ‘åœ¨è¿™è¾¹å…ˆæ„Ÿè°¢æ‚¨çš„æ”¯æŒã€‚å¦‚æœæ‚¨å¯¹äºæœ¬ç¨‹åºè¿˜æœ‰å…¶ä»–å»ºè®®çš„ï¼Œä¹Ÿè¯·å¤§èƒ†å‘æˆ‘æå‡ºã€‚'+
+        'æ‚¨å¯ä»¥åœ¨ Bethesda Game Studios è®ºå›æ‰¾åˆ°æˆ‘æˆ–è€…æœ¬ç¨‹åºçš„è®¨è®ºå¸–ã€‚');
     end;
 
   end;
+
+  if not AutoSave then
+    Exit;
 
   if vstView.IsEditing then
     Exit;
@@ -10725,7 +11255,7 @@ begin
       for i := Low(Files) to High(Files) do
         if esUnsaved in Files[i].ElementStates then
           if Files[i].UnsavedSince < Now - SaveInterval then begin
-            if MessageDlg('Äú³¤Ê±¼äÎ´±£´æ¹ıĞŞ¸ÄµÄÄÚÈİ£¬ÊÇ·ñÂíÉÏ±£´æ£¿', mtConfirmation, [mbYes, mbNo], 0, mbYes) = mrYes then begin
+            if MessageDlg('æ‚¨é•¿æ—¶é—´æœªä¿å­˜è¿‡ä¿®æ”¹çš„å†…å®¹ï¼Œæ˜¯å¦é©¬ä¸Šä¿å­˜ï¼Ÿ', mtConfirmation, [mbYes, mbNo], 0, mbYes) = mrYes then begin
               SaveChanged;
               SaveInterval := DefaultInterval;
             end;
@@ -10769,45 +11299,45 @@ begin
     wbMasterUpdateDone := True;
     if wbLoaderError then begin
       wbDontSave := True;
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= ´íÎó =--');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ¼ÓÔØÒÑ¼¤»î²å¼şÊ±·¢Éú´íÎó¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Çë²é¿´¶¥²¿µÄ´íÎóÈÕÖ¾ÒÔÕÒ³ö³ö´íµÄ²å¼ş¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ·¢Éú´Ë´íÎó×î´óµÄ¿ÉÄÜĞÔÎª²å¼ş´æÔÚ½á¹¹´íÎó¡£');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= é”™è¯¯ =--');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] åŠ è½½å·²æ¿€æ´»æ’ä»¶æ—¶å‘ç”Ÿé”™è¯¯ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] è¯·æŸ¥çœ‹é¡¶éƒ¨çš„é”™è¯¯æ—¥å¿—ä»¥æ‰¾å‡ºå‡ºé”™çš„æ’ä»¶ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å‘ç”Ÿæ­¤é”™è¯¯æœ€å¤§çš„å¯èƒ½æ€§ä¸ºæ’ä»¶å­˜åœ¨ç»“æ„é”™è¯¯ã€‚');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Î´¶Ô¼¤»î²å¼ş×öÈÎºÎĞŞ¸Ä¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Äú±ØĞëÏÈ½â¾öÁË´íÎóºóÔÙÔËĞĞ´Ë³ÌĞò¡£');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! æœªå¯¹æ¿€æ´»æ’ä»¶åšä»»ä½•ä¿®æ”¹ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! æ‚¨å¿…é¡»å…ˆè§£å†³äº†é”™è¯¯åå†è¿è¡Œæ­¤ç¨‹åºã€‚');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ÔÚ GECK ÖĞ¼ÓÔØ²¢±£´æ´íÎóµÄ²å¼şÓĞÊ±ºò¿ÉÒÔĞŞ¸´´íÎó¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ²»¹ı»¹ÊÇ½¨ÒéÖ±½ÓÁªÏµ²å¼ş×÷ÕßĞŞ¸´´íÎó¡£');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] åœ¨ GECK ä¸­åŠ è½½å¹¶ä¿å­˜é”™è¯¯çš„æ’ä»¶æœ‰æ—¶å€™å¯ä»¥ä¿®å¤é”™è¯¯ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ä¸è¿‡è¿˜æ˜¯å»ºè®®ç›´æ¥è”ç³»æ’ä»¶ä½œè€…ä¿®å¤é”™è¯¯ã€‚');
     end else try
       if wbMasterRestore then
         ChangesMade := RestorePluginsFromMaster
       else
         ChangesMade := SetAllToMaster;
       SaveChanged;
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= È«²¿Íê³É =--');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= å…¨éƒ¨å®Œæˆ =--');
       if ChangesMade then begin
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Äú±ØĞë¹Ø±Õ´Ë³ÌĞò²ÅÄÜÍê³É¶Ô .save ÎÄ¼şµÄÖØÃüÃû¡£');
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Èç¹ûÄúµÄ²å¼şÒÑÔÚÆäËû³ÌĞòÖĞ´ò¿ª£¬ÄÇÃ´Õâ±ß»¹ÊÇÓĞ¿ÉÄÜ³öÏÖ´íÎóµÄ¡£')
+        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] æ‚¨å¿…é¡»å…³é—­æ­¤ç¨‹åºæ‰èƒ½å®Œæˆå¯¹ .save æ–‡ä»¶çš„é‡å‘½åã€‚');
+        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å¦‚æœæ‚¨çš„æ’ä»¶å·²åœ¨å…¶ä»–ç¨‹åºä¸­æ‰“å¼€ï¼Œé‚£ä¹ˆè¿™è¾¹è¿˜æ˜¯æœ‰å¯èƒ½å‡ºç°é”™è¯¯çš„ã€‚')
       end else begin
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ÒÑ¼¤»î²å¼ş²»ĞèÒªÈÎºÎĞŞ¸Ä¡£');
+        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å·²æ¿€æ´»æ’ä»¶ä¸éœ€è¦ä»»ä½•ä¿®æ”¹ã€‚');
       end;
       if not wbMasterRestore then begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Èç¹ûĞŞ¸ÄÁËÒÑ¼¤»îµÄ²å¼ş£¬Çë¼ÇµÃÖØĞÂÔËĞĞ´Ë³ÌĞò !!!.');
+        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! å¦‚æœä¿®æ”¹äº†å·²æ¿€æ´»çš„æ’ä»¶ï¼Œè¯·è®°å¾—é‡æ–°è¿è¡Œæ­¤ç¨‹åº !!!.');
       end;
     except
       wbDontSave := True;
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= ´íÎó =--');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ³¢ÊÔĞŞ¸Ä ESM ±êÖ¾»òÕß±£´æÒÑ±à¼­ÎÄ¼şÊ±·¢ÉúÁËÒ»¸ö´íÎó¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Çë²é¿´¶¥²¿µÄ´íÎóÈÕÖ¾ÒÔÕÒ³ö³ö´íµÄ²å¼ş¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ·¢Éú´Ë´íÎó×î´óµÄ¿ÉÄÜĞÔÎª²å¼ş´æÔÚ½á¹¹´íÎó¡£');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= é”™è¯¯ =--');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å°è¯•ä¿®æ”¹ ESM æ ‡å¿—æˆ–è€…ä¿å­˜å·²ç¼–è¾‘æ–‡ä»¶æ—¶å‘ç”Ÿäº†ä¸€ä¸ªé”™è¯¯ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] è¯·æŸ¥çœ‹é¡¶éƒ¨çš„é”™è¯¯æ—¥å¿—ä»¥æ‰¾å‡ºå‡ºé”™çš„æ’ä»¶ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] å‘ç”Ÿæ­¤é”™è¯¯æœ€å¤§çš„å¯èƒ½æ€§ä¸ºæ’ä»¶å­˜åœ¨ç»“æ„é”™è¯¯ã€‚');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Î´¶Ô¼¤»î²å¼ş×öÈÎºÎĞŞ¸Ä¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Äú±ØĞëÏÈ½â¾öÁË´íÎóºóÔÙÔËĞĞ´Ë³ÌĞò¡£');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! æœªå¯¹æ¿€æ´»æ’ä»¶åšä»»ä½•ä¿®æ”¹ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! æ‚¨å¿…é¡»å…ˆè§£å†³äº†é”™è¯¯åå†è¿è¡Œæ­¤ç¨‹åºã€‚');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ÔÚ GECK ÖĞ¼ÓÔØ²¢±£´æ´íÎóµÄ²å¼şÓĞÊ±ºò¿ÉÒÔĞŞ¸´´íÎó¡£');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ²»¹ı»¹ÊÇ½¨ÒéÖ±½ÓÁªÏµ²å¼ş×÷ÕßĞŞ¸´´íÎó¡£');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] åœ¨ GECK ä¸­åŠ è½½å¹¶ä¿å­˜é”™è¯¯çš„æ’ä»¶æœ‰æ—¶å€™å¯ä»¥ä¿®å¤é”™è¯¯ã€‚');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ä¸è¿‡è¿˜æ˜¯å»ºè®®ç›´æ¥è”ç³»æ’ä»¶ä½œè€…ä¿®å¤é”™è¯¯ã€‚');
     end;
   end;
 end;
@@ -10831,10 +11361,10 @@ begin
 
   Rec := MainRecord.RecordBySignature['DATA'];
   if Assigned(Rec) then begin
-    NodeDatas[5].Element := Rec.ElementByName['Speed'];
-    NodeDatas[6].Element := Rec.ElementByName['Value'];
-    NodeDatas[7].Element := Rec.ElementByName['Weight'];
-    NodeDatas[8].Element := Rec.ElementByName['Damage'];
+    NodeDatas[5].Element := Rec.ElementByName['é€Ÿåº¦'];
+    NodeDatas[6].Element := Rec.ElementByName['ä»·å€¼'];
+    NodeDatas[7].Element := Rec.ElementByName['é‡é‡'];
+    NodeDatas[8].Element := Rec.ElementByName['ä¼¤å®³'];
   end;
 end;
 
@@ -12618,7 +13148,7 @@ begin
   wbLoaderDone := True;
 
   if wbLoaderError then begin
-    ShowMessage('¶ÁÈ¡²å¼şÊ±·¢Éú´íÎó£¬±à¼­¹¦ÄÜÒÑ¹Ø±Õ¡£Çë¼ì²é´íÎóÈÕÖ¾²¢ĞŞ¸´´íÎó¡£');
+    ShowMessage('è¯»å–æ’ä»¶æ—¶å‘ç”Ÿé”™è¯¯ï¼Œç¼–è¾‘åŠŸèƒ½å·²å…³é—­ã€‚è¯·æ£€æŸ¥é”™è¯¯æ—¥å¿—å¹¶ä¿®å¤é”™è¯¯ã€‚');
     Exit;
   end;
 
@@ -12741,7 +13271,7 @@ end;
 procedure LoaderProgress(const s: string);
 begin
   if s <> '' then
-    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ºóÌ¨´¦Àí³ÌĞò£º' + s);
+    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] åå°å¤„ç†ç¨‹åºï¼š' + s);
   if frmMain.ForceTerminate then
     Abort;
 end;
@@ -12753,7 +13283,7 @@ var
   s,t                         : string;
   F                           : TSearchRec;
 begin
-  LoaderProgress('ÕıÔÚÆô¶¯...');
+  LoaderProgress('æ­£åœ¨å¯åŠ¨...');
   try
     frmMain.LoaderStarted := True;
     wbProgressCallback := LoaderProgress;
@@ -12773,13 +13303,13 @@ begin
               if not ((s[1] = '\') or (s[2] = ':')) then
                 t := ltDataPath + s;
               if not FileExists(t) then
-                LoaderProgress('¾¯¸æ£º<ÎŞ·¨ÕÒµ½ ' + t + '>')
+                LoaderProgress('è­¦å‘Šï¼š<æ— æ³•æ‰¾åˆ° ' + t + '>')
               else begin
                 if wbLoadBSAs then begin
-                  LoaderProgress('[' + s + '] ÕıÔÚ¼ÓÔØ×ÊÔ´¡£');
+                  LoaderProgress('[' + s + '] æ­£åœ¨åŠ è½½èµ„æºã€‚');
                   wbContainerHandler.AddBSA(t);
                 end else
-                  LoaderProgress('[' + s + '] ÒÑÌø¹ı¡£');
+                  LoaderProgress('[' + s + '] å·²è·³è¿‡ã€‚');
               end;
             end;
           finally
@@ -12795,22 +13325,22 @@ begin
             if FindFirst(ltDataPath + s + '*.bsa', faAnyFile, F) = 0 then try
               repeat
                 if wbLoadBSAs then begin
-                  LoaderProgress('[' + F.Name + '] ÕıÔÚ¼ÓÔØ×ÊÔ´¡£');
+                  LoaderProgress('[' + F.Name + '] æ­£åœ¨åŠ è½½èµ„æºã€‚');
                   wbContainerHandler.AddBSA(ltDataPath + F.Name);
                 end else
-                  LoaderProgress('[' + F.Name + '] ÒÑÌø¹ı¡£');
+                  LoaderProgress('[' + F.Name + '] å·²è·³è¿‡ã€‚');
               until FindNext(F) <> 0;
             finally
               FindClose(F);
             end;
           end;
         end;
-        LoaderProgress('[' + ltDataPath + '] ÕıÔÚÉèÖÃ×ÊÔ´Â·¾¶¡£');
+        LoaderProgress('[' + ltDataPath + '] æ­£åœ¨è®¾ç½®èµ„æºè·¯å¾„ã€‚');
         wbContainerHandler.AddFolder(ltDataPath);
       end;
 
       for i := 0 to Pred(ltLoadList.Count) do begin
-        LoaderProgress('ÕıÔÚ¼ÓÔØ "' + ltLoadList[i] + '"...');
+        LoaderProgress('æ­£åœ¨åŠ è½½ "' + ltLoadList[i] + '"...');
         _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster, ltTemporary);
         if wbEditAllowed and not wbTranslationMode then begin
           SetLength(ltFiles, Succ(Length(ltFiles)));
@@ -12825,7 +13355,7 @@ begin
           t := wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
           s := ProgramPath + t;
           if FileExists(s) then begin
-            LoaderProgress('ÕıÔÚ¼ÓÔØ "' + t + '"...');
+            LoaderProgress('æ­£åœ¨åŠ è½½ "' + t + '"...');
             _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
             frmMain.SendAddFile(_File);
             if frmMain.ForceTerminate then
@@ -12842,7 +13372,7 @@ begin
       if wbBuildRefs then
         for i := Low(ltFiles) to High(ltFiles) do
           if not SameText(ltFiles[i].FileName, wbGameName + '.esm') then begin
-            LoaderProgress('[' + ltFiles[i].FileName + '] ÕıÔÚ´´½¨ÒıÓÃĞÅÏ¢¡£');
+            LoaderProgress('[' + ltFiles[i].FileName + '] æ­£åœ¨åˆ›å»ºå¼•ç”¨ä¿¡æ¯ã€‚');
             ltFiles[i].BuildRef;
             if frmMain.ForceTerminate then
               Exit;
@@ -12850,13 +13380,13 @@ begin
 
     except
       on E: Exception do begin
-        LoaderProgress('´íÎó£º<' + e.ClassName + ': ' + e.Message + '>');
+        LoaderProgress('é”™è¯¯ï¼š<' + e.ClassName + ': ' + e.Message + '>');
         wbLoaderError := True;
       end;
     end;
   finally
     frmMain.SendLoaderDone;
-    LoaderProgress('Íê³É');
+    LoaderProgress('å®Œæˆ');
     wbProgressCallback := nil;
   end;
   {
@@ -13185,7 +13715,7 @@ var
   WaitHandle : THandle;
 begin
   plFolder := MyGamesTheGamePath + 'Pluggy\User Files\';
-  frmMain.PostAddMessage('[PluggyLink] ÕıÔÚÆô¶¯£º' + plFolder);
+  frmMain.PostAddMessage('[PluggyLink] æ­£åœ¨å¯åŠ¨ï¼š' + plFolder);
   try
     WaitHandle := FindFirstChangeNotification(
       PChar(plFolder),
@@ -13212,9 +13742,9 @@ begin
     end;
   except
     on E: Exception do
-      frmMain.PostAddMessage('[PluggyLink] ´íÎó£º' + E.Message);
+      frmMain.PostAddMessage('[PluggyLink] é”™è¯¯ï¼š' + E.Message);
   end;
-  frmMain.PostAddMessage('[PluggyLink] ÒÑÖÕÖ¹');
+  frmMain.PostAddMessage('[PluggyLink] å·²ç»ˆæ­¢');
 end;
 
 

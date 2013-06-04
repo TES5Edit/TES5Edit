@@ -1,6 +1,6 @@
-{
-  New script template, only shows processed records
-  Assigning any nonzero value to Result will terminate script
+﻿{
+  新建脚本模板，仅显示已处理的记录。
+  分配任何非零数值到 Result 将终止脚本。
 }
 unit userscript;
 
@@ -17,7 +17,7 @@ begin
   Result := 0;
 
   // comment this out if you don't want those messages
-  AddMessage('Processing: ' + FullPath(e));
+  AddMessage('正在处理：' + FullPath(e));
 
   // processing code goes here
 

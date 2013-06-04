@@ -1,7 +1,6 @@
-{
-  Undelete and disable references, almost the copy of internal
-  xEdit code.
-  Does not require applied filter.
+﻿{
+  修复 UDR 衍生，基本上是从 xEdit 内部代码直接移植过来。
+  不需要请求清理筛选。
 }
 unit UserScript;
 
@@ -15,7 +14,7 @@ var
 begin
   Result := 0;
   
-  if not (GetIsEditable(e) and GetIsDeleted(e)) then
+  if not (IsEditable(e) and GetIsDeleted(e)) then
     Exit;
   
   Sig := Signature(e);
@@ -42,7 +41,7 @@ begin
     Exit;
   end;
   
-  AddMessage('Undeleting: ' + Name(e));
+  AddMessage('撤销删除：' + Name(e));
   
   // undelete
   SetIsDeleted(e, True);
@@ -56,9 +55,9 @@ begin
     
   // place it below the ground
   if not GetIsPersistent(e) then
-    SetElementNativeValues(e, 'DATA\Position\Z', -30000);
+    SetElementNativeValues(e, 'DATA\方位\Z', -30000);
 
-  RemoveElement(e, 'Enable Parent');
+  RemoveElement(e, '启用根源');
   RemoveElement(e, 'XTEL');
   // ... remove anything else here
   
@@ -68,8 +67,8 @@ begin
   // add enabled opposite of player (true - silent)
   xesp := Add(e, 'XESP', True);
   if Assigned(xesp) then begin
-    SetElementNativeValues(xesp, 'Reference', $14); // Player ref
-    SetElementNativeValues(xesp, 'Flags', 1);  // opposite of parent flag
+    SetElementNativeValues(xesp, '衍生', $14); // Player ref
+    SetElementNativeValues(xesp, '标志', 1);  // opposite of parent flag
   end;
 
   Inc(UndeletedCount);
@@ -77,9 +76,9 @@ end;
 
 function Finalize: integer;
 begin
-  AddMessage('Undeleted Records: ' + IntToStr(UndeletedCount));
+  AddMessage('已修复记录：' + IntToStr(UndeletedCount));
   if NAVMCount > 0 then
-    AddMessage(Format('<Warning: Plugin contains %d deleted NavMeshes which can not be undeleted>', [NAVMCount]));
+    AddMessage(Format('<警告：插件存在 %d 个被删除的 NavMeshes ，这是无法撤销删除的>', [NAVMCount]));
 end;
 
 end.

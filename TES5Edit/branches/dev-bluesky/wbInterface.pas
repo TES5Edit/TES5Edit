@@ -1,4 +1,4 @@
-{*******************************************************************************
+ï»¿{*******************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -316,7 +316,8 @@ type
     esNotReachable,
     esReachable,
     esTagged,
-    esDeciding
+    esDeciding,
+    esNotSuitableToAddTo
   );
 
   TwbElementStates = set of TwbElementState;
@@ -334,6 +335,7 @@ type
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
+    procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
     function Equals(const aElement: IwbElement): Boolean;
 
     function GetValue: string;
@@ -341,6 +343,7 @@ type
     function GetSortKey(aExtended: Boolean): string;
     function GetSortPriority: Integer;
     function GetName: string;
+    function GetBaseName: string;
     function GetDisplayName: string;
     function GetShortName: string;
     function GetPath: string;
@@ -381,7 +384,7 @@ type
     function CanContainFormIDs: Boolean;
     function GetLinksTo: IwbElement;
     function GetNoReach: Boolean;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
@@ -407,6 +410,10 @@ type
     procedure MoveDown;
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
+
+    procedure NextMember;
+    procedure PreviousMember;
+    function CanChangeMember: Boolean;
 
     procedure Tag;
     procedure ResetTags;
@@ -439,6 +446,8 @@ type
       read GetElementType;
     property Name: string
       read GetName;
+    property BaseName: string
+      read GetBaseName;
     property DisplayName: string
       read GetDisplayName;
     property ShortName: string
@@ -1233,6 +1242,7 @@ type
     function GetCount: Integer;
     function GetElementLabel(aIndex: Integer): string;
     function GetSorted: Boolean;
+    function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
 
     property Element: IwbValueDef
@@ -1248,6 +1258,9 @@ type
 
     property CountCallBack: TwbCountCallback
       read GetCountCallback;
+
+    property CanAddTo: Boolean
+      read GetCanAddTo;
   end;
 
   IwbStructDef = interface(IwbValueDef)
@@ -1369,6 +1382,7 @@ type
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
+    procedure ResourceList(const aList: TStrings);
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     property Name: string
@@ -1402,6 +1416,7 @@ type
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+    procedure ResourceList(const aContainerName: string; aContainers: TStrings);
     procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
@@ -1447,7 +1462,7 @@ function wbSubRecord(const aSignatures : array of TwbSignature;
                                        : IwbSubRecordDef; overload;
 
 function wbString(const aSignature : TwbSignature;
-                  const aName      : string = 'Unknown';
+                  const aName      : string = 'æœªçŸ¥';
                         aSize      : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -1455,7 +1470,7 @@ function wbString(const aSignature : TwbSignature;
                         aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbSubRecordDef; overload;
 
-function wbString(const aName      : string = 'Unknown';
+function wbString(const aName      : string = 'æœªçŸ¥';
                         aSize      : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -1600,16 +1615,16 @@ function wbUnion(const aName     : string;
 
 
 function wbByteArray(const aSignature : TwbSignature;
-                     const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                     const aName      : string = 'æœªçŸ¥';
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbByteArray(const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+function wbByteArray(const aName      : string = 'æœªçŸ¥';
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil)
@@ -1673,7 +1688,7 @@ function wbInteger(const aName     : string;
 
 
 function wbFloat(const aSignature  : TwbSignature;
-                 const aName       : string = 'Unknown';
+                 const aName       : string = 'æœªçŸ¥';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
                        aScale      : Extended = 1.0;
@@ -1683,7 +1698,7 @@ function wbFloat(const aSignature  : TwbSignature;
                        aDefault    : Extended = 0.0)
                                    : IwbSubRecordDef; overload;
 
-function wbFloat(const aName       : string = 'Unknown';
+function wbFloat(const aName       : string = 'æœªçŸ¥';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
                        aScale      : Extended = 1.0;
@@ -1791,7 +1806,8 @@ function wbArrayS(const aName      : string;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aCanAddTo  : Boolean = True)
                                    : IwbArrayDef; overload;
 
 function wbArrayS(const aName          : string;
@@ -2036,7 +2052,7 @@ function wbFormIDNoReach(const aValidRefs     : array of TwbSignature;
                                               : IwbFormID; overload;
 
 function wbFormID(const aSignature : TwbSignature;
-                  const aName      : string = 'Unknown';
+                  const aName      : string = 'æœªçŸ¥';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil)
@@ -2290,7 +2306,7 @@ begin
   if Length(t) >= 4 then
     Result := PwbSignature(@t[1])^
   else
-    raise Exception.Create('"'+t+'" ·ÇÓĞĞ§Ç©Ãû');
+    raise Exception.Create('"'+t+'" ä¸æ˜¯æœ‰æ•ˆçš„ç­¾å');
 end;
 
 function wbBeginInternalEdit(aForce: Boolean): Boolean;
@@ -3136,12 +3152,12 @@ type
 
   TwbByteArrayDef = class(TwbValueDef, IwbByteArrayDef)
   protected {private}
-    badSize                : Cardinal;
+    badSize                : Int64;
 
     FoundFormIDAtOffSet    : array of Integer;
     NotFoundFormIDAtOffSet : array of Integer;
     SignaturesAtOffSet     : array of TStringList;
-    FormIDsAtOffSetFoundIn  : array of TStringList;
+    FormIDsAtOffSetFoundIn : array of TStringList;
 
     FoundFloatAtOffSet     : array of Integer;
     NotFoundFloatAtOffSet  : array of Integer;
@@ -3305,6 +3321,7 @@ type
     arElement       : IwbValueDef;
     arLabels        : array of string;
     arSorted        : Boolean;
+    arCanAddTo      : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
 
@@ -3315,7 +3332,8 @@ type
                  const aLabels    : array of string;
                        aSorted    : Boolean;
                        aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                       aDontShow  : TwbDontShowCallback); overload;
+                       aDontShow  : TwbDontShowCallback;
+                       aCanAddTo  : Boolean = True); overload;
 
     constructor Create(aPriority      : TwbConflictPriority;
                        aRequired      : Boolean;
@@ -3325,7 +3343,8 @@ type
                  const aLabels        : array of string;
                        aSorted        : Boolean;
                        aAfterLoad     : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                       aDontShow      : TwbDontShowCallback); overload;
+                       aDontShow      : TwbDontShowCallback;
+                       aCanAddTo      : Boolean = True); overload;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3344,6 +3363,7 @@ type
     function GetCount: Integer;
     function GetElementLabel(aIndex: Integer): string;
     function GetSorted: Boolean;
+    function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
   end;
 
@@ -3675,7 +3695,7 @@ begin
     wbRecordDefMap := TwbFastStringListCS.CreateSorted;
 
   if wbRecordDefMap.IndexOf(aSignature) >= 0 then
-    raise Exception.CreateFmt('Ç©Ãû %s ÖØ¸´¶¨Òå', [String(aSignature)]);
+    raise Exception.CreateFmt('ç­¾å %s é‡å¤å®šä¹‰', [String(aSignature)]);
 
   Result := TwbRecordDef.Create(aPriority, aRequired, aSignature, aName, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet);
   SetLength(wbRecordDefs, Succ(Length(wbRecordDefs)));
@@ -3711,7 +3731,7 @@ end;
 
 
 function wbString(const aSignature : TwbSignature;
-                  const aName      : string = 'Unknown';
+                  const aName      : string = 'æœªçŸ¥';
                         aSize      : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -3722,7 +3742,7 @@ begin
   Result := wbSubRecord(aSignature, aName, wbString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbString(const aName      : string = 'Unknown';
+function wbString(const aName      : string = 'æœªçŸ¥';
                         aSize      : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
@@ -3919,8 +3939,8 @@ end;
 
 
 function wbByteArray(const aSignature : TwbSignature;
-                     const aName      : string = 'Unknown';
-                           aSize      : Cardinal = 0;
+                     const aName      : string = 'æœªçŸ¥';
+                           aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
@@ -3930,8 +3950,8 @@ begin
   Result := wbSubRecord(aSignature, aName, wbByteArray('', aSize, aPriority), nil, nil, aPriority, aRequired, aSizeMatch, aDontShow);
 end;
 
-function wbByteArray(const aName     : string = 'Unknown';
-                           aSize     : Cardinal = 0;
+function wbByteArray(const aName     : string = 'æœªçŸ¥';
+                           aSize     : Int64 = 0;
                            aPriority : TwbConflictPriority = cpNormal;
                            aRequired : Boolean = False;
                            aDontShow : TwbDontShowCallback = nil)
@@ -3946,7 +3966,7 @@ function wbUnknown(const aSignature : TwbSignature;
                          aDontShow  : TwbDontShowCallback = nil)
                                     : IwbSubRecordDef;
 begin
-  Result := wbByteArray(aSignature, 'Unknown', 0, aPriority, aRequired, False, aDontShow);
+  Result := wbByteArray(aSignature, 'æœªçŸ¥', 0, aPriority, aRequired, False, aDontShow);
 end;
 
 function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
@@ -3954,7 +3974,7 @@ function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
                    aDontShow : TwbDontShowCallback = nil)
                              : IwbByteArrayDef;
 begin
-  Result := wbByteArray('Unknown', 0, aPriority, aRequired, aDontShow);
+  Result := wbByteArray('æœªçŸ¥', 0, aPriority, aRequired, aDontShow);
 end;
 
 function wbInteger(const aSignature : TwbSignature;
@@ -4023,7 +4043,7 @@ begin
 end;
 
 function wbFloat(const aSignature  : TwbSignature;
-                 const aName       : string = 'Unknown';
+                 const aName       : string = 'æœªçŸ¥';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
                        aScale      : Extended = 1.0;
@@ -4036,7 +4056,7 @@ begin
   Result := wbSubRecord(aSignature, aName, wbFloat('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbFloat(const aName       : string = 'Unknown';
+function wbFloat(const aName       : string = 'æœªçŸ¥';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
                        aScale      : Extended = 1.0;
@@ -4066,7 +4086,8 @@ function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
-                       aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                       aAfterLoad : TwbAfterLoadCallback = nil;
+                       aAfterSet  : TwbAfterSetCallback = nil;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False;
                         aDontShow : TwbDontShowCallback = nil)
@@ -4175,11 +4196,13 @@ function wbArrayS(const aName      : string;
                         aCount     : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aCanAddTo  : Boolean = True)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet,aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aCanAddTo);
 end;
 
 function wbArrayS(const aName          : string;
@@ -4187,7 +4210,8 @@ function wbArrayS(const aName          : string;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
                         aRequired      : Boolean = False;
-                        aAfterLoad     : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad     : TwbAfterLoadCallback = nil;
+                        aAfterSet      : TwbAfterSetCallback = nil;
                         aDontShow      : TwbDontShowCallback = nil)
                                        : IwbArrayDef; overload;
 begin
@@ -4516,7 +4540,7 @@ begin
 end;
 
 function wbFormID(const aSignature : TwbSignature;
-                  const aName      : string = 'Unknown';
+                  const aName      : string = 'æœªçŸ¥';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil)
@@ -4775,18 +4799,18 @@ begin
 
   if wbReportUnused then
     if not defUsed then
-      WriteLn('Î´Ê¹ÓÃ£º', wbDefsToPath(aParents), wbDefToName(Self));
+      WriteLn('æœªä½¿ç”¨ï¼š', wbDefsToPath(aParents), wbDefToName(Self));
 
   if wbReportRequired and defPossiblyRequired then
     if defNotRequired = defRequired then
       if defNotRequired then
-        WriteLn('²»ĞèÒª£º', wbDefsToPath(aParents), wbDefToName(Self))
+        WriteLn('ä¸éœ€è¦ï¼š', wbDefsToPath(aParents), wbDefToName(Self))
       else
-        WriteLn('ĞèÒª£º', wbDefsToPath(aParents), wbDefToName(Self));
+        WriteLn('éœ€è¦ï¼š', wbDefsToPath(aParents), wbDefToName(Self));
 
   if wbReportUnknown then
     if Assigned(UnknownValues) then begin
-      WriteLn('Î´ÖªÓò£º', wbDefsToPath(aParents), wbDefToName(Self), ' (', UnknownValues.Count ,')');
+      WriteLn('æœªçŸ¥åŸŸï¼š', wbDefsToPath(aParents), wbDefToName(Self), ' (', UnknownValues.Count ,')');
       for i := 0 to Pred(UnknownValues.Count) do begin
         sl := UnknownValues.Objects[i] as TStringList;
         WriteLn('  ', UnknownValues[i], ' (', sl.Count ,')');
@@ -4795,7 +4819,7 @@ begin
       end;
     end else
       if IsUnknown then
-        WriteLn('Î´ÖªÓò£º', wbDefsToPath(aParents), wbDefToName(Self));
+        WriteLn('æœªçŸ¥åŸŸï¼š', wbDefsToPath(aParents), wbDefToName(Self));
 
   defReported := True;
 end;
@@ -4825,7 +4849,7 @@ begin
     if not IsUnknownChecked then begin
       IsUnknownChecked := True;
       if Supports(defParent, IwbNamedDef, NamedDef) then
-        if Pos('unknown', LowerCase(NamedDef.Name)) > 0 then
+        if Pos('æœªçŸ¥', LowerCase(NamedDef.Name)) > 0 then
           IsUnknown := True;
     end;
 
@@ -4878,11 +4902,11 @@ begin
   noAfterLoad := aAfterLoad;
   noAfterSet := aAfterSet;
   if aPriority = cpNormal then
-    if aName = 'Unused' then
+    if aName = 'æœªä½¿ç”¨' then
       aPriority := cpIgnore;
   inherited Create(aPriority, aRequired);
 
-  if Pos('unknown', LowerCase(aName)) > 0 then
+  if Pos('æœªçŸ¥', LowerCase(aName)) > 0 then
     IsUnknown := True;
 end;
 
@@ -4911,7 +4935,7 @@ begin
   Result := inherited SetParent(aParent);
 
   if not IsUnknown and (noName = '') and Supports(defParent, IwbNamedDef, Parent) then
-    IsUnknown := Pos('unknown', LowerCase(Parent.Name)) > 0;
+    IsUnknown := Pos('æœªçŸ¥', LowerCase(Parent.Name)) > 0;
 end;
 
 { TwbSignatureDef }
@@ -5263,7 +5287,7 @@ begin
   end;
   if wbReportUnusedData then
     if srHasUnusedData then
-      WriteLn('º¬Î´Ê¹ÓÃ¼ÇÂ¼£º', wbDefsToPath(aParents), wbDefToName(Self));
+      WriteLn('å«æœªä½¿ç”¨è®°å½•ï¼š', wbDefsToPath(aParents), wbDefToName(Self));
 
   defReported := True;
 end;
@@ -5816,7 +5840,7 @@ begin
       end;
     end;
   end;
-  raise Exception.Create('ÎŞĞ§Ë÷Òı');
+  raise Exception.Create('æ— æ•ˆç´¢å¼•');
 end;
 
 function TwbSubRecordUnionDef.GetSkipSignature(const aSignature: TwbSignature): Boolean;
@@ -5906,7 +5930,7 @@ begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < ExpectedLen[inType] then begin
     if wbCheckExpectedBytes then
-      Result := Format('Ô¤²â %d ×Ö½ÚµÄÊı¾İ£¬ÕÒµ½ %d', [ExpectedLen[inType] , Len])
+      Result := Format('é¢„æµ‹ %d å­—èŠ‚çš„æ•°æ®ï¼Œæ‰¾åˆ° %d', [ExpectedLen[inType] , Len])
   end else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
@@ -6304,7 +6328,7 @@ begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < ExpectedLen[inType] then begin
     if wbCheckExpectedBytes then
-      Result := Format('<´íÎó£ºÔ¤²â %d ×Ö½ÚµÄÊı¾İ£¬ÕÒµ½ %d>', [ExpectedLen[inType] , Len])
+      Result := Format('<é”™è¯¯ï¼šé¢„æµ‹ %d å­—èŠ‚çš„æ•°æ®ï¼Œæ‰¾åˆ° %d>', [ExpectedLen[inType] , Len])
   end else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
@@ -6323,7 +6347,7 @@ begin
       Result := IntToStr(Value);
     if Len > ExpectedLen[inType] then begin
       if wbCheckExpectedBytes then
-        Result := Result + Format(' <¾¯¸æ£ºÔ¤²â %d ×Ö½ÚµÄÊı¾İ£¬ÕÒµ½ %d>', [ExpectedLen[inType] , Len])
+        Result := Result + Format(' <è­¦å‘Šï¼šé¢„æµ‹ %d å­—èŠ‚çš„æ•°æ®ï¼Œæ‰¾åˆ° %d>', [ExpectedLen[inType] , Len])
     end;
   end;
   Used(aElement, Result);
@@ -6339,7 +6363,8 @@ constructor TwbArrayDef.Create(aPriority  : TwbConflictPriority;
                          const aLabels    : array of string;
                                aSorted    : Boolean;
                                aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                               aDontShow  : TwbDontShowCallback);
+                               aDontShow  : TwbDontShowCallback;
+                               aCanAddTo  : Boolean = True);
 var
   i: Integer;
 begin
@@ -6353,6 +6378,7 @@ begin
   if Assigned(aElement) then
     arElement := (aElement as IwbDefInternal).SetParent(Self) as IwbValueDef;
   arSorted := aSorted;
+  arCanAddTo := aCanAddTo;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
@@ -6376,10 +6402,10 @@ begin
   with aSource as TwbArrayDef do
     if Assigned(arCountCallback) then
       Self.Create(defPriority, defRequired, noName, arElement, arCountCallback,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defRoot := aSource
     else
       Self.Create(defPriority, defRequired, noName, arElement, arCount,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defRoot := aSource;
 end;
 
 constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -6389,11 +6415,18 @@ constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
                                aCountCallback : TwbCountCallback;
                          const aLabels        : array of string;
                                aSorted        : Boolean;
-                               aAfterLoad     : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                               aDontShow      : TwbDontShowCallback);
+                               aAfterLoad     : TwbAfterLoadCallback;
+                               aAfterSet      : TwbAfterSetCallback;
+                               aDontShow      : TwbDontShowCallback;
+                               aCanAddTo      : Boolean = True);
 begin
   arCountCallback := aCountCallback;
-  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet,aDontShow);
+  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet,aDontShow, aCanAddTo);
+end;
+
+function TwbArrayDef.GetCanAddTo: Boolean;
+begin
+  Result := arCanAddTo;
 end;
 
 function TwbArrayDef.GetCanBeZeroSize: Boolean;
@@ -6453,11 +6486,11 @@ var
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
-    if Assigned(theContainer) and (not SameText(aName, theContainer.Name)) then begin
+    if Assigned(theContainer) and (not SameText(aName, theContainer.BaseName)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
-          if SameText(aName, aContainer.Name) then begin
+          if SameText(aName, aContainer.BaseName) then begin
             Container := aContainer;
             break;
           end else
@@ -6478,7 +6511,7 @@ begin
         FindOurself(Container, noName);
     if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
         Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
-    if not Assigned(Container) and (not SameText(noName, 'Unused') or not wbHideUnused) then begin
+    if not Assigned(Container) and (not SameText(noName, 'æœªä½¿ç”¨') or not wbHideUnused) then begin
       Result := High(Integer);
       Exit;
     end;
@@ -6550,7 +6583,7 @@ begin
           Element := Container.Elements[Index];
           if not Assigned(Element) then begin
             if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
-              wbProgressCallback('µ÷ÊÔ£º['+ Container.Path +'] ' + IntToStr(Count) + ' µÄË÷Òı ' + IntToStr(Index) + ' ´óÓÚ×î´óÖµ '+
+              wbProgressCallback('è°ƒè¯•ï¼š['+ Container.Path +'] ' + IntToStr(Count) + ' çš„ç´¢å¼• ' + IntToStr(Index) + ' å¤§äºæœ€å¤§å€¼ '+
                 IntToStr(Container.ElementCount-1));
             Element := aElement; // If it is too soon, revert to previous way of doing things
           end;
@@ -6685,27 +6718,26 @@ var
   Size  : Integer;
 begin
   Result := 0;
-    if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
-      wbProgressCallback('ÕÒµ½¸ºÊıÌå»ıµÄ½á¹¹£¡ '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
-//    else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-//      Result := 0;
-//    end
-    else
-      for i := Low(stMembers) to High(stMembers) do begin
-        Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
-        if Size = High(Integer) then begin
-          Result := High(Integer);
-          Break;
-        end;
-        if Assigned(aBasePtr) then
-          Inc(Cardinal(aBasePtr), Size);
-        Inc(Result, Size);
+  if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
+    wbProgressCallback('æ‰¾åˆ°è´Ÿæ•°ä½“ç§¯çš„ç»“æ„ï¼'+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
+  else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
+    Result := 0;
+  end else
+    for i := Low(stMembers) to High(stMembers) do begin
+      Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
+      if Size = High(Integer) then begin
+        Result := High(Integer);
+        Break;
       end;
+      if Assigned(aBasePtr) then
+        Inc(Cardinal(aBasePtr), Size);
+      Inc(Result, Size);
+    end;
 end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;
 var
-  i    : Integer;
+  i : Integer;
 begin
   Result := False;
   for i := Low(stMembers) to High(stMembers) do
@@ -6854,7 +6886,7 @@ begin
         if i <= High(flgNames) then
           s := flgNames[i];
         if s = '' then begin
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s := '<æœªçŸ¥: '+IntToStr(i)+'>';
           Result := Result + s + ', ';
         end;
       end;
@@ -6881,7 +6913,7 @@ begin
   SetLength(flgNames, Length(aNames));
   for i := Low(flgNames) to High(flgNames) do begin
     flgNames[i] := aNames[i];
-    if SameText(flgNames[i], 'Unused') then
+    if SameText(flgNames[i], 'æœªä½¿ç”¨') then
       flgUnusedMask := flgUnusedMask or (Int64(1) shl i)
     else if flgUnknownIsUnused and (flgNames[i] <> '') then
       flgUnusedMask := flgUnusedMask and not (Int64(1) shl i);
@@ -6905,7 +6937,7 @@ begin
       '0': {do nothing};
       '1': Result := Result or (Int64(1) shl Pred(i));
     else
-      raise Exception.Create('"'+aValue[i]+'" ²»ÊÇ¿ÉÓÃµÄ±êÖ¾×Ö·û¡£');
+      raise Exception.Create('"'+aValue[i]+'" ä¸æ˜¯å¯ç”¨çš„æ ‡å¿—å­—ç¬¦ã€‚');
     end;
   Result := Result and not flgUnusedMask;
 end;
@@ -6932,9 +6964,9 @@ begin
         s := flgNames[i];
       if s = '' then
         if flgUnknownIsUnused then
-          s := 'Unused'
+          s := 'æœªä½¿ç”¨'
         else
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s := '<æœªçŸ¥: '+IntToStr(i)+'>';
       if GetFlagDontShow(aElement, i) then
         s := '(' + s + ')';
       Add(s);
@@ -6986,7 +7018,7 @@ begin
 
   inherited;
   if wbReportMode and wbReportUnknownFlags and HasUnknownFlags then begin
-    WriteLn('Î´Öª±êÖ¾Î»ÓÚ£º', wbDefsToPath(aParents), wbDefToName(Self));
+    WriteLn('æœªçŸ¥æ ‡å¿—ä½äºï¼š', wbDefsToPath(aParents), wbDefToName(Self));
     for i := 0 to 63 do
       if UnknownFlags[i] > 0 then
         WriteLn('  ', i,' (',UnknownFlags[i],')');
@@ -7037,7 +7069,7 @@ begin
       if i <= High(flgNames) then
         s := flgNames[i];
       if s = '' then begin
-        s := '<Unknown: '+IntToStr(i)+'>';
+        s := '<æœªçŸ¥: '+IntToStr(i)+'>';
         if wbReportMode and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
@@ -7085,7 +7117,7 @@ begin
       Result := enSparseNamesMap[i].snName;
 
   if Result = '' then
-    Result := '<Unknown: '+IntToStr(aInt)+'>'
+    Result := '<æœªçŸ¥: '+IntToStr(aInt)+'>'
   else
     Result := '';
 end;
@@ -7378,7 +7410,7 @@ begin
     if FindSparseName(aInt, i) then
       Result := enSparseNamesMap[i].snName
     else begin
-      Result := '<Unknown: '+IntToStr(aInt)+'>';
+      Result := '<æœªçŸ¥: '+IntToStr(aInt)+'>';
       if wbReportMode and wbReportUnknownEnums then begin
         if not Assigned(UnknownEnums) then
           UnknownEnums := TwbFastStringListIC.CreateSorted;
@@ -7616,7 +7648,7 @@ begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, 4);
   if aValue = '' then
     PSingle(aBasePtr)^ := 0.0
-  else if SameText(aValue, 'Ä¬ÈÏ') then
+  else if SameText(aValue, 'é»˜è®¤') then
     PCardinal(aBasePtr)^ := $7F7FFFFF
   else begin
     Value := RoundToEx(StrToFloat(aValue), -fdDigits);
@@ -7679,7 +7711,7 @@ begin
     Result := ''
   else try
     if PCardinal(aBasePtr)^ = $7F7FFFFF then
-      Result := 'Ä¬ÈÏ'
+      Result := 'é»˜è®¤'
     else begin
       Value := PSingle(aBasePtr)^;
       try
@@ -7787,10 +7819,10 @@ begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < 4 then begin
     if wbCheckExpectedBytes then
-      Result := Format('<´íÎó£ºÔ¤²â %d ×Ö½ÚµÄÊı¾İ£¬ÕÒµ½ %d>', [4, Len])
+      Result := Format('<é”™è¯¯ï¼šé¢„æµ‹ %d å­—èŠ‚çš„æ•°æ®ï¼Œæ‰¾åˆ° %d>', [4, Len])
   end else try
     if PCardinal(aBasePtr)^ = $7F7FFFFF then
-      Result := 'Ä¬ÈÏ'
+      Result := 'é»˜è®¤'
     else begin
       f := PSingle(aBasePtr)^;
       if Assigned(fdNormalizer) then
@@ -7800,10 +7832,10 @@ begin
     end;
     if Len > 4 then
       if wbCheckExpectedBytes then
-       Result := Format(' <¾¯¸æ£ºÔ¤²â %d ×Ö½ÚµÄÊı¾İ£¬ÕÒµ½ %d>', [4, Len])
+       Result := Format(' <è­¦å‘Šï¼šé¢„æµ‹ %d å­—èŠ‚çš„æ•°æ®ï¼Œæ‰¾åˆ° %d>', [4, Len])
   except
     on E: Exception do
-      Result := '$'+IntToHex64(PCardinal(aBasePtr)^, 8)+' <´íÎó'+E.Message+'>';
+      Result := '$'+IntToHex64(PCardinal(aBasePtr)^, 8)+' <é”™è¯¯ï¼š'+E.Message+'>';
   end;
   Used(aElement, Result);
 end;
@@ -7853,7 +7885,7 @@ begin
   else begin
     s := AnsiString(aValue);
     if Length(s) <> 4 then
-      raise Exception.Create('ÊıÖµ±ØĞë¸ÕºÃÊÇ4¸ö×Ö·û');
+      raise Exception.Create('æ•°å€¼å¿…é¡»åˆšå¥½æ˜¯4ä¸ªå­—ç¬¦');
 
     Result := PCardinal(@s[1])^;
   end;
@@ -7909,7 +7941,7 @@ begin
   end;
 
   if U32 <> 0 then
-    Result := Result + ' <¾¯¸æ£ºÎŞ·¨´¦Àí>';
+    Result := Result + ' <è­¦å‘Šï¼šæ— æ³•å¤„ç†>';
   Used(aElement, Result);
 end;
 
@@ -7959,7 +7991,7 @@ begin
   end;
 
   if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] <´íÎó£ºÎŞ·¨´¦Àí>';
+    Result := '['+IntToHex64(aInt,8)+'] <é”™è¯¯ï¼šæ— æ³•å¤„ç†>';
 end;
 
 function TwbFormID.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -7999,7 +8031,7 @@ begin
         FileID := _File.Masters[FileID].LoadOrder;
 
       if FileID < 0 then
-        raise Exception.Create('ÎŞ·¨ÅĞ¶Ï¾ÉÊıÖµµÄ FormID');
+        raise Exception.Create('æ— æ³•åˆ¤æ–­æ—§æ•°å€¼çš„ FormID');
 
       FormID := (FormID and $00FFFFFF) or (Cardinal(FileID) shl 24);
       if FormID = aOldFormID then begin
@@ -8014,7 +8046,7 @@ begin
               break;
             end;
         if NewFileID < 0 then
-          raise Exception.Create('FormID ['+IntToHex64(aNewFormID, 8)+'] ÒıÓÃÒ»¸öÎÄ¼ş ' + _File.Name + ' ÖĞÕÒ²»µ½µÄ Master');
+          raise Exception.Create('FormID ['+IntToHex64(aNewFormID, 8)+'] å¼•ç”¨ä¸€ä¸ªæ–‡ä»¶ ' + _File.Name + ' ä¸­æ‰¾ä¸åˆ°çš„ Master');
 
         FormID := (aNewFormID and $00FFFFFF) or (Cardinal(NewFileID) shl 24);
         if aInt <> FormID then begin
@@ -8046,7 +8078,7 @@ var
         if Supports(Group.Elements[i], IwbMainRecord, Result) then begin
           Result := Result.HighestOverrideOrSelf[MaxLoadOrder];
           if (Result.Flags._Flags and $000000C0) = $000000C0 then begin
-            AV := Result.ElementNativeValues['DATA\Actor ÊıÖµ'];
+            AV := Result.ElementNativeValues['DATA\è§’è‰²æ•°å€¼'];
             if not (VarIsNull(AV) or VarIsEmpty(AV)) then begin
               if AV = aInt then
                 Exit;
@@ -8133,7 +8165,7 @@ begin
   if Length(s) = 8 then
     Result := StrToInt64('$' + s)
   else begin
-    if IsValid('ACVA') and SameText(Trim(aValue), 'None') then begin
+    if IsValid('ACVA') and SameText(Trim(aValue), 'æ— ') then begin
       Result := $FF;
       Exit;
     end else
@@ -8163,7 +8195,7 @@ begin
           end;
 
       if NewFileID < 0 then
-        raise Exception.Create('FormID ['+IntToHex64(FormID, 8)+'] ÒıÓÃÒ»¸öÎÄ¼ş ' + _File.Name + ' ÖĞÕÒ²»µ½µÄ Master');
+        raise Exception.Create('FormID ['+IntToHex64(FormID, 8)+'] å¼•ç”¨ä¸€ä¸ªæ–‡ä»¶ ' + _File.Name + ' ä¸­æ‰¾ä¸åˆ°çš„ Master');
 
       FormID := (FormID and $00FFFFFF) or (Cardinal(NewFileID) shl 24);
       Result := FormID;
@@ -8204,7 +8236,7 @@ var
               Strings.Add(s);
 
             if not Assigned(RecordsProg) then
-              RecordsProg := Wait.CreateProgress('¼ÇÂ¼', s, Pred(aFile.RecordCount) )
+              RecordsProg := Wait.CreateProgress('è®°å½•', s, Pred(aFile.RecordCount) )
             else
               RecordsProg.UpdateStatus(i, s);
           end;
@@ -8217,7 +8249,7 @@ var
       for i := 0 to Pred(aFile.ElementCount) do begin
 
         if not Assigned(GroupsProg) then
-          GroupsProg := Wait.CreateProgress('Èº×é', aFile.Elements[i].Name, Pred(aFile.ElementCount) )
+          GroupsProg := Wait.CreateProgress('ç¾¤ç»„', aFile.Elements[i].Name, Pred(aFile.ElementCount) )
         else
           GroupsProg.UpdateStatus(i, aFile.Elements[i].Name);
 
@@ -8240,7 +8272,7 @@ var
                         Strings.Add(s);
 
                       if not Assigned(RecordsProg) then
-                        RecordsProg := Wait.CreateProgress('¼ÇÂ¼', s, Pred(GroupRecord.ElementCount) )
+                        RecordsProg := Wait.CreateProgress('è®°å½•', s, Pred(GroupRecord.ElementCount) )
                       else
                         RecordsProg.UpdateStatus(j, s);
 
@@ -8291,9 +8323,9 @@ begin
           IsValid('NAVM') or
           IsValid('INFO');
 
-        Wait := wbCreateWaitForm('ÕıÔÚ´´½¨ÏÂÀ­ÁĞ±í', 'ÕıÔÚ´´½¨ÏÂÀ­ÁĞ±í£¬ÇëµÈ´ı...', True, 2000, 500);
+        Wait := wbCreateWaitForm('æ­£åœ¨åˆ›å»ºä¸‹æ‹‰åˆ—è¡¨', 'æ­£åœ¨åˆ›å»ºä¸‹æ‹‰åˆ—è¡¨ï¼Œè¯·ç­‰å¾…...', True, 2000, 500);
 
-        FilesProg := Wait.CreateProgress('ÎÄ¼ş', _File.Name, _File.MasterCount);
+        FilesProg := Wait.CreateProgress('æ–‡ä»¶', _File.Name, _File.MasterCount);
         Process(_File);
         for i := Pred(_File.MasterCount) downto 0 do if not Wait.IsCanceled then begin
           FilesProg.UpdateStatus( _File.MasterCount - i, _File.Masters[i].Name );
@@ -8452,18 +8484,18 @@ begin
     if wbReportFormIDs then begin
       if Assigned(FoundSignatures) then
         if ClassType = TwbFormID then begin
-          WriteLn('Î´¾­ºË²éµÄ FormID ±àÖÆÆ÷£º', wbDefsToPath(aParents), wbDefToName(Self));
+          WriteLn('æœªç»æ ¸æŸ¥çš„ FormID ç¼–åˆ¶å™¨ï¼š', wbDefsToPath(aParents), wbDefToName(Self));
           WriteLn('  ', FoundSignatures.CommaText);
           for i := 0 to Pred(FoundSignatures.Count) do
             WriteLn('  ', FoundSignatures.Strings[i], ' (', Integer(FoundSignatures.Objects[i]),')');
         end;
       if Assigned(NotResolved) then begin
-        WriteLn('FormID º¬ÎŞ·¨½âÎöµÄÊıÖµ£º', wbDefsToPath(aParents), wbDefToName(Self));
+        WriteLn('è¡¨å•åºå·å«æ— æ³•è§£æçš„æ•°å€¼ï¼š', wbDefsToPath(aParents), wbDefToName(Self));
         for i := 0 to Pred(NotResolved.Count) do
           WriteLn('  ', NotResolved.Strings[i], ' (', Integer(NotResolved.Objects[i]),')');
       end;
       if Assigned(FoundNotAllowedReferences) then begin
-        WriteLn('FormID º¬²»±»ÔÊĞíµÄÑÜÉú£º', wbDefsToPath(aParents), wbDefToName(Self));
+        WriteLn('è¡¨å•åºå·å«ä¸è¢«å…è®¸çš„è¡ç”Ÿï¼š', wbDefsToPath(aParents), wbDefToName(Self));
         for i := 0 to Pred(FoundNotAllowedReferences.Count) do
           WriteLn('  ', FoundNotAllowedReferences.Strings[i], ' (', Integer(FoundNotAllowedReferences.Objects[i]),')');
       end;
@@ -8606,7 +8638,7 @@ begin
         end;
       except
         on E: Exception do begin
-          Result := '['+IntToHex64(aInt,8)+'] <´íÎó£º'+E.Message+'>';
+          Result := '['+IntToHex64(aInt,8)+'] <é”™è¯¯ï¼š'+E.Message+'>';
           if wbReportMode then
             if wbReportFormIDs then begin
               if not Assigned(FoundSignatures) then
@@ -8624,7 +8656,7 @@ begin
 
   if aInt < $800 then begin
     s := IntToHex64(aInt,8);
-    Result := '['+s+'] <¾¯¸æ£ºÎŞ·¨´¦Àí£¬²»¹ı¿ÉÄÜÊÇ±»ÒıÇæ¸øÓ²±àÒëÁË>';
+    Result := '['+s+'] <è­¦å‘Šï¼šæ— æ³•å¤„ç†ï¼Œä¸è¿‡å¯èƒ½æ˜¯è¢«å¼•æ“ç»™ç¡¬ç¼–è¯‘äº†>';
     if wbReportMode then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -8643,7 +8675,7 @@ begin
       end;
   end else begin
     s := IntToHex64(aInt,8);
-    Result := '['+s+'] <´íÎó£ºÎŞ·¨´¦Àí>';
+    Result := '['+s+'] <é”™è¯¯ï¼šæ— æ³•å¤„ç†>';
     if wbReportMode then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -8710,16 +8742,16 @@ begin
         Inc(i);
       '0'..'9', 'a'..'f', 'A'..'F': begin
         if i = Length(aValue) then
-          raise Exception.Create('·ÇÔ¤²âÖĞÖ¹Öµ¡£µ¥Î»Êı³öÏÖÔÚÊ®Áù½øÖÆ¶Ô');
+          raise Exception.Create('éé¢„æµ‹æ•°å€¼ã€‚å•ä½æ•°ä»¥åå…­è¿›åˆ¶å¯¹å‡ºç°ã€‚');
         if aValue[Succ(i)] in ['0'..'9', 'a'..'f', 'A'..'F'] then begin
           Bytes[j] := StrToInt('$'+Copy(aValue,i, 2));
           Inc(j);
           Inc(i, 2);
         end else
-          raise Exception.Create('"'+aValue[Succ(i)]+'" ÔÚ·½Î» '+IntToStr(Succ(i))+' ¶Ô ' + GetName + ' ²»ÊÇÓĞĞ§µÄÌØĞÔ');
+          raise Exception.Create('"'+aValue[Succ(i)]+'" åœ¨æ–¹ä½ '+IntToStr(Succ(i))+' å¯¹ ' + GetName + ' ä¸æ˜¯æœ‰æ•ˆçš„ç‰¹æ€§');
       end;
     else
-      raise Exception.Create('"'+aValue[i]+'" ÔÚ·½Î» '+IntToStr(i)+' ¶Ô ' + GetName + ' ²»ÊÇÓĞĞ§µÄÌØĞÔ');
+      raise Exception.Create('"'+aValue[i]+'" åœ¨æ–¹ä½ '+IntToStr(i)+' å¯¹ ' + GetName + ' ä¸æ˜¯æœ‰æ•ˆçš„ç‰¹æ€§');
     end;
   end;
 
@@ -8807,7 +8839,7 @@ begin
           if (FoundFormIDAtOffSet[j] > 2) and (NotFoundFormIDAtOffSet[j] = 0) then begin
             if not FoundOne then begin
               FoundOne := True;
-              WriteLn('ÕÒµ½ FormID £º', s);
+              WriteLn('æ‰¾åˆ°è¡¨å•åºå·ï¼š', s);
             end;
             with SignaturesAtOffSet[j] do begin
               WriteLn('  Offset ', j, ': ', Count, ' (', FoundFormIDAtOffSet[j],')');
@@ -8834,7 +8866,7 @@ begin
           if (FoundFloatAtOffSet[j] > 2) and (NotFoundFloatAtOffSet[j] = 0) then begin
             if not FoundOne then begin
               FoundOne := True;
-              WriteLn('ÕÒµ½ Float £º', s);
+              WriteLn('æ‰¾åˆ° Float ï¼š', s);
             end;
             with FloatsAtOffSet[j] do begin
               WriteLn('  Offset ', j, ': ', Count, ' (', FoundFloatAtOffSet[j],')');
@@ -8849,7 +8881,7 @@ begin
 
   if wbReportUnknownStrings then
     if (FoundString > 0) and (NotFoundString < 1) then begin
-      WriteLn('ÕÒµ½ String £º', s, '£º',Strings.Count,' (', FoundString, ')');
+      WriteLn('æ‰¾åˆ° String ï¼š', s, 'ï¼š',Strings.Count,' (', FoundString, ')');
       with Strings do
         for k := 0 to Pred(Count) do
           WriteLn('  ', Strings[k], ' (', Integer(Objects[k]),')');
@@ -8930,7 +8962,7 @@ begin
   SetLength(Result, Length(Result) - 1);
 
   if wbReportMode then begin
-    if Assigned(aElement) and (Self.noName <> 'Unused') then begin
+    if Assigned(aElement) and (Self.noName <> 'æœªä½¿ç”¨') then begin
       _File := aElement._File;
 
       if wbReportUnknownFormIDs then begin
@@ -9284,12 +9316,12 @@ end;
 
 procedure TwbValueDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 begin
-  raise Exception.Create(GetName + ' ²»¿É±à¼­¡£');
+  raise Exception.Create(GetName + ' ä¸å¯ç¼–è¾‘ã€‚');
 end;
 
 procedure TwbValueDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 begin
-  raise Exception.Create(GetName + ' ²»¿É±à¼­¡£');
+  raise Exception.Create(GetName + ' ä¸å¯ç¼–è¾‘ã€‚');
 end;
 
 function TwbValueDef.GetCanBeZeroSize: Boolean;
@@ -9458,17 +9490,17 @@ begin
     if IsValid('TRGT') and not IsValid('NULL') then begin
       Found := 'TRGT';
       if fidcValidRefs.IndexOf(Found) < 0 then
-        Result := 'ÕÒµ½Ò»¸ö TRGT ÑÜÉú£¬Ô¤²â£º' + fidcValidRefs.CommaText;
+        Result := 'æ‰¾åˆ°ä¸€ä¸ª TRGT è¡ç”Ÿï¼Œé¢„æµ‹ï¼š' + fidcValidRefs.CommaText;
     end else begin
       Found := 'NULL';
       if fidcValidRefs.IndexOf(Found) < 0 then
-        Result := 'ÕÒµ½Ò»¸ö NULL ÑÜÉú£¬Ô¤²â£º' + fidcValidRefs.CommaText;
+        Result := 'æ‰¾åˆ°ä¸€ä¸ª NULL è¡ç”Ÿï¼Œé¢„æµ‹ï¼š' + fidcValidRefs.CommaText;
     end;
     Exit;
   end else if aInt = $14 then begin
     Found := 'PLYR';
     if fidcValidRefs.IndexOf(Found) < 0 then
-      Result := 'ÕÒµ½Ò»¸ö PLYR ÑÜÉú£¬Ô¤²â£º' + fidcValidRefs.CommaText;
+      Result := 'æ‰¾åˆ°ä¸€ä¸ª PLYR è¡ç”Ÿï¼Œé¢„æµ‹ï¼š' + fidcValidRefs.CommaText;
     Exit;
   end;
 
@@ -9480,15 +9512,15 @@ begin
         if Assigned(MainRecord) then begin
           Found := MainRecord.Signature;
           if fidcValidRefs.IndexOf(Found) < 0 then
-            Result := 'ÕÒµ½Ò»¸ö '+Found+' ÑÜÉú£¬Ô¤²â£º' + fidcValidRefs.CommaText
+            Result := 'æ‰¾åˆ°ä¸€ä¸ª '+Found+' è¡ç”Ÿï¼Œé¢„æµ‹ï¼š' + fidcValidRefs.CommaText
           else begin
             if fidcPersistent then
               if not MainRecord.WinningOverride.Flags.IsPersistent then begin
-                Result := 'Target ²»ÊÇ persistent';
+                Result := 'Target ä¸æ˜¯ persistent';
                 Exit;
               end;
             if not CheckFlst(MainRecord) then
-              Result := 'ÑÜÉú FLST ´æÔÚ²»¿ÉÓÃµÄÈë¿Ú';
+              Result := 'è¡ç”Ÿ FLST å­˜åœ¨ä¸å¯ç”¨çš„å…¥å£';
           end;
           Exit;
         end;
@@ -9502,7 +9534,7 @@ begin
   end;
 
   if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] <´íÎó£ºÎŞ·¨´¦Àí>';
+    Result := '['+IntToHex64(aInt,8)+'] <é”™è¯¯ï¼šæ— æ³•å¤„ç†>';
 end;
 
 function TwbFormIDChecked.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -9519,7 +9551,7 @@ begin
   if aMainRecord.Signature <> 'FLST' then
     Exit;
 
-  if Supports(aMainRecord.ElementByName['FormIDs'], IwbContainerElementRef, Container) then
+  if Supports(aMainRecord.ElementByName['è¡¨å•åºå·'], IwbContainerElementRef, Container) then
     for i := 0 to Pred(Container.ElementCount) do
       if Supports(Container.Elements[i].LinksTo, IwbMainRecord, MainRecord) then
         if not fidcValidFlstRefs.Find(MainRecord.Signature, j) then begin
@@ -9637,11 +9669,11 @@ begin
           s := '';
 
         if (s <> '') or (Sigs.Count > 0) then begin
-          WriteLn('ÒÑ¼ì²éµÄ FormID ±àÖÆÆ÷´æÔÚ²îÒì£º', wbDefsToPath(aParents), wbDefToName(Self));
+          WriteLn('å·²æ£€æŸ¥çš„è¡¨å•åºå·ç¼–åˆ¶å™¨å­˜åœ¨å·®å¼‚ï¼š', wbDefsToPath(aParents), wbDefToName(Self));
           if s <> '' then
-            WriteLn('  Î´ÕÒµ½µ«ÒÑÍ¨¹ı£º ', s);
+            WriteLn('  æœªæ‰¾åˆ°ä½†å·²é€šè¿‡ï¼š ', s);
           if Sigs.Count > 0 then begin
-            WriteLn('  Î´ÕÒµ½µ«ÒÑÍ¨¹ı£º ', Sigs.CommaText);
+            WriteLn('  æœªæ‰¾åˆ°ä½†å·²é€šè¿‡ï¼š ', Sigs.CommaText);
             for i := 0 to Pred(Sigs.Count) do
               WriteLn('    ', Sigs.Strings[i], ' (', Integer(Sigs.Objects[i]),')');
           end;
@@ -9693,7 +9725,7 @@ end;
 function TwbIntegerDefFormater.FromEditValue(const aValue: string;
   const aElement: IwbElement): Int64;
 begin
-  raise Exception.Create(Classname + ' ²»¿É±à¼­');
+  raise Exception.Create(Classname + ' ä¸å¯ç¼–è¾‘');
 end;
 
 function TwbIntegerDefFormater.GetDefType: TwbDefType;
@@ -9862,6 +9894,7 @@ begin
     for i := 1 to High(udMembers) do
       if udMembers[i].Size[nil, nil, nil] <> j then begin
         j := -1;
+        break;
       end;
     Result := j = -1;
   end;
@@ -10166,7 +10199,7 @@ begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < Prefix then begin
     if wbCheckExpectedBytes then
-      Result := Format('Ô¤²âÖÁÉÙ %d ×Ö½ÚµÄÊı¾İ£¬ÕÒµ½ %d', [Prefix , Len]);
+      Result := Format('é¢„æµ‹è‡³å°‘ %d å­—èŠ‚çš„æ•°æ®ï¼Œæ‰¾åˆ° %d', [Prefix , Len]);
     Exit;
   end;
 
@@ -10179,7 +10212,7 @@ begin
   end;
   if Len < Size then begin
     if wbCheckExpectedBytes then
-      Result := Format('Ô¤²â %d ×Ö½ÚµÄÊı¾İ£¬ÕÒµ½ %d', [Size , Len]);
+      Result := Format('é¢„æµ‹ %d å­—èŠ‚çš„æ•°æ®ï¼Œæ‰¾åˆ° %d', [Size , Len]);
   end;
 end;
 
@@ -10422,7 +10455,7 @@ function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement
 begin
   if Assigned(aElement._File) and aElement._File.IsLocalized then begin
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
-      Result := '<´íÎó£ºlstring ID Ó¦¸ÃÎª Int32 ÊıÖµ>'
+      Result := '<é”™è¯¯ï¼šlstring ID åº”è¯¥ä¸º Int32 æ•°å€¼>'
     else
       Result := AnsiString(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement))
   end else
@@ -10586,10 +10619,10 @@ begin
           end;
           Result := AnsiString(IntToHex64(MgefCode, 8));
           if aTransformType = ttToString then
-            Result := Result + ' <¾¯¸æ£ºĞ§¹û´úÂë²¢²»ÊÇ×ÖÄ¸Êı×ÖÒ²²»ÊÇ¶¯Ì¬>';
+            Result := Result + ' <è­¦å‘Šï¼šæ•ˆæœä»£ç å¹¶ä¸æ˜¯å­—æ¯æ•°å­—ä¹Ÿä¸æ˜¯åŠ¨æ€>';
         end;
       end else if aTransformType = ttToString then
-        Result := Result + AnsiString(' <¾¯¸æ£ºÔ¤²â4×Ö½ÚµÄÊı¾İµ«ÕÒµ½ ' + IntToStr(Length(s)) + '>');
+        Result := Result + AnsiString(' <è­¦å‘Šï¼šé¢„æµ‹4å­—èŠ‚çš„æ•°æ®ä½†æ‰¾åˆ° ' + IntToStr(Length(s)) + '>');
     end;
     ttFromEditValue, ttFromNativeValue: begin
       Result := Trim(s);
@@ -10640,7 +10673,7 @@ begin
         t := Copy(Result, Succ(i), High(Integer));
         MgefCode := StrToInt(t);
         if MgefCode > $7FFFFF then
-          raise Exception.Create('"'+t+'" ³¬¹ı¶¯Ì¬Ä§·¨Ğ§¹û´úÂëµÄ×î´óÖµ');
+          raise Exception.Create('"'+t+'" è¶…è¿‡åŠ¨æ€é­”æ³•æ•ˆæœä»£ç çš„æœ€å¤§å€¼');
         MgefCode := (MgefCode shl 8) or $80000000;
 
         MgefCode := MgefCode or FileID;
@@ -10649,7 +10682,7 @@ begin
 
         MgefCode := StrToInt('$' + Result);
         if (MgefCode and $80000000) <> 0 then
-          raise Exception.Create('"'+Result+'" ²»ÊÇ¿ÉÓÃµÄÄ§·¨Ğ§¹û´úÂë');
+          raise Exception.Create('"'+Result+'" ä¸æ˜¯å¯ç”¨çš„é­”æ³•æ•ˆæœä»£ç ');
 
       end else if Length(s) = 4 then begin
 
@@ -10660,11 +10693,11 @@ begin
             break;
           end;
         if not IsAlpha then
-          raise Exception.Create('"'+Result+'" ²»ÊÇ¿ÉÓÃµÄÄ§·¨Ğ§¹û´úÂë');
+          raise Exception.Create('"'+Result+'" ä¸æ˜¯å¯ç”¨çš„é­”æ³•æ•ˆæœä»£ç ');
         MgefCode := PCardinal(@Result[1])^;
 
       end else
-        raise Exception.Create('"'+Result+'" ²»ÊÇ¿ÉÓÃµÄÄ§·¨Ğ§¹û´úÂë');
+        raise Exception.Create('"'+Result+'" ä¸æ˜¯å¯ç”¨çš„é­”æ³•æ•ˆæœä»£ç ');
 
       SetLength(Result, 4);
       PCardinal(@Result[1])^ := MgefCode;
@@ -10716,3 +10749,4 @@ initialization
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
 end.
+

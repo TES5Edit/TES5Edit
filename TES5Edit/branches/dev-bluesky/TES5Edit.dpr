@@ -18,6 +18,7 @@
 program TES5Edit;
 
 uses
+  madExcept,
   Forms,
   Dialogs,
   SysUtils,
@@ -50,7 +51,8 @@ uses
   frmScriptForm in 'frmScriptForm.pas' {frmScript},
   frmOptionsForm in 'frmOptionsForm.pas' {frmOptions},
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer},
-  wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas';
+  wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas',
+  wbNifScanner in 'wbNifScanner.pas';
 
 {$R *.res}
 

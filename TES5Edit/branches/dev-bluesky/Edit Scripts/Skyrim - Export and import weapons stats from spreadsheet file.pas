@@ -1,7 +1,6 @@
-{
-  Export and import weapons stats from *.csv files.
-  Right click and apply script to selected weapons, weapon group,
-  plugin or several selected plugins.
+﻿{
+  导出并从 *.csv 文件导入武器状态。
+  右击然后选择应用脚本到所选的武器、武器群组、插件或者多个插件。
 }
 unit UserScript;
 
@@ -37,7 +36,7 @@ begin
   
   if DoExport then begin
     // Export: add columns headers line
-    slWeap.Add('FormID;Name;Value;Weight;Damage;Speed;Reach;Crit.Damage;Crit.Mult');
+    slWeap.Add('FormID;名称;价值;重量;伤害;速度;范围;致命伤害;致命加成');
   end else begin
     // Import: select file name to import from
     dlgOpen := TOpenDialog.Create(nil);
@@ -77,14 +76,14 @@ begin
     slWeap.Add(Format('[%s];%s;%s;%s;%s;%s;%s;%s;%s', [
       // FixedFormID depends only on explicit masters and not affected by plugin's load order
       IntToHex(FixedFormID(e), 8),
-      GetElementEditValues(e, 'FULL - Name'),
-      GetElementEditValues(e, 'DATA\Value'),
-      GetElementEditValues(e, 'DATA\Weight'),
-      GetElementEditValues(e, 'DATA\Damage'),
-      GetElementEditValues(e, 'DNAM\Speed'),
-      GetElementEditValues(e, 'DNAM\Reach'),
-      GetElementEditValues(e, 'CRDT\Damage'),
-      GetElementEditValues(e, 'CRDT\% Mult')
+      GetElementEditValues(e, 'FULL - 名称'),
+      GetElementEditValues(e, 'DATA\价值'),
+      GetElementEditValues(e, 'DATA\重量'),
+      GetElementEditValues(e, 'DATA\伤害'),
+      GetElementEditValues(e, 'DNAM\速度'),
+      GetElementEditValues(e, 'DNAM\范围'),
+      GetElementEditValues(e, 'CRDT\伤害'),
+      GetElementEditValues(e, 'CRDT\% 加成')
     ]));
   end else begin
     i := slLookup.IndexOf(IntToHex(FixedFormID(e), 8));
@@ -95,14 +94,14 @@ begin
       // there should be 9 columns in each line
       if slValues.Count = 9 then begin
         // uncomment if you want to import names
-        //SetElementEditValues(e, 'FULL - Name', slValues[1]);
-        SetElementEditValues(e, 'DATA\Value',  slValues[2]);
-        SetElementEditValues(e, 'DATA\Weight', slValues[3]);
-        SetElementEditValues(e, 'DATA\Damage', slValues[4]);
-        SetElementEditValues(e, 'DNAM\Speed',  slValues[5]);
-        SetElementEditValues(e, 'DNAM\Reach',  slValues[6]);
-        SetElementEditValues(e, 'CRDT\Damage', slValues[7]);
-        SetElementEditValues(e, 'CRDT\% Mult', slValues[8]);
+        //SetElementEditValues(e, 'FULL - 名称', slValues[1]);
+        SetElementEditValues(e, 'DATA\价值',  slValues[2]);
+        SetElementEditValues(e, 'DATA\重量', slValues[3]);
+        SetElementEditValues(e, 'DATA\伤害', slValues[4]);
+        SetElementEditValues(e, 'DNAM\速度',  slValues[5]);
+        SetElementEditValues(e, 'DNAM\范围',  slValues[6]);
+        SetElementEditValues(e, 'CRDT\伤害', slValues[7]);
+        SetElementEditValues(e, 'CRDT\% 加成', slValues[8]);
       end else
         AddMessage(Format('Line %d doesn''t have 9 columns', [i+1]));
     end;

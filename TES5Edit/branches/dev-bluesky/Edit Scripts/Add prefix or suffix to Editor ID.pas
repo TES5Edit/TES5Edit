@@ -1,6 +1,5 @@
-{
-  This script will prepend or append supplied value to the EditorID field
-  of every selected record.
+﻿{
+  添加定义的内容到所选记录编辑器标识的前面或者后面。
 }
 unit UserScript;
 
@@ -14,14 +13,14 @@ var
 begin
   Result := 0;
   // ask for prefix or suffix mode
-  i := MessageDlg('Prepend [YES] or append [NO] to Editor ID?', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+  i := MessageDlg('编辑器标识的前面[YES]或者后面[NO]？', mtConfirmation, [mbYes, mbNo, mbCancel], 0);
   if i = mrYes then DoPrepend := true else
     if i = mrNo then DoPrepend := false else begin
       Result := 1;
       Exit;
     end;
   // ask for string
-  if not InputQuery('Enter', 'Prefix/suffix', s) then begin
+  if not InputQuery('输入', '前缀/后缀', s) then begin
     Result := 2;
     Exit;
   end;
@@ -32,16 +31,16 @@ end;
 
 function Process(e: IInterface): integer;
 var
-  EditorID: IInterface;
+  elEditorID: IInterface;
 begin
   Result := 0;
   //AddMessage('Processing: ' + Name(e));
-  EditorID := ElementByName(e, 'EDID - Editor ID');
-  if Assigned(EditorID) then begin
+  elEditorID := ElementByName(e, 'EDID - 编辑器标识');
+  if Assigned(elEditorID) then begin
     if DoPrepend then
-      SetEditValue(EditorID, s + GetEditValue(EditorID))
+      SetEditValue(elEditorID, s + GetEditValue(elEditorID))
     else
-      SetEditValue(EditorID, GetEditValue(EditorID) + s);
+      SetEditValue(elEditorID, GetEditValue(elEditorID) + s);
   end;
 end;
 

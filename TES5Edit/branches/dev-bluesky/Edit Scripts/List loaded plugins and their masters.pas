@@ -1,6 +1,6 @@
-{
-  Example on how to access the current list of loaded plugins.
-  Lists plugins and their masters.
+﻿{
+  一个例子，用来解释如何查看当前加载的插件列表。
+  列表显示插件和他们的 Master 。
 }
 unit UserScript;
 

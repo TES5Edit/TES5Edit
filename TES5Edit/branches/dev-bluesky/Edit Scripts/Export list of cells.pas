@@ -1,5 +1,5 @@
-{
-  Export list of CELLs
+﻿{
+  导出场景列表
 }
 unit UserScript;
 
@@ -23,7 +23,7 @@ var
   fname: string;
 begin
   fname := ProgramPath + 'Edit Scripts\cells.txt';
-  AddMessage('Saving list to ' + fname);
+  AddMessage('正在保存列表到 ' + fname);
   sl.SaveToFile(fname);
   sl.Free;
 end;

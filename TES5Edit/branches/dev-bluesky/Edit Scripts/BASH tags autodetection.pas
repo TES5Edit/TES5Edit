@@ -1,14 +1,14 @@
-{
-  Detect needed BASH tags for selected records (or whole plugin).
-  Only plugin in question and its dependencies must be loaded (same as for cleaning).
-  Tags information: http://tesfans.org/guides/wrye bash/docs/Wrye Bash Advanced Readme.html#patch-tags
-  Currently supported tags:
+﻿{
+  检测所选记录（或者整个插件）所需要的 BASH 标签。
+  只需要加载有疑问或者所依赖的插件（与清理插件一样）。
+  标签信息：http://tesfans.org/guides/wrye bash/docs/Wrye Bash Advanced Readme.html#patch-tags
+  当前支持的标签：
     Delev, Relev
     Factions
     Invent
     Names
   
-  Version: 1.0
+  版本：1.0
 }
 unit BashTagsDetector;
 
@@ -67,9 +67,9 @@ begin
   if TagExists('Delev') and TagExists('Relev') then
     Exit;
   
-  // get Leveled List Entries
-  entries := ElementByName(e, 'Leveled List Entries');
-  entriesmaster := ElementByName(m, 'Leveled List Entries');
+  // get 等级列表记录
+  entries := ElementByName(e, '等级列表记录');
+  entriesmaster := ElementByName(m, '等级列表记录');
   
   if not Assigned(entries) or not Assigned(entriesmaster) then
     Exit;
@@ -80,16 +80,16 @@ begin
   for i := 0 to ElementCount(entries) - 1 do begin
     ent := ElementByIndex(entries, i);
     // find the same entry in master
-    entm := GetElementByValue(entriesmaster, 'LVLO\Reference', GetElementEditValues(ent, 'LVLO\Reference'));
+    entm := GetElementByValue(entriesmaster, 'LVLO\衍生', GetElementEditValues(ent, 'LVLO\衍生'));
     if Assigned(entm) then begin
       Inc(matched);
       // Relev check for changed level, count, extra data
-      coed := ElementByName(ent, 'COED - Extra Data');
-      coedm := ElementByName(entm, 'COED - Extra Data');
+      coed := ElementByName(ent, '额外数据');
+      coedm := ElementByName(entm, 'COED - 额外数据');
       if Assigned(coed) then s1 := SortKey(coed, True) else s1 := '';
       if Assigned(coedm) then s2 := SortKey(coedm, True) else s2 := '';
-      if (GetElementNativeValues(ent, 'LVLO\Level') <> GetElementNativeValues(entm, 'LVLO\Level')) or
-         (GetElementNativeValues(ent, 'LVLO\Count') <> GetElementNativeValues(entm, 'LVLO\Count')) or
+      if (GetElementNativeValues(ent, 'LVLO\等级') <> GetElementNativeValues(entm, 'LVLO\等级')) or
+         (GetElementNativeValues(ent, 'LVLO\数量') <> GetElementNativeValues(entm, 'LVLO\数量')) or
          (s1 <> s2) then
         AddTag('Relev');
     end;
@@ -111,8 +111,8 @@ begin
   if TagExists('Invent') then
     Exit;
 
-  items := ElementByName(e, 'Items');
-  itemsmaster := ElementByName(m, 'Items');
+  items := ElementByName(e, '物品');
+  itemsmaster := ElementByName(m, '物品');
   
   if Assigned(items) <> Assigned(itemsmaster) then begin
     AddTag('Invent');
@@ -141,8 +141,8 @@ begin
   if TagExists('Factions') then
     Exit;
 
-  f := ElementByName(e, 'Factions');
-  fm := ElementByName(m, 'Factions');
+  f := ElementByName(e, '派系');
+  fm := ElementByName(m, '派系');
   
   if Assigned(f) <> Assigned(fm) then begin
     AddTag('Factions');
@@ -160,8 +160,8 @@ begin
   for i := 0 to ElementCount(f) - 1 do begin
     ent := ElementByIndex(f, i);
     entmaster := ElementByIndex(fm, i);
-    if (GetElementEditValues(ent, 'Faction') <> GetElementEditValues(entmaster, 'Faction')) or
-       (GetElementEditValues(ent, 'Rank') <> GetElementEditValues(entmaster, 'Rank')) then
+    if (GetElementEditValues(ent, '派系') <> GetElementEditValues(entmaster, '派系')) or
+       (GetElementEditValues(ent, '等级') <> GetElementEditValues(entmaster, '等级')) then
       AddTag('Factions');
   end;
 end;
@@ -175,7 +175,7 @@ begin
   if TagExists('Names') then
     Exit;
 
-  if GetElementEditValues(e, 'FULL - Name') <> GetElementEditValues(m, 'FULL - Name') then
+  if GetElementEditValues(e, 'FULL - 名称') <> GetElementEditValues(m, 'FULL - 名称') then
     AddTag('Names');
 end;
 
@@ -231,7 +231,7 @@ begin
   if slTags.Count > 0 then
     AddMessage(Format('{{BASH:%s}}', [slTags.DelimitedText]))
   else
-    AddMessage('No tags suggested');
+    AddMessage('无建议标签');
   
   slTags.Free;
 end;

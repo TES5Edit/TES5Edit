@@ -1,6 +1,6 @@
-{
-  List forms with load order 00 from containers, leveled lists and references
-  Used for Skywind project
+﻿{
+  显示来源于容器、等级列表和衍生的加载顺序为00的表单。
+  用于 Skywind 项目
 }
 unit UserScript;
 
@@ -54,11 +54,11 @@ begin
   if wbGameMode = gmTES4 then begin
     // containers
     if s = 'CONT' then
-      ListEntries(e, 'Items', 'Item')
+      ListEntries(e, '物品', '物品')
     else
     // leveled items, npcs and spells
     if (s = 'LVLI') or (s = 'LVLN') then
-      ListEntries(e, 'Leveled List Entries', 'Reference');
+      ListEntries(e, '等级列表记录', '衍生');
   end;
   
   if (s = 'REFR') or (s = 'ACHR') then begin

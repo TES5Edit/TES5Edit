@@ -1,5 +1,5 @@
-{
-  Does the same as internal "Check for errors" function in xEdit
+﻿{
+  功能与内置的"检查错误"是一样的
 }
 unit userscript;
 
@@ -16,12 +16,11 @@ begin
   end else
     AddMessage('');
 
-    for i := ElementCount(aElement)-1 downto 0 do
-      Result := CheckForErrors(aIndent + 1, ElementByIndex(aElement, i)) or Result;
+  for i := ElementCount(aElement) - 1 downto 0 do
+    Result := CheckForErrors(aIndent + 1, ElementByIndex(aElement, i)) or Result;
 
-  if Result and (Error = '') then begin
-    AddMessage(StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + Name(aElement));
-  end;
+  if Result and (Error = '') then
+    AddMessage(StringOfChar(' ', aIndent * 2) + '以上错误位于：' + Name(aElement));
 end;
 
 function Process(e: IInterface): integer;

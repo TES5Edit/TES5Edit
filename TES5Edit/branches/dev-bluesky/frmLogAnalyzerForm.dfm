@@ -140,7 +140,7 @@
         item
           Position = 0
           Width = 100
-          WideText = 'FormID'
+          WideText = '表单序号'
         end
         item
           Position = 1

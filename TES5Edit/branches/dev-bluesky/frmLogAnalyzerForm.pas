@@ -1,4 +1,4 @@
-unit frmLogAnalyzerForm;
+ï»¿unit frmLogAnalyzerForm;
 
 interface
 
@@ -233,7 +233,7 @@ begin
         memoText.Lines.Text := Data.PEntry.Text
       else begin
         memoText.Lines.Clear;
-        memoText.Lines.Add(Format('; RuntimeScriptProfiler - ×î´óÖ´ĞĞÊ±¼ä£º%.4n ms', [Data.PEntry.Value3]));
+        memoText.Lines.Add(Format('; RuntimeScriptProfiler - æœ€å¤§æ‰§è¡Œæ—¶é—´ï¼š%.4n ms', [Data.PEntry.Value3]));
         if Supports(Data.PEntry.Element, IwbMainRecord, MainRecord) then
           memoText.Lines.Add(MainRecord.ElementEditValues['SCTX']);
       end;
@@ -471,7 +471,7 @@ begin
   elem := RecordByFormID(fid);
   if (fid shr 24 <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
-      memoText.Lines.Add('Î´ÖªµÄ FormID [' + s + ']£¬ÊÇ·ñĞŞ¸Ä¹ıÅÅĞò£¿ËùÓĞÎ´ÖªµÄ FormID ¶¼»á±»ºöÂÔµôµÄÅ¶¡£');
+      memoText.Lines.Add('æœªçŸ¥çš„è¡¨å•[' + s + ']ï¼Œæ˜¯å¦ä¿®æ”¹è¿‡æ’åºï¼Ÿæ‰€æœ‰æœªçŸ¥çš„è¡¨å•éƒ½ä¼šè¢«å¿½ç•¥æ‰çš„å“¦ã€‚');
     Inc(FormIDErrors);
     Exit;
   end;
@@ -549,7 +549,7 @@ begin
   elem := RecordByFormID(fid);
   if (fid shr 24 <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
-      memoText.Lines.Add('Î´ÖªµÄ FormID [' + s + ']£¬ÊÇ·ñĞŞ¸Ä¹ıÅÅĞò£¿ËùÓĞÎ´ÖªµÄ FormID ¶¼»á±»ºöÂÔµôµÄÅ¶¡£');
+      memoText.Lines.Add('æœªçŸ¥çš„è¡¨å•[' + s + ']ï¼Œæ˜¯å¦ä¿®æ”¹è¿‡æ’åºï¼Ÿæ‰€æœ‰æœªçŸ¥çš„è¡¨å•éƒ½ä¼šè¢«å¿½ç•¥æ‰çš„å“¦ã€‚');
     Inc(FormIDErrors);
     Exit;
   end;
@@ -634,7 +634,7 @@ begin
         Value3 := LogEntries[i].Value3;
         LoadOrder := LogEntries[i].LoadOrder;
         if LoadOrder = $FF then
-          Text := '[FF] ´æµµ'
+          Text := '[FF] å­˜æ¡£'
         else
           if Assigned(LogEntries[i].Element) then begin
             if Assigned(LogEntries[i].Element._File) then begin
@@ -642,7 +642,7 @@ begin
               Text := Element.Name;
             end;
           end else
-            Text := 'Î´Öª';
+            Text := 'æœªçŸ¥';
       end;
     end;
   end;
@@ -654,7 +654,7 @@ end;
 procedure TfrmLogAnalyzer.btnAnalyzeClick(Sender: TObject);
 begin
   if not FileExists(edLogFile.Text) then begin
-    memoText.Lines.Add('ÎÄ¼ş²»´æÔÚ');
+    memoText.Lines.Add('æ–‡ä»¶ä¸å­˜åœ¨');
     Exit;
   end;
 
@@ -671,15 +671,15 @@ begin
   Enabled := False;
   Application.ProcessMessages;
   try
-    memoText.Lines.Add('ÕıÔÚ´¦ÀíÈÕÖ¾...');
+    memoText.Lines.Add('æ­£åœ¨å¤„ç†æ—¥å¿—...');
     if ProcessLog(edLogFile.Text) then begin
       BuildPluginsList;
       vstForms.NodeDataSize := SizeOf(TTreeData);
       vstForms.RootNodeCount := Length(LogPlugins);
       if FormIDErrors > 0 then
-        memoText.Lines.Add(Format('ÒÑºöÂÔ %d ¸öÎ´Öª FormIDs ¡£', [FormIDErrors]));
-      memoText.Lines.Add('ÒÑÍê³É¡£');
-      memoText.Lines.Add('ÌáÊ¾£ºË«»÷ FormID ¿ÉÒÔ²é¿´¸Ã ID µÄÏêÏ¸ĞÅÏ¢¡£');
+        memoText.Lines.Add(Format('å·²å¿½ç•¥ %d ä¸ªæœªçŸ¥è¡¨å•ã€‚', [FormIDErrors]));
+      memoText.Lines.Add('å·²å®Œæˆã€‚');
+      memoText.Lines.Add('æç¤ºï¼šåŒå‡»è¡¨å•å¯ä»¥æŸ¥çœ‹å…¶è¯¦ç»†ä¿¡æ¯ã€‚');
     end else begin
       SetLength(LogPlugins, 0);
       SetLength(LogEntries, 0);
@@ -707,9 +707,9 @@ begin
       edLogFile.Text := ExtractFilePath(ExcludeTrailingBackslash(lDataPath)) + 'RuntimeScriptProfiler.log';
       ProcessLog := ReadRuntimeScriptProfilerLog;
       vstForms.Header.Columns[2].Width := 100;
-      vstForms.Header.Columns[2].Text := 'Ö´ĞĞÖ¡Êı';
+      vstForms.Header.Columns[2].Text := 'æ‰§è¡Œå¸§æ•°';
       vstForms.Header.Columns[2].Width := 100;
-      vstForms.Header.Columns[3].Text := 'È«²¿Ê±¼ä, ms';
+      vstForms.Header.Columns[3].Text := 'å…¨éƒ¨æ—¶é—´, ms';
       memoText.Lines.Add('RuntimeScriptProfiler by ShadeMe');
       memoText.Lines.Add('http://www.oblivion.nexusmods.com/mods/41863');
     end;
@@ -717,12 +717,12 @@ begin
       edLogFile.Text := lMyGamesTheGamePath + 'Logs\Script\Papyrus.0.log';
       ProcessLog := ReadPapyrusLog;
       vstForms.Header.Columns[2].Width := 100;
-      vstForms.Header.Columns[2].Text := '´íÎó';
+      vstForms.Header.Columns[2].Text := 'é”™è¯¯';
       vstForms.Header.Columns[2].Width := 100;
-      vstForms.Header.Columns[3].Text := '¾¯¸æ';
-      memoText.Lines.Add('ÈçºÎ¿ªÆôÈÕÖ¾');
+      vstForms.Header.Columns[3].Text := 'è­¦å‘Š';
+      memoText.Lines.Add('å¦‚ä½•å¼€å¯æ—¥å¿—');
       memoText.Lines.Add('http://www.creationkit.com/FAQ:_My_Script_Doesn''t_Work!');
-      memoText.Lines.Add('Papyrus ´íÎó½éÉÜ');
+      memoText.Lines.Add('Papyrus é”™è¯¯ä»‹ç»');
       memoText.Lines.Add('http://www.creationkit.com/Papyrus_Runtime_Errors');
     end;
   end;

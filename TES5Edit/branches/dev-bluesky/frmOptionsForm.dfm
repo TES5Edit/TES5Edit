@@ -1,8 +1,8 @@
-object frmOptions: TfrmOptions
+ï»¿object frmOptions: TfrmOptions
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Ñ¡Ïî'
+  Caption = 'é€‰é¡¹'
   ClientHeight = 313
   ClientWidth = 466
   Color = clBtnFace
@@ -31,7 +31,7 @@ object frmOptions: TfrmOptions
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
-      Caption = '³£¹æ'
+      Caption = 'å¸¸è§„'
       ImageIndex = 1
       object Label2: TLabel
         Left = 24
@@ -40,7 +40,7 @@ object frmOptions: TfrmOptions
         Height = 30
         AutoSize = False
         Caption = 
-          'Skyrim ×¢Òâ£ºÈç¹û´Ó BSA ÖĞ½âÑ¹ÁË STRINGS ÎÄ¼ş£¬Äã¿ÉÒÔ¹Ø±Õ´Ë¹¦ÄÜ£¬½è´Ë´ó´óÌáÉı¶ÁÈ¡ËÙ¶È£¬Ã»ÓĞ½âÑ¹Çë²»ÒªÈ¡Ïû¹´Ñ¡£¬·ñÔòÄã»áµ½´¦¶¼¿´µ½¡°Î´±¾µØ»¯¡±¡£'
+          'Skyrim æ³¨æ„ï¼šå¦‚æœä» BSA ä¸­è§£å‹äº† STRINGS æ–‡ä»¶ï¼Œä½ å¯ä»¥å…³é—­æ­¤åŠŸèƒ½ï¼Œå€Ÿæ­¤å¤§å¤§æå‡è¯»å–é€Ÿåº¦ï¼Œæ²¡æœ‰è§£å‹è¯·ä¸è¦å–æ¶ˆå‹¾é€‰ï¼Œå¦åˆ™ä½ ä¼šåˆ°å¤„éƒ½çœ‹åˆ°â€œæœªæœ¬åœ°åŒ–â€ã€‚'
         WordWrap = True
       end
       object Label5: TLabel
@@ -48,14 +48,14 @@ object frmOptions: TfrmOptions
         Top = 208
         Width = 64
         Height = 13
-        Caption = 'ÁĞ¿í'
+        Caption = 'åˆ—å®½'
       end
       object cbIKnow: TCheckBox
         Left = 304
         Top = 15
         Width = 137
         Height = 17
-        Caption = 'ÎÒÖªµÀÃ¿¸ö²Ù×÷µÄÒâÒå'
+        Caption = 'æˆ‘çŸ¥é“æ¯ä¸ªæ“ä½œçš„æ„ä¹‰'
         TabOrder = 0
         Visible = False
       end
@@ -64,7 +64,7 @@ object frmOptions: TfrmOptions
         Top = 15
         Width = 90
         Height = 17
-        Caption = 'Òş²Ø²»Ê¹ÓÃµÄ'
+        Caption = 'éšè—ä¸ä½¿ç”¨çš„'
         TabOrder = 1
       end
       object cbHideIgnored: TCheckBox
@@ -72,7 +72,7 @@ object frmOptions: TfrmOptions
         Top = 38
         Width = 81
         Height = 17
-        Caption = 'Òş²ØºöÂÔµÄ'
+        Caption = 'éšè—å¿½ç•¥çš„'
         TabOrder = 2
       end
       object cbHideNeverShow: TCheckBox
@@ -80,7 +80,7 @@ object frmOptions: TfrmOptions
         Top = 61
         Width = 121
         Height = 17
-        Caption = 'Òş²Ø¡°ÓÀÔ¶²»ÏÔÊ¾¡±µÄ'
+        Caption = 'éšè—â€œæ°¸è¿œä¸æ˜¾ç¤ºâ€çš„'
         TabOrder = 3
       end
       object cbLoadBSAs: TCheckBox
@@ -88,7 +88,7 @@ object frmOptions: TfrmOptions
         Top = 84
         Width = 81
         Height = 17
-        Caption = '¶ÁÈ¡ BSA'
+        Caption = 'åŠ è½½ BSA'
         TabOrder = 4
       end
       object cbSortFLST: TCheckBox
@@ -96,7 +96,7 @@ object frmOptions: TfrmOptions
         Top = 149
         Width = 121
         Height = 17
-        Caption = '[FO3/FNV] FLST ÅÅĞò'
+        Caption = '[FO3/FNV] FLST æ’åº'
         TabOrder = 5
       end
       object cbSimpleRecords: TCheckBox
@@ -104,7 +104,7 @@ object frmOptions: TfrmOptions
         Top = 172
         Width = 281
         Height = 17
-        Caption = '¼òµ¥Êı¾İ (LAND, NAVI, NAVM)¡£ÖØÆôºóÉúĞ§¡£'
+        Caption = 'ç®€å•æ•°æ® (LAND, NAVI, NAVM)ã€‚é‡å¯åç”Ÿæ•ˆã€‚'
         TabOrder = 6
       end
       object edColumnWidth: TEdit
@@ -114,15 +114,23 @@ object frmOptions: TfrmOptions
         Height = 21
         TabOrder = 7
       end
+      object cbAutoSave: TCheckBox
+        Left = 304
+        Top = 15
+        Width = 81
+        Height = 17
+        Caption = 'è‡ªåŠ¨ä¿å­˜'
+        TabOrder = 8
+      end
     end
     object tsCleaning: TTabSheet
-      Caption = 'ÇåÀí'
+      Caption = 'æ¸…ç†'
       object Label1: TLabel
         Left = 16
         Top = 9
         Width = 154
         Height = 13
-        Caption = 'UDR Êı¾İ'
+        Caption = 'UDR æ•°æ®'
       end
       object cbUDRSetXESP: TCheckBox
         Left = 32
@@ -130,7 +138,7 @@ object frmOptions: TfrmOptions
         Width = 410
         Height = 17
         Caption = 
-          'ÉèÖÃÆôÓÃ×´Ì¬ÓëÍæ¼Ò¶ÔÁ¢£¨¹Ø¼üÉèÖÃ£¬¹Ø±Õºó²úÉúµÄºó¹ûÇë×ÔĞĞ³Ğµ£¡££©'
+          'è®¾ç½®å¯ç”¨çŠ¶æ€ä¸ç©å®¶å¯¹ç«‹ï¼ˆå…³é”®è®¾ç½®ï¼Œå…³é—­åäº§ç”Ÿçš„åæœè¯·è‡ªè¡Œæ‰¿æ‹…ã€‚ï¼‰'
         TabOrder = 0
         WordWrap = True
       end
@@ -139,7 +147,7 @@ object frmOptions: TfrmOptions
         Top = 55
         Width = 97
         Height = 17
-        Caption = 'ÉèÖÃ·¶Î§Îª'
+        Caption = 'è®¾ç½®èŒƒå›´ä¸º'
         TabOrder = 1
       end
       object cbUDRSetZ: TCheckBox
@@ -147,7 +155,7 @@ object frmOptions: TfrmOptions
         Top = 78
         Width = 97
         Height = 17
-        Caption = 'ÉèÖÃZÎ»ÖÃÎª'
+        Caption = 'è®¾ç½®Zä½ç½®ä¸º'
         TabOrder = 2
       end
       object edUDRSetScaleValue: TEdit
@@ -169,7 +177,7 @@ object frmOptions: TfrmOptions
         Top = 101
         Width = 201
         Height = 17
-        Caption = '[FO3/FNV] Ìæ»» MSTT FormID Îª'
+        Caption = '[FO3/FNV] æ›¿æ¢ MSTT è¡¨å•åºå·ä¸º'
         TabOrder = 5
       end
       object edUDRSetMSTTValue: TEdit
@@ -181,21 +189,21 @@ object frmOptions: TfrmOptions
       end
     end
     object tsColors: TTabSheet
-      Caption = 'ÑÕÉ«'
+      Caption = 'é¢œè‰²'
       ImageIndex = 2
       object Label3: TLabel
         Left = 16
         Top = 16
         Width = 89
         Height = 13
-        Caption = '³åÍ»×ÖÌåÑÕÉ«'
+        Caption = 'å†²çªå­—ä½“é¢œè‰²'
       end
       object Label4: TLabel
         Left = 16
         Top = 80
         Width = 123
         Height = 13
-        Caption = '³åÍ»±³¾°ÑÕÉ«'
+        Caption = 'å†²çªèƒŒæ™¯é¢œè‰²'
       end
       object clbConflictThis: TColorBox
         Left = 223
@@ -241,7 +249,7 @@ object frmOptions: TfrmOptions
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
-    Caption = 'È·¶¨'
+    Caption = 'ç¡®å®š'
     ModalResult = 1
     TabOrder = 1
   end
@@ -251,7 +259,7 @@ object frmOptions: TfrmOptions
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
-    Caption = 'È¡Ïû'
+    Caption = 'å–æ¶ˆ'
     ModalResult = 2
     TabOrder = 2
   end

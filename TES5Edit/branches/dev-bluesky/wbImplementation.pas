@@ -30,9 +30,9 @@ uses
   Zlibex;
 
 var
-  RecordToSkip : TStringList;
-  GroupToSkip  : TStringList;
-  SubRecordOrderList     : TStringList;
+  RecordToSkip       : TStringList;
+  GroupToSkip        : TStringList;
+  SubRecordOrderList : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
@@ -197,10 +197,11 @@ type
 
     procedure NotifyChanged; virtual;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); virtual;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); virtual;
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
+    procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
     function Equals(const aElement: IwbElement): Boolean; reintroduce;
 
     procedure Hide;
@@ -215,6 +216,7 @@ type
     function GetSortKeyInternal(aExtended: Boolean): string; virtual;
     function GetSortPriority: Integer; virtual;
     function GetName: string; virtual;
+    function GetBaseName: string; virtual;
     function GetDisplayName: string; virtual;
     function GetShortName: string; virtual;
     function GetPath: string; virtual;
@@ -280,6 +282,10 @@ type
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
 
+    procedure NextMember;
+    procedure PreviousMember;
+    function CanChangeMember: Boolean;
+
     procedure Tag;
     procedure ResetTags; virtual;
     function IsTagged: Boolean;
@@ -307,6 +313,10 @@ type
     procedure MoveElementDown(const aElement: IwbElement);
     function CanMoveElementUp(const aElement: IwbElement): Boolean;
     function CanMoveElementDown(const aElement: IwbElement): Boolean;
+
+    procedure NextElementMember(const aElement: IwbElement);
+    procedure PreviousElementMember(const aElement: IwbElement);
+    function CanChangeElementMember(const aElement: IwbElement): Boolean;
   end;
 
   TwbContainer = class(TwbElement, IwbContainerElementRef, IwbContainer, IwbContainerInternal)
@@ -333,13 +343,13 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
-    procedure SortBySortOrder;
+    procedure SortBySortOrder; virtual;
     procedure CreatedEmpty;
 
     function Reached: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
     procedure ResetConflict; override;
     procedure ResetReachable; override;
 
@@ -419,6 +429,10 @@ type
     function CanMoveElementDown(const aElement: IwbElement): Boolean;
     function CanMoveElement: Boolean; virtual;
 
+    procedure NextElementMember(const aElement: IwbElement);
+    procedure PreviousElementMember(const aElement: IwbElement);
+    function CanChangeElementMember(const aElement: IwbElement): Boolean;
+
     function FindBySortKey(const aSortKey: string; aExtended: Boolean; out aIndex: Integer): Boolean;
 
     procedure AfterConstruction; override;
@@ -477,6 +491,7 @@ type
     function GetFile: IwbFile; override;
     function GetReferenceFile: IwbFile; override;
     function GetName: string; override;
+    function GetBaseName: string; override;
     procedure PrepareSave; override;
     procedure SetModified(aValue: Boolean); override;
 
@@ -631,6 +646,7 @@ type
     function GetSignature: TwbSignature;
     procedure ScanData; virtual; abstract;
     procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); virtual;
+    procedure SortBySortOrder; override;
   public
     class function CreateForPtr(var aPtr            : Pointer;
                                     aEndPtr         : Pointer;
@@ -777,7 +793,7 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     function GetReferenceFile: IwbFile; override;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
     function LinksToParent: Boolean; override;
     function Reached: Boolean; override;
     function GetContainingMainRecord: IwbMainRecord; override;
@@ -1034,6 +1050,7 @@ type
     function GetValueDef: IwbValueDef; override;
 
     function GetName: string; override;
+    function GetBaseName: string; override;
     function GetDisplayName: string; override;
 
     function GetCheck: string; override;
@@ -1612,7 +1629,7 @@ begin
 
       if Length(flRecords) > 0 then begin
         if FindFormID(aRecord.FormID, i) then
-          raise Exception.Create('重复的 FormID ['+IntToHex64(aRecord.FormID, 8)+'] 出现在文件 ' + GetName);
+          raise Exception.Create('重复的表单序号 ['+IntToHex64(aRecord.FormID, 8)+'] 出现在文件 ' + GetName);
       end else
         i := 0;
 
@@ -1706,10 +1723,10 @@ begin
     raise Exception.CreateFmt('读取文件 "%s" 遇到非预期的错误', [flFileName]);
 
   IsNew := False;
-  MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+  MasterFiles := Header.ElementByName['Master 文件'] as IwbContainerElementRef;
   if not Assigned(MasterFiles) then begin
     Header.Assign(5, nil, False);
-    MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+    MasterFiles := Header.ElementByName['Master 文件'] as IwbContainerElementRef;
     Assert(Assigned(MasterFiles));
     IsNew := True;
   end;
@@ -1791,7 +1808,7 @@ begin
           if Rec.IsWinningOverride then begin
             Cnt := Rec as IwbContainerElementRef;
             if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
-              Flg := Cnt.ElementByName['Flags'];
+              Flg := Cnt.ElementByName['标志'];
               if Assigned(Flg) then begin
                 s := Flg.EditValue;
                 if (Length(s) > 0) and (s[1]='1') then
@@ -1833,7 +1850,7 @@ begin
           if Rec.IsWinningOverride then begin
             Cnt := Rec as IwbContainerElementRef;
             if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
-              Flg := Cnt.ElementByName['Playable'];
+              Flg := Cnt.ElementByName['玩家可用'];
               if Assigned(Flg) then begin
                 if Flg.NativeValue <> 0 then
                   (Rec as IwbElementInternal).Reached;
@@ -1862,7 +1879,7 @@ begin
           if Rec.IsWinningOverride then begin
             Cnt := Rec as IwbContainerElementRef;
             if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt2) then begin
-              Flg := Cnt2.ElementByName['Flags'];
+              Flg := Cnt2.ElementByName['标志'];
               if Assigned(Flg) then begin
                 s := Flg.SortKey[False];
                 if (Length(s)>1) and (s[2] = '1') then
@@ -1879,7 +1896,7 @@ begin
           if Rec.IsWinningOverride then begin
             Cnt := Rec as IwbContainerElementRef;
             if Supports(Cnt.RecordBySignature['ACBS'], IwbContainerElementRef, Cnt) then begin
-              Flg := Cnt.ElementByName['Flags'];
+              Flg := Cnt.ElementByName['标志'];
               if Assigned(Flg) then begin
                 s := Flg.EditValue;
                 if (Length(s) > 2) and (s[3]='1') then
@@ -1897,7 +1914,7 @@ begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
           if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
-            Flg := Cnt.ElementByName['Flags'];
+            Flg := Cnt.ElementByName['标志'];
             if Assigned(Flg) then begin
               s := Flg.EditValue;
               if (Length(s) > 0) and (s[1]='1') then
@@ -1940,7 +1957,7 @@ begin
     raise Exception.CreateFmt('读取文件 "%s" 遇到非预期的错误', [flFileName]);
 
   if Length(flMasters) >= 1 then begin
-    MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+    MasterFiles := Header.ElementByName['Master 文件'] as IwbContainerElementRef;
     Assert(Assigned(MasterFiles));
     Assert(MasterFiles.ElementCount = Length(flMasters));
 
@@ -2312,6 +2329,13 @@ begin
   end;
 end;
 
+function TwbFile.GetBaseName: string;
+begin
+  Result := GetFileName;
+  if fsIsHardcoded in flStates then
+    Result := wbGameName + '.exe';
+end;
+
 function TwbFile.GetElementType: TwbElementType;
 begin
   Result := etFile;
@@ -2428,7 +2452,7 @@ begin
   if Header.Signature <> HeaderSignature then
     raise Exception.CreateFmt('Expected header signature '+HeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
 
-  MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+  MasterFiles := Header.ElementByName['Master 文件'] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
@@ -2606,7 +2630,7 @@ begin
         Break;
       end;
   if NewFileID < 0 then
-    raise Exception.Create('加载顺序 FormID ['+IntToHex64(aFormID, 8)+'] 无法映射到文件 "'+GetFileName+'" 的文件 FormID。');
+    raise Exception.Create('加载顺序表单序号 ['+IntToHex64(aFormID, 8)+'] 无法映射到文件 "'+GetFileName+'" 的文件表单序号。');
   Result := (aFormID and $00FFFFFF) or (Cardinal(NewFileID) shl 24);
 end;
 
@@ -2721,7 +2745,7 @@ begin
     Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     while FileHeader.RemoveElement('ONAM') <> nil do
       ;
-    if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+    if Supports(FileHeader.ElementByName['Master 文件'], IwbContainerElementRef, MasterFiles) then
       for i := 0 to Pred(MasterFiles.ElementCount) do begin
         if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
 
@@ -2834,7 +2858,7 @@ begin
     Assert(flLoadFinished);
 
     if (Length(flRecords) < 1) or not FindFormID(aRecord.FormID, i) then
-      raise Exception.Create('无法从文件 '+GetName+' 中移除 FormID ['+IntToHex64(aRecord.FormID, 8)+']：FormID 未注册');
+      raise Exception.Create('无法从文件 '+GetName+' 中移除表单序号 ['+IntToHex64(aRecord.FormID, 8)+']：表单序号未注册');
 
     flRecords[i] := nil;
     if i < High(flRecords) then begin
@@ -2890,7 +2914,7 @@ begin
   if fsOnlyHeader in flStates then
     Exit;
 
-  MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+  MasterFiles := Header.ElementByName['Master 文件'] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
@@ -2908,7 +2932,7 @@ begin
     SetLength(flRecords, StrToInt(HEDR.Elements[1].Value));
   end;
 
-  flProgress('Header 已处理。预期 ' + IntToStr(Length(flRecords)) + ' 个记录');
+  flProgress('文件头已处理。预期 ' + IntToStr(Length(flRecords)) + ' 个记录');
 
   while Cardinal(CurrentPtr) < Cardinal(flEndPtr) do begin
     Rec := TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
@@ -2918,17 +2942,17 @@ begin
   if flRecordsCount < Length(flRecords) then
     SetLength(flRecords, flRecordsCount);
 
-  flProgress('正在创建 FormID 索引');
+  flProgress('正在创建表单序号索引');
   if flRecordsCount < Length(flRecords) then
     SetLength(flRecords, flRecordsCount);
   SortRecords;
-  flProgress('FormID 索引已创建');
+  flProgress('表单序号索引已创建');
 
-  flProgress('正在创建 EditorID 索引');
+  flProgress('正在创建编辑器标识索引');
   if flRecordsByEditorIDCount < Length(flRecordsByEditorID) then
     SetLength(flRecordsByEditorID, flRecordsByEditorIDCount);
   SortRecordsByEditorID;
-  flProgress('EditorID 索引已创建');
+  flProgress('编辑器标识索引已创建');
 
   if wbGameMode in [gmFNV, gmTES5] then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
@@ -3075,7 +3099,7 @@ begin
     raise Exception.CreateFmt('读取文件 "%s" 遇到非预期的错误', [flFileName]);
 
   if Length(flMasters) > 1 then begin
-    MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+    MasterFiles := Header.ElementByName['Master 文件'] as IwbContainerElementRef;
     Assert(Assigned(MasterFiles));
     Assert(MasterFiles.ElementCount = Length(flMasters));
     OldList := TStringList.Create;
@@ -3413,6 +3437,14 @@ begin
           Exit;
       end;
   end;
+end;
+
+function TwbContainer.CanChangeElementMember(const aElement: IwbElement): Boolean;
+var
+  SubRecordArrayDef : IwbSubRecordArrayDef;
+begin
+  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef) and
+    IsElementEditable(Self);
 end;
 
 function TwbContainer.CanMoveElement: Boolean;
@@ -4110,6 +4142,57 @@ begin
   TwbContainer(Result).cntElementRefs := 1;
 end;
 
+procedure TwbContainer.NextElementMember(const aElement: IwbElement);
+var
+  ElementIndex      : Integer;
+  ElementDef        : IwbRecordMemberDef;
+  Element           : IwbElement;
+  Container         : IwbContainer;
+  SubRecordArrayDef : IwbSubRecordArrayDef;
+  SubRecordUnionDef : IwbSubRecordUnionDef;
+  RecordDef         : IwbRecordDef;
+  i                 : Integer;
+begin
+  if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
+    Exit;
+  if not CanChangeElementMember(aElement) then
+    Exit;
+  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
+    Exit;
+  if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
+    Exit;
+  if Supports(aElement.Container, IwbContainer, Container) then begin
+    for i := 0 to Pred(RecordDef.MemberCount) do
+      if RecordDef.Members[i].Name = aElement.Name then
+        break;
+    if i < RecordDef.MemberCount then begin
+      RemoveElement(aElement);
+      ElementIndex := (i + 1) mod RecordDef.MemberCount;
+      ElementDef := RecordDef.Members[ElementIndex];
+
+      case ElementDef.DefType of
+        dtSubRecord:
+          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
+        dtSubRecordArray:
+          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
+        dtSubRecordStruct:
+          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
+      else
+        Assert(False);
+      end;
+
+      if Assigned(Element) and Assigned(aElement) then try
+        Element.Assign(Low(Integer), nil, False);
+        if csAsCreatedEmpty in cntStates then
+          Exclude(cntStates, csAsCreatedEmpty);
+      except
+        Element.Container.RemoveElement(Element);
+        raise;
+      end;
+    end;
+  end;
+end;
+
 procedure TwbContainer.NotifyChanged;
 begin
   if csInitializing in cntStates then
@@ -4133,6 +4216,57 @@ begin
   DoInit;
   for i := High(cntElements) downto Low(cntElements) do
     cntElements[i].PrepareSave;
+end;
+
+procedure TwbContainer.PreviousElementMember(const aElement: IwbElement);
+var
+  ElementIndex      : Integer;
+  ElementDef        : IwbRecordMemberDef;
+  Element           : IwbElement;
+  Container         : IwbContainer;
+  SubRecordArrayDef : IwbSubRecordArrayDef;
+  SubRecordUnionDef : IwbSubRecordUnionDef;
+  RecordDef         : IwbRecordDef;
+  i                 : Integer;
+begin
+  if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
+    Exit;
+  if not CanChangeElementMember(aElement) then
+    Exit;
+  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
+    Exit;
+  if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
+    Exit;
+  if Supports(aElement.Container, IwbContainer, Container) then begin
+    for i := 0 to Pred(RecordDef.MemberCount) do
+      if RecordDef.Members[i].Name = aElement.Name then
+        break;
+    if i < RecordDef.MemberCount then begin
+      RemoveElement(aElement);
+      ElementIndex := (i - 1) mod RecordDef.MemberCount;
+      ElementDef := RecordDef.Members[ElementIndex];
+
+      case ElementDef.DefType of
+        dtSubRecord:
+          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
+        dtSubRecordArray:
+          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
+        dtSubRecordStruct:
+          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
+      else
+        Assert(False);
+      end;
+
+      if Assigned(Element) and Assigned(aElement) then try
+        Element.Assign(Low(Integer), nil, False);
+        if csAsCreatedEmpty in cntStates then
+          Exclude(cntStates, csAsCreatedEmpty);
+      except
+        Element.Container.RemoveElement(Element);
+        raise;
+      end;
+    end;
+  end;
 end;
 
 function TwbContainer.Reached: Boolean;
@@ -4241,7 +4375,7 @@ begin
   end;
 end;
 
-procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -4249,9 +4383,10 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
   inherited;
-  for i := Low(cntElements) to High(cntElements) do
-    if cntElements[i].CanContainFormIDs then
-      cntElements[i].ReportRequiredMasters(aStrings, aAsNew);
+  if Recursive then
+    for i := Low(cntElements) to High(cntElements) do
+      if cntElements[i].CanContainFormIDs then
+        cntElements[i].ReportRequiredMasters(aStrings, aAsNew, Recursive);
 end;
 
 function TwbContainer.RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement;
@@ -4411,7 +4546,8 @@ procedure TwbContainer.SortBySortOrder;
 begin
   SetModified(True);
   if Length(cntElements) > 1 then begin
-    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+//    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+    QuickSort(@cntElements[0], Low(cntElements)+GetAdditionalElementCount, High(cntElements), CompareSortOrder);
     InvalidateStorage;
   end;
 end;
@@ -4493,6 +4629,15 @@ end;
 procedure TwbRecord.InformPrevMainRecord(const aPrevMainRecord: IwbMainRecord);
 begin
   {can be overriden}
+end;
+
+procedure TwbRecord.SortBySortOrder;
+begin
+  SetModified(True);
+  if Length(cntElements) > 1 then begin
+    QuickSort(@cntElements[0], Succ(Low(cntElements)), High(cntElements), CompareSortOrder);
+    InvalidateStorage;
+  end;
 end;
 
 function TwbRecord.GetSignature: TwbSignature;
@@ -5467,9 +5612,9 @@ begin
 
   if FoundError then
     if Assigned(wbProgressCallback) then begin
-      wbProgressCallback('发现错误： ' + GetName);
+      wbProgressCallback('发现错误：' + GetName);
 {$IFDEF DBGSUBREC}
-      wbProgressCallback('已存在子记录： ' + s);
+      wbProgressCallback('已存在子记录：' + s);
 {$ENDIF}
     end;
 
@@ -5811,7 +5956,7 @@ begin
       (GetSignature = 'PBAR') or {>>> Skyrim <<<}
       (GetSignature = 'PHZD')    {>>> Skyrim <<<}
     then begin
-        if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
+        if Supports(GetElementByName('地图标记'), IwbContainerElementRef, MapMarker) then
           Rec := MapMarker.RecordBySignature['FULL']
         else
           Rec := GetRecordBySignature('NAME');
@@ -5825,7 +5970,7 @@ begin
             (GridCoords.ElementCount >= 2) then
               Result := '<' + StrRight(GridCoords.Elements[0].Value,3) + ', ' + StrRight(GridCoords.Elements[1].Value,3) + '>';
     end else if (GetSignature = 'INFO') then begin
-        Result := GetElementValue('Responses\Response\NAM1');
+        Result := GetElementValue('回复\回复\NAM1');
     end;
 end;
 
@@ -5851,7 +5996,7 @@ begin
       (GetSignature = 'PBAR') or {>>> Skyrim <<<}
       (GetSignature = 'PHZD')    {>>> Skyrim <<<}
       then begin
-        if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
+        if Supports(GetElementByName('地图标记'), IwbContainerElementRef, MapMarker) then
           Rec := MapMarker.RecordBySignature['FULL']
         else
           Rec := GetRecordBySignature('NAME');
@@ -5876,7 +6021,7 @@ begin
 
   if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
     if csInit in cntStates then begin
-      Result := '<EditorID 当前不可用：初始化还在处理>';
+      Result := '<编辑器标识当前不可用：初始化还在处理>';
       Exit;
     end;
     Include(mrStates, mrsQuickInit);
@@ -6035,7 +6180,7 @@ begin
       Include(mrStates, mrsHasMesh);
     end else begin
       SelfRef := Self as IwbContainerElementRef;
-      if Supports(GetElementByName('Model'), IwbContainerElementRef, ModelCnt) then
+      if Supports(GetElementByName('模型'), IwbContainerElementRef, ModelCnt) then
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
           s := Trim(StringReplace(MODL.Value, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
@@ -6060,7 +6205,7 @@ begin
     Include(mrStates, mrsHasVWDMeshChecked);
     if GetSignature = 'TREE' then begin
       SelfRef := Self as IwbContainerElementRef;
-      if Supports(GetElementByName('Model'), IwbContainerElementRef, ModelCnt) then
+      if Supports(GetElementByName('模型'), IwbContainerElementRef, ModelCnt) then
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
           s := Trim(StringReplace(MODL.Value, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
@@ -6071,7 +6216,7 @@ begin
         end;
     end else begin
       SelfRef := Self as IwbContainerElementRef;
-      if Supports(GetElementByName('Model'), IwbContainerElementRef, ModelCnt) then
+      if Supports(GetElementByName('模型'), IwbContainerElementRef, ModelCnt) then
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
           s := Trim(StringReplace(MODL.Value, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
@@ -6254,7 +6399,7 @@ begin
       _Master := _File.Masters[FileID];
 
     if _Master.LoadOrder < 0 then
-      raise Exception.CreateFmt('位于文件 %s 的记录 FormID [%s] 引用的 Master 文件 %s 当前未定义全局加载顺序', [
+      raise Exception.CreateFmt('位于文件 %s 的记录表单序号[%s] 引用的 Master 文件 %s 当前未定义全局加载顺序', [
         _File.FileName,
 		IntToHex64(Result, 8),
         _Master.FileName
@@ -6988,12 +7133,12 @@ var
 begin
   if GetSignature = HeaderSignature then begin
     if not Supports(GetContainer, IwbFile, _File) then
-      raise Exception.Create('文件 Header 记录 '+GetName+' 必须直接包含在文件中。');
+      raise Exception.Create('文件头记录 '+GetName+' 必须直接包含在文件中。');
     if GetFormID <> 0 then
-      raise Exception.Create('文件 Header 记录 '+GetName+' 不能含有 FormID。');
+      raise Exception.Create('文件头记录 '+GetName+' 不能含有表单序号。');
   end else begin
     if GetFormID = 0 then
-      raise Exception.Create('记录 '+GetName+' 必须含有 FormID。');
+      raise Exception.Create('记录 '+GetName+' 必须含有表单序号。');
     if not Supports(GetContainer, IwbGroupRecord, GroupRecord) then
       raise Exception.Create('记录 '+GetName+' 不存在于群组之中。');
     case GroupRecord.GroupType of
@@ -7243,7 +7388,7 @@ begin
   Result := False;
   if GetReferencesInjected then begin
     if GetSignature = 'SCPT' then begin
-      Element := GetElementByName('References');
+      Element := GetElementByName('衍生');
       if Assigned(Element) then
         Element.Remove;
       Element := GetRecordBySignature('SCDA');
@@ -7316,7 +7461,7 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   _File: IwbFile;
 begin
@@ -7461,7 +7606,7 @@ begin
     SetLoadOrderFormID(StrToInt64('$'+aValue));
     NotifyChanged;
   end else
-    raise Exception.Create('FormID 仅当 wbDisplayLoadOrderFormID 开启时才可编辑');
+    raise Exception.Create('表单序号仅当 wbDisplayLoadOrderFormID 开启时才可编辑');
 end;
 
 procedure TwbMainRecord.SetIsCompressed(aValue: Boolean);
@@ -7625,7 +7770,7 @@ begin
   end;
 
   if NewFileID < 0 then
-    raise Exception.Create('FormID ['+IntToHex64(aFormID, 8)+'] 属于一个不再出现在 ' + _File.Name + ' 的 Master 。');
+    raise Exception.Create('表单序号 ['+IntToHex64(aFormID, 8)+'] 属于一个不再出现在 ' + _File.Name + ' 的 Master 。');
 
   aFormID := (aFormID and $00FFFFFF) or (Cardinal(NewFileID) shl 24);
 
@@ -7645,7 +7790,7 @@ begin
 
   Master := _File.RecordByFormID[aFormID, False];
   if Assigned(Master) and ((Master._File as IwbFileInternal) = _File) then
-    raise Exception.Create('FormID ['+IntToHex64(aFormID, 8)+'] 已存在于文件 ' + _File.Name);
+    raise Exception.Create('表单序号 ['+IntToHex64(aFormID, 8)+'] 已存在于文件 ' + _File.Name);
 
   _File.RemoveMainRecord(Self);
 
@@ -7694,7 +7839,7 @@ begin
     SetLoadOrderFormID(aValue);
     NotifyChanged;
   end else
-    raise Exception.Create('FormID 仅当 wbDisplayLoadOrderFormID 开启时才可编辑');
+    raise Exception.Create('表单序号仅当 wbDisplayLoadOrderFormID 开启时才可编辑');
 end;
 
 procedure TwbMainRecord.SetNextEntry(const aEntry: IwbMainRecordEntry);
@@ -8743,7 +8888,7 @@ begin
     end;
 
   if Assigned(dcDataEndPtr) and Assigned(BasePtr) and (BasePtr <> dcDataEndPtr) then begin
-    HasUnusedData := not SameText(ValueDef.Name, 'Unused');
+    HasUnusedData := not SameText(ValueDef.Name, '未使用');
     if HasUnusedData and (ValueDef.DefType = dtString) then begin
       HasUnusedData := False;
       while Cardinal(BasePtr) < Cardinal(dcDataEndPtr) do begin
@@ -9402,7 +9547,7 @@ begin
   MainRecord := _File.RecordByFormID[FormID, True];
   if Assigned(MainRecord) then begin
     if _File.Equals(MainRecord._File) then
-      raise Exception.Create('FormID ['+IntToHex64(FormID, 8)+'] 已经在文件 "'+_File.Name+'" 中定义。');
+      raise Exception.Create('表单序号 ['+IntToHex64(FormID, 8)+']已经在文件 "'+_File.Name+'" 中定义。');
 
     IsInjected := (FormID shr 24) = Cardinal(_File.MasterCount);
 
@@ -10759,6 +10904,15 @@ begin
     Result := False;
 end;
 
+function TwbElement.CanChangeMember: Boolean;
+var
+  ContainerInternal : IwbContainerInternal;
+begin
+  Result := Assigned(eContainer) and
+    Supports(IwbContainer(eContainer), IwbContainerInternal, ContainerInternal) and
+    ContainerInternal.CanChangeElementMember(Self);
+end;
+
 function TwbElement.CanContainFormIDs: Boolean;
 begin
   Result := True;
@@ -10897,6 +11051,11 @@ begin
   Assert(FRefCount = 1);
   Assert(eExternalRefs = 1);
   inherited;
+end;
+
+function TwbElement.GetBaseName: string;
+begin
+  Result := GetName;
 end;
 
 function TwbElement.GetCheck: string;
@@ -11337,6 +11496,13 @@ begin
   TwbElement(Result).eExternalRefs := 1;
 end;
 
+procedure TwbElement.NextMember;
+begin
+  if not CanChangeMember then
+    Exit;
+  (IwbContainer(eContainer) as IwbContainerInternal).NextElementMember(Self);
+end;
+
 procedure TwbElement.NotifyChanged;
 begin
   if Assigned(eContainer) then
@@ -11346,6 +11512,13 @@ end;
 procedure TwbElement.PrepareSave;
 begin
   {can be overriden}
+end;
+
+procedure TwbElement.PreviousMember;
+begin
+  if not CanChangeMember then
+    Exit;
+  (IwbContainer(eContainer) as IwbContainerInternal).PreviousElementMember(Self);
 end;
 
 function TwbElement.Reached: Boolean;
@@ -11388,7 +11561,7 @@ begin
   end;
 end;
 
-procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean);
+procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
 var
   Element       : IwbElement;
   ReferenceFile : IwbFile;
@@ -11449,6 +11622,14 @@ end;
 procedure TwbElement.SetEditValue(const aValue: string);
 begin
   raise Exception.Create(GetName + ' 无法编辑。');
+end;
+
+procedure TwbElement.SetElementState(aState: TwbElementState; Clear: Boolean);
+begin
+  if Clear then
+    Exclude(eStates, aState)
+  else
+    Include(eStates, aState);
 end;
 
 procedure TwbElement.SetInternalModified(aValue: Boolean);
@@ -12241,7 +12422,7 @@ begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit;
 
-    if Supports(GetElementByName('References'), IwbContainerElementRef, Container) then
+    if Supports(GetElementByName('衍生'), IwbContainerElementRef, Container) then
       for i := 0 to Pred(Container.ElementCount) do begin
         Result := Container.Elements[i].ReferencesInjected;
         if Result then
@@ -12282,6 +12463,9 @@ var
 begin
   ArrayDef := aValueDef as IwbArrayDef;
   Result := wbSortSubRecords and ArrayDef.Sorted;
+  if not ArrayDef.CanAddTo then
+    aContainer.SetElementState(esNotSuitableToAddTo);
+
   SizePrefix := 0;
 
   i := 0;
@@ -12660,15 +12844,14 @@ end;
 
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer);
 var
-  StructDef: IwbStructDef;
-
-  i          : Integer;
-  ValueDef   : IwbValueDef;
-
-  Element    : IwbElementInternal;
-
-  IntegerDef : IwbIntegerDef;
-  OptionalFromElement: Integer;
+  StructDef           : IwbStructDef;
+  i                   : Integer;
+  ValueDef            : IwbValueDef;
+  Element             : IwbElementInternal;
+  IntegerDef          : IwbIntegerDef;
+  OptionalFromElement : Integer;
+  Size                : Integer;
+  over                : Boolean;
 begin
   StructDef := aValueDef as IwbStructDef;
 
@@ -12678,16 +12861,21 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
-    if Assigned(aBasePtr) and (i >= OptionalFromElement) and
-       ( (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) or
-           ((ValueDef.Size[aBasePtr, aEndPtr, aContainer]<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
-           (Cardinal(aBasePtr) + ValueDef.Size[aBasePtr, aEndPtr, aContainer] > Cardinal(aEndPtr))) ) then begin
-      aEndPtr := aBasePtr;
-      ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
-      if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
-        ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
-      else
-        ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
+    if Assigned(aBasePtr) and (i >= OptionalFromElement) then begin
+      over := (Cardinal(aBasePtr) >= Cardinal(aEndPtr));
+      if not over then begin
+        Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
+        over := (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
+                ((Cardinal(aBasePtr) + Size) > Cardinal(aEndPtr));
+      end;
+      if over then begin
+        aEndPtr := aBasePtr;
+        ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
+        if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
+          ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
+        else
+          ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
+      end;
     end;
 
     case ValueDef.DefType of
@@ -12698,7 +12886,7 @@ begin
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
 
-    if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
+    if wbHideUnused and not wbEditAllowed and (Element.GetName = '未使用') then begin
       with aContainer do begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
@@ -12767,7 +12955,7 @@ begin
   end;
 
   if Assigned(Element) then
-    if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
+    if wbHideUnused and not wbEditAllowed and (Element.GetName = '未使用') then begin
       with aContainer do begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
@@ -12911,7 +13099,7 @@ begin
             for i := 0 to Pred(FlagsDef.FlagCount) do
               if (j and (Cardinal(1) shl i)) <> 0 then begin
                 t := FlagsDef.Flags[i];
-                if (t <> '') and (not wbHideUnused or not SameText(t,'Unused')) then
+                if (t <> '') and (not wbHideUnused or not SameText(t,'未使用')) then
                   Element := TwbFlag.Create(aContainer, aBasePtr, aEndPtr, IntegerDef, FlagsDef, i);
                 j := j and not (Cardinal(1) shl i);
                 if j = 0 then
@@ -12929,30 +13117,31 @@ begin
     t := ValueDef.Name;
     if t = '' then
       t := aContainer.Def.Name;
-    if SameText(t, 'Unknown') then for i := 0 to 3 do begin
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
-      BasePtr := Pointer( Cardinal(aBasePtr) + i );
-      Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
-    end;
+    if SameText(t, '未知') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) then
+      for i := 0 to 3 do begin
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU8', wbInteger('AsU8', itU8)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS8', wbInteger('AsS8', itS8)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU16', wbInteger('AsU16', itU16)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS16', wbInteger('AsS16', itS16)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU32', wbInteger('AsU32', itU32)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS32', wbInteger('AsS32', itS32)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsS64', wbInteger('AsS64', itS64)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFormID', wbInteger('AsFormID', itU32, wbFormID)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsChar4', wbInteger('AsChar4', itU32, wbChar4)), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
+        BasePtr := Pointer( Cardinal(aBasePtr) + i );
+        Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
+      end;
   end;
 
   i := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
@@ -13064,7 +13253,7 @@ begin
      for i := 0 to 63 do
        if (j and (Int64(1) shl i)) <> 0 then
          if (i >= FlagCount) or (Flags[i] = '') then
-           Result := Result + '<Unknown: '+IntToStr(i)+'>, ';
+           Result := Result + '<未知: '+IntToStr(i)+'>, ';
    end;
    SetLength(Result, Length(Result) - 2);
  end else}
@@ -13878,6 +14067,11 @@ begin
   Result := True;
 end;
 
+function TwbValueBase.GetBaseName: string;
+begin
+  Result := vbValueDef.Name;
+end;
+
 function TwbValueBase.GetCheck: string;
 var
   SelfRef : IwbContainerElementRef;
@@ -14552,9 +14746,9 @@ const
   DIAL : TwbSignature = 'DIAL';
 
 initialization
-  wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);
-  wbContainedInDef[6] := wbFormIDCk('Cell', [CELL], False, cpNormal, True);
-  wbContainedInDef[7] := wbFormIDCk('Topic', [DIAL], False, cpNormal, True);
+  wbContainedInDef[1] := wbFormIDCk('世界空间', [WRLD], False, cpNormal, True);
+  wbContainedInDef[6] := wbFormIDCk('场景', [CELL], False, cpNormal, True);
+  wbContainedInDef[7] := wbFormIDCk('话题', [DIAL], False, cpNormal, True);
 
   SubRecordOrderList := TStringList.Create;
   SubRecordOrderList.Sorted := True;

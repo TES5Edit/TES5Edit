@@ -140,7 +140,7 @@
     Top = 377
     Width = 154
     Height = 17
-    Caption = 'EditorID 包含'
+    Caption = '编辑器标识包含'
     TabOrder = 13
   end
   object cbByName: TCheckBox
@@ -276,7 +276,7 @@
     Top = 496
     Width = 234
     Height = 17
-    Caption = '基本记录 EditorID 包含'
+    Caption = '基本记录编辑器标识包含'
     TabOrder = 29
   end
   object edBaseEditorID: TEdit
@@ -338,7 +338,7 @@
     Top = 613
     Width = 277
     Height = 17
-    Caption = '分配 Persistent Worldspace Children 到 Cells'
+    Caption = '分配 Persistent Worldspace Children 到 Cell'
     TabOrder = 37
   end
   object cbScaledActors: TCheckBox
@@ -354,7 +354,7 @@
     Top = 319
     Width = 145
     Height = 17
-    Caption = 'deleted'
+    Caption = '已删除'
     TabOrder = 39
   end
   object pmuSelection: TPopupMenu

@@ -11,63 +11,14 @@
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
+  OnKeyDown = FormKeyDown
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Editor: TJvHLEditor
-    Left = 0
-    Top = 33
-    Width = 682
-    Height = 340
-    Cursor = crIBeam
-    BorderStyle = bsNone
-    RightMarginVisible = False
-    Completion.ItemHeight = 13
-    Completion.CRLF = '/n'
-    Completion.Separator = '='
-    TabStops = '3 5'
-    SmartTab = False
-    BracketHighlighting.WordPairs.Strings = (
-      'begin end')
-    BracketHighlighting.StringEscape = #39#39
-    OnCaretChanged = EditorCaretChanged
-    Align = alClient
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Courier New'
-    Font.Style = []
-    Colors.Comment.Style = [fsItalic]
-    Colors.Comment.ForeColor = clGreen
-    Colors.Comment.BackColor = clWindow
-    Colors.Number.ForeColor = clNavy
-    Colors.Number.BackColor = clWindow
-    Colors.Strings.ForeColor = clBlue
-    Colors.Strings.BackColor = clWindow
-    Colors.Symbol.ForeColor = clBlue
-    Colors.Symbol.BackColor = clWindow
-    Colors.Reserved.Style = [fsBold]
-    Colors.Reserved.ForeColor = clBlack
-    Colors.Reserved.BackColor = clWindow
-    Colors.Identifier.ForeColor = clBlack
-    Colors.Identifier.BackColor = clWindow
-    Colors.Preproc.ForeColor = clGreen
-    Colors.Preproc.BackColor = clWindow
-    Colors.FunctionCall.ForeColor = clWindowText
-    Colors.FunctionCall.BackColor = clWindow
-    Colors.Declaration.ForeColor = clWindowText
-    Colors.Declaration.BackColor = clWindow
-    Colors.Statement.Style = [fsBold]
-    Colors.Statement.ForeColor = clWindowText
-    Colors.Statement.BackColor = clWindow
-    Colors.PlainText.ForeColor = clWindowText
-    Colors.PlainText.BackColor = clWindow
-    ExplicitWidth = 681
-    ExplicitHeight = 350
-  end
   object pnlTop: TPanel
     Left = 0
     Top = 0
@@ -75,8 +26,7 @@
     Height = 33
     Align = alTop
     BevelOuter = bvNone
-    TabOrder = 1
-    ExplicitWidth = 681
+    TabOrder = 0
     DesignSize = (
       682
       33)
@@ -116,9 +66,7 @@
     Height = 35
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 2
-    ExplicitTop = 404
-    ExplicitWidth = 681
+    TabOrder = 1
     DesignSize = (
       682
       35)
@@ -150,9 +98,7 @@
     Height = 21
     Align = alBottom
     BevelOuter = bvLowered
-    TabOrder = 3
-    ExplicitTop = 383
-    ExplicitWidth = 681
+    TabOrder = 2
     object lblPosition: TLabel
       Left = 8
       Top = 4
@@ -160,6 +106,25 @@
       Height = 13
       AutoSize = False
     end
+  end
+  object Editor: TMemo
+    Left = 0
+    Top = 33
+    Width = 682
+    Height = 340
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Style = []
+    ParentFont = False
+    ScrollBars = ssBoth
+    TabOrder = 3
+    WantTabs = True
+    WordWrap = False
+    OnKeyUp = EditorKeyUp
+    OnMouseUp = EditorMouseUp
   end
   object dlgSave: TSaveDialog
     DefaultExt = 'pas'

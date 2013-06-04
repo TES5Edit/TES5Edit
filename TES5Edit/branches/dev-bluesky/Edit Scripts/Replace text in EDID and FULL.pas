@@ -1,5 +1,5 @@
-{
-  Replace StrSearch with StrReplace in EDID and FULL subrecords
+﻿{
+  替换 EDID 和 FULL 中的字符，将 StrSearch 替换为 StrReplace 。
 }
 unit UserScript;
 
@@ -26,15 +26,13 @@ begin
 
   if not SameText(s, GetEditValue(e)) then begin
     Inc(ReplaceCount);
-    AddMessage('Replacing in ' + FullPath(e));
+    AddMessage('正在 ' + FullPath(e) +' 替换。');
     SetEditValue(e, s);
   end;
 
 end;
 
 function Process(e: IInterface): integer;
-var
-  EditorID: IInterface;
 begin
   SearchAndReplace(ElementBySignature(e, 'EDID'), StrSearch, StrReplace);
   SearchAndReplace(ElementBySignature(e, 'FULL'), StrSearch, StrReplace);
@@ -42,7 +40,7 @@ end;
 
 function Finalize: integer;
 begin
-  AddMessage(Format('Replaced %d occurences.', [ReplaceCount]));
+  AddMessage(Format('已替换 %d 项。', [ReplaceCount]));
 end;
 
 end.

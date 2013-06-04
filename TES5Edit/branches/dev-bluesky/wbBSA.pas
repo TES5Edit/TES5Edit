@@ -39,6 +39,14 @@ implementation
 uses
   zlibEx;
 
+const
+  { https://github.com/Ethatron/bsaopt/blob/master/io/bsa.C }
+  BSAHEADER_VERSION_OB = $67; // Oblivion
+  BSAHEADER_VERSION_SK = $68; // Fallout3, Skyrim
+  BSAARCHIVE_COMPRESSFILES = $0004; // Whether the files are compressed in archive (invert file's compression flag)
+  BSAARCHIVE_PREFIXFULLFILENAMES = $0100; // Whether the name is prefixed to the data?
+  BSAFILE_COMPRESS = $40000000; // Whether the file is compressed
+
 type
   TwbContainerHandler = class(TInterfacedObject, IwbContainerHandler)
   private
@@ -54,6 +62,7 @@ type
     function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
+    procedure ResourceList(const aContainerName: string; aList: TStrings);
     procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
   end;
 
@@ -93,6 +102,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
+    procedure ResourceList(const aList: TStrings);
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBSAFile---}
@@ -129,6 +139,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
+    procedure ResourceList(const aList: TStrings);
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbFolder---}
@@ -222,6 +233,17 @@ begin
     end;
 end;
 
+procedure TwbContainerHandler.ResourceList(const aContainerName: string; aList: TStrings);
+var
+  i: Integer;
+begin
+  for i := Low(chContainers) to High(chContainers) do
+    if SameText(chContainers[i].Name, aContainerName) then begin
+      chContainers[i].ResourceList(aList);
+      Break;
+    end;
+end;
+
 procedure TwbContainerHandler.ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
 var
   aDir: string;
@@ -231,7 +253,7 @@ begin
   if aPathOut = '' then
     raise Exception.Create('目标路径未定义');
 
-  res := wbContainerHandler.OpenResource(aFileName);
+  res := OpenResource(aFileName);
 
   if Length(res) = 0 then
     raise Exception.Create('资源不存在');
@@ -246,8 +268,9 @@ begin
       raise Exception.Create('无法创建目标路径 ' + aDir);
 
   // exception handled outside
-  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do begin
+  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
     WriteBuffer(aData[0], length(aData));
+  finally
     Free;
   end;
 end;
@@ -278,12 +301,14 @@ var
   IsCompressed : Boolean;
   Buffer       : TBytes;
 begin
-  IsCompressed := (aSize and (1 shl 30)) <> 0;
+  IsCompressed := (aSize and BSAFILE_COMPRESS) <> 0;
   if IsCompressed then
-    aSize := aSize and not (1 shl 30);
-  if (bfFlags and $04) <> 0 then
+    aSize := aSize and not BSAFILE_COMPRESS;
+  if (bfFlags and BSAARCHIVE_COMPRESSFILES) <> 0 then
     IsCompressed := not IsCompressed;
   bfStream.Position := aOffset;
+  if (bfVersion = BSAHEADER_VERSION_SK) and ((bfFlags and BSAARCHIVE_PREFIXFULLFILENAMES) <> 0) then
+    aSize := aSize - Length(bfStream.ReadStringLen);
   if IsCompressed then begin
     SetLength(Result, bfStream.ReadCardinal);
     if (Length(Result) > 0) and (aSize > 4) then begin
@@ -337,6 +362,17 @@ begin
     Result := bfFolders[Integer(bfFolderMap.Objects[i])].Map.IndexOf(lName) <> -1;
 end;
 
+procedure TwbBSAFile.ResourceList(const aList: TStrings);
+var
+  i, j: Integer;
+begin
+  if not Assigned(aList) then
+    Exit;
+  for i := Low(bfFolders) to High(bfFolders) do with bfFolders[i] do
+    for j := Low(Files) to High(Files) do
+      aList.Add(Name + '\' + Files[j].Name);
+end;
+
 procedure TwbBSAFile.ReadDirectory;
 var
   i, j   : Integer;
@@ -349,11 +385,11 @@ begin
   if bfStream.ReadSignature <> 'BSA' then
     raise Exception.Create(bfFileName + ' 不是有效的 BSA 文件');
   bfVersion := bfStream.ReadCardinal;
-  if not bfVersion in [103, 104] then
+  if not bfVersion in [BSAHEADER_VERSION_OB, BSAHEADER_VERSION_SK] then
     raise Exception.Create(bfFileName + ' 含未知的版本：' + IntToStr(bfVersion) );
   bfOffset := bfStream.ReadCardinal;
   if bfOffset <> $24 then
-    raise Exception.Create(bfFileName + ' 含无法预测的偏差：' + IntToStr(bfOffset) );
+    raise Exception.Create(bfFileName + ' 含非预期的偏差：' + IntToStr(bfOffset) );
   bfFlags := bfStream.ReadCardinal;
   SetLength(bfFolders, bfStream.ReadCardinal);
   {FileCount := } bfStream.ReadCardinal; //skip file count
@@ -375,10 +411,10 @@ begin
       Offset := bfStream.ReadCardinal;
     end;
   end;
-  bfFolderMap := TStringList.Create;
+  bfFolderMap := TwbFastStringList.Create;
   for i := Low(bfFolders) to High(bfFolders) do with bfFolders[i] do begin
     bfFolderMap.AddObject(Name, TObject(i));
-    Map := TStringList.Create;
+    Map := TwbFastStringList.Create;
     for j := Low(Files) to High(Files) do with Files[j] do begin
       Name := bfStream.ReadStringTerm;
       Map.AddObject(Name, TObject(j));
@@ -442,7 +478,7 @@ begin
   ReadBuffer(s[1], Len);
   SetLength(s, Pred(Length(s)));
   Result := s;
-  Result := StringCache[StringCache.Add(Result)];
+  //Result := StringCache[StringCache.Add(Result)];
 end;
 
 function TwbFileStream.ReadStringTerm: string;
@@ -458,7 +494,7 @@ begin
   until s[i] = #0;
   SetLength(s, Pred(i));
   Result := s;
-  Result := StringCache[StringCache.Add(Result)];
+  //Result := StringCache[StringCache.Add(Result)];
 end;
 
 procedure TwbFileStream.WriteCardinal(aCardinal: Cardinal);
@@ -527,6 +563,13 @@ begin
   Result := FileExists(fPath + aFileName);
 end;
 
+procedure TwbFolder.ResourceList(const aList: TStrings);
+begin
+  if not Assigned(aList) then
+    Exit;
+  // TO DO: recursively scan all folders...
+end;
+
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);
 begin
   //...
@@ -563,7 +606,7 @@ begin
 end;
 
 initialization
-  StringCache := TStringList.Create;
+  StringCache := TwbFastStringList.Create;
   StringCache.Sorted := True;
   StringCache.Duplicates := dupIgnore;
 end.

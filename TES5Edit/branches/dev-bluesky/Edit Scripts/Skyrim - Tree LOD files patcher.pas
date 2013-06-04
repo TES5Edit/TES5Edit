@@ -1,4 +1,4 @@
-{
+﻿{
   Correct position of LOD objects for trees (BTT files) in cells over -32 or 32
 }
 unit UserScript;
@@ -48,8 +48,8 @@ begin
           Exit;
         end else
         begin
-          x := GetElementNativeValues(r, 'DATA\Position\X');
-          y := GetElementNativeValues(r, 'DATA\Position\Y');
+          x := GetElementNativeValues(r, 'DATA\方位\X');
+          y := GetElementNativeValues(r, 'DATA\方位\Y');
         end;
         writer.WriteSingle(x);
         writer.WriteSingle(y);
@@ -137,14 +137,14 @@ begin
     
     btnOk := TButton.Create(frm);
     btnOk.Parent := frm;
-    btnOk.Caption := 'OK';
+    btnOk.Caption := '确定';
     btnOk.ModalResult := mrOk;
     btnOk.Left := 200;
     btnOk.Top := 220;
     
     btnCancel := TButton.Create(frm);
     btnCancel.Parent := frm;
-    btnCancel.Caption := 'Cancel';
+    btnCancel.Caption := '取消';
     btnCancel.ModalResult := mrCancel;
     btnCancel.Left := btnOk.Left + btnOk.Width + 16;
     btnCancel.Top := 220;

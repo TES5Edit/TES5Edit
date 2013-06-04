@@ -1,4 +1,4 @@
-{*******************************************************************************
+﻿{*******************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -375,21 +375,21 @@ begin
   case aType of
     ctToStr: begin
       case aInt and $F0 of
-        $00 : Result := 'Equal to';
-        $20 : Result := 'Not equal to';
-        $40 : Result := 'Greater than';
-        $60 : Result := 'Greater than or equal to';
-        $80 : Result := 'Less than';
-        $A0 : Result := 'Less than or equal to';
+        $00 : Result := '等于';
+        $20 : Result := '不等于';
+        $40 : Result := '大于';
+        $60 : Result := '大于或等于';
+        $80 : Result := '小于';
+        $A0 : Result := '小于或等于';
       else
-        Result := '<Unknown Compare operator>'
+        Result := '<未知的比较操作符>'
       end;
 
       if not Assigned(wbCtdaTypeFlags) then
         wbCtdaTypeFlags := wbFlags([
-          {0x01} 'Or',
+          {0x01} '或',
           {0x02} 'Run on target',
-          {0x04} 'Use global'
+          {0x04} '使用全局'
         ]);
 
       s := wbCtdaTypeFlags.ToString(aInt and $0F, aElement);
@@ -405,14 +405,14 @@ begin
       case aInt and $F0 of
         $00, $20, $40, $60, $80, $A0 : Result := '';
       else
-        Result := '<Unknown Compare operator>'
+        Result := '<未知的比较操作符>'
       end;
 
       if not Assigned(wbCtdaTypeFlags) then
         wbCtdaTypeFlags := wbFlags([
-          {0x01} 'Or',
+          {0x01} '或',
           {0x02} 'Run on target',
-          {0x04} 'Use global'
+          {0x04} '使用全局'
         ]);
 
       s := wbCtdaTypeFlags.Check(aInt and $0F, aElement);
@@ -431,13 +431,13 @@ begin
       case aInt and not $80 of
         0: Result := 'Lower Body';
         1: Result := 'Left Arm';
-        2: Result := 'Left Hand';
+        2: Result := '左手';
         3: Result := 'Right Arm';
         4: Result := 'Special Idle';
         5: Result := 'Whole Body';
         6: Result := 'Upper Body';
       else
-        Result := '<Unknown: '+IntToStr(aInt and not $80)+'>';
+        Result := '<未知: '+IntToStr(aInt and not $80)+'>';
       end;
 
       if (aInt and $80) = 0 then
@@ -450,7 +450,7 @@ begin
       case aInt and not $80 of
         0..6: Result := '';
       else
-        Result := '<Unknown: '+IntToStr(aInt and not $80)+'>';
+        Result := '<未知: '+IntToStr(aInt and not $80)+'>';
       end;
     end;
   end;
@@ -489,7 +489,7 @@ begin
     Result := IntToHex64(aInt, 4)
   else if aType = ctToStr then
     if aInt = $FFFF then
-      Result := 'None'
+      Result := '无'
     else
       Result := IntToStr(aInt);
 end;
@@ -501,7 +501,7 @@ begin
     Result := IntToHex64(aInt div 17, 2) + IntToHex64(aInt mod 17, 2)
   else if aType = ctCheck then begin
     if (aInt < 0) or (aInt > 288) then
-      Result := '<Out of range: '+IntToStr(aInt)+'>'
+      Result := '<超出范围：'+IntToStr(aInt)+'>'
     else
       Result := '';
   end else if aType = ctToStr then
@@ -514,14 +514,14 @@ begin
   case aType of
     ctToStr: begin
       case aInt and not 192 of
-        0: Result := 'None';
-        1: Result := 'Pleasant';
-        2: Result := 'Cloudy';
-        3: Result := 'Unknown 3';
-        4: Result := 'Rainy';
-        8: Result := 'Snow';
+        0: Result := '无';
+        1: Result := '晴朗';
+        2: Result := '多云';
+        3: Result := '未知 3';
+        4: Result := '下雨';
+        8: Result := '下雪';
       else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
+        Result := '<未知: '+IntToStr(aInt and not 192)+'>';
       end;
     end;
     ctToSortKey: begin
@@ -531,7 +531,7 @@ begin
       case aInt and not 192 of
         0..4, 8: Result := '';
       else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
+        Result := '<未知: '+IntToStr(aInt and not 192)+'>';
       end;
     end;
   end;
@@ -543,11 +543,11 @@ begin
   case aType of
     ctToStr: begin
       case aInt of
-        Ord('s'): Result := 'Short';
-        Ord('l'): Result := 'Long';
-        Ord('f'): Result := 'Float';
+        Ord('s'): Result := '短整数';
+        Ord('l'): Result := '长整数';
+        Ord('f'): Result := '浮点数';
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<未知: '+IntToStr(aInt)+'>';
       end;
     end;
     ctToSortKey: Result := Chr(aInt);
@@ -555,7 +555,7 @@ begin
       case aInt of
         Ord('s'), Ord('l'), Ord('f'): Result := '';
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<未知: '+IntToStr(aInt)+'>';
       end;
     end;
   end;
@@ -573,7 +573,7 @@ begin
   if Assigned(Rec) then begin
     s := Trim(Rec.Value);
     if s <> '' then
-      Result := 'places ' + s;
+      Result := '放置 ' + s;
   end;
 
   Container := aMainRecord.Container;
@@ -585,7 +585,7 @@ begin
     if s <> '' then begin
       if Result <> '' then
         Result := Result + ' ';
-      Result := Result + 'in ' + s;
+      Result := Result + '到 ' + s;
     end;
   end;
 end;
@@ -601,7 +601,7 @@ begin
 
   Rec := aMainRecord.RecordBySignature['XCLC'];
   if Assigned(Rec) then
-      Result := 'at ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
+      Result := '在 ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
 
   Container := aMainRecord.Container;
   while Assigned(Container) and not
@@ -613,7 +613,7 @@ begin
     if s <> '' then begin
       if Result <> '' then
         s := s + ' ';
-      Result := 'in ' + s + Result;
+      Result := '位于 ' + s + Result;
     end;
   end;
 end;
@@ -955,7 +955,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
+  if Integer(Container.ElementByName['类型'].NativeValue) and $04 <> 0 then
     Result := 1;
 end;
 
@@ -1001,7 +1001,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
+  Desc := wbCTDAParamDescFromIndex(Container.ElementByName['函数'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType1));
 end;
@@ -1016,7 +1016,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
+  Desc := wbCTDAParamDescFromIndex(Container.ElementByName['函数'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType2));
 end;
@@ -1032,7 +1032,7 @@ begin
       if Assigned(Desc) then
         Result := Desc.Name
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<未知: '+IntToStr(aInt)+'>';
     end;
     ctToSortKey: Result := IntToHex(aInt, 8);
     ctCheck: begin
@@ -1040,7 +1040,7 @@ begin
       if Assigned(Desc) then
         Result := ''
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<未知: '+IntToStr(aInt)+'>';
     end;
   end;
 end;
@@ -1059,7 +1059,7 @@ begin
       else if aType = ctToEditValue then
         Result := IntToStr(aInt)
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<未知: '+IntToStr(aInt)+'>';
     end;
     ctToSortKey: Result := IntToHex(aInt, 8);
     ctCheck: begin
@@ -1067,7 +1067,7 @@ begin
       if Assigned(Desc) then
         Result := ''
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<未知: '+IntToStr(aInt)+'>';
     end;
     ctEditType:
       Result := 'ComboBox';
@@ -1116,13 +1116,13 @@ var
   s          : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
+    ctToStr: Result := IntToStr(aInt) + ' <警告：无法解析参数 1>';
     ctToEditValue: Result := IntToStr(aInt);
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
-    ctCheck: Result := '<Warning: Could not resolve Parameter 1>';
+    ctCheck: Result := '<警告：无法解析参数 1>';
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
@@ -1131,7 +1131,7 @@ begin
   Container := GetContainerRefFromUnionOrValue(aElement);
   if not Assigned(Container) then Exit;
 
-  Param1 := Container.ElementByName['Parameter #1'];
+  Param1 := Container.ElementByName['参数 #1'];
 
   if not Assigned(Param1) then
     Exit;
@@ -1143,8 +1143,8 @@ begin
       if Supports(Container.Container, IwbContainerElementRef, Container) then
         for i := 0 to Pred(Container.ElementCount) do
           if Supports(Container.Elements[i], IwbContainerElementRef, Container2) then
-            if SameText(Container2.ElementValues['Function'], 'GetIsID') then begin
-              Param1 := Container2.ElementByName['Parameter #1'];
+            if SameText(Container2.ElementValues['函数'], 'GetIsID') then begin
+              Param1 := Container2.ElementByName['参数 #1'];
               if Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
                 Break;
             end;}
@@ -1188,7 +1188,7 @@ begin
     if Supports(Script.ElementByName['Local Variables'], IwbContainerElementRef, LocalVars) then begin
       for i := 0 to Pred(LocalVars.ElementCount) do
         if Supports(LocalVars.Elements[i], IwbContainerElementRef, LocalVar) then begin
-          j := LocalVar.ElementNativeValues['SLSD\Index'];
+          j := LocalVar.ElementNativeValues['SLSD\索引'];
           s := LocalVar.ElementNativeValues['SCVR'];
           if Assigned(Variables) then
             Variables.AddObject(s, TObject(j))
@@ -1240,7 +1240,7 @@ begin
   if not Assigned(Container) then
     raise Exception.Create('Container not assigned');
 
-  Param1 := Container.ElementByName['Parameter #1'];
+  Param1 := Container.ElementByName['参数 #1'];
 
   if not Assigned(Param1) then
     raise Exception.Create('Could not find "Parameter #1"');
@@ -1263,7 +1263,7 @@ begin
   if Supports(Script.ElementByName['Local Variables'], IwbContainerElementRef, LocalVars) then begin
     for i := 0 to Pred(LocalVars.ElementCount) do
       if Supports(LocalVars.Elements[i], IwbContainerElementRef, LocalVar) then begin
-        j := LocalVar.ElementNativeValues['SLSD\Index'];
+        j := LocalVar.ElementNativeValues['SLSD\索引'];
         s := LocalVar.ElementNativeValues['SCVR'];
         if SameText(s, Trim(aString)) then begin
           Result := j;
@@ -1287,13 +1287,13 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
+    ctToStr: Result := IntToStr(aInt) + ' <警告：无法解析参数 1>';
     ctToEditValue: Result := IntToStr(aInt);
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
-    ctCheck: Result := '<Warning: Could not resolve Parameter 1>';
+    ctCheck: Result := '<警告：无法解析参数 1>';
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
@@ -1302,7 +1302,7 @@ begin
   Container := GetContainerRefFromUnionOrValue(aElement);
   if not Assigned(Container) then Exit;
 
-  Param1 := Container.ElementByName['Parameter #1'];
+  Param1 := Container.ElementByName['参数 #1'];
 
   if not Assigned(Param1) then
     Exit;
@@ -1329,11 +1329,11 @@ begin
     EditInfos := nil;
   end;
   try
-    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
+    if Supports(MainRecord.ElementByName['阶段'], IwbContainerElementRef, Stages) then begin
       for i := 0 to Pred(Stages.ElementCount) do
         if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
           j := Stage.ElementNativeValues['INDX'];
-          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
+          s := Trim(Stage.ElementValues['日志记录\日志记录\CNAM']);
           t := IntToStr(j);
           while Length(t) < 3 do
             t := '0' + t;
@@ -1479,15 +1479,15 @@ begin
        SameText(MainRecord.EditorID, 'RSPA') or
        SameText(MainRecord.EditorID, 'RSSH') then begin
 
-         Container.ElementNativeValues['DATA - Data\Flags'] :=
-           Cardinal(Container.ElementNativeValues['DATA - Data\Flags']) or $8;
+         Container.ElementNativeValues['DATA - 数据\标志'] :=
+           Cardinal(Container.ElementNativeValues['DATA - 数据\标志']) or $8;
 
        end;
 
     if SameText(MainRecord.EditorID, 'REAN') then begin
 
-         Container.ElementNativeValues['DATA - Data\Flags'] :=
-           Cardinal(Container.ElementNativeValues['DATA - Data\Flags']) and not $20000;
+         Container.ElementNativeValues['DATA - 数据\标志'] :=
+           Cardinal(Container.ElementNativeValues['DATA - 数据\标志']) and not $20000;
 
        end;
 
@@ -1518,14 +1518,14 @@ begin
     if MainRecord.Signature <> 'MGEF' then
       Exit;
 
-    if (MainRecord.ElementNativeValues['DATA - Data\Flags'] and $01000000) = 0 then
+    if (MainRecord.ElementNativeValues['DATA - 数据\标志'] and $01000000) = 0 then
       Exit;
 
-    ActorValue := MainRecord.ElementNativeValues['DATA - Data\Assoc. Item'];
+    ActorValue := MainRecord.ElementNativeValues['DATA - 数据\关联道具'];
     if VarIsNull(ActorValue) or VarIsClear(ActorValue) then
       Exit;
-    if VarCompareValue(ActorValue, Container.ElementNativeValues['Actor Value']) <> vrEqual then
-      Container.ElementNativeValues['Actor Value'] := ActorValue;
+    if VarCompareValue(ActorValue, Container.ElementNativeValues['角色数值']) <> vrEqual then
+      Container.ElementNativeValues['角色数值'] := ActorValue;
   finally
     wbEndInternalEdit;
   end;
@@ -1566,10 +1566,10 @@ begin
       Exit;
 
     if Container.ElementExists['DATA'] then begin
-      if SameValue(Container.ElementNativeValues['DATA\Falloff Exponent'], 0.0) then
-        Container.ElementNativeValues['DATA\Falloff Exponent'] := 1.0;
-      if SameValue(Container.ElementNativeValues['DATA\FOV'], 0.0) then
-        Container.ElementNativeValues['DATA\FOV'] := 90.0;
+      if SameValue(Container.ElementNativeValues['DATA\衰减指数'], 0.0) then
+        Container.ElementNativeValues['DATA\衰减指数'] := 1.0;
+      if SameValue(Container.ElementNativeValues['DATA\视场'], 0.0) then
+        Container.ElementNativeValues['DATA\视场'] := 90.0;
     end;
   finally
     wbEndInternalEdit;
@@ -1699,7 +1699,7 @@ begin
 
       if Removed then begin
         Point := Points.Elements[i] as IwbContainerElementRef;
-        Point.ElementNativeValues['Connections'] := Connection.ElementCount;
+        Point.ElementNativeValues['连接'] := Connection.ElementCount;
       end;
 
     end;
@@ -1821,7 +1821,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  Result := Container.ElementByName['Type'].NativeValue;
+  Result := Container.ElementByName['类型'].NativeValue;
 end;
 
 function wbCalcPGRRSize(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1842,7 +1842,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  s := Container.ElementByName['Flags'].SortKey[False];
+  s := Container.ElementByName['标志'].SortKey[False];
   if s[17] = '1' then
     Result := 1
   else if s[18] = '1' then
@@ -1881,59 +1881,59 @@ end;
 
 procedure DefineTES4;
 begin
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbRecordFlags := wbInteger('记录标志', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
     {0x00000004}'',
     {0x00000008}'',
     {0x00000010}'',
-    {0x00000020}'Deleted',
-    {0x00000040}'Border Region / Actor Value',
-    {0x00000080}'Turn Off Fire / Actor Value',
+    {0x00000020}'已删除',
+    {0x00000040}'边界地区 / 角色数值',
+    {0x00000080}'关闭火 / 角色数值',
     {0x00000100}'',
-    {0x00000200}'Casts shadows',
-    {0x00000400}'Quest item / Persistent reference / Show in Menu',
-    {0x00000800}'Initially disabled',
-    {0x00001000}'Ignored',
+    {0x00000200}'投射阴影',
+    {0x00000400}'任务物品 / 固定衍生 / 菜单显示',
+    {0x00000800}'初始禁用',
+    {0x00001000}'已忽略',
     {0x00002000}'',
     {0x00004000}'',
-    {0x00008000}'Visible when distant',
+    {0x00008000}'远景可见',
     {0x00010000}'',
-    {0x00020000}'Dangerous / Off limits (Interior cell)',
-    {0x00040000}'Compressed ',
-    {0x00080000}'Can''t wait'
+    {0x00020000}'危险 / 禁止进入 (室内场景)',
+    {0x00040000}'已压缩 ',
+    {0x00080000}'无法等待'
   ]));
 
-  wbMainRecordHeader := wbStruct('Record Header', [
-    wbString('Signature', 4, cpCritical),
-    wbInteger('Data Size', itU32, nil, cpIgnore),
+  wbMainRecordHeader := wbStruct('记录头', [
+    wbString('签名', 4, cpCritical),
+    wbInteger('数据体积', itU32, nil, cpIgnore),
     wbRecordFlags,
-    wbFormID('FormID', cpFormID),
-    wbByteArray('Unknown', 4, cpIgnore)
+    wbFormID('表单序号', cpFormID),
+    wbByteArray('未知', 4, cpIgnore)
   ]);
 
   wbSizeOfMainRecordStruct := 20;
 
   wbIgnoreRecords.Add(XXXX);
 
-  wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
+  wbXRGD := wbByteArray(XRGD, '布娃娃数据');
 
-  wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
+  wbMusicEnum := wbEnum(['默认', '公众场所', '地牢']);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
-  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
-  wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
-  wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
-  wbXSCL := wbFloat(XSCL, 'Scale');
+  wbEDID := wbString(EDID, '编辑器标识', 0, cpNormal); // not cpBenign according to Arthmoor
+  wbFULL := wbString(FULL, '名称', 0, cpTranslate);
+  wbFULLReq := wbString(FULL, '名称', 0, cpNormal, True);
+  wbDESC := wbString(DESC, '描述', 0, cpTranslate);
+  wbXSCL := wbFloat(XSCL, '范围');
 
   wbPosRot :=
-    wbStruct('Position/Rotation', [
-      wbStruct('Position', [
+    wbStruct('方位/角度', [
+      wbStruct('方位', [
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
       ]),
-      wbStruct('Rotation', [
+      wbStruct('角度', [
         wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
@@ -1941,13 +1941,13 @@ begin
     ]);
 
   wbDATAPosRot :=
-    wbStruct(DATA, 'Position/Rotation', [
-      wbStruct('Position', [
+    wbStruct(DATA, '方位/角度', [
+      wbStruct('方位', [
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
       ]),
-      wbStruct('Rotation', [
+      wbStruct('角度', [
         wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
@@ -1955,52 +1955,52 @@ begin
     ], cpNormal, True);
 
   wbMODL :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+    wbRStructSK([0], '模型', [
+      wbString(MODL, '模型'),
       wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-//      wbArray(MODT, 'Unknown',
-//        wbByteArray('Unknown', 24, cpBenign),
+      wbByteArray(MODT, '材质文件哈希值', 0, cpIgnore)
+//      wbArray(MODT, '未知',
+//        wbByteArray('未知', 24, cpBenign),
 //      0, nil, cpBenign)
     ], []);
 
-  wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
+  wbSCRI := wbFormIDCk(SCRI, '脚本', [SCPT]);
   wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);
 
-  wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
-  wbXESP := wbStruct(XESP, 'Enable Parent', [
-    wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR]),
-    wbInteger('Flags', itU8, wbFlags([
-      'Set Enable State to Opposite of Parent'
+  wbXLOD := wbArray(XLOD, '远景细节数据', wbFloat('未知'), 3);
+  wbXESP := wbStruct(XESP, '启用根源', [
+    wbFormIDCk('衍生', [PLYR, REFR, ACRE, ACHR]),
+    wbInteger('标志', itU8, wbFlags([
+      '设置父系为相反状态'
     ])),
-    wbByteArray('Unused', 3)
+    wbByteArray('未使用', 3)
   ]);
 
   wbRecord(ACHR, 'Placed NPC', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbRStruct('Unused', [
-      wbFormIDCk(XPCI, 'Unused', [CELL]),
-      wbString(FULL, 'Unused')
+    wbFormIDCk(NAME, '基础', [NPC_], False, cpNormal, True),
+    wbRStruct('未使用', [
+      wbFormIDCk(XPCI, '未使用', [CELL]),
+      wbString(FULL, '未使用')
     ], []),
     wbXLOD,
     wbXESP,
     wbFormIDCk(XMRC, 'Merchant container', [REFR], True),
-    wbFormIDCk(XHRS, 'Horse', [ACRE], True),
+    wbFormIDCk(XHRS, '马', [ACRE], True),
     wbXRGD,
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
-  wbXOWN := wbFormIDCk(XOWN, 'Owner', [FACT, NPC_]);
-  wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
+  wbXOWN := wbFormIDCk(XOWN, '所有者', [FACT, NPC_]);
+  wbXGLB := wbFormIDCk(XGLB, '全局变量', [GLOB]);
 
   wbRecord(ACRE, 'Placed Creature', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
-    wbRStruct('Ownership', [
+    wbFormIDCk(NAME, '基础', [CREA], False, cpNormal, True),
+    wbRStruct('所有权', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
+      wbInteger(XRNK, '派系等级', itS32),
       wbXGLB
     ], []),
     wbXESP,
@@ -2014,87 +2014,87 @@ begin
     wbFULL,
     wbMODL,
     wbSCRI,
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
+    wbFormIDCk(SNAM, '音效', [SOUN])
   ]);
 
-  wbICON := wbString(ICON, 'Icon filename');
+  wbICON := wbString(ICON, '图标');
 
   wbActorValueEnum :=
     wbEnum([
-      'Strength',
-      'Intelligence',
-      'Willpower',
-      'Agility',
-      'Speed',
-      'Endurance',
-      'Personality',
-      'Luck',
-      'Health',
-      'Magicka',
-      'Fatigue',
-      'Encumbrance',
+      '力量',
+      '智力',
+      '意志力',
+      '敏捷',
+      '速度',
+      '耐力',
+      '魅力',
+      '运气',
+      '生命',
+      '法力',
+      '体力',
+      '耐力',
       'Armorer',
       'Athletics',
       'Blade',
-      'Block',
+      '格挡',
       'Blunt',
-      'Hand To Hand',
-      'Heavy Armor',
-      'Alchemy',
-      'Alteration',
-      'Conjuration',
-      'Destruction',
-      'Illusion',
+      '徒手格斗',
+      '重甲',
+      '炼金',
+      '改变系',
+      '召唤系',
+      '毁灭系',
+      '幻术系',
       'Mysticism',
-      'Restoration',
+      '恢复系',
       'Acrobatics',
-      'Light Armor',
-      'Marksman',
+      '轻甲',
+      '箭术',
       'Mercantile',
       'Security',
-      'Sneak',
-      'Speechcraft',
- {33} 'Aggression',
- {34} 'Confidence',
- {35} 'Energy',
- {36} 'Responsibility',
+      '潜行',
+      '口才',
+ {33} '好战',
+ {34} '信心',
+ {35} '活力',
+ {36} '品德',
  {37} 'Bounty',
- {38} 'Fame',
- {39} 'Infamy',
+ {38} '名望',
+ {39} '恶名',
  {40} 'Magicka Multiplier',
- {41} 'Night Eye Bonus',
+ {41} '夜视 Bonus',
  {42} 'Attack Bonus',
  {43} 'Defend Bonus',
  {44} 'Casting Penalty',
- {45} 'Blindness',
+ {45} '失明',
  {46} 'Chameleon',
- {47} 'Invisibility',
- {48} 'Paralysis',
+ {47} '隐形',
+ {48} '麻痹',
  {49} 'Silence',
  {50} 'Confusion',
  {51} 'Detect Item Range',
- {52} 'Spell Absorb Chance',
+ {52} '魔法吸收概率',
  {53} 'Spell Reflect Chance',
- {54} 'Swim Speed Multiplier',
- {55} 'Water Breathing',
- {56} 'Water Walking',
+ {54} '游泳速度加成',
+ {55} '水下呼吸',
+ {56} '水下行走',
  {57} 'Stunted Magicka',
- {58} 'Detect Life Range',
+ {58} '生命检测范围',
  {59} 'Reflect Damage',
- {60} 'Telekinesis',
- {61} 'Resist Fire',
- {62} 'Resist Frost',
- {63} 'Resist Disease',
- {64} 'Resist Magic',
+ {60} '隔空取物',
+ {61} '火焰抵抗',
+ {62} '冰冻抵抗',
+ {63} '疾病抵抗',
+ {64} '魔法抵抗',
  {65} 'Resist Normal Weapons',
  {66} 'Resist Paralysis',
  {67} 'Resist Poison',
- {68} 'Resist Shock',
+ {68} '闪电抵抗',
  {69} 'Vampirism',
  {70} 'Darkness',
  {71} 'Resist Water Damage'
     ], [
-      -1, 'None'
+      -1, '无'
     ]);
 
   wbSkillEnum :=
@@ -2102,26 +2102,26 @@ begin
       'Armorer',
       'Athletics',
       'Blade',
-      'Block',
+      '格挡',
       'Blunt',
-      'Hand To Hand',
-      'Heavy Armor',
-      'Alchemy',
-      'Alteration',
-      'Conjuration',
-      'Destruction',
-      'Illusion',
+      '徒手格斗',
+      '重甲',
+      '炼金',
+      '改变系',
+      '召唤系',
+      '毁灭系',
+      '幻术系',
       'Mysticism',
-      'Restoration',
+      '恢复系',
       'Acrobatics',
-      'Light Armor',
-      'Marksman',
+      '轻甲',
+      '箭术',
       'Mercantile',
       'Security',
-      'Sneak',
-      'Speechcraft'
+      '潜行',
+      '口才'
     ], [
-      -1, 'None'
+      -1, '无'
     ]);
 
 
@@ -2132,20 +2132,20 @@ begin
   wbEFIT :=
     wbStructSK(EFIT, [4, 5], '', [
       wbInteger('Magic effect name', itU32, wbChar4),
-      wbInteger('Magnitude', itU32),
-      wbInteger('Area', itU32),
-      wbInteger('Duration', itU32),
-      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
-      wbInteger('Actor Value', itS32, wbActorValueEnum)
+      wbInteger('量级', itU32),
+      wbInteger('范围', itU32),
+      wbInteger('持续时间', itU32),
+      wbInteger('类型', itU32, wbEnum(['自身', '接触', '目标'])),
+      wbInteger('角色数值', itS32, wbActorValueEnum)
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbEFITOBME :=
     wbStructSK(EFIT, [4, 5], '', [
       wbStringMgefCode('Magic Effect Code', 4),
-      wbInteger('Magnitude', itU32),
-      wbInteger('Area', itU32),
-      wbInteger('Duration', itU32),
-      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
+      wbInteger('量级', itU32),
+      wbInteger('范围', itU32),
+      wbInteger('持续时间', itU32),
+      wbInteger('类型', itU32, wbEnum(['自身', '接触', '目标'])),
       wbUnion('Param #1', wbEFITOBMEParamDecider, [
         wbByteArray('Param #1 - Unknown Type', 4),
         wbFormID('Param #1 - FormID'),
@@ -2157,8 +2157,8 @@ begin
   wbEFIX :=
     wbStructSK(EFIX, [3], '', [
       wbInteger('Override Mask', itU32, wbFlags([])),
-      wbInteger('Flags', itU32, wbFlags([])),
-      wbFloat('Base Cost'),
+      wbInteger('标志', itU32, wbFlags([])),
+      wbFloat('基本消耗'),
       wbUnion('Param #2', wbEFIXParamDecider, [
         wbByteArray('Param #2 - Unknown Type', 4),
         wbFormID('Param #2 - FormID'),
@@ -2169,12 +2169,12 @@ begin
 
   wbMagicSchoolEnum :=
     wbEnum([
-      'Alteration',
-      'Conjuration',
-      'Destruction',
-      'Illusion',
+      '改变系',
+      '召唤系',
+      '毁灭系',
+      '幻术系',
       'Mysticism',
-      'Restoration'
+      '恢复系'
     ]);
 
   wbSCIT :=
@@ -2183,8 +2183,8 @@ begin
         wbFormIDCk('Script effect', [NULL, SCPT]),
         wbInteger('Magic school', itU32, wbMagicSchoolEnum),
         wbInteger('Visual effect name', itU32, wbChar4),
-        wbInteger('Flags', itU8, wbFlags(['Hostile'])),
-        wbByteArray('Unused', 3)
+        wbInteger('标志', itU8, wbFlags(['敌对的'])),
+        wbByteArray('未使用', 3)
       ], cpNormal, True, nil, 1),
       wbFULLReq
     ], []);
@@ -2194,25 +2194,25 @@ begin
       wbStructSK(SCIT, [0], 'Script effect data', [
         wbFormIDCk('Script effect', [NULL, SCPT]),
         wbInteger('Magic school', itU32, wbMagicSchoolEnum),
-        wbStringMgefCode('Visual Effect Code', 4),
-        wbInteger('Flags', itU8, wbFlags(['Hostile'])),
-        wbByteArray('Unused', 3)
+        wbStringMgefCode('视觉效果代码', 4),
+        wbInteger('标志', itU8, wbFlags(['敌对的'])),
+        wbByteArray('未使用', 3)
       ], cpNormal, True, nil, 1),
       wbFULLReq
     ], []);
 
 
-  wbOBMEResolutionInfo := wbEnum(['None', 'FormID', 'Magic Effect Code', 'Actor Value']);
+  wbOBMEResolutionInfo := wbEnum(['无', '表单序号', 'Magic Effect Code', '角色数值']);
 
-  wbEffects := wbRArray('Effects',
-    wbRUnion('Effects', [
-      wbRStruct('Effect', [
+  wbEffects := wbRArray('效果',
+    wbRUnion('效果', [
+      wbRStruct('效果', [
         wbEFID,
         wbEFIT,
         wbSCIT
       ], []),
-      wbRStruct('Effects', [
-        wbRStructs('Effects','Effect', [
+      wbRStruct('效果', [
+        wbRStructs('效果','效果', [
           wbStruct(EFME, 'Oblivion Magic Extender', [
             wbInteger('Record Version', itU8),
             wbStruct('OBME Version', [
@@ -2222,12 +2222,12 @@ begin
             ]),
             wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
             wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
-            wbByteArray('Unused', $0A)
+            wbByteArray('未使用', $0A)
           ]),
           wbEFIDOBME,
           wbEFITOBME,
           wbSCITOBME,
-          wbString(EFII, 'Icon'),
+          wbString(EFII, '图标'),
           wbEFIX
         ], []),
         wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
@@ -2237,16 +2237,16 @@ begin
   );
 
 //  wbEffects :=
-//    wbRUnion('Effects', [
-//      wbRStruct('Effects', [
-//        wbRStructs('Effects','Effect', [
+//    wbRUnion('效果', [
+//      wbRStruct('效果', [
+//        wbRStructs('效果','效果', [
 //          wbEFID,
 //          wbEFIT,
 //          wbSCIT
 //        ], [])
 //      ], []),
-//      wbRStruct('Effects', [
-//        wbRStructs('Effects','Effect', [
+//      wbRStruct('效果', [
+//        wbRStructs('效果','效果', [
 //          wbStruct(EFME, 'Oblivion Magic Extender', [
 //            wbInteger('Record Version', itU8),
 //            wbStruct('OBME Version', [
@@ -2256,12 +2256,12 @@ begin
 //            ]),
 //            wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
 //            wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
-//            wbByteArray('Unused', $0A)
+//            wbByteArray('未使用', $0A)
 //          ]),
 //          wbEFIDOBME,
 //          wbEFITOBME,
 //          wbSCITOBME,
-//          wbString(EFII, 'Icon'),
+//          wbString(EFII, '图标'),
 //          wbEFIX
 //        ], []),
 //        wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
@@ -2278,17 +2278,17 @@ begin
         wbInteger('Minor', itU8),
         wbInteger('Major', itU8)
       ]),
-      wbByteArray('Unused', $1C)
+      wbByteArray('未使用', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
     wbMODL,
     wbICON,
     wbSCRI,
-    wbFloat(DATA, 'Weight', cpNormal, True),
+    wbFloat(DATA, '重量', cpNormal, True),
     wbStruct(ENIT, '', [
-      wbInteger('Value', itS32),
-      wbInteger('Flags', itU8, wbFlags(['No auto-calculation', 'Food item'])),
-      wbByteArray('Unused', 3)
+      wbInteger('价值', itS32),
+      wbInteger('标志', itU8, wbFlags(['不自动计算', '食物'])),
+      wbByteArray('未使用', 3)
     ], cpNormal, True),
     wbEffects
   ]);
@@ -2301,12 +2301,12 @@ begin
     wbFormIDCk(ENAM, 'Enchantment', [ENCH]),
     wbInteger(ANAM, 'Enchantment Points', itU16),
     wbStruct(DATA, '', [
-      wbFloat('Speed'),
-      wbInteger('Flags', itU8, wbFlags(['Ignores Normal Weapon Resistance'])),
-      wbByteArray('Unused', 3),
-      wbInteger('Value', itU32),
-      wbFloat('Weight'),
-      wbInteger('Damage', itU16)
+      wbFloat('速度'),
+      wbInteger('标志', itU8, wbFlags(['无视普通武器抗性'])),
+      wbByteArray('未使用', 3),
+      wbInteger('价值', itU32),
+      wbFloat('重量'),
+      wbInteger('伤害', itU16)
     ], cpNormal, True)
   ]);
 
@@ -2323,10 +2323,10 @@ begin
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum(['Mortar and Pestle', 'Alembic', 'Calcinator', 'Retort'])),
-      wbInteger('Value', itU32),
-      wbFloat('Weight'),
-      wbFloat('Quality')
+      wbInteger('类型', itU8, wbEnum(['Mortar and Pestle', 'Alembic', 'Calcinator', 'Retort'])),
+      wbInteger('价值', itU32),
+      wbFloat('重量'),
+      wbFloat('质量')
     ], cpNormal, True)
   ]);
 
@@ -2338,62 +2338,62 @@ begin
     wbInteger(ANAM, 'Enchantment Points', itU16),
     wbStruct(BMDT, '', [
       wbInteger('Biped Flags', itU16, wbFlags([
-        {0x00000001} 'Head',
-        {0x00000002} 'Hair',
+        {0x00000001} '头部',
+        {0x00000002} '发型',
         {0x00000004} 'Upper Body',
         {0x00000008} 'Lower Body',
         {0x00000010} 'Hand',
         {0x00000020} 'Foot',
         {0x00000040} 'Right Ring',
         {0x00000080} 'Left Ring',
-        {0x00000100} 'Amulet',
-        {0x00000200} 'Weapon',
+        {0x00000100} '项链',
+        {0x00000200} '武器',
         {0x00000400} 'Back Weapon',
         {0x00000800} 'Side Weapon',
         {0x00001000} 'Quiver',
-        {0x00002000} 'Shield',
-        {0x00004000} 'Torch',
-        {0x00008000} 'Tail'
+        {0x00002000} '盾牌',
+        {0x00004000} '火把',
+        {0x00008000} '尾巴'
       ])),
-      wbInteger('General Flags', itU8, wbFlags([
+      wbInteger('一般标志', itU8, wbFlags([
         {0x0001} 'Hide Rings',
         {0x0002} 'Hide Amulets',
         {0x0004} '',
         {0x0008} '',
         {0x0010} '',
         {0x0020} '',
-        {0x0040} 'Non-Playable',
+        {0x0040} '玩家不可用',
         {0x0080} 'Heavy armor'
       ])),
-      wbByteArray('Unused', 1)
+      wbByteArray('未使用', 1)
     ], cpNormal, True),
     wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, '模型'),
       wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MODT, '材质文件哈希值', 0, cpIgnore)
     ], []),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+    wbRStruct('男性世界模型', [
+      wbString(MOD2, '模型'),
       wbFloat(MO2B, 'Bound Radius', cpBenign),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MO2T, '材质文件哈希值', 0, cpIgnore)
     ], []),
     wbString(ICON, 'Male icon filename'),
     wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename'),
+      wbString(MOD3, '模型'),
       wbFloat(MO3B, 'Bound Radius', cpBenign),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MO3T, '材质文件哈希值', 0, cpIgnore)
     ], []),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
+    wbRStruct('女性世界模型', [
+      wbString(MOD4, '模型'),
       wbFloat(MO4B, 'Bound Radius', cpBenign),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MO4T, '材质文件哈希值', 0, cpIgnore)
     ], []),
     wbString(ICO2, 'Female icon filename'),
     wbStruct(DATA, '', [
       wbInteger('Armor', itU16, wbDiv(100)),
-      wbInteger('Value', itU32),
-      wbInteger('Health', itU32),
-      wbFloat('Weight')
+      wbInteger('价值', itU32),
+      wbInteger('生命', itU32),
+      wbFloat('重量')
     ], cpNormal, True)
   ]);
 
@@ -2407,14 +2407,14 @@ begin
     wbInteger(ANAM, 'Enchantment Points', itU16),
     wbDESC,
     wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags(['Scroll', 'Can''t be taken'])),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbInteger('标志', itU8, wbFlags(['卷轴', '无法带走'])),
+      wbInteger('传授', itS8, wbSkillEnum),
+      wbInteger('价值', itU32),
+      wbFloat('重量')
     ], cpNormal, True)
   ], True);
 
-  wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL, LVSP]);
+  wbSPLO := wbFormIDCk(SPLO, '法术', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Spells', wbSPLO);
 
   wbRecord(BSGN, 'Birthsign', [
@@ -2428,54 +2428,54 @@ begin
   wbRecord(CELL, 'Cell', [
     wbEDID,
     wbFULL,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Is Interior Cell',
-      {0x02} 'Has water',
-      {0x04} 'Invert Fast Travel behavior',
-      {0x08} 'Force hide land (exterior cell) / Oblivion interior (interior cell)',
+    wbInteger(DATA, '标志', itU8, wbFlags([
+      {0x01} '室内场景',
+      {0x02} '存在水源',
+      {0x04} '无法快速旅行到这边',
+      {0x08} '强制隐藏景观 (室外场景) / 湮没室内 (室内场景)',
       {0x10} '',
-      {0x20} 'Public place',
-      {0x40} 'Hand changed',
-      {0x80} 'Behave like exterior'
+      {0x20} '公共场所',
+      {0x40} '已手动修改',
+      {0x80} '表现为室外'
     ]), cpNormal, True),
-    wbStruct(XCLC, 'Grid', [
+    wbStruct(XCLC, '网格', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32)
     ]),
-    wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+    wbStruct(XCLL, '光照', [
+      wbStruct('环境颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct('指向颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbStruct('Fog Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct('雾颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbFloat('Fog Near'),
-      wbFloat('Fog Far'),
-      wbInteger('Directional Rotation XY', itS32),
-      wbInteger('Directional Rotation Z', itS32),
-      wbFloat('Directional Fade', cpNormal, False, 1, -1, nil, nil, 1.0),
-      wbFloat('Fog Clip Dist')
+      wbFloat('雾近距离'),
+      wbFloat('雾远距离'),
+      wbInteger('指向角度 XY', itS32),
+      wbInteger('指向角度 Z', itS32),
+      wbFloat('指向淡出', cpNormal, False, 1, -1, nil, nil, 1.0),
+      wbFloat('雾裁剪距离')
     ]),
-    wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbInteger(XCMT, 'Music', itU8, wbMusicEnum),
-    wbFloat(XCLW, 'Water Height', cpBenign),
-    wbFormIDCk(XCCM, 'Climate', [CLMT]),
-    wbFormIDCk(XCWT, 'Water', [WATR]),
-    wbRStruct('Ownership', [
+    wbArrayS(XCLR, '地区', wbFormIDCk('地区', [REGN])),
+    wbInteger(XCMT, '音乐', itU8, wbMusicEnum),
+    wbFloat(XCLW, '水面高度', cpBenign),
+    wbFormIDCk(XCCM, '气候', [CLMT]),
+    wbFormIDCk(XCWT, '水源', [WATR]),
+    wbRStruct('所有权', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
+      wbInteger(XRNK, '派系等级', itS32),
       wbXGLB
     ], [XCLW, XCMT, XCCM])
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
@@ -2484,7 +2484,7 @@ begin
     wbFlags([
       {0x00000001} 'Weapons',
       {0x00000002} 'Armor',
-      {0x00000004} 'Clothing',
+      {0x00000004} '服装',
       {0x00000008} 'Books',
       {0x00000010} 'Ingredients',
       {0x00000020} '',
@@ -2492,7 +2492,7 @@ begin
       {0x00000080} 'Lights',
       {0x00000100} 'Apparatus',
       {0x00000200} '',
-      {0x00000400} 'Miscellaneous',
+      {0x00000400} '杂项',
       {0x00000800} 'Spells',
       {0x00001000} 'Magic Items',
       {0x00002000} 'Potions',
@@ -2502,7 +2502,7 @@ begin
       {0x00020000} 'Repair'
     ]);
 
-  wbSpecializationEnum := wbEnum(['Combat', 'Magic', 'Stealth']);
+  wbSpecializationEnum := wbEnum(['战斗', 'Magic', 'Stealth']);
 
   wbRecord(CLAS, 'Class', [
     wbEDID,
@@ -2513,34 +2513,34 @@ begin
       wbArrayS('Primary Attributes', wbInteger('Primary Attribute', itS32, wbActorValueEnum), 2),
       wbInteger('Specialization', itU32, wbSpecializationEnum),
       wbArrayS('Major Skills', wbInteger('Major Skill', itS32, wbActorValueEnum), 7),
-      wbInteger('Flags', itU32, wbFlags(['Playable', 'Guard'])),
+      wbInteger('标志', itU32, wbFlags(['玩家可用', 'Guard'])),
       wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbInteger('Unused', itU16)
+      wbInteger('传授', itS8, wbSkillEnum),
+      wbInteger('最大训练等级', itU8),
+      wbInteger('未使用', itU16)
     ], cpNormal, True, nil, 5)
   ]);
 
   wbRecord(CLMT, 'Climate', [
     wbEDID,
-    wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
-      wbFormIDCk('Weather', [WTHR]),
-      wbInteger('Chance', itS32)
+    wbArrayS(WLST, '天气类型', wbStructSK([0], '天气类型', [
+      wbFormIDCk('天气', [WTHR]),
+      wbInteger('概率', itS32)
     ])),
-    wbString(FNAM, 'Sun Texture'),
-    wbString(GNAM, 'Sun Glare Texture'),
+    wbString(FNAM, '太阳材质'),
+    wbString(GNAM, '太阳光晕材质'),
     wbMODL,
-    wbStruct(TNAM, 'Timing', [
-      wbStruct('Sunrise', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
+    wbStruct(TNAM, '时间', [
+      wbStruct('日出', [
+        wbInteger('开始', itU8, wbClmtTime),
+        wbInteger('结束', itU8, wbClmtTime)
       ]),
-      wbStruct('Sunset', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
+      wbStruct('日落', [
+        wbInteger('开始', itU8, wbClmtTime),
+        wbInteger('结束', itU8, wbClmtTime)
       ]),
-      wbInteger('Volatility', itU8),
-      wbInteger('Moons / Phase Length', itU8, wbClmtMoonsPhaseLength)
+      wbInteger('波动', itU8),
+      wbInteger('月亮 / 位相长度', itU8, wbClmtMoonsPhaseLength)
     ], cpNormal, True)
   ]);
 
@@ -2552,70 +2552,70 @@ begin
     wbInteger(ANAM, 'Enchantment Points', itU16),
     wbStruct(BMDT, '', [
       wbInteger('Biped Flags', itU16, wbFlags([
-        {0x00000001} 'Head',
-        {0x00000002} 'Hair',
+        {0x00000001} '头部',
+        {0x00000002} '发型',
         {0x00000004} 'Upper Body',
         {0x00000008} 'Lower Body',
         {0x00000010} 'Hand',
         {0x00000020} 'Foot',
         {0x00000040} 'Right Ring',
         {0x00000080} 'Left Ring',
-        {0x00000100} 'Amulet',
-        {0x00000200} 'Weapon',
+        {0x00000100} '项链',
+        {0x00000200} '武器',
         {0x00000400} 'Back Weapon',
         {0x00000800} 'Side Weapon',
         {0x00001000} 'Quiver',
-        {0x00002000} 'Shield',
-        {0x00004000} 'Torch',
-        {0x00008000} 'Tail'
+        {0x00002000} '盾牌',
+        {0x00004000} '火把',
+        {0x00008000} '尾巴'
       ])),
-      wbInteger('General Flags', itU8, wbFlags([
+      wbInteger('一般标志', itU8, wbFlags([
         {0x0001} 'Hide Rings',
         {0x0002} 'Hide Amulets',
         {0x0004} '',
         {0x0008} '',
         {0x0010} '',
         {0x0020} '',
-        {0x0040} 'Non-Playable',
+        {0x0040} '玩家不可用',
         {0x0080} '' {Heavy armor}
       ])),
-      wbByteArray('Unused', 1)
+      wbByteArray('未使用', 1)
     ], cpNormal, True),
     wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, '模型'),
       wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MODT, '材质文件哈希值', 0, cpIgnore)
     ], []),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+    wbRStruct('男性世界模型', [
+      wbString(MOD2, '模型'),
       wbFloat(MO2B, 'Bound Radius', cpBenign),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MO2T, '材质文件哈希值', 0, cpIgnore)
     ], []),
     wbString(ICON, 'Male icon filename'),
     wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename'),
+      wbString(MOD3, '模型'),
       wbFloat(MO3B, 'Bound Radius', cpBenign),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MO3T, '材质文件哈希值', 0, cpIgnore)
     ], []),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
+    wbRStruct('女性世界模型', [
+      wbString(MOD4, '模型'),
       wbFloat(MO4B, 'Bound Radius', cpBenign),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
+      wbByteArray(MO4T, '材质文件哈希值', 0, cpIgnore)
     ], []),
     wbString(ICO2, 'Female icon filename'),
     wbStruct(DATA, '', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbInteger('价值', itU32),
+      wbFloat('重量')
     ], cpNormal, True)
   ]);
 
   wbCNTO :=
-    wbStructSK(CNTO, [0], 'Item', [
-      wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
-      wbInteger('Count', itS32)
+    wbStructSK(CNTO, [0], '物品', [
+      wbFormIDCk('物品', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
+      wbInteger('数量', itS32)
     ]);
 
-  wbCNTOs := wbRArrayS('Items', wbCNTO);
+  wbCNTOs := wbRArrayS('物品', wbCNTO);
 
   wbRecord(CONT, 'Container', [
     wbEDID,
@@ -2624,41 +2624,41 @@ begin
     wbSCRI,
     wbCNTOs,
     wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
-      wbFloat('Weight')
+      wbInteger('标志', itU8, wbFlags(['', '重生'])),
+      wbFloat('重量')
     ], cpNormal, True),
-    wbFormIDCk(SNAM, 'Open sound', [SOUN]),
-    wbFormIDCk(QNAM, 'Close sound', [SOUN])
+    wbFormIDCk(SNAM, '开启音效', [SOUN]),
+    wbFormIDCk(QNAM, '关闭音效', [SOUN])
   ]);
 
-  wbCSDT := wbRStructSK([0], 'Sound Type', [
-    wbInteger(CSDT, 'Type', itU32,wbEnum([
-      {0x00} 'Left Foot',
-      {0x01} 'Right Foot',
-      {0x02} 'Left Back Foot',
-      {0x03} 'Right Back Foot',
-      {0x04} 'Idle',
-      {0x05} 'Aware',
-      {0x06} 'Attack',
-      {0x07} 'Hit',
-      {0x08} 'Death',
-      {0x09} 'Weapon'
+  wbCSDT := wbRStructSK([0], '声音类型', [
+    wbInteger(CSDT, '类型', itU32,wbEnum([
+      {0x00} '左脚',
+      {0x01} '右脚',
+      {0x02} '左脚后退',
+      {0x03} '右脚后退',
+      {0x04} '待机',
+      {0x05} '清醒',
+      {0x06} '攻击',
+      {0x07} '打击',
+      {0x08} '死亡',
+      {0x09} '武器'
     ])),
-    wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SOUN], False, cpNormal, True),
-      wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
+    wbRArrayS('音效', wbRStructSK([0], '音效', [
+      wbFormIDCk(CSDI, '音效', [SOUN], False, cpNormal, True),
+      wbInteger(CSDC, '声音概率', itU8, nil, cpNormal, True)
     ], []), cpNormal, True)
   ], []);
 
-  wbCSDTs := wbRArrayS('Sound Types', wbCSDT);
+  wbCSDTs := wbRArrayS('声音类型', wbCSDT);
 
   wbSoulGemEnum := wbEnum([
-    {0} 'None',
-    {1} 'Petty',
-    {2} 'Lesser',
-    {3} 'Common',
-    {4} 'Greater',
-    {5} 'Grand'
+    {0} '无',
+    {1} '微小',
+    {2} '较小',
+    {3} '普通',
+    {4} '较大',
+    {5} '巨大'
   ]);
 
   wbRecord(CREA, 'Creature', [
@@ -2667,21 +2667,21 @@ begin
     wbMODL,
     wbCNTOs,
     wbSPLOs,
-    wbArrayS(NIFZ, 'Models', wbStringLC('Model')),
-    wbByteArray(NIFT, 'Texture Files Hashes', 0, cpIgnore),
-    wbStruct(ACBS, 'Configuration', [
-      wbInteger('Flags', itU32, wbFlags([
+    wbArrayS(NIFZ, '模型', wbStringLC('模型')),
+    wbByteArray(NIFT, '材质文件哈希值', 0, cpIgnore),
+    wbStruct(ACBS, '构造', [
+      wbInteger('标志', itU32, wbFlags([
         {0x000001} 'Biped',
-        {0x000002} 'Essential',
+        {0x000002} '不死',
         {0x000004} 'Weapon & Shield',
-        {0x000008} 'Respawn',
-        {0x000010} 'Swims',
-        {0x000020} 'Flies',
-        {0x000040} 'Walks',
+        {0x000008} '重生',
+        {0x000010} '游泳',
+        {0x000020} '飞行',
+        {0x000040} '步行',
         {0x000080} 'PC Level Offset',
-        {0x000100} 'Unused', //??
+        {0x000100} '未使用', //??
         {0x000200} 'No Low Level Processing',
-        {0x000400} 'Unused', //??
+        {0x000400} '未使用', //??
         {0x000800} 'No Blood Spray',
         {0x001000} 'No Blood Decal',
         {0x002000} '',
@@ -2690,65 +2690,65 @@ begin
         {0x010000} 'No Right Arm',
         {0x020000} 'No Left Arm',
         {0x040000} 'No Combat in Water',
-        {0x080000} 'No Shadow',
+        {0x080000} '没有影子',
         {0x100000} 'No Corpse Check'
       ])),
       wbInteger('Base spell points', itU16),
-      wbInteger('Fatigue', itU16),
+      wbInteger('体力', itU16),
       wbInteger('Barter gold', itU16),
       wbInteger('Level (offset)', itS16),
       wbInteger('Calc min', itU16),
       wbInteger('Calc max', itU16)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
+    wbRArrayS('派系',
+      wbStructSK(SNAM, [0], '派系', [
+        wbFormIDCk('派系', [FACT]),
+        wbInteger('等级', itU8),
+        wbByteArray('未使用', 3)
       ])
     ),
-    wbFormIDCk(INAM, 'Death item', [LVLI]),
+    wbFormIDCk(INAM, '死亡物品', [LVLI]),
     wbSCRI,
-    wbStruct(AIDT, 'AI Data', [
-      wbInteger('Aggression', itU8),
-      wbInteger('Confidence', itU8),
-      wbInteger('Energy Level', itU8),
-      wbInteger('Responsibility', itU8),
+    wbStruct(AIDT, 'AI数据', [
+      wbInteger('好战', itU8),
+      wbInteger('信心', itU8),
+      wbInteger('活力', itU8),
+      wbInteger('品德', itU8),
       wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbByteArray('Unused', 2)
+      wbInteger('传授', itS8, wbSkillEnum),
+      wbInteger('最大训练等级', itU8),
+      wbByteArray('未使用', 2)
     ], cpNormal, True),
     wbRArray('AI Packages', wbFormIDCk(PKID, 'AI Package', [PACK])),
-    wbArrayS(KFFZ, 'Animations', wbStringLC('Animation')),
+    wbArrayS(KFFZ, '动作', wbStringLC('动作')),
     wbStruct(DATA, 'Creature Data', [
-      wbInteger('Type', itU8, wbEnum([
+      wbInteger('类型', itU8, wbEnum([
         'Creature',
         'Daedra',
         'Undead',
         'Humanoid',
-        'Horse',
+        '马',
         'Giant'
       ])),
       wbInteger('Combat Skill', itU8),
-      wbInteger('Magic Skill', itU8),
+      wbInteger('魔法技能', itU8),
       wbInteger('Stealth Skill', itU8),
       wbInteger('Soul', itU8, wbSoulGemEnum),
-      wbByteArray('Unused', 1),
-      wbInteger('Health', itU16),
-      wbByteArray('Unused', 2),
+      wbByteArray('未使用', 1),
+      wbInteger('生命', itU16),
+      wbByteArray('未使用', 2),
       wbInteger('Attack Damage', itU16),
-      wbInteger('Strength', itU8),
-      wbInteger('Intelligence', itU8),
-      wbInteger('Willpower', itU8),
-      wbInteger('Agility', itU8),
-      wbInteger('Speed', itU8),
-      wbInteger('Endurance', itU8),
-      wbInteger('Personality', itU8),
-      wbInteger('Luck', itU8)
+      wbInteger('力量', itU8),
+      wbInteger('智力', itU8),
+      wbInteger('意志力', itU8),
+      wbInteger('敏捷', itU8),
+      wbInteger('速度', itU8),
+      wbInteger('耐力', itU8),
+      wbInteger('魅力', itU8),
+      wbInteger('运气', itU8)
     ], cpNormal, True),
     wbInteger(RNAM, 'Attack reach', itU8, nil, cpNormal, True),
-    wbFormIDCk(ZNAM, 'Combat Style', [CSTY]),
+    wbFormIDCk(ZNAM, '战斗风格', [CSTY]),
     wbFloat(TNAM, 'Turning Speed', cpNormal, True),
     wbFloat(BNAM, 'Base Scale', cpNormal, True),
     wbFloat(WNAM, 'Foot Weight', cpNormal, True),
@@ -2763,7 +2763,7 @@ begin
     wbStruct(CSTD, 'Standard', [
       {000}wbInteger('Dodge % Chance', itU8),
       {001}wbInteger('Left/Right % Chance', itU8),
-      {002}wbByteArray('Unused', 2),
+      {002}wbByteArray('未使用', 2),
       {004}wbFloat('Dodge L/R Timer (min)'),
       {008}wbFloat('Dodge L/R Timer (max)'),
       {012}wbFloat('Dodge Forward Timer (min)'),
@@ -2774,12 +2774,12 @@ begin
       {032}wbFloat('Idle Timer max'),
       {036}wbInteger('Block % Chance', itU8),
       {037}wbInteger('Attack % Chance', itU8),
-      {038}wbByteArray('Unused', 2),
+      {038}wbByteArray('未使用', 2),
       {040}wbFloat('Recoil/Stagger Bonus to Attack'),
       {044}wbFloat('Unconscious Bonus to Attack'),
       {048}wbFloat('Hand-To-Hand Bonus to Attack'),
       {052}wbInteger('Power Attack % Chance', itU8),
-      {053}wbByteArray('Unused', 3),
+      {053}wbByteArray('未使用', 3),
       {056}wbFloat('Recoil/Stagger Bonus to Power'),
       {060}wbFloat('Unconscious Bonus to Power Attack'),
       {064}wbInteger('Power Attack - Normal', itU8),
@@ -2787,10 +2787,10 @@ begin
       {066}wbInteger('Power Attack - Back', itU8),
       {067}wbInteger('Power Attack - Left', itU8),
       {068}wbInteger('Power Attack - Right', itU8),
-      {069}wbByteArray('Unused', 3),
+      {069}wbByteArray('未使用', 3),
       {072}wbFloat('Hold Timer (min)'),
       {076}wbFloat('Hold Timer (max)'),
-      {080}wbInteger('Flags 1', itU8, wbFlags([
+      {080}wbInteger('标志 1', itU8, wbFlags([
              'Advanced',
              'Choose Attack using % Chance',
              'Ignore Allies in Area',
@@ -2801,7 +2801,7 @@ begin
              'Melee Alert OK'
            ])),
       {081}wbInteger('Acrobatic Dodge % Chance', itU8),
-      {082}wbByteArray('Unused', 2),
+      {082}wbByteArray('未使用', 2),
       {084}wbFloat('Range Mult (Optimal)'),
       {088}wbFloat('Range Mult (Max)'),
       {092}wbFloat('Switch Distance (Melee)'),
@@ -2810,9 +2810,9 @@ begin
       {104}wbFloat('Ranged standoff Distance'),
       {108}wbFloat('Group standoff Distance'),
       {112}wbInteger('Rushing Attack % Chance', itU8),
-      {113}wbByteArray('Unused', 3),
+      {113}wbByteArray('未使用', 3),
       {116}wbFloat('Rushing Attack Distance Mult'),
-      {120}wbInteger('Flags 2', itU32, wbFlags([
+      {120}wbInteger('标志 2', itU32, wbFlags([
              'Do Not Acquire'
            ]))
     ], cpNormal, True, nil, 31),
@@ -2843,17 +2843,17 @@ begin
 
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
-    wbRArrayS('Quests', wbFormIDCk(QSTI, 'Quest', [QUST], False, cpBenign)),
-    wbRArrayS('Quests?', wbFormIDCk(QSTR, 'Quest?', [QUST], False, cpBenign)),
+    wbRArrayS('任务', wbFormIDCk(QSTI, '任务', [QUST], False, cpBenign)),
+    wbRArrayS('任务?', wbFormIDCk(QSTR, '任务?', [QUST], False, cpBenign)),
     wbFULL,
-    wbInteger(DATA, 'Type', itU8, wbEnum([
-      {0} 'Topic',
-      {1} 'Conversation',
-      {2} 'Combat',
-      {3} 'Persuasion',
-      {4} 'Detection',
-      {5} 'Service',
-      {6} 'Miscellaneous'
+    wbInteger(DATA, '类型', itU8, wbEnum([
+      {0} '话题',
+      {1} '交谈',
+      {2} '战斗',
+      {3} '说服',
+      {4} '侦察',
+      {5} '服务',
+      {6} '杂项'
     ]), cpNormal, True)
   ], True);
 
@@ -2862,14 +2862,14 @@ begin
     wbFULL,
     wbMODL,
     wbSCRI,
-    wbFormIDCk(SNAM, 'Open sound', [SOUN]),
-    wbFormIDCk(ANAM, 'Close sound', [SOUN]),
-    wbFormIDCk(BNAM, 'Loop sound', [SOUN]),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+    wbFormIDCk(SNAM, '开启音效', [SOUN]),
+    wbFormIDCk(ANAM, '关闭音效', [SOUN]),
+    wbFormIDCk(BNAM, '循环音效', [SOUN]),
+    wbInteger(FNAM, '标志', itU8, wbFlags([
       {0x01} 'Oblivion gate',
-      {0x02} 'Automatic door',
-      {0x04} 'Hidden',
-      {0x08} 'Minimal use'
+      {0x02} '自动门',
+      {0x04} '隐藏',
+      {0x08} '最小使用'
     ]), cpNormal, True),
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
   ]);
@@ -2891,118 +2891,118 @@ begin
 
   wbBlendOpEnum := wbEnum([
     '',
-    'Add',
-    'Subtract',
-    'Reverse Subrtact',
-    'Minimum',
-    'Maximum'
+    '增加',
+    '减少',
+    '反减',
+    '最小',
+    '最大'
   ]);
   wbZTestFuncEnum := wbEnum([
     '',
     '',
     '',
-    'Equal To',
-    'Normal',
-    'Greater Than',
+    '等于',
+    '正常',
+    '大于',
     '',
-    'Greater Than or Equal Than',
-    'Always Show'
+    '大于或等于',
+    '始终显示'
   ]);
 
   wbRecord(EFSH, 'Effect Shader', [
     wbEDID,
-    wbString(ICON, 'Fill Texture'),
-    wbString(ICO2, 'Particle Shader Texture'),
+    wbString(ICON, '填充材质'),
+    wbString(ICO2, '粒子着色器材质'),
     wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0} 'No Membrane Shader',
+      wbInteger('标志', itU8, wbFlags([
+        {0} '无表面着色器',
         {1} '',
         {2} '',
-        {3} 'No Particle Shader',
-        {4} 'Edge Effect - Inverse',
-        {5} 'Membrane Shader - Affect Skin Only'
+        {3} '无粒子着色器',
+        {4} '边缘效果 - 反转',
+        {5} '表面着色器 - 仅影响表面'
       ])),
-      wbByteArray('Unused', 3),
-      wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbByteArray('未使用', 3),
+      wbInteger('表面着色器 - 源混合模式', itU32, wbBlendModeEnum),
+      wbInteger('表面着色器 - 混合操作', itU32, wbBlendOpEnum),
+      wbInteger('表面着色器 - Z测试函数', itU32, wbZTestFuncEnum),
+      wbStruct('填充/材质效果 - 颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-      wbFloat('Fill/Texture Effect - Full Alpha Time'),
-      wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-      wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-      wbFloat('Edge Effect - Fall Off'),
-      wbStruct('Edge Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbFloat('填充/材质效果 - Alpha 淡入时间'),
+      wbFloat('填充/材质效果 - 完整 Alpha 时间'),
+      wbFloat('填充/材质效果 - Alpha 淡出时间'),
+      wbFloat('填充/材质效果 - 固定 Alpha 比率'),
+      wbFloat('填充/材质效果 - Alpha 脉冲幅度'),
+      wbFloat('填充/材质效果 - Alpha 脉冲频率'),
+      wbFloat('填充/材质效果 - 材质动画速度 (U)'),
+      wbFloat('填充/材质效果 - 材质动画速度 (V)'),
+      wbFloat('边缘效果 - 衰减'),
+      wbStruct('边缘效果 - 颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbFloat('Edge Effect - Alpha Fade In Time'),
-      wbFloat('Edge Effect - Full Alpha Time'),
-      wbFloat('Edge Effect - Alpha Fade Out Time'),
-      wbFloat('Edge Effect - Persistent Alpha Ratio'),
-      wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-      wbFloat('Edge Effect - Alpha Pusle Frequence'),
-      wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-      wbFloat('Edge Effect - Full Alpha Ratio'),
-      wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Particle Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbInteger('Particle Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbFloat('Particle Shader - Particle Birth Ramp Up Time'),
-      wbFloat('Particle Shader - Full Particle Birth Time'),
-      wbFloat('Particle Shader - Particle Birth Ramp Down Time'),
-      wbFloat('Particle Shader - Full Particle Birth Ratio'),
-      wbFloat('Particle Shader - Persistant Particle Birth Ratio'),
-      wbFloat('Particle Shader - Particle Lifetime'),
-      wbFloat('Particle Shader - Particle Lifetime +/-'),
-      wbFloat('Particle Shader - Initial Speed Along Normal'),
-      wbFloat('Particle Shader - Acceleration Along Normal'),
-      wbFloat('Particle Shader - Initial Velocity #1'),
-      wbFloat('Particle Shader - Initial Velocity #2'),
-      wbFloat('Particle Shader - Initial Velocity #3'),
-      wbFloat('Particle Shader - Acceleration #1'),
-      wbFloat('Particle Shader - Acceleration #2'),
-      wbFloat('Particle Shader - Acceleration #3'),
-      wbFloat('Particle Shader - Scale Key 1'),
-      wbFloat('Particle Shader - Scale Key 2'),
-      wbFloat('Particle Shader - Scale Key 1 Time'),
-      wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbStruct('Color Key 1 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbFloat('边缘效果 - Alpha 淡入时间'),
+      wbFloat('边缘效果 - 完整 Alpha 时间'),
+      wbFloat('边缘效果 - Alpha 淡出时间'),
+      wbFloat('边缘效果 - 固定 Alpha 比率'),
+      wbFloat('边缘效果 - Alpha 脉冲幅度'),
+      wbFloat('边缘效果 - Alpha 脉冲频率'),
+      wbFloat('填充/材质效果 - 完整 Alpha 比率'),
+      wbFloat('边缘效果 - 完整 Alpha 比率'),
+      wbInteger('表面着色器 - 目标混合模式', itU32, wbBlendModeEnum),
+      wbInteger('粒子着色器 - 源混合模式', itU32, wbBlendModeEnum),
+      wbInteger('粒子着色器 - 混合操作', itU32, wbBlendOpEnum),
+      wbInteger('粒子着色器 - Z测试函数', itU32, wbZTestFuncEnum),
+      wbInteger('粒子着色器 - 目标混合模式', itU32, wbBlendModeEnum),
+      wbFloat('粒子着色器 - 粒子产生提升时间'),
+      wbFloat('粒子着色器 - 完整粒子产生时间'),
+      wbFloat('粒子着色器 - 粒子产生缓减时间'),
+      wbFloat('粒子着色器 - 完整粒子产生比率'),
+      wbFloat('粒子着色器 - 固定粒子产生比率'),
+      wbFloat('粒子着色器 - 粒子寿命'),
+      wbFloat('粒子着色器 - 粒子寿命 +/-'),
+      wbFloat('粒子着色器 - 沿法线初始速度'),
+      wbFloat('粒子着色器 - 沿法线加速度'),
+      wbFloat('粒子着色器 - 初始速度 #1'),
+      wbFloat('粒子着色器 - 初始速度 #2'),
+      wbFloat('粒子着色器 - 初始速度 #3'),
+      wbFloat('粒子着色器 - 加速度 #1'),
+      wbFloat('粒子着色器 - 加速度 #2'),
+      wbFloat('粒子着色器 - 加速度 #3'),
+      wbFloat('粒子着色器 - 规模检索 1'),
+      wbFloat('粒子着色器 - 规模检索 2'),
+      wbFloat('粒子着色器 - 规模检索 1 时间'),
+      wbFloat('粒子着色器 - 规模检索 2 时间'),
+      wbStruct('颜色检索1 - 颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbStruct('Color Key 2 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct('颜色检索2 - 颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbStruct('Color Key 3 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct('颜色检索3 - 颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbFloat('Color Key 1 - Color Alpha'),
-      wbFloat('Color Key 2 - Color Alpha'),
-      wbFloat('Color Key 3 - Color Alpha'),
-      wbFloat('Color Key 1 - Color Key Time'),
-      wbFloat('Color Key 2 - Color Key Time'),
-      wbFloat('Color Key 3 - Color Key Time')
+      wbFloat('颜色检索1 - 颜色 Alpha'),
+      wbFloat('颜色检索2 - 颜色 Alpha'),
+      wbFloat('颜色检索3 - 颜色 Alpha'),
+      wbFloat('颜色检索1 - 颜色检索时间'),
+      wbFloat('颜色检索2 - 颜色检索时间'),
+      wbFloat('颜色检索3 - 颜色检索时间')
     ], cpNormal, True, nil, 25)
   ]);
 
@@ -3015,20 +3015,20 @@ begin
         wbInteger('Minor', itU8),
         wbInteger('Major', itU8)
       ]),
-      wbByteArray('Unused', $1C)
+      wbByteArray('未使用', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
     wbStruct(ENIT, '', [
-      wbInteger('Type', itU32, wbEnum([
-        {0} 'Scroll',
-        {1} 'Staff',
-        {2} 'Weapon',
+      wbInteger('类型', itU32, wbEnum([
+        {0} '卷轴',
+        {1} '法杖',
+        {2} '武器',
         {3} 'Apparel'
       ])),
       wbInteger('Charge Amount', itU32),
       wbInteger('Enchant Cost', itU32),
-      wbInteger('Flags', itU8, wbFlags(['Manual Enchant Cost (Autocalc Off)'])),
-      wbByteArray('Unused', 3)
+      wbInteger('标志', itU8, wbFlags(['Manual Enchant Cost (Autocalc Off)'])),
+      wbByteArray('未使用', 3)
     ], cpNormal, True),
     wbEffects
   ]);
@@ -3036,29 +3036,29 @@ begin
   wbRecord(EYES, 'Eyes', [
     wbEDID,
     wbFULL,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags(['Playable']), cpNormal, True)
+    wbString(ICON, '材质', 0, cpNormal, True),
+    wbInteger(DATA, '标志', itU8, wbFlags(['玩家可用']), cpNormal, True)
   ]);
 
   wbXNAM :=
-    wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCk('Faction', [FACT, RACE]),
-      wbInteger('Modifier', itS32)
+    wbStructSK(XNAM, [0], '关系', [
+      wbFormIDCk('派系', [FACT, RACE]),
+      wbInteger('修正', itS32)
     ]);
 
-  wbXNAMs := wbRArrayS('Relations', wbXNAM);
+  wbXNAMs := wbRArrayS('关系', wbXNAM);
 
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbXNAMs,
-    wbInteger(DATA, 'Flags', itU8, wbFlags(['Hidden from Player', 'Evil', 'Special Combat']), cpNormal, True),
-    wbFloat(CNAM, 'Crime Gold Multiplier', cpNormal, True, 1, -1, nil, nil, 1.0),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia')
+    wbInteger(DATA, '标志', itU8, wbFlags(['从玩家隐藏', '有害', '特殊战斗']), cpNormal, True),
+    wbFloat(CNAM, '犯罪罚金加成', cpNormal, True, 1, -1, nil, nil, 1.0),
+    wbRStructsSK('等级', '等级', [0], [
+      wbInteger(RNAM, '等级#', itS32),
+      wbString(MNAM, '男性', 0, cpTranslate),
+      wbString(FNAM, '女性', 0, cpTranslate),
+      wbString(INAM, '记号')
     ], [])
   ]);
 
@@ -3067,12 +3067,12 @@ begin
     wbFULL,
     wbMODL,
     wbSCRI,
-    wbFormIDCk(PFIG, 'Ingredient', [INGR]),
-    wbStruct(PFPC, 'Seasonal ingredient production', [
-      wbInteger('Spring', itU8),
-      wbInteger('Summer ', itU8),
-      wbInteger('Fall', itU8),
-      wbInteger('Winter', itU8)
+    wbFormIDCk(PFIG, '原料', [INGR]),
+    wbStruct(PFPC, '季节性原料生产率', [
+      wbInteger('春季', itU8),
+      wbInteger('夏季 ', itU8),
+      wbInteger('秋季', itU8),
+      wbInteger('冬季', itU8)
     ], cpNormal, True)
   ]);
 
@@ -3086,13 +3086,13 @@ begin
 
   wbRecord(GLOB, 'Global', [
     wbEDID,
-    wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
-    wbFloat(FLTV, 'Value', cpNormal, True)
+    wbInteger(FNAM, '类型', itU8, wbGLOBFNAM, nil, cpNormal, True),
+    wbFloat(FLTV, '价值', cpNormal, True)
   ]);
 
   wbRecord(GMST, 'Game Setting', [
     wbEDID,
-    wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
+    wbUnion(DATA, '数值', wbGMSTUnionDecider, [
       wbString('', 0, cpTranslate),
       wbInteger('', itS32),
       wbFloat('')
@@ -3103,32 +3103,32 @@ begin
     wbEDID,
     wbMODL,
     wbStruct(DATA, '', [
-      wbInteger('Density', itU8),
-      wbInteger('Min Slope', itU8),
-      wbInteger('Max Slope', itU8),
-      wbByteArray('Unused', 1),
-      wbInteger('Unit from water amount', itU16),
-      wbByteArray('Unused', 2),
-      wbInteger('Unit from water type', itU32, wbEnum([
-        'Above - At Least',
-        'Above - At Most',
-        'Below - At Least',
-        'Below - At Most',
-        'Either - At Least',
-        'Either - At Most',
-        'Either - At Most Above',
-        'Either - At Most Below'
+      wbInteger('密度', itU8),
+      wbInteger('最小坡度', itU8),
+      wbInteger('最大坡度', itU8),
+      wbByteArray('未使用', 1),
+      wbInteger('距离水面的单位', itU16),
+      wbByteArray('未使用', 2),
+      wbInteger('距离水面类型的单位', itU32, wbEnum([
+        '向上 - 至少',
+        '向上 - 最多',
+        '向下 - 至少',
+        '向下 - 最多',
+        '任意 - 至少',
+        '任意 - 最多',
+        '任意 - 最多高于',
+        '任意 - 最多低于'
       ])),
-      wbFloat('Position Range'),
-      wbFloat('Height Range'),
-      wbFloat('Color Range'),
-      wbFloat('Wave Period'),
-      wbInteger('Flags', itU8, wbFlags([
-        'Vertex Lighting',
-        'Uniform Scaling',
-        'Fit to Slope'
+      wbFloat('位置范围'),
+      wbFloat('高度范围'),
+      wbFloat('颜色范围'),
+      wbFloat('波形周期'),
+      wbInteger('标志', itU8, wbFlags([
+        '顶点发光',
+        '统一大小',
+        '适应坡度'
       ])),
-      wbByteArray('Unused', 3)
+      wbByteArray('未使用', 3)
     ], cpNormal, True)
   ]);
 
@@ -3136,25 +3136,25 @@ begin
     wbEDID,
     wbFULL,
     wbMODL,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      'Playable',
-      'Not Male',
-      'Not Female',
-      'Fixed'
+    wbString(ICON, '材质', 0, cpNormal, True),
+    wbInteger(DATA, '标志', itU8, wbFlags([
+      '玩家可用',
+      '非男性',
+      '非女性',
+      '固定'
     ]), cpNormal, True)
   ]);
 
   wbCrimeTypeEnum :=
     wbEnum([
-      'Steal',
-      'Pickpocket',
-      'Trespass',
-      'Attack',
-      'Murder',
-      'Steal Horse'
+      '偷窃',
+      '扒窃',
+      '非法入侵',
+      '攻击',
+      '谋杀',
+      '盗马'
     ], [
-      -1, 'None'
+      -1, '无'
     ]);
 
   wbFormTypeEnum :=
@@ -3225,7 +3225,7 @@ begin
   ]);
 
   wbSexEnum :=
-    wbEnum(['Male','Female']);
+    wbEnum(['男性','女性']);
 
   wbAxisEnum :=
     wbEnum([], [
@@ -3235,196 +3235,196 @@ begin
     ]);
 
   wbCTDA :=
-    wbRUnion('Condition', [
-      wbStruct(CTDA, 'Condition', [
-        wbInteger('Type', itU8, wbCtdaType),
-        wbByteArray('Unused', 3),
-        wbUnion('Comparison Value', wbCTDACompValueDecider, [
-          wbFloat('Comparison Value - Float'),
-          wbFormIDCk('Comparison Value - Global', [GLOB])
+    wbRUnion('条件', [
+      wbStruct(CTDA, '条件', [
+        wbInteger('类型', itU8, wbCtdaType),
+        wbByteArray('未使用', 3),
+        wbUnion('比较值', wbCTDACompValueDecider, [
+          wbFloat('比较值 - 浮点值'),
+          wbFormIDCk('比较值 - 全局变量', [GLOB])
         ]),
-        wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-        wbUnion('Parameter #1', wbCTDAParam1Decider, [
-          {00} wbByteArray('Unknown', 4),
-          {01} wbByteArray('None', 4, cpIgnore),
-          {02} wbInteger('Integer', itS32),
+        wbInteger('函数', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+        wbUnion('参数 #1', wbCTDAParam1Decider, [
+          {00} wbByteArray('未知', 4),
+          {01} wbByteArray('无', 4, cpIgnore),
+          {02} wbInteger('整数', itS32),
           {03} wbInteger('Variable Name (INVALID)', itS32),
-          {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
-//          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-          {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-          {07} wbInteger('Axis', itU32, wbAxisEnum),
-          {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
-          {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
-          {15} wbFormIDCk('Faction', [FACT]),
-          {16} wbFormIDCk('Cell', [CELL]),
-          {17} wbFormIDCk('Class', [CLAS]),
-          {18} wbFormIDCk('Race', [RACE]),
-          {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
-          {20} wbFormIDCk('Global', [GLOB]),
-          {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
-          {23} wbFormIDCk('Owner', [FACT, NPC_]),
+          {04} wbInteger('性别', itU32, wbSexEnum),
+          {05} wbFormIDCk('角色数值', [ACVA]),
+//          {05} wbInteger('角色数值', itS32, wbActorValueEnum),
+          {06} wbInteger('犯罪类型', itU32, wbCrimeTypeEnum),
+          {07} wbInteger('坐标', itU32, wbAxisEnum),
+          {08} wbInteger('表单类型', itU32, wbFormTypeEnum),
+          {09} wbInteger('任务阶段 (不可用)', itS32),
+          {10} wbFormIDCk('衍生对象', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {12} wbFormIDCk('装备栏对象', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {13} wbFormIDCk('角色', [PLYR, ACHR, ACRE, TRGT]),
+          {14} wbFormIDCk('任务', [QUST]),
+          {15} wbFormIDCk('派系', [FACT]),
+          {16} wbFormIDCk('场景', [CELL]),
+          {17} wbFormIDCk('职业', [CLAS]),
+          {18} wbFormIDCk('种族', [RACE]),
+          {19} wbFormIDCk('角色基础', [NPC_, CREA, ACTI]),
+          {20} wbFormIDCk('全局', [GLOB]),
+          {21} wbFormIDCk('天气', [WTHR]),
+          {22} wbFormIDCk('AI包', [PACK]),
+          {23} wbFormIDCk('所有者', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
+          {25} wbFormIDCk('家具', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
-          {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {28} wbFormIDCk('世界空间', [WRLD]),
+          {29} wbFormIDCk('衍生对象', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbUnion('Parameter #2', wbCTDAParam2Decider, [
-          {00} wbByteArray('Unknown', 4),
-          {01} wbByteArray('None', 4, cpIgnore),
-          {02} wbInteger('Integer', itS32),
+        wbUnion('参数 #2', wbCTDAParam2Decider, [
+          {00} wbByteArray('未知', 4),
+          {01} wbByteArray('无', 4, cpIgnore),
+          {02} wbInteger('整数', itS32),
           {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
-          {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
-//          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-          {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-          {07} wbInteger('Axis', itU32, wbAxisEnum),
-          {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
-          {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
-          {15} wbFormIDCk('Faction', [FACT]),
-          {16} wbFormIDCk('Cell', [CELL]),
-          {17} wbFormIDCk('Class', [CLAS]),
-          {18} wbFormIDCk('Race', [RACE]),
-          {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
-          {20} wbFormIDCk('Global', [GLOB]),
-          {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
-          {23} wbFormIDCk('Owner', [FACT, NPC_]),
+          {04} wbInteger('性别', itU32, wbSexEnum),
+          {05} wbFormIDCk('角色数值', [ACVA]),
+//          {05} wbInteger('角色数值', itS32, wbActorValueEnum),
+          {06} wbInteger('犯罪类型', itU32, wbCrimeTypeEnum),
+          {07} wbInteger('坐标', itU32, wbAxisEnum),
+          {08} wbInteger('表单类型', itU32, wbFormTypeEnum),
+          {09} wbInteger('任务阶段', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
+          {10} wbFormIDCk('衍生对象', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {12} wbFormIDCk('装备栏对象', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {13} wbFormIDCk('角色', [PLYR, ACHR, ACRE, TRGT]),
+          {14} wbFormIDCk('任务', [QUST]),
+          {15} wbFormIDCk('派系', [FACT]),
+          {16} wbFormIDCk('场景', [CELL]),
+          {17} wbFormIDCk('职业', [CLAS]),
+          {18} wbFormIDCk('种族', [RACE]),
+          {19} wbFormIDCk('角色基础', [NPC_, CREA, ACTI]),
+          {20} wbFormIDCk('全局', [GLOB]),
+          {21} wbFormIDCk('天气', [WTHR]),
+          {22} wbFormIDCk('AI包', [PACK]),
+          {23} wbFormIDCk('所有者', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
+          {25} wbFormIDCk('家具', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
-          {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {28} wbFormIDCk('世界空间', [WRLD]),
+          {29} wbFormIDCk('衍生对象', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbInteger('Unused', itU32, nil, cpIgnore)
+        wbInteger('未使用', itU32, nil, cpIgnore)
       ], cpNormal, False, nil, 6),
       wbStruct(CTDT, 'Condition (old format)', [
-        wbInteger('Type', itU8, wbCtdaType),
-        wbByteArray('Unused', 3),
-        wbUnion('Comparison Value', wbCTDACompValueDecider, [
-          wbFloat('Comparison Value - Float'),
-          wbFormIDCk('Comparison Value - Global', [GLOB])
+        wbInteger('类型', itU8, wbCtdaType),
+        wbByteArray('未使用', 3),
+        wbUnion('比较值', wbCTDACompValueDecider, [
+          wbFloat('比较值 - 浮点值'),
+          wbFormIDCk('比较值 - 全局变量', [GLOB])
         ]),
-        wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-        wbUnion('Parameter #1', wbCTDAParam1Decider, [
-          {00} wbByteArray('Unknown', 4),
-          {01} wbByteArray('None', 4, cpIgnore),
-          {02} wbInteger('Integer', itS32),
+        wbInteger('函数', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+        wbUnion('参数 #1', wbCTDAParam1Decider, [
+          {00} wbByteArray('未知', 4),
+          {01} wbByteArray('无', 4, cpIgnore),
+          {02} wbInteger('整数', itS32),
           {03} wbInteger('Variable Name (INVALID)', itS32),
-          {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
-//          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-          {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-          {07} wbInteger('Axis', itU32, wbAxisEnum),
-          {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
-          {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
-          {15} wbFormIDCk('Faction', [FACT]),
-          {16} wbFormIDCk('Cell', [CELL]),
-          {17} wbFormIDCk('Class', [CLAS]),
-          {18} wbFormIDCk('Race', [RACE]),
-          {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
-          {20} wbFormIDCk('Global', [GLOB]),
-          {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
-          {23} wbFormIDCk('Owner', [FACT, NPC_]),
+          {04} wbInteger('性别', itU32, wbSexEnum),
+          {05} wbFormIDCk('角色数值', [ACVA]),
+//          {05} wbInteger('角色数值', itS32, wbActorValueEnum),
+          {06} wbInteger('犯罪类型', itU32, wbCrimeTypeEnum),
+          {07} wbInteger('坐标', itU32, wbAxisEnum),
+          {08} wbInteger('表单类型', itU32, wbFormTypeEnum),
+          {09} wbInteger('任务阶段 (不可用)', itS32),
+          {10} wbFormIDCk('衍生对象', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {12} wbFormIDCk('装备栏对象', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {13} wbFormIDCk('角色', [PLYR, ACHR, ACRE, TRGT]),
+          {14} wbFormIDCk('任务', [QUST]),
+          {15} wbFormIDCk('派系', [FACT]),
+          {16} wbFormIDCk('场景', [CELL]),
+          {17} wbFormIDCk('职业', [CLAS]),
+          {18} wbFormIDCk('种族', [RACE]),
+          {19} wbFormIDCk('角色基础', [NPC_, CREA, ACTI]),
+          {20} wbFormIDCk('全局', [GLOB]),
+          {21} wbFormIDCk('天气', [WTHR]),
+          {22} wbFormIDCk('AI包', [PACK]),
+          {23} wbFormIDCk('所有者', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
+          {25} wbFormIDCk('家具', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
-          {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {28} wbFormIDCk('世界空间', [WRLD]),
+          {29} wbFormIDCk('衍生对象', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbUnion('Parameter #2', wbCTDAParam2Decider, [
-          {00} wbByteArray('Unknown', 4),
-          {01} wbByteArray('None', 4, cpIgnore),
-          {02} wbInteger('Integer', itS32),
+        wbUnion('参数 #2', wbCTDAParam2Decider, [
+          {00} wbByteArray('未知', 4),
+          {01} wbByteArray('无', 4, cpIgnore),
+          {02} wbInteger('整数', itS32),
           {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
-          {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
-//          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
-          {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-          {07} wbInteger('Axis', itU32, wbAxisEnum),
-          {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
-          {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
-          {15} wbFormIDCk('Faction', [FACT]),
-          {16} wbFormIDCk('Cell', [CELL]),
-          {17} wbFormIDCk('Class', [CLAS]),
-          {18} wbFormIDCk('Race', [RACE]),
-          {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
-          {20} wbFormIDCk('Global', [GLOB]),
-          {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
-          {23} wbFormIDCk('Owner', [FACT, NPC_]),
+          {04} wbInteger('性别', itU32, wbSexEnum),
+          {05} wbFormIDCk('角色数值', [ACVA]),
+//          {05} wbInteger('角色数值', itS32, wbActorValueEnum),
+          {06} wbInteger('犯罪类型', itU32, wbCrimeTypeEnum),
+          {07} wbInteger('坐标', itU32, wbAxisEnum),
+          {08} wbInteger('表单类型', itU32, wbFormTypeEnum),
+          {09} wbInteger('任务阶段', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
+          {10} wbFormIDCk('衍生对象', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {12} wbFormIDCk('装备栏对象', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {13} wbFormIDCk('角色', [PLYR, ACHR, ACRE, TRGT]),
+          {14} wbFormIDCk('任务', [QUST]),
+          {15} wbFormIDCk('派系', [FACT]),
+          {16} wbFormIDCk('场景', [CELL]),
+          {17} wbFormIDCk('职业', [CLAS]),
+          {18} wbFormIDCk('种族', [RACE]),
+          {19} wbFormIDCk('角色基础', [NPC_, CREA, ACTI]),
+          {20} wbFormIDCk('全局', [GLOB]),
+          {21} wbFormIDCk('天气', [WTHR]),
+          {22} wbFormIDCk('AI包', [PACK]),
+          {23} wbFormIDCk('所有者', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
+          {25} wbFormIDCk('家具', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
-          {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {28} wbFormIDCk('世界空间', [WRLD]),
+          {29} wbFormIDCk('衍生对象', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbEmpty('Unused', cpIgnore)
+        wbEmpty('未使用', cpIgnore)
       ])
     ], []);
 
-  wbCTDAs := wbRArray('Conditions', wbCTDA);
+  wbCTDAs := wbRArray('条件', wbCTDA);
 
   wbSCHR :=
     wbRUnion('Basic Script Data', [
       wbStruct(SCHR, 'Basic Script Data', [
-        wbByteArray('Unused', 4),
+        wbByteArray('未使用', 4),
         wbInteger('RefCount', itU32),
         wbInteger('CompiledSize', itU32),
         wbInteger('VariableCount', itU32),
-        wbInteger('Type', itU32, wbEnum([
-          'Object',
-          'Quest'
+        wbInteger('类型', itU32, wbEnum([
+          '对象',
+          '任务'
         ], [
           $100, 'Magic Effect'
         ]))
       ]),
       wbStruct(SCHD, 'Basic Script Data', [
-        wbByteArray('Unused', 4),
+        wbByteArray('未使用', 4),
         wbInteger('RefCount', itU32),
         wbInteger('CompiledSize', itU32),
         wbInteger('VariableCount', itU32),
-        wbInteger('Type', itU32, wbEnum([
-          'Object',
-          'Quest'
+        wbInteger('类型', itU32, wbEnum([
+          '对象',
+          '任务'
         ], [
           $100, 'Magic Effect'
         ])),
-        wbByteArray('Unknown')
+        wbByteArray('未知')
       ])
     ], []);
 
   wbSCROs :=
-    wbRArray('References',
+    wbRArray('衍生',
       wbRUnion('', [
         wbFormIDCk(SCRO, 'Global Reference',
           [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP,
            INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
            FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
-           LVLC, CSTY, WRLD, SCPT, BSGN, TREE, NULL]),
+           LVLC, CSTY, WRLD, SCPT, BSGN, TREE, ENCH, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
@@ -3447,60 +3447,60 @@ begin
     wbEDID,
     wbMODL,
     wbCTDAs,
-    wbInteger(ANAM, 'Animation Group Section', itU8, wbIdleAnam, nil, cpNormal, True),
-    wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
+    wbInteger(ANAM, '动作群组分组', itU8, wbIdleAnam, nil, cpNormal, True),
+    wbArray(DATA, '相关待机动作', wbFormIDCk('相关待机动作', [IDLE, NULL]), ['上一级', '上一个同级对象'], cpNormal, True)
   ]);
 
   wbRecord(INFO, 'Dialog response', [
     wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous'
+      wbInteger('类型', itU8, wbEnum([
+        {0} '话题',
+        {1} '交谈',
+        {2} '战斗',
+        {3} '说服',
+        {4} '侦察',
+        {5} '服务',
+        {6} '杂项'
       ])),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x0001} 'Goodbye',
-        {0x0002} 'Random',
-        {0x0004} 'Say Once',
+      wbInteger('标志', itU8, wbFlags([
+        {0x0001} '再见',
+        {0x0002} '随机',
+        {0x0004} '说一次',
         {0x0008} '',
-        {0x0010} 'Info Refusal',
-        {0x0020} 'Random End',
-        {0x0040} 'Run for Rumors'
+        {0x0010} '信息驳回',
+        {0x0020} '随机结束',
+        {0x0040} '传播流言'
       ])),
-      wbByteArray('Unused', 1)
+      wbByteArray('未使用', 1)
     ], cpNormal, True),
-    wbFormIDCk(QSTI, 'Quest', [QUST], False, cpNormal, True),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
-    wbRArray('Add topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
-    wbRArray('Responses',
-      wbRStruct('Response', [
-        wbStruct(TRDT, 'Response Data', [
-          wbInteger('Emotion Type', itU32, wbEnum([
-            {0} 'Neutral',
-            {1} 'Anger',
-            {2} 'Disgust',
-            {3} 'Fear',
-            {4} 'Sad',
-            {5} 'Happy',
-            {6} 'Surprise'
+    wbFormIDCk(QSTI, '任务', [QUST], False, cpNormal, True),
+    wbFormIDCk(TPIC, '话题', [DIAL]),
+    wbFormIDCk(PNAM, '前一个情报', [INFO, NULL]),
+    wbRArray('Add topics', wbFormIDCk(NAME, '话题', [DIAL])),
+    wbRArray('回复',
+      wbRStruct('回复', [
+        wbStruct(TRDT, '回复数据', [
+          wbInteger('表情类型', itU32, wbEnum([
+            {0} '无表情',
+            {1} '生气',
+            {2} '厌恶',
+            {3} '恐惧',
+            {4} '伤心',
+            {5} '高兴',
+            {6} '惊讶'
           ])),
-          wbInteger('Emotion Value', itS32),
-          wbByteArray('Unused', 4),
-          wbInteger('Response number', itU8),
-          wbByteArray('Unused', 3)
+          wbInteger('表情数值', itS32),
+          wbByteArray('未使用', 4),
+          wbInteger('回复数', itU8),
+          wbByteArray('未使用', 3)
         ]),
-        wbString(NAM1, 'Response Text', 0, cpTranslate),
+        wbString(NAM1, '回复文本', 0, cpTranslate),
         wbString(NAM2, 'Actor notes', 0, cpTranslate)
       ], [])
     ),
     wbCTDAs,
     wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
-    wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
+    wbRArray('Link From', wbFormIDCk(TCLF, '话题', [DIAL])),
     wbResultScript
   ]);
 
@@ -3513,17 +3513,17 @@ begin
         wbInteger('Minor', itU8),
         wbInteger('Major', itU8)
       ]),
-      wbByteArray('Unused', $1C)
+      wbByteArray('未使用', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
     wbMODL,
     wbICON,
     wbSCRI,
-    wbFloat(DATA, 'Weight', cpNormal, True),
+    wbFloat(DATA, '重量', cpNormal, True),
     wbStruct(ENIT, '', [
-      wbInteger('Value', itS32),
-      wbInteger('Flags', itU8, wbFlags(['No auto-calculation', 'Food item'])),
-      wbByteArray('Unused', 3)
+      wbInteger('价值', itS32),
+      wbInteger('标志', itU8, wbFlags(['不自动计算', '食物'])),
+      wbByteArray('未使用', 3)
     ], cpNormal, True),
     wbEffects
   ]);
@@ -3535,104 +3535,104 @@ begin
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
+      wbInteger('价值', itS32),
+      wbFloat('重量')
     ], cpNormal, True)
   ]);
 
   wbQuadrantEnum := wbEnum([
-    {0} 'Bottom Left',
-    {1} 'Bottom Right',
-    {2} 'Top Left',
-    {3} 'Top Right'
+    {0} '左下',
+    {1} '右下',
+    {2} '左上',
+    {3} '右上'
   ]);
 
   if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
-      wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
-      wbByteArray(VCLR, 'Vertex Colours'),
+      wbByteArray(DATA, '未知'),
+      wbByteArray(VNML, '顶点法线'),
+      wbByteArray(VHGT, '顶点高度贴图'),
+      wbByteArray(VCLR, '顶点颜色'),
 
-      wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+      wbRArrayS('图层', wbRUnion('图层', [
+        wbRStructSK([0],'基础图层', [
+          wbStructSK(BTXT, [1, 3], '基础图层头部', [
+            wbFormIDCk('材质', [LTEX, NULL]),
+            wbInteger('象限', itU8, wbQuadrantEnum),
+            wbByteArray('未使用', 1),
+            wbInteger('图层', itS16)
           ])
         ], []),
-        wbRStructSK([0],'Alpha Layer', [
-          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+        wbRStructSK([0],'Alpha 图层', [
+          wbStructSK(ATXT, [1, 3], 'Alpha 图层头部', [
+            wbFormIDCk('材质', [LTEX, NULL]),
+            wbInteger('象限', itU8, wbQuadrantEnum),
+            wbByteArray('未使用', 1),
+            wbInteger('图层', itS16)
           ]),
-          wbByteArray(VTXT, 'Alpha Layer Data')
+          wbByteArray(VTXT, 'Alpha 图层数据')
         ], [])
       ], [])),
 
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, '材质', wbFormIDCk('材质', [LTEX, NULL]))
     ]);
 
   end else begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
+      wbByteArray(DATA, '未知'),
 //      wbStruct(DATA, '', [
-//        wbInteger('Flags', itU8, wbFlags([])),
-//        wbByteArray('Unknown')
+//        wbInteger('标志', itU8, wbFlags([])),
+//        wbByteArray('未知')
 //      ]),
-      wbArray(VNML, 'Vertex Normals', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
+      wbArray(VNML, '顶点法线', wbStruct('行', [
+        wbArray('列', wbStruct('列', [
           wbInteger('X', itU8),
           wbInteger('Y', itU8),
           wbInteger('Z', itU8)
         ]), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
-        wbFloat('Offset'),
-        wbArray('Rows', wbStruct('Row', [
-          wbArray('Columns', wbInteger('Column', itU8), 33)
+      wbStruct(VHGT, '顶点高度贴图', [
+        wbFloat('偏移'),
+        wbArray('行', wbStruct('行', [
+          wbArray('列', wbInteger('列', itU8), 33)
         ]), 33),
-        wbByteArray('Unused', 3)
+        wbByteArray('未使用', 3)
       ]),
-      wbArray(VCLR, 'Vertex Colours', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
+      wbArray(VCLR, '顶点颜色', wbStruct('行', [
+        wbArray('列', wbStruct('列', [
           wbInteger('X', itU8),
           wbInteger('Y', itU8),
           wbInteger('Z', itU8)
         ]), 33)
       ]), 33),
 
-      wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+      wbRArrayS('图层', wbRUnion('图层', [
+        wbRStructSK([0],'基础图层', [
+          wbStructSK(BTXT, [1, 3], '基础图层头部', [
+            wbFormIDCk('材质', [LTEX, NULL]),
+            wbInteger('象限', itU8, wbQuadrantEnum),
+            wbByteArray('未使用', 1),
+            wbInteger('图层', itS16)
           ])
         ], []),
-        wbRStructSK([0],'Alpha Layer', [
-          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
+        wbRStructSK([0],'Alpha 图层', [
+          wbStructSK(ATXT, [1, 3], 'Alpha 图层头部', [
+            wbFormIDCk('材质', [LTEX, NULL]),
+            wbInteger('象限', itU8, wbQuadrantEnum),
+            wbByteArray('未使用', 1),
+            wbInteger('图层', itS16)
           ]),
-          wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
-            wbInteger('Position', itU16, wbAtxtPosition),
-            wbByteArray('Unused', 2),
-            wbFloat('Opacity')
+          wbArrayS(VTXT, 'Alpha 图层数据', wbStructSK([0], '场景', [
+            wbInteger('方位', itU16, wbAtxtPosition),
+            wbByteArray('未使用', 2),
+            wbFloat('透明度')
           ]))
         ], [])
       ], [])),
 
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, '材质', wbFormIDCk('材质', [LTEX, NULL]))
     ]);
 
   end;
@@ -3644,45 +3644,45 @@ begin
     wbFULL,
     wbICON,
     wbStruct(DATA, '', [
-      wbInteger('Time', itS32),
-      wbInteger('Radius', itU32),
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Unused', itU8)
+      wbInteger('时间', itS32),
+      wbInteger('半径', itU32),
+      wbStruct('颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbInteger('未使用', itU8)
       ]),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Dynamic',
-        {0x00000002} 'Can be Carried',
-        {0x00000004} 'Negative',
-        {0x00000008} 'Flicker',
-        {0x00000010} 'Unused',
-        {0x00000020} 'Off By Default',
-        {0x00000040} 'Flicker Slow',
-        {0x00000080} 'Pulse',
-        {0x00000100} 'Pulse Slow',
-        {0x00000200} 'Spot Light',
-        {0x00000400} 'Spot Shadow'
+      wbInteger('标志', itU32, wbFlags([
+        {0x00000001} '动态的',
+        {0x00000002} '可以携带',
+        {0x00000004} '背光',
+        {0x00000008} '闪烁',
+        {0x00000010} '未使用',
+        {0x00000020} '默认熄灭',
+        {0x00000040} '微弱闪烁',
+        {0x00000080} '跳动',
+        {0x00000100} '微弱跳动',
+        {0x00000200} '点光源',
+        {0x00000400} '点阴影'
       ])),
-      wbFloat('Falloff Exponent'),
-      wbFloat('FOV'),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbFloat('衰减指数'),
+      wbFloat('视场'),
+      wbInteger('数值', itU32),
+      wbFloat('重量')
     ], cpNormal, True, nil, 6),
-    wbFloat(FNAM, 'Fade value', cpNormal, True, 1, -1, nil, nil, 1.0),
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
+    wbFloat(FNAM, '淡化数值', cpNormal, True, 1, -1, nil, nil, 1.0),
+    wbFormIDCk(SNAM, '音效', [SOUN])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
   wbRecord(LSCR, 'Load Screen', [
     wbEDID,
     wbICON,
     wbDESC,
-    wbRArrayS('Locations', wbStructSK(LNAM, [0, 1], 'Location', [
+    wbRArrayS('Locations', wbStructSK(LNAM, [0, 1], '位置', [
       wbFormIDCk('Direct', [CELL, WRLD, NULL]),
       wbStructSK([0, 1], 'Indirect', [
         wbFormIDCk('World', [NULL, WRLD]),
-        wbStructSK([0,1], 'Grid', [
+        wbStructSK([0,1], '网格', [
           wbInteger('Y', itS16),
           wbInteger('X', itS16)
         ])
@@ -3693,17 +3693,17 @@ begin
   wbRecord(LTEX, 'Landscape Texture', [
     wbEDID,
     wbICON,
-    wbStruct(HNAM, 'Havok Data', [
-      wbInteger('Material Type', itU8, wbEnum([
+    wbStruct(HNAM, 'Havok 数据', [
+      wbInteger('材料类型', itU8, wbEnum([
         {00} 'STONE',
         {01} 'CLOTH',
         {02} 'DIRT',
         {03} 'GLASS',
-        {04} 'GRASS',
+        {04} '草地',
         {05} 'METAL',
         {06} 'ORGANIC',
         {07} 'SKIN',
-        {08} 'WATER',
+        {08} '水源',
         {09} 'WOOD',
         {10} 'HEAVY STONE',
         {11} 'HEAVY METAL',
@@ -3711,27 +3711,27 @@ begin
         {13} 'CHAIN',
         {14} 'SNOW'
       ]), cpNormal, True, nil, nil, 2),
-      wbInteger('Friction', itU8, nil, cpNormal, True, nil, nil, 30),
-      wbInteger('Restitution', itU8, nil, cpNormal, True, nil, nil, 30)
+      wbInteger('摩擦', itU8, nil, cpNormal, True, nil, nil, 30),
+      wbInteger('弹力', itU8, nil, cpNormal, True, nil, nil, 30)
     ], cpNormal, True),
-    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True, False, nil, nil, 30),
-    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbInteger(SNAM, '纹理高光指数', itU8, nil, cpNormal, True, False, nil, nil, 30),
+    wbRArrayS('草地', wbFormIDCk(GNAM, '草地', [GRAS]))
   ]);
 
   wbRecord(LVLC, 'Leveled Creature', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count'
+    wbInteger(LVLF, '标志', itU8, wbFlags([
+      {0x01} '计算自所有低于玩家等级的',
+      {0x02} '计算每一个物品的数量'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [NPC_, CREA, LVLC]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
+    wbRArrayS('等级列表记录',
+      wbStructExSK(LVLO , [0, 2], [3], '等级列表记录', [
+        wbInteger('等级', itS16),
+        wbByteArray('未使用', 2),
+        wbFormIDCk('衍生', [NPC_, CREA, LVLC]),
+        wbInteger('数量', itS16),
+        wbByteArray('未使用', 2)
       ], cpNormal, False, nil, 3),
     cpNormal, True),
     wbSCRI,
@@ -3741,37 +3741,37 @@ begin
   wbRecord(LVLI, 'Leveled Item', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count'
+    wbInteger(LVLF, '标志', itU8, wbFlags([
+      {0x01} '计算自所有低于玩家等级的',
+      {0x02} '计算每一个物品的数量'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
+    wbRArrayS('等级列表记录',
+      wbStructExSK(LVLO , [0, 2], [3], '等级列表记录', [
+        wbInteger('等级', itS16),
+        wbByteArray('未使用', 2),
+        wbFormIDCk('衍生', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
+        wbInteger('数量', itS16),
+        wbByteArray('未使用', 2)
       ], cpNormal, False, nil, 3),
     cpNormal, True),
-    wbByteArray(DATA, 'Unused', 1)
+    wbByteArray(DATA, '未使用', 1)
   ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
   wbRecord(LVSP, 'Leveled Spell', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Use all spells'
+    wbInteger(LVLF, '标志', itU8, wbFlags([
+      {0x01} '计算自所有低于玩家等级的',
+      {0x02} '计算每一个物品的数量',
+      {0x04} '使用所有魔法'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [SPEL, LVSP]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
+    wbRArrayS('等级列表记录',
+      wbStructExSK(LVLO , [0, 2], [3], '等级列表记录', [
+        wbInteger('等级', itS16),
+        wbByteArray('未使用', 2),
+        wbFormIDCk('衍生', [SPEL, LVSP]),
+        wbInteger('数量', itS16),
+        wbByteArray('未使用', 2)
       ], cpNormal, False, nil, 3),
     cpNormal, True)
   ], False, nil, cpNormal, False, wbLVLAfterLoad);
@@ -3787,7 +3787,7 @@ begin
       ]),
       wbInteger('Param A Info', itU8, wbOBMEResolutionInfo),
       wbInteger('Param B Info', itU8, wbOBMEResolutionInfo),
-      wbByteArray('Unused', 2),
+      wbByteArray('未使用', 2),
       wbString('Handler', 4),
       wbInteger('Flag Overrides', itU32, wbFlags([
         { 0} '',
@@ -3820,54 +3820,54 @@ begin
         {27} '',
         {28} '',
         {29} '',
-        {30} 'Hidden'
+        {30} '隐藏'
       ])),
       wbByteArray('ParamB', 4),
-      wbByteArray('Unused', $1C)
+      wbByteArray('未使用', $1C)
     ], cpNormal, False, wbOBMEDontShow),
-    wbString(EDDX, 'EditorID', 0, cpNormal, False, wbEDDXDontShow),
+    wbString(EDDX, '编辑器标识', 0, cpNormal, False, wbEDDXDontShow),
     wbFULL,
     wbDESC,
     wbICON,
     wbMODL,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Hostile',
-        {0x00000002} 'Recover',
-        {0x00000004} 'Detrimental',
+    wbStruct(DATA, '数据', [
+      wbInteger('标志', itU32, wbFlags([
+        {0x00000001} '敌对的',
+        {0x00000002} '恢复',
+        {0x00000004} '有害的',
         {0x00000008} 'Magnitude %',
-        {0x00000010} 'Self',
-        {0x00000020} 'Touch',
-        {0x00000040} 'Target',
+        {0x00000010} '自身',
+        {0x00000020} '接触',
+        {0x00000040} '目标',
         {0x00000080} 'No duration',
         {0x00000100} 'No magnitude',
         {0x00000200} 'No area',
         {0x00000400} 'FX persist',
         {0x00000800} 'Spellmaking',
-        {0x00001000} 'Enchanting',
+        {0x00001000} '附魔',
         {0x00002000} 'No Ingredient',
-        {0x00004000} 'Unknown 14',
-        {0x00008000} 'Unknown 15',
+        {0x00004000} '未知 14',
+        {0x00008000} '未知 15',
         {0x00010000} 'Use weapon',
         {0x00020000} 'Use armor',
         {0x00040000} 'Use creature',
         {0x00080000} 'Use skill',
         {0x00100000} 'Use attribute',
-        {0x00200000} 'Unknown 21',
-        {0x00400000} 'Unknown 22',
-        {0x00800000} 'Unknown 23',
+        {0x00200000} '未知 21',
+        {0x00400000} '未知 22',
+        {0x00800000} '未知 23',
         {0x01000000} 'Use actor value',
         {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
         {0x04000000} 'Bolt projectile type',
         {0x08000000} 'No hit effect',
-        {0x10000000} 'Unknown 28',
-        {0x20000000} 'Unknown 29',
-        {0x40000000} 'Unknown 30',
-        {0x80000000} 'Unknown 31'
+        {0x10000000} '未知 28',
+        {0x20000000} '未知 29',
+        {0x40000000} '未知 30',
+        {0x80000000} '未知 31'
       ])),
       wbFloat('Base cost'),
-      wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-        wbFormIDCk('Unused', [NULL]),
+      wbUnion('关联道具', wbMGEFFAssocItemDecider, [
+        wbFormIDCk('未使用', [NULL]),
         wbFormIDCk('Assoc. Weapon', [WEAP]),
         wbFormIDCk('Assoc. Armor', [ARMO, NULL{?}]),
         wbFormIDCk('Assoc. Creature', [CREA, LVLC, NPC_]),
@@ -3876,10 +3876,10 @@ begin
       wbInteger('Magic School', itS32, wbMagicSchoolEnum),
       wbInteger('Resist value', itS32, wbActorValueEnum),
       wbInteger('Counter Effect Count', itU16), //!!! must be updated automatically when ESCE length changes!
-      wbByteArray('Unused', 2),
-      wbFormIDCk('Light', [LIGH, NULL]),
+      wbByteArray('未使用', 2),
+      wbFormIDCk('光效', [LIGH, NULL]),
       wbFloat('Projectile speed'),
-      wbFormIDCk('Effect Shader', [EFSH, NULL]),
+      wbFormIDCk('效果渲染', [EFSH, NULL]),
       wbFormIDCk('Enchant effect', [EFSH, NULL]),
       wbFormIDCk('Casting sound', [NULL, SOUN]),
       wbFormIDCk('Bolt sound', [NULL, SOUN]),
@@ -3888,7 +3888,7 @@ begin
       wbFloat('Constant Effect enchantment factor'),
       wbFloat('Constant Effect barter factor')
     ], cpNormal, True, nil, 10),
-    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4){wbInteger('Counter Effect', itU32, wbChar4)})
+    wbArrayS(ESCE, '消除效果', wbStringMgefCode('Counter Effect Code', 4){wbInteger('Counter Effect', itU32, wbChar4)})
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
 
   wbRecord(MISC, 'Misc. Item', [
@@ -3899,18 +3899,18 @@ begin
     wbSCRI,
     wbStruct(DATA, '', [
       wbUnion('', wbMISCActorValueDecider, [
-        wbInteger('Value', itS32),
-        wbFormIDCk('Actor Value', [ACVA])
+        wbInteger('价值', itS32),
+        wbFormIDCk('角色数值', [ACVA])
       ]),
       wbUnion('', wbMISCActorValueDecider, [
-        wbFloat('Weight'),
+        wbFloat('重量'),
         wbInteger('Group', itU32, wbEnum([], [
           $40E00000, ' [NONE]',
           $40400000, 'AI',
           $00000000, 'Attribute',
-          $40C00000, 'Combat',
-          $40A00000, 'Misc',
-          $40000000, 'Skill',
+          $40C00000, '战斗',
+          $40A00000, '杂项',
+          $40000000, '技能',
           $40800000, 'Social',
           $3F800000, 'Stat'
         ]))
@@ -3918,23 +3918,23 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbFaceGen := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+  wbFaceGen := wbRStruct('脸部生成数据', [
+    wbByteArray(FGGS, '脸部生成几何-对称', 0, cpNormal, True),
+    wbByteArray(FGGA, '脸部生成几何-不对称', 0, cpNormal, True),
+    wbByteArray(FGTS, '脸部生成材质-对称', 0, cpNormal, True)
   ], [], cpNormal, True);
 
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDID,
     wbFULL,
     wbMODL,
-    wbStruct(ACBS, 'Configuration', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x000001} 'Female',
-        {0x000002} 'Essential',
+    wbStruct(ACBS, '构造', [
+      wbInteger('标志', itU32, wbFlags([
+        {0x000001} '女性',
+        {0x000002} '不死',
         {0x000004} '',
-        {0x000008} 'Respawn',
-        {0x000010} 'Auto-calc stats',
+        {0x000008} '重生',
+        {0x000010} '自动计算属性',
         {0x000020} '',
         {0x000040} '',
         {0x000080} 'PC Level Offset',
@@ -3944,7 +3944,7 @@ begin
         {0x000800} '',
         {0x001000} '',
         {0x002000} 'No Rumors',
-        {0x004000} 'Summonable',
+        {0x004000} '可召唤',
         {0x008000} 'No Persuasion',
         {0x010000} '',
         {0x020000} '',
@@ -3953,97 +3953,97 @@ begin
         {0x100000} 'Can Corpse Check'
       ])),
       wbInteger('Base spell points', itU16),
-      wbInteger('Fatigue', itU16),
+      wbInteger('体力', itU16),
       wbInteger('Barter gold', itU16),
       wbInteger('Level (offset)', itS16),
       wbInteger('Calc min', itU16),
       wbInteger('Calc max', itU16)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
+    wbRArrayS('派系',
+      wbStructSK(SNAM, [0], '派系', [
+        wbFormIDCk('派系', [FACT]),
+        wbInteger('等级', itU8),
+        wbByteArray('未使用', 3)
       ])
     ),
-    wbFormIDCk(INAM, 'Death item', [LVLI]),
-    wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True),
+    wbFormIDCk(INAM, '死亡物品', [LVLI]),
+    wbFormIDCk(RNAM, '种族', [RACE], False, cpNormal, True),
     wbCNTOs,
     wbSPLOs,
     wbSCRI,
-    wbStruct(AIDT, 'AI Data', [
-      wbInteger('Aggression', itU8),
-      wbInteger('Confidence', itU8),
-      wbInteger('Energy Level', itU8),
-      wbInteger('Responsibility', itU8),
+    wbStruct(AIDT, 'AI数据', [
+      wbInteger('好战', itU8),
+      wbInteger('信心', itU8),
+      wbInteger('活力', itU8),
+      wbInteger('品德', itU8),
       wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbByteArray('Unused', 2)
+      wbInteger('传授', itS8, wbSkillEnum),
+      wbInteger('最大训练等级', itU8),
+      wbByteArray('未使用', 2)
     ], cpNormal, True),
     wbRArray('AI Packages', wbFormIDCk(PKID, 'AI Package', [PACK])),
-    wbArrayS(KFFZ, 'Animations', wbString('Animation')),
-    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
+    wbArrayS(KFFZ, '动作', wbString('动作')),
+    wbFormIDCk(CNAM, '职业', [CLAS], False, cpNormal, True),
     wbStruct(DATA, 'Stats', [
       wbInteger('Armorer', itU8),
       wbInteger('Athletics', itU8),
       wbInteger('Blade', itU8),
-      wbInteger('Block', itU8),
+      wbInteger('格挡', itU8),
       wbInteger('Blunt', itU8),
-      wbInteger('Hand to Hand', itU8),
-      wbInteger('Heavy Armor', itU8),
-      wbInteger('Alchemy', itU8),
-      wbInteger('Alteration', itU8),
-      wbInteger('Conjuration', itU8),
-      wbInteger('Destruction', itU8),
-      wbInteger('Illusion', itU8),
+      wbInteger('徒手格斗', itU8),
+      wbInteger('重甲', itU8),
+      wbInteger('炼金', itU8),
+      wbInteger('改变系', itU8),
+      wbInteger('召唤系', itU8),
+      wbInteger('毁灭系', itU8),
+      wbInteger('幻术系', itU8),
       wbInteger('Mysticism', itU8),
-      wbInteger('Restoration', itU8),
+      wbInteger('恢复系', itU8),
       wbInteger('Acrobatics', itU8),
-      wbInteger('Light Armor', itU8),
-      wbInteger('Marksman', itU8),
+      wbInteger('轻甲', itU8),
+      wbInteger('箭术', itU8),
       wbInteger('Mercantile', itU8),
       wbInteger('Security', itU8),
-      wbInteger('Sneak', itU8),
-      wbInteger('Speechcraft', itU8),
-      wbInteger('Health', itU16),
-      wbByteArray('Unused', 2),
-      wbInteger('Strength', itU8),
-      wbInteger('Intelligence', itU8),
-      wbInteger('Willpower', itU8),
-      wbInteger('Agility', itU8),
-      wbInteger('Speed', itU8),
-      wbInteger('Endurance', itU8),
-      wbInteger('Personality', itU8),
-      wbInteger('Luck', itU8)
+      wbInteger('潜行', itU8),
+      wbInteger('口才', itU8),
+      wbInteger('生命', itU16),
+      wbByteArray('未使用', 2),
+      wbInteger('力量', itU8),
+      wbInteger('智力', itU8),
+      wbInteger('意志力', itU8),
+      wbInteger('敏捷', itU8),
+      wbInteger('速度', itU8),
+      wbInteger('耐力', itU8),
+      wbInteger('魅力', itU8),
+      wbInteger('运气', itU8)
     ], cpNormal, True),
-    wbFormIDCk(HNAM, 'Hair', [HAIR]),
+    wbFormIDCk(HNAM, '发型', [HAIR]),
     wbFloat(LNAM, 'Hair length'),
-    wbArray(ENAM, 'Eyes', wbFormIDCk('Eyes', [EYES])),
+    wbArray(ENAM, '眼睛', wbFormIDCk('眼睛', [EYES])),
     wbStruct(HCLR, 'Hair color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
+      wbInteger('红', itU8),
+      wbInteger('绿', itU8),
+      wbInteger('蓝', itU8),
+      wbByteArray('未使用', 1)
     ], cpNormal, True),
-    wbFormIDCk(ZNAM, 'Combat Style', [CSTY]),
+    wbFormIDCk(ZNAM, '战斗风格', [CSTY]),
     wbFaceGen,
-    wbByteArray(FNAM, 'Unknown', 0, cpBenign)
+    wbByteArray(FNAM, '未知', 0, cpBenign)
   ], True);
 
   wbPKDTFlags := wbFlags([
-          {0x00000001} 'Offers services',
+          {0x00000001} '提供服务',
           {0x00000002} 'Must reach location',
-          {0x00000004} 'Must complete',
+          {0x00000004} '必须完成',
           {0x00000008} 'Lock doors at package start',
           {0x00000010} 'Lock doors at package end',
           {0x00000020} 'Lock doors at location',
-          {0x00000040} 'Unlock doors at package start',
-          {0x00000080} 'Unlock doors at package end',
+          {0x00000040} '开始时开门',
+          {0x00000080} '结束时开门',
           {0x00000100} 'Unlock doors at location',
           {0x00000200} 'Continue if PC near',
-          {0x00000400} 'Once per day',
-          {0x00000800} 'Unused',
+          {0x00000400} '每天一次',
+          {0x00000800} '未使用',
           {0x00001000} 'Skip fallout behavior',
           {0x00002000} 'Always run',
           {0x00004000} '',
@@ -4083,40 +4083,40 @@ begin
 
   wbRecord(PACK, 'AI Package', [
     wbEDID,
-    wbUnion(PKDT, 'General', wbPACKPKDTDecider, [
-      wbStruct('General', [
-        wbInteger('Flags', itU16, wbPKDTFlags),
-        wbInteger('Type', itU8, wbPKDTType),
-        wbByteArray('Unused', 1)
+    wbUnion(PKDT, '常规', wbPACKPKDTDecider, [
+      wbStruct('常规', [
+        wbInteger('标志', itU16, wbPKDTFlags),
+        wbInteger('类型', itU8, wbPKDTType),
+        wbByteArray('未使用', 1)
       ]),
-      wbStruct('General', [
-        wbInteger('Flags', itU32, wbPKDTFlags),
-        wbInteger('Type', itU8, wbPKDTType),
-        wbByteArray('Unused', 3)
+      wbStruct('常规', [
+        wbInteger('标志', itU32, wbPKDTFlags),
+        wbInteger('类型', itU8, wbPKDTType),
+        wbByteArray('未使用', 3)
       ])
     ]),
-    wbStruct(PLDT, 'Location', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Near reference',
-        {1} 'In cell',
-        {2} 'Near current location',
-        {3} 'Near editor location',
-        {4} 'Object ID',
+    wbStruct(PLDT, '位置', [
+      wbInteger('类型', itS32, wbEnum([
+        {0} '接近衍生',
+        {1} '在场景内',
+        {2} '接近当前位置',
+        {3} '接近编辑器位置',
+        {4} '对象编号',
         {5} 'Object type'
       ])),
-      wbUnion('Location', wbPxDTLocationDecider, [
-        wbFormIDCk('Reference', [REFR, ACHR, ACRE, PLYR], True),
-        wbFormIDCk('Cell', [CELL]),
-        wbFormIDCk('Unused', [NULL]),
-        wbFormIDCk('Unused', [NULL]),
-        wbFormIDCk('Object ID', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+      wbUnion('位置', wbPxDTLocationDecider, [
+        wbFormIDCk('衍生', [REFR, ACHR, ACRE, PLYR], True),
+        wbFormIDCk('场景', [CELL]),
+        wbFormIDCk('未使用', [NULL]),
+        wbFormIDCk('未使用', [NULL]),
+        wbFormIDCk('对象编号', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
         wbInteger('Object type', itU32)
       ]),
-      wbInteger('Radius', itS32)
+      wbInteger('半径', itS32)
     ]),
-    wbStruct(PSDT, 'Schedule', [
-      wbInteger('Month', itS8),
-      wbInteger('Day of week', itS8, wbEnum([
+    wbStruct(PSDT, '时间表', [
+      wbInteger('月份', itS8),
+      wbInteger('星期', itS8, wbEnum([
         'Sundas',
         'Morndas',
         'Tirdas',
@@ -4129,24 +4129,24 @@ begin
         'Morndas, Middas, Fredas',
         'Tirdas, Turdas'
       ], [
-        -1, 'Any'
+        -1, '任意'
       ])),
-      wbInteger('Date', itU8),
-      wbInteger('Time', itS8),
-      wbInteger('Duration', itS32)
+      wbInteger('日', itU8),
+      wbInteger('时间', itS8),
+      wbInteger('持续时间', itS32)
     ]),
-    wbStruct(PTDT, 'Target', [
-      wbInteger('Type', itS32, wbEnum([
+    wbStruct(PTDT, '目标', [
+      wbInteger('类型', itS32, wbEnum([
         {0} 'Specific reference',
-        {1} 'Object ID',
+        {1} '对象编号',
         {2} 'Object type'
       ])),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCk('Reference', [ACHR, ACRE, REFR, PLYR], True),
-        wbFormIDCk('Object ID', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+      wbUnion('目标', wbPxDTLocationDecider, [
+        wbFormIDCk('衍生', [ACHR, ACRE, REFR, PLYR], True),
+        wbFormIDCk('对象编号', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
         wbInteger('Object type', itU32)
       ]),
-      wbInteger('Count', itS32)
+      wbInteger('数量', itS32)
     ]),
     wbCTDAs
   ]);
@@ -4156,8 +4156,8 @@ begin
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z (Even = Red/Orange, Odd = Blue)'),
-      wbInteger('Connections', itU8{, wbPGRPConnectionsCallback}),
-      wbByteArray('Unused', 3)
+      wbInteger('连接', itU8{, wbPGRPConnectionsCallback}),
+      wbByteArray('未使用', 3)
     ]), 0, nil, nil, cpNormal, True);
 
       {The Connection Count in the PGRP record specifies how many entries in this
@@ -4170,20 +4170,20 @@ begin
   wbRecord(PGRD, 'Path Grid', [
     wbInteger(DATA, 'Point Count', itU16, nil, cpNormal, True),
     wbPGRP,
-    wbByteArray(PGAG, 'Unknown'),
+    wbByteArray(PGAG, '未知'),
     wbArray(PGRR, 'Point-to-Point Connections',
       wbArrayS('Point', wbInteger('Point', itU16), wbCalcPGRRSize{, cpNormal, False, wbPGRRPointAfterLoad})
     ),
     wbArrayS(PGRI, 'Inter-Cell Connections', wbStructSK([0,2,3,4], 'Inter-Cell Connection', [
       wbInteger('Point', itU16),
-      wbByteArray('Unused', 2),
+      wbByteArray('未使用', 2),
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
     ]), 0, cpNormal, False, wbPGRIPointerAfterLoad),
     wbRArrayS('Point-to-Reference Mappings',
       wbStructSK(PGRL, [0], 'Point-to-Reference Mapping', [
-        wbFormIDCk('Reference', [REFR]),
+        wbFormIDCk('衍生', [REFR]),
         wbArrayS('Points', wbInteger('Point', itU32))
       ])
     )
@@ -4194,46 +4194,46 @@ begin
     wbSCRI,
     wbFULL,
     wbICON,
-    wbStruct(DATA, 'General', [
-      wbInteger('Flags', itU8, wbFlags([
+    wbStruct(DATA, '常规', [
+      wbInteger('标志', itU8, wbFlags([
         {0x01} 'Start game enabled',
         {0x02} '',
         {0x04} 'Allow repeated conversation topics',
-        {0x08} 'Allow repeated stages'
+        {0x08} '允许重复的阶段'
       ])),
-      wbInteger('Priority', itU8)
+      wbInteger('优先级', itU8)
     ], cpNormal, True),
     wbCTDAs,
-    wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
+    wbRArrayS('阶段', wbRStructSK([0], '阶段', [
       wbInteger(INDX, 'Stage index', itS16),
-      wbRArray('Log Entries', wbRStruct('Log Entry', [
-        wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
+      wbRArray('日志记录', wbRStruct('日志记录', [
+        wbInteger(QSDT, '阶段标志', itU8, wbFlags([
           {0x01} 'Complete quest'
         ])),
         wbCTDAs,
-        wbString(CNAM, 'Log Entry', 0, cpTranslate),
+        wbString(CNAM, '日志记录', 0, cpTranslate),
         wbResultScript
       ], []))
     ], [])),
-    wbRArray('Targets', wbRStruct('Target', [
-      wbStruct(QSTA, 'Target', [
-        wbFormIDCk('Target', [REFR, ACRE, ACHR], True),
-        wbInteger('Flags', itU8, wbFlags([
+    wbRArray('目标', wbRStruct('目标', [
+      wbStruct(QSTA, '目标', [
+        wbFormIDCk('目标', [REFR, ACRE, ACHR], True),
+        wbInteger('标志', itU8, wbFlags([
           {0x01} 'Compass marker ignores locks'
         ])),
-        wbByteArray('Unused', 3)
+        wbByteArray('未使用', 3)
       ]),
       wbCTDAs
     ], []))
   ]);
 
   wbBodyDataIndex :=
-    wbInteger(INDX, 'Index', itU32, wbEnum([
+    wbInteger(INDX, '索引', itU32, wbEnum([
       'Upper Body',
       'Lower Body',
       'Hand',
       'Foot',
-      'Tail'
+      '尾巴'
     ]));
 
   wbRecord(RACE, 'Race', [
@@ -4243,60 +4243,60 @@ begin
     wbSPLOs,
     wbXNAMs,
     wbStruct(DATA, '', [
-      wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
-        wbInteger('Skill', itS8, wbActorValueEnum),
-        wbInteger('Boost', itS8)
+      wbArrayS('技能加强', wbStructSK([0], '技能加强', [
+        wbInteger('技能', itS8, wbActorValueEnum),
+        wbInteger('加强', itS8)
       ]), 7),
-      wbByteArray('Unused', 2),
-      wbFloat('Male Height'),
-      wbFloat('Female Height'),
-      wbFloat('Male Weight'),
-      wbFloat('Female Weight'),
-      wbInteger('Flags', itU32, wbFlags([
-        'Playable'
+      wbByteArray('未使用', 2),
+      wbFloat('男性身高'),
+      wbFloat('女性身高'),
+      wbFloat('男性体重'),
+      wbFloat('女性体重'),
+      wbInteger('标志', itU32, wbFlags([
+        '玩家可用'
       ]))
     ], cpNormal, True),
-    wbStruct(VNAM, 'Voice', [
-      wbFormIDCk('Male', [RACE, NULL]),
-      wbFormIDCk('Female', [RACE, NULL])
+    wbStruct(VNAM, '语音', [
+      wbFormIDCk('男性', [RACE, NULL]),
+      wbFormIDCk('女性', [RACE, NULL])
     ]),
     wbStruct(DNAM, 'Default Hair', [
-      wbFormIDCk('Male', [HAIR]),
-      wbFormIDCk('Female', [HAIR])
+      wbFormIDCk('男性', [HAIR]),
+      wbFormIDCk('女性', [HAIR])
     ]),
-    wbInteger(CNAM, 'Default Hair Color', itU8, nil, cpNormal, True),
-    wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
-    wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
+    wbInteger(CNAM, '默认头发颜色', itU8, nil, cpNormal, True),
+    wbFloat(PNAM, '脸部生成 - 主要钳位', cpNormal, True),
+    wbFloat(UNAM, '脸部生成 - 脸部钳位', cpNormal, True),
     wbStruct(ATTR, 'Base Attributes', [
-      wbStruct('Male', [
-        wbInteger('Strength', itU8),
-        wbInteger('Intelligence', itU8),
-        wbInteger('Willpower', itU8),
-        wbInteger('Agility', itU8),
-        wbInteger('Speed', itU8),
-        wbInteger('Endurance', itU8),
-        wbInteger('Personality', itU8),
-        wbInteger('Luck', itU8)
+      wbStruct('男性', [
+        wbInteger('力量', itU8),
+        wbInteger('智力', itU8),
+        wbInteger('意志力', itU8),
+        wbInteger('敏捷', itU8),
+        wbInteger('速度', itU8),
+        wbInteger('耐力', itU8),
+        wbInteger('魅力', itU8),
+        wbInteger('运气', itU8)
       ]),
-      wbStruct('Female', [
-        wbInteger('Strength', itU8),
-        wbInteger('Intelligence', itU8),
-        wbInteger('Willpower', itU8),
-        wbInteger('Agility', itU8),
-        wbInteger('Speed', itU8),
-        wbInteger('Endurance', itU8),
-        wbInteger('Personality', itU8),
-        wbInteger('Luck', itU8)
+      wbStruct('女性', [
+        wbInteger('力量', itU8),
+        wbInteger('智力', itU8),
+        wbInteger('意志力', itU8),
+        wbInteger('敏捷', itU8),
+        wbInteger('速度', itU8),
+        wbInteger('耐力', itU8),
+        wbInteger('魅力', itU8),
+        wbInteger('运气', itU8)
       ])
     ]),
     wbRStruct('Face Data', [
       wbEmpty(NAM0, 'Face Data Marker'),
-      wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-        wbInteger(INDX, 'Index', itU32, wbEnum([
-          'Head',
+      wbRArrayS('部分', wbRStructSK([0], '部分', [
+        wbInteger(INDX, '索引', itU32, wbEnum([
+          '头部',
           'Ear (Male)',
           'Ear (Female)',
-          'Mouth',
+          '嘴巴',
           'Teeth (Lower)',
           'Teeth (Upper)',
           'Tongue',
@@ -4307,210 +4307,210 @@ begin
         wbICON
       ], []))
     ], [], cpNormal, True),
-    wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
-    wbRStruct('Male Body Data', [
+    wbEmpty(NAM1, '身体数据标记', cpNormal, True),
+    wbRStruct('男性身体数据', [
       wbEmpty(MNAM, 'Male Body Data Marker'),
       wbMODL,
-      wbRArrayS('Parts', wbRStructSK([0], 'Part', [
+      wbRArrayS('部分', wbRStructSK([0], '部分', [
         wbBodyDataIndex,
         wbICON
       ], []))
     ], [], cpNormal, True),
-    wbRStruct('Female Body Data', [
+    wbRStruct('女性身体数据', [
       wbEmpty(FNAM, 'Female Body Data Marker'),
       wbMODL,
-      wbRArrayS('Parts', wbRStructSK([0], 'Part', [
+      wbRArrayS('部分', wbRStructSK([0], '部分', [
         wbBodyDataIndex,
         wbICON
       ], []))
     ], [], cpNormal, True),
-    wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),
-    wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal, True),
+    wbArrayS(HNAM, '发型', wbFormIDCk('发型', [HAIR]), 0, cpNormal, True),
+    wbArrayS(ENAM, '眼睛', wbFormIDCk('眼睛', [EYES]),  0,  cpNormal, True),
     wbFaceGen,
-    wbByteArray(SNAM, 'Unknown', 2, cpNormal, True)
+    wbByteArray(SNAM, '未知', 2, cpNormal, True)
   ], True);
 
   wbRecord(REFR, 'Placed Object', [
     wbEDID,
-    wbFormIDCk(NAME, 'Base', [TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS], False, cpNormal, True),
-    wbStruct(XTEL, 'Teleport Destination', [
-      wbFormIDCk('Door', [REFR], True),
+    wbFormIDCk(NAME, '基础', [TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS], False, cpNormal, True),
+    wbStruct(XTEL, '传送目的地', [
+      wbFormIDCk('门', [REFR], True),
       wbPosRot
     ]),
     wbStruct(XLOC, 'Lock information', [
       wbInteger('Lock Level', itU8),
-      wbByteArray('Unused', 3),
-      wbFormIDCk('Key', [KEYM, NULL]),
-      wbUnion('Unused', wbXLOCFillerDecider, [
-        wbEmpty('Unused'),
-        wbByteArray('Unused', 4)
+      wbByteArray('未使用', 3),
+      wbFormIDCk('钥匙', [KEYM, NULL]),
+      wbUnion('未使用', wbXLOCFillerDecider, [
+        wbEmpty('未使用'),
+        wbByteArray('未使用', 4)
       ]),
-      wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unused', 3)
+      wbInteger('标志', itU8, wbFlags(['', '', '等级锁'])),
+      wbByteArray('未使用', 3)
     ]),
-    wbRStruct('Ownership', [
+    wbRStruct('所有权', [
       wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
+      wbInteger(XRNK, '派系等级', itS32),
       wbXGLB
     ], [XLOC]),
     wbXESP,
-    wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
+    wbFormIDCk(XTRG, '目标', [REFR, ACHR, ACRE], True),
     wbUnion(XSED, '', wbREFRXSEDDecider, [
       wbInteger('SpeedTree Seed', itU8),
       wbInteger('SpeedTree Seed (old format)', itU8{itU32 CS just cuts it off...})
     ]),
     wbXLOD,
-    wbFloat(XCHG, 'Charge'),
-    wbInteger(XHLT, 'Health', itS32),
-    wbRStruct('Unused', [
-      wbFormIDCk(XPCI, 'Unused', [CELL]),
-      wbString(FULL, 'Unused')
+    wbFloat(XCHG, '费用'),
+    wbInteger(XHLT, '生命', itS32),
+    wbRStruct('未使用', [
+      wbFormIDCk(XPCI, '未使用', [CELL]),
+      wbString(FULL, '未使用')
     ], []),
-    wbInteger(XLCM, 'Level Modifier', itS32),
-    wbFormIDCk(XRTM, 'Unknown', [REFR]),
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
-      'Use Default',
-      'Activate',
-      'Open',
-      'Open by Default'
+    wbInteger(XLCM, '等级调整', itS32),
+    wbFormIDCk(XRTM, '未知', [REFR]),
+    wbInteger(XACT, '动作标记', itU32, wbFlags([
+      '使用默认',
+      '激活',
+      '打开',
+      '默认打开'
     ])),
-    wbInteger(XCNT, 'Count', itS32),
-    wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Start Marker'),
-      wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
-        {0x01} 'Visible',
-        {0x02} 'Can Travel To'
+    wbInteger(XCNT, '数量', itS32),
+    wbRStruct('地图标记', [
+      wbEmpty(XMRK, '地图标记起始标记'),
+      wbInteger(FNAM, '地图标志', itU8, wbFlags([
+        {0x01} '可见',
+        {0x02} '可以旅行到'
       ]), cpNormal, True),
       wbFULLReq,
       wbStruct(TNAM, '', [
-        wbInteger('Type', itU8, wbEnum([
-          {0x00} 'None?',
-          {0x01} 'Camp',
-          {0x02} 'Cave',
-          {0x03} 'City',
-          {0x04} 'Elven Ruin',
-          {0x05} 'Fort Ruin',
-          {0x06} 'Mine',
-          {0x07} 'Landmark',
-          {0x08} 'Tavern',
-          {0x09} 'Settlement',
-          {0x0A} 'Daedric Shrine',
-          {0x0B} 'Oblivion Gate',
-          {0x0C} 'Unknown? (door icon)'
+        wbInteger('类型', itU8, wbEnum([
+          {0x00} '无?',
+          {0x01} '营地',
+          {0x02} '洞穴',
+          {0x03} '城市',
+          {0x04} '精灵废墟',
+          {0x05} '堡垒废墟',
+          {0x06} '矿山',
+          {0x07} '地标',
+          {0x08} '酒馆',
+          {0x09} '村落',
+          {0x0A} '达德拉神殿',
+          {0x0B} '地狱门',
+          {0x0C} '未知? (门图标)'
         ])),
-        wbByteArray('Unused', 1)
+        wbByteArray('未使用', 1)
       ], cpNormal, True)
     ], []),
-    wbEmpty(ONAM, 'Open by Default'),
+    wbEmpty(ONAM, '默认打开'),
     wbXSCL,
-    wbInteger(XSOL, 'Contained Soul', itU8, wbSoulGemEnum),
+    wbInteger(XSOL, '所含灵魂', itU8, wbSoulGemEnum),
     wbDATAPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region', [
     wbEDID,
     wbICON,
-    wbStruct(RCLR, 'Map Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
+    wbStruct(RCLR, '地图颜色', [
+      wbInteger('红', itU8),
+      wbInteger('绿', itU8),
+      wbInteger('蓝', itU8),
+      wbByteArray('未使用', 1)
     ], cpNormal, True),
-    wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+    wbFormIDCk(WNAM, '世界空间', [WRLD]),
 
-    wbRArray('Region Areas', wbRStruct('Region Area', [
-      wbInteger(RPLI, 'Edge Fall-off', itU32),
-      wbArray(RPLD, 'Region Point List Data', wbStruct('Point', [
+    wbRArray('区域范围', wbRStruct('区域范围', [
+      wbInteger(RPLI, '边缘衰减', itU32),
+      wbArray(RPLD, '区域点数据', wbStruct('点', [
         wbFloat('X'),
         wbFloat('Y')
       ]), 0, wbRPLDAfterLoad)
     ], []), cpNormal, True),
 
-    wbRArrayS('Region Data Entries', wbRStructSK([0], 'Region Data Entry', [
+    wbRArrayS('边缘数据记录', wbRStructSK([0], '边缘数据记录', [
       {always starts with an RDAT}
-      wbStructSK(RDAT, [0], 'Data Header', [
-        wbInteger('Type', itU32, wbEnum([
+      wbStructSK(RDAT, [0], '数据头', [
+        wbInteger('类型', itU32, wbEnum([
           {0}'',
           {1}'',
-          {2}'Objects',
-          {3}'Weather',
-          {4}'Map',
-          {5}'Unknown 5',
-          {6}'Grass',
-          {7}'Sound',
+          {2}'对象',
+          {3}'天气',
+          {4}'地图',
+          {5}'未知 5',
+          {6}'草地',
+          {7}'音效',
           {8}'',
           {9}''
         ])),
-        wbInteger('Flags', itU8, wbFlags([
-          'Override'
+        wbInteger('标志', itU8, wbFlags([
+          '覆盖'
         ])),
-        wbInteger('Priority', itU8),
-        wbByteArray('Unused', 2)
+        wbInteger('优先级', itU8),
+        wbByteArray('未使用', 2)
       ], cpNormal, True, nil, 3),
 
       {followed by one of these: }
 
       {--- Objects ---}
-      wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX]),
-        wbInteger('Parent Index', itU16, wbHideFFFF),
-        wbByteArray('Unused', 2),
-        wbFloat('Density'),
-        wbInteger('Clustering', itU8),
-        wbInteger('Min Slope', itU8),
-        wbInteger('Max Slope', itU8),
-        wbInteger('Flags', itU8, wbFlags([
-          {0}'Conform to slope',
-          {1}'Paint Vertices',
-          {2}'Size Variance +/-',
+      wbArray(RDOT, '对象', wbStruct('对象', [
+        wbFormIDCk('对象', [TREE, FLOR, STAT, LTEX]),
+        wbInteger('父系索引', itU16, wbHideFFFF),
+        wbByteArray('未使用', 2),
+        wbFloat('密度'),
+        wbInteger('聚集', itU8),
+        wbInteger('最小坡度', itU8),
+        wbInteger('最大坡度', itU8),
+        wbInteger('标志', itU8, wbFlags([
+          {0}'与斜坡一致',
+          {1}'绘制顶点',
+          {2}'尺寸变化范围 +/-',
           {3}'X +/-',
           {4}'Y +/-',
           {5}'Z +/-',
-          {6}'Tree',
-          {7}'Huge Rock'
+          {6}'树木',
+          {7}'超大石块'
         ])),
-        wbInteger('Radius wrt Parent', itU16),
-        wbInteger('Radius', itU16),
-        wbByteArray('Unknown', 4),
-        wbFloat('Max Height'),
-        wbFloat('Sink'),
-        wbFloat('Sink Variance'),
-        wbFloat('Size Variance'),
-        wbStruct('Angle Variance', [
+        wbInteger('半径关于父系', itU16),
+        wbInteger('半径', itU16),
+        wbByteArray('未知', 4),
+        wbFloat('最大高度'),
+        wbFloat('下沉'),
+        wbFloat('下沉变化范围'),
+        wbFloat('尺寸变化范围'),
+        wbStruct('角度变化范围', [
           wbInteger('X', itU16),
           wbInteger('Y', itU16),
           wbInteger('Z', itU16)
         ]),
-        wbByteArray('Unused', 2),
-        wbByteArray('Unknown', 4)
+        wbByteArray('未使用', 2),
+        wbByteArray('未知', 4)
       ])),
 
       {--- Map ---}
-      wbString(RDMP, 'Map Name', 0, cpTranslate),
+      wbString(RDMP, '地图名称', 0, cpTranslate),
 
       {--- Grass ---}
-      wbArrayS(RDGS, 'Grasses', wbStructSK([0], 'Grass', [
-        wbFormIDCk('Grass', [GRAS]),
-        wbByteArray('Unused', 4)
+      wbArrayS(RDGS, '草地', wbStructSK([0], '草地', [
+        wbFormIDCk('草地', [GRAS]),
+        wbByteArray('未使用', 4)
       ])),
 
       {--- Sound ---}
-      wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum),
-      wbArrayS(RDSD, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SOUN]),
-        wbInteger('Flags', itU32, wbFlags([
-          'Pleasant',
-          'Cloudy',
-          'Rainy',
-          'Snowy'
+      wbInteger(RDMD, '音乐类型', itU32, wbMusicEnum),
+      wbArrayS(RDSD, '音效', wbStructSK([0], '音效', [
+        wbFormIDCk('音效', [SOUN]),
+        wbInteger('标志', itU32, wbFlags([
+          '晴朗',
+          '多云',
+          '下雨',
+          '下雪'
         ])),
-        wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
+        wbInteger('概率', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
       ])),
 
       {--- Weather ---}
-      wbArrayS(RDWT, 'Weather Types', wbStructSK([0], 'Weather Type', [
-        wbFormIDCk('Weather', [WTHR]),
-        wbInteger('Chance', itU32)
+      wbArrayS(RDWT, '天气类型', wbStructSK([0], '天气类型', [
+        wbFormIDCk('天气', [WTHR]),
+        wbInteger('概率', itU32)
       ]))
     ], []))
   ], True);
@@ -4541,10 +4541,10 @@ begin
   ]);
 
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
-    wbInteger('Index', itU32),
-    wbByteArray('Unused', 12),
-    wbInteger('Flags', itU8, wbFlags(['IsLongOrShort']), cpCritical),
-    wbByteArray('Unused')
+    wbInteger('索引', itU32),
+    wbByteArray('未使用', 12),
+    wbInteger('标志', itU8, wbFlags(['IsLongOrShort']), cpCritical),
+    wbByteArray('未使用')
   ]);
 
   wbRecord(SCPT, 'Script', [
@@ -4555,7 +4555,7 @@ begin
     wbStringScript(SCTX, 'Script Source', 0, cpNormal, True),
     wbRArrayS('Local Variables', wbRStructSK([0], 'Local Variable', [
       wbSLSD,
-      wbString(SCVR, 'Name', 0, cpCritical)
+      wbString(SCVR, '名称', 0, cpCritical)
     ], [])),
     wbSCROs
   ]);
@@ -4569,7 +4569,7 @@ begin
         wbInteger('Minor', itU8),
         wbInteger('Major', itU8)
       ]),
-      wbByteArray('Unused', $1C)
+      wbByteArray('未使用', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
     wbMODL,
@@ -4578,18 +4578,18 @@ begin
     wbEffects,
     wbStruct(DATA, '', [
       wbInteger('Uses ', itU8),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbInteger('价值', itU32),
+      wbFloat('重量')
     ], cpNormal, True)
   ]);
 
   wbRecord(SKIL, 'Skill', [
     wbEDID,
-    wbInteger(INDX, 'Skill', itS32, wbActorValueEnum, cpNormal, True),
+    wbInteger(INDX, '技能', itS32, wbActorValueEnum, cpNormal, True),
     wbDESC,
     wbICON,
     wbStruct(DATA, 'Skill Data', [
-      wbInteger('Action', itS32, wbActorValueEnum),
+      wbInteger('操作', itS32, wbActorValueEnum),
       wbInteger('Attribute', itS32, wbActorValueEnum),
       wbInteger('Specialization', itU32, wbSpecializationEnum),
       wbArray('Use Values', wbFloat('Use Value'), 2)
@@ -4607,11 +4607,11 @@ begin
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbInteger('价值', itU32),
+      wbFloat('重量')
     ], cpNormal, True),
-    wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
-    wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True)
+    wbInteger(SOUL, '所含灵魂', itU8, wbSoulGemEnum, cpNormal, True),
+    wbInteger(SLCP, '最大容量', itU8, wbSoulGemEnum, cpNormal, True)
   ]);
 
   wbRecord(SOUN, 'Sound', [
@@ -4621,42 +4621,42 @@ begin
       wbStruct(SNDX, 'Sound Data', [
         wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
         wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
-        wbInteger('Frequency adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU16, wbFlags([
-          {0x0001} 'Random Frequency Shift',
+        wbInteger('频率调整 %', itS8),
+        wbByteArray('未使用', 1),
+        wbInteger('标志', itU16, wbFlags([
+          {0x0001} '随机频移',
           {0x0002} 'Play At Random',
           {0x0004} 'Environment Ignored',
           {0x0008} 'Random Location',
-          {0x0010} 'Loop',
+          {0x0010} '循环',
           {0x0020} 'Menu Sound',
           {0x0040} '2D',
           {0x0080} '360 LFE'
         ])),
-        wbByteArray('Unused', 2),
+        wbByteArray('未使用', 2),
         wbInteger('Static attentuation cdB', itS16),
         wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8)
+        wbInteger('起始时间 ', itU8)
       ], cpNormal, True),
       wbStruct(SNDD, 'Sound Data', [
         wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
         wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
-        wbInteger('Frequency adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU16, wbFlags([
-          {0x0001} 'Random Frequency Shift',
+        wbInteger('频率调整 %', itS8),
+        wbByteArray('未使用', 1),
+        wbInteger('标志', itU16, wbFlags([
+          {0x0001} '随机频移',
           {0x0002} 'Play At Random',
           {0x0004} 'Environment Ignored',
           {0x0008} 'Random Location',
-          {0x0010} 'Loop',
+          {0x0010} '循环',
           {0x0020} 'Menu Sound',
           {0x0040} '2D',
           {0x0080} '360 LFE'
         ])),
-        wbByteArray('Unused', 2),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbByteArray('未使用', 2),
+        wbEmpty('未使用'),
+        wbEmpty('未使用'),
+        wbEmpty('未使用')
       ], cpNormal, True)
     ], [], cpNormal, True)
   ]);
@@ -4670,37 +4670,37 @@ begin
         wbInteger('Minor', itU8),
         wbInteger('Major', itU8)
       ]),
-      wbByteArray('Unused', $1C)
+      wbByteArray('未使用', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
     wbStruct(SPIT, '', [
-      wbInteger('Type', itU32, wbEnum([
-        {0} 'Spell',
-        {1} 'Disease',
-        {2} 'Power',
-        {3} 'Lesser Power',
-        {4} 'Ability',
-        {5} 'Poison'
+      wbInteger('类型', itU32, wbEnum([
+        {0} '法术',
+        {1} '疾病',
+        {2} '威能',
+        {3} '次级威能',
+        {4} '能力',
+        {5} '毒药'
       ])),
       wbInteger('Cost', itU32),
-      wbInteger('Level', itU32, wbEnum([
-        {0} 'Novice',
-        {1} 'Apprentice',
-        {2} 'Journeyman',
-        {3} 'Expert',
-        {4} 'Master'
+      wbInteger('等级', itU32, wbEnum([
+        {0} '新手',
+        {1} '学徒',
+        {2} '熟手',
+        {3} '专家',
+        {4} '大师'
       ])),
-      wbInteger('Flags', itU8, wbFlags([
+      wbInteger('标志', itU8, wbFlags([
         {0x00000001} 'Manual Spell Cost',
         {0x00000002} 'Immune to Silence 1',
         {0x00000004} 'Player Start Spell',
         {0x00000008} 'Immune to Silence 2',
-        {0x00000010} 'Area Effect Ignores LOS',
+        {0x00000010} '影响范围不受视角限制',
         {0x00000020} 'Script Effect Always Applies',
         {0x00000040} 'Disallow Spell Absorb/Reflect',
         {0x00000080} 'Touch Spell Explodes w/ no Target'
       ])),
-      wbByteArray('Unused', 3)
+      wbByteArray('未使用', 3)
     ], cpNormal, True),
     wbEffects
   ]);
@@ -4711,18 +4711,18 @@ begin
   ]);
 
   wbRecord(TES4, 'Main File Header', [
-    wbStruct(HEDR, 'Header', [
-      wbFloat('Version'),
-      wbInteger('Number of Records', itU32),
-      wbInteger('Next Object ID', itU32)
+    wbStruct(HEDR, '文件头', [
+      wbFloat('版本'),
+      wbInteger('记录总数', itU32),
+      wbInteger('下个物体序号', itU32)
     ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
-    wbString(CNAM, 'Author', 0, cpTranslate, True),
-    wbString(SNAM, 'Description', 0, cpTranslate),
-    wbRArray('Master Files', wbRStruct('Master File', [
-      wbString(MAST, 'Filename', 0, cpNormal, True),
-      wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
+    wbByteArray(OFST, '未知', 0, cpIgnore),
+    wbByteArray(DELE, '未知', 0, cpIgnore),
+    wbString(CNAM, '作者', 0, cpTranslate, True),
+    wbString(SNAM, '描述', 0, cpTranslate),
+    wbRArray('Master 文件', wbRStruct('Master 文件', [
+      wbString(MAST, '文件', 0, cpNormal, True),
+      wbByteArray(DATA, '未使用', 8, cpIgnore, True)
     ], []))
   ], False, nil, cpNormal, True, wbRemoveOFST);
 
@@ -4731,7 +4731,7 @@ begin
     wbMODL,
     wbICON,
     wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32)),
-    wbStruct(CNAM, 'Tree Data', [
+    wbStruct(CNAM, '树木数据', [
       wbFloat('Leaf Curvature'),
       wbFloat('Minimum Leaf Angle'),
       wbFloat('Maximum Leaf Angle'),
@@ -4742,64 +4742,64 @@ begin
       wbFloat('Rustle Speed')
     ], cpNormal, True),
     wbStruct(BNAM, 'Billboard Dimensions', [
-      wbFloat('Width'),
-      wbFloat('Height')
+      wbFloat('宽度'),
+      wbFloat('高度')
     ], cpNormal, True)
   ]);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
-    wbString(TNAM, 'Texture', 0, cpNormal, True),
-    wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0}'Causes Damage',
+    wbString(TNAM, '材质', 0, cpNormal, True),
+    wbInteger(ANAM, '透明度', itU8, nil, cpNormal, True),
+    wbInteger(FNAM, '标志', itU8, wbFlags([
+      {0}'造成伤害',
       {1}'Reflective'
     ]), cpNormal, True),
     wbString(MNAM, 'Material ID'{>>>}, 0, cpNormal, True{<<<}),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
+    wbFormIDCk(SNAM, '音效', [SOUN]),
     wbStruct(DATA, '', [
       wbFloat('Wind Velocity'),
-      wbFloat('Wind Direction'),
+      wbFloat('风向'),
       wbFloat('Wave Amplitude'),
-      wbFloat('Wave Frequency'),
-      wbFloat('Sun Power'),
-      wbFloat('Reflectivity Amount'),
-      wbFloat('Fresnel Amount'),
-      wbFloat('Scroll X Speed'),
-      wbFloat('Scroll Y Speed'),
-      wbFloat('Fog Distance - Near Plane'),
-      wbFloat('Fog Distance - Far Plane'),
-      wbStruct('Shallow Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbFloat('波动频率'),
+      wbFloat('阳光强度'),
+      wbFloat('反射指数'),
+      wbFloat('菲涅耳指数'),
+      wbFloat('X 滚动速度'),
+      wbFloat('Y 滚动速度'),
+      wbFloat('水雾距离 - 接近地面'),
+      wbFloat('水雾距离 - 远离地面'),
+      wbStruct('潜水颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbStruct('Deep Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct('深水颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
-      wbStruct('Reflection Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
+      wbStruct('反射颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8),
+        wbByteArray('未使用', 1)
       ]),
       wbInteger('Texture Blend', itU8),
-      wbByteArray('Unused', 3),
-      wbFloat('Rain Simulator - Force'),
-      wbFloat('Rain Simulator - Velocity'),
-      wbFloat('Rain Simulator - Falloff'),
-      wbFloat('Rain Simulator - Dampner'),
-      wbFloat('Rain Simulator - Starting Size'),
-      wbFloat('Displacement Simulator - Force'),
-      wbFloat('Displacement Simulator - Velocity'),
-      wbFloat('Displacement Simulator - Falloff'),
-      wbFloat('Displacement Simulator - Dampner'),
-      wbFloat('Displacement Simulator - Starting Size'),
-      wbInteger('Damage', itU16)
+      wbByteArray('未使用', 3),
+      wbFloat('雨滴模拟器 - 推力'),
+      wbFloat('雨滴模拟器 - 速度'),
+      wbFloat('雨滴模拟器 - 衰减'),
+      wbFloat('雨滴模拟器 - 阻尼'),
+      wbFloat('雨滴模拟器 - 起始尺寸'),
+      wbFloat('水纹模拟器 - 推力'),
+      wbFloat('水纹模拟器 - 速度'),
+      wbFloat('水纹模拟器 - 衰减'),
+      wbFloat('水纹模拟器 - 阻尼'),
+      wbFloat('水纹模拟器 - 起始尺寸'),
+      wbInteger('伤害', itU16)
     ], cpNormal, True, nil, 0),
     wbStruct(GNAM, 'Related Waters', [
       wbFormIDCk('Daytime', [WATR, NULL]),
@@ -4817,58 +4817,58 @@ begin
     wbENAM,
     wbInteger(ANAM, 'Enchantment Points', itU16),
     wbStruct(DATA, '', [
-      wbInteger('Type', itU32, wbEnum([
+      wbInteger('类型', itU32, wbEnum([
         {0} 'Blade One Hand',
         {1} 'Blade Two Hand',
         {2} 'Blunt One Hand',
         {3} 'Blunt Two Hand',
-        {4} 'Staff',
-        {5} 'Bow'
+        {4} '法杖',
+        {5} '弓'
       ])),
-      wbFloat('Speed'),
-      wbFloat('Reach'),
-      wbInteger('Flags', itU32, wbFlags(['Ignores Normal Weapon Resistance'])),
-      wbInteger('Value', itU32),
-      wbInteger('Health', itU32),
-      wbFloat('Weight'),
-      wbInteger('Damage', itU16)
+      wbFloat('速度'),
+      wbFloat('范围'),
+      wbInteger('标志', itU32, wbFlags(['无视普通武器抗性'])),
+      wbInteger('价值', itU32),
+      wbInteger('生命', itU32),
+      wbFloat('重量'),
+      wbInteger('伤害', itU16)
     ], cpNormal, True)
   ]);
 
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,
     wbFULL,
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbFormIDCk(WNAM, '父系空间', [WRLD]),
+    wbFormIDCk(CNAM, '气候', [CLMT]),
+    wbFormIDCk(NAM2, '水源', [WATR]),
     wbICON,
-    wbStruct(MNAM, 'Map Data', [
+    wbStruct(MNAM, '地图数据', [
       wbStruct('Uable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
+      wbStruct('场景坐标', [
+        wbStruct('北西场景', [
           wbInteger('X', itS16),
           wbInteger('Y', itS16)
         ]),
-        wbStruct('SE Cell', [
+        wbStruct('南东场景', [
           wbInteger('X', itS16),
           wbInteger('Y', itS16)
         ])
       ])
     ]),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
+    wbInteger(DATA, '标志', itU8, wbFlags([
       {0x01} 'Small world',
-      {0x02} 'Can''t fast travel',
+      {0x02} '无法快速旅行',
       {0x04} 'Oblivion worldspace',
       {0x08} '',
-      {0x10} 'No LOD water'
+      {0x10} '无LOD水'
     ]), cpNormal, True),
-    wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-    wbByteArray(OFST, 'Unknown')
+    wbArray(NAM0, '未知', wbFloat(''), 0, nil, nil, cpNormal, True),
+    wbArray(NAM9, '未知', wbFloat(''), 0, nil, nil, cpNormal, True),
+    wbInteger(SNAM, '音乐', itU32, wbMusicEnum),
+    wbByteArray(OFST, '未知')
   ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
@@ -4877,26 +4877,26 @@ begin
     wbString(DNAM, 'Texture Upper Layer'),
     wbMODL,
     wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
+      wbArray('类型',
+        wbStruct('时间', [
+          wbInteger('红', itU8),
+          wbInteger('绿', itU8),
+          wbInteger('蓝', itU8),
+          wbByteArray('未使用', 1)
         ]),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
+        ['日出', '白天', '日落', '夜晚']
       ),
-      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
+      ['天空高层','Fog','Clouds-Lower','环境','日光','太阳','星星','天空低层','地平线','Clouds-Upper']
     , cpNormal, True),
-    wbStruct(FNAM, 'Fog Distance', [
+    wbStruct(FNAM, '水雾距离', [
       wbFloat('Day Near'),
       wbFloat('Day Far'),
       wbFloat('Night Near'),
       wbFloat('Night Far')
     ], cpNormal, True),
     wbStruct(HNAM, 'HDR Data', [
-      wbFloat('Eye Adapt Speed'),
-      wbFloat('Blur Radius'),
+      wbFloat('眼睛适应速度'),
+      wbFloat('模糊半径'),
       wbFloat('Blur Passes'),
       wbFloat('Emissive Mult'),
       wbFloat('Target LUM'),
@@ -4911,31 +4911,31 @@ begin
       wbFloat('Tree Dimmer')
     ], cpNormal, True),
     wbStruct(DATA, '', [
-      wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
-      wbInteger('Trans Delta', itU8),
-      wbInteger('Sun Glare', itU8),
-      wbInteger('Sun Damage', itU8),
-      wbInteger('Precipitation - Begin Fade In', itU8),
-      wbInteger('Precipitation - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
+      wbInteger('风速', itU8),
+      wbInteger('云层速度 (Lower)', itU8),
+      wbInteger('云层速度 (Upper)', itU8),
+      wbInteger('过渡时长', itU8),
+      wbInteger('太阳眩光', itU8),
+      wbInteger('太阳伤害', itU8),
+      wbInteger('颗粒 - 开始淡入', itU8),
+      wbInteger('颗粒 - 结束淡出', itU8),
+      wbInteger('雷电 - 开始淡入', itU8),
+      wbInteger('雷电 - 结束淡出', itU8),
+      wbInteger('雷电 - 频率', itU8),
       wbInteger('Weather Classification', itU8, wbWthrDataClassification),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
+      wbStruct('闪电颜色', [
+        wbInteger('红', itU8),
+        wbInteger('绿', itU8),
+        wbInteger('蓝', itU8)
       ])
     ], cpNormal, True),
-    wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
-      wbFormIDCk('Sound', [SOUN]),
-      wbInteger('Type', itU32, wbEnum([
-       {0}'Default',
-       {1}'Precip',
-       {2}'Wind',
-       {3}'Thunder'
+    wbRArray('音效', wbStruct(SNAM, '音效', [
+      wbFormIDCk('音效', [SOUN]),
+      wbInteger('类型', itU32, wbEnum([
+       {0}'默认',
+       {1}'颗粒',
+       {2}'风',
+       {3}'闪电'
       ]))
     ]))
   ]);

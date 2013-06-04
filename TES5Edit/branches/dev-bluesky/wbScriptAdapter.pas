@@ -54,6 +54,22 @@ begin
   wbForceNewHeader := True;
 end;
 
+procedure GetRecordDefNames(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  sl: TStrings;
+  i: integer;
+begin
+  sl := TStrings(V2O(Args.Values[0]));
+
+  if not Assigned(sl) then
+    Exit;
+
+  for i := 0 to Pred(wbRecordDefMap.Count) do
+    with IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])) do
+      sl.Add(DefaultSignature + ' - ' + GetName);
+end;
+
+
 { IwbElement }
 
 procedure IwbElement_Name(var Value: Variant; Args: TJvInterpreterArgs);
@@ -63,6 +79,24 @@ begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.Name;
+end;
+
+procedure IwbElement_ShortName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.ShortName;
+end;
+
+procedure IwbElement_BaseName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.BaseName;
 end;
 
 procedure IwbElement_Path(var Value: Variant; Args: TJvInterpreterArgs);
@@ -490,6 +524,15 @@ begin
     Value := MainRecord.FormID;
 end;
 
+procedure IwbMainRecord_EditorID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.EditorID;
+end;
+
 procedure IwbMainRecord_FixedFormID(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
@@ -681,6 +724,14 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
     Value := MainRecord.WinningOverride;
+end;
+
+procedure IwbMainRecord_HighestOverrideOrSelf(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.HighestOverrideOrSelf[Integer(Args.Values[1])];
 end;
 
 procedure IwbMainRecord_CompareExchangeFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -920,6 +971,11 @@ begin
   Value := wbContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
 end;
 
+procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbContainerHandler.ResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+end;
+
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
@@ -996,9 +1052,12 @@ begin
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
+    AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ShortName', IwbElement_ShortName, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'BaseName', IwbElement_BaseName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
@@ -1050,6 +1109,7 @@ begin
     { IwbMainRecord }
     AddFunction(cUnit, 'Signature', IwbMainRecord_Signature, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FormID', IwbMainRecord_FormID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'EditorID', IwbMainRecord_EditorID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FixedFormID', IwbMainRecord_FixedFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrderFormID', IwbMainRecord_GetLoadOrderFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetLoadOrderFormID', IwbMainRecord_SetLoadOrderFormID, 2, [varEmpty, varEmpty], varEmpty);
@@ -1072,6 +1132,7 @@ begin
     AddFunction(cUnit, 'IsMaster', IwbMainRecord_IsMaster, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'IsWinningOverride', IwbMainRecord_IsWinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'WinningOverride', IwbMainRecord_WinningOverride, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'HighestOverrideOrSelf', IwbMainRecord_HighestOverrideOrSelf, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ChildGroup', IwbMainRecord_ChildGroup, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CompareExchangeFormID', IwbMainRecord_CompareExchangeFormID, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ChangeFormSignature', IwbMainRecord_ChangeFormSignature, 2, [varEmpty, varEmpty], varEmpty);
@@ -1103,9 +1164,10 @@ begin
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
 
-    { wbContainerHandler }
+    { IwbContainerHandler }
     AddFunction(cUnit, 'ResourceExists', IwbContainerHandler_ResourceExists, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCount', IwbContainerHandler_ResourceCount, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceList', IwbContainerHandler_ResourceList, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCopy', IwbContainerHandler_ResourceCopy, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
