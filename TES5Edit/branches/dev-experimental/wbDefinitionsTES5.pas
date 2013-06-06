@@ -6295,7 +6295,7 @@ begin
     Int64($3520E710), 'Largest Bounty',
     Int64($8A24FDE2), 'Locations Discovered',
     Int64($5829CC2E), 'Locks Picked',
-    Int64($88089979), 'Magic Items Maid',
+    Int64($88089979), 'Magic Items Made',
     Int64($7EA26C2D), 'Main Quests Completed',
     Int64($7187A208), 'Mauls',
     Int64($98EE55DC), 'Misc Objectives Completed',
@@ -9092,13 +9092,15 @@ begin
     {>>> Seen in Open Cities <<<}
     wbArray(RCSR, 'ActorBase Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbStruct(ACEC, 'BaseActor Encounter Reference', [
-      wbFormIDCk('Location', [WRLD, CELL]),
-      wbArray('Coordinates', wbStruct('', [
-        wbInteger('Grid X', itS16),
-        wbInteger('Grid Y', itS16)
-      ]))
-    ]),
+    wbRArray('BaseActor Encounter Reference',
+      wbStruct(ACEC, 'Unknown', [
+        wbFormIDCk('Location', [WRLD, CELL]),
+        wbArray('Coordinates', wbStruct('', [
+          wbInteger('Grid X', itS16),
+          wbInteger('Grid Y', itS16)
+        ]))
+      ])
+    ),
     wbRArray('Location Encounter Reference',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
@@ -9654,7 +9656,7 @@ begin
       wbInteger('% Frequency Variance', itU8),
       wbInteger('Priority', itU8),
       wbInteger('db Variance', itU8),
-      wbInteger('Static Attentuation (db)', itU16, wbdiv(100))
+      wbInteger('Static Attenuation (db)', itU16, wbdiv(100))
     ])
   ]);
 
@@ -11623,11 +11625,11 @@ begin
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]),
 	  wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
 	  wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
-    wbRStruct('Male Behavoir Graph', [
+    wbRStruct('Male Behavior Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
       wbMODL
     ], [], cpNormal, True),
-    wbRStruct('Female Behavoir Graph', [
+    wbRStruct('Female Behavior Graph', [
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
       wbMODL
     ], [], cpNormal, True),

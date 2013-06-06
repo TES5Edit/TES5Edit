@@ -16,12 +16,11 @@ begin
   end else
     AddMessage('');
 
-    for i := ElementCount(aElement)-1 downto 0 do
-      Result := CheckForErrors(aIndent + 1, ElementByIndex(aElement, i)) or Result;
+  for i := ElementCount(aElement) - 1 downto 0 do
+    Result := CheckForErrors(aIndent + 1, ElementByIndex(aElement, i)) or Result;
 
-  if Result and (Error = '') then begin
+  if Result and (Error = '') then
     AddMessage(StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + Name(aElement));
-  end;
 end;
 
 function Process(e: IInterface): integer;

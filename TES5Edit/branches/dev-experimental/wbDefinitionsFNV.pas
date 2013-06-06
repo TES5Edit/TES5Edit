@@ -6362,7 +6362,7 @@ begin
     '',
     'Add',
     'Subtract',
-    'Reverse Subrtact',
+    'Reverse Subtract',
     'Minimum',
     'Maximum'
   ]);

@@ -15,7 +15,7 @@ var
 begin
   Result := 0;
   
-  if not (GetIsEditable(e) and GetIsDeleted(e)) then
+  if not (IsEditable(e) and GetIsDeleted(e)) then
     Exit;
   
   Sig := Signature(e);

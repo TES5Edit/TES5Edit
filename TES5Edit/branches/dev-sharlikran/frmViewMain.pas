@@ -38,6 +38,7 @@ uses
   ActnList,
   AppEvnts,
   ShellAPI,
+  IOUtils,
   Actions,
   pngimage,
   VirtualTrees,
@@ -289,7 +290,6 @@ type
     mniViewPreviousMember: TMenuItem;
     mniViewHeaderJumpTo: TMenuItem;
     acScript: TAction;
-    mniViewOpenFrom: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -498,7 +498,6 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
-    procedure mniViewOpenFromClick(Sender: TObject);
   protected
     DisplayActive: Boolean;
     m_hwndRenderFullScreen:  HWND;
@@ -672,8 +671,6 @@ type
 
     ScriptProcessElements: TwbElementTypes;
     ScriptHotkeys: TStringList;
-
-    OpenFromAsset: string;
 
 //    STATsWithWindows: TStringList;
 
@@ -2864,16 +2861,16 @@ procedure TfrmMain.DoInit;
     F     : TSearchRec;
     slNew : TStringList;
   begin
-    if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
+    if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
       slNew := TStringList.Create;
       try
         repeat
           if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
             if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-              DeleteFile(DataPath + F.Name)
+              DeleteFile(wbDataPath + F.Name)
             else
             if FindMatchText(sl, F.Name) < 0 then
-              slNew.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+              slNew.AddObject(F.Name, TObject(FileAge(wbDataPath + F.Name)));
           end;
         until FindNext(F) <> 0;
         slNew.CustomSort(PluginListCompare);
@@ -3977,7 +3974,7 @@ begin
     if Assigned(fs) then
       FreeAndNil(fs);
   end;
-  if wbRemoveTempPath then
+  if DirectoryExists(wbTempPath) and wbRemoveTempPath then
     DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
   BackHistory := nil;
@@ -5836,7 +5833,8 @@ begin
       wbStartTime := Now;
 
       Enabled := False;
-      PostAddMessage('Applying script...');
+      AddMessage('Applying script...');
+      Application.ProcessMessages;
 
       if jvi.FunctionExists('', 'Initialize') then begin
         jvi.CallFunction('Initialize', nil, []);
@@ -9606,13 +9604,13 @@ begin
   end;
 end;
 
-procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
+{procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
 var
   From, FileName, TempPath: string;
 begin
   From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
   if not SameText(ExtractFileExt(From), '.bsa') then begin
-    FileName := wbDataPath + OpenFromAsset;
+    FileName := DataPath + OpenFromAsset;
     From := 'Data';
   end else begin
     // extract file from BSA
@@ -9626,7 +9624,7 @@ begin
   if FileExists(FileName) then
     ShellExecute(Handle, 'open', PWideChar(FileName), nil, nil, SW_SHOW);
 end;
-
+}
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -10089,13 +10087,8 @@ procedure TfrmMain.pmuViewPopup(Sender: TObject);
 var
   NodeDatas     : PViewNodeDatas;
   Element       : IwbElement;
-  Value         : string;
-  s             : string;
-  sl            : TStringList;
-  MenuItem      : TMenuItem;
   TargetNode    : PVirtualNode;
   TargetIndex   : Integer;
-  i             : Integer;
   TargetElement : IwbElement;
 begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
@@ -10103,7 +10096,6 @@ begin
   mniViewAdd.Visible := False;
   mniViewNextMember.Visible := False;
   mniViewPreviousMember.Visible := False;
-  mniViewOpenFrom.Visible := False;
   mniViewRemove.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
@@ -10138,7 +10130,7 @@ begin
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       // open file menu
-      if Assigned(Element) then
+      {if Assigned(Element) then
          Value := Element.EditValue
       else
         Value := '';
@@ -10178,7 +10170,7 @@ begin
             end;
           end;
         end;
-      end;
+      end;}
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
