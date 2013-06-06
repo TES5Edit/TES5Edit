@@ -9652,7 +9652,7 @@ begin
       wbInteger('% Frequency Variance', itU8),
       wbInteger('Priority', itU8),
       wbInteger('db Variance', itU8),
-      wbInteger('Static Attentuation (db)', itU16, wbdiv(100))
+      wbInteger('Static Attenuation (db)', itU16, wbdiv(100))
     ])
   ]);
 
@@ -11619,11 +11619,11 @@ begin
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]),
 	  wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
 	  wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
-    wbRStruct('Male Behavoir Graph', [
+    wbRStruct('Male Behavior Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
       wbMODL
     ], [], cpNormal, True),
-    wbRStruct('Female Behavoir Graph', [
+    wbRStruct('Female Behavior Graph', [
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
       wbMODL
     ], [], cpNormal, True),
