@@ -1115,6 +1115,7 @@ type
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
     function GetIsVariableSize: Boolean;
@@ -1135,6 +1136,8 @@ type
 
     property Size[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
       read GetSize;
+    property DefaultSize[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
+      read GetDefaultSize;
     property IsVariableSize: Boolean
       read GetIsVariableSize;
     property CanBeZeroSize: Boolean
@@ -2964,6 +2967,7 @@ type
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; virtual;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual; abstract;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual; abstract;
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; virtual;
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); virtual;
     function GetIsVariableSize: Boolean; virtual;
@@ -3009,6 +3013,7 @@ type
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; override;
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override;
     function GetIsVariableSize: Boolean; override;
@@ -3066,6 +3071,7 @@ type
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetIsVariableSize: Boolean; override;
     function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
@@ -3115,6 +3121,7 @@ type
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; override;
     procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
   end;
 
   TwbLStringKCDef = class(TwbLStringDef)
@@ -3141,6 +3148,7 @@ type
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetIsVariableSize: Boolean; override;
     function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
@@ -3192,6 +3200,7 @@ type
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetIsVariableSize: Boolean; override;
     function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
@@ -3221,6 +3230,7 @@ type
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetCanBeZeroSize: Boolean; override;
     procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
@@ -3256,6 +3266,7 @@ type
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; override;
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override;
     function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
@@ -3296,6 +3307,7 @@ type
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
     function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
@@ -3353,6 +3365,7 @@ type
 
     {---IwbValueDef---}
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetIsVariableSize: Boolean; override;
     function GetCanBeZeroSize: Boolean; override;
@@ -3394,6 +3407,7 @@ type
 
     {---IwbValueDef---}
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetIsVariableSize: Boolean; override;
@@ -6130,6 +6144,11 @@ begin
   end;
 end;
 
+function TwbIntegerDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := GetSize(aBasePtr, aEndPtr, aElement);
+end;
+
 procedure TwbIntegerDef.MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte);
 var
   OldValue : Int64;
@@ -6479,6 +6498,8 @@ var
   Element       : IwbElement;
   DataContainer : IwbDataContainer;
   KnownSize     : Boolean;
+  aName         : String;
+//  Signature     : IwbSignatureDef;
 
   procedure FindOurself(theContainer: IwbContainer; aName: String);
   var
@@ -6507,11 +6528,17 @@ begin
   // First advance to ourselves :
   if Assigned(aElement) then begin
     Container := GetContainerFromUnion(aElement);
-    if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
-        FindOurself(Container, noName);
-    if Assigned(Container) and (Pos('\ '+ noName, Container.Path) = 0) then
+    // This can be problematic later on !!!
+    // if (noName = '') then
+    //   aName := GetName
+    // else
+      aName := noName;
+
+    if Assigned(Container) and (Pos('\ '+ aName, Container.Path) = 0) then
+        FindOurself(Container, aName);
+    if Assigned(Container) and (Pos('\ '+ aName, Container.Path) = 0) then
         Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
-    if not Assigned(Container) and (not SameText(noName, 'Unused') or not wbHideUnused) then begin
+    if not Assigned(Container) and (not SameText(aName, 'Unused') or not wbHideUnused) then begin
       Result := High(Integer);
       Exit;
     end;
@@ -6602,6 +6629,11 @@ begin
       if Size < High(Integer) then
         Result := (Count * Size) + Prefix;
     end;
+end;
+
+function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
 end;
 
 function TwbArrayDef.GetSorted: Boolean;
@@ -6721,7 +6753,7 @@ begin
   if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
     wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
   else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-    Result := 0;
+    Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else
     for i := Low(stMembers) to High(stMembers) do begin
       Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
@@ -6733,6 +6765,24 @@ begin
         Inc(Cardinal(aBasePtr), Size);
       Inc(Result, Size);
     end;
+end;
+
+function TwbStructDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  i     : Integer;
+  Size  : Integer;
+begin
+  Result := 0;
+  for i := Low(stMembers) to High(stMembers) do begin
+    Size := stMembers[i].DefaultSize[aBasePtr, aEndPtr, aElement];
+    if Size = High(Integer) then begin
+      Result := High(Integer);
+      Break;
+    end;
+    if Assigned(aBasePtr) then
+      Inc(Cardinal(aBasePtr), Size);
+    Inc(Result, Size);
+  end;
 end;
 
 function TwbStructDef.GetIsVariableSize: Boolean;
@@ -7551,6 +7601,11 @@ begin
   end;
 end;
 
+function TwbStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 1;
+end;
+
 function TwbStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement): string;
 begin
@@ -7689,6 +7744,11 @@ end;
 function TwbFloatDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := SizeOf(Single);
+end;
+
+function TwbFloatDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := GetSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbFloatDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
@@ -8803,6 +8863,11 @@ begin
     Result := High(Integer);
 end;
 
+function TwbByteArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := badSize;
+end;
+
 procedure TwbByteArrayDef.Report(const aParents: TwbDefPath);
 var
   FoundOne: Boolean;
@@ -9837,8 +9902,14 @@ begin
 end;
 
 function TwbUnionDef.Decide(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
+var
+  aMemberIndex : Integer;
 begin
-  Result := udMembers[udDecider(aBasePtr, aEndPtr, aElement)];
+  aMemberIndex := udDecider(aBasePtr, aEndPtr, aElement);
+  if (aMemberIndex>=0) and (aMemberIndex<Length(udMembers))then
+    Result := udMembers[aMemberIndex]
+  else
+    Result := nil;
   Used(nil, '');
 end;
 
@@ -9917,10 +9988,12 @@ end;
 
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i    : Integer;
-  Size : Integer;
+  i       : Integer;
+  Size    : Integer;
+  aMember : IwbValueDef;
 begin
-  if not Assigned(aBasePtr) then begin
+  aMember := Decide(aBasePtr, aEndPtr, aElement);
+  if not Assigned(aMember) then begin
     Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];
     if Result > 0 then
       for i := 1 to High(udMembers) do
@@ -9934,8 +10007,19 @@ begin
         end else
           break;
   end else begin
-    Result := Decide(aBasePtr, aEndPtr, aElement).Size[aBasePtr, aEndPtr, aElement];
+    Result := aMember.Size[aBasePtr, aEndPtr, aElement];
   end;
+end;
+
+function TwbUnionDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aMember : IwbValueDef;
+begin
+  aMember := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(aMember) then
+    Result := aMember.DefaultSize[aBasePtr, aEndPtr, aElement]
+  else
+    Result := 0;
 end;
 
 procedure TwbUnionDef.Report(const aParents: TwbDefPath);
@@ -10032,6 +10116,11 @@ begin
 end;
 
 function TwbEmptyDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+end;
+
+function TwbEmptyDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
 end;
@@ -10306,6 +10395,11 @@ begin
     Result := Prefix;
 end;
 
+function TwbLenStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := Prefix;
+end;
+
 function TwbLenStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement): Boolean;
 begin
@@ -10449,6 +10543,14 @@ begin
     Result := 4
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
+end;
+
+function TwbLStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  if Assigned(aElement._File) and aElement._File.IsLocalized then
+    Result := 4
+  else
+    Result := inherited GetDefaultSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
