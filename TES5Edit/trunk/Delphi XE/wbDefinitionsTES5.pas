@@ -583,6 +583,7 @@ const
   XCWT : TwbSignature = 'XCWT';
   XCZA : TwbSignature = 'XCZA'; { New To Skyrim }
   XCZC : TwbSignature = 'XCZC'; { New To Skyrim }
+  XCZR : TwbSignature = 'XCZR'; { New To Skyrim }
   XDCR : TwbSignature = 'XDCR';
   XEMI : TwbSignature = 'XEMI';
   XESP : TwbSignature = 'XESP';
@@ -11860,7 +11861,8 @@ begin
 			wbFloat('X Angle'),
 			wbByteArray('Unknown', 4)
     ]),
-		wbUnknown(XCZA),
+    wbFormIDCk(XCZR, 'Unknown', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+    wbUnknown(XCZA),
     wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
     wbXSCL,
     wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
