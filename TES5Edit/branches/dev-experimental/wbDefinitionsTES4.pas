@@ -1827,8 +1827,24 @@ end;
 function wbCalcPGRRSize(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Index: Integer;
+
+  function ExtractCountFromLabel(const aElement: IwbElement; aCount: Integer): Integer;
+  var
+    i: Integer;
+  begin
+    i := Pos('#', aElement.Name);
+    if i = 0 then
+      Result := aCount
+    else try
+      Result := StrToInt(Trim(Copy(aElement.Name, i+1, Length(aElement.Name))))+1;
+    except
+      Result := aCount;
+    end;
+
+  end;
+
 begin
-  Index := aElement.Container.ElementCount;
+  Index := ExtractCountFromLabel(aElement, aElement.Container.ElementCount);
   Result := ((aElement.Container.Container as IwbMainRecord).RecordBySignature['PGRP'].Elements[Pred(Index)] as IwbContainer).Elements[3].NativeValue;
 end;
 
@@ -4172,7 +4188,7 @@ begin
     wbPGRP,
     wbByteArray(PGAG, 'Unknown'),
     wbArray(PGRR, 'Point-to-Point Connections',
-      wbArrayS('Point', wbInteger('Point', itU16), wbCalcPGRRSize{, cpNormal, False, wbPGRRPointAfterLoad})
+      wbArrayS('Point', wbInteger('Point', itS16), wbCalcPGRRSize{, cpNormal, False, wbPGRRPointAfterLoad})
     ),
     wbArrayS(PGRI, 'Inter-Cell Connections', wbStructSK([0,2,3,4], 'Inter-Cell Connection', [
       wbInteger('Point', itU16),
