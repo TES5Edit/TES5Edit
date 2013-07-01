@@ -960,6 +960,9 @@ type
 
   IwbSubRecord = interface(IwbRecord)
     ['{CDE36A3D-64F6-4B8E-980E-FBAB8D9FCAF7}']
+    function GetSubRecordHeaderSize: Integer;
+    property SubRecordHeaderSize: Integer
+      read GetSubRecordHeaderSize;
   end;
 
   TDynGroupRecords = array of IwbGroupRecord;

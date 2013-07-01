@@ -654,40 +654,46 @@ end;
 
 function wbXLOCFillerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container: IwbContainer;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.DataSize = 16 then
-    Result := 1;
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 16 then
+      Result := 1;
 end;
 
 function wbPACKPKDTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container: IwbContainer;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
 begin
   Result := 1;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
-  if Container.DataSize = 4 then
-    Result := 0;
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 4 then
+      Result := 0;
 end;
 
 function wbREFRXSEDDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container: IwbContainer;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.DataSize = 4 then
-    Result := 1;
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 4 then
+      Result := 1;
 end;
 
 
