@@ -1793,18 +1793,17 @@ end;
 
 function wbIMGSSkinDimmerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container     : IwbContainer;
-  DataContainer : IwbDataContainer;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Supports(Container.Container, IwbDataContainer, DataContainer) then begin
-    if DataContainer.DataSize in [132, 148] then
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize in [132, 148] then
       Result := 1;
-  end;
 end;
 
 function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3908,31 +3907,31 @@ end;
 
 function wbPKDTFalloutBehaviorFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container     : IwbContainer;
-  DataContainer : IwbDataContainer;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Supports(Container, IwbDataContainer, DataContainer) then
-    if DataContainer.DataSize = 8 then
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 8 then
       Result := 1;
 end;
 
 function wbPKDTSpecificFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container     : IwbContainer;
-  DataContainer : IwbDataContainer;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Supports(Container, IwbDataContainer, DataContainer) then
-    if DataContainer.DataSize = 8 then
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 8 then
       Exit;
   Result := Container.ElementByName['Type'].NativeValue + 1;
 end;

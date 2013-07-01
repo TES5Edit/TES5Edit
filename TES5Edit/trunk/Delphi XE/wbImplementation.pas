@@ -1035,6 +1035,9 @@ type
 
     procedure CheckTerminator;
 
+    {--- IwbSubRecord ---}
+    function GetSubRecordHeaderSize: Integer;
+
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
   end;
@@ -9108,6 +9111,14 @@ begin
     Result := srValueDef.ToSortKey(GetDataBasePtr, dcDataEndPtr, Self, aExtended)
   else
     Result := inherited GetSortKeyInternal(aExtended);
+end;
+
+function TwbSubRecord.GetSubRecordHeaderSize: Integer;
+begin
+  if Assigned(dcBasePtr) then
+    Result := srStruct.srsDataSize
+  else
+    Result := 0;
 end;
 
 function TwbSubRecord.GetValue: string;

@@ -987,6 +987,9 @@ type
 
   IwbSubRecord = interface(IwbRecord)
     ['{CDE36A3D-64F6-4B8E-980E-FBAB8D9FCAF7}']
+    function GetSubRecordHeaderSize: Integer;
+    property SubRecordHeaderSize: Integer
+      read GetSubRecordHeaderSize;
   end;
 
   TDynGroupRecords = array of IwbGroupRecord;
@@ -9610,6 +9613,8 @@ begin
       -2 : Result := SizeOf(Word);
       -4 : Result := SizeOf(Byte);
     -255 : Result := 0; // Explicitly null for wbNull (displays better in unions)
+    else
+      Result := 0;
     end
 end;
 

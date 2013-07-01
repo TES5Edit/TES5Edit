@@ -85,6 +85,96 @@ begin
   Result := JavaName(aType);
 end;
 
+function UESPName(aName: String): String;
+begin
+  while Pos(' ', aName)>0 do
+    aName[Pos(' ', aName)] := '_';
+  Result := aName;
+end;
+
+function UESPType(aType: String): String;
+
+  function UESParrayType(aType: String): String; forward;
+
+  function UESPsingleType(aType, aStandard, aResult: String): String;
+  var
+    i: Integer;
+    l: Integer;
+  begin
+    i := Pos(UpperCase(aStandard), Uppercase(aType));
+    if i>0 then begin
+      Result := '';
+      l := Length(aStandard);
+      if i>1 then begin
+        Result := Copy(aType, 1, i-1);
+        Delete(aType, 1, i+l-1);
+      end else
+        Delete(aType, 1, l);
+      Result := Result + aResult + aType;
+    end else
+      Result := aType;
+  end;
+
+  function UESParrayCount(aType: String): String;
+  var
+    i: Integer;
+    c: String;
+  begin
+    i := Pos('_', aType);
+    if i>1 then begin
+      c := Copy(aType, 1, i-1);
+      Delete(aType, 1, i);
+    end else
+      c := '';
+    Result := '_'+aType+'['+c+']';
+  end;
+
+  function UESParrayType(aType: String): String;
+  const
+    cArray = '_ARRAY';
+    cof = '_OF_';
+  var
+    i: Integer;
+    j : Integer;
+    l: Integer;
+    t: String;
+  begin
+    i := Pos(cArray, UpperCase(aType));
+    l := Length(cArray);
+    if (i>0) and ((i+l-1) = Length(aType)) then begin
+      Delete(aType, i, l);
+      j := Pos(cOf, UpperCase(aType));
+      if j>1 then begin
+        Result := Copy(aType, 1, j-1);
+        Delete(aType, 1, j+Length(cOf)-1);
+        t := UESParrayCount(aType);
+        Result := Result + t;
+      end;
+    end else
+      Result := aType;
+  end;
+
+begin
+  Result := UESPName(aType);
+  Result := UESParrayType(Result);
+
+  Result := UESPsingleType(Result, 'Unsigned_Bytes', 'uint8');
+  Result := UESPsingleType(Result, 'Signed_Bytes', 'int8');
+  Result := UESPsingleType(Result, 'Bytes', 'int8');
+  Result := UESPsingleType(Result, 'Unsigned_Byte', 'uint8');
+  Result := UESPsingleType(Result, 'Signed_Byte', 'int8');
+  Result := UESPsingleType(Result, 'Byte', 'int8');
+  Result := UESPsingleType(Result, 'Unsigned_DWord', 'uint32');
+  Result := UESPsingleType(Result, 'Signed_DWord', 'int32');
+  Result := UESPsingleType(Result, 'DWord', 'int32');
+  Result := UESPsingleType(Result, 'Unsigned_Word', 'uint16');
+  Result := UESPsingleType(Result, 'Signed_Word', 'int16');
+  Result := UESPsingleType(Result, 'Word', 'int16');
+  Result := UESPsingleType(Result, 'Float', 'float32');
+
+  Result := UESPsingleType(Result, 'FormID', 'formid');
+end;
+
 const
   UESPWikiTable = '{| class="wikitable" border="1" width="100%"'+#13+#10+
   '! width="3%" | [[Tes5Mod:File Format Conventions|C]]'+#13+#10+
@@ -99,13 +189,13 @@ begin
   case aFormat of
     efUESPWiki: begin
       if aIndent='' then
-        Result := '=== [[Tes5Mod:Save File Format/'+aProfile+'|'+aName+']] ==='+#13+#10+UESPWikiTable
+        Result := '=== [[Tes5Mod:Save File Format/'+aProfile+'|'+UESPName(aName)+']] ==='+#13+#10+UESPWikiTable
       else begin
-        Result := '|-'+#13+#10+'|'+aName+#13+#10+'|';
+        Result := '|-'+#13+#10+'|'+UESPName(aName)+#13+#10+'|';
         if useProfile then
-          Result := Result+'[[Tes5Mod:Save File Format/'+aProfile+'|'+aType+']]'
+          Result := Result+'[[Tes5Mod:Save File Format/'+aProfile+'|'+UESPType(aType)+']]'
         else
-          Result := Result+aType;
+          Result := Result+UESPType(aType);
         Result := Result+#13+#10+'|';
       end;
     end;
@@ -974,6 +1064,9 @@ begin
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump -Saves will load the specified ess files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the game directory.');
       WriteLn(ErrOutput);
+      WriteLn(ErrOutput, wbAppName + 'Export will dump the plugin definition in the specified format.');
+      WriteLn(ErrOutput, wbAppName + 'Export -Saves will dump the save file definition in the specified format.');
+      WriteLn(ErrOutput);
       WriteLn(ErrOutput, 'You can use the normal redirect mechanism to send the output to a file.');
       WriteLn(ErrOutput, 'e.g. "'+wbAppName+'Dump '+wbGameName+'.esm > '+wbGameName+'.txt"');
       WriteLn(ErrOutput);
@@ -1016,6 +1109,11 @@ begin
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
       WriteLn(ErrOutput, '  TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
+      WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Currently supported export formats:');
+      WriteLn(ErrOutput, 'RAW          ','Private format for debugging');
+      WriteLn(ErrOutput, 'UESPWIKI     ','UESP Wiki table format [Very WIP]');
+      WriteLn(ErrOutput, 'JAVA         ','Java type definition [Very WIP]');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;

@@ -988,6 +988,9 @@ type
 
   IwbSubRecord = interface(IwbRecord)
     ['{CDE36A3D-64F6-4B8E-980E-FBAB8D9FCAF7}']
+    function GetSubRecordHeaderSize: Integer;
+    property SubRecordHeaderSize: Integer
+      read GetSubRecordHeaderSize;
   end;
 
   TDynGroupRecords = array of IwbGroupRecord;
@@ -9396,6 +9399,7 @@ end;
 
 function TwbByteArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
+  Result := 0;
   if badSize>=0 then
     Result := badSize
   else
@@ -10544,7 +10548,6 @@ begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
     wbProgressCallback('Found a union with a negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+
       ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-    Result := 0;
   end;
   aMember := Decide(aBasePtr, aEndPtr, aElement);
   if not Assigned(aMember) then begin

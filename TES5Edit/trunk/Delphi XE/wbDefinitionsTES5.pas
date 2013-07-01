@@ -1932,15 +1932,19 @@ end;
 
 function wbPHWTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container: IwbContainer;
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
 begin
   Result := 2;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.DataSize = 64 then Result := 0
-  else if Container.DataSize = 32 then Result := 1
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 64 then
+      Result := 0
+    else if SubRecord.SubRecordHeaderSize = 32 then
+      Result := 1
 end;
 
 function wbMGEFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
