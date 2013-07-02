@@ -6257,7 +6257,7 @@ var
   s: string;
   Key: Word;
 begin
-  s := mmoMessages.SelText;
+  s := Trim(mmoMessages.SelText);
   if Length(s) < 8 then
     Exit;
   if (s[1] = '[') and (s[Length(s)] = ']') then

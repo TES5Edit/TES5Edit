@@ -1930,23 +1930,6 @@ begin
     Result := 1;
 end;
 
-function wbPHWTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container : IwbContainer;
-  SubRecord : IwbSubRecord;
-begin
-  Result := 2;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  if Supports(Container, IwbSubRecord, SubRecord) then
-    if SubRecord.SubRecordHeaderSize = 64 then
-      Result := 0
-    else if SubRecord.SubRecordHeaderSize = 32 then
-      Result := 1
-end;
-
 function wbMGEFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
