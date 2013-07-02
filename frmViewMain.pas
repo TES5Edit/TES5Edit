@@ -10059,6 +10059,9 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
+  if wbGameMode = gmTES5 then begin
+    mniNavCreateMergedPatch.Visible := False;
+  end;
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
