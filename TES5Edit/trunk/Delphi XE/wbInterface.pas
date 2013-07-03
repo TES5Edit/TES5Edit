@@ -10141,8 +10141,8 @@ begin
 //  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
 //    Result := NamedDef.Name;
 //  if Result = '' then
-//    Result := 'Empty';
-  Result := '';
+    Result := '<Empty>';
+//  Result := '';
 end;
 
 function TwbEmptyDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -10152,7 +10152,7 @@ begin
 //  Result := GetName;
 //  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
 //    Result := NamedDef.Name;
-  Result := '';
+  Result := '<Empty>';
 
   Used(aElement, Result);
 end;
