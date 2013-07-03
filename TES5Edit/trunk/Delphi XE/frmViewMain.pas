@@ -1413,7 +1413,7 @@ begin
             UniqueValues.Add(Element.SortKey[True]);
         end else
           if not (vnfIgnore in aNodeDatas[i].ViewNodeFlags) then
-            UniqueValues.Add('');
+            UniqueValues.Add('{C7739FBD-3B58-48A2-9DD0-8057D3496892}'); // Empty string does not look like the best of choice. Using an arbitrary value.
 
         if Priority = cpIgnore then
           aNodeDatas[i].ConflictThis := ctIgnored

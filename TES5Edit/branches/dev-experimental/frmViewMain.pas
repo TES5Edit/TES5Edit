@@ -1413,7 +1413,7 @@ begin
             UniqueValues.Add(Element.SortKey[True]);
         end else
           if not (vnfIgnore in aNodeDatas[i].ViewNodeFlags) then
-            UniqueValues.Add('');
+            UniqueValues.Add('{C7739FBD-3B58-48A2-9DD0-8057D3496892}'); // Empty string does not look like the best of choice. Using an arbitrary value.
 
         if Priority = cpIgnore then
           aNodeDatas[i].ConflictThis := ctIgnored
@@ -6251,7 +6251,7 @@ var
   s: string;
   Key: Word;
 begin
-  s := mmoMessages.SelText;
+  s := Trim(mmoMessages.SelText);
   if Length(s) < 8 then
     Exit;
   if (s[1] = '[') and (s[Length(s)] = ']') then
@@ -10071,6 +10071,9 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
+  if wbGameMode = gmTES5 then begin
+    mniNavCreateMergedPatch.Visible := False;
+  end;
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
