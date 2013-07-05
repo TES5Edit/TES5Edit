@@ -2188,19 +2188,32 @@ begin
     Elements[i] := NodeData.Element;
   end;
 
-  CopyInto(
-    Sender = mniNavCopyAsNewRecord,
-    Sender = mniNavCopyAsWrapper,
-    Sender = mniNavCopyAsSpawnRateOverride,
-    Sender = mniNavDeepCopyAsOverride,
-    Elements);
+  try
+    wbCurrentAction := 'Copying...';
+    wbStartTime := now;
+    wbShowStartTime := 1;
+    wbCurrentTick := GetTickCount;
 
-  for i := Low(SelectedNodes) to High(SelectedNodes) do
-    vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-  InvalidateElementsTreeView(SelectedNodes);
-  PostResetActiveTree;
-  if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
-    vstNav.Invalidate;
+    CopyInto(
+      Sender = mniNavCopyAsNewRecord,
+      Sender = mniNavCopyAsWrapper,
+      Sender = mniNavCopyAsSpawnRateOverride,
+      Sender = mniNavDeepCopyAsOverride,
+      Elements);
+
+    for i := Low(SelectedNodes) to High(SelectedNodes) do
+      vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
+    InvalidateElementsTreeView(SelectedNodes);
+    PostResetActiveTree;
+    if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
+      vstNav.Invalidate;
+  finally
+    wbProgressCallback('Copying done.');
+    wbCurrentAction := '';
+    wbCurrentTick := 0;
+    wbShowStartTime := 0;
+    Caption := Application.Title;
+  end;
 end;
 
 procedure TfrmMain.mniNavCreateMergedPatchClick(Sender: TObject);
@@ -2405,12 +2418,7 @@ var
 
         if IsFaultyOrderedList then begin
           PostAddMessage('Error: Can''t merge faulty ordered list ' + Master.Name);
-        end else
-        // unsafe to copy VMAD subrecords to merged patch until they are decoded
-        {if (wbGameMode = gmTES5) and (MainRecord.ElementExists['VMAD']) then begin
-          PostAddMessage('Notice: Can''t merge for the winning record with scripts ' + MainRecord.Name);
-        end else}
-        begin
+        end else begin
           TargetRecord := nil;
           for l := Low(aListNames) to High(aListNames) do
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then

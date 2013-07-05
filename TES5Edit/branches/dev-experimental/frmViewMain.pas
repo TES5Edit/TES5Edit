@@ -2188,19 +2188,32 @@ begin
     Elements[i] := NodeData.Element;
   end;
 
-  CopyInto(
-    Sender = mniNavCopyAsNewRecord,
-    Sender = mniNavCopyAsWrapper,
-    Sender = mniNavCopyAsSpawnRateOverride,
-    Sender = mniNavDeepCopyAsOverride,
-    Elements);
+  try
+    wbCurrentAction := 'Copying...';
+    wbStartTime := now;
+    wbShowStartTime := 1;
+    wbCurrentTick := GetTickCount;
 
-  for i := Low(SelectedNodes) to High(SelectedNodes) do
-    vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-  InvalidateElementsTreeView(SelectedNodes);
-  PostResetActiveTree;
-  if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
-    vstNav.Invalidate;
+    CopyInto(
+      Sender = mniNavCopyAsNewRecord,
+      Sender = mniNavCopyAsWrapper,
+      Sender = mniNavCopyAsSpawnRateOverride,
+      Sender = mniNavDeepCopyAsOverride,
+      Elements);
+
+    for i := Low(SelectedNodes) to High(SelectedNodes) do
+      vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
+    InvalidateElementsTreeView(SelectedNodes);
+    PostResetActiveTree;
+    if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
+      vstNav.Invalidate;
+  finally
+    wbProgressCallback('Copying done.');
+    wbCurrentAction := '';
+    wbCurrentTick := 0;
+    wbShowStartTime := 0;
+    Caption := Application.Title;
+  end;
 end;
 
 procedure TfrmMain.mniNavCreateMergedPatchClick(Sender: TObject);

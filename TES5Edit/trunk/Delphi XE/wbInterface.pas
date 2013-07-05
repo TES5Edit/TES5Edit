@@ -29,12 +29,12 @@ const
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
-
   TwbPointerArray = array [0..Pred(High(Integer) div SizeOf(Pointer))] of Pointer;
   PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
 
 threadvar
   wbProgressCallback : TwbProgressCallback;
+  wbCurrentTick      : Integer;
   wbCurrentAction    : string;
   wbStartTime        : TDateTime;
   wbShowStartTime    : Integer;
