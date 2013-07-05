@@ -32,6 +32,7 @@ type
     btnOK: TButton;
     btnCancel: TButton;
     dlgCompareTool: TOpenDialog;
+    LiteCompareButton: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure btnCompareClick(Sender: TObject);
@@ -156,6 +157,8 @@ begin
       wShowWindow := SW_SHOWNORMAL;
     end;
 
+    aParams := '"'+aExe+'"'+aParams;
+
     if CreateProcess(PChar(aExe), PChar(aParams),
       nil, nil, false, NORMAL_PRIORITY_CLASS,
       nil, nil, StartUpInfo, ProcessInfo)
@@ -215,6 +218,10 @@ procedure TfrmViewElements.FormShow(Sender: TObject);
 begin
   if Assigned(Settings) then
     CompareCmdLine := Settings.ReadString('External', 'CompareCommandLine', 'bcompare.exe %1 %2');
+  {$IFDEF LiteVersion}
+  LiteCompareButton.Visible := True;
+  btnCompare.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfrmViewElements.MemoChange(Sender: TObject);

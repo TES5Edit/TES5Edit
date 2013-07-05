@@ -11669,7 +11669,8 @@ begin
       ModalEdit := GetKeyState(VK_SHIFT) < 0;
 
       for i := Low(ActiveRecords) to High(ActiveRecords) do
-        AddElement(NodeDatas[i].Element, vstView.FocusedColumn = Succ(i), ModalEdit and Assigned(NodeDatas[i].Element) and NodeDatas[i].Element.IsEditable);
+        AddElement(NodeDatas[i].Element, vstView.FocusedColumn = Succ(i),
+          ModalEdit and Assigned(NodeDatas[i].Element) and NodeDatas[i].Element.IsEditable);
       if not ModalEdit then
         Show
       else
