@@ -1,7 +1,7 @@
 object frmViewElements: TfrmViewElements
   Left = 0
   Top = 0
-  ClientHeight = 300
+  ClientHeight = 325
   ClientWidth = 565
   Color = clBtnFace
   ParentFont = True
@@ -18,7 +18,7 @@ object frmViewElements: TfrmViewElements
     Left = 8
     Top = 8
     Width = 549
-    Height = 251
+    Height = 276
     Margins.Left = 8
     Margins.Top = 8
     Margins.Right = 8
@@ -31,7 +31,7 @@ object frmViewElements: TfrmViewElements
       Left = 1
       Top = 1
       Width = 547
-      Height = 249
+      Height = 274
       Margins.Left = 5
       Margins.Top = 5
       Margins.Right = 5
@@ -43,11 +43,12 @@ object frmViewElements: TfrmViewElements
   end
   object Panel2: TPanel
     Left = 0
-    Top = 267
+    Top = 292
     Width = 565
     Height = 33
     Align = alBottom
     BevelOuter = bvNone
+    PopupMenu = PopupMenu1
     TabOrder = 1
     object pnlButtons: TPanel
       Left = 192
@@ -87,6 +88,17 @@ object frmViewElements: TfrmViewElements
         ModalResult = 2
         TabOrder = 2
         OnClick = btnCancelClick
+      end
+      object LiteCompareButton: TButton
+        Left = 96
+        Top = 3
+        Width = 75
+        Height = 25
+        Caption = 'Compare'
+        DropDownMenu = PopupMenu1
+        TabOrder = 3
+        Visible = False
+        OnClick = btnCompareClick
       end
     end
   end
