@@ -4458,6 +4458,12 @@ begin
   if aPos < High(cntElements) then begin
     Move(cntElements[Succ(aPos)], cntElements[aPos], (High(cntElements) - aPos) * SizeOf(Pointer));
     Pointer(cntElements[High(cntElements)]) := nil;
+    if (csInitializing in cntStates) and Supports(Self, IwbDataContainer) then
+      with Self as TwbDataContainer do
+      if Assigned(dcDataEndPtr) then begin
+        dcDataEndPtr := Pointer(Cardinal(dcDataEndPtr) - Result.DataSize);
+//        dcEndPtr := dcDataEndPtr;
+      end;
   end;
 
   SetLength(cntElements, Pred(Length(cntElements)));

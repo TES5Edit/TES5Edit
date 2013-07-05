@@ -9359,7 +9359,7 @@ begin
     wbFormIDCk(YNAM, 'Younger', [RACE]),
     wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
-    wbArray(DNAM, 'Default Hair Styles', wbFormIDCk('Default Hair Style', [HAIR]), ['Male', 'Female'], cpNormal, True),
+    wbArray(DNAM, 'Default Hair Styles', wbFormIDCk('Default Hair Style', [HAIR, NULL]), ['Male', 'Female'], cpNormal, True),
     wbArray(CNAM, 'Default Hair Colors', wbInteger('Default Hair Color', itU8, wbEnum([
       'Bleached',
       'Brown',
