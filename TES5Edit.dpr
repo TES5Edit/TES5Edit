@@ -55,6 +55,7 @@ uses
   wbNifScanner in 'wbNifScanner.pas';
 
 {$R *.res}
+{$MAXSTACKSIZE 2097152}
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;

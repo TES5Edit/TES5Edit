@@ -71,6 +71,10 @@ var
   Container   : IwbContainer;
   Target      : IwbElement;
 begin
+  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+    wbProgressCallback('');
+    wbCurrentTick := GetTickCount;
+  end;
   Container := aSource.Container;
   if Assigned(Container) then begin
     if Supports(Container, IwbMainRecord, MainRecord) then
