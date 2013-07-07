@@ -6279,7 +6279,7 @@ begin
     Int64($3520E710), 'Largest Bounty',
     Int64($8A24FDE2), 'Locations Discovered',
     Int64($5829CC2E), 'Locks Picked',
-    Int64($88089979), 'Magic Items Maid',
+    Int64($88089979), 'Magic Items Made',
     Int64($7EA26C2D), 'Main Quests Completed',
     Int64($7187A208), 'Mauls',
     Int64($98EE55DC), 'Misc Objectives Completed',

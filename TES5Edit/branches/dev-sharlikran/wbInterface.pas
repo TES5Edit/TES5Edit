@@ -327,7 +327,8 @@ type
     esReachable,
     esTagged,
     esDeciding,
-    esNotSuitableToAddTo
+    esNotSuitableToAddTo,
+    esDummy {Used in wbScriptAdapter as a default value}
   );
 
   TwbElementStates = set of TwbElementState;
@@ -2457,6 +2458,7 @@ var
 
 function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
 function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContainerElementRef;
+function GetElementFromUnion(const aElement: IwbElement): IwbElement;
 
 var
   wbHeaderSignature : TwbSignature = 'TES4';
@@ -11622,6 +11624,16 @@ begin
       Supports(Result.Container, IwbContainerElementRef, Result);
   end else
     Supports(aElement, IwbContainerElementRef, Result);
+end;
+
+function GetElementFromUnion(const aElement: IwbElement): IwbElement;
+begin
+  if (aElement.ElementType = etUnion) then begin
+    Result := aElement.Container;
+    while Result.ElementType = etUnion do
+      Result := Result.Container;
+  end else
+    Result := aElement;
 end;
 
 { TwbStringKCDef }

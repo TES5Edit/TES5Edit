@@ -3210,7 +3210,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3227,7 +3227,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3244,7 +3244,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3266,7 +3266,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3283,7 +3283,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3300,7 +3300,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3317,7 +3317,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3334,7 +3334,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3351,7 +3351,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3368,7 +3368,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -3385,7 +3385,7 @@ var
   i          : Int64;
 begin
   Result := False;
-  Element := aElement;
+  Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
     Element := Element.Container;
@@ -4631,7 +4631,7 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
+  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
   wbRecord(ACRE, 'Placed Creature', [
@@ -6874,7 +6874,7 @@ begin
       wbByteArray('Unused', 3)
     ], cpNormal, True, nil, 1),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True)
+    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE, NULL]), 0, nil, nil, cpNormal, True)  // NULL looks valid if IDLS\Animation Count is 0
   ]);
 
   wbRecord(NOTE, 'Note', [
@@ -7665,7 +7665,7 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
-    wbRStructs('Body Parts', 'Body Part', [
+    wbRStructS('Body Parts', 'Body Part', [
       wbString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),

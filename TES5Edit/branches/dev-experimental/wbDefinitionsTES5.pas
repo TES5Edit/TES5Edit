@@ -1930,23 +1930,6 @@ begin
     Result := 1;
 end;
 
-function wbPHWTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container : IwbContainer;
-  SubRecord : IwbSubRecord;
-begin
-  Result := 2;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  if Supports(Container, IwbSubRecord, SubRecord) then
-    if SubRecord.SubRecordHeaderSize = 64 then
-      Result := 0
-    else if SubRecord.SubRecordHeaderSize = 32 then
-      Result := 1
-end;
-
 function wbMGEFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -4899,7 +4882,7 @@ begin
     {0x00080000}'CantWait HasCurrents',
     {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
     {0x00100000}'IgnoreObjectInteraction',
-    {0x00200000}'(Used by in Memory Changed Form)',
+    {0x00200000}'(Used in Memory Changed Form)',
     {0x00400000}'Unknown 23',
     {>>> 0x00800000 ACTI: Is Marker <<<}
     {0x00800000}'IsMarker',
