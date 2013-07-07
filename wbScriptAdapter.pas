@@ -99,6 +99,77 @@ begin
     Value := Element.BaseName;
 end;
 
+function IntToEsState(anInt: Integer): TwbElementState;
+begin
+  case anInt of
+    0: Result := esModified;
+    1: Result := esInternalModified;
+    2: Result := esUnsaved;
+    3: Result := esSortKeyValid;
+    4: Result := esExtendedSortKeyValid;
+    5: Result := esHidden;
+    6: Result := esParentHidden;
+    7: Result := esParentHiddenChecked;
+    8: Result := esNotReachable;
+    9: Result := esReachable;
+    10: Result := esTagged;
+    11: Result := esDeciding;
+    12: Result := esNotSuitableToAddTo;
+  else
+    Result := esDummy;
+  end;
+end;
+
+procedure IwbElement_ClearElementState(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element : IwbElement;
+  eState  : TwbElementState;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    try
+      eState := IntToEsState(Args.Values[1]);
+      Value := eState in Element.ElementStates;
+      Element.SetElementState(eState, True);
+    except
+
+    end;
+  end;
+end;
+
+procedure IwbElement_SetElementState(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element : IwbElement;
+  eState  : TwbElementState;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    try
+      eState := IntToEsState(Args.Values[1]);
+      Value := eState in Element.ElementStates;
+      Element.SetElementState(eState);
+    except
+
+    end;
+  end;
+end;
+
+procedure IwbElement_GetElementState(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element : IwbElement;
+  eState  : TwbElementState;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    try
+      eState := IntToEsState(Args.Values[1]);
+      Value := eState in Element.ElementStates;
+    except
+
+    end;
+  end;
+end;
+
 procedure IwbElement_Path(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -1008,6 +1079,21 @@ begin
     AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
     AddConst(cUnit, 'etUnion', ord(etUnion));
 
+    { TwbElementState }
+    AddConst(cUnit, 'esModified', Ord(esModified));
+    AddConst(cUnit, 'esInternalModified', Ord(esInternalModified));
+    AddConst(cUnit, 'esUnsaved', Ord(esUnsaved));
+    AddConst(cUnit, 'esSortKeyValid', Ord(esSortKeyValid));
+    AddConst(cUnit, 'esExtendedSortKeyValid', Ord(esExtendedSortKeyValid));
+    AddConst(cUnit, 'esHidden', Ord(esHidden));
+    AddConst(cUnit, 'esParentHidden', Ord(esParentHidden));
+    AddConst(cUnit, 'esParentHiddenChecked', Ord(esParentHiddenChecked));
+    AddConst(cUnit, 'esNotReachable', Ord(esNotReachable));
+    AddConst(cUnit, 'esReachable', Ord(esReachable));
+    AddConst(cUnit, 'esTagged', Ord(esTagged));
+    AddConst(cUnit, 'esDeciding', Ord(esDeciding));
+    AddConst(cUnit, 'esNotSuitableToAddTo', Ord(esNotSuitableToAddTo));
+
     { TwbDefType }
     AddConst(cUnit, 'dtRecord', ord(dtRecord));
     AddConst(cUnit, 'dtSubRecord', ord(dtSubRecord));
@@ -1084,6 +1170,9 @@ begin
     AddFunction(cUnit, 'MoveDown', IwbElement_MoveDown, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToFile', _wbCopyElementToFile, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToRecord', _wbCopyElementToRecord, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
+    AddFunction(cUnit, 'ElementClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'ElementSetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'ElementGetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);

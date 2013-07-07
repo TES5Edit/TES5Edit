@@ -14099,7 +14099,7 @@ end;
 function TwbValueBase.GetDataSize: Integer;
 begin
   if not Assigned(dcDataBasePtr) and not (dcfStorageInvalid in dcFlags) then
-    Result := vbValueDef.Size[nil, nil, Self]
+    Result := vbValueDef.DefaultSize[nil, nil, Self]
   else
     Result := inherited GetDataSize;
 end;
