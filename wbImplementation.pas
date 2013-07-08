@@ -1676,7 +1676,7 @@ begin
   if flFormIDsSorted then
     Exit;
 
-  if (aRecord.Signature = 'MGEF') or (aRecord.Signature = 'GMST') then begin
+  if (aRecord.Signature = 'MGEF') or (aRecord.Signature = 'GMST') or wbTrackAllEditorID then begin
     s := aRecord.EditorID;
     if s <> '' then begin
       if flRecordsByEditorIDCount >= Length(flRecordsByEditorID) then

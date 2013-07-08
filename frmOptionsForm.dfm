@@ -54,11 +54,11 @@ object frmOptions: TfrmOptions
       end
       object cbIKnow: TCheckBox
         Left = 304
-        Top = 38
+        Top = 204
         Width = 137
         Height = 17
         Caption = 'I know what I am doing'
-        TabOrder = 0
+        TabOrder = 9
         Visible = False
       end
       object cbHideUnused: TCheckBox
@@ -67,7 +67,7 @@ object frmOptions: TfrmOptions
         Width = 81
         Height = 17
         Caption = 'Hide unused'
-        TabOrder = 1
+        TabOrder = 0
       end
       object cbHideIgnored: TCheckBox
         Left = 16
@@ -75,7 +75,7 @@ object frmOptions: TfrmOptions
         Width = 81
         Height = 17
         Caption = 'Hide ignored'
-        TabOrder = 2
+        TabOrder = 1
       end
       object cbHideNeverShow: TCheckBox
         Left = 16
@@ -83,7 +83,7 @@ object frmOptions: TfrmOptions
         Width = 121
         Height = 17
         Caption = 'Hide "never shown"'
-        TabOrder = 3
+        TabOrder = 2
       end
       object cbLoadBSAs: TCheckBox
         Left = 16
@@ -91,7 +91,7 @@ object frmOptions: TfrmOptions
         Width = 81
         Height = 17
         Caption = 'Load BSAs'
-        TabOrder = 4
+        TabOrder = 3
       end
       object cbSortFLST: TCheckBox
         Left = 16
@@ -99,7 +99,7 @@ object frmOptions: TfrmOptions
         Width = 121
         Height = 17
         Caption = '[FO3/FNV] Sort FLST'
-        TabOrder = 5
+        TabOrder = 6
       end
       object cbSimpleRecords: TCheckBox
         Left = 16
@@ -107,14 +107,14 @@ object frmOptions: TfrmOptions
         Width = 281
         Height = 17
         Caption = 'Simple records (LAND, NAVI, NAVM). Requires restart.'
-        TabOrder = 6
+        TabOrder = 7
       end
       object edColumnWidth: TEdit
         Left = 86
         Top = 204
         Width = 51
         Height = 21
-        TabOrder = 7
+        TabOrder = 8
       end
       object cbAutoSave: TCheckBox
         Left = 304
@@ -122,7 +122,16 @@ object frmOptions: TfrmOptions
         Width = 81
         Height = 17
         Caption = 'Auto save'
-        TabOrder = 8
+        TabOrder = 4
+      end
+      object cbTrackAllEditorID: TCheckBox
+        Left = 304
+        Top = 38
+        Width = 137
+        Height = 17
+        Hint = 'Default only track MGEF and game settings'
+        Caption = 'Track all EditorID'
+        TabOrder = 5
       end
     end
     object tsCleaning: TTabSheet
