@@ -78,7 +78,7 @@ begin
 end;
 
 // several ini settings should be read before record definitions
-// they make affect definitions like wbSimpleRecords
+// they may affect definitions like wbSimpleRecords
 // and should be overridden by command line parameters
 procedure ReadSettings;
 var
@@ -97,6 +97,7 @@ begin
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+      wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
     finally
       Settings.Free;
     end;
@@ -185,6 +186,9 @@ begin
     wbShowInternalEdit := True
   else if FindCmdLineSwitch('hidefixup') then
     wbShowInternalEdit := False;
+
+  if FindCmdLineSwitch('TrackAllEditorID') then
+    wbTrackAllEditorID := True;
 
   wbApplicationTitle := wbAppName + 'View ' + VersionString;
   if isMode('lodgen') then begin

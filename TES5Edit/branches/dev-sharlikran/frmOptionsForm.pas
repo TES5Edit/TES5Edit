@@ -39,6 +39,7 @@ type
     Label5: TLabel;
     edColumnWidth: TEdit;
     cbAutoSave: TCheckBox;
+    cbTrackAllEditorID: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

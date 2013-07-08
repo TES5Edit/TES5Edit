@@ -69,6 +69,10 @@ begin
       sl.Add(DefaultSignature + ' - ' + GetName);
 end;
 
+procedure wbGetTrackAllEditorID(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbTrackAllEditorID;
+end;
 
 { IwbElement }
 
@@ -384,6 +388,16 @@ begin
       Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '');
 end;
 
+procedure _wbCopyElementToFileWithPrefix(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], Args.Values[5], Args.Values[6]);
+end;
+
 procedure _wbCopyElementToRecord(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -601,6 +615,16 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.EditorID;
+end;
+
+procedure IwbMainRecord_SetEditorID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    MainRecord.EditorID := Args.Values[1];
     Value := MainRecord.EditorID;
 end;
 
@@ -1139,6 +1163,7 @@ begin
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbTrackAllEditorID', wbGetTrackAllEditorID, 0, [], varEmpty);
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
@@ -1161,7 +1186,7 @@ begin
     AddFunction(cUnit, 'ContainingMainRecord', IwbElement_ContainingMainRecord, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'LinksTo', IwbElement_LinksTo, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Check', IwbElement_Check, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'ElementAssign', IwbElement_Assign, 4, [varEmpty, varInteger, varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'ElementAssign', IwbElement_Assign, 4, [varEmpty, varEmpty, varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'Equals', IwbElement_Equals, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'CanContainFormIDs', IwbElement_CanContainFormIDs, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CanMoveUp', IwbElement_CanMoveUp, 1, [varEmpty], varEmpty);
@@ -1169,10 +1194,11 @@ begin
     AddFunction(cUnit, 'MoveUp', IwbElement_MoveUp, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MoveDown', IwbElement_MoveDown, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToFile', _wbCopyElementToFile, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
+    AddFunction(cUnit, 'wbCopyElementToFileWithPrefix', _wbCopyElementToFileWithPrefix, 7, [varEmpty, varEmpty, varBoolean, varBoolean, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToRecord', _wbCopyElementToRecord, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
-    AddFunction(cUnit, 'ElementClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
-    AddFunction(cUnit, 'ElementSetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
-    AddFunction(cUnit, 'ElementGetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'ClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'SetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'GetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
@@ -1199,6 +1225,7 @@ begin
     AddFunction(cUnit, 'Signature', IwbMainRecord_Signature, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FormID', IwbMainRecord_FormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EditorID', IwbMainRecord_EditorID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetEditorID', IwbMainRecord_SetEditorID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FixedFormID', IwbMainRecord_FixedFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrderFormID', IwbMainRecord_GetLoadOrderFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetLoadOrderFormID', IwbMainRecord_SetLoadOrderFormID, 2, [varEmpty, varEmpty], varEmpty);

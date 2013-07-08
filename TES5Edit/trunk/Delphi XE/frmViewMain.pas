@@ -9625,6 +9625,7 @@ begin
     edColumnWidth.Text := IntToStr(wbColumnWidth);
     cbAutoSave.Checked := AutoSave;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
+    cbTrackAllEditorID.Checked := wbTrackAllEditorID;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
     edUDRSetScaleValue.Text := FloatToStrF(wbUDRSetScaleValue, ffFixed, 99, wbFloatDigits);
@@ -9645,6 +9646,7 @@ begin
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
+    wbTrackAllEditorID := cbTrackAllEditorID.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
     wbUDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, wbUDRSetScaleValue);
@@ -9662,6 +9664,7 @@ begin
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
+    Settings.WriteBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
     Settings.WriteFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);

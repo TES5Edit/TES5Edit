@@ -102,6 +102,7 @@ var
   wbReportFormIDNotAllowedReferences: Boolean{} = True{};
   wbReportUnknown: Boolean{} = True{};
   wbMoreInfoForRequired: Boolean = False;
+  wbTrackAllEditorID: Boolean{} = False{};
 
   wbCheckExpectedBytes: Boolean{} = True{};
 
