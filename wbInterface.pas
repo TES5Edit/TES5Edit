@@ -8222,10 +8222,16 @@ begin
       if (Length(s) = 13) and (s[5] = ':') then
         Delete(s, 1, 5);
     end;
-    if Length(s) = 8 then
-      i := 0
-    else
+
+    try
+      StrToInt64('$' + s);
+      if Length(s) = 8 then
+        i := 0
+      else
+        i := Pos('[', t);
+    except
       i := Pos('[', t);
+    end;
   end;
 
   if Length(s) = 8 then
