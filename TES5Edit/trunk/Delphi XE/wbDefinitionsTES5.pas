@@ -9027,46 +9027,47 @@ begin
   wbRecord(LCTN, 'Location', [
     wbEDID,
 
-    wbArray(ACPR, 'Actor Persistent Reference', wbStruct('', [
+    wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCPR, 'Location Persistent Reference', wbStruct('', [
+    wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
     {>>> From Danwguard.esm, Does not follow similar previous patterns <<<}
-    wbArray(RCPR, 'Actor Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR])),
+    wbArray(RCPR, 'Reference Cell Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbArray(ACUN, 'ActorBase Unique Refs', wbStruct('', [
+    wbArray(ACUN, 'Actor Cell Unique', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN, NULL])
     ])),
-    wbArray(LCUN, 'Location Unique Reference', wbStruct('', [
+    wbArray(LCUN, 'Location Cell Unique', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN, NULL])
     ])),
-    {>>> Not See Yet but suspect it has same format <<<}
-    wbArray(RCUN, 'ActorBase Unique Refs', wbStruct('', [
+    {>>> in Unofficial Skyrim patch <<<}
+    wbArray(RCUN, 'Reference Cell Unique', wbFormIDCk('Actor', [NPC_])),
+    {wbArray(RCUN, 'ActorBase Unique Refs', wbStruct('', [
       wbFormIDCk('Actor', [NPC_]),
       wbFormIDCk('Ref', [ACHR]),
       wbFormIDCk('Location', [LCTN, NULL])
-    ])),
+    ])),}
 
-    wbArray(ACSR, 'ActorBase Static Reference', wbStruct('', [
+    wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCSR, 'Location Static Reference', wbStruct('', [
+    wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
@@ -9074,9 +9075,9 @@ begin
       wbInteger('Grid Y', itS16)
     ])),
     {>>> Seen in Open Cities <<<}
-    wbArray(RCSR, 'ActorBase Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
+    wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbRArray('BaseActor Encounter Reference',
+    wbRArray('Actor Cell Encounter Reference',
       wbStruct(ACEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
@@ -9085,7 +9086,7 @@ begin
         ]))
       ])
     ),
-    wbRArray('Location Encounter Reference',
+    wbRArray('Location Cell Encounter Reference',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
@@ -9095,7 +9096,7 @@ begin
       ])
     ),
     {>>> Seen in Open Cities <<<}
-    wbRArray('BaseActor Encounter Reference',
+    wbRArray('Reference Cell Encounter Reference',
       wbStruct(RCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
@@ -9105,16 +9106,16 @@ begin
       ])
     ),
 
-    wbArray(ACID, 'ActorBase Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
-    wbArray(LCID, 'Location Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
 
-    wbArray(ACEP, 'ActorBase Enable Point', wbStruct('', [
+    wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
-    wbArray(LCEP, 'Location Enable Point', wbStruct('', [
+    wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
@@ -10457,15 +10458,15 @@ begin
         {0x00080000} 'Opposite Gender Anims',
         {0x00100000} 'Simple Actor',
         {0x00200000} 'looped script?',
-        {0x00400000} '',
-        {0x00800000} '',
-        {0x01000000} '',
-        {0x02000000} '',
-        {0x04000000} '',
-        {0x08000000} '',
+        {0x00400000} 'Unknown 22',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
+        {0x02000000} 'Unknown 25',
+        {0x04000000} 'Unknown 26',
+        {0x08000000} 'Unknown 27',
         {0x10000000} 'looped audio?',
         {0x20000000} 'Is Ghost',
-        {0x40000000} '',
+        {0x40000000} 'Unknown 30',
         {0x80000000} 'Invulnerable'
       ])),
       wbInteger('Magicka Offset', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
