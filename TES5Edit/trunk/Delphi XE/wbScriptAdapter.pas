@@ -48,6 +48,14 @@ begin
   Value := Assigned(V2O(Args.Values[0]));
 end;
 
+procedure ObjectToElement(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  try
+    Value := IwbElement(Pointer(V2O(Args.Values[0])));
+  except
+  end;
+end;
+
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbTestWrite := True;
@@ -1161,6 +1169,7 @@ begin
 
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbTrackAllEditorID', wbGetTrackAllEditorID, 0, [], varEmpty);
