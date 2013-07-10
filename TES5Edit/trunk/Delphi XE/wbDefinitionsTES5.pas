@@ -798,56 +798,6 @@ var
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
 
-//function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-//var
-//  Index      : Integer;
-//  Flags      : Cardinal;
-//  IsExternal : Boolean;
-//  Container  : IwbContainerElementRef;
-//begin
-//  Result := '';
-//  IsExternal := False;
-//  if Supports(aElement, IwbContainerElementRef, Container) then begin
-//    Index := StrToIntDef(Copy(Container.Name, 11, 1), -1);
-//    if (Index >= 0) and (Index <= 2) then begin
-//      Flags := Container.ElementNativeValues['..\..\Flags'];
-//      IsExternal := Flags and (Cardinal(1) shl Index) <> 0;
-//    end;
-//  end;
-//
-//  if IsExternal then begin
-//    case aType of
-//      ctToStr: begin
-//        Result := IntToStr(aInt);
-//        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + IntToStr(aInt)] then
-//          Result := Result + ' (Triangle #' +
-//            Container.ElementValues['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Triangle'] + ' in ' +
-//            Container.ElementValues['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Navigation Mesh'] + ')'
-//        else
-//          Result := Result + ' <Error: NVEX\Connection #' + IntToStr(aInt) + ' is missing>';
-//      end;
-//      ctToSortKey:
-//        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + IntToStr(aInt)] then
-//          Result :=
-//            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Navigation Mesh', True] + '|' +
-//            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Triangle', True];
-//      ctCheck:
-//        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + IntToStr(aInt)] then
-//          Result := ''
-//        else
-//          Result := 'NVEX\Connection #' + IntToStr(aInt) + ' is missing';
-//    end
-//  end else
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt);
-//    end;
-//end;
-
-//function wbNVTREdgeToInt(const aString: string; const aElement: IwbElement): Int64;
-//begin
-//  Result := StrToInt64(aString);
-//end;
-
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -1257,6 +1207,212 @@ begin
   s := Copy(s, 1, Pred(i));
 
   Result := StrToInt(s);
+end;
+
+{ Alias to string conversion, requires quest reference or quest record specific to record that references alias }
+function wbAliasToStr(aInt: Int64; const aQuestRef: IwbElement; aType: TwbCallbackType): string;
+var
+  MainRecord : IwbMainRecord;
+  EditInfos  : TStringList;
+  Aliases    : IwbContainerElementRef;
+  Alias      : IwbContainerElementRef;
+  i, j       : Integer;
+  s, t       : string;
+begin
+  case aType of
+    ctToStr: if aInt = -1 then Result := 'None' else
+      Result := IntToStr(aInt) + ' <Warning: Could not resolve alias>';
+    ctToEditValue: if aInt = -1 then Result := 'None' else
+      Result := IntToStr(aInt);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: if aInt = -1 then Result := '' else
+      Result := '<Warning: Could not resolve alias>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  if (aInt = -1) and (aType <> ctEditType) and (aType <> ctEditInfo) then
+    Exit;
+
+  if not Assigned(aQuestRef) then
+    Exit;
+
+  // aQuestRef can be a QUST record or reference to QUST record
+  if not Supports(aQuestRef, IwbMainRecord, MainRecord) then
+    if not Supports(aQuestRef.LinksTo, IwbMainRecord, MainRecord) then
+      Exit;
+
+  if MainRecord.Signature <> QUST then begin
+    case aType of
+      ctToStr: Result := IntToStr(aInt) + ' <Warning: "' + MainRecord.ShortName + '" is not a Quest record>';
+      ctCheck: Result := '<Warning: "' + MainRecord.ShortName + '" is not a Quest record>';
+    end;
+    Exit;
+  end;
+
+  case aType of
+    ctEditType: begin
+      Result := 'ComboBox';
+      Exit;
+    end;
+    ctEditInfo:
+      EditInfos := TStringList.Create;
+  else
+    EditInfos := nil;
+  end;
+
+  try
+    if Supports(MainRecord.ElementByName['Aliases'], IwbContainerElementRef, Aliases) then begin
+      for i := 0 to Pred(Aliases.ElementCount) do
+        if Supports(Aliases.Elements[i], IwbContainerElementRef, Alias) then begin
+          j := Alias.Elements[0].NativeValue;
+          s := Alias.ElementEditValues['ALID'];
+          t := IntToStr(j);
+          while Length(t) < 3 do
+            t := '0' + t;
+          if s <> '' then
+            t := t + ' ' + s;
+          if Assigned(EditInfos) then
+            EditInfos.Add(t)
+          else if j = aInt then begin
+            case aType of
+              ctToStr, ctToEditValue: Result := t;
+              ctCheck: Result := '';
+            end;
+            Exit;
+          end;
+        end;
+    end;
+
+    case aType of
+      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Alias not found in "' + MainRecord.Name + '">';
+      ctCheck: Result := '<Warning: Quest Alias not found in "' + MainRecord.Name + '">';
+      ctEditInfo: begin
+        EditInfos.Add('None');
+        EditInfos.Sort;
+        Result := EditInfos.CommaText;
+      end;
+    end;
+  finally
+    FreeAndNil(EditInfos);
+  end;
+end;
+
+function wbStrToAlias(const aString: string; const aElement: IwbElement): Int64;
+var
+  i    : Integer;
+  s    : string;
+begin
+  Result := -1;
+
+  if aString = 'None' then
+    Exit;
+
+  i := 1;
+  s := Trim(aString);
+  while (i <= Length(s)) and (s[i] in ['0'..'9']) do
+    Inc(i);
+  s := Copy(s, 1, Pred(i));
+
+  Result := StrToIntDef(s, -1);
+end;
+
+function wbScriptObjectAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerRefFromUnionOrValue(aElement);
+
+  if not Assigned(Container) then
+    Exit;
+
+  Result := wbAliasToStr(aInt, Container.ElementByName['FormID'], aType);
+end;
+
+function wbPackageLocationAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainer;
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Container.ElementType <> etMainRecord) do
+    Container := Container.Container;
+
+  if not Assigned(Container) then
+    Exit;
+
+  Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType);
+end;
+
+function wbQuestAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainer;
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Container.ElementType <> etMainRecord) do
+    Container := Container.Container;
+
+  if not Assigned(Container) then
+    Exit;
+
+  Result := wbAliasToStr(aInt, Container, aType);
+end;
+
+function wbQuestExternalAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainer;
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := aElement.Container;
+
+  if not Assigned(Container) then
+    Exit;
+
+  Result := wbAliasToStr(aInt, Container.ElementBySignature['ALEQ'] , aType);
+end;
+
+function wbConditionAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainer;
+  MainRecord : IwbMainRecord;
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  while Assigned(Container) and (Container.ElementType <> etMainRecord) do
+    Container := Container.Container;
+
+  if not Assigned(Container) then
+    Exit;
+
+  if not Supports(Container, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if MainRecord.Signature = QUST then
+    Result := wbAliasToStr(aInt, Container, aType)
+  else
+  if MainRecord.Signature = SCEN then
+    Result := wbAliasToStr(aInt, Container.ElementBySignature['PNAM'], aType)
+  else
+  if MainRecord.Signature = PACK then
+    Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType);
 end;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -5184,12 +5340,12 @@ begin
   wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
       wbInteger('Unknown', itU16),
-      wbInteger('Alias ID', itS16),
+      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbFormID('FormID')
     ]),
     wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
-      wbInteger('Alias ID', itS16),
+      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unknown', itU16)
     ])
   ]);
@@ -5384,7 +5540,7 @@ begin
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unknown', 4, cpIgnore),
-      {8} wbInteger('Alias ID', itU32),
+      {8} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
       {9} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
@@ -5404,7 +5560,7 @@ begin
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unknown', 4, cpIgnore),
-      {8} wbInteger('Alias ID', itU32),
+      {8} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
       {9} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
@@ -5428,7 +5584,7 @@ begin
       {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SHOU, SOUN, TXST, PROJ]),
       {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {3} wbFormID('Reference'),
-      {4} wbInteger('Alias ID', itU32),
+      {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
       {5} wbByteArray('Unknown', 4, cpIgnore),
       {6} wbByteArray('Unknown', 4, cpIgnore)
     ]),
@@ -6437,7 +6593,7 @@ begin
         wbFormIDCkNoReach('Shout', [SHOU]),
         wbFormIDCkNoReach('Location', [LCTN]),
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
-        wbInteger('Alias ID', itU32),
+        wbInteger('Alias', itS32, wbConditionAliasToStr, wbStrToAlias),
         wbInteger('Packdata ID', itU32),
         wbFormIDCk('Association Type', [ASTP]),
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
@@ -6536,7 +6692,7 @@ begin
         wbFormIDCkNoReach('Shout', [SHOU]),
         wbFormIDCkNoReach('Location', [LCTN]),
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
-        wbInteger('Alias ID', itU32),
+        wbInteger('Alias', itS32, wbConditionAliasToStr, wbStrToAlias),
         wbInteger('Packdata ID', itU32),
         wbFormIDCk('Association Type', [ASTP]),
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
@@ -11019,7 +11175,7 @@ begin
       wbLString(NNAM, 'Display Text', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
-          wbInteger('Alias', itU32),
+          wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Compass Marker Ignores Locks'
           ])),
@@ -11037,23 +11193,23 @@ begin
           wbInteger(ALST, 'Reference Alias ID', itU32),
           wbString(ALID, 'Alias Name'),
           wbQUSTAliasFlags,
-          wbInteger(ALFI, 'Force Into Alias When Filled', itU32),
+          wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
           wbFormID(ALFR, 'Forced Reference'),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
-            wbInteger(ALFA, 'Alias', itU32),
+            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
             wbFormIDCk(KNAM, 'Keyword', [KYWD]),
             wbFormIDCk(ALRT, 'Ref Type', [LCRT])
           ], []),
           wbRStruct('External Alias Reference', [
             wbFormIDCk(ALEQ, 'Quest', [QUST]),
-            wbInteger(ALEA, 'Alias', itU32)
+            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
           ], []),
           wbRStruct('Create Reference to Object', [
             wbFormID(ALCO, 'Object'),
             wbStruct(ALCA, 'Alias', [
-              wbInteger('Alias', itU16),
+              wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
               wbInteger('Create', itU16, wbEnum([] ,[
                 $0000, 'At',
                 $8000, 'In'
@@ -11068,8 +11224,8 @@ begin
             ]))
           ], []),
           wbRStruct('Find Matching Reference Near Alias', [
-            wbInteger(ALNA, 'Near Alias', itU32),
-            wbInteger(ALNT, 'Near Type', itU32, wbEnum([
+            wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+            wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked Ref Child'
             ]))
           ], []),
@@ -11099,23 +11255,23 @@ begin
           wbInteger(ALLS, 'Location Alias ID', itU32),
           wbString(ALID, 'Alias Name'),
           wbQUSTAliasFlags,
-          wbInteger(ALFI, 'Force Into Alias When Filled', itU32),
+          wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
           wbFormID(ALFR, 'Forced Reference'),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
-            wbInteger(ALFA, 'Alias', itU32),
+            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
             wbFormIDCk(KNAM, 'Keyword', [KYWD]),
             wbFormIDCk(ALRT, 'Ref Type', [LCRT])
           ], []),
           wbRStruct('External Alias Reference', [
             wbFormIDCk(ALEQ, 'Quest', [QUST]),
-            wbInteger(ALEA, 'Alias', itU32)
+            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
           ], []),
           wbRStruct('Create Reference to Object', [
             wbFormID(ALCO, 'Object'),
             wbStruct(ALCA, 'Alias', [
-              wbInteger('Alias', itU16),
+              wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
               wbInteger('Create', itU16, wbEnum([] ,[
                 $0000, 'At',
                 $8000, 'In'
@@ -11130,8 +11286,8 @@ begin
             ]))
           ], []),
           wbRStruct('Find Matching Reference Near Alias', [
-            wbInteger(ALNA, 'Near Alias', itU32),
-            wbInteger(ALNT, 'Near Type', itU32, wbEnum([
+            wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+            wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked Ref Child'
             ]))
           ], []),
