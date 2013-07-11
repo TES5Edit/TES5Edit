@@ -5724,6 +5724,7 @@ var
   i, v: Integer;
 begin
   if SameText(Identifier, 'ScriptProcessElements') then begin
+    ScriptProcessElements := [];
     v := V2S(Value);
     for i := Integer(Low(TwbElementType)) to Integer(High(TwbElementType)) do
       if (v and (1 shl i)) > 0 then
