@@ -9210,11 +9210,6 @@ begin
     ])),
     {>>> in Unofficial Skyrim patch <<<}
     wbArray(RCUN, 'Reference Cell Unique', wbFormIDCk('Actor', [NPC_])),
-    {wbArray(RCUN, 'ActorBase Unique Refs', wbStruct('', [
-      wbFormIDCk('Actor', [NPC_]),
-      wbFormIDCk('Ref', [ACHR]),
-      wbFormIDCk('Location', [LCTN, NULL])
-    ])),}
 
     wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
@@ -9233,7 +9228,7 @@ begin
     {>>> Seen in Open Cities <<<}
     wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
 
-    wbRArray('Actor Cell Encounter Reference',
+    wbRArray('Actor Cell Encounter Cell',
       wbStruct(ACEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
@@ -9242,7 +9237,7 @@ begin
         ]))
       ])
     ),
-    wbRArray('Location Cell Encounter Reference',
+    wbRArray('Location Cell Encounter Cell',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
@@ -9252,7 +9247,7 @@ begin
       ])
     ),
     {>>> Seen in Open Cities <<<}
-    wbRArray('Reference Cell Encounter Reference',
+    wbRArray('Reference Cell Encounter Cell',
       wbStruct(RCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
