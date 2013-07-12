@@ -4801,14 +4801,19 @@ end;
 
 function wbTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Container: IwbContainer;
+  Container : IwbContainer;
+  Element   : IwbElement;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  Result := Container.ElementByName['Type'].NativeValue;
+  Element := Container.ElementByName['Type'];
+  if Assigned(Element) then
+    Result := Element.NativeValue
+  else if wbMoreInfoForDecider then
+    wbProgressCallback('"'+Container.Name+'" does not contain an element named Type');
 end;
 
 procedure DefineTES5a;
@@ -5018,7 +5023,7 @@ begin
     {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
     {0x00000800}'InitiallyDisabled',
     {0x00001000}'Ignored',
-    {0x00002000}'Unknown 14',
+    {0x00002000}'ActorChanged',
     {0x00004000}'Unknown 15',
     {>>> 0x00008000 STAT: Has Distant LOD <<<}
     {0x00008000}'VWD',
@@ -5035,7 +5040,7 @@ begin
     {0x00080000}'CantWait HasCurrents',
     {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
     {0x00100000}'IgnoreObjectInteraction',
-    {0x00200000}'Unknown 22',
+    {0x00200000}'(Used in Memory Changed Form)',
     {0x00400000}'Unknown 23',
     {>>> 0x00800000 ACTI: Is Marker <<<}
     {0x00800000}'IsMarker',
