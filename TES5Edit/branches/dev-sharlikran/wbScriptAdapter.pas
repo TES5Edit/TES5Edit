@@ -48,6 +48,14 @@ begin
   Value := Assigned(V2O(Args.Values[0]));
 end;
 
+procedure ObjectToElement(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  try
+    Value := IwbElement(Pointer(V2O(Args.Values[0])));
+  except
+  end;
+end;
+
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbTestWrite := True;
@@ -1163,6 +1171,7 @@ begin
 
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbTrackAllEditorID', wbGetTrackAllEditorID, 0, [], varEmpty);
@@ -1199,8 +1208,8 @@ begin
     AddFunction(cUnit, 'wbCopyElementToFileWithPrefix', _wbCopyElementToFileWithPrefix, 7, [varEmpty, varEmpty, varBoolean, varBoolean, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToRecord', _wbCopyElementToRecord, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
     AddFunction(cUnit, 'ClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
-    AddFunction(cUnit, 'SetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
-    AddFunction(cUnit, 'GetElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'SetElementState', IwbElement_SetElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'GetElementState', IwbElement_GetElementState, 2, [varEmpty, varEmpty], varBoolean);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
