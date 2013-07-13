@@ -1,11 +1,8 @@
-[color=#00BFFF]TES5Edit 3.0.29 EXPERIMENTAL by ElminsterAU. Updated for Skyrim by Hlp, Zilav and Sharlikran.[/color]
+[color=#00BFFF]TES5Edit 3.0.30 EXPERIMENTAL by ElminsterAU. Updated for Skyrim by Hlp, Zilav and Sharlikran.[/color]
 
 [color=#FF0000]This is the eighth update of TES5Edit and is still being updated.  However, it should still be considered experimental.  Make backups of your plugins and report any issues in the official Bethesda thread.  If you have never used TES5Edit, Wiki Pages and basic videos are available.
 
-With the release of 3.0.29 we need to remind you that we only support version 1.9 of Skyrim and version 3.0.29 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
-
-TES5EDIT: Merge Patches
-[youtube]9pi5u2qwdxg[/youtube]
+We only support version 1.9 of Skyrim and version 3.0.30 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
 
 Cleaning Plugins and Master Files: Updated for Dragonborn
 [youtube]wt4W1dZF9IE[/youtube]
@@ -18,11 +15,14 @@ Other Informative Videos can be found on my [url=http://www.youtube.com/user/Sha
 [list]
 [*] [url=http://www.creationkit.com/Category:TES5Edit]TES5Edit[/url]
 [*] [url=http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit]TES5Edit Cleaning Guide[/url]
-[*] [url=http://www.creationkit.com/Skyrim_TES5Edit_Mod_Cleaning_Tutorial]TES5Edit Mod Cleaning Tutorial[/url]
+[*] [url=http://www.creationkit.com/TES5Edit_Mod_Cleaning_Tutorial]TES5Edit Mod Cleaning Tutorial[/url]
 [*] [url=http://www.creationkit.com/Skyrim_Dirty_Plugins_List]TES5Edit Skyrim Dirty Plugins List[/url]
 [/list]
 
-[url=http://forums.bethsoft.com/topic/1440522-relz-tes5edit/]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
+[color=#00BFFF]TES5Edit is now Available in Chinese:[/color]
+You can download the translation by [url=http://skyrim.nexusmods.com/users/2541088]bluesky404 [/url][url=http://skyrim.nexusmods.com/mods/37228]here[/url].
+
+[url=http://forums.bethsoft.com/topic/1466352-relz-tes5edit]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
 [url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
 
 [color=#00BFFF]Current Documentation:[/color]
@@ -40,7 +40,9 @@ We appreciate all the thanks and support from the community.  Hlp recently volun
 
 Although we welcome suggestions for improving TES5Edit automation is not one of them.  We do not plan on adding an automated way to clean multiple plugins or access to TES5Edit from the command line.  Currently cleaning a plugin involves indexing over a million references at times.  When only the required plugins are loaded then the cleaning is accurate.  If unnecessary plugins are involved those become part of the index and could cause the plugin to lose important and required data.  We understand the need for unattended automation at times.  However, without human intervention too many issues during the cleaning process would go unnoticed and make troubleshooting game issues related to plugins even more difficult then it already is.
 
-As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  Editing masses of entries, [url=http://forums.bethsoft.com/topic/1425724-merging-mods]merging plugins[/url], and creating compatibility patches for Skyrim overhauls may be possible.  However, please create your own separate thread apart from the official Bethesda developmental thread for TES5Edit.
+As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  Editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls may be possible.  However, please create your own separate thread apart from the official Bethesda developmental thread for TES5Edit.
+
+For more info on ways to use TES5Edit to Merge Plugins check out [url=http://forums.nexusmods.com/index.php?/topic/904953-how-to-merge-multiple-mods-with-multiple-master-files]How To Merge Multiple Mods With Multiple Master Files[/url] and [url=http://forums.bethsoft.com/topic/1425724-merging-mods]Merging Mods[/url].
 
 [color=#00BFFF]Trouble shooting plugins:[/color]
 
@@ -55,6 +57,33 @@ We understand that sometimes updates to programs break things.  Please use the u
 [color=#00BFFF]TES5Edit Updates:[/color]
 
 [color=#FF0000]With each new version of TES5Edit you may want to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.[/color]
+
+[color=#00BFFF]Version 3.0.30 contains the following changes:[/color]
+
+- Added Prev/NextMember for Record union. Use after adding a new one to select the apropriate.
+- Search for required master extended upward.
+- Added a second command line parameter to specify the game's ini file location. 
+- Ctrl+A to select all in editor window.
+- "Jump to" option in record's header popup menu.
+- Enable/disable autosaves in options.
+- Log file is overwritten at 3MB.
+- [xDump] Fatal exceptions are reported through ReportProgress to have a timestamp. It might be useful to track down the issue.
+- [TES5] Blocks adding new script property and new scripts. Please use CK to create them.
+- [TES4/TES5/FO3/FNV] Record definitions update (number of ITM counts may change).
+Scripting:
+- New scripts added.
+- New scripting functions (including regular expressions).
+- New UI controls (TLabeledEdit, TCheckListBox).
+- Scripts can be accessed with hotkeys (Ctrl+Shift+F to call a new find cell script demo).
+- Removed syntax highlighter from script editor.
+Fixes:
+- Variable size detection corrected.
+- Out of bounds detection corrected.
+- Issues 125, 126, 129, 128 (128 was "worked around").
+Misc:
+- Code modified for compatibility with both Delphi XE and XE3 in the same source files.
+- Added BaseName property so unsorted arrays can contain structured unions.
+- ByteArray length increased to 64 bits.
 
 [color=#00BFFF]Version 3.0.29 contains the following changes:[/color]
 
@@ -210,19 +239,6 @@ Q: I have the following errors with one of my plugins what do I do?
 [00:43] Background Loader: Contained subrecords: EDID BODT RNAM DNAM MOD2 MO2T MOD3 MO3T MOD4 MO4T MOD5 MO5T SNDD NAM0 NAM1 NAM2 NAM3 MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL MODL 
 
 A: I have seen that occur with plugins made with the ReProccer, NPC Editor, and older buggy versions of TESVSnip.  Usually TESVSnip 4.2 or 4.3.x.  TESVSnip never used the proper compression which is ZLib so the files are improperly compressed or they were left uncompressed.  No matter how the plugin was made it will cause issues durring game play.  You can either continue to use them but they may cause game instability, report the errors to the author so they can be addressed, or uninstall them.
-
-Q: I get have the following Errors when cleaning the official Bethesda Plugins.  Should I be worried about them?
-
-[size=2]<Warning: Unused data in: \ [00] Skyrim.esm \ [58] GRUP Top "WRLD" \ [11] GRUP World Children of CWTestHold "Avoidance Exterior" [WRLD:0001B44A] \ [2] GRUP Exterior Cell Block 0, 0 \ [0] GRUP Exterior Cell Sub-Block 0, 0 \ [18] TestCWHoldStart [CELL:0001B513] (in CWTestHold "Avoidance Exterior" [WRLD:0001B44A] at 0,0) \ [3] DATA - Flags>
-<Warning: Unused data in: \ [00] Skyrim.esm \ [58] GRUP Top "WRLD" \ [11] GRUP World Children of CWTestHold "Avoidance Exterior" [WRLD:0001B44A] \ [0] [CELL:0001B4C6] (in CWTestHold "Avoidance Exterior" [WRLD:0001B44A] at 0,0) \ [2] DATA - Flags>[/size]
-
-A: Those are just warnings.  Some of the Bethesda records contain older outdated information from initial release.  They are 2 old cell records in Skyrim.esm using oblivion like flags. (1 byte instead of 2)  Those records will be overwritten with the proper values by other Bethesda Files or mods made with the Construction Kit.
-
-Q: How do I force TES5Edit to save a file?
-A: CTRL+S
-
-Q: I am getting random crashes.  I see that you don't troubleshoot plugins but can you offer any advice?
-A: Nothing more then the typical stuff: 1) Disable all SkyProc type plugins such as ReProccer, ASIS, AV, and such because they are not made with the CK. 2) 
 
 ToDo List:
 
