@@ -8773,9 +8773,13 @@ end;
 
 constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
 var
-  BasePtr: Pointer;
-  EndPtr: Pointer;
+  BasePtr : Pointer;
+  EndPtr  : Pointer;
+  i       : TwbContainerState;
 begin
+  cntStates := [];
+  for i := Low(TwbContainerState) to High(TwbContainerState) do
+    Exclude(cntStates, i);
   srDef := aSubRecordDef;
   BasePtr := nil;
   Create(aContainer, BasePtr, nil, nil);

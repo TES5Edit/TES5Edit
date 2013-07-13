@@ -1307,6 +1307,8 @@ type
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters);
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
 
+    function GetRequiresKey: Boolean;
+
     property IsEditable[aInt: Int64; const aElement: IwbElement]: Boolean
       read GetIsEditable;
     property LinksTo[aInt: Int64; const aElement: IwbElement]: IwbElement
@@ -1316,6 +1318,9 @@ type
       read GetEditType;
     property EditInfo[aInt: Int64; const aElement: IwbElement]: string
       read GetEditInfo;
+
+    property RequiresKey: Boolean
+      read GetRequiresKey;
   end;
 
   IwbFormID = interface(IwbIntegerDefFormater)
@@ -3120,6 +3125,7 @@ type
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
 
   TwbLStringDef = class(TwbStringDef)
@@ -3453,6 +3459,8 @@ type
     function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64; virtual;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters); virtual;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; virtual;
+
+    function GetRequiresKey: Boolean; virtual;
   end;
 
   TwbFormID = class(TwbIntegerDefFormater, IwbFormID)
@@ -3581,6 +3589,7 @@ type
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
 
+    function GetRequiresKey: Boolean; override;
     {---IwbFlagsDef---}
     function GetFlag(aIndex: Integer): string;
     function GetFlagCount: Integer;
@@ -6311,7 +6320,10 @@ const
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < ExpectedLen[inType] then
-    Result := ''
+    if Assigned(inFormater) and inFormater.RequiresKey then
+      Result := inFormater.ToSortKey(0, aElement)
+    else
+      Result := ''
   else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
@@ -7082,6 +7094,11 @@ begin
   end;
 
   defReported := True;
+end;
+
+function TwbFlagsDef.GetRequiresKey: Boolean;
+begin
+  Result := True;
 end;
 
 function TwbFlagsDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -9831,6 +9848,11 @@ begin
   Result := nil;
 end;
 
+function TwbIntegerDefFormater.GetRequiresKey: Boolean;
+begin
+  Result := False;
+end;
+
 function TwbIntegerDefFormater.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64;
 begin
   Result := aInt;
@@ -10694,6 +10716,13 @@ begin
       end;
 end;
 
+function TwbStringMgefCodeDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+begin
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> ' <Warning: Expected 4 bytes but found 0>');
+  if Result then
+    FromEditValue(aBasePtr, aEndPtr, aElement, '');
+end;
+
 function TwbStringMgefCodeDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
 var
   IsAlpha  : Boolean;
@@ -10741,6 +10770,8 @@ begin
     end;
     ttFromEditValue, ttFromNativeValue: begin
       Result := Trim(s);
+      if S = '' then
+        Exit;
       i := Pos(':', Result);
       if i > 0 then begin
 
