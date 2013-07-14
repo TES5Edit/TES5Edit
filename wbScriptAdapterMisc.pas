@@ -734,7 +734,7 @@ begin
     AddGet(TStrings, 'CaseSensitive', TStringList_Read_CaseSensitive, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'CaseSensitive', TStringList_Write_CaseSensitive, 0, [varEmpty]);
 
-    { TBinaryReader }
+    { TBytesStream }
     AddClass('Classes', TBytesStream, 'TBytesStream');
     AddGet(TBytesStream, 'Create', TBytesStream_Create, 1, [varEmpty], varEmpty);
 

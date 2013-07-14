@@ -60,10 +60,10 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     procedure ContainerList(const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
-    procedure ResourceList(const aContainerName: string; const aList: TStrings);
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
   end;
 
@@ -211,6 +211,17 @@ begin
     aList.Add(chContainers[i].Name);
 end;
 
+procedure TwbContainerHandler.ContainerResourceList(const aContainerName: string; const aList: TStrings);
+var
+  i: Integer;
+begin
+  for i := Low(chContainers) to High(chContainers) do
+    if SameText(chContainers[i].Name, aContainerName) then begin
+      chContainers[i].ResourceList(aList);
+      Break;
+    end;
+end;
+
 function TwbContainerHandler.ResourceExists(const aFileName: string): Boolean;
 var
   i: Integer;
@@ -242,17 +253,6 @@ begin
       Inc(Result);
       if Assigned(aContainers) then
         aContainers.Add(chContainers[i].Name);
-    end;
-end;
-
-procedure TwbContainerHandler.ResourceList(const aContainerName: string; const aList: TStrings);
-var
-  i: Integer;
-begin
-  for i := Low(chContainers) to High(chContainers) do
-    if SameText(chContainers[i].Name, aContainerName) then begin
-      chContainers[i].ResourceList(aList);
-      Break;
     end;
 end;
 
