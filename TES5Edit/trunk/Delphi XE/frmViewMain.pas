@@ -3767,17 +3767,6 @@ begin
   Result := wbDistance(a, b);
 end;
 
-type
-  TMeshInfo = class
-    MainRecord : IwbMainRecord;
-    Mesh       : TwbMesh;
-    Refs       : array of PRefInfo;
-    TryHarder  : Boolean;
-  public
-    constructor Create(const aMainRecord: IwbMainRecord; const aMesh: TwbMesh);
-    procedure AddRef(const aRef: TRefInfo);
-  end;
-
 function StrRight(const s: String; Len: Integer): string;
 begin
   Result := s;
@@ -13622,31 +13611,6 @@ end;
 function TMainRecordRefByHistoryEntry.GetTabSheet: TTabSheet;
 begin
   Result := frmMain.tbsReferencedBy;
-end;
-
-{ TMeshInfo }
-
-procedure TMeshInfo.AddRef(const aRef: TRefInfo);
-var
-  Ref : PRefInfo;
-  i   : Integer;
-begin
-  New(Ref);
-  Ref^ := aRef;
-  for i := Low(Refs) to High(Refs) do
-    if (wbDistance(Refs[i].Pos, Ref.Pos) < 15.0) and (RotDistance(Refs[i].Rot, Ref.Rot) < 0.3) then begin
-      Ref.Next := Refs[i];
-      Refs[i] := Ref;
-      Exit;
-    end;
-  SetLength(Refs, Succ(Length(Refs)));
-  Refs[High(Refs)] := Ref;
-end;
-
-constructor TMeshInfo.Create(const aMainRecord: IwbMainRecord; const aMesh: TwbMesh);
-begin
-  MainRecord := aMainRecord;
-  Mesh := aMesh;
 end;
 
 { TPluggyLinkThread }

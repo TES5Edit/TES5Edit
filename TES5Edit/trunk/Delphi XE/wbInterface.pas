@@ -1428,10 +1428,11 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     function ResolveHash(const aHash: Int64): TDynStrings;
+    procedure ContainerList(const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
-    procedure ResourceList(const aContainerName: string; aContainers: TStrings);
-    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+    procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
   end;
 
 var

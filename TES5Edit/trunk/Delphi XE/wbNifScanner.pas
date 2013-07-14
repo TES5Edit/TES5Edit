@@ -157,7 +157,7 @@ begin
     if Length(NifBlockSizes) = 0 then
       Exit;
 
-    // calculate blocks offets
+    // calculate blocks offsets
     SetLength(NifBlockOffsets, NifNumBlocks);
     j := aStream.Position;
     for i := 0 to Pred(NifNumBlocks) do begin
