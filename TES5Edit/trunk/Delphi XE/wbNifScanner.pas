@@ -17,229 +17,200 @@ unit wbNifScanner;
 interface
 
 uses
-  Windows,
   SysUtils,
-  {$IFNDEF VER220}
-  DXtypes,
-  {$ENDIF VER220}
-  Direct3D9;
+  Classes;
 
-type
-  TSubsetInfo = record
-    Center                  : TD3DVector;
-    Radius                  : Single;
-    Alpha                   : Single;
-    vCount                  : Integer;
-    iCount                  : Integer;
-    containsTexCoords       : ByteBool;
-    containsNormals         : ByteBool;
-    containsColor           : ByteBool;
-    containsTangentBinormal : ByteBool;
-    containsTexture         : ByteBool;
-    containsIndicies        : ByteBool;
-    applyMode               : Byte;
-    wireframe               : ByteBool;
-    hasalpha                : ByteBool;
-  end;
-
-  TTexCoords = record
-    u, v: Single;
-  end;
-
-  PConvertedVertex = ^TConvertedVertex;
-  TConvertedVertex = record
-    Position : TD3DVector;
-    Tangent  : TD3DVector;
-    Binormal : TD3DVector;
-    Normal   : TD3DVector;
-    TexCoords: TTexCoords;
-    Color    : TD3DColorValue;
-  end;
-
-  TwbSubSetState = (
-    sssHasInfo,
-    sssHasTexture,
-    sssHasMaterial,
-    sssHasVerts,
-    sssHasTransform,
-    sssHasIndices
-  );
-
-  TwbSubSetStates = set of TwbSubSetState;
-
-  TwbSubSet = record
-    ssState      : TwbSubSetStates;
-    ssInfo       : TSubsetInfo;
-    ssTexture    : string;
-    ssMaterial   : TD3DMaterial9;
-    ssTransform  : TD3DMatrix;
-    ssVerts      : array of TConvertedVertex;
-    ssIndices    : array of Word;
-  end;
-
-  TwbMesh = record
-    msFailedSubsets : Integer;
-    msSubSets       : array of TwbSubSet;
-    msMaxSize       : Single;
-    msLog           : array of string;
-  end;
-
-function nsLoadMesh(aData: TBytes; out aMesh: TwbMesh): Boolean;
-
-function nsLoaded: Boolean;
-function nsUnload: Boolean;
-function nsLoad: Boolean;
+function NifTextures(aNifData: TBytes; aTextures: TStrings): Boolean;
 
 implementation
 
-uses
-  Classes;
+{
+  Get the list of textures from Nif data into aTextures
+}
+function NifTextures(aNifData: TBytes; aTextures: TStrings): Boolean;
+const
+  NifMagic = 'Gamebryo File Format';
 
-type
-  TLoadReturn = record
-    Subsets       : Cardinal;
-    FailedSubsets : Integer;
-    MaxSize       : Single;
-    Log           : PChar;
+  // read string terminated by $0A
+  function ReadLineString(data: TBinaryReader): string;
+  var
+    c: Char;
+  begin
+    repeat
+      c := Char(data.ReadByte);
+      if c <> #$0A then
+        Result := Result + c;
+    until c = #$0A;
   end;
 
-  TwbNifScannerLoad = function(Data: Pointer; Size: Integer): TLoadReturn; stdcall;
-  TwbNifScannerGetInfo = function(ID: Cardinal; out Info: TSubsetInfo): LongBool; stdcall;
-  TwbNifScannerGetTex = function(ID: Cardinal; out Texture: PChar): LongBool; stdcall;
-  TwbNifScannerGetMaterial = function(ID: Cardinal; out Material: TD3DMaterial9): LongBool; stdcall;
-  TwbNifScannerGetVerticies = function(ID: Cardinal; Verticies: PConvertedVertex): LongBool; stdcall;
-  TwbNifScannerGetTransform = function(ID: Cardinal; out Matrix: TD3DMatrix): LongBool; stdcall;
-  TwbNifScannerGetIndicies = function(ID: Cardinal; Strip: PShortInt): LongBool; stdcall;
-
-var
-  _Load         : TwbNifScannerLoad;
-  _GetInfo      : TwbNifScannerGetInfo;
-  _GetTex       : TwbNifScannerGetTex;
-  _GetMaterial  : TwbNifScannerGetMaterial;
-  _GetVerticies : TwbNifScannerGetVerticies;
-  _GetTransform : TwbNifScannerGetTransform;
-  _GetIndicies  : TwbNifScannerGetIndicies;
-
-var
-  NifScannerLib: THandle = 0;
-
-function nsLoaded: Boolean;
-begin
-  Result:= NifScannerLib <> 0;
-end;
-
-function nsUnload: Boolean;
-begin
-  Result:= True;
-  if nsLoaded then begin
-    Result         := FreeLibrary(NifScannerLib);
-    _Load         := nil;
-    _GetInfo      := nil;
-    _GetTex       := nil;
-    _GetMaterial  := nil;
-    _GetVerticies := nil;
-    _GetTransform := nil;
-    _GetIndicies  := nil;
-    NifScannerLib  := 0;
+  // read null terminated string, 1 byte prefix with length including null
+  function ReadShortString(data: TBinaryReader): string;
+  begin
+    Result := TEncoding.ASCII.GetString(data.ReadBytes(data.ReadByte - 1));
+    data.ReadByte; // skip null
   end;
-end;
 
-function nsLoad: Boolean;
-begin
-  Result:= nsLoaded;
-  if not Result then begin
-    NifScannerLib:= SafeLoadLibrary('NifScanner.dll');
-    if nsLoaded then begin
-      _Load := GetProcAddress(NifScannerLib, 'Load');
-      _GetInfo := GetProcAddress(NifScannerLib, 'GetInfo');
-      _GetTex := GetProcAddress(NifScannerLib, 'GetTex');
-      _GetMaterial := GetProcAddress(NifScannerLib, 'GetMaterial');
-      _GetVerticies := GetProcAddress(NifScannerLib, 'GetVerticies');
-      _GetTransform := GetProcAddress(NifScannerLib, 'GetTransform');
-      _GetIndicies := GetProcAddress(NifScannerLib, 'GetIndicies');
-      Result:=
-        Assigned(_Load) and
-        Assigned(_GetInfo) and
-        Assigned(_GetTex) and
-        Assigned(_GetMaterial) and
-        Assigned(_GetVerticies) and
-        Assigned(_GetTransform) and
-        Assigned(_GetIndicies);
-      if not Result then
-        nsUnload;
-    end;
+  // read string with 4 byte prefix
+  function ReadSizedString(data: TBinaryReader): string;
+  var
+    i: integer;
+  begin
+    i := data.ReadInt32;
+    if i > 1000 then
+      raise Exception.Create('Probably invalid Nif file, SizedString length > 1000');
+    Result := TEncoding.ASCII.GetString(data.ReadBytes(i));
   end;
-end;
 
-function nsLoadMesh(aData: TBytes; out aMesh: TwbMesh): Boolean;
 var
-  i: Integer;
-  p: PChar;
+  aStream: TBytesStream;
+  data: TBinaryReader;
+  i, j, n: integer;
+  s: string;
+  NifVersion: Cardinal;
+  NifNumBlocks, NifNumBlockTypes, NifNumStrings: Integer;
+  NifBlockTypes: array of string;
+  NifBlockType: array of integer;
+  NifBlockSizes: array of integer;
+  NifBlockOffsets: array of integer;
 begin
-  aMesh.msFailedSubsets := 0;
-  aMesh.msSubsets := nil;
-  aMesh.msMaxSize := 0;
-  aMesh.msLog := nil;
+  Result := False;
 
-  Result := nsLoad;
-  if not Result then
-    Exit;
-  if Length(aData) < 1 then
+  if Length(aNifData) = 0 then
     Exit;
 
-  with TStringList.Create do try
-    with aMesh, _Load(@aData[0], Length(aData)) do begin
-      msFailedSubsets := FailedSubsets;
-      msMaxSize := MaxSize;
-      SetLength(msSubSets, Subsets);
+  if not Assigned(aTextures) then
+    Exit;
 
-      for i:= Low(msSubSets) to High(msSubSets) do
-        with msSubSets[i] do begin
+  aTextures.Clear;
 
-          if _GetInfo(i, ssInfo) then
-            Include(ssState, sssHasInfo);
+  aStream := TBytesStream.Create(aNifData);
+  data := TBinaryReader.Create(aStream);
 
-          if _GetTex(i, p) then begin
-            ssTexture := p;
-            Include(ssState, sssHasTexture);
-          end;
+  try
+    // check Nif header
+    if TEncoding.ASCII.GetString(data.ReadBytes(Length(NifMagic))) <> NifMagic then
+      Exit;
 
-          if _GetMaterial(i, ssMaterial) then
-            Include(ssState, sssHasMaterial);
+    // skip the rest of header
+    ReadLineString(data);
 
-          if _GetTransform(i, ssTransform) then
-            Include(ssState, sssHasTransform);
+    // Version, Skyrim is $14020007
+    NifVersion := data.ReadUInt32;
+    if NifVersion < $14000000 then
+      Exit;
+    //WriteLn(IntToHex(NifVersion, 8));
 
-          if sssHasInfo in ssState then begin
+    // Endianness
+    if NifVersion >= $14000004 then
+      data.ReadByte;
 
-            SetLength(ssVerts, ssInfo.vCount+1);
-            if Length(ssVerts) > 0 then
-              if _GetVerticies(i, @ssVerts[0]) then begin
-                Include(ssState, sssHasVerts);
-                SetLength(ssVerts, ssInfo.vCount);
-              end else
-                ssVerts := nil;
+    // skip User version
+    data.ReadUInt32;
 
-            SetLength(ssIndices, ssInfo.iCount+1);
-            if Length(ssIndices) > 0 then
-              if _GetIndicies(i, @ssIndices[0]) then begin
-                Include(ssState, sssHasIndices);
-                SetLength(ssIndices, ssInfo.iCount);
-              end else
-                ssIndices := nil;
+    // Num Blocks
+    NifNumBlocks := data.ReadUInt32;
+    if NifNumBlocks > 1000 then
+      raise Exception.Create('Probably invalid Nif file, NifNumBlocks > 1000');
+    //WriteLn(Format('NumBlocks = %d', [NifNumBlocks]));
 
-          end;
+    data.ReadUInt32; // skip User version 2
+    ReadShortString(data); // skip Export Info \ Creator
+    ReadShortString(data); // skip Export Info \ Export Info 1
+    ReadShortString(data); // skip Export Info \ Export Info 2
 
-        end;
+    // Num Block Types
+    NifNumBlockTypes := data.ReadUInt16;
+    if NifNumBlockTypes > 1000 then
+      raise Exception.Create('Probably invalid Nif file, NifNumBlockTypes > 1000');
+    //WriteLn(Format('NumBlockTypes = %d', [NifNumBlockTypes]));
+    //WriteLn('Position = ' + IntToHex(aStream.Position, 8));
 
-      Text := Log;
-      SetLength(msLog, Count);
-      for i := 0 to Pred(Count) do
-        msLog[i] := Strings[i];
+    // block types
+    SetLength(NifBlockTypes, NifNumBlockTypes);
+    for i := 0 to Pred(NifNumBlockTypes) do
+      //WriteLn(ReadSizedString(data));
+      NifBlockTypes[i] := ReadSizedString(data);
+
+    // block type index
+    SetLength(NifBlockType, NifNumBlocks);
+    for i := 0 to Pred(NifNumBlocks) do
+      NifBlockType[i] := data.ReadUInt16;
+      //WriteLn(data.ReadUInt16);
+
+    // Block sizes
+    if NifVersion >= $14020007 then begin
+      SetLength(NifBlockSizes, NifNumBlocks);
+      for i := 0 to Pred(NifNumBlocks) do
+        NifBlockSizes[i] := data.ReadUInt32;
+        //WriteLn(Format('Block Size[%d] = %d', [i, data.ReadUInt32]));
     end;
+
+    // strings in header
+    if NifVersion >= $14010003 then begin
+      NifNumStrings := data.ReadUInt32;
+      data.ReadUInt32; // skip max string length
+      for i := 0 to Pred(NifNumStrings) do
+        ReadSizedString(data);
+    end;
+    data.ReadUInt32; // skip Unknown Int 2
+
+    if Length(NifBlockSizes) = 0 then
+      Exit;
+
+    // calculate blocks offets
+    SetLength(NifBlockOffsets, NifNumBlocks);
+    j := aStream.Position;
+    for i := 0 to Pred(NifNumBlocks) do begin
+      NifBlockOffsets[i] := j;
+      j := j + NifBlockSizes[i];
+    end;
+
+    // get used textures
+    for i := 0 to Pred(NifNumBlocks) do begin
+
+      if NifBlockTypes[NifBlockType[i]] = 'BSShaderTextureSet' then begin
+        aStream.Position := NifBlockOffsets[i];
+        j := data.ReadUInt32; // number of textures
+        for n := 1 to j do
+          aTextures.Add(ReadSizedString(data));
+      end
+
+      else if NifBlockTypes[NifBlockType[i]] = 'BSEffectShaderProperty' then begin
+        aStream.Position := NifBlockOffsets[i];
+        if NifVersion >= $14010003 then  // name is string index if version >= 20.1.0.3
+          data.ReadUInt32;
+        j := data.ReadUInt32; // Num Extra Data List
+        data.ReadBytes(SizeOf(Integer) * j); // Extra Data List
+        data.ReadInt32; // Controller
+        data.ReadInt32; // Shader Flags 1
+        data.ReadInt32; // Shader Flags 2
+        data.ReadBytes(8); // UV Offset
+        data.ReadBytes(8); // UV Scale
+        aTextures.Add(ReadSizedString(data));
+        data.ReadInt32; // Texture clamp mode
+        data.ReadBytes(SizeOf(Single) * 10); // different falloff and emissive data
+        aTextures.Add(ReadSizedString(data));
+      end;
+
+    end;
+
+    // remove empty lines, trim others
+    for i := Pred(aTextures.Count) downto 0 do begin
+      s := Trim(aTextures[i]);
+      if s = '' then
+        aTextures.Delete(i)
+      else
+        aTextures[i] := s;
+    end;
+
+    Result := True;
+
   finally
-    Free;
+    data.Free;
+    aStream.Free;
   end;
 end;
+
+
 
 end.
