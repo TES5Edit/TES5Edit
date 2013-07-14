@@ -59,11 +59,12 @@ type
     procedure AddBSA(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
+    procedure ContainerList(const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
-    procedure ResourceList(const aContainerName: string; aList: TStrings);
-    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+    procedure ResourceList(const aContainerName: string; const aList: TStrings);
+    procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
   end;
 
   TwbBSAFileRec = record
@@ -199,6 +200,17 @@ begin
   SetLength(Result, j);
 end;
 
+procedure TwbContainerHandler.ContainerList(const aList: TStrings);
+var
+  i: Integer;
+begin
+  if not Assigned(aList) then
+    Exit;
+
+  for i := Low(chContainers) to High(chContainers) do
+    aList.Add(chContainers[i].Name);
+end;
+
 function TwbContainerHandler.ResourceExists(const aFileName: string): Boolean;
 var
   i: Integer;
@@ -233,7 +245,7 @@ begin
     end;
 end;
 
-procedure TwbContainerHandler.ResourceList(const aContainerName: string; aList: TStrings);
+procedure TwbContainerHandler.ResourceList(const aContainerName: string; const aList: TStrings);
 var
   i: Integer;
 begin
@@ -244,11 +256,12 @@ begin
     end;
 end;
 
-procedure TwbContainerHandler.ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+procedure TwbContainerHandler.ResourceCopy(const aContainerName, aFileName, aPathOut: string);
 var
-  aDir: string;
-  aData: TBytes;
-  res: TDynResources;
+  aDir       : string;
+  aData      : TBytes;
+  res        : TDynResources;
+  i, residx  : integer;
 begin
   if aPathOut = '' then
     raise Exception.Create('Destination path is not specified');
@@ -258,9 +271,13 @@ begin
   if Length(res) = 0 then
     raise Exception.Create('Resource doesn''t exist');
 
-  if (aContainerIndex = -1) or (aContainerIndex > High(res)) or (aContainerIndex < Low(res)) then
-    aContainerIndex := High(res);
-  aData := res[aContainerIndex].GetData;
+  for i := High(res) to Low(res) do
+    if (aContainerName = '') or SameText(res[i].Container.Name, aContainerName) then begin
+      residx := i;
+      Break;
+    end;
+
+  aData := res[residx].GetData;
 
   aDir := IncludeTrailingPathDelimiter(aPathOut) + ExtractFilePath(aFileName);
   if not DirectoryExists(aDir) then

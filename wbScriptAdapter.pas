@@ -8,7 +8,8 @@ uses
   Variants,
   wbInterface,
   wbImplementation,
-  wbBSA;
+  wbBSA,
+  wbNifScanner;
 
 implementation
 
@@ -1064,6 +1065,16 @@ end;
 
 { wbContainerHandler }
 
+procedure IwbContainerHandler_ResourceContainerList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbContainerHandler.ContainerList(TStrings(V2O(Args.Values[0])));
+end;
+
+procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+end;
+
 procedure IwbContainerHandler_ResourceExists(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := wbContainerHandler.ResourceExists(Args.Values[0]);
@@ -1074,15 +1085,41 @@ begin
   Value := wbContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
 end;
 
-procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbContainerHandler_ResourceOpenData(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Res        : TDynResources;
+  ResIndex   : integer;
 begin
-  wbContainerHandler.ResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+  Res := wbContainerHandler.OpenResource(Args.Values[0]);
+  if Length(Res) = 0 then
+    Exit;
+  ResIndex := Args.Values[1];
+  if (ResIndex = -1) or (ResIndex > High(Res)) then
+    ResIndex := High(Res);
+  Value := Res[ResIndex].GetData;
 end;
 
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
 end;
+
+
+{ TwbFastStringList }
+
+procedure TwbFastStringList_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TwbFastStringList.Create);
+end;
+
+
+{ Nif routines }
+
+procedure NifUtils_NifTextureList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := NifTextures(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+end;
+
 
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -1290,10 +1327,20 @@ begin
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
 
     { IwbContainerHandler }
+    AddFunction(cUnit, 'ResourceContainerList', IwbContainerHandler_ResourceContainerList, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceExists', IwbContainerHandler_ResourceExists, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCount', IwbContainerHandler_ResourceCount, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceList', IwbContainerHandler_ResourceList, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceOpenData', IwbContainerHandler_ResourceOpenData, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCopy', IwbContainerHandler_ResourceCopy, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+
+    { IwbFastStringList }
+    AddClass('TwbFastStringList', TwbFastStringList, 'TwbFastStringList');
+    AddGet(TwbFastStringList, 'Create', TwbFastStringList_Create, 0, [varEmpty], varEmpty);
+
+    { Nif routines }
+    AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
+
   end;
 end;
 

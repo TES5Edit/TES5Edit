@@ -69,7 +69,6 @@ begin
 end;
 
 
-
 { TStrings }
 
 procedure TStrings_Read_Delimiter(var Value: Variant; Args: TJvInterpreterArgs);
@@ -97,6 +96,21 @@ procedure TStrings_Write_DelimitedText(const Value: Variant; Args: TJvInterprete
 begin
   TStrings(Args.Obj).DelimitedText := Value;
 end;
+
+
+{ TStringList }
+
+procedure TStringList_Read_CaseSensitive(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TStringList(Args.Obj).CaseSensitive;
+end;
+
+procedure TStringList_Write_CaseSensitive(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TStringList(Args.Obj).CaseSensitive := Value;
+end;
+
+
 
 procedure JvInterpreter_SameText(var Value: Variant; Args: TJvInterpreterArgs);
 begin
@@ -171,6 +185,15 @@ begin
     Args.Values[5]
   );
 end;
+
+
+{ TBytesStream }
+
+procedure TBytesStream_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TBytesStream.Create(TBytes(Args.Values[0])));
+end;
+
 
 
 { TBinaryReader }
@@ -706,6 +729,14 @@ begin
     AddSet(TStrings, 'StrictDelimiter', TStrings_Write_StrictDelimiter, 0, [varEmpty]);
     AddGet(TStrings, 'DelimitedText', TStrings_Read_DelimitedText, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'DelimitedText', TStrings_Write_DelimitedText, 0, [varEmpty]);
+
+    { TStringList }
+    AddGet(TStrings, 'CaseSensitive', TStringList_Read_CaseSensitive, 0, [varEmpty], varEmpty);
+    AddSet(TStrings, 'CaseSensitive', TStringList_Write_CaseSensitive, 0, [varEmpty]);
+
+    { TBinaryReader }
+    AddClass('Classes', TBytesStream, 'TBytesStream');
+    AddGet(TBytesStream, 'Create', TBytesStream_Create, 1, [varEmpty], varEmpty);
 
     { TBinaryReader }
     AddClass('Classes', TBinaryReader, 'TBinaryReader');
