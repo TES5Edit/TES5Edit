@@ -17,6 +17,7 @@ uses
   Controls,
   StdCtrls,
   ExtCtrls,
+  ComCtrls,
   CheckLst,
   ShellApi,
   IniFiles,
@@ -24,6 +25,7 @@ uses
   Math,
   RegularExpressionsCore,
   wbInterface;
+
 
 { Missing code }
 
@@ -381,6 +383,28 @@ end;
 procedure TLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
+end;
+
+
+{ TListItems }
+
+procedure TListItems_Write_Count(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TListItems(Args.Obj).Count := Value;
+end;
+
+
+{ TListView }
+
+type
+  TJvInterpreterListViewEvents = class(TJvInterpreterEvent)
+  private
+    procedure OnData(Sender: TObject; Item: TListItem);
+  end;
+
+procedure TJvInterpreterListViewEvents.OnData(Sender: TObject; Item: TListItem);
+begin
+  CallFunction(nil, [O2V(Sender), O2V(Item)]);
 end;
 
 
@@ -787,6 +811,12 @@ begin
 
     { TBoundLabel }
     AddClass('ExtCtrls', TBoundLabel, 'TBoundLabel');
+
+    { TListItems }
+    AddSet(TListItems, 'Count', TListItems_Write_Count, 0, [varEmpty]);
+
+    { TListView }
+    AddHandler('ComCtrls', 'TLVOwnerDataEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnData);
 
     { TCustomIniFile }
     AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');
