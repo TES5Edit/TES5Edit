@@ -95,11 +95,6 @@ begin
       slOut.Add(slIn[i]);
 end;
 
-procedure wbGetTrackAllEditorID(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := wbTrackAllEditorID;
-end;
-
 procedure wbGetVersionNumber(var Value: Variant; Args: TJvInterpreterArgs);
 var
   fileInfo   : PVSFIXEDFILEINFO;
@@ -1265,7 +1260,6 @@ begin
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFilterStrings', wbFilterStrings, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
-    AddFunction(cUnit, 'wbTrackAllEditorID', wbGetTrackAllEditorID, 0, [], varEmpty);
     AddFunction(cUnit, 'wbVersionNumber', wbGetVersionNumber, 0, [], varEmpty);
 
     { IwbElement }

@@ -18,6 +18,7 @@ uses
   StdCtrls,
   ExtCtrls,
   ComCtrls,
+  Menus,
   CheckLst,
   ShellApi,
   IniFiles,
@@ -178,7 +179,7 @@ end;
 
 procedure JvInterpreter_ShellExecute(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  ShellExecute(
+  Value := ShellExecute(
     Args.Values[0],
     PWideChar(String(Args.Values[1])),
     PWideChar(String(Args.Values[2])),
@@ -386,6 +387,19 @@ begin
 end;
 
 
+{ TListItem }
+
+procedure TListItem_Read_SubItems(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TListItem(Args.Obj).SubItems);
+end;
+
+procedure TListItem_Write_SubItems(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TListItem(Args.Obj).SubItems := V2O(Value) as TStrings;
+end;
+
+
 { TListItems }
 
 procedure TListItems_Write_Count(const Value: Variant; Args: TJvInterpreterArgs);
@@ -400,11 +414,26 @@ type
   TJvInterpreterListViewEvents = class(TJvInterpreterEvent)
   private
     procedure OnData(Sender: TObject; Item: TListItem);
+    procedure OnSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
   end;
 
 procedure TJvInterpreterListViewEvents.OnData(Sender: TObject; Item: TListItem);
 begin
   CallFunction(nil, [O2V(Sender), O2V(Item)]);
+end;
+
+procedure TJvInterpreterListViewEvents.OnSelectItem(Sender: TObject;
+  Item: TListItem; Selected: Boolean);
+begin
+  CallFunction(nil, [O2V(Sender), O2V(Item), Selected]);
+end;
+
+
+{ TMenuItem }
+
+procedure TMenuItem_Clear(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TMenuItem(Args.Obj).Clear;
 end;
 
 
@@ -812,11 +841,19 @@ begin
     { TBoundLabel }
     AddClass('ExtCtrls', TBoundLabel, 'TBoundLabel');
 
+    { TListItem }
+    AddGet(TListItem, 'SubItems', TListItem_Read_SubItems, 0, [varEmpty], varEmpty);
+    AddSet(TListItem, 'SubItems', TListItem_Write_SubItems, 0, [varEmpty]);
+
     { TListItems }
     AddSet(TListItems, 'Count', TListItems_Write_Count, 0, [varEmpty]);
 
     { TListView }
     AddHandler('ComCtrls', 'TLVOwnerDataEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnData);
+    AddHandler('ComCtrls', 'TLVSelectItemEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnSelectItem);
+
+    { TMenuItem }
+    AddGet(TMenuItem, 'Clear', TMenuItem_Clear, 0, [varEmpty], varEmpty);
 
     { TCustomIniFile }
     AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');
