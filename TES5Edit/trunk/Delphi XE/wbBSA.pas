@@ -16,7 +16,7 @@ unit wbBSA;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, IOUtils,
   wbInterface;
 
 function wbCreateContainerHandler: IwbContainerHandler;
@@ -581,10 +581,13 @@ begin
 end;
 
 procedure TwbFolder.ResourceList(const aList: TStrings);
+var
+  FileName: string;
 begin
   if not Assigned(aList) then
     Exit;
-  // TO DO: recursively scan all folders...
+  for FileName in TDirectory.GetFiles(fPath, '*.*', TSearchOption.soAllDirectories) do
+    aList.Add(LowerCase(Copy(FileName, Length(fPath) + 1, Length(FileName))));
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);

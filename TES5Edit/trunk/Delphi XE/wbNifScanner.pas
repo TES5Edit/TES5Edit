@@ -109,8 +109,8 @@ begin
 
     // Num Blocks
     NifNumBlocks := data.ReadUInt32;
-    if NifNumBlocks > 1000 then
-      raise Exception.Create('Probably invalid Nif file, NifNumBlocks > 1000');
+    if NifNumBlocks > 5000 then
+      raise Exception.Create('Probably invalid Nif file, NifNumBlocks > 5000');
     //WriteLn(Format('NumBlocks = %d', [NifNumBlocks]));
 
     data.ReadUInt32; // skip User version 2

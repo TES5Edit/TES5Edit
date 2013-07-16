@@ -5553,8 +5553,16 @@ begin
     Value := wbGameName;
     Done := True;
   end else
+  if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
+    Value := wbAppName;
+    Done := True;
+  end else
   if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
+    Value := wbTrackAllEditorID;
     Done := True;
   end else
   if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
@@ -5571,6 +5579,10 @@ begin
   end else
   if SameText(Identifier, 'DataPath') and (Args.Count = 0) then begin
     Value := DataPath;
+    Done := True;
+  end else
+  if SameText(Identifier, 'TempPath') and (Args.Count = 0) then begin
+    Value := wbTempPath;
     Done := True;
   end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
