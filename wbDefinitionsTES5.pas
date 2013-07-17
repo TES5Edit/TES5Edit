@@ -6872,11 +6872,11 @@ begin
       wbInteger('Male Priority', itU8),
       wbInteger('Female Priority', itU8),
       wbInteger('Weight slider - Male', itU8, wbFlags([
-        {0x01} '',
+        {0x01} 'Unknown 0',
         {0x02} 'Enabled'
       ])),
       wbInteger('Weight slider - Female', itU8, wbFlags([
-        {0x01} '',
+        {0x01} 'Unknown 0',
         {0x02} 'Enabled'
       ])),
       wbByteArray('Unknown', 2),
@@ -11726,11 +11726,11 @@ begin
       ])
       //wbByteArray('Unknown', 4*7)
     ], cpNormal, True, nil, 29),
-    wbEmpty(MNAM, 'Marker'),
-    wbString(ANAM, 'Skeletal Model'),
+    wbEmpty(MNAM, 'Male Marker'),
+    wbString(ANAM, 'Male Skeletal Model'),
     wbMODT,
-    wbEmpty(FNAM, 'Marker'),
-    wbString(ANAM, 'Skeletal Model'),
+    wbEmpty(FNAM, 'Female Marker'),
+    wbString(ANAM, 'Female Skeletal Model'),
     wbMODT,
     wbEmpty(NAM2, 'Marker NAM2 #1'),
     wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
