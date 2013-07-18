@@ -1,5 +1,8 @@
 {
   Assets browser.
+  Searches for files in Data folder and inside BSA archives.
+  Allows to open files with associated apps, unpack single file
+  and multifile unpack/copy preserving paths.
   
   Hotkey: Ctrl+F3
 }
@@ -8,10 +11,11 @@ unit userscript;
 
 var
   slContainers, slResList, sl: TStringList;
-  slAssets, slItems, slTextures: TwbFastStringList;
+  slAssets, slItems, slTextures: THashedStringList;
   frm: TForm;
   edFilter: TLabeledEdit;
   lblItems, lblInfo, lblHelp: TLabel;
+  cmbContainer: TComboBox;
   lvAssets: TListView;
   mInfo: TMemo;
   mnPopup: TPopupMenu;
@@ -26,6 +30,22 @@ begin
   Result := ExtractFileName(aName);
   if Result = '' then
     Result := 'Data';
+end;
+
+//===========================================================================
+// load list of files from container
+procedure LoadAssetsList(aIndex: integer);
+var
+  i: integer;
+begin
+  slAssets.Clear;
+  AddMessage('Loading resources, please wait...');
+  for i := 0 to Pred(slContainers.Count) do
+    if (aIndex = 0) or (Pred(aIndex) = i) then begin
+      //AddMessage('Loading files list from ' + SimpleName(slContainers[i]));
+      ResourceList(slContainers[i], slAssets);
+    end;
+  AddMessage('Done.');
 end;
   
 //===========================================================================
@@ -139,6 +159,14 @@ begin
 end;
 
 //===========================================================================
+// on change event for container selection
+procedure cmbContainerOnChange(Sender: TObject);
+begin
+  LoadAssetsList(cmbContainer.ItemIndex);
+  FilterAssets;
+end;
+  
+//===========================================================================
 // on key down event handler for filter
 procedure edFilterOnChange(Sender: TObject);
 begin
@@ -165,7 +193,6 @@ begin
     mInfo.Lines.EndUpdate;
     slTextures.Clear;
   end;
-  //lblItems.Caption := Item.Caption;
 end;
 
 //===========================================================================
@@ -192,6 +219,32 @@ begin
 end;
 
 //===========================================================================
+// on click event handler for "Copy All" popup menu
+procedure CopyAllClick(Sender: TObject);
+var
+  i: integer;
+  aPath, aContainer: string;
+begin
+  aPath := SelectDirectory('Destination path to copy files to', '', nil);
+  if aPath = '' then
+    Exit;
+  // if container is selected, then copy files from that container
+  if cmbContainer.ItemIndex = 0 then aContainer := '' else
+    aContainer := slContainers[Pred(cmbContainer.ItemIndex)];
+  AddMessage('Copying files, please wait...');
+  try
+    for i := 0 to Pred(slItems.Count) do
+      // const aContainerName, aFileName, aPathOut: string
+      // empty container means last (winning) container for each file
+      ResourceCopy(aContainer, slItems[i], aPath);
+    AddMessage('Done.');
+  except
+    on E: Exception do
+      AddMessage('Error copying file ' + slItems[i] + ': ' + E.Message);
+  end;
+end;
+
+//===========================================================================
 // on popup menu event handler
 procedure MenuPopup(Sender: TObject);
 var
@@ -215,6 +268,10 @@ begin
     MenuItem.Tag := i;
     mnPopup.Items.Add(MenuItem);
   end;
+  MenuItem := TMenuItem.Create(mnPopup);
+  MenuItem.Caption := 'Copy All to...';
+  MenuItem.OnClick := CopyAllClick;
+  mnPopup.Items.Add(MenuItem);
 end;
 
 //===========================================================================
@@ -263,6 +320,20 @@ begin
     lvAssets.OnSelectItem := lvAssetsSelectItem;
     lvAssets.OnDblClick := lvAssetsDblClick;
    
+    cmbContainer := TComboBox.Create(frm);
+    cmbContainer.Parent := frm;
+    cmbContainer.Left := lvAssets.Left + lvAssets.Width - 300;
+    cmbContainer.Top := edFilter.Top;
+    cmbContainer.Width := 300;
+    cmbContainer.Style := csDropDownList;
+    cmbContainer.DropDownCount := 20;
+    cmbContainer.Anchors := [akTop, akRight];
+    cmbContainer.OnChange := cmbContainerOnChange;
+    cmbContainer.Items.Add('All containers');
+    for i := 0 to Pred(slContainers.Count) do
+      cmbContainer.Items.Add(SimpleName(slContainers[i]));
+    cmbContainer.ItemIndex := 0;
+
     mInfo := TMemo.Create(frm);
     mInfo.Parent := frm;
     mInfo.Left := 8;
@@ -290,8 +361,8 @@ begin
     btnClose := TButton.Create(frm);
     btnClose.Parent := frm;
     btnClose.Top := mInfo.Top + mInfo.Height - btnClose.Height;
-    btnClose.Left := lblHelp.Left + 20;
-    btnClose.Width := 100;
+    btnClose.Left := lblHelp.Left + 10;
+    btnClose.Width := 120;
     btnClose.Caption := 'Close';
     btnClose.Anchors := [akRight, akBottom];
     btnClose.ModalResult := mrOk;
@@ -310,35 +381,28 @@ end;
 
 //===========================================================================
 function Initialize: integer;
-var
-  i: Integer;
 begin
   slContainers := TStringList.Create;
-  ResourceContainerList(slContainers);
   
-  slAssets := TwbFastStringList.Create;
+  slAssets := THashedStringList.Create;
   slAssets.Sorted := True;
   slAssets.Duplicates := dupIgnore;
 
-  slTextures := TwbFastStringList.Create;
+  slTextures := THashedStringList.Create;
   slTextures.Sorted := True;
   slTextures.Duplicates := dupIgnore;
 
-  slItems := TwbFastStringList.Create;
+  slItems := THashedStringList.Create;
   slResList := TStringList.Create;
   sl := TStringList.Create;
 
   if not wbLoadBSAs then
-    MessageDlg('You disabled loading of BSA archives in xEdit options, only loose files will be shown', mtInformation, [mbOk], 0);
+    MessageDlg('Loading of BSA archives is disabled in xEdit options, only files in Data folder will be shown', mtInformation, [mbOk], 0);
 
-  AddMessage('Loading resources, please wait...');
-  //for i := 0 to 2 do begin
-  for i := 0 to Pred(slContainers.Count) do begin
-    AddMessage('Loading files list from ' + SimpleName(slContainers[i]));
-    ResourceList(slContainers[i], slAssets);
-  end;
-
-  AddMessage('Done. Opening browser...');
+  ResourceContainerList(slContainers);
+  LoadAssetsList(0);
+    
+  AddMessage('Opening browser...');
   
   ShowBrowser;
   
