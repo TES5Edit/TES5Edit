@@ -5595,7 +5595,7 @@ begin
   end else
   if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
-      PostAddMessage(Args.Values[0]);
+      AddMessage(Args.Values[0]);
       Done := True;
       Application.ProcessMessages;
     end else

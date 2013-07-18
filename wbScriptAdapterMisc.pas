@@ -21,6 +21,7 @@ uses
   Menus,
   CheckLst,
   ShellApi,
+  FileCtrl,
   IniFiles,
   Registry,
   Math,
@@ -189,6 +190,15 @@ begin
   );
 end;
 
+procedure JvInterpreter_SelectDirectory(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  aDir: string;
+begin
+  Value := '';
+  if SelectDirectory(String(Args.Values[0]), String(Args.Values[1]), aDir, [], TWinControl(V2O(Args.Values[2]))) then
+    Value := aDir;
+end;
+
 
 { TBytesStream }
 
@@ -346,6 +356,19 @@ begin
 end;
 
 
+{ TComboBox }
+
+procedure TComboBox_Read_DropDownCount(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TComboBox(Args.Obj).DropDownCount;
+end;
+
+procedure TComboBox_Write_DropDownCount(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TComboBox(Args.Obj).DropDownCount := Value;
+end;
+
+
 { TCustomLabeledEdit }
 
 procedure TCustomLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -434,6 +457,14 @@ end;
 procedure TMenuItem_Clear(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TMenuItem(Args.Obj).Clear;
+end;
+
+
+{ THashedStringList }
+
+procedure THashedStringList_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(THashedStringList.Create);
 end;
 
 
@@ -775,6 +806,7 @@ begin
     AddFunction('System', 'StringOfChar', JvInterpreter_StringOfChar, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Windows', 'CopyFile', JvInterpreter_CopyFile, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
@@ -825,6 +857,10 @@ begin
     AddGet(TCheckListBox, 'AllowGrayed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
     AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
 
+   { TComboBox }
+    AddGet(TComboBox, 'DropDownCount', TComboBox_Read_DropDownCount, 0, [varEmpty], varEmpty);
+    AddSet(TComboBox, 'DropDownCount', TComboBox_Write_DropDownCount, 0, [varEmpty]);
+
     { TCustomLabeledEdit }
     AddClass('ExtCtrls', TCustomLabeledEdit, 'TCustomLabeledEdit');
     AddGet(TCustomLabeledEdit, 'Create', TCustomLabeledEdit_Create, 1, [varEmpty], varEmpty);
@@ -854,6 +890,10 @@ begin
 
     { TMenuItem }
     AddGet(TMenuItem, 'Clear', TMenuItem_Clear, 0, [varEmpty], varEmpty);
+
+    { THashedStringList }
+    AddClass('IniFiles', THashedStringList, 'THashedStringList');
+    AddGet(THashedStringList, 'Create', THashedStringList_Create, 0, [varEmpty], varEmpty);
 
     { TCustomIniFile }
     AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');
