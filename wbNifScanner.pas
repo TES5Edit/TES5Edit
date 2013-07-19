@@ -36,6 +36,7 @@ const
   var
     c: Char;
   begin
+    Result := '';
     repeat
       c := Char(data.ReadByte);
       if c <> #$0A then

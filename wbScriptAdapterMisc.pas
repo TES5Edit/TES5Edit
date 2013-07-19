@@ -261,6 +261,11 @@ begin
   Value := TBinaryReader(Args.Obj).ReadSingle;
 end;
 
+procedure TBinaryReader_ReadString(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadString;
+end;
+
 
 { TBinaryWriter }
 
@@ -274,6 +279,8 @@ begin
   case VarType(Args.Values[0]) of
     varByte:
       TBinaryWriter(Args.Obj).Write(Byte(Args.Values[0]));
+    System.varArray:
+      TBinaryWriter(Args.Obj).Write(TBytes(Args.Values[0]));
     varInteger, varLongWord:
       TBinaryWriter(Args.Obj).Write(Integer(Args.Values[0]));
     varWord, varShortInt, varSmallInt:
@@ -819,6 +826,10 @@ begin
     AddGet(TStrings, 'CaseSensitive', TStringList_Read_CaseSensitive, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'CaseSensitive', TStringList_Write_CaseSensitive, 0, [varEmpty]);
 
+    { THashedStringList }
+    AddClass('IniFiles', THashedStringList, 'THashedStringList');
+    AddGet(THashedStringList, 'Create', THashedStringList_Create, 0, [varEmpty], varEmpty);
+
     { TBytesStream }
     AddClass('Classes', TBytesStream, 'TBytesStream');
     AddGet(TBytesStream, 'Create', TBytesStream_Create, 1, [varEmpty], varEmpty);
@@ -835,6 +846,7 @@ begin
     AddGet(TBinaryReader, 'ReadShortInt', TBinaryReader_ReadShortInt, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadInteger', TBinaryReader_ReadInteger, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadSingle', TBinaryReader_ReadSingle, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadString', TBinaryReader_ReadString, 0, [varEmpty], varEmpty);
 
     { TBinaryWriter }
     AddClass('Classes', TBinaryWriter, 'TBinaryWriter');
@@ -890,10 +902,6 @@ begin
 
     { TMenuItem }
     AddGet(TMenuItem, 'Clear', TMenuItem_Clear, 0, [varEmpty], varEmpty);
-
-    { THashedStringList }
-    AddClass('IniFiles', THashedStringList, 'THashedStringList');
-    AddGet(THashedStringList, 'Create', THashedStringList_Create, 0, [varEmpty], varEmpty);
 
     { TCustomIniFile }
     AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');
