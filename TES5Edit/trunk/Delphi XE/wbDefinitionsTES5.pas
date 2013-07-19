@@ -1390,9 +1390,12 @@ function wbConditionAliasToStr(aInt: Int64; const aElement: IwbElement; aType: T
 var
   Container  : IwbContainer;
   MainRecord : IwbMainRecord;
+  GroupRecord : IwbGroupRecord;
 begin
   if not Assigned(aElement) then
     Exit;
+
+  Result := IntToStr(aInt); Exit;
 
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
@@ -1407,12 +1410,16 @@ begin
 
   if MainRecord.Signature = QUST then
     Result := wbAliasToStr(aInt, Container, aType)
-  else
-  if MainRecord.Signature = SCEN then
+  else if MainRecord.Signature = SCEN then
     Result := wbAliasToStr(aInt, Container.ElementBySignature['PNAM'], aType)
-  else
-  if MainRecord.Signature = PACK then
-    Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType);
+  else if MainRecord.Signature = PACK then
+    Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType)
+  else if MainRecord.Signature = INFO then begin
+    // discovered memory leak
+    // test on 00015C73
+    {if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
+      Result := wbAliasToStr(aInt, GroupRecord.ChildrenOf.ElementBySignature['QNAM'], aType);}
+  end;
 end;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
