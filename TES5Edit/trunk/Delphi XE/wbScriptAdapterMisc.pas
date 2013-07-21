@@ -167,6 +167,16 @@ begin
   Value := ForceDirectories(Args.Values[0]);
 end;
 
+procedure JvInterpreter_IncludeTrailingBackslash(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := IncludeTrailingBackslash(Args.Values[0]);
+end;
+
+procedure JvInterpreter_ExcludeTrailingBackslash(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := ExcludeTrailingBackslash(Args.Values[0]);
+end;
+
 procedure JvInterpreter_CopyFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := CopyFile(PWideChar(String(Args.Values[0])), PWideChar(String(Args.Values[1])), Args.Values[2]);
@@ -195,7 +205,8 @@ var
   aDir: string;
 begin
   Value := '';
-  if SelectDirectory(String(Args.Values[0]), String(Args.Values[1]), aDir, [], TWinControl(V2O(Args.Values[2]))) then
+  aDir := String(Args.Values[2]);
+  if SelectDirectory(String(Args.Values[0]), String(Args.Values[1]), aDir, [], TWinControl(V2O(Args.Values[3]))) then
     Value := aDir;
 end;
 
@@ -810,10 +821,12 @@ begin
     AddFunction('SysUtils', 'DirectoryExists', JvInterpreter_DirectoryExists, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'FileExists', JvInterpreter_FileExists, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'ForceDirectories', JvInterpreter_ForceDirectories, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'IncludeTrailingBackslash', JvInterpreter_IncludeTrailingBackslash, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'ExcludeTrailingBackslash', JvInterpreter_ExcludeTrailingBackslash, 1, [varEmpty], varEmpty);
     AddFunction('System', 'StringOfChar', JvInterpreter_StringOfChar, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Windows', 'CopyFile', JvInterpreter_CopyFile, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
-    AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
