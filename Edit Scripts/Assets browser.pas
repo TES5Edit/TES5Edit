@@ -7,7 +7,7 @@
   Hotkey: Ctrl+F3
 }
 
-unit userscript;
+unit AssetsBrowser;
 
 var
   slContainers, slResList, sl: TStringList;
@@ -225,7 +225,7 @@ var
   i: integer;
   aPath, aContainer: string;
 begin
-  aPath := SelectDirectory('Destination path to copy files to', '', nil);
+  aPath := SelectDirectory('Destination path to copy files to', '', '', nil);
   if aPath = '' then
     Exit;
   // if container is selected, then copy files from that container
@@ -261,6 +261,7 @@ begin
     MenuItem.Tag := i;
     mnPopup.Items.Add(MenuItem);
   end;
+  MenuItem := TMenuItem.Create(mnPopup); MenuItem.Caption := '-'; mnPopup.Items.Add(MenuItem);
   for i := Pred(slResList.Count) downto 0 do begin
     MenuItem := TMenuItem.Create(mnPopup);
     MenuItem.Caption := 'Saves As (from ' + SimpleName(slResList[i]) + ')';
@@ -268,6 +269,7 @@ begin
     MenuItem.Tag := i;
     mnPopup.Items.Add(MenuItem);
   end;
+  MenuItem := TMenuItem.Create(mnPopup); MenuItem.Caption := '-'; mnPopup.Items.Add(MenuItem);
   MenuItem := TMenuItem.Create(mnPopup);
   MenuItem.Caption := 'Copy All to...';
   MenuItem.OnClick := CopyAllClick;
