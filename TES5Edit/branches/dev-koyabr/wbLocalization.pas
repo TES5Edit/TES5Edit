@@ -180,7 +180,13 @@ begin
     if SameText(ext, wbLocalizationExtension[i]) then
       Result := i;
 end;
-
+ 
+{
+	UTF8 Support - Modified function
+	
+	For plugins with external STRINGS file
+	*Only needed for displaying utf8 words in STRINGS file*
+}
 function TwbLocalizationFile.ReadZString(aStream: TStream): string;
 var
   s: RawByteString;
@@ -196,8 +202,8 @@ begin
   SetLength(s, Length(buf));
   Move(buf[0], s[1], Length(buf));
   //Result := UTF8Decode(s); // chinese
-  Result := s; // others
-  //if IsUTF8String(s) then Result := UTF8Decode(s) else Result := s;
+  //Result := s; // others
+  if IsUTF8String(s) then Result := UTF8Decode(s) else Result := s;
 end;
 
 function TwbLocalizationFile.ReadLenZString(aStream: TStream): string;
@@ -212,7 +218,16 @@ begin
   Result := s;
   //if IsUTF8String(s) then Result := UTF8Decode(s) else Result := s;
 end;
-
+  
+  
+{
+	UTF8 Support - TODO
+	
+	I've tried to force writing UTF8Encoded string here,
+	works fine according to current test feedback.
+	But better to leave the editing work to other tools like StrEdit.
+	*Only needed for editing utf8 words in STRINGS file*
+}
 procedure TwbLocalizationFile.WriteZString(aStream: TStream; aString: string);
 const z: Byte = 0;
 var

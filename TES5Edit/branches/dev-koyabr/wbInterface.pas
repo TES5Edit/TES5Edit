@@ -2307,6 +2307,7 @@ var
 implementation
 
 uses
+  WideStrUtils,
   Windows,
   Variants,
   Math,
@@ -3068,9 +3069,11 @@ type
                        aDontShow  : TwbDontShowCallback); virtual;
 
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; virtual;
+    function ToStringNativeU(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): RawByteString;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 
     procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); virtual;
+    procedure FromStringNativeU(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: RawByteString);
     procedure FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 
     function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; virtual;
@@ -7571,9 +7574,65 @@ begin
   end;
 end;
 
-procedure TwbStringDef.FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
+{      
+	UTF8 Support - Added function 
+	
+	Write back RawByteString instead of AnsiString
+	*Only needed for editing utf8 words, not affect displaying*
+}
+procedure TwbStringDef.FromStringNativeU(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: RawByteString);
+var
+  NewSize : Integer;
 begin
-  FromStringNative(aBasePtr, aEndPtr, aElement, TransformString(AnsiString(aValue), aTransformType, aElement));
+
+  if sdSize > 0 then
+    NewSize := sdSize
+  else
+    NewSize := Succ(Length(aValue));
+
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
+
+  if sdSize > 0 then begin
+    FillChar(aBasePtr^, sdSize, 0);
+    NewSize := Length(aValue);
+    if NewSize > 0 then
+      Move(aValue[1], aBasePtr^, NewSize);
+  end else begin
+    if NewSize > 1 then
+      Move(aValue[1], aBasePtr^, Length(aValue));
+
+    PAnsiChar(aBasePtr)[Pred(NewSize)] := #0;
+  end;
+end;
+
+{    
+	UTF8 Support - Modified function
+	
+	Need to detect whether the source string contains non-standard-ascii characters,
+	if so encode as utf8 and write.
+	*Only needed for editing utf8 words, not affect displaying*
+}
+procedure TwbStringDef.FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
+
+function DetectNonAnsi(const str: string): Boolean;
+var
+  ch: Char;
+begin
+  Result := False;
+  for ch in str do
+    if ord(ch) > 127 then
+    begin
+      Result := True;
+      break;
+    end;
+end;
+
+begin
+
+   if DetectNonAnsi(aValue) then
+     FromStringNativeU(aBasePtr, aEndPtr, aElement, UTF8Encode(aValue))
+   else
+     FromStringNative(aBasePtr, aEndPtr, aElement, AnsiString(aValue));
 end;
 
 function TwbStringDef.GetDefType: TwbDefType;
@@ -7671,11 +7730,56 @@ begin
   Used(aElement, Result);
 end;
 
-function TwbStringDef.ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
+{      
+	UTF8 Support - Added function 
+	
+	Extract RawByteString instead of AnsiString
+	*Only needed for displaying utf8 words, not affect editing*
+}
+function TwbStringDef.ToStringNativeU(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): RawByteString;
+var
+  Len : Cardinal;
 begin
-  Result := TransformString(ToStringNative(aBasePtr, aEndPtr, aElement), aTransformType, aElement);
+  Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
+  if sdSize > 0 then begin
+    if Len > Cardinal(sdSize) then
+      Len := sdSize;
+  end;
+
+  while (Len > 0) and (PAnsiChar(aBasePtr)[Pred(Len)] = #0) do
+    Dec(Len);
+
+  SetLength(Result, Len);
+  if Len > 0 then
+    Move(aBasePtr^, Result[1], Len);
+  // Note here the 'Used(Element, Result)' is moved out
 end;
 
+{  
+	UTF8 Support - Modified function 
+	
+ 	Need to detect whether the source string contains utf8 characters,
+ 	Plugins translated using non-utf8 words may fail the test.
+	*Only needed for displaying utf8 words, not affect editing*
+}
+function TwbStringDef.ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
+
+var
+   tmp : RawByteString;
+begin
+
+  tmp := ToStringNativeU(aBasePtr, aEndPtr, aElement);
+  if IsUTF8String(tmp) then begin
+     Result := UTF8Decode(tmp);
+     Used(aElement, Result); //fix up ToStringNativeU
+  end
+  else
+     Result := ToStringNative(aBasePtr, aEndPtr, aElement);
+
+end;
+
+
+{Not used for utf8 version}
 function TwbStringDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
 begin
   Result := s;
