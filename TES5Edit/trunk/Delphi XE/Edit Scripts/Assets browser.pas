@@ -14,6 +14,7 @@ var
   slAssets, slItems, slTextures: THashedStringList;
   frm: TForm;
   edFilter: TLabeledEdit;
+  edClipboard: TEdit;
   lblItems, lblInfo, lblHelp: TLabel;
   cmbContainer: TComboBox;
   lvAssets: TListView;
@@ -50,7 +51,7 @@ end;
   
 //===========================================================================
 // open asset (unpack to temp file and execute)
-procedure AssetOpen(aFileName: string; aContainerIndex: integer);
+procedure AssetOpen(aContainerName, aFileName: string);
 var
   f: string;
   bs: TBytesStream;
@@ -58,14 +59,15 @@ var
 begin
   // unpack file if not present
   ResourceCount(aFileName, slResList);
-  if aContainerIndex = -1 then
-   aContainerIndex := slResList.Count - 1;
-  if SimpleName(slResList[aContainerIndex]) = 'Data' then
-    f := slResList[aContainerIndex] + aFileName
+  if aContainerName = '' then
+   aContainerName := slResList[slResList.Count - 1];
+  if SimpleName(aContainerName) = 'Data' then
+    // container name is the real path, so just append file name
+    f := aContainerName + aFileName
   else begin
     f := TempPath + ExtractFileName(aFileName);
     try
-      bs := TBytesStream.Create(ResourceOpenData(aFileName, aContainerIndex));
+      bs := TBytesStream.Create(ResourceOpenData(aContainerName, aFileName));
       try
         ForceDirectories(TempPath); // TempPath folder is removed by xEdit upon exit
         fs := TFileStream.Create(f, fmCreate);
@@ -86,7 +88,7 @@ end;
 
 //===========================================================================
 // save asset as
-procedure AssetSaveAs(aFileName: string; aContainerIndex: integer);
+procedure AssetSaveAs(aContainerName, aFileName: string);
 var
   bs: TBytesStream;
   fs: TFileStream;
@@ -98,7 +100,7 @@ begin
     dlgSave.InitialDir := DataPath;
     dlgSave.FileName := ExtractFileName(aFileName);
     if dlgSave.Execute then begin
-      bs := TBytesStream.Create(ResourceOpenData(aFileName, aContainerIndex));
+      bs := TBytesStream.Create(ResourceOpenData(aContainerName, aFileName));
       try
         fs := TFileStream.Create(dlgSave.FileName, fmCreate);
         fs.CopyFrom(bs, 0);
@@ -184,7 +186,7 @@ begin
   f := Item.Caption;
   ext := ExtractFileExt(f);
   if SameText(ext, '.nif') then begin
-    NifTextureList(ResourceOpenData(f, -1), sl);
+    NifTextureList(ResourceOpenData('', f), sl);
     slTextures.AddStrings(sl); // remove duplicates
     mInfo.Lines.BeginUpdate;
     mInfo.Clear;
@@ -201,21 +203,24 @@ procedure lvAssetsDblClick(Sender: TObject);
 begin
   if not Assigned(lvAssets.Selected) then
     Exit;
-  AssetOpen(lvAssets.Selected.Caption, -1);
+  // open from last container
+  AssetOpen('', lvAssets.Selected.Caption);
 end;
 
 //===========================================================================
 // on click event handler for "Open" popup menu
 procedure OpenClick(Sender: TObject);
 begin
-  AssetOpen(lvAssets.Selected.Caption, TMenuItem(Sender).Tag);
+  ResourceCount(lvAssets.Selected.Caption, slResList);
+  AssetOpen(slResList[TMenuItem(Sender).Tag], lvAssets.Selected.Caption);
 end;
 
 //===========================================================================
 // on click event handler for "Save As" popup menu
 procedure SaveAsClick(Sender: TObject);
 begin
-  AssetSaveAs(lvAssets.Selected.Caption, TMenuItem(Sender).Tag);
+  ResourceCount(lvAssets.Selected.Caption, slResList);
+  AssetSaveAs(slResList[TMenuItem(Sender).Tag], lvAssets.Selected.Caption);
 end;
 
 //===========================================================================
@@ -223,25 +228,34 @@ end;
 procedure CopyAllClick(Sender: TObject);
 var
   i: integer;
-  aPath, aContainer: string;
+  aPath, aContainerName: string;
 begin
   aPath := SelectDirectory('Destination path to copy files to', '', '', nil);
   if aPath = '' then
     Exit;
   // if container is selected, then copy files from that container
-  if cmbContainer.ItemIndex = 0 then aContainer := '' else
-    aContainer := slContainers[Pred(cmbContainer.ItemIndex)];
+  if cmbContainer.ItemIndex = 0 then aContainerName := '' else
+    aContainerName := slContainers[Pred(cmbContainer.ItemIndex)];
   AddMessage('Copying files, please wait...');
   try
     for i := 0 to Pred(slItems.Count) do
       // const aContainerName, aFileName, aPathOut: string
       // empty container means last (winning) container for each file
-      ResourceCopy(aContainer, slItems[i], aPath);
+      ResourceCopy(aContainerName, slItems[i], aPath);
     AddMessage('Done.');
   except
     on E: Exception do
       AddMessage('Error copying file ' + slItems[i] + ': ' + E.Message);
   end;
+end;
+
+//===========================================================================
+// on click event handler for "Copy to clpboard" popup menu
+procedure CopyClipboardClick(Sender: TObject);
+begin
+  edClipboard.Text := lvAssets.Selected.Caption;
+  edClipboard.SelectAll;
+  edClipboard.CopyToClipboard;
 end;
 
 //===========================================================================
@@ -274,6 +288,11 @@ begin
   MenuItem.Caption := 'Copy All to...';
   MenuItem.OnClick := CopyAllClick;
   mnPopup.Items.Add(MenuItem);
+  MenuItem := TMenuItem.Create(mnPopup); MenuItem.Caption := '-'; mnPopup.Items.Add(MenuItem);
+  MenuItem := TMenuItem.Create(mnPopup);
+  MenuItem.Caption := 'Copy name to clipboard';
+  MenuItem.OnClick := CopyClipboardClick;
+  mnPopup.Items.Add(MenuItem);
 end;
 
 //===========================================================================
@@ -298,6 +317,11 @@ begin
     edFilter.Top := 8;
     edFilter.Width := 250;
     edFilter.OnChange := edFilterOnChange;
+
+    // invisible edit field used to copy to clipboard
+    edClipboard := TEdit.Create(frm);
+    edClipboard.Parent := frm;
+    edClipboard.Visible := False;
 
     lblItems := TLabel.Create(frm);
     lblItems.Parent := frm;

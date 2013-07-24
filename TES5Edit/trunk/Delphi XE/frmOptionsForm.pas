@@ -26,7 +26,6 @@ type
     cbHideIgnored: TCheckBox;
     cbHideNeverShow: TCheckBox;
     cbLoadBSAs: TCheckBox;
-    Label2: TLabel;
     cbSortFLST: TCheckBox;
     tsColors: TTabSheet;
     clbConflictThis: TColorBox;
@@ -40,6 +39,7 @@ type
     edColumnWidth: TEdit;
     cbAutoSave: TCheckBox;
     cbTrackAllEditorID: TCheckBox;
+    cbResolveAliases: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
