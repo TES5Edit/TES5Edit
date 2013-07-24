@@ -7608,28 +7608,13 @@ end;
 {    
 	UTF8 Support - Modified function
 	
-	Need to detect whether the source string contains non-standard-ascii characters,
+	Need to detect whether the source string contains characters outside the ASCII range,
 	if so encode as utf8 and write.
 	*Only needed for editing utf8 words, not affect displaying*
 }
 procedure TwbStringDef.FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
-
-function DetectNonAnsi(const str: string): Boolean;
-var
-  ch: Char;
 begin
-  Result := False;
-  for ch in str do
-    if ord(ch) > 127 then
-    begin
-      Result := True;
-      break;
-    end;
-end;
-
-begin
-
-   if DetectNonAnsi(aValue) then
+   if HasExtendCharacter(RawByteString(aValue)) then
      FromStringNativeU(aBasePtr, aEndPtr, aElement, UTF8Encode(aValue))
    else
      FromStringNative(aBasePtr, aEndPtr, aElement, AnsiString(aValue));
