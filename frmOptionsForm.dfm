@@ -33,18 +33,8 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      object Label2: TLabel
-        Left = 24
-        Top = 107
-        Width = 417
-        Height = 30
-        AutoSize = False
-        Caption = 
-          'Deactivate for Skyrim only if you extracted STRINGS files, will ' +
-          'reduce loading time greatly. Otherwise you'#39'll see "no localizati' +
-          'on" text everywhere.'
-        WordWrap = True
-      end
+      ExplicitLeft = 0
+      ExplicitTop = 28
       object Label5: TLabel
         Left = 16
         Top = 208
@@ -53,7 +43,7 @@ object frmOptions: TfrmOptions
         Caption = 'Column width'
       end
       object cbIKnow: TCheckBox
-        Left = 304
+        Left = 298
         Top = 204
         Width = 137
         Height = 17
@@ -90,20 +80,28 @@ object frmOptions: TfrmOptions
         Top = 84
         Width = 81
         Height = 17
+        Hint = 
+          'Deactivate for Skyrim only if you extracted STRINGS files, will ' +
+          'reduce loading time greatly. Otherwise you'#39'll see "no localizati' +
+          'on" text everywhere.'
         Caption = 'Load BSAs'
         TabOrder = 3
       end
       object cbSortFLST: TCheckBox
         Left = 16
-        Top = 149
+        Top = 130
         Width = 121
         Height = 17
+        Hint = 
+          'Sorting FLST can cause issues for mods relying on the order of f' +
+          'orms, unsorted FLST prevents them from being merged in merged pa' +
+          'tch.'
         Caption = '[FO3/FNV] Sort FLST'
         TabOrder = 6
       end
       object cbSimpleRecords: TCheckBox
         Left = 16
-        Top = 172
+        Top = 153
         Width = 281
         Height = 17
         Caption = 'Simple records (LAND, NAVI, NAVM). Requires restart.'
@@ -117,7 +115,7 @@ object frmOptions: TfrmOptions
         TabOrder = 8
       end
       object cbAutoSave: TCheckBox
-        Left = 304
+        Left = 298
         Top = 15
         Width = 81
         Height = 17
@@ -125,13 +123,24 @@ object frmOptions: TfrmOptions
         TabOrder = 4
       end
       object cbTrackAllEditorID: TCheckBox
-        Left = 304
+        Left = 298
         Top = 38
-        Width = 137
+        Width = 111
         Height = 17
         Hint = 'Default only track MGEF and game settings'
         Caption = 'Track all EditorID'
         TabOrder = 5
+      end
+      object cbResolveAliases: TCheckBox
+        Left = 16
+        Top = 107
+        Width = 169
+        Height = 17
+        Hint = 
+          'Show/Check/Edit aliases by name in alias refs, slows down xEdit ' +
+          'and requires more memory'
+        Caption = '[TES5] Resolve quest aliases'
+        TabOrder = 10
       end
     end
     object tsCleaning: TTabSheet

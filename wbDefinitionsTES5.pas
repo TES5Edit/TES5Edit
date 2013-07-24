@@ -1313,7 +1313,7 @@ begin
 
   i := 1;
   s := Trim(aString);
-  while (i <= Length(s)) and (s[i] in ['0'..'9']) do
+  while (i <= Length(s)) and (s[i] in ['-', '0'..'9']) do
     Inc(i);
   s := Copy(s, 1, Pred(i));
 
@@ -1324,6 +1324,16 @@ function wbScriptObjectAliasToStr(aInt: Int64; const aElement: IwbElement; aType
 var
   Container  : IwbContainerElementRef;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1339,6 +1349,16 @@ function wbPackageLocationAliasToStr(aInt: Int64; const aElement: IwbElement; aT
 var
   Container  : IwbContainer;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1357,6 +1377,16 @@ function wbQuestAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCa
 var
   Container  : IwbContainer;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1375,6 +1405,16 @@ function wbQuestExternalAliasToStr(aInt: Int64; const aElement: IwbElement; aTyp
 var
   Container  : IwbContainer;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1392,6 +1432,16 @@ var
   MainRecord : IwbMainRecord;
   GroupRecord : IwbGroupRecord;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1417,8 +1467,8 @@ begin
   else if MainRecord.Signature = INFO then begin
     // discovered memory leak
     // test on 00015C73
-    {if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
-      Result := wbAliasToStr(aInt, GroupRecord.ChildrenOf.ElementBySignature['QNAM'], aType);}
+    if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
+      Result := wbAliasToStr(aInt, GroupRecord.ChildrenOf.ElementBySignature['QNAM'], aType);
   end;
 end;
 

@@ -63,6 +63,7 @@ var
   wbNewHeaderAddon: Cardinal = 40; // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  wbResolveAlias: Boolean{} = False;{}
 
   wbUDRSetXESP: Boolean = True;
   wbUDRSetScale: Boolean = False;

@@ -1137,16 +1137,19 @@ end;
 
 procedure IwbContainerHandler_ResourceOpenData(var Value: Variant; Args: TJvInterpreterArgs);
 var
-  Res        : TDynResources;
-  ResIndex   : integer;
+  Res           : TDynResources;
+  ResContainer  : string;
+  i             : integer;
 begin
-  Res := wbContainerHandler.OpenResource(Args.Values[0]);
+  Res := wbContainerHandler.OpenResource(Args.Values[1]);
   if Length(Res) = 0 then
     Exit;
-  ResIndex := Args.Values[1];
-  if (ResIndex = -1) or (ResIndex > High(Res)) then
-    ResIndex := High(Res);
-  Value := Res[ResIndex].GetData;
+  ResContainer := string(Args.Values[0]);
+  if ResContainer = '' then
+    ResContainer := Res[High(Res)].Container.Name;
+  for i := Low(Res) to High(Res) do
+    if SameText(Res[i].Container.Name, ResContainer) then
+      Value := Res[i].GetData;
 end;
 
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);

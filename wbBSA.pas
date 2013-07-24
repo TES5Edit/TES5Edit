@@ -277,18 +277,29 @@ begin
       Break;
     end;
 
-  aData := res[residx].GetData;
-
   aDir := IncludeTrailingPathDelimiter(aPathOut) + ExtractFilePath(aFileName);
   if not DirectoryExists(aDir) then
     if not ForceDirectories(aDir) then
       raise Exception.Create('Unable to create destination directory ' + aDir);
 
-  // exception handled outside
-  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
-    WriteBuffer(aData[0], length(aData));
-  finally
-    Free;
+  // direct copy if file is loose with overwriting
+  if ExtractFileExt(res[residx].Container.Name) = '' then begin
+    try
+      TFile.Copy(res[residx].Container.Name + aFileName, aDir + ExtractFileName(aFileName), True);
+    except
+    end;
+  end
+
+  // otherwise extract from BSA
+  else begin
+    aData := res[residx].GetData;
+
+    // exception handled outside
+    with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
+      WriteBuffer(aData[0], length(aData));
+    finally
+      Free;
+    end;
   end;
 end;
 

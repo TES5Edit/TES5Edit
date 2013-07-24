@@ -1,7 +1,8 @@
 {
   Assets manager.
-  
-  Hotkey: Ctrl+F4
+
+  Allows to check existence of used assets including textures in meshes,
+  and copy assets used by plugin to separate folder.
 }
 unit AssetsManager;
 
@@ -176,12 +177,12 @@ begin
     lbl.Left := rbModeCopy.Left + 16;
     lbl.Width := frm.Width - lbl.Left - 40;
     lbl.Height := 60;
-    lbl.Caption := 'Copy assets used in a mod to the separate destination folder retaining directory structure. Useful to package mod for distribution. You might want to deselect the game''s BSA archives to avoid copying vanilla files.';
+    lbl.Caption := 'Copy assets used in a mod to the separate destination folder retaining directory structure. Useful to package mod for distribution. You might want to deselect the game''s BSA archives to avoid copying vanilla files. Existing files in destination folder are not overwritten.';
 
     edPath := TLabeledEdit.Create(frm);
     edPath.Parent := frm;
     edPath.Left := lbl.Left;
-    edPath.Top := lbl.Top + 70;
+    edPath.Top := lbl.Top + 80;
     edPath.Width := lbl.Width - 40;
     edPath.LabelPosition := lpAbove;
     edPath.EditLabel.Caption := 'Destination folder';
@@ -195,6 +196,16 @@ begin
     btnPath.Caption := '...';
     btnPath.OnClick := btnPathClick;
     
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.AutoSize := False;
+    lbl.Wordwrap := True;
+    lbl.Top := edPath.Top + 50;
+    lbl.Left := rbModeCopy.Left;
+    lbl.Width := edPath.Width + 40;
+    lbl.Height := 60;
+    lbl.Caption := 'Keep in mind that disabling processing of meshes also disables processing of textures used in meshes. The same rule applies for compiled scripts and script sources.';
+
     btnOk := TButton.Create(frm);
     btnOk.Parent := frm;
     btnOk.Top := frm.Height - 70;
@@ -252,7 +263,8 @@ end;
 //==========================================================================
 function NormalizePath(value: string; atype: integer): string;
 begin
-  if not SameText(Copy(value, 1, 3), 'c:\') then
+  // uncomment to not show errors on full paths
+  //if not SameText(Copy(value, 1, 3), 'c:\') then
   if (atype = atMesh) and not (Copy(value, 1, 7) = 'meshes\') then
     value := 'meshes\' + value
   else if (atype = atTexture) and not (Copy(value, 1, 9) = 'textures\') then
@@ -266,15 +278,16 @@ end;
 
 //==========================================================================
 // perform operation with resource depending on workmode
-// returns True if resource exists
-function ProcessResource(aResName, aResLocation: string; aResType: integer): boolean;
+// returns the last container's name (in selected) of resource if exists
+function ProcessResource(aResName, aResDescr: string; aResType: integer): string;
 var
   i: integer;
 begin
-  Result := False;
+  Result := '';
 
   if optAsset and aResType = 0 then
     Exit;
+
   slRes.Clear;
   ResourceCount(aResName, slRes);
 
@@ -282,18 +295,19 @@ begin
   // starting from the last one
   for i := Pred(slRes.Count) downto 0 do
     if slContainers.IndexOf(slRes[i]) <> -1 then begin
-      Result := True;
+      Result := slRes[i];
       Break;
     end;
   
   if optMode = wmCheck then begin
-    if not Result then
-      AddMessage(aResName + '   <-- ' + aResLocation);
+    if Result = '' then
+      AddMessage(aResName + '   <-- ' + aResDescr);
   end
   else if optMode = wmCopy then begin
-    if Result and not FileExists(optPath + aResName) then begin
-      AddMessage('Copying ' + aResName);
-      ResourceCopy(slRes[i], aResName, optPath);
+    // do not overwrite existing files or copy same files several times
+    if (Result <> '') and not FileExists(optPath + aResName) then begin
+      AddMessage(aResName + '   <-- ' + aResDescr);
+      ResourceCopy(Result, aResName, optPath);
     end;
   end;
 end;
@@ -301,7 +315,7 @@ end;
 //==========================================================================
 procedure ProcessAsset(el: IInterface);
 var
-  value, valuepath, ext, s: string;
+  value, valuedescr, ext, s, rescont: string;
   i, atype: integer;
 begin
   if not Assigned(el) then
@@ -314,7 +328,13 @@ begin
   if Name(el) = 'scriptName' then begin
     value := 'scripts\' + value + '.pex';
     atype := atScript;
-  end else begin
+  end
+  else if Signature(el) = 'QUST' then begin
+    value := 'seq\' + LowerCase(ChangeFileExt(GetFileName(el), '.seq'));
+    valuedescr := 'Start-game enabled quest requires SEQ file ' + Name(el);
+    atype := atSeqFile;
+  end
+  else begin
     ext := Copy(value, Length(value) - 3, 4);
     if value[1] = '\' then
       Delete(value, 1, 1);
@@ -328,24 +348,42 @@ begin
     value := NormalizePath(value, atype);
   end;
   
-  valuepath := Name(CurrentRecord) +  ' \ ' + Path(el);
+  if valuedescr = '' then
+    valuedescr := Name(CurrentRecord) +  ' \ ' + Path(el);
+
+  rescont := ProcessResource(value, valuedescr, atype);
+  if rescont = '' then
+    Exit;
 
   // if resource exists, check additional resources tied to it
-  if ProcessResource(value, valuepath, atype) then
+
   // check textures in mesh
   if (atype = atMesh) and (optAsset and atTexture > 0) then begin
-    NifTextureList(ResourceOpenData(value, -1), sl);
+    // suppress possible errors for invalid meshes
+    try
+      NifTextureList(ResourceOpenData(rescont, value), sl);
+    except on E: Exception do
+      AddMessage('NIF: ' + E.Message + ' ' + value);
+    end;
     slTextures.AddStrings(sl); // remove duplicates
     for i := 0 to Pred(slTextures.Count) do begin
       s := NormalizePath(LowerCase(slTextures[i]), atTexture);
-      ProcessResource(s, valuepath + ': ' + value, atTexture);
+      ProcessResource(s, valuedescr + ': ' + value, atTexture);
     end;
     slTextures.Clear;
-  end
+  end;
+
+  // copy additional lod and collision meshes
+  if (atype = atMesh) and (optMode = wmCopy) then begin
+      if wbGameMode = gmTES5 then s := '_lod'
+        else s := '_far';
+      ProcessResource(Copy(value, 1, Length(value) - 4) + s + ext, 'LOD mesh for ' + valuedescr + ': ' + value, atMesh);
+  end;
+
   // script's source
-  else if (atype = atScript) and (optAsset and atScript > 0) then begin
+  if (atype = atScript) and (optAsset and atScript > 0) then begin
     s := ExtractFilePath(value) + 'source\' + ChangeFileExt(ExtractFileName(value), '.psc');
-    ProcessResource(s, valuepath, atScriptSource);
+    ProcessResource(s, valuedescr, atScriptSource);
   end;
 end;
 
@@ -375,7 +413,7 @@ end;
 function Initialize: integer;
 begin
   if wbGameMode <> gmTES5 then begin
-    AddMessage('Sorry, script works for Skyrim only for now.');
+    AddMessage('Sorry, script supports Skyrim only for now.');
     Result := 1;
     Exit;
   end;
@@ -412,7 +450,10 @@ begin
   ShowOptions;
   
   if optMode = wmCheck then begin
-    AddMessage('List of missing assets:');
+    AddMessage('LIST OF MISSING ASSET FILES:');
+  end
+  else if optMode = wmCopy then begin
+    AddMessage('COPYING USED ASSET FILES:');
   end
   else if optMode = wmNone then begin
     Finalize;
@@ -450,7 +491,8 @@ begin
   ScanForAssets(ElementByPath(e, 'Destructable'));
   
   // papyrus scripts
-  ScanForAssets(ElementByPath(e, 'VMAD'));
+  if optAsset and atScript > 0 then
+    ScanForAssets(ElementByPath(e, 'VMAD'));
   
   if (sig = 'ARMA') or (sig = 'ARMO') then begin
     ProcessAsset(ElementByPath(e, 'Male world model\MOD2'));
@@ -459,8 +501,9 @@ begin
     ProcessAsset(ElementByPath(e, 'Female 1st Person\MOD5'));
   end
   
-  else if (sig = 'BPTD') then
-    ScanForAssets(ElementByPath(e, 'Body Parts'))
+  // looks like those are not real mesh files
+  {else if (sig = 'BPTD') then
+    ScanForAssets(ElementByPath(e, 'Body Parts'))}
 
   else if (sig = 'CLMT') then begin
     ProcessAsset(ElementByPath(e, 'FNAM'));
@@ -475,6 +518,12 @@ begin
   else if (sig = 'PROJ') then
     ProcessAsset(ElementByPath(e, 'Muzzle Flash Model\NAM1'))
 
+  else if (sig = 'QUST') and (wbGameMode = gmTES5) then begin
+    if GetElementNativeValues(e, 'DNAM\Flags') and 1 > 0 then
+      if not Assigned(Master(e)) or (GetElementNativeValues(Master(e), 'DNAM\Flags') and 1 = 0) then
+        ProcessAsset(e);
+  end
+              
   else if (sig = 'RACE') then begin
     ProcessAsset(ElementByPath(e, 'ANAM - Male Skeletal Model'));
     ProcessAsset(ElementByPath(e, 'ANAM - Female Skeletal Model'));
