@@ -3475,7 +3475,7 @@ begin
 
   wbRecord(INFO, 'Dialog response', [
     wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
+      wbInteger('Type', itU16, wbEnum([
         {0} 'Topic',
         {1} 'Conversation',
         {2} 'Combat',
@@ -3488,12 +3488,11 @@ begin
         {0x0001} 'Goodbye',
         {0x0002} 'Random',
         {0x0004} 'Say Once',
-        {0x0008} '',
+        {0x0008} 'Run Immediately',
         {0x0010} 'Info Refusal',
         {0x0020} 'Random End',
         {0x0040} 'Run for Rumors'
-      ])),
-      wbByteArray('Unused', 1)
+      ]))
     ], cpNormal, True),
     wbFormIDCk(QSTI, 'Quest', [QUST], False, cpNormal, True),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),

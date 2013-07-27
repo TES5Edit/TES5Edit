@@ -14,6 +14,7 @@ object frmOptions: TfrmOptions
   KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
+  ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
@@ -33,8 +34,6 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 28
       object Label5: TLabel
         Left = 16
         Top = 208
