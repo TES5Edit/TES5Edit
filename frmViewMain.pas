@@ -9710,27 +9710,6 @@ begin
   end;
 end;
 
-{procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
-var
-  From, FileName, TempPath: string;
-begin
-  From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  if not SameText(ExtractFileExt(From), '.bsa') then begin
-    FileName := DataPath + OpenFromAsset;
-    From := 'Data';
-  end else begin
-    // extract file from BSA
-    TempPath := wbTempPath + From + '\';
-    FileName := TempPath + OpenFromAsset;
-    if not FileExists(FileName) then begin
-      if ForceDirectories(TempPath) then
-        wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
-    end;
-  end;
-  if FileExists(FileName) then
-    ShellExecute(Handle, 'open', PWideChar(FileName), nil, nil, SW_SHOW);
-end;
-}
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -13320,7 +13299,13 @@ begin
 
         with TMemIniFile.Create(frmMain.TheGameIniFileName) do try
           with TStringList.Create do try
-            Text := StringReplace(ReadString('Archive','sArchiveList',''), ',',#10, [rfReplaceAll]);
+            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+              Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
+            else
+              Text := StringReplace(
+                ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
+                ',', #10, [rfReplaceAll]
+              );
             for i := 0 to Pred(Count) do begin
               s := Trim(Strings[i]);
               if Length(s) < 5 then
@@ -13345,9 +13330,9 @@ begin
         end;
 
         for i := 0 to Pred(ltLoadList.Count) do begin
-          if (ExtractFileExt(ltLoadList[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+          //if (ExtractFileExt(ltLoadList[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s := ChangeFileExt(ltLoadList[i], '');
-            if FindFirst(ltDataPath + s + '*.bsa', faAnyFile, F) = 0 then try
+            if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
               repeat
                 if wbLoadBSAs then begin
                   LoaderProgress('[' + F.Name + '] Loading Resources.');
@@ -13358,7 +13343,7 @@ begin
             finally
               FindClose(F);
             end;
-          end;
+          //end;
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);
