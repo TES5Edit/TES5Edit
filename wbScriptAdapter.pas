@@ -822,6 +822,30 @@ begin
     Value := MainRecord.ReferencedBy[Args.Values[1]];
 end;
 
+procedure IwbMainRecord_BaseRecord(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.BaseRecord;
+end;
+
+procedure IwbMainRecord_BaseRecordID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.BaseRecordID;
+end;
+
+procedure IwbMainRecord_UpdateRefs(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    MainRecord.UpdateRefs;
+end;
+
 procedure IwbMainRecord_ChildGroup(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
@@ -1349,6 +1373,9 @@ begin
     AddFunction(cUnit, 'IsWinningOverride', IwbMainRecord_IsWinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'WinningOverride', IwbMainRecord_WinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'HighestOverrideOrSelf', IwbMainRecord_HighestOverrideOrSelf, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'BaseRecord', IwbMainRecord_BaseRecord, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'BaseRecordID', IwbMainRecord_BaseRecordID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'UpdateRefs', IwbMainRecord_UpdateRefs, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ChildGroup', IwbMainRecord_ChildGroup, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CompareExchangeFormID', IwbMainRecord_CompareExchangeFormID, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ChangeFormSignature', IwbMainRecord_ChangeFormSignature, 2, [varEmpty, varEmpty], varEmpty);

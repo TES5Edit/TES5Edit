@@ -472,11 +472,8 @@ begin
   
   sig := Signature(e);
   
-  if (sig = 'CELL') then
-    ProcessAsset(ElementByPath(e, 'XNAM'));
-
   // skip records without assets
-  if (sig = 'REFR') or (sig = 'ACHR') or (sig = 'ACRE') or (sig = 'CELL') or
+  if (sig = 'REFR') or (sig = 'ACHR') or (sig = 'ACRE') or (sig = 'PGRE') or
      (sig = 'NAVM') or (sig = 'PGRD') or (sig = 'LAND') or (sig = 'PACK')
   then
     Exit;
@@ -485,7 +482,8 @@ begin
   ProcessAsset(ElementByPath(e, 'Model\MODL'));
 
   // generic icon common for all records
-  ProcessAsset(ElementByPath(e, 'ICON'));
+  ProcessAsset(ElementBySignature(e, 'ICON'));
+  ScanForAssets(ElementByName(e, 'Icon'));
 
   // generic destruction models common for all records
   ScanForAssets(ElementByPath(e, 'Destructable'));
@@ -496,20 +494,39 @@ begin
   
   if (sig = 'ARMA') or (sig = 'ARMO') then begin
     ProcessAsset(ElementByPath(e, 'Male world model\MOD2'));
-    ProcessAsset(ElementByPath(e, 'Female world model\MOD2'));
+    ProcessAsset(ElementByPath(e, 'Female world model\MOD3'));
     ProcessAsset(ElementByPath(e, 'Male 1st Person\MOD4'));
     ProcessAsset(ElementByPath(e, 'Female 1st Person\MOD5'));
+    ScanForAssets(ElementByPath(e, 'Icon 2 (female)'));
   end
   
   // looks like those are not real mesh files
   {else if (sig = 'BPTD') then
     ScanForAssets(ElementByPath(e, 'Body Parts'))}
 
+  else if (sig = 'CELL') then begin
+    ProcessAsset(ElementByPath(e, 'XNAM'));
+    ProcessAsset(ElementByPath(e, 'XWEM'));
+  end
+
   else if (sig = 'CLMT') then begin
     ProcessAsset(ElementByPath(e, 'FNAM'));
     ProcessAsset(ElementByPath(e, 'GNAM'));
   end
   
+  else if (sig = 'DEBR') then
+    ScanForAssets(ElementByPath(e, 'Models'))
+
+  else if (sig = 'EFSH') then begin
+    ProcessAsset(ElementByPath(e, 'ICO2'));
+    ProcessAsset(ElementByPath(e, 'NAM7'));
+    ProcessAsset(ElementByPath(e, 'NAM8'));
+    ProcessAsset(ElementByPath(e, 'NAM9'));
+  end
+
+  else if (sig = 'FURN') then
+    ProcessAsset(ElementByPath(e, 'XMRK'))
+
   else if (sig = 'MUST') then begin
     ProcessAsset(ElementByPath(e, 'ANAM'));
     ProcessAsset(ElementByPath(e, 'BNAM'));
