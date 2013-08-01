@@ -13330,20 +13330,21 @@ begin
         end;
 
         for i := 0 to Pred(ltLoadList.Count) do begin
-          //if (ExtractFileExt(ltLoadList[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-            s := ChangeFileExt(ltLoadList[i], '');
-            if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
-              repeat
-                if wbLoadBSAs then begin
-                  LoaderProgress('[' + F.Name + '] Loading Resources.');
-                  wbContainerHandler.AddBSA(ltDataPath + F.Name);
-                end else
-                  LoaderProgress('[' + F.Name + '] Skipped.');
-              until FindNext(F) <> 0;
-            finally
-              FindClose(F);
-            end;
-          //end;
+          s := ChangeFileExt(ltLoadList[i], '');
+          // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
+          if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+            s := s + '*';
+          if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
+            repeat
+              if wbLoadBSAs then begin
+                LoaderProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(ltDataPath + F.Name);
+              end else
+                LoaderProgress('[' + F.Name + '] Skipped.');
+            until FindNext(F) <> 0;
+          finally
+            FindClose(F);
+          end;
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);
