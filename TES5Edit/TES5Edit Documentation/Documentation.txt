@@ -1,0 +1,943 @@
+= Introduction =
+
+The following information is presented as a way to properly use the FO3/FNV/TES4/TES5Edit tools created by ElminsterEU.  This manual contains a tour of xxx-Edit, a lengthy FAQ/Navigator and several Chapters of detailed instructions on how you can utilize the varied functions of xxx-Edit successfully to improve your gaming experience.  This includes a guided-tour of the many functions that xxx-Edit provides, and show you how to de-conflict groups of mods as well as improve the stability of your game and ensure the minimum of game-impacting conflicts.
+
+The questions answered and processes described herein are intended to help both mod-users and mod-authors to improve the quality, standardization and conformity of Bethesda mods. If you utilize more than the provided Bethesda content or if you write mods, then using xx-Edit to resolve potential conflicts, clean mods and smoothen the loading process.  There are thousands of mods for all the games that xxx-Edit supports.  Hopefully through public contribution this page can become a resource to standardize mod delivery and reduce conflicts where-ever possible.
+
+== About This Document ==
+
+This document presumes a basic understanding of what "Mods" are, and how to install them on your system. This manual is not a guide on how to build mods, and the use of xxx-Edit for extensive mod changes is discouraged for most users – that's what the GECK and CK were built for.
+
+= Overview =
+== Introducing FNVEdit ==
+FNV-Edit is an advanced graphical module viewer/editor and conflict detector, with many additional functions that make it akin to a Swiss-army knife for modders and mod-authors alike. The primary function of FNV-Edit is to help you spot conflicts between mods and resolve them, as well as to prepare your mod-list for a smooth run-time with Master Update Mode (MUM). MUM resolves some bugs with Fallout: New Vegas and improves mod compatibility during run-time by turning all mod files into Masters (ESM) and creating the special ONAM records that allow the mod files to work together smoothly.
+
+For the mod author FNV-Edit provides the capability of viewing mod files at great depth, cleaning mod files of extraneous and duplicated records, merging mods together, changing ESPs to ESMs and scanning references in mod files for reach ability, form errors and specific references. These functions are very important to mod authors in the Fallout: New Vegas environment, as they will clean the mod of un-intended changes, erroneous records and potential conflicts with other mainstream mods that players run.
+Thus whether you use mods to enhance your Fallout: New Vegas experience or create mods for others to enjoy, using FNV-Edit is both a wise investment in time and a beneficial act for the modding community. Authors who clean and prepare their mods with FNV-Edit will experience fewer conflict and compatibility problems once published, and Players who de-conflict and MUMify their load-orders will be much less likely to experience crashes and head-aches. In general the use of FNV-Edit can only improve the inter-operability of all mods, and this can only be a good thing.
+If I have not convinced you by now to invest an evening to learn how to use FNV-Edit, then you should be sacked and have a live Nuka-grenade stuffed down your trousers. If however you wish to do the right thing by the modding community, grab a coffee and let‟s get to work! FNVEdit is not a difficult tool to use, but it does require that your CPU (brain) be involved in the process, and that is what this tutorial is designed to teach.
+Overview
+Training Manual for FNVEdit 3
+== Acquisition and Installation ==
+=== Downloading FNVEdit from Nexus ===
+FNVEdit works on Windows XP, Vista and Windows 7, other platforms or Windows simulators may or may not work and are not officially supported. FNVEdit is available for download from Nexus, one of the most outstanding sources for Fallout3, Fallout: New Vegas and Oblivion content.
+For Fallout 3:
+Use this FastLink or the following URL: http://www.Fallout3nexus.com/downloads/file.php?id=637
+For Fallout: New Vegas:
+Use this FastLink or the following URL: http://www.newvegasnexus.com/downloads/file.php?id=34703
+The following page will display from the Fallout: New Vegas Nexus site. You will need to first click on, “Files” to display the list of FNVEdit versions. Once loaded, check the Version number in the upper-right corner (B) to ensure you download the most current revision (it may/will be different from the screenshot below, which is just an example). Then click on that revision of FNVEdit in the Mail Files section (C).
+Once you download the program, you will need an archive extraction tool that can handle 7-Zip files (.7z), such as 7-Zip, which is available at: http://www.7-zip.org/
+Overview
+Training Manual for FNVEdit 4
+Once the archive is open, you will need to extract the FNVEdit files into the right place in order for it to function. That place is the Fallout: New Vegas\ directory, where the FalloutNV.exe program is installed. Do not install into the Fallout: New Vegas\Data directory or the program will not function correctly as shown below.
+Note: the FNVEdit package also contains a special file called, “FalloutNV.Hardcoded.keep.this.with.the.exe .and.otherwise.ignore.it.I.really.mean.it.dat”. This file needs to be in the same folder as the FNVEdit.exe. It contains hardcoded, Fallout: New Vegas game engine records which will show up as false errors in FNVEdit if said file is absent.
+What makes these special is that the records are referenced in FalloutNV.ESM but are NOT contained in FalloutNV.ESM (they are in the binary). FNVEdit automatically loads FalloutNV.hardcoded.esp… at the same load order index [00] as FalloutNV.ESM so that these hardcoded values can be used in conflict detection and resolution. You shouldn‟t touch this file until you're ready to un-install.
+The FalloutNV.hardcoded.esp simply needs to be in the same folder as the FNVEdit.exe. FNVEdit automatically loads FalloutNV.hardcoded.esp at the same load order index [00] as FalloutNV.ESM so that these hardcoded values show up as coming from, “FalloutNV.exe” while working in FNVEdit.
+Overview
+Training Manual for FNVEdit 5
+=== DirectX and Requirements ===
+With FNVEdit installed let‟s review some system parameters and drivers that you will need in order to successfully operate the tool. FNVEdit requires current DirectX drivers from Microsoft. You can tell if your system is up-to-spec by simply launching the tool. If FNVEdit loads and presents you with a Master/Plugin Selector view, your good to go but you can skip this next step. If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to at least the March 2008 Version.
+The most current DirectX version can be found here:
+DirectX End-User Runtime Web Installer:
+Or here:
+DirectX End-User Runtimes Redistributable (install it after unpacking it).
+Once DirectX is installed, you should be able launch the FNVEdit application successfully. If you still get errors, please report them to Miaximus or ElminsterEU.
+=== Windows Vista/7 and UAC Security ===
+The UAC Security feature of Vista protects the Program Files directory from un-authorized access. Unfortunately this also causes problems for FNVEdit and Fallout: New Vegas, and requires some manual intervention on your part to resolve. You have 3 options for dealing with UAC Security:
+1. Disable the UAC completely, but this will leave your system more vulnerable. (not recommended)
+2. Install Fallout: New Vegas and FNVEdit in the C:\Games\Fallout New Vegas folder, which is not controlled by UAC and will prevent conflicts. (recommended)
+3. Assign the "Users" group "Full Control" of the Fallout New Vegas folder in UAC, which will prevent UAC from causing problems.
+Any of the above options will work, though it is probably a better option to install Fallout: New Vegas and FNVEdit into C:\Games\Fallout: New Vegas directory and avoid the Program Files directory all-together. That leaves your system secure and averts the UAC problem for Fallout: New Vegas.
+If you are unable to get past the UAC restrictions, post the details of the problem to the Fallout New Vegas GECK forum for additional assistance. If all went well with the install, you should be able to successfully run FNVEdit.
+=== Starting FNVEdit ===
+When started it will automatically find your Fallout New Vegas Data directory via the system registry (not by where it was installed). If you immediately get errors indicating that FNVEdit can‟t find the Fallout: New Vegas files, it means you moved the files to another directory after installing FNVEdit. You need to re-install the Fallout: New Vegas Game again and place it into whatever directory you want as part of the install process.
+If FNVEdit starts, you get a dialog to select which modules you want to load with the current selection from your Plugins.txt as default value. This order will have been set by FOMM, and cannot be changed in FNVEdit.
+Overview
+Training Manual for FNVEdit 6
+If you need to change your load order, close FNVEdit and change the load-order in FOMM, then re-launch FNVEdit.
+Select the mods that you want to load into FNVEdit, which can be all (for conflict detection) or just one if you‟re working on a specific mod-file. Once you have confirmed that dialog the selected modules will start loading in the background. Depending on your system it should take 30 seconds to a few minutes (!) for all modules to load. You can follow the progress in the message window. (Don't panic if it seems to freeze, it just takes time).
+The tree view on the left side now shows all active modules in their correct load order. By navigating that tree view you can look at every single record in any of your modules. An example of a successful launch of FNVEdit is shown below, though you may also see additional error information if errors were found during start-up.
+Overview
+Training Manual for FNVEdit 7
+== Tour of User Interface ==
+This section of the manual will take you on a brief tour of FNVEdit to introduce you to the different views and screens that you will be working with. This tour is designed for beginner-level users, and does not discuss the functionality of the views at any depth just yet. The tour is recommended for all levels of user, especially if you have not used FNVEdit within the last several months as there have been many updates.
+=== Master/Plugin Selection View ===
+The Master/Plugin Selection view is presented to you when FNVEdit is first launched, and allows you to select/un-select the mods that you want FNVEdit to load. You can also Right-Click in open space to access more options, such as “Select All” or “Select None”.
+To change the load-order of mods, close FNVEdit and open FOMM. Change the load-order as desired, close FOMM and re-open FNVEdit. There is an additional option you can use to quickly load a single mod – simply Double-Click on a mod file in the list. Double-clicking a mod will automatically un-select all other mod files, and will load the selected mod file. It‟s a short-cut to loading single mods.
+Overview
+Training Manual for FNVEdit 8
+=== Left-Side Panel ===
+The Left-Hand side of the main FNVEdit view is the most heavily used in FNVEdit, containing both a hierarchical data-tree structure for all references as well as the main context menu. It also contains a status bar and search boxes for hunting-down specific FormIDs or EditorIDs as shown below:
+The main context menu (B) contains all of the major FNVEdit functions, including Filters, Reference hunts, Error checking, Removing Extraneous content and many more. There are also several functions that do not apply to Fallout: New Vegas, such as Generate Object LOD. We will discuss each of the important options for Fallout New Vegas in the tutorials below.
+Overview
+Training Manual for FNVEdit 9
+=== Main Context Menu ===
+The main context menu is accessed by Right-clicking in the Left-Side Panel, and acts as the main navigation and function selection point for FNVEdit. As such, much time and explanation is provided on how to utilize this menu, as well as a Reference Chart (shown below) to help illustrate what each function does.
+There are some functions such as, “Generate Object LOD” and the “Set VWD for all REFR…” options that only work on Oblivion, and should not be used with Fallout: New Vegas. With some functions you will be presented with additional options, while with others such as “Check for Errors”, the output is sent to the Messages Tab (or other tabs with other functions).
+Each of these functions is described in-detail within the tutorial, and Quick Links to those detailed sections can be found in the list below for easy-access. Additional description is provided below for each function on the main context menu.
+Overview
+Training Manual for FNVEdit 10
+ Compare To – Loads another module at the same load order index as the one under the cursor when you right clicked. Works very well to compare 2 different versions of the same module against each other.
+ Apply Filter – This function will present you with the Filter Menu, where you can select options on how you want to filter (restrict) the data shown in FNVEdit.
+ Remove Filter – This function will remove the current filter, so that all loaded-data will be presented and processed.
+ Building Reference Info – This function will build reference information for the currently select mod, which can be used after extensive changes are made.
+ Building Reachable Info – This function scans all references in a selected mod and will determine which are reachable (by the player in-game) from those that cannot ever be reached or accessed by the player. This function takes into account the totality of all loaded modules (looking only at the contents of the winning version of each record). So it's possible for the reachable status to be different for a record, depending on which other modules you've loaded.
+ Checking for Errors – This function is used to check for reports any case where the information in the module file does not match the FNVEdit record definitions. This is not a check for missing references, physical or data errors – that is done during the loading process with results available in the Messages Tab.
+ Checking for Circular Leveled Lists – Leveled Lists can reference other Leveled Lists, it's possible in this case to build a circular reference (with as little as 2 leveled lists directly referencing each other, or any number of additional leveled lists in the chain). When the game engine then tries to resolve that leveled lists down to a particular item/creature/NPC it can get caught in the endless loop and crash.
+ Renumbering FormIDs – This function will re-number all references in a selected mod file, starting from a number that you specify. This function does not in any way resolve conflicts, and should be used only if you know exactly what you are doing (as it will result in incompatibilities with existing save games and any module which uses this module as a Master). This function was implemented for the BetterCities team, so that they could assign non-overlapping FormIDs to each of their city specific .esp's, to prevent the need for changing FormIDs when merging the city-specific esp's into the alternative "full" esp which contains all cities.
+ Un-deleting and Disabling References – This function is used to un-delete any references in a selected mod file that were deleted in a previous edit, and instead mark them as “disabled”. That will ensure that no conflicts occur if another mod depends on the object being deleted, and setting it to “disabled” will ensure that the original intent of the mod author (to remove the object from the game) is true as the player will never see a disabled object. More on this in the section on Mod Cleaning.
+ Removing “Identical To Master” Records – This function will remove any record in a selected mod file that is identical to a record in the Master files. This happens often when using the GECK, that some scripts or objects get marked as “modified” even though no changes were made. This bloats a mod file and makes it vulnerable to conflicts with other mods. More on this in the section on Mod Cleaning.
+ Applying Scripts Into – This function is used to apply a script(s) into a specific reference, and writes the resulting new or override records into the specified module.
+ Creating a Merged Patch – This function is used to build the foundation of a merged patch-file, resulting in a new mod file using a name you select. More on this in the section on Mod Conflict Resolution.
+Overview
+Training Manual for FNVEdit 11
+ Set VWD for all REFR with VWD Mesh in this file – This function only works with Oblivion, and should not be used for Fallout: New Vegas mods under any circumstances.
+ Set VWD for all REFR with VWD Mesh copy as override - This function only works with Oblivion, and should not be used for Fallout: New Vegas mods under any circumstances.
+ Generate Object LOD – This function only works with Oblivion, and should not be used for Fallout: New Vegas mods under any circumstances.
+ Add (Reference) – What exactly that menu shows you is depending on the context, if you right click on a file node you will get a list of all groups that don't exist yet, if you right click on a group you get a list of all records that can be added to it and so on. And yes, this can be used to add new records, so you can basically build a mod from scratch with it.
+ Mark Modified – It will mark the currently selected node and all child nodes as modified. To minimize the chance that FNVEdit breaks something that it doesn't fully understand when saving, only records that are marked as modified are assembled field by field, sub record by sub record. Any record or even complete group that is not marked as modified is simply copied unchanged as a blob of bytes from the old module file into the newly saved one.
+ Add Masters – This adds a new Master to the MAST sub record in the file header and correctly renumbers the FormIDs in the module. This function is also used to create an ESM/ESP pair from a single ESP plug-in.
+ Sort Masters – This function will sort the global load-order of Master files to match the order of global load order.
+ Clean Masters – This function will scan a Plugin for Master ESM dependencies, determine if any Masters are un-used by the plug-in and remove them.
+ Copy Idle Animations Into – This function is used to copy all of the idle animations from one skeleton to another, which replicating monsters.
+ Hidden – This function hides the selected mod file(s) or references from further view/processing by FNVEdit.
+Overview
+Training Manual for FNVEdit 12
+=== Right-Side Information Tab ===
+The Information Tab holds a textural version of the FNVEdit help guide, including basic information on mod conflict resolution, instructions on using Master Update Mode and a legend on how to interpret the color-scheme of text and background. You can reference this tab at any time as a cheat-sheet of sorts on how to use FNVEdit.
+You can also capture any/all sections of the help information by Right-Clicking in the view-pane (A) and selecting one of the textural options presented to you.
+Overview
+Training Manual for FNVEdit 13
+=== Right-Side Messages Tab ===
+The Messages Tab acts like a running log-file of what FNVEdit is doing in response to your actions. When you first load FNVEdit, the Messages Tab is displayed by default so that you can watch the loading process in real-time. This is important as any Errors in the mod files such as missing references, missing files or dirty-edits to a mod file done in a hex-editor can all result in errors. Most of these will be harmless to Fallout: New Vegas, but some are lethal and you can see them all in the Messages Tab while they are loaded into FNVEdit. The view below shows an example:
+Any actions that you take which result in changes to the files such as saving, will also print their output into the Messages Tab. Thus it is important to check this tab often while working in FNVEdit, as there are cases in which a mod file won‟t save due to errors – and you want to know about that as soon as a problem occurs.
+Overview
+Training Manual for FNVEdit 14
+=== Right-Side References Tab ===
+The References Tab is used to locate all occurrences of a particular reference such as Soda Bottles, Projectiles and Explosions. If you select a reference in the Left-Hand window, every occurrence of that reference in the in the game is displayed.
+You can also Left-Click on any reference in the Referenced By view to present a copy/remove menu. Here you can literally delete the reference of the object out of the mod, or copy it into another mod (perhaps a patch plug-in, discussed in detail in the chapter on Conflict Detection and Resolution. These functions are especially useful for gaining a high-level understanding of what the mod contains, and where references can be found (a task which can be exceedingly difficult in the GECK).
+You can also double click entries in that list to directly jump to that record (and switch to the View tab), you can then use the backward button in the top right corner or on your mouse (if it got more than 2 buttons).
+Overview
+Training Manual for FNVEdit 15
+=== Right-Side View Tab ===
+The View Tab is used to display the details about any record that you click-select in the Left-Side Panel. The View Tab is where most of the work of conflict resolution takes place. Each mod that has a copy/version of a selected record is shown in the view with its own Column. This way, all of the mods that have a version of the same record can be shown side-by-side to more easily navigated and spot conflicts. The screenshot below high-lights details about the View Tab.
+We discuss this view at depth in the chapter on Conflict Detection and Resolution, but for now it‟s only important to understand its high-level function and how to navigate to it. As in the Referenced-By Tab, within the View Tab you can Right-click on any reference to receive an additional context menu. You can edit and remove any entry, as well as tell FNVEdit what kind of view you're looking for; with or without de-conflicted rows (rows without a conflict of any kind).
+Overview
+Training Manual for FNVEdit 16
+=== Filter Menu ===
+The Filter view is used for several purposes in FNVEdit; from conflict resolution to mod cleaning to reference viewing and reach ability data – all are achieved by activating a FNVEdit Filter. The Filters essentially work to restrict what data you see in FNVEdit to just what you want to see or are working on, and in some cases data is parsed (such as in conflict detection). When trying to resolve conflicts among mods, the Filter is used to show you only the records that show a conflict – leaving the un-conflicted rows invisible.
+As you can see there are dozens of different options you can select in the filter view. Not to worry though, we will give you the correct filter options to select for each of the functions you perform with FNVEdit. For now it is only important to recognize this as the Filter View, which gives you unprecedented viewing access to mods files. You can Apply and Remove Filters from the main context menu as shown below:
+Overview
+Training Manual for FNVEdit 17
+== Saving and Confirmation ==
+You can save your changes at any time by pressing, “Alt” and “S”, and when you exit FNVEdit (if there are changes to save). If you have not saved for a while, FNVEdit may also remind you that it‟s a good time to save. When the, “Save changed files” window is presented, click on the mods you want to save. The screenshot below illustrates this process:
+The output of each save is available in the Right-hand Messages Tab. It is important to check this, as sometimes errors in a mod file can prevent you from successfully saving it.
+Overview
+Training Manual for FNVEdit 18
+== Quick Tips and Shortcuts ==
+There are several important keyboard short-cuts that can make your usage of FNVEdit more efficient with less key-strokes for some common functions.
+ Ctrl+S:
+o Opens the Save Files dialog.
+ Ctrl+click on a FormID in the right side pane:
+o Jump to the selected Record in the tree view.
+ Double click on an entry in the Referenced By tab:
+o Jump to the selected Record in the tree view.
+ Press F2 with the mouse over a field in the right side pane:
+o Edit the field in the pane view immediately.
+ Press F2 with the mouse over a record in the tree view:
+o Edit the Form ID of the selected Record.
+Master Update and Master Restore
+Training Manual for FNVEdit 19
+= Master Update and Master Restore =
+== Overview ==
+Master Update Mode is the solution to the white-face bug and a number of older issues with mod conflicts. Master Update (MUM) is highly recommended for all modders, as it can prevent crashes, incompatibilities and may provide you with a smoother gaming experience.
+FNVEdit also provides the native ability to reverse the Master Update process, returning all MUM'ified plugins back to their original ESP state. This process is called Master Restore Mode (MRM), and will all you to edit your plug-in with the GECK. As the GECK will not allow you to set a Master (ESM) as the Active file, the MRM(er) process is required in order for you to modify your plug-ins again after running Master Update Mode.
+Thus in the tradition of UNIX nomenclature, you must first MUMify your plug-ins to play, and then MRMer at them to edit them in the GECK. This section describes both processes at depth.
+== Master Update Mode ==
+Master Update Mode is activated by creating another copy of the program, and renaming it to, “FNVMasterUpdate.exe”. When FNVEdit runs, it will recognize its filename and run in Master Update Mode accordingly.
+When Master Update Mode is activated, the following operations are performed without further user interaction:
+ All modules in the Data folder are assigned into 2 groups, Masters and Plugins, based on their file extension (.ESM or .esp).
+ The modules in each group are sorted by file modification date/time.
+ All module files are re-dated, first all Masters, then all Plugins, in 1 minute intervals.
+ All active modules are then loaded, the ESM flag set in the file header if not yet present, and the ONAM sub records build if required.
+ Any temporary overriding world space record that has at least one previous version that is persistent is marked as persistent.
+ All modified modules are saved.
+This process will result in a better-integrated group of mods, and will likely result in less crashes than without having run Master Update Mode.
+Master Update and Master Restore
+Training Manual for FNVEdit 20
+The process of creating the 2nd copy of FNVEdit for Master Update Mode is illustrated below:
+The same procedure can be used to create a “FNVMasterRestore.exe” version as well, both may be needed (especially for modders). When your ready to mod again, use FNVMasterRestore to remove the ESM flags from plugins that normally carry the .ESP filename extension.
+Master Update and Master Restore
+Training Manual for FNVEdit 21
+The screenshot below shows you screenshots of a common setup, and the output of Master Update and Master Restore Modes:
+You must close the program to finalize and save the settings, or your MUM'ifcation will not be completed. Running Fallout: New Vegas with MUM open will cause problems, so make sure you close the program when you see the, “--= All Done =--“indication.
+It is recommended that you create icons for both MUM and MRM (alongside of the FNVEdit Icon) so that you can conveniently run either depending on whether you‟re playing or modding in the GECK. This is considered the best practice.
+You can safely delete the Backup files at any time; these are created for your protection. You can restore a mod from one of these backups simply by renaming the backup file to the original plug-in filename.
+Master Update and Master Restore
+Training Manual for FNVEdit 22
+== Master Restore Mode ==
+There is also a MasterRestore mode which reverses the MUM process by removing the ESM flag again from all .esp files. Similar to Master Update Mode, you need to copy/paste the FNVEdit.exe. Program, and rename the new copy to, “FNVMasterRestore.exe”.
+This will give you 3 icons; FNVEdit.exe, FNVMasterUpdate.exe and FNVMasterRestore.exe. Once you launch the Master Restore Mode (MRM), the rest of the action is automatic. The screenshot below illustrates the output of Master Restore Mode:
+You must close the program to finalize and save the settings, or your MUM'ifcation will not be completed. Running Fallout: New Vegas with MUM open will cause problems, so make sure you close the program when you see the, “--= All Done =--“indication.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 23
+= Conflict Detection and Resolution =
+== Overview ==
+One of the primary roles of FNVEdit is for conflict detection and resolution, so that multiple mods that modify the same records can work together successfully. Conflicts and Overrides are not always bad, and in fact the entire idea of “modding” is to make changes to the game that replace (and thus create a conflict or override for) the original records that came with Fallout: New Vegas. That is why our goal is to detect conflicts, determine their nature and resolve the bad conflicts while leaving good changes in place.
+The name of the game with Conflicts Resolution is load-order, as Fallout: New Vegas will count the last record loaded as the winner of any conflict between files. For example, two mods are added to the load-order; ModA and ModB. ModA changes the color of a standard lantern from a Neutral color to a Warmer color. ModB changes the radius of the same lantern by 50%, making it brighter. If ModA loads before ModB, the changes made to the lantern by ModA get over-written by ModB (which still thinks the lantern has a Neutral color). This is a bad conflict, and overcoming them is the focus of this chapter.
+Negative or bad conflicts can also occur when mods make radical changes to the same world cell as the example below shows, while others can result in missing references, features in-game and even game crashes. The picture below is a poster-child example of how mods can fight over the same space and result in a bad change to the game:
+Some conflicts are very apparent in-game such as in the example above, while others are hidden and only reveal themselves via crashes or when mods don‟t work right. In the worst case scenario Fallout: New Vegas will crash more often, sometimes constantly. These are the conflicts that we need to detect and resolve, while leaving the bulk of the good/intended conflicts and overrides left un-changed. We discuss the process in depth below.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 24
+== Differences between Conflicts and Overrides ==
+There is a huge difference between a "conflict" and an "override". There are mods which override changes from a Master file, such as changing the level cap. If for example, ModA changes the level cap to 40 from the default, this over-rides the level 20 cap in the Fallout: New Vegas Master files and is a normal. Overrides are not conflicting in any way. Overrides show up in FNVEdit with a Yellow background color and Green text color. In most cases you don‟t need to do anything with Overrides.
+To get a conflict you need to have the same FormID defined in at least 3 modules, a Master, and 2 overrides. The conflict arises when the two overrides change different aspects of the same record, so that when the mods are loaded by Fallout: New Vegas, the last-mod loaded overrides the changes of the first-mod. Thus the last loaded mod is the, “Conflict Winner” while the first mod, whose changes were overridden, is the, “Conflict Loser”. Conflict Losers will show up with a red background, red text. The screenshot below illustrates the differences as seen in FNVEdit:
+In all this it's important to say, it's perfectly possible for 10 modules to override the same record without a single conflict, as long as the last loaded version of that record includes all the changes from the 10 other modules. That's what creating Patch Plugins is all about, and the process starts with applying a Filter.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 25
+== Applying Conflict Filters ==
+The application of Filters is the primary means of conflict detection for FNVEdit. When you apply a filter, the loaded mod data in FNVEdit is parsed and analyzed via a complex algorithm (described below) to detect all conflicts and overrides. The list of mods in the Left-Side Panel changes color (text and background) based on conflict status of each, and the results are shown in the View Tab which also changes color (text and background). The color-schema matches throughout FNVEdit, so you won‟t have to memorize more than one (described in detail below).
+To begin, Right-click in the Left-Side Panel and select, “Apply Filter” as shown in Step 1 and 2 below:
+The Filter window will now be presented, allowing you to check and un-check options according to the screenshot below (which are the settings for conflict detection).
+Conflict Detection and Resolution
+Training Manual for FNVEdit 26
+In the example screenshot below of the Filter window, the options A-E are the Only options that should be checked, after which you can click, “Apply” (F) to start the filter.
+Once you click on Filter (F), FNVEdit will filter and analyze all of the loaded mods against the conflict-detection algorithm. This may take some time depending on how many mods you have loaded and how robust your computer is. The progress is shown in the upper-right corner of FNVEdit as the screenshot below illustrates:
+FNVEdit also keeps track of how long the filter takes to apply. If you run 100+ mods, it can take several minutes to process all of the data. Conflict detection is not simply based on the existence of multiple records for the same FormID in different modules but instead performs a comparison of the parsed sub-record data via an algorithm.
+As such the conflict detection process requires a lot of memory, and systems with less than 2 Gigabytes of RAM may suffer. If you receive an, “Out of Memory” error, then your computer does not have enough memory to process the number of mods you have chosen. Upgrade your computer or reduce the number of mods you run.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 27
+The screenshot below illustrates how FNVEdit will look once the conflict detection process is complete. Note the [Filtering done] block in the Messages Tab below (A), indicating both the success of the conflict filtering process as well as record and time statistics about the filtration result. The screenshot below shows a typical outcome:
+The mods-list in the Left-Side Panel changes as the filter adjusts the text color and background color based on conflict status. The View Tab will show the actual conflicts, but only when you select on a record in the Left-Side Panel as shown below:
+With that you now understand how to detect for conflicts with FNVEdit and where to look at the data. You‟re now ready to learn about colors and display order. Understanding the color schemes behind the text and backgrounds is critical to understanding the conflicts, and how to resolve them.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 28
+== Color Schemas and Display Order  ==
+Understanding the color schema is a key to understanding FNVEdit. The color coding schema is designed to make the process as simple and efficient as possible. The legend below will introduce you to the basic color schema:
+The same color schema is used for the Left-Side Panel as well as in the Right-Hand View Tab, which shows the actual conflicts. This is done for consistency, with the text/background color of the left-hand mod-list determined by the conflicts in the right-hand window. There are many cases in which the status shows a conflict has occurred (red background), but that no action needs to be taken.
+There also is the case when a module contains a record that is identical to the Master (which is usually un-intentional). If you have this module loaded alone the record will show up with a Green Background (signaling, no conflict) and Grey Text (identical to Master). Named, “dirty edits”, these can be purged with the Mod Cleaning Process.
+The sample below shows both the color schema and the display-order together to better illustrate how conflict detection works. FNVEdit displays each conflict in the order that the files are loaded (FOMM‟s load order), with the first mod loaded listed on the Left (Purple) and the last mod loaded listed on the Right (Orange).
+All conflicts are ordered this way, with any mods loaded in-between either in a conflict state (Red) or that is identical to the Master (Grey) as described above.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 29
+The Load Order Workflow chart below is designed to help you understand the different color-combinations that you will encounter when de-conflicting mods. The FNVEdit display order as shown above was transposed into the vertical diagram below to help better illustrate how FNVEdit determines conflict winners and losers:
+As the chart above illustrates, the last-file loaded is always the conflict winner and ultimately determines what loads into Fallout: New Vegas. In this example NV-Phalanx got lucky that MyPatchPlugin mod shared the same Flagging, or they would have been conflict losers to the Flagging set by Cuter Veronica. However the Cuter Veronica mod is the conflict looser, and in this case we want Cuter Veronica to be the winner in terms of Hair and other body data.
+The next question is how do we fix it and resolve the conflicts?
+Conflict Detection and Resolution
+Training Manual for FNVEdit 30
+== The Conflict Resolution Process ==
+Conflict Resolution is really a simple process that you repeat multiple times for each conflict in your load-order. It is also the point at which your CPU (brain) gets involved in the process, as determining the action to take for each specific conflict requires your input. There are really only four options available to us for conflict resolution:qq
+1. Do nothing at all – Often time‟s conflicts are not harmful to the game and/or may not be something important-enough for you to care about.
+2. Change the Load Order – where often times simply adjust the order in which the mods load can resolve the conflict to your satisfaction.
+3. Add the records to a patch plug-in – for cases in which the mods are important and the conflicts can‟t be resolved with load-order.
+4. Remove one of the offending Mods – if two mods simply cannot get along because of massive conflicts, one of them may have to go.
+Overall the best thing to do is change your load order or nothing at all if the conflict isn‟t concerning, as that require the least effort. Adding records to a patch plug-in where conflicts can‟t be resolved is the next step, and in most cases will resolve the conflict definitively. Very rarely will you need to un-load one of the mods. The process is illustrated in the figure below:
+Several examples are provided below to illustrate this process with real mod data. The process above is intentionally designed to be as simple as possible, and after practice you will find that it goes very fast and becomes almost second nature.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 31
+In this example a record that has been selected in the Left-Side Panel, shows its detailed contents in the Right-hand View Tab, which includes all versions of the selected record from all modules which contain it. The right-most column (NV-Phalanx) is the module that loads first after the master, (Cuter Veronica) loads next and “MiaxPlayerHouse1” is last – which becomes the version of the record that Fallout: New Vegas loads into the game. The screenshot below illustrates an example of a conflict between mods:
+After clicking-open the FalloutNV.esm master and its Non-Player Character tree, we notice that Veronica has a conflict (red text, red background). By clicking on Veronica, the right-hand View Tab gets populated with every mod that has a reference to Veronica, and sorts them by conflict winner. The right-most column (B) is the winner in all cases, which in our example means that the Cuter Veronica (C) mod wins-out over the NV-Phalanx mod (B).
+In this example Veronica‟s hair color is conflicted. We see that FalloutNV.ESM sets the color to 24/16/7, but Cuter Veronica over-rides this and sets it to 118/49/7. However MiaxPlayerHouse1 over-rides this with the default values (probably un-intentionally). This conflicts with the change that Cuter Veronica is trying to make. Ultimately the conflict-winner is MiaxPlayerHouse (D), which sets the color back to 24/17/7 and leaves poor Veronica looking not as nice as she might.
+Also important to note in this example is the mods with Grey Text / Red Background with the NV-Phalanx mod – signifying that the record is identical to the FalloutNV.ESM Master file – and is thus redundant.
+In this case we do need to take action to resolve the conflicts, or Veronica will never see benefits of the Cuter Veronica nod. The question is, “Can we resolve this conflict by simply changing the mod load-order in FOMM?” Let‟s find out, start by closing FNVEdit and opening FOMM.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 32
+Changing the load-order in FOMM can often resolve conflicts. In this example, by dragging the Cuter Veronica mod below the MyPlayerHouse1 mod, we force Cuter Veronica to load last so it will be the conflict winner:
+Closing FOMM (to save the load order), re-opening FNVEdit with the new load order and applying a conflict Filter yields the following results:
+Notice how on the left that Veronica‟s essential flag conflict is now resolved, because we swapped the load order so that Cuter Veronica came after NV-Phalanx. This worked because Cuter Veronica changed different things on Veronica that NV-Phalanx did, meaning there are no other conflicts. By forcing Cuter Veronica to load last, the conflict is effectively resolved because Veronica gets all of the flags that each mod intended for him.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 33
+== Understanding Patch Plugins and Merged Patches ==
+There are two methods by which you can create a patch plug-in to resolve conflicts; by hand or using the automatic merged patch tool. The recommend best-practice with patch Plugins is that you use the automatic merged patch creation tool, after which you review the merged patch and add/remove/correct anything that the automatic tool did not change to your satisfaction. This is necessary because there is often not one “correct” answer to which mod should win a conflict over the same record, and sometimes what is normally deemed correct will not be to your personal liking. We describe the manual patch Plugin creation process first, and then show you how FNVEdit creates one automatically.
+== Creating a Patch Plugin (Manual Method) ==
+To create a patch plug-in, you must have already created your conflict detection filter (Section 4.3). To create the new patch Plugin, right-click on a conflicted record (A) and select, “Copy as override” (B). This will open the file selection window, where you can choose, “<new file>” (E) by either double-clicking it or by checking it‟s button and clicking, “OK”. This will present you with a, “New Module File” window as shown on the next page, where you can select the name of your new patch plug-in.
+Note: Note: You can, “Copy as Override” into any mod as well as <new file>, but we highly recommend that you only modify your own mods!
+Conflict Detection and Resolution
+Training Manual for FNVEdit 34
+The New Module File window allows you to choose any name for your patch plug-in, after which you will be prompted to add the mod-name as a Master from which you copied the record. The screenshot below illustrates the process:
+Once confirmed, FNVEdit will add NV-Phalanx as the Master-file of your new patch plug-in. This happens because we chose the Veronica reference from NV-Phalanx when we did the, “Copy as override into…”. If we had chosen Cuter Veronica instead, it would set that as the Master file for our patch plug-in instead. This ensures that when you copy a reference into your patch plug-in, any data needed for it from the original mod file can be accessed by Fallout: New Vegas at run time. Once complete, you will see:
+Note how your new patch plug-in, “MyPatchPlugin.esp”, has been created and now occupies the right-most column, making it the conflict winner. Also note that Cuter Veronica is now in conflict because the Essential flag has not yet been moved over, as well as the level-cap and quest key. Now that our patch Plugin has been created, we can correct all of the conflicts on poor Veronica (but does she Deserve it?!?)
+Conflict Detection and Resolution
+Training Manual for FNVEdit 35
+We can now literally drag/drop each of these items into our new patch plug-in. We do this operation more than any other in FNVEdit when making a plug-in, as once the initial creation step is complete, it‟s simply a matter of dragging all of the overrides that we want into the patch plug-in as shown below:
+Note that for the key we dragged it from the top-level, “Item” entry for that record, and not from the key item row itself. The Item row is the root-level for this particular object (including its Count variable, etc.). As such FNVEdit will only let you “drag” from the correct row-level, so you don‟t have to worry about getting it wrong! The screenshot below shows the result, with the key now replicated into our patch plug-in.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 36
+The screenshot below shows the results, with the Essential flag now replicated into our patch plug-in. The last thing we need to do is correct the level-cap conflict with Broken Steel, so we can get Veronica up to the maximum ruthlessness. We can drag n‟ drop this from the Broken Steel Master entry, but instead let‟s illustrate the edit function. Simply right-click on the value in your patch plug-in (A) and select, “Edit” (B) as shown:
+Once you select, “Edit”, you will be presented with an Edit dialogue window, where you can type in the level that you want. Some fields will instead show you a list of Flags that you can check/un-check, all depending on what type of record you are editing. The last screenshot below shows the final result, with Veronica ready to kick some ass!
+The merged-patch will produce a nearly crash-free game very quickly, but some subtle features of mods will inevitably not work. By manually patching and understanding each change, we can solve for these conflicts to our own satisfaction. Whether you retain the essential flag or remove it, is a player-by-player personal decision for what you want form your gaming experience.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 37
+The final step is to save your patch plug-in, so we don‟t lose all our hard work! The most convenient way is to hit, “Alt-S”, which will present you with a save window as shown below:
+The, “Save Changed Files” view will present you with all of the mod files that have changed since the last save or boot up. This is handy, as you can un-check any files that you do not want to save, giving you finer control and ensuring you don‟t accidentally save a mod file that is not your own. Ensure that our, “MyPatchPlugin” is checked (A), and click, “OK” (B) to save your Plugin.
+You can get confirmation that the save was successful by clicking on the Messages Tab (C), where you will see a, “Done Saving” message. If there was any problem with the save, you would see an Error message instead.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 38
+== Creating a Merged Patch (Automatic Method)  ==
+FNVEdit provides an automatic method of generated a merged patch, which is the same as a patch Plugin but contains resolved conflicts from All of the loaded mods. This will greatly speed the conflict resolution process, as most of the common types of conflicts are automatically merged into the patch Plugin. It's very unlikely that the generated patch is going to be any worse than using the originally conflicting mods without the patch would be, and as such this method is recommended for everyone that runs mods.
+The whole point of using the automatic method is to generate a merged patch that is custom built for a specific load order (yours). However not every load-order conflict can be anticipated, and too often mod authors create messy plug-ins that create unforeseen outcomes. That‟s why it is important to review each of the overrides that the merged function creates. First thing is to apply a Conflict filter as shown below:
+The same filter options apply as when resolving standard conflicts:
+Conflict Detection and Resolution
+Training Manual for FNVEdit 39
+Once the conflict filter has completed its operation, we are ready to build our Automatic Patch Plug-in! This process will examine all of the loaded mods for certain form types that can be automatically merged into a patch plug-in. FNVEdit will create the new patch plug-in with all of the form types that it can safely merge for you, which you can then use as the base for your custom patch plug-in.
+This does not include all form types, and not even all cases of some form types. This is because FNVEdit cannot read your mind (future release) and thus does not know how to resolve many kinds of conflicts. Without the ability to read your mind, interpret the data and determine what you would want in all possible conflicts, this means that FNVEdit cannot fully automate the conflict resolution process. The automatic merged-patch then should be thought of as a foundation from which you resolve conflicts in your mod load order. The screenshot below illustrates the challenge:
+As the screenshot shown above describes, there are many kinds of conflicts that cannot be resolved by an automatic merged patch. In this case the one conflict that can be resolved is that of Inventory Items, where one mod gives Veronica an item while another mod gives her different items. The conflict can be resolved by giving her the items from both mods in the merged patch-plug-in. For everything else in which a human decision is ultimately required, the merged patch will leave these records in conflict as we will see below.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 40
+To create the merged patch, Right-Click anywhere in the Left-Side panel to summon the context menu. From there select, “Create Merged Patch” to start the action:
+This will open the “New Module File” name window where the name of the patch plug-in can be defined:
+Conflict Detection and Resolution
+Training Manual for FNVEdit 41
+The Merged Patch function should take several seconds to complete, after which the Messages Tab will reveal the outcome as shown below:
+Notice how the Merged Patch automatically creates our Patch Plugin, and assigns all of the mods in our load-order as Masters to it. This is important, as it allows you to drag n‟ drop any record into it, and ensures maximum compatibility across your mod list. The screenshot above shows you how FNVEdit creates the entire record tree (1), and where the log file output is shown in the Messages Tab (2).
+Conflict Detection and Resolution
+Training Manual for FNVEdit 42
+The screenshot below shows you the View Tab of our newly-created merged patch, which you can see by selecting and clicking on a record from the tree:
+As described above, the process of creating an automatic merged patch has only resolved one of the conflicts in the example by successfully giving Veronica new inventory items from several mods. However all of the other conflicts remain, which can now be resolved by dragging-dropping records into our new patch plug-in, fleshing it out with both the automatic data FNVEdit could find and your personal conflict resolution decisions.
+The examples provided above will give you a broad taste of the kinds of conflicts and overrides you will run into when creating a merged patch. Reviewing the changes can take as little as 10 or 15 minutes, compared to the hours of work it would take to create the patch plug-in by hand. That is why the recommendation is to use the Automatic method to create a merged patch, and then use your manual patching skills to correct any problems you find in the merged patch. That will produce the best patch plug-in for your mod-list, and ensure the smoothest gaming experience possible.
+Now it‟s time for you to take the reins and do some serious conflict resolution while the knowledge is still fresh in your brain. Take your own mod-list and create a merged patch just as described in this chapter, then manually de-conflict it. It will give you some real-world exercise in conflict resolution, and will help your own game at the same time!
+Conflict Detection and Resolution
+Training Manual for FNVEdit 43
+== The Conflict Detection Algorithm ==
+To round-out our discussion on conflict detection and resolution, we have included the main algorithm (in textural, descriptive form) for your reference. You do not have to read this unless you have an interest in the internal mechanism of how FNVEdit determines a conflict/override from un-conflicted records.
+Note: The Surgeon General has declared that reading code without a blood/caffeine content of 0.20 may be hazardous to your sanity.
+FNVEdit uses a complex algorithm that parses the mod sub-record data at depth, and performs a number of operations on the data to detect conflicts and overrides. While you do not have to memorize this, the main conflict-detection algorithm is described below for reference (and those brave enough to noodle it out):
+Step 1. FNVEdit makes a list with all entries from the Master record, and designates this as the, “TargetList”.
+Step 2. FNVEdit Loops and repeats the following for each existing override record:
+Sub-Step A. FNVEdit determines the file containing this override record, and designates it as, “CurrentFile”.
+Sub-Step B. FNVEdit makes a list with all entries from that override record, and designates it as, “CurrentList”.
+Sub-Step C. FNVEdit goes through the list of Master files for CurrentFile, from last to first, and stops when the first is found containing an override for this record, designated as, “CurrentMaster”.
+Sub-Step D. FNVEdit makes a list with all entries from CurrentMaster, and designates it as “CurrentMasterList”.
+Sub-Step E. FNVEdit goes over CurrentList and CurrentMasterList, for each entry that:
++ Exists only in CurrentList, adds this entry to TargetList if not yet present.
++ Exists only in CurrentMasterList, removes this entry from TargetList if present.
+Step 3. FNVEdit then makes a list with all entries from the winning override record, and designates it as, “WinningList”.
+Step 4. FNVEdit then compares TargetList and WinningList, and if different:
+Sub-Step A. FNVEdit copies the currently winning record as override into the new file, designated as, “TargetRecord”.
+Sub-Step B. FNVEdit then removes all list entries from “TargetRecord”.
+Sub-Step C. FNVEdit goes over TargetList and for each entry add a new entry to the “TargetRecord.”
+Step 5. FNVEdit then makes the Master List (as it applies to leveled list entries) which is also important to understand what's going on:
+Sub-Step A. For each entry, FNVEdit generates a string representation including: Level, Reference, Count, Item Condition, Owner, and Owner Rank.
+Sub-Step B. FNVEdit sorts the generated list of strings.
+Conflict Detection and Resolution
+Training Manual for FNVEdit 44
+Sub-Step C. FNVEdit walks over the sorted list, add numbers to duplicated entries, and so suppose you have a list: A, B, B, C, D, D after this step it will be A#0, B#0, B#1, C#0, D#0, D#1.
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 45
+= Mod Cleaning and Error Checking ==
+== Overview ==
+FNVEdit provides several tools that help mod authors to clean their mods of extraneous / duplicated references, fix deleted references and to merge plug-ins together. These utilities can help a mod author avoid many conflicts with other mods and is considered a best practice. It is highly recommended that mod authors clean their mods before they are released to the general public, which can avert silly and embarrassing compatibility problems after release and make for a more professional showing in the community.
+Mod quality is a community wide problem and needs to be addressed on that level. If everyone just tweaks their load order around and cleans mods they installed that's not going to move us forward as a community. It is important that if there are general issues with a mod that these be made public and the author of the mod fixes them. With many of the possibly conflicting changes that a mod makes, it becomes a question of intent when cleaning them up, and only the mod author can give an authoritative answer to that.
+This chapter is really dedicated to mod authors, and can be safely ignored by mod-users (whew!). Mod Authors that use the GECK should realize that the GECK can set the modified flag on a thing very easily, and that gets saved into your mod as an override to some standard object. The problem comes when players integrate your mod with others that make intentional changes to the standard object that you inadvertently saved – which is the cause of more conflicts than any other kind between mods today.
+Note: Those not convinced by now to read-through and understand the mod cleaning and merging process are sloppy and should be sacked. For the honorable modders who want to contribute to the community in the right way, read-on.
+== Mod Cleaning Process ==
+What is the mod cleaning process anyway? The mod cleaning process involves cleaning a mod file of duplicate/un-necessary records and un-deleting objects in the Masters that were inadvertently deleted - setting them to disabled instead. We also check for errors as well as looped level lists. The itemized cleaning process is:
+1. Identifying and removing records in a mod file that is identical to those in the Master files, which user useless in a mod-file and can cause conflicts with other mods. Removing these from your mod file is a primary goal of this process.
+2. Identifying any records in the Master files which have been marked as deleted, which FNVEdit un-deletes and marks as, “disabled” instead. This ensures that any change made to that object by other mods won‟t cause crashes or conflicts, which can happen if a modder accidentally deletes a base object, which is modified by another mod and you get a null pointer – poof!
+3. Identifying any infinite loops in the leveled-lists, and ensure there are no physical/data errors with the mod file to round-out the clean-up.
+For example, modder A inadvertently double-clicks on a wine bottle and it gets marked for save – becoming one of the changes introduced by modder A‟s plug-in. Modder A makes things worse by deleting the whiskey bottle record, removing it from the game!
+Mod B is added to the player‟s mod-list, which changes the wine bottle making it stronger. Mod A‟s plug-in however conflicts with this and can over-ride Mob B‟s changes without cause (as Mod A‟s author did not intend
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 46
+to change the wine bottle). Furthermore all occurrences of the whiskey bottle are now bogus. When Mod B tries to change the whiskey bottle, it finds no whiskey bottle to change and Fallout: New Vegas will crash.
+Modder A could avoid both of these issues with the mod cleaning process, which un-deletes references that were deleted on accident and un-does inadvertent changes to things in the game that were not intended. The screenshot below illustrates the start of the process, in which you must load-up FNVEdit and follow the steps herein:
+Once, “OK” is clicked (D), FNVEdit will load the selected plug-in for cleaning.
+Note that you can also, “Select All” or “Invert Selection”, which gives you additional controls over which mod-files are selected for loading into FNVEdit. For the mod cleaning process, we only want to load the plug-in being cleaned. You can do this using the, “Select None” menu option, and then clicking on the mod file to be cleaned.
+You should only clean one mod file at a time, and you should not clean other people‟s mod files! There is no harm in running through the process to see if mod A or mod B is filled with dirty edits (after which you can send them a PM on the forums!), but it is considered a bad idea to clean other people‟s mods.
+Once loaded into FNVEdit, we need to apply a Filter to detect all of the Identical to Master references in the mod being cleaned as shown below:
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 47
+Clicking on, “Apply Filter” (B) will present the Filter window, just as it did with the Conflict Resolution Process. This filter window however will utilize different options than with conflict detection, as in this case we are only looking at one mod file and one specific kind of conflict – the Identical to Master references.
+The options to select for Mod Cleaning are:
+1. By conflict status for this particular record
+2. Identical to Master
+3. Conflict status inherited by parent
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 48
+The screenshot below illustrates the filter options to select:
+Clicking on, “Filter” (D) will launch the FNVEdit analysis for Identical to Master records, which should complete in a short period of time (perhaps 1-20 seconds). If your system is very slow or bogged down or the mod is really huge, it is possible for the process to take longer. The status of FNVEdit can be viewed in the upper-right corner of the screen, as shown in the screenshot below:
+Both the elapsed time and processed records are shown in the upper-right window. When FNVEdit completes the analysis, the Messages Tab will reveal the result as shown on the next page. You should also not expect to see in anything yet in the View Tab.
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 49
+The output of the filter can be seen in the Messages Tab as shown below:
+The total number of records filtered and the elapsed time are given, which should be quick. Also note the Yellow/Green text and backgrounds in the screenshot above, which are the references to be cleaned out.
+The records to be cleaned will be shown in the View Tab, though at first you won‟t see anything in the view. This is because the default setting for the View Tab is the, “Hide no conflict rows”, which means any rows that don‟t have a conflict are normally not shown (as they play no role in conflict resolution, they are not conflicted!). The screenshot below shows you the simple operation you can perform to see the records that need cleaning:
+Once you un-check the, “Hide no conflict rows” setting in the View Tab, you will be able to see all of records just as you do during conflict detection.
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 50
+Note the grey text with green background in the mod we are cleaning; indicating that they are identical to the Master versions of the same record and should be removed (cleaned). These are often called, “dirty edits”.
+A simple visual inspection between the FalloutNV.ESM and BetterCaravans mod reveals the duplicated records that really don‟t need to be in the BetterCaravans mod at all. Removing these will have no negative impact on the mod or Fallout: New Vegas. The process of removing the duplicated, “identical to Master” records involve applying a slightly different filter to the mod, followed by several context menu options as shown below:
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 51
+=== Removing “Identical to Master” Records ===
+Clicking on the, “Apply Filter” button from the Left-Side Panel‟s context menu will present the Filter window once again. This time choose the Mod Cleaning settings as shown below:
+As before the status of the filtering process is shown in the upper-right menu bar, and once complete the log-file output is shown in the Messages Tab. This filter will load only the data that needs to be cleaned from the mod. The screenshot below again shows how the output may look from this step – which should take just a few seconds:
+With the Mod Cleaning filter applied, Golly! It‟s time to get out the Mr. Clean and make this puppy sparkle with goodness! Grab the mop by Left-clicking on the mod that you want to clean, in our case BetterCaravans (A). Splash the Mr. Clean on by Right-clicking the shiny white space beneath the mod your cleaning (B), and spin
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 52
+that mop into action by clicking on, „Remove “Identical to Master” records‟ (C) – and watch as FNVEdit puts the shine on that puppy!
+You will be presented with the Warning screen, press, “Yes” when prompted:
+As FNVEdit completes the mod-cleaning process, you can see the output in the Messages Tab, which shows you every record that is being removed along with its hex ID number. Once complete, you get a line of text reading, [Removing “Identical to Master” records done] – along with statistics on the number of records processed and removed as well as the elapsed time (A).
+The screenshot below illustrates the output:
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 53
+The final output is also printed in the bottom status bar (B) for your viewing pleasure. With this, the first step in the mod cleaning process is complete.
+=== Sorting Master File Load Orders ===
+There are times in which the load-order of Master files gets switched around when you add/change load-orders. It can become a problem when the Master load order becomes different then how they are listed in the Master List, header section of your Plugin. The, “Sort Masters” function corrects the Master file load-order in the Plugins Master List, and correctly renumbers all file specific FormIDs. The screenshot below illustrates:
+There is no specific log-output from the function unless there is a problem. If you see no issues or errors in the Messages Tab, then the function sorted the Masters correctly.
+=== Un-deleting and Disabling References ===
+The next step in the cleaning process is to Undelete and Disable References from the mod being cleaned. The, “Undelete and Disable References” function scans through the mod and the Master files it depends upon,
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 54
+looking for any records that you may have deleted by accident. If it finds some, it will un-delete them and then set the reference to, “disabled” so that it will never be seen in-game nor affect your mod.
+This ensures that if another mod tweaks/changes the item you deleted, that the item will still be in the files (just disabled), and thus won‟t cause Fallout: New Vegas to crash. If your mod file loads with the item deleted and another mod tries to change it, Fallout: New Vegas will crash!  These are among the more serious conflicts that can occur and the reason why it is important for mod authors to run this function as part of the mod cleaning process. The screenshot below illustrates how to activate it:
+Note that you must Right-click on the mod in the Left-Side Panel to pull the right context menu. In this case you do not want to click on open-space.
+The screenshot below shows the results, which show the log-file output in two places (A and B) in the Messages Tab and on the lower status bar:
+Now we know for sure that other mods will not run into missing references that were a consequence of changes made in the mod your cleaning. With the second step in the cleaning process complete, it‟s time for the final step.
+=== Purging un-used Master File References ===
+Master File References are links or references from your Plugin to any Master files (ESMs) that it depends on to run, and stores the list in a record called, “MAST”. Most mods have FalloutNV.ESM in their Master List, but you can have many such links in a plug-in. In fact when FNVEdit creates a Merged Patch, it puts links to many or nearly-all of the Master files in your mod list. It is possible in some cases for a Plugin to contain a link to a Master file that it does not need.
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 55
+For example, suppose the Plugin we are cleaning had MasterB.ESM in its Master List but it doesn't contain any overrides for, or makes any other references to, records from MasterB.ESM. In that case we would not need nor want MasterB.ESM listed in the Master record for our Plugin! This function detects any un-used Master references in the Plugin we are cleaning, and removes them from the Master List. FNVEdit also renumbers any file specific FormIDs in the Plugin to ensure that it is cleaned properly.
+The screenshot below illustrates how to activate the, “Clean Masters” function:
+Unfortunately there is no log-file output for this function, so you‟ll have to trust me that this works correctly.
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 56
+The screenshot below illustrates how the BetterCaravans mod looks now that it‟s clean, with its new sparkly (bold)-Green text in both the View Tab (B) and the Left-Side Panel (A):
+At this point you should save your mod and load it up in-game to make sure that everything is still happy. There are a few notes about the process to be aware of:
+Note: You should not clean other people‟s mods! It is the responsibility of each mod owner to clean their own mods, and with the creation of this tutorial there is no longer any excuse why people can do this. If you find a dirty mod, send the mod author a PM on Nexus and tell them they have a dirty mod and reference them to FNVEdit (please?)
+Note: Make sure that you run Master Update again before testing your mod in-game, as the cleaning process will undoubtedly change references and you want to make sure FNVEdit synchs everything up. This has shown to prevent crashes.
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 57
+== Checking For Reference Errors ==
+The “Check for Reference Errors” function reports any case in which the information contained in a module file does not match the FNVEdit record definitions. There is a very minimal chance that something that's reported as an error is actually an oversight in the FNVEdit record definitions and not in the module, but all cases should be reported to be safe). Note that there are errors in the FalloutNV.ESM and the DLCs. Both Elminster and Quarn have gone through them all to ensure they are genuine errors. Running the check is a recommended practice as part of the mod-cleaning process as shown below:
+When the error-check is complete, the screenshot below shows you how the output will look when errors are found in a module:
+In this example we found both kinds of errors (Ouch!), which was ideal for our tutorial. In the first case FNVEdit found reference errors where data is missing such as Flags and Idle Timer Settings (A). These errors should be corrected by the mod author and not by you! The error we see in (B) is the result of an unknown Flags type, (Unknown: 15), which FNVEdit did not understand. These kinds of errors should be sent to Elminster for to ensure FNVEdit has the right information, or if the mod has some strange error.
+Mod Cleaning and Error Checking
+Training Manual for FNVEdit 58
+== Checking for Circular Leveled Lists ==
+With mods it is possible to have Leveled Lists that reference other Leveled Lists that are perfectly valid. However, it's possible in some cases that a mod builds a circular reference (with as little as 2 leveled lists directly referencing each other, or any number of additional leveled lists in the chain). When the game engine then tries to resolve that leveled lists down to a particular item/creature/NPC, it can get caught in the endless loop and crash. This function looks for such cases and identifies them if they exist:
+I have not yet found an example in any mod of such a circular leveled list, but I do know that they exist and that FNVEdit can spot them. If you don‟t get any output from running this function, then the checked mod is clean of such loops.
+Managing Mod Files
+Training Manual for FNVEdit 59
+= Managing Mod Files =
+== Overview ==
+This chapter is dedicated to mod authors and describes a number of FNVEdit functions which make mod authors' lives easier and lend a degree of uniformity to their work. Much like the material covered in the Mod Cleaning and Error Checking chapter, these functions help mod authors refine their plugins in order to make them less conflict prone when used with other mods. Actions like merging mods, splitting them into Plugin/Master pairs, adding Master file references and more are documented in this chapter, all functions which can open doors to new possibilities which mod authors may have not known existed.
+== Adding Master Files to a Plugin ==
+In order to allow a Slave.esp to add new, merge ready, forms (by injection) to Master.ESM or to allow Slave.esp to reference and/or change (by override) Master.ESM native forms, Master.ESM must be included within Slave.esp‟s Master List (MAST) found within the Slave.esp‟s File Header. Master.ESM‟s inclusion in Slave.esp‟s Master List is as Slave.esp‟s key to draw from an otherwise inaccessible resource. FNVEdit is able to readily add new Master(s) to modules‟ MASTs and, when using the “Add Masters” feature, will correctly renumber the FormIDs in the module to ensure no two forms have the same FormID(s) post-reload. This can be very handy tool for mod authors as it whittles the process down to a few mouse clicks that the author can focus on other, more important things.
+In this example we showcase Saiden Storm‟s Weapon Effects mod and the taylorsd‟s Better Frag Grenade Physics mods, two excellent enhancements to Fallout: New Vegas. Here we will add the SS Weapon Effects.ESM Master file to the Better Frag Grenade Physics plug-in, so that we can add one of Saiden Storm‟s cool plasma blasts to a frag grenade for kicks! To start the action, select “Add Masters” from the context menu as shown:
+This will present the File selection menu, from which you can Check the Master file(s) that you want to add as references in the Plugin‟s header as shown:
+Managing Mod Files
+Training Manual for FNVEdit 60
+Once FNVEdit adds the Master file as a reference in the Plugin, you see results similar to the screenshot below showing the Messages Tab log-entry: Note that “SS Weapon Effects.ESM” has now been added to RealFragGrenade3.esp, making it possible to attach one of Saiden Storm‟s Weapon Effects explosions to the grenade effect in Better Frag Grenade Physics. The View Tab shows the specific entry:
+Note: If you plan to release a mod to the public, then you should ONLY do this with permission from the mod author, in this case Saiden Storm. If you wanted to use his weapon effects in a mod of your own and release it, you need permission!
+Below Elminster describes why this function is important for mod authors wanting to add Master file references to their own mods:
+Managing Mod Files
+Training Manual for FNVEdit 61
+With FormIDs it's important to realize that the FormIDs that FNVEdit shows you are NOT the ones that are actually written into the module file. The FormIDs that FNVEdit shows you are load order corrected ones, while the FormIDs in the file itself are file specific ones. FormIDs are made up of 2 parts, the first byte (2 characters) is the module index, the last 3 bytes (6 characters) are the module specific ID. Mapping from file specific to load order corrected FormIDs and back only affects the "module index" and leaves the module specific ID untouched. An example: Suppose you got a bunch of modules loaded: [00] FalloutNV.ESM ... [04] MasterA.ESM ... [10] MasterB.ESM ... [15] MasterC.ESM ... [20] Plugin.esp And let’s suppose the MAST sub record in the File Header of Plugin.esp lists: FalloutNV.ESM MasterB.ESM MasterA.ESM If you now see a record in Plugin.esp that overrides a record from FalloutNV.ESM, then you would see a FormID like 00123456 for it. In this particular case that record would also have the same (00123456) FormID inside the Plugin.esp module file. But if you have a record that overrides a record from MasterA.ESM, e.g. with a FormID like 04ABCDEF (you can see the 04 as module index matches the load order of MasterA.ESM) then it would be saved as 02ABCDEF in the Plugin.esp module file, because 02 is the index of MasterA.ESM in the list of Master files in the File Header of Plugin.esp. And an override for a record in MasterB.ESM (e.g. 10654321) would be saved as 01654321 in the Plugin.esp module file because 01 is the index of MasterB.ESM in the list of Master files in the File Header. Last but not least, a NEW record in Plugin.esp which belongs to Plugin.esp and which FNVEdit would show you e.g. as 20FEDCBA gets stored as 03FEDCBA in the file (because 03 is equal to the number of entries in the Master List, as indices into that list start at 00, 03 is one higher than the highest valid index into that list). You will also notice that it's not possible to have an override record for a record from Master3.ESM in Plugin.esp or in any other form reference such a record, because there is no way to map a load order corrected FormID of 15A1B2C3 to a file specific one that's valid in Plugin.esp. To reference a record from Master3.ESM in Plugin.esp you need to add Master3.ESM to the Master List in the File Header of Plugin.esp. But if you just go there and do that manually, then you've just added Master3.ESM with the index 03 to the file. This means that all the records that used to belong to Plugin.esp are suddenly
+Managing Mod Files
+Training Manual for FNVEdit 62
+considered override records for records from Master3.ESM and will show up with 15xxxxxx FormIDs instead of 20xxxxxx FormIDs, a real mess! If you instead use the Add Masters function, then FNVEdit will not only add then new entry into the Master List, it will also renumber all (file specific) 03xxxxxx FormIDs into 04xxxxxx FormIDs first to preserve their meaning (which is "this record belongs to this file"). There are rare cases when editing the master list directly is what you actually want. e.g. when splitting an .esp into an .ESM/.esp pair. In that case you would make a copy of the .esp, rename it to .ESM, load it alone into FNVEdit to set the ESM flag in its header, then restart FNVEdit to load both the .ESM and the .esp and modify the MAST sub record in the File Header of the .esp by adding the .ESM as last entry. After restarting FNVEdit and loading both files you will see that all records in the .esp are now considered overrides for the same records from the .ESM”
+Managing Mod Files
+Training Manual for FNVEdit 63
+== Changing Mod FormIDs ==
+There are times in which you may need to renumber the FormIDs for all records in a plug-in to avoid conflicts. This can become necessary if two plug-ins share the same FormIDs (or some of them), which can result in bad conflicts in-game. Renumbering FormIDs from will change all FormIDs of records belonging to the Mod-file (but not any override records which might be contained in that mod file) so that they start at the specified value.
+This Function is useful if you have multiple modules that you plan to update in the future, but also want to always provide a merged version (e.g. using FO3Plugin). By assigning non overlapping FormIDs to the different modules, you can make sure that no FormID reassignment of conflicting FormIDs has to take place when merging.
+To renumber the FormIDs of a Mod file, Right-click on that mod's title in the left hand panel in order to present the main context menu (A). Then select, “Renumber FormIDs from…” from the menu as shown in the screenshot below:
+When selected, the function will present a, “Start from…” window asking you what number you want to start the renumbering at as shown below.
+Managing Mod Files
+Training Manual for FNVEdit 64
+Normally a FormID is 8 characters long, with the first 2 representing the mod file‟s index and the last 6 the reference‟s specific index within that specific mod. Thus pick a number between 100000 and FFFFFF in hex:
+Once the new module specific start FormID (in hex) has been input (A) and the OK button selected (B), FNVEdit will begin changing the FormIDs and present the output in the Messages Tab as shown in the screenshot below:
+When changing the FormIDs of a huge mod like Reykjavik by Alexander Sigurðsson, the process took 3-4 minutes on a high-end computer. The results shown in the Messages Tab reveal just a few examples of FNVEdit renumbering a FormID, discovering all references to it in all mod files, and correcting the numbering to prevent conflicts.
+Note: Changing the FormIDs of an existing module will make it SaveGame incompatible and will break any other module that uses this module as Master! If you have any dependent modules, you need to have them all loaded into FNVEdit at the time you change to FormIDs so that they will all be updated accordingly.
+Managing Mod Files
+Training Manual for FNVEdit 65
+== Merging a Plugin into another Plugin or Master ==
+Many mod authors and users alike encounter the need or desire to merge modules. Many like to merge their favorite plug-ins into a single master file or multiple consolidated plugins. One anonymous modder affectionately calls their conglomerate module “[BORG].ESM (Best Of Really Great Enigmatic Super Mods)”. FNVEdit can be used to merge any number of plugins and, if used properly, will ensure that the resulting plug-in is synchronized correctly against its combined references and that the merged content will function properly.
+In this example, we‟re going to merge Enterprise.esp and KlingonVessel.esp into [BORG].ESM. Note that any number of mods can be merged in one FNVEdit session as one desires, but it is best to merge them a few at a time. Firstly, we load up FOMM and order the files to ensure [BORG].ESM is loading before the plugins it is to assimilated.
+Load order is very important when merging mods together, primarily because FNVEdit, the GECK, and the game engine are very particular regarding the numbering of Forms‟ IDs and the references to them amongst modules. It is easy to end up with multiple forms bearing the same FormID(s) when merging downward, that is, by copying records into a file loaded after the plug-in(s) to be assimilated. By merging upward, as will be demonstrated in this lab, all forms to be merged into [BORG].ESM will first be assigned new, [BORG].ESM FormIDs such that each form will invariably have a unique ID. After closing FOMM and load things up in FNVEdit, you will find the plugins are listed in the same order as you have set them up in FOMM.
+Managing Mod Files
+Training Manual for FNVEdit 66
+Once all has loaded, we must add [BORG].ESM to the master lists of Enterprise.esp and KlingonVessel.esp. R-Click Enterprise.esp in the left pane and select “Add Masters”. This will prompt a window which will allow the addition of [BORG].ESM to Enterprise.esp‟s master list as shown below:
+Repeat the process and only add [BORG].ESM to KlingonVessels.esp‟s master list. Now that both mods to be merged have [BORG].ESM as a master, we can perform the next phase of the merge.
+The FormIDs of all forms native to and to be assimilated from both Enterprise.esp and KlingonVessel.esp must be altered to allow their addition to [BORG].ESM. Since all Enterprise.esp and KlingonVessel.esp native forms begin with 02 and 03 respectively, they cannot be copied as they are into their new master. To get around this, we will inject said native forms into [BORG].ESM by assigning them new IDs starting with 01. It is important to realize that a form merely having an ID starting with 01 does not necessarily mean it is merge-ready as it might reference other forms with out of range load indexes. To proactively avoid errors while merging, it is best to change all FormIDs before copying/merging any records.
+Managing Mod Files
+Training Manual for FNVEdit 67
+While changing FormIDs, it is best to change as many at a time as possible via multi-selection of records. When doing so, all references to the records being changed will be automatically updated by FNVEdit, ensuring the inter-referential structures remain intact and that all of the puzzle pieces line up, so to speak. In the left panel, select Enterprise.esp and press „*‟ to expand all of its branches (A below).
+We‟ll work from the top down and begin with the CELL group which can, in this case, demonstrate FormID changing of multiselected records. Multiselect (Ctrl+click) both EnterpriseBridgeCELL and EnterpriseReadyRoomCELL via Ctrl+Click. Then R-Click either cell record and select “Change FormID” as shown below:
+Managing Mod Files
+Training Manual for FNVEdit 68
+Choose [BORG].ESM as the target plug-in.
+Now that the cells‟ FormIDs begin with 01, let‟s move on to their contents. Some record types, namely REFR, ACRE, ACHR, NAVM, PGRE, PIMS, and INFO, are referred to as „children‟ because they are invariably contained within „parent‟ forms such as a CELL or DIAL. Multiselect, via highlighting, all of the “Persistent” and “Temporary” cell children, R-Click them, select “Change FormID”, and select [BORG].ESM again.
+Sometimes, multiselection of records is not applicable and changing the FormID of a single record is necessary. We can demonstrate this by observing Enterprise.esp‟s Dialog Topic group as EnterpriseDIAL is the only record of its type needing a FormID change.
+In this case, we‟re going to inject the children first, then the parent. Multiselect the INFO records, then change their FormIDs in the same manner as described above. Note that those six INFO records are assigned sequential FormIDs, the last being 01001D89. Knowing there is a pattern, we can determine 01001D9A is available. R-Click EnterpriseDIAL, select “Change FormID”, then manually enter 01001D9A. The Dialog Topic group is now completely injected.
+When changing the FormID of a single record, such as EnterpriseDIAL, there are no references to the record having its FormID changed. Other records, such as StarFleetFACT, are referenced several times and must have the records referencing them manually selected upon changing FormID. R-Click StarFleetFACT, select “Change FormID”, then enter an unused [BORG].ESM ID.
+Managing Mod Files
+Training Manual for FNVEdit 69
+A window will appear in the event the form is referenced, listing the other records which reference it. In this case, all available referencing records should be updated, so R-Click and “Select All”. Now, all of the Enterprise crew reference the [BORG].ESM ready faction record.
+Any plug-in with NavMeshes will have a GECK added record, NAVI, which is the single record in the Navigational Mesh Info Map group. This record keeps track of door connections and should not be manually edited with FNVEdit, but rebuilt by the GECK instead. Note that it has been updated since we‟ve changed the FormIDs of the NavMeshes it references. For the moment, don‟t worry about merging NAVI as we‟ll get to rebuilding that record with the GECK later on.
+Managing Mod Files
+Training Manual for FNVEdit 70
+At this point of the merge, we can Multiselect everything else and change FormIDs en masse, so Multiselect the remaining 02 forms and inject them into [BORG].ESM.
+Following the same algorithm as described with Enterprise.esp, prepare KlingonVessel.esp for merge. Both files‟ structures are similar, so there shouldn‟t be any surprises.
+Managing Mod Files
+Training Manual for FNVEdit 71
+The mods are ready to merge when all FormIDs from Enterprise.esp and KlingonVessel.esp begin with 01. Make it so. Afterward, expand both mods in the left panel as shown below, highlight all groups, R-Click, select “Deep copy as override into…”, select [BORG].ESM, and assimilate away.
+After copying the new forms in, don‟t save just yet as there are a few things to check for. The „children‟ discussed earlier can sometimes end up „orphaned‟ when copied. The Cell, Dialogue Topic, and Worldspace groups can end up with such „orphans‟ if one is not careful. The GECK unceremoniously and silently deletes „orphans‟ on sight and aptly so as such records are known to cause in game issues such as crashing when, say, an orphaned reference tries to load. To ensure the assimilator remains healthy, proactively avoiding „orphaned‟ records is crucial when merging. To check [BORG].ESM for „orphans‟, select and expand the three groups mentioned above. The below pictures are „orphan‟ free.
+Managing Mod Files
+Training Manual for FNVEdit 72
+If any instances of “Children” or “World Children” are present, you have orphans which will need „fostering‟. To do so, the errant copies must first be removed, so select any “Children” or “World Children” branches and remove them. Intact versions of these records are still contained within one of the two merged files, but recopying the records will render the same result until reloading the editor. Before this reload, should it be necessary, let‟s first check the rest of the contents for any discrepancies or other anomalies.
+Upon inspection, all Enterprise.esp and KlingonVessel.esp records show as “Identical to master” but for one, GREETING "GREETING" [DIAL:000000C8]. Since both merged plugins alter this record, as does [BORG].ESM, it needs manual manipulation so the dialogue checks out. This instance isn‟t a conflict while the plugins are loaded separately, but a merged version will need all of the associated quests listed, so drag/drop them into [BORG].ESM.
+Managing Mod Files
+Training Manual for FNVEdit 73
+Once you‟ve gotten everything in order, you are ready to close FNVEdit and save your work. Since [BORG].ESM has new NavMeshes merged into it, its NAVI record will need updating by the GECK as previously mentioned. To facilitate doing so with [BORG].ESM, select its file header and hit F2 after clicking “ESM”. The ESM flag will be ticked as [BORG].ESM is, for the moment, a bona fide ESM. Untick the ESM flag.
+Managing Mod Files
+Training Manual for FNVEdit 74
+Close and save all modified plugins.
+You‟ll be left with a false-flag ESM containing all content, save any „orphans‟ which we‟ll soon address, from Enterprise.esp and KlingonVessel.esp.
+If you had „orphans‟, open all three lab plugins in FNVEdit and “Deep copy as override into…” [BORG].ESM again any groups which hadn‟t copied properly the first time and verify that the fresh copies are „fostered‟ or „parented‟. Sometimes reloading several times might be required in the event some copies end up „orphaned‟ again.
+If there are exactly zero „orphans‟, all that‟s left is the Navigational Mesh Info Map (NAVI) which we‟ll rebuild with the GECK. Albeit, the GECK cannot have a bona fide ESM as its active file, it can do so with a false-flag one such as our [BORG].ESM.
+Open [BORG].ESM in the GECK
+Save in the GECK, once it‟s fully loaded, and NAVI will have been rebuilt to include the door connections from all three plugins. To verify all went well, look for “Saving…Done!”, then close the GECK.
+Managing Mod Files
+Training Manual for FNVEdit 75
+Open up [BORG].ESM with FNVEdit and have a look at the new NAVI which should contain all of the door connections and such from the constituent plugins as well as any connections already within [BORG].ESM.
+Managing Mod Files
+Training Manual for FNVEdit 76
+After a successful merge, Enterprise.esp and KlingonVessel.esp can be deactivated or deleted in favor of [BORG].ESM. Hopefully, these plugins will prove demonstrative, but they don‟t really do anything in game, so just delete it all after the exercise if you‟ve downloaded the lab.
+Managing Mod Files
+Training Manual for FNVEdit 77
+== Converting a Plugin into a Master ==
+Converting a Plugin (esp) into a Master (ESM) file is a simple process that can be accomplished using FNVEdit in less than five minutes. The file extension of a Plugin as well as the ESM flag within its file header must be changed in order to make the transition to a bona fide Master file. The screenshot below starts the action by launching FNVEdit:
+First you need to de-select all of the mods using Right-click in the Master/Plugin Selection window (A). Then click/check just the mod your converting (B), in this example we‟re converting Antistar‟s Weapon Mod Kits plug-in into a Master file. Click “OK” (C) to load FNVEdit with just the mod being changed as shown:
+Note that Weapon Mod Kits is successfully loaded into FNVEdit (B), and that it is the only file listed aside from the Fallout: New Vegas Master files (A). You are now ready to convert the Plugin into a Master file.
+To make the conversion, all we have to do is change one flag in the File Header, which can be accessed by Left-clicking open the Weapon Mod Kits record in the Left-hand Panel. Immediately beneath name of the mod
+Managing Mod Files
+Training Manual for FNVEdit 78
+is the File Header row (A) as shown below. You will then see the File Header data printed into the View Tab (B):
+The File Header record is divided into different sub-headings and variables, including the Record Flags, Version, Author, mod Description and any Master file references that the plug-in requires. We will be changing the Record Flags variable by Right-clicking into the open space next to it (C), which will render a small context menu. You can then click, “Edit” (D) to change the values. Doing so will present a warning window as shown below:
+This window is a default/standard in FNVEdit, and exists to make sure that anytime you are about to change a mod file for the first time, you know about it. It may seem annoying to some, but often the worst conflicts between mods come from changes that a mod author did not intend to make. Simply select, “Yes” (A) to move along.
+You will next be present with a menu of available/known flags that you can select:
+Managing Mod Files
+Training Manual for FNVEdit 79
+Note that many of the flags are blank or unknown, because literally the community does not know what those flag values mean. Fortunately the flag we need is the first one on the list (A), simply Left-click it and then click, “OK” to save the flag settings.
+With that you are done! Note the File Header text is now Bold (A) indicating a change, and the Record Flags in the View Tab (C) show that the ESM flag is set (B).
+Once done with FNVEdit, you will want to change the file extension from Weapon Mod Kits.esp to Weapon Mod Kits.ESM so that the extension matches the File Header flagging. The GECK and Fallout: New Vegas don‟t really care about the file extension (ESP/ESM), what matters is that File Header flag. The Extension is for
+Managing Mod Files
+Training Manual for FNVEdit 80
+humans to keep them sorted correctly! Now all you need to do is exit FNVEdit or press, “Alt-S” and Save your new Master file as shown below:
+It is also possible to change a Plugin to a Master using just FOMM or other tools, but there is always the potential of problems with ONAM records. ONAM records are special records created that allow Master files to communicate with one-another when references need to be passed. FNVEdit ensures that as part of the conversion process, these ONAM records are built and correctly ordered. This is why it is better to make the Plugin to Master conversion using FNVEdit.
+Managing Mod Files
+Training Manual for FNVEdit 81
+== Splitting a Plugin into a Plugin/Master Pair ==
+Splitting a single Plugin (ESP) into a Master (ESM)/Plugin (ESP) pair can be useful in many situations, especially when a mod author wants to share resources from one Plugin with other Plugins. The only way to share resources between Plugins is to convert those resources into a Master file. The split is a two-part operation in which you first split the single Plugin into a duplicate Plugin and Master at the file (windows explorer) level. You then change the Flagging on one of the two duplicates to turn it into a Master, and change the flagging on the Plugin copy to make reference its new Master file. The action begins in windows explorer as shown below:
+With the mod copied, the next screenshot shows the paste:
+This will create a duplicate of the WeaponModKits.esp Plugin. This may seem a very basic part of the process to duplicate, but was done for thoroughness and for those who can‟t read English and depend on the diagrams for the process.
+Managing Mod Files
+Training Manual for FNVEdit 82
+Now we need to re-name the copy to make it our Master file version.
+You will be presented with a warning about changing the file extension, which is a common windows warning. Simply select, “Yes” when prompted. The screenshot below shows the last part of the duplication process:
+You will then be presented with the output; both a Plugin and Master file that are identical at this point. The screenshot below shows the Master (A) and Plugin (B):
+With the file duplication part done, it‟s time to launch Fallout Mod Manager (FOMM) to set our loading order for the new Master file as shown below:
+Once FOMM is loaded, find the WeaponModKits.esp (B) and WeaponModKits.ESM (A) versions of the mod in the list and ensure that both of them are Checked/Selected to load. The screenshot shows how FOMM will
+Managing Mod Files
+Training Manual for FNVEdit 83
+look when first loaded after the split, showing the ESP (B) is still checked (as it was before), while the new Master we just created is not yet checked (A) as shown below:
+Here you must also ensure that the Master (ESM) version loads Before the Plugin (ESP) version as this is a Fallout: New Vegas requirement. The recommendation is to move the Master (ESM) higher-up in the load order before all other Plugins, and load the Plugin (ESP) version of Weapon Mod Kits somewhere below the Masters. With that done, close FOMM and load FNVEdit. Your new load order with the Weapon Mod Kits.ESM loading before the Weapon Mod Kits.esp should be visible in FNVEdits as shown below:
+To load just the Master and Plugin, first Right-click in open space (A) and select, “None” from the context menu as shown above, and then check-off just the Weapon Mod Kits.esp and Weapon Mod Kits.ESM files (C), and click, “OK” to load them into FNVEdit. This will load just the two Weapon Mod Kits files and the Fallout: New Vegas Masters into FNVEdit as shown below:
+Managing Mod Files
+Training Manual for FNVEdit 84
+Note that both our Master and Plugin version of Weapon Mod Kits is loaded and ready for conversion (A). The loader confirms a successful boot-up in the Messages Tab (B), indicating we are good to go for the conversions. Next we need to set the Record Flags to ESM (or Master) as shown below:
+With the File Header block of Weapon Mod Kits.esp selected (A), Right –click in the open space next to the, “Record Flags” section (C) which will render a small context Menu. Select, “Edit” (D) from this small menu to add the ESM Master flag, which effectively converts the Plugin into a Master. Before you can proceed however, you will get a warning message from FNVEdit about changing the mod‟s contents. This is normal and provided for your protection. Simply select, “Yes” (A) to continue.
+Managing Mod Files
+Training Manual for FNVEdit 85
+The screenshot below shows you the Flags menu that is rendered:
+This, “Edit Value” menu shows you all of the known (and unknown) flags available for setting in a Fallout: New Vegas mod file for Record Flags. Many of the flags are known and can be selected, while a few still remain unknown. The only flag we care about is the, “ESM” flag (A), which you should check-off and then click, “OK” (B) to accept the new flag values.
+Once done you will be presented with the outcome as shown below, which now has the Weapon Mod Kits.esp entry and its File Header in Bold text (A) in the Left-hand Panel, indicating the change. In the Right-hand View Tab (C), the Record Flag row is now also in Bold text with the new, “ESM” flag now populated with it (B) as shown below:
+Managing Mod Files
+Training Manual for FNVEdit 86
+Next we need to add the new Master version of Weapon Mod Kits (ESM) into the Plugin version (ESP) as a Master file reference, so that the Plugin references the Master. This will allow the Plugin (ESP) to use the Master (ESM) records going forward. The screenshot below shows you the first step in the process of adding a Master reference:
+Note that we‟re changing the File Header section just as we did when adding the ESM Master flag, but this time we Right-click in the Master Files row (B), and then selecting, “Add” from the context menu.
+This will create a new, blank Master File reference in the Weapon Mod Kits Plugin that you can now assign to our new Master file as shown below (D), which we can then modify as needed. For our example we need to assign the new Master file entry to Weapon Mod Kits.esp. To make the change, simply Right-click in the open space to the right of the “MAST – Filename”, entry (B), to render a small context menu. Then select, “Edit” (C) as shown below:
+Managing Mod Files
+Training Manual for FNVEdit 87
+Clicking Edit will open a, “Edit Value” window, allowing you to type-in the name of the Master file you want to assign as the reference (A). Click, “OK” when done (B) to save the reference, which will take you back to the View Tab.
+You should use the same case that the Master file does, in this case, “WeaponModKits.ESM” to ensure that there are no conflicts. And with that we‟re done! Note that the WeaponModKits.ESM is listed next to the, “MAST – Filename” entry (B), and that the File Header also has Bold text (A) indicating the change as shown below:
+Managing Mod Files
+Training Manual for FNVEdit 88
+And for the final step, you need to save the changes. Use, “Alt-S” or close FNVEdit to present the Save Files window as shown below:
+With this, you now have a Master/Plugin version of Weapon Mod Kits, and the process works exactly the same for any mod that you want to split. You can change the esp file extension to ESM, then open and save it with the GECK and it will tick the ESM flag on, but won't produce ONAM's like FNVEdit will which are needed for any overrides to FalloutNV.ESM's references. Unless your Plugin has no CELL and/or WRLD group, you're better off using FNVEdit.
+Note: An .esp can be the Master of another .esp.
+Note: If you have a Plugin with multiple Masters, you'll have to edit your GeckCustom.ini "bAllowMultipleMasterLoads=1"
+Note: The GECK won't edit .ESM's, so you have to ESP'ify, edit in GECK, then ESM'ify.
+Managing Mod Files
+Training Manual for FNVEdit 89
+== Comparing Two Versions of a Mod ==
+One of the common tasks that mod authors face is to compare two versions of their own mods, either during construction or in subsequent updates. There are also times when mod authors encounter difficult to solve problems with a new version of a mod, and need to revert back to a previous backup. The FNVEdit compare function can provide a valuable and convenient way of copying data from one version of a mod to another, without having to sort through records that don‟t belong to their mods. Whatever the case may be, this section is devoted to teaching you how to compare two versions of a mod file, and how to copy records over if the need arises.
+For this section we feature Quarn‟s Unofficial Fallout: New Vegas Patch, which has helped to resolve countless bugs in Fallout: New Vegas and has improved the gaming experience for thousands of modders. To start the action, launch FNVEdit and select One of the two mod files that you wish to compare as shown below:
+As shown above, by Right-clicking in open-space in the Master/Plugin selection window (A), you will render the selection menu (B) where you can, “Select None”. Doing so will uncheck everything on the list. Then select just One of the two mods (C) and Click “OK” to load it (D). The screenshot below shows the result:
+Here we have just One of the two mod files loaded along with the Fallout: New Vegas Master files it depends on. We will need to hide these Master files from view so that we are Only looking at the mod file that we want to compare.
+Managing Mod Files
+Training Manual for FNVEdit 90
+To hide the Master file references from view, we need to select each one of them in-turn with a Right-mouse click (A), which will present the main context menu. There you can select, “Hidden” (B), which is the last option on the list as shown below:
+You won‟t see any outward-change in the in the FNVEdit view afterwards, but you can confirm that they are marked as hidden by Right-clicking on them again – you will see a Check-mark next to, “Hidden” menu option indicating that they are hidden (from filters).
+Next we need to load the other version of the Unofficial Fallout: New Vegas Patch mod file we‟re comparing (the new/current version). You can do this by Right-clicking on the loaded-version of the mod (A), which will present the main context menu. Select, “Compare to…” from the context menu (B) as shown below:
+Managing Mod Files
+Training Manual for FNVEdit 91
+Selecting “Compare To” will present the, “Open” window as shown below, where you can select the current version of Unofficial Fallout: New Vegas Patch (A), and then, “Open” (B) to load it into FNVEdit as shown below:
+The “Compare To” version of the mod is loaded as read-only into FNVEdit, so you will not be able to make any changes to it, but you can copy from it into the version of Unofficial Fallout: New Vegas Patch that we loaded into FNVEdit at boot time. You can change the order and load either/any version of the mod first, so that you can edit/copy records into whatever version you loaded.
+Once the Compare To function loads the other version of the mod as read-only into FNVEdit, you will see a view similar to the one below. Note the two versions that appear together in the Left-hand panel (A), and no errors noted in the Messages Tab (B):
+With both versions of the mod now loaded with the Compare To function, the last step is to apply a Filter to find the changed records between them. Note that with the Fallout: New Vegas Master files now listed as, “Hidden”, they will not show up at all after we apply the filter – which is exactly what we want.
+Managing Mod Files
+Training Manual for FNVEdit 92
+To apply a filter, right-click in the open-space (A) within the left panel to render the main context menu. Click, “Apply Filter” (B) to open up the Filter menu as shown below:
+The main Filter window will render, where you can select the Mod Comparison Filter Settings as shown in the screenshot below:
+Selecting the, “By conflict status for this particular record” (A), “Identical to Master” (B), “Override without Conflict” (C) and “Conflict status inherited by Parent” (D) sets the Mod Comparison Filters. You can then select, “Filter” (E) to apply the filter.
+Managing Mod Files
+Training Manual for FNVEdit 93
+The Mod Comparison Filter should process quite quickly in most cases, unless you‟re working with a very large mod file. The screenshot below highlights the status bar, which will tell you how far along the filter operation are towards completion:
+Once done, the screenshot below illustrates the result. Both versions of the mod (at the top level) have Yellow backgrounds in the Left-Side Panel (A), indicating that they are not identical (of course). In the Message Tab we see that now errors were encountered by the Filter (B), along with some statistics:
+Opening one of the mods in the Left-Side Panel and selecting a record highlights the similarities where they are identical between the two mods with Green backgrounds (A) and records that are different with Yellow backgrounds (B).
+Managing Mod Files
+Training Manual for FNVEdit 94
+At this point we are done with the comparison. You can browse through the Unofficial Fallout: New Vegas Patch records between the new and old versions, and compare the differences at will. If you don‟t need to make changes, you can simply close FNVEdit when done.
+If however there is a need to copy records from one version of the mod to the other, the process below will guide you through the steps. There are a few limitations to be aware of, such as you can‟t drag-n-drop records from the version you loaded at boot time into the version you loaded with the “Compare To” function, but you can still copy from that version as shown below:
+Here we Left-click-and-hold the record we want to copy with the mouse (A), and drag it horizontally to the mod we loaded when FNVEdit booted-up (B). Dropping the record into the row will copy that record (and all of its attributers) into the other mod. The screenshot below shows the results, with both sides now identical (A) and the background of both now Green (B) indicating they are indeed duplicates:
+Managing Mod Files
+Training Manual for FNVEdit 95
+The screenshot below illustrates how FNVEdit will prevent you from drag-n-dropping records from the loaded version of Unofficial Fallout: New Vegas Patch into the “Compare To” version (which is loaded read-only). Note how when trying the drag-n-drop, you get a blocked-circle (B), indicating that you can‟t drop records into the read-only version:
+When you‟re done making changes, you‟ll need to save them. You can either close FNVEdit or press, “Alt-S” to render the Save Changed Files window:
+With that, we‟re done with mod comparisons and updates! Of course you should not change the Unofficial Fallout: New Vegas Patch as that is for Quarn to do, but there is no harm in experimenting with the mods to learn the process (just make sure to have a backup of the files before you do!).
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 96
+= Transferring Mods from Fallout 3 to Fallout: New Vegas =
+The process of transferring mods from Fallout 3 to Fallout: New Vegas is not only possible, it is simple in most cases and can be done within 5 to 60 minutes depending on how many Fallout 3-only references you have in your mod. An analysis on the number of assets that were used in both Fallout 3 and Fallout: New Vegas revealed that 32.7% of all modable Fallout 3 models were transferred to Fallout: New Vegas and are present in both games. In practical terms when considering the number of kit-sets that were transferred, the percentage of assets present in both games is much higher. This is very good news for level designers and mods that contain generic (non-Fallout 3-specific content) models in our mods. If your mod doesn‟t place models/objects anywhere, you don‟t have to worry about any of these percentages.
+For those modders that did create levels/cells/places using Fallout 3 content, this means that a percentage of the models we used will not transfer when we port the mod to New Vegas. This process will help you to identify those Fallout 3-only assets, and how to assign placeholder objects for the transfer to New Vegas. Lastly we describe how to use the NV-GECK to replace those placeholder objects with shiny, new Fallout: New Vegas assets that have the same 3D location as the original Fallout 3 objects had. For some modders you may not care about going through the trouble of assigning placeholders to preserve the 3D orientation/location of the object, and we‟ll show those folks what steps to skip and which are important to the basic transfer operation.
+The resulting New Vegas mod will contain only content present in Fallout: New Vegas, and will thus be a legal mod that can be uploaded to Nexus and supported by the community.  And so it is Very clear:
+It is ILLEGAL to use Fallout 3-only assets in Fallout: New Vegas mods, unless those assets exist in both games! If you violate this rule, others will point it out! Your mod will be pulled from Nexus and you will be publically shamed for being an idiot!
+Respect the companies (Bethesda and Obsidian) that support our very ability to mod their games, and do not use Fallout 3-only assets in your New Vegas mods! Please play by the rules and don‟t spoil it for the rest of us! Now on with the show, the process for legally transferring Fallout 3 mods to Fallout: New Vegas starts below. We‟ll use “MyHouse.esp” as our example plug-in:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 97
+Step 1 will be to make a copy of your mod using windows explorer, which you may need as a reference and because it‟s always smart to make backups! Open windows explorer and navigate to your Fallout 3\data\ directory. Then select you‟re your mod and use Control+C then Control+V to make a copy:
+With our copy/backup made, Step 2 involves adding “NV” to the name of the mod, which you can choose to avoid if you wish. I prefer adding “NV” to the mod name to avoid confusion, but you don‟t have to.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 98
+In Step 3 we need to launch Fo3Edit (the Fallout 3 version), and load our mod-to-be-transferred. When Fo3Edit loads, make sure that Fallout3.esm and your plug-in are the only two checked, then click “OK”.
+For Step 4, expand the navigation tree for your mod by clicking on the + (“plus”) sign, and then left-clicking the “File Header” entry. This will reveal the mod‟s header data, including its master file entries as shown below. Our goal is to change the “MAST – Filename” entry from Fallout3.esm to FalloutNV.esm:
+You may receive the traditional warning about editing a mod file (illustrated below); simply select “Yes” when allowed to.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 99
+In Step 5 you will now be presented with the “Edit Value” window, where you can change Fallout3 to FalloutNV, and click “OK” to proceed:
+As shown in the screenshot below, this will change the Master file entry to FalloutNV.esm:
+Step 6: Close Fo3Edit by clicking on the “X” in the upper-right corner, after which you will be prompted to Save your changes to the mod file. Make sure your mod is checked as shown below, and click “OK”.
+Note: NOTE: Once you change the master file to FalloutNV.esm, the mod will no longer load correctly in the Fo3 GECK, Fo3Edit or the Fallout 3 game! This is why it is critical to make a backup first!
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 100
+Step 7: Move the mod file into the Fallout New Vegas directory\data\ directory where it will live, usually located in your Steam directory structure as shown below. One convenient way of moving the file is to select it in explorer and hit Control+X, then left-click on the Fallout New Vegas\data\ directory and hit Control-V.
+This will move the file as opposed to copying it, as our modified version of the mod file will no longer work in Fallout 3 and its best not to have copies of it languishing in the Fallout 3\data\ directory! However you choose to move or copy the file is of course your choice. 
+At this point there are several options as to what you can do to complete the transfer depending on the kind of mod your moving. I provide 2 jump-off points below for you to consider:
+1. If your mod doesn‟t contain cells/levels/areas of objects (like a player house), or your either confident that no references are missing or don‟t care if some references are lost, then click here for the: Quick Finish for New Vegas Mod Transfer.
+2. If your mod does contain cells/levels/areas and/or you want to ensure that no references are lost, then click here for the Complete New Vegas Transfer Process.
+Both paths are viable and will result in a legal Fallout: New Vegas mod. The only warnings I feel compelled to provide is this:
+A. If your mod has Fallout 3 references/objects that are not also in Fallout: New Vegas, then the quick finish will strip your mod of these references and you‟ll have to place new ones in the NV-GECK.
+B. If your mod has many Fallout 3 references/objects that are not also in Fallout: New Vegas, then the quick path may not work (the NV-GECK will crash if there are too many missing references).
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 101
+== Quick Finish for New Vegas Mod Transfer ==
+The quick finish to the transfer process is entirely due to Bethesda and Obsidian, and to the way in which they designed the GECK. I say this because when the GECK loads your mod, it is capable/able to avoid missing references and problems and still load your mod (even though not everything will work right for some reference types that have changed). Then when you Save, the GECK re-writes your mod file to disk reference-by-reference, it‟s a complete write in which the GECK re-evaluates everything and saves a properly formatted New Vegas mod to disk. It really is a wonderful gift, and we should all be thankful that they made it this easy.
+Step 8: Once done you can re-launch the NV-GECK and start making changes. Again remember that some references may not work the same as they did in Fallout 3, and you should re-test everything in your mod to make sure that nothing important got omitted or changed in a way you didn‟t anticipate. For most form types the transfer process works flawlessly. Launch the NV-GECK and load your plug-in as the Active file:
+Say “Yes to All” to any errors you see. If the GECK finishes loading your mod without crashing, you‟re in good shape. If it crashes, you need to use the complete process; Complete New Vegas Transfer Process.
+Step 9: For mods that load without crashing the NV-GECK, simply click “Save” and close the NV-GECK as shown below to complete the transfer operation:
+That‟s it! You can now re-launch the NV-GECK and take a look to see what transferred well and what might need some work. You can also launch it with the Fallout: New Vegas game and begin testing! The NV-GECK now automatically strips-out any missing references, which is handy as it ensures that your mod contains only Fallout: New Vegas assets and is thus legal for upload to Nexus. And as a final warning:
+Note: Do not add Fallout3-only assets to Fallout: New Vegas mods! You will be caught and the mod taken down. It is neither legal nor honorable, so keep it clean for the benefit of everyone in the community. Thanks. 
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 102
+== Complete New Vegas Transfer Process ==
+The complete transfer process will take you through the steps of checking your mod for missing references that are not in Fallout: New Vegas, and offer a method of preserving their location/orientation in your mod by using placeholders. It will also show you how to spot these missing references, and how to look them up in Fo3Edit so that you can see what they were and make decisions on how to move forward. There are two methods of dealing with missing references (or objects/things in your Fallout 3 mod that are Not in Fallout: New Vegas):
+1. Replace the missing references using FNVEdit and placeholders to preserve the location/orientation of these references, and then and Fallout: New Vegas objects in the NV-GECK.
+2. Replace those Fallout3-only references in the Fallout3-GECK with a reference/object that is also present in Fallout: New Vegas. In this manner your mod will transfer without missing any references, and you then replace those with New Vegas objects in the NV-GECK after the transfer.
+Both of these methods are described in this process, which will allow you to decide how you want to proceed in the transfer.
+Step 10: starts the process with launching Fo3Edit, and selecting the copy of your mod and Fallout3.esm as shown:
+We load Fo3Edit with the Fallout3-copy of your mod to use as a reference, so that we can lookup references that show as missing.
+Step 11: Next launch FNVEdit and load you‟re new/modified New Vegas plug-in, which should show up if you copied the mod into the Fallout New Vegas\data\ directory. The screenshot below shows an example:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 103
+Step 12: With both Fo3Edit and FNVEdit loaded with copies of your mod, we start by checking the FNVEdit version for errors. As we have not yet loaded the mod into the NV-GECK, any missing references will be called-out when you do this, and allow you the option of how to handle it. To check for errors, Right-Click your mod in FNVEdit and select “Check for Errors” as shown below:
+The checking for error process may take several seconds depending on the size of your mod. Any errors found will be displayed in the Messages tab of the Right-hand pane as demonstrated below. There may be several different kinds of errors displayed, but only the type indicated below are the missing references that you need to worry about replacing. Other errors will be resolved by the NV-GECK when you load and save the mod later on. The screenshot below gives you several examples of what these errors look like:
+If you don‟t see any of the “<Error: Could not be resolved>” errors, that means your mod doesn‟t contain any Fallout 3-only assets! At this point you can proceed to the Quick process for transferring your mod to New Vegas: Quick Finish for New Vegas Mod Transfer. Otherwise you should precede forward soldier!
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 104
+To illustrate the missing references, you can expand the Cell tree in FNVEdit by Left-Clicking on “Cell” and typing “*” (asterisk). This will expand all levels of the Cell tree and allow you to examine each “Placed Object” as shown in the example screenshot below:
+Step 13: Back in the Messages Tab, we can start to copy/paste the FormIDs of the missing records into Notepad or another storage place. If you have just a few missing references, you can work on the one-by-one. If you have half a dozen or more, it will likely be easier to work on them as a group – the choice is yours. I recommend working on at least one missing reference first and see how it goes as instructed below:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 105
+Step 14: Now you can Paste each of the missing FormIDs into the copy of Fo3Edit that you launched earlier (Or you can launch Fo3Edit again if you don‟t have it up, and load the Copy/Backup (Fallout3 version) of your mod now). Paste one of the missing FormIDs into the “FormID” window as shown below. This will find that reference and show it to you in the View Tab in the Right Pane:
+As we can see in the example above, the “ForgeDoorExterior” object reference was not carried forward from Fallout3 to Fallout: New Vegas, and is thus not present in FalloutNV.esm. You can do this with each missing FormID (copying from error message in FNVEdit, pasting into Fo3Edits FormID window) to see what they are.
+Next it will be time to make some choices about what to do with the missing references. There are 3 options:
+1. “Wack that sucker” (Delete the offending references).
+2. “Forget that crap, I‟ll fix it first!” (Replacing it in Fo3-GECK before transfer).
+3. “Slap in a shim” (Use a placeholder and fix it in the NV-GECK after transfer).
+If you don‟t want to deal with any of the missing references and want them All too just GO AWAY, then simply proceed to the quick process for transfer by clicking here: Quick Finish for New Vegas Mod Transfer. If there are some references that you care about and some that you don‟t care about precede forward soldier!
+Note: You can simply forget about the object references that you want to delete, as the NV-GECK will wack em like a gangster with a Tommy Gun when you load it up and save the mod for the first time. :gun:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 106
+Options #2: If you wish to use the Fo3-GECK to fix the missing references before transferring the mod to New Vegas (pros only), you will need to replace the missing references with an object that is present in both games. This will allow them to transfer to New Vegas cleanly and without errors. If this is your choice then:
+1. Use the procedure outlined above in Steps 13 and 14 to make a list of all the FormIDs that you will need to replace in Notepad++ (or equivalent).
+2. Launch the Fo3GECK and replace those forms with an object present in both games, after which you can re-start the mod transfer process.
+You can use the shared asset analysis for a list of objects present in both games to find a suitable replacement, or you can launch both the Fo3GECK and NVGECK at the same time and switch between them to find common FormIDs. Once your done fixing references in the Fo3GECK save the mod and start the transfer process again. Stop here, and get to work soldier!
+Option #3: If however you want to fix the missing references in the NV-GECK after transferring the mod to New Vegas (which is my recommendation), then proceed with Step 15 below.
+Step 15: We will be inserting placeholder objects for all of the missing references, so that they will transfer to New Vegas cleanly and give us placeholders in the NV-GECK with exactly the same location/orientation as the original Fallout3 objects.
+In our example mod we have two missing form types; two copies of the same door (ForgeDoorExterior) and a sign (MetroSignFriendship). Neither of these objects references exists in Fallout: New Vegas. To replace them with shims, we‟ll start with the missing doors. Right-Click on the mod and select “Add” then “Door” as shown:
+Note: Note: If you don‟t know what type of form to insert, choose “MISC – Misc Object”. It‟s just a shim!
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 107
+Step 16: This step may or may not be necessary for your mod. If this is the first door reference for the mod, then Step 15 will create the top level door category as shown circled near “A” below. If however you already had doors in your mod, then you will already have a top level “Door” category and you should skip to Step 17.
+If however this was the first door-type objects in the mod (which is the case in our example), then you will need to add the door reference again to create an actual individual door. Right-Click on the Door root category as shown below in Step a, then select “Add” and “Door”:
+Step 17: As a result of Step 15 (if you had a door root category already) or Step 16 (if you didn‟t), you will be presented with a New FormID window. Here you can determine what the new FormID will be, which must be unique from all other FormIDs in your mod and FalloutNV.esm.
+FNVEdit will pre-populate the field with the next available FormID in your mod, which we will want to change to the FormID we copied from Step 13/14 (from your list of missing FormIDs). Using the missing FormIDs from the Error messages in Step 13 has the advantage of replacing all instances of those references at one stroke without you having to hunt through each cell to find them. The example FormID below is for our missing doors:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 108
+Note the result shown below; the new door placeholder has been inserted into your mod with the FormID of the missing reference from the Fallout 3 version. The placeholder doesn‟t have an EditorID (common name) yet, nor a 3D model assigned. We will cover both of those steps next and turn this into a valid placeholder that you can work with in the NV-GECK.
+You will also notice the injection notice in the Messages Tab, indicating that this form “was injected into FalloutNV.esm”. As a placeholder item only, this is Okay and does not actually change your FalloutNV.esm in any way, shape or form! The message is simply warning you that this FormID lives in the same range as the rest of the FalloutNV.esm objects. We will delete it in NV-GECK once we find a real object for it later on.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 109
+Step 18: Changing the EditorID of our placeholder object that we can use in the NV-GECK later on. One recommendation is to take the FormID of the original Fallout3 object and add a “ph” at the front (for Place Holder). That way when you load the mod into the NV-GECK, the placeholders will all have names close to the original Fallout3 object, and also so that you can find all the placeholders later on by simply putting “ph” into the Object filter window. In our example, “ForgeDoorExterior” would get an EditorID of “plForgeDoorExterior”.
+To change the EditorID, Right-Click on the EDID row in the View Tab (A) to render the editing window and select “Edit” (B) to spawn the Edit Value window:
+With the Edit Value window loaded, you can input the new EditorID and click “OK” as shown below:
+As you can see from the resulting screenshot below, our placeholder door now has an EditorID (A, B):
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 110
+If you open-up the Cell view by Left-Clicking it and pressing “*” (asterisks), you will note that both occurrences of our missing door reference have been replaced with our placeholder objects:
+Step 19: The last step for each placeholder is to assign a model to that placeholder so that you can see it in the NV-GECK, select it with your mouse and thus replace them with New Vegas objects. To do this we first need to tell FNVEdit that this object has a model. To do this, Right-Clicking on the “Model” row of the View Tab (A) to spawn the editing window and select, “Add” (B) to create the model reference:
+Note: Note: We‟re changing the model on the missing Sign in this example; it works the same for the door and all other placeholder objects that you may need to add.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 111
+Step 20: Next we will assign a specific 3d model to the placeholder entry by Right-Clicking the “MODL – Model Filename” entry (A) and selecting “Edit” from the editor window (B) as shown below:
+This will spawn the Edit Value window (below) into which you can enter a model filename. I recommend using the common Ashtray model for your placeholder items, as it‟s easy to see in the GECK and has a short path/filename that is easy to remember. As shown below we need to enter the path and the filename together, which in this case is “clutter\ashtray\ashtray01.nif”. You can cut-and-paste into each placeholder you make:
+The result is shown in the screenshot below, which is a completed placeholder with EditorID and model:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 112
+Rinse-and-Repeat: Assuming you have a list of missing reference FormIDs from Steps 13 and 14, you will need to repeat Steps 15-20 for at least 1 instance of each missing FormID.
+Step 15: Inserting a placeholder object for the missing reference (Right-Click mod, Add -> Type).
+Step 16: Repeating Step 15 if no top-level category existed.
+Step 17: Copy/Paste the missing FormID from your Step 13/14 list of missing FormIDs.
+Step 18: Change the EditorID of the placeholder object (Right-Click EditorID, Edit, and Add “pl” to name).
+Step 19: Add a model reference to the placeholder object (Right-Click Model, Add).
+Step 20: Assign “clutter\ashtray\ashtray.nif” as the model name (Right-Click MODL, Edit, Copy/Paste).
+Note: Remember, if you have multiple copies of the same missing FormID (like in our example where we had two copies of the ForgeDoorExterior), you only need to create the placeholder for it once. FNVEdit will update all other instances for you.
+Step 21: Save your work and exit FNVEdit! You can do this simply by closing FNVEdit, after which you will be prompted with the Save changed files window as shown below. Make sure your mod is Checked as shown and click “OK”.
+Step 22: Great Job! With that done, you have completed the hard part of the complete transfer process and are ready to conduct a final error check to make sure you didn‟t miss anything, and it will be time to fire up the NV-GECK. To run a final test on checking for errors, simply re-launch FNVEdit and re-load your NV mod:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 113
+Step 23: Once FNVEdit is done loading your mod, run the error check again by Right-Clicking on your mod (A) and selecting “Check for Errors” (B) from the context menu:
+If you have replaced all of the missing FormIDs, then your error check should either come up totally clean (showing no errors) OR you may still see some errors, but none of the “<Error: Could not be resolved>” types. The example screenshot below shows no errors found, which will be the common outcome. As long as you don‟t have any “<Error: Could not be resolved>” errors, your good to go. If you do, go back to Steps 13-20 and replace those missing errors.
+This outcome shows that we are ready to complete the transfer by loading our mod in the NV-GECK! Yay!
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 114
+Step 24: Launch the NV-GECK!
+Now load your mod by double-clicking it, and then clicking “Set as Active File”. Note that the Parent Masters listed for the mod is FalloutNV.esm, which is correct. Clicking OK will load your mod. Make sure to select, “Yes” to all errors:
+If however your mod crashes when you try loading it in the NV-GECK and you still don‟t have any “<Error: Could not be resolved>” errors, then proceed to the “delete offending references” section by clicking on:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 115
+Deleting Offending References.
+Step 25: If your mod is successfully loaded into the NV-GECK, all you need to do is Save your mod and Exit!
+Congratulations!! You have successfully transferred your mod to Fallout New Vegas. You‟re not quite done with the overall process as we still have to replace our placeholders, but you‟ve taken a big step!
+Step 26: First re-launch the NV-GECK and re-load your mod as the Active file. This time when you load the mod, you should not see any errors listed. This is because when you loaded and saved the mod in Steps 24 and 25, any remaining missing references or errored-forms will have been either removed or fixed by the NV-GECK during the Save operation. If you do have errors when loading the mod into the NV-GECK the second time, you will want to note these as they will each need attention.
+Step 27: Once your mod is loaded in the NV-GECK, double-click on one of your cells to load it into the render window, as we have with our house mod in the example below. Note our ashtray placeholders ready and waiting for us:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 116
+The important aspect of these placeholders is that they have retained the exactly location and orientation of the original Fallout 3 object, which will be very handy in a lot of cases as placing objects in specific spots is often a time consuming aspect of level design. Using our placeholder method, don‟t have to redo any of that – we just need to replace the placeholders with real New Vegas objects.
+Step 28: Replacing placeholder objects. Select one of the placeholder objects in your cell by Left-Clicking it (A), and type Control+F to spawn the Search & Replace window. In the example screenshot below we start with replacing the sign placeholder (which had been MetroSignFriendship in the Fallout 3 version).
+Note the EditorID name in the Search For window (C), “phMetroSignFriendship”, and use the Replace With (D) to find a suitable New Vegas object to replace the placeholder with. In our example I‟ll choose “TheTopsSign01” as it‟s unique to New Vegas and will look cool in my player house:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 117
+Note the result below, in which the Tops sign was very much larger than the Friendship Metro sign. I showed this as an example of what can happen, which is easily fixable by adjusting the scale of the Tops sign down to about 20% of normal.
+Step 29: Once the scale of the Tops sign is adjusted to 20%, it looks quite nice in the corner now. Lastly we can multi-select the door placeholder objects by holding down Control and Left-Clicking each of the placeholder ashtrays (A, B).
+Once multi-selected simply press Control+F to spawn the Search and Replace window as before (C), where you can find a suitable door in the “Replace With” window (D). In our example we‟ll use the IndDoorSmAnim01 door, which uses exactly the same model as the Fallout 3 “ForgeDoorExterior”, but you won‟t always get that lucky. You can use the “Preview” feature in the Object Window to find suitable replacements.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 118
+The result of our two replacements is shown below, which looks like a normal Fallout New Vegas cell that is very close to the Fallout 3 version.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 119
+Note: Object references that get replaced may need to be further modified, such as doors which will need to be re-linked to their counterparts in other cells.
+Note: Rinse and Repeat: You will need to replace all of the placeholder objects in your mod using Steps 28 and 29, which can take some time depending on how many placeholder objects you have.
+The resulting mod is ready for clean-up and saving!
+Step 30: Deleting placeholder references. The last step is to delete the placeholders, which are no longer needed. You can do this most simply by typing “ph” into the Filter Window (A) and find the placeholder entries
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 120
+in the Editor ID window (B). Then multi-select the placeholder items and either press delete or Right-Click them and select “Delete” (D). This will wipe them out of your New Vegas mod.
+Step 31: Now it‟s time to make the final save! Simply click the Save icon again and close the NV-GECK:
+You can now load your Fallout: New Vegas mod and check it out in-game! You have successfully and legally transferred your mod from Fallout 3 to Fallout: New Vegas. Congratulations!
+If there are ways in which I could improve this process, please let me know by PMing me as Miaximus on the Bethesda Softworks forums. Thanks!
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 121
+== Deleting Offending References ==
+Some mods have some many errors in them that the NV-GECK crashes when trying to load them up. This happened to my own big mod (Skyhaven Airport), which had 2,228 missing references and other errors when checking for errors in FNVEdit! The NV-GECK crashed violently when trying to load a mod with that many errors. Like so many of us, there is a limit to how much garbage that the GECK can swallow without vomiting.
+If your mod is suffering this fate, there is hope! You can mass-delete the offending references from your mod with FNVEdit, or delete enough of them to so that the NV-GECK can take it without vomiting all over your computer (it‟s gross!). I don‟t know what that limit or number is, you may need to experiment if you want to delete some but not all of the offending errors. Below are some examples of the kinds of errors you may encounter, from background loader errors to errors you get when Checking for Errors:
+Note that the process of Checking for Errors can take a bit depending on how many errors you have and how large the mod file is. You can track the progress by watching the top menu bar:
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 122
+The samples below are all of different types of errors that you might encounter when Checking for Errors in FNVEdit:
+Most of these error types will be cleaned-up by the NV-GECK, but missing references and “Could not be resolved” references will cause problems in large numbers. There is also a common critical error regarding the wasteland that many mods will face.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 123
+The short process below will step you through cleaning your mod of all of these offending references.
+Step 1: We‟ll start with the most common, critical error that mod files will face when transferring to New Vegas; having references to the DC Wasteland world space. You can check by clicking-open the “Worldspace” record type in your mod (if you have one), and looking through the list of worldspaces included. If the DC Wasteland exists in your mod, you will see it listed and italicized as shown in the example below (A).
+As shown you will need to remove this entire entry from the mod file by Right-Clicking on the Wasteland record (A) and selecting “Remove” from the context menu (B). You will receive a warning message similar to the one shown below, which you should select “Yes” to:
+This will strip the entire wasteland out of your mod, and solve that critical issue. If you had this problem then I recommend saving and exiting FNVEdit at this point, and trying your mod in the NV-GECK again. Trust me, the NV-GECK will be a lot happier with you this time, as it wants nothing to do with the DC Wasteland worldspace.
+If you still have crash problems with the NV-GECK, proceed to the next step.
+Transferring Mods from Fallout 3 to Fallout: New Vegas
+Training Manual for FNVEdit 124
+If you‟ve reached this point and your mod still causes the NV-GECK to crash, then you may have no other choice but to mass-delete all of the missing references from your mod file. You can do this in FNVEdit by simply expanding each record type by Left-Clicking on them, pressing “*” (asterisk) to expand the tree and finally clicking the “Name” column (B) to sort the records. As shown below, you will then see the errored references grouped together (C):
+Simply multi-select “Could not be resolved” references and press Delete to wack them out of the mod. You will need to do this for every record heading in your mod, especially the Cell and Wordlspace types. This may take you some time, but when done you should have no instances of <Error: Could not be resolved> present in your mod.
+Close FNVEdit when done and Save your work. Then re-launch the NV-GECK and try loading your mod file again. This time you should have more success assuming you removed enough (or all) of the errored references. In my testing I have found that the NV-GECK is “wasteland-hardy”, and will ingest a ton of shit before racing for the toilet. This is good for us, as you have an excellent chance of the NV-GECK loading your mod if you remove enough of the offending references.
+If the NV-GECK still crashes when trying to load your mod, trying posting a message in the Bethesda GECK forum for help, and include as many details as possible (a link to your mod file on FileShare or equivalent is always helpful). Good luck!
+Mod Utilities
+Training Manual for FNVEdit 125
+= Mod Utilities =
+== Overview ==
+The mod utilities are a collection of functions that have been added to FNVEdit over the years for both Oblivion and Fallout: New Vegas that can aid mod authors in several areas. The next sections review these functions and describe how to utilize them.
+== Building Reference Information ==
+Building reference information is a common task that is often performed behind the scenes by FNVEdit, and essentially finds all instances of a “Thing” in the game. Be it a script, NPC or a toilet, the build reference info function will show you all of them across the mod files loaded into FNVEdit. In this section we feature Xodarap‟s Fallout Overhaul (XFO) mod, which is known as one of the bigger, stable mods that changes that make your gaming experience much more challenging and immersive (I use this myself, so I had to feature Xodaraps fine work!)
+For our example of building reference information, there are a couple of choices to consider; If you are trying to find All instances of that Thing, then load all of the mod files when loading FNVEdit. If however you are looking for instances of a Thing in a single mod-file, then you‟ll only want to load that mod-file as shown in the screenshot below:
+Here we start the action by Right-clicking in the open white-space of the Master/Plugin Selection window (A) which presents a small context menu. From this menu choose, “Select None” (B) to clear all check marks. Then you can select just the XFO mod we want to load (C) and click, “OK” to bring it up into FNVEdit.
+Once FNVEdit is loaded, you will be presented with a screenshot similar to that below. There you can see the three mods loaded, the XFO stand-alone version and its two Masters. To build reference information, Right-
+Mod Utilities
+Training Manual for FNVEdit 126
+click on the XFO entry in the Left-side Panel (A) which will present the main context menu. Select, “Build Reference Info” (B) from this menu as shown below:
+This will present you with a new window for, “Building reference information”, where you can select the Master files or other mod files that you want to build reference information for (A). If you are looking through all mod files, make sure that you select everything (you can also use the Right-click, “Select None” method to quickly check them all:
+This process can take some time depending on how many mods you are building reference information for. Fortunately there is a status indicator in the top window (A) that shows you the time elapsed during parsing as shown below:
+Mod Utilities
+Training Manual for FNVEdit 127
+Note how there is a new Tab at the bottom the Referenced By Tab, which displays the output of our reference check. As shown above, the Messages Tab shows the overall outcome of the function, while the screenshot below shows you the Referenced By Tab and its output.
+In this case we Left-clicked on the Drink Toilet record in XFO, and can see very instance of the toilet in the Referenced By Tab. Each row in the output shows you extensive information about the reference, the cell it‟s placed in, the name of the location, and its FormID, etc. You can run this function for any time in any mod that you wish!
+Mod Utilities
+Training Manual for FNVEdit 128
+== Building Reachable Information ==
+For our example of building reference information, there are a couple of choices to consider; If you are trying to find All instances of that Thing, then load all of the mod files when loading FNVEdit. If however you are looking for instances of a Thing in a single mod-file, then you‟ll only want to load that mod-file instead of the entire list. Some important notes about the "Build Reachable Info" function
+After you've run that function, you'll see that some records are displayed stricken-through. These records are considered to be "not reachable".
+There are some limits to this. The "not reachable" classification is only true if you:
+ Start a new game with exactly the mods you've currently loaded.
+ Do not use the console in any way.
+ There are no FOSE scripts involved that use some dirty tricks to get hold of a reference to something without that something showing up in the SCRO's of the script.
+Also the meaning of "reachable" is sometimes a bit gray. For example; For Activator's, Statics, Weapons, Armor, and so on “reachable” means that the player character should be able to get somewhere from where he can see the object and/or somehow get it into his inventory. For Quests it means that the quest either starts enabled or that there is probably some way how it can become enabled or at least that somewhere the variables belonging to the quest script get accessed. For DIAL's and INFO's it means that it's probably possible to select the topic somewhere or hear the response somewhere. For CELL's and WRLD's it means that the player character is probably somehow able to enter it.
+Start the action by right clicking in the open white space of the Master/Plugin Selection window (A), which will present a small context menu. From this menu choose, “Select None” (B) to clear all check marks. Then you can select just the XFO mod we want to load (C) and click, “OK” to bring it up into FNVEdit as shown below:
+Once loaded, Right-click on the mod to build reachable info for (A) to render the main context menu. Select, “Build reachable info” from the menu to run the function as shown below:
+Mod Utilities
+Training Manual for FNVEdit 129
+As with the Build Reference Information function, the build reach ability function may take some time to process all of the records depending on how many mods you are loading for the comparison. The status bar at the very top will give you indication of how far along the function is during parsing as shown below. The Messages Tab shows the log-file output as it happens, and overall this function can take some time to complete:
+Be aware that half-way through the process, the Elapsed Time clock on top will appear to stop, and FNVEdit will appear to be frozen or locked-up. In truth the Elapsed Clock only counts through half of the Build Reachable Info function, so be patient – the process will complete within a minute or two.
+Once the Build Reachable Info function is complete, you will see the, “All done!” notice in the Messages Tab (A) along with log file output. The Left-side Panel shows all of the records in the mod with Green Text, Yellow Background (B) as shown below:
+Mod Utilities
+Training Manual for FNVEdit 130
+We‟re not quite done yet, next we need to apply a Filter to remove all records from the view except those that are considered, “Unreachable”. To do this, Right-click on the mod in the Left-side Panel (A), and select, “Apply Filter” from the main context menu:
+Once Apply Filter is selected, the main Filter window view will be presented as shown below, where you can apply the Reachable Info Filter.
+Mod Utilities
+Training Manual for FNVEdit 131
+The screenshot below illustrates the Reachable Info filter settings that you will need to set; this time just two, “by not reachable status” (A) and “only not reachable” (B). Then select, “Filter” (C) to apply the new filter settings as shown below:
+This filter should not take very long to process, perhaps several seconds. Below an example is shown of the Messages Tab output, indicating the result of the filter (B). You can also see the stricken-through records (A) that are not reachable by the player:
+The final results of the Build Reachable Info function are shown in the screenshot below via the View Tab (A) and Left-Side Panel (C), where the stricken-through records are shown with horizontal lines through the text. These stricken-through records are those which are not considered, “Reachable” by the player-character in-game. You can click-open any of the record headings in the Left-side Panel to see the un-reachable records by category as shown in the screenshot below:
+Mod Utilities
+Training Manual for FNVEdit 132
+Note that in the FormLists you might see some things marked as unreachable which do technically have an effect on the player character. For example, the repair lists will show up as unreachable. The reason for that is that if the repair-list was marked as reachable, it would automatically mark all contained records as reachable. But that's not really right. Just because something can possibly be used to repair an object that the character has doesn't meant that this something can actually ever be acquired by the player. So really, for FormLists the reachable status doesn't mean much either way.
+Outside of FormLists, there shouldn't be any false negatives (meaning something marked as unreachable which has an influence on the game). There can be false positives (something marked as reachable while it's not). e.g. it's possible for a CELL to be considered reachable even though the only way to get there is through a door which can only be opened with a key and the key is not reachable.
+For an INFO record to be reachable even though none of the conditions attached to the responses could ever possible be true or the quest that the INFO belongs to will never be enabled. For any type of object could be reachable even though it's just used in a GetIsID check in some script (not in a CTDA, objects referenced from conditions never become reachable through that).
+Overall, even with all these shortcomings and gray areas, if someone ends up being marked as not reachable, that's a very strong indication that the particular thing will not normally effect the game.
+Mod Utilities
+Training Manual for FNVEdit 133
+== Changing and Adding References ==
+One of the less-used features of FNVEdit allows you to actually insert to records (items, scripts, NPCs, etc.) into a mod-file directly from FNVEdit. The GECK is of course the preferred method of adding new things to your mod, but in certain circumstances it is easier or simpler to add the thing directly to the file without the GECK. This function saw its most use just prior to the release of the GECK, when there was no tool to use for such purposes. Now with the GECK in play, there is less of a need for this capability, but it still exists in FNVEdit and is documented for cases in which you want to add references directly to the game.
+In this section we feature Martigen‟s Marts Mutant Mod (MMM), which is one of the very best mods created for Fallout: New Vegas. The screenshot below starts the action, in which we Right-click in open space somewhere in the Master/Plugin Selection window (A), then choose, “Select None” to un-check all of the entries. Now check-off the mod you want to change (C), and click, “OK” to load it into FNVEdit (D) as shown below:
+Once loaded, the screenshot below shows you the expected results. Here we see that only MMM is loaded (A), along with its Master file references. The Messages Tab shows the outcome of the load, and any errors that may persist (B) as shown below:
+Mod Utilities
+Training Manual for FNVEdit 134
+With our mod loaded and on the operating table, it‟s time to start changing and added records! The first example below is of a reference change, in which we alter the Flags used on our test NPC, Lucky Harith (He is just THE man, so I had to feature him). The screenshot below illustrates the process:
+We start by opening-up the Left-Side Panel record tree for MMM to the location where we want to change things (A), and choose Lucky Harith with a Left-Mouse Click (B). To edit a record, Right-click its entry in the View Tab (C) to render a small context menu, then select, “Edit” (D) to open the edit context menu as shown above.
+Mod Utilities
+Training Manual for FNVEdit 135
+The, “Edit Value” window will now be presented, allowing you to check/select any flags that you want Lucky Harith to have added to them. As we just can‟t let Lucky down, we‟ll give him an Essential flag so that he never dies! Check-mark the Essential flag row in the window (A) and select, “OK” to set the flagging (B) as shown:
+Once OK is selected, you are taken back to the main View Tab where you can see the new flags set (A). Note that the Flagging is also now in Bold, indicating that they have been marked as changed and will thus be saved as shown below:
+Also note that the reference Text (B) and the record entry (C) are also both in Bold Text, marking them as changed for saving. See how easy that was!?!
+Mod Utilities
+Training Manual for FNVEdit 136
+To add a new reference into a record, the process is very similar. Let‟s keep with Lucky Harith, and add some Rad-X to his inventory so that he‟s ready for everything! To do this, start by Left-Clicking the record you want to change (A) in the Left-Side Panel, then Right-click the row in the View Tab adjacent to the type of record you want to add. In this case we‟re adding an item, so to the right of, “Items” in the View Tab is where you want to Right-click (B). A small context window will render, select, “Add” (C) as shown:
+Once you click, “Add”, a new blank item entry will be added into the View Tab (A) next to the item reference (B). Also note it shows with a Yellow background (A).
+Initially all new items get added as a “NULL” (RefID 00000000) which is obviously not right. Once added you will need to change (Edit) the new item to turn it into the Rad-X item that we want to give to Lucky Harith.
+Mod Utilities
+Training Manual for FNVEdit 137
+To transform our new NULL item into Rad-X, we first Right-click on the new item (A) and click on which renders a small context menu. Select “Edit” (B) from the menu as shown:
+This will pull-up a small, “Edit Value” window as shown below. Here you can input the FormID of the Rad-X item, which is, “00015168”. Enter that into the value field (A) and click, “OK” to apply the value (B):
+Once done, note below that our NULL item has magically turned into Rad-X! I bet Lucky Harith has never felt so safe! (B). Also note the text is in Bold, marking it for saving. You can also edit other values about the object as needed (such as count, etc.) as shown:
+Mod Utilities
+Training Manual for FNVEdit 138
+The last thing we need to do is save our changes! You can do this via either selecting, “Alt-S” and/or close FNVEdit to render the “Save changed files” window. Here you can select/check any mod you want to save (A), and click, “OK” to save the files (B) as shown in the screenshot below:
+Note that different kinds of records will require different actions when adding new references, as scripts are different from items which are different from NPCs. You can take some time and explore the different types of additions as needed.
+Mod Utilities
+Training Manual for FNVEdit 139
+== Marking Nodes as Modified ==
+This function is used to mark records modified, meaning they will be saved when you press, “Alt-S” or exit FNVEdit. This is sometimes necessary when a mod author wants to force an update of a particular records or group of records to save even though FNVEdit registers no change. The process is one-step as shown in the screenshot below:
+The screenshot below shows the results, in which the record that was Marked as Modified now has Bold text (A). This record will now be saved when you exit.
+Mod Utilities
+Training Manual for FNVEdit 140
+== Copying and Replicating Idle Animations ==
+Copying and Replicating Idle Animations is a specialized function that was written for Martigen in support of Marts Mutant Mod (MMM). What the function does is to copy a set of NPC idle animations from a list of available animations into an NPC. In this way, the process of creating new NPCs is dramatically improved and much less prone to errors when assigning idle animations. This process describes how that function works, and is clearly geared towards the mod author.
+To start the action, launch FNVEdit and Right-click in open space somewhere in the window (A) to render a small context menu. Select, “Apply None” (B) from this menu to de-select everything. You can then Left-click the check box for just the mod you want to copy idle animations into (C), and then, “OK” to load it (D). As this function was written by Elminster for Martigen, we of course will feature MMM in this section as shown below:
+Once loaded FNVEdit presents the typical output as shown below, in which MMM and its Master file references are the only record-trees shown in the Left-Side Panel (A):
+Next we‟ll want to open MMM up in the Left-Side Panel by Left-clicking on the record tree (A and B). This will expose the interior of the MMM plug-in, and allow you to select the NPC that you want to copy Idle Animations into (C). Right-click on this NPC (C) to render the main context menu, then select, “Copy Idle Animations into…” as shown:
+Mod Utilities
+Training Manual for FNVEdit 141
+You will be presented with the classic FNVEdit warning window, harkening doom upon the universe should you dare attempt to tamper with this mod file! Indeed, you should not change other people‟s mod files as a general rule. We are only changing MMM for the purposes of this tutorial; just don‟t save it when you‟re done eh?
+If you dare, select, “Yes I‟m absolutely sure” to continue.
+Next you will be presented with the, “Which Idles do you want to copy?” window, which offers the Master selection of available idle animations that you can choose from. Do not ask me how to create these idle animations, as I do not know. You can ask Martigen in the forums about this, but I recommend strong doses of Rad-X first or he may simply morph you into a night-ghoul for daring to bother him. Otherwise, take the wise choice and select one of the available groups of idle animations to copy (A) and the click, “OK” to load them into the buffer (B) as shown below:
+Mod Utilities
+Training Manual for FNVEdit 142
+You will now be presented with a series of small Edit Box windows, which are used to customize the naming of these idle animations and thus prevent duplicates. The first window asks for a new Model Prefix (A) – which allows you to specify a new model-name for these animations as shown below:
+The next EditorID window allows you to Remove a portion of the current idle animations name in the new versions your creating (A). This is Optional, click “OK” either way.
+Mod Utilities
+Training Manual for FNVEdit 143
+The next EditorID Prefix window allows you to add a new unique name to the Beginning of each animation name (A). Pick something unique to your mod:
+The last EditorID Suffix window allows you to add something to the End of each animation name (A), which again is Optional. Click, “OK” either way to finish:
+Finally we reach the last step, in which a window is presented with the available loaded mod-files that you can copy these idle animations into. For the purposes of this demo we chose MMM‟s Master file (A), as shown in the screenshot below:
+Mod Utilities
+Training Manual for FNVEdit 144
+Selecting, “OK” (B) will execute the paste command and place the new idle animations into the mod file you specified. The screenshot below illustrates a typical result, in which both the File Header and Idle Animation record headings show with Bold text (indicating that they have changed and are thus marked as modified for saving):
+Opening the Idle Animation record tree in the Left-Side Panel (B) will reveal the newly-copied animations as shown below.
+The output screenshots below illustrate both the Left-Side Panel results (below) and the View Tab output for each new animation (bottom). Note how each animation that was copied now carries the new Prefix, “Animations” (B) as well as the new Suffix, “mmm” (C) that we chose in the four EditorID windows.
+Mod Utilities
+Training Manual for FNVEdit 145
+Note below the details about each idle animation as shown in the View Tab (B). Each animation includes many variables and details that would be time consuming and error-prone to do by hand. This Copy Idle Animations function automates the process.
+The final step is to save our hard work! Either pressing, “Alt-S” or closing the FNVEdit program with present you with the Save changed files window as shown below. Simply ensure that the mod you worked on is checked (A), and press, “OK” to Save. (Don‟t try this at home kids!):
+Mod Utilities
+Training Manual for FNVEdit 146
+Note again that you should not be changing MMM or any other mod that you did not create. This function is purely for mod authors in creating their own mods which require many new NPCs, for which this function can automation part of the work.
+== Applying Scripts Into ==
+Download this: http://Fallout3nexus.com/downloads/file.php?id=1904 It makes use of this function. If you have still questions about it afterward feel free to ask again.
+== Deprecated Functions ==
+There are three options in the main context menu that were built for Oblivion and were carried-forward into the Fallout: New Vegas version of FNVEdit. These functions may still work for Oblivion, but they do not work for Fallout: New Vegas and are considered Deprecated functions which should not be used for any reason. You may even crash FNVEdit by trying to run them. These functions that are deprecated for Fallout: New Vegas are:
+ Object LOD
+ Set VWD for all REFR with VWD Mesh in this file
+ Set VWD for all REFR with VWD Mesh copy as override…
+FNVEdit FAQ
+Training Manual for FNVEdit 147
+= Cheat Sheets and Quick Reference Charts =
+In the following pages we have included several of the more pertinent reference charts and cheat sheets to make them easier and more accessible to you in the future.
+Cheat Sheets and Quick Reference Charts
+Training Manual for FNVEdit 162
+The Conflict Detection Filter Settings are shown below:
+The record/reference Reach ability Info Filter Settings are shown below:
+Cheat Sheets and Quick Reference Charts
+Training Manual for FNVEdit 163
+The Identical To Master Detection filter settings are shown below (Part 1 of Cleaning Process):
+The Mod Cleaning filter settings are shown below (Part 2 of Cleaning Process):
+
+= Frequently Asked Questions =
+
+This is a work in progress it is not complete at this time.
+
+* [[TES5Edit_Frequently Asked Questions|Frequently Asked Questions]]
+
+= Credits =
+
+This has been adapted from [http://fallout3.nexusmods.com/mods/8629 Fallout3 Training Manual] and [http://newvegas.nexusmods.com/mods/38413 FNVEdit Training Manual] by ElminsterEU, JustinOther and Miaximus.
+
+Thanks also go to ElminsterEU, Sharlikran, Hlp, and Zilav for their work with TES5Edit.
