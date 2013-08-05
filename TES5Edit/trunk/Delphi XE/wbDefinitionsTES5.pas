@@ -699,8 +699,6 @@ var
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
   wbPGRP: IwbSubRecordDef;
-  wbFaceGen: IwbSubRecordStructDef;
-  wbFaceGenNPC: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
   wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
@@ -1604,17 +1602,16 @@ begin
       Result := IntToHex64(aInt, 2);
       Exit;
     end;
-//    ctCheck: begin
-//      case aInt shr 5 of
-//        0, 1, 2, 3, 4, 5 : Result := '';
-//      else
-//        Result := '<Unknown Compare operator>'
-//      end;
-//
-//      s := wbCtdaTypeFlags.ToString(aInt and $1F, aElement);
-//      if s <> '' then
-//        Result := Result + ' / ' + s;
-//    end;
+    ctCheck: begin
+      case aInt and $E0 of
+        $00, $20, $40, $60, $80, $A0 : Result := '';
+      else
+        Result := '<Unknown Compare operator>'
+      end;
+      s := wbCtdaTypeFlags.Check(aInt and $1F, aElement);
+      if s <> '' then
+        Result := Result + ' / ' + s;
+    end;
   end;
 end;
 
@@ -10625,18 +10622,6 @@ begin
     wbInteger(NAM1, 'Created Object Count', itU16)
   ]);
 
-  wbFaceGen := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True);
-
-  wbFaceGenNPC := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True, nil{wbActorTemplateUseModelAnimation});
-
   wbRecord(NPC_, 'Non-Player Character (Actor)', [
     wbEDID,
     wbVMAD,
@@ -12548,7 +12533,8 @@ begin
   wbRecord(WATR, 'Water', [
     wbEDID,
     wbFULL,
-    wbRArray('Unused', wbByteArray(NNAM, 'Unused', 0, cpIgnore, False)), // leftover
+    //wbRArray('Unused', wbByteArray(NNAM, 'Unused', 0, cpIgnore, False)), // leftover
+    wbRArray('Unused', wbString(NNAM, 'Noise Map', 0, cpIgnore, False)), // leftover
     wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
     wbInteger(FNAM, 'Flags', itU8, wbFlags(['Causes Damage']), cpNormal, True),
     wbByteArray(MNAM, 'Unused', 0, cpIgnore, False),  // leftover
