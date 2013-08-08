@@ -10217,48 +10217,6 @@ begin
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
-      // open file menu
-      {if Assigned(Element) then
-         Value := Element.EditValue
-      else
-        Value := '';
-      if Length(Value) > 4 then begin
-        s := ExtractFileExt(Value);
-        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') or SameText(s, '.mp3') then begin
-          if Value[1] = '\' then
-            Delete(Value, 1, 1);
-          if SameText(Copy(Value, 1, 5), 'data\') then
-            Delete(Value, 1, 5);
-          if SameText(s, '.nif') and not SameText(Copy(Value, 1, 7), 'meshes\') then
-            Value := 'meshes\' + Value
-          else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
-            Value := 'textures\' + Value
-          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
-            Value := 'sound\' + Value
-          else if SameText(s, '.mp3') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
-            Value := 'music\' + Value;
-          mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
-          if mniViewOpenFrom.Visible then begin
-            mniViewOpenFrom.Clear;
-            sl := TStringList.Create;
-            try
-              wbContainerHandler.ResourceCount(Value, sl);
-              for i := 0 to Pred(sl.Count) do begin
-                MenuItem := TMenuItem.Create(mniViewOpenFrom);
-                s := ExtractFileName(sl[i]);
-                if s = '' then s := 'Data\' + Value;
-                MenuItem.Caption := s;
-                MenuItem.Tag := i; // container index
-                MenuItem.OnClick := mniViewOpenFromClick;
-                mniViewOpenFrom.Add(MenuItem);
-              end;
-              OpenFromAsset := Value;
-            finally
-              sl.Free;
-            end;
-          end;
-        end;
-      end;}
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
