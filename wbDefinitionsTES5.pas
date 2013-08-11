@@ -3537,9 +3537,6 @@ var
   Container    : IwbContainerElementRef;
 //  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
-  HasWater     : Boolean;
-//  IsInterior   : Boolean;
-//  i            : Integer;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -3557,17 +3554,10 @@ begin
     if not Container.ElementExists['DATA'] then
       Exit;
 
-//    IsInterior := (Container.ElementNativeValues['DATA'] and 1) <> 0;
-    HasWater := (Container.ElementNativeValues['DATA'] and 2) <> 0;
-
-    if HasWater then begin
-      if not Container.ElementExists['XCLW'] then begin
-        Container.Add('XCLW', True);
-        Container.ElementEditValues['XCLW'] := '-2147483648.000000';
-      end;
-    end else begin
-      if Container.ElementExists['XCLW'] then
-        Container.ElementEditValues['XCLW'] := '-2147483648.000000';
+    // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
+    if (not Container.ElementExists['XCLW']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then begin
+      Container.Add('XCLW', True);
+      Container.ElementEditValues['XCLW'] := 'Default';
     end;
 
 //    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
