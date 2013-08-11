@@ -10682,6 +10682,9 @@ begin
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
 
+  if not wbSortGroupRecord then
+    Exit;
+
   {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}
   {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
   if wbGameMode in [gmFO3, gmFNV, gmTES5] then

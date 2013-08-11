@@ -100,7 +100,7 @@ object frmOptions: TfrmOptions
       end
       object cbSimpleRecords: TCheckBox
         Left = 16
-        Top = 153
+        Top = 176
         Width = 281
         Height = 17
         Caption = 'Simple records (LAND, NAVI, NAVM). Requires restart.'
@@ -140,6 +140,15 @@ object frmOptions: TfrmOptions
           'and requires more memory'
         Caption = '[TES5] Resolve quest aliases'
         TabOrder = 10
+      end
+      object cbSortGroupRecord: TCheckBox
+        Left = 16
+        Top = 153
+        Width = 121
+        Height = 17
+        Hint = 'Sort INFOs in DIAL by previous INFO'
+        Caption = '[TES4] Sort INFOs'
+        TabOrder = 11
       end
     end
     object tsCleaning: TTabSheet

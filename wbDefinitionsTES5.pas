@@ -247,9 +247,6 @@ const
   EYES : TwbSignature = 'EYES';
   FACT : TwbSignature = 'FACT';
   FCHT : TwbSignature = 'FCHT'; { New to Skyrim }
-  FGGA : TwbSignature = 'FGGA';
-  FGGS : TwbSignature = 'FGGS';
-  FGTS : TwbSignature = 'FGTS';
   FLMV : TwbSignature = 'FLMV'; { New to Skyrim }
   FLOR : TwbSignature = 'FLOR';
   FLST : TwbSignature = 'FLST';
@@ -356,12 +353,10 @@ const
   MOD3 : TwbSignature = 'MOD3';
   MOD4 : TwbSignature = 'MOD4';
   MOD5 : TwbSignature = 'MOD5'; { New to Skyrim }
-  MODB : TwbSignature = 'MODB';
   MODD : TwbSignature = 'MODD';
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
   MODT : TwbSignature = 'MODT';
-  MOSD : TwbSignature = 'MOSD';
   MOVT : TwbSignature = 'MOVT';
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
@@ -682,7 +677,6 @@ var
   wbDATAPosRot: IwbSubRecordDef;
   wbPosRot: IwbStructDef;
   wbMODD: IwbSubRecordDef;
-  wbMOSD: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
@@ -4644,14 +4638,6 @@ begin
       ]),
     -1);
 
-  wbMOSD :=
-    wbInteger(MOSD, 'FaceGen Model Flags', itU8, wbFlags([
-      'Head',
-      'Torso',
-      'Right Hand',
-      'Left Hand'
-    ]));
-
   wbMODS :=
     wbArrayS(MODS, 'Alternate Textures',
       wbStructSK([0, 2], 'Alternate Texture', [
@@ -4675,28 +4661,22 @@ begin
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
-      wbMODS,
-      wbMODD
+      wbMODS
     ], [], cpNormal, False, nil, True);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
-      wbMODS,
-      wbMODD
+      wbMODS
     ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation}, True);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
-      wbMODS,
-      wbMODD
+      wbMODS
     ], [], cpNormal, True, nil, True);
 
   wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
@@ -7217,7 +7197,6 @@ begin
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
-    wbICON,
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -10094,7 +10073,7 @@ begin
         {8} 'Side Quest',
         {9} 'Civil War',
        {10} 'DLC01 - Vampire',
-       {11} 'DLC02?'
+       {11} 'DLC02 - Dragonborn'
       ]))
     ]),
     wbString(ENAM, 'Event', 4),
@@ -10196,7 +10175,7 @@ begin
           wbCTDAs,
           wbKSIZ,
           wbKWDAs,
-          wbInteger(COCT, 'Count', itU32),
+          wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
@@ -10258,7 +10237,7 @@ begin
           wbCTDAs,
           wbKSIZ,
           wbKWDAs,
-          wbInteger(COCT, 'Count', itU32),
+          wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),

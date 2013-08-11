@@ -3434,6 +3434,7 @@ begin
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
+  wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbResolveAlias := Settings.ReadBool('Options', 'ResolveAliases', wbResolveAlias);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -9624,6 +9625,7 @@ begin
     cbHideNeverShow.Checked := wbHideNeverShow;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
+    cbSortGroupRecord.Checked := wbSortGroupRecord;
     cbResolveAliases.Checked := wbResolveAlias;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
@@ -9646,6 +9648,7 @@ begin
     wbHideNeverShow := cbHideNeverShow.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
+    wbSortGroupRecord := cbSortGroupRecord.Checked;
     wbResolveAlias := cbResolveAliases.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
@@ -9666,6 +9669,7 @@ begin
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
+    Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
     Settings.WriteBool('Options', 'ResolveAliases', wbResolveAlias);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);

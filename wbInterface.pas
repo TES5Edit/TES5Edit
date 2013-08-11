@@ -52,6 +52,7 @@ var
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
+  wbSortGroupRecord: Boolean{} = True;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
