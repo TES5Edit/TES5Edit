@@ -200,6 +200,30 @@ begin
   );
 end;
 
+procedure JvInterpreter_ShellExecuteWait(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  SEInfo: TShellExecuteInfo;
+  ExitCode: Cardinal;
+begin
+  FillChar(SEInfo, SizeOf(SEInfo), 0);
+  SEInfo.cbSize := SizeOf(TShellExecuteInfo);
+  with SEInfo do begin
+    fMask := SEE_MASK_NOCLOSEPROCESS;
+    Wnd := Args.Values[0];
+    lpVerb := PWideChar(String(Args.Values[1]));
+    lpFile := PWideChar(String(Args.Values[2]));
+    lpParameters := PWideChar(String(Args.Values[3]));
+    lpDirectory := PWideChar(String(Args.Values[4]));
+    nShow := Args.Values[5];
+  end;
+  if ShellExecuteEx(@SEInfo) then begin
+    WaitforSingleObject(SEInfo.hProcess, INFINITE);
+    GetExitCodeProcess(SEInfo.hProcess, ExitCode);
+    Value := ExitCode;
+  end else
+    Value := 0;
+end;
+
 procedure JvInterpreter_SelectDirectory(var Value: Variant; Args: TJvInterpreterArgs);
 var
   aDir: string;
@@ -826,6 +850,7 @@ begin
     AddFunction('System', 'StringOfChar', JvInterpreter_StringOfChar, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Windows', 'CopyFile', JvInterpreter_CopyFile, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('ShellApi', 'ShellExecuteWait', JvInterpreter_ShellExecuteWait, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
 
     { TStrings }
