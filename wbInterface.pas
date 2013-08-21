@@ -10187,7 +10187,7 @@ begin
 //  Result := GetName;
 //  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
 //    Result := NamedDef.Name;
-  Result := '<Empty>';
+  Result := '';
 
   Used(aElement, Result);
 end;

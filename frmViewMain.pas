@@ -3138,6 +3138,8 @@ begin
               sl2.Free;
             end;
           end;
+          // remove nonexisting files
+          FixLoadList(sl);
           AddMissingToLoadList(sl);
           PluginListGroupESM(sl)
         end
