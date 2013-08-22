@@ -4464,6 +4464,12 @@ begin
   if aPos < High(cntElements) then begin
     Move(cntElements[Succ(aPos)], cntElements[aPos], (High(cntElements) - aPos) * SizeOf(Pointer));
     Pointer(cntElements[High(cntElements)]) := nil;
+    if (csInitializing in cntStates) and Supports(Self, IwbDataContainer) then
+      with Self as TwbDataContainer do
+        if Assigned(dcDataEndPtr) then begin
+          dcDataEndPtr := Pointer(Cardinal(dcDataEndPtr) - Result.DataSize);
+//          dcEndPtr := dcDataEndPtr;
+        end;
   end;
 
   SetLength(cntElements, Pred(Length(cntElements)));
@@ -8819,9 +8825,13 @@ end;
 
 constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
 var
-  BasePtr: Pointer;
-  EndPtr: Pointer;
+  BasePtr : Pointer;
+  EndPtr  : Pointer;
+  i       : TwbContainerState;
 begin
+  cntStates := [];
+  for i := Low(TwbContainerState) to High(TwbContainerState) do
+    Exclude(cntStates, i);
   srDef := aSubRecordDef;
   BasePtr := nil;
   Create(aContainer, BasePtr, nil, nil);
@@ -10723,6 +10733,9 @@ var
   NewElements : TDynElementInternals;
 begin
   if grStates * [gsSorted, gsSorting] <> [] then
+    Exit;
+
+  if not wbSortGroupRecord then
     Exit;
 
   {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}

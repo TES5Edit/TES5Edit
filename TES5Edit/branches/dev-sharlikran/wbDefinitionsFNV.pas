@@ -4108,7 +4108,7 @@ begin
     {0x00000800}'Initially disabled',
     {0x00001000}'Ignored',
     {0x00002000}'No Voice Filter',
-    {0x00004000}'',
+    {0x00004000}'Cannot Save',
     {0x00008000}'Visible when distant',
     {0x00010000}'Random Anim Start / High Priority LOD',
     {0x00020000}'Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
@@ -6290,18 +6290,20 @@ begin
     wbEDIDReq,
     wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
       wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Unknown', wbRStruct('Unknown', [
-        wbFormIDCk(INFC, 'Unknown', [INFO]),
-        wbInteger(INFX, 'Unknown', itS32)
+      wbRArray('Info connections', wbRStruct('Data', [
+        wbFormIDCk(INFC, 'Info connection', [INFO]),
+        wbInteger(INFX, 'Info connection Index', itS32)
       ], []))
     ], [])),
     wbRArrayS('Removed Quests', wbRStructSK([0], 'Removed Quest', [
       wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Unknown', wbRStruct('Unknown', [
-        wbFormIDCk(INFC, 'Unknown', [INFO]),
-        wbInteger(INFX, 'Unknown', itS32)
+      wbRArray('Info connections', wbRStruct('Data', [
+        wbFormIDCk(INFC, 'Info connection', [INFO]),
+        wbInteger(INFX, 'Info connection Index', itS32)
       ], []))
     ], [])),
+    wbRArray('Info Connections', wbFormIDCk(INFC, 'Info connection', [INFO])),
+    wbRArray('Info Indexes', wbInteger(INFX, 'Info connection Index', itS32)),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbString(TDUM),
@@ -8643,7 +8645,7 @@ begin
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True);
 
-  wbFaceGenNPC := wbRStruct('FaceGen Data', [
+  wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
     wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
     wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
@@ -11180,4 +11182,5 @@ begin
 end;
 
 initialization
+  wbDoNotBuildRefsFor.Add('Fallout3.esm');
 end.

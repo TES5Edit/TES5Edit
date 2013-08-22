@@ -6,9 +6,11 @@ uses
   Classes,
   SysUtils,
   Variants,
+  Windows,
   wbInterface,
   wbImplementation,
-  wbBSA;
+  wbBSA,
+  wbNifScanner;
 
 implementation
 
@@ -77,10 +79,50 @@ begin
       sl.Add(DefaultSignature + ' - ' + GetName);
 end;
 
-procedure wbGetTrackAllEditorID(var Value: Variant; Args: TJvInterpreterArgs);
+procedure wbFilterStrings(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  slIn, slOut: TStrings;
+  Filter: string;
+  i: integer;
 begin
-  Value := wbTrackAllEditorID;
+  slIn := TStrings(V2O(Args.Values[0]));
+  slOut := TStrings(V2O(Args.Values[1]));
+  if not Assigned(slIn) or not Assigned(slOut) then
+    Exit;
+  Filter := string(Args.Values[2]);
+  for i := 0 to Pred(slIn.Count) do
+    if Pos(Filter, slIn[i]) > 0 then
+      slOut.Add(slIn[i]);
 end;
+
+procedure wbGetVersionNumber(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  fileInfo   : PVSFIXEDFILEINFO;
+  verlen     : Cardinal;
+  rs         : TResourceStream;
+  m          : TMemoryStream;
+  resource   : HRSRC;
+begin
+  Value := 0;
+  resource := FindResource(HInstance, PWideChar(1), RT_VERSION);
+  if resource = 0 then
+    Exit;
+  m := TMemoryStream.Create;
+  try
+    rs := TResourceStream.CreateFromID(HInstance, 1, RT_VERSION);
+    try m.CopyFrom(rs, rs.Size); finally rs.Free; end;
+    m.Position := 0;
+    if not VerQueryValue(m.Memory, '\', Pointer(fileInfo), verlen) then
+      Exit;
+    Value := fileInfo.dwFileVersionMS shl  8 and $FF000000 +
+             fileInfo.dwFileVersionMS shl 16 and $00FF0000 +
+             fileInfo.dwFileVersionLS shr  8 and $0000FF00 +
+             fileInfo.dwFileVersionLS        and $000000FF;
+  finally
+    m.Free;
+  end;
+end;
+
 
 { IwbElement }
 
@@ -780,6 +822,30 @@ begin
     Value := MainRecord.ReferencedBy[Args.Values[1]];
 end;
 
+procedure IwbMainRecord_BaseRecord(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.BaseRecord;
+end;
+
+procedure IwbMainRecord_BaseRecordID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.BaseRecordID;
+end;
+
+procedure IwbMainRecord_UpdateRefs(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    MainRecord.UpdateRefs;
+end;
+
 procedure IwbMainRecord_ChildGroup(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
@@ -929,6 +995,15 @@ begin
     Value := _File.LoadOrder;
 end;
 
+procedure IwbFile_GetNewFormID(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := 0;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.NewFormID;
+end;
+
 procedure IwbFile_GetIsESM(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
@@ -1064,6 +1139,16 @@ end;
 
 { wbContainerHandler }
 
+procedure IwbContainerHandler_ResourceContainerList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbContainerHandler.ContainerList(TStrings(V2O(Args.Values[0])));
+end;
+
+procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+end;
+
 procedure IwbContainerHandler_ResourceExists(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := wbContainerHandler.ResourceExists(Args.Values[0]);
@@ -1074,15 +1159,44 @@ begin
   Value := wbContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
 end;
 
-procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbContainerHandler_ResourceOpenData(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Res           : TDynResources;
+  ResContainer  : string;
+  i             : integer;
 begin
-  wbContainerHandler.ResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+  Res := wbContainerHandler.OpenResource(Args.Values[1]);
+  if Length(Res) = 0 then
+    Exit;
+  ResContainer := string(Args.Values[0]);
+  if ResContainer = '' then
+    ResContainer := Res[High(Res)].Container.Name;
+  for i := Low(Res) to High(Res) do
+    if SameText(Res[i].Container.Name, ResContainer) then
+      Value := Res[i].GetData;
 end;
 
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
 end;
+
+
+{ TwbFastStringList }
+
+procedure TwbFastStringList_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TwbFastStringList.Create);
+end;
+
+
+{ Nif routines }
+
+procedure NifUtils_NifTextureList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := NifTextures(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+end;
+
 
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -1174,7 +1288,8 @@ begin
     AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'wbTrackAllEditorID', wbGetTrackAllEditorID, 0, [], varEmpty);
+    AddFunction(cUnit, 'wbFilterStrings', wbFilterStrings, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbVersionNumber', wbGetVersionNumber, 0, [], varEmpty);
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
@@ -1260,6 +1375,9 @@ begin
     AddFunction(cUnit, 'IsWinningOverride', IwbMainRecord_IsWinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'WinningOverride', IwbMainRecord_WinningOverride, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'HighestOverrideOrSelf', IwbMainRecord_HighestOverrideOrSelf, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'BaseRecord', IwbMainRecord_BaseRecord, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'BaseRecordID', IwbMainRecord_BaseRecordID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'UpdateRefs', IwbMainRecord_UpdateRefs, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ChildGroup', IwbMainRecord_ChildGroup, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CompareExchangeFormID', IwbMainRecord_CompareExchangeFormID, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ChangeFormSignature', IwbMainRecord_ChangeFormSignature, 2, [varEmpty, varEmpty], varEmpty);
@@ -1274,6 +1392,7 @@ begin
     { IwbFile }
     AddFunction(cUnit, 'GetFileName', IwbFile_GetFileName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrder', IwbFile_GetLoadOrder, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetNewFormID', IwbFile_GetNewFormID, 0, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESM', IwbFile_GetIsESM, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsESM', IwbFile_SetIsESM, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'SortMasters', IwbFile_SortMasters, 1, [varEmpty], varEmpty);
@@ -1292,10 +1411,20 @@ begin
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
 
     { IwbContainerHandler }
+    AddFunction(cUnit, 'ResourceContainerList', IwbContainerHandler_ResourceContainerList, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceExists', IwbContainerHandler_ResourceExists, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCount', IwbContainerHandler_ResourceCount, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceList', IwbContainerHandler_ResourceList, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceOpenData', IwbContainerHandler_ResourceOpenData, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCopy', IwbContainerHandler_ResourceCopy, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+
+    { IwbFastStringList }
+    AddClass('TwbFastStringList', TwbFastStringList, 'TwbFastStringList');
+    AddGet(TwbFastStringList, 'Create', TwbFastStringList_Create, 0, [varEmpty], varEmpty);
+
+    { Nif routines }
+    AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
+
   end;
 end;
 

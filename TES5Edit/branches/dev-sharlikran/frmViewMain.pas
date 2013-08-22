@@ -3332,6 +3332,8 @@ begin
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
+  wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+  wbResolveAlias := Settings.ReadBool('Options', 'ResolveAliases', wbResolveAlias);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -3664,17 +3666,6 @@ begin
     b.z := b.z + (2*Pi);
   Result := wbDistance(a, b);
 end;
-
-type
-  TMeshInfo = class
-    MainRecord : IwbMainRecord;
-    Mesh       : TwbMesh;
-    Refs       : array of PRefInfo;
-    TryHarder  : Boolean;
-  public
-    constructor Create(const aMainRecord: IwbMainRecord; const aMesh: TwbMesh);
-    procedure AddRef(const aRef: TRefInfo);
-  end;
 
 function StrRight(const s: String; Len: Integer): string;
 begin
@@ -5462,24 +5453,38 @@ begin
     Value := wbGameName;
     Done := True;
   end else
+  if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
+    Value := wbAppName;
+    Done := True;
+  end else
   if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
+    Value := wbTrackAllEditorID;
     Done := True;
   end else
   if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
     Value := O2V(wbRecordDefMap);
     Done := True;
   end else
-  if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
+  if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'wbProgramPath') and (Args.Count = 0)) then begin
     Value := wbProgramPath;
     Done := True;
   end else
-  if SameText(Identifier, 'ScriptsPath') and (Args.Count = 0) then begin
+  if (SameText(Identifier,   'ScriptsPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'wbScriptsPath') and (Args.Count = 0)) then begin
     Value := wbScriptsPath;
     Done := True;
   end else
-  if SameText(Identifier, 'DataPath') and (Args.Count = 0) then begin
+  if SameText(Identifier, 'wbDataPath') and (Args.Count = 0) then begin
     Value := wbDataPath;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbTempPath') and (Args.Count = 0) then begin
+    Value := wbTempPath;
     Done := True;
   end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
@@ -5492,7 +5497,7 @@ begin
   end else
   if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
-      PostAddMessage(Args.Values[0]);
+      AddMessage(Args.Values[0]);
       Done := True;
       Application.ProcessMessages;
     end else
@@ -9538,6 +9543,8 @@ begin
     cbHideNeverShow.Checked := wbHideNeverShow;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
+    cbSortGroupRecord.Checked := wbSortGroupRecord;
+    cbResolveAliases.Checked := wbResolveAlias;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
     cbAutoSave.Checked := AutoSave;
@@ -9559,6 +9566,8 @@ begin
     wbHideNeverShow := cbHideNeverShow.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
+    wbSortGroupRecord := cbSortGroupRecord.Checked;
+    wbResolveAlias := cbResolveAliases.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     AutoSave := cbAutoSave.Checked;
@@ -9578,6 +9587,8 @@ begin
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
+    Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+    Settings.WriteBool('Options', 'ResolveAliases', wbResolveAlias);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -9621,27 +9632,6 @@ begin
   end;
 end;
 
-{procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
-var
-  From, FileName, TempPath: string;
-begin
-  From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  if not SameText(ExtractFileExt(From), '.bsa') then begin
-    FileName := DataPath + OpenFromAsset;
-    From := 'Data';
-  end else begin
-    // extract file from BSA
-    TempPath := wbTempPath + From + '\';
-    FileName := TempPath + OpenFromAsset;
-    if not FileExists(FileName) then begin
-      if ForceDirectories(TempPath) then
-        wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
-    end;
-  end;
-  if FileExists(FileName) then
-    ShellExecute(Handle, 'open', PWideChar(FileName), nil, nil, SW_SHOW);
-end;
-}
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -10149,48 +10139,6 @@ begin
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
-      // open file menu
-      {if Assigned(Element) then
-         Value := Element.EditValue
-      else
-        Value := '';
-      if Length(Value) > 4 then begin
-        s := ExtractFileExt(Value);
-        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') or SameText(s, '.mp3') then begin
-          if Value[1] = '\' then
-            Delete(Value, 1, 1);
-          if SameText(Copy(Value, 1, 5), 'data\') then
-            Delete(Value, 1, 5);
-          if SameText(s, '.nif') and not SameText(Copy(Value, 1, 7), 'meshes\') then
-            Value := 'meshes\' + Value
-          else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
-            Value := 'textures\' + Value
-          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
-            Value := 'sound\' + Value
-          else if SameText(s, '.mp3') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
-            Value := 'music\' + Value;
-          mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
-          if mniViewOpenFrom.Visible then begin
-            mniViewOpenFrom.Clear;
-            sl := TStringList.Create;
-            try
-              wbContainerHandler.ResourceCount(Value, sl);
-              for i := 0 to Pred(sl.Count) do begin
-                MenuItem := TMenuItem.Create(mniViewOpenFrom);
-                s := ExtractFileName(sl[i]);
-                if s = '' then s := 'Data\' + Value;
-                MenuItem.Caption := s;
-                MenuItem.Tag := i; // container index
-                MenuItem.OnClick := mniViewOpenFromClick;
-                mniViewOpenFrom.Add(MenuItem);
-              end;
-              OpenFromAsset := Value;
-            finally
-              sl.Free;
-            end;
-          end;
-        end;
-      end;}
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
@@ -13215,6 +13163,7 @@ end;
 procedure TLoaderThread.Execute;
 var
   i                           : Integer;
+  dummy                       : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   F                           : TSearchRec;
@@ -13231,7 +13180,13 @@ begin
 
         with TMemIniFile.Create(wbTheGameIniFileName) do try
           with TStringList.Create do try
-            Text := StringReplace(ReadString('Archive','sArchiveList',''), ',',#10, [rfReplaceAll]);
+            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+              Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
+            else
+              Text := StringReplace(
+                ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
+                ',', #10, [rfReplaceAll]
+              );
             for i := 0 to Pred(Count) do begin
               s := Trim(Strings[i]);
               if Length(s) < 5 then
@@ -13258,7 +13213,10 @@ begin
         for i := 0 to Pred(ltLoadList.Count) do begin
           if (ExtractFileExt(ltLoadList[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s := ChangeFileExt(ltLoadList[i], '');
-            if FindFirst(ltDataPath + s + '*.bsa', faAnyFile, F) = 0 then try
+            // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
+            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+              s := s + '*';
+            if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
               repeat
                 if wbLoadBSAs then begin
                   LoaderProgress('[' + F.Name + '] Loading Resources.');
@@ -13307,7 +13265,7 @@ begin
 
       if wbBuildRefs then
         for i := Low(ltFiles) to High(ltFiles) do
-          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') then begin
+          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) then begin
             LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
             ltFiles[i].BuildRef;
             if frmMain.ForceTerminate then
@@ -13538,31 +13496,6 @@ end;
 function TMainRecordRefByHistoryEntry.GetTabSheet: TTabSheet;
 begin
   Result := frmMain.tbsReferencedBy;
-end;
-
-{ TMeshInfo }
-
-procedure TMeshInfo.AddRef(const aRef: TRefInfo);
-var
-  Ref : PRefInfo;
-  i   : Integer;
-begin
-  New(Ref);
-  Ref^ := aRef;
-  for i := Low(Refs) to High(Refs) do
-    if (wbDistance(Refs[i].Pos, Ref.Pos) < 15.0) and (RotDistance(Refs[i].Rot, Ref.Rot) < 0.3) then begin
-      Ref.Next := Refs[i];
-      Refs[i] := Ref;
-      Exit;
-    end;
-  SetLength(Refs, Succ(Length(Refs)));
-  Refs[High(Refs)] := Ref;
-end;
-
-constructor TMeshInfo.Create(const aMainRecord: IwbMainRecord; const aMesh: TwbMesh);
-begin
-  MainRecord := aMainRecord;
-  Mesh := aMesh;
 end;
 
 { TPluggyLinkThread }

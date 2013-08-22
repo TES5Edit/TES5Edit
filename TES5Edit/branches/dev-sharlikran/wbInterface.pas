@@ -29,7 +29,6 @@ const
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
-
   TwbPointerArray = array [0..Pred(High(Integer) div SizeOf(Pointer))] of Pointer;
   PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
 
@@ -53,6 +52,7 @@ var
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
+  wbSortGroupRecord: Boolean{} = True;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
@@ -64,6 +64,8 @@ var
   wbNewHeaderAddon: Cardinal = 40; // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  wbResolveAlias: Boolean{} = False;{}
+  wbDoNotBuildRefsFor: TStringList;
 
   wbUDRSetXESP: Boolean = True;
   wbUDRSetScale: Boolean = False;
@@ -1354,6 +1356,8 @@ type
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters);
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
 
+    function GetRequiresKey: Boolean;
+
     property IsEditable[aInt: Int64; const aElement: IwbElement]: Boolean
       read GetIsEditable;
     property LinksTo[aInt: Int64; const aElement: IwbElement]: IwbElement
@@ -1363,6 +1367,9 @@ type
       read GetEditType;
     property EditInfo[aInt: Int64; const aElement: IwbElement]: string
       read GetEditInfo;
+
+    property RequiresKey: Boolean
+      read GetRequiresKey;
   end;
 
   IwbDumpIntegerDefFormater = interface(IwbIntegerDefFormater)
@@ -1486,10 +1493,11 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     function ResolveHash(const aHash: Int64): TDynStrings;
+    procedure ContainerList(const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
-    procedure ResourceList(const aContainerName: string; aContainers: TStrings);
-    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+    procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
   end;
 
 var
@@ -3324,6 +3332,7 @@ type
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
 
   TwbLStringDef = class(TwbStringDef)
@@ -3700,6 +3709,8 @@ type
     function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64; virtual;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters); virtual;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; virtual;
+
+    function GetRequiresKey: Boolean; virtual;
   end;
 
   TwbDumpIntegerDefFormater = class(TwbIntegerDefFormater, IwbDumpIntegerDefFormater)
@@ -3842,6 +3853,7 @@ type
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
 
+    function GetRequiresKey: Boolean; override;
     {---IwbFlagsDef---}
     function GetFlag(aIndex: Integer): string;
     function GetFlagCount: Integer;
@@ -6892,7 +6904,10 @@ const
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < ExpectedLen[inType] then
-    Result := ''
+    if Assigned(inFormater) and inFormater.RequiresKey then
+      Result := inFormater.ToSortKey(0, aElement)
+    else
+      Result := ''
   else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
@@ -7214,7 +7229,7 @@ begin
 
       if Container.ElementCount = Count then begin
         KnownSize := True;
-        for Index := 0 to Pred(Container.ElementCount) do begin
+        for Index := 0 to Pred(Count) do begin
           Element := Container.Elements[Index];
           if Supports(Element, IwbDataContainer, DataContainer) then begin
             Size := Cardinal(DataContainer.DataEndPtr)-Cardinal(DataContainer.DataBasePtr);
@@ -7402,7 +7417,7 @@ begin
     end;
   end;
   if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then begin // if aBasePtr >= aEndPtr then no allocation (or error)
-    wbProgressCallback('Found a struct with a negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+
+    wbProgressCallback('Found a struct with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
       ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
     Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
@@ -7414,7 +7429,7 @@ begin
         Break;
       end;
       if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
-        wbProgressCallback('Found a struct with a negative size! '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+        wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
           ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
         Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
         Break;
@@ -7747,6 +7762,11 @@ begin
   end;
 
   defReported := True;
+end;
+
+function TwbFlagsDef.GetRequiresKey: Boolean;
+begin
+  Result := True;
 end;
 
 function TwbFlagsDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -8272,9 +8292,9 @@ end;
 
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+  {if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
     Result := 0
-  else if sdSize > 0 then
+  else} if sdSize > 0 then
     Result := sdSize
   else begin
     if aBasePtr = nil then
@@ -10594,6 +10614,11 @@ begin
   Result := nil;
 end;
 
+function TwbIntegerDefFormater.GetRequiresKey: Boolean;
+begin
+  Result := False;
+end;
+
 function TwbIntegerDefFormater.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64;
 begin
   Result := aInt;
@@ -10769,8 +10794,8 @@ end;
 
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i    : Integer;
-  Size : Integer;
+  i       : Integer;
+  Size    : Integer;
   aMember : IwbValueDef;
 begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
@@ -11488,6 +11513,13 @@ begin
       end;
 end;
 
+function TwbStringMgefCodeDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+begin
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> ' <Warning: Expected 4 bytes but found 0>');
+  if Result then
+    FromEditValue(aBasePtr, aEndPtr, aElement, '');
+end;
+
 function TwbStringMgefCodeDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
 var
   IsAlpha  : Boolean;
@@ -11535,6 +11567,8 @@ begin
     end;
     ttFromEditValue, ttFromNativeValue: begin
       Result := Trim(s);
+      if S = '' then
+        Exit;
       i := Pos(':', Result);
       if i > 0 then begin
 
@@ -11698,7 +11732,7 @@ begin
          Result := inherited ToString(wbRefIDArray[val - 1], aElement)
        else
          Result := '['+IntToHex64(val-1, 8)+'] Index in FormID Array';
-    1: Result := inherited ToString(val, aElement); // '['+IntToHex64(val, 8)+'] Skyrim.esm FormID';
+    1: Result := inherited ToString(val, aElement);
     2: Result := '[FF'+IntToHex64(val, 6)+'] Created FormID';
     else
       Result := '['+IntToHex64(aInt, 8)+']  <Error: bad key for RefID '+IntToStr(key)+'>';
@@ -11840,8 +11874,14 @@ end;
 initialization
   TwoPi := 2 * OnePi;
 
+  if (DebugHook = 0) then
+    wbReportMode := False;
+
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
+  wbDoNotBuildRefsFor := TStringList.Create;
+  wbDoNotBuildRefsFor.Sorted := True;
+  wbDoNotBuildRefsFor.Duplicates := dupIgnore;
 end.
 

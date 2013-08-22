@@ -16,7 +16,7 @@ unit wbBSA;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, IOUtils,
   wbInterface;
 
 function wbCreateContainerHandler: IwbContainerHandler;
@@ -59,11 +59,12 @@ type
     procedure AddBSA(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
+    procedure ContainerList(const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
-    procedure ResourceList(const aContainerName: string; aList: TStrings);
-    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+    procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
   end;
 
   TwbBSAFileRec = record
@@ -199,6 +200,28 @@ begin
   SetLength(Result, j);
 end;
 
+procedure TwbContainerHandler.ContainerList(const aList: TStrings);
+var
+  i: Integer;
+begin
+  if not Assigned(aList) then
+    Exit;
+
+  for i := Low(chContainers) to High(chContainers) do
+    aList.Add(chContainers[i].Name);
+end;
+
+procedure TwbContainerHandler.ContainerResourceList(const aContainerName: string; const aList: TStrings);
+var
+  i: Integer;
+begin
+  for i := Low(chContainers) to High(chContainers) do
+    if SameText(chContainers[i].Name, aContainerName) then begin
+      chContainers[i].ResourceList(aList);
+      Break;
+    end;
+end;
+
 function TwbContainerHandler.ResourceExists(const aFileName: string): Boolean;
 var
   i: Integer;
@@ -233,22 +256,12 @@ begin
     end;
 end;
 
-procedure TwbContainerHandler.ResourceList(const aContainerName: string; aList: TStrings);
+procedure TwbContainerHandler.ResourceCopy(const aContainerName, aFileName, aPathOut: string);
 var
-  i: Integer;
-begin
-  for i := Low(chContainers) to High(chContainers) do
-    if SameText(chContainers[i].Name, aContainerName) then begin
-      chContainers[i].ResourceList(aList);
-      Break;
-    end;
-end;
-
-procedure TwbContainerHandler.ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
-var
-  aDir: string;
-  aData: TBytes;
-  res: TDynResources;
+  aDir       : string;
+  aData      : TBytes;
+  res        : TDynResources;
+  i, residx  : integer;
 begin
   if aPathOut = '' then
     raise Exception.Create('Destination path is not specified');
@@ -258,20 +271,35 @@ begin
   if Length(res) = 0 then
     raise Exception.Create('Resource doesn''t exist');
 
-  if (aContainerIndex = -1) or (aContainerIndex > High(res)) or (aContainerIndex < Low(res)) then
-    aContainerIndex := High(res);
-  aData := res[aContainerIndex].GetData;
+  for i := High(res) to Low(res) do
+    if (aContainerName = '') or SameText(res[i].Container.Name, aContainerName) then begin
+      residx := i;
+      Break;
+    end;
 
   aDir := IncludeTrailingPathDelimiter(aPathOut) + ExtractFilePath(aFileName);
   if not DirectoryExists(aDir) then
     if not ForceDirectories(aDir) then
       raise Exception.Create('Unable to create destination directory ' + aDir);
 
-  // exception handled outside
-  with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
-    WriteBuffer(aData[0], length(aData));
-  finally
-    Free;
+  // direct copy if file is loose with overwriting
+  if ExtractFileExt(res[residx].Container.Name) = '' then begin
+    try
+      TFile.Copy(res[residx].Container.Name + aFileName, aDir + ExtractFileName(aFileName), True);
+    except
+    end;
+  end
+
+  // otherwise extract from BSA
+  else begin
+    aData := res[residx].GetData;
+
+    // exception handled outside
+    with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
+      WriteBuffer(aData[0], length(aData));
+    finally
+      Free;
+    end;
   end;
 end;
 
@@ -564,10 +592,13 @@ begin
 end;
 
 procedure TwbFolder.ResourceList(const aList: TStrings);
+var
+  FileName: string;
 begin
   if not Assigned(aList) then
     Exit;
-  // TO DO: recursively scan all folders...
+  for FileName in TDirectory.GetFiles(fPath, '*.*', TSearchOption.soAllDirectories) do
+    aList.Add(LowerCase(Copy(FileName, Length(fPath) + 1, Length(FileName))));
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);
