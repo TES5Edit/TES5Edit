@@ -4376,9 +4376,12 @@ begin
     ], [XLOC]),
     wbXESP,
     wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
-    wbUnion(XSED, '', wbREFRXSEDDecider, [
-      wbInteger('SpeedTree Seed', itU8),
-      wbInteger('SpeedTree Seed (old format)', itU8{itU32 CS just cuts it off...})
+    wbStruct(XSED, 'SpeedTree', [
+      wbInteger('Seed', itU8),
+      wbUnion('Unused', wbREFRXSEDDecider, [
+        wbEmpty('Unused', cpIgnore),
+        wbByteArray('Unused', 3, cpIgnore)
+      ])
     ]),
     wbXLOD,
     wbFloat(XCHG, 'Charge'),
