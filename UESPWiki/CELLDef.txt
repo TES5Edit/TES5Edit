@@ -2,7 +2,7 @@
 {| class="wikitable" width="100%"
 ! width="3%" | C
 ! width="10%" | Field
-! width="10%" | [[Tes4Mod:File Format Conventions|Type]]
+! width="10%" | [[Tes5Mod:File Format Conventions|Type]]
 ! Info
 |-
 | - || EDID || zstring || Cell editor ID
@@ -11,7 +11,14 @@
 |-
 | + || DATA || uint8[1] || Sometimes two bytes are stored instead of one.
 |-
-| - || XCLC || int32[2] + 4 bytes || (X, Y) grid location of the cell followed by four unknown bytes. Always in exterior cells and never in interior cells.
+| - || XCLC || struct || (X, Y) grid location of the cell followed by flags. Always in exterior cells and never in interior cells.
+:int32 - X
+:int32 - Y
+:uint32 - flags (high bits look random)
+::0x1 - Force Hide Land Quad 1
+::0x2 - Force Hide Land Quad 2
+::0x4 - Force Hide Land Quad 3
+::0x8 - Force Hide Land Quad 4
 |-
 | - || XCLL || 64/92 bytes || Lighting (assumed from Oblivion). Only in interior cells.
 |-
@@ -28,37 +35,38 @@
 *0x4F7FFFC9 is a bug in the CK, this is the maximum unsigned integer 2^32-1 cast to a float and means the same as above
 *0xCF000000 could be a bug as well, this is the maximum signed negative integer -2^31 cast to a float
 |-
-| - || XWCS || 4 bytes || Always has the value three in Skyrim.esm.
-|-
 | - || XNAM || 1 byte ||
 |-
 | - || XCLR || formid[*] || Regions containing the cell (assumed from Oblivion).
+|- {{ThickLine}}
+| colspan=4 | Fields below this line can appear in any order.
 |-
-| - || XLCN || formid || The [[Tes5Mod:Mod File Format/LCTN|location]] for (of?) this cell. 
+| - || XLCN || formid || The [[Tes5Mod:Mod File Format/LCTN|location]] for (of?) this cell.
 |-
-| - || XCWT || formid || The [[Tes5Mod:Mod File Format/WATR|water]] for (of?) this cell. 
+| - || XWCN || 4 bytes || Only one occurrence.
+|-
+| - || XWCS || 4 bytes || Always has the value three in Skyrim.esm.
+|-
+| - || XWCU || 48/64 bytes
+|-
+| - || XCWT || formid || The [[Tes5Mod:Mod File Format/WATR|water]] for (of?) this cell.
+|-
+| - || XOWN || formid || Owner NPC or Faction (assumed from Oblivion). Only in interior cells.
+|-
+| - || XILL || formid || ID of an NPC_ or FLST. Only in interior cells.
+|-
+| - || XWEM || 38-46 bytes || Only in interior cells.
+|-
+| - || XCCM || formid || Climate if interior cell behaves like exterior cell (assumed from Oblivion). Only in interior cells.
+|-
+| - || XCAS || formid || The [[Tes5Mod:Mod File Format/ASPC|acoustic space]] for this cell.
+|-
+| - || XEZN || formid || A reference to an [[Tes5Mod:Mod File Format/ECZN|encounter zone]].
 |-
 | - || XCMO || formid || The [[Tes5Mod:Mod File Format/MUSC|music type]] for this cell. 
 |-
 | - || XCIM || formid || The [[Tes5Mod:Mod File Format/IMGS|image space]] for this cell.
-|-
-| - || XCAS || formid || The [[Tes5Mod:Mod File Format/ASPC|acoustic space]] for this cell.
-|-
-| - || XWEM || 38-46 bytes || Only in interior cells.
-|-
-| - || XILL || formid || ID of an NPC_ or FLST. Only in interior cells.
-|-
-| - || XOWN || formid || Owner NPC or Faction (assumed from Oblivion). Only in interior cells.
-|-
-| - || XCCM || formid || Climate if interior cell behaves like exterior cell (assumed from Oblivion). Only in interior cells.
-|-
-| - || XWCU || 48/64 bytes
-|-
-| - || XWCN || 4 bytes || Only two occurrences.
-|-
-| - || XEZN || formid || A reference to an [[Tes5Mod:Mod File Format/ECZN|encounter zone]].
 |}
-Fields XLCN through XEZN do not always appear in that order in Skyrim.esm.
 
 The last four bytes in XCLC do not appear to be a form ID. The following values appear 100 or more times in those last four bytes:
 {|class="wikitable"

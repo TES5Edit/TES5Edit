@@ -1,5 +1,10 @@
 {{Trail|File Formats|Mod File Format}}
-TACT contains the data for a "Talking Activator".  In other words, an object (not an NPC) with which you can start/receive dialog.
+'''TACT''' contains the data for a "Talking Activator".  In other words, an object (not an NPC) with which you can start/receive dialog.
+
+[[Tes5Mod:Mod_File_Format#Records|Record header flags]]:
+:0x200 - not On Local Map
+:0x10000 - Random Anim Start (not used)
+:0x20000 - Radio Station (not used)
 
 {| class="wikitable" border="1" width="100%" 
 ! width="3%" | [[Tes5Mod:File Format Conventions|C]]
@@ -10,17 +15,25 @@ TACT contains the data for a "Talking Activator".  In other words, an object (no
 |- 
 | + || EDID || editorId || zstring || Editor id
 |-
+| - || VMAD || unknown || [[Tes5Mod:Mod File Format/VMAD Field|VMAD]] || Scripting Info
+|-
 | + || OBND || objectBounds|| [[Tes5Mod:Mod File Format/OBND Field|OBND]] ||  Object bounds.
 |-
 | - || FULL || full name || zstring || Name seen ingame (if any)
 |-
-| + || MODL || model file || zstring || Relative directory to a .nif
+| - || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
 |-
-| - || MODT || model data? || struct || Variable length, factors of 12 ''collision data?  InvisibleCollision01.nif are the ones without''
+| - || DEST || destruction data || [[Tes5Mod:Mod File Format/DEST_Field|DEST]] || Includes Fields DSTD, DMDL, DMDT, DMDS
 |-
-| + || PNAM || unknown || uint32? || ''only 2 values, 0 and 0xCC4C3300''
+| - || KSIZ || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KSIZ]] || uint32 || KYWD count
 |-
-| + || FNAM || unknown || ushort? || Always 0
+| - || KWDA || [[Tes5Mod:Mod File Format/KYWD#Including_Keywords|KWDA]] || formid[KSIZ] || Array of KYWD formids
 |-
-| + || VNAM || voice type || formid || Voice Type ([[Tes5Mod:Mod File Format/VTYP|VTYP]])
+| - || PNAM || unknown ||   || RESET to 0 by CK, assumed legacy
+|-
+| + || SNAM || Looping Sound || formid || Looping Sound
+|-
+| + || FNAM || Unknown ||   || Unknown, assumed legacy
+|-
+| + || VNAM || Voice Type || formid || Voice Type ([[Tes5Mod:Mod File Format/VTYP|VTYP]])
 |}

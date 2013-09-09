@@ -12,9 +12,7 @@ These records are extremely simple, containing only an editorID and model inform
 |- 
 | + || EDID || editorId || zstring || Editor id
 |-
-| + || MODL || model || zstring || Path to .nif
-|-
-| - || MODT || model data || struct[] || ''only 1 with this and almost no data in it''
+| + || MODL || model || [[Tes5Mod:Mod File Format/MODL_Field|MODL]] || Includes Fields MODB, MODT, MODS, MODD
 |-
 | - || BNAM || Unload Event || zstring || Always 'AnimObjectUnequip', only 1 record without (0x000B18F2, AnimObjectLog)
 |-
