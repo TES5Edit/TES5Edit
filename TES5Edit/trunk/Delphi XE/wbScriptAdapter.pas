@@ -7,10 +7,13 @@ uses
   SysUtils,
   Variants,
   Windows,
+  Graphics,
   wbInterface,
   wbImplementation,
+  wbHelpers,
   wbBSA,
-  wbNifScanner;
+  wbNifScanner,
+  wbDDS;
 
 implementation
 
@@ -1198,6 +1201,26 @@ begin
 end;
 
 
+{ DDS routines }
+
+procedure DDSUtils_wbDDSStreamToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbDDSStreamToBitmap(TStream(V2O(Args.Values[0])), TBitmap(V2O(Args.Values[1])));
+end;
+
+procedure DDSUtils_wbDDSDataToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbDDSDataToBitmap(TBytes(Args.Values[0]), TBitmap(V2O(Args.Values[1])));
+end;
+
+
+{ Misc routines }
+
+procedure Misc_wbFlipBitmap(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbFlipBitmap(TBitmap(V2O((Args.Values[0]))), Integer(Args.Values[1]));
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 const
@@ -1423,6 +1446,12 @@ begin
     { Nif routines }
     AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
 
+    { DDS routines }
+    AddFunction(cUnit, 'wbDDSStreamToBitmap', DDSUtils_wbDDSStreamToBitmap, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbDDSDataToBitmap', DDSUtils_wbDDSDataToBitmap, 2, [varEmpty, varEmpty], varEmpty);
+
+    { Misc routines }
+    AddFunction(cUnit, 'wbFlipBitmap', Misc_wbFlipBitmap, 2, [varEmpty, varEmpty], varEmpty);
   end;
 end;
 
