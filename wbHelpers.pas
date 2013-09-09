@@ -17,7 +17,7 @@ unit wbHelpers;
 interface
 
 uses
-  Classes, ShellAPI,
+  Classes, Windows, SysUtils, Graphics, ShellAPI,
   wbInterface, Direct3D9, D3DX9, DXTypes;
 
 function wbDistance(const a, b: TD3DXVector3): Single; overload
@@ -27,6 +27,9 @@ function FindMatchText(Strings: TStrings; const Str: string): Integer;
 function IsFileESM(const aFileName: string): Boolean;
 function IsFileESP(const aFileName: string): Boolean;
 procedure DeleteDirectory(const DirName: string);
+procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer); // MirrorType: 1 - horizontal, 2 - vertical, 0 - both
+function wbAlphaBlend(DestDC, X, Y, Width, Height,
+  SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -57,9 +60,6 @@ type
 
 
 implementation
-
-uses
-  Windows, SysUtils;
 
 procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
 var
@@ -238,6 +238,65 @@ begin
   FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
   SHFileOperation(FileOp);
 end;
+
+procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer);
+var
+  MemBmp: TBitmap;
+  Dest: TRect;
+begin
+  if not Assigned(aBitmap) then
+    Exit;
+
+  MemBmp := TBitmap.Create;
+  try
+    MemBmp.Assign(aBitmap);
+    case MirrorType of
+      1:
+        begin
+          Dest.Left := MemBmp.Width;
+          Dest.Top := 0;
+          Dest.Right := -MemBmp.Width;
+          Dest.Bottom := MemBmp.Height
+        end;
+      2:
+        begin
+          Dest.Left := 0;
+          Dest.Top := MemBmp.Height;
+          Dest.Right := MemBmp.Width;
+          Dest.Bottom := -MemBmp.Height
+        end;
+      0:
+        begin
+          Dest.Left := MemBmp.Width;
+          Dest.Top := MemBmp.Height;
+          Dest.Right := -MemBmp.Width;
+          Dest.Bottom := -MemBmp.Height
+        end;
+    end;
+    StretchBlt(MemBmp.Canvas.Handle, Dest.Left, Dest.Top, Dest.Right, Dest.Bottom,
+               MemBmp.Canvas.Handle, 0, 0, MemBmp.Width, MemBmp.Height,
+               SRCCOPY);
+    aBitmap.Assign(MemBmp);
+  finally
+    FreeAndNil(MemBmp);
+  end;
+end;
+
+function wbAlphaBlend(DestDC, X, Y, Width, Height,
+  SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
+var
+  BlendFunc: TBlendFunction;
+begin
+  BlendFunc.BlendOp := AC_SRC_OVER;
+  BlendFunc.BlendFlags := 0;
+  BlendFunc.SourceConstantAlpha := Alpha;
+  if Alpha = 255 then
+    BlendFunc.AlphaFormat := AC_SRC_ALPHA
+  else
+    BlendFunc.AlphaFormat := 0;
+  Result := Windows.AlphaBlend(DestDC, X, Y, Width, Height, SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, BlendFunc);
+end;
+
 
 { TnxFastStringList }
 
