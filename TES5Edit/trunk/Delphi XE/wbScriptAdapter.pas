@@ -35,6 +35,7 @@ uses
   JvInterpreter_Graphics,
   JvInterpreter_Menus,
   JvInterpreter,
+  JvInterpreterFm,
   wbScriptAdapterMisc;
 
 { TElement }
@@ -1458,13 +1459,12 @@ end;
 procedure Init;
 begin
   RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  wbScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  JvInterpreterFm.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_System.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_SysUtils.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Classes.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Windows.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Graphics.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Controls.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Buttons.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
@@ -1474,6 +1474,8 @@ begin
   JvInterpreter_Forms.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Menus.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  wbScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
 end;
 
 initialization

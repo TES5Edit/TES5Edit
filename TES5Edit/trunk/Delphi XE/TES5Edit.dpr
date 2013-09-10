@@ -65,6 +65,7 @@ begin
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  Application.UpdateFormatSettings := False;
   Application.Title := wbApplicationTitle;
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
