@@ -7,10 +7,13 @@ uses
   SysUtils,
   Variants,
   Windows,
+  Graphics,
   wbInterface,
   wbImplementation,
+  wbHelpers,
   wbBSA,
-  wbNifScanner;
+  wbNifScanner,
+  wbDDS;
 
 implementation
 
@@ -32,6 +35,7 @@ uses
   JvInterpreter_Graphics,
   JvInterpreter_Menus,
   JvInterpreter,
+  JvInterpreterFm,
   wbScriptAdapterMisc;
 
 { TElement }
@@ -1198,6 +1202,26 @@ begin
 end;
 
 
+{ DDS routines }
+
+procedure DDSUtils_wbDDSStreamToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbDDSStreamToBitmap(TStream(V2O(Args.Values[0])), TBitmap(V2O(Args.Values[1])));
+end;
+
+procedure DDSUtils_wbDDSDataToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbDDSDataToBitmap(TBytes(Args.Values[0]), TBitmap(V2O(Args.Values[1])));
+end;
+
+
+{ Misc routines }
+
+procedure Misc_wbFlipBitmap(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  wbFlipBitmap(TBitmap(V2O((Args.Values[0]))), Integer(Args.Values[1]));
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 const
@@ -1425,19 +1449,24 @@ begin
     { Nif routines }
     AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
 
+    { DDS routines }
+    AddFunction(cUnit, 'wbDDSStreamToBitmap', DDSUtils_wbDDSStreamToBitmap, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbDDSDataToBitmap', DDSUtils_wbDDSDataToBitmap, 2, [varEmpty, varEmpty], varEmpty);
+
+    { Misc routines }
+    AddFunction(cUnit, 'wbFlipBitmap', Misc_wbFlipBitmap, 2, [varEmpty, varEmpty], varEmpty);
   end;
 end;
 
 procedure Init;
 begin
   RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  wbScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  JvInterpreterFm.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_System.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_SysUtils.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Classes.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Windows.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Graphics.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Controls.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Buttons.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
@@ -1447,6 +1476,8 @@ begin
   JvInterpreter_Forms.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Menus.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  wbScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
 end;
 
 initialization

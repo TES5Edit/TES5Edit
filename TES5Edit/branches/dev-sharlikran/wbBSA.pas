@@ -53,6 +53,7 @@ type
     chContainers: array of IwbResourceContainer;
   protected
     procedure AddContainer(const aContainer: IwbResourceContainer);
+    function ContainerExists(aContainerName: string): Boolean;
 
     {---IwbContainerHandler---}
     procedure AddFolder(const aPath: string);
@@ -170,20 +171,33 @@ end;
 
 { TwbContainerHandler }
 
-procedure TwbContainerHandler.AddBSA(const aFileName: string);
-begin
-  AddContainer(TwbBSAFile.Create(aFileName));
-end;
-
 procedure TwbContainerHandler.AddContainer(const aContainer: IwbResourceContainer);
 begin
   SetLength(chContainers, Succ(Length(chContainers)));
   chContainers[High(chContainers)] := aContainer;
 end;
 
+function TwbContainerHandler.ContainerExists(aContainerName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := True;
+  for i := Low(chContainers) to High(chContainers) do
+    if SameText(chContainers[i].Name, aContainerName) then
+      Exit;
+  Result := False;
+end;
+
+procedure TwbContainerHandler.AddBSA(const aFileName: string);
+begin
+  if not ContainerExists(aFileName) then
+    AddContainer(TwbBSAFile.Create(aFileName));
+end;
+
 procedure TwbContainerHandler.AddFolder(const aPath: string);
 begin
-  AddContainer(TwbFolder.Create(aPath));
+  if not ContainerExists(aPath) then
+    AddContainer(TwbFolder.Create(aPath));
 end;
 
 function TwbContainerHandler.OpenResource(const aFileName: string): TDynResources;
@@ -271,6 +285,7 @@ begin
   if Length(res) = 0 then
     raise Exception.Create('Resource doesn''t exist');
 
+  residx := High(res);
   for i := High(res) to Low(res) do
     if (aContainerName = '') or SameText(res[i].Container.Name, aContainerName) then begin
       residx := i;

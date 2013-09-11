@@ -2703,7 +2703,7 @@ begin
     end;
 end;
 
-procedure PluginListGroupESM(List: TStringList);
+{procedure PluginListGroupESM(List: TStringList);
 var
   slESM, slESP : TStringList;
   IsESM        : Boolean;
@@ -2726,7 +2726,7 @@ begin
     FreeAndNil(slESM);
     FreeAndNil(slESP);
   end;
-end;
+end;}
 
 function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
@@ -2850,7 +2850,7 @@ end;
 procedure TfrmMain.DoInit;
 
   // remove comments, empty lines and missing files from list
-  procedure FixLoadList(sl: TStrings; CommentsOnly: Boolean = False);
+  procedure FixLoadList(sl: TStrings);
   var
     i, j: integer;
     s: string;
@@ -2861,7 +2861,7 @@ procedure TfrmMain.DoInit;
       if j > 0 then
         System.Delete(s, j, High(Integer));
       s := Trim(s);
-      if (s = '') or not (CommentsOnly or FileExists(wbDataPath + s)) then begin
+      if (s = '') or not FileExists(wbDataPath + s) then begin
         sl.Delete(i);
         Continue;
       end;
@@ -2873,7 +2873,9 @@ procedure TfrmMain.DoInit;
   var
     F     : TSearchRec;
     slNew : TStringList;
+    i, j  : integer;
   begin
+    j := -1;
     if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
       slNew := TStringList.Create;
       try
@@ -2887,7 +2889,19 @@ procedure TfrmMain.DoInit;
           end;
         until FindNext(F) <> 0;
         slNew.CustomSort(PluginListCompare);
-        sl.AddStrings(slNew);
+        // add esm masters after the last master, add esp plugins at the end
+        // find position of the last master
+        for j := Pred(sl.Count) downto 0 do
+          if IsFileESM(sl[j]) then
+            Break;
+        Inc(j);
+        for i := 0 to Pred(slNew.Count) do begin
+          if IsFileESM(slNew[i]) then begin
+            sl.InsertObject(j, slNew[i], slNew.Objects[i]);
+            Inc(j);
+          end else
+            sl.AddObject(slNew[i], slNew.Objects[i]);
+        end;
       finally
         slNew.Free;
       end;
@@ -2988,15 +3002,14 @@ begin
       with TfrmFileSelect.Create(nil) do try
 
         {
-           *** Load order handling for Skyrim ***
+           *** Load order handling for Skyrim and later games ***
            Plugins are sorted by the order in plugins.txt
            1. Load plugins list from plugins file
            2. Add missing files from BOSS list loadorder.txt
-           3. Add missing files from Data folder
         }
-        if wbGameMode in [gmTES5] then begin
+        if not (wbGameMode in [gmTES4, gmFO3, gmFNV]) then begin
           sl.LoadFromFile(wbPluginsFileName);
-          FixLoadList(sl);
+          FixLoadList(sl); // remove comments and nonexisting files
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
           j := FindMatchText(sl, wbGameName+'.esm');
@@ -3011,43 +3024,28 @@ begin
             try
               sl2.LoadFromFile(s);
               // skip first line "Skyrim.esm" in BOSS list
-              FixLoadList(sl2, True);
-              if (sl2.Count>0) and (SameText(wbGameName+'.esm', sl2[0]) or SameText('Update.esm', sl2[0])) then
-                j := 1
-              else
-                j := 0;
-
-              for i := j to Pred(sl2.Count) do begin
+              for i := 1 to Pred(sl2.Count) do begin
                 j := FindMatchText(sl, sl2[i]);
                 // if plugin exists in plugins file, skip
                 if j <> -1 then Continue;
                 // otherwise insert it after position of previous plugin
-                if i>0 then
-                  j := FindMatchText(sl, sl2[i-1])
-                else
-                  j := -1;
+                j := FindMatchText(sl, sl2[i-1]);
                 if j <> -1 then
-                  sl.Insert(j+1, sl2[i])
-                else
-                // or at the end if the previous is not present (I don't known how that could happen, but if by any chance...)
-                  sl.Add(sl2[i]);
+                  sl.Insert(j+1, sl2[i]);
               end;
             finally
               sl2.Free;
             end;
           end;
-          AddMissingToLoadList(sl);
-          PluginListGroupESM(sl)
-        end
+        end;
 
-        else
         {
            *** Load order handling for Oblivion, Fallout3 and New Vegas ***
-           Plugins are sorted by timestamps
+           Plugins are sorted by timestamps.
+           Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
         }
-        begin
-          AddMissingToLoadList(sl);
-        end;
+        AddMissingToLoadList(sl);
+        FixLoadList(sl); // remove nonexisting files
 
         if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
           Age := Integer(sl.Objects[0]);
@@ -3061,6 +3059,7 @@ begin
 
         CheckListBox1.Items.Assign(sl);
 
+        // check active files using the game's plugins list
         sl.LoadFromFile(wbPluginsFileName);
         for i := Pred(sl.Count) downto 0 do begin
           s := Trim(sl.Strings[i]);
