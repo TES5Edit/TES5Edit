@@ -1222,6 +1222,23 @@ begin
   wbFlipBitmap(TBitmap(V2O((Args.Values[0]))), Integer(Args.Values[1]));
 end;
 
+procedure Misc_wbAlphaBlend(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbAlphaBlend(
+    Args.Values[0], // DestDC
+    Args.Values[1], // X
+    Args.Values[2], // Y
+    Args.Values[3], // Width
+    Args.Values[4], // Height
+    Args.Values[5], // SrcDC
+    Args.Values[6], // SrcX
+    Args.Values[7], // SrcY
+    Args.Values[8], // SrcWidth
+    Args.Values[9], // SrcHeight
+    Args.Values[10] // Alpha
+  );
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 const
@@ -1453,6 +1470,7 @@ begin
 
     { Misc routines }
     AddFunction(cUnit, 'wbFlipBitmap', Misc_wbFlipBitmap, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbAlphaBlend', Misc_wbAlphaBlend, 11, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
 

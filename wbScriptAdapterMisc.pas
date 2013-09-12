@@ -11,6 +11,7 @@ implementation
 
 uses
   Windows,
+  Graphics,
   Classes,
   SysUtils,
   Variants,
@@ -502,6 +503,14 @@ begin
 end;
 
 
+{ TBitmap }
+
+procedure TBitmap_SetSize(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TBitmap(Args.Obj).SetSize(Args.Values[0], Args.Values[1]);
+end;
+
+
 { THashedStringList }
 
 procedure THashedStringList_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -940,6 +949,9 @@ begin
 
     { TMenuItem }
     AddGet(TMenuItem, 'Clear', TMenuItem_Clear, 0, [varEmpty], varEmpty);
+
+    { TBitmap }
+    AddGet(TBitmap, 'SetSize', TBitmap_SetSize, 2, [varEmpty, varEmpty], varEmpty);
 
     { TCustomIniFile }
     AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');

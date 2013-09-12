@@ -11718,7 +11718,7 @@ begin
       {0x80} 'No Grass'
     ]), cpNormal, True),
     {>>> Object Bounds doesn't show up in CK <<<}
-    wbRStruct('Object Bounds (unused?)', [
+    wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
         wbFloat('X', cpNormal, False, 1/4096),
         wbFloat('Y', cpNormal, False, 1/4096)
