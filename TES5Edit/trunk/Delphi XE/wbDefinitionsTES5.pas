@@ -11643,31 +11643,27 @@ begin
     wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itU16),
-      wbInteger('Y', itU16)
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16)
     ]),
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbInteger(PNAM, 'Use Flags', itU16, wbFlags([
-      {0x0001}'Use Land Data',
-      {0x0002}'Use LOD Data',
-      {0x0004}'Don''t Use Map Data',
-      {0x0008}'Use Water Data',
-      {0x0010}'Use Climate Data',
-      {0x0020}'Unknown 6',
-      {0x0040}'Use Sky Cell',
-      {0x0080}'Unknown 8',
-      {0x0100}'Unknown 9',
-      {0x0200}'Unknown 10',
-      {0x0400}'Unknown 11',
-      {0x0800}'Unknown 12',
-      {0x1000}'Unknown 13',
-      {0x2000}'Unknown 14',
-      {0x4000}'Unknown 15',
-      {0x8000}'Unknown 16'
-    ], True)),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+      wbStruct(PNAM, '', [
+        wbInteger('Flags', itU8, wbFlags([
+          {0x0001}'Use Land Data',
+          {0x0002}'Use LOD Data',
+          {0x0004}'Don''t Use Map Data',
+          {0x0008}'Use Water Data',
+          {0x0010}'Use Climate Data',
+          {0x0020}'Use Image Space Data (unused)',
+          {0x0040}'Use Sky Cell'
+        ], True)),
+        wbByteArray('Unknown', 1)
+      ], cpNormal, True)
+    ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
@@ -11702,9 +11698,9 @@ begin
     ], cpNormal, False, nil, 2),
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset', cpNormal, False, 1/4096),
-      wbFloat('Cell Y Offset', cpNormal, False, 1/4096),
-      wbFloat('Cell Z Offset', cpNormal, False, 1/4096)
+      wbFloat('Cell X Offset'),
+      wbFloat('Cell Y Offset'),
+      wbFloat('Cell Z Offset')
     ], cpNormal, True),
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([

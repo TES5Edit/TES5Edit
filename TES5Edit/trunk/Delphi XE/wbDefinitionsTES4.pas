@@ -4862,12 +4862,14 @@ begin
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,
     wbFULL,
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD])
+    ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbICON,
     wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
+      wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
@@ -4889,8 +4891,18 @@ begin
       {0x08} '',
       {0x10} 'No LOD water'
     ]), cpNormal, True),
-    wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+    //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+    //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+    wbRStruct('Object Bounds', [
+      wbStruct(NAM0, 'Min', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
+      wbStruct(NAM9, 'Max', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
     wbByteArray(OFST, 'Unknown')
   ], False, nil, cpNormal, False, wbRemoveOFST);

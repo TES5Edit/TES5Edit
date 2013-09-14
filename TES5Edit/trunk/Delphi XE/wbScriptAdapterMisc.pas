@@ -19,6 +19,7 @@ uses
   StdCtrls,
   ExtCtrls,
   ComCtrls,
+  Forms,
   Menus,
   CheckLst,
   ShellApi,
@@ -285,6 +286,21 @@ end;
 procedure TBinaryReader_ReadShortInt(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TBinaryReader(Args.Obj).ReadShortInt;
+end;
+
+procedure TBinaryReader_ReadSmallInt(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadSmallInt;
+end;
+
+procedure TBinaryReader_ReadUInt16(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadUInt16;
+end;
+
+procedure TBinaryReader_ReadUInt32(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadUInt32;
 end;
 
 procedure TBinaryReader_ReadInteger(var Value: Variant; Args: TJvInterpreterArgs);
@@ -820,6 +836,7 @@ begin
     AddConst('StdCtrls', 'cbChecked', Ord(cbChecked));
     AddConst('StdCtrls', 'cbUnchecked', Ord(cbUnchecked));
     AddConst('StdCtrls', 'cbGrayed', Ord(cbGrayed));
+    AddConst('Forms', 'poMainFormCenter', Ord(poMainFormCenter));
     AddConst('Controls', 'akLeft', Ord(akLeft));
     AddConst('Controls', 'akRight', Ord(akRight));
     AddConst('Controls', 'akTop', Ord(akTop));
@@ -891,6 +908,9 @@ begin
     AddGet(TBinaryReader, 'ReadChar', TBinaryReader_ReadChar, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadDouble', TBinaryReader_ReadDouble, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadShortInt', TBinaryReader_ReadShortInt, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadSmallInt', TBinaryReader_ReadSmallInt, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadUInt16', TBinaryReader_ReadUInt16, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadUInt32', TBinaryReader_ReadUInt32, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadInteger', TBinaryReader_ReadInteger, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadSingle', TBinaryReader_ReadSingle, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadString', TBinaryReader_ReadString, 0, [varEmpty], varEmpty);
