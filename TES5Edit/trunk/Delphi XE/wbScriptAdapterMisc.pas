@@ -511,6 +511,19 @@ begin
 end;
 
 
+{ TMenu }
+
+procedure TMenu_Read_AutoHotKeys(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Integer(TMenu(Args.Obj).AutoHotKeys);
+end;
+
+procedure TMenu_Write_AutoHotKeys(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TMenu(Args.Obj).AutoHotKeys := Value;
+end;
+
+
 { TMenuItem }
 
 procedure TMenuItem_Clear(var Value: Variant; Args: TJvInterpreterArgs);
@@ -837,6 +850,8 @@ begin
     AddConst('StdCtrls', 'cbUnchecked', Ord(cbUnchecked));
     AddConst('StdCtrls', 'cbGrayed', Ord(cbGrayed));
     AddConst('Forms', 'poMainFormCenter', Ord(poMainFormCenter));
+    AddConst('Menus', 'maAutomatic', Ord(maAutomatic));
+    AddConst('Menus', 'maManual', Ord(maManual));
     AddConst('Controls', 'akLeft', Ord(akLeft));
     AddConst('Controls', 'akRight', Ord(akRight));
     AddConst('Controls', 'akTop', Ord(akTop));
@@ -966,6 +981,10 @@ begin
     { TListView }
     AddHandler('ComCtrls', 'TLVOwnerDataEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnData);
     AddHandler('ComCtrls', 'TLVSelectItemEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnSelectItem);
+
+    { TMenu }
+    AddGet(TMenu, 'AutoHotKeys', TMenu_Read_AutoHotKeys, 0, [varEmpty], varEmpty);
+    AddSet(TMenu, 'AutoHotKeys', TMenu_Write_AutoHotKeys, 0, [varEmpty]);
 
     { TMenuItem }
     AddGet(TMenuItem, 'Clear', TMenuItem_Clear, 0, [varEmpty], varEmpty);

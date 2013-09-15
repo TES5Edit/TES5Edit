@@ -9,6 +9,7 @@ unit WorldspaceBrowser;
 const
   CellSize = 4096;
   ColorBackground = $000000; // background map color RGB
+  ColorTransparent = $000001; // transparent color for overlay
   // cell grid font sizes for lod level 32
   FontSizeBlock = 20;
   FontSizeSubBlock = 7;
@@ -23,10 +24,11 @@ var
   GridOpacity: integer;
   fMapDrawn: boolean;
   CurrentWorld: IInterface;
+  slPlugin, slRegion: TStringList;
 
   frmMain, frmWorld: TForm;
   mnMain: TMainMenu;
-  miWorldspace, mi: TMenuItem;
+  mi, miWorldspace, miOverlay, miRegion, miCell: TMenuItem;
   memoInfo: TMemo;
   sbxMap: TScrollBox;
   imgMap, imgOver: TImage;
@@ -118,6 +120,40 @@ begin
 end;
 
 //============================================================================
+// returns LAND record for CELL record
+function GetLandscapeForCell(cell: IInterface): IInterface;
+var
+  cellchild, r: IInterface;
+  i: integer;
+begin
+  cellchild := FindChildGroup(ChildGroup(cell), 9, cell); // get Temporary group of cell
+  for i := 0 to Pred(ElementCount(cellchild)) do begin
+    r := ElementByIndex(cellchild, i);
+    if Signature(r) = 'LAND' then begin
+      Result := r;
+      Exit;
+    end;
+  end;
+end;
+
+//============================================================================
+// returns NAVM or PGRD record for CELL record
+function GetPathingForCell(cell: IInterface): IInterface;
+var
+  cellchild, r: IInterface;
+  i: integer;
+begin
+  cellchild := FindChildGroup(ChildGroup(cell), 9, cell); // get Temporary group of cell
+  for i := 0 to Pred(ElementCount(cellchild)) do begin
+    r := ElementByIndex(cellchild, i);
+    if (Signature(r) = 'NAVM') or (Signature(r) = 'PGRD') then begin
+      Result := r;
+      Exit;
+    end;
+  end;
+end;
+
+//============================================================================
 // Cell X to pixel
 function CellX2px(x: integer): integer;
 begin
@@ -157,6 +193,20 @@ end;
 function px2PosY(y: integer): single;
 begin
   Result := -(y / PosSizePx - MapSizeY * CellSize);
+end;
+
+//============================================================================
+// game units to X position in pixels for overlay depending on view scale
+function OverX(x: single): integer;
+begin
+  Result := PosX2px(x) * MapViewScale;
+end;
+
+//============================================================================
+// game units to Y position in pixels for overlay depending on view scale
+function OverY(y: single): integer;
+begin
+  Result := PosY2px(y) * MapViewScale;
 end;
 
 //============================================================================
@@ -327,6 +377,8 @@ end;
 procedure DrawMap(wrld: IInterface);
 var
   bmp: TBitmap;
+  i, j: integer;
+  ent, regns, regn: IInterface;
 begin
   bmp := TBitmap.Create;
   try
@@ -341,6 +393,8 @@ begin
     imgMap.Picture.Assign(bmp);
     imgOver.Width := imgMap.Width;
     imgOver.Height := imgMap.Height;
+    imgOver.Picture.Bitmap.SetSize(imgOver.Width, imgOver.Height);
+    miOverlayClearClick(nil);
   finally
     bmp.Free;
   end;
@@ -348,6 +402,25 @@ begin
     memoInfo.Lines.Text : = Format('No LOD level %d textures for worldspace %s, try other levels.', [LODLevel, Name(wrld)]);
   frmMain.Caption := Format('Worldspace Browser - %s', [Name(wrld)]);
   frmMainFormResize(nil);
+
+  // list of overriding plugins
+  slPlugin.Clear;
+  for i := 0 to Pred(OverrideCount(wrld)) do begin
+    ent := OverrideByIndex(wrld, i);
+    slPlugin.AddObject(Name(GetFile(ent)), ent);
+  end;
+  miCell.Enabled := (slPlugin.Count > 0);
+
+  // list of regions
+  slRegion.Clear;
+  for i := Pred(FileCount) downto 0 do begin
+    regns := GroupBySignature(FileByIndex(i), 'REGN');
+    for j := 0 to Pred(ElementCount(regns)) do begin
+      regn := ElementByIndex(regns, j);
+      if SameText(GetElementEditValues(regn, 'WNAM'), Name(CurrentWorld)) and ElementExists(regn, 'Region Areas') then
+        slRegion.AddObject(EditorID(regn), regn);
+    end;
+  end;
 end;
 
 //============================================================================
@@ -407,6 +480,126 @@ begin
 end;
 
 //============================================================================
+procedure miOverlayClearClick(Sender: TObject);
+begin
+  imgOver.Canvas.Brush.Color := ColorTransparent;
+  imgOver.Canvas.FillRect(Rect(0, 0, imgOver.Picture.Bitmap.Width, imgOver.Picture.Bitmap.Height));
+end;
+
+//============================================================================
+procedure OverlayRegion(regn: IInterface);
+var
+  i, j: integer;
+  areas, area, points, point: IInterface;
+  x, y: real;
+begin
+  imgOver.Canvas.Pen.Color := clYellow;
+  areas := ElementByName(regn, 'Region Areas');
+  for i := 0 to Pred(ElementCount(areas)) do begin
+    area := ElementByIndex(areas, i);
+    points := ElementBySignature(area, 'RPLD');
+    for j := 0 to Pred(ElementCount(points)) do begin
+      point := ElementByIndex(points, j);
+      if j = 0 then begin
+        x := OverX(GetElementNativeValues(point, 'X'));
+        y := OverY(GetElementNativeValues(point, 'Y'));
+        imgOver.Canvas.MoveTo(x, y);
+      end else
+        imgOver.Canvas.LineTo(OverX(GetElementNativeValues(point, 'X')), OverY(GetElementNativeValues(point, 'Y')));
+    end;
+    if ElementCount(points) > 0 then
+      imgOver.Canvas.LineTo(x, y);
+  end;
+end;
+
+//============================================================================
+procedure OverlayCell(wrld: IInterface);
+var
+  blockidx, subblockidx, cellidx: integer;
+  wrldgrup, block, subblock, cell: IInterface;
+  x, y, x1, y1: real;
+begin
+  imgOver.Canvas.Pen.Color := clYellow;
+  wrldgrup := ChildGroup(wrld);
+  // traverse Blocks
+  for blockidx := 0 to Pred(ElementCount(wrldgrup)) do begin
+    block := ElementByIndex(wrldgrup, blockidx);
+    // traverse SubBlocks
+    for subblockidx := 0 to Pred(ElementCount(block)) do begin
+      subblock := ElementByIndex(block, subblockidx);
+      // traverse Cells
+      for cellidx := 0 to Pred(ElementCount(subblock)) do begin
+        cell := ElementByIndex(subblock, cellidx);
+        if Signature(cell) <> 'CELL' then Continue;
+        if not ElementExists(cell, 'XCLC') then Continue;
+        x := OverX(GetElementNativeValues(cell, 'XCLC\X')*CellSize);
+        y := OverY(GetElementNativeValues(cell, 'XCLC\Y')*CellSize);
+        x1 := x + CellSizePx*MapViewScale;
+        y1 := y + CellSizePx*MapViewScale;
+        if Assigned(GetLandscapeForCell(cell)) then
+          imgOver.Canvas.Pen.Style := psSolid // landscape overrides shown as solid rect
+        else
+          imgOver.Canvas.Pen.Style := psDot; // cell only override shown as dotted rect
+        imgOver.Canvas.MoveTo(x, y);
+        imgOver.Canvas.LineTo(x1, y);
+        imgOver.Canvas.LineTo(x1, y1);
+        imgOver.Canvas.LineTo(x, y1);
+        imgOver.Canvas.LineTo(x, y);
+        if Assigned(GetPathingForCell(cell)) then begin
+          imgOver.Canvas.Pen.Style := psDot;
+          imgOver.Canvas.MoveTo(x, y);
+          imgOver.Canvas.LineTo(x1, y1);
+          imgOver.Canvas.MoveTo(x, y1);
+          imgOver.Canvas.LineTo(x1, y);
+        end;
+      end;
+    end;
+  end;
+end;
+
+//============================================================================
+procedure miRegionClick(Sender: TObject);
+var
+  frm: TForm;
+  clb: TCheckListBox;
+  i: integer;
+begin
+  frm := frmFileSelect;
+  try
+    frm.Caption := 'Region';
+    clb := TCheckListBox(frm.FindComponent('CheckListBox1'));
+    clb.Items.Assign(slRegion);
+    if frm.ShowModal <> mrOk then Exit;
+    for i := 0 to Pred(clb.Items.Count) do
+      if clb.Checked[i] then
+        OverlayRegion(ObjectToElement(slRegion.Objects[i]));
+  finally
+    frm.Free;
+  end;
+end;
+
+//============================================================================
+procedure miCellClick(Sender: TObject);
+var
+  frm: TForm;
+  clb: TCheckListBox;
+  i: integer;
+begin
+  frm := frmFileSelect;
+  try
+    frm.Caption := 'Overriding plugins';
+    clb := TCheckListBox(frm.FindComponent('CheckListBox1'));
+    clb.Items.Assign(slPlugin);
+    if frm.ShowModal <> mrOk then Exit;
+    for i := 0 to Pred(clb.Items.Count) do
+      if clb.Checked[i] then
+        OverlayCell(ObjectToElement(slPlugin.Objects[i]));
+  finally
+    frm.Free;
+  end;
+end;
+
+//============================================================================
 // create forms
 procedure BuildForms;
 var
@@ -425,15 +618,35 @@ begin
   //frmMain.OnKeyDown := FormKeyDown;
 
   mnMain := TMainMenu.Create(frmMain);
+  mnMain.AutoHotKeys := maManual;
   miWorldspace := TMenuItem.Create(mnMain);
   miWorldspace.Caption := 'Wordspace';
   mnMain.Items.Add(miWorldspace);
+  miOverlay := TMenuItem.Create(mnMain);
+  miOverlay.Caption := 'Overlay';
+  mnMain.Items.Add(miOverlay);
   
   mi := TMenuItem.Create(mnMain);
   mi.Caption := 'Select';
   mi.OnClick := miWorldspaceClick;
   miWorldspace.Add(mi);
 
+  miRegion := TMenuItem.Create(mnMain);
+  miRegion.Caption := 'Region';
+  miRegion.OnClick := miRegionClick;
+  miOverlay.Add(miRegion);
+
+  miCell := TMenuItem.Create(mnMain);
+  miCell.Caption := 'Cell overrides';
+  miCell.OnClick := miCellClick;
+  miOverlay.Add(miCell);
+
+  mi := TMenuItem.Create(mnMain); mi.Caption := '-'; miOverlay.Add(mi);
+  mi := TMenuItem.Create(mnMain);
+  mi.Caption := 'Clear';
+  mi.OnClick := miOverlayClearClick;
+  miOverlay.Add(mi);
+  
   memoInfo := TMemo.Create(frmMain);
   memoInfo.Parent := frmMain;
   memoInfo.Height := 60;
@@ -455,7 +668,10 @@ begin
   imgMap.Parent := sbxMap;
   imgOver := TImage.Create(frmMain);
   imgOver.Parent := sbxMap;
+  //imgOver.Picture.Bitmap.TransparentMode := tmFixed;
+  imgOver.Picture.Bitmap.TransparentColor := ColorTransparent;
   imgOver.Transparent := True;
+  miOverlayClearClick(nil);
   
   // worldspace select window
   frmWorld := TForm.Create(nil);
@@ -502,7 +718,7 @@ begin
       for j := 0 to Pred(ElementCount(wrlds)) do begin
         wrld := ElementByIndex(wrlds, j);
         if HasLOD(wrld) then
-          sl.AddObject(EditorID(wrld), wrld);
+          sl.AddObject(EditorID(wrld), MasterOrSelf(wrld));
       end;
     end;
     cmbWorld.Items.Assign(sl);
@@ -534,6 +750,10 @@ var
 begin
   InitBrowser;
   try
+    slRegion := TStringList.Create;
+    slRegion.Duplicates := dupIgnore;
+    slRegion.Sorted := True;
+    slPlugin := TStringList.Create;
     BuildForms;
     if wbGameMode = gmFNV then
       wrld := RecordByFormID(FileByIndex(0), $000DA726, False)
@@ -545,6 +765,8 @@ begin
   finally
     frmWorld.Free;
     frmMain.Free;
+    slRegion.Free;
+    slPlugin.Free;
   end;
 
   Result := 1;
