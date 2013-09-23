@@ -8734,11 +8734,11 @@ begin
       wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
     ]),
     wbStruct(BNAM, 'Values', [
-      wbInteger('% Frequency Shift', itU8),
-      wbInteger('% Frequency Variance', itU8),
+      wbInteger('% Frequency Shift', itS8),
+      wbInteger('% Frequency Variance', itS8),
       wbInteger('Priority', itU8),
       wbInteger('db Variance', itU8),
-      wbInteger('Static Attenuation (db)', itU16, wbdiv(100))
+      wbInteger('Static Attenuation (db)', itU16, wbDiv(100))
     ])
   ]);
 

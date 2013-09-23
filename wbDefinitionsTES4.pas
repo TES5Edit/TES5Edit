@@ -4643,8 +4643,8 @@ begin
     wbString(FNAM, 'Sound Filename'),
     wbRUnion('Sound Data', [
       wbStruct(SNDX, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
+        wbInteger('Minimum attenuation distance', itU8, wbMul(5)),
+        wbInteger('Maximum attenuation distance', itU8, wbMul(100)),
         wbInteger('Frequency adjustment %', itS8),
         wbByteArray('Unused', 1),
         wbInteger('Flags', itU16, wbFlags([
@@ -4658,13 +4658,13 @@ begin
           {0x0080} '360 LFE'
         ])),
         wbByteArray('Unused', 2),
-        wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8)
+        wbInteger('Static Attenuation (db)', itU16, wbDiv(100)),
+        wbInteger('Stop time', itU8),
+        wbInteger('Start time', itU8)
       ], cpNormal, True),
       wbStruct(SNDD, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
+        wbInteger('Minimum attenuation distance', itU8, wbMul(5)),
+        wbInteger('Maximum attenuation distance', itU8, wbMul(100)),
         wbInteger('Frequency adjustment %', itS8),
         wbByteArray('Unused', 1),
         wbInteger('Flags', itU16, wbFlags([
