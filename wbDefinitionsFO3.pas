@@ -3386,12 +3386,12 @@ begin
       end;
     end;
 
-    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
+    {if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
       if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
         Assert(False);
       NewContainer.RemoveElement('PLD2');
       NewContainer.AddElement(OldContainer);
-    end;
+    end;}
   finally
     wbEndInternalEdit;
   end;
