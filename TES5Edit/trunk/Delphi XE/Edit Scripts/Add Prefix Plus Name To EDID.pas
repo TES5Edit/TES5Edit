@@ -8,15 +8,17 @@ unit AddPrefixPlusNameToEDID;
 
 Const
   Prefix = 'Reserve';
+  
+Var
+  Count: Integer;
 
 function Process(e: IInterface): integer;
 var
   elEditorID: IInterface;
   s, s1: String;
-  Position, Count: Integer;
+  Position: Integer;
 begin
   Result := 0;
-  Count := 0;
   s1:= '';
   AddMessage('Processing: ' + Name(e));
   elEditorID := ElementByName(e, 'EDID - Editor ID');
@@ -27,8 +29,7 @@ begin
     elEditorID := Add(e, 'EDID', True)
 	End;
   Begin
-    //SetEditValue(elEditorID, Prefix + s1 + '_' + IntToStr(Count));
-	SetEditValue(elEditorID, Prefix + s1);
+    SetEditValue(elEditorID, Prefix + s1 + '_' + IntToStr(Count));
 	Inc(Count)
   End;
 end;
