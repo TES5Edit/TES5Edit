@@ -2435,7 +2435,9 @@ var
                   CountElement := TargetRecord.ElementByName[aCntNames[l]];
                   if Assigned(CountElement) then
                     if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
-                      CountElement.NativeValue := Entries.ElementCount;
+                      CountElement.NativeValue := Entries.ElementCount
+                    else
+                      CountElement.Remove;
                 end;
 
               end;
