@@ -2459,6 +2459,15 @@ var
   LastLoadOrder   : Integer;
   i               : Integer;
 begin
+  if wbGameMode in [gmTES5] then begin
+    if MessageDlg('Merged patch is unsupported for ' + wbGameName +
+      '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
+      'Do you want to continue?',
+      mtWarning, mbYesNo, 0) <> mrYes
+    then
+      Exit;
+  end;
+
   TargetFile := nil;
 
   while not Assigned(TargetFile) do
@@ -10075,9 +10084,9 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
-  if wbGameMode = gmTES5 then begin
-    mniNavCreateMergedPatch.Visible := False;
-  end;
+  //if wbGameMode = gmTES5 then begin
+  //  mniNavCreateMergedPatch.Visible := False;
+  //end;
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
