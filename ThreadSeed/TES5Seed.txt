@@ -1,15 +1,16 @@
 ﻿[size=5][color=#00BFFF][url=http://skyrim.nexusmods.com/mods/25859/]TES5Edit 3.0.30 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
  
-[size=4][color=#FF0000]This is the ninth update of TES5Edit and is still being updated. However, it should still be considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available. Feel free to ask about plugin cleaning in the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/]RELz TES5Edit Plugin Cleaning Emporium[/url][/color]. If you require technical assistance the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1466352-relz-tes5edit/]RELz TES5Edit[/url][/color] thread is best for that. As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
+[size=4][color=#FF0000]This is the ninth update of TES5Edit and is still being updated. However, it should still be considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available. Feel free to ask about plugin cleaning in the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/]RELz TES5Edit Plugin Cleaning Emporium[/url][/color]. If you require technical assistance the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color] thread is best for that. As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
  
 [size=4][color=#FF0000]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
  
 [size=4][color=#FF8C00]TES5Edit 3.0.30 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://skyrim.nexusmods.com/users/156622]Zilav[/url], [url=http://skyrim.nexusmods.com/users/1102380]Hlp[/url], and [url=http://skyrim.nexusmods.com/users/4147439]Sharlikran[/url].[/color][/size]
  
-[size=4][b][color=#00BFFF]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1466352-relz-tes5edit/]RELz TES5Edit[/url][/color][/b][/size]
+[size=4][b][color=#00BFFF]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color][/b][/size]
  
 Threads:
 [spoiler]
+[topic=1466352]Thread 17[/topic]
 [topic=1461810]Thread 16[/topic]
 [topic=1450501]Thread 15[/topic]
 [topic=1443268]Thread 14[/topic]
@@ -40,6 +41,7 @@ Threads:
 [*][url=http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit]TES5Edit Cleaning Guide[/url][/*]
 [*][url=http://www.creationkit.com/TES5Edit_Mod_Cleaning_Tutorial]TES5Edit Mod Cleaning Tutorial[/url][/*]
 [*][url=http://www.creationkit.com/Skyrim_Dirty_Plugins_List]TES5Edit Skyrim Dirty Plugins List[/url][/*]
+[*][url=http://www.creationkit.com/TES5Edit_Scripting_Functions]TES5Edit Scripting Functions[/url] - New! [WIP][/*]
 [/LIST]
 Gopher's first video [url=http://youtu.be/UOQO2S6HDBw]TES5EDIT : Cleaning your mods[/url] covers important cleaning aspects of TES5Edit and I look forward to more helpful videos from him.
  
@@ -51,7 +53,7 @@ Fallout3 [url=http://fallout3.nexusmods.com/mods/8629]Training Manual[/url] for 
 Fallout New Vegas [url=http://newvegas.nexusmods.com/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
  
 [color=#FF8C00]Important for Older Systems:[/color]
-If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  [url=http://www.microsoft.com/en-us/download/details.aspx?id=8109]DirectX End-User Runtimes (June 2010)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes (March 2008)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url].  (make sure to install it after unpacking it)
+If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version. [url=http://www.microsoft.com/en-us/download/details.aspx?id=8109]DirectX End-User Runtimes (June 2010)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes (March 2008)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url]. (make sure to install it after unpacking it)
  
 [color=#00BFFF]TES5Edit Updates:[/color]
  
@@ -69,22 +71,21 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
 [*]- [xDump] Fatal exceptions are reported through ReportProgress to have a timestamp. It might be useful to track down the issue.[/*]
 [*]- [TES5] Blocks adding new script property and new scripts. Please use CK to create them.[/*]
 [*]- [TES4/TES5/FO3/FNV] Record definitions update (number of ITM counts may change).[/*]
-Scripting:
+[*]Scripting:[/*]
 [*]- New scripts added.[/*]
 [*]- New scripting functions (including regular expressions).[/*]
 [*]- New UI controls (TLabeledEdit, TCheckListBox).[/*]
 [*]- Scripts can be accessed with hotkeys (Ctrl+Shift+F to call a new find cell script demo).[/*]
 [*]- Removed syntax highlighter from script editor.[/*]
-Fixes:
+[*]Fixes:[/*]
 [*]- Variable size detection corrected.[/*]
 [*]- Out of bounds detection corrected.[/*]
 [*]- Issues 125, 126, 129, 128 (128 was "worked around").[/*]
-Misc:
+[*]Misc:[/*]
 [*]- Code modified for compatibility with both Delphi XE and XE3 in the same source files.[/*]
 [*]- Added BaseName property so unsorted arrays can contain structured unions.[/*]
 [*]- ByteArray length increased to 64 bits.[/*]
 [/LIST]
-
 [color=#00BFFF]Version 3.0.29 contains the following changes:[/color]
 [spoiler]
 [LIST]
@@ -98,11 +99,11 @@ Misc:
 [*]- issue 110 : Check for errors now checks for invalid FormIDs. Also, new "Check for errors" sample script.[/*]
 [*]- Options are processed when they matter, not at the beginning.[/*]
 [*]- issue 82 : [TES5] Capitalization fixed in text are being treated as dirty edits. Description fields are case sensitive now.[/*]
-Scripting:
+[*]Scripting:[/*]
 [*]- Scripts can use other scripts with standard pascal "uses" keyword.[/*]
 [*]- New functions available.[/*]
 [*]- New sample scripts.[/*]
-Fixes:
+[*]Fixes:[/*]
 [*]- Compare to will not overwrite an existing file, nor will it leave temporary files behind.[/*]
 [*]- issue 125 : Condition added are no longer empty.[/*]
 [*]- issue 121 : Changing FormID of Region causes severe bugs. Reference building is delayed to after the change is done. Non region reference XCLR record are no longer removed.[/*]
@@ -115,10 +116,10 @@ Fixes:
 [*]- issue 106 : Error adding a new master to plugin with own navmeshes. Fire Union decider when they can effectively properly work, not before.[/*]
 [*]- issue 105 : Overwriting quest fragments or Quest Aliases may produce exceptions. During copy, memory is initialized properly before being used.[/*]
 [*]- issue 100 : Voice Type EditorID disappears. Memory sizing issue.[/*]
-Known issue:
+[*]Known issue:[/*]
 [*]- issue 123 : Using Check for errors after sort master, before saving and reloading: the Cell FormID will not be updated. (that is a display issue only).[/*]
 [*]- issue 102 : Objects with property names but no assigned values don't display the names. The CK does not save the property name in the plugin in that case so it is correct.[/*]
-Misc:
+[*]Misc:[/*]
 [*]- issue 115 : "Backup plugin" checkbox anchored to bottom of form.[/*]
 [*]- avoid firing some cached exception (to ease debugging).[/*]
 [/LIST]
