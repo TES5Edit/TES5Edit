@@ -74,6 +74,24 @@ begin
   Value := Ceil(Extended(Args.Values[0]));
 end;
 
+{ Math }
+
+procedure JvInterpreter_Max(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Max(Integer(Args.Values[0]), Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_Min(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Min(Integer(Args.Values[0]), Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_IntPower(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Extended(Math.IntPower(Extended(Args.Values[0]), Integer(Args.Values[1])));
+end;
+
+
 
 { TStrings }
 
@@ -893,6 +911,11 @@ begin
     AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecuteWait', JvInterpreter_ShellExecuteWait, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+
+    { Math }
+    AddFunction('Math', 'Max', JvInterpreter_Max, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Min', JvInterpreter_Min, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'IntPower', JvInterpreter_IntPower, 2, [varEmpty,varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);

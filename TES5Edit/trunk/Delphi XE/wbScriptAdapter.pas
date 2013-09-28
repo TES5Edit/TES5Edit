@@ -432,6 +432,14 @@ begin
     Element.MoveDown;
 end;
 
+procedure IwbElement_BuildRef(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Element.BuildRef;
+end;
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -640,6 +648,14 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Container.ReverseElements;
+end;
+
+procedure IwbContainer_ContainerStates(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+    Value := Byte(Container.ContainerStates);
 end;
 
 
@@ -1322,6 +1338,14 @@ begin
     AddConst(cUnit, 'caConflict', ord(caConflict));
     AddConst(cUnit, 'caConflictCritical', ord(caConflictCritical));
 
+    { TwbContainerState }
+    AddConst(cUnit, 'csInit', ord(csInit));
+    AddConst(cUnit, 'csInitOnce', ord(csInitOnce));
+    AddConst(cUnit, 'csInitDone', ord(csInitDone));
+    AddConst(cUnit, 'csInitializing', ord(csInitializing));
+    AddConst(cUnit, 'csRefsBuild', ord(csRefsBuild));
+    AddConst(cUnit, 'csAsCreatedEmpty', ord(csAsCreatedEmpty));
+
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);
@@ -1364,6 +1388,7 @@ begin
     AddFunction(cUnit, 'ClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'SetElementState', IwbElement_SetElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'GetElementState', IwbElement_GetElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'BuildRef', IwbElement_BuildRef, 1, [varEmpty], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
@@ -1385,6 +1410,7 @@ begin
     AddFunction(cUnit, 'RemoveElement', IwbContainer_RemoveElement, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'RemoveByIndex', IwbContainer_RemoveByIndex, 3, [varEmpty, varInteger, varBoolean], varEmpty);
     AddFunction(cUnit, 'ReverseElements', IwbContainer_ReverseElements, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ContainerStates', IwbContainer_ContainerStates, 1, [varEmpty], varEmpty);
 
     { IwbMainRecord }
     AddFunction(cUnit, 'Signature', IwbMainRecord_Signature, 1, [varEmpty], varEmpty);
