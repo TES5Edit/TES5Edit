@@ -6389,7 +6389,16 @@ begin
       wbInteger('Topic Flags', itU8, wbFlags([
         'Do All Before Repeating'
       ]), cpNormal, True),
-      wbByteArray('Unknown', 1),
+      wbInteger('Category', itU8, wbEnum([
+        {0} 'Topic',
+        {1} 'Favor', // only in DA14 quest topics
+        {2} 'Scene',
+        {3} 'Combat',
+        {4} 'Favors',
+        {5} 'Detection',
+        {6} 'Service',
+        {7} 'Miscellaneous'
+      ])),
       wbInteger('Subtype', itU16, wbEnum([], [
          0, 'Custom',
          1, 'ForceGreet',
@@ -8953,9 +8962,7 @@ begin
 
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbFormID(DNAM, 'Response Data'),
-    wbCTDAs,
 
-    {>>> Unordered, CTDA can appear before or after LNAM <<<}
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
@@ -8973,10 +8980,11 @@ begin
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
-      wbCTDAs,
-      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
-      wbCTDAs
+      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
+
+    wbCTDAs,
+
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRArray('Unknown',
       wbRStruct('Unknown', [
@@ -8986,6 +8994,7 @@ begin
       ], []), cpIgnore, false, wbNeverShow
     ),
     {>>> END leftover from earlier CK versions <<<}
+
     wbLString(RNAM, 'Prompt'),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
