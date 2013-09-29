@@ -2432,6 +2432,7 @@ var
 
                 // update counts
                 if (l <= High(aCntNames)) and (aCntNames[l] <> '') then begin
+                  TargetRecord.Add(aCntNames[l], True);
                   CountElement := TargetRecord.ElementByName[aCntNames[l]];
                   if Assigned(CountElement) then
                     if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
