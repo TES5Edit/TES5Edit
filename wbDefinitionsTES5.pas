@@ -5901,6 +5901,7 @@ procedure DefineTES5c;
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
     wbRecord(aSignature, aName, [
+      wbEDID,
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -10857,7 +10858,7 @@ begin
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
         //wbInteger('Linked Rooms Count', itU16),
-        wbByteArray('Unknown', 1),
+        wbByteArray('Number of Linked Rooms', 1),
         wbInteger('Flags', itU8, wbFlags([
           'Unknown 1',
           'Unknown 2',
