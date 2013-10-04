@@ -10857,8 +10857,7 @@ begin
 
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
-        //wbInteger('Linked Rooms Count', itU16),
-        wbByteArray('Number of Linked Rooms', 1),
+        wbInteger('Linked Rooms Count', itU8),
         wbInteger('Flags', itU8, wbFlags([
           'Unknown 1',
           'Unknown 2',

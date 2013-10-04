@@ -18,9 +18,9 @@ interface
 
 uses
   Classes, Windows, SysUtils, Graphics, ShellAPI,
-  wbInterface, Direct3D9, D3DX9, DXTypes;
+  wbInterface;
 
-function wbDistance(const a, b: TD3DXVector3): Single; overload
+function wbDistance(const a, b: TwbVector): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
@@ -113,16 +113,32 @@ begin
   end;
 end;
 
-function wbDistance(const a, b: TD3DXVector3): Single;
-var
-  t: TD3DXVector3;
+function Vec3Subtract(out vOut: TwbVector; const v1, v2: TwbVector): TwbVector;
 begin
-  Result := D3DXVec3Length(D3DXVec3Subtract(t,a,b)^);
+  with vOut do
+  begin
+    x:= v1.x - v2.x;
+    y:= v1.y - v2.y;
+    z:= v1.z - v2.z;
+  end;
+  Result := vOut;
+end;
+
+function Vec3Length(const v: TwbVector): Single;
+begin
+  with v do Result:= Sqrt(x*x + y*y + z*z);
+end;
+
+function wbDistance(const a, b: TwbVector): Single;
+var
+  t: TwbVector;
+begin
+  Result := Vec3Length(Vec3Subtract(t,a,b));
 end;
 
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
 var
-  PosA, PosB: TD3DXVector3;
+  PosA, PosB: TwbVector;
 begin
   if not a.GetPosition(PosA) then
     raise Exception.Create('GetPosition failed');
@@ -134,7 +150,7 @@ end;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
 var
   Count       : Integer;
-  Position    : TD3DXVector3;
+  Position    : TwbVector;
   MaxLoadOrder: Integer;
 
   procedure FindREFRs(const aElement: IwbElement);
@@ -142,7 +158,7 @@ var
     MainRecord : IwbMainRecord;
     Container  : IwbContainerElementRef;
     i          : Integer;
-    Temp       : TD3DXVector3;
+    Temp       : TwbVector;
   begin
     if Supports(aElement, IwbMainRecord, MainRecord) then begin
       if not (aMainRecord.LoadOrderFormID = MainRecord.LoadOrderFormID) and

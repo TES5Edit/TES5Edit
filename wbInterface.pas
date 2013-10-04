@@ -18,8 +18,7 @@ interface
 uses
   Classes,
   SysUtils,
-  Graphics,
-  D3DX9;
+  Graphics;
 
 const
   VersionString               = '3.0.31 EXPERIMENTAL';
@@ -796,6 +795,12 @@ type
     _Flags: Cardinal;
   end;
 
+  TwbVector = packed record
+    x: Single;
+    y: Single;
+    z: Single;
+  end;
+
   TwbGridCell = record
     x, y: Integer;
   end;
@@ -855,9 +860,9 @@ type
 
     procedure UpdateRefs;
 
-    function GetPosition(out aPosition: TD3DXVector3): Boolean;
-    function SetPosition(const aPosition: TD3DXVector3): Boolean;
-    function GetRotation(out aRotation: TD3DXVector3): Boolean;
+    function GetPosition(out aPosition: TwbVector): Boolean;
+    function SetPosition(const aPosition: TwbVector): Boolean;
+    function GetRotation(out aRotation: TwbVector): Boolean;
     function GetScale(out aScale: Single): Boolean;
 
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
@@ -2202,11 +2207,11 @@ var
   wbGetFormIDCallback : function(const aElement: IwbElement): Cardinal;
 
 function wbGetFormID(const aElement: IwbElement): Cardinal;
-function wbPositionToGridCell(const aPosition: TD3DXVector3): TwbGridCell;
+function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
 function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
-function wbIsInGridCell(const aPosition: TD3DXVector3; const aGridCell: TwbGridCell): Boolean;
+function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 
 var
   wbRecordFlags            : IwbIntegerDef;
@@ -2470,7 +2475,7 @@ begin
       Result := Result + '['+IntToStr(aDefs[i].Index)+'] ';
   end;
 end;
-function wbIsInGridCell(const aPosition: TD3DXVector3; const aGridCell: TwbGridCell): Boolean;
+function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 var
   GridCell : TwbGridCell;
 begin
@@ -2478,7 +2483,7 @@ begin
   Result := (GridCell.x = aGridCell.x) and (GridCell.y = aGridCell.y);
 end;
 
-function wbPositionToGridCell(const aPosition: TD3DXVector3): TwbGridCell;
+function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 begin
   Result.x := Trunc(aPosition.x / 4096);
   if aPosition.x < 0 then

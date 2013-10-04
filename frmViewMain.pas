@@ -36,7 +36,6 @@ uses
   ActiveX,
   Buttons,
   ActnList,
-  AppEvnts,
   ShellAPI,
   IOUtils,
   Actions,
@@ -44,12 +43,6 @@ uses
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
-  Direct3D9,
-  D3DX9,
-  {$IFDEF DX3D}
-  RenderUnit,
-  DXUT,
-  {$ENDIF DX3D}
   JvComponentBase,
   JvInterpreter,
   wbInterface,
@@ -229,7 +222,6 @@ type
     mniNavDeepCopyAsOverride: TMenuItem;
     TabSheet2: TTabSheet;
     DisplayPanel: TPanel;
-    ApplicationEvents1: TApplicationEvents;
     N5: TMenuItem;
     mniNavCellChildPers: TMenuItem;
     mniNavCellChildTemp: TMenuItem;
@@ -299,8 +291,6 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     procedure splElementsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-
-    procedure OnToggleFullscreen(Sender: TObject);
 
     {--- pgMain ---}
     procedure tbsMessagesShow(Sender: TObject);
@@ -450,8 +440,6 @@ type
 
     procedure acForwardUpdate(Sender: TObject);
     procedure acForwardExecute(Sender: TObject);
-    procedure DisplayPanelResize(Sender: TObject);
-    procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure mniNavCheckForCircularLeveledListsClick(Sender: TObject);
     procedure mniPathPluggyLinkClick(Sender: TObject);
     procedure mniNavBanditFixClick(Sender: TObject);
@@ -498,13 +486,6 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
-  protected
-    DisplayActive: Boolean;
-    m_hwndRenderFullScreen:  HWND;
-
-    procedure InitDisplay;
-    procedure DoneDisplay;
-
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -1154,26 +1135,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
-begin
-  Done:= True;
-{$IFDEF DX3D}
-
-  if not DisplayActive then
-    Exit;
-
-  // Do not render if the app is minimized
-  if IsIconic(Application.Handle) then Exit;
-
-  // Update and render a frame
- //!! CheckForLostFullscreen;
-  DXUTRender3DEnvironment;
-
-  // Keep requesting more idle time
-  Done:= False;
-{$ENDIF}
-end;
-
 procedure TfrmMain.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 begin
   if Msg.message = 524 {WM_XBUTTONUP} then
@@ -1184,7 +1145,7 @@ begin
 end;
 
 type
-  TCoords = TD3DVector;
+  TCoords = TwbVector;
 
   PRefInfo = ^TRefInfo;
   TRefInfo = record
@@ -1194,16 +1155,6 @@ type
     Scale  : Single;
     Next   : PRefInfo;
   end;
-
-{procedure TfrmMain.ScriptScanProgress(aTotalCount, aCount: Integer);
-begin
-  Caption := '[Scanning] Processed Records: ' + IntToStr(aTotalCount) +
-    ' References Found: ' + IntToStr(aCount) +
-    ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
-  if ForceTerminate then
-    Abort;
-end;}
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
 begin
@@ -2499,8 +2450,12 @@ begin
     CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
     CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count']);
+    if wbGameMode >= gmTES5 then
+      // exclude Head Parts for Skyrim, causes issues
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count'])
+    else
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
     CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
     CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
     CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
@@ -2827,16 +2782,6 @@ begin
   inherited;
   FreeAndNil(NewMessages);
   FreeAndNil(ScriptHotkeys);
-end;
-
-procedure TfrmMain.DisplayPanelResize(Sender: TObject);
-begin
-{$IFDEF DX3D}
-  if DisplayActive then begin
-    DXUTPause(True, True);
-    DXUTStaticWndProc(DXUTGetHWND, WM_EXITSIZEMOVE, 0, 0);
-  end;
-{$ENDIF}
 end;
 
 procedure TfrmMain.DoGenerateLOD;
@@ -3491,21 +3436,6 @@ begin
   CreateActionsForScripts;
 end;
 
-procedure TfrmMain.DoneDisplay;
-begin
-  if not DisplayActive then
-    Exit;
-
-{$IFDEF DX3D}
-  DXUTFreeState;
-  DestroyCustomDXUTobjects;
-
-  DestroyWindow(m_hwndRenderFullScreen);
-{$ENDIF}
-
-  DisplayActive := False;
-end;
-
 procedure TfrmMain.edEditorIDSearchChange(Sender: TObject);
 begin
   edEditorIDSearch.Color := clWindow;
@@ -3710,7 +3640,7 @@ begin
     end;
 end;
 
-function NormalizeRotation(const aRot: TD3DXVector3): TD3DXVector3;
+function NormalizeRotation(const aRot: TwbVector): TwbVector;
 
   function NormalizeAxis(const aValue: Single): Single;
   begin
@@ -3852,7 +3782,7 @@ var
   i {, n}                     : Integer;
   MainRecord, LinksToRecord   : IwbMainRecord;
   Element                     : IwbElement;
-  Position                    : TD3DXVector3;
+  Position                    : TwbVector;
   Cntr {, Cntr2}              : IwbContainerElementRef;
 begin
   if not wbEditAllowed then
@@ -4071,8 +4001,6 @@ begin
   if Assigned(PluggyLinkThread) then
     PluggyLinkThread.Terminate;
   FreeAndNil(PluggyLinkThread);
-
-  DoneDisplay;
 
   SaveChanged;
 
@@ -5137,91 +5065,6 @@ begin
   end;
 end;
 
-//-----------------------------------------------------------------------------
-// Name: FullScreenWndProc()
-// Desc: The WndProc funtion used when the app is in fullscreen mode. This is
-//       needed simply to trap the ESC key.
-//-----------------------------------------------------------------------------
-function FullScreenWndProc(hWnd: HWND; msg: UINT; wParam: WPARAM;
-  lParam: LPARAM): LRESULT; stdcall;
-begin
-  if (msg = WM_CLOSE) then
-  begin
-    // User wants to exit, so go back to windowed mode and exit for real
-    frmMain.OnToggleFullScreen(nil);
-    PostMessage(Application.Handle, WM_CLOSE, 0, 0);
-  end;
-
-  if (msg = WM_SETCURSOR) then SetCursor(0);
-
-  // User wants to leave fullscreen mode
-  if (msg = WM_KEYUP) and (wParam = VK_ESCAPE) then
-    frmMain.OnToggleFullScreen(nil);
-
-//  if Assigned(m_ArcBall) then
-//    m_ArcBall.HandleMessages(hWnd, Msg, wParam, lParam);
-
-  Result:= DefWindowProc(hWnd, msg, wParam, lParam);
-end;
-
-procedure TfrmMain.OnToggleFullscreen(Sender: TObject);
-begin
-{$IFDEF DX3D}
-  DXUTToggleFullScreen;
-{$ENDIF}
-end;
-
-
-procedure TfrmMain.InitDisplay;
-{$WRITEABLECONST ON}
-const
-  wndClass: TWndClass = (
-    style: CS_HREDRAW or CS_VREDRAW;
-    lpfnWndProc: @FullScreenWndProc; cbClsExtra: 0; cbWndExtra: 0; hInstance: 0;
-    hIcon: 0; hCursor: 0; hbrBackground: 0; lpszMenuName: nil;
-    lpszClassName: 'Fullscreen Window'
-  );
-{$WRITEABLECONST OFF}
-begin
-  if DisplayActive then
-    Exit;
-
-{$IFDEF DX3D}
-  // Register a class for a fullscreen window
-  wndClass.hbrBackground:= GetStockObject(WHITE_BRUSH);
-  Windows.RegisterClass(wndClass);
-
-  // We create the fullscreen window (not visible) at startup, so it can
-  // be the focus window.  The focus window can only be set at CreateDevice
-  // time, not in a Reset, so ToggleFullscreen wouldn't work unless we have
-  // already set up the fullscreen focus window.
-  m_hwndRenderFullScreen:= CreateWindow('Fullscreen Window', nil,
-                               WS_POPUP, 0, 0, Screen.Width, Screen.Height,
-                               Application.Handle, 0, 0, nil);
-
-  //////////////////////////////////////////////////////////////
-
-  CreateCustomDXUTobjects;
-
-  // Set the callback functions
-  DXUTSetCallbackDeviceCreated(OnCreateDevice);
-  DXUTSetCallbackDeviceReset(OnResetDevice);
-  DXUTSetCallbackDeviceLost(OnLostDevice);
-  DXUTSetCallbackDeviceDestroyed(OnDestroyDevice);
-  DXUTSetCallbackMsgProc(MsgProc);
-  DXUTSetCallbackFrameRender(OnFrameRender);
-  DXUTSetCallbackFrameMove(OnFrameMove);
-
-  // Initialize DXUT and create the desired Win32 window and Direct3D device for the application
-  DXUTInit(True, True, True); // Parse the command line, handle the default hotkeys, and show msgboxes
-  DXUTSetCursorSettings(True, True); // Show the cursor and clip it when in full screen
-  DXUTSetWindow(m_hwndRenderFullScreen{?}, m_hwndRenderFullScreen, DisplayPanel.Handle, False);
-  DXUTCreateDevice(D3DADAPTER_DEFAULT, true, 640, 480, IsDeviceAcceptable, ModifyDeviceSettings);
-
-{$ENDIF}
-  DisplayActive := True;
-end;
-
 procedure TfrmMain.InitNodes(const aNodeDatas: PViewNodeDatas;
   const aParentDatas: PViewNodeDatas;
   aNodeCount: Integer;
@@ -5952,11 +5795,13 @@ var
   Count                       : Cardinal;
   StartTick                   : Cardinal;
   jvi                         : TJvInterpreterProgram;
-  i                           : integer;
+  i                           : Integer;
+  bCheckUnsaved               : Boolean;
 begin
   if Trim(aScript) = '' then
     Exit;
 
+  bCheckUnsaved := tmrCheckUnsaved.Enabled;
   tmrCheckUnsaved.Enabled := False;
 
   Count := 0;
@@ -5978,6 +5823,7 @@ begin
       wbStartTime := Now;
 
       Enabled := False;
+
       AddMessage('Applying script...');
       Application.ProcessMessages;
 
@@ -6047,11 +5893,9 @@ begin
 
     InvalidateElementsTreeView(NoNodes);
     vstNav.Invalidate;
-    //Application.ProcessMessages;
-    //pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
-    tmrCheckUnsaved.Enabled := True;
+    tmrCheckUnsaved.Enabled := bCheckUnsaved;
   end;
 end;
 
@@ -8943,7 +8787,7 @@ var
   MainRecord2                 : IwbMainRecord;
   FoundAny                    : Boolean;
   GridCell                    : TwbGridCell;
-  Position                    : TD3DXVector3;
+  Position                    : TwbVector;
 
   Cells                       : array of array of array of PVirtualNode;
   FileFiltered                : array of Integer;
@@ -13159,8 +13003,6 @@ begin
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
   tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbMasterUpdate or wbLODGen) and not wbIKnowWhatImDoing;
-
-  InitDisplay;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
