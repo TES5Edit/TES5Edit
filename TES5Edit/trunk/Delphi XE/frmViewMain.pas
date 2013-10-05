@@ -2384,7 +2384,7 @@ var
                 // update counts
                 if (l <= High(aCntNames)) and (aCntNames[l] <> '') then begin
                   TargetRecord.Add(aCntNames[l], True);
-                  CountElement := TargetRecord.ElementByName[aCntNames[l]];
+                  CountElement := TargetRecord.ElementByPath[aCntNames[l]];
                   if Assigned(CountElement) then
                     if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
                       CountElement.NativeValue := Entries.ElementCount
@@ -2442,25 +2442,36 @@ begin
 
   ResetAllTags;
   for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
+    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT']);
     CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
-    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
+    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count']);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
+    // exclude Head Parts for Skyrim, causes issues
     if wbGameMode >= gmTES5 then
-      // exclude Head Parts for Skyrim, causes issues
-      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count'])
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
     else
       CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
-    CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    // keywords
+    if wbGameMode >= gmTES5 then begin
+      CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['BOOK'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['FLOR'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['FURN'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['INGR'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['MGEF'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SCRL'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SLGM'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SPEL'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ']);
+    end;
   end;
 
   TargetFile.CleanMasters;
@@ -2504,7 +2515,7 @@ begin
         for n := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
             QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-            // include SGE quests which are new or set SGE flag on master quest
+            // include SGE (start game enabled) quests which are new or set SGE flag on master quest
             if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then
               if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
                 SetLength(FormIDs, Succ(Length(FormIDs)));
@@ -2540,7 +2551,7 @@ begin
       Inc(Count);
     end;
   end;
-  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ' Sequence Files Created: ' + IntToStr(j));
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', Sequence Files Created: ' + IntToStr(j));
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -2849,8 +2860,8 @@ end;
 
 procedure TfrmMain.DoInit;
 
-  // remove comments, empty lines and missing files from list
-  procedure FixLoadList(sl: TStrings);
+  // remove comments and empty lines from list
+  procedure RemoveCommentsAndEmpty(sl: TStrings);
   var
     i, j: integer;
     s: string;
@@ -2860,12 +2871,19 @@ procedure TfrmMain.DoInit;
       j := Pos('#', s);
       if j > 0 then
         System.Delete(s, j, High(Integer));
-      s := Trim(s);
-      if (s = '') or not FileExists(DataPath + s) then begin
+      if Trim(s) = '' then
         sl.Delete(i);
-        Continue;
-      end;
     end;
+  end;
+
+  // remove missing files from list
+  procedure RemoveMissingFiles(sl: TStrings);
+  var
+    i: integer;
+  begin
+    for i := Pred(sl.Count) downto 0 do
+      if not FileExists(DataPath + sl.Strings[i]) then
+        sl.Delete(i);
   end;
 
   // add missing plugin files to list sorted by timestamps
@@ -3039,10 +3057,10 @@ begin
 
     MyGamesTheGamePath := TheGameIniFileName + 'My Games\'+ wbGameName +'\';
 
-    if wbGameMode in [gmTES4, gmTES5] then
-      TheGameIniFileName := MyGamesTheGamePath + wbGameName + '.ini'
+    if wbGameMode in [gmFO3, gmFNV] then
+      TheGameIniFileName := MyGamesTheGamePath + 'Fallout.ini'
     else
-      TheGameIniFileName := MyGamesTheGamePath + 'Fallout.ini';
+      TheGameIniFileName := MyGamesTheGamePath + wbGameName + '.ini';
     AddMessage('Using ini: ' + TheGameIniFileName);
 
     if not FileExists(TheGameIniFileName) then begin
@@ -3079,7 +3097,8 @@ begin
         }
         if not (wbGameMode in [gmTES4, gmFO3, gmFNV]) then begin
           sl.LoadFromFile(PluginsFileName);
-          FixLoadList(sl); // remove comments and nonexisting files
+          RemoveCommentsAndEmpty(sl); // remove comments
+          RemoveMissingFiles(sl); // remove nonexisting files
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
           j := FindMatchText(sl, wbGameName+'.esm');
@@ -3093,6 +3112,7 @@ begin
             sl2 := TStringList.Create;
             try
               sl2.LoadFromFile(s);
+              RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
               // skip first line "Skyrim.esm" in BOSS list
               for i := 1 to Pred(sl2.Count) do begin
                 j := FindMatchText(sl, sl2[i]);
@@ -3115,7 +3135,6 @@ begin
            Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
         }
         AddMissingToLoadList(sl);
-        FixLoadList(sl); // remove nonexisting files
 
         if wbMasterUpdate and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
           Age := Integer(sl.Objects[0]);
