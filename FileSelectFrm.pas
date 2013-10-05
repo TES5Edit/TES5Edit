@@ -23,7 +23,6 @@ uses
 type
   TfrmFileSelect = class(TForm)
     CheckListBox1: TCheckListBox;
-    BitBtn1: TBitBtn;
     PopupMenu1: TPopupMenu;
     SelectAll1: TMenuItem;
     SelectNone1: TMenuItem;
@@ -31,6 +30,7 @@ type
     edSearch: TEdit;
     Label1: TLabel;
     cbBackup: TCheckBox;
+    btnOK: TButton;
     procedure SelectAll1Click(Sender: TObject);
     procedure SelectNone1Click(Sender: TObject);
     procedure InvertSelection1Click(Sender: TObject);
@@ -55,7 +55,7 @@ begin
   SelectNone1.Click;
   if (CheckListBox1.ItemIndex >= 0) and (CheckListBox1.ItemIndex < CheckListBox1.Count) then begin
     CheckListBox1.Checked[CheckListBox1.ItemIndex] := True;
-    BitBtn1.Click;
+    btnOK.Click;
   end; 
 end;
 

@@ -35,25 +35,13 @@ object frmFileSelect: TfrmFileSelect
     TabOrder = 0
     OnDblClick = CheckListBox1DblClick
   end
-  object BitBtn1: TBitBtn
-    Left = 249
-    Top = 582
-    Width = 75
-    Height = 25
-    Anchors = [akRight, akBottom]
-    DoubleBuffered = True
-    Kind = bkOK
-    NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 1
-  end
   object edSearch: TEdit
     Left = 47
     Top = 8
     Width = 282
     Height = 21
     Anchors = [akLeft, akTop, akRight]
-    TabOrder = 2
+    TabOrder = 1
     OnChange = edSearchChange
   end
   object cbBackup: TCheckBox
@@ -65,8 +53,18 @@ object frmFileSelect: TfrmFileSelect
     Caption = 'Backup plugins'
     Checked = True
     State = cbChecked
-    TabOrder = 3
+    TabOrder = 2
     Visible = False
+  end
+  object btnOK: TButton
+    Left = 249
+    Top = 582
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    ModalResult = 1
+    TabOrder = 3
   end
   object PopupMenu1: TPopupMenu
     Left = 128
