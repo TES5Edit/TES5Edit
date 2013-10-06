@@ -75,6 +75,7 @@ end;
 // on close event handler for form
 procedure frmFormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  if frm.ModalResult <> mrOk then Exit;
   if rbModeCopy.Checked and not DirectoryExists(edPath.Text) then begin
     MessageDlg('Please select existing destination folder', mtInformation, [mbOk], 0);
     Action := caNone;

@@ -32,6 +32,7 @@ begin
   if not FilterApplied then begin
     MessageDlg('You need to "Apply filter for Cleaning" for this script to work properly', mtInformation, [mbOk], 0);
     Result := 1;
+    Exit;
   end;
   slWin := TStringList.Create;
   slWin.Sorted := True;
