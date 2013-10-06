@@ -85,8 +85,13 @@ Bandit's Eyepatch Compatibility Patch v4. Version 4 changes keywords so that clo
 [url=http://skyrim.nexusmods.com/mods/7664]Hana Dress by Hentai[/url] -- by aruless (Org Hentai)
 [color=#FF0000]Hosted with permission from author.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/6566]Shaders Begone - NoGlow[/url] -- by Duns_Inc (File 0.29 Retired)
-[color=#FF0000]This file was hosted with permission from author.  However, it has been updated by the author so I will no longer be hosting this file.[/color]
+[url=http://skyrim.nexusmods.com/mods/6566]Shaders Begone - NoGlow[/url] -- by Duns_Inc
+[color=#FF0000]File hosted with permission from author.[/color]
+[color=#00FFFF]
+New version 2 is available!
+- File 0.29 Retired
+- The mod has been updated by the author so I will no longer be hosting this file.
+[/color]
 
 [url=http://skyrim.nexusmods.com/mods/4866]Open Faced Helmets[/url] -- by MadCat221
 [color=#FF0000]Hosted with permission from author.[/color]  This is temporary until MadCat221 hosts the file himself.
@@ -134,22 +139,15 @@ CaoMengde777's Compatibility Patches:
 [url=http://www.curse.com/mods/skyrim/caos-perk-ranks-overhaul]Cao's Advanced Perk Ranks[/url]
 
 [url=http://skyrim.nexusmods.com/mods/12553]Dovahkiin Hideout[/url] -- by Shawkab [color=#FF0000]Install only one of the three Dovahkiin Hideout Patches![/color]
-[color=#FFA500]Remove all items before installing[/color]
+[color=#FF0000]File hosted with permission from author.[/color]
+[color=#FFA500]Remove all items before installing![/color]
 [color=#FFA500]Also make sure to uninstall all previous version of Dovahkiin Hideout prior to installing. Original mod is not required.[/color]
-[color=#FF0000]Hearthfires and Non Hearthfires versions are available![/color]
-[color=#FF0000]Hosted with permission from author.[/color]
+[color=#FF0000]Non-Hearthfires version available here![/color]
 [color=#00FFFF]
-Hideout Hearthfires Compatibility Patch V0.31.1! Available 9/13/2013!
-- Smaller more optimized archive with less duplicate files
-- Some AI Packs added to give the NPCs something to do
-- More redundant ITM records removed
-- Updated Mannequins - No need for SluckyD mannequin fix script
+New Hideout Hearthfires Version 1.0 is available!
+- File 0.31.x Retired
+- The Hearthfires Versions of the mod has been updated and I have hosted it on a [url=http://skyrim.nexusmods.com/mods/43593/]seperate page.[/url]
 [/color]
-[size=4][color=#FF8C00]Looking for Help with Dovahkiin Hideout:[/color][/size]
-
-I am looking for people who have knowledge with Dialogue, Quests, and voice overs for NPCs.  One of my biggest projects that will be the most difficult is fixing Dovahkiin Hideout.  I may have worked on the update for TES5Edit and I know the technical aspects of records and how many bytes some of the subrecords have, but I am new to modding and I could use the help on that mod.  There is another that has some issues I want to fix but it's probably due to oversights more then being pre ck and potentially made with snip.
-
-Update (01/2013): He made some changes and after doing so I tweaked the files a bit.  I sent him two versions  and one is specifically for Hearthfires.  There will need to be more work done to get the NPCs talking again and the PACK and AI needs to be reworked.  Hopefully I can learn how or he will have a little spare time to do it.
 
 [size=4][color=#FF8C00]FAQ:[/color][/size]
 
@@ -168,8 +166,11 @@ A: No. Feel free to use the plugin with TES5Edit or the CK and make any changes 
 Q: Can you upgrade your patch to work current DLC?
 A: I don't update the plugins for Dawnguard, Dragonborn, or Hearthfires, unless I feel it is needed to prevent a CTD.  An example of this is the Dovahkiin Hideout when used with Hearthfires.
 
+Q: What do the patches do, Exactly?
+A: I don't discuss this so don't ask.  The plugin I provide replaces the original authors plugin.  As the BOSS messages I have added to the masterlist explain, some mods were made before the Construction Kit was released.  Since there wasn't a working Construction Kit they were made with older versions of TESVSnip so the plugin is corrupt.  Some files were made after the release of the Construction Kit but were modified with earlier versions of TESVSnip so the plugin is corrupt.  Any version of TESVSnip prior to version 4.4.x used to modify a plugin will corrupt the plugin.  However, that does not mean the current dev-version of TESVSnip is really any safer to use.  It has not undergone enough of an update and testing to be used to make plugins.  Plugins should still be made with the Construction Kit.  When needed TES5Edit can be used on the plugin but, using TES5Edit to make extensive mod changes is discouraged for most users – that's what the CK was built for.
+
 Q: What do you change?
-A: I don't keep a change log and I will not make one ever, so don't ask.  Here are the most common things I change: a) I change null FormIDs (00000000) to something that the CK or Skyrim can work with. b) I correct out of order subrecords. c) I load the plugin into the CK. d) I clean the plugin with TES5Edit. e) I check the plugin with TES5Edit using the "Check for Errors" routine.
+A: I don't post changes I have made to the file unless I feel the need to do so, so don't ask.  Here are the most common things I change: a) I change null FormIDs (00000000) to something that the CK or Skyrim can work with. b) I correct out of order subrecords. c) I load the plugin into the CK. d) I clean the plugin with TES5Edit. e) I check the plugin with TES5Edit using the "Check for Errors" routine.
 
 Q: Do you provide instructions on how to fix plugins with out of order subrecords or plugins corrupted by previous versions of TESVSnip (4.2 and 4.3.x)?  Are there any resources out that you can direct me to? 
 A: I don't provide this information, so don't ask.  There are far too many people that can't clean plugins with TES5Edit even after reading the Wiki pages and watching videos.  I am not about to trouble shoot someone else's mistakes.

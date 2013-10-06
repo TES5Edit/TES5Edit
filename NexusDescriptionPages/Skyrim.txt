@@ -1,13 +1,11 @@
-[color=#00BFFF]TES5Edit 3.0.30 EXPERIMENTAL by ElminsterAU. Updated for Skyrim by Hlp, Zilav and Sharlikran.[/color]
+[color=#00BFFF]TES5Edit 3.0.31 EXPERIMENTAL by ElminsterAU. Updated for Skyrim by Hlp, Zilav and Sharlikran.[/color]
 
-[color=#FF0000]This is the eighth update of TES5Edit and is still being updated.  However, it should still be considered experimental.  Make backups of your plugins and report any issues in the official Bethesda thread.  If you have never used TES5Edit, Wiki Pages and basic videos are available.
+[color=#FF0000]This is the tenth update of TES5Edit and is still being updated.  However, it should still be considered experimental.  Make backups of your plugins and report any issues in the official Bethesda thread.  If you have never used TES5Edit, Wiki Pages and basic videos are available.
 
-We only support version 1.9 of Skyrim and version 3.0.30 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
+We only support version 1.9 of Skyrim and version 3.0.31 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
 
 Cleaning Plugins and Master Files: Updated for Dragonborn
 [youtube]wt4W1dZF9IE[/youtube]
-
-Other Informative Videos can be found on my [url=http://www.youtube.com/user/Sharlikran/videos?flow=list&view=0&sort=dd]YouTube chanel[/url].
 
 [color=#FF0000]Note: These are all a work in Progress.[/color]
 
@@ -22,7 +20,7 @@ Other Informative Videos can be found on my [url=http://www.youtube.com/user/Sha
 [color=#00BFFF]TES5Edit is now Available in Chinese:[/color]
 You can download the translation by [url=http://skyrim.nexusmods.com/users/2541088]bluesky404 [/url][url=http://skyrim.nexusmods.com/mods/37228]here[/url].
 
-[url=http://forums.bethsoft.com/topic/1466352-relz-tes5edit]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
+[url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
 [url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
 
 [color=#00BFFF]Current Documentation:[/color]
@@ -30,23 +28,49 @@ You can download the translation by [url=http://skyrim.nexusmods.com/users/25410
 [url=http://fallout3.nexusmods.com/mods/8629]Fallout3 Training Manual[/url] for FO3Edit (applies to all game versions)
 [url=http://newvegas.nexusmods.com/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
 
+With the strains of real life there is no way for the TES5Edit team to update documentation.  If you would like to contribute to the conversion of the Fallout New Vegas documentation please visit the [url=http://www.creationkit.com/TES5Edit_Documentation]TES5Edit Documentation pages[/url] on the CK Wiki.  Your help is greatly appreciated.
+
 [color=#00BFFF]Important DirectX Information:[/color]
 
 If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  [url=http://www.microsoft.com/en-us/download/details.aspx?id=8109]DirectX End-User Runtimes (June 2010)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes (March 2008)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url].  (make sure to install it after unpacking it)
 
 [color=#00BFFF]Future of TES5Edit:[/color]
 
-We appreciate all the thanks and support from the community.  Hlp recently volunteered and was responsible for the additional updates to the VMAD routines.  Although they look good please keep backups of your plugins and report any errors with VMAD.  Zilav has some updates planed that will improve the Check for Errors routine so that it includes checking for assets.  The additional function will check for meshes, textures, pex scripts, seq files (if needed), and will search BSA files as well.  This will help end users check to see if all required assets are present.  When files are missing especially scripts, that can lead to undetected issues, malfunctions with the plugin, and CTDs.
+We appreciate all the thanks and support from the community.  Zilav's and Hlp's ongoing contributions to the project are greatly appreciated.  In the latest version of TES5Edit Zilav has introduced the Asset Browser and Asset Manager.  While we appreciate feedback and enhancement ideas please be understanding that these two new additions are in their early stages.  Your patience is appreciated while they are updated and refined to provide more useful and accurate functionality.
 
-Although we welcome suggestions for improving TES5Edit automation is not one of them.  We do not plan on adding an automated way to clean multiple plugins or access to TES5Edit from the command line.  Currently cleaning a plugin involves indexing over a million references at times.  When only the required plugins are loaded then the cleaning is accurate.  If unnecessary plugins are involved those become part of the index and could cause the plugin to lose important and required data.  We understand the need for unattended automation at times.  However, without human intervention too many issues during the cleaning process would go unnoticed and make troubleshooting game issues related to plugins even more difficult then it already is.
+The Asset Manager function will check for the presence of meshes, textures, pex scripts, seq files (if needed), and will search BSA files as well.  This will help end users check to see if all required assets are present.  When files are missing such as scripts, meshes and textures, those missing files can lead to undetected issues, malfunctions with the plugin, and CTDs.  You may come across missing files and when that happens you should contact the author of the plugin.  When doing so please be extremely considerate because in the early stage of the Asset Manager's development it sometimes reports erroneous errors.  This should change with future updates.
 
-As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  Editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls may be possible.  However, please create your own separate thread apart from the official Bethesda developmental thread for TES5Edit.
+The Asset Manager also allows you to copy all the files used by the mod to a new folder for archiving and uploading to the Nexus.  The function only copies loose files and does not make a BSA file at this time.  You will quickly discover that it copies many files that are already included with Skyrim's own DLC inside the official BSA files.  The function also copies only files and pathes directly encoded in the plugin.  Things like custom voices for NPCs and "filename_0.nif" zero slider meshes are not copied at this time.  When using this feature I suggest using a program like BeyondCompare to compare the destination folder where TES5Edit put the files and the original folder for your mod.  Comparing the contents and ruling out unneeded files will take practice but in the end will help ensure your mod has all the needed and updated resources for your mod.
 
-For more info on ways to use TES5Edit to Merge Plugins check out [url=http://forums.nexusmods.com/index.php?/topic/904953-how-to-merge-multiple-mods-with-multiple-master-files]How To Merge Multiple Mods With Multiple Master Files[/url] and [url=http://forums.bethsoft.com/topic/1425724-merging-mods]Merging Mods[/url].
+I have not had much time to play with the Asset Browser yet and I'm sorry I can't provide a better description.
+
+[color=#00BFFF]Cleaning Plugins and official DLC:[/color]
+
+I am still seeing many posts where people state that they have cleaned multiple plugins at the same time.  I understand that the cleaning process seems tedious and it would be nice to fire off the program to clean 200 plugins while you go do something else.  Unfortunately there are still no plans on adding an automated way to clean multiple plugins or access to TES5Edit from the command line.  Being there to see what errors might be reported during the cleaning process ensure that you are aware of potential issues that can lead to instability while playing Skyrim.
+
+Cleaning multiple plugins at once can and will lead to erroneous cleaning and can in many cases lead to unwanted crashes to the desktop.  Please look at the Cleaning Tutorial or watch the cleaning videos.  They show both loading the plugins you know are required or show only loading the one plugin and letting TES5Edit load any other dependencies.  After applying the filter for cleaning, clean only the one plugin.  It is imperative that the process is repeated for each individual separate plugin that you wish to clean.  
+
+Currently cleaning a plugin involves indexing over a million references at times.  When only the required plugins are loaded then the cleaning is accurate.  If unnecessary plugins are involved those become part of the index and could cause the plugin to lose important and required data.  Without human intervention too many issues during the cleaning process would go unnoticed and make troubleshooting game issues related to plugins even more difficult then it already is.
+
+[color=#00BFFF]Cleaning Plugins and official DLC when a new version of TES5Edit is released:[/color]
+
+It is not always necessary to clean all your plugins every time a new version of TES5Edit is released.  More often then not an ITM does not cause Skyrim to crash.  What can lead to crashes are deleted references which are resolved as part of the cleaning process when you choose "Undelete and Disable References".  It is still important to remove "Identical to Master" records for a more stable game but not as vital to eliminating crashes.  The other causes for crashes are corrupt plugins, poorly written and managed scripts, and missing files required by the plugin.  If Skyrim is working for you leave things the way they are.  It's not really required unless we make some major update in the cleaning process.  If you feel you must clean the official Bethesda ESM files then restore any backups you have.  However, it is much more reliable to use the Verify Cache feature from Steam.  
+
+[color=#00BFFF]Using TES5Edit in place of the CK:[/color]
+
+As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people still want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  
+
+[color=#00BFFF]Merging Plugins:[/color]
+
+There is still a demand for merging multiple plugins but merging plugins is still unsupported directly from TES5Edit's UI.  There is a [url=http://skyrim.nexusmods.com/mods/37981]TES5Edit script by Matortheeternal[/url] for merging plugins.  Some mods cannot be successfully merged with it and you should direct all questions relating to the script to the author.  There is [url=http://forums.nexusmods.com/index.php?showtopic=1033740]a thread available[/url] where people have posted which plugins merge successfully or unsuccessfully.  For more info on ways to use TES5Edit to Merge Plugins check out [url=http://forums.nexusmods.com/index.php?/topic/904953-how-to-merge-multiple-mods-with-multiple-master-files]How To Merge Multiple Mods With Multiple Master Files[/url] and [url=http://forums.bethsoft.com/topic/1425724-merging-mods]Merging Mods[/url].  Otherwise if you intend on editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls please create your own separate thread.
 
 [color=#00BFFF]Trouble shooting plugins:[/color]
 
-Detecting issues with plugins is a big concern.  Nobody wants to start their game over due to constant crashes to desktop.  Detecting issues with plugins is very difficult and is unique depending on the other plugins in your load order.  Recently I had two plugins that I felt were not related to the cause of my own crash to desktop while in the character creation menu.  However, after uninstalling those plugins I was able to create a new character and experience uninterrupted game play.  I know many of you look to the TES5Edit development team for guidance but we are not modders.  We rarely use the Construction Kit unless we need to test the data in the records of the plugins.  As noted by FlaFlada (slightly revised) who posted on my YouTube channel: The main points if having issues are 1. Dirty mods. 2. Leveled list issues. 3. Improper mod placement.  The solutions are 1.Clean all mods except Skyrim.esm and Unofficial patches using TES5Edit. 2. Let BOSS sort your mods. 3. make a bashed patch using Wrye Bash.  And in this order: Update mods, activate plugins, BOSS sort mods, clean mods, create patches with TES5Edit, delete duplicate records in any user created patches already handled by Wrye Bash, drag bashed patch BELOW additional user created patches, rebuild Bash Patch. If issues persist contact mod makers.
+Detecting issues with plugins is a big concern.  Nobody wants to start their game over due to constant crashes to desktop.  Detecting issues with plugins is very difficult and is unique depending on the other plugins in your load order.  Many people still forget to look for log files from TES5Edit or load the plugins into the the Construction Kit and look at EditorWarnings.txt.  Paying attention to log files will help you understand the cause of the issue and sometimes lead to a quick and easy resolution.  Although some errors from the Construction Kit are erroneous and can be ignored some should defiantly not be ignored.  Get used to reading the files and looking for problems with mods.
+
+It is still rather common for people to simply post, "my game crashes, what gives."  That is still completely useless in troubleshooting your issue.  When you experience crashes you should be disabling and reactivating plugins until the game no longer crashes.  Then report your issue to the author of the plugin.  Although I have directed people to the [url=http://forums.nexusmods.com/index.php?/forum/421-skyrim-mod-troubleshooting]Skyrim mod troubleshooting[/url] forum in the past it is also not the place to post, "Here is my load order, my game crashes, please help!"  Again you need to do some troubleshooting on your own and provide specific information when asking for help.
+
+I know many of you look to the TES5Edit development team for guidance but we are not modders.  We rarely use the Construction Kit unless we need to test the data in the records of the plugins.  As noted by FlaFlada a while back who posted (slightly revised) on my YouTube channel: The main points if having issues are 1. Dirty mods. 2. Leveled list issues. 3. Improper mod placement.  The solutions are 1. Clean all mods except Skyrim.esm and Unofficial patches using TES5Edit. 2. Let BOSS sort your mods. 3. Make a bashed patch using Wrye Bash.  And in this order: Update mods, activate plugins, BOSS sort mods, clean mods, create patches with TES5Edit, delete duplicate records in any user created patches already handled by Wrye Bash, drag bashed patch BELOW additional user created patches, rebuild Bash Patch. If issues persist contact mod makers.
 
 Contacting the mod authors is probably the last thing you should do after encountering an issue.  Unfortunately it's the first thing most people do.  As authors of TES5Edit we understand that there may be a lot of information to absorb for new users but give it time.  It took us time to inform ourselves about everything so you can't expect to understand it in a day.  I myself still look to the community and modders for advice and information to make sure I provide the most accurate guidance and information.  Telling us or a mod author that you can't read walls of text you can't comprehend doesn't help you at all when asking for help.  Most authors don't have the time to compile compatibility lists of plugins and list in detail how to manage your load order.  Questions like, "Is this updated for Skyrim 1.8?", "Is this compatible with [Insert Plugin Here]?", are easily answered by reading the documentation (if provided) or reading the description page.  I myself will be referring people more and more to community based resources, videos, and documentation so that I can work more directly with improving TES5Edit, updating Wrye Bash, updating plugins for Skyrim, and helping the BOSS team when possible.  For that reason I will be increasingly less understanding when it comes to questions that have been asked and answered before.
 
@@ -56,7 +80,30 @@ We understand that sometimes updates to programs break things.  Please use the u
 
 [color=#00BFFF]TES5Edit Updates:[/color]
 
-[color=#FF0000]With each new version of TES5Edit you may want to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.[/color]
+[color=#00BFFF]Version 3.0.31 contains the following changes:[/color]
+
+- esp files can be loaded before esm
+- issue 136: no stack overflow and progress indication for long operations
+- issue 137: added empty subrecords were treated as ITM leading to possible erroneous cleaning
+- fixed bug when 8 chars in square brackets were treated as FormID giving errors in various places, i.e. [$PitStop]
+- Ctrl+DblClick on FormID numbers in messages tab could previously not work on some of them
+- INFO records sorting is now optional instead of disabled
+- BSA files are loaded by exact matching with plugin names for TES5, and partial matching for previous games
+- new scripting functions, UI controls and scripts: Assets manager, Assets browser (Ctrl+F3)
+- [TES5] added XCZR (encounter zone reference?) subrecord in REFR
+- [TES5] added PMIS record
+- [TES5] removed obsolete model subrecords: MODB, MOSD, FGGA, FGGS, FGTS 
+- [TES5] updated LCTN definition (showed errors in USKP before)
+- [TES5] optional switch to resolve aliases (show ID and name)
+- [TES5] fixed error when copying PACK record
+- [TES5] 'Default' water height instead of '-2147483648.00000' is being added to CELLs with water but no XCLW subrecord
+- [TES5] renamed "WRLD\Object bounds" element, please update scripts if needed
+- [TES5] merged patch improvements and fixes
+- [TES4] updated INFO record definition to fix flags
+- [TES4] fixed PGRR subrecord corruption in pathgrids when saving
+- [TES4] fixed error when copying MGEF and REFR with XLOC subrecord
+- [TES4] fixed "Unsused data in XSED" warning
+- [FO3/FNV] fixed issues when copying NPC_, definitions update.
 
 [color=#00BFFF]Version 3.0.30 contains the following changes:[/color]
 
