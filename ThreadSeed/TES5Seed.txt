@@ -1,10 +1,10 @@
-﻿[size=5][color=#00BFFF][url=http://skyrim.nexusmods.com/mods/25859/]TES5Edit 3.0.30 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
+﻿[size=5][color=#00BFFF][url=http://skyrim.nexusmods.com/mods/25859/]TES5Edit 3.0.31 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
  
 [size=4][color=#FF0000]This is the ninth update of TES5Edit and is still being updated. However, it should still be considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available. Feel free to ask about plugin cleaning in the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/]RELz TES5Edit Plugin Cleaning Emporium[/url][/color]. If you require technical assistance the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color] thread is best for that. As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
  
 [size=4][color=#FF0000]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
  
-[size=4][color=#FF8C00]TES5Edit 3.0.30 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://skyrim.nexusmods.com/users/156622]Zilav[/url], [url=http://skyrim.nexusmods.com/users/1102380]Hlp[/url], and [url=http://skyrim.nexusmods.com/users/4147439]Sharlikran[/url].[/color][/size]
+[size=4][color=#FF8C00]TES5Edit 3.0.31 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://skyrim.nexusmods.com/users/156622]Zilav[/url], [url=http://skyrim.nexusmods.com/users/1102380]Hlp[/url], and [url=http://skyrim.nexusmods.com/users/4147439]Sharlikran[/url].[/color][/size]
  
 [size=4][b][color=#00BFFF]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color][/b][/size]
  
@@ -58,8 +58,34 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
 [color=#00BFFF]TES5Edit Updates:[/color]
  
 [color=#FF0000]With each new version of TES5Edit you may want to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.[/color]
- 
+
+[color=#00BFFF]Version 3.0.31 contains the following changes:[/color]
+[LIST]
+[*]- esp files can be loaded before esm[/*]
+[*]- issue 136: no stack overflow and progress indication for long operations[/*]
+[*]- issue 137: added empty subrecords were treated as ITM leading to possible erroneous cleaning[/*]
+[*]- fixed bug when 8 chars in square brackets were treated as FormID giving errors in various places, i.e. [$PitStop][/*]
+[*]- Ctrl+DblClick on FormID numbers in messages tab could previously not work on some of them[/*]
+[*]- INFO records sorting is now optional instead of disabled[/*]
+[*]- BSA files are loaded by exact matching with plugin names for TES5, and partial matching for previous games[/*]
+[*]- new scripting functions, UI controls and scripts: Assets manager, Assets browser (Ctrl+F3)[/*]
+[*]- [TES5] added XCZR (encounter zone reference?) subrecord in REFR[/*]
+[*]- [TES5] added PMIS record[/*]
+[*]- [TES5] removed obsolete model subrecords: MODB, MOSD, FGGA, FGGS, FGTS[/*]
+[*]- [TES5] updated LCTN definition (showed errors in USKP before)[/*]
+[*]- [TES5] optional switch to resolve aliases (show ID and name)[/*]
+[*]- [TES5] fixed error when copying PACK record[/*]
+[*]- [TES5] 'Default' water height instead of '-2147483648.00000' is being added to CELLs with water but no XCLW subrecord[/*]
+[*]- [TES5] renamed "WRLD\Object bounds" element, please update scripts if needed[/*]
+[*]- [TES5] merged patch improvements and fixes[/*]
+[*]- [TES4] updated INFO record definition to fix flags[/*]
+[*]- [TES4] fixed PGRR subrecord corruption in pathgrids when saving[/*]
+[*]- [TES4] fixed error when copying MGEF and REFR with XLOC subrecord[/*]
+[*]- [TES4] fixed "Unsused data in XSED" warning[/*]
+[*]- [FO3/FNV] fixed issues when copying NPC_, definitions update.[/*]
+[/LIST]
 [color=#00BFFF]Version 3.0.30 contains the following changes:[/color]
+[spoiler]
 [LIST]
 [*]- Added Prev/NextMember for Record union. Use after adding a new one to select the apropriate.[/*]
 [*]- Search for required master extended upward.[/*]
@@ -86,6 +112,7 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
 [*]- Added BaseName property so unsorted arrays can contain structured unions.[/*]
 [*]- ByteArray length increased to 64 bits.[/*]
 [/LIST]
+[/spoiler]
 [color=#00BFFF]Version 3.0.29 contains the following changes:[/color]
 [spoiler]
 [LIST]
