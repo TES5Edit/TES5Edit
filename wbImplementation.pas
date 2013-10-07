@@ -2790,9 +2790,9 @@ begin
                   end else
                     NewONAM := ONAMs.Assign(High(Integer), nil, True);
 
-                  if wbDisplayLoadOrderFormID then
+                  {if wbDisplayLoadOrderFormID then
                     NewONAM.NativeValue := Current.LoadOrderFormID
-                  else
+                  else}
                     NewONAM.NativeValue := FormID;
 
                   if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
