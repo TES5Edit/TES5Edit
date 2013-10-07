@@ -21,7 +21,7 @@ uses
   Graphics;
 
 const
-  VersionString               = '3.0.31 EXPERIMENTAL';
+  VersionString               = '3.0.32 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;

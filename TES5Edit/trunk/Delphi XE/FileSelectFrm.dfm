@@ -1,14 +1,17 @@
 object frmFileSelect: TfrmFileSelect
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Master/Plugin Selection'
   ClientHeight = 615
   ClientWidth = 332
   Color = clBtnFace
   ParentFont = True
+  KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   DesignSize = (
     332
     615)
