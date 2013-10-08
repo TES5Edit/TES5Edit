@@ -48,10 +48,11 @@ var
   wbHideIgnored : Boolean{} = True;{}
   wbHideNeverShow : Boolean{} = True;{}
   wbShowFormVersion : Boolean{} = False;{}
+  wbShowFlagEnumValue : Boolean{} = False;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
-  wbSortGroupRecord: Boolean{} = True;{}
+  wbSortGroupRecord: Boolean{} = False;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
@@ -59,7 +60,7 @@ var
   wbMoreInfoForIndex: Boolean = False;
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean = False;
-  wbForceNewHeader: boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
+  wbForceNewHeader: Boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
   wbNewHeaderAddon: Cardinal = 40; // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
@@ -7046,6 +7047,8 @@ begin
           s := '<Unknown: '+IntToStr(i)+'>';
       if GetFlagDontShow(aElement, i) then
         s := '(' + s + ')';
+      if wbShowFlagEnumValue then
+        s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       Add(s);
     end;
     Result := CommaText;
@@ -7062,6 +7065,8 @@ end;
 function TwbFlagsDef.GetFlag(aIndex: Integer): string;
 begin
   Result := flgNames[aIndex];
+  if wbShowFlagEnumValue then
+    Result := Result + ' (0x' + IntToHex(Int64(1) shl aIndex, 8) + ')';
 end;
 
 function TwbFlagsDef.GetFlagCount: Integer;
@@ -7157,6 +7162,8 @@ begin
           HasUnknownFlags := True;
         end;
       end;
+      if wbShowFlagEnumValue then
+        s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       if not GetFlagDontShow(aElement, i) then
         Result := Result + s + ', ';
     end;
@@ -7249,7 +7256,10 @@ begin
     for i := Low(enNames) to High(enNames) do begin
       enNames[i] := aNames[i];
       if aNames[i] <> '' then
-        EditInfo.Add(aNames[i]);
+        if wbShowFlagEnumValue then
+          EditInfo.Add(aNames[i] + ' (' + IntToStr(i) + ')')
+        else
+          EditInfo.Add(aNames[i]);
     end;
 
     Assert(Length(aSparseNames) mod 2 = 0);
@@ -7274,7 +7284,10 @@ begin
           snName  := aSparseNames[Succ(i * 2)].VWideChar;
 
         if snName <> '' then
-          EditInfo.Add(snName);
+          if wbShowFlagEnumValue then
+            EditInfo.Add(snName + ' (' + IntToStr(snIndex) + ')')
+          else
+            EditInfo.Add(snName);
       end;
     end;
     EditInfo.Sort;
@@ -7390,22 +7403,30 @@ end;
 
 function TwbEnumDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 var
-  i: Integer;
+  i, j: Integer;
+  Value: string;
 begin
   if aValue = '' then
     Result := 0
   else begin
+    Value := aValue;
+    if wbShowFlagEnumValue and (Value[Length(Value)] = ')') then begin
+      // remove an integer value of enum from enum string value
+      i := LastDelimiter('(', Value);
+      if (i > 0) and TryStrToInt(Copy(Value, Succ(i), Length(Value) - Succ(i)), j) then
+        Delete(Value, Pred(i), Length(Value));
+    end;
     for i := Low(enNames) to High(enNames) do
-      if SameStr(enNames[i], aValue) then begin
+      if SameStr(enNames[i], Value) then begin
         Result := i;
         Exit;
       end;
     for i := Low(enSparseNames) to High(enSparseNames) do with enSparseNames[i] do
-      if SameStr(snName, aValue) then begin
+      if SameStr(snName, Value) then begin
         Result := snIndex;
         Exit;
       end;
-    Result := StrToInt64(aValue);
+    Result := StrToInt64(Value);
   end;
 end;
 
@@ -7462,15 +7483,24 @@ var
 begin
   Result := '';
 
-  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then
+  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then begin
     Result := enNames[aInt];
+    if wbShowFlagEnumValue then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 
   if Result = '' then
-    if FindSparseName(aInt, i) then
+    if FindSparseName(aInt, i) then begin
       Result := enSparseNamesMap[i].snName;
+      if wbShowFlagEnumValue then
+        Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
+    end;
 
-  if Result = '' then
+  if Result = '' then begin
     Result := IntToStr(aInt);
+    if wbShowFlagEnumValue then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 end;
 
 function TwbEnumDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
@@ -7485,12 +7515,18 @@ var
 begin
   Result := '';
 
-  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then
+  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then begin
     Result := enNames[aInt];
+    if wbShowFlagEnumValue and (Result <> '') then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 
   if Result = '' then begin
-    if FindSparseName(aInt, i) then
-      Result := enSparseNamesMap[i].snName
+    if FindSparseName(aInt, i) then begin
+      Result := enSparseNamesMap[i].snName;
+      if wbShowFlagEnumValue then
+        Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
+    end
     else begin
       Result := '<Unknown: '+IntToStr(aInt)+'>';
       if wbReportMode and wbReportUnknownEnums then begin
