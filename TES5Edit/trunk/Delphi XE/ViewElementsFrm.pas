@@ -40,6 +40,7 @@ type
     procedure btnCancelClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     Edits: TList;
     procedure MemoChange(Sender: TObject);
@@ -212,6 +213,13 @@ begin
       TwbEdit(Edits[i]).Free;
     Edits.Free;
   end;
+end;
+
+procedure TfrmViewElements.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+    btnCancel.Click;
 end;
 
 procedure TfrmViewElements.FormShow(Sender: TObject);

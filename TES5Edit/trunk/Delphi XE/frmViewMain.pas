@@ -32,6 +32,7 @@ uses
   Menus,
   Math,
   IniFiles,
+  ClipBrd,
   TypInfo,
   ActiveX,
   Buttons,
@@ -2723,31 +2724,6 @@ begin
       end;
     end;
 end;
-
-{procedure PluginListGroupESM(List: TStringList);
-var
-  slESM, slESP : TStringList;
-  IsESM        : Boolean;
-  i            : Integer;
-begin
-  slESM := TStringList.Create;
-  slESP := TStringList.Create;
-  try
-    for i := 0 to List.Count - 1 do begin
-      IsESM := IsFileESM(List[i]);
-      if IsESM then
-        slESM.Add(List[i])
-      else
-        slESP.Add(List[i]);
-    end;
-    List.Clear;
-    List.AddStrings(slESM);
-    List.AddStrings(slESP);
-  finally
-    FreeAndNil(slESM);
-    FreeAndNil(slESP);
-  end;
-end;}
 
 function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
@@ -6853,6 +6829,8 @@ begin
         Exit;
 
       EditValue := Element.EditValue;
+
+      // flags editor
       if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
@@ -6873,9 +6851,10 @@ begin
           Free;
         end;
 
-      end else
+      end
 
-      if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
+      // localization editor
+      else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
@@ -6888,9 +6867,11 @@ begin
         end;
         vstView.Invalidate;
         Exit;
-      end else
-        if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
-          Exit;
+      end
+
+      // string editor
+      else if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
+        Exit;
 
       Element.EditValue := EditValue;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
@@ -11871,7 +11852,8 @@ begin
         vstView.FocusedNode := vstView.GetNextSibling(vstView.FocusedNode);
       end;
       Ord('C'): begin
-        vstView.CopyToClipBoard;
+        Clipboard.AsText := Element.EditValue;
+        //vstView.CopyToClipBoard;
         Exit;
       end;
     else

@@ -5,11 +5,13 @@ object frmViewElements: TfrmViewElements
   ClientWidth = 565
   Color = clBtnFace
   ParentFont = True
+  KeyPreview = True
   OldCreateOrder = False
   Position = poDefault
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
