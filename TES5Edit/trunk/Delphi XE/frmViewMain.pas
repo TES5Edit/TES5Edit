@@ -13117,6 +13117,7 @@ end;
 procedure TLoaderThread.Execute;
 var
   i                           : Integer;
+  dummy                       : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   F                           : TSearchRec;
@@ -13216,7 +13217,7 @@ begin
 
       if wbBuildRefs then
         for i := Low(ltFiles) to High(ltFiles) do
-          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') then begin
+          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) then begin
             LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
             ltFiles[i].BuildRef;
             if frmMain.ForceTerminate then

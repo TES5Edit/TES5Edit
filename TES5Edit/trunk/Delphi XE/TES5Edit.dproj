@@ -65,12 +65,12 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<VerInfo_Release>28</VerInfo_Release>
+			<VerInfo_Release>32</VerInfo_Release>
 			<Manifest_File>None</Manifest_File>
 			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<UsePackages>true</UsePackages>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.28.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterEU;ProductVersion=3.0.28;Comments=</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
 			<VerInfo_PreRelease>true</VerInfo_PreRelease>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>

@@ -65,6 +65,7 @@ var
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
   wbResolveAlias: Boolean{} = False;{}
+  wbDoNotBuildRefsFor: TStringList;
 
   wbUDRSetXESP: Boolean = True;
   wbUDRSetScale: Boolean = False;
@@ -5257,7 +5258,7 @@ function TwbSubRecordDef.CanHandle(aSignature     : TwbSignature;
 begin
   Result := inherited CanHandle(aSignature, aDataContainer);
   if Result and srSizeMatch and Assigned(aDataContainer) and Assigned(srValue) then
-    Result := aDataContainer.DataSize = srValue.Size[nil, nil, nil];
+    Result := aDataContainer.DataSize = srValue.DefaultSize[nil, nil, nil];
 end;
 
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
@@ -6617,7 +6618,7 @@ begin
 
       if Container.ElementCount = Count then begin
         KnownSize := True;
-        for Index := 0 to Pred(Container.ElementCount) do begin
+        for Index := 0 to Pred(Count) do begin
           Element := Container.Elements[Index];
           if Supports(Element, IwbDataContainer, DataContainer) then begin
             Size := Cardinal(DataContainer.DataEndPtr)-Cardinal(DataContainer.DataBasePtr);
@@ -6779,7 +6780,7 @@ var
 begin
   Result := 0;
   if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
-    wbProgressCallback('Found a struct with negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8))
+    wbProgressCallback('Found a struct with negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+noName)
   else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
     Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else
@@ -8838,7 +8839,7 @@ var
 begin
   Result := Supports(aDef, IwbByteArrayDef, ByteArrayDef);
   if Result and (badSize > 0) then begin
-    Result := ByteArrayDef.IsVariableSize or (ByteArrayDef.Size[nil, nil, nil] <= Integer(badSize));
+    Result := ByteArrayDef.IsVariableSize or (ByteArrayDef.DefaultSize[nil, nil, nil] <= Integer(badSize));
   end;
 end;
 
@@ -10040,9 +10041,9 @@ begin
   end;
 
   if not Result then begin
-    j := udMembers[0].Size[nil, nil, nil];
+    j := udMembers[0].DefaultSize[nil, nil, nil];
     for i := 1 to High(udMembers) do
-      if udMembers[i].Size[nil, nil, nil] <> j then begin
+      if udMembers[i].DefaultSize[nil, nil, nil] <> j then begin
         j := -1;
         break;
       end;
@@ -10948,5 +10949,8 @@ initialization
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
+  wbDoNotBuildRefsFor := TStringList.Create;
+  wbDoNotBuildRefsFor.Sorted := True;
+  wbDoNotBuildRefsFor.Duplicates := dupIgnore;
 end.
 
