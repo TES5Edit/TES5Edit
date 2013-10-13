@@ -2898,7 +2898,7 @@ var
 begin
   while not wbInitDone do Sleep(10);
 
-   SetDoubleBuffered(Self);
+  SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
 
@@ -11784,7 +11784,8 @@ begin
         vstView.FocusedNode := vstView.GetNextSibling(vstView.FocusedNode);
       end;
       Ord('C'): begin
-        vstView.CopyToClipBoard;
+        Clipboard.AsText := Element.EditValue;
+        //vstView.CopyToClipBoard;
         Exit;
       end;
     else

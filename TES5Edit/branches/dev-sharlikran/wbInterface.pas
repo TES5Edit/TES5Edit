@@ -7166,7 +7166,7 @@ begin
   Prefix := 0;
 
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
-    wbProgressCallback('Found an array with a negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+
+    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
       ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
     Exit;
   end;
@@ -7266,7 +7266,7 @@ begin
             Exit;
           end;
           if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
-            wbProgressCallback('Found an array with negative size! '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+            wbProgressCallback('Found an array with negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
               ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
             Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
             Exit;
@@ -7280,7 +7280,7 @@ begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
       if Size < High(Integer) then begin
         if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size*Count) then begin
-          wbProgressCallback('Found an array with negative size! '+IntToHex64(Cardinal(aBasePtr)+Size*Count, 8)+
+          wbProgressCallback('Found an array with negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Size*Count, 8)+
             ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
           Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
           Exit;

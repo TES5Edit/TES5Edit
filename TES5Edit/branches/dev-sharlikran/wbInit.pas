@@ -107,6 +107,7 @@ begin
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+      wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
     finally
       Settings.Free;
