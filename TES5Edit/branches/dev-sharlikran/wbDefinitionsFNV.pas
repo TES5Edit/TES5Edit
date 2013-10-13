@@ -4108,7 +4108,7 @@ begin
     {0x00000800}'Initially disabled',
     {0x00001000}'Ignored',
     {0x00002000}'No Voice Filter',
-    {0x00004000}'Cannot Save',
+    {0x00004000}'Cannot Save (Runtime only)',
     {0x00008000}'Visible when distant',
     {0x00010000}'Random Anim Start / High Priority LOD',
     {0x00020000}'Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
@@ -10509,7 +10509,7 @@ begin
     ]),
     wbICON,
     wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
+      wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
@@ -10542,14 +10542,14 @@ begin
     ]), cpNormal, True),
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True)
-    ], [], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),

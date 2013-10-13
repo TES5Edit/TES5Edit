@@ -2149,8 +2149,6 @@ function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
 var
   rEDID      : IwbRecord;
   s          : string;
-//  _File      : IwbFile;
-//  MainRecord : IwbMainRecord;
 const
   OrderedList = 'OrderedList';
 begin
@@ -3838,75 +3836,75 @@ begin
   {>>> When Set to None this Equals FF FF FF FF <<<}
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
-    'Head',
-    'Hair',
-    'Body',
-    'Hands',
-    'Forearms',
-    'Amulet',
-    'Ring',
-    'Feet',
-    'Calves',
-    'Shield',
-    'Body AddOn 1 / Tail',
-    'Long Hair',
-    'Circlet',
-    'Body AddOn 2',
-    'Body AddOn 3',
-    'Body AddOn 4',
-    'Body AddOn 5',
-    'Body AddOn 6',
-    'Body AddOn 7',
-    'Body AddOn 8',
-    'Decapate Head',
-    'Decapate',
-    'Body AddOn 9',
-    'Body AddOn 10',
-    'Body AddOn 11',
-    'Body AddOn 12',
-    'Body AddOn 13',
-    'Body AddOn 14',
-    'Body AddOn 15',
-    'Body AddOn 16',
-    'Body AddOn 17',
-    'FX01'
+    '30 - Head',
+    '31 - Hair',
+    '32 - Body',
+    '33 - Hands',
+    '34 - Forearms',
+    '35 - Amulet',
+    '36 - Ring',
+    '37 - Feet',
+    '38 - Calves',
+    '39 - Shield',
+    '40 - Tail',
+    '41 - LongHair',
+    '42 - Circlet',
+    '43 - Unnamed',
+    '44 - Unnamed',
+    '45 - Unnamed',
+    '46 - Unnamed',
+    '47 - Unnamed',
+    '48 - Unnamed',
+    '49 - Unnamed',
+    '50 - DecapitateHead',
+    '51 - Decapitate',
+    '52 - Unnamed',
+    '53 - Unnamed',
+    '54 - Unnamed',
+    '55 - Unnamed',
+    '56 - Unnamed',
+    '57 - Unnamed',
+    '58 - Unnamed',
+    '59 - Unnamed',
+    '60 - Unnamed',
+    '61 - FX01'
   ], [
     -1, 'None'
   ]);
 
   wbBipedObjectFlags := wbFlags([
-    {0x00000001} 'Head',
-    {0x00000002} 'Hair',
-    {0x00000004} 'Body',
-    {0x00000008} 'Hands',
-    {0x00000010} 'Forearms',
-    {0x00000020} 'Amulet',
-    {0x00000040} 'Ring',
-    {0x00000080} 'Feet',
-    {0x00000100} 'Calves',
-    {0x00000200} 'Shield',
-    {0x00000400} 'Body AddOn 1 / Tail',
-    {0x00000800} 'Long Hair',
-    {0x00001000} 'Circlet',
-    {0x00002000} 'Body AddOn 2',
-    {0x00004000} 'Body AddOn 3',
-    {0x00008000} 'Body AddOn 4',
-    {0x00010000} 'Body AddOn 5',
-    {0x00020000} 'Body AddOn 6',
-    {0x00040000} 'Body AddOn 7',
-    {0x00080000} 'Body AddOn 8',
-    {0x00100000} 'Decapitate Head',
-    {0x00200000} 'Decapitate',
-    {0x00400000} 'Body AddOn 9',
-    {0x00800000} 'Body AddOn 10',
-    {0x01000000} 'Body AddOn 11',
-    {0x02000000} 'Body AddOn 12',
-    {0x03000000} 'Body AddOn 13',
-    {0x08000000} 'Body AddOn 14',
-    {0x10000000} 'Body AddOn 15',
-    {0x20000000} 'Body AddOn 16',
-    {0x40000000} 'Body AddOn 17',
-    {0x80000000} 'FX01'
+    {0x00000001} '30 - Head',
+    {0x00000002} '31 - Hair',
+    {0x00000004} '32 - Body',
+    {0x00000008} '33 - Hands',
+    {0x00000010} '34 - Forearms',
+    {0x00000020} '35 - Amulet',
+    {0x00000040} '36 - Ring',
+    {0x00000080} '37 - Feet',
+    {0x00000100} '38 - Calves',
+    {0x00000200} '39 - Shield',
+    {0x00000400} '40 - Tail',
+    {0x00000800} '41 - LongHair',
+    {0x00001000} '42 - Circlet',
+    {0x00002000} '43 - Unnamed',
+    {0x00004000} '44 - Unnamed',
+    {0x00008000} '45 - Unnamed',
+    {0x00010000} '46 - Unnamed',
+    {0x00020000} '47 - Unnamed',
+    {0x00040000} '48 - Unnamed',
+    {0x00080000} '49 - Unnamed',
+    {0x00100000} '50 - DecapitateHead',
+    {0x00200000} '51 - Decapitate',
+    {0x00400000} '52 - Unnamed',
+    {0x00800000} '53 - Unnamed',
+    {0x01000000} '54 - Unnamed',
+    {0x02000000} '55 - Unnamed',
+    {0x03000000} '56 - Unnamed',
+    {0x08000000} '57 - Unnamed',
+    {0x10000000} '58 - Unnamed',
+    {0x20000000} '59 - Unnamed',
+    {0x40000000} '60 - Unnamed',
+    {0x80000000} '61 - FX01'
   ], True);
 
   wbBODT := wbStruct(BODT, 'Body Template', [
@@ -5909,6 +5907,7 @@ procedure DefineTES5c;
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
     wbRecord(aSignature, aName, [
+      wbEDID,
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -6397,7 +6396,16 @@ begin
       wbInteger('Topic Flags', itU8, wbFlags([
         'Do All Before Repeating'
       ]), cpNormal, True),
-      wbByteArray('Unknown', 1),
+      wbInteger('Category', itU8, wbEnum([
+        {0} 'Topic',
+        {1} 'Favor', // only in DA14 quest topics
+        {2} 'Scene',
+        {3} 'Combat',
+        {4} 'Favors',
+        {5} 'Detection',
+        {6} 'Service',
+        {7} 'Miscellaneous'
+      ])),
       wbInteger('Subtype', itU16, wbEnum([], [
          0, 'Custom',
          1, 'ForceGreet',
@@ -8740,11 +8748,11 @@ begin
       wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
     ]),
     wbStruct(BNAM, 'Values', [
-      wbInteger('% Frequency Shift', itU8),
-      wbInteger('% Frequency Variance', itU8),
+      wbInteger('% Frequency Shift', itS8),
+      wbInteger('% Frequency Variance', itS8),
       wbInteger('Priority', itU8),
       wbInteger('db Variance', itU8),
-      wbInteger('Static Attenuation (db)', itU16, wbdiv(100))
+      wbInteger('Static Attenuation (db)', itU16, wbDiv(100))
     ])
   ]);
 
@@ -8959,7 +8967,6 @@ begin
 
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbFormID(DNAM, 'Response Data'),
-    wbCTDAs,
 
     {>>> Unordered, CTDA can appear before or after LNAM <<<}
     wbRArray('Responses', wbRStruct('Response', [
@@ -8980,9 +8987,12 @@ begin
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
       wbCTDAs,
-      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
-      wbCTDAs
+      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
+      //,wbCTDAs
     ], [])),
+
+    wbCTDAs,
+
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRArray('Unknown',
       wbRStruct('Unknown', [
@@ -8992,6 +9002,7 @@ begin
       ], []), cpIgnore, false, wbNeverShow
     ),
     {>>> END leftover from earlier CK versions <<<}
+
     wbLString(RNAM, 'Prompt'),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
@@ -10173,7 +10184,7 @@ begin
           wbCTDAs,
           wbKSIZ,
           wbKWDAs,
-          wbInteger(COCT, 'Count', itU32),
+          wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
@@ -10235,7 +10246,7 @@ begin
           wbCTDAs,
           wbKSIZ,
           wbKWDAs,
-          wbInteger(COCT, 'Count', itU32),
+          wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
@@ -10855,8 +10866,7 @@ begin
 
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
-        //wbInteger('Linked Rooms Count', itU16),
-        wbByteArray('Unknown', 1),
+        wbInteger('Linked Rooms Count', itU8),
         wbInteger('Flags', itU8, wbFlags([
           'Unknown 1',
           'Unknown 2',
@@ -11651,31 +11661,27 @@ begin
     wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itU16),
-      wbInteger('Y', itU16)
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16)
     ]),
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbInteger(PNAM, 'Use Flags', itU16, wbFlags([
-      {0x0001}'Use Land Data',
-      {0x0002}'Use LOD Data',
-      {0x0004}'Don''t Use Map Data',
-      {0x0008}'Use Water Data',
-      {0x0010}'Use Climate Data',
-      {0x0020}'Unknown 6',
-      {0x0040}'Use Sky Cell',
-      {0x0080}'Unknown 8',
-      {0x0100}'Unknown 9',
-      {0x0200}'Unknown 10',
-      {0x0400}'Unknown 11',
-      {0x0800}'Unknown 12',
-      {0x1000}'Unknown 13',
-      {0x2000}'Unknown 14',
-      {0x4000}'Unknown 15',
-      {0x8000}'Unknown 16'
-    ], True)),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+      wbStruct(PNAM, '', [
+        wbInteger('Flags', itU8, wbFlags([
+          {0x0001}'Use Land Data',
+          {0x0002}'Use LOD Data',
+          {0x0004}'Don''t Use Map Data',
+          {0x0008}'Use Water Data',
+          {0x0010}'Use Climate Data',
+          {0x0020}'Use Image Space Data (unused)',
+          {0x0040}'Use Sky Cell'
+        ], True)),
+        wbByteArray('Unknown', 1)
+      ], cpNormal, True)
+    ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
@@ -11710,9 +11716,9 @@ begin
     ], cpNormal, False, nil, 2),
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset', cpNormal, False, 1/4096),
-      wbFloat('Cell Y Offset', cpNormal, False, 1/4096),
-      wbFloat('Cell Z Offset', cpNormal, False, 1/4096)
+      wbFloat('Cell X Offset'),
+      wbFloat('Cell Y Offset'),
+      wbFloat('Cell Z Offset')
     ], cpNormal, True),
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
@@ -11726,7 +11732,7 @@ begin
       {0x80} 'No Grass'
     ]), cpNormal, True),
     {>>> Object Bounds doesn't show up in CK <<<}
-    wbRStruct('Object Bounds (unused?)', [
+    wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
         wbFloat('X', cpNormal, False, 1/4096),
         wbFloat('Y', cpNormal, False, 1/4096)

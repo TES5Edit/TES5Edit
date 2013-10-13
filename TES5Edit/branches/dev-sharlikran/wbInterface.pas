@@ -18,11 +18,10 @@ interface
 uses
   Classes,
   SysUtils,
-  Graphics,
-  D3DX9;
+  Graphics;
 
 const
-  VersionString               = '3.0.31 EXPERIMENTAL';
+  VersionString               = '3.0.32 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -49,10 +48,11 @@ var
   wbHideIgnored : Boolean{} = True;{}
   wbHideNeverShow : Boolean{} = True;{}
   wbShowFormVersion : Boolean{} = False;{}
+  wbShowFlagEnumValue : Boolean{} = False;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
-  wbSortGroupRecord: Boolean{} = True;{}
+  wbSortGroupRecord: Boolean{} = False;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
@@ -60,7 +60,7 @@ var
   wbMoreInfoForIndex: Boolean = False;
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean = False;
-  wbForceNewHeader: boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
+  wbForceNewHeader: Boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
   wbNewHeaderAddon: Cardinal = 40; // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
@@ -806,6 +806,12 @@ type
     _Flags: Cardinal;
   end;
 
+  TwbVector = packed record
+    x: Single;
+    y: Single;
+    z: Single;
+  end;
+
   TwbGridCell = record
     x, y: Integer;
   end;
@@ -865,9 +871,9 @@ type
 
     procedure UpdateRefs;
 
-    function GetPosition(out aPosition: TD3DXVector3): Boolean;
-    function SetPosition(const aPosition: TD3DXVector3): Boolean;
-    function GetRotation(out aRotation: TD3DXVector3): Boolean;
+    function GetPosition(out aPosition: TwbVector): Boolean;
+    function SetPosition(const aPosition: TwbVector): Boolean;
+    function GetRotation(out aRotation: TwbVector): Boolean;
     function GetScale(out aScale: Single): Boolean;
 
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
@@ -2363,11 +2369,11 @@ var
   wbGetFormIDCallback : function(const aElement: IwbElement): Cardinal;
 
 function wbGetFormID(const aElement: IwbElement): Cardinal;
-function wbPositionToGridCell(const aPosition: TD3DXVector3): TwbGridCell;
+function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
 function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
-function wbIsInGridCell(const aPosition: TD3DXVector3; const aGridCell: TwbGridCell): Boolean;
+function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 
 var
   wbRecordFlags            : IwbIntegerDef;
@@ -2663,7 +2669,7 @@ begin
       Result := Result + '['+IntToStr(aDefs[i].Index)+'] ';
   end;
 end;
-function wbIsInGridCell(const aPosition: TD3DXVector3; const aGridCell: TwbGridCell): Boolean;
+function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 var
   GridCell : TwbGridCell;
 begin
@@ -2671,7 +2677,7 @@ begin
   Result := (GridCell.x = aGridCell.x) and (GridCell.y = aGridCell.y);
 end;
 
-function wbPositionToGridCell(const aPosition: TD3DXVector3): TwbGridCell;
+function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 begin
   Result.x := Trunc(aPosition.x / 4096);
   if aPosition.x < 0 then
@@ -5676,7 +5682,7 @@ function TwbSubRecordDef.CanHandle(aSignature     : TwbSignature;
 begin
   Result := inherited CanHandle(aSignature, aDataContainer);
   if Result and srSizeMatch and Assigned(aDataContainer) and Assigned(srValue) then
-    Result := aDataContainer.DataSize = srValue.Size[nil, nil, nil];
+    Result := aDataContainer.DataSize = srValue.DefaultSize[nil, nil, nil];
 end;
 
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
@@ -8136,15 +8142,24 @@ var
 begin
   Result := '';
 
-  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then
+  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then begin
     Result := enNames[aInt];
+    if wbShowFlagEnumValue then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 
   if Result = '' then
-    if FindSparseName(aInt, i) then
+    if FindSparseName(aInt, i) then begin
       Result := enSparseNamesMap[i].snName;
+      if wbShowFlagEnumValue then
+        Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
+    end;
 
-  if Result = '' then
+  if Result = '' then begin
     Result := IntToStr(aInt);
+    if wbShowFlagEnumValue then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 end;
 
 function TwbEnumDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
@@ -8159,12 +8174,18 @@ var
 begin
   Result := '';
 
-  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then
+  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then begin
     Result := enNames[aInt];
+    if wbShowFlagEnumValue and (Result <> '') then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 
   if Result = '' then begin
-    if FindSparseName(aInt, i) then
-      Result := enSparseNamesMap[i].snName
+    if FindSparseName(aInt, i) then begin
+      Result := enSparseNamesMap[i].snName;
+      if wbShowFlagEnumValue then
+        Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
+    end
     else begin
       Result := '<Unknown: '+IntToStr(aInt)+'>';
       if wbReportMode and wbReportUnknownEnums then begin
@@ -9489,7 +9510,7 @@ var
 begin
   Result := Supports(aDef, IwbByteArrayDef, ByteArrayDef);
   if Result and (badSize > 0) then begin
-    Result := ByteArrayDef.IsVariableSize or (ByteArrayDef.Size[nil, nil, nil] <= Integer(badSize));
+    Result := ByteArrayDef.IsVariableSize or (ByteArrayDef.DefaultSize[nil, nil, nil] <= Integer(badSize));
   end;
 end;
 
@@ -10767,9 +10788,9 @@ begin
   end;
 
   if not Result then begin
-    j := udMembers[0].Size[nil, nil, nil];
+    j := udMembers[0].DefaultSize[nil, nil, nil];
     for i := 1 to High(udMembers) do
-      if udMembers[i].Size[nil, nil, nil] <> j then begin
+      if udMembers[i].DefaultSize[nil, nil, nil] <> j then begin
         j := -1;
         break;
       end;
@@ -10969,7 +10990,7 @@ begin
 //  Result := GetName;
 //  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
 //    Result := NamedDef.Name;
-  Result := '<Empty>';
+  Result := '';
 
   Used(aElement, Result);
 end;

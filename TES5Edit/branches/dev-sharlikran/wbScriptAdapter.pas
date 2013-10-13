@@ -432,6 +432,14 @@ begin
     Element.MoveDown;
 end;
 
+procedure IwbElement_BuildRef(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Element.BuildRef;
+end;
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -640,6 +648,14 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Container.ReverseElements;
+end;
+
+procedure IwbContainer_ContainerStates(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbContainerElementRef;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
+    Value := Byte(Container.ContainerStates);
 end;
 
 
@@ -1222,6 +1238,23 @@ begin
   wbFlipBitmap(TBitmap(V2O((Args.Values[0]))), Integer(Args.Values[1]));
 end;
 
+procedure Misc_wbAlphaBlend(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbAlphaBlend(
+    Args.Values[0], // DestDC
+    Args.Values[1], // X
+    Args.Values[2], // Y
+    Args.Values[3], // Width
+    Args.Values[4], // Height
+    Args.Values[5], // SrcDC
+    Args.Values[6], // SrcX
+    Args.Values[7], // SrcY
+    Args.Values[8], // SrcWidth
+    Args.Values[9], // SrcHeight
+    Args.Values[10] // Alpha
+  );
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 const
@@ -1307,6 +1340,14 @@ begin
     AddConst(cUnit, 'caConflict', ord(caConflict));
     AddConst(cUnit, 'caConflictCritical', ord(caConflictCritical));
 
+    { TwbContainerState }
+    AddConst(cUnit, 'csInit', ord(csInit));
+    AddConst(cUnit, 'csInitOnce', ord(csInitOnce));
+    AddConst(cUnit, 'csInitDone', ord(csInitDone));
+    AddConst(cUnit, 'csInitializing', ord(csInitializing));
+    AddConst(cUnit, 'csRefsBuild', ord(csRefsBuild));
+    AddConst(cUnit, 'csAsCreatedEmpty', ord(csAsCreatedEmpty));
+
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);
@@ -1349,6 +1390,7 @@ begin
     AddFunction(cUnit, 'ClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'SetElementState', IwbElement_SetElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'GetElementState', IwbElement_GetElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'BuildRef', IwbElement_BuildRef, 1, [varEmpty], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
@@ -1370,6 +1412,7 @@ begin
     AddFunction(cUnit, 'RemoveElement', IwbContainer_RemoveElement, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'RemoveByIndex', IwbContainer_RemoveByIndex, 3, [varEmpty, varInteger, varBoolean], varEmpty);
     AddFunction(cUnit, 'ReverseElements', IwbContainer_ReverseElements, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ContainerStates', IwbContainer_ContainerStates, 1, [varEmpty], varEmpty);
 
     { IwbMainRecord }
     AddFunction(cUnit, 'Signature', IwbMainRecord_Signature, 1, [varEmpty], varEmpty);
@@ -1455,6 +1498,7 @@ begin
 
     { Misc routines }
     AddFunction(cUnit, 'wbFlipBitmap', Misc_wbFlipBitmap, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbAlphaBlend', Misc_wbAlphaBlend, 11, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
 
@@ -1467,6 +1511,7 @@ begin
   JvInterpreter_Classes.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Windows.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Graphics.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Controls.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Buttons.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);

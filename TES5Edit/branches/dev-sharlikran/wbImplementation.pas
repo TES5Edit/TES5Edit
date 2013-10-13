@@ -23,8 +23,6 @@ uses
   Classes,
   SysUtils,
   Contnrs,
-  Direct3D9,
-  D3DX9,
   Math,
   wbInterface,
   Zlibex;
@@ -909,9 +907,9 @@ type
 
     procedure UpdateRefs;
 
-    function GetPosition(out aPosition: TD3DXVector3): Boolean;
-    function SetPosition(const aPosition: TD3DXVector3): Boolean;
-    function GetRotation(out aRotation: TD3DXVector3): Boolean;
+    function GetPosition(out aPosition: TwbVector): Boolean;
+    function SetPosition(const aPosition: TwbVector): Boolean;
+    function GetRotation(out aRotation: TwbVector): Boolean;
     function GetScale(out aScale: Single): Boolean;
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
     function GetFormVersion: Cardinal; {>>> Form Version access <<<}
@@ -2836,9 +2834,9 @@ begin
                   end else
                     NewONAM := ONAMs.Assign(High(Integer), nil, True);
 
-                  if wbDisplayLoadOrderFormID then
+                  {if wbDisplayLoadOrderFormID then
                     NewONAM.NativeValue := Current.LoadOrderFormID
-                  else
+                  else}
                     NewONAM.NativeValue := FormID;
 
                   if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
@@ -5314,7 +5312,7 @@ begin
   BasePtr.mrsFlags._Flags := 0;
   BasePtr.mrsFormID := aFormID;
   BasePtr.mrsVCS1 := 0;
-  if wbGameMode in [gmTES5] then
+  if wbGameMode >= gmTES5 then
     BasePtr.mrsVersion := 43
   else
     BasePtr.mrsVersion := 15;
@@ -6574,7 +6572,7 @@ begin
   Result := Length(mrOverrides);
 end;
 
-function TwbMainRecord.GetPosition(out aPosition: TD3DXVector3): Boolean;
+function TwbMainRecord.GetPosition(out aPosition: TwbVector): Boolean;
 var
   Signature : TwbSignature;
   SelfRef   : IwbContainerElementRef;
@@ -6710,7 +6708,7 @@ begin
   Result := mrsReferencesInjected in mrStates;
 end;
 
-function TwbMainRecord.GetRotation(out aRotation: TD3DXVector3): Boolean;
+function TwbMainRecord.GetRotation(out aRotation: TwbVector): Boolean;
 var
   Signature : TwbSignature;
   SelfRef   : IwbContainerElementRef;
@@ -7906,7 +7904,7 @@ begin
   mreNext := Pointer(aEntry);
 end;
 
-function TwbMainRecord.SetPosition(const aPosition: TD3DXVector3): Boolean;
+function TwbMainRecord.SetPosition(const aPosition: TwbVector): Boolean;
 var
   Signature : TwbSignature;
   SelfRef   : IwbContainerElementRef;
@@ -8003,7 +8001,7 @@ var
   Worldspace        : IwbMainRecord;
   IsExterior        : Boolean;
   SelfRef           : IwbElement;
-  Position          : TD3DXVector3;
+  Position          : TwbVector;
   GridCell          : TwbGridCell;
   SubBlock          : TwbGridCell;
   Block             : TwbGridCell;
@@ -10735,12 +10733,9 @@ begin
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
 
-  if not wbSortGroupRecord then
-    Exit;
-
   {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}
   {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
-  if wbGameMode in [gmFO3, gmFNV, gmTES5] then
+  if not wbSortGroupRecord then
     Exit;
 
   Include(grStates, gsSorting);

@@ -11,6 +11,7 @@ implementation
 
 uses
   Windows,
+  Graphics,
   Classes,
   SysUtils,
   Variants,
@@ -18,6 +19,7 @@ uses
   StdCtrls,
   ExtCtrls,
   ComCtrls,
+  Forms,
   Menus,
   CheckLst,
   ShellApi,
@@ -71,6 +73,24 @@ procedure JvInterpreter_Ceil(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := Ceil(Extended(Args.Values[0]));
 end;
+
+{ Math }
+
+procedure JvInterpreter_Max(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Max(Integer(Args.Values[0]), Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_Min(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Min(Integer(Args.Values[0]), Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_IntPower(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Extended(Math.IntPower(Extended(Args.Values[0]), Integer(Args.Values[1])));
+end;
+
 
 
 { TStrings }
@@ -286,6 +306,21 @@ begin
   Value := TBinaryReader(Args.Obj).ReadShortInt;
 end;
 
+procedure TBinaryReader_ReadSmallInt(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadSmallInt;
+end;
+
+procedure TBinaryReader_ReadUInt16(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadUInt16;
+end;
+
+procedure TBinaryReader_ReadUInt32(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadUInt32;
+end;
+
 procedure TBinaryReader_ReadInteger(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TBinaryReader(Args.Obj).ReadInteger;
@@ -494,11 +529,32 @@ begin
 end;
 
 
+{ TMenu }
+
+procedure TMenu_Read_AutoHotKeys(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Integer(TMenu(Args.Obj).AutoHotKeys);
+end;
+
+procedure TMenu_Write_AutoHotKeys(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TMenu(Args.Obj).AutoHotKeys := Value;
+end;
+
+
 { TMenuItem }
 
 procedure TMenuItem_Clear(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TMenuItem(Args.Obj).Clear;
+end;
+
+
+{ TBitmap }
+
+procedure TBitmap_SetSize(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TBitmap(Args.Obj).SetSize(Args.Values[0], Args.Values[1]);
 end;
 
 
@@ -811,6 +867,9 @@ begin
     AddConst('StdCtrls', 'cbChecked', Ord(cbChecked));
     AddConst('StdCtrls', 'cbUnchecked', Ord(cbUnchecked));
     AddConst('StdCtrls', 'cbGrayed', Ord(cbGrayed));
+    AddConst('Forms', 'poMainFormCenter', Ord(poMainFormCenter));
+    AddConst('Menus', 'maAutomatic', Ord(maAutomatic));
+    AddConst('Menus', 'maManual', Ord(maManual));
     AddConst('Controls', 'akLeft', Ord(akLeft));
     AddConst('Controls', 'akRight', Ord(akRight));
     AddConst('Controls', 'akTop', Ord(akTop));
@@ -853,6 +912,11 @@ begin
     AddFunction('ShellApi', 'ShellExecuteWait', JvInterpreter_ShellExecuteWait, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
 
+    { Math }
+    AddFunction('Math', 'Max', JvInterpreter_Max, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Min', JvInterpreter_Min, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'IntPower', JvInterpreter_IntPower, 2, [varEmpty,varEmpty], varEmpty);
+
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'Delimiter', TStrings_Write_Delimiter, 0, [varEmpty]);
@@ -882,6 +946,9 @@ begin
     AddGet(TBinaryReader, 'ReadChar', TBinaryReader_ReadChar, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadDouble', TBinaryReader_ReadDouble, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadShortInt', TBinaryReader_ReadShortInt, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadSmallInt', TBinaryReader_ReadSmallInt, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadUInt16', TBinaryReader_ReadUInt16, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadUInt32', TBinaryReader_ReadUInt32, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadInteger', TBinaryReader_ReadInteger, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadSingle', TBinaryReader_ReadSingle, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadString', TBinaryReader_ReadString, 0, [varEmpty], varEmpty);
@@ -938,8 +1005,15 @@ begin
     AddHandler('ComCtrls', 'TLVOwnerDataEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnData);
     AddHandler('ComCtrls', 'TLVSelectItemEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnSelectItem);
 
+    { TMenu }
+    AddGet(TMenu, 'AutoHotKeys', TMenu_Read_AutoHotKeys, 0, [varEmpty], varEmpty);
+    AddSet(TMenu, 'AutoHotKeys', TMenu_Write_AutoHotKeys, 0, [varEmpty]);
+
     { TMenuItem }
     AddGet(TMenuItem, 'Clear', TMenuItem_Clear, 0, [varEmpty], varEmpty);
+
+    { TBitmap }
+    AddGet(TBitmap, 'SetSize', TBitmap_SetSize, 2, [varEmpty, varEmpty], varEmpty);
 
     { TCustomIniFile }
     AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');

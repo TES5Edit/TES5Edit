@@ -32,11 +32,11 @@ uses
   Menus,
   Math,
   IniFiles,
+  ClipBrd,
   TypInfo,
   ActiveX,
   Buttons,
   ActnList,
-  AppEvnts,
   ShellAPI,
   IOUtils,
   Actions,
@@ -44,12 +44,6 @@ uses
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
-  Direct3D9,
-  D3DX9,
-  {$IFDEF DX3D}
-  RenderUnit,
-  DXUT,
-  {$ENDIF DX3D}
   JvComponentBase,
   JvInterpreter,
   wbInterface,
@@ -229,7 +223,6 @@ type
     mniNavDeepCopyAsOverride: TMenuItem;
     TabSheet2: TTabSheet;
     DisplayPanel: TPanel;
-    ApplicationEvents1: TApplicationEvents;
     N5: TMenuItem;
     mniNavCellChildPers: TMenuItem;
     mniNavCellChildTemp: TMenuItem;
@@ -299,8 +292,6 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     procedure splElementsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-
-    procedure OnToggleFullscreen(Sender: TObject);
 
     {--- pgMain ---}
     procedure tbsMessagesShow(Sender: TObject);
@@ -450,8 +441,6 @@ type
 
     procedure acForwardUpdate(Sender: TObject);
     procedure acForwardExecute(Sender: TObject);
-    procedure DisplayPanelResize(Sender: TObject);
-    procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure mniNavCheckForCircularLeveledListsClick(Sender: TObject);
     procedure mniPathPluggyLinkClick(Sender: TObject);
     procedure mniNavBanditFixClick(Sender: TObject);
@@ -498,13 +487,6 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
-  protected
-    DisplayActive: Boolean;
-    m_hwndRenderFullScreen:  HWND;
-
-    procedure InitDisplay;
-    procedure DoneDisplay;
-
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -1131,26 +1113,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
-begin
-  Done:= True;
-{$IFDEF DX3D}
-
-  if not DisplayActive then
-    Exit;
-
-  // Do not render if the app is minimized
-  if IsIconic(Application.Handle) then Exit;
-
-  // Update and render a frame
- //!! CheckForLostFullscreen;
-  DXUTRender3DEnvironment;
-
-  // Keep requesting more idle time
-  Done:= False;
-{$ENDIF}
-end;
-
 procedure TfrmMain.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 begin
   if Msg.message = 524 {WM_XBUTTONUP} then
@@ -1161,7 +1123,7 @@ begin
 end;
 
 type
-  TCoords = TD3DVector;
+  TCoords = TwbVector;
 
   PRefInfo = ^TRefInfo;
   TRefInfo = record
@@ -1171,16 +1133,6 @@ type
     Scale  : Single;
     Next   : PRefInfo;
   end;
-
-{procedure TfrmMain.ScriptScanProgress(aTotalCount, aCount: Integer);
-begin
-  Caption := '[Scanning] Processed Records: ' + IntToStr(aTotalCount) +
-    ' References Found: ' + IntToStr(aCount) +
-    ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
-  if ForceTerminate then
-    Abort;
-end;}
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
 begin
@@ -2389,10 +2341,13 @@ var
 
                 // update counts
                 if (l <= High(aCntNames)) and (aCntNames[l] <> '') then begin
-                  CountElement := TargetRecord.ElementByName[aCntNames[l]];
+                  TargetRecord.Add(aCntNames[l], True);
+                  CountElement := TargetRecord.ElementByPath[aCntNames[l]];
                   if Assigned(CountElement) then
                     if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
-                      CountElement.NativeValue := Entries.ElementCount;
+                      CountElement.NativeValue := Entries.ElementCount
+                    else
+                      CountElement.Remove;
                 end;
 
               end;
@@ -2414,6 +2369,15 @@ var
   LastLoadOrder   : Integer;
   i               : Integer;
 begin
+  if wbGameMode in [gmTES5] then begin
+    if MessageDlg('Merged patch is unsupported for ' + wbGameName +
+      '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
+      'Do you want to continue?',
+      mtWarning, mbYesNo, 0) <> mrYes
+    then
+      Exit;
+  end;
+
   TargetFile := nil;
 
   while not Assigned(TargetFile) do
@@ -2436,21 +2400,36 @@ begin
 
   ResetAllTags;
   for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
+    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT']);
     CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
-    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
+    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
+    // exclude Head Parts for Skyrim, causes issues
+    if wbGameMode >= gmTES5 then
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
+    else
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
+    // keywords
+    if wbGameMode >= gmTES5 then begin
+      CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['BOOK'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['FLOR'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['FURN'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['INGR'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['MGEF'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SCRL'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SLGM'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SPEL'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ']);
+    end;
   end;
 
   TargetFile.CleanMasters;
@@ -2494,7 +2473,7 @@ begin
         for n := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
             QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-            // include SGE quests which are new or set SGE flag on master quest
+            // include SGE (start game enabled) quests which are new or set SGE flag on master quest
             if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then
               if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
                 SetLength(FormIDs, Succ(Length(FormIDs)));
@@ -2530,7 +2509,7 @@ begin
       Inc(Count);
     end;
   end;
-  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ' Sequence Files Created: ' + IntToStr(j));
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', Sequence Files Created: ' + IntToStr(j));
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -2774,16 +2753,6 @@ begin
   FreeAndNil(ScriptHotkeys);
 end;
 
-procedure TfrmMain.DisplayPanelResize(Sender: TObject);
-begin
-{$IFDEF DX3D}
-  if DisplayActive then begin
-    DXUTPause(True, True);
-    DXUTStaticWndProc(DXUTGetHWND, WM_EXITSIZEMOVE, 0, 0);
-  end;
-{$ENDIF}
-end;
-
 procedure TfrmMain.DoGenerateLOD;
 var
   i, j        : Integer;
@@ -2849,8 +2818,8 @@ end;
 
 procedure TfrmMain.DoInit;
 
-  // remove comments, empty lines and missing files from list
-  procedure FixLoadList(sl: TStrings);
+  // remove comments and empty lines from list
+  procedure RemoveCommentsAndEmpty(sl: TStrings);
   var
     i, j: integer;
     s: string;
@@ -2860,12 +2829,19 @@ procedure TfrmMain.DoInit;
       j := Pos('#', s);
       if j > 0 then
         System.Delete(s, j, High(Integer));
-      s := Trim(s);
-      if (s = '') or not FileExists(wbDataPath + s) then begin
+      if Trim(s) = '' then
         sl.Delete(i);
-        Continue;
-      end;
     end;
+  end;
+
+  // remove missing files from list
+  procedure RemoveMissingFiles(sl: TStrings);
+  var
+    i: integer;
+  begin
+    for i := Pred(sl.Count) downto 0 do
+      if not FileExists(wbDataPath + sl.Strings[i]) then
+        sl.Delete(i);
   end;
 
   // add missing plugin files to list sorted by timestamps
@@ -3009,7 +2985,8 @@ begin
         }
         if not (wbGameMode in [gmTES4, gmFO3, gmFNV]) then begin
           sl.LoadFromFile(wbPluginsFileName);
-          FixLoadList(sl); // remove comments and nonexisting files
+          RemoveCommentsAndEmpty(sl); // remove comments
+          RemoveMissingFiles(sl); // remove nonexisting files
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
           j := FindMatchText(sl, wbGameName+'.esm');
@@ -3023,6 +3000,7 @@ begin
             sl2 := TStringList.Create;
             try
               sl2.LoadFromFile(s);
+              RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
               // skip first line "Skyrim.esm" in BOSS list
               for i := 1 to Pred(sl2.Count) do begin
                 j := FindMatchText(sl, sl2[i]);
@@ -3045,7 +3023,6 @@ begin
            Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
         }
         AddMissingToLoadList(sl);
-        FixLoadList(sl); // remove nonexisting files
 
         if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
           Age := Integer(sl.Objects[0]);
@@ -3366,21 +3343,6 @@ begin
   CreateActionsForScripts;
 end;
 
-procedure TfrmMain.DoneDisplay;
-begin
-  if not DisplayActive then
-    Exit;
-
-{$IFDEF DX3D}
-  DXUTFreeState;
-  DestroyCustomDXUTobjects;
-
-  DestroyWindow(m_hwndRenderFullScreen);
-{$ENDIF}
-
-  DisplayActive := False;
-end;
-
 procedure TfrmMain.edEditorIDSearchChange(Sender: TObject);
 begin
   edEditorIDSearch.Color := clWindow;
@@ -3585,7 +3547,7 @@ begin
     end;
 end;
 
-function NormalizeRotation(const aRot: TD3DXVector3): TD3DXVector3;
+function NormalizeRotation(const aRot: TwbVector): TwbVector;
 
   function NormalizeAxis(const aValue: Single): Single;
   begin
@@ -3727,7 +3689,7 @@ var
   i {, n}                     : Integer;
   MainRecord, LinksToRecord   : IwbMainRecord;
   Element                     : IwbElement;
-  Position                    : TD3DXVector3;
+  Position                    : TwbVector;
   Cntr {, Cntr2}              : IwbContainerElementRef;
 begin
   if not wbEditAllowed then
@@ -3946,8 +3908,6 @@ begin
   if Assigned(PluggyLinkThread) then
     PluggyLinkThread.Terminate;
   FreeAndNil(PluggyLinkThread);
-
-  DoneDisplay;
 
   SaveChanged;
 
@@ -5012,91 +4972,6 @@ begin
   end;
 end;
 
-//-----------------------------------------------------------------------------
-// Name: FullScreenWndProc()
-// Desc: The WndProc funtion used when the app is in fullscreen mode. This is
-//       needed simply to trap the ESC key.
-//-----------------------------------------------------------------------------
-function FullScreenWndProc(hWnd: HWND; msg: UINT; wParam: WPARAM;
-  lParam: LPARAM): LRESULT; stdcall;
-begin
-  if (msg = WM_CLOSE) then
-  begin
-    // User wants to exit, so go back to windowed mode and exit for real
-    frmMain.OnToggleFullScreen(nil);
-    PostMessage(Application.Handle, WM_CLOSE, 0, 0);
-  end;
-
-  if (msg = WM_SETCURSOR) then SetCursor(0);
-
-  // User wants to leave fullscreen mode
-  if (msg = WM_KEYUP) and (wParam = VK_ESCAPE) then
-    frmMain.OnToggleFullScreen(nil);
-
-//  if Assigned(m_ArcBall) then
-//    m_ArcBall.HandleMessages(hWnd, Msg, wParam, lParam);
-
-  Result:= DefWindowProc(hWnd, msg, wParam, lParam);
-end;
-
-procedure TfrmMain.OnToggleFullscreen(Sender: TObject);
-begin
-{$IFDEF DX3D}
-  DXUTToggleFullScreen;
-{$ENDIF}
-end;
-
-
-procedure TfrmMain.InitDisplay;
-{$WRITEABLECONST ON}
-const
-  wndClass: TWndClass = (
-    style: CS_HREDRAW or CS_VREDRAW;
-    lpfnWndProc: @FullScreenWndProc; cbClsExtra: 0; cbWndExtra: 0; hInstance: 0;
-    hIcon: 0; hCursor: 0; hbrBackground: 0; lpszMenuName: nil;
-    lpszClassName: 'Fullscreen Window'
-  );
-{$WRITEABLECONST OFF}
-begin
-  if DisplayActive then
-    Exit;
-
-{$IFDEF DX3D}
-  // Register a class for a fullscreen window
-  wndClass.hbrBackground:= GetStockObject(WHITE_BRUSH);
-  Windows.RegisterClass(wndClass);
-
-  // We create the fullscreen window (not visible) at startup, so it can
-  // be the focus window.  The focus window can only be set at CreateDevice
-  // time, not in a Reset, so ToggleFullscreen wouldn't work unless we have
-  // already set up the fullscreen focus window.
-  m_hwndRenderFullScreen:= CreateWindow('Fullscreen Window', nil,
-                               WS_POPUP, 0, 0, Screen.Width, Screen.Height,
-                               Application.Handle, 0, 0, nil);
-
-  //////////////////////////////////////////////////////////////
-
-  CreateCustomDXUTobjects;
-
-  // Set the callback functions
-  DXUTSetCallbackDeviceCreated(OnCreateDevice);
-  DXUTSetCallbackDeviceReset(OnResetDevice);
-  DXUTSetCallbackDeviceLost(OnLostDevice);
-  DXUTSetCallbackDeviceDestroyed(OnDestroyDevice);
-  DXUTSetCallbackMsgProc(MsgProc);
-  DXUTSetCallbackFrameRender(OnFrameRender);
-  DXUTSetCallbackFrameMove(OnFrameMove);
-
-  // Initialize DXUT and create the desired Win32 window and Direct3D device for the application
-  DXUTInit(True, True, True); // Parse the command line, handle the default hotkeys, and show msgboxes
-  DXUTSetCursorSettings(True, True); // Show the cursor and clip it when in full screen
-  DXUTSetWindow(m_hwndRenderFullScreen{?}, m_hwndRenderFullScreen, DisplayPanel.Handle, False);
-  DXUTCreateDevice(D3DADAPTER_DEFAULT, true, 640, 480, IsDeviceAcceptable, ModifyDeviceSettings);
-
-{$ENDIF}
-  DisplayActive := True;
-end;
-
 procedure TfrmMain.InitNodes(const aNodeDatas: PViewNodeDatas;
   const aParentDatas: PViewNodeDatas;
   aNodeCount: Integer;
@@ -5616,6 +5491,10 @@ begin
       FilterPreset := False;
       Done := True;
     end;
+  end else
+  if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
+    Value := O2V(TfrmFileSelect.Create(nil));
+    Done := True;
   end;
 end;
 
@@ -5825,11 +5704,13 @@ var
   Count                       : Cardinal;
   StartTick                   : Cardinal;
   jvi                         : TJvInterpreterProgram;
-  i                           : integer;
+  i                           : Integer;
+  bCheckUnsaved               : Boolean;
 begin
   if Trim(aScript) = '' then
     Exit;
 
+  bCheckUnsaved := tmrCheckUnsaved.Enabled;
   tmrCheckUnsaved.Enabled := False;
 
   Count := 0;
@@ -5851,6 +5732,7 @@ begin
       wbStartTime := Now;
 
       Enabled := False;
+
       AddMessage('Applying script...');
       Application.ProcessMessages;
 
@@ -5920,11 +5802,9 @@ begin
 
     InvalidateElementsTreeView(NoNodes);
     vstNav.Invalidate;
-    //Application.ProcessMessages;
-    //pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
-    tmrCheckUnsaved.Enabled := True;
+    tmrCheckUnsaved.Enabled := bCheckUnsaved;
   end;
 end;
 
@@ -6881,6 +6761,8 @@ begin
         Exit;
 
       EditValue := Element.EditValue;
+
+      // flags editor
       if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
@@ -6901,9 +6783,10 @@ begin
           Free;
         end;
 
-      end else
+      end
 
-      if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
+      // localization editor
+      else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
@@ -6916,9 +6799,11 @@ begin
         end;
         vstView.Invalidate;
         Exit;
-      end else
-        if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
-          Exit;
+      end
+
+      // string editor
+      else if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
+        Exit;
 
       Element.EditValue := EditValue;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
@@ -8834,7 +8719,7 @@ var
   MainRecord2                 : IwbMainRecord;
   FoundAny                    : Boolean;
   GridCell                    : TwbGridCell;
-  Position                    : TD3DXVector3;
+  Position                    : TwbVector;
 
   Cells                       : array of array of array of PVirtualNode;
   FileFiltered                : array of Integer;
@@ -9544,6 +9429,7 @@ begin
     cbSortFLST.Checked := wbSortFLST;
     cbSortGroupRecord.Checked := wbSortGroupRecord;
     cbResolveAliases.Checked := wbResolveAlias;
+    cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
     cbAutoSave.Checked := AutoSave;
@@ -9567,6 +9453,7 @@ begin
     wbSortFLST := cbSortFLST.Checked;
     wbSortGroupRecord := cbSortGroupRecord.Checked;
     wbResolveAlias := cbResolveAliases.Checked;
+    wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     AutoSave := cbAutoSave.Checked;
@@ -9588,6 +9475,7 @@ begin
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
     Settings.WriteBool('Options', 'ResolveAliases', wbResolveAlias);
+    Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -9976,9 +9864,9 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
-  if wbGameMode = gmTES5 then begin
-    mniNavCreateMergedPatch.Visible := False;
-  end;
+  //if wbGameMode = gmTES5 then begin
+  //  mniNavCreateMergedPatch.Visible := False;
+  //end;
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
@@ -13050,8 +12938,6 @@ begin
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
   tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) and not wbIKnowWhatImDoing;
-
-  InitDisplay;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
@@ -13210,22 +13096,20 @@ begin
         end;
 
         for i := 0 to Pred(ltLoadList.Count) do begin
-          if (ExtractFileExt(ltLoadList[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-            s := ChangeFileExt(ltLoadList[i], '');
-            // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
-            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
-              s := s + '*';
-            if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
-              repeat
-                if wbLoadBSAs then begin
-                  LoaderProgress('[' + F.Name + '] Loading Resources.');
-                  wbContainerHandler.AddBSA(ltDataPath + F.Name);
-                end else
-                  LoaderProgress('[' + F.Name + '] Skipped.');
-              until FindNext(F) <> 0;
-            finally
-              FindClose(F);
-            end;
+          s := ChangeFileExt(ltLoadList[i], '');
+          // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
+          if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+            s := s + '*';
+          if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
+            repeat
+              if wbLoadBSAs then begin
+                LoaderProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(ltDataPath + F.Name);
+              end else
+                LoaderProgress('[' + F.Name + '] Skipped.');
+            until FindNext(F) <> 0;
+          finally
+            FindClose(F);
           end;
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');

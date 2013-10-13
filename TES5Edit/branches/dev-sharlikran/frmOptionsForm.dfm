@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 313
+  ClientHeight = 345
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,30 +20,31 @@ object frmOptions: TfrmOptions
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    313)
+    345)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 265
+    Height = 297
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
+      ExplicitHeight = 237
       object Label5: TLabel
         Left = 16
-        Top = 208
+        Top = 232
         Width = 64
         Height = 13
         Caption = 'Column width'
       end
       object cbIKnow: TCheckBox
         Left = 298
-        Top = 204
+        Top = 230
         Width = 137
         Height = 17
         Caption = 'I know what I am doing'
@@ -101,14 +102,14 @@ object frmOptions: TfrmOptions
       object cbSimpleRecords: TCheckBox
         Left = 16
         Top = 176
-        Width = 281
+        Width = 273
         Height = 17
-        Caption = 'Simple records (LAND, NAVI, NAVM). Requires restart.'
+        Caption = 'Simple records LAND, NAVI, NAVM (requires restart)'
         TabOrder = 7
       end
       object edColumnWidth: TEdit
         Left = 86
-        Top = 204
+        Top = 228
         Width = 51
         Height = 21
         TabOrder = 8
@@ -144,15 +145,27 @@ object frmOptions: TfrmOptions
       object cbSortGroupRecord: TCheckBox
         Left = 16
         Top = 153
-        Width = 121
+        Width = 81
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
-        Caption = '[TES4] Sort INFOs'
+        Caption = 'Sort INFOs'
         TabOrder = 11
+      end
+      object cbShowFlagEnumValue: TCheckBox
+        Left = 16
+        Top = 199
+        Width = 297
+        Height = 17
+        Hint = 
+          'Add integer values of flags and enumerations in () brackets at t' +
+          'he end'
+        Caption = 'Show values of flags and enumerations (requires restart)'
+        TabOrder = 12
       end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
+      ExplicitHeight = 237
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -220,6 +233,7 @@ object frmOptions: TfrmOptions
     object tsColors: TTabSheet
       Caption = 'Colors'
       ImageIndex = 2
+      ExplicitHeight = 237
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -274,22 +288,24 @@ object frmOptions: TfrmOptions
   end
   object btnOK: TButton
     Left = 302
-    Top = 280
+    Top = 312
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
+    ExplicitTop = 280
   end
   object btnCancel: TButton
     Left = 383
-    Top = 280
+    Top = 312
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+    ExplicitTop = 280
   end
 end
