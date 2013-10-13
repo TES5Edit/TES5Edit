@@ -8964,6 +8964,7 @@ begin
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbFormID(DNAM, 'Response Data'),
 
+    {>>> Unordered, CTDA can appear before or after LNAM <<<}
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
@@ -8981,6 +8982,7 @@ begin
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
+      wbCTDAs,
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
 

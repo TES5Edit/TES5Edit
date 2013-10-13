@@ -3323,7 +3323,7 @@ procedure wbPACKAfterLoad(const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
   MainRecord    : IwbMainRecord;
-  OldContainer  : IwbContainerElementRef;
+  //OldContainer  : IwbContainerElementRef;
   NewContainer  : IwbContainerElementRef;
   //NewContainer2 : IwbContainerElementRef;
 begin
