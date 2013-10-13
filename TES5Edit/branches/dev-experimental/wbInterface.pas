@@ -18,18 +18,16 @@ interface
 uses
   Classes,
   SysUtils,
-  Graphics,
-  D3DX9;
+  Graphics;
 
 const
-  VersionString               = '3.0.31 EXPERIMENTAL';
+  VersionString               = '3.0.32 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
-
   TwbPointerArray = array [0..Pred(High(Integer) div SizeOf(Pointer))] of Pointer;
   PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
 
@@ -50,9 +48,11 @@ var
   wbHideIgnored : Boolean{} = True;{}
   wbHideNeverShow : Boolean{} = True;{}
   wbShowFormVersion : Boolean{} = False;{}
+  wbShowFlagEnumValue : Boolean{} = False;{}
   wbDisplayShorterNames : Boolean;
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
+  wbSortGroupRecord: Boolean{} = False;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
@@ -60,10 +60,12 @@ var
   wbMoreInfoForIndex: Boolean = False;
   wbTranslationMode: Boolean;
   wbTestWrite: Boolean = False;
-  wbForceNewHeader: boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
+  wbForceNewHeader: Boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
   wbNewHeaderAddon: Cardinal = 40; // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
+  wbResolveAlias: Boolean{} = False;{}
+  wbDoNotBuildRefsFor: TStringList;
 
   wbUDRSetXESP: Boolean = True;
   wbUDRSetScale: Boolean = False;
@@ -73,16 +75,8 @@ var
   wbUDRSetMSTT: Boolean = True;
   wbUDRSetMSTTValue: Int64 = $0000003B; { XMarker }
 
-  wbMasterUpdate: Boolean;
-  wbMasterUpdateDone: Boolean;
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
-  wbDontSave: Boolean;
-  wbDontBackup: Boolean{} = False;{}
-  wbMasterRestore: Boolean;
-
-  wbLODGen: Boolean;
-
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
@@ -116,7 +110,7 @@ var
 //  wbRotationFactor : Extended = 1;
 //  wbRotationScale : Integer = 6;
 
-  wbDataPath: string;
+  wbDataPath : string;
 
 type
   TConflictAll = (
@@ -241,6 +235,10 @@ var
     dtStruct,
     dtUnion,
     dtStructChapter
+  ];
+  dtArrays : set of TwbDefType = [
+    dtSubRecordArray,
+    dtArray
   ];
 
 type
@@ -805,6 +803,12 @@ type
     _Flags: Cardinal;
   end;
 
+  TwbVector = packed record
+    x: Single;
+    y: Single;
+    z: Single;
+  end;
+
   TwbGridCell = record
     x, y: Integer;
   end;
@@ -864,9 +868,9 @@ type
 
     procedure UpdateRefs;
 
-    function GetPosition(out aPosition: TD3DXVector3): Boolean;
-    function SetPosition(const aPosition: TD3DXVector3): Boolean;
-    function GetRotation(out aRotation: TD3DXVector3): Boolean;
+    function GetPosition(out aPosition: TwbVector): Boolean;
+    function SetPosition(const aPosition: TwbVector): Boolean;
+    function GetRotation(out aRotation: TwbVector): Boolean;
     function GetScale(out aScale: Single): Boolean;
 
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
@@ -1027,9 +1031,6 @@ type
 
   IwbSubRecordArray = interface
     ['{26937F7A-5F31-4D65-932F-038BD0FA9FEF}']
-    function GetCounter: TwbSignature;
-    property Counter: TwbSignature
-      read GetCounter;
   end;
 
   IwbSubRecordStruct = interface
@@ -1212,11 +1213,9 @@ type
     ['{67943BAC-B558-4112-8DBC-C94A44E0B1D1}']
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
-    function GetHasCounter: TwbSignature;
 
     property Element: IwbRecordMemberDef read GetElement;
     property Sorted[const aContainer: IwbContainer]: Boolean read GetSorted;
-    property HasCounter: TwbSignature read GetHasCounter;
   end;
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
@@ -1351,6 +1350,8 @@ type
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters);
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
 
+    function GetRequiresKey: Boolean;
+
     property IsEditable[aInt: Int64; const aElement: IwbElement]: Boolean
       read GetIsEditable;
     property LinksTo[aInt: Int64; const aElement: IwbElement]: IwbElement
@@ -1360,6 +1361,9 @@ type
       read GetEditType;
     property EditInfo[aInt: Int64; const aElement: IwbElement]: string
       read GetEditInfo;
+
+    property RequiresKey: Boolean
+      read GetRequiresKey;
   end;
 
   IwbDumpIntegerDefFormater = interface(IwbIntegerDefFormater)
@@ -1483,10 +1487,11 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     function ResolveHash(const aHash: Int64): TDynStrings;
+    procedure ContainerList(const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
-    procedure ResourceList(const aContainerName: string; aContainers: TStrings);
-    procedure ResourceCopy(const aFileName, aPathOut: string; aContainerIndex: integer = -1);
+    procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
   end;
 
 var
@@ -1873,14 +1878,6 @@ function wbRArray(const aName     : string;
                         aDontShow : TwbDontShowCallback = nil)
                                   : IwbSubRecordArrayDef; overload;
 
-function wbRArray(const aName       : string;
-                  const aElement    : IwbRecordMemberDef;
-                        aHasCounter : TwbSignature;
-                        aPriority   : TwbConflictPriority = cpNormal;
-                        aRequired   : Boolean = False;
-                        aDontShow   : TwbDontShowCallback = nil)
-                                    : IwbSubRecordArrayDef; overload;
-
 function wbArrayS(const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
@@ -1954,17 +1951,6 @@ function wbRArrayS(const aName      : string;
                          aDontShow  : TwbDontShowCallback = nil;
                          aIsSorted  : TwbIsSortedCallback = nil)
                                     : IwbSubRecordArrayDef; overload;
-
-function wbRArrayS(const aName       : string;
-                   const aElement    : IwbRecordMemberDef;
-                         aHasCounter : TwbSignature;
-                         aPriority   : TwbConflictPriority = cpNormal;
-                         aRequired   : Boolean = False;
-                         aAfterLoad  : TwbAfterLoadCallback = nil;
-                         aAfterSet   : TwbAfterSetCallback = nil;
-                         aDontShow   : TwbDontShowCallback = nil;
-                         aIsSorted   : TwbIsSortedCallback = nil)
-                                     : IwbSubRecordArrayDef; overload;
 
 
 {--- wbStruct - ordered list of members ----------------------------------------}
@@ -2127,16 +2113,6 @@ function wbStructS(const aName        : string;
 function wbRStructS(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
-                    const aSkipSigs    : array of TwbSignature;
-                          aPriority    : TwbConflictPriority = cpNormal;
-                          aRequired    : Boolean = False;
-                          aDontShow    : TwbDontShowCallback = nil)
-                                       : IwbSubRecordArrayDef; overload;
-
-function wbRStructS(const aName        : string;
-                    const aElementName : string;
-                    const aMembers     : array of IwbRecordMemberDef;
-                          aHasCounter  : TwbSignature;
                     const aSkipSigs    : array of TwbSignature;
                           aPriority    : TwbConflictPriority = cpNormal;
                           aRequired    : Boolean = False;
@@ -2339,11 +2315,11 @@ var
   wbGetFormIDCallback : function(const aElement: IwbElement): Cardinal;
 
 function wbGetFormID(const aElement: IwbElement): Cardinal;
-function wbPositionToGridCell(const aPosition: TD3DXVector3): TwbGridCell;
+function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
 function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
-function wbIsInGridCell(const aPosition: TD3DXVector3; const aGridCell: TwbGridCell): Boolean;
+function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 
 var
   wbRecordFlags            : IwbIntegerDef;
@@ -2602,16 +2578,27 @@ end;
 function wbDefToName(const aDef: IwbDef): string;
 var
   SignatureDef : IwbSignatureDef;
+  Signature    : TwbSignature;
   NamedDef     : IwbNamedDef;
+  i            : Integer;
 begin
   if Supports(aDef, IwbSignatureDef, SignatureDef) then begin
-    Result := SignatureDef.DefaultSignature + ' - ' + SignatureDef.Name;
+    Signature := SignatureDef.DefaultSignature;
+    if Signature[0]=#0 then
+      Result := '$(00)'+Signature[1]+Signature[2]+Signature[3] + ' - ' + SignatureDef.Name
+    else
+      Result := Signature + ' - ' + SignatureDef.Name;
   end else if Supports(aDef, IwbNamedDef, NamedDef) then begin
     Result := NamedDef.Name;
   end else if Assigned(aDef) then begin
     Result := '<'+GetEnumName(TypeInfo(TwbDefType), Ord(aDef.DefType))+'>';
   end else
     Result := '<nil>';
+  for i := Length(Result) downto 1 do
+    if Result[i]<' ' then begin
+      Insert('$('+IntToHex(Ord(Result[i]), 2)+')', Result, i);
+      Delete(Result, i + 5, 1);
+    end;
 end;
 
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -2625,7 +2612,7 @@ begin
       Result := Result + '['+IntToStr(aDefs[i].Index)+'] ';
   end;
 end;
-function wbIsInGridCell(const aPosition: TD3DXVector3; const aGridCell: TwbGridCell): Boolean;
+function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 var
   GridCell : TwbGridCell;
 begin
@@ -2633,7 +2620,7 @@ begin
   Result := (GridCell.x = aGridCell.x) and (GridCell.y = aGridCell.y);
 end;
 
-function wbPositionToGridCell(const aPosition: TD3DXVector3): TwbGridCell;
+function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 begin
   Result.x := Trunc(aPosition.x / 4096);
   if aPosition.x < 0 then
@@ -2956,21 +2943,19 @@ type
 
   TwbSubRecordArrayDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordArrayDef)
   private
-    sraElement    : IwbRecordMemberDef;
-    sraSorted     : Boolean;
-    sraIsSorted   : TwbIsSortedCallback;
-    sraHasCounter : TwbSignature;
+    sraElement  : IwbRecordMemberDef;
+    sraSorted   : Boolean;
+    sraIsSorted : TwbIsSortedCallback;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
-                 const aName       : string;
-                 const aElement    : IwbRecordMemberDef;
-                       aSorted     : Boolean;
-                       aAfterLoad  : TwbAfterLoadCallback;
-                       aAfterSet   : TwbAfterSetCallback;
-                       aDontShow   : TwbDontShowCallback;
-                       aIsSorted   : TwbIsSortedCallback;
-                       aHasCounter : TwbSignature);
+    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+                 const aName      : string;
+                 const aElement   : IwbRecordMemberDef;
+                       aSorted    : Boolean;
+                       aAfterLoad : TwbAfterLoadCallback;
+                       aAfterSet  : TwbAfterSetCallback;
+                       aDontShow  : TwbDontShowCallback;
+                       aIsSorted  : TwbIsSortedCallback);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -2994,7 +2979,6 @@ type
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
-    function GetHasCounter: TwbSignature;
   end;
 
   TwbSubRecordStructDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
@@ -3286,6 +3270,7 @@ type
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
 
   TwbLStringDef = class(TwbStringDef)
@@ -3649,6 +3634,8 @@ type
     function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64; virtual;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters); virtual;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; virtual;
+
+    function GetRequiresKey: Boolean; virtual;
   end;
 
   TwbDumpIntegerDefFormater = class(TwbIntegerDefFormater, IwbDumpIntegerDefFormater)
@@ -3789,6 +3776,7 @@ type
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
 
+    function GetRequiresKey: Boolean; override;
     {---IwbFlagsDef---}
     function GetFlag(aIndex: Integer): string;
     function GetFlagCount: Integer;
@@ -4380,18 +4368,7 @@ function wbRArray(const aName     : string;
                         aDontShow : TwbDontShowCallback = nil)
                                   : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, nil, nil, aDontShow, nil, 'NONE');
-end;
-
-function wbRArray(const aName       : string;
-                  const aElement    : IwbRecordMemberDef;
-                        aHasCounter : TwbSignature;
-                        aPriority   : TwbConflictPriority = cpNormal;
-                        aRequired   : Boolean = False;
-                        aDontShow   : TwbDontShowCallback = nil)
-                                    : IwbSubRecordArrayDef; overload;
-begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, nil, nil, aDontShow, nil, aHasCounter);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, nil, nil, aDontShow, nil);
 end;
 
 function wbArray(const aSignature : TwbSignature;
@@ -4517,21 +4494,7 @@ function wbRArrayS(const aName      : string;
                          aIsSorted  : TwbIsSortedCallback = nil)
                                     : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet,aDontShow, aIsSorted, 'NONE');
-end;
-
-function wbRArrayS(const aName       : string;
-                   const aElement    : IwbRecordMemberDef;
-                         aHasCounter : TwbSignature;
-                         aPriority   : TwbConflictPriority = cpNormal;
-                         aRequired   : Boolean = False;
-                         aAfterLoad  : TwbAfterLoadCallback = nil;
-                         aAfterSet   : TwbAfterSetCallback = nil;
-                         aDontShow   : TwbDontShowCallback = nil;
-                         aIsSorted   : TwbIsSortedCallback = nil)
-                                     : IwbSubRecordArrayDef; overload;
-begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet,aDontShow, aIsSorted, aHasCounter);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet,aDontShow, aIsSorted);
 end;
 
 function wbArrayS(const aSignature : TwbSignature;
@@ -4771,19 +4734,6 @@ function wbRStructs(const aName        : string;
                                        : IwbSubRecordArrayDef; overload;
 begin
   Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, aDontShow);
-end;
-
-function wbRStructs(const aName        : string;
-                    const aElementName : string;
-                    const aMembers     : array of IwbRecordMemberDef;
-                          aHasCounter  : TwbSignature;
-                    const aSkipSigs    : array of TwbSignature;
-                          aPriority    : TwbConflictPriority = cpNormal;
-                          aRequired    : Boolean = False;
-                          aDontShow    : TwbDontShowCallback = nil)
-                                       : IwbSubRecordArrayDef; overload;
-begin
-  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aHasCounter, aPriority, aRequired, aDontShow);
 end;
 
 function wbRStructsSK(const aName        : string;
@@ -5588,7 +5538,7 @@ function TwbSubRecordDef.CanHandle(aSignature     : TwbSignature;
 begin
   Result := inherited CanHandle(aSignature, aDataContainer);
   if Result and srSizeMatch and Assigned(aDataContainer) and Assigned(srValue) then
-    Result := aDataContainer.DataSize = srValue.Size[nil, nil, nil];
+    Result := aDataContainer.DataSize = srValue.DefaultSize[nil, nil, nil];
 end;
 
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
@@ -5705,7 +5655,7 @@ constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
     Self.Create(defPriority, defRequired, noName, sraElement, sraSorted,
-      noAfterLoad, noAfterSet, noDontShow, sraIsSorted, sraHasCounter).defRoot := aSource;
+      noAfterLoad, noAfterSet, noDontShow, sraIsSorted).defRoot := aSource;
 end;
 
 constructor TwbSubRecordArrayDef.Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
@@ -5715,25 +5665,18 @@ constructor TwbSubRecordArrayDef.Create(aPriority   : TwbConflictPriority; aRequ
                                         aAfterLoad  : TwbAfterLoadCallback;
                                         aAfterSet   : TwbAfterSetCallback;
                                         aDontShow   : TwbDontShowCallback;
-                                        aIsSorted   : TwbIsSortedCallback;
-                                        aHasCounter : TwbSignature);
+                                        aIsSorted  : TwbIsSortedCallback);
 begin
   if Assigned(aElement) then
     sraElement := (aElement as IwbDefInternal).SetParent(Self) as IwbRecordMemberDef;
   sraSorted := aSorted;
   sraIsSorted := aIsSorted;
-  sraHasCounter := aHasCounter;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
 function TwbSubRecordArrayDef.GetElement: IwbRecordMemberDef;
 begin
   Result := sraElement;
-end;
-
-function TwbSubRecordArrayDef.GetHasCounter: TwbSignature;
-begin
-  Result := sraHasCounter;
 end;
 
 function TwbSubRecordArrayDef.GetDefaultSignature: TwbSignature;
@@ -6777,7 +6720,10 @@ const
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < ExpectedLen[inType] then
-    Result := ''
+    if Assigned(inFormater) and inFormater.RequiresKey then
+      Result := inFormater.ToSortKey(0, aElement)
+    else
+      Result := ''
   else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
@@ -7006,6 +6952,8 @@ begin
   Prefix := 0;
 
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
+    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
     Exit;
   end;
 
@@ -7074,7 +7022,7 @@ begin
 
       if Container.ElementCount = Count then begin
         KnownSize := True;
-        for Index := 0 to Pred(Container.ElementCount) do begin
+        for Index := 0 to Pred(Count) do begin
           Element := Container.Elements[Index];
           if Supports(Element, IwbDataContainer, DataContainer) then begin
             Size := Cardinal(DataContainer.DataEndPtr)-Cardinal(DataContainer.DataBasePtr);
@@ -7105,6 +7053,8 @@ begin
             Exit;
           end;
           if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
+            wbProgressCallback('Found an array with negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+              ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
             Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
             Exit;
           end;
@@ -7117,6 +7067,8 @@ begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
       if Size < High(Integer) then begin
         if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size*Count) then begin
+          wbProgressCallback('Found an array with negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Size*Count, 8)+
+            ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
           Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
           Exit;
         end;
@@ -7253,6 +7205,8 @@ begin
     end;
   end;
   if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then begin // if aBasePtr >= aEndPtr then no allocation (or error)
+    wbProgressCallback('Found a struct with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
     Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else
@@ -7263,6 +7217,8 @@ begin
         Break;
       end;
       if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
+        wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+          ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
         Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
         Break;
       end;
@@ -7580,6 +7536,11 @@ begin
   end;
 
   defReported := True;
+end;
+
+function TwbFlagsDef.GetRequiresKey: Boolean;
+begin
+  Result := True;
 end;
 
 function TwbFlagsDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -7935,15 +7896,24 @@ var
 begin
   Result := '';
 
-  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then
+  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then begin
     Result := enNames[aInt];
+    if wbShowFlagEnumValue then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 
   if Result = '' then
-    if FindSparseName(aInt, i) then
+    if FindSparseName(aInt, i) then begin
       Result := enSparseNamesMap[i].snName;
+      if wbShowFlagEnumValue then
+        Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
+    end;
 
-  if Result = '' then
+  if Result = '' then begin
     Result := IntToStr(aInt);
+    if wbShowFlagEnumValue then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 end;
 
 function TwbEnumDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
@@ -7958,12 +7928,18 @@ var
 begin
   Result := '';
 
-  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then
+  if (aInt >= Low(enNames)) and (aInt <= High(enNames)) then begin
     Result := enNames[aInt];
+    if wbShowFlagEnumValue and (Result <> '') then
+      Result := Result + ' (' + IntToStr(aInt) + ')';
+  end;
 
   if Result = '' then begin
-    if FindSparseName(aInt, i) then
-      Result := enSparseNamesMap[i].snName
+    if FindSparseName(aInt, i) then begin
+      Result := enSparseNamesMap[i].snName;
+      if wbShowFlagEnumValue then
+        Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
+    end
     else begin
       Result := '<Unknown: '+IntToStr(aInt)+'>';
       if wbReportMode and wbReportUnknownEnums then begin
@@ -9278,7 +9254,7 @@ var
 begin
   Result := Supports(aDef, IwbByteArrayDef, ByteArrayDef);
   if Result and (badSize > 0) then begin
-    Result := ByteArrayDef.IsVariableSize or (ByteArrayDef.Size[nil, nil, nil] <= Integer(badSize));
+    Result := ByteArrayDef.IsVariableSize or (ByteArrayDef.DefaultSize[nil, nil, nil] <= Integer(badSize));
   end;
 end;
 
@@ -9410,7 +9386,6 @@ end;
 
 function TwbByteArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := 0;
   if badSize>=0 then
     Result := badSize
   else
@@ -9419,6 +9394,8 @@ begin
       -2 : Result := SizeOf(Word);
       -4 : Result := SizeOf(Byte);
     -255 : Result := 0; // Explicitly null for wbNull (displays better in unions)
+    else
+      Result := 0;
     end
 end;
 
@@ -10382,6 +10359,11 @@ begin
   Result := nil;
 end;
 
+function TwbIntegerDefFormater.GetRequiresKey: Boolean;
+begin
+  Result := False;
+end;
+
 function TwbIntegerDefFormater.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64;
 begin
   Result := aInt;
@@ -10525,9 +10507,9 @@ begin
   end;
 
   if not Result then begin
-    j := udMembers[0].Size[nil, nil, nil];
+    j := udMembers[0].DefaultSize[nil, nil, nil];
     for i := 1 to High(udMembers) do
-      if udMembers[i].Size[nil, nil, nil] <> j then begin
+      if udMembers[i].DefaultSize[nil, nil, nil] <> j then begin
         j := -1;
         break;
       end;
@@ -10722,7 +10704,7 @@ begin
 //  Result := GetName;
 //  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
 //    Result := NamedDef.Name;
-  Result := '<Empty>';
+  Result := '';
 
   Used(aElement, Result);
 end;
@@ -11256,6 +11238,13 @@ begin
       end;
 end;
 
+function TwbStringMgefCodeDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+begin
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> ' <Warning: Expected 4 bytes but found 0>');
+  if Result then
+    FromEditValue(aBasePtr, aEndPtr, aElement, '');
+end;
+
 function TwbStringMgefCodeDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
 var
   IsAlpha  : Boolean;
@@ -11303,6 +11292,8 @@ begin
     end;
     ttFromEditValue, ttFromNativeValue: begin
       Result := Trim(s);
+      if S = '' then
+        Exit;
       i := Pos(':', Result);
       if i > 0 then begin
 
@@ -11609,5 +11600,8 @@ initialization
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
+  wbDoNotBuildRefsFor := TStringList.Create;
+  wbDoNotBuildRefsFor.Sorted := True;
+  wbDoNotBuildRefsFor.Duplicates := dupIgnore;
 end.
 

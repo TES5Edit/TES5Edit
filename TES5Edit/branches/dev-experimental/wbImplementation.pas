@@ -23,8 +23,6 @@ uses
   Classes,
   SysUtils,
   Contnrs,
-  Direct3D9,
-  D3DX9,
   Math,
   wbInterface,
   Zlibex;
@@ -909,9 +907,9 @@ type
 
     procedure UpdateRefs;
 
-    function GetPosition(out aPosition: TD3DXVector3): Boolean;
-    function SetPosition(const aPosition: TD3DXVector3): Boolean;
-    function GetRotation(out aRotation: TD3DXVector3): Boolean;
+    function GetPosition(out aPosition: TwbVector): Boolean;
+    function SetPosition(const aPosition: TwbVector): Boolean;
+    function GetRotation(out aRotation: TwbVector): Boolean;
     function GetScale(out aScale: Single): Boolean;
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
     function GetFormVersion: Cardinal; {>>> Form Version access <<<}
@@ -1403,10 +1401,6 @@ type
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function CanMoveElement: Boolean; override;
-    function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload; override;
-
-    {---IwbContainerElementRef---}
-    procedure PrepareSave; override;
 
     {---IwbSortableContainer---}
     function GetSorted: Boolean;
@@ -1414,9 +1408,6 @@ type
     {--- IwbHasSignature ---}
     function GetSignature: TwbSignature;
 
-    {--- IwbSubRecordArray ---}
-    function GetCounter: TwbSignature;
-    procedure CheckCount;
   end;
 
   TwbSubRecordStruct = class(TwbContainer, IwbHasSignature)
@@ -2830,9 +2821,9 @@ begin
                   end else
                     NewONAM := ONAMs.Assign(High(Integer), nil, True);
 
-                  if wbDisplayLoadOrderFormID then
+                  {if wbDisplayLoadOrderFormID then
                     NewONAM.NativeValue := Current.LoadOrderFormID
-                  else
+                  else}
                     NewONAM.NativeValue := FormID;
 
                   if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
@@ -4458,12 +4449,6 @@ begin
   if aPos < High(cntElements) then begin
     Move(cntElements[Succ(aPos)], cntElements[aPos], (High(cntElements) - aPos) * SizeOf(Pointer));
     Pointer(cntElements[High(cntElements)]) := nil;
-    if (csInitializing in cntStates) and Supports(Self, IwbDataContainer) then
-      with Self as TwbDataContainer do
-      if Assigned(dcDataEndPtr) then begin
-        dcDataEndPtr := Pointer(Cardinal(dcDataEndPtr) - Result.DataSize);
-//        dcEndPtr := dcDataEndPtr;
-      end;
   end;
 
   SetLength(cntElements, Pred(Length(cntElements)));
@@ -5308,7 +5293,7 @@ begin
   BasePtr.mrsFlags._Flags := 0;
   BasePtr.mrsFormID := aFormID;
   BasePtr.mrsVCS1 := 0;
-  if wbGameMode in [gmTES5] then
+  if wbGameMode >= gmTES5 then
     BasePtr.mrsVersion := 43
   else
     BasePtr.mrsVersion := 15;
@@ -6568,7 +6553,7 @@ begin
   Result := Length(mrOverrides);
 end;
 
-function TwbMainRecord.GetPosition(out aPosition: TD3DXVector3): Boolean;
+function TwbMainRecord.GetPosition(out aPosition: TwbVector): Boolean;
 var
   Signature : TwbSignature;
   SelfRef   : IwbContainerElementRef;
@@ -6704,7 +6689,7 @@ begin
   Result := mrsReferencesInjected in mrStates;
 end;
 
-function TwbMainRecord.GetRotation(out aRotation: TD3DXVector3): Boolean;
+function TwbMainRecord.GetRotation(out aRotation: TwbVector): Boolean;
 var
   Signature : TwbSignature;
   SelfRef   : IwbContainerElementRef;
@@ -7900,7 +7885,7 @@ begin
   mreNext := Pointer(aEntry);
 end;
 
-function TwbMainRecord.SetPosition(const aPosition: TD3DXVector3): Boolean;
+function TwbMainRecord.SetPosition(const aPosition: TwbVector): Boolean;
 var
   Signature : TwbSignature;
   SelfRef   : IwbContainerElementRef;
@@ -7997,7 +7982,7 @@ var
   Worldspace        : IwbMainRecord;
   IsExterior        : Boolean;
   SelfRef           : IwbElement;
-  Position          : TD3DXVector3;
+  Position          : TwbVector;
   GridCell          : TwbGridCell;
   SubBlock          : TwbGridCell;
   Block             : TwbGridCell;
@@ -8819,9 +8804,13 @@ end;
 
 constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
 var
-  BasePtr: Pointer;
-  EndPtr: Pointer;
+  BasePtr : Pointer;
+  EndPtr  : Pointer;
+  i       : TwbContainerState;
 begin
+  cntStates := [];
+  for i := Low(TwbContainerState) to High(TwbContainerState) do
+    Exclude(cntStates, i);
   srDef := aSubRecordDef;
   BasePtr := nil;
   Create(aContainer, BasePtr, nil, nil);
@@ -10727,7 +10716,7 @@ begin
 
   {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}
   {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
-  if wbGameMode in [gmFO3, gmFNV, gmTES5] then
+  if not wbSortGroupRecord then
     Exit;
 
   Include(grStates, gsSorting);
@@ -11914,8 +11903,6 @@ begin
     Result := Element;
   end;
 
-  CheckCount;
-
   arcSorted := False;
   if wbSortSubRecords and arcDef.Sorted[IwbContainer(eContainer)] then begin
     if Length(cntElements) > 1 then
@@ -11959,25 +11946,6 @@ end;
 function TwbSubRecordArray.CanMoveElement: Boolean;
 begin
   Result := not arcSorted;
-end;
-
-procedure TwbSubRecordArray.CheckCount;
-var
-  Container : IwbContainer;
-  aRecord   : IwbRecord;
-  i         : Integer;
-begin
-  // Other counters added by Skyrim:
-  i := 0;
-  if (GetCounter <> 'NONE') then
-  if Assigned(eContainer) then
-  if Supports(IwbContainer(eContainer), IwbContainer, Container) then
-    while Assigned(Container.Elements[i]) do
-      if Supports(Container.Elements[i], IwbRecord, aRecord) and (aRecord.Signature = GetCounter) then begin
-        Container.Elements[i].NativeValue := Length(cntElements);
-        Break;
-      end else
-        Inc(i);
 end;
 
 function TwbSubRecordArray.CanElementReset: Boolean;
@@ -12072,14 +12040,6 @@ begin
     arcSortInvalid := True;
 end;
 
-function TwbSubRecordArray.GetCounter: TwbSignature;
-begin
-  if Assigned(arcDef) then
-    Result := arcDef.HasCounter
-  else
-   Result := 'NONE';
-end;
-
 function TwbSubRecordArray.GetDef: IwbNamedDef;
 begin
   Result := arcDef;
@@ -12123,18 +12083,6 @@ end;
 function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and (Length(cntElements) > 1);
-end;
-
-procedure TwbSubRecordArray.PrepareSave;
-begin
-  inherited;
-  CheckCount;
-end;
-
-function TwbSubRecordArray.RemoveElement(const aElement: IwbElement; aMarkModified: Boolean): IwbElement;
-begin
-  Result := inherited RemoveElement(aElement, aMarkModified);
-  CheckCount;
 end;
 
 procedure TwbSubRecordArray.SetModified(aValue: Boolean);
@@ -12842,12 +12790,7 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count     : Cardinal;
-  Counter   : TwbSignature;
-  Container : IwbContainer;
-  SubRecord : IwbSubRecordArray;
-  aRecord   : IwbRecord;
-  i         : Integer;
+  Count : Cardinal;
 begin
   if arrSizePrefix < 1 then
     Exit;
@@ -12869,20 +12812,6 @@ begin
       2: PWord(GetDataBasePtr)^ := Length(cntElements);
       4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
     end;
-
-  // Other counters added by Skyrim:
-  i := 0;
-  if Supports(Self, IwbSubRecordArray, SubRecord) then begin
-    Counter := SubRecord.Counter;
-    if (Counter <> 'NONE') and Assigned(eContainer) and Supports(eContainer, IwbContainer, Container) then
-      while Assigned(Container.Elements[i]) do
-        if Supports(Container.Elements[i], IwbRecord, aRecord) and (aRecord.Signature = Counter) then begin
-          Container.Elements[i].NativeValue := Length(cntElements);
-          Break;
-        end else
-          Inc(i);
-  end;
-
 end;
 
 procedure TwbArray.CheckTerminator;
@@ -14954,6 +14883,7 @@ var
   Container   : IwbContainer;
   SelfRef     : IwbContainerElementRef;
   fPath       : String;
+
 begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');

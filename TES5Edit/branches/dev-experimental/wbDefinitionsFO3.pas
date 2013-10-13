@@ -3323,7 +3323,7 @@ procedure wbPACKAfterLoad(const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
   MainRecord    : IwbMainRecord;
-  OldContainer  : IwbContainerElementRef;
+  //OldContainer  : IwbContainerElementRef;
   NewContainer  : IwbContainerElementRef;
   //NewContainer2 : IwbContainerElementRef;
 begin
@@ -3386,12 +3386,12 @@ begin
       end;
     end;
 
-    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
+    {if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
       if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
         Assert(False);
       NewContainer.RemoveElement('PLD2');
       NewContainer.AddElement(OldContainer);
-    end;
+    end;}
   finally
     wbEndInternalEdit;
   end;
@@ -8729,9 +8729,9 @@ begin
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True),
       wbByteArray(IDLB, 'Unused', 4, cpIgnore)
     ], []),
+    wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbEmpty(PKED, 'Eat Marker'),
     wbInteger(PKE2, 'Escort Distance', itU32),
-    wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFloat(PKFD, 'Follow - Start Location - Trigger Radius'),
     wbStruct(PKPT, 'Patrol Flags', [
       wbInteger('Repeatable', itU8, wbEnum(['No', 'Yes']), cpNormal, False, nil, nil, 1),
@@ -9999,7 +9999,7 @@ begin
     ]),
     wbICON,
     wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
+      wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
@@ -10032,14 +10032,14 @@ begin
     ]), cpNormal, True),
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True)
-    ], [], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),

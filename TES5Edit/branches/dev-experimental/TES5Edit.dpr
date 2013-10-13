@@ -18,7 +18,6 @@
 program TES5Edit;
 
 uses
-  madExcept,
   Forms,
   Dialogs,
   SysUtils,
@@ -52,7 +51,8 @@ uses
   frmOptionsForm in 'frmOptionsForm.pas' {frmOptions},
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer},
   wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas',
-  wbNifScanner in 'wbNifScanner.pas';
+  wbNifScanner in 'wbNifScanner.pas',
+  wbDDS in 'wbDDS.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -66,6 +66,7 @@ begin
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  Application.UpdateFormatSettings := False;
   Application.Title := wbApplicationTitle;
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;

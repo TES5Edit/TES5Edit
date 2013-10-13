@@ -23,7 +23,6 @@ uses
 type
   TfrmFileSelect = class(TForm)
     CheckListBox1: TCheckListBox;
-    BitBtn1: TBitBtn;
     PopupMenu1: TPopupMenu;
     SelectAll1: TMenuItem;
     SelectNone1: TMenuItem;
@@ -31,12 +30,14 @@ type
     edSearch: TEdit;
     Label1: TLabel;
     cbBackup: TCheckBox;
+    btnOK: TButton;
     procedure SelectAll1Click(Sender: TObject);
     procedure SelectNone1Click(Sender: TObject);
     procedure InvertSelection1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure CheckListBox1DblClick(Sender: TObject);
     procedure edSearchChange(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
   public
@@ -55,7 +56,7 @@ begin
   SelectNone1.Click;
   if (CheckListBox1.ItemIndex >= 0) and (CheckListBox1.ItemIndex < CheckListBox1.Count) then begin
     CheckListBox1.Checked[CheckListBox1.ItemIndex] := True;
-    BitBtn1.Click;
+    btnOK.Click;
   end; 
 end;
 
@@ -67,7 +68,6 @@ begin
   s := Trim(edSearch.Text);
   if s <> '' then
     for i := 0 to CheckListBox1.Items.Count - 1 do begin
-      //p := ChangeFileExt(CheckListBox1.Items[i], '');
       p := CheckListBox1.Items[i];
       if ContainsText(p, s) then begin
         CheckListBox1.ItemIndex := i;
@@ -80,6 +80,22 @@ end;
 procedure TfrmFileSelect.FormCreate(Sender: TObject);
 begin
   Font := Screen.IconFont;
+end;
+
+procedure TfrmFileSelect.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if edSearch.Focused then
+    Exit;
+
+  if Key = VK_RETURN then
+    btnOK.Click
+  else if Key = VK_SUBTRACT then
+    SelectNone1.Click
+  else if Key = VK_ADD then
+    SelectAll1.Click
+  else if Key = VK_MULTIPLY then
+    InvertSelection1.Click;
 end;
 
 procedure TfrmFileSelect.InvertSelection1Click(Sender: TObject);

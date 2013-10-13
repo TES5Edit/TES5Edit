@@ -34,10 +34,10 @@ begin
 
   // update worldspace bounds
   if Sig = 'WRLD' then begin
-    SetElementNativeValues(e, 'Object Bounds (unused?)\NAM0\X', GetElementNativeValues(e, 'Object Bounds (unused?)\NAM0\X') + ShiftX);
-    SetElementNativeValues(e, 'Object Bounds (unused?)\NAM0\Y', GetElementNativeValues(e, 'Object Bounds (unused?)\NAM0\Y') + ShiftY);
-    SetElementNativeValues(e, 'Object Bounds (unused?)\NAM9\X', GetElementNativeValues(e, 'Object Bounds (unused?)\NAM9\X') + ShiftX);
-    SetElementNativeValues(e, 'Object Bounds (unused?)\NAM9\Y', GetElementNativeValues(e, 'Object Bounds (unused?)\NAM9\Y') + ShiftY);
+    SetElementNativeValues(e, 'Object Bounds\NAM0\X', GetElementNativeValues(e, 'Object Bounds\NAM0\X') + ShiftX);
+    SetElementNativeValues(e, 'Object Bounds\NAM0\Y', GetElementNativeValues(e, 'Object Bounds\NAM0\Y') + ShiftY);
+    SetElementNativeValues(e, 'Object Bounds\NAM9\X', GetElementNativeValues(e, 'Object Bounds\NAM9\X') + ShiftX);
+    SetElementNativeValues(e, 'Object Bounds\NAM9\Y', GetElementNativeValues(e, 'Object Bounds\NAM9\Y') + ShiftY);
   end else
 
   // update CELL grid coords except persistent cell
@@ -51,7 +51,7 @@ begin
     RemoveNode(e);
   end else
 
-  // skip other records (should LAND only for worldspace group)
+  // skip other records (should be the LAND only for worldspace group)
   if (Sig <> 'REFR') and (Sig <> 'PGRE') and (Sig <> 'PMIS') and (Sig <> 'ACHR') and (Sig <> 'ACRE') and
      (Sig <> 'PARW') and (Sig <> 'PBAR') and (Sig <> 'PBEA') and (Sig <> 'PCON') and (Sig <> 'PFLA') and
      (Sig <> 'PHZD')

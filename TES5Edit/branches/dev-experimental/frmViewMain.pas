@@ -32,11 +32,11 @@ uses
   Menus,
   Math,
   IniFiles,
+  ClipBrd,
   TypInfo,
   ActiveX,
   Buttons,
   ActnList,
-  AppEvnts,
   ShellAPI,
   IOUtils,
   Actions,
@@ -44,12 +44,6 @@ uses
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
-  Direct3D9,
-  D3DX9,
-  {$IFDEF DX3D}
-  RenderUnit,
-  DXUT,
-  {$ENDIF DX3D}
   JvComponentBase,
   JvInterpreter,
   wbInterface,
@@ -229,7 +223,6 @@ type
     mniNavDeepCopyAsOverride: TMenuItem;
     TabSheet2: TTabSheet;
     DisplayPanel: TPanel;
-    ApplicationEvents1: TApplicationEvents;
     N5: TMenuItem;
     mniNavCellChildPers: TMenuItem;
     mniNavCellChildTemp: TMenuItem;
@@ -299,8 +292,6 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     procedure splElementsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-
-    procedure OnToggleFullscreen(Sender: TObject);
 
     {--- pgMain ---}
     procedure tbsMessagesShow(Sender: TObject);
@@ -450,8 +441,6 @@ type
 
     procedure acForwardUpdate(Sender: TObject);
     procedure acForwardExecute(Sender: TObject);
-    procedure DisplayPanelResize(Sender: TObject);
-    procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure mniNavCheckForCircularLeveledListsClick(Sender: TObject);
     procedure mniPathPluggyLinkClick(Sender: TObject);
     procedure mniNavBanditFixClick(Sender: TObject);
@@ -498,13 +487,6 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
-  protected
-    DisplayActive: Boolean;
-    m_hwndRenderFullScreen:  HWND;
-
-    procedure InitDisplay;
-    procedure DoneDisplay;
-
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -593,9 +575,6 @@ type
     procedure WMUser3(var Message: TMessage); message WM_USER + 3;
     procedure WMUser4(var Message: TMessage); message WM_USER + 4;
   private
-    PluginsFileName: string;
-    TheGameIniFileName: string;
-    SettingsFileName: string;
     Files: TDynFiles;
     NewMessages: TStringList;
     ActiveIndex: TColumnIndex;
@@ -685,7 +664,6 @@ type
     PluggySpellFormID: Cardinal;
     PluggyLinkThread: TPluggyLinkThread;
 
-    function CheckAppPath: string;
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
@@ -820,12 +798,6 @@ type
 
 var
   frmMain                     : TfrmMain;
-
-  DataPath                    : string;
-  ProgramPath                 : string;
-  wbTempPath                  : string;
-  ScriptsPath                 : string;
-  MyGamesTheGamePath          : string;
   FilesToRename               : TStringList;
 
 procedure DoRename;
@@ -893,29 +865,25 @@ end;
 
 procedure DoRename;
 var
-  i                           : Integer;
-  s                           : string;
-  b, f, t, e                  : string;
-  OrgDate                     : Integer;
+  i       : Integer;
+  s,
+  f,
+  t,
+  e       : string;
+  OrgDate : Integer;
 begin
   wbFileForceClosed;
 
   if wbDontSave then
     Exit;
 
-  // backup path
-  b := DataPath + wbAppName + 'Edit Backups\';
-  if not DirectoryExists(b) then
-    if not ForceDirectories(b) then
-      b := DataPath;
-
   if Assigned(FilesToRename) then
     for i := 0 to Pred(FilesToRename.Count) do begin
       // create backup file
       s := FilesToRename.Names[i];
-      f := DataPath + s;
+      f := wbDataPath + s;
       OrgDate := FileAge(f);
-      t := b + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+      t := wbBackupPath + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
       if not wbDontBackup then begin
         // backup original file
         if not RenameFile(f, t) then begin
@@ -931,7 +899,7 @@ begin
       // rename temp save file to original
       t := f;
       s := FilesToRename.ValueFromIndex[i];
-      f := DataPath + s;
+      f := wbDataPath + s;
       if not RenameFile(f, t) then
         MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
       else begin
@@ -941,15 +909,6 @@ begin
           FileSetDate(t, OrgDate);
       end;
     end;
-end;
-
-function GetCSIDLShellFolder(CSIDLFolder: integer): string;
-begin
-  SetLength(Result, MAX_PATH);
-  SHGetSpecialFolderPath(0, PChar(Result), CSIDLFolder, True);
-  SetLength(Result, StrLen(PChar(Result)));
-  if (Result <> '') then
-    Result := IncludeTrailingBackslash(Result);
 end;
 
 procedure TfrmMain.acBackExecute(Sender: TObject);
@@ -1043,7 +1002,7 @@ begin
     if s = '' then
       Exit;
     s := s + '.esp';
-    if FileExists(DataPath + s) then begin
+    if FileExists(wbDataPath + s) then begin
       ShowMessage('A file of that name exists already.');
       Exit;
     end;
@@ -1052,7 +1011,7 @@ begin
     if Length(Files) > 0 then
       LoadOrder := Succ(Files[High(Files)].LoadOrder);
 
-    aFile := wbNewFile(DataPath + s, LoadOrder);
+    aFile := wbNewFile(wbDataPath + s, LoadOrder);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := aFile;
     vstNav.AddChild(nil, Pointer(aFile));
@@ -1154,26 +1113,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
-begin
-  Done:= True;
-{$IFDEF DX3D}
-
-  if not DisplayActive then
-    Exit;
-
-  // Do not render if the app is minimized
-  if IsIconic(Application.Handle) then Exit;
-
-  // Update and render a frame
- //!! CheckForLostFullscreen;
-  DXUTRender3DEnvironment;
-
-  // Keep requesting more idle time
-  Done:= False;
-{$ENDIF}
-end;
-
 procedure TfrmMain.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 begin
   if Msg.message = 524 {WM_XBUTTONUP} then
@@ -1184,7 +1123,7 @@ begin
 end;
 
 type
-  TCoords = TD3DVector;
+  TCoords = TwbVector;
 
   PRefInfo = ^TRefInfo;
   TRefInfo = record
@@ -1194,16 +1133,6 @@ type
     Scale  : Single;
     Next   : PRefInfo;
   end;
-
-{procedure TfrmMain.ScriptScanProgress(aTotalCount, aCount: Integer);
-begin
-  Caption := '[Scanning] Processed Records: ' + IntToStr(aTotalCount) +
-    ' References Found: ' + IntToStr(aCount) +
-    ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
-  if ForceTerminate then
-    Abort;
-end;}
 
 procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
 begin
@@ -1830,26 +1759,6 @@ begin
   end;
 end;
 
-function TfrmMain.CheckAppPath: string;
-const
-  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
-  ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
-var
-  s: string;
-begin
-  Result := '';
-  s := ParamStr(0);
-  s := ExtractFilePath(s);
-  while Length(s) > 3 do begin
-    if FileExists(s + ExeName[wbGameMode]) and DirectoryExists(s + 'Data') then begin
-      Result := s;
-      Exit;
-    end;
-    s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
-  end;
-end;
-
 function TfrmMain.CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 var
   Error                       : string;
@@ -2014,21 +1923,21 @@ begin
 
   with odModule do begin
     FileName := '';
-    InitialDir := DataPath;
+    InitialDir := wbDataPath;
     if not Execute then
       Exit;
 
     CompareFile := FileName;
     // copy selected file to Data directory without overwriting an existing file
-    if not SameText(ExtractFilePath(CompareFile), DataPath) then begin
-      s := DataPath + ExtractFileName(CompareFile);
+    if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+      s := wbDataPath + ExtractFileName(CompareFile);
       if FileExists(s) then // Finds a unique name
         for i := 0 to 255 do begin
-          s := DataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+          s := wbDataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
           if not FileExists(s) then Break;
         end;
       if FileExists(s) then begin
-        wbProgressCallback('Could not copy '+FileName+' into '+DataPath);
+        wbProgressCallback('Could not copy '+FileName+' into '+wbDataPath);
         Exit;
       end;
       CompareFile := s;
@@ -2432,10 +2341,13 @@ var
 
                 // update counts
                 if (l <= High(aCntNames)) and (aCntNames[l] <> '') then begin
-                  CountElement := TargetRecord.ElementByName[aCntNames[l]];
+                  TargetRecord.Add(aCntNames[l], True);
+                  CountElement := TargetRecord.ElementByPath[aCntNames[l]];
                   if Assigned(CountElement) then
                     if Supports(TargetRecord.ElementByName[aListNames[l]], IwbContainerElementRef, Entries) then
-                      CountElement.NativeValue := Entries.ElementCount;
+                      CountElement.NativeValue := Entries.ElementCount
+                    else
+                      CountElement.Remove;
                 end;
 
               end;
@@ -2457,6 +2369,15 @@ var
   LastLoadOrder   : Integer;
   i               : Integer;
 begin
+  if wbGameMode in [gmTES5] then begin
+    if MessageDlg('Merged patch is unsupported for ' + wbGameName +
+      '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
+      'Do you want to continue?',
+      mtWarning, mbYesNo, 0) <> mrYes
+    then
+      Exit;
+  end;
+
   TargetFile := nil;
 
   while not Assigned(TargetFile) do
@@ -2479,21 +2400,36 @@ begin
 
   ResetAllTags;
   for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT - Count']);
-    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT - Count']);
+    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT']);
+    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT']);
     CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
-    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT - Count']);
+    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT - Count', '']);
-    CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT - Count', '', '', 'SPCT - Count', 'PRKZ - Perk Count', 'KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
-    CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ - Keyword Count']);
+    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
+    // exclude Head Parts for Skyrim, causes issues
+    if wbGameMode >= gmTES5 then
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
+    else
+      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
+    // keywords
+    if wbGameMode >= gmTES5 then begin
+      CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['BOOK'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['FLOR'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['FURN'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['INGR'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['MGEF'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SCRL'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SLGM'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['SPEL'], ['KWDA - Keywords'], ['KSIZ']);
+      CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ']);
+    end;
   end;
 
   TargetFile.CleanMasters;
@@ -2537,7 +2473,7 @@ begin
         for n := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[n], IwbMainRecord, MainRecord) then begin
             QustFlags := MainRecord.ElementByPath['DNAM - General\Flags'];
-            // include SGE quests which are new or set SGE flag on master quest
+            // include SGE (start game enabled) quests which are new or set SGE flag on master quest
             if Assigned(QustFlags) and (QustFlags.NativeValue and 1 > 0) then
               if not Assigned(MainRecord.Master) or (MainRecord.Master.ElementNativeValues['DNAM\Flags'] and 1 = 0) then begin
                 SetLength(FormIDs, Succ(Length(FormIDs)));
@@ -2550,7 +2486,7 @@ begin
         PostAddMessage('Skipped: ' + _File.FileName + ' doesn''t need sequence file')
       else try
         try
-          p := DataPath + 'Seq\';
+          p := wbDataPath + 'Seq\';
           if not DirectoryExists(p) then
             if not ForceDirectories(p) then
               raise Exception.Create('Unable to create SEQ directory in game''s Data');
@@ -2573,7 +2509,7 @@ begin
       Inc(Count);
     end;
   end;
-  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ' Sequence Files Created: ' + IntToStr(j));
+  PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', Sequence Files Created: ' + IntToStr(j));
 end;
 
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
@@ -2746,31 +2682,6 @@ begin
     end;
 end;
 
-procedure PluginListGroupESM(List: TStringList);
-var
-  slESM, slESP : TStringList;
-  IsESM        : Boolean;
-  i            : Integer;
-begin
-  slESM := TStringList.Create;
-  slESP := TStringList.Create;
-  try
-    for i := 0 to List.Count - 1 do begin
-      IsESM := IsFileESM(List[i]);
-      if IsESM then
-        slESM.Add(List[i])
-      else
-        slESP.Add(List[i]);
-    end;
-    List.Clear;
-    List.AddStrings(slESM);
-    List.AddStrings(slESP);
-  finally
-    FreeAndNil(slESM);
-    FreeAndNil(slESP);
-  end;
-end;
-
 function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
   IsESM1                      : Boolean;
@@ -2817,16 +2728,6 @@ begin
   FreeAndNil(ScriptHotkeys);
 end;
 
-procedure TfrmMain.DisplayPanelResize(Sender: TObject);
-begin
-{$IFDEF DX3D}
-  if DisplayActive then begin
-    DXUTPause(True, True);
-    DXUTStaticWndProc(DXUTGetHWND, WM_EXITSIZEMOVE, 0, 0);
-  end;
-{$ENDIF}
-end;
-
 procedure TfrmMain.DoGenerateLOD;
 var
   i, j        : Integer;
@@ -2836,7 +2737,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   try
-    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
+    frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
 
     Worldspaces := nil;
     for i := Low(Files) to High(Files) do begin
@@ -2877,11 +2778,11 @@ begin
         end;
       except
         on E: Exception do begin
-          frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Generator: <Error: '+E.Message+'>');
+          frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: <Error: '+E.Message+'>');
           raise;
         end;
       end;
-      frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Generator: finished (you can close this application now)');
+      frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: finished (you can close this application now)');
     finally
       Self.Caption := Application.Title;
     end;
@@ -2892,8 +2793,8 @@ end;
 
 procedure TfrmMain.DoInit;
 
-  // remove comments, empty lines and missing files from list
-  procedure FixLoadList(sl: TStrings);
+  // remove comments and empty lines from list
+  procedure RemoveCommentsAndEmpty(sl: TStrings);
   var
     i, j: integer;
     s: string;
@@ -2903,12 +2804,19 @@ procedure TfrmMain.DoInit;
       j := Pos('#', s);
       if j > 0 then
         System.Delete(s, j, High(Integer));
-      s := Trim(s);
-      if (s = '') or not FileExists(DataPath + s) then begin
+      if Trim(s) = '' then
         sl.Delete(i);
-        Continue;
-      end;
     end;
+  end;
+
+  // remove missing files from list
+  procedure RemoveMissingFiles(sl: TStrings);
+  var
+    i: integer;
+  begin
+    for i := Pred(sl.Count) downto 0 do
+      if not FileExists(wbDataPath + sl.Strings[i]) then
+        sl.Delete(i);
   end;
 
   // add missing plugin files to list sorted by timestamps
@@ -2916,21 +2824,35 @@ procedure TfrmMain.DoInit;
   var
     F     : TSearchRec;
     slNew : TStringList;
+    i, j  : integer;
   begin
-    if FindFirst(DataPath + '*.*', faAnyFile, F) = 0 then try
+    j := -1;
+    if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
       slNew := TStringList.Create;
       try
         repeat
           if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
             if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-              DeleteFile(DataPath + F.Name)
+              DeleteFile(wbDataPath + F.Name)
             else
             if FindMatchText(sl, F.Name) < 0 then
-              slNew.AddObject(F.Name, TObject(FileAge(DataPath + F.Name)));
+              slNew.AddObject(F.Name, TObject(FileAge(wbDataPath + F.Name)));
           end;
         until FindNext(F) <> 0;
         slNew.CustomSort(PluginListCompare);
-        sl.AddStrings(slNew);
+        // add esm masters after the last master, add esp plugins at the end
+        // find position of the last master
+        for j := Pred(sl.Count) downto 0 do
+          if IsFileESM(sl[j]) then
+            Break;
+        Inc(j);
+        for i := 0 to Pred(slNew.Count) do begin
+          if IsFileESM(slNew[i]) then begin
+            sl.InsertObject(j, slNew[i], slNew.Objects[i]);
+            Inc(j);
+          end else
+            sl.AddObject(slNew[i], slNew.Objects[i]);
+        end;
       finally
         slNew.Free;
       end;
@@ -2939,23 +2861,17 @@ procedure TfrmMain.DoInit;
     end;
   end;
 
-
-const
-  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
-  i, j, k                     : Integer;
-  s                           : string;
-  sl, sl2                     : TStringList;
-  ConflictAll                 : TConflictAll;
-  ConflictThis                : TConflictThis;
-  Age                         : Integer;
-  AgeDateTime                 : TDateTime;
+  i, j, k      : Integer;
+  s            : string;
+  sl, sl2      : TStringList;
+  ConflictAll  : TConflictAll;
+  ConflictThis : TConflictThis;
+  Age          : Integer;
+  AgeDateTime  : TDateTime;
+
 begin
   while not wbInitDone do Sleep(10);
-
-  ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
-  ScriptsPath := ProgramPath + 'Edit Scripts\';
 
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -3000,91 +2916,27 @@ begin
 
   ModGroups := TStringList.Create;
 
-  wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit');
-  DataPath := CheckAppPath;
-
-  if DataPath = '' then with TRegistry.Create do try
-    RootKey := HKEY_LOCAL_MACHINE;
-
-    if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
-      if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
-        AddMessage('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
-        if wbGameMode = gmTES5 then
-          AddMessage('This can happen after Steam updates, run game''s launcher to restore registry settings');
-        wbDontSave := True;
-        Exit;
-      end;
-
-    DataPath := ReadString('Installed Path');
-
-    if DataPath = '' then begin
-      AddMessage('Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
-      if wbGameMode = gmTES5 then
-        AddMessage('This can happen after Steam updates, run game''s launcher to restore registry settings');
-      wbDontSave := True;
-      Exit;
-    end;
-
-  finally
-    Free;
-  end;
 
   AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
-  DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
-  wbDataPath := DataPath;
-  AddMessage('Using '+wbGameName+' Data Path: ' + DataPath);
+  AddMessage('Using '+wbGameName+' Data Path: ' + wbDataPath);
 
-  PluginsFileName := '';
-  if ParamCount >= 1 then begin
-    PluginsFileName := ParamStr(1);
-    if PluginsFileName <> '' then begin  // Allows using xxEdit without the game installed
-      if ParamCount >= 2 then begin
-        TheGameIniFileName := ParamStr(2);
-        if (Length(TheGameIniFileName) > 0) and (TheGameIniFileName[1] = '-') then
-          TheGameIniFileName := '';
-      end;
-    if (Length(PluginsFileName) > 0) and (PluginsFileName[1] = '-') then
-      PluginsFileName := '';
-    end;
+
+  AddMessage('Using ini: ' + wbTheGameIniFileName);
+  if not FileExists(wbTheGameIniFileName) then begin
+    AddMessage('Fatal: Could not find ini');
+    Exit;
   end;
 
-  if PluginsFileName = '' then begin
-    PluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
-    if PluginsFileName = '' then begin
-      AddMessage('Fatal: Could not determine the local application data folder');
-      Exit;
-    end;
-
-    PluginsFileName := PluginsFileName + wbGameName + '\Plugins.txt';
+  AddMessage('Using plugin list: ' + wbPluginsFileName);
+  if not FileExists(wbPluginsFileName) then begin
+    AddMessage('Fatal: Could not find plugin list');
+    Exit;
   end;
 
-  if TheGameIniFileName = '' then begin
-    TheGameIniFileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
-    if TheGameIniFileName = '' then begin
-      AddMessage('Fatal: Could not determine my documents folder');
-      Exit;
-    end;
+  AddMessage('Using settings file: ' + wbSettingsFileName);
 
-    MyGamesTheGamePath := TheGameIniFileName + 'My Games\'+ wbGameName +'\';
-
-    if wbGameMode in [gmTES4, gmTES5] then
-      TheGameIniFileName := MyGamesTheGamePath + wbGameName + '.ini'
-    else
-      TheGameIniFileName := MyGamesTheGamePath + 'Fallout.ini';
-    AddMessage('Using ini: ' + TheGameIniFileName);
-
-    if not FileExists(TheGameIniFileName) then begin
-      AddMessage('Fatal: Could not find ini');
-      Exit;
-    end;
-  end;
-
-  SettingsFileName := ChangeFileExt(PluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
-
-  AddMessage('Using settings file: ' + SettingsFileName);
-
-  Settings := TMemIniFile.Create(SettingsFileName);
+  Settings := TMemIniFile.Create(wbSettingsFileName);
 
   Left := Settings.ReadInteger(Name, 'Left', Left);
   Top := Settings.ReadInteger(Name, 'Top', Top);
@@ -3092,7 +2944,7 @@ begin
   Height := Settings.ReadInteger(Name, 'Height', Height);
   WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
 
-  AddMessage('Loading active plugin list: ' + PluginsFileName);
+  AddMessage('Loading active plugin list: ' + wbPluginsFileName);
 
   try
     sl := TStringList.Create;
@@ -3101,15 +2953,15 @@ begin
       with TfrmFileSelect.Create(nil) do try
 
         {
-           *** Load order handling for Skyrim ***
+           *** Load order handling for Skyrim and later games ***
            Plugins are sorted by the order in plugins.txt
            1. Load plugins list from plugins file
            2. Add missing files from BOSS list loadorder.txt
-           3. Add missing files from Data folder
         }
-        if wbGameMode in [gmTES5] then begin
-          sl.LoadFromFile(PluginsFileName);
-          FixLoadList(sl);
+        if not (wbGameMode in [gmTES4, gmFO3, gmFNV]) then begin
+          sl.LoadFromFile(wbPluginsFileName);
+          RemoveCommentsAndEmpty(sl); // remove comments
+          RemoveMissingFiles(sl); // remove nonexisting files
           // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
           // even if not present in plugins.txt
           j := FindMatchText(sl, wbGameName+'.esm');
@@ -3117,12 +2969,13 @@ begin
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
 
-          s := ExtractFilePath(PluginsFileName) + 'loadorder.txt';
+          s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
           if FileExists(s) then begin
             AddMessage('Found BOSS load order list: ' + s);
             sl2 := TStringList.Create;
             try
               sl2.LoadFromFile(s);
+              RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
               // skip first line "Skyrim.esm" in BOSS list
               for i := 1 to Pred(sl2.Count) do begin
                 j := FindMatchText(sl, sl2[i]);
@@ -3137,32 +2990,29 @@ begin
               sl2.Free;
             end;
           end;
-          AddMissingToLoadList(sl);
-          PluginListGroupESM(sl)
-        end
-
-        else
-        {
-           *** Load order handling for Oblivion, Fallout3 and New Vegas ***
-           Plugins are sorted by timestamps
-        }
-        begin
-          AddMissingToLoadList(sl);
         end;
 
-        if wbMasterUpdate and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
+        {
+           *** Load order handling for Oblivion, Fallout3 and New Vegas ***
+           Plugins are sorted by timestamps.
+           Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
+        }
+        AddMissingToLoadList(sl);
+
+        if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
           Age := Integer(sl.Objects[0]);
           AgeDateTime := FileDateToDateTime(Age);
           for i := 1 to Pred(sl.Count) do begin
             AgeDateTime := AgeDateTime + (1/24/60);
             Age := DateTimeToFileDate(AgeDateTime);
-            FileSetDate(DataPath + sl[i], Age);
+            FileSetDate(wbDataPath + sl[i], Age);
           end;
         end;
 
         CheckListBox1.Items.Assign(sl);
 
-        sl.LoadFromFile(PluginsFileName);
+        // check active files using the game's plugins list
+        sl.LoadFromFile(wbPluginsFileName);
         for i := Pred(sl.Count) downto 0 do begin
           s := Trim(sl.Strings[i]);
           j := Pos('#', s);
@@ -3181,7 +3031,7 @@ begin
             CheckListBox1.Checked[j] := True;
         end;
 
-        if not (wbMasterUpdate or wbLODGen) then begin
+        if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then begin
           ShowModal;
           if ModalResult <> mrOk then begin
             frmMain.Close;
@@ -3202,7 +3052,7 @@ begin
           while sl.Count > 0 do begin
             sl2.Clear;
             for i := 0 to Pred(sl.Count) do
-              wbMastersForFile(DataPath + sl[i], sl2);
+              wbMastersForFile(wbDataPath + sl[i], sl2);
 
             sl.Clear;
             if sl2.Count > 0 then
@@ -3231,7 +3081,7 @@ begin
         Free;
       end;
 
-      if not (wbMasterUpdate or wbLODGen) then
+      if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then
         with TfrmFileSelect.Create(nil) do try
 
           if (not wbEditAllowed) or wbTranslationMode then begin
@@ -3265,7 +3115,7 @@ begin
             end;
           end;
 
-          s := ChangeFileExt(ParamStr(0), '.modgroups');
+          s := wbModGroupFileName;
           if FileExists(s) then
             with TMemIniFile.Create(s) do try
               ReadSections(ModGroups);
@@ -3433,6 +3283,8 @@ begin
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
+  wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+  wbResolveAlias := Settings.ReadBool('Options', 'ResolveAliases', wbResolveAlias);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -3464,21 +3316,6 @@ begin
   end;
 
   CreateActionsForScripts;
-end;
-
-procedure TfrmMain.DoneDisplay;
-begin
-  if not DisplayActive then
-    Exit;
-
-{$IFDEF DX3D}
-  DXUTFreeState;
-  DestroyCustomDXUTobjects;
-
-  DestroyWindow(m_hwndRenderFullScreen);
-{$ENDIF}
-
-  DisplayActive := False;
 end;
 
 procedure TfrmMain.edEditorIDSearchChange(Sender: TObject);
@@ -3685,7 +3522,7 @@ begin
     end;
 end;
 
-function NormalizeRotation(const aRot: TD3DXVector3): TD3DXVector3;
+function NormalizeRotation(const aRot: TwbVector): TwbVector;
 
   function NormalizeAxis(const aValue: Single): Single;
   begin
@@ -3766,17 +3603,6 @@ begin
   Result := wbDistance(a, b);
 end;
 
-type
-  TMeshInfo = class
-    MainRecord : IwbMainRecord;
-    Mesh       : TwbMesh;
-    Refs       : array of PRefInfo;
-    TryHarder  : Boolean;
-  public
-    constructor Create(const aMainRecord: IwbMainRecord; const aMesh: TwbMesh);
-    procedure AddRef(const aRef: TRefInfo);
-  end;
-
 function StrRight(const s: String; Len: Integer): string;
 begin
   Result := s;
@@ -3838,7 +3664,7 @@ var
   i {, n}                     : Integer;
   MainRecord, LinksToRecord   : IwbMainRecord;
   Element                     : IwbElement;
-  Position                    : TD3DXVector3;
+  Position                    : TwbVector;
   Cntr {, Cntr2}              : IwbContainerElementRef;
 begin
   if not wbEditAllowed then
@@ -4058,8 +3884,6 @@ begin
     PluggyLinkThread.Terminate;
   FreeAndNil(PluggyLinkThread);
 
-  DoneDisplay;
-
   SaveChanged;
 
   if Assigned(Settings) then begin
@@ -4074,7 +3898,7 @@ begin
   end;
 
   try
-    s := ProgramPath + wbAppName + 'Edit_log.txt';
+    s := wbProgramPath + wbAppName + 'Edit_log.txt';
     if FileExists(s) then begin
       fs := TFileStream.Create(s, fmOpenReadWrite);
       fs.Seek(0, soFromEnd);
@@ -4088,8 +3912,8 @@ begin
     if Assigned(fs) then
       FreeAndNil(fs);
   end;
-  if DirectoryExists(wbTempPath)  then
-    DeleteDirectory(wbTempPath); // remove temp folder
+  if DirectoryExists(wbTempPath) and wbRemoveTempPath then
+    DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
   BackHistory := nil;
   ForwardHistory := nil;
@@ -4131,7 +3955,7 @@ begin
   LastUpdate := GetTickCount;
   Font := Screen.IconFont;
   Caption := Application.Title;
-  if wbMasterUpdate or wbLODGen then begin
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;
@@ -4513,7 +4337,7 @@ begin
       Abort;
   end;
 
-  ForceDirectories(DataPath + 'DistantLOD\');
+  ForceDirectories(wbDataPath + 'DistantLOD\');
 
   i := 0;
   Caption := 'Deleting old .lod files: ' + aWorldspace.Name + ' Processed Files: ' + IntToStr(i) +
@@ -4524,9 +4348,9 @@ begin
   if ForceTerminate then
     Abort;
 
-  if FindFirst(DataPath + 'DistantLOD\'+aWorldspace.EditorID+'*.lod', faAnyFile, F) = 0 then try
+  if FindFirst(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'*.lod', faAnyFile, F) = 0 then try
     repeat
-      DeleteFile(DataPath + 'DistantLOD\' + F.Name);
+      DeleteFile(wbDataPath + 'DistantLOD\' + F.Name);
       Inc(i);
 
       if StartTick + 500 < GetTickCount then begin
@@ -4545,7 +4369,7 @@ begin
   end;
 
   if Rule > rClear then begin
-    CmpStream := TwbFileStream.Create(DataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp', fmCreate);
+    CmpStream := TwbFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp', fmCreate);
     try
       Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -4607,7 +4431,7 @@ begin
             end;
             SetLength(RefsInCell, Succ(l));
 
-            with TwbFileStream.Create(DataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod', fmCreate) do try
+            with TwbFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod', fmCreate) do try
               WriteCardinal(Length(RefsInCell));
 
               for l := Low(RefsInCell) to High(RefsInCell) do begin
@@ -4979,7 +4803,7 @@ begin
                 //Assert(Cardinal(Container.ElementCount) <= aChildCount);
               end;
             end;
-          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion:
+          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion, etStructChapter:
             if aChildCount < Cardinal(Container.ElementCount) then
               aChildCount := Container.ElementCount;
         end;
@@ -5123,91 +4947,6 @@ begin
   end;
 end;
 
-//-----------------------------------------------------------------------------
-// Name: FullScreenWndProc()
-// Desc: The WndProc funtion used when the app is in fullscreen mode. This is
-//       needed simply to trap the ESC key.
-//-----------------------------------------------------------------------------
-function FullScreenWndProc(hWnd: HWND; msg: UINT; wParam: WPARAM;
-  lParam: LPARAM): LRESULT; stdcall;
-begin
-  if (msg = WM_CLOSE) then
-  begin
-    // User wants to exit, so go back to windowed mode and exit for real
-    frmMain.OnToggleFullScreen(nil);
-    PostMessage(Application.Handle, WM_CLOSE, 0, 0);
-  end;
-
-  if (msg = WM_SETCURSOR) then SetCursor(0);
-
-  // User wants to leave fullscreen mode
-  if (msg = WM_KEYUP) and (wParam = VK_ESCAPE) then
-    frmMain.OnToggleFullScreen(nil);
-
-//  if Assigned(m_ArcBall) then
-//    m_ArcBall.HandleMessages(hWnd, Msg, wParam, lParam);
-
-  Result:= DefWindowProc(hWnd, msg, wParam, lParam);
-end;
-
-procedure TfrmMain.OnToggleFullscreen(Sender: TObject);
-begin
-{$IFDEF DX3D}
-  DXUTToggleFullScreen;
-{$ENDIF}
-end;
-
-
-procedure TfrmMain.InitDisplay;
-{$WRITEABLECONST ON}
-const
-  wndClass: TWndClass = (
-    style: CS_HREDRAW or CS_VREDRAW;
-    lpfnWndProc: @FullScreenWndProc; cbClsExtra: 0; cbWndExtra: 0; hInstance: 0;
-    hIcon: 0; hCursor: 0; hbrBackground: 0; lpszMenuName: nil;
-    lpszClassName: 'Fullscreen Window'
-  );
-{$WRITEABLECONST OFF}
-begin
-  if DisplayActive then
-    Exit;
-
-{$IFDEF DX3D}
-  // Register a class for a fullscreen window
-  wndClass.hbrBackground:= GetStockObject(WHITE_BRUSH);
-  Windows.RegisterClass(wndClass);
-
-  // We create the fullscreen window (not visible) at startup, so it can
-  // be the focus window.  The focus window can only be set at CreateDevice
-  // time, not in a Reset, so ToggleFullscreen wouldn't work unless we have
-  // already set up the fullscreen focus window.
-  m_hwndRenderFullScreen:= CreateWindow('Fullscreen Window', nil,
-                               WS_POPUP, 0, 0, Screen.Width, Screen.Height,
-                               Application.Handle, 0, 0, nil);
-
-  //////////////////////////////////////////////////////////////
-
-  CreateCustomDXUTobjects;
-
-  // Set the callback functions
-  DXUTSetCallbackDeviceCreated(OnCreateDevice);
-  DXUTSetCallbackDeviceReset(OnResetDevice);
-  DXUTSetCallbackDeviceLost(OnLostDevice);
-  DXUTSetCallbackDeviceDestroyed(OnDestroyDevice);
-  DXUTSetCallbackMsgProc(MsgProc);
-  DXUTSetCallbackFrameRender(OnFrameRender);
-  DXUTSetCallbackFrameMove(OnFrameMove);
-
-  // Initialize DXUT and create the desired Win32 window and Direct3D device for the application
-  DXUTInit(True, True, True); // Parse the command line, handle the default hotkeys, and show msgboxes
-  DXUTSetCursorSettings(True, True); // Show the cursor and clip it when in full screen
-  DXUTSetWindow(m_hwndRenderFullScreen{?}, m_hwndRenderFullScreen, DisplayPanel.Handle, False);
-  DXUTCreateDevice(D3DADAPTER_DEFAULT, true, 640, 480, IsDeviceAcceptable, ModifyDeviceSettings);
-
-{$ENDIF}
-  DisplayActive := True;
-end;
-
 procedure TfrmMain.InitNodes(const aNodeDatas: PViewNodeDatas;
   const aParentDatas: PViewNodeDatas;
   aNodeCount: Integer;
@@ -5232,7 +4971,7 @@ begin
         case Container.ElementType of
           etMainRecord, etSubRecordStruct:
             NodeData.Element := Container.ElementBySortOrder[aIndex];
-          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion:
+          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion, etStructChapter:
             if aIndex < Cardinal(Container.ElementCount) then
               NodeData.Element := Container.Elements[aIndex];
         end;
@@ -5563,24 +5302,38 @@ begin
     Value := wbGameName;
     Done := True;
   end else
+  if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
+    Value := wbAppName;
+    Done := True;
+  end else
   if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
+    Value := wbTrackAllEditorID;
     Done := True;
   end else
   if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
     Value := O2V(wbRecordDefMap);
     Done := True;
   end else
-  if SameText(Identifier, 'ProgramPath') and (Args.Count = 0) then begin
-    Value := ProgramPath;
+  if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'wbProgramPath') and (Args.Count = 0)) then begin
+    Value := wbProgramPath;
     Done := True;
   end else
-  if SameText(Identifier, 'ScriptsPath') and (Args.Count = 0) then begin
-    Value := ScriptsPath;
+  if (SameText(Identifier,   'ScriptsPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'wbScriptsPath') and (Args.Count = 0)) then begin
+    Value := wbScriptsPath;
     Done := True;
   end else
-  if SameText(Identifier, 'DataPath') and (Args.Count = 0) then begin
-    Value := DataPath;
+  if SameText(Identifier, 'wbDataPath') and (Args.Count = 0) then begin
+    Value := wbDataPath;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbTempPath') and (Args.Count = 0) then begin
+    Value := wbTempPath;
     Done := True;
   end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
@@ -5593,7 +5346,7 @@ begin
   end else
   if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
-      PostAddMessage(Args.Values[0]);
+      AddMessage(Args.Values[0]);
       Done := True;
       Application.ProcessMessages;
     end else
@@ -5713,6 +5466,10 @@ begin
       FilterPreset := False;
       Done := True;
     end;
+  end else
+  if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
+    Value := O2V(TfrmFileSelect.Create(nil));
+    Done := True;
   end;
 end;
 
@@ -5900,7 +5657,7 @@ var
   sl: TStringList;
   UnitFile: string;
 begin
-  UnitFile := ScriptsPath + UnitName + '.pas';
+  UnitFile := wbScriptsPath + UnitName + '.pas';
   sl := TStringList.Create;
   try
     sl.LoadFromFile(UnitFile);
@@ -5922,11 +5679,13 @@ var
   Count                       : Cardinal;
   StartTick                   : Cardinal;
   jvi                         : TJvInterpreterProgram;
-  i                           : integer;
+  i                           : Integer;
+  bCheckUnsaved               : Boolean;
 begin
   if Trim(aScript) = '' then
     Exit;
 
+  bCheckUnsaved := tmrCheckUnsaved.Enabled;
   tmrCheckUnsaved.Enabled := False;
 
   Count := 0;
@@ -5948,6 +5707,7 @@ begin
       wbStartTime := Now;
 
       Enabled := False;
+
       AddMessage('Applying script...');
       Application.ProcessMessages;
 
@@ -6017,11 +5777,9 @@ begin
 
     InvalidateElementsTreeView(NoNodes);
     vstNav.Invalidate;
-    //Application.ProcessMessages;
-    //pgMain.ActivePage := tbsMessages;
   finally
     jvi.Free;
-    tmrCheckUnsaved.Enabled := True;
+    tmrCheckUnsaved.Enabled := bCheckUnsaved;
   end;
 end;
 
@@ -6030,7 +5788,7 @@ var
   Scr: string;
 begin
   with TfrmScript.Create(Self) do try
-    Path := ScriptsPath;
+    Path := wbScriptsPath;
     LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
     if ShowModal <> mrOK then
       Exit;
@@ -6063,10 +5821,10 @@ begin
     if ActionList1.Actions[i].Tag > 0 then
       ActionList1.Actions[i].Free;
 
-  if FindFirst(ScriptsPath + '*.pas', faAnyFile, F) = 0 then try
+  if FindFirst(wbScriptsPath + '*.pas', faAnyFile, F) = 0 then try
     slScript := TStringList.Create;
     repeat
-      scr := ScriptsPath + F.Name;
+      scr := wbScriptsPath + F.Name;
       slScript.LoadFromFile(scr);
       for i := 0 to Pred(slScript.Count) do begin
         s := Trim(slScript[i]);
@@ -6431,7 +6189,6 @@ var
     rlNewRecord: IwbMainRecord;
     rlReferencedBy : TDynMainRecords;
   end;
-  ForceOldRecord              : Boolean;
 begin
   ReplaceList := nil;
   l := 0;
@@ -6449,7 +6206,7 @@ begin
 
   with odCSV do begin
     FileName := '';
-    InitialDir := DataPath;
+    InitialDir := wbDataPath;
     if not Execute then
       Exit;
   end;
@@ -6467,8 +6224,8 @@ begin
         SetLength(ReplaceList, CSV.Count);
         for i := 1 to Pred(CSV.Count) do begin //ignore first line
           Line.CommaText := CSV[i];
-          if (Line.Count < 7) or (Line.Count > 8) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': 7 or 8 values expected but '+IntToStr(Line.Count)+' found.');
+          if Line.Count <> 7 then begin
+            AddMessage('Skipping line '+IntToStr(i+1)+': 7 values expected but '+IntToStr(Line.Count)+' found.');
             Continue;
           end;
 
@@ -6521,16 +6278,6 @@ begin
             Continue;
           end;
 
-          forceOldRecord := False;
-          s := Trim(Line[7]);
-          j := StrToIntDef(s, 0);
-          if (j < 0) or (j > 1) then begin
-            AddMessage('Skipping line '+IntToStr(i+1)+': Flag always rename oldRecord "'+s+'" is not in the valid range (0/1).');
-            Continue;
-          end else
-            if j = 1 then
-              forceOldRecord := True;
-
           s := Trim(Line[0]);
           if not SameText(OldRecord.Signature, s) then
             AddMessage('Warning line '+IntToStr(i+1)+': Old Record do not have expected Signature ("'+OldRecord.Signature+'" vs. "'+s+'")".');
@@ -6553,13 +6300,6 @@ begin
             RefRecord := OldRecord.ReferencedBy[j];
             if _File.Equals(RefRecord._File) then begin
               ReferencedBy[k] := RefRecord;
-              Inc(k);
-            end;
-          end;
-
-          if (k < 1) and ForceOldRecord then begin
-            if _File.Equals(OldRecord._File) then begin
-              ReferencedBy[k] := OldRecord;
               Inc(k);
             end;
           end;
@@ -6978,6 +6718,8 @@ begin
         Exit;
 
       EditValue := Element.EditValue;
+
+      // flags editor
       if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
@@ -6998,9 +6740,10 @@ begin
           Free;
         end;
 
-      end else
+      end
 
-      if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
+      // localization editor
+      else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
           wbLocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
@@ -7013,9 +6756,11 @@ begin
         end;
         vstView.Invalidate;
         Exit;
-      end else
-        if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
-          Exit;
+      end
+
+      // string editor
+      else if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
+        Exit;
 
       Element.EditValue := EditValue;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
@@ -8613,8 +8358,8 @@ procedure TfrmMain.mniNavLogAnalyzerClick(Sender: TObject);
 begin
   with TfrmLogAnalyzer.Create(Self) do begin
     Caption := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-    lDataPath := DataPath;
-    lMyGamesTheGamePath := MyGamesTheGamePath;
+    lDataPath := wbDataPath;
+    lMyGamesTheGamePath := wbMyGamesTheGamePath;
     PFiles := @Files;
     JumpTo := frmMain.JumpTo;
     ltLog := TLogType(TMenuItem(Sender).Tag);
@@ -8931,7 +8676,7 @@ var
   MainRecord2                 : IwbMainRecord;
   FoundAny                    : Boolean;
   GridCell                    : TwbGridCell;
-  Position                    : TD3DXVector3;
+  Position                    : TwbVector;
 
   Cells                       : array of array of array of PVirtualNode;
   FileFiltered                : array of Integer;
@@ -9639,6 +9384,9 @@ begin
     cbHideNeverShow.Checked := wbHideNeverShow;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
+    cbSortGroupRecord.Checked := wbSortGroupRecord;
+    cbResolveAliases.Checked := wbResolveAlias;
+    cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
     cbAutoSave.Checked := AutoSave;
@@ -9660,6 +9408,9 @@ begin
     wbHideNeverShow := cbHideNeverShow.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
+    wbSortGroupRecord := cbSortGroupRecord.Checked;
+    wbResolveAlias := cbResolveAliases.Checked;
+    wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     AutoSave := cbAutoSave.Checked;
@@ -9679,6 +9430,9 @@ begin
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
+    Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+    Settings.WriteBool('Options', 'ResolveAliases', wbResolveAlias);
+    Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -9722,27 +9476,6 @@ begin
   end;
 end;
 
-{procedure TfrmMain.mniViewOpenFromClick(Sender: TObject);
-var
-  From, FileName, TempPath: string;
-begin
-  From := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  if not SameText(ExtractFileExt(From), '.bsa') then begin
-    FileName := DataPath + OpenFromAsset;
-    From := 'Data';
-  end else begin
-    // extract file from BSA
-    TempPath := wbTempPath + From + '\';
-    FileName := TempPath + OpenFromAsset;
-    if not FileExists(FileName) then begin
-      if ForceDirectories(TempPath) then
-        wbContainerHandler.ResourceCopy(OpenFromAsset, TempPath, (Sender as TMenuItem).Tag);
-    end;
-  end;
-  if FileExists(FileName) then
-    ShellExecute(Handle, 'open', PWideChar(FileName), nil, nil, SW_SHOW);
-end;
-}
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -10088,9 +9821,9 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
-  if wbGameMode = gmTES5 then begin
-    mniNavCreateMergedPatch.Visible := False;
-  end;
+  //if wbGameMode = gmTES5 then begin
+  //  mniNavCreateMergedPatch.Visible := False;
+  //end;
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
@@ -10250,48 +9983,6 @@ begin
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
-      // open file menu
-      {if Assigned(Element) then
-         Value := Element.EditValue
-      else
-        Value := '';
-      if Length(Value) > 4 then begin
-        s := ExtractFileExt(Value);
-        if SameText(s, '.dds') or SameText(s, '.nif') or SameText(s, '.wav') or SameText(s, '.mp3') then begin
-          if Value[1] = '\' then
-            Delete(Value, 1, 1);
-          if SameText(Copy(Value, 1, 5), 'data\') then
-            Delete(Value, 1, 5);
-          if SameText(s, '.nif') and not SameText(Copy(Value, 1, 7), 'meshes\') then
-            Value := 'meshes\' + Value
-          else if SameText(s, '.dds') and not SameText(Copy(Value, 1, 9), 'textures\') then
-            Value := 'textures\' + Value
-          else if SameText(s, '.wav') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
-            Value := 'sound\' + Value
-          else if SameText(s, '.mp3') and not SameText(Copy(Value, 1, 6), 'sound\') and not SameText(Copy(Value, 1, 6), 'music\') then
-            Value := 'music\' + Value;
-          mniViewOpenFrom.Visible := wbContainerHandler.ResourceExists(Value);
-          if mniViewOpenFrom.Visible then begin
-            mniViewOpenFrom.Clear;
-            sl := TStringList.Create;
-            try
-              wbContainerHandler.ResourceCount(Value, sl);
-              for i := 0 to Pred(sl.Count) do begin
-                MenuItem := TMenuItem.Create(mniViewOpenFrom);
-                s := ExtractFileName(sl[i]);
-                if s = '' then s := 'Data\' + Value;
-                MenuItem.Caption := s;
-                MenuItem.Tag := i; // container index
-                MenuItem.OnClick := mniViewOpenFromClick;
-                mniViewOpenFrom.Add(MenuItem);
-              end;
-              OpenFromAsset := Value;
-            finally
-              sl.Free;
-            end;
-          end;
-        end;
-      end;}
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
@@ -10495,7 +10186,7 @@ var
   SavedAny                    : Boolean;
   AnyErrors                   : Boolean;
 begin
-  if wbDontSave or wbLODGen then
+  if wbDontSave or (wbToolMode in [tmLODgen]) then
     Exit;
 
   pgMain.ActivePage := tbsMessages;
@@ -10520,7 +10211,7 @@ begin
     if Assigned(Settings) then
       cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
-    if (CheckListBox1.Count > 0) and not wbMasterUpdate then begin
+    if (CheckListBox1.Count > 0) and not (wbToolMode in [tmMasterUpdate, tmMasterRestore]) then begin
       ShowModal;
       wbDontBackup := not cbBackup.Checked;
       if Assigned(Settings) then begin
@@ -10544,13 +10235,13 @@ begin
             _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
             s := _LFile.FileName;
             NeedsRename := FileExists(s);
-            s := Copy(s, length(DataPath) + 1, length(s)); // relative path to string file from Data folder
+            s := Copy(s, length(wbDataPath) + 1, length(s)); // relative path to string file from Data folder
             u := s;
             if NeedsRename then
               s := s + t;
 
             try
-              FileStream := TFileStream.Create(DataPath + s, fmCreate);
+              FileStream := TFileStream.Create(wbDataPath + s, fmCreate);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                 _LFile.WriteToStream(FileStream);
@@ -10576,12 +10267,12 @@ begin
 
             s := CheckListBox1.Items[i];
             u := s;
-            NeedsRename := FileExists(DataPath + CheckListBox1.Items[i]);
+            NeedsRename := FileExists(wbDataPath + CheckListBox1.Items[i]);
             if NeedsRename then
               s := s + t;
 
             //try
-              FileStream := TFileStream.Create(DataPath + s, fmCreate);
+              FileStream := TFileStream.Create(wbDataPath + s, fmCreate);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                 _File.WriteToStream(FileStream);
@@ -11329,7 +11020,7 @@ begin
       tbsMessages.Highlighted := True;
   end;
 
-  if wbMasterUpdate and wbLoaderDone and not wbMasterUpdateDone then begin
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbLoaderDone and not wbMasterUpdateDone then begin
     wbMasterUpdateDone := True;
     if wbLoaderError then begin
       wbDontSave := True;
@@ -11345,7 +11036,7 @@ begin
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
     end else try
-      if wbMasterRestore then
+      if (wbToolMode in [tmMasterRestore]) then
         ChangesMade := RestorePluginsFromMaster
       else
         ChangesMade := SetAllToMaster;
@@ -11357,7 +11048,7 @@ begin
       end else begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Non of your active modules required changes.');
       end;
-      if not wbMasterRestore then begin
+      if (wbToolMode in [tmMasterUpdate]) then begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
       end;
@@ -12050,7 +11741,8 @@ begin
         vstView.FocusedNode := vstView.GetNextSibling(vstView.FocusedNode);
       end;
       Ord('C'): begin
-        vstView.CopyToClipBoard;
+        Clipboard.AsText := Element.EditValue;
+        //vstView.CopyToClipBoard;
         Exit;
       end;
     else
@@ -13189,7 +12881,7 @@ begin
     Exit;
   end;
 
-  if wbLODGen then begin
+  if (wbToolMode in [tmLODgen]) then begin
     if not ForceTerminate then
       tmrGenerator.Enabled := True;
     Exit;
@@ -13203,9 +12895,7 @@ begin
   tbsARMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
-  tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbMasterUpdate or wbLODGen) and not wbIKnowWhatImDoing;
-
-  InitDisplay;
+  tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) and not wbIKnowWhatImDoing;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
@@ -13278,7 +12968,7 @@ end;
 
 constructor TLoaderThread.Create(var aList: TStringList; IsTemporary: Boolean = False);
 begin
-  ltDataPath := DataPath;
+  ltDataPath := wbDataPath;
   ltMaster := '';
   ltLoadList := aList;
   aList := nil;
@@ -13316,6 +13006,7 @@ end;
 procedure TLoaderThread.Execute;
 var
   i                           : Integer;
+  dummy                       : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   F                           : TSearchRec;
@@ -13330,9 +13021,15 @@ begin
       if not Assigned(wbContainerHandler) then begin
         wbContainerHandler := wbCreateContainerHandler;
 
-        with TMemIniFile.Create(frmMain.TheGameIniFileName) do try
+        with TMemIniFile.Create(wbTheGameIniFileName) do try
           with TStringList.Create do try
-            Text := StringReplace(ReadString('Archive','sArchiveList',''), ',',#10, [rfReplaceAll]);
+            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+              Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
+            else
+              Text := StringReplace(
+                ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
+                ',', #10, [rfReplaceAll]
+              );
             for i := 0 to Pred(Count) do begin
               s := Trim(Strings[i]);
               if Length(s) < 5 then
@@ -13357,19 +13054,20 @@ begin
         end;
 
         for i := 0 to Pred(ltLoadList.Count) do begin
-          if (ExtractFileExt(ltLoadList[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-            s := ChangeFileExt(ltLoadList[i], '');
-            if FindFirst(ltDataPath + s + '*.bsa', faAnyFile, F) = 0 then try
-              repeat
-                if wbLoadBSAs then begin
-                  LoaderProgress('[' + F.Name + '] Loading Resources.');
-                  wbContainerHandler.AddBSA(ltDataPath + F.Name);
-                end else
-                  LoaderProgress('[' + F.Name + '] Skipped.');
-              until FindNext(F) <> 0;
-            finally
-              FindClose(F);
-            end;
+          s := ChangeFileExt(ltLoadList[i], '');
+          // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
+          if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+            s := s + '*';
+          if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
+            repeat
+              if wbLoadBSAs then begin
+                LoaderProgress('[' + F.Name + '] Loading Resources.');
+                wbContainerHandler.AddBSA(ltDataPath + F.Name);
+              end else
+                LoaderProgress('[' + F.Name + '] Skipped.');
+            until FindNext(F) <> 0;
+          finally
+            FindClose(F);
           end;
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
@@ -13390,7 +13088,7 @@ begin
 
         if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameName + '.esm') then begin
           t := wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
-          s := ProgramPath + t;
+          s := wbProgramPath + t;
           if FileExists(s) then begin
             LoaderProgress('loading "' + t + '"...');
             _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
@@ -13399,7 +13097,7 @@ begin
               Exit;
 
             t := wbGameName + '.Hardcoded.esp';
-            s := ProgramPath + t;
+            s := wbProgramPath + t;
             if FileExists(s) then
               DeleteFile(s);
           end;
@@ -13408,7 +13106,7 @@ begin
 
       if wbBuildRefs then
         for i := Low(ltFiles) to High(ltFiles) do
-          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') then begin
+          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) then begin
             LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
             ltFiles[i].BuildRef;
             if frmMain.ForceTerminate then
@@ -13641,31 +13339,6 @@ begin
   Result := frmMain.tbsReferencedBy;
 end;
 
-{ TMeshInfo }
-
-procedure TMeshInfo.AddRef(const aRef: TRefInfo);
-var
-  Ref : PRefInfo;
-  i   : Integer;
-begin
-  New(Ref);
-  Ref^ := aRef;
-  for i := Low(Refs) to High(Refs) do
-    if (wbDistance(Refs[i].Pos, Ref.Pos) < 15.0) and (RotDistance(Refs[i].Rot, Ref.Rot) < 0.3) then begin
-      Ref.Next := Refs[i];
-      Refs[i] := Ref;
-      Exit;
-    end;
-  SetLength(Refs, Succ(Length(Refs)));
-  Refs[High(Refs)] := Ref;
-end;
-
-constructor TMeshInfo.Create(const aMainRecord: IwbMainRecord; const aMesh: TwbMesh);
-begin
-  MainRecord := aMainRecord;
-  Mesh := aMesh;
-end;
-
 { TPluggyLinkThread }
 
 procedure TPluggyLinkThread.ChangeDetected;
@@ -13751,7 +13424,7 @@ procedure TPluggyLinkThread.Execute;
 var
   WaitHandle : THandle;
 begin
-  plFolder := MyGamesTheGamePath + 'Pluggy\User Files\';
+  plFolder := wbMyGamesTheGamePath + 'Pluggy\User Files\';
   frmMain.PostAddMessage('[PluggyLink] Starting for: ' + plFolder);
   try
     WaitHandle := FindFirstChangeNotification(

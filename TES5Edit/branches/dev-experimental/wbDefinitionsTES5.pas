@@ -22,8 +22,7 @@ implementation
 
 uses
   Types, Classes, SysUtils, Math, Variants,
-  wbInterface,
-  wbLocalization;
+  wbInterface;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -248,9 +247,6 @@ const
   EYES : TwbSignature = 'EYES';
   FACT : TwbSignature = 'FACT';
   FCHT : TwbSignature = 'FCHT'; { New to Skyrim }
-  FGGA : TwbSignature = 'FGGA';
-  FGGS : TwbSignature = 'FGGS';
-  FGTS : TwbSignature = 'FGTS';
   FLMV : TwbSignature = 'FLMV'; { New to Skyrim }
   FLOR : TwbSignature = 'FLOR';
   FLST : TwbSignature = 'FLST';
@@ -357,12 +353,10 @@ const
   MOD3 : TwbSignature = 'MOD3';
   MOD4 : TwbSignature = 'MOD4';
   MOD5 : TwbSignature = 'MOD5'; { New to Skyrim }
-  MODB : TwbSignature = 'MODB';
   MODD : TwbSignature = 'MODD';
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
   MODT : TwbSignature = 'MODT';
-  MOSD : TwbSignature = 'MOSD';
   MOVT : TwbSignature = 'MOVT';
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
@@ -424,6 +418,7 @@ const
   PLDT : TwbSignature = 'PLDT';
   PLVD : TwbSignature = 'PLVD'; { New to Skyrim }
   PLYR : TwbSignature = 'PLYR';
+  PMIS : TwbSignature = 'PMIS';
   PNAM : TwbSignature = 'PNAM';
   POBA : TwbSignature = 'POBA';
   POCA : TwbSignature = 'POCA';
@@ -648,8 +643,6 @@ var
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
-  wbREPL: IwbSubRecordDef;
-  wbBIPL: IwbSubRecordDef;
   wbOBND: IwbSubRecordDef;
   wbOBNDReq: IwbSubRecordDef;
   wbDEST: IwbSubRecordStructDef;
@@ -666,7 +659,6 @@ var
   wbWardStateEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
-//  wbHeadPartIndexEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
@@ -679,14 +671,12 @@ var
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
-  wbXNAM: IwbSubRecordDef;
   wbDESC: IwbSubRecordDef;
   wbDESCReq: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot: IwbSubRecordDef;
   wbPosRot: IwbStructDef;
   wbMODD: IwbSubRecordDef;
-  wbMOSD: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
@@ -697,11 +687,6 @@ var
   wbCTDA: IwbSubRecordStructDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
-  wbPGRP: IwbSubRecordDef;
-  wbFaceGen: IwbSubRecordStructDef;
-  wbFaceGenNPC: IwbSubRecordStructDef;
-  wbENAM: IwbSubRecordDef;
-  wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordStructDef;
@@ -733,7 +718,6 @@ var
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
-  wbFULLFact: IwbSubRecordDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbUnionDef;
@@ -762,14 +746,10 @@ var
   wbMGEFType: IwbIntegerDef;
   wbCastEnum: IwbEnumDef;
   wbTargetEnum: IwbEnumDef;
-  wbRNAM: IwbSubRecordDef;
-  wbSNAM: IwbSubRecordDef;
-  wbQNAM: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
   wbDMDSs: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
-  wbDMDL: IwbSubRecordDef;
   wbSPCT: IwbSubRecordDef;
   wbTints: IwbSubRecordArrayDef;
   wbMODT: IwbSubRecordDef;
@@ -797,6 +777,7 @@ var
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
+  wbNull: IwbValueDef;
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -825,197 +806,6 @@ begin
   PSingle(@AsCardinal)^ := AsFloat;
   Result := AsCardinal;
 end;
-
-{>>> Script stuff in VMAD now <<<}
-//function wbCTDAParam2VariableNameToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-//var
-//  Container  : IwbContainerElementRef;
-//  //Container2 : IwbContainerElementRef;
-//  Param1     : IwbElement;
-//  MainRecord : IwbMainRecord;
-//  BaseRecord : IwbMainRecord;
-//  ScriptRef  : IwbElement;
-//  Script     : IwbMainRecord;
-//  Variables  : TStringList;
-//  LocalVars  : IwbContainerElementRef;
-//  LocalVar   : IwbContainerElementRef;
-//  i, j       : Integer;
-//  s          : string;
-//begin
-//  case aType of
-//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
-//    ctToEditValue: Result := IntToStr(aInt);
-//    ctToSortKey: begin
-//      Result := IntToHex64(aInt, 8);
-//      Exit;
-//    end;
-//    ctCheck: Result := '<Warning: Could not resolve Parameter 1>';
-//    ctEditType: Result := '';
-//    ctEditInfo: Result := '';
-//  end;
-//
-//  if not Assigned(aElement) then
-//    Exit;
-//
-//  if aElement.ElementType = etValue then
-//    Supports(aElement.Container, IwbContainerElementRef, Container)
-//  else
-//    Supports(aElement, IwbContainerElementRef, Container);
-//
-//  if not Assigned(Container) then
-//    Exit;
-//
-//  Param1 := Container.ElementByName['Parameter #1'];
-//
-//  if not Assigned(Param1) then
-//    Exit;
-//
-//  MainRecord := nil;
-//  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-//    Exit;
-//{    if Param1.NativeValue = 0 then
-//      if Supports(Container.Container, IwbContainerElementRef, Container) then
-//        for i := 0 to Pred(Container.ElementCount) do
-//          if Supports(Container.Elements[i], IwbContainerElementRef, Container2) then
-//            if SameText(Container2.ElementValues['Function'], 'GetIsID') then begin
-//              Param1 := Container2.ElementByName['Parameter #1'];
-//              if Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-//                Break;
-//            end;}
-//
-//  if not Assigned(MainRecord) then
-//    Exit;
-//
-//  BaseRecord := MainRecord.BaseRecord;
-//  if Assigned(BaseRecord) then
-//    MainRecord := BaseRecord;
-//
-//  ScriptRef := MainRecord.RecordBySignature['SCRI'];
-//
-//  if not Assigned(ScriptRef) then begin
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" does not contain a SCRI subrecord>';
-//      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" does not contain a SCRI subrecord>';
-//    end;
-//    Exit;
-//  end;
-//
-//  if not Supports(ScriptRef.LinksTo, IwbMainRecord, Script) then begin
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" does not have a valid script>';
-//      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" does not have a valid script>';
-//    end;
-//    Exit;
-//  end;
-//
-//  Script := Script.HighestOverrideOrSelf[aElement._File.LoadOrder];
-//
-//  case aType of
-//    ctEditType: begin
-//      Result := 'ComboBox';
-//      Exit;
-//    end;
-//    ctEditInfo:
-//      Variables := TStringList.Create;
-//  else
-//    Variables := nil;
-//  end;
-//  try
-//    if Supports(Script.ElementByName['Local Variables'], IwbContainerElementRef, LocalVars) then begin
-//      for i := 0 to Pred(LocalVars.ElementCount) do
-//        if Supports(LocalVars.Elements[i], IwbContainerElementRef, LocalVar) then begin
-//          j := LocalVar.ElementNativeValues['SLSD\Index'];
-//          s := LocalVar.ElementNativeValues['SCVR'];
-//          if Assigned(Variables) then
-//            Variables.AddObject(s, TObject(j))
-//          else if j = aInt then begin
-//            case aType of
-//              ctToStr, ctToEditValue: Result := s;
-//              ctCheck: Result := '';
-//            end;
-//            Exit;
-//          end;
-//        end;
-//    end;
-//
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Variable Index not found in "' + Script.Name + '">';
-//      ctCheck: Result := '<Warning: Variable Index not found in "' + Script.Name + '">';
-//      ctEditInfo: begin
-//        Variables.Sort;
-//        Result := Variables.CommaText;
-//      end;
-//    end;
-//  finally
-//    FreeAndNil(Variables);
-//  end;
-//end;
-
-{>>> Script stuff in VMAD now <<<}
-//function wbCTDAParam2VariableNameToInt(const aString: string; const aElement: IwbElement): Int64;
-//var
-//  Container  : IwbContainerElementRef;
-//  Param1     : IwbElement;
-//  MainRecord : IwbMainRecord;
-//  BaseRecord : IwbMainRecord;
-//  ScriptRef  : IwbElement;
-//  Script     : IwbMainRecord;
-//  LocalVars  : IwbContainerElementRef;
-//  LocalVar   : IwbContainerElementRef;
-//  i, j       : Integer;
-//  s          : string;
-//begin
-//  Result := StrToInt64Def(aString, Low(Cardinal));
-//  if Result <> Low(Cardinal) then
-//    Exit;
-//
-//  if not Assigned(aElement) then
-//    raise Exception.Create('aElement not specified');
-//
-//  if aElement.ElementType = etValue then
-//    Supports(aElement.Container, IwbContainerElementRef, Container)
-//  else
-//    Supports(aElement, IwbContainerElementRef, Container);
-//
-//  if not Assigned(Container) then
-//    raise Exception.Create('Container not assigned');
-//
-//  Param1 := Container.ElementByName['Parameter #1'];
-//
-//  if not Assigned(Param1) then
-//    raise Exception.Create('Could not find "Parameter #1"');
-//
-//  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-//    raise Exception.Create('"Parameter #1" does not reference a valid main record');
-//
-//  BaseRecord := MainRecord.BaseRecord;
-//  if Assigned(BaseRecord) then
-//    MainRecord := BaseRecord;
-//
-//  ScriptRef := MainRecord.RecordBySignature['SCRI'];
-//
-//  if not Assigned(ScriptRef) then
-//    raise Exception.Create('"'+MainRecord.ShortName+'" does not contain a SCRI subrecord');
-//
-//  if not Supports(ScriptRef.LinksTo, IwbMainRecord, Script) then
-//    raise Exception.Create('"'+MainRecord.ShortName+'" does not have a valid script');
-//
-//  Script := Script.HighestOverrideOrSelf[aElement._File.LoadOrder];
-//
-//  if Supports(Script.ElementByName['Local Variables'], IwbContainerElementRef, LocalVars) then begin
-//    for i := 0 to Pred(LocalVars.ElementCount) do
-//      if Supports(LocalVars.Elements[i], IwbContainerElementRef, LocalVar) then begin
-//        j := LocalVar.ElementNativeValues['SLSD\Index'];
-//        s := LocalVar.ElementNativeValues['SCVR'];
-//        if SameText(s, Trim(aString)) then begin
-//          Result := j;
-//          Exit;
-//        end;
-//      end;
-//  end;
-//
-//  raise Exception.Create('Variable "'+aString+'" was not found in "'+MainRecord.ShortName+'"');
-//end;
 
 function wbCTDAParam2QuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1313,7 +1103,7 @@ begin
 
   i := 1;
   s := Trim(aString);
-  while (i <= Length(s)) and (s[i] in ['0'..'9']) do
+  while (i <= Length(s)) and (s[i] in ['-', '0'..'9']) do
     Inc(i);
   s := Copy(s, 1, Pred(i));
 
@@ -1324,6 +1114,16 @@ function wbScriptObjectAliasToStr(aInt: Int64; const aElement: IwbElement; aType
 var
   Container  : IwbContainerElementRef;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1339,6 +1139,16 @@ function wbPackageLocationAliasToStr(aInt: Int64; const aElement: IwbElement; aT
 var
   Container  : IwbContainer;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1357,6 +1167,16 @@ function wbQuestAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCa
 var
   Container  : IwbContainer;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1375,6 +1195,16 @@ function wbQuestExternalAliasToStr(aInt: Int64; const aElement: IwbElement; aTyp
 var
   Container  : IwbContainer;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -1390,9 +1220,22 @@ function wbConditionAliasToStr(aInt: Int64; const aElement: IwbElement; aType: T
 var
   Container  : IwbContainer;
   MainRecord : IwbMainRecord;
+  GroupRecord : IwbGroupRecord;
 begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
   if not Assigned(aElement) then
     Exit;
+
+  Result := IntToStr(aInt); Exit;
 
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
@@ -1407,12 +1250,16 @@ begin
 
   if MainRecord.Signature = QUST then
     Result := wbAliasToStr(aInt, Container, aType)
-  else
-  if MainRecord.Signature = SCEN then
+  else if MainRecord.Signature = SCEN then
     Result := wbAliasToStr(aInt, Container.ElementBySignature['PNAM'], aType)
-  else
-  if MainRecord.Signature = PACK then
-    Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType);
+  else if MainRecord.Signature = PACK then
+    Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType)
+  else if MainRecord.Signature = INFO then begin
+    // discovered memory leak
+    // test on 00015C73
+    if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
+      Result := wbAliasToStr(aInt, GroupRecord.ChildrenOf.ElementBySignature['QNAM'], aType);
+  end;
 end;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -1547,17 +1394,16 @@ begin
       Result := IntToHex64(aInt, 2);
       Exit;
     end;
-//    ctCheck: begin
-//      case aInt shr 5 of
-//        0, 1, 2, 3, 4, 5 : Result := '';
-//      else
-//        Result := '<Unknown Compare operator>'
-//      end;
-//
-//      s := wbCtdaTypeFlags.ToString(aInt and $1F, aElement);
-//      if s <> '' then
-//        Result := Result + ' / ' + s;
-//    end;
+    ctCheck: begin
+      case aInt and $E0 of
+        $00, $20, $40, $60, $80, $A0 : Result := '';
+      else
+        Result := '<Unknown Compare operator>'
+      end;
+      s := wbCtdaTypeFlags.Check(aInt and $1F, aElement);
+      if s <> '' then
+        Result := Result + ' / ' + s;
+    end;
   end;
 end;
 
@@ -2005,44 +1851,6 @@ begin
   end;
 end;
 
-//function wbIPDSDATACount(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-//begin
-//  if Assigned(aBasePtr) and Assigned(aEndPtr) then
-//    Result := (Cardinal(aBasePtr) - Cardinal(aBasePtr)) div 4
-//  else
-//    Result := 12;
-//end;
-
-//function wbNAVINAVMGetCount1(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-//var
-//  DataContainer : IwbDataContainer;
-//begin
-//  Result := 0;
-//
-//  if Supports(aElement, IwbDataContainer, DataContainer) then begin
-//    if DataContainer.ElementType = etArray then
-//      if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
-//        Exit;
-//    Assert(DataContainer.Name = 'Data');
-//    Result := PWord(Cardinal(DataContainer.DataBasePtr) + 3*3*4)^;
-//  end;
-//end;
-
-//function wbNAVINAVMGetCount2(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-//var
-//  DataContainer : IwbDataContainer;
-//begin
-//  Result := 0;
-//
-//  if Supports(aElement, IwbDataContainer, DataContainer) then begin
-//    if DataContainer.ElementType = etArray then
-//      if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
-//        Exit;
-//    Assert(DataContainer.Name = 'Data');
-//    Result := PWord(Cardinal(DataContainer.DataBasePtr) + 3*3*4 + 2)^;
-//  end;
-//end;
-
 procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   if aOldValue <> aNewValue then
@@ -2298,45 +2106,6 @@ begin
     Result := 1;
 end;
 
-//function wbNAVINVMIDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-//var
-//  Container     : IwbContainer;
-//begin
-//  Result := 0;
-//  if aElement.ElementType = etValue then
-//    Container := aElement.Container
-//  else
-//    Container := aElement as IwbContainer;
-//
-//  if not Assigned(Container) then
-//    Exit;
-//
-//  case Integer(Container.ElementNativeValues['Type']) of
-//    $00: Result :=1;
-//    $20: Result :=2;
-//    $30: Result :=3;
-//  end;
-//end;
-
-//function wbIMGSSkinDimmerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-//var
-//  Container     : IwbContainer;
-//  DataContainer : IwbDataContainer;
-//begin
-//  Result := 0;
-//  if not Assigned(aElement) then
-//    Exit;
-//
-//  if aElement.ElementType = etValue then
-//    Container := aElement.Container
-//  else
-//    Container := aElement as IwbContainer;
-//  if Supports(Container.Container, IwbDataContainer, DataContainer) then begin
-//    if DataContainer.DataSize in [132, 148] then
-//      Result := 1;
-//  end;
-//end;
-
 function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -2380,8 +2149,6 @@ function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
 var
   rEDID      : IwbRecord;
   s          : string;
-//  _File      : IwbFile;
-//  MainRecord : IwbMainRecord;
 const
   OrderedList = 'OrderedList';
 begin
@@ -3274,332 +3041,6 @@ begin
   Result := StrToInt64(aString);
 end;
 
-{>>> Needs revision for Skyrim <<<}
-//type
-//  TPERKEntryPointConditionType = (
-//    epcDefault,
-//    epcItem,
-//    epcWeapon,
-//    epcWeaponTarget,
-//    epcTarget,
-//    epcAttacker,
-//    epcAttackerAttackee,
-//    epcAttackerAttackerWeapon
-//  );
-//
-//  TPERKEntryPointFunctionType = (
-//    epfFloat,
-//    epfLeveledItem,
-//    epfScript,
-//    epfUnknown
-//  );
-//
-//  TPERKEntryPointFunctionParamType = (
-//    epfpNone,
-//    epfpFloat,
-//    epfpFloatFloat,
-//    epfpLeveledItem,
-//    epfpScript
-//  );
-//
-//  PPERKEntryPoint = ^TPERKEntryPoint;
-//  TPERKEntryPoint = record
-//    Name         : string;
-//    Condition   : TPERKEntryPointConditionType;
-//    FunctionType : TPERKEntryPointFunctionType;
-//  end;
-//
-//  PPERKCondition = ^TPERKCondition;
-//  TPERKCondition = record
-//    Count    : Integer;
-//    Caption1 : string;
-//    Caption2 : string;
-//    Caption3 : string;
-//  end;
-//
-//  PPERKFunction = ^TPERKFunction;
-//  TPERKFunction = record
-//    Name         : string;
-//    FunctionType : TPERKEntryPointFunctionType;
-//    ParamType    : TPERKEntryPointFunctionParamType;
-//  end;
-//
-//const
-//  wbPERKCondition : array[TPERKEntryPointConditionType] of TPERKCondition = (
-//    (Count: 1; Caption1: 'Perk Owner'),
-//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Item'),
-//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Weapon'),
-//    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Weapon'; Caption3: 'Target'),
-//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Target'),
-//    (Count: 2; Caption1: 'Perk Owner'; Caption2: 'Attacker'),
-//    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Attacker'; Caption3: 'Attackee'),
-//    (Count: 3; Caption1: 'Perk Owner'; Caption2: 'Attacker'; Caption3: 'Attacker Weapon')
-//  );
-//
-//  wbPERKFunctions : array[0..9] of TPERKFunction = (
-//    (Name: ''; FunctionType: epfUnknown; ParamType: epfpNone),
-//    (Name: 'Set Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-//    (Name: 'Add Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-//    (Name: 'Multiply Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-//    (Name: 'Add Range To Value'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
-//    (Name: 'Add Actor Value Mult'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
-//    (Name: 'Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
-//    (Name: 'Negative Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
-//    (Name: 'Add Leveled List'; FunctionType: epfLeveledItem; ParamType: epfpLeveledItem),
-//    (Name: 'Add Activate Choice'; FunctionType: epfScript; ParamType: epfpScript)
-//  );
-//
-//  wbPERKEntryPoints : array[0..73] of TPERKEntryPoint = (
-//    (Name: 'Calculate Weapon Damage'; Condition: epcWeaponTarget),
-//    (Name: 'Calculate My Critical Hit Chance'; Condition: epcWeaponTarget),
-//    (Name: 'Calculate My Critical Hit Damage'; Condition: epcWeaponTarget),
-//    (Name: 'Calculate Weapon Attack AP Cost'; Condition: epcWeapon),
-//    (Name: 'Calculate Mine Explode Chance'; Condition: epcItem),
-//    (Name: 'Adjust Range Penalty'; Condition: epcWeapon),
-//    (Name: 'Adjust Limb Damage'; Condition: epcAttackerAttackerWeapon),
-//    (Name: 'Calculate Weapon Range'; Condition: epcWeapon),
-//    (Name: 'Calculate To Hit Chance'; Condition: epcWeaponTarget),
-//    (Name: 'Adjust Experience Points'),
-//    (Name: 'Adjust Gained Skill Points'),
-//    (Name: 'Adjust Book Skill Points'),
-//    (Name: 'Modify Recovered Health'),
-//    (Name: 'Calculate Inventory AP Cost'),
-//    (Name: 'Get Disposition'; Condition: epcTarget),
-//    (Name: 'Get Should Attack'; Condition: epcAttacker),
-//    (Name: 'Get Should Assist'; Condition: epcAttackerAttackee),
-//    (Name: 'Calculate Buy Price'; Condition: epcItem),
-//    (Name: 'Get Bad Karma'),
-//    (Name: 'Get Good Karma'),
-//    (Name: 'Ignore Locked Terminal'),
-//    (Name: 'Add Leveled List On Death'; Condition: epcTarget; FunctionType: epfLeveledItem),
-//    (Name: 'Get Max Carry Weight'),
-//    (Name: 'Modify Addiction Chance'),
-//    (Name: 'Modify Addiction Duration'),
-//    (Name: 'Modify Positive Chem Duration'),
-//    (Name: 'Adjust Drinking Radiation'),
-//    (Name: 'Activate'; Condition: epcTarget; FunctionType: epfScript),
-//    (Name: 'Mysterious Stranger'),
-//    (Name: 'Has Paralyzing Palm'),
-//    (Name: 'Hacking Science Bonus'),
-//    (Name: 'Ignore Running During Detection'),
-//    (Name: 'Ignore Broken Lock'),
-//    (Name: 'Has Concentrated Fire'),
-//    (Name: 'Calculate Gun Spread'; Condition: epcWeapon),
-//    (Name: 'Player Kill AP Reward'; Condition: epcWeaponTarget),
-//{36}(Name: 'Modify Enemy Critical Hit Chance'; Condition: epcWeaponTarget),
-//{37}(Name: 'Reload Speed'; Condition: epcWeapon),
-//{38}(Name: 'Equip Speed'; Condition: epcWeapon),
-//{39}(Name: 'Action Point Regen'; Condition: epcWeapon),
-//{40}(Name: 'Action Point Cost'; Condition: epcWeapon),
-//{41}(Name: 'Miss Fortune'; Condition: epcDefault),
-//{42}(Name: 'Modify Run Speed'; Condition: epcDefault),
-//{43}(Name: 'Modify Attack Speed'; Condition: epcWeapon),
-//{44}(Name: 'Modify Radiation Consumed'; Condition: epcDefault),
-//{45}(Name: 'Has Pip Hacker'; Condition: epcDefault),
-//{46}(Name: 'Has Meltdown'; Condition: epcDefault),
-//{47}(Name: 'See Enemy Health'; Condition: epcDefault),
-//{48}(Name: 'Has Jury Rigging'; Condition: epcDefault),
-//{49}(Name: 'Modify Threat Range'; Condition: epcWeapon),
-//{50}(Name: 'Modify Thread'; Condition: epcWeapon),
-//{51}(Name: 'Has Fast Travel Always'; Condition: epcDefault),
-//{52}(Name: 'Knockdown Chance'; Condition: epcWeapon),
-//{53}(Name: 'Modify Weapon Strength Req'; Condition: epcWeapon),
-//{54}(Name: 'Modify Aiming Move Speed'; Condition: epcWeapon),
-//{55}(Name: 'Modify Light Items'; Condition: epcDefault),
-//{56}(Name: 'Modify Damage Threshold (defender)'; Condition: epcWeaponTarget),
-//{57}(Name: 'Modify Chance for Ammo Item'; Condition: epcWeapon),
-//{58}(Name: 'Modify Damage Threshold (attacker)'; Condition: epcWeaponTarget),
-//{59}(Name: 'Modify Throwing Velocity'; Condition: epcWeapon),
-//{60}(Name: 'Chance for Item on Fire'; Condition: epcWeapon),
-//{61}(Name: 'Has Unarmed Forward Power Attack'; Condition: epcDefault),
-//{62}(Name: 'Has Unarmed Back Power Attack'; Condition: epcWeaponTarget),
-//{63}(Name: 'Has Unarmed Crouched Power Attack'; Condition: epcDefault),
-//{64}(Name: 'Has Unarmed Counter Attack'; Condition: epcWeaponTarget),
-//{65}(Name: 'Has Unarmed Left Power Attack'; Condition: epcDefault),
-//{66}(Name: 'Has Unarmed Right Power Attack'; Condition: epcDefault),
-//{67}(Name: 'VATS HelperChance'; Condition: epcDefault),
-//{68}(Name: 'Modify Item Damage'; Condition: epcDefault),
-//{69}(Name: 'Has Improved Detection'; Condition: epcDefault),
-//{70}(Name: 'Has Improved Spotting'; Condition: epcDefault),
-//{71}(Name: 'Has Improved Item Detection'; Condition: epcDefault),
-//{72}(Name: 'Adjust Explosion Radius'; Condition: epcWeapon),
-//{73}(Name: 'Reserved'; Condition: epcWeapon)
-//  );
-//
-//  wbPERKFunctionParams: array[TPERKEntryPointFunctionParamType] of string = (
-//    'None',
-//    'Float',
-//    'Float, Float',
-//    'Leveled Item',
-//    'Script'
-//  );
-//
-//procedure wbPERKEntryPointAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-//var
-//  OldEntryPoint   : PPERKEntryPoint;
-//  NewEntryPoint   : PPERKEntryPoint;
-//  OldCondition    : PPERKCondition;
-//  NewCondition    : PPERKCondition;
-//  OldFunction     : PPERKFunction;
-//  EntryPoint      : IwbContainerElementRef;
-//  Effect          : IwbContainerElementRef;
-//  PerkConditions  : IwbContainerElementRef;
-//  PerkCondition   : IwbContainerElementRef;
-//  Container       : IwbContainerElementRef;
-//  i               : Integer;
-//begin
-//  if aOldValue <> aNewValue then begin
-//    OldEntryPoint := @wbPERKEntryPoints[Integer(aOldValue)];
-//    NewEntryPoint := @wbPERKEntryPoints[Integer(aNewValue)];
-//    OldCondition := @wbPERKCondition[OldEntryPoint.Condition];
-//    NewCondition := @wbPERKCondition[NewEntryPoint.Condition];
-//    if not Assigned(aElement) then
-//      Exit;
-//    if not Supports(aElement.Container, IwbContainerElementRef, EntryPoint) then
-//      Exit;
-//    i := EntryPoint.ElementNativeValues['Function'];
-//    if (i >= Low(wbPERKFunctions)) and (i <= High(wbPERKFunctions)) then
-//      OldFunction := @wbPERKFunctions[i]
-//    else
-//      OldFunction := nil;
-//    if not Assigned(OldFunction) or (OldFunction.FunctionType <> NewEntryPoint.FunctionType) then
-//      for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
-//        with wbPERKFunctions[i] do
-//          if FunctionType = NewEntryPoint.FunctionType then begin
-//            EntryPoint.ElementNativeValues['Function'] := i;
-//            Break;
-//          end;
-//    EntryPoint.ElementNativeValues['Perk Condition Tab Count'] := NewCondition.Count;
-//
-//    if not Supports(EntryPoint.Container, IwbContainerElementRef, Container) then
-//      Exit;
-//    if not Supports(Container.Container, IwbContainerElementRef, Effect) then
-//      Exit;
-//
-//    if not Supports(Effect.ElementByName['Perk Conditions'], IwbContainerElementRef, PerkConditions) then
-//      Exit;
-//
-//    for i := Pred(PerkConditions.ElementCount) downto 0 do
-//      if Supports(PerkConditions.Elements[i], IwbContainerElementRef, PerkCondition) then
-//        if Integer(PerkCondition.ElementNativeValues['PRKC']) >= NewCondition.Count then
-//          PerkCondition.Remove
-//        else
-//          case Integer(PerkCondition.ElementNativeValues['PRKC']) of
-//            2: if OldCondition.Caption2 <> NewCondition.Caption2 then
-//                 PerkCondition.Remove;
-//            3: if OldCondition.Caption3 <> NewCondition.Caption3 then
-//                 PerkCondition.Remove;
-//          end;
-//  end;
-//end;
-//
-//function wbPRKCToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-//var
-//  Container     : IwbContainerElementRef;
-//  EntryPointVar : Variant;
-//  EntryPoint    : Integer;
-//begin
-//  case aType of
-//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
-//    ctToEditValue: Result := IntToStr(aInt);
-//    ctToSortKey: begin
-//      Result := IntToHex64(aInt, 2);
-//      Exit;
-//    end;
-//    ctCheck: Result := '<Warning: Could not resolve Entry Point>';
-//    ctEditType: Result := '';
-//    ctEditInfo: Result := '';
-//  end;
-//
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    Exit;
-//  EntryPointVar := Container.ElementNativeValues['..\..\..\DATA\Entry Point\Entry Point'];
-//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-//    Exit;
-//  EntryPoint := EntryPointVar;
-//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-//      ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-//    end;
-//    Exit;
-//  end;
-//
-//  with wbPERKEntryPoints[EntryPoint] do begin
-//    with wbPERKCondition[Condition] do begin
-//      case aType of
-//        ctEditType: Result := 'ComboBox';
-//        ctEditInfo: with TStringList.Create do try
-//          if Caption1 <> '' then
-//            Add(Caption1);
-//          if Caption2 <> '' then
-//            Add(Caption2);
-//          if Caption3 <> '' then
-//            Add(Caption3);
-//          Sort;
-//          Result := CommaText;
-//        finally
-//          Free;
-//        end;
-//      else
-//        if (aInt < 0) or (aInt >= Count) then
-//          case aType of
-//            ctToStr: Result := IntToStr(aInt) + ' <Warning: Value out of Bounds for this Entry Point>';
-//            ctCheck: Result := '<Warning: Value out of Bounds for this Entry Point>';
-//          end
-//        else
-//          case aType of
-//            ctToStr, ctToEditValue: case Integer(aInt) of
-//              0: Result := Caption1;
-//              1: Result := Caption2;
-//              2: Result := Caption3;
-//            end;
-//            ctCheck: Result := '';
-//          end;
-//      end;
-//    end;
-//  end;
-//end;
-//
-//function wbPRKCToInt(const aString: string; const aElement: IwbElement): Int64;
-//var
-//  Container     : IwbContainerElementRef;
-//  EntryPointVar : Variant;
-//  EntryPoint    : Integer;
-//  s             : string;
-//begin
-//  s := Trim(aString);
-//
-//  Result := StrToInt64Def(s, Low(Integer));
-//  if Result <> Low(Integer) then
-//    Exit;
-//  if s = '' then begin
-//    Result := 0;
-//    Exit;
-//  end;
-//
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    raise Exception.Create('Could not resolve Entry Point');
-//  EntryPointVar := Container.ElementNativeValues['..\..\..\DATA\Entry Point\Entry Point'];
-//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-//    raise Exception.Create('Could not resolve Entry Point');
-//
-//  EntryPoint := EntryPointVar;
-//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then
-//    raise Exception.Create('Unknown Entry Point #'+IntToStr(EntryPoint));
-//
-//  with wbPERKEntryPoints[EntryPoint] do
-//    with wbPERKCondition[Condition] do
-//      if SameText(aString, Caption1) then
-//        Result := 0
-//      else if SameText(aString, Caption2) then
-//        Result := 1
-//      else if SameText(aString, Caption3) then
-//        Result := 2
-//      else
-//        raise Exception.Create('"'+s+'" is not valid for this Entry Point');
-//end;
-
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
   Result := wbHideNeverShow;
@@ -3710,277 +3151,6 @@ begin
   if not (Integer(Container.ElementNativeValues['EPFT']) in [4]) then
     Result := True;
 end;
-
-{>>> Needs revision for Skyrim <<<}
-//function wbPERKPRKCDontShow(const aElement: IwbElement): Boolean;
-//var
-//  Container: IwbContainerElementRef;
-//begin
-//  Result := False;
-//  if aElement.Name <> 'Effect' then
-//    Exit;
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    Exit;
-//  if Integer(Container.ElementNativeValues['PRKE\Type']) <> 2 then
-//    Result := True;
-//end;
-
-{>>> Needs revision for Skyrim <<<}
-//function wbPerkDATAFunctionToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-//var
-//  Container     : IwbContainerElementRef;
-//  EntryPointVar : Variant;
-//  EntryPoint    : Integer;
-//  i             : Integer;
-//begin
-//  case aType of
-//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
-//    ctToEditValue: Result := IntToStr(aInt);
-//    ctToSortKey: begin
-//      Result := IntToHex64(aInt, 2);
-//      Exit;
-//    end;
-//    ctCheck: Result := '<Warning: Could not resolve Entry Point>';
-//    ctEditType: Result := '';
-//    ctEditInfo: Result := '';
-//  end;
-//
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    Exit;
-//  EntryPointVar := Container.ElementNativeValues['..\Entry Point'];
-//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-//    Exit;
-//  EntryPoint := EntryPointVar;
-//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-//      ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
-//    end;
-//    Exit;
-//  end;
-//
-//  with wbPERKEntryPoints[EntryPoint] do begin
-//    case aType of
-//      ctEditType: Result := 'ComboBox';
-//      ctEditInfo: with TStringList.Create do try
-//        for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
-//          if wbPERKFunctions[i].FunctionType = FunctionType then
-//            if (wbPERKFunctions[i].Name <> '') then
-//              Add(wbPERKFunctions[i].Name);
-//        Sort;
-//        Result := CommaText;
-//      finally
-//        Free;
-//      end;
-//    else
-//      if (aInt < Low(wbPERKFunctions)) or (aInt > High(wbPERKFunctions)) then
-//        case aType of
-//          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function>';
-//          ctCheck: Result := '<Warning: Unknown Function>';
-//        end
-//      else
-//        case aType of
-//          ctToStr, ctToEditValue: begin
-//            Result := wbPERKFunctions[Integer(aInt)].Name;
-//            if (aType = ctToStr) and (wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType) then
-//              Result := Result + ' <Warning: Value out of Bounds for this Entry Point>';
-//          end;
-//          ctCheck:
-//            if wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType then
-//              Result := '<Warning: Value out of Bounds for this Entry Point>'
-//            else
-//              Result := '';
-//        end;
-//    end;
-//  end;
-//end;
-
-{>>> Needs revision for Skyrim <<<}
-//function wbPerkDATAFunctionToInt(const aString: string; const aElement: IwbElement): Int64;
-//var
-//  Container     : IwbContainerElementRef;
-//  EntryPointVar : Variant;
-//  EntryPoint    : Integer;
-//  s             : string;
-//  i             : Integer;
-//begin
-//  s := Trim(aString);
-//
-//  Result := StrToInt64Def(s, Low(Integer));
-//  if Result <> Low(Integer) then
-//    Exit;
-//  if s = '' then
-//    raise Exception.Create('"" is not a valid value for this field');
-//
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    raise Exception.Create('Could not resolve Entry Point');
-//  EntryPointVar := Container.ElementNativeValues['..\Entry Point'];
-//  if VarIsNull(EntryPointVar) or VarIsClear(EntryPointVar) then
-//    raise Exception.Create('Could not resolve Entry Point');
-//
-//  EntryPoint := EntryPointVar;
-//  if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then
-//    raise Exception.Create('Unknown Entry Point #'+IntToStr(EntryPoint));
-//
-//  with wbPERKEntryPoints[EntryPoint] do
-//    for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
-//      if wbPERKFunctions[i].FunctionType = FunctionType then
-//        if SameText(s, wbPERKFunctions[i].Name) then begin
-//          Result := i;
-//          Exit;
-//        end;
-//
-//  raise Exception.Create('"'+s+'" is not valid for this Entry Point');
-//end;
-
-{>>> Needs revision for Skyrim <<<}
-//procedure wbPerkDATAFunctionAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-//var
-//  NewFunction : Integer;
-//  Container   : IwbContainerElementRef;
-//  OldParamType: Integer;
-//  NewParamType: Integer;
-//begin
-//  NewFunction := aNewValue;
-//  if (NewFunction < Low(wbPERKFunctions)) or (NewFunction > High(wbPERKFunctions)) then
-//    Exit;
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    Exit;
-//  OldParamType := Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'];
-//  NewParamType := Ord(wbPERKFunctions[NewFunction].ParamType);
-//  if (OldParamType = NewParamType) and not VarSameValue(aOldValue, aNewValue) and (NewFunction in [4,5]) then
-//    Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'] := 0;
-//  Container.ElementNativeValues['..\..\..\Entry Point Function Parameters\EPFT'] := NewParamType;
-//end;
-//
-//function wbPerkEPFTToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-//var
-//  Container       : IwbContainerElementRef;
-//  FunctionTypeVar : Variant;
-//  FunctionType    : Integer;
-////  i               : Integer;
-//begin
-//  case aType of
-//    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Function>';
-//    ctToEditValue: Result := IntToStr(aInt);
-//    ctToSortKey: begin
-//      Result := IntToHex64(aInt, 2);
-//      Exit;
-//    end;
-//    ctCheck: Result := '<Warning: Could not resolve Function>';
-//    ctEditType: Result := '';
-//    ctEditInfo: Result := '';
-//  end;
-//
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    Exit;
-//  FunctionTypeVar := Container.ElementNativeValues['..\..\DATA\Entry Point\Function'];
-//  if VarIsNull(FunctionTypeVar) or VarIsClear(FunctionTypeVar) then
-//    Exit;
-//  FunctionType := FunctionTypeVar;
-//  if (FunctionType < Low(wbPERKFunctions)) or (FunctionType > High(wbPERKFunctions)) then begin
-//    case aType of
-//      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
-//      ctCheck: Result := '<Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
-//    end;
-//    Exit;
-//  end;
-//
-//  with wbPERKFunctions[FunctionType] do begin
-//    case aType of
-//      ctEditType: Result := 'ComboBox';
-//      ctEditInfo: Result := '"' + wbPERKFunctionParams[ParamType] + '"';
-//    else
-//      if (aInt < Ord(Low(wbPERKFunctionParams))) or (aInt > Ord(High(wbPERKFunctionParams))) then
-//        case aType of
-//          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function Param Type>';
-//          ctCheck: Result := '<Warning: Unknown Function Param Type>';
-//        end
-//      else
-//        case aType of
-//          ctToStr, ctToEditValue: begin
-//            Result := wbPERKFunctionParams[TPERKEntryPointFunctionParamType(aInt)];
-//            if (aType = ctToStr) and (TPERKEntryPointFunctionParamType(aInt) <> ParamType) then
-//              Result := Result + ' <Warning: Value out of Bounds for this Function>';
-//          end;
-//          ctCheck:
-//            if TPERKEntryPointFunctionParamType(aInt) <> ParamType then
-//              Result := Result + ' <Warning: Value out of Bounds for this Function>'
-//            else
-//              Result := '';
-//        end;
-//    end;
-//  end;
-//end;
-
-{>>> Needs revision for Skyrim <<<}
-//function wbPerkEPFTToInt(const aString: string; const aElement: IwbElement): Int64;
-//var
-//  Container       : IwbContainerElementRef;
-//  FunctionTypeVar : Variant;
-//  FunctionType    : Integer;
-//  s               : string;
-////  i               : Integer;
-//  j               : TPERKEntryPointFunctionParamType;
-//begin
-//  s := Trim(aString);
-//
-//  Result := StrToInt64Def(s, Low(Integer));
-//  if Result <> Low(Integer) then
-//    Exit;
-//  if s = '' then
-//    raise Exception.Create('"" is not a valid value for this field');
-//
-//  if not Supports(aElement, IwbContainerElementRef, Container) then
-//    raise Exception.Create('Could not resolve Function');
-//  FunctionTypeVar := Container.ElementNativeValues['..\..\DATA\Entry Point\Function'];
-//  if VarIsNull(FunctionTypeVar) or VarIsClear(FunctionTypeVar) then
-//    raise Exception.Create('Could not resolve Function');
-//
-//  FunctionType := FunctionTypeVar;
-//  if (FunctionType < Low(wbPERKFunctions)) or (FunctionType > High(wbPERKFunctions)) then
-//    raise Exception.Create('Unknown Function #'+IntToStr(FunctionType));
-//
-//  with wbPERKFunctions[FunctionType] do begin
-//    for j := Low(wbPERKFunctionParams) to High(wbPERKFunctionParams) do
-//      if SameText(s, wbPERKFunctionParams[j]) then begin
-//        if j <> ParamType then
-//          raise Exception.Create('"'+s+'" is not a valid Parameter Type for Function "'+Name+'"');
-//        Result := Ord(j);
-//        Exit;
-//      end;
-//  end;
-//
-//  raise Exception.Create('"'+s+'" is not a valid Parameter Type');
-//end;
-
-{>>> Needs revision for Skyrim <<<}
-//procedure wbPerkEPFTAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-//var
-//  i: Integer;
-//  Container: IwbContainerElementRef;
-//begin
-//  if VarSameValue(aOldValue, aNewValue) then
-//    Exit;
-//  i := aNewValue;
-//  if (i < Ord(Low(wbPERKFunctionParams))) or (i> Ord(High(wbPERKFunctionParams))) then
-//    Exit;
-//  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
-//    Exit;
-//  Container.RemoveElement('EPFD');
-//  Container.RemoveElement('EPF2');
-//  Container.RemoveElement('EPF3');
-//  Container.RemoveElement('Embedded Script');
-//  case TPERKEntryPointFunctionParamType(i) of
-//    epfpFloat, epfpFloatFloat, epfpLeveledItem:
-//      Container.Add('EPFD', True);
-//    epfpScript: begin
-//      Container.Add('EPF2', True);
-//      Container.Add('EPF3', True);
-//      Container.Add('SCHR', True);
-//    end;
-//  end;
-//end;
 
 procedure wbRemoveOFST(const aElement: IwbElement);
 var
@@ -4211,165 +3381,6 @@ begin
   end;
 end;
 
-{>>> No "Run On Target" flag in Skyrim, disabled <<<}
-//procedure wbCTDAAfterLoad(const aElement: IwbElement);
-//var
-//  Container  : IwbContainerElementRef;
-//  //Size       : Cardinal;
-//  TypeFlags  : Cardinal;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    TypeFlags := Container.ElementNativeValues['Type'];
-//    if (TypeFlags and $02) <> 0 then begin
-//      if Container.DataSize = 20 then
-//        Container.DataSize := 28;
-//      Container.ElementNativeValues['Type'] := TypeFlags and not $02;
-//      Container.ElementEditValues['Run On'] := 'Target';
-//    end;
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
-
-{ Needs revision for Skyrim }
-//procedure wbMGEFAfterLoad(const aElement: IwbElement);
-//var
-//  Container     : IwbContainerElementRef;
-//  MainRecord    : IwbMainRecord;
-//  OldActorValue : Integer;
-//  NewActorValue : Integer;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    if not Supports(aElement, IwbMainRecord, MainRecord) then
-//      Exit;
-//
-//    if MainRecord.IsDeleted then
-//      Exit;
-//
-//    OldActorValue := Container.ElementNativeValues['DATA - Data\Actor Value'];
-//    NewActorValue := OldActorValue;
-//    case Integer(Container.ElementNativeValues['DATA - Data\Archtype']) of
-//      01, //Script
-//      02, //Dispel
-//      03, //Cure Disease
-//      13, //Light
-//      16, //Lock
-//      17, //Open
-//      18, //Bound Item
-//      19, //Summon Creature
-//      30, //Cure Paralysis
-//      31, //Cure Addiction
-//      32, //Cure Poison
-//      33, //Concussion
-//      35: //Limb Condition
-//        NewActorValue := -1;
-//      11: //Invisibility
-//        NewActorValue := 48; //Invisibility
-//      12: //Chameleon
-//        NewActorValue := 49; //Chameleon
-//      24: //Paralysis
-//        NewActorValue := 47; //Paralysis
-//      36: //Turbo
-//        NewActorValue := 51; //Turbo
-//    end;
-//    if OldActorValue <> NewActorValue then
-//      Container.ElementNativeValues['DATA - Data\Actor Value'] := NewActorValue;
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
-
-{ Needs revision for Skyrim }
-//procedure wbPACKAfterLoad(const aElement: IwbElement);
-//var
-//  Container     : IwbContainerElementRef;
-//  MainRecord    : IwbMainRecord;
-//  OldContainer  : IwbContainerElementRef;
-//  NewContainer  : IwbContainerElementRef;
-//  //NewContainer2 : IwbContainerElementRef;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    if not Supports(aElement, IwbMainRecord, MainRecord) then
-//      Exit;
-//
-//    if MainRecord.IsDeleted then
-//      Exit;
-//
-//    case Integer(Container.ElementNativeValues['PKDT - General\Type']) of
-//       0: begin {Find}
-//         Container.Add('PTDT');
-//       end;
-//       1: begin {Follow}
-//         Container.Add('PKFD');
-//       end;
-//       2: begin {Escort}
-//       end;
-//       3: begin {Eat}
-//         Container.Add('PTDT');
-//         Container.Add('PKED');
-//       end;
-//       4: begin {Sleep}
-//         if not Container.ElementExists['Locations'] then
-//           if Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-//             NewContainer.ElementEditValues['PLDT - Location 1\Type'] := 'Near editor location';
-//       end;
-//       5: begin {Wander}
-//       end;
-//       6: begin {Travel}
-//       end;
-//       7: begin {Accompany}
-//       end;
-//       8: begin {Use Item At}
-//       end;
-//       9: begin {Ambush}
-//       end;
-//      10: begin {Flee Not Combat}
-//      end;
-//      12: begin {Sandbox}
-//      end;
-//      13: begin {Patrol}
-//         if not Container.ElementExists['Locations'] then
-//           if Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-//             NewContainer.ElementEditValues['PLDT - Location 1\Type'] := 'Near linked reference';
-//        Container.Add('PKPT');
-//      end;
-//      14: begin {Guard}
-//      end;
-//      15: begin {Dialogue}
-//      end;
-//      16: begin {Use Weapon}
-//      end;
-//    end;
-//
-//    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
-//      if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-//        Assert(False);
-//      NewContainer.RemoveElement('PLD2');
-//      NewContainer.AddElement(OldContainer);
-//    end;
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
-
 procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
@@ -4527,9 +3538,6 @@ var
   Container    : IwbContainerElementRef;
 //  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
-  HasWater     : Boolean;
-//  IsInterior   : Boolean;
-//  i            : Integer;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -4547,17 +3555,10 @@ begin
     if not Container.ElementExists['DATA'] then
       Exit;
 
-//    IsInterior := (Container.ElementNativeValues['DATA'] and 1) <> 0;
-    HasWater := (Container.ElementNativeValues['DATA'] and 2) <> 0;
-
-    if HasWater then begin
-      if not Container.ElementExists['XCLW'] then begin
-        Container.Add('XCLW', True);
-        Container.ElementEditValues['XCLW'] := '-2147483648.000000';
-      end;
-    end else begin
-      if Container.ElementExists['XCLW'] then
-        Container.ElementEditValues['XCLW'] := '-2147483648.000000';
+    // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
+    if (not Container.ElementExists['XCLW']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then begin
+      Container.Add('XCLW', True);
+      Container.ElementEditValues['XCLW'] := 'Default';
     end;
 
 //    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
@@ -4650,34 +3651,6 @@ end;
 //      Container.ElementNativeValues['DATA\Particle Shader - Persistant Particle Count'] := PersistantParticleCount;
 //    end;
 //
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
-
-{ Not used is Skyrim }
-//procedure wbFACTAfterLoad(const aElement: IwbElement);
-//var
-//  Container: IwbContainerElementRef;
-//  MainRecord   : IwbMainRecord;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    if not Container.ElementExists['CNAM'] then
-//      Exit;
-//
-//    if not Supports(aElement, IwbMainRecord, MainRecord) then
-//      Exit;
-//
-//    if MainRecord.IsDeleted then
-//      Exit;
-//
-//    Container.RemoveElement('CNAM');
 //  finally
 //    wbEndInternalEdit;
 //  end;
@@ -4821,6 +3794,7 @@ var
   wbRecordFlagsEnum : IwbFlagsDef;
 
 begin
+  wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
@@ -4851,7 +3825,7 @@ begin
       wbCOED
     ], []);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCNTOs := wbRArrayS('Items', wbCNTO, COCT);
+  wbCNTOs := wbRArrayS('Items', wbCNTO);
 
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
@@ -4862,75 +3836,75 @@ begin
   {>>> When Set to None this Equals FF FF FF FF <<<}
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
-    'Head',
-    'Hair',
-    'Body',
-    'Hands',
-    'Forearms',
-    'Amulet',
-    'Ring',
-    'Feet',
-    'Calves',
-    'Shield',
-    'Body AddOn 1 / Tail',
-    'Long Hair',
-    'Circlet',
-    'Body AddOn 2',
-    'Body AddOn 3',
-    'Body AddOn 4',
-    'Body AddOn 5',
-    'Body AddOn 6',
-    'Body AddOn 7',
-    'Body AddOn 8',
-    'Decapate Head',
-    'Decapate',
-    'Body AddOn 9',
-    'Body AddOn 10',
-    'Body AddOn 11',
-    'Body AddOn 12',
-    'Body AddOn 13',
-    'Body AddOn 14',
-    'Body AddOn 15',
-    'Body AddOn 16',
-    'Body AddOn 17',
-    'FX01'
+    '30 - Head',
+    '31 - Hair',
+    '32 - Body',
+    '33 - Hands',
+    '34 - Forearms',
+    '35 - Amulet',
+    '36 - Ring',
+    '37 - Feet',
+    '38 - Calves',
+    '39 - Shield',
+    '40 - Tail',
+    '41 - LongHair',
+    '42 - Circlet',
+    '43 - Unnamed',
+    '44 - Unnamed',
+    '45 - Unnamed',
+    '46 - Unnamed',
+    '47 - Unnamed',
+    '48 - Unnamed',
+    '49 - Unnamed',
+    '50 - DecapitateHead',
+    '51 - Decapitate',
+    '52 - Unnamed',
+    '53 - Unnamed',
+    '54 - Unnamed',
+    '55 - Unnamed',
+    '56 - Unnamed',
+    '57 - Unnamed',
+    '58 - Unnamed',
+    '59 - Unnamed',
+    '60 - Unnamed',
+    '61 - FX01'
   ], [
     -1, 'None'
   ]);
 
   wbBipedObjectFlags := wbFlags([
-    {0x00000001} 'Head',
-    {0x00000002} 'Hair',
-    {0x00000004} 'Body',
-    {0x00000008} 'Hands',
-    {0x00000010} 'Forearms',
-    {0x00000020} 'Amulet',
-    {0x00000040} 'Ring',
-    {0x00000080} 'Feet',
-    {0x00000100} 'Calves',
-    {0x00000200} 'Shield',
-    {0x00000400} 'Body AddOn 1 / Tail',
-    {0x00000800} 'Long Hair',
-    {0x00001000} 'Circlet',
-    {0x00002000} 'Body AddOn 2',
-    {0x00004000} 'Body AddOn 3',
-    {0x00008000} 'Body AddOn 4',
-    {0x00010000} 'Body AddOn 5',
-    {0x00020000} 'Body AddOn 6',
-    {0x00040000} 'Body AddOn 7',
-    {0x00080000} 'Body AddOn 8',
-    {0x00100000} 'Decapitate Head',
-    {0x00200000} 'Decapitate',
-    {0x00400000} 'Body AddOn 9',
-    {0x00800000} 'Body AddOn 10',
-    {0x01000000} 'Body AddOn 11',
-    {0x02000000} 'Body AddOn 12',
-    {0x03000000} 'Body AddOn 13',
-    {0x08000000} 'Body AddOn 14',
-    {0x10000000} 'Body AddOn 15',
-    {0x20000000} 'Body AddOn 16',
-    {0x40000000} 'Body AddOn 17',
-    {0x80000000} 'FX01'
+    {0x00000001} '30 - Head',
+    {0x00000002} '31 - Hair',
+    {0x00000004} '32 - Body',
+    {0x00000008} '33 - Hands',
+    {0x00000010} '34 - Forearms',
+    {0x00000020} '35 - Amulet',
+    {0x00000040} '36 - Ring',
+    {0x00000080} '37 - Feet',
+    {0x00000100} '38 - Calves',
+    {0x00000200} '39 - Shield',
+    {0x00000400} '40 - Tail',
+    {0x00000800} '41 - LongHair',
+    {0x00001000} '42 - Circlet',
+    {0x00002000} '43 - Unnamed',
+    {0x00004000} '44 - Unnamed',
+    {0x00008000} '45 - Unnamed',
+    {0x00010000} '46 - Unnamed',
+    {0x00020000} '47 - Unnamed',
+    {0x00040000} '48 - Unnamed',
+    {0x00080000} '49 - Unnamed',
+    {0x00100000} '50 - DecapitateHead',
+    {0x00200000} '51 - Decapitate',
+    {0x00400000} '52 - Unnamed',
+    {0x00800000} '53 - Unnamed',
+    {0x01000000} '54 - Unnamed',
+    {0x02000000} '55 - Unnamed',
+    {0x03000000} '56 - Unnamed',
+    {0x08000000} '57 - Unnamed',
+    {0x10000000} '58 - Unnamed',
+    {0x20000000} '59 - Unnamed',
+    {0x40000000} '60 - Unnamed',
+    {0x80000000} '61 - FX01'
   ], True);
 
   wbBODT := wbStruct(BODT, 'Body Template', [
@@ -4953,9 +3927,6 @@ begin
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, False);
 
-  wbDMDL := wbString(DMDL, 'Model Filename');
-  wbSNAM := wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]);
-  wbQNAM := wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR]);
   wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
   wbCNAM := wbStruct(CNAM, 'Color', [
     wbInteger('Red', itU8),
@@ -5367,7 +4338,7 @@ begin
       wbInteger('Type', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
-        {00} wbByteArray('Unknown', 0, cpIgnore),
+        {00} wbInteger('Null', itU32),
         {01} wbScriptObject,
         {02} wbLenString('String', 2),
         {03} wbInteger('Int32', itS32),
@@ -5541,7 +4512,7 @@ begin
   wbPLDT := wbStruct(PLDT, 'Location', [
     wbInteger('Type', itS32, wbLocationEnum),
     wbUnion('Location Value', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
       {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
       {3} wbByteArray('Near Editor Location', 4, cpIgnore),
@@ -5550,7 +4521,7 @@ begin
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unknown', 4, cpIgnore),
       {8} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
-      {9} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      {9} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore)
@@ -5561,7 +4532,7 @@ begin
   wbPLVD := wbStruct(PLVD, 'Location', [
     wbInteger('Type', itS32, wbLocationEnum),
     wbUnion('Location Value', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
       {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
       {3} wbByteArray('Near Editor Location', 4, cpIgnore),
@@ -5570,7 +4541,7 @@ begin
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unknown', 4, cpIgnore),
       {8} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
-      {9} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      {9} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore)
@@ -5589,7 +4560,7 @@ begin
       {6} 'Self'
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA], True),
+      {0} wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True),
       {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SHOU, SOUN, TXST, PROJ]),
       {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {3} wbFormID('Reference'),
@@ -5600,9 +4571,7 @@ begin
     wbInteger('Count / Distance', itS32)
   ]);
 
-  wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
-  wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
 
   wbPosRot :=
     wbStruct('Position/Rotation', [
@@ -5665,14 +4634,6 @@ begin
       ]),
     -1);
 
-  wbMOSD :=
-    wbInteger(MOSD, 'FaceGen Model Flags', itU8, wbFlags([
-      'Head',
-      'Torso',
-      'Right Hand',
-      'Left Hand'
-    ]));
-
   wbMODS :=
     wbArrayS(MODS, 'Alternate Textures',
       wbStructSK([0, 2], 'Alternate Texture', [
@@ -5696,28 +4657,22 @@ begin
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
-      wbMODS,
-      wbMODD
+      wbMODS
     ], [], cpNormal, False, nil, True);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
-      wbMODS,
-      wbMODD
+      wbMODS
     ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation}, True);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
-      wbMODS,
-      wbMODD
+      wbMODS
     ], [], cpNormal, True, nil, True);
 
   wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
@@ -5728,9 +4683,6 @@ begin
     ]),
   -1);
 
-//------------------------------------------------------------------------------
-// wbDEST DEST, DSTD, DMDL, DMDT, DMDS, DSTF
-//------------------------------------------------------------------------------
   wbDEST := wbRStruct('Destructable', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
@@ -5798,11 +4750,10 @@ begin
     ) // End Stage Array
   ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation});
 
-  wbENAM := wbFormIDCk(ENAM, 'Object Effect', [ENCH]);
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
   wbXESP := wbStruct(XESP, 'Enable Parent', [
-    wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
     wbInteger('Flags', itU8, wbFlags([
       'Set Enable State to Opposite of Parent',
       'Pop In'
@@ -5904,8 +4855,8 @@ begin
     wbFloat(XHLP, 'Health'),
 
     wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
+      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
 
     {--- Activate Parents ---}
@@ -5915,7 +4866,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
           wbFloat('Delay')
         ])
       )
@@ -5955,7 +4906,7 @@ begin
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
 
     {--- Flags ---}
     wbEmpty(XIBS, 'Ignored By Sandbox'),
@@ -6570,7 +5521,7 @@ begin
         wbFormIDCkNoReach('Equip Type', [EQUP]),
         wbInteger('Form Type', itU32, wbFormTypeEnum),
         wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+        wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
         wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, SCRL, SLGM, INGR, FLST, LIGH]),
         wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
         wbFormIDCkNoReach('Voice Type', [VTYP, FLST]),
@@ -6626,7 +5577,7 @@ begin
         wbFormIDCkNoReach('Equip Type', [EQUP]),
         wbInteger('Form Type', itU32, wbFormTypeEnum),
         wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+        wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
         wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, SCRL, SLGM, INGR, FLST, LIGH]),
         wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
         wbFormIDCkNoReach('Voice Type', [VTYP, FLST]),
@@ -6721,7 +5672,7 @@ begin
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
-        wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA], True)
+        wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True)
       ]),
       wbInteger('Parameter #3', itS32)
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
@@ -6827,12 +5778,6 @@ begin
     wbFULL,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
-//    wbRStruct('Male biped model', [
-//      wbString(MODL, 'Model Filename'),
-//      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbMODS,
-//      wbMODD
-//    ], [], cpNormal, False, nil, True),
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
@@ -6876,11 +5821,11 @@ begin
       wbInteger('Male Priority', itU8),
       wbInteger('Female Priority', itU8),
       wbInteger('Weight slider - Male', itU8, wbFlags([
-        {0x01} '',
+        {0x01} 'Unknown 0',
         {0x02} 'Enabled'
       ])),
       wbInteger('Weight slider - Female', itU8, wbFlags([
-        {0x01} '',
+        {0x01} 'Unknown 0',
         {0x02} 'Enabled'
       ])),
       wbByteArray('Unknown', 2),
@@ -6962,6 +5907,7 @@ procedure DefineTES5c;
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
     wbRecord(aSignature, aName, [
+      wbEDID,
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -6978,8 +5924,8 @@ procedure DefineTES5c;
         ], cpNormal, False, nil, 1)
       ),
       wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-        wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-        wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
+        wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+        wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])
       ], cpNormal, False, nil, 1)),
       wbRStruct('Activate Parents', [
         wbInteger(XAPD, 'Flags', itU8, wbFlags([
@@ -6987,7 +5933,7 @@ procedure DefineTES5c;
         ], True)),
         wbRArrayS('Activate Parent Refs',
           wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-            wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+            wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
             wbFloat('Delay')
           ])
         )
@@ -7023,6 +5969,7 @@ begin
   ReferenceRecord(PFLA, 'Placed Flame');
   ReferenceRecord(PGRE, 'Placed Projectile');
   ReferenceRecord(PHZD, 'Placed Hazard');
+  ReferenceRecord(PMIS, 'Placed Missile');
 
   wbRecord(CELL, 'Cell', [
     wbEDID,
@@ -7276,8 +6223,8 @@ begin
       ])),
       wbFloat('Weight')
     ], cpNormal, True),
-    wbSNAM,
-    wbQNAM
+    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
+    wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR])
   ], True);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
@@ -7449,7 +6396,16 @@ begin
       wbInteger('Topic Flags', itU8, wbFlags([
         'Do All Before Repeating'
       ]), cpNormal, True),
-      wbByteArray('Unknown', 1),
+      wbInteger('Category', itU8, wbEnum([
+        {0} 'Topic',
+        {1} 'Favor', // only in DA14 quest topics
+        {2} 'Scene',
+        {3} 'Combat',
+        {4} 'Favors',
+        {5} 'Detection',
+        {6} 'Service',
+        {7} 'Miscellaneous'
+      ])),
       wbInteger('Subtype', itU16, wbEnum([], [
          0, 'Custom',
          1, 'ForceGreet',
@@ -7838,22 +6794,20 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbXNAM :=
-    wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCkNoReach('Faction', [FACT, RACE]),
-      wbInteger('Modifier', itS32),
-      wbInteger('Group Combat Reaction', itU32, wbEnum([
-      {0x00000001}'Neutral',
-      {0x00000002}'Enemy',
-      {0x00000004}'Ally',
-      {0x00000008}'Friend'
-    ]))
-  ]);
-
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
-    wbRArrayS('Relations', wbXNAM),
+    wbRArrayS('Relations',
+      wbStructSK(XNAM, [0], 'Relation', [
+        wbFormIDCkNoReach('Faction', [FACT, RACE]),
+        wbInteger('Modifier', itS32),
+        wbInteger('Group Combat Reaction', itU32, wbEnum([
+        {0x00000001}'Neutral',
+        {0x00000002}'Enemy',
+        {0x00000004}'Ally',
+        {0x00000008}'Friend'
+      ]))
+    ])),
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Hidden From NPC',
@@ -8249,7 +7203,6 @@ begin
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
-    wbICON,
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -8276,8 +7229,7 @@ begin
           ]), -1),
           wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
           wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbStruct('Unused', [
-            ]),
+            wbNull,
             wbStruct('Island Data', [
               wbByteArray('Unknown', 24),
               wbArray('Triangles', wbByteArray('Triangle', 6), -1),
@@ -8362,8 +7314,7 @@ begin
           ]), -1),
           wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
           wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbStruct('Unused', [
-            ]),
+            wbNull,
             wbStruct('Island Data', [
               wbFloat('Min X'),
               wbFloat('Min Y'),
@@ -8430,7 +7381,7 @@ begin
               '1 <-> 2',
               '2 <-> 0'
             ]),
-            wbByteArray('Cover Marker?', 2),
+            wbByteArray('Cover Marker?', 2),   // Might be Flags if bit if effectivly "Preferred path"
             wbInteger('Cover Edge #1 Flags', itU8),
             wbInteger('Cover Edge #2 Flags', itU8)
           ])
@@ -8839,7 +7790,7 @@ begin
       wbInteger('Num Ranks', itU8),
       wbInteger('Playable', itU8, wbEnum(['False', 'True'])),
       wbInteger('Hidden', itU8, wbEnum(['False', 'True']))
-    ], cpNormal, True{, nil, 4}),
+    ], cpNormal, True),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
 
     wbRStructsSK('Effects', 'Effect', [0, 1], [
@@ -9193,13 +8144,13 @@ begin
     wbEDID,
 
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
@@ -9222,14 +8173,14 @@ begin
 
     wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
     wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
@@ -9266,23 +8217,23 @@ begin
       ])
     ),
 
-    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
-    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
 
     wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbInteger('Grid X', itS16),
       wbInteger('Grid Y', itS16)
     ])),
 
-    wbFull,
+    wbFULL,
     wbKSIZ,
     wbKWDAs,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
@@ -9797,11 +8748,11 @@ begin
       wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
     ]),
     wbStruct(BNAM, 'Values', [
-      wbInteger('% Frequency Shift', itU8),
-      wbInteger('% Frequency Variance', itU8),
+      wbInteger('% Frequency Shift', itS8),
+      wbInteger('% Frequency Variance', itS8),
       wbInteger('Priority', itU8),
       wbInteger('db Variance', itU8),
-      wbInteger('Static Attenuation (db)', itU16, wbdiv(100))
+      wbInteger('Static Attenuation (db)', itU16, wbDiv(100))
     ])
   ]);
 
@@ -10016,10 +8967,9 @@ begin
 
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbFormID(DNAM, 'Response Data'),
-    wbCTDAs,
 
     {>>> Unordered, CTDA can appear before or after LNAM <<<}
-    wbRArray('Responses', wbRStruct('Response', [ // Begin Array
+    wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
         wbInteger('Emotion Value', itU32),
@@ -10037,9 +8987,12 @@ begin
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
       wbCTDAs,
-      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
-      wbCTDAs
+      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
+      //,wbCTDAs
     ], [])),
+
+    wbCTDAs,
+
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRArray('Unknown',
       wbRStruct('Unknown', [
@@ -10049,6 +9002,7 @@ begin
       ], []), cpIgnore, false, wbNeverShow
     ),
     {>>> END leftover from earlier CK versions <<<}
+
     wbLString(RNAM, 'Prompt'),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
@@ -10307,7 +9261,6 @@ begin
         ]),
 				wbCOED
       ], []),
-    LLCT,
     cpNormal, True),
     wbMODL
   ]);
@@ -10334,8 +9287,7 @@ begin
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
         wbCOED
-      ], []),
-    LLCT
+      ], [])
     )
   ]);
 
@@ -10579,18 +9531,6 @@ begin
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
     wbInteger(NAM1, 'Created Object Count', itU16)
   ]);
-
-  wbFaceGen := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True);
-
-  wbFaceGenNPC := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True, nil{wbActorTemplateUseModelAnimation});
 
   wbRecord(NPC_, 'Non-Player Character (Actor)', [
     wbEDID,
@@ -10973,7 +9913,7 @@ begin
         13, 'Run in Sequence, Do Once'
       ]), cpNormal, True),
       wbStruct(IDLC, '', [
-        wbInteger( 'Animation Count', itU8),
+        wbInteger('Animation Count', itU8),
         wbByteArray('Unknown', 3)
       ], cpNormal, True, nil, 1),
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
@@ -11140,7 +10080,7 @@ begin
         {8} 'Side Quest',
         {9} 'Civil War',
        {10} 'DLC01 - Vampire',
-       {11} 'DLC02?'
+       {11} 'DLC02 - Dragonborn'
       ]))
     ]),
     wbString(ENAM, 'Event', 4),
@@ -11242,7 +10182,7 @@ begin
           wbCTDAs,
           wbKSIZ,
           wbKWDAs,
-          wbInteger(COCT, 'Count', itU32),
+          wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
@@ -11304,7 +10244,7 @@ begin
           wbCTDAs,
           wbKSIZ,
           wbKWDAs,
-          wbInteger(COCT, 'Count', itU32),
+          wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
@@ -11322,7 +10262,7 @@ begin
     wbString(NNAM, 'Description', 0, cpNormal, False),
     wbRArray('Targets', wbRStruct('Target', [
       wbStruct(QSTA, 'Target', [
-        wbFormIDCkNoReach('Target', [ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA], True),
+        wbFormIDCkNoReach('Target', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True),
         wbInteger('Flags', itU8, wbFlags([
           {0x01} 'Compass Marker Ignores Locks'
         ])),
@@ -11732,11 +10672,11 @@ begin
       ])
       //wbByteArray('Unknown', 4*7)
     ], cpNormal, True, nil, 29),
-    wbEmpty(MNAM, 'Marker'),
-    wbString(ANAM, 'Skeletal Model'),
+    wbEmpty(MNAM, 'Male Marker'),
+    wbString(ANAM, 'Male Skeletal Model'),
     wbMODT,
-    wbEmpty(FNAM, 'Marker'),
-    wbString(ANAM, 'Skeletal Model'),
+    wbEmpty(FNAM, 'Female Marker'),
+    wbString(ANAM, 'Female Skeletal Model'),
     wbMODT,
     wbEmpty(NAM2, 'Marker NAM2 #1'),
     wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
@@ -11924,8 +10864,7 @@ begin
 
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
-        //wbInteger('Linked Rooms Count', itU16),
-        wbByteArray('Unknown', 1),
+        wbInteger('Linked Rooms Count', itU8),
         wbInteger('Flags', itU8, wbFlags([
           'Unknown 1',
           'Unknown 2',
@@ -12011,7 +10950,7 @@ begin
 			wbFloat('X Angle'),
 			wbByteArray('Unknown', 4)
     ]),
-    wbFormIDCk(XCZR, 'Unknown', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+    wbFormIDCk(XCZR, 'Unknown', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
     wbUnknown(XCZA),
     wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
     wbXSCL,
@@ -12024,7 +10963,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
           wbFloat('Delay')
         ])
       )
@@ -12087,8 +11026,8 @@ begin
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA])
+      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
 
     wbRArray('Patrol', wbRStruct('Data', [
@@ -12184,7 +11123,7 @@ begin
       ]), cpNormal, True)
     ], []),
     {--- Attach reference ---}
-    wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
     wbXLOD,
     wbDataPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
@@ -12445,7 +11384,7 @@ begin
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
     wbArray(ONAM, 'Overridden Forms',
-      wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PARW, PBAR, PBEA, PCON, PFLA]),
+      wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot'),
     wbUnknown(INTV),
@@ -12503,7 +11442,7 @@ begin
   wbRecord(WATR, 'Water', [
     wbEDID,
     wbFULL,
-    wbRArray('Unused', wbByteArray(NNAM, 'Unused', 0, cpIgnore, False)), // leftover
+    wbRArray('Unused', wbString(NNAM, 'Noise Map', 0, cpIgnore, False)), // leftover
     wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
     wbInteger(FNAM, 'Flags', itU8, wbFlags(['Causes Damage']), cpNormal, True),
     wbByteArray(MNAM, 'Unused', 0, cpIgnore, False),  // leftover
@@ -12720,31 +11659,27 @@ begin
     wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itU16),
-      wbInteger('Y', itU16)
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16)
     ]),
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbInteger(PNAM, 'Use Flags', itU16, wbFlags([
-      {0x0001}'Use Land Data',
-      {0x0002}'Use LOD Data',
-      {0x0004}'Don''t Use Map Data',
-      {0x0008}'Use Water Data',
-      {0x0010}'Use Climate Data',
-      {0x0020}'Unknown 6',
-      {0x0040}'Use Sky Cell',
-      {0x0080}'Unknown 8',
-      {0x0100}'Unknown 9',
-      {0x0200}'Unknown 10',
-      {0x0400}'Unknown 11',
-      {0x0800}'Unknown 12',
-      {0x1000}'Unknown 13',
-      {0x2000}'Unknown 14',
-      {0x4000}'Unknown 15',
-      {0x8000}'Unknown 16'
-    ], True)),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+      wbStruct(PNAM, '', [
+        wbInteger('Flags', itU8, wbFlags([
+          {0x0001}'Use Land Data',
+          {0x0002}'Use LOD Data',
+          {0x0004}'Don''t Use Map Data',
+          {0x0008}'Use Water Data',
+          {0x0010}'Use Climate Data',
+          {0x0020}'Use Image Space Data (unused)',
+          {0x0040}'Use Sky Cell'
+        ], True)),
+        wbByteArray('Unknown', 1)
+      ], cpNormal, True)
+    ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
@@ -12779,9 +11714,9 @@ begin
     ], cpNormal, False, nil, 2),
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset', cpNormal, False, 1/4096),
-      wbFloat('Cell Y Offset', cpNormal, False, 1/4096),
-      wbFloat('Cell Z Offset', cpNormal, False, 1/4096)
+      wbFloat('Cell X Offset'),
+      wbFloat('Cell Y Offset'),
+      wbFloat('Cell Z Offset')
     ], cpNormal, True),
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
@@ -12795,7 +11730,7 @@ begin
       {0x80} 'No Grass'
     ]), cpNormal, True),
     {>>> Object Bounds doesn't show up in CK <<<}
-    wbRStruct('Object Bounds (unused?)', [
+    wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
         wbFloat('X', cpNormal, False, 1/4096),
         wbFloat('Y', cpNormal, False, 1/4096)

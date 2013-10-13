@@ -4108,7 +4108,7 @@ begin
     {0x00000800}'Initially disabled',
     {0x00001000}'Ignored',
     {0x00002000}'No Voice Filter',
-    {0x00004000}'',
+    {0x00004000}'Cannot Save (Runtime only)',
     {0x00008000}'Visible when distant',
     {0x00010000}'Random Anim Start / High Priority LOD',
     {0x00020000}'Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
@@ -8643,7 +8643,7 @@ begin
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True);
 
-  wbFaceGenNPC := wbRStruct('FaceGen Data', [
+  wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
     wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
     wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
@@ -9132,9 +9132,9 @@ begin
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True),
       wbByteArray(IDLB, 'Unused', 4, cpIgnore)
     ], []),
+    wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbEmpty(PKED, 'Eat Marker'),
     wbInteger(PKE2, 'Escort Distance', itU32),
-    wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFloat(PKFD, 'Follow - Start Location - Trigger Radius'),
     wbStruct(PKPT, 'Patrol Flags', [
       wbInteger('Repeatable', itU8, wbEnum(['No', 'Yes']), cpNormal, False, nil, nil, 1),
@@ -10507,7 +10507,7 @@ begin
     ]),
     wbICON,
     wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
+      wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
@@ -10540,14 +10540,14 @@ begin
     ]), cpNormal, True),
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ], cpNormal, True)
-    ], [], cpNormal, True),
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
@@ -11180,4 +11180,5 @@ begin
 end;
 
 initialization
+  wbDoNotBuildRefsFor.Add('Fallout3.esm');
 end.

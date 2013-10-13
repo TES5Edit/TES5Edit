@@ -1744,7 +1744,7 @@ var
   s           : string;
   Keys        : TStringList;
 begin
-//  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Connections) then
       Exit;
 
@@ -1762,9 +1762,9 @@ begin
     finally
       Keys.Free;
     end;
-//  finally
-//    wbEndInternalEdit;
-//  end;
+  finally
+    wbEndInternalEdit;
+  end;
 end;
 
 {
@@ -3475,7 +3475,7 @@ begin
 
   wbRecord(INFO, 'Dialog response', [
     wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
+      wbInteger('Type', itU16, wbEnum([
         {0} 'Topic',
         {1} 'Conversation',
         {2} 'Combat',
@@ -3488,12 +3488,11 @@ begin
         {0x0001} 'Goodbye',
         {0x0002} 'Random',
         {0x0004} 'Say Once',
-        {0x0008} '',
+        {0x0008} 'Run Immediately',
         {0x0010} 'Info Refusal',
         {0x0020} 'Random End',
         {0x0040} 'Run for Rumors'
-      ])),
-      wbByteArray('Unused', 1)
+      ]))
     ], cpNormal, True),
     wbFormIDCk(QSTI, 'Quest', [QUST], False, cpNormal, True),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
@@ -4377,9 +4376,12 @@ begin
     ], [XLOC]),
     wbXESP,
     wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
-    wbUnion(XSED, '', wbREFRXSEDDecider, [
-      wbInteger('SpeedTree Seed', itU8),
-      wbInteger('SpeedTree Seed (old format)', itU8{itU32 CS just cuts it off...})
+    wbStruct(XSED, 'SpeedTree', [
+      wbInteger('Seed', itU8),
+      wbUnion('Unused', wbREFRXSEDDecider, [
+        wbEmpty('Unused', cpIgnore),
+        wbByteArray('Unused', 3, cpIgnore)
+      ])
     ]),
     wbXLOD,
     wbFloat(XCHG, 'Charge'),
@@ -4641,8 +4643,8 @@ begin
     wbString(FNAM, 'Sound Filename'),
     wbRUnion('Sound Data', [
       wbStruct(SNDX, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
+        wbInteger('Minimum attenuation distance', itU8, wbMul(5)),
+        wbInteger('Maximum attenuation distance', itU8, wbMul(100)),
         wbInteger('Frequency adjustment %', itS8),
         wbByteArray('Unused', 1),
         wbInteger('Flags', itU16, wbFlags([
@@ -4656,13 +4658,13 @@ begin
           {0x0080} '360 LFE'
         ])),
         wbByteArray('Unused', 2),
-        wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8)
+        wbInteger('Static Attenuation (db)', itU16, wbDiv(100)),
+        wbInteger('Stop time', itU8),
+        wbInteger('Start time', itU8)
       ], cpNormal, True),
       wbStruct(SNDD, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
+        wbInteger('Minimum attenuation distance', itU8, wbMul(5)),
+        wbInteger('Maximum attenuation distance', itU8, wbMul(100)),
         wbInteger('Frequency adjustment %', itS8),
         wbByteArray('Unused', 1),
         wbInteger('Flags', itU16, wbFlags([
@@ -4860,12 +4862,14 @@ begin
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,
     wbFULL,
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD])
+    ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbICON,
     wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
+      wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
       ]),
@@ -4887,8 +4891,18 @@ begin
       {0x08} '',
       {0x10} 'No LOD water'
     ]), cpNormal, True),
-    wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+    //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+    //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+    wbRStruct('Object Bounds', [
+      wbStruct(NAM0, 'Min', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
+      wbStruct(NAM9, 'Max', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
     wbByteArray(OFST, 'Unknown')
   ], False, nil, cpNormal, False, wbRemoveOFST);

@@ -11,19 +11,25 @@ implementation
 
 uses
   Windows,
+  Graphics,
   Classes,
   SysUtils,
   Variants,
   Controls,
   StdCtrls,
   ExtCtrls,
+  ComCtrls,
+  Forms,
+  Menus,
   CheckLst,
   ShellApi,
+  FileCtrl,
   IniFiles,
   Registry,
   Math,
   RegularExpressionsCore,
   wbInterface;
+
 
 { Missing code }
 
@@ -68,6 +74,23 @@ begin
   Value := Ceil(Extended(Args.Values[0]));
 end;
 
+{ Math }
+
+procedure JvInterpreter_Max(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Max(Integer(Args.Values[0]), Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_Min(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Min(Integer(Args.Values[0]), Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_IntPower(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Extended(Math.IntPower(Extended(Args.Values[0]), Integer(Args.Values[1])));
+end;
+
 
 
 { TStrings }
@@ -97,6 +120,21 @@ procedure TStrings_Write_DelimitedText(const Value: Variant; Args: TJvInterprete
 begin
   TStrings(Args.Obj).DelimitedText := Value;
 end;
+
+
+{ TStringList }
+
+procedure TStringList_Read_CaseSensitive(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TStringList(Args.Obj).CaseSensitive;
+end;
+
+procedure TStringList_Write_CaseSensitive(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TStringList(Args.Obj).CaseSensitive := Value;
+end;
+
+
 
 procedure JvInterpreter_SameText(var Value: Variant; Args: TJvInterpreterArgs);
 begin
@@ -149,6 +187,16 @@ begin
   Value := ForceDirectories(Args.Values[0]);
 end;
 
+procedure JvInterpreter_IncludeTrailingBackslash(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := IncludeTrailingBackslash(Args.Values[0]);
+end;
+
+procedure JvInterpreter_ExcludeTrailingBackslash(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := ExcludeTrailingBackslash(Args.Values[0]);
+end;
+
 procedure JvInterpreter_CopyFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := CopyFile(PWideChar(String(Args.Values[0])), PWideChar(String(Args.Values[1])), Args.Values[2]);
@@ -162,7 +210,7 @@ end;
 
 procedure JvInterpreter_ShellExecute(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  ShellExecute(
+  Value := ShellExecute(
     Args.Values[0],
     PWideChar(String(Args.Values[1])),
     PWideChar(String(Args.Values[2])),
@@ -171,6 +219,49 @@ begin
     Args.Values[5]
   );
 end;
+
+procedure JvInterpreter_ShellExecuteWait(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  SEInfo: TShellExecuteInfo;
+  ExitCode: Cardinal;
+begin
+  FillChar(SEInfo, SizeOf(SEInfo), 0);
+  SEInfo.cbSize := SizeOf(TShellExecuteInfo);
+  with SEInfo do begin
+    fMask := SEE_MASK_NOCLOSEPROCESS;
+    Wnd := Args.Values[0];
+    lpVerb := PWideChar(String(Args.Values[1]));
+    lpFile := PWideChar(String(Args.Values[2]));
+    lpParameters := PWideChar(String(Args.Values[3]));
+    lpDirectory := PWideChar(String(Args.Values[4]));
+    nShow := Args.Values[5];
+  end;
+  if ShellExecuteEx(@SEInfo) then begin
+    WaitforSingleObject(SEInfo.hProcess, INFINITE);
+    GetExitCodeProcess(SEInfo.hProcess, ExitCode);
+    Value := ExitCode;
+  end else
+    Value := 0;
+end;
+
+procedure JvInterpreter_SelectDirectory(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  aDir: string;
+begin
+  Value := '';
+  aDir := String(Args.Values[2]);
+  if SelectDirectory(String(Args.Values[0]), String(Args.Values[1]), aDir, [], TWinControl(V2O(Args.Values[3]))) then
+    Value := aDir;
+end;
+
+
+{ TBytesStream }
+
+procedure TBytesStream_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TBytesStream.Create(TBytes(Args.Values[0])));
+end;
+
 
 
 { TBinaryReader }
@@ -215,6 +306,21 @@ begin
   Value := TBinaryReader(Args.Obj).ReadShortInt;
 end;
 
+procedure TBinaryReader_ReadSmallInt(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadSmallInt;
+end;
+
+procedure TBinaryReader_ReadUInt16(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadUInt16;
+end;
+
+procedure TBinaryReader_ReadUInt32(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadUInt32;
+end;
+
 procedure TBinaryReader_ReadInteger(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TBinaryReader(Args.Obj).ReadInteger;
@@ -223,6 +329,11 @@ end;
 procedure TBinaryReader_ReadSingle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TBinaryReader(Args.Obj).ReadSingle;
+end;
+
+procedure TBinaryReader_ReadString(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TBinaryReader(Args.Obj).ReadString;
 end;
 
 
@@ -238,6 +349,8 @@ begin
   case VarType(Args.Values[0]) of
     varByte:
       TBinaryWriter(Args.Obj).Write(Byte(Args.Values[0]));
+    System.varArray:
+      TBinaryWriter(Args.Obj).Write(TBytes(Args.Values[0]));
     varInteger, varLongWord:
       TBinaryWriter(Args.Obj).Write(Integer(Args.Values[0]));
     varWord, varShortInt, varSmallInt:
@@ -320,6 +433,19 @@ begin
 end;
 
 
+{ TComboBox }
+
+procedure TComboBox_Read_DropDownCount(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TComboBox(Args.Obj).DropDownCount;
+end;
+
+procedure TComboBox_Write_DropDownCount(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TComboBox(Args.Obj).DropDownCount := Value;
+end;
+
+
 { TCustomLabeledEdit }
 
 procedure TCustomLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -358,6 +484,85 @@ end;
 procedure TLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
+end;
+
+
+{ TListItem }
+
+procedure TListItem_Read_SubItems(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TListItem(Args.Obj).SubItems);
+end;
+
+procedure TListItem_Write_SubItems(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TListItem(Args.Obj).SubItems := V2O(Value) as TStrings;
+end;
+
+
+{ TListItems }
+
+procedure TListItems_Write_Count(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TListItems(Args.Obj).Count := Value;
+end;
+
+
+{ TListView }
+
+type
+  TJvInterpreterListViewEvents = class(TJvInterpreterEvent)
+  private
+    procedure OnData(Sender: TObject; Item: TListItem);
+    procedure OnSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
+  end;
+
+procedure TJvInterpreterListViewEvents.OnData(Sender: TObject; Item: TListItem);
+begin
+  CallFunction(nil, [O2V(Sender), O2V(Item)]);
+end;
+
+procedure TJvInterpreterListViewEvents.OnSelectItem(Sender: TObject;
+  Item: TListItem; Selected: Boolean);
+begin
+  CallFunction(nil, [O2V(Sender), O2V(Item), Selected]);
+end;
+
+
+{ TMenu }
+
+procedure TMenu_Read_AutoHotKeys(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Integer(TMenu(Args.Obj).AutoHotKeys);
+end;
+
+procedure TMenu_Write_AutoHotKeys(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TMenu(Args.Obj).AutoHotKeys := Value;
+end;
+
+
+{ TMenuItem }
+
+procedure TMenuItem_Clear(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TMenuItem(Args.Obj).Clear;
+end;
+
+
+{ TBitmap }
+
+procedure TBitmap_SetSize(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TBitmap(Args.Obj).SetSize(Args.Values[0], Args.Values[1]);
+end;
+
+
+{ THashedStringList }
+
+procedure THashedStringList_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(THashedStringList.Create);
 end;
 
 
@@ -662,6 +867,9 @@ begin
     AddConst('StdCtrls', 'cbChecked', Ord(cbChecked));
     AddConst('StdCtrls', 'cbUnchecked', Ord(cbUnchecked));
     AddConst('StdCtrls', 'cbGrayed', Ord(cbGrayed));
+    AddConst('Forms', 'poMainFormCenter', Ord(poMainFormCenter));
+    AddConst('Menus', 'maAutomatic', Ord(maAutomatic));
+    AddConst('Menus', 'maManual', Ord(maManual));
     AddConst('Controls', 'akLeft', Ord(akLeft));
     AddConst('Controls', 'akRight', Ord(akRight));
     AddConst('Controls', 'akTop', Ord(akTop));
@@ -696,9 +904,18 @@ begin
     AddFunction('SysUtils', 'DirectoryExists', JvInterpreter_DirectoryExists, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'FileExists', JvInterpreter_FileExists, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'ForceDirectories', JvInterpreter_ForceDirectories, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'IncludeTrailingBackslash', JvInterpreter_IncludeTrailingBackslash, 1, [varEmpty], varEmpty);
+    AddFunction('SysUtils', 'ExcludeTrailingBackslash', JvInterpreter_ExcludeTrailingBackslash, 1, [varEmpty], varEmpty);
     AddFunction('System', 'StringOfChar', JvInterpreter_StringOfChar, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Windows', 'CopyFile', JvInterpreter_CopyFile, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('ShellApi', 'ShellExecuteWait', JvInterpreter_ShellExecuteWait, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+
+    { Math }
+    AddFunction('Math', 'Max', JvInterpreter_Max, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Min', JvInterpreter_Min, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'IntPower', JvInterpreter_IntPower, 2, [varEmpty,varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
@@ -706,6 +923,18 @@ begin
     AddSet(TStrings, 'StrictDelimiter', TStrings_Write_StrictDelimiter, 0, [varEmpty]);
     AddGet(TStrings, 'DelimitedText', TStrings_Read_DelimitedText, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'DelimitedText', TStrings_Write_DelimitedText, 0, [varEmpty]);
+
+    { TStringList }
+    AddGet(TStrings, 'CaseSensitive', TStringList_Read_CaseSensitive, 0, [varEmpty], varEmpty);
+    AddSet(TStrings, 'CaseSensitive', TStringList_Write_CaseSensitive, 0, [varEmpty]);
+
+    { THashedStringList }
+    AddClass('IniFiles', THashedStringList, 'THashedStringList');
+    AddGet(THashedStringList, 'Create', THashedStringList_Create, 0, [varEmpty], varEmpty);
+
+    { TBytesStream }
+    AddClass('Classes', TBytesStream, 'TBytesStream');
+    AddGet(TBytesStream, 'Create', TBytesStream_Create, 1, [varEmpty], varEmpty);
 
     { TBinaryReader }
     AddClass('Classes', TBinaryReader, 'TBinaryReader');
@@ -717,8 +946,12 @@ begin
     AddGet(TBinaryReader, 'ReadChar', TBinaryReader_ReadChar, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadDouble', TBinaryReader_ReadDouble, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadShortInt', TBinaryReader_ReadShortInt, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadSmallInt', TBinaryReader_ReadSmallInt, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadUInt16', TBinaryReader_ReadUInt16, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadUInt32', TBinaryReader_ReadUInt32, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadInteger', TBinaryReader_ReadInteger, 0, [varEmpty], varEmpty);
     AddGet(TBinaryReader, 'ReadSingle', TBinaryReader_ReadSingle, 0, [varEmpty], varEmpty);
+    AddGet(TBinaryReader, 'ReadString', TBinaryReader_ReadString, 0, [varEmpty], varEmpty);
 
     { TBinaryWriter }
     AddClass('Classes', TBinaryWriter, 'TBinaryWriter');
@@ -741,6 +974,10 @@ begin
     AddGet(TCheckListBox, 'AllowGrayed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
     AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
 
+   { TComboBox }
+    AddGet(TComboBox, 'DropDownCount', TComboBox_Read_DropDownCount, 0, [varEmpty], varEmpty);
+    AddSet(TComboBox, 'DropDownCount', TComboBox_Write_DropDownCount, 0, [varEmpty]);
+
     { TCustomLabeledEdit }
     AddClass('ExtCtrls', TCustomLabeledEdit, 'TCustomLabeledEdit');
     AddGet(TCustomLabeledEdit, 'Create', TCustomLabeledEdit_Create, 1, [varEmpty], varEmpty);
@@ -756,6 +993,27 @@ begin
 
     { TBoundLabel }
     AddClass('ExtCtrls', TBoundLabel, 'TBoundLabel');
+
+    { TListItem }
+    AddGet(TListItem, 'SubItems', TListItem_Read_SubItems, 0, [varEmpty], varEmpty);
+    AddSet(TListItem, 'SubItems', TListItem_Write_SubItems, 0, [varEmpty]);
+
+    { TListItems }
+    AddSet(TListItems, 'Count', TListItems_Write_Count, 0, [varEmpty]);
+
+    { TListView }
+    AddHandler('ComCtrls', 'TLVOwnerDataEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnData);
+    AddHandler('ComCtrls', 'TLVSelectItemEvent', TJvInterpreterListViewEvents, @TJvInterpreterListViewEvents.OnSelectItem);
+
+    { TMenu }
+    AddGet(TMenu, 'AutoHotKeys', TMenu_Read_AutoHotKeys, 0, [varEmpty], varEmpty);
+    AddSet(TMenu, 'AutoHotKeys', TMenu_Write_AutoHotKeys, 0, [varEmpty]);
+
+    { TMenuItem }
+    AddGet(TMenuItem, 'Clear', TMenuItem_Clear, 0, [varEmpty], varEmpty);
+
+    { TBitmap }
+    AddGet(TBitmap, 'SetSize', TBitmap_SetSize, 2, [varEmpty, varEmpty], varEmpty);
 
     { TCustomIniFile }
     AddClass('IniFiles', TCustomIniFile, 'TCustomIniFile');
