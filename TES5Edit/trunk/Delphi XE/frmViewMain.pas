@@ -591,6 +591,7 @@ type
     AutoSave: Boolean;
 
     FilterPreset: Boolean; // new: flag to skip filter window
+    FilterScripted: Boolean; // new: flag to use scripted filtering function
     FilterApplied: Boolean;
 
     FilterConflictAll: Boolean;
@@ -654,6 +655,7 @@ type
     ComparingSiblings: Boolean;
     CompareRecords: TDynMainRecords;
 
+    ScriptEngine: TJvInterpreterProgram;
     ScriptProcessElements: TwbElementTypes;
     ScriptHotkeys: TStringList;
 
@@ -5600,6 +5602,10 @@ begin
       ScriptProcessElements := [etMainRecord];
     Done := True;
   end else
+  if SameText(Identifier, 'FilterScripted') then begin
+    FilterScripted := Value;
+    Done := True;
+  end else
   if SameText(Identifier, 'FilterConflictAll') then begin
     FilterConflictAll := Value;
     Done := True;
@@ -5804,6 +5810,7 @@ begin
 
   jvi := TJvInterpreterProgram.Create(Self);
   try
+    ScriptEngine := jvi;
     jvi.OnGetValue := JvInterpreterProgram1GetValue;
     jvi.OnSetValue := JvInterpreterProgram1SetValue;
     jvi.OnGetUnitSource := JvInterpreterProgram1GetUnitSource;
@@ -5879,6 +5886,7 @@ begin
       end;
 
     finally
+      ScriptEngine := nil;
       vstNav.EndUpdate;
       Enabled := True;
       Caption := Application.Title;
@@ -8761,6 +8769,18 @@ end;
 
 
 procedure TfrmMain.mniNavFilterApplyClick(Sender: TObject);
+
+  function CustomScriptFilter(MainRecord: IwbMainRecord): Boolean;
+  begin
+    Result := False;
+
+    if not ScriptEngine.FunctionExists('', 'Filter') then
+      Exit;
+
+    ScriptEngine.CallFunction('Filter', nil, [MainRecord]);
+    Result := Boolean(ScriptEngine.VResult);
+  end;
+
 const
   sJustWait                   = 'Filtering. Please wait... (yes, this takes a while, just wait!)';
 var
@@ -9377,7 +9397,16 @@ begin
                   )
                 )
               )
-            ) then begin
+            ) or
+            (
+              (FilterScripted) and
+              (
+                not Assigned(ScriptEngine) or
+                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
+                not CustomScriptFilter(MainRecord)
+              )
+            )
+            then begin
             if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
               if Assigned(MainRecord._File) {and (MainRecord.Signature <> 'TES4')} then begin
                 for i := Low(Files) to High(Files) do
@@ -9415,6 +9444,7 @@ begin
     Signatures.Free;
     BaseSignatures.Free;
     vstNav.Visible:= True;
+    FilterScripted := False;
   end;
 end;
 
