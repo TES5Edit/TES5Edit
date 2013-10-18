@@ -6279,13 +6279,13 @@ begin
           ])),
      {04} wbInteger('Mood', itU8, wbEnum([
             'Neutral',
-            'Afraid',
-            'Annoyed',
-            'Cocky',
-            'Drugged',
-            'Pleasant',
             'Angry',
-            'Sad'
+            'Fear',
+            'Happy',
+            'Sad',
+            'Surprised',
+            'Puzzled',
+            'Disgusted'
           ])),
           wbInteger('Assistance', itU8, wbEnum([
             'Helps Nobody',
