@@ -8985,7 +8985,7 @@ begin
   DoInit;
 
   if not Assigned(dcDataBasePtr) and Assigned(srValueDef) and not (dcfStorageInvalid in dcFlags) then begin
-    Result := srValueDef.Size[nil, nil, Self];
+    Result := srValueDef.DefaultSize[nil, nil, Self];
     Assert(Result <> Cardinal(High(Integer)));
   end else
     Result := inherited GetDataSize;

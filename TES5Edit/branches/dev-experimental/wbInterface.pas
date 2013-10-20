@@ -4724,7 +4724,7 @@ begin
   Result := wbArray(aName, wbStruct(aElementName, aMembers, aPriority), 0, aPriority, aRequired, aDontShow);
 end;
 
-function wbRStructs(const aName        : string;
+function wbRStructS(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
                     const aSkipSigs    : array of TwbSignature;
@@ -6538,7 +6538,7 @@ begin
       Result := 0;
     end
   else
-    Result := 0;
+    Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbIntegerDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -7208,7 +7208,7 @@ begin
     wbProgressCallback('Found a struct with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
       ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-    Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
+    Result := 0; // assuming we would have called GetDefaultSize otherwise... GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else
     for i := Low(stMembers) to High(stMembers) do begin
       Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
