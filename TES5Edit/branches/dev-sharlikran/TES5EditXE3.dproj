@@ -7,7 +7,7 @@
 		<AppType>Application</AppType>
 		<FrameworkType>VCL</FrameworkType>
 		<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-        <ProjectVersion>14.3</ProjectVersion>
+		<ProjectVersion>14.3</ProjectVersion>
 		<Platform Condition="'$(Platform)'==''">Win32</Platform>
 		<TargetedPlatforms>1</TargetedPlatforms>
 		<Platform>Win32</Platform>
@@ -219,7 +219,7 @@
 					<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 					<VersionInfo Name="MajorVer">3</VersionInfo>
 					<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">31</VersionInfo>
+					<VersionInfo Name="Release">32</VersionInfo>
 					<VersionInfo Name="Build">0</VersionInfo>
 					<VersionInfo Name="Debug">True</VersionInfo>
 					<VersionInfo Name="PreRelease">True</VersionInfo>
@@ -232,18 +232,18 @@
 				<VersionInfoKeys>
 					<VersionInfoKeys Name="CompanyName"/>
 					<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.0.31.0</VersionInfoKeys>
+					<VersionInfoKeys Name="FileVersion">3.0.32.0</VersionInfoKeys>
 					<VersionInfoKeys Name="InternalName"/>
 					<VersionInfoKeys Name="LegalCopyright"/>
 					<VersionInfoKeys Name="LegalTrademarks"/>
 					<VersionInfoKeys Name="OriginalFilename"/>
 					<VersionInfoKeys Name="ProductName">xxEdit from ElminsterAU</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">3.0.31</VersionInfoKeys>
+					<VersionInfoKeys Name="ProductVersion">3.0.32</VersionInfoKeys>
 					<VersionInfoKeys Name="Comments"/>
 				</VersionInfoKeys>
 				<Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					<Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+					<Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 				</Excluded_Packages>
 			</Delphi.Personality>
 			<Platforms>

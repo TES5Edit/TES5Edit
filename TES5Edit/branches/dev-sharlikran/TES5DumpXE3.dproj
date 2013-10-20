@@ -188,7 +188,7 @@
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
-						<VersionInfoKeys Name="ProductName">xxEdit from ElminsterAU</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductName">xxDump from ElminsterAU</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductVersion">3.0.32</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>

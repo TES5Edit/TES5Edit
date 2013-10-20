@@ -6285,13 +6285,13 @@ begin
           ])),
      {04} wbInteger('Mood', itU8, wbEnum([
             'Neutral',
-            'Afraid',
-            'Annoyed',
-            'Cocky',
-            'Drugged',
-            'Pleasant',
             'Angry',
-            'Sad'
+            'Fear',
+            'Happy',
+            'Sad',
+            'Surprised',
+            'Puzzled',
+            'Disgusted'
           ])),
           wbInteger('Assistance', itU8, wbEnum([
             'Helps Nobody',
@@ -8968,7 +8968,7 @@ begin
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbFormID(DNAM, 'Response Data'),
 
-    {>>> Unordered, CTDA can appear before or after LNAM <<<}
+    {>>> Unordered, CTDA can appear before or after LNAM <- REQUIRES CONFIRMATION <<<}
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
@@ -8986,9 +8986,8 @@ begin
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
-      wbCTDAs,
+      //wbCTDAs,
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
-      //,wbCTDAs
     ], [])),
 
     wbCTDAs,
