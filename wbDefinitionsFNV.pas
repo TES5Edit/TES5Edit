@@ -6290,18 +6290,21 @@ begin
     wbEDIDReq,
     wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
       wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Unknown', wbRStruct('Unknown', [
-        wbFormIDCk(INFC, 'Unknown', [INFO]),
-        wbInteger(INFX, 'Unknown', itS32)
+      wbRArray('Shared Infos', wbRStruct('Shared Info', [
+        wbFormIDCk(INFC, 'Info Connection', [INFO], False, cpBenign),
+        wbInteger(INFX, 'Info Index', itS32, nil, cpBenign)
       ], []))
     ], [])),
+    // no QSTR in FNV, but keep it just in case
     wbRArrayS('Removed Quests', wbRStructSK([0], 'Removed Quest', [
-      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Unknown', wbRStruct('Unknown', [
-        wbFormIDCk(INFC, 'Unknown', [INFO]),
-        wbInteger(INFX, 'Unknown', itS32)
-      ], []))
+      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign)
     ], [])),
+    // some records have INFC INFX (with absent formids) but no QSTI, probably error in GECK
+    // i.e. [DIAL:001287C6] and [DIAL:000E9084]
+    wbRArray('Unused', wbRStruct('Unused', [
+      wbUnknown(INFC, cpIgnore),
+      wbUnknown(INFX, cpIgnore)
+    ], []), cpIgnore, False, wbNeverShow),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbString(TDUM),

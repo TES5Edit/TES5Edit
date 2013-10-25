@@ -2667,7 +2667,7 @@ begin
       {0x09} 'Weapon'
     ])),
     wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SOUN], False, cpNormal, True),
+      wbFormIDCk(CSDI, 'Sound', [SOUN, NULL], False, cpNormal, True),
       wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
     ], []), cpNormal, True)
   ], []);
