@@ -3475,14 +3475,15 @@ begin
 
   wbRecord(INFO, 'Dialog response', [
     wbStruct(DATA, '', [
-      wbInteger('Type', itU16, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous'
+      wbInteger('Type', itU16, wbEnum([], [
+        0, 'Topic',
+        1, 'Conversation',
+        2, 'Combat',
+        3, 'Persuasion',
+        4, 'Detection',
+        5, 'Service',
+        6, 'Miscellaneous',
+        257, 'Conversation 257'
       ])),
       wbInteger('Flags', itU8, wbFlags([
         {0x0001} 'Goodbye',
