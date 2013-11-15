@@ -66,12 +66,12 @@ begin
     if ElementExists(e, 'VTCK - Voice') then begin
       InfoNPCID := Name(e);
       InfoRACEID := GetElementEditValues(e, 'RNAM - Race');
-      ent := WinningOverride(LinksTo(ElementByName(e, 'VTCK - Voice')));
-      if Signature(ent) = 'VTYP' then lstVoice.AddObject(EditorID(ent), ent);
+      ent := LinksTo(ElementByName(e, 'VTCK - Voice'));
+      GetRecordVoiceTypes(ent, lstVoice);
     end
     // otherwise get voice from template
     else if ElementExists(e, 'TPLT - Template') then begin
-      ent := WinningOverride(LinksTo(ElementByName(e, 'TPLT - Template')));
+      ent := LinksTo(ElementByName(e, 'TPLT - Template'));
       GetRecordVoiceTypes(ent, lstVoice);
     end;
   end
@@ -80,7 +80,7 @@ begin
     ents := ElementByName(e, 'Leveled List Entries');
     for i := 0 to Pred(ElementCount(ents)) do begin
       ent := ElementByIndex(ents, i);
-      ent := WinningOverride(LinksTo(ElementByPath(ent, 'LVLO\Reference')));
+      ent := LinksTo(ElementByPath(ent, 'LVLO\Reference'));
       GetRecordVoiceTypes(ent, lstVoice);
     end;
   end
@@ -93,9 +93,19 @@ begin
   else if sig = 'FLST' then begin
     ents := ElementByName(e, 'FormIDs');
     for i := 0 to Pred(ElementCount(ents)) do begin
-      ent := WinningOverride(LinksTo(ElementByIndex(ents, i)));
-      if Signature(ent) = 'VTYP' then lstVoice.AddObject(EditorID(ent), ent);
+      ent := LinksTo(ElementByIndex(ents, i));
+      GetRecordVoiceTypes(ent, lstVoice);
     end;
+  end
+  // Faction record
+  else if sig = 'FACT' then begin
+    for i := 0 to Pred(ReferencedByCount(e)) do begin
+      ent := ReferencedByIndex(e, i);
+      // avoid loop on self rerefence
+      if (GetLoadOrderFormID(ent) <> GetLoadOrderFormID(e)) and (Signature(ent) = 'NPC_') then
+        GetRecordVoiceTypes(ent, lstVoice);
+    end;
+  
   end;
 end;
 
@@ -132,12 +142,18 @@ begin
     // from CK Wiki "... list of voice types which the editor uses to limit any dialogue assigned to this alias"
     // so remove everything that is not in list
     if GetElementNativeValues(Alias, 'VTCK - Voice Types') <> 0 then begin
-      lstLimit := TStringList.Create;
-      GetRecordVoiceTypes(LinksTo(ElementByName(Alias, 'VTCK - Voice Types')), lstLimit);
-      for j := Pred(lstVoice.Count) downto 0 do
-        if lstLimit.IndexOf(lstVoice[j]) = -1 then
-          lstVoice.Delete(j);
-      lstLimit.Free;
+      // if we already have voices, then use it as a limit
+      if lstVoice.Count <> 0 then begin
+        lstLimit := TStringList.Create;
+        GetRecordVoiceTypes(LinksTo(ElementByName(Alias, 'VTCK - Voice Types')), lstLimit);
+        for j := Pred(lstVoice.Count) downto 0 do
+          if lstLimit.IndexOf(lstVoice[j]) = -1 then
+            lstVoice.Delete(j);
+        lstLimit.Free;
+      end
+      // otherwise use it as voices list
+      else
+        GetRecordVoiceTypes(LinksTo(ElementByName(Alias, 'VTCK - Voice Types')), lstVoice);
     end;
 
     // stop processing other aliases
@@ -151,9 +167,13 @@ procedure GetConditionsVoiceTypes(Conditions: IInterface; lstVoice: TStringList)
 var
   Condition, Elem, Quest: IInterface;
   ConditionFunction: string;
-  i, Alias: integer;
+  lstVoiceCondition: TStringList;
+  i, j, Alias: integer;
+  bFactionCondition: Boolean;
 begin
   AddDebug('GetConditionsVoiceTypes ' + FullPath(Conditions));
+
+  lstVoiceCondition := TStringList.Create; lstVoiceCondition.Duplicates := dupIgnore; lstVoiceCondition.Sorted := True;
 
   for i := 0 to Pred(ElementCount(Conditions)) do begin
     Condition := ElementByIndex(Conditions, i);
@@ -162,13 +182,13 @@ begin
     if ConditionFunction = 'GetIsID' then begin
       InfoCONDITION := ConditionFunction;
       Elem := LinksTo(ElementByPath(Condition, 'CTDA\Referenceable Object'));
-      GetRecordVoiceTypes(Elem, lstVoice);
+      GetRecordVoiceTypes(Elem, lstVoiceCondition);
     end
     // Voice type of FLST list of voice types
     else if ConditionFunction = 'GetIsVoiceType' then begin
       InfoCONDITION := ConditionFunction;
       Elem := LinksTo(ElementByPath(Condition, 'CTDA\Voice Type'));
-      GetRecordVoiceTypes(Elem, lstVoice);
+      GetRecordVoiceTypes(Elem, lstVoiceCondition);
     end
     // Quest alias
     else if ConditionFunction = 'GetIsAliasRef' then begin
@@ -182,9 +202,38 @@ begin
       else if Signature(Elem) = 'QUST' then
         Quest := Elem;
 
-      GetAliasVoiceTypes(Quest, Alias, lstVoice);
+      GetAliasVoiceTypes(Quest, Alias, lstVoiceCondition);
+    end else
+    if ConditionFunction = 'GetInFaction' then begin
+      // looks like GetInFaction is used only once by CK when exporting dialogues, i.e. 000D9513
+      if not bFactionCondition then begin
+        bFactionCondition := True;
+        InfoCONDITION := ConditionFunction;
+        Elem := LinksTo(ElementByPath(Condition, 'CTDA\Faction'));
+        GetRecordVoiceTypes(Elem, lstVoiceCondition);
+      end;
     end;
+    
+    if lstVoiceCondition.Count = 0 then
+      Continue;
+    
+    // not sure about how to combine voice types from several conditions, for now just OR
+    lstVoice.AddStrings(lstVoiceCondition);
+    
+    {// if condition is ORed then combine voice lists
+    if GetElementNativeValues(Condition, 'CTDA\Type') and 1 > 0 then
+      lstVoice.AddStrings(lstVoiceCondition)
+    // otherwise intersect (AND)
+    else begin
+      for j := Pred(lstVoice.Count) downto 0 do
+        if lstVoiceCondition.IndexOf(lstVoice[j]) = -1 then
+          lstVoice.Delete(j);
+    end;
+    }
+    lstVoiceCondition.Clear;
   end;
+  
+  lstVoiceCondition.Free;
 end;
 
 //============================================================================
@@ -247,8 +296,8 @@ begin
 
   // if still can't determine voices, then use all of them
   if lstVoice.Count = 0 then begin
-    AddDebug('!!! No voice types found, using all voices !!!');
-    GetRecordVoiceTypes(RecordByFormID(FileByIndex(0), $0003B4A5, False), lstVoice); // DefaultNPCVoiceTypes [FLST:0003B4A5]
+    AddMessage('Warning: No voice types found for ' + Name(Info));
+    //GetRecordVoiceTypes(RecordByFormID(FileByIndex(0), $0003B4A5, False), lstVoice); // DefaultNPCVoiceTypes [FLST:0003B4A5]
   end;
   
 end;
@@ -312,7 +361,7 @@ begin
     // processing INFOs of quest topic
     for j := 0 to Pred(lstInfo.Count) do begin
       Info := ObjectToElement(lstInfo.Objects[j]);
-      //if FormID(Info) <> $000CA13B then Continue;
+      if FormID(Info) <> $000D9513 then Continue;
 
       if GetIsDeleted(Info) then
         Continue;
@@ -325,7 +374,7 @@ begin
 
       // list of voice types for INFO
       InfoVoiceTypes(Info, lstVoice);
-      AddDebug(Trim(lstVoice.Text));
+      AddDebug('Voices: ' + Trim(lstVoice.CommaText));
       
       for r := 0 to Pred(ElementCount(Responses)) do begin
         Response := ElementByIndex(Responses, r);
