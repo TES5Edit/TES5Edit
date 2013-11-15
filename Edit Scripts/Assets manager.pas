@@ -15,6 +15,7 @@ const
   atScript = 16;
   atScriptSource = 32;
   atSeqFile = 64;
+  atLODAsset = 128;
   // work mode
   wmNone = 0;
   wmCheck = 1;
@@ -262,10 +263,35 @@ begin
 end;
 
 //==========================================================================
+function HexArrayToStr(s: string): string;
+var
+  i: integer;
+  c: char;
+  hex: string;
+begin
+  Result := '';
+  i := 1;
+  while i < Length(s) do begin
+    if s <> ' ' then begin
+      c := Chr(StrToInt('$' + Copy(s, i, 2)));
+      if c = #0 then
+        Exit;
+      Result := Result + c;
+      i := i + 3;
+    end else
+      i := i + 1;
+  end;
+end;
+
+//==========================================================================
 function NormalizePath(value: string; atype: integer): string;
 begin
   // uncomment to not show errors on full paths
   //if not SameText(Copy(value, 1, 3), 'c:\') then
+  if Copy(value, 1, 1) = '\' then
+    Delete(value, 1, 1);
+  if SameText(Copy(value, 1, 5), 'data\') then
+    value := Copy(value, 6, Length(value));
   if (atype = atMesh) and not (Copy(value, 1, 7) = 'meshes\') then
     value := 'meshes\' + value
   else if (atype = atTexture) and not (Copy(value, 1, 9) = 'textures\') then
@@ -314,6 +340,26 @@ begin
 end;
 
 //==========================================================================
+procedure ProcessMeshTextures(aMesh, aContainer, aDescr: string);
+var
+  s: string;
+  i: integer;
+begin
+  // suppress possible errors for invalid meshes
+  try
+    NifTextureList(ResourceOpenData(aContainer, aMesh), sl);
+  except on E: Exception do
+    AddMessage('NIF: ' + E.Message + ' ' + aMesh);
+  end;
+  slTextures.AddStrings(sl); // remove duplicates
+  for i := 0 to Pred(slTextures.Count) do begin
+    s := NormalizePath(LowerCase(slTextures[i]), atTexture);
+    ProcessResource(s, 'Texture for ' + aDescr + ': ' + aMesh, atTexture);
+  end;
+  slTextures.Clear;
+end;
+
+//==========================================================================
 procedure ProcessAsset(el: IInterface);
 var
   value, valuedescr, ext, s, rescont: string;
@@ -337,10 +383,6 @@ begin
   end
   else begin
     ext := Copy(value, Length(value) - 3, 4);
-    if value[1] = '\' then
-      Delete(value, 1, 1);
-    if SameText(Copy(value, 1, 5), 'data\') then
-      value := Copy(value, 6, Length(value));
     i := slAssetsExt.IndexOf(ext);
     if i = -1 then Exit;
     atype := Integer(slAssetsExt.Objects[i]);
@@ -360,25 +402,7 @@ begin
 
   // check textures in mesh
   if (atype = atMesh) and (optAsset and atTexture > 0) then begin
-    // suppress possible errors for invalid meshes
-    try
-      NifTextureList(ResourceOpenData(rescont, value), sl);
-    except on E: Exception do
-      AddMessage('NIF: ' + E.Message + ' ' + value);
-    end;
-    slTextures.AddStrings(sl); // remove duplicates
-    for i := 0 to Pred(slTextures.Count) do begin
-      s := NormalizePath(LowerCase(slTextures[i]), atTexture);
-      ProcessResource(s, valuedescr + ': ' + value, atTexture);
-    end;
-    slTextures.Clear;
-  end;
-
-  // copy additional lod and collision meshes
-  if (atype = atMesh) and (optMode = wmCopy) then begin
-      if wbGameMode = gmTES5 then s := '_lod'
-        else s := '_far';
-      ProcessResource(Copy(value, 1, Length(value) - 4) + s + ext, 'LOD mesh for ' + valuedescr + ': ' + value, atMesh);
+    ProcessMeshTextures(value, rescont, valuedescr);
   end;
 
   // script's source
@@ -437,6 +461,7 @@ begin
   slAssetsType.AddObject('Papyrus scripts (compiled)', atScript);
   slAssetsType.AddObject('Papyrus scripts (source)', atScriptSource);
   slAssetsType.AddObject('SEQ file', atSeqFile);
+  slAssetsType.AddObject('LOD Assets ', atLODAsset);
 
   slTextures := TwbFastStringList.Create;
   slTextures.Sorted := True;
@@ -465,8 +490,8 @@ end;
 //==========================================================================
 function Process(e: IInterface): integer;
 var
-  el: IInterface;
-  sig: string;
+  el, ent, ents: IInterface;
+  sig, s, contnr: string;
   i: integer;
 begin
   CurrentRecord := e;
@@ -555,8 +580,32 @@ begin
   else if (sig = 'SNDR') then
     ScanForAssets(ElementByPath(e, 'Sounds'))
 
+  // STAT LOD
+  else if (sig = 'STAT') and ElementExists(e, 'MNAM') then begin
+    ents := ElementBySignature(e, 'MNAM');
+    for i := 0 to Pred(ElementCount(ents)) do begin
+      ent := ElementByIndex(ents, i);
+      s := HexArrayToStr(GetElementEditValues(ent, 'Mesh'));
+      if s = '' then Continue;
+      s := NormalizePath(s, atMesh);
+      contnr := ProcessResource(s, 'Static LOD level ' + IntToStr(i) + ' mesh for ' + Name(e), atLODAsset);
+      // checking LOD textures
+      if contnr <> '' then
+        ProcessMeshTextures(s, contnr, Name(e));
+    end;
+  end
+
   else if (sig = 'TXST') then
     ScanForAssets(ElementByPath(e, 'Textures (RGB/A)'))
+
+  // TREE LOD
+  else if (sig = 'TREE') then begin
+    s := GetElementEditValues(e, 'Model\MODL');
+    if s <> '' then begin
+      s := NormalizePath(ChangeFileExt(s, '') + '_lod_flat.nif', atMesh);
+      ProcessResource(s, 'Tree LOD mesh for ' + Name(e), atLODAsset);
+    end;
+  end
 
   else if (sig = 'WATR') then
     ProcessAsset(ElementByPath(e, 'NAM2'))

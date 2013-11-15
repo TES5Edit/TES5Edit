@@ -657,6 +657,7 @@ var
   wbFurnitureEntryTypeFlags: IwbFlagsDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
   wbWardStateEnum: IwbEnumDef;
+  wbEventFunctionEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
@@ -2456,7 +2457,9 @@ type
     ptFurnitureAnim,      // enum
     ptFurnitureEntry,     // flags
     ptScene,              // SCEN
-    ptWardState           // enum
+    ptWardState,          // enum
+    ptEventFunction,      // enum
+    ptEventData           // LCTN, KYWD or FLST
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2752,7 +2755,7 @@ const
 {N} (Index: 571; Name: 'GetCurrentCastingType'; ParamType1: ptCastingSource),
 {N} (Index: 572; Name: 'GetCurrentDeliveryType'; ParamType1: ptCastingSource),
 {N} (Index: 574; Name: 'GetAttackState'),
-{N} (Index: 576; Name: 'GetEventData'; ParamType1: ptNone; ParamType2: ptNone; ParamType3: ptNone),
+{N} (Index: 576; Name: 'GetEventData'; ParamType1: ptEventFunction; ParamType2: ptEventData; ParamType3: ptNone),
 {N} (Index: 577; Name: 'IsCloserToAThanB'; ParamType1: ptObjectReference; ParamType2: ptObjectReference),
 {N} (Index: 579; Name: 'GetEquippedShout'; ParamType1: ptShout),
 {N} (Index: 580; Name: 'IsBleedingOut'),
@@ -4253,6 +4256,20 @@ begin
     'Break'
   ]);
 
+  wbEventFunctionEnum := wbEnum([], [
+    Int64($00000000), 'None',
+    Int64($324C0000), 'GetIsID, New Location',
+    Int64($314C0000), 'GetIsID, Old Location',
+    Int64($324C0001), 'IsInList, New Location',
+    Int64($314C0001), 'IsInList, Old Location',
+    Int64($324C0002), 'GetValue, New Location',
+    Int64($314C0002), 'GetValue, Old Location',
+    Int64($324C0003), 'HasKeyword, New Location',
+    Int64($314C0003), 'HasKeyword, Old Location',
+    Int64($324C0004), 'GetItemValue, New Location',
+    Int64($314C0004), 'GetItemValue, Old Location'
+  ]);
+
   wbWeaponAnimTypeEnum := wbEnum([
     {0} 'HandToHandMelee',
     {1} 'OneHandSword',
@@ -5553,7 +5570,9 @@ begin
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
         wbFormIDCk('Scene', [NULL, SCEN]),
-        wbInteger('Ward State', itU32, wbWardStateEnum)
+        wbInteger('Ward State', itU32, wbWardStateEnum),
+        wbInteger('Event Function', itU32, wbEventFunctionEnum),
+        wbFormIDCk('Event Data', [NULL, LCTN, KYWD, FLST])
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         wbByteArray('Unknown', 4),
@@ -5652,7 +5671,9 @@ begin
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
         wbFormIDCk('Scene', [NULL, SCEN]),
-        wbInteger('Ward State', itU32, wbWardStateEnum)
+        wbInteger('Ward State', itU32, wbWardStateEnum),
+        wbInteger('Event Function', itU32, wbEventFunctionEnum),
+        wbFormIDCk('Event Data', [NULL, LCTN, KYWD, FLST])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',

@@ -22,7 +22,7 @@ var
   PosSizePx: real;
   MapViewScale: real;
   GridOpacity: integer;
-  fMapDrawn: boolean;
+  fMapDrawn, fMapNormals: boolean;
   CurrentWorld: IInterface;
   slPlugin, slRegion: TStringList;
 
@@ -32,7 +32,8 @@ var
   memoInfo: TMemo;
   sbxMap: TScrollBox;
   imgMap, imgOver: TImage;
-  cmbWorld, cmbMapSize, cmbLODLevel, cmbScale, cmbGrid: TComboBox;
+  cmbWorld, cmbMapSize, cmbLODLevel, cmbLODSize, cmbScale, cmbGrid: TComboBox;
+  chkNormals: TCheckBox;
 
 
   
@@ -50,31 +51,29 @@ end;
 
 //============================================================================
 // name of LOD texture for worldspace
-function LODTextureFileName(aFormID: integer; aEditorID: string; x, y: integer): string;
+function LODTextureFileName(aGame, aFormID: integer; aEditorID: string;
+  x, y, aLODLevel: integer; aNormals: boolean): string;
+var
+  texname: string;
 begin
   // Oblivion
-  if wbGameMode = gmTES4 then
-    Result := Format('textures\landscapelod\generated\%s.%.2d.%.2d.%d.dds', [
-      IntToStr(aFormID and $FFFFFF),
-      x, y,
-      LODLevel
-    ])
+  if aGame = gmTES4 then begin
+    if not aNormals then texname := 'textures\landscapelod\generated\%s.%.2d.%.2d.%d.dds'
+                    else texname := 'textures\landscapelod\generated\%s.%.2d.%.2d.%d_fn.dds';
+    Result := Format(texname, [IntToStr(aFormID and $FFFFFF), x, y, aLODLevel]);
+  end
   // Fallout
-  else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
-    Result := Format('textures\landscape\lod\%s\diffuse\%s.n.level%d.x%d.y%d.dds', [
-      aEditorID,
-      aEditorID,
-      LODLevel,
-      x, y
-    ])
+  else if (aGame = gmFO3) or (aGame = gmFNV) then begin
+    if not aNormals then texname := 'textures\landscape\lod\%s\diffuse\%s.n.level%d.x%d.y%d.dds'
+                    else texname := 'textures\landscape\lod\%s\normals\%s.n.level%d.x%d.y%d.dds';
+    Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
+  end
   // Skyrim (and probably later games)
-  else
-    Result := Format('textures\terrain\%s\%s.%d.%d.%d.dds', [
-      aEditorID,
-      aEditorID,
-      LODLevel,
-      x, y
-    ]);
+  else begin
+    if not aNormals then texname := 'textures\terrain\%s\%s.%d.%d.%d.dds'
+                    else texname := 'textures\terrain\%s\%s.%d.%d.%d_n.dds';
+    Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
+  end;
 end;
 
 //============================================================================
@@ -83,7 +82,7 @@ function HasLOD(wrld: IInterface): boolean;
 begin
   // for Oblivion it is a presence of 0,0 quad lod texture
   if wbGameMode = gmTES4 then
-    Result := ResourceExists(LODTextureFileName(FormID(wrld), EditorID(wrld), 0, 0))
+    Result := ResourceExists(LODTextureFileName(wbGameMode, FormID(wrld), EditorID(wrld), 0, 0, 32, False))
   // for other games a presence of lod settings file
   else
     Result := ResourceExists(LODSettingsFileName(wrld));
@@ -103,7 +102,7 @@ begin
   if not HasLOD(wrld) then
     Exit;
 
-  // other games read from lod settings file
+  // read from lod settings file
   if wbGameMode <> gmTES4 then begin
     BytesStream := TBytesStream.Create(ResourceOpenData('', LODSettingsFileName(wrld)));
     lodsettings := TBinaryReader.Create(BytesStream);
@@ -334,7 +333,7 @@ begin
     while y < MapSizeY do begin
       x := SWx;
       while x < MapSizeX do begin
-        texName := LODTextureFileName(wrldFormID, wrldEDID, x, y);
+        texName := LODTextureFileName(wbGameMode, wrldFormID, wrldEDID, x, y, LODLevel, fMapNormals);
         if ResourceExists(texName) then begin
           if wbDDSDataToBitmap(ResourceOpenData('', texName), bmp) then begin
             Result := True;
@@ -381,6 +380,7 @@ var
   ent, regns, regn: IInterface;
 begin
   bmp := TBitmap.Create;
+  bmp.PixelFormat := pf32bit;
   try
     fMapDrawn := CreateWorldSpaceMap(wrld, bmp);
     CurrentWorld := wrld;
@@ -400,7 +400,7 @@ begin
   end;
   if not fMapDrawn then
     memoInfo.Lines.Text : = Format('No LOD level %d textures for worldspace %s, try other levels.', [LODLevel, Name(wrld)]);
-  frmMain.Caption := Format('Worldspace Browser - %s', [Name(wrld)]);
+  frmMain.Caption := Format('Worldspace Browser - %s %dx%d', [Name(wrld), imgMap.Width, imgMap.Height]);
   frmMainFormResize(nil);
 
   // list of overriding plugins
@@ -456,7 +456,7 @@ function CreateComboList(aForm: TForm; aLeft, aTop, aWidth: integer): TComboBox;
 begin
   Result := TComboBox.Create(aForm);
   Result.Parent := aForm;
-  Result.Style := csDropDownList;
+  Result.Style := csDropDownList; Result.DropDownCount := 20;
   Result.Left := aLeft; Result.Top := aTop; Result.Width := aWidth;
 end;
 
@@ -473,9 +473,60 @@ begin
     MapSizeX := StrToIntDef(Copy(s, 1, Pos('x', s)-1), 128) div 2;
     MapSizeY := StrToIntDef(Copy(s, Pos('x', s)+1, 3), 128) div 2;
     LODLevel := StrToInt(cmbLODLevel.Text);
+    LODSize := StrToInt(cmbLODSize.Text);
     MapViewScale := StrToInt(cmbScale.Text)/100;
     GridOpacity := StrToIntDef(cmbGrid.Text, 0);
+    fMapNormals := chkNormals.Checked;
     DrawMap(ObjectToElement(cmbWorld.Items.Objects[cmbWorld.ItemIndex]));
+  end;
+end;
+
+//============================================================================
+// save map as separate lod textures to be used with landscape lod meshes
+procedure miWorldspaceSaveAsLODClick(Sender: TObject);
+var
+  x, y, lev, cnt: integer;
+  tile: TBitmap;
+  SrcRect, DestRect: TRect;
+  edid, texpath, fname: string;
+begin
+  //imgMap.Picture.Bitmap.SaveToFile('e:\3\1.bmp'); Exit;
+  
+  if not InputQuery('Enter', 'Worldspace Editor ID', edid) then Exit;
+  if edid = '' then Exit;
+  texpath := SelectDirectory('Destination path for LOD textures', '', '', nil);
+  if (texpath = '') or not DirectoryExists(texpath) then Exit;
+  texpath := IncludeTrailingBackslash(texpath);
+  
+  cnt := 0;
+  tile := TBitmap.Create;
+  tile.PixelFormat := pf32bit;
+  try
+    lev := 32;
+    while lev >= 4 do begin
+      AddMessage(Format('Savind LOD level %d tiles...', [lev]));
+      tile.SetSize(Round(LODSize*lev/32), Round(LODSize*lev/32));
+      DestRect := Rect(0, 0, tile.Width, tile.Height);
+      y := -MapSizeY;
+      while y < MapSizeY do begin
+        x := -MapSizeX;
+        while x < MapSizeX do begin
+          SrcRect := Rect(CellX2Px(x), CellY2Px(y + lev), CellX2Px(x + lev), CellY2px(y));
+          tile.Canvas.CopyRect(DestRect, imgMap.Canvas, SrcRect);
+          fname := ExtractFileName(LODTextureFileName(gmTES5, 0, edid, x, y, lev, fMapNormals));
+          fname := texpath + ChangeFileExt(fname, '.bmp');
+          tile.SaveToFile(fname);
+          Inc(cnt);
+          x := x + lev;
+        end;
+        y := y + lev;
+      end;
+      lev := lev div 2;
+    end;
+    AddMessage(Format('Done. The total number of LOD textures: %d.', [cnt]));
+    AddMessage('Use http://www.xnview.com/en/nconvert/ to convert bitmap files to dds format: nconvert.exe -out dds *.bmp');
+  finally
+    tile.Free;
   end;
 end;
 
@@ -630,6 +681,11 @@ begin
   mi.Caption := 'Select';
   mi.OnClick := miWorldspaceClick;
   miWorldspace.Add(mi);
+  mi := TMenuItem.Create(mnMain);
+  mi.Caption := 'Save as LOD tiles';
+  mi.OnClick := miWorldspaceSaveAsLODClick;
+  miWorldspace.Add(mi);
+  
 
   miRegion := TMenuItem.Create(mnMain);
   miRegion.Caption := 'Region';
@@ -668,7 +724,6 @@ begin
   imgMap.Parent := sbxMap;
   imgOver := TImage.Create(frmMain);
   imgOver.Parent := sbxMap;
-  //imgOver.Picture.Bitmap.TransparentMode := tmFixed;
   imgOver.Picture.Bitmap.TransparentColor := ColorTransparent;
   imgOver.Transparent := True;
   miOverlayClearClick(nil);
@@ -678,20 +733,24 @@ begin
   frmWorld.Caption := 'Worldspace';
   frmWorld.BorderStyle := bsDialog;
   frmWorld.Position := poMainFormCenter;
-  frmWorld.Width := 240; frmWorld.Height := 254;
+  frmWorld.Width := 265; frmWorld.Height := 265;
   CreateLabel(frmWorld, 'Worldspaces with LOD data', 16, 13);
   CreateLabel(frmWorld, 'Map Size', 16, 69);
   CreateLabel(frmWorld, 'LOD Level', 112, 69);
-  CreateLabel(frmWorld, 'Scale %', 177, 69);
+  CreateLabel(frmWorld, 'LOD Tile size', 171, 69);
   CreateLabel(frmWorld, 'Grid Opacity (0 - disabled)', 16, 125);
-  cmbWorld := CreateComboList(frmWorld, 16, 32, 207);
+  CreateLabel(frmWorld, 'View Scale %', 171, 125);
+  cmbWorld := CreateComboList(frmWorld, 16, 32, 228);
   cmbMapSize := CreateComboList(frmWorld, 16, 88, 78);
   cmbLODLevel := CreateComboList(frmWorld, 112, 88, 48);
-  cmbScale := CreateComboList(frmWorld, 177, 88, 46);
-  cmbGrid := CreateComboList(frmWorld, 16, 144, 57);
-  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 74; btn.Top := 193; btn.Width := 73;
+  cmbLODSize := CreateComboList(frmWorld, 171, 88, 73);
+  cmbScale := CreateComboList(frmWorld, 171, 144, 73);
+  cmbGrid := CreateComboList(frmWorld, 16, 144, 78);
+  chkNormals := TCheckBox.Create(frmWorld); chkNormals.Parent := frmWorld; chkNormals.Left := 16; chkNormals.Top := 181;
+  chkNormals.Width := 89; chkNormals.Caption := 'Normal maps';
+  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 92; btn.Top := 204; btn.Width := 73;
   btn.Caption := 'Cancel'; btn.ModalResult := mrCancel;
-  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 153; btn.Top := 193; btn.Width := 73;
+  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 171; btn.Top := 204; btn.Width := 73;
   btn.Caption := 'OK'; btn.ModalResult := mrOk;
   for i := 1 to 4 do
     for j := 1 to 4 do
@@ -700,14 +759,17 @@ begin
     cmbLODLevel.Items.Text := '32' // Oblivion uses only 32
   else
     cmbLODLevel.Items.Text := '4'#13'8'#13'16'#13'32';
+  cmbLODSize.Items.Text := '256'#13'512'#13'1024'#13'2048'#13'4096';
   for i := 1 to 6 do
     cmbScale.Items.Add(IntToStr(i*25));
   for i := 0 to 255 do
     cmbGrid.Items.Add(IntToStr(i));
   cmbMapSize.ItemIndex := cmbMapSize.Items.IndexOf(Format('%dx%d', [MapSizeX+MapSizeX, MapSizeY+MapSizeY]));
   cmbLODLevel.ItemIndex := cmbLODLevel.Items.IndexOf(IntToStr(LODLevel));
+  cmbLODSize.ItemIndex := cmbLODSize.Items.IndexOf(IntToStr(LODSize));
   cmbScale.ItemIndex := cmbScale.Items.IndexOf(IntToStr(Round(MapViewScale*100)));
   cmbGrid.ItemIndex := cmbGrid.Items.IndexOf(IntToStr(GridOpacity));
+  chkNormals.Checked := fMapNormals;
   // filling list of worldspaces
   sl := TStringList.Create;
   try
@@ -737,6 +799,7 @@ begin
   LODSize := 256; // default lod texture size for level 32
   MapViewScale := 1;
   GridOpacity := 75;
+  fMapNormals := False;
   if wbGameMode = gmTES4 then begin
     LODSize := 1024; // Oblivion uses 1024x1024 lod textures only
     MapViewScale := 0.5; // scale them down since they are huge
