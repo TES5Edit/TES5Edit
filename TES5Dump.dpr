@@ -26,16 +26,16 @@ uses
   Classes,
   SysUtils,
   Windows,
+  Zlibex in 'Zlibex.pas',
+  wbBSA in 'wbBSA.pas',
+  wbInterface in 'wbInterface.pas',
+  wbImplementation in 'wbImplementation.pas',
+  wbLocalization in 'wbLocalization.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
-  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
-  wbImplementation in 'wbImplementation.pas',
-  wbInterface in 'wbInterface.pas',
-  wbLocalization in 'wbLocalization.pas',
-  wbBSA in 'wbBSA.pas',
-  Zlibex in 'Zlibex.pas';
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -48,7 +48,7 @@ var
 
 procedure ReportProgress(const aStatus: string);
 begin
-  WriteLn(ErrOutput, FormatDateTime('<nn:ss.zzz>', Now - StartTime), ' ', aStatus);
+  WriteLn(ErrOutput, FormatDateTime('<hh:nn:ss.zzz>', Now - StartTime), ' ', aStatus);
 end;
 
 procedure WriteElement(aElement: IwbElement; aIndent: string = ''); forward;

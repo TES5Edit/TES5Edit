@@ -62,12 +62,12 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
 		<Manifest_File>None</Manifest_File>
-		<VerInfo_Release>31</VerInfo_Release>
+		<VerInfo_Release>32</VerInfo_Release>
 		<VerInfo_MajorVer>3</VerInfo_MajorVer>
 		<VerInfo_PreRelease>true</VerInfo_PreRelease>
 		<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 		<Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
-		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDup by ElminsterAU;ProductVersion=3.0.31.0;Comments=</VerInfo_Keys>
+		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32.0;Comments=</VerInfo_Keys>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Cfg_2)'!=''">
 		<DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
@@ -81,11 +81,11 @@
 	<Manifest_File>None</Manifest_File>
 	<VerInfo_PreRelease>true</VerInfo_PreRelease>
 	<VerInfo_MajorVer>3</VerInfo_MajorVer>
-	<VerInfo_Release>31</VerInfo_Release>
+		<VerInfo_Release>32</VerInfo_Release>
 	<VerInfo_Debug>true</VerInfo_Debug>
 	<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 	<Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
-	<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.31;Comments=</VerInfo_Keys>
+		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
 	<Debugger_RunParams></Debugger_RunParams>
 	<DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
 	</PropertyGroup>
@@ -93,16 +93,16 @@
 	<DelphiCompile Include="$(MainSource)">
 		<MainSource>MainSource</MainSource>
 		</DelphiCompile>
+		<DCCReference Include="Zlibex.pas"/>
+		<DCCReference Include="wbBSA.pas"/>
+		<DCCReference Include="wbInterface.pas"/>
+		<DCCReference Include="wbImplementation.pas"/>
+		<DCCReference Include="wbLocalization.pas"/>
 		<DCCReference Include="wbDefinitionsFNV.pas"/>
 		<DCCReference Include="wbDefinitionsFO3.pas"/>
 		<DCCReference Include="wbDefinitionsTES3.pas"/>
 		<DCCReference Include="wbDefinitionsTES4.pas"/>
 		<DCCReference Include="wbDefinitionsTES5.pas"/>
-		<DCCReference Include="wbImplementation.pas"/>
-		<DCCReference Include="wbInterface.pas"/>
-		<DCCReference Include="wbLocalization.pas"/>
-		<DCCReference Include="wbBSA.pas"/>
-        <DCCReference Include="Zlibex.pas"/>
 		<BuildConfiguration Include="Debug">
 			<Key>Cfg_2</Key>
 			<CfgParent>Base</CfgParent>
@@ -143,13 +143,13 @@
 				<VersionInfoKeys>
 					<VersionInfoKeys Name="CompanyName"/>
 					<VersionInfoKeys Name="FileDescription"/>
-					<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.0.32.0</VersionInfoKeys>
 					<VersionInfoKeys Name="InternalName"/>
 					<VersionInfoKeys Name="LegalCopyright"/>
 					<VersionInfoKeys Name="LegalTrademarks"/>
 					<VersionInfoKeys Name="OriginalFilename"/>
-					<VersionInfoKeys Name="ProductName"/>
-					<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductName">xxDump from ElminsterAU</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.0.32</VersionInfoKeys>
 					<VersionInfoKeys Name="Comments"/>
 				</VersionInfoKeys>
 				<Excluded_Packages>
