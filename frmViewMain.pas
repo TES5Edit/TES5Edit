@@ -13180,6 +13180,8 @@ begin
               if not FileExists(t) then
                 LoaderProgress('Warning: <Can''t find ' + t + '>')
               else begin
+                if wbContainerHandler.ContainerExists(t) then
+                  Continue;
                 if wbLoadBSAs then begin
                   LoaderProgress('[' + s + '] Loading Resources.');
                   wbContainerHandler.AddBSA(t);
@@ -13201,6 +13203,8 @@ begin
             s := s + '*';
           if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
             repeat
+              if wbContainerHandler.ContainerExists(ltDataPath + F.Name) then
+                Continue;
               if wbLoadBSAs then begin
                 LoaderProgress('[' + F.Name + '] Loading Resources.');
                 wbContainerHandler.AddBSA(ltDataPath + F.Name);
