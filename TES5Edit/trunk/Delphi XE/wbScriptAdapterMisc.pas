@@ -220,6 +220,7 @@ begin
   );
 end;
 
+// parent window, verb, file, params, dir, show window
 procedure JvInterpreter_ShellExecuteWait(var Value: Variant; Args: TJvInterpreterArgs);
 var
   SEInfo: TShellExecuteInfo;
@@ -241,7 +242,38 @@ begin
     GetExitCodeProcess(SEInfo.hProcess, ExitCode);
     Value := ExitCode;
   end else
-    Value := 0;
+    raise Exception.Create('ShellExecute failed, error code ' + IntToStr(GetLastError));
+end;
+
+// file, params, show window, timeout
+procedure JvInterpreter_CreateProcessWait(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  StartUpInfo: TStartUpInfo;
+  ProcessInfo: TProcessInformation;
+  ExitCode: Cardinal;
+begin
+  FillChar(StartUpInfo, SizeOf(TStartUpInfo), 0);
+  with StartUpInfo do begin
+    cb := SizeOf(TStartUpInfo);
+    dwFlags := STARTF_USESHOWWINDOW or STARTF_FORCEONFEEDBACK;
+    wShowWindow := Args.Values[2];
+  end;
+
+  if CreateProcess(
+    PWideChar(String(Args.Values[0])),
+    PWideChar(String(Args.Values[1])),
+    nil, nil, False, NORMAL_PRIORITY_CLASS,
+    nil,
+    nil,
+    StartUpInfo, ProcessInfo)
+  then begin
+    WaitforSingleObject(ProcessInfo.hProcess, Cardinal(Args.Values[3]));
+    GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
+    CloseHandle(ProcessInfo.hThread);
+    CloseHandle(ProcessInfo.hProcess);
+    Value := ExitCode;
+  end else
+    raise Exception.Create('CreateProcess failed, error code ' + IntToStr(GetLastError));
 end;
 
 procedure JvInterpreter_SelectDirectory(var Value: Variant; Args: TJvInterpreterArgs);
@@ -910,6 +942,7 @@ begin
     AddFunction('Windows', 'CopyFile', JvInterpreter_CopyFile, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecuteWait', JvInterpreter_ShellExecuteWait, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('Windows', 'CreateProcessWait', JvInterpreter_CreateProcessWait, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
 
     { Math }
