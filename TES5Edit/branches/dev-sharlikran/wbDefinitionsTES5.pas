@@ -657,6 +657,7 @@ var
   wbFurnitureEntryTypeFlags: IwbFlagsDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
   wbWardStateEnum: IwbEnumDef;
+  wbEventFunctionEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
@@ -2457,7 +2458,9 @@ type
     ptFurnitureAnim,      // enum
     ptFurnitureEntry,     // flags
     ptScene,              // SCEN
-    ptWardState           // enum
+    ptWardState,          // enum
+    ptEventFunction,      // enum
+    ptEventData           // LCTN, KYWD or FLST
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2753,7 +2756,7 @@ const
 {N} (Index: 571; Name: 'GetCurrentCastingType'; ParamType1: ptCastingSource),
 {N} (Index: 572; Name: 'GetCurrentDeliveryType'; ParamType1: ptCastingSource),
 {N} (Index: 574; Name: 'GetAttackState'),
-{N} (Index: 576; Name: 'GetEventData'; ParamType1: ptNone; ParamType2: ptNone; ParamType3: ptNone),
+{N} (Index: 576; Name: 'GetEventData'; ParamType1: ptEventFunction; ParamType2: ptEventData; ParamType3: ptNone),
 {N} (Index: 577; Name: 'IsCloserToAThanB'; ParamType1: ptObjectReference; ParamType2: ptObjectReference),
 {N} (Index: 579; Name: 'GetEquippedShout'; ParamType1: ptShout),
 {N} (Index: 580; Name: 'IsBleedingOut'),
@@ -4259,6 +4262,20 @@ begin
     'Break'
   ]);
 
+  wbEventFunctionEnum := wbEnum([], [
+    Int64($00000000), 'None',
+    Int64($324C0000), 'GetIsID, New Location',
+    Int64($314C0000), 'GetIsID, Old Location',
+    Int64($324C0001), 'IsInList, New Location',
+    Int64($314C0001), 'IsInList, Old Location',
+    Int64($324C0002), 'GetValue, New Location',
+    Int64($314C0002), 'GetValue, Old Location',
+    Int64($324C0003), 'HasKeyword, New Location',
+    Int64($314C0003), 'HasKeyword, Old Location',
+    Int64($324C0004), 'GetItemValue, New Location',
+    Int64($314C0004), 'GetItemValue, Old Location'
+  ]);
+
   wbWeaponAnimTypeEnum := wbEnum([
     {0} 'HandToHandMelee',
     {1} 'OneHandSword',
@@ -5545,7 +5562,7 @@ begin
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
         wbInteger('VATS Value Param (INVALID)', itU32),
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM]),
+        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH]),
         wbFormIDCkNoReach('Region', [REGN]),
         wbFormIDCkNoReach('Keyword', [KYWD, NULL]),
         wbInteger('Player Action', itU32, wbAdvanceActionEnum),
@@ -5559,7 +5576,9 @@ begin
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
         wbFormIDCk('Scene', [NULL, SCEN]),
-        wbInteger('Ward State', itU32, wbWardStateEnum)
+        wbInteger('Ward State', itU32, wbWardStateEnum),
+        wbInteger('Event Function', itU32, wbEventFunctionEnum),
+        wbFormIDCk('Event Data', [NULL, LCTN, KYWD, FLST])
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         wbByteArray('Unknown', 4),
@@ -5644,7 +5663,7 @@ begin
          {19} wbInteger('Delivery Type', itU32, wbTargetEnum),
          {20} wbInteger('Casting Type', itU32, wbCastEnum)
         ]),
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, SCRL, SHOU], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, SCRL, SHOU]),
+        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, SCRL, SHOU], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH]),
         wbFormIDCkNoReach('Region', [REGN]),
         wbFormIDCkNoReach('Keyword', [KYWD, NULL]),
         wbInteger('Player Action', itU32, wbAdvanceActionEnum),
@@ -5658,7 +5677,9 @@ begin
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
         wbFormIDCk('Scene', [NULL, SCEN]),
-        wbInteger('Ward State', itU32, wbWardStateEnum)
+        wbInteger('Ward State', itU32, wbWardStateEnum),
+        wbInteger('Event Function', itU32, wbEventFunctionEnum),
+        wbFormIDCk('Event Data', [NULL, LCTN, KYWD, FLST])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',
@@ -7381,7 +7402,7 @@ begin
               '1 <-> 2',
               '2 <-> 0'
             ]),
-            wbByteArray('Cover Marker?', 2),
+            wbByteArray('Cover Marker?', 2),   // Might be Flags if bit if effectivly "Preferred path"
             wbInteger('Cover Edge #1 Flags', itU8),
             wbInteger('Cover Edge #2 Flags', itU8)
           ])

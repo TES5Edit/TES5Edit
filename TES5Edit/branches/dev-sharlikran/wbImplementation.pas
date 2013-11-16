@@ -5482,8 +5482,10 @@ var
 //  MainRecord             : IwbMainRecord;
   s: string;
 {$ENDIF}
-  RequiredRecords, PresentRecords: set of byte;
-  i : Integer;
+  RequiredRecords : set of byte;
+  PresentRecords : set of byte;
+  i              : Integer;
+  badRecord      : Boolean;
 begin
   RequiredRecords := [];
   PresentRecords := [];

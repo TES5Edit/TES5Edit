@@ -5205,7 +5205,7 @@ begin
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-      wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+      wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
       wbUnion('Parameter #1', wbCTDAParam1Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore),
@@ -6290,20 +6290,21 @@ begin
     wbEDIDReq,
     wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
       wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Info connections', wbRStruct('Data', [
-        wbFormIDCk(INFC, 'Info connection', [INFO]),
-        wbInteger(INFX, 'Info connection Index', itS32)
+      wbRArray('Shared Infos', wbRStruct('Shared Info', [
+        wbFormIDCk(INFC, 'Info Connection', [INFO], False, cpBenign),
+        wbInteger(INFX, 'Info Index', itS32, nil, cpBenign)
       ], []))
     ], [])),
+    // no QSTR in FNV, but keep it just in case
     wbRArrayS('Removed Quests', wbRStructSK([0], 'Removed Quest', [
-      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign),
-      wbRArray('Info connections', wbRStruct('Data', [
-        wbFormIDCk(INFC, 'Info connection', [INFO]),
-        wbInteger(INFX, 'Info connection Index', itS32)
-      ], []))
+      wbFormIDCkNoReach(QSTR, 'Quest', [QUST], False, cpBenign)
     ], [])),
-    wbRArray('Info Connections', wbFormIDCk(INFC, 'Info connection', [INFO])),
-    wbRArray('Info Indexes', wbInteger(INFX, 'Info connection Index', itS32)),
+    // some records have INFC INFX (with absent formids) but no QSTI, probably error in GECK
+    // i.e. [DIAL:001287C6] and [DIAL:000E9084]
+    wbRArray('Unused', wbRStruct('Unused', [
+      wbUnknown(INFC, cpIgnore),
+      wbUnknown(INFX, cpIgnore)
+    ], []), cpIgnore, False, wbNeverShow),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbString(TDUM),
@@ -9036,7 +9037,7 @@ begin
     ], cpNormal, True, nil, 2),
     wbRStruct('Locations', [
       wbStruct(PLDT, 'Location 1', [
-        wbInteger('Type', itS32, wbEnum([
+        wbInteger('Type', itS32, wbEnum([     // Byte + filler
           {0} 'Near reference',
           {1} 'In cell',
           {2} 'Near current location',
