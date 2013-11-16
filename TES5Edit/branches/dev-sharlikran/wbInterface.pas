@@ -1499,6 +1499,7 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     function ResolveHash(const aHash: Int64): TDynStrings;
+    function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
     procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;

@@ -53,13 +53,13 @@ type
     chContainers: array of IwbResourceContainer;
   protected
     procedure AddContainer(const aContainer: IwbResourceContainer);
-    function ContainerExists(aContainerName: string): Boolean;
 
     {---IwbContainerHandler---}
     procedure AddFolder(const aPath: string);
     procedure AddBSA(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
+    function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
     procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
     function ResourceExists(const aFileName: string): Boolean;

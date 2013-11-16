@@ -96,7 +96,7 @@
 		<DCCReference Include="Zlibex.pas"/>
 		<DCCReference Include="wbBSA.pas"/>
 		<DCCReference Include="wbInterface.pas"/>
-			<DCCReference Include="wbSaveInterface.pas"/>
+		<DCCReference Include="wbSaveInterface.pas"/>
 		<DCCReference Include="wbImplementation.pas"/>
 		<DCCReference Include="wbLocalization.pas"/>
 		<DCCReference Include="wbDefinitionsFNV.pas"/>
@@ -104,7 +104,7 @@
 		<DCCReference Include="wbDefinitionsTES3.pas"/>
 		<DCCReference Include="wbDefinitionsTES4.pas"/>
 		<DCCReference Include="wbDefinitionsTES5.pas"/>
-			<DCCReference Include="wbDefinitionsTES5Saves.pas"/>
+		<DCCReference Include="wbDefinitionsTES5Saves.pas"/>
 		<BuildConfiguration Include="Debug">
 			<Key>Cfg_2</Key>
 			<CfgParent>Base</CfgParent>
