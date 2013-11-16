@@ -2782,7 +2782,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   try
-    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
+    frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
 
     Worldspaces := nil;
     for i := Low(Files) to High(Files) do begin
@@ -2823,11 +2823,11 @@ begin
         end;
       except
         on E: Exception do begin
-          frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Generator: <Error: '+E.Message+'>');
+          frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: <Error: '+E.Message+'>');
           raise;
         end;
       end;
-      frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] LOD Generator: finished (you can close this application now)');
+      frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: finished (you can close this application now)');
     finally
       Self.Caption := Application.Title;
     end;
