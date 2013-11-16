@@ -45,7 +45,7 @@
 		<DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
 		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 		<VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+		<DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
 		<DCC_ImageBase>00400000</DCC_ImageBase>
 		<DCC_E>false</DCC_E>
 		<DCC_N>false</DCC_N>
@@ -62,12 +62,12 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
 		<Manifest_File>None</Manifest_File>
-		<VerInfo_Release>31</VerInfo_Release>
+		<VerInfo_Release>32</VerInfo_Release>
 		<VerInfo_MajorVer>3</VerInfo_MajorVer>
 		<VerInfo_PreRelease>true</VerInfo_PreRelease>
 		<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 		<Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
-		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDup by ElminsterAU;ProductVersion=3.0.31.0;Comments=</VerInfo_Keys>
+		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32.0;Comments=</VerInfo_Keys>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Cfg_2)'!=''">
 		<DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
@@ -81,11 +81,11 @@
 	<Manifest_File>None</Manifest_File>
 	<VerInfo_PreRelease>true</VerInfo_PreRelease>
 	<VerInfo_MajorVer>3</VerInfo_MajorVer>
-	<VerInfo_Release>31</VerInfo_Release>
+	<VerInfo_Release>32</VerInfo_Release>
 	<VerInfo_Debug>true</VerInfo_Debug>
 	<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 	<Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
-	<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.31;Comments=</VerInfo_Keys>
+	<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
 	<Debugger_RunParams></Debugger_RunParams>
 	<DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
 	</PropertyGroup>
@@ -96,7 +96,6 @@
 		<DCCReference Include="Zlibex.pas"/>
 		<DCCReference Include="wbBSA.pas"/>
 		<DCCReference Include="wbInterface.pas"/>
-		<DCCReference Include="wbSaveInterface.pas"/>
 		<DCCReference Include="wbImplementation.pas"/>
 		<DCCReference Include="wbLocalization.pas"/>
 		<DCCReference Include="wbDefinitionsFNV.pas"/>

@@ -7,7 +7,7 @@
 		<TargetedPlatforms>1</TargetedPlatforms>
 		<AppType>Console</AppType>
 		<FrameworkType>None</FrameworkType>
-		<ProjectVersion>14.3</ProjectVersion>
+        <ProjectVersion>14.3</ProjectVersion>
 		<Platform Condition="'$(Platform)'==''">Win32</Platform>
 		<Platform>Win32</Platform>
 		<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
@@ -96,7 +96,6 @@
 		<DCCReference Include="Zlibex.pas"/>
 		<DCCReference Include="wbBSA.pas"/>
 		<DCCReference Include="wbInterface.pas"/>
-		<DCCReference Include="wbSaveInterface.pas"/>
 		<DCCReference Include="wbImplementation.pas"/>
 		<DCCReference Include="wbLocalization.pas"/>
 		<DCCReference Include="wbDefinitionsFNV.pas"/>

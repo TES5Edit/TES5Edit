@@ -1084,6 +1084,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean;
 
     property DefaultSignature: TwbSignature
       read GetDefaultSignature;
@@ -2854,6 +2857,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
   end;
 
   TwbRecordDef = class(TwbSignatureDef, IwbRecordDef)
@@ -2975,6 +2981,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
 
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
@@ -3017,6 +3026,9 @@ type
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
 
@@ -3069,6 +3081,9 @@ type
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
 
@@ -3687,6 +3702,7 @@ type
 
   TwbRefID = class(TwbFormID, IwbRefID)
   protected
+    {---IwbIntegerDefFormater---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
   end;
@@ -5278,6 +5294,12 @@ begin
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
+function TwbSignatureDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := CanHandle(aSignature, aDataContainer);
+end;
+
 constructor TwbSignatureDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbSignatureDef) do
@@ -5651,6 +5673,12 @@ begin
   Result := sraElement.CanHandle(aSignature, aDataContainer);
 end;
 
+function TwbSubRecordArrayDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := sraElement.CanHandleAlso(aSignature, aDataContainer);
+end;
+
 constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
@@ -5798,6 +5826,12 @@ begin
     Result := ContainsMemberFor(aSignature, aDataContainer)
   else
     Result := srsMembers[0].CanHandle(aSignature, aDataContainer);
+end;
+
+function TwbSubRecordStructDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := ContainsMemberFor(aSignature, aDataContainer)
 end;
 
 constructor TwbSubRecordStructDef.Clone(const aSource: TwbDef);
@@ -6017,6 +6051,12 @@ begin
     if Result then
       Exit;
   end;
+end;
+
+function TwbSubRecordUnionDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := CanHandle(aSignature, aDataContainer);
 end;
 
 constructor TwbSubRecordUnionDef.Clone(const aSource: TwbDef);

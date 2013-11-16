@@ -1,0 +1,3 @@
+Clutter\Basket01.NIF
+Clutter\Dwemer\DwemerBowl01.nif
+Clutter\HoneyPot01.nif
