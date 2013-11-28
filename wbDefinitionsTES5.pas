@@ -5835,6 +5835,7 @@ begin
     wbStruct(DNAM, 'Data', [
       wbInteger('Male Priority', itU8),
       wbInteger('Female Priority', itU8),
+      // essentialy a number of world models for different weights (Enabled = 2 models _0.nif and _1.nif)
       wbInteger('Weight slider - Male', itU8, wbFlags([
         {0x01} 'Unknown 0',
         {0x02} 'Enabled'
@@ -6833,7 +6834,7 @@ begin
         {0x00000020}'Unknown 6',
         {0x00000040}'Track Crime',
         {0x00000080}'Ignore Crimes: Murder',
-        {0x00000100}'Ignore Crimes: Assult',
+        {0x00000100}'Ignore Crimes: Assault',
         {0x00000200}'Ignore Crimes: Stealing',
         {0x00000400}'Ignore Crimes: Trespass',
         {0x00000800}'Do Not Report Crimes Against Members',
@@ -6869,7 +6870,7 @@ begin
       {01} wbInteger('Arrest', itU8, wbEnum(['False', 'True'])),
       {02} wbInteger('Attack On Sight', itU8, wbEnum(['False', 'True'])),
       {02} wbInteger('Murder', itU16),
-      {02} wbInteger('Assult', itU16),
+      {02} wbInteger('Assault', itU16),
       {02} wbInteger('Trespass', itU16),
       {02} wbInteger('Pickpocket', itU16),
       {02} wbInteger('Unknown', itU16),

@@ -34,6 +34,7 @@ var
   imgMap, imgOver: TImage;
   cmbWorld, cmbMapSize, cmbLODLevel, cmbLODSize, cmbScale, cmbGrid: TComboBox;
   chkNormals: TCheckBox;
+  PanningX, PanningY: integer;
 
 
   
@@ -443,6 +444,38 @@ begin
 end;
 
 //============================================================================
+procedure imgOverMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  PanningX := X;
+  PanningY := Y;
+end;
+
+//============================================================================
+procedure TForm1.imgOverMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+var
+  dX, dY: integer;
+begin
+  // Panning map view with mouse while left mouse button is pressed
+  if Shift = [ssLeft] then begin
+    // delta
+    dX := PanningX - X;
+    dY := PanningY - Y;
+    // scrollbars range is 0..Range
+    if sbxMap.HorzScrollBar.Position + dX < 0 then dX := -sbxMap.HorzScrollBar.Position else
+      if sbxMap.HorzScrollBar.Position + dX > sbxMap.HorzScrollBar.Range then dX := sbxMap.HorzScrollBar.Range - sbxMap.HorzScrollBar.Position;
+    if sbxMap.VertScrollBar.Position + dY < 0 then dY := -sbxMap.VertScrollBar.Position else
+      if sbxMap.VertScrollBar.Position + dY > sbxMap.VertScrollBar.Range then dY := sbxMap.VertScrollBar.Range - sbxMap.VertScrollBar.Position;
+    sbxMap.HorzScrollBar.Position := sbxMap.HorzScrollBar.Position + dX;
+    sbxMap.VertScrollBar.Position := sbxMap.VertScrollBar.Position + dY;
+    // save current mouse position modified by deltas
+    PanningX := X + dX;
+    PanningY := Y + dY;
+  end;
+end;
+
+//============================================================================
 function CreateLabel(aForm: TForm; aText: string; aLeft, aTop: integer): TLabel;
 begin
   Result := TLabel.Create(aForm);
@@ -686,7 +719,6 @@ begin
   mi.OnClick := miWorldspaceSaveAsLODClick;
   miWorldspace.Add(mi);
   
-
   miRegion := TMenuItem.Create(mnMain);
   miRegion.Caption := 'Region';
   miRegion.OnClick := miRegionClick;
@@ -726,6 +758,8 @@ begin
   imgOver.Parent := sbxMap;
   imgOver.Picture.Bitmap.TransparentColor := ColorTransparent;
   imgOver.Transparent := True;
+  imgOver.OnMouseDown := imgOverMouseDown;
+  imgOver.OnMouseMove := imgOverMouseMove;
   miOverlayClearClick(nil);
   
   // worldspace select window
