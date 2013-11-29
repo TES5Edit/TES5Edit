@@ -11809,7 +11809,7 @@ begin
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
     ], []),
-    wbStruct(PNAM, 'Cloud Layer', [
+    wbArray(PNAM, 'Cloud Colors', wbStruct('Layer', [
       wbArray('Colors',
         wbStruct('Time', [
           wbInteger('Red', itU8),
@@ -11818,10 +11818,9 @@ begin
           wbByteArray('Unknown', 1)
         ]),
         ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-      wbArray('Unknown', wbByteArray('Unknown', 4))
-    ]),
-    wbArray(JNAM, 'Clouds', wbStruct('Layer', [
+      )
+    ])),
+    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Alpha'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
@@ -11906,7 +11905,7 @@ begin
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
     wbRArray('Directional Ambient Lighting Colors',
-      wbStruct(DALC, 'Day/Night/Sunrise/Sunset Order', [wbAmbientColors], cpNormal, True)
+      wbStruct(DALC, 'Sunrise/Day/Sunset/Night Order', [wbAmbientColors], cpNormal, True)
     ),
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),

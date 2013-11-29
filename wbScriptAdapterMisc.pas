@@ -404,6 +404,17 @@ end;
 
 { TCheckListBox }
 
+type
+  TJvInterpreterCheckListBoxEvents = class(TJvInterpreterEvent)
+  private
+    procedure OnClickCheck(Sender: TObject);
+  end;
+
+procedure TJvInterpreterCheckListBoxEvents.OnClickCheck(Sender: TObject);
+begin
+  CallFunction(nil, [O2V(Sender)]);
+end;
+
 procedure TCheckListBox_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TCheckListBox.Create(V2O(Args.Values[0]) as TComponent));
@@ -993,7 +1004,7 @@ begin
     AddGet(TBinaryWriter, 'WriteSingle', TBinaryWriter_WriteSingle, 1, [varEmpty], varEmpty);
 
     { TCheckListBox }
-    AddClass('StdCtrls', TCheckListBox, 'TCheckListBox');
+    AddClass('CheckLst', TCheckListBox, 'TCheckListBox');
     AddGet(TCheckListBox, 'Create', TCheckListBox_Create, 1, [varEmpty], varEmpty);
     AddGet(TCheckListBox, 'CheckAll', TCheckListBox_CheckAll, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddIGet(TCheckListBox, 'Checked', TCheckListBox_Read_Checked, 1, [varEmpty], varEmpty);
@@ -1006,6 +1017,7 @@ begin
     AddISet(TCheckListBox, 'ItemEnabled', TCheckListBox_Write_ItemEnabled, 1, [varNull]);
     AddGet(TCheckListBox, 'AllowGrayed', TCheckListBox_Read_AllowGrayed, 0, [varEmpty], varEmpty);
     AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
+    AddHandler('CheckLst', 'TNotifyEvent', TJvInterpreterCheckListBoxEvents, @TJvInterpreterCheckListBoxEvents.OnClickCheck);
 
    { TComboBox }
     AddGet(TComboBox, 'DropDownCount', TComboBox_Read_DropDownCount, 0, [varEmpty], varEmpty);
