@@ -11079,6 +11079,7 @@ begin
       ]), cpNormal, True),
       wbFULLReq,
       wbInteger(TNAM, 'Type', itU16, wbEnum([], [
+        0, 'Undefined',
         1, 'City',
         2, 'Town',
         3, 'Settlement',
