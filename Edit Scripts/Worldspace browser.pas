@@ -1,8 +1,23 @@
 {
-  Visual worldspace browser.
-  Supports Oblivion, Fallout 3, New Vegas, Skyrim.
-  
+  Worldspace Browser v0.2 for Oblivion, Fallout 3, New Vegas, Skyrim.
   Hotkey: Alt+F3
+  
+  Reconstructs worldspace map from distand LOD (level of detail) landscape textures.
+  Push and hold left mouse button to pan map.
+  Menu actions:
+    Worldspace \ Select - draw a map for selected worldspace
+    Worldspace \ Save as Image - save map as a single large image
+    Worldspace \ Save as LOD Tiles - split map image back into separate LOD textures used by a game (Skyrim's format)
+    Worldspace \ Load Image - load bitmap image, for example to be split by previous function after adjusting with graphical editors
+    Overlay \ Region - draw selected regions
+    Overlay \ Map Marker - draw selected map marker types
+    Overlay \ Base Object References - draw references of selected objects in the current worldspace
+    Overlay \ Cell Overrides - draw worldspace overrides for selected plugins
+      dotted square: cell record (CELL) is overridden
+      solid square: landspace record (LAND) in this cell is added or overridden
+      dotted cross: navmesh or pathgrid records (NAVM or PGRD) in this cell are added or overridden
+    Overlay \ Change Color - select color to be used by overlay drawing functions
+    Overlay \ Clear - clear all overlayed objects
 }
 unit WorldspaceBrowser;
 
@@ -10,7 +25,9 @@ const
   CellSize = 4096;
   ColorBackground = $000000; // background map color RGB
   ColorTransparent = $000001; // transparent color for overlay
-  // font sizes for lod level 32
+  ColorOverlayDefault = clYellow; // default overlay drawing color
+  OverlaySizeReference = 3; // drawing size of reference
+  // font sizes for lod level 32, automatically scaled for other lod levels
   FontSizeBlock = 20;
   FontSizeSubBlock = 7;
   FontSizeCell = 5;
@@ -28,13 +45,14 @@ var
 
   frmMain, frmWorld: TForm;
   mnMain: TMainMenu;
-  mi, miWorldspace, miOverlay, miRegion, miCell, miMapMarker: TMenuItem;
+  mi, miWorldspace, miOverlay, miRegion, miCell, miMapMarker, miReferences: TMenuItem;
   sbInfo: TStatusBar;
   sbxMap: TScrollBox;
   imgMap, imgOver: TImage;
   cmbWorld, cmbMapSize, cmbLODLevel, cmbLODSize, cmbScale, cmbGrid: TComboBox;
   chkNormals: TCheckBox;
   PanningX, PanningY: integer;
+  ColorOverlay: integer;
 
 
   
@@ -150,6 +168,40 @@ begin
       Result := r;
       Exit;
     end;
+  end;
+end;
+
+//============================================================================
+// get cell record by X,Y grid coordinates from worldspace
+procedure GetCellFromWorldspace(Worldspace: IInterface; CellX, CellY: integer);
+var
+  blockidx, subblockidx, cellidx: integer;
+  wrldgrup, block, subblock, cell: IInterface;
+  BlockName, SubBlockName: string;
+begin
+  BlockName := Format('Block %d, %d', [(CellX + 32) div 32 - 1, (CellY + 32) div 32 - 1]);
+  SubBlockName := Format('Sub-Block %d, %d', [(CellX + 8) div 8 - 1, (CellY + 8) div 8 - 1]);
+  wrldgrup := ChildGroup(Worldspace);
+  // iterate over Exterior Blocks
+  for blockidx := 0 to Pred(ElementCount(wrldgrup)) do begin
+    block := ElementByIndex(wrldgrup, blockidx);
+    if ShortName(block) <> BlockName then Continue;
+    // iterate over SubBlocks
+    for subblockidx := 0 to Pred(ElementCount(block)) do begin
+      subblock := ElementByIndex(block, subblockidx);
+      if ShortName(subblock) <> SubBlockName then Continue;
+      // iterate over Cells
+      for cellidx := 0 to Pred(ElementCount(subblock)) do begin
+        cell := ElementByIndex(subblock, cellidx);
+        if (Signature(cell) <> 'CELL') or GetIsPersistent(cell) then Continue;
+        if (GetElementNativeValues(cell, 'XCLC\X') = CellX) and (GetElementNativeValues(cell, 'XCLC\Y') = CellY) then begin
+          Result := cell;
+          Exit;
+        end;
+      end;
+      Break;
+    end;
+    Break;
   end;
 end;
 
@@ -314,7 +366,7 @@ begin
 end;
 
 //============================================================================
-// create map from lod texture, requires FormID and EditorID of worldspace
+// create map from lod textures, requires FormID and EditorID of worldspace
 function CreateWorldspaceMap(wrld: IInterface; bmpMap: TBitMap): Boolean;
 var
   wrldFormID, x, y, bmpx, bmpy: integer;
@@ -386,60 +438,73 @@ begin
 end;
   
 //============================================================================
-// draws a map for WRLD record
+// draw a map for WRLD record
 procedure DrawMap(wrld: IInterface);
 var
   bmp: TBitmap;
-  i, j: integer;
-  ents, ent, regns, regn: IInterface;
+  i, j, k: integer;
+  ents, ent, w, regns, regn: IInterface;
 begin
   bmp := TBitmap.Create;
   bmp.PixelFormat := pf32bit;
   try
     fMapDrawn := CreateWorldSpaceMap(wrld, bmp);
     CurrentWorld := wrld;
+    // draw grid if grid's opacity is not zero
     if GridOpacity > 0 then
       DrawCellGrid(bmp, GridOpacity);
+    // stretch TImage of map if scale is not 100%
     if MapViewScale <> 1 then imgMap.Stretch := True
       else imgMap.Stretch := False;
+    // adjust sise of map TImage depending on scale
     imgMap.Width := Round(bmp.Width * MapViewScale);
     imgMap.Height := Round(bmp.Height * MapViewScale);
+    // draw a map on TImage
     imgMap.Picture.Assign(bmp);
+    // adjust overlay TImage to match map TImage
     imgOver.Width := imgMap.Width;
     imgOver.Height := imgMap.Height;
     imgOver.Picture.Bitmap.SetSize(imgOver.Width, imgOver.Height);
+    // clear overlay
     miOverlayClearClick(nil);
   finally
     bmp.Free;
   end;
   if not fMapDrawn then
     ShowMessage(Format('No LOD level %d textures for worldspace %s, try other levels.', [LODLevel, Name(wrld)]));
-  frmMain.Caption := Format('Worldspace Browser - %s %dx%d', [Name(wrld), imgMap.Width, imgMap.Height]);
+  frmMain.Caption := Format('%sEdit Worldspace Browser - %s %dx%d', [wbAppName, Name(wrld), imgMap.Width, imgMap.Height]);
   frmMainFormResize(nil);
   sbInfo.SimpleText := '';
   
+  // collect additional data about selected worldspace used by overlaying functions
+  
   // list of worldspaces including current worldspace and it's children worldspaces flagged "use land data" (except Oblivion, no flags there)
+  // list of overriding plugins for worldspaces
+  slPlugin.Clear;
   slWorldspaces.Clear;
   slWorldspaces.AddObject(IntToHex(FormID(wrld), 8), wrld);
+  for k := 0 to Pred(OverrideCount(wrld)) do begin
+    w := OverrideByIndex(wrld, k);
+    slPlugin.AddObject(Name(GetFile(w)), w);
+  end;
   for i := 0 to Pred(FileCount) do begin
     ents := GroupBySignature(FileByIndex(i), 'WRLD');
     for j := 0 to Pred(ElementCount(ents)) do begin
       ent := ElementByIndex(ents, j);
       if FormID(wrld) = FormID(LinksTo(ElementByPath(ent, 'Parent\WNAM'))) then
-        if (wbGameMode = gmTES4) or (GetElementNativeValues(ent, 'Parent\PNAM\Flags') and 1 = 1) then
+        if (wbGameMode = gmTES4) or (GetElementNativeValues(ent, 'Parent\PNAM\Flags') and 1 = 1) then begin
           slWorldspaces.AddObject(IntToHex(FormID(ent), 8), ent);
+          for k := 0 to Pred(OverrideCount(ent)) do begin
+            w := OverrideByIndex(ent, k);
+            if slPlugin.IndexOf(Name(GetFile(w))) = -1 then
+              slPlugin.AddObject(Name(GetFile(w)), w);
+          end;
+        end;
     end;
-  end;
-
-  // list of overriding plugins
-  slPlugin.Clear;
-  for i := 0 to Pred(OverrideCount(wrld)) do begin
-    ent := OverrideByIndex(wrld, i);
-    slPlugin.AddObject(Name(GetFile(ent)), ent);
   end;
   miCell.Enabled := (slPlugin.Count > 0);
 
-  // list of regions
+  // list of regions with points data
   slRegion.Clear;
   for i := Pred(FileCount) downto 0 do begin
     regns := GroupBySignature(FileByIndex(i), 'REGN');
@@ -452,83 +517,139 @@ begin
 end;
 
 //============================================================================
-// resize event for main form
-procedure frmMainFormResize(Sender: TObject);
+// draw a region on overlay
+procedure OverlayRegion(regn: IInterface);
 var
-  a: integer;
+  i, j, x, y: integer;
+  areas, area, points, point: IInterface;
 begin
-  if not fMapDrawn then Exit;
-  sbxMap.HorzScrollBar.Position := 0;
-  sbxMap.VertScrollBar.Position := 0;
-  a := (sbxMap.Width - imgMap.Width) div 2;
-  if a < 0 then a := 0;
-  imgMap.Left := a;
-  a := (sbxMap.Height - imgMap.Height) div 2;
-  if a < 0 then a := 0;
-  imgMap.Top := a;
-  imgOver.Left := imgMap.Left;
-  imgOver.Top := imgMap.Top;
-end;
-
-//============================================================================
-procedure imgOverMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  PanningX := X;
-  PanningY := Y;
-end;
-
-//============================================================================
-procedure TForm1.imgOverMouseMove(Sender: TObject; Shift: TShiftState; X,
-  Y: Integer);
-var
-  dX, dY: integer;
-begin
-  // Panning map view with mouse while left mouse button is pressed
-  if Shift = [ssLeft] then begin
-    // delta
-    dX := PanningX - X;
-    dY := PanningY - Y;
-    // scrollbars range is 0..Range
-    if sbxMap.HorzScrollBar.Position + dX < 0 then dX := -sbxMap.HorzScrollBar.Position else
-      if sbxMap.HorzScrollBar.Position + dX > sbxMap.HorzScrollBar.Range then dX := sbxMap.HorzScrollBar.Range - sbxMap.HorzScrollBar.Position;
-    if sbxMap.VertScrollBar.Position + dY < 0 then dY := -sbxMap.VertScrollBar.Position else
-      if sbxMap.VertScrollBar.Position + dY > sbxMap.VertScrollBar.Range then dY := sbxMap.VertScrollBar.Range - sbxMap.VertScrollBar.Position;
-    sbxMap.HorzScrollBar.Position := sbxMap.HorzScrollBar.Position + dX;
-    sbxMap.VertScrollBar.Position := sbxMap.VertScrollBar.Position + dY;
-    // save current mouse position modified by deltas
-    PanningX := X + dX;
-    PanningY := Y + dY;
-  end
-  else if fMapDrawn then begin
-    sbInfo.SimpleText := Format('Cell: %d, %d   Position: %.0n, %.0n', [Pos2Cell(px2PosX(X)), Pos2Cell(px2PosY(Y)), px2PosX(X), px2PosY(Y)]);
+  imgOver.Canvas.Pen.Color := ColorOverlay;
+  areas := ElementByName(regn, 'Region Areas');
+  for i := 0 to Pred(ElementCount(areas)) do begin
+    area := ElementByIndex(areas, i);
+    points := ElementBySignature(area, 'RPLD');
+    for j := 0 to Pred(ElementCount(points)) do begin
+      point := ElementByIndex(points, j);
+      if j = 0 then begin
+        x := OverX(GetElementNativeValues(point, 'X'));
+        y := OverY(GetElementNativeValues(point, 'Y'));
+        imgOver.Canvas.MoveTo(x, y);
+      end else
+        imgOver.Canvas.LineTo(OverX(GetElementNativeValues(point, 'X')), OverY(GetElementNativeValues(point, 'Y')));
+    end;
+    if ElementCount(points) > 0 then
+      imgOver.Canvas.LineTo(x, y);
   end;
 end;
 
 //============================================================================
-function CreateLabel(aForm: TForm; aText: string; aLeft, aTop: integer): TLabel;
+// draw a map marker (REFR record type) on overlay
+procedure OverlayMapMarker(refr: IInterface);
+var
+  x, y, r: real;
+  s: string;
 begin
-  Result := TLabel.Create(aForm);
-  Result.Parent := aForm;
-  Result.Caption := aText;
-  Result.Left := aLeft; Result.Top := aTop;
+  // getting marker position
+  imgOver.Canvas.Pen.Color := ColorOverlay;
+  x := GetElementNativeValues(refr, 'DATA\Position\X');
+  y := GetElementNativeValues(refr, 'DATA\Position\Y');
+  // getting marker radius
+  if ElementExists(refr, 'XRDS') then r := GetElementNativeValues(refr, 'XRDS')
+    else r := 2000;
+  // draw marker as a cirle
+  imgOver.Canvas.Ellipse(OverX(x-r), OverY(y-r), OverX(x+r), OverY(y+r));
+  // draw marker name
+  s := GetElementEditValues(refr, 'Map Marker\FULL');
+  if s <> '' then begin
+    imgOver.Canvas.Font.Color := ColorOverlay;
+    imgOver.Canvas.Font.Size := Round(FontSizeMapMarker*FontMult);
+    imgOver.Canvas.Font.Style := [fsBold];
+    imgOver.Canvas.Brush.Style := bsClear;
+    imgOver.Canvas.TextOut(OverX(x+r), OverY(y-r), s);
+  end;
 end;
 
 //============================================================================
-function CreateComboList(aForm: TForm; aLeft, aTop, aWidth: integer): TComboBox;
+// draw a reference on overlay
+procedure OverlayReference(refr: IInterface);
+var
+  x, y: integer;
 begin
-  Result := TComboBox.Create(aForm);
-  Result.Parent := aForm;
-  Result.Style := csDropDownList; Result.DropDownCount := 20;
-  Result.Left := aLeft; Result.Top := aTop; Result.Width := aWidth;
+  // getting reference position
+  x := OverX(GetElementNativeValues(refr, 'DATA\Position\X'));
+  y := OverY(GetElementNativeValues(refr, 'DATA\Position\Y'));
+  // draw reference
+  imgOver.Canvas.Pen.Color := ColorOverlay;
+  imgOver.Canvas.Pen.Style := psSolid;
+  imgOver.Canvas.MoveTo(x - OverlaySizeReference, y);
+  imgOver.Canvas.LineTo(x, y - OverlaySizeReference);
+  imgOver.Canvas.LineTo(x + OverlaySizeReference, y);
+  imgOver.Canvas.LineTo(x, y + OverlaySizeReference);
+  imgOver.Canvas.LineTo(x - OverlaySizeReference, y);
 end;
 
 //============================================================================
+// draw a cell conflicts on overlay
+procedure OverlayCell(wrld: IInterface);
+var
+  blockidx, subblockidx, cellidx: integer;
+  wrldgrup, block, subblock, cell: IInterface;
+  x, y, x1, y1: real;
+begin
+  imgOver.Canvas.Pen.Color := ColorOverlay;
+  wrldgrup := ChildGroup(wrld);
+  // traverse Blocks
+  for blockidx := 0 to Pred(ElementCount(wrldgrup)) do begin
+    block := ElementByIndex(wrldgrup, blockidx);
+    // traverse SubBlocks
+    for subblockidx := 0 to Pred(ElementCount(block)) do begin
+      subblock := ElementByIndex(block, subblockidx);
+      // traverse Cells
+      for cellidx := 0 to Pred(ElementCount(subblock)) do begin
+        cell := ElementByIndex(subblock, cellidx);
+        // we are interested in CELLs only
+        if Signature(cell) <> 'CELL' then Continue;
+        // skip persistent cell
+        if GetIsPersistent(cell) then Continue;
+        // skip cells without grid position
+        if not ElementExists(cell, 'XCLC') then Continue;
+        // calculation cell's rectangle on overlay
+        x := OverX(GetElementNativeValues(cell, 'XCLC\X')*CellSize);
+        y := OverY(GetElementNativeValues(cell, 'XCLC\Y')*CellSize);
+        x1 := x + CellSizePx*MapViewScale;
+        y1 := y - CellSizePx*MapViewScale;
+        // type of rectangle depending on conflict type
+        if Assigned(GetLandscapeForCell(cell)) then
+          imgOver.Canvas.Pen.Style := psSolid // landscape overrides shown as solid rect
+        else
+          imgOver.Canvas.Pen.Style := psDot; // cell only override shown as dotted rect
+        imgOver.Canvas.MoveTo(x, y);
+        imgOver.Canvas.LineTo(x1, y);
+        imgOver.Canvas.LineTo(x1, y1);
+        imgOver.Canvas.LineTo(x, y1);
+        imgOver.Canvas.LineTo(x, y);
+        // draw a dotted cross for navmesh/pathgrid conflicts
+        if Assigned(GetPathingForCell(cell)) then begin
+          imgOver.Canvas.Pen.Style := psDot;
+          imgOver.Canvas.MoveTo(x, y);
+          imgOver.Canvas.LineTo(x1, y1);
+          imgOver.Canvas.MoveTo(x, y1);
+          imgOver.Canvas.LineTo(x1, y);
+        end;
+      end;
+    end;
+  end;
+end;
+
+//============================================================================
+// click event for worldspace select menu
 procedure miWorldspaceClick(Sender: TObject);
 var
   s: string;
 begin
+  // setting worldspace combobox to the current drawn worldspace
   cmbWorld.ItemIndex := cmbWorld.Items.IndexOf(EditorID(CurrentWorld));
+  // selector form
   if frmWorld.ShowModal = mrOk then begin
     if cmbWorld.ItemIndex = -1 then
       Exit;
@@ -545,6 +666,63 @@ begin
 end;
 
 //============================================================================
+// click event for worldspace load image menu
+procedure miWorldspaceLoadImageClick(Sender: TObject);
+var
+  ImageFileName: string;
+  dlgOpen: TSaveDialog;
+  bmp: TBitmap;
+begin
+  dlgOpen := TOpenDialog.Create(nil);
+  try
+    dlgOpen.Filter := 'Windows Bitmap (*.bmp)|*.bmp';
+    dlgOpen.InitialDir := DataPath;
+    if dlgOpen.Execute then
+      ImageFileName := dlgOpen.FileName;
+  finally
+    dlgOpen.Free;
+  end;
+  
+  if ImageFileName = '' then
+    Exit;
+
+  bmp := TBitmap.Create;
+  try
+    bmp.LoadFromFile(ImageFileName);
+    if bmp.Width = imgMap.Width then
+      imgMap.Canvas.Draw(0, 0, bmp)
+    else
+      imgMap.Canvas.StretchDraw(Rect(0, 0, imgMap.Width, imgMap.Height), bmp);
+  finally
+    bmp.Free;
+  end;
+end;
+
+//============================================================================
+// click event for worldspace save as image menu
+procedure miWorldspaceSaveAsImageClick(Sender: TObject);
+var
+  dlgSave: TSaveDialog;
+begin
+  if not fMapDrawn then
+    Exit;
+    
+  dlgSave := TSaveDialog.Create(nil);
+  try
+    dlgSave.Options := dlgSave.Options + [ofOverwritePrompt];
+    dlgSave.Filter := 'Windows Bitmap (*.bmp)|*.bmp';
+    dlgSave.InitialDir := DataPath;
+    dlgSave.FileName := EditorID(CurrentWorld) + '.bmp';
+    if dlgSave.Execute then begin
+      imgMap.Picture.Bitmap.SaveToFile(dlgSave.FileName);
+    end;
+  finally
+    dlgSave.Free;
+  end;
+end;
+
+//============================================================================
+// click event for worldspace save as lod tiles menu
 // save map as separate lod textures to be used with landscape lod meshes
 procedure miWorldspaceSaveAsLODClick(Sender: TObject);
 var
@@ -553,7 +731,8 @@ var
   SrcRect, DestRect: TRect;
   edid, texpath, fname: string;
 begin
-  //imgMap.Picture.Bitmap.SaveToFile('e:\3\1.bmp'); Exit;
+  if not fMapDrawn then
+    Exit;
   
   if not InputQuery('Enter', 'Worldspace Editor ID', edid) then Exit;
   if edid = '' then Exit;
@@ -594,106 +773,7 @@ begin
 end;
 
 //============================================================================
-procedure miOverlayClearClick(Sender: TObject);
-begin
-  imgOver.Canvas.Brush.Color := ColorTransparent;
-  imgOver.Canvas.FillRect(Rect(0, 0, imgOver.Picture.Bitmap.Width, imgOver.Picture.Bitmap.Height));
-end;
-
-//============================================================================
-procedure OverlayRegion(regn: IInterface);
-var
-  i, j, x, y: integer;
-  areas, area, points, point: IInterface;
-begin
-  imgOver.Canvas.Pen.Color := clYellow;
-  areas := ElementByName(regn, 'Region Areas');
-  for i := 0 to Pred(ElementCount(areas)) do begin
-    area := ElementByIndex(areas, i);
-    points := ElementBySignature(area, 'RPLD');
-    for j := 0 to Pred(ElementCount(points)) do begin
-      point := ElementByIndex(points, j);
-      if j = 0 then begin
-        x := OverX(GetElementNativeValues(point, 'X'));
-        y := OverY(GetElementNativeValues(point, 'Y'));
-        imgOver.Canvas.MoveTo(x, y);
-      end else
-        imgOver.Canvas.LineTo(OverX(GetElementNativeValues(point, 'X')), OverY(GetElementNativeValues(point, 'Y')));
-    end;
-    if ElementCount(points) > 0 then
-      imgOver.Canvas.LineTo(x, y);
-  end;
-end;
-
-//============================================================================
-procedure OverlayMapMarker(refr: IInterface);
-var
-  x, y, r: real;
-  s: string;
-begin
-  imgOver.Canvas.Pen.Color := clWhite;
-  x := GetElementNativeValues(refr, 'DATA\Position\X');
-  y := GetElementNativeValues(refr, 'DATA\Position\Y');
-  // radius
-  if ElementExists(refr, 'XRDS') then r := GetElementNativeValues(refr, 'XRDS')
-    else r := 2000;
-  imgOver.Canvas.Ellipse(OverX(x-r), OverY(y-r), OverX(x+r), OverY(y+r));
-  s := GetElementEditValues(refr, 'Map Marker\FULL');
-  if s <> '' then begin
-    imgOver.Canvas.Font.Color := clWhite;
-    imgOver.Canvas.Font.Size := Round(FontSizeMapMarker*FontMult);
-    imgOver.Canvas.Font.Style := [fsBold];
-    imgOver.Canvas.Brush.Style := bsClear;
-    imgOver.Canvas.TextOut(OverX(x+r), OverY(y-r), s);
-  end;
-end;
-
-//============================================================================
-procedure OverlayCell(wrld: IInterface);
-var
-  blockidx, subblockidx, cellidx: integer;
-  wrldgrup, block, subblock, cell: IInterface;
-  x, y, x1, y1: real;
-begin
-  imgOver.Canvas.Pen.Color := clYellow;
-  wrldgrup := ChildGroup(wrld);
-  // traverse Blocks
-  for blockidx := 0 to Pred(ElementCount(wrldgrup)) do begin
-    block := ElementByIndex(wrldgrup, blockidx);
-    // traverse SubBlocks
-    for subblockidx := 0 to Pred(ElementCount(block)) do begin
-      subblock := ElementByIndex(block, subblockidx);
-      // traverse Cells
-      for cellidx := 0 to Pred(ElementCount(subblock)) do begin
-        cell := ElementByIndex(subblock, cellidx);
-        if Signature(cell) <> 'CELL' then Continue;
-        if not ElementExists(cell, 'XCLC') then Continue;
-        x := OverX(GetElementNativeValues(cell, 'XCLC\X')*CellSize);
-        y := OverY(GetElementNativeValues(cell, 'XCLC\Y')*CellSize);
-        x1 := x + CellSizePx*MapViewScale;
-        y1 := y + CellSizePx*MapViewScale;
-        if Assigned(GetLandscapeForCell(cell)) then
-          imgOver.Canvas.Pen.Style := psSolid // landscape overrides shown as solid rect
-        else
-          imgOver.Canvas.Pen.Style := psDot; // cell only override shown as dotted rect
-        imgOver.Canvas.MoveTo(x, y);
-        imgOver.Canvas.LineTo(x1, y);
-        imgOver.Canvas.LineTo(x1, y1);
-        imgOver.Canvas.LineTo(x, y1);
-        imgOver.Canvas.LineTo(x, y);
-        if Assigned(GetPathingForCell(cell)) then begin
-          imgOver.Canvas.Pen.Style := psDot;
-          imgOver.Canvas.MoveTo(x, y);
-          imgOver.Canvas.LineTo(x1, y1);
-          imgOver.Canvas.MoveTo(x, y1);
-          imgOver.Canvas.LineTo(x1, y);
-        end;
-      end;
-    end;
-  end;
-end;
-
-//============================================================================
+// click event for overlay region menu
 procedure miRegionClick(Sender: TObject);
 var
   frm: TForm;
@@ -715,6 +795,7 @@ begin
 end;
 
 //============================================================================
+// click event for overlay map marker menu
 procedure miMapMarkerClick(Sender: TObject);
 var
   frm: TForm;
@@ -738,8 +819,7 @@ begin
   for i := 0 to Pred(ReferencedByCount(MapMarkerStat)) do begin
     e := ReferencedByIndex(MapMarkerStat, i);
     if not IsReferenceInWorldspace(e) then Continue;
-    s := GetElementEditValues(e, 'Map Marker\TNAM');
-    if s = '0' then AddMessage(Name(e));
+    s := GetElementEditValues(e, 'Map Marker\TNAM\Type');
     if s <> '' then
       slMarkerType.Add(s);
   end;
@@ -759,7 +839,7 @@ begin
       for i := 0 to Pred(ReferencedByCount(MapMarkerStat)) do begin
         e := ReferencedByIndex(MapMarkerStat, i);
         if not IsReferenceInWorldspace(e) then Continue;
-        s := GetElementEditValues(e, 'Map Marker\TNAM');
+        s := GetElementEditValues(e, 'Map Marker\TNAM\Type');
         if slMarkerType.IndexOf(s) <> -1 then
           OverlayMapMarker(e);
       end;
@@ -770,6 +850,81 @@ begin
 end;
 
 //============================================================================
+// click event for overlay base object references menu
+procedure miReferencesClick(Sender: TObject);
+var
+  frm: TForm;
+  clb: TCheckListBox;
+  i, j, k: integer;
+  grp, ent, baseobj: IInterface;
+  slBaseObject: TStringList;
+  s: string;
+begin
+  if ContainerStates(GetFile(CurrentWorld)) and (1 shl csRefsBuild) = 0 then
+    MessageDlg(Format('References are not built for %s, this function won''t work properly. Please use right click "Other\Build Reference Info" menu of %sEdit', [
+      GetFileName(GetFile(CurrentWorld)),
+      wbAppName
+    ]), mtInformation, [mbOk], 0);
+
+  // first ask for base object types
+  slBaseObject := TStringList.Create;
+  slBaseObject.Duplicates := dupIgnore;
+  slBaseObject.Sorted := True;
+  frm := frmFileSelect;
+  try
+    frm.Width := 500;
+    frm.Caption := 'Base Object Type';
+    clb := TCheckListBox(frm.FindComponent('CheckListBox1'));
+    GetRecordDefNames(clb.Items);
+    if frm.ShowModal <> mrOk then
+      Exit;
+
+    // iterate through selected signatures
+    for i := 0 to Pred(clb.Items.Count) do
+      if clb.Checked[i] then begin
+        s := Copy(clb.Items[i], 1, 4); // signature
+        // iterate through loaded plugins
+        for j := 0 to Pred(FileCount) do begin
+          grp := GroupBySignature(FileByIndex(j), s);
+          // iterate through records
+          for k := 0 to Pred(ElementCount(grp)) do begin
+            ent := ElementByIndex(grp, k);
+            // adding only master records to skip overrides
+            if IsMaster(ent) then begin
+              // but actually adding the last winning override
+              ent := WinningOverride(ent);
+              slBaseObject.AddObject(Name(ent), ent);
+            end;
+          end;
+        end;
+      end;
+
+    if slBaseObject.Count = 0 then
+      Exit;
+      
+    clb.Items.Assign(slBaseObject);
+    frm.Caption := 'Base Object';
+    if frm.ShowModal <> mrOk then
+      Exit;
+
+    for i := 0 to Pred(clb.Items.Count) do
+      if clb.Checked[i] then begin
+        baseobj := ObjectToElement(clb.Items.Objects[i]);
+        for j := 0 to Pred(ReferencedByCount(baseobj)) do begin
+          ent := ReferencedByIndex(baseobj, j);
+          if IsReferenceInWorldspace(ent) then
+            OverlayReference(ent);
+        end;
+      end;
+
+  finally
+    frm.Free;
+    slBaseObject.Free;
+  end;
+end;
+
+//============================================================================
+// click event for overlay cell overrides menu
 procedure miCellClick(Sender: TObject);
 var
   frm: TForm;
@@ -791,6 +946,115 @@ begin
 end;
 
 //============================================================================
+// click event for overlay change color menu
+procedure miOverlayChangeColorClick(Sender: TObject);
+var
+  dlgColor: TColorDialog;
+begin
+  dlgColor := TColorDialog.Create(frmMain);
+  try
+    dlgColor.Options := [cdFullOpen, cdAnyColor];
+    dlgColor.Color := ColorOverlay;
+    if dlgColor.Execute then
+      ColorOverlay := dlgColor.Color;
+  finally
+    dlgColor.Free;
+  end;
+end;
+
+//============================================================================
+// click event for overlay clear menu
+procedure miOverlayClearClick(Sender: TObject);
+begin
+  imgOver.Canvas.Brush.Color := ColorTransparent;
+  imgOver.Canvas.FillRect(Rect(0, 0, imgOver.Picture.Bitmap.Width, imgOver.Picture.Bitmap.Height));
+end;
+
+//============================================================================
+// on mouse down event
+procedure imgOverMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  // start of mouse panning, store cursor position
+  PanningX := X;
+  PanningY := Y;
+end;
+
+//============================================================================
+// on mouse up event
+procedure imgOverMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  PanningX := -1;
+end;
+
+//============================================================================
+// on mouse move event
+procedure imgOverMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+var
+  dX, dY: integer;
+begin
+  // Panning map view with mouse while left mouse button is pressed
+  if Shift = [ssLeft] then begin
+    if PanningX = -1 then Exit;
+    // delta
+    dX := PanningX - X;
+    dY := PanningY - Y;
+    // scrollbars range is 0..Range
+    if sbxMap.HorzScrollBar.Position + dX < 0 then dX := -sbxMap.HorzScrollBar.Position else
+      if sbxMap.HorzScrollBar.Position + dX > sbxMap.HorzScrollBar.Range then dX := sbxMap.HorzScrollBar.Range - sbxMap.HorzScrollBar.Position;
+    if sbxMap.VertScrollBar.Position + dY < 0 then dY := -sbxMap.VertScrollBar.Position else
+      if sbxMap.VertScrollBar.Position + dY > sbxMap.VertScrollBar.Range then dY := sbxMap.VertScrollBar.Range - sbxMap.VertScrollBar.Position;
+    sbxMap.HorzScrollBar.Position := sbxMap.HorzScrollBar.Position + dX;
+    sbxMap.VertScrollBar.Position := sbxMap.VertScrollBar.Position + dY;
+    // save current mouse position modified by deltas
+    PanningX := X + dX;
+    PanningY := Y + dY;
+  end
+  else if fMapDrawn then begin
+    sbInfo.SimpleText := Format('Cell: %d, %d   Position: %.0n, %.0n', [Pos2Cell(px2PosX(X)), Pos2Cell(px2PosY(Y)), px2PosX(X), px2PosY(Y)]);
+  end;
+end;
+
+//============================================================================
+// resize event for main form
+procedure frmMainFormResize(Sender: TObject);
+var
+  a: integer;
+begin
+  if not fMapDrawn then Exit;
+  sbxMap.HorzScrollBar.Position := 0;
+  sbxMap.VertScrollBar.Position := 0;
+  a := (sbxMap.Width - imgMap.Width) div 2;
+  if a < 0 then a := 0;
+  imgMap.Left := a;
+  a := (sbxMap.Height - imgMap.Height) div 2;
+  if a < 0 then a := 0;
+  imgMap.Top := a;
+  imgOver.Left := imgMap.Left;
+  imgOver.Top := imgMap.Top;
+end;
+
+//============================================================================
+function CreateLabel(aForm: TForm; aText: string; aLeft, aTop: integer): TLabel;
+begin
+  Result := TLabel.Create(aForm);
+  Result.Parent := aForm;
+  Result.Caption := aText;
+  Result.Left := aLeft; Result.Top := aTop;
+end;
+
+//============================================================================
+function CreateComboList(aForm: TForm; aLeft, aTop, aWidth: integer): TComboBox;
+begin
+  Result := TComboBox.Create(aForm);
+  Result.Parent := aForm;
+  Result.Style := csDropDownList; Result.DropDownCount := 20;
+  Result.Left := aLeft; Result.Top := aTop; Result.Width := aWidth;
+end;
+
+//============================================================================
 // create forms
 procedure BuildForms;
 var
@@ -800,7 +1064,7 @@ var
   wrlds, wrld: IInterface;
 begin
   frmMain := TForm.Create(nil);
-  frmMain.Caption := 'Worldspace Browser';
+  frmMain.Caption := wbAppName + 'Edit Worldspace Browser';
   frmMain.Width := 900;
   frmMain.Height := 650;
   frmMain.Position := poMainFormCenter;
@@ -819,31 +1083,60 @@ begin
   
   mi := TMenuItem.Create(mnMain);
   mi.Caption := 'Select';
+  mi.ShortCut := TextToShortCut('F3');
   mi.OnClick := miWorldspaceClick;
   miWorldspace.Add(mi);
+
   mi := TMenuItem.Create(mnMain);
-  mi.Caption := 'Save as LOD tiles';
+  mi.Caption := 'Load Image';
+  mi.OnClick := miWorldspaceLoadImageClick;
+  miWorldspace.Add(mi);
+
+  mi := TMenuItem.Create(mnMain);
+  mi.Caption := 'Save as Image';
+  mi.OnClick := miWorldspaceSaveAsImageClick;
+  miWorldspace.Add(mi);
+
+  mi := TMenuItem.Create(mnMain);
+  mi.Caption := 'Save as LOD Tiles';
   mi.OnClick := miWorldspaceSaveAsLODClick;
   miWorldspace.Add(mi);
   
   miRegion := TMenuItem.Create(mnMain);
   miRegion.Caption := 'Region';
+  miRegion.ShortCut := TextToShortCut('Alt+R');
   miRegion.OnClick := miRegionClick;
   miOverlay.Add(miRegion);
 
   miMapMarker := TMenuItem.Create(mnMain);
   miMapMarker.Caption := 'Map Marker';
+  miMapMarker.ShortCut := TextToShortCut('Alt+M');
   miMapMarker.OnClick := miMapMarkerClick;
   miOverlay.Add(miMapMarker);
 
+  miReferences := TMenuItem.Create(mnMain);
+  miReferences.Caption := 'Base Object References';
+  miReferences.ShortCut := TextToShortCut('Alt+B');
+  miReferences.OnClick := miReferencesClick;
+  miOverlay.Add(miReferences);
+
   miCell := TMenuItem.Create(mnMain);
-  miCell.Caption := 'Cell overrides';
+  miCell.Caption := 'Cell Overrides';
+  miCell.ShortCut := TextToShortCut('Alt+O');
   miCell.OnClick := miCellClick;
   miOverlay.Add(miCell);
 
   mi := TMenuItem.Create(mnMain); mi.Caption := '-'; miOverlay.Add(mi);
+
+  mi := TMenuItem.Create(mnMain);
+  mi.Caption := 'Change Color';
+  mi.ShortCut := TextToShortCut('Alt+C');
+  mi.OnClick := miOverlayChangeColorClick;
+  miOverlay.Add(mi);
+
   mi := TMenuItem.Create(mnMain);
   mi.Caption := 'Clear';
+  mi.ShortCut := TextToShortCut('F8');
   mi.OnClick := miOverlayClearClick;
   miOverlay.Add(mi);
   
@@ -868,6 +1161,7 @@ begin
   imgOver.Picture.Bitmap.TransparentColor := ColorTransparent;
   imgOver.Transparent := True;
   imgOver.OnMouseDown := imgOverMouseDown;
+  imgOver.OnMouseUp := imgOverMouseUp;
   imgOver.OnMouseMove := imgOverMouseMove;
   miOverlayClearClick(nil);
   
@@ -902,11 +1196,11 @@ begin
     cmbLODLevel.Items.Text := '32' // Oblivion uses only 32
   else
     cmbLODLevel.Items.Text := '4'#13'8'#13'16'#13'32';
-  cmbLODSize.Items.Text := '256'#13'512'#13'1024'#13'2048'#13'4096';
+  cmbLODSize.Items.Text := '128'#13'256'#13'512'#13'1024'#13'2048'#13'4096';
   for i := 1 to 6 do
     cmbScale.Items.Add(IntToStr(i*25));
-  for i := 0 to 255 do
-    cmbGrid.Items.Add(IntToStr(i));
+  for i := 0 to 255 div 5 do
+    cmbGrid.Items.Add(IntToStr(i*5));
   cmbMapSize.ItemIndex := cmbMapSize.Items.IndexOf(Format('%dx%d', [MapSizeX+MapSizeX, MapSizeY+MapSizeY]));
   cmbLODLevel.ItemIndex := cmbLODLevel.Items.IndexOf(IntToStr(LODLevel));
   cmbLODSize.ItemIndex := cmbLODSize.Items.IndexOf(IntToStr(LODSize));
@@ -941,12 +1235,13 @@ begin
   LODLevel := 32;
   LODSize := 256; // default lod texture size for level 32
   MapViewScale := 1;
-  GridOpacity := 75;
+  GridOpacity := 0;
   fMapNormals := False;
   if wbGameMode = gmTES4 then begin
     LODSize := 1024; // Oblivion uses 1024x1024 lod textures only
     MapViewScale := 0.5; // scale them down since they are huge
   end;
+  ColorOverlay := ColorOverlayDefault;
 end;
 
 //============================================================================
@@ -955,7 +1250,7 @@ var
   wrld: IInterface;
 begin
   InitBrowser;
-  //try
+  try
     slWorldspaces := TStringList.Create; slWorldspaces.Duplicates := dupIgnore; slWorldspaces.Sorted := True;
     slRegion := TStringList.Create; slRegion.Duplicates := dupIgnore; slRegion.Sorted := True;
     slPlugin := TStringList.Create;
@@ -967,13 +1262,13 @@ begin
     if Assigned(wrld) and HasLOD(wrld) then
       DrawMap(wrld);
     frmMain.ShowModal;
-  //finally
+  finally
     frmWorld.Free;
     frmMain.Free;
     slWorldspaces.Free;
     slRegion.Free;
     slPlugin.Free;
-  //end;
+  end;
 
   Result := 1;
 end;
