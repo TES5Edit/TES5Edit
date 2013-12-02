@@ -4409,7 +4409,7 @@ begin
       wbFULLReq,
       wbStruct(TNAM, '', [
         wbInteger('Type', itU8, wbEnum([
-          {0x00} 'None?',
+          {0x00} 'None',
           {0x01} 'Camp',
           {0x02} 'Cave',
           {0x03} 'City',
