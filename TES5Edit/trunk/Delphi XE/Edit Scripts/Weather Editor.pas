@@ -1,5 +1,6 @@
 {
   Weather Editor v0.1
+  Supports Oblivion, Skyrim, Fallout 3, Fallout New Vegas
 
   Hotkey: Ctrl+W
 }
@@ -8,13 +9,13 @@ unit WeatherEditor;
 
 const
   sCloudTexturesLocation = 'textures\sky\';
-  sCloudLayerSignatures = '00TX,10TX,20TX,30TX,40TX,50TX,60TX,70TX,80TX,90TX,:0TX,;0TX,<0TX,=0TX,>0TX,?0TX,@0TX,A0TX,B0TX,C0TX,D0TX,E0TX,F0TX,G0TX,H0TX,I0TX,J0TX,K0TX,L0TX';
   iColorEditorWidth = 170;
   iColorEditorHeight = 50;
 
 var
   Weather: IInterface;
-  slCloudTextures, slCloudSignatures: TStringList;
+  sCloudLayerSignatures, sColorTimes: string;
+  slCloudTextures, slCloudSignatures, slColorTimes: TStringList;
   lstCED, lstCEDElement: TList; // list of Color Editors and respective elements
   frm: TForm;
   pgcWeather: TPageControl;
@@ -25,6 +26,8 @@ var
   btnShowCloudTexture, btnApplyCloud, btnApplyWeatherColors, btnApplyLightingColors: TButton;
   edCloudXSpeed, edCloudYSpeed, edCloudAlpha: TLabeledEdit;
   imgCloud: TImage;
+  CountCloudLayers: integer; // a total number of supported cloud layers
+  CountTimes: integer; // a total number of times (sunrise, day, sunset, night)
   CountWeatherColors: integer; // a total number of weather colors
   CountLightingColors: integer; // a total number of lighting colors
 
@@ -85,8 +88,8 @@ begin
   dlgColor.Options := [cdFullOpen, cdAnyColor];
   dlgColor.Color := pnl.Color;
   // add quartet colors as custom ones
-  j := Round((pnl.Tag div 4)*4);
-  for i := 0 to 3 do
+  j := Round((pnl.Tag div CountTimes) * CountTimes);
+  for i := 0 to Pred(CountTimes) do
     dlgColor.CustomColors.Add(Format('Color%s=%s', [Chr(65+i), IntToHex(TPanel(lstCED[j+i]).Color, 6)]));
   if dlgColor.Execute then
     pnl.Color := dlgColor.Color;
@@ -108,7 +111,7 @@ begin
   if not CheckEditable(Weather) then
     Exit;
 
-  ColorEditorWriteColor(4, 4 + Pred(CountWeatherColors));
+  ColorEditorWriteColor(CountTimes, CountTimes + Pred(CountWeatherColors));
 end;
 
 //============================================================================
@@ -118,7 +121,7 @@ begin
   if not CheckEditable(Weather) then
     Exit;
 
-  ColorEditorWriteColor(4 + CountWeatherColors, 4 + CountWeatherColors + Pred(CountLightingColors));
+  ColorEditorWriteColor(CountTimes + CountWeatherColors, CountTimes + CountWeatherColors + Pred(CountLightingColors));
 end;
 
 //============================================================================
@@ -129,7 +132,6 @@ var
 begin
   CloudTexture := 'textures\' + LowerCase(cmbCloudTexture.Text);
   if not ResourceExists(CloudTexture) then begin
-    //MessageDlg(CloudTexture + ' does not exist.', mtInformation, [mbOk], 0);
     AddMessage(CloudTexture + ' does not exist.');
     Exit;
   end;
@@ -146,11 +148,19 @@ begin
     Exit;
 
   Layer := lbCloudLayers.ItemIndex;
-  SetElementEditValues(Weather, slCloudSignatures[Layer], cmbCloudTexture.Text);
-  SetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]), edCloudXSpeed.Text);
-  SetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]), edCloudYSpeed.Text);
-  SetElementEditValues(Weather, Format('JNAM\Layer #%d\Alpha', [Layer]), edCloudAlpha.Text);
-  ColorEditorWriteColor(0, 3);
+
+  if wbGameMode = gmTES5 then begin
+    SetElementEditValues(Weather, slCloudSignatures[Layer], cmbCloudTexture.Text);
+    SetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]), edCloudXSpeed.Text);
+    SetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]), edCloudYSpeed.Text);
+    SetElementEditValues(Weather, Format('JNAM\Layer #%d\Alpha', [Layer]), edCloudAlpha.Text);
+  end
+  else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
+    SetEditValue(ElementByIndex(ElementByPath(Weather, 'ONAM'), Layer), edCloudXSpeed.Text)
+  else if wbGameMode = gmTES4 then
+    SetEditValue(ElementByIndex(ElementByPath(Weather, 'DATA'), Layer + 1), edCloudXSpeed.Text);
+
+  ColorEditorWriteColor(0, Pred(CountTimes));
 end;
 
 //============================================================================
@@ -174,15 +184,31 @@ begin
     imgCloud.Picture := nil;
 
   // fill layer parameters
-  edCloudXSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]));
-  edCloudYSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]));
-  edCloudAlpha.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Alpha', [Layer]));
+  if wbGameMode = gmTES5 then begin
+    edCloudXSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]));
+    edCloudYSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]));
+    edCloudAlpha.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Alpha', [Layer]));
+  end
+  else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
+    edCloudXSpeed.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, 'ONAM'), Layer))
+  else if wbGameMode = gmTES4 then
+    edCloudXSpeed.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, 'DATA'), Layer + 1));
 
   // fill layer colors
-  elColors := ElementByName(ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer), 'Colors');
-  for i := 0 to 3 do
+  if wbGameMode = gmTES5 then
+    elColors := ElementByName(ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer), 'Colors')
+  else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
+    elColors := ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer)
+  else if wbGameMode = gmTES4 then begin
+    if Layer = 0 then
+      elColors := ElementByIndex(ElementByPath(Weather, 'NAM0'), 2)
+    else if Layer = 1 then
+      elColors := ElementByIndex(ElementByPath(Weather, 'NAM0'), 9);
+  end;
+  
+  for i := 0 to Pred(CountTimes) do
     lstCEDElement[i] := ElementByIndex(elColors, i);
-  ColorEditorReadColor(0, 3);
+  ColorEditorReadColor(0, Pred(CountTimes));
 end;
 
 //============================================================================
@@ -193,8 +219,16 @@ var
   DisabledClouds: LongWord;
 begin
   Layer := lbCloudLayers.ItemIndex;
+
+  // can't disable cloud layers in games before Skyrim
+  if (wbGameMode = gmTES4) or (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
+    lbCloudLayers.Checked[Layer] := True;
+    MessageDlg(Format('Can not disable cloud layer in %s', [wbGameName]), mtError, [mbOk], 0);
+    Exit;
+  end;
+
   if not CheckEditable(Weather) then begin
-    // can edit layer, restore layer's check state back
+    // can't edit layer, restore layer's check state back
     lbCloudLayers.Checked[Layer] := not lbCloudLayers.Checked[Layer];
     Exit;
   end;
@@ -259,17 +293,12 @@ end;
 procedure EditorUI;
 var
   i, j: integer;
+  s: string;
   DisabledClouds: LongWord;
-  arColorTime: array [0..3] of string;
   lbl: TLabel;
   sbx: TScrollBox;
   e1, e2: IInterface;
 begin
-  arColorTime[0] := 'Sunrise';
-  arColorTime[1] := 'Day';
-  arColorTime[2] := 'Sunset';
-  arColorTime[3] := 'Night';
-
   frm := TForm.Create(nil);
   try
     frm.Caption := Format('%s \ %s - %s Weather Editor', [GetFileName(Weather), Name(Weather), wbGameName]);
@@ -296,8 +325,14 @@ begin
     lbCloudLayers.OnClick := lbCloudLayersClick;
     lbCloudLayers.OnClickCheck := lbCloudLayersClickCheck;
     DisabledClouds := GetElementNativeValues(Weather, 'NAM1');
-    for i := 0 to 28 do begin
-      lbCloudLayers.Items.Add(Format('Layer %d', [i]));
+    for i := 0 to Pred(CountCloudLayers) do begin
+      // Oblivion has only 2 predefined cloud names
+      if wbGameMode = gmTES4 then begin
+        if i = 0 then s := 'Lower'
+          else if i = 1 then s := 'Upper';
+      end else
+        s := Format('Layer %d', [i]);
+      lbCloudLayers.Items.Add(s);
       if DisabledClouds and (1 shl i) = 0 then
         lbCloudLayers.Checked[i] := True;
     end;
@@ -343,20 +378,25 @@ begin
     edCloudXSpeed.EditLabel.Caption := 'X Speed';
     edCloudXSpeed.Left := 70; edCloudXSpeed.Top := 40; edCloudXSpeed.Width := 70;
 
-    edCloudYSpeed := TLabeledEdit.Create(frm);
-    edCloudYSpeed.Parent := pnlCloudEdit;
-    edCloudYSpeed.LabelPosition := lpLeft;
-    edCloudYSpeed.EditLabel.Caption := 'Y Speed';
-    edCloudYSpeed.Left := 200; edCloudYSpeed.Top := 40; edCloudYSpeed.Width := 70;
+    // only one speed value per cloud layer and no alpha in games before Skyrim
+    if (wbGameMode = gmTES4) or (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
+      edCloudXSpeed.EditLabel.Caption := 'Speed'
+    else begin
+      edCloudYSpeed := TLabeledEdit.Create(frm);
+      edCloudYSpeed.Parent := pnlCloudEdit;
+      edCloudYSpeed.LabelPosition := lpLeft;
+      edCloudYSpeed.EditLabel.Caption := 'Y Speed';
+      edCloudYSpeed.Left := 200; edCloudYSpeed.Top := 40; edCloudYSpeed.Width := 70;
+      
+      edCloudAlpha := TLabeledEdit.Create(frm);
+      edCloudAlpha.Parent := pnlCloudEdit;
+      edCloudAlpha.LabelPosition := lpLeft;
+      edCloudAlpha.EditLabel.Caption := 'Alpha';
+      edCloudAlpha.Left := 330; edCloudAlpha.Top := 40; edCloudAlpha.Width := 70;
+    end;
 
-    edCloudAlpha := TLabeledEdit.Create(frm);
-    edCloudAlpha.Parent := pnlCloudEdit;
-    edCloudAlpha.LabelPosition := lpLeft;
-    edCloudAlpha.EditLabel.Caption := 'Alpha';
-    edCloudAlpha.Left := 330; edCloudAlpha.Top := 40; edCloudAlpha.Width := 70;
-
-    for i := 0 to 3 do begin
-      lbl := CreateLabel(pnlCloudEdit, 12 + i*iColorEditorWidth, 80, arColorTime[i]);
+    for i := 0 to Pred(CountTimes) do begin
+      lbl := CreateLabel(pnlCloudEdit, 12 + i*iColorEditorWidth, 80, slColorTimes[i]);
       lbl.AutoSize := False;
       lbl.Width := iColorEditorWidth;
       lbl.Alignment := taCenter;
@@ -389,10 +429,13 @@ begin
 
     e1 := ElementByPath(Weather, 'NAM0');
     for i := 0 to Pred(ElementCount(e1)) do begin
+      // skip cloud colors that are stored together with weather colors in Oblivion
+      if (wbGameMode = gmTES4) and ((i = 2) or (i = 9)) then
+        Continue;
       e2 := ElementByIndex(e1, i);
-      for j := 0 to Pred(ElementCount(e2)) do begin
+      for j := 0 to Pred(CountTimes) do begin
         if i = 0 then begin
-          lbl := CreateLabel(sbx, 112 + j*iColorEditorWidth, 8, arColorTime[j]);
+          lbl := CreateLabel(sbx, 120 + j*iColorEditorWidth, 8, slColorTimes[j]);
           lbl.AutoSize := False;
           lbl.Width := iColorEditorWidth;
           lbl.Alignment := taCenter;
@@ -411,52 +454,53 @@ begin
     btnApplyWeatherColors := TButton.Create(frm);
     btnApplyWeatherColors.Parent := sbx;
     btnApplyWeatherColors.Width := 100;
-    btnApplyWeatherColors.Left := 120 + 4*iColorEditorWidth - btnApplyWeatherColors.Width;
+    btnApplyWeatherColors.Left := 120 + CountTimes*iColorEditorWidth - btnApplyWeatherColors.Width;
     btnApplyWeatherColors.Top := 40 + Succ(i)*iColorEditorHeight;
     btnApplyWeatherColors.Caption := 'Apply Changes';
     btnApplyWeatherColors.OnClick := btnApplyWeatherColorsClick;
 
     // LIGHTING COLORS TABSHEET
-    tsLightingColors := TTabSheet.Create(pgcWeather);
-    tsLightingColors.PageControl := pgcWeather;
-    tsLightingColors.Caption := 'Directional Ambient Lighting Colors';
-    
-    sbx := TScrollBox.Create(frm);
-    sbx.Parent := tsLightingColors;
-    sbx.Align := alClient;
-    sbx.BorderStyle := bsNone;
-    sbx.HorzScrollBar.Tracking := True;
-    sbx.VertScrollBar.Tracking := True;
+    if wbGameMode = gmTES5 then begin
+      tsLightingColors := TTabSheet.Create(pgcWeather);
+      tsLightingColors.PageControl := pgcWeather;
+      tsLightingColors.Caption := 'Directional Ambient Lighting Colors';
+      
+      sbx := TScrollBox.Create(frm);
+      sbx.Parent := tsLightingColors;
+      sbx.Align := alClient;
+      sbx.BorderStyle := bsNone;
+      sbx.HorzScrollBar.Tracking := True;
+      sbx.VertScrollBar.Tracking := True;
 
-    e1 := ElementByName(Weather, 'Directional Ambient Lighting Colors');
-    for i := 0 to Pred(ElementCount(e1)) do begin
-      e2 := ElementByPath(ElementByIndex(e1, i), 'Directional Ambient\Colors');
-      for j := 0 to Pred(ElementCount(e2)) do begin
-        if j = 0 then begin
-          lbl := CreateLabel(sbx, 112 + i*iColorEditorWidth, 8, arColorTime[i]);
-          lbl.AutoSize := False;
-          lbl.Width := iColorEditorWidth;
-          lbl.Alignment := taCenter;
+      e1 := ElementByName(Weather, 'Directional Ambient Lighting Colors');
+      for i := 0 to Pred(CountTimes) do begin
+        e2 := ElementByPath(ElementByIndex(e1, i), 'Directional Ambient\Colors');
+        for j := 0 to Pred(ElementCount(e2)) do begin
+          if j = 0 then begin
+            lbl := CreateLabel(sbx, 120 + i*iColorEditorWidth, 8, slColorTimes[i]);
+            lbl.AutoSize := False;
+            lbl.Width := iColorEditorWidth;
+            lbl.Alignment := taCenter;
+          end;
+          if i = 0 then begin
+            lbl := CreateLabel(sbx, 12, 28 + Succ(j)*iColorEditorHeight - iColorEditorHeight div 2 - 5, Name(ElementByIndex(e2, j)));
+            lbl.AutoSize := False;
+            lbl.Width := 100;
+            lbl.Alignment := taRightJustify;
+          end;
+          CreateColorEditor(sbx, 120 + i*iColorEditorWidth, 28 + j*iColorEditorHeight, ElementByIndex(e2, j));
+          Inc(CountLightingColors);
         end;
-        if i = 0 then begin
-          lbl := CreateLabel(sbx, 12, 28 + Succ(j)*iColorEditorHeight - iColorEditorHeight div 2 - 5, Name(ElementByIndex(e2, j)));
-          lbl.AutoSize := False;
-          lbl.Width := 100;
-          lbl.Alignment := taRightJustify;
-        end;
-        CreateColorEditor(sbx, 120 + i*iColorEditorWidth, 28 + j*iColorEditorHeight, ElementByIndex(e2, j));
-        Inc(CountLightingColors);
       end;
+
+      btnApplyLightingColors := TButton.Create(frm);
+      btnApplyLightingColors.Parent := sbx;
+      btnApplyLightingColors.Width := 100;
+      btnApplyLightingColors.Left := 120 + CountTimes*iColorEditorWidth - btnApplyLightingColors.Width;
+      btnApplyLightingColors.Top := 40 + Succ(j)*iColorEditorHeight;
+      btnApplyLightingColors.Caption := 'Apply Changes';
+      btnApplyLightingColors.OnClick := btnApplyLightingColorsClick;
     end;
-
-    btnApplyLightingColors := TButton.Create(frm);
-    btnApplyLightingColors.Parent := sbx;
-    btnApplyLightingColors.Width := 100;
-    btnApplyLightingColors.Left := 120 + 4*iColorEditorWidth - btnApplyLightingColors.Width;
-    btnApplyLightingColors.Top := 40 + Succ(j)*iColorEditorHeight;
-    btnApplyLightingColors.Caption := 'Apply Changes';
-    btnApplyLightingColors.OnClick := btnApplyLightingColorsClick;
-
 
     frm.ShowModal;
   finally
@@ -465,8 +509,8 @@ begin
 end;
 
 //============================================================================
-// Skyrim Weather Editor
-procedure WeatherEditorTES5(e: IInterface);
+// Weather Editor
+procedure DoWeatherEditor(e: IInterface);
 var
   slContainers, slAssets, slFiltered: TStringList;
   i: integer;
@@ -478,6 +522,11 @@ begin
   slCloudSignatures := TStringList.Create;
   slCloudSignatures.Delimiter := ',';
   slCloudSignatures.DelimitedText := sCloudLayerSignatures;
+  CountCloudLayers := slCloudSignatures.Count;
+  slColorTimes := TStringList.Create;
+  slColorTimes.Delimiter := ',';
+  slColorTimes.DelimitedText := sColorTimes;
+  CountTimes := slColorTimes.Count;
   lstCED := TList.Create;
   lstCEDElement := TList.Create;
 
@@ -504,6 +553,7 @@ begin
 
   slCloudTextures.Free;
   slCloudSignatures.Free;
+  slColorTimes.Free;
   lstCED.Free;
   lstCEDElement.Free;
 end;
@@ -511,11 +561,23 @@ end;
 //============================================================================
 function Initialize: integer;
 begin
-  if wbGameMode <> gmTES5 then begin
-    MessageDlg('Sorry, script supports Skyrim weathers only for now.', mtInformation, [mbOk], 0);
+  // game specific settings
+  if wbGameMode = gmTES5 then begin
+    sCloudLayerSignatures := '00TX,10TX,20TX,30TX,40TX,50TX,60TX,70TX,80TX,90TX,:0TX,;0TX,<0TX,=0TX,>0TX,?0TX,@0TX,A0TX,B0TX,C0TX,D0TX,E0TX,F0TX,G0TX,H0TX,I0TX,J0TX,K0TX,L0TX';
+  end
+  else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
+    sCloudLayerSignatures := 'DNAM,CNAM,ANAM,BNAM';
+  end
+  else if wbGameMode = gmTES4 then begin
+    sCloudLayerSignatures := 'CNAM,DNAM';
+  end
+  else begin
+    MessageDlg(Format('Weather Editor for %s is not supported', [wbGameName]), mtInformation, [mbOk], 0)
     Result := 1;
     Exit;
   end;
+  // all games have 4 time spans for colors
+  sColorTimes := 'Sunrise,Day,Sunset,Night';
 end;
 
 //============================================================================
@@ -524,7 +586,7 @@ begin
   if Signature(e) <> 'WTHR' then
     MessageDlg(Format('The selected record %s is not a weather', [Name(e)]), mtInformation, [mbOk], 0)
   else
-    WeatherEditorTES5(e);
+    DoWeatherEditor(e);
 
   Result := 1;
 end;
