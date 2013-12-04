@@ -22,7 +22,7 @@
 unit WorldspaceBrowser;
 
 const
-  CellSize = 4096;
+  CellSize = 4096; // size of cell in game units
   ColorBackground = $000000; // background map color RGB
   ColorTransparent = $000001; // transparent color for overlay
   ColorOverlayDefault = clYellow; // default overlay drawing color
@@ -45,6 +45,7 @@ var
 
   frmMain, frmWorld: TForm;
   mnMain: TMainMenu;
+  mnMapPopup: TPopupMenu;
   mi, miWorldspace, miOverlay, miRegion, miCell, miMapMarker, miReferences: TMenuItem;
   sbInfo: TStatusBar;
   sbxMap: TScrollBox;
@@ -52,6 +53,7 @@ var
   cmbWorld, cmbMapSize, cmbLODLevel, cmbLODSize, cmbScale, cmbGrid: TComboBox;
   chkNormals: TCheckBox;
   PanningX, PanningY: integer;
+  SelectedCellX, SelectedCellY: integer;
   ColorOverlay: integer;
 
 
@@ -173,14 +175,22 @@ end;
 
 //============================================================================
 // get cell record by X,Y grid coordinates from worldspace
-procedure GetCellFromWorldspace(Worldspace: IInterface; CellX, CellY: integer);
+function GetCellFromWorldspace(Worldspace: IInterface; CellX, CellY: integer): IInterface;
 var
-  blockidx, subblockidx, cellidx: integer;
+  x, y, blockidx, subblockidx, cellidx: integer;
   wrldgrup, block, subblock, cell: IInterface;
   BlockName, SubBlockName: string;
 begin
-  BlockName := Format('Block %d, %d', [(CellX + 32) div 32 - 1, (CellY + 32) div 32 - 1]);
-  SubBlockName := Format('Sub-Block %d, %d', [(CellX + 8) div 8 - 1, (CellY + 8) div 8 - 1]);
+  x := CellX div 32;
+  if (CellX < 0) and (CellX mod 32 <> 0) then Dec(x);
+  y := CellY div 32;
+  if (CellY < 0) and (CellY mod 32 <> 0) then Dec(y);
+  BlockName := Format('Block %d, %d', [x, y]);
+  x := CellX div 8;
+  if (CellX < 0) and (CellX mod 8 <> 0) then Dec(x);
+  y := CellY div 8;
+  if (CellY < 0) and (CellY mod 8 <> 0) then Dec(y);
+  SubBlockName := Format('Sub-Block %d, %d', [x, y]);
   wrldgrup := ChildGroup(Worldspace);
   // iterate over Exterior Blocks
   for blockidx := 0 to Pred(ElementCount(wrldgrup)) do begin
@@ -472,14 +482,20 @@ begin
   end;
   if not fMapDrawn then
     ShowMessage(Format('No LOD level %d textures for worldspace %s, try other levels.', [LODLevel, Name(wrld)]));
-  frmMain.Caption := Format('%sEdit Worldspace Browser - %s %dx%d', [wbAppName, Name(wrld), imgMap.Width, imgMap.Height]);
+  frmMain.Caption := Format('%sEdit Worldspace Browser - %s %dx%d Zoom %d%%', [
+    wbAppName,
+    Name(wrld),
+    imgMap.Picture.Bitmap.Width,
+    imgMap.Picture.Bitmap.Height,
+    Round(MapViewScale*100)
+  ]);
   frmMainFormResize(nil);
   sbInfo.SimpleText := '';
   
   // collect additional data about selected worldspace used by overlaying functions
   
-  // list of worldspaces including current worldspace and it's children worldspaces flagged "use land data" (except Oblivion, no flags there)
-  // list of overriding plugins for worldspaces
+  // list of worldspaces and overrides including current worldspace and it's children worldspaces
+  // flagged "use land data" (except Oblivion, no flags there)
   slPlugin.Clear;
   slWorldspaces.Clear;
   slWorldspaces.AddObject(IntToHex(FormID(wrld), 8), wrld);
@@ -963,6 +979,54 @@ begin
 end;
 
 //============================================================================
+// click event for jump to cell menu
+procedure miJumpToClick(Sender: TObject);
+var
+  w, cell: IInterface;
+begin
+  w := ObjectToElement(slWorldspaces.Objects[TMenuItem(Sender).Tag]);
+  cell := GetCellFromWorldspace(w, SelectedCellX, SelectedCellY);
+  if not Assigned(cell) then
+    Continue;
+  JumpTo(cell, True);
+  frmMain.Close;
+end;
+
+//===========================================================================
+// on popup menu event handler for map menu
+procedure MapPopup(Sender: TObject);
+var
+  i: integer;
+  MenuItem: TMenuItem;
+  w, cell: IInterface;
+  s: string;
+  sl: TStringList;
+begin
+  mnMapPopup.Items.Clear;
+  if not fMapDrawn then
+    Exit;
+  // list of cell formids added to menu, to prevent the same cell to appear more than once if it is overridden by several plugins
+  sl := TStringList.Create;
+  // search for cell in every worldspace
+  for i := Pred(slWorldspaces.Count) downto 0 do begin
+    w := ObjectToElement(slWorldspaces.Objects[i]);
+    cell := GetCellFromWorldspace(w, SelectedCellX, SelectedCellY);
+    if not Assigned(cell) then
+      Continue;
+    s := IntToHex(FormID(cell), 8);
+    if sl.IndexOf(s) <> - 1 then
+      Continue;
+    MenuItem := TMenuItem.Create(mnMapPopup);
+    MenuItem.Caption := Format('Jump to [CELL:%s] at <%d, %d> in %s', [s, SelectedCellX, SelectedCellY, EditorID(w)]);
+    MenuItem.OnClick := miJumpToClick;
+    MenuItem.Tag := i;
+    mnMapPopup.Items.Add(MenuItem);
+    sl.Add(s);
+  end;
+  sl.Free;
+end;
+
+//============================================================================
 // click event for overlay clear menu
 procedure miOverlayClearClick(Sender: TObject);
 begin
@@ -1013,7 +1077,12 @@ begin
     PanningY := Y + dY;
   end
   else if fMapDrawn then begin
-    sbInfo.SimpleText := Format('Cell: %d, %d   Position: %.0n, %.0n', [Pos2Cell(px2PosX(X)), Pos2Cell(px2PosY(Y)), px2PosX(X), px2PosY(Y)]);
+    // translate cursor position to game units and cell (keep in mind viewing scale)
+    X := X/MapViewScale;
+    Y := Y/MapViewScale;
+    SelectedCellX := Pos2Cell(px2PosX(X));
+    SelectedCellY := Pos2Cell(px2PosY(Y));
+    sbInfo.SimpleText := Format('Cell: %d, %d   Position: %.0n, %.0n', [SelectedCellX, SelectedCellY, px2PosX(X), px2PosY(Y)]);
   end;
 end;
 
@@ -1165,6 +1234,10 @@ begin
   imgOver.OnMouseMove := imgOverMouseMove;
   miOverlayClearClick(nil);
   
+  mnMapPopup := TPopupMenu.Create(frmMain);
+  mnMapPopup.OnPopup := MapPopup;
+  imgOver.PopupMenu := mnMapPopup;
+
   // worldspace select window
   frmWorld := TForm.Create(nil);
   frmWorld.Caption := 'Worldspace';
@@ -1176,7 +1249,7 @@ begin
   CreateLabel(frmWorld, 'LOD Level', 112, 69);
   CreateLabel(frmWorld, 'LOD Tile size', 171, 69);
   CreateLabel(frmWorld, 'Grid Opacity (0 - disabled)', 16, 125);
-  CreateLabel(frmWorld, 'View Scale %', 171, 125);
+  CreateLabel(frmWorld, 'Zoom %', 171, 125);
   cmbWorld := CreateComboList(frmWorld, 16, 32, 228);
   cmbMapSize := CreateComboList(frmWorld, 16, 88, 78);
   cmbLODLevel := CreateComboList(frmWorld, 112, 88, 48);
@@ -1239,7 +1312,7 @@ begin
   fMapNormals := False;
   if wbGameMode = gmTES4 then begin
     LODSize := 1024; // Oblivion uses 1024x1024 lod textures only
-    MapViewScale := 0.5; // scale them down since they are huge
+    MapViewScale := 0.25; // scale them down since they are huge
   end;
   ColorOverlay := ColorOverlayDefault;
 end;
@@ -1250,7 +1323,7 @@ var
   wrld: IInterface;
 begin
   InitBrowser;
-  try
+  //try
     slWorldspaces := TStringList.Create; slWorldspaces.Duplicates := dupIgnore; slWorldspaces.Sorted := True;
     slRegion := TStringList.Create; slRegion.Duplicates := dupIgnore; slRegion.Sorted := True;
     slPlugin := TStringList.Create;
@@ -1262,13 +1335,13 @@ begin
     if Assigned(wrld) and HasLOD(wrld) then
       DrawMap(wrld);
     frmMain.ShowModal;
-  finally
+  //finally
     frmWorld.Free;
     frmMain.Free;
     slWorldspaces.Free;
     slRegion.Free;
     slPlugin.Free;
-  end;
+  //end;
 
   Result := 1;
 end;

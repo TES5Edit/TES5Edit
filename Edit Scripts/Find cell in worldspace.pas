@@ -7,15 +7,23 @@ unit userscript;
 
 procedure FindCell(WrldEDID, XVal, YVal: string);
 var
-  x, y: integer;
+  CellX, CellY, x, y: integer;
   modidx, wrldidx, blockidx, subblockidx, cellidx: integer;
   f, wrlds, wrld, wrldgrup, block, subblock, cell: IInterface;
   BlockName, SubBlockName: string;
 begin
-  x := StrToIntDef(XVal, 0);
-  y := StrToIntDef(YVal, 0);
-  BlockName := Format('Block %d, %d', [(x + 32) div 32 - 1, (y + 32) div 32 - 1]);
-  SubBlockName := Format('Sub-Block %d, %d', [(x + 8) div 8 - 1, (y + 8) div 8 - 1]);
+  CellX := StrToIntDef(XVal, 0);
+  CellY := StrToIntDef(YVal, 0);
+  x := CellX div 32;
+  if (CellX < 0) and (CellX mod 32 <> 0) then Dec(x);
+  y := CellY div 32;
+  if (CellY < 0) and (CellY mod 32 <> 0) then Dec(y);
+  BlockName := Format('Block %d, %d', [x, y]);
+  x := CellX div 8;
+  if (CellX < 0) and (CellX mod 8 <> 0) then Dec(x);
+  y := CellY div 8;
+  if (CellY < 0) and (CellY mod 8 <> 0) then Dec(y);
+  SubBlockName := Format('Sub-Block %d, %d', [x, y]);
 
   // traverse mods
   for modidx := 0 to FileCount - 1 do begin
@@ -43,7 +51,7 @@ begin
           for cellidx := 0 to ElementCount(subblock) - 1 do begin
             cell := ElementByIndex(subblock, cellidx);
             if Signature(cell) <> 'CELL' then Continue;
-            if (GetElementNativeValues(cell, 'XCLC\X') = x) and (GetElementNativeValues(cell, 'XCLC\Y') = y) then begin
+            if (GetElementNativeValues(cell, 'XCLC\X') = CellX) and (GetElementNativeValues(cell, 'XCLC\Y') = CellY) then begin
               JumpTo(cell, False);
               Exit;
             end;
