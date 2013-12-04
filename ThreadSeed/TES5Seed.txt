@@ -1,10 +1,10 @@
-﻿[size=5][color=#00BFFF][url=http://skyrim.nexusmods.com/mods/25859/]TES5Edit 3.0.31 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
+﻿[size=5][color=#00BFFF][url=http://www.nexusmods.com/skyrim/mods/25859/]TES5Edit 3.0.31 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
  
 [size=4][color=#FF0000]This is the ninth update of TES5Edit and is still being updated. However, it should still be considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available. Feel free to ask about plugin cleaning in the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/]RELz TES5Edit Plugin Cleaning Emporium[/url][/color]. If you require technical assistance the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color] thread is best for that. As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
  
 [size=4][color=#FF0000]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
  
-[size=4][color=#FF8C00]TES5Edit 3.0.31 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://skyrim.nexusmods.com/users/156622]Zilav[/url], [url=http://skyrim.nexusmods.com/users/1102380]Hlp[/url], and [url=http://skyrim.nexusmods.com/users/4147439]Sharlikran[/url].[/color][/size]
+[size=4][color=#FF8C00]TES5Edit 3.0.31 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://www.nexusmods.com/skyrim/users/156622]Zilav[/url], [url=http://www.nexusmods.com/skyrim/users/1102380]Hlp[/url], and [url=http://www.nexusmods.com/skyrim/users/4147439]Sharlikran[/url].[/color][/size]
  
 [size=4][b][color=#00BFFF]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color][/b][/size]
  
@@ -31,7 +31,7 @@ Threads:
  
 [size=4][color=#FF8C00]Support for other versions of Edit are located at these locations:[/color][/size] [size=3][url=http://forums.nexusmods.com/index.php?/topic/83746-fo3edit/]FO3Edit[/url], [url=http://forums.nexusmods.com/index.php?/topic/248639-fnvedit/]FNVEdit[/url], [url=http://forums.nexusmods.com/index.php?showtopic=37310]TES4Edit[/url], [url=http://forums.nexusmods.com/index.php?showtopic=813094]TES5Edit[/url][/size]
  
-[size=4][color=#FF8C00]Other versions of Edit can be downloaded at these locations:[/color][/size] [size=3][url=http://www.fallout3nexus.com/downloads/file.php?id=637]FO3Edit[/url], [url=http://www.newvegasnexus.com/downloads/file.php?id=34703]FNVEdit[/url], [url=http://oblivion.nexusmods.com/mods/11536]TES4Edit[/url], [url=http://skyrim.nexusmods.com/mods/25859]TES5Edit[/url][/size]
+[size=4][color=#FF8C00]Other versions of Edit can be downloaded at these locations:[/color][/size] [size=3][url=http://www.nexusmods.com/fallout3/mods/637]FO3Edit[/url], [url=http://www.nexusmods.com/newvegas/mods/34703]FNVEdit[/url], [url=http://www.nexusmods.com/oblivion/mods/11536]TES4Edit[/url], [url=http://www.nexusmods.com/skyrim/mods/25859]TES5Edit[/url][/size]
  
 [color=#FF0000]Note: These are all a work in Progress.[/color]
  
@@ -43,14 +43,16 @@ Threads:
 [*][url=http://www.creationkit.com/Skyrim_Dirty_Plugins_List]TES5Edit Skyrim Dirty Plugins List[/url][/*]
 [*][url=http://www.creationkit.com/TES5Edit_Scripting_Functions]TES5Edit Scripting Functions[/url] - New! [WIP][/*]
 [/LIST]
-Gopher's first video [url=http://youtu.be/UOQO2S6HDBw]TES5EDIT : Cleaning your mods[/url] covers important cleaning aspects of TES5Edit and I look forward to more helpful videos from him.
+Gopher's Video's [url=http://www.youtube.com/watch?v=UOQO2S6HDBw]Cleaning Plugins and Master Files - Mod Authors.[/url]
+Gopher's Video's [url=http://www.youtube.com/watch?v=fw3g_N1jcZQ]Cleaning Plugins and Master Files - Mod Authors.[/url]
+My Video [url=http://www.youtube.com/watch?v=ciRPWx3OhBQ]Making a Merge Patch.[/url] [Unsupported]
  
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to FO3Edit.exe to work with Fallout3.
 Rename to FNVEdit.exe to work with New Vegas.
  
-Fallout3 [url=http://fallout3.nexusmods.com/mods/8629]Training Manual[/url] for FO3Edit (applies to all game versions)
-Fallout New Vegas [url=http://newvegas.nexusmods.com/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
+Fallout3 [url=http://www.nexusmods.com/fallout3/mods/8629]Training Manual[/url] for FO3Edit (applies to all game versions)
+Fallout New Vegas [url=http://www.nexusmods.com/newvegas/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
  
 [color=#FF8C00]Important for Older Systems:[/color]
 If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version. [url=http://www.microsoft.com/en-us/download/details.aspx?id=8109]DirectX End-User Runtimes (June 2010)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes (March 2008)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url]. (make sure to install it after unpacking it)
@@ -297,9 +299,9 @@ Some additional tweaking needs to be done but we are close to having on open bet
  
 [color=#FF8C00][size=4][b]Current Contributors:[/b][/size][/color]
  
-[url=http://skyrim.nexusmods.com/users/4147439]Sharlikran[/url]
-[url=http://skyrim.nexusmods.com/users/156622]Zilav[/url]
-Hlp
+[url=http://www.nexusmods.com/skyrim/users/1102380]Hlp[/url]
+[url=http://www.nexusmods.com/skyrim/users/4147439]Sharlikran[/url]
+[url=http://www.nexusmods.com/skyrim/users/156622]Zilav[/url]
  
 We would love to have more people helping out on the project.
  

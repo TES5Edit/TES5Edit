@@ -1,13 +1,13 @@
-Check out the new banners that [url=http://skyrim.nexusmods.com/users/69377]Grace Darkling[/url] made for me.  That was a sweet and appreciated Christmas Gift.  I added a few in game Christmas shots of my own.
+Check out the new banners that [url=http://www.nexusmods.com/skyrim/users/69377]Grace Darkling[/url] made for me.  That was a sweet and appreciated Christmas Gift.  I added a few in game Christmas shots of my own.
 
 [size=5][color=#FF8C00]NOTE: All Patches are made with v1.8.151 of the CK therefore, version 1.8.151.0.7 is required to use these patches.[/color][/size]
 
 [size=4][color=#FF8C00]Useful Links:[/color][/size]
-[url=http://skyrim.nexusmods.com/mods/814]Skyrim configurator[/url] -- by pfannkuchen_gesicht:
+[url=http://www.nexusmods.com/skyrim/mods/814]Skyrim configurator[/url] -- by pfannkuchen_gesicht:
 [url=http://www.geforce.com/optimize/guides/the-elder-scrolls-v-skyrim-tweak-guide#1]Nvidia: The Elder Scrolls V: Skyrim Tweak Guide[/url]
-[url=http://code.google.com/p/better-oblivion-sorting-software/downloads/list]BOSS[/url]
+[url=http://boss-developers.github.io/]BOSS[/url]
 [url=http://sourceforge.net/projects/oblivionworks/]Wrye Bash[/url]
-[url=http://skyrim.nexusmods.com/mods/25859/]TES5Edit[/url]
+[url=http://www.nexusmods.com/skyrim/mods/25859/]TES5Edit[/url]
 
 [size=4][color=#FF8C00]Overview:[/color][/size]
 
@@ -29,63 +29,70 @@ Unless otherwise specified, download the author's original mod listed below.  Th
 
 [url=http://skyrim.nexusmods.com/downloads/file.php?id=6583]Bleach Weapon Pack[/url] -- by Niagra127
 
-[url=http://skyrim.nexusmods.com/mods/1002]JaySuS Swords[/url] -- by JaySuS
+[url=http://www.nexusmods.com/skyrim/mods/1002]JaySuS Swords[/url] -- by JaySuS
 [color=#FF0000]Author not accepting PMs at this time.[/color]
 [color=#FF0000]Does not require original mod[/color]
+[color=#00FFFF]
+New JaySuS Swords V14
+- Updated both JSwords.esm and the JSwordsDistributionBalancePlugin.esp
+- New update attempts to resolve crafting conditions.  Previously you could craft something if your Smithing was 50, now it's set to Greater or Equal to 50.  This attempts to resolve claims that some items cannot be crafted.
+- I did not change what level of smihing is required to craft the item.  If JaySuS required you to be level 100 in smithing and your Character to be level 100 then it's still that way.
+[/color]
+
 
 Lustrianna's Armor Files:
 [color=#FF0000]Author not accepting PMs at this time.[/color]
-[url=http://skyrim.nexusmods.com/mods/16096]LustDesign - Sovngarde Steel Armor v2 - CBBEv3[/url] -- by Lustrianna
-[url=http://skyrim.nexusmods.com/mods/17026]LustDesign - Female Daedric Armor Replacer - CBBEv3[/url] -- by Lustrianna
-[url=http://skyrim.nexusmods.com/mods/15804]LustDesign - Dovahkiin Mercenary Gear - CBBE v3[/url] -- by Lustrianna
+[url=http://www.nexusmods.com/skyrim/mods/16096]LustDesign - Sovngarde Steel Armor v2 - CBBEv3[/url] -- by Lustrianna
+[url=http://www.nexusmods.com/skyrim/mods/17026]LustDesign - Female Daedric Armor Replacer - CBBEv3[/url] -- by Lustrianna
+[url=http://www.nexusmods.com/skyrim/mods/15804]LustDesign - Dovahkiin Mercenary Gear - CBBE v3[/url] -- by Lustrianna
 
-[url=http://skyrim.nexusmods.com/mods/874]Vals Crafting Meltdown Alpha - Melting Smelting and Fletchin[/url] -- valdosa
+[url=http://www.nexusmods.com/skyrim/mods/874]Vals Crafting Meltdown Alpha - Melting Smelting and Fletchin[/url] -- valdosa
 Version 2 uses an NMM installer for the Arrows and Non-Arrows versions.
 [color=#FF0000]Posted With Permission[/color]
 [color=#FF0000]Does not require original mod[/color]
 
-[url=http://skyrim.nexusmods.com/mods/1020]Lost Art of the Blacksmith[/url] -- Impulseve
+[url=http://www.nexusmods.com/skyrim/mods/1020]Lost Art of the Blacksmith[/url] -- Impulseve
 
-[url=http://skyrim.nexusmods.com/mods/3413]Midas Magic - Spells in Skyrim[/url] -- xilver
+[url=http://www.nexusmods.com/skyrim/mods/3413]Midas Magic - Spells in Skyrim[/url] -- xilver
 [color=#FF0000]Author not accepting PMs at this time.[/color]
 TES5Edit will complain about the VMAD in an EXPL record, just ignore that.  I have not found a suitable replacement yet.
 [url=https://docs.google.com/spreadsheet/ccc?key=0AplUhLbDogAwdEtZWWZoRnZqZVdYYjlUU2JvWF9DQWc#gid=0][WIP] List of Midas Magic Spells (Google Doc)[/url] -- by DeepImpact.
 
-[url=http://skyrim.nexusmods.com/mods/1874]Bandit Eyepatch[/url] -- Ceekay9
+[url=http://www.nexusmods.com/skyrim/mods/1874]Bandit Eyepatch[/url] -- Ceekay9
 Bandit's Eyepatch Compatibility Patch v4. Version 4 changes keywords so that clothing versions are considered clothing and not leather.  The Eyepatch is  assigned to slot 55 as mentioned in the [url=http://www.creationkit.com/Biped_Object]CK Wiki[/url].  Now you can use the patch with a hood for example.  They are still available in both Clothing and Light Armor and, can be purchased from Grelka in Riften.
 [color=#FF0000]Hosted with permission from author.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/4670]Mage-Friendly Dragon Priest Masks[/url] -- sanastro
+[url=http://www.nexusmods.com/skyrim/mods/4670]Mage-Friendly Dragon Priest Masks[/url] -- sanastro
 
-[url=http://skyrim.nexusmods.com/mods/5705]Staff of Magnus Absorb[/url] -- Osgoode
+[url=http://www.nexusmods.com/skyrim/mods/5705]Staff of Magnus Absorb[/url] -- Osgoode
 [color=#FF0000]Hosted with permission from author.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/4419]Warmer Magic Lights[/url] -- KSG
+[url=http://www.nexusmods.com/skyrim/mods/4419]Warmer Magic Lights[/url] -- KSG
 
-[url=http://skyrim.nexusmods.com/mods/4708]Triss Armor Retextured[/url] -- Psyke23
+[url=http://www.nexusmods.com/skyrim/mods/4708]Triss Armor Retextured[/url] -- Psyke23
 [color=#FF0000]Hosted with permission from author.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/7819]Dynasty Armor Set - QuickFox edition[/url] -- QuickFox
+[url=http://www.nexusmods.com/skyrim/mods/7819]Dynasty Armor Set - QuickFox edition[/url] -- QuickFox
 [color=#FF0000]Not Accepting PMs at this time.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/5540]Fortify enchanting necklace[/url] -- jimhsu
+[url=http://www.nexusmods.com/skyrim/mods/5540]Fortify enchanting necklace[/url] -- jimhsu
 [color=#FF0000]Hosted with permission from author.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/6348]Frostmourne and Lich Kings Armor[/url] -- by jojjo
+[url=http://www.nexusmods.com/skyrim/mods/6348]Frostmourne and Lich Kings Armor[/url] -- by jojjo
 [color=#FF0000]Hosted with permission from author.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/6684]Lore Friendly Armor Pack[/url] -- by rahman530
+[url=http://www.nexusmods.com/skyrim/mods/6684]Lore Friendly Armor Pack[/url] -- by rahman530
 
-[url=http://skyrim.nexusmods.com/mods/17582]Equipment Of Eternal Shine - Elven Overhaul[/url] -- by lKocMoHaBTl
+[url=http://www.nexusmods.com/skyrim/mods/17582]Equipment Of Eternal Shine - Elven Overhaul[/url] -- by lKocMoHaBTl
 
-[url=http://skyrim.nexusmods.com/mods/5600]Mystic Elven Armor[/url] -- by Sader325
+[url=http://www.nexusmods.com/skyrim/mods/5600]Mystic Elven Armor[/url] -- by Sader325
 
-[url=http://skyrim.nexusmods.com/mods/5397]Knights Templar in Skyrim[/url] -- by Luka
+[url=http://www.nexusmods.com/skyrim/mods/5397]Knights Templar in Skyrim[/url] -- by Luka
 
-[url=http://skyrim.nexusmods.com/mods/7664]Hana Dress by Hentai[/url] -- by aruless (Org Hentai)
+[url=http://www.nexusmods.com/skyrim/mods/7664]Hana Dress by Hentai[/url] -- by aruless (Org Hentai)
 [color=#FF0000]Hosted with permission from author.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/6566]Shaders Begone - NoGlow[/url] -- by Duns_Inc
+[url=http://www.nexusmods.com/skyrim/mods/6566]Shaders Begone - NoGlow[/url] -- by Duns_Inc
 [color=#FF0000]File hosted with permission from author.[/color]
 [color=#00FFFF]
 New version 2 is available!
@@ -93,44 +100,48 @@ New version 2 is available!
 - The mod has been updated by the author so I will no longer be hosting this file.
 [/color]
 
-[url=http://skyrim.nexusmods.com/mods/4866]Open Faced Helmets[/url] -- by MadCat221
+[url=http://www.nexusmods.com/skyrim/mods/4866]Open Faced Helmets[/url] -- by MadCat221
 [color=#FF0000]Hosted with permission from author.[/color]  This is temporary until MadCat221 hosts the file himself.
 
-[url=http://skyrim.nexusmods.com/mods/6236]Bikini Clothes[/url] -- by Snezko
+[url=http://www.nexusmods.com/skyrim/mods/6236]Bikini Clothes[/url] -- by Snezko
 [color=#FF0000]Hosted with permission from author.[/color]
 [color=#FF0000]Original Mod Not Required.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/7155]Snowy Nightingale Armor[/url] -- by Tandellin
+[url=http://www.nexusmods.com/skyrim/mods/7155]Snowy Nightingale Armor[/url] -- by Tandellin
 
-[url=http://skyrim.nexusmods.com/mods/7478]Dark Seraphim Armor[/url] -- by iLily - Hentai - person123456789
+[url=http://www.nexusmods.com/skyrim/mods/7478]Dark Seraphim Armor[/url] -- by iLily - Hentai - person123456789
 [color=#FF0000]Hosted with permission from iLily.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/5816]Babettes Feast - Improved Cooking[/url] -- by Merilia
+[url=http://www.nexusmods.com/skyrim/mods/22793]Morrowind Armor for Skyrim[/url] by THusky 
+
+[url=http://www.nexusmods.com/skyrim/mods/5816]Babettes Feast - Improved Cooking[/url] -- by Merilia
 [color=#FF0000]Version 0.41.2 includes "BabettesFeast - IMCN.esp" for use with Imps More Complex Needs.  Only these files are compatible with each other because of major FormID changes.  Imp's Original Mod is required![/color]
 
-[url=http://skyrim.nexusmods.com/mods/14827]Companions Wolf Armor and Ancient Nord Shields[/url] -- by QuickFox
+[url=http://www.nexusmods.com/skyrim/mods/14827]Companions Wolf Armor and Ancient Nord Shields[/url] -- by QuickFox
 
 Headbomb's Compatibility patches: [color=#FF0000](These do not require original mod)[/color]
-[url=http://skyrim.nexusmods.com/mods/4719]Weapons and Armor Fixes[/url]
-[url=http://skyrim.nexusmods.com/mods/8003]Complete Crafting Overhaul[/url]
-[url=http://skyrim.nexusmods.com/mods/6047]Smithing Perks Overhaul[/url] 
-[url=http://skyrim.nexusmods.com/mods/2730]Better Sorting[/url]
+[url=http://www.nexusmods.com/skyrim/mods/4719]Weapons and Armor Fixes[/url]
+[url=http://www.nexusmods.com/skyrim/mods/8003]Complete Crafting Overhaul[/url]
+[url=http://www.nexusmods.com/skyrim/mods/6047]Smithing Perks Overhaul[/url] 
+[url=http://www.nexusmods.com/skyrim/mods/2730]Better Sorting[/url]
 [color=#FF0000]Do Not Clean "Better Sorting" with TES5Edit![/color]
 [color=#FF0000]Not Accepting PMs at this time.[/color]
 
 Niire's Compatibility patches:
-[url=http://skyrim.nexusmods.com/mods/19974]Niires Hjerim[/url]
-[url=http://skyrim.nexusmods.com/mods/19690]Niires Proudspire[/url]
-[url=http://skyrim.nexusmods.com/mods/19297]Niires Honeyside[/url]
+[url=http://www.nexusmods.com/skyrim/mods/19974]Niires Hjerim[/url]
+[url=http://www.nexusmods.com/skyrim/mods/19690]Niires Proudspire[/url]
+[url=http://www.nexusmods.com/skyrim/mods/19297]Niires Honeyside[/url]
 [color=#FF0000]Requires Hearthfires![/color]
 [color=#FF0000]Posted with approval from alternate contact.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/3871]Weapons of the Third Era[/url] -- by 747823
+[url=http://www.nexusmods.com/skyrim/mods/3871]Weapons of the Third Era[/url] -- by 747823
 [color=#FF0000]Author gives permission to any and all on Description page.[/color]
 
-[url=http://skyrim.nexusmods.com/mods/16751]The Loners Sword[/url] -- by Syncing
+[url=http://www.nexusmods.com/skyrim/mods/5586]SBMS - Skyrim Balanced Magic System[/url] -- by Akfek Branford
 
-[url=http://skyrim.nexusmods.com/mods/6524]Black and Gold Elven Equipment with Masked Helmet[/url] -- by Shodan44
+[url=http://www.nexusmods.com/skyrim/mods/16751]The Loners Sword[/url] -- by Syncing
+
+[url=http://www.nexusmods.com/skyrim/mods/6524]Black and Gold Elven Equipment with Masked Helmet[/url] -- by Shodan44
 [color=#FF0000]Author gives permission to any and all in Readme File.  However, the author requests that we all thank JulianP and Vinifera7 for their outstanding work on this standalone version![/color]
 
 CaoMengde777's Compatibility Patches:
@@ -138,15 +149,14 @@ CaoMengde777's Compatibility Patches:
 [url=http://www.curse.com/mods/skyrim/caos-inventory-packs]Cao's Inventory Packs aka Bags of Holding[/url]
 [url=http://www.curse.com/mods/skyrim/caos-perk-ranks-overhaul]Cao's Advanced Perk Ranks[/url]
 
-[url=http://skyrim.nexusmods.com/mods/12553]Dovahkiin Hideout[/url] -- by Shawkab [color=#FF0000]Install only one of the three Dovahkiin Hideout Patches![/color]
+[url=http://www.nexusmods.com/skyrim/mods/12553]Dovahkiin Hideout[/url] -- by Shawkab [color=#FF0000]Install only one of the three Dovahkiin Hideout Patches![/color]
 [color=#FF0000]File hosted with permission from author.[/color]
-[color=#FFA500]Remove all items before installing![/color]
-[color=#FFA500]Also make sure to uninstall all previous version of Dovahkiin Hideout prior to installing. Original mod is not required.[/color]
-[color=#FF0000]Non-Hearthfires version available here![/color]
 [color=#00FFFF]
-New Hideout Hearthfires Version 1.0 is available!
-- File 0.31.x Retired
-- The Hearthfires Versions of the mod has been updated and I have hosted it on a [url=http://skyrim.nexusmods.com/mods/43593/]seperate page.[/url]
+New Hideout Hearthfires and Non Hearthfires Version 1.0 is available!
+- File 0.30.x Hideout_Compatibility_Patch Retired
+- File 0.31.x Hideout_ESM_Compatibility_Patch Retired
+- File 0.32.x Hideout_Hearthfires_Compatibility_Patch Retired
+- The Dovahkiin Hideout mod has been updated and I have hosted it on a seperate page [url=http://www.nexusmods.com/skyrim/mods/43593/]Shawks Corner[/url].
 [/color]
 
 [size=4][color=#FF8C00]FAQ:[/color][/size]
@@ -167,7 +177,9 @@ Q: Can you upgrade your patch to work current DLC?
 A: I don't update the plugins for Dawnguard, Dragonborn, or Hearthfires, unless I feel it is needed to prevent a CTD.  An example of this is the Dovahkiin Hideout when used with Hearthfires.
 
 Q: What do the patches do, Exactly?
-A: I don't discuss this so don't ask.  The plugin I provide replaces the original authors plugin.  As the BOSS messages I have added to the masterlist explain, some mods were made before the Construction Kit was released.  Since there wasn't a working Construction Kit they were made with older versions of TESVSnip so the plugin is corrupt.  Some files were made after the release of the Construction Kit but were modified with earlier versions of TESVSnip so the plugin is corrupt.  Any version of TESVSnip prior to version 4.4.x used to modify a plugin will corrupt the plugin.  However, that does not mean the current dev-version of TESVSnip is really any safer to use.  It has not undergone enough of an update and testing to be used to make plugins.  Plugins should still be made with the Construction Kit.  When needed TES5Edit can be used on the plugin but, using TES5Edit to make extensive mod changes is discouraged for most users – that's what the CK was built for.
+A: I don't discuss this so don't ask.  The plugin I provide replaces the original authors plugin.  As the BOSS messages I have added to the masterlist explain, some mods were made before the Construction Kit was released.  Since there wasn't a working Construction Kit they were made with older versions of TESVSnip so the plugin is corrupt.  Some files were made after the release of the Construction Kit but were modified with earlier versions of TESVSnip so the plugin is corrupt.  
+
+[color=#FF0000]NOTE: Any version of TESVSnip prior to version 4.4.x used to modify a plugin will corrupt the plugin.  However, that does not mean the current dev-version of TESVSnip is really any safer to use.  It has not undergone enough of an updating and testing to be used to make plugins.  Plugins should still be made with the Construction Kit.  When needed TES5Edit can be used on the plugin but, using TES5Edit to make extensive mod changes is discouraged – that's what the CK was built for.[/color]
 
 Q: What do you change?
 A: I don't post changes I have made to the file unless I feel the need to do so, so don't ask.  Here are the most common things I change: a) I change null FormIDs (00000000) to something that the CK or Skyrim can work with. b) I correct out of order subrecords. c) I load the plugin into the CK. d) I clean the plugin with TES5Edit. e) I check the plugin with TES5Edit using the "Check for Errors" routine.

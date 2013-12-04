@@ -4,8 +4,12 @@
 
 We only support version 1.9 of Skyrim and version 3.0.31 of TES5Edit.  Update TES5Edit and Skyrim before you post in the forum.[/color]
 
-Cleaning Plugins and Master Files: Updated for Dragonborn
-[youtube]wt4W1dZF9IE[/youtube]
+Cleaning Plugins and Master Files - Mod Authors:
+[youtube]UOQO2S6HDBw[/youtube]
+Cleaning Plugins and Master Files - Mod Users:
+[youtube]fw3g_N1jcZQ[/youtube]
+Making a Merge Patch
+[youtube]ciRPWx3OhBQ[/youtube]
 
 [color=#FF0000]Note: These are all a work in Progress.[/color]
 
@@ -18,15 +22,15 @@ Cleaning Plugins and Master Files: Updated for Dragonborn
 [/list]
 
 [color=#00BFFF]TES5Edit is now Available in Chinese:[/color]
-You can download the translation by [url=http://skyrim.nexusmods.com/users/2541088]bluesky404 [/url][url=http://skyrim.nexusmods.com/mods/37228]here[/url].
+You can download the translation by [url=http://skyrim.nexusmods.com/users/2541088]bluesky404 [/url][url=http://www.nexusmods.com/skyrim/mods/37228]here[/url].
 
 [url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]Official Bethesda Forum[/url]: Best place to ask technical questions related to the inner workings of TES5Edit.
 [url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium]TES5Edit Plugin Cleaning Emporium[/url]: Best place to ask questions related to cleaning plugins. Both modders and the closed beta testers post here often.
 
 [color=#00BFFF]Current Documentation:[/color]
 
-[url=http://fallout3.nexusmods.com/mods/8629]Fallout3 Training Manual[/url] for FO3Edit (applies to all game versions)
-[url=http://newvegas.nexusmods.com/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
+[url=http://www.nexusmods.com/fallout3/mods/8629]Fallout3 Training Manual[/url] for FO3Edit (applies to all game versions)
+[url=http://www.nexusmods.com/newvegas/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
 
 With the strains of real life there is no way for the TES5Edit team to update documentation.  If you would like to contribute to the conversion of the Fallout New Vegas documentation please visit the [url=http://www.creationkit.com/TES5Edit_Documentation]TES5Edit Documentation pages[/url] on the CK Wiki.  Your help is greatly appreciated.
 
@@ -62,7 +66,7 @@ As TES5Edit becomes more widely used in the Skyrim community it has become a con
 
 [color=#00BFFF]Merging Plugins:[/color]
 
-There is still a demand for merging multiple plugins but merging plugins is still unsupported directly from TES5Edit's UI.  There is a [url=http://skyrim.nexusmods.com/mods/37981]TES5Edit script by Matortheeternal[/url] for merging plugins.  Some mods cannot be successfully merged with it and you should direct all questions relating to the script to the author.  There is [url=http://forums.nexusmods.com/index.php?showtopic=1033740]a thread available[/url] where people have posted which plugins merge successfully or unsuccessfully.  For more info on ways to use TES5Edit to Merge Plugins check out [url=http://forums.nexusmods.com/index.php?/topic/904953-how-to-merge-multiple-mods-with-multiple-master-files]How To Merge Multiple Mods With Multiple Master Files[/url] and [url=http://forums.bethsoft.com/topic/1425724-merging-mods]Merging Mods[/url].  Otherwise if you intend on editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls please create your own separate thread.
+There is still a demand for merging multiple plugins but merging plugins is still unsupported directly from TES5Edit's UI.  There is a [url=http://www.nexusmods.com/skyrim/mods/37981]TES5Edit script by Matortheeternal[/url] for merging plugins.  Some mods cannot be successfully merged with it and you should direct all questions relating to the script to the author.  There is [url=http://forums.nexusmods.com/index.php?showtopic=1033740]a thread available[/url] where people have posted which plugins merge successfully or unsuccessfully.  For more info on ways to use TES5Edit to Merge Plugins check out [url=http://forums.nexusmods.com/index.php?/topic/904953-how-to-merge-multiple-mods-with-multiple-master-files]How To Merge Multiple Mods With Multiple Master Files[/url] and [url=http://forums.bethsoft.com/topic/1425724-merging-mods]Merging Mods[/url].  Otherwise if you intend on editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls please create your own separate thread.
 
 [color=#00BFFF]Trouble shooting plugins:[/color]
 
