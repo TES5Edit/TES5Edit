@@ -42,7 +42,7 @@ References are generally deleted to remove them from the game world, but a pract
 
 === Quick List of What Not to Clean ===
 
-* Do NOT clean the unofficial patches (USKP, UDGP, UHFP). They have already been cleaned.
+* Do NOT clean the unofficial patches (USKP, UDGP, UHFP, UDBP). They have already been cleaned.
 
 == What Is Cleaning? ==
 
@@ -67,9 +67,9 @@ If you don't understand the above example and the fix, you don't possess the kno
 
 Automated cleaning requires knowledge of exactly which other mods the mod to be cleaned is dependent on, both implicitly and explicitly.
 
-In automated cleaning, if cleaning dirty edits, the program analyses every record edit a mod makes and compares each one against the record without the edit, removing any edits that match the technical definitions of dirty edits.
+If cleaning dirty edits, the program analyses every record edit a mod makes and compares each one against the record without the edit, removing any edits that match the technical definitions of dirty edits.
 
-If cleaning deleted references, the program it analyses each reference a mod edits, checking if it has been deleted or not, undeleting and disabling any deleted references encountered.
+If cleaning deleted references, the program analyses each reference a mod edits checking if it has been deleted or not, then undeleting and disabling any deleted references encountered.
 
 == How To Clean? ==
 
@@ -140,11 +140,12 @@ For mod users:
 
 === Order For Cleaning Bethesda's Master Files ===
 
-[[File:TES5EditCleaningUpdate.jpg|50px|TES5 Apply Filter For Cleaning Update.esm]]  [[File:TES5EditCleaningDawnguard.jpg|50px|TES5 Apply Filter For Cleaning Dawnguard.esm]]  [[File:TES5EditCleaningHearthfires.jpg|50px|TES5 Apply Filter For Cleaning Hearthfires.esm]]
+[[File:TES5EditCleaningUpdate.jpg|50px|TES5 Apply Filter For Cleaning Update.esm]]  [[File:TES5EditCleaningDawnguard.jpg|50px|TES5 Apply Filter For Cleaning Dawnguard.esm]]  [[File:TES5EditCleaningHearthfires.jpg|50px|TES5 Apply Filter For Cleaning Hearthfires.esm]]  [[File:TES5EditCleaningDragonborn.jpg|50px|TES5 Apply Filter For Cleaning Dragonborn.esm]]
 
 :For Update.esm: Load Skyrim.esm and Update.esm, but only clean Update.esm.
 :For Dawnguard.esm: Load Skyrim.esm, Update.esm, and Dawnguard.esm but only clean Dawnguard.esm.
-:For Hearthfires.esm: Load Skyrim.esm, Update.esm, and Hearthfires.esm but only clean Hearthfires.esm.
+:For Hearthfires.esm: Load Skyrim.esm and Hearthfires.esm but only clean Hearthfires.esm.
+:For Dragonborn.esm: Load Skyrim.esm, Update.sm, and Dragonborn.esm but only clean Dragonborn.esm.
 
 === Non Critical Errors ===
 
@@ -154,13 +155,13 @@ This error can occur for a variety of reasons and should be handled by the mod a
 
 <pre><Warning: Plugin contains 57 deleted NavMeshes which can not be undeleted></pre>
 
-You will see this warning for both Dawnguard.esm and Hearthfires.esm ignore it for now.  Otherwise this is a warning that there are deleted Navmesh records.  Any deleted Navmesh records should be reported to the author of the mod so they can be corrected properly.
+You will see this warning for official DLC (DB, HF, and DG). This warning can be ignored for the official DLC, otherwise this is a warning that there are deleted Navmesh records.  Any deleted Navmesh records should be reported to the author of the mod so they can be corrected properly.
 
 === TES5Edit Cleaning Instructions ===
 
 These are the actual instructions for the automated cleaning of plugins using TES5Edit:
 
-# Download [http://skyrim.nexusmods.com/mods/25859 TES5Edit].
+# Download [http://www.nexusmods.com/skyrim/mods/25859 TES5Edit].
 # Extract the downloaded archive to wherever you want.
 # Run the TES5Edit.exe file.
 # A dialog box appears listing all your installed plugins, with all currently active plugins ticked. Right-click anywhere in the list and pick "Select None".
@@ -211,7 +212,8 @@ This glossary contains definitions for the general modding terms and cleaning-sp
 * [[TES5Edit|TES5Edit]]
 * [[TES5Edit_Mod_Cleaning_Tutorial|TES5Edit Mod Cleaning Tutorial]]
 * [[Skyrim_Dirty_Plugins_List|Skyrim Dirty Plugins List]]
-* [http://forums.bethsoft.com/topic/1419201-relz-tes5edit/ Official Elderscrolls TES5Edit forum topic]
+* [[TES5Edit_Scripting_Functions|TES5Edit Scripting Functions]]
+* [http://forums.bethsoft.com/topic/1474325-relz-tes5edit/ Official Elderscrolls TES5Edit forum topic]
 
 = Closing Remarks & Credits =
 

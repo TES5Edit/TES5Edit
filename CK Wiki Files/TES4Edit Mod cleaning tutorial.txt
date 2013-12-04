@@ -5,36 +5,6 @@ This tutorial is designed to teach modders and mod users how to use TES5Edit to 
 
 I will be using Sharlikran_Map_Markers_Expanded.esp. This file allows me to demonstrate the use of the program and to take pictures of the working process without using anyone's mod as a guinea pig.
 
-== Downloading, Installation, and Language Settings ==
-
-=== Installation ===
-
-You can download the latest version from the skyrim Nexus:
-* [http://skyrim.nexusmods.com/mods/25859/ TES5Edit by ElminsterEU, updated by Zilav and Sharlikran for Skyrim]
-
-In order to use it, you need to place the files contained in the archive you just downloaded in any directory on your local computer.  As I show in the screenshot below, I placed mine in a separate directory, ''any folder'' on your computer will work just as well.
-
-[[Image:TES5Edit Folder.jpg|800px|TES5Edit Install Folder]]
-
-=== Creating A Shortcut  ===
-
-It is best to set up a shortcut at an easily accessible location because you will be opening, closing, and re-opening TES5Edit many, many times. Your desktop is the suggested location.  
-
-From where you installed right click TES5Edit.exe, then "Send To" and then Desktop.
-
-[[Image:TES5EditCreateShortcut.jpg|800px|TES5Edit Create Shortcut]]
-
-=== Setting The Language ===
-
-TES5Edit has a Language selection parameter "-l:language" for Skyrim.
-
-Right click the Shortcut you made on the Desktop and click Properties.
-In the Box labeled Target add the parameter after the last quotation (") mark.  In the screenshot I added "-l:spanish".
-
-[[Image:TES5LanguageSetting.jpg|300px|TES5Edit Language Setting]]
-
-NOTE:  TES5Edit is in English only.  This command line parameter is only for the Plugin's localization.  If Localization is not available, or not working correctly only English will be shown for that Plugin.
-
 == Having the mod ready ==
 
 Before you launch TES5Edit, be sure to have the ESP you want to clean already placed in the Data folder.  If not, then before launching the program, first copy one. For the sake of this example, I'll copy my plugin to the Data folder:
@@ -47,9 +17,10 @@ Take notice of its size so you can see the effect of the cleaning afterwards.
 
 == Quick List of What & What Not to Clean ==
 
-* Do NOT clean the unofficial patches (USKP, UDGP, UHFP). They have already been cleaned.
-* Do clean the official DLC. (Update.esm, Dawnguard.esm, HearthFires.esm)
-* Do clean just about everything else.
+* Do NOT clean Skyrim.esm!
+* Do NOT clean the Unofficial Patches (USKP, UDGP, UHFP, UDBP). They have already been cleaned.
+* You should clean the official DLC. (Update.esm, Dawnguard.esm, HearthFires.esm, Dragonborn.esm)
+* You can also clean just about everything else.
 
 == Warming up ==
 
@@ -131,11 +102,12 @@ So now, we can proceed with the cleaning.
 
 === Order For Cleaning Bethesda's Master Files ===
 
-[[File:TES5EditCleaningUpdate.jpg|50px|TES5 Apply Filter For Cleaning Update.esm]]  [[File:TES5EditCleaningDawnguard.jpg|50px|TES5 Apply Filter For Cleaning Dawnguard.esm]]  [[File:TES5EditCleaningHearthfires.jpg|50px|TES5 Apply Filter For Cleaning Hearthfires.esm]]
+[[File:TES5EditCleaningUpdate.jpg|50px|TES5 Apply Filter For Cleaning Update.esm]]  [[File:TES5EditCleaningDawnguard.jpg|50px|TES5 Apply Filter For Cleaning Dawnguard.esm]]  [[File:TES5EditCleaningHearthfires.jpg|50px|TES5 Apply Filter For Cleaning Hearthfires.esm]]  [[File:TES5EditCleaningDragonborn.jpg|50px|TES5 Apply Filter For Cleaning Dragonborn.esm]]
 
 :For Update.esm: Load Skyrim.esm and Update.esm, but only clean Update.esm.
 :For Dawnguard.esm: Load Skyrim.esm, Update.esm, and Dawnguard.esm but only clean Dawnguard.esm.
-:For Hearthfires.esm: Load Skyrim.esm, Update.esm, and Hearthfires.esm but only clean Hearthfires.esm.
+:For Hearthfires.esm: Load Skyrim.esm and Hearthfires.esm but, only clean Hearthfires.esm.
+:For Dragonborn.esm: Load Skyrim.esm, Update.sm, and Dragonborn.esm but only clean Dragonborn.esm.
 
 === Cleaning the ESM or ESP ===
 
@@ -225,7 +197,7 @@ As you can check for yourself, the records shown are the same that were shown wh
 
 [[Image:TES5EditUndeleteDisableReferences.jpg|800px|Undelete and Disable References]]
 
-Right click again on the plugin you are cleaning (again in our case: Update.esm) and select “Undelete and Disable References.” Again, check the Messages tab to see what was changed. Make a note of the number of Identical to Master" records that were removed and the number of undeleted and disabled references for later when reporting the plugin to the BOSS team.
+Right click again on the plugin you are cleaning (again in our case: Update.esm) and select “Undelete and Disable References.” Again, check the Messages tab to see what was changed. Make a note of the number of "Identical to Master" records that were removed and the number of "undeleted and disabled references" for later when reporting the plugin to the BOSS team.
 
 == Saving the work ==
 Ok, understand this point which is very important: the modified mod is yet unsaved and it will not be saved until you want to. If you change your mind now, you will be allowed to exit the program (just click on the top-right corner of the window as you would do normally,) and then answer to the window that appears: 
@@ -271,7 +243,7 @@ Ok, that should be everything I can think of now.
 * [[TES5Edit|TES5Edit]]
 * [[TES5Edit_Cleaning_Guide_-_TES5Edit|TES5Edit Cleaning Guide]]
 * [[Skyrim_Dirty_Plugins_List|Skyrim Dirty Plugins List]]
-* [http://forums.bethsoft.com/topic/1418088-relz-tes5edit/ Official Elderscrolls TES5Edit forum topic]
+* [http://forums.bethsoft.com/topic/1436132-relz-tes5edit/ Official Elderscrolls TES5Edit forum topic]
 
 = Final words =
 

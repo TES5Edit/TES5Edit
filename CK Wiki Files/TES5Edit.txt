@@ -23,14 +23,15 @@ Both the detail view and the record list use the same color coding to signal the
 : Green - Multiple but no conflict:
 : Yellow - Override without conflict:
 : Red - Conflict:
+: Fuchsia - Critical Conflict:
 
 '''Text color''':
 
 : Black - Single Record:
 : Purple - Master:
 : Gray - Identical to Master:
-: Orange - Identical to Master but conflict Winner:
 : Green - Override without conflict:
+: Olive - Identical to Master but conflict Winner:
 : Orange - Conflict winner:
 : Red - Conflict loser:
 
@@ -39,28 +40,81 @@ based on the same conflict categorization as the background and text color.  Yes
 
 Be warned, this program uses a lot of memory. Performance on a system with less then 2GB of RAM will most likely be sub-optimal. Activating the filtering uses even more memory.
 
-== Installation ==
+== Downloading, Installation, and Language Settings ==
+
+=== Installation ===
+
+You can download the latest version from the skyrim Nexus:
+* [http://www.nexusmods.com/skyrim/mods/25859/ TES5Edit by ElminsterEU, updated by Zilav, Hlp, and Sharlikran for Skyrim]
+
+# Extract the contents of the archive into a new empty folder.
+# You can execute the program from any folder on your local computer.  As I show in the screenshot below, I placed mine in a separate directory, ''any folder'' on your computer will work just as well.
 
 [[Image:TES5Edit Folder.jpg|800px|TES5Edit Install Folder]]
- 
-# Extract the contents of the archive any where you so desire or into its own personal folder.
-# The program will automatically detect the directory where your plugins are located at.
+
+NOTE: The program will automatically detect the directory where your plugins are located at.
 
 You can change the way the program interacts renaming it
 # TES5Edit.exe
 # TES5View.exe
 # TES5Trans.exe
 
-You can also create shortcuts to use on your desktop that will do the same thing that renaming the files will accomplish. I recommend using this option because it makes it easier to update one file then it is to rename it every time.
+=== Creating A Shortcut  ===
+
+It is best to set up a shortcut at an easily accessible location because you will be opening, closing, and re-opening TES5Edit many, many times. Your desktop is the suggested location.  
+
+From where you installed right click TES5Edit.exe, then "Send To" and then Desktop.
+
+[[Image:TES5EditCreateShortcut.jpg|800px|TES5Edit Create Shortcut]]
 
 '''Example shortcuts'''
 <Pre>"C:\Program Files\TES5Edit_3_0_22_EXPERIMENTAL\TES5Edit.exe"</pre>
 <Pre>"C:\Program Files\TES5Edit_3_0_22_EXPERIMENTAL\TES5Edit.exe" -view</pre>
 <Pre>"C:\Program Files\TES5Edit_3_0_22_EXPERIMENTAL\TES5Edit.exe" -translate</pre>
 
-[http://skyrim.nexusmods.com/mods/25859/ Download TES5Edit from the Skyrim Nexus]
+=== Setting The Language ===
 
-[http://forums.bethsoft.com/topic/1419201-relz-tes5edit/ Official Elderscrolls TES5Edit forum topic]
+TES5Edit has a Language selection parameter "-l:language" for Skyrim.
+
+Right click the Shortcut you made on the Desktop and click Properties.
+In the Box labeled Target add the parameter after the last quotation (") mark.  In the screenshot I added "-l:spanish".
+
+[[Image:TES5LanguageSetting.jpg|300px|TES5Edit Language Setting]]
+
+NOTE:  TES5Edit is in English only.  This command line parameter is only for the Plugin's localization.  If Localization is not available, or not working correctly only English will be shown for that Plugin.
+
+'''Example shortcuts'''
+<Pre>"C:\Program Files\TES5Edit_3_0_22_EXPERIMENTAL\TES5Edit.exe" -:language spanish</pre>
+
+== Documentation ==
+
+'''This is a work in progress it is not complete at this time.'''  
+
+* [[TES5Edit_Documentation|TES5Edit Documentation]]
+
+This is being provided as a base for documentation for all versions.  It is being taken straight from the Fallout documentation written by Miax and other contributors.  If you have previous knowledge of FO3Edit, FNVEdit, and TES4Edit please contribute to this documentation.  There is no way any one person can include everything.  Your contributions will make the documentation as through as possible.
+
+'''What will not be included in the Documentation'''
+
+# How the Bethesda CK Works
+# Specific conflicts that should be ignored
+# Technical Plugin Specific Information
+# Exactly how to troubleshoot load order issues or prevent a Crash To Desktop or, CTD
+# Which plugins should not be cleaned
+
+Some people new to using FO3/FNV/TES4/TES5Edit are trying to prevent their game from crashing.  However, they normally don't have the technical background to understand the inner workings of the plugins nor would they understand the programming that goes into the tool itself.  Because of this, only general ways to detect a conflict should be presented.  The Author of the mod should be contacted to resolve any issues with the plugin they have provided to the public.  The documentation should only include proper use of the software.  Try to keep it generic so it covers all versions.  When applicable, note any version specific differences.
+
+If you do understand programming and would like to know more about the inner workings of TES5Edit feel free to visit our Google Code site.  You are more then welcome to read the source code and and search the web for applicable Delphi documentation.
+
+== Frequently Asked Questions ==
+
+This is a work in progress it is not complete at this time.
+
+* [[TES5Edit_Frequently Asked Questions|Frequently Asked Questions]]
+
+= TES5Edit Scripting Functions =
+
+* [[TES5Edit_Scripting_Functions|TES5Edit Scripting Functions]]
 
 = Additional TES5Edit Resources =
 
@@ -68,18 +122,19 @@ You can also create shortcuts to use on your desktop that will do the same thing
 * [[TES5Edit_Mod_Cleaning_Tutorial|TES5Edit Mod Cleaning Tutorial]]
 * [[Skyrim_Dirty_Plugins_List|Skyrim Dirty Plugins List]]
 
-== Closing Remarks & Credits ==
+
+= Closing Remarks & Credits =
 
 This has been adapted from the [http://cs.elderscrolls.com/index.php/TES4Edit TES4Edit] article on the Elderscrolls Wiki.
 
 Thanks also go to ElminsterEU, Sharlikran, and Zilav for their work in getting TES5Edit released. Special Thanks to Gopher for getting the word out with a short video announcing the public release of TES5Edit and his upcoming tutorials.
 
-== Still to do ==
+= Still to do =
 * Make sure TES5Edit still utilizes TES5View and TES5Trans functionality.
 * Update the Dirty Plugins List
 * Update the TES5Edit Mod Cleaning Tutorial
 * Get the correctness of the guide verified by the TES5Edit team.
 
-== See Also ==
+= See Also =
 *[[:Category:TESVSnip|TESVSnip]]
 {{Languages}}
