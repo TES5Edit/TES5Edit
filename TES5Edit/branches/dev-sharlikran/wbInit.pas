@@ -297,9 +297,6 @@ begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
-    wbVWDInTemporary := True;
-    wbLoadBSAs := False;
-    ReadSettings;
     if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
@@ -312,9 +309,6 @@ begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
-    wbVWDInTemporary := True;
-    wbLoadBSAs := False;
-    ReadSettings;
     if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
@@ -327,9 +321,6 @@ begin
     wbGameMode := gmTES3;
     wbAppName := 'TES3';
     wbGameName := 'Morrowind';
-    wbLoadBSAs := False;
-    wbAllowInternalEdit := false;
-    ReadSettings;
     if not (wbToolMode in []) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
@@ -342,9 +333,6 @@ begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
-    wbLoadBSAs := True;
-    wbAllowInternalEdit := false;
-    ReadSettings;
     if not (wbToolMode in [tmView, tmEdit, tmLODgen]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
@@ -357,10 +345,6 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
-    wbVWDInTemporary := True;
-    wbLoadBSAs := True; // localization won't work otherwise
-    wbHideIgnored := False; // to show Form Version
-    ReadSettings;
     if not (wbToolMode in [tmView, tmEdit, tmTranslate]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
@@ -375,6 +359,31 @@ begin
   end;
 
   DoInitPath;
+
+  if isMode('FNV') then begin
+    wbVWDInTemporary := True;
+    wbLoadBSAs := False;
+    ReadSettings;
+  end else if isMode('FO3') then begin
+    wbVWDInTemporary := True;
+    wbLoadBSAs := False;
+    ReadSettings;
+  end else if isMode('TES3') then begin
+    wbLoadBSAs := False;
+    wbAllowInternalEdit := false;
+    ReadSettings;
+  end else if isMode('TES4') then begin
+    wbLoadBSAs := True;
+    wbAllowInternalEdit := false;
+    ReadSettings;
+  end else if isMode('TES5') then begin
+    wbVWDInTemporary := True;
+    wbLoadBSAs := True; // localization won't work otherwise
+    wbHideIgnored := False; // to show Form Version
+    ReadSettings;
+  end else begin
+    Exit;
+  end;
 
   if wbGameMode = gmFNV then
     DefineFNV

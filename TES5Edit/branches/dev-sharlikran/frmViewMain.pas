@@ -3201,6 +3201,12 @@ begin
         end;
       end;
 
+      // hold shift to skip bulding references
+      if GetKeyState(VK_SHIFT) < 0 then begin
+        wbBuildRefs := False;
+        AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
+      end;
+
       wbStartTime := Now;
       TLoaderThread.Create(sl);
     finally
@@ -3299,6 +3305,9 @@ begin
     wbColorConflictThis[ConflictThis] := Settings.ReadInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ConflictThis)), Integer(wbColorConflictThis[ConflictThis]));
   for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
     wbColorConflictAll[ConflictAll] := Settings.ReadInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ConflictAll)), Integer(wbColorConflictAll[ConflictAll]));
+  Settings.ReadSection('DoNotBuildRefsFor', wbDoNotBuildRefsFor);
+  if (wbDoNotBuildRefsFor.Count = 0) and (wbGameMode = gmFNV) then
+    wbDoNotBuildRefsFor.Add('Fallout3.esm');
 
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
   mniViewHideNoConflict.Checked := HideNoConflict;
@@ -9424,6 +9433,7 @@ procedure TfrmMain.mniNavOptionsClick(Sender: TObject);
 var
   ct: TConflictThis;
   ca: TConflictAll;
+  i: integer;
 begin
   with TfrmOptions.Create(Self) do try
 
@@ -9447,6 +9457,8 @@ begin
     edUDRSetZValue.Text := FloatToStrF(wbUDRSetZValue, ffFixed, 99, wbFloatDigits);
     cbUDRSetMSTT.Checked := wbUDRSetMSTT;
     edUDRSetMSTTValue.Text := IntToHex(wbUDRSetMSTTValue, 8);
+    lbDoNotBuildRef.Items.Assign(wbDoNotBuildRefsFor);
+    _Files := @Files;
 
     if ShowModal <> mrOK then
       Exit;
@@ -9471,6 +9483,7 @@ begin
     wbUDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, wbUDRSetZValue);
     wbUDRSetMSTT := cbUDRSetMSTT.Checked;
     wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
+    wbDoNotBuildRefsFor.Assign(lbDoNotBuildRef.Items);
 
     Settings.WriteBool('Options', 'AutoSave', AutoSave);
     Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
@@ -9496,6 +9509,9 @@ begin
       Settings.WriteInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ct)), Integer(wbColorConflictThis[ct]));
     for ca := Low(TConflictAll) to High(TConflictAll) do
       Settings.WriteInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ca)), Integer(wbColorConflictAll[ca]));
+    for i := 0 to Pred(wbDoNotBuildRefsFor.Count) do
+      Settings.WriteInteger('DoNotBuildRefsFor', wbDoNotBuildRefsFor[i], 1);
+
     Settings.UpdateFile;
 
   finally

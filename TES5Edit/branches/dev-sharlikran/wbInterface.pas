@@ -1090,6 +1090,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean;
 
     property DefaultSignature: TwbSignature
       read GetDefaultSignature;
@@ -2913,6 +2916,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
   end;
 
   TwbRecordDef = class(TwbSignatureDef, IwbRecordDef)
@@ -3039,6 +3045,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
 
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
@@ -3083,6 +3092,9 @@ type
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
 
@@ -3136,6 +3148,9 @@ type
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
 
@@ -5418,6 +5433,12 @@ begin
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
+function TwbSignatureDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := CanHandle(aSignature, aDataContainer);
+end;
+
 constructor TwbSignatureDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbSignatureDef) do
@@ -5801,6 +5822,12 @@ begin
   Result := sraElement.CanHandle(aSignature, aDataContainer);
 end;
 
+function TwbSubRecordArrayDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := sraElement.CanHandleAlso(aSignature, aDataContainer);
+end;
+
 constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
@@ -5960,6 +5987,12 @@ begin
     Result := ContainsMemberFor(aSignature, aDataContainer)
   else
     Result := srsMembers[0].CanHandle(aSignature, aDataContainer);
+end;
+
+function TwbSubRecordStructDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := ContainsMemberFor(aSignature, aDataContainer)
 end;
 
 constructor TwbSubRecordStructDef.Clone(const aSource: TwbDef);
@@ -6184,6 +6217,12 @@ begin
     if Result then
       Exit;
   end;
+end;
+
+function TwbSubRecordUnionDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := CanHandle(aSignature, aDataContainer);
 end;
 
 constructor TwbSubRecordUnionDef.Clone(const aSource: TwbDef);
@@ -7714,6 +7753,8 @@ begin
           s := '<Unknown: '+IntToStr(i)+'>';
       if GetFlagDontShow(aElement, i) then
         s := '(' + s + ')';
+      if wbShowFlagEnumValue then
+        s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       Add(s);
     end;
     Result := CommaText;
@@ -7730,6 +7771,8 @@ end;
 function TwbFlagsDef.GetFlag(aIndex: Integer): string;
 begin
   Result := flgNames[aIndex];
+  if wbShowFlagEnumValue then
+    Result := Result + ' (0x' + IntToHex(Int64(1) shl aIndex, 8) + ')';
 end;
 
 function TwbFlagsDef.GetFlagCount: Integer;
@@ -7825,6 +7868,8 @@ begin
           HasUnknownFlags := True;
         end;
       end;
+      if wbShowFlagEnumValue then
+        s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       if not GetFlagDontShow(aElement, i) then
         Result := Result + s + ', ';
     end;
@@ -7917,7 +7962,10 @@ begin
     for i := Low(enNames) to High(enNames) do begin
       enNames[i] := aNames[i];
       if aNames[i] <> '' then
-        EditInfo.Add(aNames[i]);
+        if wbShowFlagEnumValue then
+          EditInfo.Add(aNames[i] + ' (' + IntToStr(i) + ')')
+        else
+          EditInfo.Add(aNames[i]);
     end;
 
     Assert(Length(aSparseNames) mod 2 = 0);
@@ -7942,7 +7990,10 @@ begin
           snName  := aSparseNames[Succ(i * 2)].VWideChar;
 
         if snName <> '' then
-          EditInfo.Add(snName);
+          if wbShowFlagEnumValue then
+            EditInfo.Add(snName + ' (' + IntToStr(snIndex) + ')')
+          else
+            EditInfo.Add(snName);
       end;
     end;
     EditInfo.Sort;
@@ -8058,22 +8109,30 @@ end;
 
 function TwbEnumDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 var
-  i: Integer;
+  i, j: Integer;
+  Value: string;
 begin
   if aValue = '' then
     Result := 0
   else begin
+    Value := aValue;
+    if wbShowFlagEnumValue and (Value[Length(Value)] = ')') then begin
+      // remove an integer value of enum from enum string value
+      i := LastDelimiter('(', Value);
+      if (i > 0) and TryStrToInt(Copy(Value, Succ(i), Length(Value) - Succ(i)), j) then
+        Delete(Value, Pred(i), Length(Value));
+    end;
     for i := Low(enNames) to High(enNames) do
-      if SameStr(enNames[i], aValue) then begin
+      if SameStr(enNames[i], Value) then begin
         Result := i;
         Exit;
       end;
     for i := Low(enSparseNames) to High(enSparseNames) do with enSparseNames[i] do
-      if SameStr(snName, aValue) then begin
+      if SameStr(snName, Value) then begin
         Result := snIndex;
         Exit;
       end;
-    Result := StrToInt64(aValue);
+    Result := StrToInt64(Value);
   end;
 end;
 
