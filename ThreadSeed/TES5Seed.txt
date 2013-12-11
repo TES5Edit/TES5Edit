@@ -44,7 +44,7 @@ Threads:
 [*][url=http://www.creationkit.com/TES5Edit_Scripting_Functions]TES5Edit Scripting Functions[/url] - New! [WIP][/*]
 [/LIST]
 Gopher's Video's [url=http://www.youtube.com/watch?v=UOQO2S6HDBw]Cleaning Plugins and Master Files - Mod Authors.[/url]
-Gopher's Video's [url=http://www.youtube.com/watch?v=fw3g_N1jcZQ]Cleaning Plugins and Master Files - Mod Authors.[/url]
+Gopher's Video's [url=http://www.youtube.com/watch?v=fw3g_N1jcZQ]Cleaning Plugins and Master Files - Mod Users.[/url]
 My Video [url=http://www.youtube.com/watch?v=ciRPWx3OhBQ]Making a Merge Patch.[/url] [Unsupported]
  
 Rename to TES4Edit.exe to work with Oblivion.
