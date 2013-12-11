@@ -2361,8 +2361,7 @@ begin
   Result := flStates;
 end;
 
-function TwbFile.GetGroupBySignature(
-  const aSignature: TwbSignature): IwbGroupRecord;
+function TwbFile.GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
 var
   SelfRef: IwbContainerElementRef;
   i: Integer;
@@ -5432,8 +5431,22 @@ var
 //  MainRecord             : IwbMainRecord;
   s: string;
 {$ENDIF}
-  RequiredRecords, PresentRecords: set of byte;
-  i : Integer;
+  RequiredRecords : set of byte;
+  PresentRecords : set of byte;
+  i              : Integer;
+  badRecord      : Boolean;
+
+  function CheckBadRecord: Boolean;
+  begin
+    Result := false;
+    if (CurrentDefPos < mrDef.MemberCount) then begin
+        CurrentDef := mrDef.Members[CurrentDefPos];
+        if CurrentDef.CanHandleAlso(CurrentRec.Signature, CurrentRec) then begin
+          Result := True;
+        end;
+    end;
+  end;
+
 begin
   RequiredRecords := [];
   PresentRecords := [];
@@ -5490,6 +5503,7 @@ begin
 
   CurrentDefPos := 0;
   CurrentRecPos := 0;
+
   while (CurrentRecPos < Length(cntElements)) do begin
     if cntElements[CurrentRecPos].ElementType <> etSubRecord then begin
       Inc(CurrentRecPos);
@@ -5512,17 +5526,21 @@ begin
       end;
       CurrentDef := mrDef.Members[CurrentDefPos];
     end else begin
+      badRecord := False;
       if not mrDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
-        if Assigned(wbProgressCallback) then
-          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
-        FoundError := True;
-        Inc(CurrentRecPos);
-        Continue;
+        if not checkBadRecord then begin
+          if Assigned(wbProgressCallback) then
+            wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+          FoundError := True;
+          Inc(CurrentRecPos);
+          Continue;
+        end;
+        badRecord := True;
       end;
 
       if (CurrentDefPos < mrDef.MemberCount) then begin
         CurrentDef := mrDef.Members[CurrentDefPos];
-        if not CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec) then begin
+        if not (badRecord or CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec)) then begin
           Inc(CurrentDefPos);
           Continue;
         end;
@@ -8951,7 +8969,7 @@ begin
   DoInit;
 
   if not Assigned(dcDataBasePtr) and Assigned(srValueDef) and not (dcfStorageInvalid in dcFlags) then begin
-    Result := srValueDef.Size[nil, nil, Self];
+    Result := srValueDef.DefaultSize[nil, nil, Self];
     Assert(Result <> Cardinal(High(Integer)));
   end else
     Result := inherited GetDataSize;
@@ -9370,7 +9388,10 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
   if not Assigned(srDef) then
-    raise Exception.Create(GetName + ' can not be edited');
+    if aValue <> '' then
+      raise Exception.Create(GetName + ' can not be edited')
+    else
+      Exit;
 
   DoInit;
 
@@ -11975,7 +11996,7 @@ begin
         Break;
     end;
 
-    if not ElementDef.CanHandle(SubRecord.Signature, SubRecord) then
+    if not ElementDef.CanHandleAlso(SubRecord.Signature, SubRecord) then
       Break;
 
     case ElementDef.DefType of
@@ -14241,7 +14262,7 @@ procedure TwbValueBase.InitDataPtr;
 var
   Size : Integer;
 begin
-  if GetDataBasePtr <> nil then begin
+  if (GetDataBasePtr <> nil) and (Cardinal(dcDataEndPtr)>=Cardinal(dcDataBasePtr)) then begin
     Size := vbValueDef.Size[dcDataBasePtr, dcDataEndPtr, Self];
     if Size < High(Integer) then begin
       dcDataEndPtr := Pointer( Cardinal(dcDataBasePtr) + Cardinal(Size) );

@@ -1057,6 +1057,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean;
 
     property DefaultSignature: TwbSignature
       read GetDefaultSignature;
@@ -2455,16 +2458,27 @@ end;
 function wbDefToName(const aDef: IwbDef): string;
 var
   SignatureDef : IwbSignatureDef;
+  Signature    : TwbSignature;
   NamedDef     : IwbNamedDef;
+  i            : Integer;
 begin
   if Supports(aDef, IwbSignatureDef, SignatureDef) then begin
-    Result := SignatureDef.DefaultSignature + ' - ' + SignatureDef.Name;
+    Signature := SignatureDef.DefaultSignature;
+    if Signature[0]=#0 then
+      Result := '$(00)'+Signature[1]+Signature[2]+Signature[3] + ' - ' + SignatureDef.Name
+    else
+      Result := Signature + ' - ' + SignatureDef.Name;
   end else if Supports(aDef, IwbNamedDef, NamedDef) then begin
     Result := NamedDef.Name;
   end else if Assigned(aDef) then begin
     Result := '<'+GetEnumName(TypeInfo(TwbDefType), Ord(aDef.DefType))+'>';
   end else
     Result := '<nil>';
+  for i := Length(Result) downto 1 do
+    if Result[i]<' ' then begin
+      Insert('$('+IntToHex(Ord(Result[i]), 2)+')', Result, i);
+      Delete(Result, i + 5, 1);
+    end;
 end;
 
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -2720,6 +2734,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
   end;
 
   TwbRecordDef = class(TwbSignatureDef, IwbRecordDef)
@@ -2841,6 +2858,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
 
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
@@ -2883,6 +2903,9 @@ type
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
 
@@ -2935,6 +2958,9 @@ type
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
+    function CanHandleAlso(aSignature : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
 
@@ -4484,7 +4510,7 @@ begin
   Result := wbArray(aName, wbStruct(aElementName, aMembers, aPriority), 0, aPriority, aRequired, aDontShow);
 end;
 
-function wbRStructs(const aName        : string;
+function wbRStructS(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
                     const aSkipSigs    : array of TwbSignature;
@@ -4999,6 +5025,12 @@ begin
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
+function TwbSignatureDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := CanHandle(aSignature, aDataContainer);
+end;
+
 constructor TwbSignatureDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbSignatureDef) do
@@ -5372,6 +5404,12 @@ begin
   Result := sraElement.CanHandle(aSignature, aDataContainer);
 end;
 
+function TwbSubRecordArrayDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := sraElement.CanHandleAlso(aSignature, aDataContainer);
+end;
+
 constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
@@ -5519,6 +5557,12 @@ begin
     Result := ContainsMemberFor(aSignature, aDataContainer)
   else
     Result := srsMembers[0].CanHandle(aSignature, aDataContainer);
+end;
+
+function TwbSubRecordStructDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := ContainsMemberFor(aSignature, aDataContainer)
 end;
 
 constructor TwbSubRecordStructDef.Clone(const aSource: TwbDef);
@@ -5740,6 +5784,12 @@ begin
   end;
 end;
 
+function TwbSubRecordUnionDef.CanHandleAlso(aSignature: TwbSignature;
+  const aDataContainer: IwbDataContainer): Boolean;
+begin
+  Result := CanHandle(aSignature, aDataContainer);
+end;
+
 constructor TwbSubRecordUnionDef.Clone(const aSource: TwbDef);
 var
   SkipSigs : array of TwbSignature;
@@ -5914,8 +5964,7 @@ end;
 
 { TwbIntegerDef }
 
-procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement);
+procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 var
   Value       : Int64;
 const
@@ -5957,8 +6006,7 @@ begin
   Result := Assigned(inFormater) and (inFormater.CanContainFormIDs);
 end;
 
-function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): string;
+function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   Len         : Cardinal;
   Value       : Int64;
@@ -6046,8 +6094,7 @@ begin
   FromInt(i, aBasePtr, aEndPtr, aElement);
 end;
 
-procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement);
+procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
     1, 1, 2, 2, 4, 4, 8, 8
@@ -6123,8 +6170,7 @@ begin
   Result := wbIsInternalEdit or (not Assigned(inFormater) or inFormater.IsEditable[ToInt(aBasePtr, aEndPtr, aElement), aElement]);
 end;
 
-function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): IwbElement;
+function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
 var
   Value       : Int64;
 const
@@ -6157,6 +6203,25 @@ end;
 
 function TwbIntegerDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<Cardinal(aEndPtr)) then
+    case inType of
+      itU8:  Result := SizeOf(Byte);
+      itS8:  Result := SizeOf(ShortInt);
+      itU16: Result := SizeOf(Word);
+      itS16: Result := SizeOf(SmallInt);
+      itU32: Result := SizeOf(Cardinal);
+      itS32: Result := SizeOf(LongInt);
+      itU64: Result := SizeOf(Int64);
+      itS64: Result := SizeOf(Int64);
+    else
+      Result := 0;
+    end
+  else
+    Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
+end;
+
+function TwbIntegerDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
   case inType of
     itU8:  Result := SizeOf(Byte);
     itS8:  Result := SizeOf(ShortInt);
@@ -6169,11 +6234,6 @@ begin
   else
     Result := 0;
   end;
-end;
-
-function TwbIntegerDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := GetSize(aBasePtr, aEndPtr, aElement);
 end;
 
 procedure TwbIntegerDef.MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte);
@@ -6531,21 +6591,25 @@ var
   aName         : String;
 //  Signature     : IwbSignatureDef;
 
-  procedure FindOurself(theContainer: IwbContainer; aName: String);
+  function FindOurself(theContainer: IwbContainer; aName: String): Boolean;
   var
     i           : Integer;
     Element     : IwbElement;
     aContainer  : IwbContainer;
   begin
+    Result := False;
     if Assigned(theContainer) and (not SameText(aName, theContainer.BaseName)) then begin
       for i := 0 to Pred(theContainer.ElementCount) do begin
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
           if SameText(aName, aContainer.BaseName) then begin
             Container := aContainer;
+            Result := true;
             break;
-          end else
-            FindOurself(aContainer, aName);
+          end else if FindOurself(aContainer, aName) then begin
+            Result := True;
+            break;
+          end;
       end;
     end;
   end;
@@ -6553,6 +6617,12 @@ var
 begin
   Result := 0;
   Prefix := 0;
+
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
+    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+    Exit;
+  end;
 
   // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
   // First advance to ourselves :
@@ -6649,6 +6719,12 @@ begin
             Result := High(Integer);
             Exit;
           end;
+          if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
+            wbProgressCallback('Found an array with negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+              ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+            Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
+            Exit;
+          end;
           Inc(Cardinal(EndPtr), Size);
           Inc(Result, Size);
           Inc(Index);
@@ -6656,8 +6732,15 @@ begin
 
     end else begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
-      if Size < High(Integer) then
+      if Size < High(Integer) then begin
+        if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size*Count) then begin
+          wbProgressCallback('Found an array with negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Size*Count, 8)+
+            ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+          Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
+          Exit;
+        end;
         Result := (Count * Size) + Prefix;
+      end;
     end;
 end;
 
@@ -6780,15 +6863,22 @@ var
   Size  : Integer;
 begin
   Result := 0;
-  if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then // if aBasePtr >= aEndPtr then no allocation (or error)
-    wbProgressCallback('Found a struct with negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+noName)
-  else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
-    Result := GetDefaultSize(aBasePtr, aEndPtr, aElement);
+  if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then begin // if aBasePtr >= aEndPtr then no allocation (or error)
+    wbProgressCallback('Found a struct with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
+  end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
+    Result := 0; // assuming we would have called GetDefaultSize otherwise... GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else
     for i := Low(stMembers) to High(stMembers) do begin
       Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
       if Size = High(Integer) then begin
         Result := High(Integer);
+        Break;
+      end;
+      if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
+        wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+          ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+        Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
         Break;
       end;
       if Assigned(aBasePtr) then
@@ -7813,7 +7903,10 @@ end;
 
 function TwbFloatDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := SizeOf(Single);
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+    Result := 0
+  else
+    Result := SizeOf(Single);
 end;
 
 function TwbFloatDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -10073,6 +10166,10 @@ var
   Size    : Integer;
   aMember : IwbValueDef;
 begin
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
+    wbProgressCallback('Found a union with a negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+  end;
   aMember := Decide(aBasePtr, aEndPtr, aElement);
   if not Assigned(aMember) then begin
     Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];
@@ -10089,6 +10186,11 @@ begin
           break;
   end else begin
     Result := aMember.Size[aBasePtr, aEndPtr, aElement];
+    if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+      wbProgressCallback('Found a union with a negative size! '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+        ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+      Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
+    end;
   end;
 end;
 
@@ -10455,24 +10557,26 @@ function TwbLenStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: Iwb
 var
   Len : Integer;
 begin
-  if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
-    Result := 0
-  else if Assigned(aBasePtr) then begin
-    Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-    if Result < Prefix then
-      Exit;
+  if Assigned(aBasePtr) and Assigned(aEndPtr) then
+    if (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+      Result := 0
+    else begin
+      Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
+      if Result < Prefix then
+        Exit;
 
-    case Prefix of
-      1: Len := PByte(aBasePtr)^ + Prefix;
-      2: Len := PWord(aBasePtr)^ + Prefix;
-      4: Len := PCardinal(aBasePtr)^ + Prefix;
-    else
-      Len := 0;
-    end;
+      case Prefix of
+        1: Len := PByte(aBasePtr)^ + Prefix;
+        2: Len := PWord(aBasePtr)^ + Prefix;
+        4: Len := PCardinal(aBasePtr)^ + Prefix;
+      else
+        Len := 0;
+      end;
 
-    if Len < Result then
-      Result := Len;
-  end else
+      if Len < Result then
+        Result := Len;
+    end
+  else
     Result := Prefix;
 end;
 
@@ -10618,10 +10722,10 @@ end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
     Result := 0
-  else if Assigned(aElement._File) and aElement._File.IsLocalized then
-    Result := 4
+  else if Assigned(aBasePtr) and Assigned(aEndPtr) and Assigned(aElement._File) and aElement._File.IsLocalized then
+    Result := Min(4, Cardinal(aEndPtr) - Cardinal(aBasePtr))
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
 end;

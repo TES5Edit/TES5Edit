@@ -3792,6 +3792,9 @@ begin
 end;
 
 procedure DefineTES5a;
+var
+  wbRecordFlagsEnum : IwbFlagsDef;
+
 begin
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32);
@@ -3965,7 +3968,7 @@ begin
     ])
   ]);
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
+  wbRecordFlagsEnum := wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
@@ -4034,7 +4037,8 @@ begin
     {0x40000000}'NavMeshGround NoRespawn',
     {>>> 0x80000000 REFR: MultiBound <<<}
     {0x80000000}'MultiBound'
-  ]));
+  ]);
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbRecordFlagsEnum);
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
     {0x00000001}'Unknown 1',
@@ -4349,7 +4353,7 @@ begin
       wbInteger('Type', itU8, wbPropTypeEnum),
       wbInteger('Unknown', itU8),
       wbUnion('Value', wbScriptPropertyDecider, [
-        {00} wbByteArray('Unknown', 0, cpIgnore),
+        {00} wbInteger('Null', itU32),
         {01} wbScriptObject,
         {02} wbLenString('String', 2),
         {03} wbInteger('Int32', itS32),
@@ -7399,7 +7403,7 @@ begin
               '1 <-> 2',
               '2 <-> 0'
             ]),
-            wbByteArray('Cover Marker?', 2),
+            wbByteArray('Cover Marker?', 2),   // Might be Flags if bit 0 if effectivly "Preferred path"
             wbInteger('Cover Edge #1 Flags', itU8),
             wbInteger('Cover Edge #2 Flags', itU8)
           ])
