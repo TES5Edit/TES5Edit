@@ -1407,7 +1407,6 @@ type
 
     {--- IwbHasSignature ---}
     function GetSignature: TwbSignature;
-
   end;
 
   TwbSubRecordStruct = class(TwbContainer, IwbHasSignature)

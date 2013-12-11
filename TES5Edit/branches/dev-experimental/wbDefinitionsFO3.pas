@@ -9145,7 +9145,7 @@ begin
     ]),
 
     {--- Map Data ---}
-    wbRStruct('Map Data', [
+    wbRStruct('Map Marker', [
       wbEmpty(XMRK, 'Map Data Marker'),
       wbInteger(FNAM, 'Flags', itU8, wbFlags([
         {0x01} 'Visible',

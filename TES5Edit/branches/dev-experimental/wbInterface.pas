@@ -7521,6 +7521,8 @@ begin
           s := '<Unknown: '+IntToStr(i)+'>';
       if GetFlagDontShow(aElement, i) then
         s := '(' + s + ')';
+      if wbShowFlagEnumValue then
+        s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       Add(s);
     end;
     Result := CommaText;
@@ -7537,6 +7539,8 @@ end;
 function TwbFlagsDef.GetFlag(aIndex: Integer): string;
 begin
   Result := flgNames[aIndex];
+  if wbShowFlagEnumValue then
+    Result := Result + ' (0x' + IntToHex(Int64(1) shl aIndex, 8) + ')';
 end;
 
 function TwbFlagsDef.GetFlagCount: Integer;
@@ -7632,6 +7636,8 @@ begin
           HasUnknownFlags := True;
         end;
       end;
+      if wbShowFlagEnumValue then
+        s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       if not GetFlagDontShow(aElement, i) then
         Result := Result + s + ', ';
     end;
@@ -7724,7 +7730,10 @@ begin
     for i := Low(enNames) to High(enNames) do begin
       enNames[i] := aNames[i];
       if aNames[i] <> '' then
-        EditInfo.Add(aNames[i]);
+        if wbShowFlagEnumValue then
+          EditInfo.Add(aNames[i] + ' (' + IntToStr(i) + ')')
+        else
+          EditInfo.Add(aNames[i]);
     end;
 
     Assert(Length(aSparseNames) mod 2 = 0);
@@ -7749,7 +7758,10 @@ begin
           snName  := aSparseNames[Succ(i * 2)].VWideChar;
 
         if snName <> '' then
-          EditInfo.Add(snName);
+          if wbShowFlagEnumValue then
+            EditInfo.Add(snName + ' (' + IntToStr(snIndex) + ')')
+          else
+            EditInfo.Add(snName);
       end;
     end;
     EditInfo.Sort;
@@ -7865,22 +7877,30 @@ end;
 
 function TwbEnumDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 var
-  i: Integer;
+  i, j: Integer;
+  Value: string;
 begin
   if aValue = '' then
     Result := 0
   else begin
+    Value := aValue;
+    if wbShowFlagEnumValue and (Value[Length(Value)] = ')') then begin
+      // remove an integer value of enum from enum string value
+      i := LastDelimiter('(', Value);
+      if (i > 0) and TryStrToInt(Copy(Value, Succ(i), Length(Value) - Succ(i)), j) then
+        Delete(Value, Pred(i), Length(Value));
+    end;
     for i := Low(enNames) to High(enNames) do
-      if SameStr(enNames[i], aValue) then begin
+      if SameStr(enNames[i], Value) then begin
         Result := i;
         Exit;
       end;
     for i := Low(enSparseNames) to High(enSparseNames) do with enSparseNames[i] do
-      if SameStr(snName, aValue) then begin
+      if SameStr(snName, Value) then begin
         Result := snIndex;
         Exit;
       end;
-    Result := StrToInt64(aValue);
+    Result := StrToInt64(Value);
   end;
 end;
 
