@@ -34,7 +34,6 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitHeight = 237
       object Label5: TLabel
         Left = 16
         Top = 232
@@ -165,7 +164,6 @@ object frmOptions: TfrmOptions
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitHeight = 237
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -233,7 +231,6 @@ object frmOptions: TfrmOptions
     object tsColors: TTabSheet
       Caption = 'Colors'
       ImageIndex = 2
-      ExplicitHeight = 237
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -285,6 +282,44 @@ object frmOptions: TfrmOptions
         OnChange = clbConflictAllChange
       end
     end
+    object tsDoNotBuildRefs: TTabSheet
+      Caption = 'References building'
+      ImageIndex = 3
+      object Label2: TLabel
+        Left = 16
+        Top = 13
+        Width = 187
+        Height = 13
+        Caption = 'Do not autobuild references for plugins'
+      end
+      object lbDoNotBuildRef: TListBox
+        Left = 16
+        Top = 32
+        Width = 329
+        Height = 225
+        ItemHeight = 13
+        MultiSelect = True
+        TabOrder = 0
+      end
+      object btnDoNotBuildRefAdd: TButton
+        Left = 367
+        Top = 32
+        Width = 75
+        Height = 25
+        Caption = 'Add'
+        TabOrder = 1
+        OnClick = btnDoNotBuildRefAddClick
+      end
+      object btnDoNotBuildRefDel: TButton
+        Left = 367
+        Top = 63
+        Width = 75
+        Height = 25
+        Caption = 'Delete'
+        TabOrder = 2
+        OnClick = btnDoNotBuildRefDelClick
+      end
+    end
   end
   object btnOK: TButton
     Left = 302
@@ -295,7 +330,6 @@ object frmOptions: TfrmOptions
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
-    ExplicitTop = 280
   end
   object btnCancel: TButton
     Left = 383
@@ -306,6 +340,5 @@ object frmOptions: TfrmOptions
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 280
   end
 end

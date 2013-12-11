@@ -402,6 +402,19 @@ begin
 end;
 
 
+{ TWinControl }
+
+procedure TWinControl_Read_DoubleBuffered(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TWinControl(Args.Obj).DoubleBuffered;
+end;
+
+procedure TWinControl_Write_DoubleBuffered(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TWinControl(Args.Obj).DoubleBuffered := Boolean(Value);
+end;
+
+
 { TCheckListBox }
 
 type
@@ -1002,6 +1015,10 @@ begin
     AddGet(TBinaryWriter, 'Create', TBinaryWriter_Create, 1, [varEmpty], varEmpty);
     AddGet(TBinaryWriter, 'Write', TBinaryWriter_Write, 1, [varEmpty], varEmpty);
     AddGet(TBinaryWriter, 'WriteSingle', TBinaryWriter_WriteSingle, 1, [varEmpty], varEmpty);
+
+    { TWinControl }
+    AddGet(TWinControl, 'DoubleBuffered', TWinControl_Read_DoubleBuffered, 0, [varEmpty], varEmpty);
+    AddSet(TWinControl, 'DoubleBuffered', TWinControl_Write_DoubleBuffered, 0, [varEmpty]);
 
     { TCheckListBox }
     AddClass('CheckLst', TCheckListBox, 'TCheckListBox');

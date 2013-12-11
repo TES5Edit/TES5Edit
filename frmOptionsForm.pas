@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, ExtCtrls;
+  Dialogs, StdCtrls, ComCtrls, ExtCtrls, wbInterface;
 
 type
   TfrmOptions = class(TForm)
@@ -42,6 +42,11 @@ type
     cbResolveAliases: TCheckBox;
     cbSortGroupRecord: TCheckBox;
     cbShowFlagEnumValue: TCheckBox;
+    tsDoNotBuildRefs: TTabSheet;
+    lbDoNotBuildRef: TListBox;
+    Label2: TLabel;
+    btnDoNotBuildRefAdd: TButton;
+    btnDoNotBuildRefDel: TButton;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
@@ -49,10 +54,13 @@ type
     procedure cbConflictAllChange(Sender: TObject);
     procedure clbConflictAllChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure btnDoNotBuildRefAddClick(Sender: TObject);
+    procedure btnDoNotBuildRefDelClick(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
+    _Files: ^TDynFiles;
   end;
 
 var
@@ -63,11 +71,52 @@ implementation
 {$R *.dfm}
 
 uses
-  wbInterface, TypInfo;
+  FileSelectFrm, TypInfo;
 
 var
   wbColorConflictAllDefault: TConflictAllColors;
   wbColorConflictThisDefault: TConflictThisColors;
+
+procedure TfrmOptions.btnDoNotBuildRefAddClick(Sender: TObject);
+var
+  i: integer;
+  sl: TStringList;
+begin
+  with TfrmFileSelect.Create(Self) do try
+
+    sl := TStringList.Create;
+    sl.Sorted := True;
+    sl.Duplicates := dupIgnore;
+
+    sl.Assign(lbDoNotBuildRef.Items);
+
+    for i := Low(_Files^) to High(_Files^) do
+      if _Files^[i].IsEditable then
+        CheckListBox1.Items.Add(_Files^[i].FileName);
+
+    if ShowModal <> mrOK then
+      Exit;
+
+    for i := 0 to Pred(CheckListBox1.Count) do
+      if CheckListBox1.Checked[i] then
+        sl.Add(CheckListBox1.Items[i]);
+
+    lbDoNotBuildRef.Items.Assign(sl);
+
+  finally
+    FreeAndNil(sl);
+    Free;
+  end;
+end;
+
+procedure TfrmOptions.btnDoNotBuildRefDelClick(Sender: TObject);
+var
+  i: integer;
+begin
+  for i := Pred(lbDoNotBuildRef.Count) downto 0 do
+    if lbDoNotBuildRef.Selected[i] then
+      lbDoNotBuildRef.Items.Delete(i);
+end;
 
 procedure TfrmOptions.cbConflictAllChange(Sender: TObject);
 begin

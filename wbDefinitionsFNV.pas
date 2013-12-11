@@ -11182,6 +11182,4 @@ begin
   DefineFNVf;
 end;
 
-initialization
-  wbDoNotBuildRefsFor.Add('Fallout3.esm');
 end.
