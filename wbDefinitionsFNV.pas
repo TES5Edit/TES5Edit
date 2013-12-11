@@ -4098,7 +4098,7 @@ begin
     {0x00000002}'',
     {0x00000004}'',
     {0x00000008}'',
-    {0x00000010}'',
+    {0x00000010}'Form initialized (Runtime only)',
     {0x00000020}'Deleted',
     {0x00000040}'Border Region / Has Tree LOD / Constant / Hidden From Local Map',
     {0x00000080}'Turn Off Fire',
@@ -4113,12 +4113,12 @@ begin
     {0x00010000}'Random Anim Start / High Priority LOD',
     {0x00020000}'Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
     {0x00040000}'Compressed',
-    {0x00080000}'Can''t wait / Platform Specific Texture',
+    {0x00080000}'Can''t wait / Platform Specific Texture / Dead',
     {0x00100000}'Unknown 21',
     {0x00200000}'Unknown 22',
     {0x00400000}'Unknown 23',
     {0x00800000}'Unknown 24',
-    {0x01000000}'Unknown 25',
+    {0x01000000}'Destructible (Runtime only)',
     {0x02000000}'Obstacle / No AI Acquire',
     {0x03000000}'NavMesh Generation - Filter',
     {0x08000000}'NavMesh Generation - Bounding Box',
@@ -5205,7 +5205,7 @@ begin
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-      wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+      wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
       wbUnion('Parameter #1', wbCTDAParam1Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore),
@@ -5553,7 +5553,7 @@ begin
         ]))
       ])
     ),
-    wbFormIDCk(TNAM, 'Anmation Sounds Template', [ARMO])
+    wbFormIDCk(TNAM, 'Animation Sounds Template', [ARMO])
   ]);
 
   wbRecord(ARMA, 'Armor Addon', [
@@ -9037,7 +9037,7 @@ begin
     ], cpNormal, True, nil, 2),
     wbRStruct('Locations', [
       wbStruct(PLDT, 'Location 1', [
-        wbInteger('Type', itS32, wbEnum([
+        wbInteger('Type', itS32, wbEnum([     // Byte + filler
           {0} 'Near reference',
           {1} 'In cell',
           {2} 'Near current location',
