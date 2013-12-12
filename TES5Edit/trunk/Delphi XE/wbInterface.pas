@@ -75,16 +75,8 @@ var
   wbUDRSetMSTT: Boolean = True;
   wbUDRSetMSTTValue: Int64 = $0000003B; { XMarker }
 
-  wbMasterUpdate: Boolean;
-  wbMasterUpdateDone: Boolean;
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;
-  wbDontSave: Boolean;
-  wbDontBackup: Boolean{} = False;{}
-  wbMasterRestore: Boolean;
-
-  wbLODGen: Boolean;
-
   wbAllowInternalEdit: Boolean{} = True{};
   wbShowInternalEdit: Boolean{ = True{};
 
@@ -2225,13 +2217,19 @@ var
   wbSizeOfMainRecordStruct : Integer;
 
 type
-  TwbGameMode = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
+  TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate);
+  TwbToolSource = (tsPlugins, tsSaves);
 
 var
-  wbGameMode : TwbGameMode;
-  wbAppName  : string;
-  wbGameName : string;
-  wbLanguage : string;
+  wbGameMode   : TwbGameMode;
+  wbToolMode   : TwbToolMode;
+  wbToolSource : TwbToolSource;
+  wbAppName    : string;
+  wbGameName   : string;
+  wbToolName   : string;
+  wbSourceName : String;
+  wbLanguage   : string;
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -2315,7 +2313,7 @@ function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContain
 function GetElementFromUnion(const aElement: IwbElement): IwbElement;
 
 var
-  HeaderSignature : TwbSignature = 'TES4';
+  wbHeaderSignature : TwbSignature = 'TES4';
 
 implementation
 

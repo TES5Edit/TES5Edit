@@ -2045,7 +2045,7 @@ begin
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
-  Header := TwbMainRecord.Create(Self, HeaderSignature, 0);
+  Header := TwbMainRecord.Create(Self, wbHeaderSignature, 0);
   if wbGameMode = gmFNV then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.32'
   else if wbGameMode = gmFO3 then
@@ -2453,8 +2453,8 @@ begin
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.Signature <> HeaderSignature then
-    raise Exception.CreateFmt('Expected header signature '+HeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
+  if Header.Signature <> wbHeaderSignature then
+    raise Exception.CreateFmt('Expected header signature '+wbHeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
 
   MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
@@ -2586,7 +2586,7 @@ begin
 
   if Assigned(aElement) then
     case aElement.ElementType of
-      etMainRecord: Result := (aElement as IwbMainRecord).Signature <> HeaderSignature; {can't remove the file header}
+      etMainRecord: Result := (aElement as IwbMainRecord).Signature <> wbHeaderSignature; {can't remove the file header}
       etGroupRecord: Result := True;
     else
       Assert(False);
@@ -2655,7 +2655,7 @@ begin
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
 
   FileHeader := cntElements[0] as IwbMainRecord;
-  if FileHeader.Signature <> HeaderSignature then
+  if FileHeader.Signature <> wbHeaderSignature then
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
 
   HEDR := FileHeader.RecordBySignature['HEDR'];
@@ -2710,7 +2710,7 @@ begin
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
 
   FileHeader := cntElements[0] as IwbMainRecord;
-  if FileHeader.Signature <> HeaderSignature then
+  if FileHeader.Signature <> wbHeaderSignature then
     raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
 
   HEDR := FileHeader.RecordBySignature['HEDR'];
@@ -2912,7 +2912,7 @@ begin
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.Signature <> HeaderSignature then
+  if Header.Signature <> wbHeaderSignature then
     raise Exception.CreateFmt('Expected header signature TES4, found %s in file "%s"', [String(Header.Signature), flFileName]);
 
   if fsOnlyHeader in flStates then
@@ -7154,7 +7154,7 @@ var
   _File       : IwbFile;
   GroupRecord : IwbGroupRecord;
 begin
-  if GetSignature = HeaderSignature then begin
+  if GetSignature = wbHeaderSignature then begin
     if not Supports(GetContainer, IwbFile, _File) then
       raise Exception.Create('File Header record '+GetName+' must be contained directly in the file.');
     if GetFormID <> 0 then
@@ -14347,7 +14347,7 @@ begin
         MainRecordInternal.MakeHeaderWriteable;
 
         if Flags.IsESM then
-          if MainRecordInternal.Signature <> HeaderSignature then
+          if MainRecordInternal.Signature <> wbHeaderSignature then
             Flags.SetESM(False);
 
         if Flags.IsDeleted <> MainRecordInternal.mrStruct.mrsFlags.IsDeleted then begin
