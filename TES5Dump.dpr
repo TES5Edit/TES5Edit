@@ -26,6 +26,7 @@ uses
   Classes,
   SysUtils,
   Windows,
+  Registry,
   Zlibex in 'Zlibex.pas',
   wbBSA in 'wbBSA.pas',
   wbInterface in 'wbInterface.pas',
@@ -59,7 +60,7 @@ var
   GroupRecord  : IwbGroupRecord;
   ContainerRef : IwbContainerElementRef;
 begin
-  if (aContainer.ElementType = etGroupRecord) then
+  if (wbToolSource in [tsPlugins]) then if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType = 0 then begin
         if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
@@ -134,11 +135,7 @@ end;
 
 
 {==============================================================================}
-function wbFindCmdLineSwitch(const aSwitch: string): Boolean;
-begin
-  Result := FindCmdLineSwitch(aSwitch, ['-', '/'], True);
-end;
-{------------------------------------------------------------------------------}
+
 function wbFindCmdLineParam(const aSwitch     : string;
                             const aChars      : TSysCharSet;
                                   aIgnoreCase : Boolean;
@@ -158,16 +155,16 @@ begin
           if (length(s)>(length(aSwitch)+2)) and (s[Length(aSwitch) + 2] = ':') then begin
             aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
             Result := True;
+            Exit;
           end;
-          Exit;
         end;
       end else
         if AnsiCompareStr(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
           if s[Length(aSwitch) + 2] = ':' then begin
             aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
             Result := True;
+            Exit;
           end;
-          Exit;
         end;
   end;
 end;
@@ -176,19 +173,104 @@ function wbFindCmdLineParam(const aSwitch : string;
                               out aValue  : string)
                                           : Boolean; overload;
 begin
-  Result := wbFindCmdLineParam(aSwitch, ['-', '/'], True, aValue);
+  Result := wbFindCmdLineParam(aSwitch, SwitchChars, True, aValue);
 end;
 {==============================================================================}
+
+function CheckAppPath: string;
+const
+  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
+  ExeName : array[TwbGameMode] of string =
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
+var
+  s: string;
+begin
+  Result := '';
+  s := ParamStr(0);
+  s := ExtractFilePath(s);
+  while Length(s) > 3 do begin
+    if FileExists(s + ExeName[wbGameMode]) and DirectoryExists(s + 'Data') then begin
+      Result := s;
+      Exit;
+    end;
+    s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
+  end;
+end;
+
+function CheckParamPath: string; // for Dump, do we have bsa in the same directory
+var
+  s: string;
+  F : TSearchRec;
+begin
+  Result := '';
+  s := ParamStr(ParamCount);
+  s := ChangeFileExt(s, '*.bsa');
+  if FindFirst(s, faAnyfile, F)=0 then begin
+    Result := ExtractFilePath(ParamStr(ParamCount));
+    SysUtils.FindClose(F);
+  end;
+end;
+
+procedure DoInitPath;
+const
+  sBethRegKey   = '\SOFTWARE\Bethesda Softworks\';
+  sBethRegKey64 = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+var
+  ProgramPath : String;
+  DataPath    : String;
+begin
+  ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+
+  if not wbFindCmdLineParam('D', DataPath) then begin
+    DataPath := CheckAppPath;
+
+    if DataPath = '' then with TRegistry.Create do try
+      RootKey := HKEY_LOCAL_MACHINE;
+
+      if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
+        if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
+          ReportProgress('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
+          if wbGameMode = gmTES5 then
+            ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
+          Exit;
+        end;
+
+      DataPath := ReadString('Installed Path');
+
+      if DataPath = '' then begin
+        ReportProgress('Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
+        if wbGameMode = gmTES5 then
+          ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
+      end;
+    finally
+      Free;
+    end;
+    if DataPath <>'' then
+      DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
+  end else
+    DataPath := IncludeTrailingPathDelimiter(DataPath);
+
+  wbDataPath := DataPath;
+end;
 
 function isMode(aMode: String): Boolean;
 begin
   Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
 end;
 
+function isFormatValid(aFormatName: String): Boolean;
+begin
+  if Uppercase(aFormatName) = 'UESP' then
+    Result := False
+  else if Uppercase(aFormatName) = 'UESP' then
+    Result := False
+  else
+    Result := False;
+end;
+
 var
   NeedsSyntaxInfo : Boolean;
   s, s2           : string;
-  DataPath        : string;
   i               : integer;
   _File           : IwbFile;
   Masters         : TStringList;
@@ -205,17 +287,47 @@ begin
   StartTime := Now;
 
   try
+    wbToolSource := tsPlugins;
+    wbSourceName := 'Plugins';
+
+    if isMode('Export') then begin
+      wbToolMode := tmExport;
+      wbToolName := 'Export';
+    end else if isMode('Dump') then begin
+      wbToolMode := tmDump;
+      wbToolName := 'Dump';
+    end else begin
+      WriteLn(ErrOutput, 'Application name must contain Dump or Export to select mode.');
+      Exit;
+    end;
+
     if isMode('FNV') then begin
       wbGameMode := gmFNV;
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
-      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineFNV;
     end else if isMode('FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
-      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineFO3;
     end else if isMode('TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
@@ -224,26 +336,56 @@ begin
       wbAppName := 'TES3';
       wbGameName := 'Morrowind';
       wbLoadBSAs := false;
+      if not (wbToolMode in []) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in []) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineTES3;
     end else if isMode('TES4') then begin
       wbGameMode := gmTES4;
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
-      wbLoadBSAs := wbFindCmdLineSwitch('bsa') or wbFindCmdLineSwitch('allbsa');
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
       DefineTES4;
     end else if isMode('TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
       wbLoadBSAs := true;
-      DefineTES5;
+      if not (wbToolMode in [tmDump]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
+      case wbToolSource of
+        tsPlugins: DefineTES5;
+      end;
     end else begin
       WriteLn(ErrOutput, 'Application name must contain FNV, FO3, TES4, TES5 to select game.');
       Exit;
     end;
 
-    if not wbFindCmdLineSwitch('q') and not wbReportMode then begin
-      WriteLn(ErrOutput, wbAppName, 'Dump ', VersionString);
+    DoInitPath;
+    if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
+      wbDataPath := CheckParamPath;
+
+    if not FindCmdLineSwitch('q') and not wbReportMode then begin
+      WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString);
       WriteLn(ErrOutput);
 
       WriteLn(ErrOutput, 'This Program is subject to the Mozilla Public License');
@@ -266,9 +408,9 @@ begin
       DumpGroups.Sort;
     end;
 
-    wbLoadAllBSAs := wbFindCmdLineSwitch('allbsa');
+    wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
 
-    if wbFindCmdLineSwitch('more') then
+    if FindCmdLineSwitch('more') then
       wbMoreInfoForUnknown:= True
     else
       wbMoreInfoForUnknown:= False;
@@ -278,7 +420,7 @@ begin
 
     if wbFindCmdLineParam('xg', s) then
       GroupToSkip.CommaText := s
-    else if wbFindCmdLineSwitch('xbloat') then begin
+    else if FindCmdLineSwitch('xbloat') then begin
       GroupToSkip.Add('LAND');
       GroupToSkip.Add('REGN');
       GroupToSkip.Add('PGRD');
@@ -290,7 +432,7 @@ begin
       GroupToSkip.Add('WRLD');
     end;
 
-    if wbFindCmdLineParam('l', s) and (wbGameMode = gmTES5) then
+    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5]) then
       wbLanguage := s
     else
       wbLanguage := 'English';
@@ -298,17 +440,25 @@ begin
     s := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
-    if (ParamCount >= 1) and not FileExists(s) then begin
-      if s[1] in ['-', '/'] then
+    if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
+      if s[1] in SwitchChars then
         WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
       else
         WriteLn(ErrOutput, 'Can''t find the file "',s,'". Please check the command line parameters.');
       WriteLn;
       NeedsSyntaxInfo := True;
+    end else if (wbToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
+      if s[1] in SwitchChars then
+        WriteLn(ErrOutput, 'No format was specified. Please check the command line parameters.')
+      else
+        WriteLn(ErrOutput, 'Cannot handle the format "',s,'". Please check the command line parameters.');
+      WriteLn;
+      NeedsSyntaxInfo := True;
     end;
 
-    if NeedsSyntaxInfo or (ParamCount < 1) or wbFindCmdLineSwitch('?') or wbFindCmdLineSwitch('help') then begin
+    if NeedsSyntaxInfo or (ParamCount < 1) or FindCmdLineSwitch('?') or FindCmdLineSwitch('help') then begin
       WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
+      WriteLn(ErrOutput, '  or     '+wbAppName+'Export [options] format');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
       WriteLn(ErrOutput);
@@ -318,13 +468,6 @@ begin
       WriteLn(ErrOutput, 'Currently supported options:');
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
-      WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
-      WriteLn(ErrOutput, '             ', '  decompressed and processed.');
-      WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
-      WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
-      WriteLn(ErrOutput, '             ', '  -xg:LAND, REGN, PGRD, SCEN, PACK, PERK, NAVI, CELL, WRLD');
-      WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
-      WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
       WriteLn(ErrOutput, '             ', '  Default language is English');
@@ -332,9 +475,19 @@ begin
       WriteLn(ErrOutput, '             ', ' (plugin.bsa and plugin - interface.bsa)');
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
       WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
+      WriteLn(ErrOutput, '-d:datapath  ', 'Path to the game plugins directory');
+      WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Plugin mode ONLY');
+      WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
+      WriteLn(ErrOutput, '             ', '  decompressed and processed.');
+      WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
+      WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
+      WriteLn(ErrOutput, '             ', '  -xg:LAND,REGN,PGRD,SCEN,PACK,PERK,NAVI,CELL,WRLD');
+      WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
+      WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
-      WriteLn(ErrOutput, 'TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
+      WriteLn(ErrOutput, '  TES5Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
@@ -343,7 +496,8 @@ begin
       wbContainerHandler := wbCreateContainerHandler;
 
     StartTime := Now;
-    ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename);
+    ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename+
+      ' Mode:'+wbToolName+' Source:'+wbSourceName);
     if Assigned(Dumpgroups) then
       ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
     if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
@@ -352,7 +506,6 @@ begin
       ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
 
     if wbLoadBSAs then begin
-      DataPath := ExtractFilePath(s);
       Masters := TStringList.Create;
       wbMastersForFile(s, Masters);
       Masters.Add(ExtractFileName(s));
@@ -361,10 +514,10 @@ begin
         if wbLoadAllBSAs then begin
           if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s2 := ChangeFileExt(Masters[i], '');
-            if FindFirst(DataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
+            if FindFirst(wbDataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
               repeat
                 ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(DataPath + F.Name);
+                wbContainerHandler.AddBSA(wbDataPath + F.Name);
               until FindNext(F) <> 0;
             finally
               SysUtils.FindClose(F);
@@ -373,18 +526,18 @@ begin
         end else begin
           if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
             s2 := ChangeFileExt(Masters[i], '');
-            if FindFirst(DataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
+            if FindFirst(wbDataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
               repeat
                 ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(DataPath + F.Name);
+                wbContainerHandler.AddBSA(wbDataPath + F.Name);
               until FindNext(F) <> 0;
             finally
               SysUtils.FindClose(F);
             end;
-            if FindFirst(DataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
+            if FindFirst(wbDataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
               repeat
                 ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(DataPath + F.Name);
+                wbContainerHandler.AddBSA(wbDataPath + F.Name);
               until FindNext(F) <> 0;
             finally
               SysUtils.FindClose(F);
@@ -393,17 +546,15 @@ begin
         end;
       end;
       FreeAndNil(Masters);
-      ReportProgress('[' + DataPath + '] Setting Resource Path.');
-      wbContainerHandler.AddFolder(DataPath);
+      ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
+      wbContainerHandler.AddFolder(wbDataPath);
     end;
-
-    wbDataPath := DataPath;
 
     _File := wbFile(s);
 
     ReportProgress('Finished loading record. Starting Dump.');
 
-    if wbFindCmdLineSwitch('check') and not wbReportMode then
+    if FindCmdLineSwitch('check') and not wbReportMode then
       CheckForErrors(0, _File)
     else
       WriteContainer(_File);
