@@ -11829,10 +11829,10 @@ begin
       )
     ])),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Alpha'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('Sunrise'),
+      wbFloat('Day'),
+      wbFloat('Sunset'),
+      wbFloat('Night')
     ])),
     {>>> not as an array since last entries are omitted in skyrim.esm <<<}
     wbStruct(NAM0, 'Weather Colors', [
