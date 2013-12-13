@@ -9270,6 +9270,7 @@ begin
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
+    wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
@@ -11422,6 +11423,7 @@ begin
 
   wbRecord(TREE, 'Tree', [
     wbEDID,
+    wbVMAD,
     wbOBNDReq,
     wbMODL,
     wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, LVLI, NULL]),
