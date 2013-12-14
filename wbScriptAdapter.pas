@@ -1281,6 +1281,7 @@ begin
     AddConst(cUnit, 'etFlag', ord(etFlag));
     AddConst(cUnit, 'etStringListTerminator', ord(etStringListTerminator));
     AddConst(cUnit, 'etUnion', ord(etUnion));
+    AddConst(cUnit, 'etStructChapter', ord(etStructChapter));
 
     { TwbElementState }
     AddConst(cUnit, 'esModified', Ord(esModified));
@@ -1314,6 +1315,7 @@ begin
     AddConst(cUnit, 'dtStruct', ord(dtStruct));
     AddConst(cUnit, 'dtUnion', ord(dtUnion));
     AddConst(cUnit, 'dtEmpty', ord(dtEmpty));
+    AddConst(cUnit, 'dtStructChapter', ord(dtStructChapter));
 
     { TConflictThis }
     AddConst(cUnit, 'ctUnknown', ord(ctUnknown));
