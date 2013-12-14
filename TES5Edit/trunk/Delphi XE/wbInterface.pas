@@ -1354,6 +1354,10 @@ type
     ['{71C4A255-B983-488C-9837-0A720132348A}']
   end;
 
+  IwbRefID = interface(IwbFormID)
+    ['{F6EEAFDD-5AD7-4DB3-BF45-5D5DB53465D4}']
+  end;
+
   IwbFormIDChecked = interface(IwbFormID)
     ['{DC7CBC9F-07EC-430B-94EE-ECE1867A2660}']
     function GetSignature(aIndex: Integer): TwbSignature;
@@ -2094,6 +2098,14 @@ function wbEmpty(const aName      : string;
                        aSorted    : Boolean = False)
                                   : IwbValueDef; overload;
 
+function wbRefID: IwbRefID; overload;
+
+function wbRefID(const aName      : string;
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aAfterSet  : TwbAfterSetCallback = nil)
+                                  : IwbIntegerDef; overload;
 function wbFormID: IwbFormID; overload;
 
 function wbFormID(const aValidRefs : array of TwbSignature;
@@ -2357,6 +2369,11 @@ function GetElementFromUnion(const aElement: IwbElement): IwbElement;
 
 var
   wbHeaderSignature : TwbSignature = 'TES4';
+
+type
+  TwbRefIDArray = array of Cardinal;
+
+procedure InitializeRefIDArray(anArray: TwbRefIDArray);
 
 implementation
 
@@ -3612,6 +3629,13 @@ type
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
   end;
 
+  TwbRefID = class(TwbFormID, IwbRefID)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
+  end;
+
   TwbFormIDChecked = class(TwbFormID, IwbFormIDChecked)
   protected {private}
     fidcValidRefsArr     : array of TwbSignature;
@@ -4650,6 +4674,30 @@ function wbEmpty(const aName      : string;
                                   : IwbValueDef;
 begin
   Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted);
+end;
+
+var
+  _RefID: IwbRefID;
+
+function wbRefID: IwbRefID;
+begin
+  if wbReportMode then
+    Result := TwbRefID.Create(cpNormal, False)
+  else begin
+    if not Assigned(_RefID) then
+      _RefID := TwbRefID.Create(cpNormal, False);
+    Result := _RefID;
+  end;
+end;
+
+function wbRefID(const aName     : string;
+                       aPriority : TwbConflictPriority = cpNormal;
+                       aRequired : Boolean = False;
+                       aDontShow : TwbDontShowCallback = nil;
+                       aAfterSet : TwbAfterSetCallback = nil)
+                                 : IwbIntegerDef; overload;
+begin
+  Result := wbInteger(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
 var
@@ -11302,6 +11350,55 @@ end;
 function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
+end;
+
+{ TwbRefID }
+
+var
+  wbRefIDArray : TwbRefIDArray = nil;
+
+procedure InitializeRefIDArray(anArray: TwbRefIDArray);
+begin
+  wbRefIDArray := anArray;
+end;
+
+procedure TwbRefID.BuildRef(aInt: Int64; const aElement: IwbElement);
+var
+  key        : Integer;
+  val        : Integer;
+begin
+  // First two bits are the key:
+  key := aInt shr 22;
+  val := aInt and $003FFFFF;
+  case key of
+    0: if (val > 0) and (val < Length(wbRefIDArray)) then
+         inherited BuildRef(wbRefIDArray[val - 1], aElement);
+    1: inherited BuildRef(val, aElement); // '['+IntToHex64(val, 8)+'] Skyrim.esm FormID';
+  end;
+end;
+
+function TwbRefID.ToString(aInt: Int64; const aElement: IwbElement): string;
+var
+  key        : Integer;
+  val        : Integer;
+begin
+  // First two bits are the key:
+  key := aInt shr 22;
+  val := aInt and $003FFFFF;
+  case key of
+    0: if val = 0 then
+         Result := '[00000000] NULL'
+       else if val < Length(wbRefIDArray) then
+         Result := inherited ToString(wbRefIDArray[val - 1], aElement)
+       else
+         Result := '['+IntToHex64(val-1, 8)+'] Index in FormID Array';
+    1: Result := inherited ToString(val, aElement);
+    2: Result := '[FF'+IntToHex64(val, 6)+'] Created FormID';
+    else
+      Result := '['+IntToHex64(aInt, 8)+']  <Error: bad key for RefID '+IntToStr(key)+'>';
+  end;
+  Result := IntToStr(aInt)+' '+Result;
+  Used(aElement, Result);
 end;
 
 { TwbStructCDef }
