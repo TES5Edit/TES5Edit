@@ -2828,7 +2828,6 @@ procedure TfrmMain.DoInit;
     slNew : TStringList;
     i, j  : integer;
   begin
-    j := -1;
     if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
       slNew := TStringList.Create;
       try
