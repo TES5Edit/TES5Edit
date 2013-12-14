@@ -92,23 +92,22 @@ begin
         if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
-  Name := aElement.Name;
+  Name := aElement.DisplayName;
   Value := aElement.Value;
 
-  if (Name <> '') or (Value <> '') then begin
-    if not wbReportMode then
-      Write(aIndent, Name);
+  if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
+    Write(aIndent, Name);
+  if ((Name <> '') and (Name <> 'Unused')) or (Value <> '') then
     aIndent := aIndent + '  ';
-    if Value <> '' then begin
-      if not wbReportMode then
-        WriteLn(': ', Value);
-    end else begin
-      if not wbReportMode then
-        WriteLn;
-    end;
+  if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
+    if not wbReportMode then
+      WriteLn(': ', Value);
+  end else begin
+    if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
+      WriteLn;
   end;
 
-  if Supports(aElement, IwbContainer, Container) then
+  if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then
     WriteContainer(Container, aIndent);
 end;
 
@@ -437,6 +436,9 @@ begin
     else
       wbLanguage := 'English';
 
+    if wbFindCmdLineParam('do', s) then
+      wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
+
     s := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
@@ -476,6 +478,11 @@ begin
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
       WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
       WriteLn(ErrOutput, '-d:datapath  ', 'Path to the game plugins directory');
+      WriteLn(ErrOutput, '-do:value    ', 'Dump objects offsets and size and/or array count');
+      WriteLn(ErrOutput, '             ', '  -do:0 nothing');
+      WriteLn(ErrOutput, '             ', '  -do:1 starting offset');
+      WriteLn(ErrOutput, '             ', '  -do:2 starting offset and array count  PERFORMANCE PENALTY');
+      WriteLn(ErrOutput, '             ', '  -do:3 starting and ending offset, size and array count  PERFORMANCE PENALTY');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Plugin mode ONLY');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
