@@ -778,6 +778,7 @@ var
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
+  wbNull: IwbValueDef;
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -3796,6 +3797,7 @@ var
   wbRecordFlagsEnum : IwbFlagsDef;
 
 begin
+  wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
@@ -7249,8 +7251,7 @@ begin
           ]), -1),
           wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
           wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbStruct('Unused', [
-            ]),
+            wbNull,
             wbStruct('Island Data', [
               wbByteArray('Unknown', 24),
               wbArray('Triangles', wbByteArray('Triangle', 6), -1),
@@ -7335,8 +7336,7 @@ begin
           ]), -1),
           wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
           wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbStruct('Unused', [
-            ]),
+            wbNull,
             wbStruct('Island Data', [
               wbFloat('Min X'),
               wbFloat('Min Y'),
