@@ -192,7 +192,9 @@ type
     itU32,
     itS32,
     itU64,
-    itS64
+    itS64,
+    itU24,
+    itU6to30
   );
 
   TwbDefType = (
@@ -5958,6 +5960,86 @@ begin
   defReported := True;
 end;
 
+function ReadInteger24(aBasePtr: pointer): Int64;
+var
+  Buffer : array[0..3] of Byte;
+begin
+  Result := 0;
+  Buffer[3] := 0;
+  Buffer[2] := PByte(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[1] := PByte(aBasePtr)^; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  Buffer[0] := PByte(aBasePtr)^;
+  Move(Buffer, Result, SizeOf(Result));
+end;
+
+procedure WriteInteger24(aBasePtr: pointer; aValue: Int64);
+var
+  Buffer : array[0..3] of Byte;
+begin
+  Move(aValue, Buffer, SizeOf(aValue));
+  PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+  PByte(aBasePtr)^ := Buffer[0];
+end;
+
+function ReadIntegerCounterSize(aBasePtr: pointer): Int64;
+var
+  Key : Byte;
+begin
+  if Assigned(aBasePtr) then begin
+    Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+    case key of
+      0: Result := 1;
+      1: Result := 2;
+      2: Result := 4;
+    else
+      Result := 1;
+    end
+  end else
+    Result := 1; // Minimum size
+end;
+
+function ReadIntegerCounter(aBasePtr: pointer): Int64;
+var
+  Key    : Byte;
+begin
+  Result := 0;
+  Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+  case key of
+    0: Move(PByte(aBasePtr)^,     Result, 1); // The 6 remaining bits are the count.
+    1: Move(PWord(aBasePtr)^,     Result, 2); // 6 + 8 bits of count
+    2: Move(PCardinal(aBasePtr)^, Result, 4); // 6 + 24 bits of count
+    3: ; // Not supposed to exist : zeroed out by the engine
+  end;
+  Result := Result shr 2;
+end;
+
+procedure WriteIntegerCounter(aBasePtr: pointer; aValue: Int64);
+var
+  Buffer : array[0..3] of Byte;
+begin
+  Move(aValue, Buffer, SizeOf(aValue));
+  if Buffer[3] > 0 then begin // 4 bytes counter
+    Buffer[3] := (Buffer[3] shl 2 ) or 3;
+    PByte(aBasePtr)^ := Buffer[3]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[0];
+  end else if Buffer[2] > 0 then begin
+    Buffer[2] := (Buffer[3] shl 2 ) or 2;
+    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[0];
+  end else if Buffer[1] > 0 then begin
+    Buffer[1] := (Buffer[1] shl 2 ) or 1;
+    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+    PByte(aBasePtr)^ := Buffer[0];
+  end else begin
+    Buffer[0] := (Buffer[0] shl 2 ) or 0;
+    PByte(aBasePtr)^ := Buffer[0];
+  end;
+end;
+
 { TwbIntegerDef }
 
 procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
@@ -5965,7 +6047,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   if Assigned(inFormater) then
@@ -5974,10 +6056,12 @@ begin
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
+        itU24: Value := ReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
         itS64: Value := PInt64(aBasePtr)^;
+        itU6to30: Value := ReadIntegerCounter(aBasePtr);
       else
         {itU8:}  Value := PByte(aBasePtr)^;
       end;
@@ -6008,7 +6092,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Result := '';
@@ -6021,10 +6105,12 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -6093,7 +6179,7 @@ end;
 procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
@@ -6101,10 +6187,12 @@ begin
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
     itS16: PSmallInt(aBasePtr)^ := aValue;
+    itU24: WriteInteger24(aBasePtr, aValue);
     itU32: PCardinal(aBasePtr)^ := aValue;
     itS32: PLongInt(aBasePtr)^ := aValue;
     itU64: PInt64(aBasePtr)^ := aValue;
     itS64: PInt64(aBasePtr)^ := aValue;
+    itU6to30: WriteIntegerCounter(aBasePtr, aValue);
   else
     PByte(aBasePtr)^ := aValue;
   end;
@@ -6113,7 +6201,7 @@ end;
 procedure TwbIntegerDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
@@ -6121,10 +6209,12 @@ begin
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
     itS16: PSmallInt(aBasePtr)^ := aValue;
+    itU24: WriteInteger24(aBasePtr, aValue);
     itU32: PCardinal(aBasePtr)^ := aValue;
     itS32: PLongInt(aBasePtr)^ := aValue;
     itU64: PInt64(aBasePtr)^ := aValue;
     itS64: PInt64(aBasePtr)^ := aValue;
+    itU6to30: WriteIntegerCounter(aBasePtr, aValue);
   else
     PByte(aBasePtr)^ := aValue;
   end;
@@ -6171,7 +6261,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Result := nil;
@@ -6181,10 +6271,12 @@ begin
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
+        itU24: Value := ReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
         itS64: Value := PInt64(aBasePtr)^;
+        itU6to30: Value := ReadIntegerCounter(aBasePtr);
       else
         {itU8:}  Value := PByte(aBasePtr)^;
       end;
@@ -6205,10 +6297,12 @@ begin
       itS8:  Result := SizeOf(ShortInt);
       itU16: Result := SizeOf(Word);
       itS16: Result := SizeOf(SmallInt);
+      itU24: Result := 3*SizeOf(Byte);
       itU32: Result := SizeOf(Cardinal);
       itS32: Result := SizeOf(LongInt);
       itU64: Result := SizeOf(Int64);
       itS64: Result := SizeOf(Int64);
+      itU6to30: Result := ReadIntegerCounterSize(aBasePtr);
     else
       Result := 0;
     end
@@ -6223,10 +6317,12 @@ begin
     itS8:  Result := SizeOf(ShortInt);
     itU16: Result := SizeOf(Word);
     itS16: Result := SizeOf(SmallInt);
+    itU24: Result := 3*SizeOf(Byte);
     itU32: Result := SizeOf(Cardinal);
     itS32: Result := SizeOf(LongInt);
     itU64: Result := SizeOf(Int64);
     itS64: Result := SizeOf(Int64);
+    itU6to30: Result := 1;
   else
     Result := 0;
   end;
@@ -6299,7 +6395,7 @@ var
   Value : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
@@ -6311,10 +6407,12 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -6333,7 +6431,7 @@ var
   Len         : Cardinal;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
@@ -6344,10 +6442,12 @@ begin
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
+      itU24: Result := ReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Result := PInt64(aBasePtr)^;
+      itU6to30: Result := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Result := PByte(aBasePtr)^;
     end;
@@ -6356,7 +6456,7 @@ end;
 function TwbIntegerDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   if Cardinal(aEndPtr) - Cardinal(aBasePtr) < ExpectedLen[inType] then
@@ -6366,10 +6466,12 @@ begin
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
+      itU24: Result := ReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Result := PInt64(aBasePtr)^;
+      itU6to30: Result := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Result := PByte(aBasePtr)^;
     end;
@@ -6381,7 +6483,7 @@ var
   Value : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
@@ -6396,10 +6498,12 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -6426,7 +6530,7 @@ var
   Value       : Int64;
 const
   ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
   );
 begin
   Result := '';
@@ -6439,10 +6543,12 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
+      itU24: Value := ReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
       itS64: Value := PInt64(aBasePtr)^;
+      itU6to30: Value := ReadIntegerCounter(aBasePtr);
     else
       {itU8:}  Value := PByte(aBasePtr)^;
     end;
@@ -6450,7 +6556,7 @@ begin
       Result := inFormater.ToString(Value, aElement)
     else
       Result := IntToStr(Value);
-    if Len > ExpectedLen[inType] then begin
+    if (Len > ExpectedLen[inType]) and not (inType in [itU6to30]) then begin
       if wbCheckExpectedBytes then
         Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [ExpectedLen[inType] , Len])
     end;
