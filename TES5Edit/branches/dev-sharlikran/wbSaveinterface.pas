@@ -6,6 +6,12 @@ uses
   SysUtils,
   wbInterface;
 
+var
+  dtArrays : set of TwbDefType = [
+    dtSubRecordArray,
+    dtArray
+  ];
+
 function wbVMType              : IwbIntegerDefFormater; overload;
 function wbVMObjectHandle      : IwbIntegerDefFormater; overload;
 function wbVMArrayHandle       : IwbIntegerDefFormater; overload;

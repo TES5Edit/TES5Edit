@@ -233,10 +233,6 @@ var
     dtUnion,
     dtStructChapter
   ];
-  dtArrays : set of TwbDefType = [
-    dtSubRecordArray,
-    dtArray
-  ];
 
 type
   IwbDef = interface;
@@ -2487,7 +2483,6 @@ var
   wbBytesToSkip     : Cardinal = 0;
   wbBytesToDump     : Cardinal = $FFFFFFFF;
   wbBytesToGroup    : Cardinal = 4;
-  wbFileHierarchy   : IwbStructDef;
   wbExtractInfo     : ^TByteSet;
 
 type

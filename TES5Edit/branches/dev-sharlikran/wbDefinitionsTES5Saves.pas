@@ -3273,21 +3273,12 @@ begin
     wbLenString('Player Name', 2),
     wbInteger('Player Level', itU32),
     wbLenString('Save Cell', 2),
-    wbLenString('Save Date', 2),
+    wbLenString('Save Duration', 2),
     wbLenString('Player Race Editor ID', 2),
     wbInteger('Player Sex', itU16, wbSexEnum),
     wbFloat('Player Current Experience'),
     wbFloat('Player LevelUp Experience'),
-    wbStruct('Save Time', [
-      wbInteger('Year', itU8),
-      wbInteger('Month', itU8),
-      wbInteger('Day Of Week', itU8),
-      wbInteger('Day', itU8),
-      wbInteger('Hour', itU8),
-      wbInteger('Minute', itU8),
-      wbInteger('Second', itU8),
-      wbInteger('Millisecond', itU8)
-    ]),
+    wbByteArray('Save Time', 8),
     wbInteger('Screenshot Width', itU32),
     wbInteger('Screenshot Height', itU32)
   ]);

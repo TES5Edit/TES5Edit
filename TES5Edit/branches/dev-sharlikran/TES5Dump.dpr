@@ -62,6 +62,7 @@ type
 
 var
   wbDefProfiles : TStringList = nil;
+
 function StrToTExportFormat(aFormat: string): TExportFormat;
 begin
   Result := efRaw;
