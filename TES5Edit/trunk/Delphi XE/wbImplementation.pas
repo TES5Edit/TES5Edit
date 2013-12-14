@@ -30,6 +30,7 @@ uses
 var
   RecordToSkip       : TStringList;
   GroupToSkip        : TStringList;
+  ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
@@ -1129,6 +1130,22 @@ type
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
+  end;
+
+  TwbChapter = class(TwbStruct, IwbChapter)
+  protected
+    cChapterSkipped : Boolean;
+  protected
+    function GetSkipped: Boolean; override;
+    function GetElementType: TwbElementType; override;
+    function GetChapterType: Integer;
+    function GetChapterTypeName: String;
+  public
+    constructor Create(const aContainer  : IwbContainer;
+                       const aValueDef   : IwbValueDef;
+                       const aSource     : IwbElement;
+                       const aOnlySK     : Boolean;
+                       const aNameSuffix : string);  reintroduce; overload;
   end;
 
   TwbUnion = class(TwbValueBase)
@@ -8491,6 +8508,7 @@ begin
           end else case ArrayDef.Element.DefType of
             dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
             dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+            dtStructChapter: Result := TwbChapter.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
             dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
           else
             Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
@@ -8499,7 +8517,7 @@ begin
         CheckCount;
         CheckTerminator;
       end;
-      dtStruct: begin
+      dtStruct, dtStructChapter: begin
         StructDef := srValueDef as IwbStructDef;
 
         Assert(aElement.SortOrder >= 0);
@@ -8607,6 +8625,7 @@ begin
                 case ArrayDef.Element.DefType of
                   dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                   dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                  dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                   dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
                 else
                   Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
@@ -8885,7 +8904,7 @@ begin
         srIsArray := True;
         srSorted := ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix);
       end;
-      dtStruct: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
+      dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
       dtUnion:  begin
         case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
           ufArray: srIsArray := True;
@@ -8909,6 +8928,7 @@ begin
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       dtUnion: Element := TwbUnion.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
@@ -12558,6 +12578,7 @@ begin
       case ValueDef.DefType of
         dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
@@ -12641,6 +12662,7 @@ begin
     case ArrayDef.Element.DefType of
       dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
       dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+      dtStructChapter: Result := TwbChapter.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
       dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
     else
       Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
@@ -12727,6 +12749,7 @@ begin
         case ArrayDef.Element.DefType of
           dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
           dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+          dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
           dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
         else
           Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
@@ -12919,6 +12942,7 @@ begin
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
@@ -12986,6 +13010,7 @@ begin
       Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
     dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
   else
     Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
@@ -14783,6 +14808,51 @@ const
   CELL : TwbSignature = 'CELL';
   DIAL : TwbSignature = 'DIAL';
 
+{ TwbChapter }
+
+constructor TwbChapter.Create(const aContainer  : IwbContainer;
+                              const aValueDef   : IwbValueDef;
+                              const aSource     : IwbElement;
+                              const aOnlySK     : Boolean;
+                              const aNameSuffix : string);
+var
+  Dummy : Integer;
+begin
+  if Assigned(aValueDef) then
+    Assert(Supports(aValueDef, IwbStructCDef));
+  inherited;
+  cChapterSkipped := cChapterSkipped or ChaptersToSkip.Find(aValueDef.Name, Dummy);
+end;
+
+function TwbChapter.GetChapterType: Integer;
+var
+  Struct : IwbStructCDef;
+begin
+  Result := -1;
+  if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
+    Result := Struct.GetChapterType(dcBasePtr, dcEndPtr, Self);
+end;
+
+function TwbChapter.GetChapterTypeName: String;
+var
+  Struct : IwbStructCDef;
+begin
+  if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
+    Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self))
+  else
+    Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self));
+end;
+
+function TwbChapter.GetElementType: TwbElementType;
+begin
+  Result := etStructChapter;
+end;
+
+function TwbChapter.GetSkipped: Boolean;
+begin
+  Result := cChapterSkipped;
+end;
+
 initialization
   wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);
   wbContainedInDef[6] := wbFormIDCk('Cell', [CELL], False, cpNormal, True);
@@ -14799,6 +14869,10 @@ initialization
   GroupToSkip := TStringList.Create;
   GroupToSkip.Sorted := True;
   GroupToSkip.Duplicates := dupIgnore;
+
+  ChaptersToSkip := TStringList.Create;
+  ChaptersToSkip.Sorted := True;
+  ChaptersToSkip.Duplicates := dupIgnore;
 
   FilesMap := TStringList.Create;
   FilesMap.Sorted := True;
