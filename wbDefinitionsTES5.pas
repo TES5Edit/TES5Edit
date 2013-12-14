@@ -7403,7 +7403,24 @@ begin
               '1 <-> 2',
               '2 <-> 0'
             ]),
-            wbByteArray('Cover Marker?', 2),   // Might be Flags if bit 0 if effectivly "Preferred path"
+            wbInteger('Flags', itU16, wbFlags([
+              'Unknown 1',
+              'Unknown 2',
+              'Unknown 3',
+              'Unknown 4',
+              'Unknown 5',
+              'Unknown 6',
+              'Preferred pathing',
+              'Unknown 8',
+              'Unknown 9',
+              'Water',
+              'Unknown 11',
+              'Unknown 12',
+              'Unknown 13',
+              'Unknown 14',
+              'Unknown 15',
+              'Unknown 16'
+            ])),
             wbInteger('Cover Edge #1 Flags', itU8),
             wbInteger('Cover Edge #2 Flags', itU8)
           ])
