@@ -120,6 +120,7 @@ type
     caConflictCritical
     );
 
+  TByteSet = set of Byte;
   TConflictAllSet = set of TConflictAll;
   TConflictAllColors = array[TConflictAll] of TColor;
 
@@ -185,6 +186,7 @@ type
   PwbSignature = ^TwbSignature;
   TwbSignature = array[0..3] of AnsiChar;
   TwbSignatures = array of TwbSignature;
+  TwbFileMagic = string;
 
   TwbIntType = (
     itU8,
@@ -962,6 +964,14 @@ type
     property ConflictThis: TConflictThis
       read GetConflictThis
       write SetConflictThis;
+  end;
+
+  IwbFileHeader = interface(IwbDataContainer)
+    ['{E309EEE2-C20E-4506-BF46-B63F903706C9}']
+    function GetFileMagic: TwbFileMagic;
+
+    property FileMagic: TwbFileMagic
+      read GetFileMagic;
   end;
 
   IwbChapter = interface
@@ -2392,6 +2402,12 @@ function GetElementFromUnion(const aElement: IwbElement): IwbElement;
 
 var
   wbHeaderSignature : TwbSignature = 'TES4';
+  wbFileMagic       : TwbFileMagic;
+  wbFilePlugins     : String = 'Master Files';
+  wbUseFalsePlugins : Boolean = False;
+  wbFileHeader      : IwbStructDef;
+  wbFileChapters    : IwbStructDef;
+  wbExtractInfo     : ^TByteSet;
 
 type
   TwbRefIDArray = array of Cardinal;

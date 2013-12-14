@@ -35,7 +35,7 @@ var
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -48,6 +48,9 @@ function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 
 implementation
+
+const
+  TheEmptyPlugin = 'EmptyPlugin.esp';
 
 type
   TwbMainRecordEntryHeader = record
@@ -401,7 +404,7 @@ type
     procedure AddElement(const aElement: IwbElement); virtual;
     procedure InsertElement(aPosition: Integer; const aElement: IwbElement);
     function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; virtual;
-    function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload;
+    function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload; virtual;
     function RemoveElement(const aName: string): IwbElement; overload;
     function LastElement: IwbElement;
 
@@ -560,19 +563,26 @@ type
     procedure InjectMainRecord(aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(aRecord: IwbMainRecord);
     procedure ForceClosed;
-    procedure GetMasters(aMasters: TStrings);
+    procedure GetMasters(aMasters: TStrings); virtual;
 
-    procedure Scan;
+    procedure Scan; virtual;
     procedure SortRecords;
     procedure SortRecordsByEditorID;
 
-    procedure AddMaster(const aFileName: string); overload;
+    procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
 
     constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   public
     destructor Destroy; override;
+  end;
+
+  TwbFileSource = class(TwbFile)
+  protected
+    procedure Scan; override;
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
+    procedure GetMasters(aMasters: TStrings); override;
   end;
 
   TwbDataContainerFlag = (
@@ -1132,6 +1142,11 @@ type
     function GetElementType: TwbElementType; override;
   end;
 
+  TwbFileHeader = class(TwbStruct, IwbFileHeader)
+  protected
+    function GetFileMagic: TwbFileMagic;
+  end;
+
   TwbChapter = class(TwbStruct, IwbChapter)
   protected
     cChapterSkipped : Boolean;
@@ -1552,7 +1567,7 @@ end;
 
 { TwbFile }
 
-procedure TwbFile.AddMaster(const aFileName: string);
+procedure TwbFile.AddMaster(const aFileName: string; isTemporary: Boolean = False);
 var
   _File: IwbFile;
   s : string;
@@ -1566,7 +1581,7 @@ begin
     s := IncludeTrailingPathDelimiter(s);
 
   flProgress('Adding master "' + t + '"');
-  _File := wbFile(s + t);
+  _File := wbFile(s + t, -1, '', isTemporary);
   if wbRequireLoadOrder and (_File.LoadOrder < 0) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
   AddMaster(_File);
@@ -13393,7 +13408,7 @@ begin
 end;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
 var
   FileName: string;
   i: Integer;
@@ -13406,7 +13421,10 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
+    if isPrimary and (wbToolSource in [tsSaves]) then
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, isTemporary)
+    else
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -13426,6 +13444,8 @@ begin
 
   if FilesMap.Find(FileName, i) then
     _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
+  else if wbToolSource in [tsSaves] then
+    _File := TwbFileSource.Create(FileName, -1, '', True)
   else
     _File := TwbFile.Create(FileName, -1, '', True);
 
@@ -14160,12 +14180,22 @@ end;
 function TwbValueBase.GetDisplayName: string;
 var
   Resolved: IwbValueDef;
+  Container: IwbDataContainer;
 begin
   Resolved := Resolve(vbValueDef, GetDataBasePtr, GetDataEndPtr, Self);
   if (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
     Result := vbValueDef.Name
   else
     Result := Resolved.Name;
+  if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
+    Result := Result + ' {' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) + '}';
+  // something for Dump: Displaying the size in {} and the array count in []
+  //  Triggers a lot of pre calculations
+  if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
+    Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
+      ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
+  if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
+    Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
 end;
@@ -14807,6 +14837,145 @@ const
   WRLD : TwbSignature = 'WRLD';
   CELL : TwbSignature = 'CELL';
   DIAL : TwbSignature = 'DIAL';
+
+{ TwbFileSource }
+
+constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer);
+begin
+  Include(flStates, fsIsNew);
+  flLoadOrder := aLoadOrder;
+  flFileName := aFileName;
+end;
+
+procedure TwbFileSource.GetMasters(aMasters: TStrings);
+var
+  Header      : IwbFileHeader;
+  MasterFiles : IwbContainerElementRef;
+  fPath       : String;
+  i           : Integer;
+begin
+  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Header.FileMagic <> wbFileMagic then
+    raise Exception.CreateFmt('Expected File Magic %s, found %s in file "%s"',
+      [wbFileMagic, String(Header.FileMagic), flFileName]);
+
+  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+  if Assigned(MasterFiles) then
+    for i := 0 to Pred(MasterFiles.ElementCount) do begin
+      fPath := wbDataPath + MasterFiles[i].Value;
+      if FileExists(fPath) then
+        aMasters.Add(MasterFiles[i].Value)
+    end;
+
+end;
+
+function CreateTemporaryCopy(FileName, CompareFile: String): String;
+var
+  s : String;
+  i : Integer;
+
+begin
+  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+    s := wbDataPath + ExtractFileName(CompareFile);
+    if FileExists(s) then // Finds a unique name
+      for i := 0 to 255 do begin
+        s := wbDataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+        if not FileExists(s) then Break;
+      end;
+    if FileExists(s) then begin
+      wbProgressCallback('Could not copy '+FileName+' into '+wbDataPath);
+      Exit;
+    end;
+    CompareFile := s;
+    CopyFile(PChar(FileName), PChar(CompareFile), false);
+  end;
+  Result := CompareFile;
+end;
+
+procedure TwbFileSource.Scan;
+var
+  CurrentPtr  : Pointer;
+  Header      : IwbFileHeader;
+  MasterFiles : IwbContainerElementRef;
+  i           : Integer;
+  ExtractInfo : TByteSet;
+  Element     : IwbElement;
+  Container   : IwbContainer;
+  SelfRef     : IwbContainerElementRef;
+  fPath       : String;
+
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  flProgress('Start processing');
+
+  wbBaseOffset := Cardinal(flView);
+
+  CurrentPtr := flView;
+  TwbFileHeader.Create(Self, CurrentPtr, flEndPtr, wbFileHeader, '', False);
+
+  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Header.FileMagic <> wbFileMagic then
+    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"',
+      [wbFileMagic, String(Header.FileMagic), flFileName]);
+
+  if fsOnlyHeader in flStates then
+    Exit;
+
+  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+  if Assigned(MasterFiles) then
+    for i := 0 to Pred(MasterFiles.ElementCount) do begin
+      fPath := wbDataPath + MasterFiles[i].Value;
+      if FileExists(fPath) then
+        AddMaster(fPath)
+      else if wbUseFalsePlugins then begin
+        fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        if FileExists(fPath) then
+          AddMaster(CreateTemporaryCopy(fPath, MasterFiles[i].Value), True);
+      end;
+    end;
+
+  if flCompareTo <> '' then
+    AddMaster(flCompareTo);
+
+  if Assigned(wbExtractInfo) then
+    ExtractInfo := wbExtractInfo^
+  else
+    ExtractInfo := [];
+
+  for i := 0 to Pred(wbFileChapters.MemberCount) do begin
+    case wbFileChapters.Members[i].DefType of
+      dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+      dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+      dtStructChapter: Element := TwbChapter.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+      dtUnion: Element := TwbUnion.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+    else
+      Element := TwbValue.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+    end;
+    if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
+      with Element as TwbContainer do DoInit;
+  end;
+
+  flProgress('Processing completed');
+  flLoadFinished := True;
+end;
+
+{ TwbFileHeader }
+
+function TwbFileHeader.GetFileMagic: TwbFileMagic;
+var
+  Element : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := '';
+  if not Supports(Self, IwbContainer, Container) or (Container.ElementCount < 1) then Exit;
+  Element := Container.Elements[0];
+  if Assigned(Element) then
+    Result := Element.NativeValue;
+end;
 
 { TwbChapter }
 
