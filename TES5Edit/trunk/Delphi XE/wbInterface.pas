@@ -104,6 +104,8 @@ var
   wbRotationFactor : Extended = 180/Pi;
   wbRotationScale  : Integer = 4;
 
+  wbDumpOffset     : Integer = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
+  wbBaseOffset     : Cardinal = 0;
 
   wbDataPath       : string;
 
@@ -1350,6 +1352,10 @@ type
       read GetRequiresKey;
   end;
 
+  IwbDumpIntegerDefFormater = interface(IwbIntegerDefFormater)
+    ['{9767F3EF-0E6F-45FB-AC9F-31A9B4312760}']
+  end;
+
   IwbFormID = interface(IwbIntegerDefFormater)
     ['{71C4A255-B983-488C-9837-0A720132348A}']
   end;
@@ -1401,6 +1407,14 @@ type
       read GetName;
     property NameCount: Integer
       read GetNameCount;
+  end;
+
+  IwbKey2Data6EnumDef = interface(IwbEnumDef)
+    ['{A74C58CC-6280-4143-B72B-4AD4F68A9957}']
+  end;
+
+  IwbData6Key2EnumDef = interface(IwbEnumDef)
+    ['{AC7F99C9-9DF1-43BB-9052-6AD4B69E706F}']
   end;
 
   IwbCallbackDef = interface(IwbIntegerDefFormater)
@@ -2106,6 +2120,15 @@ function wbRefID(const aName      : string;
                        aDontShow  : TwbDontShowCallback = nil;
                        aAfterSet  : TwbAfterSetCallback = nil)
                                   : IwbIntegerDef; overload;
+
+function wbDumpInteger : IwbIntegerDefFormater; overload;
+
+function wbKey2Data6Enum(const aNames : array of string)
+                                      : IwbKey2Data6EnumDef; overload;
+
+function wbData6Key2Enum(const aNames : array of string)
+                                      : IwbData6Key2EnumDef; overload;
+
 function wbFormID: IwbFormID; overload;
 
 function wbFormID(const aValidRefs : array of TwbSignature;
@@ -3588,6 +3611,12 @@ type
     function GetRequiresKey: Boolean; virtual;
   end;
 
+  TwbDumpIntegerDefFormater = class(TwbIntegerDefFormater, IwbDumpIntegerDefFormater)
+  protected
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
   TwbFormID = class(TwbIntegerDefFormater, IwbFormID)
   protected
     FoundSignatures: TStringList;
@@ -3771,6 +3800,20 @@ type
     {---IwbEnumDef---}
     function GetName(aIndex: Integer): string;
     function GetNameCount: Integer;
+  end;
+
+  TwbKey2Data6EnumDef = class(TwbEnumDef, IwbKey2Data6EnumDef)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+  end;
+
+  TwbData6Key2EnumDef = class(TwbEnumDef, IwbData6Key2EnumDef)
+  protected
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
   end;
 
   TwbDivDef = class(TwbIntegerDefFormater)
@@ -4674,6 +4717,21 @@ function wbEmpty(const aName      : string;
                                   : IwbValueDef;
 begin
   Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted);
+end;
+
+function wbDumpInteger : IwbIntegerDefFormater;
+begin
+  Result := TwbDumpIntegerDefFormater.Create(cpNormal, False);
+end;
+
+function wbKey2Data6Enum(const aNames : array of string) : IwbKey2Data6EnumDef;
+begin
+  Result := TwbKey2Data6EnumDef.Create(aNames, []);
+end;
+
+function wbData6Key2Enum(const aNames : array of string) : IwbData6Key2EnumDef;
+begin
+  Result := TwbData6Key2EnumDef.Create(aNames, []);
 end;
 
 var
@@ -11401,6 +11459,18 @@ begin
   Used(aElement, Result);
 end;
 
+{ TwbDumpIntegerDefFormater }
+
+function TwbDumpIntegerDefFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex64(aInt, 8);
+end;
+
+function TwbDumpIntegerDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToStr(aInt) + ' [' + IntToHex64(aInt, 8) + '] ['+IntToStr(aInt and $03)+':'+IntToStr(aInt shr 2)+']';
+end;
+
 { TwbStructCDef }
 
 constructor TwbStructCDef.Clone(const aSource: TwbDef);
@@ -11459,6 +11529,59 @@ begin
     Result := scGetChapterTypeName(aBasePtr, aEndPtr, aElement)
   else
     Result := IntToStr(GetChapterType(aBasePtr, aEndPtr, aElement));
+end;
+
+{ TwbKey2Data6EnumDef }
+
+function TwbKey2Data6EnumDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex64(aInt, 2);
+end;
+
+function TwbKey2Data6EnumDef.ToString(aInt: Int64; const aElement: IwbElement): string;
+var
+  key : Integer;
+  val : Integer;
+begin
+  key := aInt shr 6;
+  val := aInt and $3f;
+  if val>=Length(enNames) then
+    Result := 'Bad enum index: ' + IntToStr(val) + ' [' + IntToHex64(val, 2) + ']'
+  else
+    Result := enNames[val];
+  case key of
+    0: Result := Result + ' Small size';
+    1: Result := Result + ' Medium size';
+    2: Result := Result + ' Large size';
+  end;
+end;
+
+{ TwbData6Key2EnumDef }
+
+function TwbData6Key2EnumDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := IntToHex64(aInt, 2);
+end;
+
+function TwbData6Key2EnumDef.ToString(aInt: Int64; const aElement: IwbElement): string;
+var
+  key : Integer;
+begin
+  if aInt < Power(2, 6) then
+    key := 0
+  else if aInt < Power(2, 14) then
+    key := 1
+  else if aInt < Power(2, 22) then
+    key := 2
+  else
+    key := 3;
+  Result := IntToStr(aInt);
+  case key of
+    0: Result := Result + ' Small size';
+    1: Result := Result + ' Medium size';
+    2: Result := Result + ' Large size';
+    3: Result := '0' + ' Null size';
+  end;
 end;
 
 initialization
