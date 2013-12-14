@@ -7403,7 +7403,24 @@ begin
               '1 <-> 2',
               '2 <-> 0'
             ]),
-            wbByteArray('Cover Marker?', 2),   // Might be Flags if bit if effectivly "Preferred path"
+            wbInteger('Flags', itU16, wbFlags([
+              'Unknown 1',
+              'Unknown 2',
+              'Unknown 3',
+              'Unknown 4',
+              'Unknown 5',
+              'Unknown 6',
+              'Preferred pathing',
+              'Unknown 8',
+              'Unknown 9',
+              'Water',
+              'Unknown 11',
+              'Unknown 12',
+              'Unknown 13',
+              'Unknown 14',
+              'Unknown 15',
+              'Unknown 16'
+            ])),
             wbInteger('Cover Edge #1 Flags', itU8),
             wbInteger('Cover Edge #2 Flags', itU8)
           ])
@@ -9270,6 +9287,7 @@ begin
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
+    wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
@@ -11422,6 +11440,7 @@ begin
 
   wbRecord(TREE, 'Tree', [
     wbEDID,
+    wbVMAD,
     wbOBNDReq,
     wbMODL,
     wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, LVLI, NULL]),
@@ -11829,10 +11848,10 @@ begin
       )
     ])),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Alpha'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('Sunrise'),
+      wbFloat('Day'),
+      wbFloat('Sunset'),
+      wbFloat('Night')
     ])),
     {>>> not as an array since last entries are omitted in skyrim.esm <<<}
     wbStruct(NAM0, 'Weather Colors', [

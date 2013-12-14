@@ -102,15 +102,12 @@ var
   wbCheckExpectedBytes: Boolean{} = True{};
 
   wbRotationFactor : Extended = 180/Pi;
-  wbRotationScale : Integer = 4;
+  wbRotationScale  : Integer = 4;
 
-  wbDumpOffset : Integer = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
-  wbBaseOffset : Cardinal = 0;
+  wbDumpOffset     : Integer = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
+  wbBaseOffset     : Cardinal = 0;
 
-//  wbRotationFactor : Extended = 1;
-//  wbRotationScale : Integer = 6;
-
-  wbDataPath : string;
+  wbDataPath       : string;
 
 type
   TConflictAll = (
@@ -399,7 +396,7 @@ type
     function CanContainFormIDs: Boolean;
     function GetLinksTo: IwbElement;
     function GetNoReach: Boolean;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True);
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = false);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
@@ -6786,7 +6783,7 @@ begin
     itU6to30: Result := 1;
   else
     Result := 0;
-  end
+  end;
 end;
 
 procedure TwbIntegerDef.MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte);

@@ -203,7 +203,7 @@ type
 
     procedure NotifyChanged; virtual;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); virtual;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); virtual;
 
     function GetElementID: Cardinal;
     function GetElementStates: TwbElementStates;
@@ -355,7 +355,7 @@ type
     function Reached: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); override;
     procedure ResetConflict; override;
     procedure ResetReachable; override;
 
@@ -806,7 +806,7 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     function GetReferenceFile: IwbFile; override;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True); override;
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); override;
     function LinksToParent: Boolean; override;
     function Reached: Boolean; override;
     function GetContainingMainRecord: IwbMainRecord; override;
@@ -4424,7 +4424,7 @@ begin
   end;
 end;
 
-procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
+procedure TwbContainer.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false);
 var
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -4432,7 +4432,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
   inherited;
-  if Recursive then
+  if Recursive or Initial then
     for i := Low(cntElements) to High(cntElements) do
       if cntElements[i].CanContainFormIDs then
         cntElements[i].ReportRequiredMasters(aStrings, aAsNew, Recursive);
@@ -5554,6 +5554,7 @@ begin
 
   CurrentDefPos := 0;
   CurrentRecPos := 0;
+
   while (CurrentRecPos < Length(cntElements)) do begin
     if cntElements[CurrentRecPos].ElementType <> etSubRecord then begin
       Inc(CurrentRecPos);
@@ -7534,7 +7535,7 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
+procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false);
 var
   _File: IwbFile;
 begin
@@ -11652,7 +11653,7 @@ begin
   end;
 end;
 
-procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True);
+procedure TwbElement.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false);
 var
   Element       : IwbElement;
   ReferenceFile : IwbFile;

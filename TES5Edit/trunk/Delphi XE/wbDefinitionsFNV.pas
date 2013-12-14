@@ -7066,7 +7066,7 @@ begin
         wbInteger('Triangle Count', itU32),
         wbInteger('External Connections Count', itU32),
         wbInteger('NVCA Count', itU32),
-        wbInteger('Doors Count', itU32)
+        wbInteger('Doors Count', itU32) // as of version = 5 (earliest NavMesh version I saw (Fallout3 1.7) is already 11)
       ]),
       wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
         wbFloat('X'),
@@ -7087,11 +7087,11 @@ begin
           'Unknown 4',
           'Unknown 5',
           'Unknown 6',
-          'Unknown 7',
+          'Preferred pathing',
           'Unknown 8',
           'Unknown 9',
-          'Unknown 10',
-          'Unknown 11',
+          'Water',
+          'Contains door',
           'Unknown 12',
           'Unknown 13',
           'Unknown 14',
@@ -7115,14 +7115,14 @@ begin
           'Unknown 32'
         ]))
       ])),
-      wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)),
+      wbArray(NVCA, 'Unknown', wbInteger('Triangle', itS16)),  // Assumed triangle as the value fits the triangle id's
       wbArray(NVDP, 'Doors', wbStruct('Door', [
         wbFormIDCk('Reference', [REFR]),
-        wbInteger('Unknown', itU16),
+        wbInteger('Triangle', itU16),
         wbByteArray('Unused', 2)
       ])),
-      wbStruct(NVGD, 'Unknown', [
-        wbByteArray('Unknown', 4),
+      wbStruct(NVGD, 'NavMesh Grid', [
+        wbInteger('Row and Line count', itU32),
         wbFloat('Unknown'),
         wbFloat('Unknown'),
         wbFloat('Unknown'),
@@ -7131,13 +7131,13 @@ begin
         wbFloat('Unknown'),
         wbFloat('Unknown'),
         wbFloat('Unknown'),
-        wbArray('Unknown', wbArray('Unknown', wbInteger('Unknown', itU16), -2))
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itU16), -2)) // cellCount is row count² , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
+        wbByteArray('Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array
+        wbFormIDCk('Navigation Mesh', [NAVM, NULL], False, cpNormal),  // NULL values are ignored silently.
         wbInteger('Triangle', itU16, nil, cpNormal)
-      ]))
+      ]))  // Different if ver<5: Length = $2E/$30 and contains other data between NavMesh and Triangle
     ], False, wbNAVMAddInfo);
 
   end;

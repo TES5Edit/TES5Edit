@@ -10,6 +10,7 @@
     Worldspace \ Save as LOD Tiles - split map image back into separate LOD textures used by a game (Skyrim's format)
     Worldspace \ Load Image - load bitmap image, for example to be split by previous function after adjusting with graphical editors
     Overlay \ Region - draw selected regions
+    Overlay \ Regional Weather - draw regions with selected weathers
     Overlay \ Map Marker - draw selected map marker types
     Overlay \ Base Object References - draw references of selected objects in the current worldspace
     Overlay \ Cell Overrides - draw worldspace overrides for selected plugins
@@ -46,7 +47,8 @@ var
   frmMain, frmWorld: TForm;
   mnMain: TMainMenu;
   mnMapPopup: TPopupMenu;
-  mi, miWorldspace, miOverlay, miRegion, miCell, miMapMarker, miReferences: TMenuItem;
+  mi, miWorldspace, miOverlay, miRegion, miRegionalWeather: TMenuItem;
+  miCell, miMapMarker, miReferences: TMenuItem;
   sbInfo: TStatusBar;
   sbxMap: TScrollBox;
   imgMap, imgOver: TImage;
@@ -518,7 +520,6 @@ begin
         end;
     end;
   end;
-  miCell.Enabled := (slPlugin.Count > 0);
 
   // list of regions with points data
   slRegion.Clear;
@@ -526,10 +527,19 @@ begin
     regns := GroupBySignature(FileByIndex(i), 'REGN');
     for j := 0 to Pred(ElementCount(regns)) do begin
       regn := ElementByIndex(regns, j);
-      if SameText(GetElementEditValues(regn, 'WNAM'), Name(CurrentWorld)) and ElementExists(regn, 'Region Areas') then
-        slRegion.AddObject(EditorID(regn), regn);
+      if not IsMaster(regn) then
+        Continue;
+      regn := WinningOverride(regn);
+      if (slWorldspaces.IndexOf(IntToHex(FormID(LinksTo(ElementBySignature(regn, 'WNAM'))), 8)) <> -1) and ElementExists(regn, 'Region Areas') then
+        slRegion.AddObject(Name(regn), regn);
     end;
   end;
+  
+  miRegion.Enabled := fMapDrawn;
+  miRegionalWeather.Enabled := fMapDrawn;
+  miMapMarker.Enabled := fMapDrawn;
+  miReferences.Enabled := fMapDrawn;
+  miCell.Enabled := fMapDrawn and (slPlugin.Count > 0);
 end;
 
 //============================================================================
@@ -686,7 +696,7 @@ end;
 procedure miWorldspaceLoadImageClick(Sender: TObject);
 var
   ImageFileName: string;
-  dlgOpen: TSaveDialog;
+  dlgOpen: TOpenDialog;
   bmp: TBitmap;
 begin
   dlgOpen := TOpenDialog.Create(nil);
@@ -807,6 +817,69 @@ begin
         OverlayRegion(ObjectToElement(slRegion.Objects[i]));
   finally
     frm.Free;
+  end;
+end;
+
+//============================================================================
+// click event for overlay regional weather menu
+procedure miRegionalWeatherClick(Sender: TObject);
+var
+  frm: TForm;
+  clb: TCheckListBox;
+  i, j, d, w: integer;
+  s: string;
+  slWeathers: TStringList;
+  ent, ents, regdatas, regdata, regw: IInterface;
+begin
+  // building a list of weathers
+  slWeathers := TStringList.Create;
+  slWeathers.Duplicates := dupIgnore;
+  slWeathers.Sorted := True;
+  for i := 0 to Pred(slRegion.Count) do begin
+    ent := ObjectToElement(slRegion.Objects[i]);
+    regdatas := ElementByName(ent, 'Region Data Entries');
+    for d := 0 to Pred(ElementCount(regdatas)) do begin
+      regdata := ElementBySignature(ElementByIndex(regdatas, d), 'RDWT');
+      for w := 0 to Pred(ElementCount(regdata)) do begin
+        regw := LinksTo(ElementByIndex(ElementByIndex(regdata, w), 0));
+        if Assigned(regw) then
+          slWeathers.AddObject(Name(regw), regw);
+      end;
+    end;
+  end;
+  
+  frm := frmFileSelect;
+  try
+    frm.Caption := 'Weather';
+    clb := TCheckListBox(frm.FindComponent('CheckListBox1'));
+    clb.Items.Assign(slWeathers);
+    if frm.ShowModal <> mrOk then Exit;
+    // list of FormIDs of selected weathers
+    slWeathers.Clear;
+    for i := 0 to Pred(clb.Items.Count) do
+      if clb.Checked[i] then
+        slWeathers.Add(IntToHex(FormID(ObjectToElement(clb.Items.Objects[i])), 8));
+    // go through all regions and check for any of selected weathers
+    for i := 0 to Pred(slRegion.Count) do begin
+      ent := ObjectToElement(slRegion.Objects[i]);
+      regdatas := ElementByName(ent, 'Region Data Entries');
+      for d := 0 to Pred(ElementCount(regdatas)) do begin
+        regdata := ElementBySignature(ElementByIndex(regdatas, d), 'RDWT');
+        // list of weathers FormIDs in region
+        s := '';
+        for w := 0 to Pred(ElementCount(regdata)) do
+          s := s + ' ' + SortKey(ElementByIndex(regdata, w), False);
+        if s = '' then
+          Continue;
+        // find FormIDs of selected weathers
+        for w := 0 to Pred(slWeathers.Count) do
+          if Pos(slWeathers[w], s) > 0 then
+            OverlayRegion(ent);
+      end;
+    end;
+  finally
+    frm.Free;
+    slWeathers.Free;
   end;
 end;
 
@@ -1176,6 +1249,12 @@ begin
   miRegion.ShortCut := TextToShortCut('Alt+R');
   miRegion.OnClick := miRegionClick;
   miOverlay.Add(miRegion);
+
+  miRegionalWeather := TMenuItem.Create(mnMain);
+  miRegionalWeather.Caption := 'Regional Weather';
+  miRegionalWeather.ShortCut := TextToShortCut('Alt+W');
+  miRegionalWeather.OnClick := miRegionalWeatherClick;
+  miOverlay.Add(miRegionalWeather);
 
   miMapMarker := TMenuItem.Create(mnMain);
   miMapMarker.Caption := 'Map Marker';

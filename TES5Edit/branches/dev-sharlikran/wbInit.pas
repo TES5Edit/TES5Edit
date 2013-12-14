@@ -240,16 +240,6 @@ begin
   Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
 end;
 
-function isFormatValid(aFormatName: String): Boolean;
-begin
-  if Uppercase(aFormatName) = 'UESP' then
-    Result := False
-  else if Uppercase(aFormatName) = 'UESP' then
-    Result := False
-  else
-    Result := False;
-end;
-
 procedure wbDoInit;
 var
   s: string;

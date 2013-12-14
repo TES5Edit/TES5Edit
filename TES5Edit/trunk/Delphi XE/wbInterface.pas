@@ -102,12 +102,10 @@ var
   wbCheckExpectedBytes: Boolean{} = True{};
 
   wbRotationFactor : Extended = 180/Pi;
-  wbRotationScale : Integer = 4;
+  wbRotationScale  : Integer = 4;
 
-//  wbRotationFactor : Extended = 1;
-//  wbRotationScale : Integer = 6;
 
-  wbDataPath: string;
+  wbDataPath       : string;
 
 type
   TConflictAll = (
@@ -382,7 +380,7 @@ type
     function CanContainFormIDs: Boolean;
     function GetLinksTo: IwbElement;
     function GetNoReach: Boolean;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True);
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = false);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;

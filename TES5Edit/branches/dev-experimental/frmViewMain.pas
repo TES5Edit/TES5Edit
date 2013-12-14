@@ -1537,7 +1537,7 @@ begin
       aElements[i].ReportRequiredMasters(sl, AsNew);
       Container := aElements[i].Container;
       while Assigned(Container) do begin
-        Container.ReportRequiredMasters(sl, AsNew, False);
+        Container.ReportRequiredMasters(sl, AsNew, False, True);
         Container := Container.Container;
       end;
     end;
@@ -5339,11 +5339,13 @@ begin
     Value := wbScriptsPath;
     Done := True;
   end else
-  if SameText(Identifier, 'wbDataPath') and (Args.Count = 0) then begin
+  if (SameText(Identifier, 'wbDataPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'DataPath') and (Args.Count = 0)) then begin
     Value := wbDataPath;
     Done := True;
   end else
-  if SameText(Identifier, 'wbTempPath') and (Args.Count = 0) then begin
+  if (SameText(Identifier, 'wbTempPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'TempPath') and (Args.Count = 0)) then begin
     Value := wbTempPath;
     Done := True;
   end else

@@ -1537,7 +1537,7 @@ begin
       aElements[i].ReportRequiredMasters(sl, AsNew);
       Container := aElements[i].Container;
       while Assigned(Container) do begin
-        Container.ReportRequiredMasters(sl, AsNew, False);
+        Container.ReportRequiredMasters(sl, AsNew, False, True);
         Container := Container.Container;
       end;
     end;

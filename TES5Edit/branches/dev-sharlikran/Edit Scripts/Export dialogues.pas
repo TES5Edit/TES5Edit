@@ -3,21 +3,27 @@
 }
 unit ExportDialogue;
 
+const
+  fDebug = False;
+
 var
   slExport: TStringList;
-  InfoNPCID, InfoSPEAKER, InfoRACEID, InfoCONDITION: string;
+  lstRecursion: TList;
+  ExportFileName, InfoNPCID, InfoSPEAKER, InfoRACEID, InfoCONDITION: string;
 
 //============================================================================
 // uncomment to check debug messages
 procedure AddDebug(aMsg: string);
 begin
-  AddMessage('DEBUG: ' + aMsg);
+  if fDebug then
+    AddMessage('DEBUG: ' + aMsg);
 end;
 
 //============================================================================
 function Initialize: integer;
 begin
   slExport := TStringList.Create;
+  lstRecursion := TList.Create;
 end;
 
 //============================================================================
@@ -29,7 +35,10 @@ begin
     QuestID := Copy(QuestID, 1, 25);
   dlen := 15 + Max(0, 10 - Length(QuestID));
   DialID := Copy(DialID, 1, dlen);
-  qlen := 25 - Length(DialID);
+  qlen := Min(Length(QuestID), 25 - Length(DialID));
+  // for some reason the limit is 24 chars, otherwise truncated to 10
+  // example DialogueSolitudeWellScene3 "Noster Begging" [QUST:000367BB]
+  if qlen >= 25 then qlen := 10;
   QuestID := Copy(QuestID, 1, qlen);
   Result := Format('%s_%s_%s_%d', [
     QuestID,
@@ -40,13 +49,18 @@ begin
 end;
 
 //============================================================================
-// get voice types from record or reference of record
-procedure GetRecordVoiceTypes(e: IInterface; lstVoice: TStringList);
+// get voice types from record or reference of record (not to be called directly)
+procedure GetRecordVoiceTypes2(e: IInterface; lstVoice: TStringList);
 var
   sig: string;
   i: integer;
   ent, ents: IInterface;
 begin
+  // recursive function, prevent calling itself in loop
+  // check against a list of processed FormIDs
+  if lstRecursion.IndexOf(FormID(e)) <> -1 then Exit
+    else lstRecursion.Add(FormID(e));
+  
   e := WinningOverride(e);
   AddDebug('GetRecordVoiceType '+Name(e));
 
@@ -67,12 +81,12 @@ begin
       InfoNPCID := Name(e);
       InfoRACEID := GetElementEditValues(e, 'RNAM - Race');
       ent := LinksTo(ElementByName(e, 'VTCK - Voice'));
-      GetRecordVoiceTypes(ent, lstVoice);
+      GetRecordVoiceTypes2(ent, lstVoice);
     end
     // otherwise get voice from template
     else if ElementExists(e, 'TPLT - Template') then begin
       ent := LinksTo(ElementByName(e, 'TPLT - Template'));
-      GetRecordVoiceTypes(ent, lstVoice);
+      GetRecordVoiceTypes2(ent, lstVoice);
     end;
   end
   // npc leveled list
@@ -81,7 +95,7 @@ begin
     for i := 0 to Pred(ElementCount(ents)) do begin
       ent := ElementByIndex(ents, i);
       ent := LinksTo(ElementByPath(ent, 'LVLO\Reference'));
-      GetRecordVoiceTypes(ent, lstVoice);
+      GetRecordVoiceTypes2(ent, lstVoice);
     end;
   end
   // Talking activator record
@@ -94,19 +108,26 @@ begin
     ents := ElementByName(e, 'FormIDs');
     for i := 0 to Pred(ElementCount(ents)) do begin
       ent := LinksTo(ElementByIndex(ents, i));
-      GetRecordVoiceTypes(ent, lstVoice);
+      GetRecordVoiceTypes2(ent, lstVoice);
     end;
   end
-  // Faction record
-  else if sig = 'FACT' then begin
+  // Faction/class record
+  else if (sig = 'FACT') or (sig = 'CLAS') then begin
     for i := 0 to Pred(ReferencedByCount(e)) do begin
       ent := ReferencedByIndex(e, i);
-      // avoid loop on self rerefence
-      if (GetLoadOrderFormID(ent) <> GetLoadOrderFormID(e)) and (Signature(ent) = 'NPC_') then
-        GetRecordVoiceTypes(ent, lstVoice);
+      if Signature(ent) = 'NPC_' then
+        GetRecordVoiceTypes2(ent, lstVoice);
     end;
-  
   end;
+end;
+
+//============================================================================
+// get voice types from record or reference of record
+procedure GetRecordVoiceTypes(e: IInterface; lstVoice: TStringList);
+begin
+  // clear recursion list
+  lstRecursion.Clear;
+  GetRecordVoiceTypes2(e, lstVoice);
 end;
 
 //============================================================================
@@ -169,11 +190,19 @@ var
   ConditionFunction: string;
   lstVoiceCondition: TStringList;
   i, j, Alias: integer;
-  bFactionCondition: Boolean;
+  bFactionCondition, bGetIsID: Boolean;
 begin
   AddDebug('GetConditionsVoiceTypes ' + FullPath(Conditions));
 
   lstVoiceCondition := TStringList.Create; lstVoiceCondition.Duplicates := dupIgnore; lstVoiceCondition.Sorted := True;
+
+  // check all condition functions beforehand
+  // GetIsID has priority over everything else, if it is found ignore other functions
+  for i := 0 to Pred(ElementCount(Conditions)) do
+    if GetElementEditValues(ElementByIndex(Conditions, i), 'CTDA\Function') = 'GetIsID' then begin
+      bGetIsID := True;
+      Break;
+    end;
 
   for i := 0 to Pred(ElementCount(Conditions)) do begin
     Condition := ElementByIndex(Conditions, i);
@@ -183,16 +212,17 @@ begin
       InfoCONDITION := ConditionFunction;
       Elem := LinksTo(ElementByPath(Condition, 'CTDA\Referenceable Object'));
       GetRecordVoiceTypes(Elem, lstVoiceCondition);
-    end
+    end else
+    // skip other functions
+    if not bGetIsID then 
     // Voice type of FLST list of voice types
-    else if ConditionFunction = 'GetIsVoiceType' then begin
+    if ConditionFunction = 'GetIsVoiceType' then begin
       InfoCONDITION := ConditionFunction;
       Elem := LinksTo(ElementByPath(Condition, 'CTDA\Voice Type'));
       GetRecordVoiceTypes(Elem, lstVoiceCondition);
     end
     // Quest alias
     else if ConditionFunction = 'GetIsAliasRef' then begin
-      InfoCONDITION := ConditionFunction;
       Alias := GetElementNativeValues(Condition, 'CTDA\Alias');
       Elem := ContainingMainRecord(Conditions);
       if Signature(Elem) = 'INFO' then begin
@@ -201,17 +231,19 @@ begin
       end
       else if Signature(Elem) = 'QUST' then
         Quest := Elem;
-
       GetAliasVoiceTypes(Quest, Alias, lstVoiceCondition);
     end else
     if ConditionFunction = 'GetInFaction' then begin
       // looks like GetInFaction is used only once by CK when exporting dialogues, i.e. 000D9513
       if not bFactionCondition then begin
         bFactionCondition := True;
-        InfoCONDITION := ConditionFunction;
         Elem := LinksTo(ElementByPath(Condition, 'CTDA\Faction'));
         GetRecordVoiceTypes(Elem, lstVoiceCondition);
       end;
+    end
+    else if ConditionFunction = 'GetIsClass' then begin
+      Elem := LinksTo(ElementByPath(Condition, 'CTDA\Class'));
+      GetRecordVoiceTypes(Elem, lstVoiceCondition);
     end;
     
     if lstVoiceCondition.Count = 0 then
@@ -338,6 +370,8 @@ begin
       Continue;
     lstDial.AddObject(IntToHex(GetLoadOrderFormID(Dialogue), 8), Dialogue);
   end;
+  
+  AddDebug('DIAL Topics found: ' + IntToStr(lstDial.Count));
 
   // TODO: sort the list of quest topics
   
@@ -361,7 +395,7 @@ begin
     // processing INFOs of quest topic
     for j := 0 to Pred(lstInfo.Count) do begin
       Info := ObjectToElement(lstInfo.Objects[j]);
-      if FormID(Info) <> $000D9513 then Continue;
+      //if FormID(Info) <> $000D9513 then Continue;
 
       if GetIsDeleted(Info) then
         Continue;
@@ -394,7 +428,7 @@ begin
             GetElementEditValues(Dialogue, 'DATA\Category'),
             GetElementEditValues(Dialogue, 'SNAM'),
             GetElementEditValues(Dialogue, 'DATA\Subtype'),
-            Trim(EditorID(Dialogue) + ' [DIAL:' + IntToHex(FormID(Dialogue), 8) + ']'),
+            Trim(EditorID(Info) + ' [INFO:' + IntToHex(FormID(Info), 8) + ']'),
             IntToStr(ResponseNumber),
             VoiceFileName,
             VoiceFilePath + VoiceFileName + '.xwm',
@@ -413,6 +447,8 @@ begin
   lstInfo.Free;
   lstDial.Free;
   lstVoice.Free;
+
+  ExportFileName := 'dialogueExport' + EditorID(Quest) + '.csv';
 end;
 
 //============================================================================
@@ -428,7 +464,7 @@ begin
 
   e := MasterOrSelf(e);
   
-  if ContainerStates(GetFile(e)) and Round(IntPower(2, csRefsBuild)) = 0 then begin
+  if ContainerStates(GetFile(e)) and (1 shl csRefsBuild) = 0 then begin
     AddMessage('Skipping quest, references are not built for file ' + GetFileName(e));
     AddMessage('Use Right click \ Other \ Build Reference Info menu and try again.');
     Exit;
@@ -440,16 +476,27 @@ end;
 //============================================================================
 function Finalize: integer;
 var
-  ExportFileName: string;
+  dlgSave: TSaveDialog;
 begin
   if slExport.Count <> 0 then begin
-    ExportFileName := ScriptsPath + 'a.txt';
-    AddMessage('Saving ' + ExportFileName);
-    slExport.Insert(0, 'PLUGIN'#9'QUEST'#9'NPCID'#9'SPEAKER'#9'RACEID'#9'VOICE TYPE'#9'CONDITION'#9'BRANCH'#9'CATEGORY'#9'TYPE'#9'SUBTYPE'#9'TOPIC'#9'RESPONSE INDEX'#9'FILENAME'#9'FULLPATH'#9'TOPIC TEXT'#9'PROMPT'#9'RESPONSE TEXT'#9'EMOTION'#9'SCRIPT NOTES');
-    slExport.SaveToFile(ExportFileName);
+    dlgSave := TSaveDialog.Create(nil);
+    try
+      dlgSave.Options := dlgSave.Options + [ofOverwritePrompt];
+      dlgSave.Filter := 'Excel (*.csv)|*.csv';
+      dlgSave.InitialDir := ScriptsPath;
+      dlgSave.FileName := ExportFileName;
+      if dlgSave.Execute then begin
+        ExportFileName := dlgSave.FileName;
+        AddMessage('Saving ' + ExportFileName);
+        slExport.Insert(0, 'PLUGIN'#9'QUEST'#9'NPCID'#9'SPEAKER'#9'RACEID'#9'VOICE TYPE'#9'CONDITION'#9'BRANCH'#9'CATEGORY'#9'TYPE'#9'SUBTYPE'#9'TOPIC'#9'RESPONSE INDEX'#9'FILENAME'#9'FULLPATH'#9'TOPIC TEXT'#9'PROMPT'#9'RESPONSE TEXT'#9'EMOTION'#9'SCRIPT NOTES');
+        slExport.SaveToFile(ExportFileName);
+      end;
+    finally
+      dlgSave.Free;
+    end;
   end;
-  
   slExport.Free;
+  lstRecursion.Free;
 end;
 
 end.

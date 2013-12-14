@@ -24,7 +24,7 @@ var
   pnlCloud, pnlCloudEdit: TPanel;
   cmbCloudTexture: TComboBox;
   btnShowCloudTexture, btnApplyCloud, btnApplyWeatherColors, btnApplyLightingColors: TButton;
-  edCloudXSpeed, edCloudYSpeed, edCloudAlpha: TLabeledEdit;
+  edCloudXSpeed, edCloudYSpeed, edCloudAlpha1, edCloudAlpha2, edCloudAlpha3, edCloudAlpha4: TLabeledEdit;
   imgCloud: TImage;
   CountCloudLayers: integer; // a total number of supported cloud layers
   CountTimes: integer; // a total number of times (sunrise, day, sunset, night)
@@ -153,7 +153,10 @@ begin
     SetElementEditValues(Weather, slCloudSignatures[Layer], cmbCloudTexture.Text);
     SetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]), edCloudXSpeed.Text);
     SetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]), edCloudYSpeed.Text);
-    SetElementEditValues(Weather, Format('JNAM\Layer #%d\Alpha', [Layer]), edCloudAlpha.Text);
+    SetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunrise', [Layer]), edCloudAlpha1.Text);
+    SetElementEditValues(Weather, Format('JNAM\Layer #%d\Day', [Layer]), edCloudAlpha2.Text);
+    SetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunset', [Layer]), edCloudAlpha3.Text);
+    SetElementEditValues(Weather, Format('JNAM\Layer #%d\Night', [Layer]), edCloudAlpha4.Text);
   end
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
     SetEditValue(ElementByIndex(ElementByPath(Weather, 'ONAM'), Layer), edCloudXSpeed.Text)
@@ -187,7 +190,10 @@ begin
   if wbGameMode = gmTES5 then begin
     edCloudXSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]));
     edCloudYSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]));
-    edCloudAlpha.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Alpha', [Layer]));
+    edCloudAlpha1.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunrise', [Layer]));
+    edCloudAlpha2.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Day', [Layer]));
+    edCloudAlpha3.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunset', [Layer]));
+    edCloudAlpha4.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Night', [Layer]));
   end
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
     edCloudXSpeed.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, 'ONAM'), Layer))
@@ -387,12 +393,19 @@ begin
       edCloudYSpeed.LabelPosition := lpLeft;
       edCloudYSpeed.EditLabel.Caption := 'Y Speed';
       edCloudYSpeed.Left := 200; edCloudYSpeed.Top := 40; edCloudYSpeed.Width := 70;
-      
-      edCloudAlpha := TLabeledEdit.Create(frm);
-      edCloudAlpha.Parent := pnlCloudEdit;
-      edCloudAlpha.LabelPosition := lpLeft;
-      edCloudAlpha.EditLabel.Caption := 'Alpha';
-      edCloudAlpha.Left := 330; edCloudAlpha.Top := 40; edCloudAlpha.Width := 70;
+
+      edCloudAlpha1 := TLabeledEdit.Create(frm); edCloudAlpha1.Parent := pnlCloudEdit;
+      edCloudAlpha1.LabelPosition := lpLeft; edCloudAlpha1.EditLabel.Caption := 'Alpha';
+      edCloudAlpha1.Left := 62 + 0*iColorEditorWidth; edCloudAlpha1.Top := 155; edCloudAlpha1.Width := iColorEditorWidth - 50;
+      edCloudAlpha2 := TLabeledEdit.Create(frm); edCloudAlpha2.Parent := pnlCloudEdit;
+      edCloudAlpha2.LabelPosition := lpLeft; edCloudAlpha2.EditLabel.Caption := 'Alpha';
+      edCloudAlpha2.Left := 62 + 1*iColorEditorWidth; edCloudAlpha2.Top := 155; edCloudAlpha2.Width := iColorEditorWidth - 50;
+      edCloudAlpha3 := TLabeledEdit.Create(frm); edCloudAlpha3.Parent := pnlCloudEdit;
+      edCloudAlpha3.LabelPosition := lpLeft; edCloudAlpha3.EditLabel.Caption := 'Alpha';
+      edCloudAlpha3.Left := 62 + 2*iColorEditorWidth; edCloudAlpha3.Top := 155; edCloudAlpha3.Width := iColorEditorWidth - 50;
+      edCloudAlpha4 := TLabeledEdit.Create(frm); edCloudAlpha4.Parent := pnlCloudEdit;
+      edCloudAlpha4.LabelPosition := lpLeft; edCloudAlpha4.EditLabel.Caption := 'Alpha';
+      edCloudAlpha4.Left := 62 + 3*iColorEditorWidth; edCloudAlpha4.Top := 155; edCloudAlpha4.Width := iColorEditorWidth - 50;
     end;
 
     for i := 0 to Pred(CountTimes) do begin
@@ -406,7 +419,7 @@ begin
     btnApplyCloud := TButton.Create(frm);
     btnApplyCloud.Parent := pnlCloudEdit;
     btnApplyCloud.Left := btnShowCloudTexture.Left;
-    btnApplyCloud.Top := 180;
+    btnApplyCloud.Top := 190;
     btnApplyCloud.Width := 100;
     btnApplyCloud.Caption := 'Apply Changes';
     btnApplyCloud.OnClick := btnApplyCloudClick;
