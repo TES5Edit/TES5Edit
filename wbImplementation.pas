@@ -5560,14 +5560,14 @@ begin
     end else begin
       badRecord := False;
       if not mrDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
-        if not checkBadRecord then begin
+//        if not checkBadRecord then begin
           if Assigned(wbProgressCallback) then
             wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
           FoundError := True;
           Inc(CurrentRecPos);
           Continue;
-        end;
-        badRecord := True;
+//        end;
+//        badRecord := True;
       end;
 
       if (CurrentDefPos < mrDef.MemberCount) then begin
@@ -12031,7 +12031,7 @@ begin
         Break;
     end;
 
-    if not ElementDef.CanHandleAlso(SubRecord.Signature, SubRecord) then
+    if not ElementDef.CanHandle{Also}(SubRecord.Signature, SubRecord) then
       Break;
 
     case ElementDef.DefType of
