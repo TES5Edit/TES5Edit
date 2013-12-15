@@ -5901,7 +5901,9 @@ end;
 function TwbSubRecordStructDef.CanHandleAlso(aSignature: TwbSignature;
   const aDataContainer: IwbDataContainer): Boolean;
 begin
-  Result := ContainsMemberFor(aSignature, aDataContainer)
+  Result := srsMembers[0].CanHandle(aSignature, aDataContainer) or (
+    (Length(srsMembers)>1) and srsMembers[1].CanHandle(aSignature, aDataContainer));
+//  Result := ContainsMemberFor(aSignature, aDataContainer)
 end;
 
 constructor TwbSubRecordStructDef.Clone(const aSource: TwbDef);
