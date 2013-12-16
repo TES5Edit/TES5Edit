@@ -620,6 +620,7 @@ var
   wbFunctionsEnum: IwbEnumDef;
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
+  wbBPNDStruct: IwbSubRecordDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -7665,78 +7666,91 @@ begin
     ], [])
   ]);
 
+  wbBPNDStruct := wbStruct(BPND, '', [
+    {00} wbFloat('Damage Mult'),
+    {04} wbInteger('Flags', itU8, wbFlags([
+      'Severable',
+      'IK Data',
+      'IK Data - Biped Data',
+      'Explodable',
+      'IK Data - Is Head',
+      'IK Data - Headtracking',
+      'To Hit Chance - Absolute'
+    ])),
+    {05} wbInteger('Part Type', itU8, wbEnum([
+           'Torso',
+           'Head 1',
+           'Head 2',
+           'Left Arm 1',
+           'Left Arm 2',
+           'Right Arm 1',
+           'Right Arm 2',
+           'Left Leg 1',
+           'Left Leg 2',
+           'Left Leg 3',
+           'Right Leg 1',
+           'Right Leg 2',
+           'Right Leg 3',
+           'Brain',
+           'Weapon'
+         ])),
+    {06} wbInteger('Health Percent', itU8),
+    {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
+    {08} wbInteger('To Hit Chance', itU8),
+    {09} wbInteger('Explodable - Explosion Chance %', itU8),
+    {10} wbInteger('Explodable - Debris Count', itU16),
+    {12} wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
+    {16} wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
+    {20} wbFloat('Tracking Max Angle'),
+    {24} wbFloat('Explodable - Debris Scale'),
+    {28} wbInteger('Severable - Debris Count', itS32),
+    {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
+    {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
+    {40} wbFloat('Severable - Debris Scale'),
+    wbStruct('Gore Effects Positioning', [
+      wbStruct('Translate', [
+        {44} wbFloat('X'),
+        {48} wbFloat('Y'),
+        {52} wbFloat('Z')
+      ]),
+      wbStruct('Rotation', [
+        {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ])
+    ]),
+    {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
+    {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
+    {28} wbInteger('Severable - Decal Count', itU8),
+    {28} wbInteger('Explodable - Decal Count', itU8),
+    {76} wbByteArray('Unused', 2),
+    {80} wbFloat('Limb Replacement Scale')
+  ], cpNormal, True);
+
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
-    wbRStructS('Body Parts', 'Body Part', [
-      wbString(BPTN, 'Part Name', 0, cpNormal, True),
-      wbString(BPNN, 'Part Node', 0, cpNormal, True),
-      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
-      wbStruct(BPND, '', [
-        {00} wbFloat('Damage Mult'),
-        {04} wbInteger('Flags', itU8, wbFlags([
-          'Severable',
-          'IK Data',
-          'IK Data - Biped Data',
-          'Explodable',
-          'IK Data - Is Head',
-          'IK Data - Headtracking',
-          'To Hit Chance - Absolute'
-        ])),
-        {05} wbInteger('Part Type', itU8, wbEnum([
-               'Torso',
-               'Head 1',
-               'Head 2',
-               'Left Arm 1',
-               'Left Arm 2',
-               'Right Arm 1',
-               'Right Arm 2',
-               'Left Leg 1',
-               'Left Leg 2',
-               'Left Leg 3',
-               'Right Leg 1',
-               'Right Leg 2',
-               'Right Leg 3',
-               'Brain',
-               'Weapon'
-             ])),
-        {06} wbInteger('Health Percent', itU8),
-        {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
-        {08} wbInteger('To Hit Chance', itU8),
-        {09} wbInteger('Explodable - Explosion Chance %', itU8),
-        {10} wbInteger('Explodable - Debris Count', itU16),
-        {12} wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
-        {16} wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
-        {20} wbFloat('Tracking Max Angle'),
-        {24} wbFloat('Explodable - Debris Scale'),
-        {28} wbInteger('Severable - Debris Count', itS32),
-        {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
-        {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
-        {40} wbFloat('Severable - Debris Scale'),
-        wbStruct('Gore Effects Positioning', [
-          wbStruct('Translate', [
-            {44} wbFloat('X'),
-            {48} wbFloat('Y'),
-            {52} wbFloat('Z')
-          ]),
-          wbStruct('Rotation', [
-            {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-            {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-            {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-          ])
-        ]),
-        {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
-        {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-        {28} wbInteger('Severable - Decal Count', itU8),
-        {28} wbInteger('Explodable - Decal Count', itU8),
-        {76} wbByteArray('Unused', 2),
-        {80} wbFloat('Limb Replacement Scale')
-      ], cpNormal, True),
-      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
-    ], [], cpNormal, True),
+    wbRUnion('Body Part Data', [
+      wbRStructS('Body Parts', 'Body Part', [
+        wbString(BPTN, 'Part Name', 0, cpNormal, True),
+        wbString(BPNN, 'Part Node', 0, cpNormal, True),
+        wbString(BPNT, 'VATS Target', 0, cpNormal, True),
+        wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+        wbBPNDStruct,
+        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+        wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      ], [], cpNormal, True),
+      wbRStructS('Body Parts', 'Body Part', [
+        wbString(BPNN, 'Part Node', 0, cpNormal, True),
+        wbString(BPNT, 'VATS Target', 0, cpNormal, True),
+        wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+        wbBPNDStruct,
+        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+        wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      ], [], cpNormal, True)
+    ], [], cpNormal, true),
     wbFormIDCk(RAGA, 'Ragdoll', [RGDL])
   ]);
 
