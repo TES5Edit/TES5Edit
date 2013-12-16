@@ -5466,18 +5466,6 @@ var
   RequiredRecords : set of byte;
   PresentRecords : set of byte;
   i              : Integer;
-  badRecord      : Boolean;
-
-  function CheckBadRecord: Boolean;
-  begin
-    Result := false;
-    if (CurrentDefPos < mrDef.MemberCount) then begin
-        CurrentDef := mrDef.Members[CurrentDefPos];
-        if CurrentDef.CanHandleAlso(CurrentRec.Signature, CurrentRec) then begin
-          Result := True;
-        end;
-    end;
-  end;
 
 begin
   RequiredRecords := [];
@@ -5558,21 +5546,17 @@ begin
       end;
       CurrentDef := mrDef.Members[CurrentDefPos];
     end else begin
-      badRecord := False;
       if not mrDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
-//        if not checkBadRecord then begin
-          if Assigned(wbProgressCallback) then
-            wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
-          FoundError := True;
-          Inc(CurrentRecPos);
-          Continue;
-//        end;
-//        badRecord := True;
+        if Assigned(wbProgressCallback) then
+          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+        FoundError := True;
+        Inc(CurrentRecPos);
+        Continue;
       end;
 
       if (CurrentDefPos < mrDef.MemberCount) then begin
         CurrentDef := mrDef.Members[CurrentDefPos];
-        if not (badRecord or CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec)) then begin
+        if not CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec) then begin
           Inc(CurrentDefPos);
           Continue;
         end;
@@ -12031,7 +12015,7 @@ begin
         Break;
     end;
 
-    if not ElementDef.CanHandle{Also}(SubRecord.Signature, SubRecord) then
+    if not ElementDef.CanHandle(SubRecord.Signature, SubRecord) then
       Break;
 
     case ElementDef.DefType of
