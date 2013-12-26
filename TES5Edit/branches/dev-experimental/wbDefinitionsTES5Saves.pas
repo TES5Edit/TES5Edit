@@ -35,7 +35,7 @@ uses
 var
   wbSexEnum         : IwbEnumDef;
   wbPropTypeEnum    : IwbEnumDef;
-  wbRecordFlagsEnum : IwbFlagsDef;
+  wbRecordFlagsFlags : IwbFlagsDef;
 
 var // forward type directives
   wbChangeTypes : IwbEnumDef;
@@ -63,7 +63,7 @@ begin
 
   wbSexEnum := wbEnum(['Male','Female']);
 
-  wbRecordFlagsEnum := wbFlags([
+  wbRecordFlagsFlags := wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
@@ -1194,13 +1194,10 @@ begin
   Assert(aElement.BaseName='Changed Form');
 
   if Supports(aElement, IwbDataContainer, Container) then begin
-    {aElement :=  Container.ElementByName['Type'];
-    if Assigned(aElement) then
-      Result := aElement.NativeValue
-    else} with Container do if IsValidOffset(DataBasePtr, DataEndPtr, OffsetType) then begin // we are part a proper structure
-        BasePtr := Pointer(Cardinal(DataBasePtr) + OffsetType);
-        Result := PByte(BasePtr)^;
-      end;
+    with Container do if IsValidOffset(DataBasePtr, DataEndPtr, OffsetType) then begin // we are part a proper structure
+      BasePtr := Pointer(Cardinal(DataBasePtr) + OffsetType);
+      Result := PByte(BasePtr)^;
+    end;
   end;
 end;
 
@@ -1278,7 +1275,7 @@ begin
   Element := aElement;
   Result := ChangedFormGetRawType(Element);
   if Result >=0 then
-    Result := Result and $3F;
+    Result := 10000 + (Result and $3F);
 end;
 
 function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
@@ -1547,6 +1544,9 @@ begin
   Result := ChangedFlagBitXXDecider($80000000, aBasePtr, aEndPtr, aElement);
 end;
 
+var
+  PlayerRefIndex : Cardinal = 0;
+
 function IsActorPlayerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   anID      : Integer;
@@ -1562,8 +1562,14 @@ begin
     Element := Container.ElementByName['RefID'];
     if Assigned(Element) then begin
       anID := Element.NativeValue;
-      if (anID and $3F) = $14 then
-        Result := 1;
+      if anID > 0 then begin
+        if PlayerRefIndex = 0 then
+          if (anID shr 22) = 0 then
+            if GetSaveRefID(anID) = wbPlayerRefID then
+                PlayerRefIndex := anID;
+        if anID = PlayerRefIndex then
+          Result := 1;
+      end;
     end;
   end;
 end;
@@ -1891,7 +1897,7 @@ var
   wbChangeQuestFlags         : IwbIntegerDef;
   wbChangeREFRFlags          : IwbIntegerDef;
   wbChangeActorFlags         : IwbIntegerDef;
-  wbChangeInfoFlags         : IwbIntegerDef;
+  wbChangeInfoFlags          : IwbIntegerDef;
   wbChangeQuestNodeFlags     : IwbIntegerDef;
   wbChangeDefaultFlags       : IwbIntegerDef;
   wbChangeObjectFlags        : IwbIntegerDef;
@@ -3017,20 +3023,20 @@ begin
 
   wbInitialDataType01 := wbStruct('Detached CELL CHANGE_CELL_EXTERIOR_CHAR', [
     wbInteger('Worldspace Index', itU16, wbSaveWorldspaceIndex),  // index into Worldspace table
-    wbInteger('Unknown', itU8),
-    wbInteger('Unknown', itU8),
-    wbInteger('Unknown', itU32)
+    wbInteger('coordX', itS8),
+    wbInteger('coordY', itS8),
+    wbInteger('detachTime', itU8)
 	]);
 
   wbInitialDataType02 := wbStruct('Detached CELL CHANGE_CELL_EXTERIOR_SHORT', [
-    wbInteger('Unknown', itU16),
-    wbInteger('Unknown', itU16),
-    wbInteger('Unknown', itU16),
-    wbInteger('Unknown', itU32)
+    wbInteger('Worldspace Index', itU16, wbSaveWorldspaceIndex),  // index into Worldspace table
+    wbInteger('coordX', itS16),
+    wbInteger('coordY', itS16),
+    wbInteger('detachTime', itU32)
 	]);
 
   wbInitialDataType03 := wbStruct('Detached CELL', [
-    wbInteger('Unknown', itU32)
+    wbInteger('detachTime', itU32)
 	]);
 
   wbInitialDataType04 := wbStruct('Reference moved', [
@@ -3043,7 +3049,7 @@ begin
     wbFloat('RotZ')
 	]);
 
-  wbInitialDataType05 := wbStruct('Contructed Reference', [
+  wbInitialDataType05 := wbStruct('Constructed Reference', [
     wbRefID('Cell/Worldspace'),
     wbFloat('PosX'),
     wbFloat('PosY'),
@@ -3051,8 +3057,8 @@ begin
     wbFloat('RotX'),
     wbFloat('RotY'),
     wbFloat('RotZ'),
-    wbInteger('Unknown', itU8),
-    wbRefID('RefID')
+    wbInteger('flags', itU8),
+    wbRefID('baseFormID')
 	]);
 
   wbInitialDataType06 := wbStruct('Reference Changed Cell or Promoted', [
@@ -3063,9 +3069,9 @@ begin
     wbFloat('RotX'),
     wbFloat('RotY'),
     wbFloat('RotZ'),
-    wbRefID('RefID'),
-    wbInteger('Unknown', itS16),
-    wbInteger('Unknown', itS16)
+    wbRefID('new Cell/Worldspace'),
+    wbInteger('CoordX', itS16),
+    wbInteger('CoordY', itS16),
 	]);
 
   wbInitialDataType := wbUnion('Initial Data Type', InitialDataTypeDecider, [
@@ -3073,7 +3079,7 @@ begin
     wbInitialDataType01,
     wbInitialDataType02,
     wbInitialDataType03,
-    wbInitialDataType03,
+    wbInitialDataType04,
     wbInitialDataType05,
     wbInitialDataType06
   ]);

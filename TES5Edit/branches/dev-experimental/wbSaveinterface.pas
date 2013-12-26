@@ -12,21 +12,21 @@ var
     dtArray
   ];
 
-function wbVMType              : IwbIntegerDefFormater; overload;
-function wbVMObjectHandle      : IwbIntegerDefFormater; overload;
-function wbVMArrayHandle       : IwbIntegerDefFormater; overload;
-function wbSaveWorldspaceIndex : IwbIntegerDefFormater; overload;
+function wbVMType              : IwbIntegerDefFormater;
+function wbVMObjectHandle      : IwbIntegerDefFormater;
+function wbVMArrayHandle       : IwbIntegerDefFormater;
+function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
 
 procedure InitializeVMTypeArray(aContainer: IwbContainer);
-procedure InitializeVMObjectArray(aContainer: IwbContainer); forward;
-procedure InitializeVMObjectDetachedArray(aContainer: IwbContainer); forward;
-procedure InitializeVMArrayTable(aContainer: IwbContainer); forward;
+procedure InitializeVMObjectArray(aContainer: IwbContainer);
+procedure InitializeVMObjectDetachedArray(aContainer: IwbContainer);
+procedure InitializeVMArrayTable(aContainer: IwbContainer);
 
 procedure InitializeSaveWorldspaceArray(aContainer: IwbContainer);
 procedure InitializeSaveRefIDArray(aContainer: IwbContainer);
+function GetSaveRefID(aIndex: Cardinal): Cardinal;
 
-
-function QueryCountForVMArrayHandle(anArrayHandle: Int64): Int64; forward;
+function QueryCountForVMArrayHandle(anArrayHandle: Int64): Int64;
 
 implementation
 
@@ -224,7 +224,15 @@ begin
   end;
 end;
 
-function wbVMType : IwbIntegerDefFormater; overload;
+function GetSaveRefID(aIndex: Cardinal): Cardinal;
+begin
+  if (aIndex>0) and (aIndex<Length(SaveRefIDArray)) then
+    Result := SaveRefIDArray[aIndex-1]
+  else
+    Result := 0;
+end;
+
+function wbVMType : IwbIntegerDefFormater;
 begin
   Result := wbCallback(@TwbVMTypeFormaterToString, nil);
 end;
@@ -234,12 +242,12 @@ begin
   Result := wbCallback(@TwbObjectHandleFormaterToString, nil);
 end;
 
-function wbVMArrayHandle : IwbIntegerDefFormater; overload;
+function wbVMArrayHandle : IwbIntegerDefFormater;
 begin
   Result := wbCallback(@TwbVMArrayHandleFormaterToString, nil);
 end;
 
-function wbSaveWorldspaceIndex : IwbIntegerDefFormater; overload;
+function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
 begin
   Result := wbCallback(@TwbSaveWorldspaceIndexFormaterToString, nil);
 end;

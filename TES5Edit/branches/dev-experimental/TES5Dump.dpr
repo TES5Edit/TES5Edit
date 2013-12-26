@@ -49,6 +49,7 @@ var
   StartTime    : TDateTime;
   DumpGroups   : TStringList;
   DumpChapters : TStringList;
+  DumpForms    : TStringList;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -838,7 +839,8 @@ end;
 var
   NeedsSyntaxInfo : Boolean;
   s, s2           : string;
-  i               : integer;
+  i               : Integer;
+  c               : Integer;
   _File           : IwbFile;
   Masters         : TStringList;
   F               : TSearchRec;
@@ -987,12 +989,29 @@ begin
       DumpGroups.Sort;
     end;
 
-    if wbFindCmdLineParam('dc', s) then begin
+    if wbFindCmdLineParam('dc', s) or wbFindCmdLineParam('df', s) then begin
       DumpChapters := TStringList.Create;
       DumpChapters.Sorted := True;
       DumpChapters.Duplicates := dupIgnore;
+    end;
+
+    if wbFindCmdLineParam('dc', s) then begin
       DumpChapters.CommaText := s;
       DumpChapters.Sort;
+    end;
+
+    if wbFindCmdLineParam('df', s) then begin
+      DumpForms := TStringList.Create;
+      DumpForms.Sorted := True;
+      DumpForms.Duplicates := dupIgnore;
+      DumpForms.CommaText := s;
+      DumpForms.Sort;
+      for i := 0 to DumpForms.Count-1 do try
+        c := StrToInt(DumpForms[i]);
+        DumpChapters.Add(IntToStr(10000+c));
+      finally
+      end;
+      DumpForms.Free;
     end;
 
     wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
@@ -1023,6 +1042,20 @@ begin
       ChaptersToSkip.CommaText := s
     else if FindCmdLineSwitch('xcbloat') then begin
       ChaptersToSkip.Add('1001');
+    end;
+
+    if wbFindCmdLineParam('xf', s) then begin
+      DumpForms := TStringList.Create;
+      DumpForms.Sorted := True;
+      DumpForms.Duplicates := dupIgnore;
+      DumpForms.CommaText := s;
+      DumpForms.Sort;
+      for i := 0 to DumpForms.Count-1 do try
+        c := StrToInt(DumpForms[i]);
+        ChaptersToSkip.Add(IntToStr(10000+c));
+      finally
+      end;
+      DumpForms.Free;
     end;
 
     if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5]) then
@@ -1100,6 +1133,8 @@ begin
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Saves mode ONLY');
+      WriteLn(ErrOutput, '-df:list     ', 'If specified, only dump the listed ChangedForm type');
+      WriteLn(ErrOutput, '-xf:list     ', 'Excludes complete ChangedForm type from being processed');
       WriteLn(ErrOutput, '-dc:GlobalDataIDlist   ', 'If specified, only process those global data ID');
       WriteLn(ErrOutput, '-xc:GlobalDataIDlist   ', 'Excludes those global data from being processed');
       WriteLn(ErrOutput, '-xcbloat     ', 'The following value applies:');

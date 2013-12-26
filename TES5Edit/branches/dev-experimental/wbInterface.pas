@@ -2447,6 +2447,7 @@ var
   wbBytesToDump     : Cardinal = $FFFFFFFF;
   wbBytesToGroup    : Cardinal = 4;
   wbExtractInfo     : ^TByteSet;
+  wbPlayerRefID     : Cardinal = $14;
 
 type
   TwbRefIDArray = array of Cardinal;
@@ -7040,7 +7041,6 @@ var
   Index         : Integer; // Used instead of count for easier debugging output.
   Size          : Integer;
   BasePtr       : Pointer;
-  EndPtr        : Pointer;
   Container     : IwbContainer;
   Element       : IwbElement;
   DataContainer : IwbDataContainer;
@@ -7077,7 +7077,7 @@ begin
 
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
     wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
     Exit;
   end;
 
@@ -7101,6 +7101,7 @@ begin
     end;
   end;
 
+  BasePtr := aBasePtr;
   Count := arCount;
   if Count < 0 then begin
     if Count < -1 then
@@ -7113,16 +7114,16 @@ begin
     if Assigned(aBasePtr) then begin
       case Prefix of
         1: begin
-             Count := PByte(aBasePtr)^;
-             Inc(PByte(aBasePtr));
+             Count := PByte(BasePtr)^;
+             Inc(PByte(BasePtr));
            end;
         2: begin
-             Count := PWord(aBasePtr)^;
-             Inc(PWord(aBasePtr));
+             Count := PWord(BasePtr)^;
+             Inc(PWord(BasePtr));
            end;
         4: begin
-             Count := PCardinal(aBasePtr)^;
-             Inc(PCardinal(aBasePtr));
+             Count := PCardinal(BasePtr)^;
+             Inc(PCardinal(BasePtr));
            end;
       end;
       Result := Prefix;
@@ -7130,9 +7131,9 @@ begin
       Count := 0;
   end else begin
     if (Count < 1) and Assigned(arCountCallback) then
-      Count := arCountCallback(aBasePtr, aEndPtr, Container);
+      Count := arCountCallback(BasePtr, aEndPtr, Container);
 
-    if not Assigned(aBasePtr) and (Count < 1) then
+    if not Assigned(BasePtr) and (Count < 1) then
       Count := 1;
 
     if (Count < 1) and not Assigned(arCountCallback) then begin
@@ -7159,11 +7160,9 @@ begin
       end else
         KnownSize := False;
 
-      EndPtr := aBasePtr;
       Index := 0;
       if not KnownSize then
-        while (Count > Index) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
-          BasePtr := EndPtr;
+        while (Count > Index) and (Cardinal(BasePtr) < Cardinal(aEndPtr)) do begin
           Element := Container.Elements[Index];
           if not Assigned(Element) then begin
             if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
@@ -7176,27 +7175,32 @@ begin
             Result := High(Integer);
             Exit;
           end;
-          if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
-            wbProgressCallback('Found an array with negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
-              ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+          Inc(Result, Size);
+          if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+            if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+              wbProgressCallback('Found an array with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+                ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
             Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
             Exit;
           end;
-          Inc(Cardinal(EndPtr), Size);
-          Inc(Result, Size);
+          if Assigned(BasePtr) then
+            Inc(Cardinal(BasePtr), Size);
           Inc(Index);
         end;
 
     end else begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
-      if Size < High(Integer) then begin
-        if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size*Count) then begin
-          wbProgressCallback('Found an array with negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Size*Count, 8)+
-            ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-          Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
-          Exit;
-        end;
-        Result := (Count * Size) + Prefix;
+      if Size = High(Integer) then begin
+        Result := High(Integer);
+        Exit;
+      end;
+      Result := (Count * Size) + Prefix;
+      if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+          wbProgressCallback('Found a static array with a negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+            ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+        Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
+        Exit;
       end;
     end;
 end;
@@ -7321,9 +7325,10 @@ end;
 
 function TwbStructDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i     : Integer;
-  Size  : Integer;
-  scDef : IwbStructCDef;
+  i       : Integer;
+  Size    : Integer;
+  scDef   : IwbStructCDef;
+  BasePtr : Pointer;
 begin
   Result := 0;
   if Supports(Self, IwbStructCDef, scDef) then begin
@@ -7335,26 +7340,29 @@ begin
   end;
   if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then begin // if aBasePtr >= aEndPtr then no allocation (or error)
     wbProgressCallback('Found a struct with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
+      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
     Result := 0; // assuming we would have called GetDefaultSize otherwise... GetDefaultSize(aBasePtr, aEndPtr, aElement);
-  end else
+  end else begin
+    BasePtr := aBasePtr;
     for i := Low(stMembers) to High(stMembers) do begin
-      Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
+      Size := stMembers[i].Size[BasePtr, aEndPtr, aElement];
       if Size = High(Integer) then begin
         Result := High(Integer);
         Break;
       end;
-      if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
-        wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
-          ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-        Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
+      Inc(Result, Size);
+      if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+          wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+            ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+        Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
         Break;
       end;
-      if Assigned(aBasePtr) then
-        Inc(Cardinal(aBasePtr), Size);
-      Inc(Result, Size);
+      if Assigned(BasePtr) then
+        Inc(Cardinal(BasePtr), Size);
     end;
+  end;
 end;
 
 function TwbStructDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -8244,9 +8252,7 @@ end;
 
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  {if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
-    Result := 0
-  else} if sdSize > 0 then
+  if sdSize > 0 then
     Result := sdSize
   else begin
     if aBasePtr = nil then
@@ -10751,8 +10757,8 @@ var
   aMember : IwbValueDef;
 begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
-    wbProgressCallback('Found a union with a negative size! '+IntToHex64(Cardinal(aBasePtr), 8)+
-      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+    wbProgressCallback('Found a union with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
   end;
   aMember := Decide(aBasePtr, aEndPtr, aElement);
   if not Assigned(aMember) then begin
@@ -10770,9 +10776,11 @@ begin
           break;
   end else begin
     Result := aMember.Size[aBasePtr, aEndPtr, aElement];
+    if Result = High(Integer) then Exit;
     if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
-      wbProgressCallback('Found a union with a negative size! '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
-        ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+      if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+        wbProgressCallback('Found a union with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+          ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
       Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
     end;
   end;

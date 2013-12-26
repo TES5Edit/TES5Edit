@@ -14,7 +14,7 @@ var
   NumTypes, NumTrees, TreeType: Integer;
   i, t, formid: integer;
   x, y, z, rot, scale: single;
-  r: IInterface;
+  r, f: IInterface;
 begin
   Result := True;
   fsRead := TFileStream.Create(aFileName, fmOpenRead);
@@ -36,7 +36,8 @@ begin
         rot := reader.ReadSingle;
         scale := reader.ReadSingle;
         formid := reader.ReadInteger;
-        r := RecordByFormID(FileByLoadOrder(formid shr 24), formid, false);
+        f := FileByLoadOrder(formid shr 24); 
+        r := RecordByFormID(f, LoadOrderFormIDtoFileFormID(f, formid), false);
         if not Assigned(r) then begin
           AddMessage('Can''t locate record with formid=' + IntToHex(formid, 8));
           Result := False;
