@@ -3386,6 +3386,11 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+
+    function GetPrefixLen: Integer;
+    function GetPrefixOffset: Integer;
+    function GetPrefixValue(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+    procedure SetPrefixValue(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aValue: Cardinal);
   end;
 
   TwbByteArrayDef = class(TwbValueDef, IwbByteArrayDef)
@@ -7113,7 +7118,7 @@ begin
   Result := 0;
   if arCount = -255 then
     Result := 0
-  else if ArCount = -254 then
+  else if arCount = -254 then
     Result := ReadIntegerCounter(aBasePtr)
   else if Assigned(aBasePtr) then
     case GetPrefixlength(aBasePtr) of
@@ -7325,7 +7330,7 @@ end;
 procedure TwbArrayDef.SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
 begin
   if arCount = -255 then
-  else if ArCount = -254 then
+  else if arCount = -254 then
     WriteIntegerCounter(aBasePtr, aValue)
   else if Assigned(aBasePtr) then
     case GetPrefixlength(aBasePtr) of
@@ -11177,19 +11182,12 @@ var
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < Prefix then begin
+  if Len < GetPrefixOffset then begin
     if wbCheckExpectedBytes then
       Result := Format('Expected at least %d bytes of data, found %d', [Prefix , Len]);
     Exit;
   end;
-
-  case Prefix of
-    1: Size := PByte(aBasePtr)^ + Prefix;
-    2: Size := PWord(aBasePtr)^ + Prefix;
-    4: Size := PCardinal(aBasePtr)^ + Prefix;
-  else
-    Size := 0; // Just to remove the Hint
-  end;
+  Size := GetPrefixValue(aBasePtr, aEndPtr, aElement) + GetPrefixOffset;
   if Len < Size then begin
     if wbCheckExpectedBytes then
       Result := Format('Expected %d bytes of data, found %d', [Size , Len]);
@@ -11224,19 +11222,10 @@ var
 begin
   s := AnsiString(aValue);
   Len := Length(s);
-//  if (Prefix < 4) and (Len >= (Cardinal(1) shl (Prefix*8))) then
-//    raise Exception.Create('String length overflow');
-
-  NewSize := Len + Prefix;
+  NewSize := Len + GetPrefixOffset;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
-
-  p := aBasePtr;
-  case Prefix of
-    1: PByte(p)^ := Len;
-    2: PWord(p)^ := Len;
-    4: PCardinal(p)^ := Len;
-  end;
-  p := Pointer(Cardinal(p) + Prefix);
+  SetPrefixValue(aBasePtr, aEndPtr, aElement, Len);
+  p := Pointer(Cardinal(aBasePtr) + GetPrefixOffset);
   if Len > 0 then
     Move(s[1], p^, Len);
 end;
@@ -11266,6 +11255,33 @@ begin
   Result := True;
 end;
 
+function TwbLenStringDef.GetPrefixLen: Integer;
+begin
+  case Prefix of
+    1: Result := 1;
+    2: Result := 2;
+    4: Result := 4;
+  else
+    Result := 0;
+  end;
+end;
+
+function TwbLenStringDef.GetPrefixOffset: Integer;
+begin
+    Result := Prefix;
+end;
+
+function TwbLenStringDef.GetPrefixValue(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  case Prefix of
+    1: Result := PByte(aBasePtr)^;
+    2: Result := PWord(aBasePtr)^;
+    4: Result := PCardinal(aBasePtr)^;
+  else
+    Result := 0;
+  end;
+end;
+
 function TwbLenStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Len : Integer;
@@ -11275,27 +11291,28 @@ begin
       Result := 0
     else begin
       Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-      if Result < Prefix then
+      Len := GetPrefixValue(aBasePtr, aEndPtr, aElement)+GetPrefixOffset;
+      if Len>Result then
         Exit;
-
-      case Prefix of
-        1: Len := PByte(aBasePtr)^ + Prefix;
-        2: Len := PWord(aBasePtr)^ + Prefix;
-        4: Len := PCardinal(aBasePtr)^ + Prefix;
-      else
-        Len := 0;
-      end;
-
       if Len < Result then
         Result := Len;
     end
   else
-    Result := Prefix;
+    Result := GetPrefixOffset;
 end;
 
 function TwbLenStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := Prefix;
+end;
+
+procedure TwbLenStringDef.SetPrefixValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aValue: Cardinal);
+begin
+  case Prefix of
+    1: PByte(aBasePtr)^ := aValue;
+    2: PWord(aBasePtr)^ := aValue;
+    4: PCardinal(aBasePtr)^ := aValue;
+  end;
 end;
 
 function TwbLenStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer;
@@ -11324,26 +11341,11 @@ var
 begin
   s := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < Prefix then
+  if Len<GetPrefixOffset then
     Exit;
 
-  case Prefix of
-    1: begin
-         Size := PByte(aBasePtr)^;
-         Inc(PByte(aBasePtr));
-       end;
-    2: begin
-         Size := PWord(aBasePtr)^;
-         Inc(PWord(aBasePtr));
-       end;
-    4: begin
-         Size := PCardinal(aBasePtr)^;
-         Inc(PCardinal(aBasePtr));
-       end;
-  else
-    Size := 0;
-  end;
-  Dec(Len, Prefix);
+  Size := GetPrefixValue(aBasePtr, aEndPtr, aElement);
+  Inc(PByte(aBasePtr), GetPrefixOffset);
 
   if Len > Size then
     Len := Size;
