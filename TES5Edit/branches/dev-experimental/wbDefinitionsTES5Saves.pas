@@ -3071,7 +3071,7 @@ begin
     wbFloat('RotZ'),
     wbRefID('new Cell/Worldspace'),
     wbInteger('CoordX', itS16),
-    wbInteger('CoordY', itS16),
+    wbInteger('CoordY', itS16)
 	]);
 
   wbInitialDataType := wbUnion('Initial Data Type', InitialDataTypeDecider, [
@@ -3101,7 +3101,7 @@ begin
   wbChangedFormData := wbStruct('Changed Form Data', [
     wbInitialDataType,
     wbUnion('CForm Flags', ChangedFlag00Decider, [wbNull, wbStruct('Change Form Flags', [
-        wbInteger('Mask Invert Flags', itU32, wbRecordFlagsEnum),
+        wbInteger('Mask Invert Flags', itU32, wbRecordFlagsFlags),
         wbInteger('Mask Set unk010', itU16)
       ])
     ]),
