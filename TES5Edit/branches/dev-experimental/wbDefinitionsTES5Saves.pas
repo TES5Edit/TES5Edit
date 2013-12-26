@@ -1084,47 +1084,22 @@ begin
   end;
 end;
 
-function Data6Key2Counter(aParent, aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element : IwbElement;
-  Container: IwbDataContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := FindElement(aParent, aElement);
-  Assert(Element.BaseName=aParent);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName[aName];
-    if Assigned(Element) then
-      Result := Element.NativeValue;
-  end;
-end;
-
-function Unknown1000Counter(aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Data6Key2Counter('Temp Effect', aName, aBasePtr, aEndPtr, aElement);
-end;
-
-function Unknown1000_000Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Data6Key2Counter('Unknown1000_00', 'Unknown1000_000 Count', aBasePtr, aEndPtr, aElement);
-end;
-
-function Unknown1000_01Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Unknown1000Counter('Unknown1000_01 Count', aBasePtr, aEndPtr, aElement);
-end;
-
-function Unknown1000_02Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Unknown1000Counter('Unknown1000_02 Count', aBasePtr, aEndPtr, aElement);
-end;
-
-function Unknown1000_03Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Unknown1000Counter('Unknown1000_03 Count', aBasePtr, aEndPtr, aElement);
-end;
+//function Data6Key2Counter(aParent, aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+//var
+//  Element : IwbElement;
+//  Container: IwbDataContainer;
+//begin
+//  Result := 0;
+//  if not Assigned(aElement) then Exit;
+//  Element := FindElement(aParent, aElement);
+//  Assert(Element.BaseName=aParent);
+//
+//  if Supports(Element, IwbDataContainer, Container) then begin
+//    Element := Container.ElementByName[aName];
+//    if Assigned(Element) then
+//      Result := Element.NativeValue;
+//  end;
+//end;
 
 function Unknown1000_00001Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -1574,16 +1549,6 @@ begin
   end;
 end;
 
-function StageDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Data6Key2Counter('Stages Data', 'Stage Count', aBasePtr, aEndPtr, aElement);
-end;
-
-function ObjectiveDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Data6Key2Counter('Objectives Data', 'Objective Count', aBasePtr, aEndPtr, aElement);
-end;
-
 function QuestRuntimeAliasTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
@@ -1640,21 +1605,6 @@ begin
         Inc(Result);
     end;
   end;
-end;
-
-function InstanceCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Data6Key2Counter('Instance Data', 'Instance Count', aBasePtr, aEndPtr, aElement);
-end;
-
-function InstanceAliasCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Data6Key2Counter('Instance', 'Instance Alias Count', aBasePtr, aEndPtr, aElement);
-end;
-
-function InstanceGlobalCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := Data6Key2Counter('Instance', 'Instance Global Count', aBasePtr, aEndPtr, aElement);
 end;
 
 function InitialDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2488,7 +2438,6 @@ begin
       // 1000 to 1005
       wbStruct('Temp Effect', [
         wbStruct('Unknown1000_00', [
-          wbInteger('Unknown1000_000 Count', itU6to30),
           wbArray('Unknown1000_000', wbStruct('Unknown1000_0000', [
             wbInteger('Unknown1000_00000', itU8),
             wbUnion('Unknown1000_00001', Unknown1000_00001Decider, [
@@ -2523,24 +2472,21 @@ begin
               wbNull,
               wbInteger('Unknown', itU32)
             ])
-          ]), Unknown1000_000Counter)
+          ]), -254)
         ]),
         wbInteger('Next ID', itU32),
-        wbInteger('Unknown1000_01 Count', itU6to30),
         wbArray('Unknown1000_01', wbStruct('Unknown', [
           wbInteger('Unknown', itU32),
           wbStruct('Unknown', []) // Needs sample to continue
-        ]), Unknown1000_01Counter),
-        wbInteger('Unknown1000_02 Count', itU6to30),
+        ]), -254),
         wbArray('Unknown1000_02', wbStruct('Unknown', [
           wbInteger('Unknown', itU32),
           wbStruct('Unknown', []) // Needs sample to continue
-        ]), Unknown1000_02Counter),
-        wbInteger('Unknown1000_03 Count', itU6to30),
+        ]), -254),
         wbArray('Unknown1000_03', wbStruct('Unknown', [
           wbInteger('Unknown', itU32),
           wbStruct('Unknown', []) // Needs sample to continue
-        ]), Unknown1000_03Counter)
+        ]), -254)
       ]),
       wbStruct('Papyrus Struct', [
         wbInteger('SkyrimVM_version', itU16)  // FFFF marks an invalid save, 4 seems current max     UESP: header
@@ -3025,7 +2971,7 @@ begin
     wbInteger('Worldspace Index', itU16, wbSaveWorldspaceIndex),  // index into Worldspace table
     wbInteger('coordX', itS8),
     wbInteger('coordY', itS8),
-    wbInteger('detachTime', itU8)
+    wbInteger('detachTime', itU32)
 	]);
 
   wbInitialDataType02 := wbStruct('Detached CELL CHANGE_CELL_EXTERIOR_SHORT', [
@@ -3131,21 +3077,19 @@ begin
         ,wbUnion('Quest Stages Data', ChangedFlag31Decider, [
            wbNull,
            wbStruct('Stages Data', [
-             wbInteger('Stage Count', itU6to30),
              wbArray('Stages', wbStruct('Stage', [
                wbInteger('Stage ID', itU16),
                wbInteger('Sets Flag bit 0', itU8, wbEnum(['False', 'True']))
-             ]), StageDataCounter)
+             ]), -254)
            ])
          ])
         ,wbUnion('Quest Objectives Data', ChangedFlag29Decider, [
            wbNull,
            wbStruct('Objectives Data', [
-             wbInteger('Objective Count', itU6to30),
              wbArray('Objectives', wbStruct('Objective', [
                wbInteger('Objective ID', itU32),
                wbInteger('Objective Status (Byte)', itU32, wbFlags(['Displayed', 'Completed']))
-             ]), ObjectiveDataCounter)
+             ]), -254)
            ])
          ])
         ,wbUnion('Quest Runtime Data', ChangedFlag28Decider, [
@@ -3195,22 +3139,19 @@ begin
            wbNull
           ,wbStruct('Instance Data', [  // Multiple of 7 , no obvious array no obvious list
              wbInteger('Unknown', itU32)
-            ,wbInteger('Instance Count', itU6to30)
             ,wbArray('Instances', wbStruct('Instance', [
                wbInteger('Unknown', itU32)                                          // Instance.unk000
-              ,wbInteger('Instance Alias Count', itU6to30)
               ,wbArray('Instance Aliases', wbStruct('Instance Alias', [
                  wbInteger('Alias ID', itU32),
                  wbRefID('RefID')
-               ]), InstanceAliasCounter)
-              ,wbInteger('Instance Global Count', itU6to30)
+               ]), -254)
               ,wbArray('Instance Globals', wbStruct('Instance Global', [
                  wbRefID('Global'),
                  wbFloat('Value')
-               ]), InstanceGlobalCounter)
+               ]), -254)
               ,wbInteger('Unknown', itU16)
               ,wbInteger('Unknown', itU8)
-            ]), InstanceCounter)
+            ]), -254)
            ])
          ])
         ,wbUnion('Quest Already Run', ChangedFlag26Decider, [wbNull, wbInteger('Already Run', itU8, wbEnum(['False', 'True']))])

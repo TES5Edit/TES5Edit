@@ -1289,6 +1289,10 @@ type
     function GetSorted: Boolean;
     function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
+    function GetPrefixSize(aBasePtr: Pointer): Integer;
+    function GetPrefixLength(aBasePtr: Pointer): Integer;
+    function GetPrefixCount(aBasePtr: Pointer): Cardinal;
+    procedure SetPrefixCount(aBasePtr: Pointer; aCount: Cardinal);
 
     property Element: IwbValueDef
       read GetElement;
@@ -1306,6 +1310,13 @@ type
 
     property CanAddTo: Boolean
       read GetCanAddTo;
+
+    property PrefixSize[aBasePtr: Pointer]: Integer    // how many bytes of storage for the prefix
+      read GetPrefixSize;
+    property PrefixLength[aBasePtr: Pointer]: Integer  // Integer size of the prefix
+      read GetPrefixLength;
+    property PrefixCount[aBasePtr: Pointer]: Cardinal  // Value stored in the prefix
+      read GetPrefixCount write SetPrefixCount;
   end;
 
   IwbStructDef = interface(IwbValueDef)
@@ -3610,6 +3621,10 @@ type
     function GetSorted: Boolean;
     function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
+    function GetPrefixSize(aBasePtr: Pointer): Integer;
+    function GetPrefixLength(aBasePtr: Pointer): Integer;
+    function GetPrefixCount(aBasePtr: Pointer): Cardinal;
+    procedure SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -6395,39 +6410,43 @@ var
   Key    : Byte;
 begin
   Result := 0;
-  Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
-  case key of
-    0: Move(PByte(aBasePtr)^,     Result, 1); // The 6 remaining bits are the count.
-    1: Move(PWord(aBasePtr)^,     Result, 2); // 6 + 8 bits of count
-    2: Move(PCardinal(aBasePtr)^, Result, 4); // 6 + 24 bits of count
-    3: ; // Not supposed to exist : zeroed out by the engine
+  if Assigned(aBasePtr) then begin
+    Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+    case key of
+      0: Move(PByte(aBasePtr)^,     Result, 1); // The 6 remaining bits are the count.
+      1: Move(PWord(aBasePtr)^,     Result, 2); // 6 + 8 bits of count
+      2: Move(PCardinal(aBasePtr)^, Result, 4); // 6 + 24 bits of count
+      3: ; // Not supposed to exist : zeroed out by the engine
+    end;
+    Result := Result shr 2;
   end;
-  Result := Result shr 2;
 end;
 
 procedure WriteIntegerCounter(aBasePtr: pointer; aValue: Int64);
 var
   Buffer : array[0..3] of Byte;
 begin
-  Move(aValue, Buffer, SizeOf(aValue));
-  if Buffer[3] > 0 then begin // 4 bytes counter
-    Buffer[3] := (Buffer[3] shl 2 ) or 3;
-    PByte(aBasePtr)^ := Buffer[3]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[0];
-  end else if Buffer[2] > 0 then begin
-    Buffer[2] := (Buffer[3] shl 2 ) or 2;
-    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[0];
-  end else if Buffer[1] > 0 then begin
-    Buffer[1] := (Buffer[1] shl 2 ) or 1;
-    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[0];
-  end else begin
-    Buffer[0] := (Buffer[0] shl 2 ) or 0;
-    PByte(aBasePtr)^ := Buffer[0];
+  if Assigned(aBasePtr) then begin
+    Move(aValue, Buffer, SizeOf(aValue));
+    if Buffer[3] > 0 then begin // 4 bytes counter
+      Buffer[3] := (Buffer[3] shl 2 ) or 3;
+      PByte(aBasePtr)^ := Buffer[3]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[0];
+    end else if Buffer[2] > 0 then begin
+      Buffer[2] := (Buffer[3] shl 2 ) or 2;
+      PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[0];
+    end else if Buffer[1] > 0 then begin
+      Buffer[1] := (Buffer[1] shl 2 ) or 1;
+      PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[0];
+    end else begin
+      Buffer[0] := (Buffer[0] shl 2 ) or 0;
+      PByte(aBasePtr)^ := Buffer[0];
+    end;
   end;
 end;
 
@@ -7089,6 +7108,40 @@ begin
   Result := (arCount <= 0) or arElement.IsVariableSize;
 end;
 
+function TwbArrayDef.GetPrefixCount(aBasePtr: Pointer): Cardinal;
+begin
+  Result := 0;
+  if arCount = -255 then
+    Result := 0
+  else if ArCount = -254 then
+    Result := ReadIntegerCounter(aBasePtr)
+  else if Assigned(aBasePtr) then
+    case GetPrefixlength(aBasePtr) of
+      1: Result := PByte(aBasePtr)^;
+      2: Result := PWord(aBasePtr)^;
+      4: Result := PCardinal(aBasePtr)^;
+    end;
+end;
+
+function TwbArrayDef.GetPrefixLength(aBasePtr: Pointer): Integer;
+begin
+  Result := 0;
+  if arCount < 0 then
+    if arCount = -1 then
+      Result := 4
+    else if arCount = -2 then
+      Result := 2
+    else if arCount = -4 then
+      Result := 1
+    else if arCount = -254 then
+      Result := ReadIntegerCounterSize(aBasePtr);
+end;
+
+function TwbArrayDef.GetPrefixSize(aBasePtr: Pointer): Integer;
+begin
+  Result := GetPrefixLength(aBasePtr);
+end;
+
 function TwbArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Prefix        : Integer;
@@ -7128,7 +7181,6 @@ var
 
 begin
   Result := 0;
-  Prefix := 0;
 
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
     wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
@@ -7156,34 +7208,12 @@ begin
     end;
   end;
 
+  Prefix := GetPrefixSize(aBasePtr);
   BasePtr := aBasePtr;
   Count := arCount;
   if Count < 0 then begin
-    if Count < -1 then
-      if Count < -2 then
-        Prefix := 1
-      else
-        Prefix := 2
-    else
-      Prefix := 4;
-    if Assigned(aBasePtr) then begin
-      case Prefix of
-        1: begin
-             Count := PByte(BasePtr)^;
-             Inc(PByte(BasePtr));
-           end;
-        2: begin
-             Count := PWord(BasePtr)^;
-             Inc(PWord(BasePtr));
-           end;
-        4: begin
-             Count := PCardinal(BasePtr)^;
-             Inc(PCardinal(BasePtr));
-           end;
-      end;
-      Result := Prefix;
-    end else
-      Count := 0;
+    Count := GetPrefixCount(aBasePtr);
+    Result := Prefix;
   end else begin
     if (Count < 1) and Assigned(arCountCallback) then
       Count := arCountCallback(BasePtr, aEndPtr, Container);
@@ -7196,6 +7226,9 @@ begin
       Exit;
     end;
   end;
+
+  if Assigned(aBasePtr) then
+    Inc(PByte(BasePtr), Prefix);
 
   if Count > 0 then
     if arElement.IsVariableSize then begin
@@ -7287,6 +7320,19 @@ begin
   end;
 
   defReported := True;
+end;
+
+procedure TwbArrayDef.SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
+begin
+  if arCount = -255 then
+  else if ArCount = -254 then
+    WriteIntegerCounter(aBasePtr, aValue)
+  else if Assigned(aBasePtr) then
+    case GetPrefixlength(aBasePtr) of
+      1: PByte(aBasePtr)^ := aValue;
+      2: PWord(aBasePtr)^ := aValue;
+      4: PCardinal(aBasePtr)^ := aValue;
+    end;
 end;
 
 function TwbArrayDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -8628,7 +8674,7 @@ begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < GetDefaultSize(aBasePtr, aEndPtr, aElement) then begin
     if wbCheckExpectedBytes then
-      Result := Format('< Error: Expected %d bytes of data, found %d >', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len])
+      Result := Format('<Error: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len])
   end else begin
     Value := ToValue(aBasePtr, aEndPtr, aElement);
     if IsNan(Value) or (Value=maxDouble) or (Value=maxSingle)  then
