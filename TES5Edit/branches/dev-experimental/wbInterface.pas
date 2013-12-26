@@ -1266,11 +1266,15 @@ type
 
     function GetFormater: IwbIntegerDefFormater;
     function GetIntType: TwbIntType;
+    function GetExpectedLength(aValue: Int64 = 0): Integer;
 
     property Formater: IwbIntegerDefFormater
       read GetFormater;
     property IntType: TwbIntType
       read GetIntType;
+
+    property ExpectedLength[aValue: Int64 = 0]: Integer
+      read GetExpectedLength;
   end;
 
   IwbFloatDef = interface(IwbValueDef)
@@ -3509,6 +3513,7 @@ type
     procedure FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
     function GetFormater: IwbIntegerDefFormater;
     function GetIntType: TwbIntType;
+    function GetExpectedLength(aValue: Int64 = 0): Integer;
   end;
 
   TwbFloatDef = class(TwbValueDef, IwbFloatDef)
@@ -6431,13 +6436,9 @@ end;
 procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 var
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   if Assigned(inFormater) then
-    if Cardinal(aEndPtr) - Cardinal(aBasePtr) >= ExpectedLen[inType] then begin
+    if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) >= GetExpectedLength then begin
       case inType of
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
@@ -6476,16 +6477,12 @@ function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElem
 var
   Len         : Cardinal;
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then begin
+  if Len < GetExpectedLength then begin
     if wbCheckExpectedBytes then
-      Result := Format('Expected %d bytes of data, found %d', [ExpectedLen[inType] , Len])
+      Result := Format('Expected %d bytes of data, found %d', [GetExpectedLength , Len])
   end else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
@@ -6563,12 +6560,8 @@ begin
 end;
 
 procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, GetExpectedLength(aValue));
   case inType of
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
@@ -6585,12 +6578,8 @@ begin
 end;
 
 procedure TwbIntegerDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, GetExpectedLength(aValue));
   case inType of
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
@@ -6646,6 +6635,21 @@ begin
     Result := inherited GetEditType(aBasePtr, aEndPtr, aElement);
 end;
 
+function TwbIntegerDef.GetExpectedLength(aValue: Int64 = 0): Integer;
+const
+  ExpectedLen : array[TwbIntType] of Cardinal = (
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
+  );
+begin
+  Result := ExpectedLen[inType];
+  if (inType=itU6to30) and (aValue<>0) then
+    case (aValue and 3) of
+      0 : Result := 1;
+      1 : Result := 2;
+      2 : Result := 4;
+    end;
+end;
+
 function TwbIntegerDef.GetFormater: IwbIntegerDefFormater;
 begin
   Result := inFormater;
@@ -6664,14 +6668,10 @@ end;
 function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
 var
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Result := nil;
   if Assigned(inFormater) then
-    if Cardinal(aEndPtr) - Cardinal(aBasePtr) >= ExpectedLen[inType] then begin
+    if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) >= GetExpectedLength then begin
       case inType of
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
@@ -6799,13 +6799,10 @@ var
   Len   : Cardinal;
   Value : Int64;
 const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then
+  if Len < GetExpectedLength then
     Result := ''
   else begin
     case inType of
@@ -6834,13 +6831,9 @@ end;
 function TwbIntegerDef.ToInt(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Int64;
 var
   Len         : Cardinal;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then
+  if Len < GetExpectedLength then
     Result := 0
   else
     case inType of
@@ -6859,12 +6852,8 @@ begin
 end;
 
 function TwbIntegerDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
-  if Cardinal(aEndPtr) - Cardinal(aBasePtr) < ExpectedLen[inType] then
+  if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) < GetExpectedLength then
     VarClear(Result)
   else
     case inType of
@@ -6887,13 +6876,10 @@ var
   Len   : Cardinal;
   Value : Int64;
 const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then
+  if Len < GetExpectedLength then
     if Assigned(inFormater) and inFormater.RequiresKey then
       Result := inFormater.ToSortKey(0, aElement)
     else
@@ -6924,7 +6910,7 @@ begin
         itS32: Value := Value + Abs(Int64(Low(LongInt)));
         itS64: Value := Value + Abs(Int64(Low(Int64)));
       end;
-      Result := Result + IntToHex64(Value, Succ(ExpectedLen[inType] * 2));
+      Result := Result + IntToHex64(Value, Succ(GetExpectedLength(Value) * 2));
     end;
   end;
 end;
@@ -6933,16 +6919,12 @@ function TwbIntegerDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbE
 var
   Len         : Cardinal;
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then begin
+  if Len < GetExpectedLength then begin
     if wbCheckExpectedBytes then
-      Result := Format('<Error: Expected %d bytes of data, found %d>', [ExpectedLen[inType] , Len])
+      Result := Format('<Error: Expected %d bytes of data, found %d>', [GetExpectedLength, Len])
   end else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
@@ -6961,9 +6943,9 @@ begin
       Result := inFormater.ToString(Value, aElement)
     else
       Result := IntToStr(Value);
-    if (Len > ExpectedLen[inType]) and not (inType in [itU6to30]) then begin
+    if (Len > GetExpectedLength) and not (inType in [itU6to30]) then begin
       if wbCheckExpectedBytes then
-        Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [ExpectedLen[inType] , Len])
+        Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [GetExpectedLength , Len])
     end;
   end;
   Used(aElement, Result);
