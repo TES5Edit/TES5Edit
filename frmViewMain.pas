@@ -13082,7 +13082,9 @@ begin
               if Length(s) < 5 then
                 Continue;
               if not ((s[1] = '\') or (s[2] = ':')) then
-                t := ltDataPath + s;
+                t := ltDataPath + s
+              else
+                t := s;
               if not FileExists(t) then
                 LoaderProgress('Warning: <Can''t find ' + t + '>')
               else begin
