@@ -2828,7 +2828,7 @@ procedure TfrmMain.DoInit;
     slNew : TStringList;
     i, j  : integer;
   begin
-    j := -1;
+//    j := -1;
     if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
       slNew := TStringList.Create;
       try
@@ -13101,7 +13101,9 @@ begin
               if Length(s) < 5 then
                 Continue;
               if not ((s[1] = '\') or (s[2] = ':')) then
-                t := ltDataPath + s;
+                t := ltDataPath + s
+              else
+                t := s;
               if not FileExists(t) then
                 LoaderProgress('Warning: <Can''t find ' + t + '>')
               else begin

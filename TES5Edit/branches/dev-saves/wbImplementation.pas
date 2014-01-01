@@ -5485,18 +5485,6 @@ var
   RequiredRecords : set of byte;
   PresentRecords : set of byte;
   i              : Integer;
-  badRecord      : Boolean;
-
-  function CheckBadRecord: Boolean;
-  begin
-    Result := false;
-    if (CurrentDefPos < mrDef.MemberCount) then begin
-        CurrentDef := mrDef.Members[CurrentDefPos];
-        if CurrentDef.CanHandleAlso(CurrentRec.Signature, CurrentRec) then begin
-          Result := True;
-        end;
-    end;
-  end;
 
 begin
   RequiredRecords := [];
@@ -5577,21 +5565,17 @@ begin
       end;
       CurrentDef := mrDef.Members[CurrentDefPos];
     end else begin
-      badRecord := False;
       if not mrDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
-        if not checkBadRecord then begin
-          if Assigned(wbProgressCallback) then
-            wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
-          FoundError := True;
-          Inc(CurrentRecPos);
-          Continue;
-        end;
-        badRecord := True;
+        if Assigned(wbProgressCallback) then
+          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+        FoundError := True;
+        Inc(CurrentRecPos);
+        Continue;
       end;
 
       if (CurrentDefPos < mrDef.MemberCount) then begin
         CurrentDef := mrDef.Members[CurrentDefPos];
-        if not (badRecord or CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec)) then begin
+        if not CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec) then begin
           Inc(CurrentDefPos);
           Continue;
         end;
@@ -12071,7 +12055,7 @@ begin
         Break;
     end;
 
-    if not ElementDef.CanHandleAlso(SubRecord.Signature, SubRecord) then
+    if not ElementDef.CanHandle(SubRecord.Signature, SubRecord) then
       Break;
 
     case ElementDef.DefType of
@@ -12599,7 +12583,7 @@ begin
   if not ArrayDef.CanAddTo then
     aContainer.SetElementState(esNotSuitableToAddTo);
 
-  SizePrefix := 0;
+  SizePrefix := ArrayDef.PrefixSize[aBasePtr];
 
   i := 0;
 
@@ -12607,36 +12591,15 @@ begin
   VarSize := ArrayDef.IsVariableSize;
   ArrSize := ArrayDef.ElementCount;
   if ArrSize < 0 then begin
-    if ArrSize < -1 then
-      if ArrSize < -2 then
-        SizePrefix := 1
-      else
-        SizePrefix := 2
-    else
-      SizePrefix := 4;
-
-    if Assigned(aBasePtr) then begin
-      case SizePrefix of
-        1: begin
-             ArrSize := PByte(aBasePtr)^;
-             Inc(PByte(aBasePtr));
-           end;
-        2: begin
-             ArrSize := PWord(aBasePtr)^;
-             Inc(PWord(aBasePtr));
-           end;
-        4: begin
-             ArrSize := PCardinal(aBasePtr)^;
-             Inc(PCardinal(aBasePtr));
-           end;
-      end;
-    end else
-      ArrSize := 0;
+    ArrSize := ArrayDef.PrefixCount[aBasePtr];
   end else
     if (ArrSize < 1) and Assigned(ArrayDef.CountCallback) then
       ArrSize := ArrayDef.CountCallback(aBasePtr, aEndPtr, aContainer)
     else if VarSize then
       ArrSize := High(Integer);
+
+  if Assigned(aBasePtr) then
+    Inc(PByte(aBasePtr), SizePrefix);
 
   if ArrSize > 0 then
     while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr))) do begin
@@ -12791,12 +12754,8 @@ begin
             q := DataContainer.DataBasePtr;
             Move(q^, p^, aElement.DataSize);
           end;
-        end else case ArrayDef.ElementCount of
-          -1: RequestStorageChange(p, q, 4);
-          -2: RequestStorageChange(p, q, 2);
-        else
-          RequestStorageChange(p, q, 1);
-        end;
+        end else
+          RequestStorageChange(p, q, ArrayDef.PrefixSize[nil]);
       NotifyChanged;
 
       for i := 0 to Pred(Container.ElementCount) do
@@ -12878,27 +12837,16 @@ var
   SubRecord : IwbSubRecordArray;
   aRecord   : IwbRecord;
   i         : Integer;
+  ArrayDef  : IwbArrayDef;
 begin
-  if arrSizePrefix < 1 then
+  if arrSizePrefix = 0 then
     Exit;
 
-  if Assigned(dcDataBasePtr) then
-    case arrSizePrefix of
-      1: Count := PByte(dcDataBasePtr)^;
-      2: Count := PWord(dcDataBasePtr)^;
-      4: Count := PCardinal(dcDataBasePtr)^;
-    else
-      Count := 0;
-    end
-  else
-    Count := 0;
+  ArrayDef := vbValueDef as IwbArrayDef;
+  Count := arrayDef.PrefixCount[dcDataBasePtr];
 
   if Count <> Length(cntElements) then
-    case arrSizePrefix of
-      1: PByte(GetDataBasePtr)^ := Length(cntElements);
-      2: PWord(GetDataBasePtr)^ := Length(cntElements);
-      4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
-    end;
+    ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
 
   // Other counters added by Skyrim:
   i := 0;
@@ -14307,7 +14255,7 @@ begin
   if (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
     Result := vbValueDef.Name
   else
-   Result := Resolved.Name;
+    Result := Resolved.Name;
   if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
     Result := Result + ' {' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) + '}';
   // something for Dump: Displaying the size in {} and the array count in []

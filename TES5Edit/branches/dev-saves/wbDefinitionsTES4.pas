@@ -4427,6 +4427,7 @@ begin
       ], cpNormal, True)
     ], []),
     wbEmpty(ONAM, 'Open by Default'),
+    wbXRGD,
     wbXSCL,
     wbInteger(XSOL, 'Contained Soul', itU8, wbSoulGemEnum),
     wbDATAPosRot
