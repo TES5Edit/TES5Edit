@@ -368,6 +368,8 @@ begin
     if Supports(Result, IwbContainer, Container) then
       FindOurself(aName, Container, Result);
   end;
+  if Assigned(Result) and (not Sametext(aName, Result.BaseName)) then
+    Result := nil;
 end;
 
 function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1951,7 +1953,7 @@ begin
         Result := 3;
     if aType in [0,1,2,3,4,5,40,41,42] then begin  // REFR or descendant
       Element := Container.ElementByName['RefID'];
-      if Assigned(Element) and (Element.NativeValue>=$FF000000) then // Form is Constructed
+      if Assigned(Element) and (2 = (Element.NativeValue shr 22)) then // Form is Constructed
         Result := 5
       else if (ChangedFlag03or25Decider(aBasePtr, aEndPtr, aElement)<>0) then
         Result := 6
@@ -5546,10 +5548,10 @@ wbNull
     ])
   ]), -254);
 
-  wbChangedInventory := wbArrayT('Entry Datas', wbStruct('Entry Data', [
-    wbRefIDT('Type'),
-    wbIntegerT('Delta', itS32),
-    wbArrayT('Extend Datas', wbStruct('Extra Data List', [wbChangedExtraData]), -254)
+  wbChangedInventory := wbArray('Entry Datas', wbStruct('Entry Data', [
+    wbRefID('Type'),
+    wbInteger('Delta', itS32),
+    wbArray('Extend Datas', wbStruct('Extra Data List', [wbChangedExtraData]), -254)
   ]), -254);
 
   wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05or27Decider, [wbNull, wbChangedInventory]);
@@ -5565,14 +5567,13 @@ wbNull
   wbChangedREFR := wbStruct('Change REFR Data', [
      wbUnionCHANGE_FORM_FLAGS
     ,wbUnionCHANGE_REFR_BASEOBJECT
+// no actual data   ,wbUnionCHANGE_OBJECT_EMPTY
 // no actual data  wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
     ,wbUnionCHANGE_REFR_SCALE
     ,wbChangedExtra
 //        ,wbUnionCHANGE_REFR_MOVE
 //        ,wbUnionCHANGE_REFR_HAVOK_MOVE
 //        ,wbUnionCHANGE_REFR_CELL_CHANGED
-// no actual data   ,wbUnionCHANGE_OBJECT_EMPTY
-    ,wbUnionCHANGE_REFR_SCALE
 //        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
 //        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
 //        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
