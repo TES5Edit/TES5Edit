@@ -11350,7 +11350,7 @@ begin
     ])),
     wbFloat('Charge Time'),
     wbInteger('Cast Type', itU32, wbCastEnum),
-    wbInteger('Type', itU32, wbTargetEnum),
+    wbInteger('Target Type', itU32, wbTargetEnum),
     wbFloat('Cast Duration'),
     wbFloat('Range'),
     wbFormIDCk('Half-cost Perk', [NULL, PERK])
