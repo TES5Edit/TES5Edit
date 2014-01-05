@@ -177,36 +177,33 @@ end;
 
 //============================================================================
 // get cell record by X,Y grid coordinates from worldspace
-function GetCellFromWorldspace(Worldspace: IInterface; CellX, CellY: integer): IInterface;
+function GetCellFromWorldspace(Worldspace: IInterface; GridX, GridY: integer): IInterface;
 var
-  x, y, blockidx, subblockidx, cellidx: integer;
+  blockidx, subblockidx, cellidx: integer;
   wrldgrup, block, subblock, cell: IInterface;
-  BlockName, SubBlockName: string;
+  Grid, GridBlock, GridSubBlock: TwbGridCell;
+  LabelBlock, LabelSubBlock: Cardinal;
 begin
-  x := CellX div 32;
-  if (CellX < 0) and (CellX mod 32 <> 0) then Dec(x);
-  y := CellY div 32;
-  if (CellY < 0) and (CellY mod 32 <> 0) then Dec(y);
-  BlockName := Format('Block %d, %d', [x, y]);
-  x := CellX div 8;
-  if (CellX < 0) and (CellX mod 8 <> 0) then Dec(x);
-  y := CellY div 8;
-  if (CellY < 0) and (CellY mod 8 <> 0) then Dec(y);
-  SubBlockName := Format('Sub-Block %d, %d', [x, y]);
+  Grid := wbGridCell(GridX, GridY);
+  GridSubBlock := wbSubBlockFromGridCell(Grid);
+  LabelSubBlock := wbGridCellToGroupLabel(GridSubBlock);
+  GridBlock := wbBlockFromSubBlock(GridSubBlock);
+  LabelBlock := wbGridCellToGroupLabel(GridBlock);
+
   wrldgrup := ChildGroup(Worldspace);
   // iterate over Exterior Blocks
   for blockidx := 0 to Pred(ElementCount(wrldgrup)) do begin
     block := ElementByIndex(wrldgrup, blockidx);
-    if ShortName(block) <> BlockName then Continue;
+    if GroupLabel(block) <> LabelBlock then Continue;
     // iterate over SubBlocks
     for subblockidx := 0 to Pred(ElementCount(block)) do begin
       subblock := ElementByIndex(block, subblockidx);
-      if ShortName(subblock) <> SubBlockName then Continue;
+      if GroupLabel(subblock) <> LabelSubBlock then Continue;
       // iterate over Cells
       for cellidx := 0 to Pred(ElementCount(subblock)) do begin
         cell := ElementByIndex(subblock, cellidx);
         if (Signature(cell) <> 'CELL') or GetIsPersistent(cell) then Continue;
-        if (GetElementNativeValues(cell, 'XCLC\X') = CellX) and (GetElementNativeValues(cell, 'XCLC\Y') = CellY) then begin
+        if (GetElementNativeValues(cell, 'XCLC\X') = Grid.x) and (GetElementNativeValues(cell, 'XCLC\Y') = Grid.y) then begin
           Result := cell;
           Exit;
         end;
