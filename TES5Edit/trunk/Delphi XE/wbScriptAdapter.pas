@@ -38,8 +38,14 @@ uses
   JvInterpreterFm,
   wbScriptAdapterMisc;
 
-{ TElement }
+const
+  cUnit = 'Dummy';
+  cInterface = 'wbInterface';
+  cTwbVector = 'TwbVector';
+  cTwbGridCell = 'TwbGridCell';
 
+
+{ TElement }
 //procedure IwbElement_Name(var Value: Variant; Args: TJvInterpreterArgs);
 //var
 //  Element: IwbElement;
@@ -125,6 +131,59 @@ begin
   finally
     m.Free;
   end;
+end;
+
+
+{ TwbVector }
+
+function wbVector2Var(const wbVector: TwbVector): Variant;
+var
+  Rec: ^TwbVector;
+begin
+  New(Rec);
+  Rec^ := wbVector;
+  Result := R2V(cTwbVector, Rec);
+end;
+
+function Var2wbVector(const wbVector: Variant): TwbVector;
+begin
+  Result := TwbVector(V2R(wbVector)^);
+end;
+
+procedure JvInterpreter_wbVector(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Rec: TwbVector;
+begin
+  Rec.x := Args.Values[0];
+  Rec.y := Args.Values[1];
+  Rec.z := Args.Values[2];
+  Value := wbVector2Var(Rec);
+end;
+
+
+{ TwbGridCell }
+
+function wbGridCell2Var(const wbGridCell: TwbGridCell): Variant;
+var
+  Rec: ^TwbGridCell;
+begin
+  New(Rec);
+  Rec^ := wbGridCell;
+  Result := R2V(cTwbGridCell, Rec);
+end;
+
+function Var2wbGridCell(const wbGridCell: Variant): TwbGridCell;
+begin
+  Result := TwbGridCell(V2R(wbGridCell)^);
+end;
+
+procedure JvInterpreter_wbGridCell(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Rec: TwbGridCell;
+begin
+  Rec.x := Args.Values[0];
+  Rec.y := Args.Values[1];
+  Value := wbGridCell2Var(Rec);
 end;
 
 
@@ -942,6 +1001,39 @@ begin
   end;
 end;
 
+procedure IwbMainRecord_GetPosition(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+  Vec: TwbVector;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    MainRecord.GetPosition(Vec);
+    Value := wbVector2Var(Vec);
+  end;
+end;
+
+procedure IwbMainRecord_GetRotation(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+  Vec: TwbVector;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    MainRecord.GetRotation(Vec);
+    Value := wbVector2Var(Vec);
+  end;
+end;
+
+procedure IwbMainRecord_GetGridCell(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+  Rec: TwbGridCell;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+    MainRecord.GetGridCell(Rec);
+    Value := wbGridCell2Var(Rec);
+  end;
+end;
+
 
 { IwbGroupRecord }
 
@@ -1255,12 +1347,44 @@ begin
   );
 end;
 
+procedure Misc_wbPositionToGridCell(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbGridCell2Var(wbPositionToGridCell(Var2wbVector(Args.Values[0])));
+end;
+
+procedure Misc_wbSubBlockFromGridCell(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbGridCell2Var(wbSubBlockFromGridCell(Var2wbGridCell(Args.Values[0])));
+end;
+
+procedure Misc_wbBlockFromSubBlock(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbGridCell2Var(wbBlockFromSubBlock(Var2wbGridCell(Args.Values[0])));
+end;
+
+procedure Misc_wbGridCellToGroupLabel(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbGridCellToGroupLabel(Var2wbGridCell(Args.Values[0]));
+end;
+
+procedure Misc_wbIsInGridCell(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbIsInGridCell(Var2wbVector(Args.Values[0]), Var2wbGridCell(Args.Values[1]));
+end;
+
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
-const
-  cUnit = 'Dummy';
 begin
   with JvInterpreterAdapter do begin
+    AddExtUnit(cInterface);
+    { TwbVector }
+    AddRec(cInterface, cTwbVector, SizeOf(TwbVector), [RFD('x', 0, varSingle), RFD('y', 4, varSingle), RFD('z', 8, varSingle)], nil, nil, nil);
+    AddFunction(cInterface, 'wbVector', JvInterpreter_wbVector, 3, [varEmpty, varEmpty, varEmpty], varRecord);
+    { TwbGridCell }
+    AddRec(cInterface, cTwbGridCell, SizeOf(TwbGridCell), [RFD('x', 0, varInteger), RFD('y', 4, varInteger)], nil, nil, nil);
+    AddFunction(cInterface, 'wbGridCell', JvInterpreter_wbGridCell, 2, [varEmpty, varEmpty], varRecord);
+
     //AddIntfGet(IwbElement, 'Name', IwbElement_Name, 0, [VarEmpty], varEmpty);
     AddConst(cUnit, 'gmTES4', ord(gmTES4));
     AddConst(cUnit, 'gmTES5', ord(gmTES5));
@@ -1448,6 +1572,9 @@ begin
     AddFunction(cUnit, 'ChildGroup', IwbMainRecord_ChildGroup, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CompareExchangeFormID', IwbMainRecord_CompareExchangeFormID, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ChangeFormSignature', IwbMainRecord_ChangeFormSignature, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetPosition', IwbMainRecord_GetPosition, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetRotation', IwbMainRecord_GetRotation, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetGridCell', IwbMainRecord_GetGridCell, 1, [varEmpty], varEmpty);
 
     { IwbGroupRecord }
     AddFunction(cUnit, 'GroupType', IwbGroupRecord_GroupType, 1, [varEmpty], varEmpty);
@@ -1499,6 +1626,11 @@ begin
     { Misc routines }
     AddFunction(cUnit, 'wbFlipBitmap', Misc_wbFlipBitmap, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbAlphaBlend', Misc_wbAlphaBlend, 11, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbPositionToGridCell', Misc_wbPositionToGridCell, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbSubBlockFromGridCell', Misc_wbSubBlockFromGridCell, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbBlockFromSubBlock', Misc_wbBlockFromSubBlock, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbGridCellToGroupLabel', Misc_wbGridCellToGroupLabel, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbIsInGridCell', Misc_wbIsInGridCell, 2, [varEmpty, varEmpty], varEmpty);
   end;
 end;
 
