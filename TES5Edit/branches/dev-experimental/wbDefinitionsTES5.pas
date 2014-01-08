@@ -3792,6 +3792,33 @@ begin
     wbProgressCallback('"'+Container.Name+'" does not contain an element named Type');
 end;
 
+procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Element         : IwbElement;
+  Container       : IwbContainer;
+  SelfAsContainer : IwbContainer;
+begin
+  if Supports(aElement.Container, IwbContainer, Container) and
+     Supports(aElement, IwbContainer, SelfAsContainer) then begin
+    Element := Container.ElementByName['COCT - Count'];
+    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+      Element.SetNativeValue(SelfAsContainer.GetElementCount);
+  end;
+end;
+procedure wbCONTAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Element         : IwbElement;
+  Elems           : IwbElement;
+  Container       : IwbContainer;
+begin
+  if Supports(aElement, IwbContainer, Container) then begin
+    Element := Container.ElementByName['COCT - Count'];
+    Elems   := Container.ElementByName['Items'];
+    if Assigned(Element) and not Assigned(Elems) then
+      if Element.GetNativeValue<>0 then
+        Element.SetNativeValue(0);
+  end;
+end;
 procedure DefineTES5a;
 var
   wbRecordFlagsEnum : IwbFlagsDef;
@@ -3828,7 +3855,7 @@ begin
       wbCOED
     ], []);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCNTOs := wbRArrayS('Items', wbCNTO);
+  wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
 
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
@@ -6247,7 +6274,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
     wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR])
-  ], True);
+  ], True, nil, cpNormal, False, nil, wbCONTAfterSet);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
@@ -9569,7 +9596,7 @@ begin
     wbFormID(CNAM, 'Created Object'),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
     wbInteger(NAM1, 'Created Object Count', itU16)
-  ]);
+  ], False, nil, cpNormal, False, nil, wbCONTAfterSet);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)', [
     wbEDID,
@@ -9788,7 +9815,7 @@ begin
         wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
         wbInteger(TIAS, 'Preset', itS16)
       ], []))
-  ], False, nil, cpNormal, False, wbNPCAfterLoad);
+  ], False, nil, cpNormal, False, wbNPCAfterLoad, wbCONTAfterSet);
 
   wbObjectTypeEnum := wbEnum([
     ' NONE',
@@ -10233,7 +10260,7 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], []),
+        ], [], cpNormal, False, nil, False, nil, wbCONTAfterSet),
 
         // Location Alias
         wbRStruct('Alias', [
@@ -10295,7 +10322,7 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], [])
+        ], [], cpNormal, False, nil, False, nil, wbCONTAfterSet)
       ], [])
     ),
     wbString(NNAM, 'Description', 0, cpNormal, False),
@@ -11350,7 +11377,7 @@ begin
     ])),
     wbFloat('Charge Time'),
     wbInteger('Cast Type', itU32, wbCastEnum),
-    wbInteger('Type', itU32, wbTargetEnum),
+    wbInteger('Target Type', itU32, wbTargetEnum),
     wbFloat('Cast Duration'),
     wbFloat('Range'),
     wbFormIDCk('Half-cost Perk', [NULL, PERK])

@@ -4242,6 +4242,8 @@ begin
     Exclude(cntStates, csAsCreatedEmpty);
 
   inherited;
+
+  DoAfterSet(varEmpty, varEmpty);
 end;
 
 procedure TwbContainer.PrepareSave;

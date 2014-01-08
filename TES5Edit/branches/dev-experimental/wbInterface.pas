@@ -2493,6 +2493,7 @@ var
   wbBytesToGroup    : Cardinal = 4;
   wbExtractInfo     : ^TByteSet;
   wbPlayerRefID     : Cardinal = $14;
+  wbChangedFormOffset : Integer = 10000;
 
 type
   TwbRefIDArray = array of Cardinal;
