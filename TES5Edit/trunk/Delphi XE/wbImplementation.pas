@@ -10720,15 +10720,15 @@ begin
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
 
-  {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}
-  {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
-  if not wbSortGroupRecord then
-    Exit;
-
   Include(grStates, gsSorting);
   try
     ChildrenOf := GetChildrenOf;
     if Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
+      {>>> Sorting DIAL group doesn't always work, and Skyrim.esm has a plenty of unsorted DIALs <<<}
+      {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
+      if not wbSortGroupRecord then
+        Exit;
+
       if not wbDisplayLoadOrderFormID then
         Exit;
 
@@ -10765,14 +10765,6 @@ begin
                     if not Supports(TargetRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
                       Assert(False);
 
-                    {
-                    wbProgressCallback(Format('Inserting %s:[%s] after %s:[%s]', [
-                      InsertRecord._File.FileName,
-                      IntToHex(InsertRecord.FormID, 8),
-                      TargetRecord._File.FileName,
-                      IntToHex(TargetRecord.FormID, 8)
-                    ]));
-                    }
                     InsertRecord.InsertEntryAfter(TargetRecord);
 
                   end else if InsertRecord.ElementExists['PNAM'] then
@@ -10847,6 +10839,7 @@ begin
       end;
       Exit;
     end;
+
     if Length(cntElements) > 1 then
       QuickSort(@cntElements[0], Low(cntElements), High(cntElements), CompareGroupContents);
     Include(grStates, gsSorted);
