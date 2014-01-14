@@ -21,6 +21,12 @@ uses
   Dialogs, StdCtrls, Buttons, CheckLst, Menus;
 
 type
+  TCheckListBox = class(CheckLst.TCheckListbox)
+  protected
+    procedure DrawItem(Index: Integer; Rect: TRect; State: TOwnerDrawState);
+      override;
+  end;
+
   TfrmFileSelect = class(TForm)
     CheckListBox1: TCheckListBox;
     PopupMenu1: TPopupMenu;
@@ -51,13 +57,25 @@ implementation
 uses
   StrUtils;
 
+procedure TCheckListBox.DrawItem(Index: Integer; Rect: TRect;
+  State: TOwnerDrawState);
+var
+  s: string;
+begin
+  s := Trim(TfrmFileSelect(Self.Parent).edSearch.Text);
+  if s <> '' then
+    if not (odSelected in State) and ContainsText(Items[Index], s) then
+      Canvas.Brush.Color := clGradientInactiveCaption;
+  inherited;
+end;
+
 procedure TfrmFileSelect.CheckListBox1DblClick(Sender: TObject);
 begin
   SelectNone1.Click;
   if (CheckListBox1.ItemIndex >= 0) and (CheckListBox1.ItemIndex < CheckListBox1.Count) then begin
     CheckListBox1.Checked[CheckListBox1.ItemIndex] := True;
     btnOK.Click;
-  end; 
+  end;
 end;
 
 procedure TfrmFileSelect.edSearchChange(Sender: TObject);
@@ -65,6 +83,7 @@ var
   s, p: string;
   i: integer;
 begin
+  CheckListBox1.Invalidate;
   s := Trim(edSearch.Text);
   if s <> '' then
     for i := 0 to CheckListBox1.Items.Count - 1 do begin
