@@ -1917,12 +1917,14 @@ function wbArray(const aName          : string;
                        aDontShow      : TwbDontShowCallback = nil)
                                       : IwbArrayDef; overload;
 
-function wbRArray(const aName     : string;
-                  const aElement  : IwbRecordMemberDef;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbSubRecordArrayDef; overload;
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbSubRecordArrayDef; overload;
 
 function wbArrayS(const aSignature : TwbSignature;
                   const aName      : string;
@@ -4469,9 +4471,9 @@ function wbArray(const aSignature : TwbSignature;
                        aCount     : Integer = 0;
                        aAfterLoad : TwbAfterLoadCallback = nil;
                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil)
                                   : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
@@ -4501,14 +4503,16 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow);
 end;
 
-function wbRArray(const aName     : string;
-                  const aElement  : IwbRecordMemberDef;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbSubRecordArrayDef; overload;
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, nil, nil, aDontShow, nil);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil);
 end;
 
 function wbArray(const aSignature : TwbSignature;
@@ -4889,7 +4893,7 @@ function wbRStructS(const aName        : string;
                           aDontShow    : TwbDontShowCallback = nil)
                                        : IwbSubRecordArrayDef; overload;
 begin
-  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, aDontShow);
+  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, nil, nil, aDontShow);
 end;
 
 function wbRStructsSK(const aName        : string;

@@ -6153,7 +6153,7 @@ begin
     wbSCRIActor,
     wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
     wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
+    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
     wbArrayS(KFFZ, 'Animations', wbStringLC('Animation'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
     wbStruct(DATA, '', [
       {00} wbInteger('Type', itU8, wbCreatureTypeEnum, cpNormal, False, wbActorTemplateUseTraits),
@@ -6305,7 +6305,7 @@ begin
     wbRArray('Unused', wbRStruct('Unused', [
       wbUnknown(INFC, cpIgnore),
       wbUnknown(INFX, cpIgnore)
-    ], []), cpIgnore, False, wbNeverShow),
+    ], []), cpIgnore, False, nil, nil, wbNeverShow),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbString(TDUM),
@@ -8782,7 +8782,7 @@ begin
     wbSCRIActor,
     wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
     wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
+    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True, wbActorTemplateUseTraits),
     wbStruct(DATA, '', [
       {00} wbInteger('Base Health', itS32),
@@ -9900,7 +9900,7 @@ begin
       wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
       wbFormIDCk(RDSI, 'Incidental MediaSet', [MSET], False, cpNormal, False, wbREGNSoundDontShow),
-      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, wbREGNSoundDontShow),
+      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, nil, nil, wbREGNSoundDontShow),
       wbArrayS(RDSD, 'Sounds', wbStructSK([0], 'Sound', [
         wbFormIDCk('Sound', [SOUN]),
         wbInteger('Flags', itU32, wbFlags([
