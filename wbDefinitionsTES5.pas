@@ -8318,6 +8318,7 @@ begin
       wbStruct('Object', [
         //wbString('Use', 4),
         wbInteger('Use', itU32, wbEnum([], [
+                        0, 'None',
           Sig2Int('RADA'), 'RADA (Unused)',
           Sig2Int('MORP'), 'MORP (Unused)',
           Sig2Int('PPAR'), 'PPAR (Unused)',
@@ -8636,6 +8637,7 @@ begin
           Sig2Int('GCKX'), 'Keyword - Generic Craftable Keyword 10',
           Sig2Int('JWLR'), 'Keyword - Jewelry',
           Sig2Int('KWCU'), 'Keyword - Cuirass',
+          Sig2Int('MNTK'), 'Keyword - Mount',
           Sig2Int('LMHP'), 'Local Map Hide Plane',
           Sig2Int('SLDM'), 'Snow LOD Material',
           Sig2Int('SLHD'), 'Snow LOD Material (HD)',
