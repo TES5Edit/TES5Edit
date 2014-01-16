@@ -3908,7 +3908,7 @@ begin
   end;
   if Supports(aElement, IwbContainer, Container) then begin
     Element := Container.ElementByName['KSIZ - Keyword Count'];
-    Elems   := Container.ElementByName['Keywords'];
+    Elems   := Container.ElementByName['KWDA - Keywords'];
     if Assigned(Element) and not Assigned(Elems) then
       if Element.GetNativeValue<>0 then
         Element.SetNativeValue(0);
@@ -4013,7 +4013,7 @@ begin
     Element := Container.ElementByName['IDLC - Animation Count'];
 	if not Assigned(Element) then
 	  Element := Container.ElementByPath['IDLC\Animation Count'];
-    Elems   := Container.ElementByName['Animations'];
+    Elems   := Container.ElementByName['IDLA - Animations'];
     if Assigned(Element) and not Assigned(Elems) then
       if Element.GetNativeValue<>0 then
         Element.SetNativeValue(0);
@@ -10541,7 +10541,7 @@ begin
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True),
       wbByteArray(IDLB, 'Unknown', 4, cpIgnore)
-    ], [], cpNormal, False, nil, False, nil, wbAnimationsAfterSet),
+    ], [], cpNormal, False, nil, False, nil {cannot be totally removed , wbAnimationsAfterSet}),
 
     wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
