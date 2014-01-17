@@ -789,7 +789,7 @@ begin
       lev := lev div 2;
     end;
     AddMessage(Format('Done. The total number of LOD textures: %d.', [cnt]));
-    AddMessage('Use http://www.xnview.com/en/nconvert/ to convert bitmap files to dds format: nconvert.exe -out dds *.bmp');
+    AddMessage('Use http://code.google.com/p/crunch/ to convert bitmap files to dds format: crunch.exe -outsamedir -fileformat dds -dxt1 -file *.bmp');
   finally
     tile.Free;
   end;
