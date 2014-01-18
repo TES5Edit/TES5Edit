@@ -5103,7 +5103,7 @@ begin
       'Ignored by Sandbox'
     ])),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(TACT, 'Talking Activator', [
     wbEDID,
@@ -5118,7 +5118,7 @@ begin
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
     wbUnknown(FNAM, cpIgnore, True),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbICON := wbRStruct('Icon', [
     wbString(ICON, 'Large Icon filename'),
@@ -6065,7 +6065,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbLString(CNAM, 'Description')
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
 procedure DefineTES5c;
@@ -7126,7 +7126,7 @@ begin
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbString(XMRK, 'Model Filename')
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 //----------------------------------------------------------------------------
 // For expansion to use wbGLOBUnionDecider to display Short, Long, Float
@@ -7376,7 +7376,7 @@ begin
     wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True),
     wbFormIDCk(NAM0, 'Linked To', [SLGM])
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   if wbSimpleRecords then begin
 
@@ -8426,7 +8426,7 @@ begin
     wbFloat(RNAM, 'World Location Radius'),
     wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbCNAM
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 end;
 
@@ -9577,7 +9577,7 @@ begin
       ]))
     ], cpNormal, True),
     wbEffectsReq
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(KEYM, 'Key', [
     wbEDID,
@@ -9595,7 +9595,7 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbQuadrantEnum := wbEnum([
     {0} 'Bottom Left',
@@ -11866,7 +11866,7 @@ begin
     wbDESCReq,
     wbSPIT,
     wbEffectsReq
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(SCRL, 'Scroll', [
     wbEDID,
@@ -11887,7 +11887,7 @@ begin
     ], cpNormal, True),
     wbSPIT,
     wbEffectsReq
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(STAT, 'Static', [
     wbEDID,
@@ -11980,7 +11980,7 @@ begin
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
     ], cpNormal, True)
-  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
