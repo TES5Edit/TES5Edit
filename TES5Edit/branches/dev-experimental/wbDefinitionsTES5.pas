@@ -3800,191 +3800,110 @@ begin
     wbProgressCallback('"'+Container.Name+'" does not contain an element named Type');
 end;
 
-procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
 var
   Element         : IwbElement;
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-  if Supports(aElement.Container, IwbContainer, Container) and
+   Result := False;
+  if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
      Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName['COCT - Count'];
-    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-      Element.SetNativeValue(SelfAsContainer.GetElementCount);
+    Element := Container.ElementByName[aCounterName];
+    if not Assigned(Element) then  // Signature not listed in mrDef cannot be added
+      Element := Container.Add(Copy(aCounterName, 1, 4));
+    if Assigned(Element) then begin
+      if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+        Element.SetNativeValue(SelfAsContainer.GetElementCount);
+      Result := True;
+    end;
   end;
 end;
 
-procedure wbCONTAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
 var
   Element         : IwbElement;
   Elems           : IwbElement;
   Container       : IwbContainer;
 begin
+  Result := False;  // You may need to check alterative counter name
   if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['COCT - Count'];
-    Elems   := Container.ElementByName['Items'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
+    Element := Container.ElementByName[aCounterName];
+    Elems   := Container.ElementByName[anArrayName];
+    if Assigned(Element) then begin
+      if not Assigned(Elems) then
+        if Element.GetNativeValue<>0 then
+          Element.SetNativeValue(0)
+        else if DeleteOnEmpty then
+          Container.RemoveElement(aCounterName);
+      Result := True; // Counter member exists
+    end;
   end;
+end;
+
+procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('COCT - Count', aElement);
+end;
+
+procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
 end;
 
 procedure wbSPLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Container       : IwbContainer;
-  SelfAsContainer : IwbContainer;
 begin
-  if Supports(aElement.Container, IwbContainer, Container) and
-     Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName['SPCT - Count'];
-    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-      Element.SetNativeValue(SelfAsContainer.GetElementCount);
-  end;
+  wbCounterAfterSet('SPCT - Count', aElement);
 end;
 
 procedure wbKWDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Container       : IwbContainer;
-  SelfAsContainer : IwbContainer;
 begin
-  if Supports(aElement.Container, IwbContainer, Container) and
-     Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName['KSIZ - Keyword Count'];
-    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-      Element.SetNativeValue(SelfAsContainer.GetElementCount);
-  end;
+  wbCounterAfterSet('KSIZ - Keyword Count', aElement);
 end;
 
-procedure wbNPC_AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Elems           : IwbElement;
-  Container       : IwbContainer;
+procedure wbNPCAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['SPCT - Count'];
-    Elems   := Container.ElementByName['Actor Effects'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['LLCT - Count'];
-    Elems   := Container.ElementByName['Leveled List Entries'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['KSIZ - Keyword Count'];
-    Elems   := Container.ElementByName['Keywords'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['PRKZ - Perk Count'];
-    Elems   := Container.ElementByName['Perks'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
+  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
+  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+  wbCounterContainerAfterSet('PRKZ - Perk Count', 'Perks', aElement);
 end;
 
 procedure wbRaceAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Elems           : IwbElement;
-  Container       : IwbContainer;
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['SPCT - Count'];
-    Elems   := Container.ElementByName['Actor Effects'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['KSIZ - Keyword Count'];
-    Elems   := Container.ElementByName['KWDA - Keywords'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
+  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+end;
+
+procedure wbKeywordsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
 end;
 
 procedure wbLVLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Container       : IwbContainer;
-  SelfAsContainer : IwbContainer;
 begin
-  if Supports(aElement.Container, IwbContainer, Container) and
-     Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName['LLCT - Count'];
-    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-      Element.SetNativeValue(SelfAsContainer.GetElementCount);
-  end;
+  wbCounterAfterSet('LLCT - Count', aElement);
 end;
 
 procedure wbLLEAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Elems           : IwbElement;
-  Container       : IwbContainer;
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['LLCT - Count'];
-    Elems   := Container.ElementByName['Leveled List Entries'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
+  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
 end;
 
 procedure wbPRKRsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Container       : IwbContainer;
-  SelfAsContainer : IwbContainer;
 begin
-  if Supports(aElement.Container, IwbContainer, Container) and
-     Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName['PRKZ - Count'];
-    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-      Element.SetNativeValue(SelfAsContainer.GetElementCount);
-  end;
+  wbCounterAfterSet('PRKZ - Count', aElement);
 end;
 
 procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Container       : IwbContainer;
-  SelfAsContainer : IwbContainer;
 begin
-  if Supports(aElement.Container, IwbContainer, Container) and
-     Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName['CITC - Condition Count'];
-    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-      Element.SetNativeValue(SelfAsContainer.GetElementCount);
-  end;
+  wbCounterAfterSet('CITC - Condition Count', aElement);
 end;
 
 procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Element         : IwbElement;
-  Elems           : IwbElement;
-  Container       : IwbContainer;
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['CITC - Condition Count'];
-    Elems   := Container.ElementByName['Conditions'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
+  wbCounterContainerAfterSet('CITC - Condition Count', 'Conditions', aElement);
 end;
 
 procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -3993,14 +3912,12 @@ var
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-  if Supports(aElement.Container, IwbContainer, Container) and
-     Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName['IDLC - Animation Count'];
-	if not Assigned(Element) then
-	  Element := Container.ElementByPath['IDLC\Animation Count'];
-    if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-      Element.SetNativeValue(SelfAsContainer.GetElementCount);
-  end;
+  if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
+    if Supports(aElement, IwbContainer, Container) then begin
+      Element := Container.ElementByPath['IDLC\Animation Count'];
+      if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+        Element.SetNativeValue(SelfAsContainer.GetElementCount);
+    end;
 end;
 
 procedure wbAnimationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -4009,15 +3926,14 @@ var
   Elems           : IwbElement;
   Container       : IwbContainer;
 begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName['IDLC - Animation Count'];
-	if not Assigned(Element) then
-	  Element := Container.ElementByPath['IDLC\Animation Count'];
-    Elems   := Container.ElementByName['IDLA - Animations'];
-    if Assigned(Element) and not Assigned(Elems) then
-      if Element.GetNativeValue<>0 then
-        Element.SetNativeValue(0);
-  end;
+  if not wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
+    if Supports(aElement, IwbContainer, Container) then begin
+      Element := Container.ElementByPath['IDLC\Animation Count'];
+      Elems   := Container.ElementByName['IDLA - Animations'];
+      if Assigned(Element) and not Assigned(Elems) then
+        if Element.GetNativeValue<>0 then
+          Element.SetNativeValue(0);
+    end;
 end;
 
 procedure DefineTES5a;
@@ -5187,7 +5103,7 @@ begin
       'Ignored by Sandbox'
     ])),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(TACT, 'Talking Activator', [
     wbEDID,
@@ -5202,7 +5118,7 @@ begin
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
     wbUnknown(FNAM, cpIgnore, True),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   wbICON := wbRStruct('Icon', [
     wbString(ICON, 'Large Icon filename'),
@@ -5987,7 +5903,7 @@ begin
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
     wbEffectsReq
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(AMMO, 'Ammunition', [
     wbEDID,
@@ -6012,7 +5928,7 @@ begin
       wbInteger('Value', itU32)
     ], cpNormal, True),
     wbString(ONAM, 'Short Name')
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDID,
@@ -6059,7 +5975,7 @@ begin
     ], cpNormal, True),
     wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO])
-  ], False, nil, cpNormal, False, wbARMOAfterLoad);
+  ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
@@ -6149,7 +6065,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbLString(CNAM, 'Description')
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 end;
 
 procedure DefineTES5c;
@@ -6475,7 +6391,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
     wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR])
-  ], True, nil, cpNormal, False, nil, wbCONTAfterSet);
+  ], True, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
@@ -7210,7 +7126,7 @@ begin
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbString(XMRK, 'Model Filename')
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
 //----------------------------------------------------------------------------
 // For expansion to use wbGLOBUnionDecider to display Short, Long, Float
@@ -7460,7 +7376,7 @@ begin
     wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True),
     wbFormIDCk(NAM0, 'Linked To', [SLGM])
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   if wbSimpleRecords then begin
 
@@ -8510,7 +8426,7 @@ begin
     wbFloat(RNAM, 'World Location Radius'),
     wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbCNAM
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
 end;
 
@@ -9661,7 +9577,7 @@ begin
       ]))
     ], cpNormal, True),
     wbEffectsReq
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(KEYM, 'Key', [
     wbEDID,
@@ -9679,7 +9595,7 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   wbQuadrantEnum := wbEnum([
     {0} 'Bottom Left',
@@ -10100,7 +10016,7 @@ begin
     ])),
     wbLStringKC(DNAM, 'Magic Item Description'),
     wbCTDAs
-  ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad});
+  ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbKeywordsAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDID,
@@ -10118,7 +10034,7 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
@@ -10152,7 +10068,7 @@ begin
     wbFormID(CNAM, 'Created Object'),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
     wbInteger(NAM1, 'Created Object Count', itU16)
-  ], False, nil, cpNormal, False, nil, wbCONTAfterSet);
+  ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)', [
     wbEDID,
@@ -10371,7 +10287,7 @@ begin
         wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
         wbInteger(TIAS, 'Preset', itS16)
       ], []))
-  ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPC_AfterSet);
+  ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
 
   wbObjectTypeEnum := wbEnum([
     ' NONE',
@@ -10816,7 +10732,7 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], [], cpNormal, False, nil, False, nil, wbCONTAfterSet),
+        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
         // Location Alias
         wbRStruct('Alias', [
@@ -10878,7 +10794,7 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], [], cpNormal, False, nil, False, nil, wbCONTAfterSet)
+        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet)
       ], [])
     ),
     wbString(NNAM, 'Description', 0, cpNormal, False),
@@ -11950,7 +11866,7 @@ begin
     wbDESCReq,
     wbSPIT,
     wbEffectsReq
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(SCRL, 'Scroll', [
     wbEDID,
@@ -11971,7 +11887,7 @@ begin
     ], cpNormal, True),
     wbSPIT,
     wbEffectsReq
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(STAT, 'Static', [
     wbEDID,
@@ -12064,7 +11980,7 @@ begin
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
     ], cpNormal, True)
-  ]);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
@@ -12276,7 +12192,7 @@ begin
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
-  ], False, nil, cpNormal, False, wbWEAPAfterLoad);
+  ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,
