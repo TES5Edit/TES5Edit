@@ -1027,9 +1027,6 @@ type
 
   IwbSubRecordArray = interface
     ['{26937F7A-5F31-4D65-932F-038BD0FA9FEF}']
-    function GetCounter: TwbSignature;
-    property Counter: TwbSignature
-      read GetCounter;
   end;
 
   IwbSubRecordStruct = interface
@@ -1212,11 +1209,9 @@ type
     ['{67943BAC-B558-4112-8DBC-C94A44E0B1D1}']
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
-    function GetHasCounter: TwbSignature;
 
     property Element: IwbRecordMemberDef read GetElement;
     property Sorted[const aContainer: IwbContainer]: Boolean read GetSorted;
-    property HasCounter: TwbSignature read GetHasCounter;
   end;
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
@@ -2130,20 +2125,14 @@ function wbArrayT(const aName          : string;
                         aDontShow      : TwbDontShowCallback = nil)
                                        : IwbArrayDef; overload;
 
-function wbRArray(const aName     : string;
-                  const aElement  : IwbRecordMemberDef;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbSubRecordArrayDef; overload;
-
-function wbRArray(const aName       : string;
-                  const aElement    : IwbRecordMemberDef;
-                        aHasCounter : TwbSignature;
-                        aPriority   : TwbConflictPriority = cpNormal;
-                        aRequired   : Boolean = False;
-                        aDontShow   : TwbDontShowCallback = nil)
-                                    : IwbSubRecordArrayDef; overload;
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbSubRecordArrayDef; overload;
 
 function wbArrayS(const aSignature : TwbSignature;
                   const aName      : string;
@@ -2218,18 +2207,6 @@ function wbRArrayS(const aName      : string;
                          aDontShow  : TwbDontShowCallback = nil;
                          aIsSorted  : TwbIsSortedCallback = nil)
                                     : IwbSubRecordArrayDef; overload;
-
-function wbRArrayS(const aName       : string;
-                   const aElement    : IwbRecordMemberDef;
-                         aHasCounter : TwbSignature;
-                         aPriority   : TwbConflictPriority = cpNormal;
-                         aRequired   : Boolean = False;
-                         aAfterLoad  : TwbAfterLoadCallback = nil;
-                         aAfterSet   : TwbAfterSetCallback = nil;
-                         aDontShow   : TwbDontShowCallback = nil;
-                         aIsSorted   : TwbIsSortedCallback = nil)
-                                     : IwbSubRecordArrayDef; overload;
-
 
 {--- wbStruct - ordered list of members ----------------------------------------}
 function wbStructSK(const aSortKey             : array of Integer;
@@ -2404,16 +2381,6 @@ function wbStructS(const aName        : string;
 function wbRStructS(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
-                    const aSkipSigs    : array of TwbSignature;
-                          aPriority    : TwbConflictPriority = cpNormal;
-                          aRequired    : Boolean = False;
-                          aDontShow    : TwbDontShowCallback = nil)
-                                       : IwbSubRecordArrayDef; overload;
-
-function wbRStructS(const aName        : string;
-                    const aElementName : string;
-                    const aMembers     : array of IwbRecordMemberDef;
-                          aHasCounter  : TwbSignature;
                     const aSkipSigs    : array of TwbSignature;
                           aPriority    : TwbConflictPriority = cpNormal;
                           aRequired    : Boolean = False;
@@ -3265,18 +3232,16 @@ type
     sraElement    : IwbRecordMemberDef;
     sraSorted     : Boolean;
     sraIsSorted   : TwbIsSortedCallback;
-    sraHasCounter : TwbSignature;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
-                 const aName       : string;
-                 const aElement    : IwbRecordMemberDef;
-                       aSorted     : Boolean;
-                       aAfterLoad  : TwbAfterLoadCallback;
-                       aAfterSet   : TwbAfterSetCallback;
-                       aDontShow   : TwbDontShowCallback;
-                       aIsSorted   : TwbIsSortedCallback;
-                       aHasCounter : TwbSignature);
+    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+                 const aName      : string;
+                 const aElement   : IwbRecordMemberDef;
+                       aSorted    : Boolean;
+                       aAfterLoad : TwbAfterLoadCallback;
+                       aAfterSet  : TwbAfterSetCallback;
+                       aDontShow  : TwbDontShowCallback;
+                       aIsSorted  : TwbIsSortedCallback);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3301,7 +3266,6 @@ type
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
-    function GetHasCounter: TwbSignature;
   end;
 
   TwbSubRecordStructDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
@@ -4303,7 +4267,8 @@ end;
 function wbSubRecord(const aSignature : TwbSignature;
                      const aName      : string;
                      const aValue     : IwbValueDef;
-                           aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                           aAfterLoad : TwbAfterLoadCallback = nil;
+                           aAfterSet  : TwbAfterSetCallback = nil;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
@@ -4920,9 +4885,9 @@ function wbArray(const aSignature : TwbSignature;
                        aCount     : Integer = 0;
                        aAfterLoad : TwbAfterLoadCallback = nil;
                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil)
                                   : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
@@ -4989,25 +4954,16 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, True, True);
 end;
 
-function wbRArray(const aName     : string;
-                  const aElement  : IwbRecordMemberDef;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbSubRecordArrayDef; overload;
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, nil, nil, aDontShow, nil, 'NONE');
-end;
-
-function wbRArray(const aName       : string;
-                  const aElement    : IwbRecordMemberDef;
-                        aHasCounter : TwbSignature;
-                        aPriority   : TwbConflictPriority = cpNormal;
-                        aRequired   : Boolean = False;
-                        aDontShow   : TwbDontShowCallback = nil)
-                                    : IwbSubRecordArrayDef; overload;
-begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, nil, nil, aDontShow, nil, aHasCounter);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil);
 end;
 
 function wbArray(const aSignature : TwbSignature;
@@ -5139,7 +5095,7 @@ function wbArrayS(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
 function wbArrayS(const aName      : string;
@@ -5192,21 +5148,7 @@ function wbRArrayS(const aName      : string;
                          aIsSorted  : TwbIsSortedCallback = nil)
                                     : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet,aDontShow, aIsSorted, 'NONE');
-end;
-
-function wbRArrayS(const aName       : string;
-                   const aElement    : IwbRecordMemberDef;
-                         aHasCounter : TwbSignature;
-                         aPriority   : TwbConflictPriority = cpNormal;
-                         aRequired   : Boolean = False;
-                         aAfterLoad  : TwbAfterLoadCallback = nil;
-                         aAfterSet   : TwbAfterSetCallback = nil;
-                         aDontShow   : TwbDontShowCallback = nil;
-                         aIsSorted   : TwbIsSortedCallback = nil)
-                                     : IwbSubRecordArrayDef; overload;
-begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet,aDontShow, aIsSorted, aHasCounter);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet,aDontShow, aIsSorted);
 end;
 
 function wbArrayS(const aSignature : TwbSignature;
@@ -5461,20 +5403,7 @@ function wbRStructS(const aName        : string;
                           aDontShow    : TwbDontShowCallback = nil)
                                        : IwbSubRecordArrayDef; overload;
 begin
-  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, aDontShow);
-end;
-
-function wbRStructS(const aName        : string;
-                    const aElementName : string;
-                    const aMembers     : array of IwbRecordMemberDef;
-                          aHasCounter  : TwbSignature;
-                    const aSkipSigs    : array of TwbSignature;
-                          aPriority    : TwbConflictPriority = cpNormal;
-                          aRequired    : Boolean = False;
-                          aDontShow    : TwbDontShowCallback = nil)
-                                       : IwbSubRecordArrayDef; overload;
-begin
-  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aHasCounter, aPriority, aRequired, aDontShow);
+  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, nil, nil, aDontShow);
 end;
 
 function wbRStructsSK(const aName        : string;
@@ -6420,35 +6349,28 @@ constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
     Self.Create(defPriority, defRequired, noName, sraElement, sraSorted,
-      noAfterLoad, noAfterSet, noDontShow, sraIsSorted, sraHasCounter).defRoot := aSource;
+      noAfterLoad, noAfterSet, noDontShow, sraIsSorted).defRoot := aSource;
 end;
 
-constructor TwbSubRecordArrayDef.Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
-                                  const aName       : string;
-                                  const aElement    : IwbRecordMemberDef;
-                                        aSorted     : Boolean;
-                                        aAfterLoad  : TwbAfterLoadCallback;
-                                        aAfterSet   : TwbAfterSetCallback;
-                                        aDontShow   : TwbDontShowCallback;
-                                        aIsSorted   : TwbIsSortedCallback;
-                                        aHasCounter : TwbSignature);
+constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+                                  const aName      : string;
+                                  const aElement   : IwbRecordMemberDef;
+                                        aSorted    : Boolean;
+                                        aAfterLoad : TwbAfterLoadCallback;
+                                        aAfterSet  : TwbAfterSetCallback;
+                                        aDontShow  : TwbDontShowCallback;
+                                        aIsSorted  : TwbIsSortedCallback);
 begin
   if Assigned(aElement) then
     sraElement := (aElement as IwbDefInternal).SetParent(Self) as IwbRecordMemberDef;
   sraSorted := aSorted;
   sraIsSorted := aIsSorted;
-  sraHasCounter := aHasCounter;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
 end;
 
 function TwbSubRecordArrayDef.GetElement: IwbRecordMemberDef;
 begin
   Result := sraElement;
-end;
-
-function TwbSubRecordArrayDef.GetHasCounter: TwbSignature;
-begin
-  Result := sraHasCounter;
 end;
 
 function TwbSubRecordArrayDef.GetDefaultSignature: TwbSignature;

@@ -19,11 +19,12 @@ var
   lstCED, lstCEDElement: TList; // list of Color Editors and respective elements
   frm: TForm;
   pgcWeather: TPageControl;
-  tsClouds, tsWeatherColors, tsLightingColors: TTabSheet;
+  tsClouds, tsWeatherColors, tsLightingColors, tsTools: TTabSheet;
   lbCloudLayers: TCheckListBox;
   pnlCloud, pnlCloudEdit: TPanel;
   cmbCloudTexture: TComboBox;
   btnShowCloudTexture, btnApplyCloud, btnApplyWeatherColors, btnApplyLightingColors: TButton;
+  btnCopyClouds, btnCopyWeatherColors, btnCopyLightingColors: TButton;
   edCloudXSpeed, edCloudYSpeed, edCloudAlpha1, edCloudAlpha2, edCloudAlpha3, edCloudAlpha4: TLabeledEdit;
   imgCloud: TImage;
   CountCloudLayers: integer; // a total number of supported cloud layers
@@ -37,6 +38,74 @@ begin
   Result := IsEditable(e);
   if not Result then
     MessageDlg(Format('%s \ %s is not editable', [GetFileName(e), Name(e)]), mtError, [mbOk], 0);
+end;
+
+//============================================================================
+// copy element elName from RecSrc record to RecDst record
+procedure CopyElement(RecSrc, RecDst: IInterface; elName: string);
+var
+  el: IInterface;
+begin
+  el := ElementByPath(recsrc, elName);
+  if not Assigned(el) then begin
+    RemoveElement(recdst, elName);
+    Exit;
+  end;
+  if not ElementExists(recdst, elName) then
+    Add(recdst, elName, True);
+  ElementAssign(ElementByPath(recdst, elName), LowInteger, el, False);
+end;
+
+//============================================================================
+// record selector
+function SelectRecord(aSignatures: string; aWithOverrides: Boolean): IInterface;
+var
+  sl, slRec: TStringList;
+  i, j, k: integer;
+  f, g, r: IInterface;
+  clb: TCheckListBox;
+  frm: TForm;
+begin
+  sl := TStringList.Create;
+  sl.Delimiter := ',';
+  sl.StrictDelimiter := True;
+  sl.DelimitedText := aSignatures;
+  slRec := TStringList.Create;
+  
+  for i := 0 to Pred(FileCount) do begin
+    f := FileByIndex(i);
+    for j := 0 to Pred(sl.Count) do begin
+      g := GroupBySignature(f, sl[j]);
+      for k := 0 to Pred(ElementCount(g)) do begin
+        r := ElementByIndex(g, k);
+        if aWithOverrides then
+          slRec.AddObject(GetFileName(r) + ' \ '+ Name(r), r)
+        else
+          if IsMaster(r) then begin
+            r := WinningOverride(r);
+            slRec.AddObject(Name(r), r);
+          end;
+      end;
+    end;
+  end;
+  
+  frm := frmFileSelect;
+  frm.Width := 600;
+  try
+    frm.Caption := 'Select a record';
+    clb := TCheckListBox(frm.FindComponent('CheckListBox1'));
+    clb.Items.Assign(slRec);
+    if frm.ShowModal <> mrOk then Exit;
+    for i := 0 to Pred(clb.Items.Count) do
+      if clb.Checked[i] then begin
+        Result := ObjectToElement(clb.Items.Objects[i]);
+        Exit;
+      end;
+  finally
+    frm.Free;
+    sl.Free;
+    slRec.Free;
+  end;
 end;
 
 //============================================================================
@@ -260,6 +329,84 @@ begin
     end else
       lbCloudLayers.Checked[Layer] := not lbCloudLayers.Checked[Layer];
   end;
+end;
+
+//============================================================================
+// copy clouds from another weather
+procedure btnCopyCloudsClick(Sender: TObject);
+var
+  i: integer;
+  WeatherFrom: IInterface;
+begin
+  if not CheckEditable(Weather) then
+    Exit;
+
+  WeatherFrom := SelectRecord('WTHR', True);
+  if not Assigned(WeatherFrom) or Equals(Weather, WeatherFrom) then
+    Exit;
+  
+  // copy clouds textures
+  for i := 0 to Pred(slCloudSignatures.Count) do
+    CopyElement(WeatherFrom, Weather, slCloudSignatures[i]);
+  
+  // copy clouds speed, alpha, colors
+  if wbGameMode = gmTES5 then begin
+    CopyElement(WeatherFrom, Weather, 'NAM1');
+    CopyElement(WeatherFrom, Weather, 'Cloud Speed');
+    CopyElement(WeatherFrom, Weather, 'JNAM');
+    CopyElement(WeatherFrom, Weather, 'PNAM');
+  end
+  else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
+    CopyElement(WeatherFrom, Weather, 'ONAM');
+    CopyElement(WeatherFrom, Weather, 'PNAM');
+  end else if wbGameMode = gmTES4 then begin
+    ElementAssign(ElementByIndex(ElementByPath(Weather, 'NAM0'), 2), LowInteger, ElementByIndex(ElementByPath(WeatherFrom, 'NAM0'), 2), False);
+    ElementAssign(ElementByIndex(ElementByPath(Weather, 'NAM0'), 9), LowInteger, ElementByIndex(ElementByPath(WeatherFrom, 'NAM0'), 9), False);
+    SetElementEditValues(Weather, 'DATA\Cloud Speed (Lower)', GetElementEditValues(WeatherFrom, 'DATA\Cloud Speed (Lower)'));
+    SetElementEditValues(Weather, 'DATA\Cloud Speed (Upper)', GetElementEditValues(WeatherFrom, 'DATA\Cloud Speed (Upper)'));
+  end;
+
+  // I'm too lazy to reload new data, just restart the script
+  MessageDlg('Please restart Weather Editor to see changes', mtInformation, [mbOk], 0);
+  frm.Close;
+end;
+
+//============================================================================
+// copy weather colors from another weather
+procedure btnCopyWeatherColorsClick(Sender: TObject);
+var
+  WeatherFrom: IInterface;
+begin
+  if not CheckEditable(Weather) then
+    Exit;
+
+  WeatherFrom := SelectRecord('WTHR', True);
+  if not Assigned(WeatherFrom) or Equals(Weather, WeatherFrom) then
+    Exit;
+  
+  CopyElement(WeatherFrom, Weather, 'NAM0');
+
+  MessageDlg('Please restart Weather Editor to see changes', mtInformation, [mbOk], 0);
+  frm.Close;
+end;
+
+//============================================================================
+// copy Directional Ambient Lighting Colors from another weather
+procedure btnCopyLightingColorsClick(Sender: TObject);
+var
+  WeatherFrom: IInterface;
+begin
+  if not CheckEditable(Weather) then
+    Exit;
+
+  WeatherFrom := SelectRecord('WTHR', True);
+  if not Assigned(WeatherFrom) or Equals(Weather, WeatherFrom) then
+    Exit;
+  
+  CopyElement(WeatherFrom, Weather, 'Directional Ambient Lighting Colors');
+
+  MessageDlg('Please restart Weather Editor to see changes', mtInformation, [mbOk], 0);
+  frm.Close;
 end;
 
 //============================================================================
@@ -514,6 +661,32 @@ begin
       btnApplyLightingColors.Caption := 'Apply Changes';
       btnApplyLightingColors.OnClick := btnApplyLightingColorsClick;
     end;
+
+    // TOOLS TABSHEET
+    tsTools := TTabSheet.Create(pgcWeather);
+    tsTools.PageControl := pgcWeather;
+    tsTools.Caption := 'Tools';
+
+    btnCopyClouds := TButton.Create(frm);
+    btnCopyClouds.Parent := tsTools;
+    btnCopyClouds.Left := 16; btnCopyClouds.Top := 16; btnCopyClouds.Width := 200;
+    btnCopyClouds.Caption := 'Copy clouds from';
+    btnCopyClouds.OnClick := btnCopyCloudsClick;
+
+    btnCopyWeatherColors := TButton.Create(frm);
+    btnCopyWeatherColors.Parent := tsTools;
+    btnCopyWeatherColors.Left := 16; btnCopyWeatherColors.Top := 46; btnCopyWeatherColors.Width := 200;
+    btnCopyWeatherColors.Caption := 'Copy weather colors from';
+    btnCopyWeatherColors.OnClick := btnCopyWeatherColorsClick;
+
+    if wbGameMode = gmTES5 then begin
+      btnCopyLightingColors := TButton.Create(frm);
+      btnCopyLightingColors.Parent := tsTools;
+      btnCopyLightingColors.Left := 16; btnCopyLightingColors.Top := 76; btnCopyLightingColors.Width := 200;
+      btnCopyLightingColors.Caption := 'Copy lighting colors from';
+      btnCopyLightingColors.OnClick := btnCopyLightingColorsClick;
+    end;
+    
 
     frm.ShowModal;
   finally

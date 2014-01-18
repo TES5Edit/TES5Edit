@@ -1407,20 +1407,12 @@ type
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function CanMoveElement: Boolean; override;
-    function RemoveElement(const aElement: IwbElement; aMarkModified: Boolean = False): IwbElement; overload; override;
-
-    {---IwbContainerElementRef---}
-    procedure PrepareSave; override;
 
     {---IwbSortableContainer---}
     function GetSorted: Boolean;
 
     {--- IwbHasSignature ---}
     function GetSignature: TwbSignature;
-
-    {--- IwbSubRecordArray ---}
-    function GetCounter: TwbSignature;
-    procedure CheckCount;
   end;
 
   TwbSubRecordStruct = class(TwbContainer, IwbHasSignature)
@@ -4250,6 +4242,9 @@ begin
     Exclude(cntStates, csAsCreatedEmpty);
 
   inherited;
+
+  if esModified in eStates then
+    DoAfterSet(varEmpty, varEmpty);
 end;
 
 procedure TwbContainer.PrepareSave;
@@ -10739,15 +10734,15 @@ begin
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
 
-  {>>> Doesn't always work, and Skyrim.esm has a plenty of unsorted DIAL <<<}
-  {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
-  if not wbSortGroupRecord then
-    Exit;
-
   Include(grStates, gsSorting);
   try
     ChildrenOf := GetChildrenOf;
     if Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
+      {>>> Sorting DIAL group doesn't always work, and Skyrim.esm has a plenty of unsorted DIALs <<<}
+      {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
+      if not wbSortGroupRecord then
+        Exit;
+
       if not wbDisplayLoadOrderFormID then
         Exit;
 
@@ -10784,14 +10779,6 @@ begin
                     if not Supports(TargetRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
                       Assert(False);
 
-                    {
-                    wbProgressCallback(Format('Inserting %s:[%s] after %s:[%s]', [
-                      InsertRecord._File.FileName,
-                      IntToHex(InsertRecord.FormID, 8),
-                      TargetRecord._File.FileName,
-                      IntToHex(TargetRecord.FormID, 8)
-                    ]));
-                    }
                     InsertRecord.InsertEntryAfter(TargetRecord);
 
                   end else if InsertRecord.ElementExists['PNAM'] then
@@ -10866,6 +10853,7 @@ begin
       end;
       Exit;
     end;
+
     if Length(cntElements) > 1 then
       QuickSort(@cntElements[0], Low(cntElements), High(cntElements), CompareGroupContents);
     Include(grStates, gsSorted);
@@ -11928,8 +11916,6 @@ begin
     Result := Element;
   end;
 
-  CheckCount;
-
   arcSorted := False;
   if wbSortSubRecords and arcDef.Sorted[IwbContainer(eContainer)] then begin
     if Length(cntElements) > 1 then
@@ -11973,25 +11959,6 @@ end;
 function TwbSubRecordArray.CanMoveElement: Boolean;
 begin
   Result := not arcSorted;
-end;
-
-procedure TwbSubRecordArray.CheckCount;
-var
-  Container : IwbContainer;
-  aRecord   : IwbRecord;
-  i         : Integer;
-begin
-  // Other counters added by Skyrim:
-  i := 0;
-  if (GetCounter <> 'NONE') then
-  if Assigned(eContainer) then
-  if Supports(IwbContainer(eContainer), IwbContainer, Container) then
-    while Assigned(Container.Elements[i]) do
-      if Supports(Container.Elements[i], IwbRecord, aRecord) and (aRecord.Signature = GetCounter) then begin
-        Container.Elements[i].NativeValue := Length(cntElements);
-        Break;
-      end else
-        Inc(i);
 end;
 
 function TwbSubRecordArray.CanElementReset: Boolean;
@@ -12086,14 +12053,6 @@ begin
     arcSortInvalid := True;
 end;
 
-function TwbSubRecordArray.GetCounter: TwbSignature;
-begin
-  if Assigned(arcDef) then
-    Result := arcDef.HasCounter
-  else
-   Result := 'NONE';
-end;
-
 function TwbSubRecordArray.GetDef: IwbNamedDef;
 begin
   Result := arcDef;
@@ -12137,18 +12096,6 @@ end;
 function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and (Length(cntElements) > 1);
-end;
-
-procedure TwbSubRecordArray.PrepareSave;
-begin
-  inherited;
-  CheckCount;
-end;
-
-function TwbSubRecordArray.RemoveElement(const aElement: IwbElement; aMarkModified: Boolean): IwbElement;
-begin
-  Result := inherited RemoveElement(aElement, aMarkModified);
-  CheckCount;
 end;
 
 procedure TwbSubRecordArray.SetModified(aValue: Boolean);
@@ -12831,13 +12778,8 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count     : Cardinal;
-  Counter   : TwbSignature;
-  Container : IwbContainer;
-  SubRecord : IwbSubRecordArray;
-  aRecord   : IwbRecord;
-  i         : Integer;
-  ArrayDef  : IwbArrayDef;
+  Count    : Cardinal;
+  ArrayDef : IwbArrayDef;
 begin
   if arrSizePrefix = 0 then
     Exit;
@@ -12847,19 +12789,6 @@ begin
 
   if Count <> Length(cntElements) then
     ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
-
-  // Other counters added by Skyrim:
-  i := 0;
-  if Supports(Self, IwbSubRecordArray, SubRecord) then begin
-    Counter := SubRecord.Counter;
-    if (Counter <> 'NONE') and Assigned(eContainer) and Supports(eContainer, IwbContainer, Container) then
-      while Assigned(Container.Elements[i]) do
-        if Supports(Container.Elements[i], IwbRecord, aRecord) and (aRecord.Signature = Counter) then begin
-          Container.Elements[i].NativeValue := Length(cntElements);
-          Break;
-        end else
-          Inc(i);
-  end;
 
 end;
 

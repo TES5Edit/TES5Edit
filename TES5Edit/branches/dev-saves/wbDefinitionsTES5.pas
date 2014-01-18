@@ -780,6 +780,14 @@ var
   wbUNAMs: IwbSubRecordArrayDef;
   wbNull: IwbValueDef;
 
+function Sig2Int(aSignature: TwbSignature): Int64; inline;
+begin
+  Result := Ord(aSignature[3]) shl 24 +
+            Ord(aSignature[2]) shl 16 +
+            Ord(aSignature[1]) shl  8 +
+            Ord(aSignature[0]);
+end;
+
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -3792,6 +3800,142 @@ begin
     wbProgressCallback('"'+Container.Name+'" does not contain an element named Type');
 end;
 
+function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
+var
+  Element         : IwbElement;
+  Container       : IwbContainer;
+  SelfAsContainer : IwbContainer;
+begin
+   Result := False;
+  if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
+     Supports(aElement, IwbContainer, SelfAsContainer) then begin
+    Element := Container.ElementByName[aCounterName];
+    if not Assigned(Element) then  // Signature not listed in mrDef cannot be added
+      Element := Container.Add(Copy(aCounterName, 1, 4));
+    if Assigned(Element) then begin
+      if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+        Element.SetNativeValue(SelfAsContainer.GetElementCount);
+      Result := True;
+    end;
+  end;
+end;
+
+function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
+var
+  Element         : IwbElement;
+  Elems           : IwbElement;
+  Container       : IwbContainer;
+begin
+  Result := False;  // You may need to check alterative counter name
+  if Supports(aElement, IwbContainer, Container) then begin
+    Element := Container.ElementByName[aCounterName];
+    Elems   := Container.ElementByName[anArrayName];
+    if Assigned(Element) then begin
+      if not Assigned(Elems) then
+        if Element.GetNativeValue<>0 then
+          Element.SetNativeValue(0)
+        else if DeleteOnEmpty then
+          Container.RemoveElement(aCounterName);
+      Result := True; // Counter member exists
+    end;
+  end;
+end;
+
+procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('COCT - Count', aElement);
+end;
+
+procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+end;
+
+procedure wbSPLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('SPCT - Count', aElement);
+end;
+
+procedure wbKWDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('KSIZ - Keyword Count', aElement);
+end;
+
+procedure wbNPCAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
+  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+  wbCounterContainerAfterSet('PRKZ - Perk Count', 'Perks', aElement);
+end;
+
+procedure wbRaceAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+end;
+
+procedure wbKeywordsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+end;
+
+procedure wbLVLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('LLCT - Count', aElement);
+end;
+
+procedure wbLLEAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
+end;
+
+procedure wbPRKRsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('PRKZ - Count', aElement);
+end;
+
+procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('CITC - Condition Count', aElement);
+end;
+
+procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('CITC - Condition Count', 'Conditions', aElement);
+end;
+
+procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Element         : IwbElement;
+  Container       : IwbContainer;
+  SelfAsContainer : IwbContainer;
+begin
+  if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
+    if Supports(aElement, IwbContainer, Container) then begin
+      Element := Container.ElementByPath['IDLC\Animation Count'];
+      if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+        Element.SetNativeValue(SelfAsContainer.GetElementCount);
+    end;
+end;
+
+procedure wbAnimationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Element         : IwbElement;
+  Elems           : IwbElement;
+  Container       : IwbContainer;
+begin
+  if not wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
+    if Supports(aElement, IwbContainer, Container) then begin
+      Element := Container.ElementByPath['IDLC\Animation Count'];
+      Elems   := Container.ElementByName['IDLA - Animations'];
+      if Assigned(Element) and not Assigned(Elems) then
+        if Element.GetNativeValue<>0 then
+          Element.SetNativeValue(0);
+    end;
+end;
+
 procedure DefineTES5a;
 var
   wbRecordFlagsEnum : IwbFlagsDef;
@@ -3804,10 +3948,10 @@ begin
 
   wbSPCT := wbInteger(SPCT, 'Count', itU32);
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
-  wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, nil{wbActorTemplateUseActorEffectList});
+  wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
 
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32);
-  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal);
+  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -3828,7 +3972,7 @@ begin
       wbCOED
     ], []);
   wbCOCT := wbInteger(COCT, 'Count', itU32);
-  wbCNTOs := wbRArrayS('Items', wbCNTO, COCT);
+  wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
 
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
@@ -4959,7 +5103,7 @@ begin
       'Ignored by Sandbox'
     ])),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(TACT, 'Talking Activator', [
     wbEDID,
@@ -4974,7 +5118,7 @@ begin
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
     wbUnknown(FNAM, cpIgnore, True),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbICON := wbRStruct('Icon', [
     wbString(ICON, 'Large Icon filename'),
@@ -5701,8 +5845,8 @@ begin
     wbString(CIS2, 'Parameter #2')
   ], [], cpNormal);
 
-  wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
+  wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
+  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
 
   wbEffects :=
     wbRStructs('Effects', 'Effect', [
@@ -5759,7 +5903,7 @@ begin
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
     wbEffectsReq
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(AMMO, 'Ammunition', [
     wbEDID,
@@ -5784,7 +5928,7 @@ begin
       wbInteger('Value', itU32)
     ], cpNormal, True),
     wbString(ONAM, 'Short Name')
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDID,
@@ -5831,7 +5975,7 @@ begin
     ], cpNormal, True),
     wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO])
-  ], False, nil, cpNormal, False, wbARMOAfterLoad);
+  ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
@@ -5921,7 +6065,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbLString(CNAM, 'Description')
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
 procedure DefineTES5c;
@@ -6247,7 +6391,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
     wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR])
-  ], True);
+  ], True, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
@@ -6904,7 +7048,7 @@ begin
     wbPLVD,
     wbCITC,
     wbCTDAs
-  ], False, nil, cpNormal, False, nil {wbFACTAfterLoad});
+  ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
   wbRecord(FURN, 'Furniture', [
     wbEDID,
@@ -6982,7 +7126,7 @@ begin
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbString(XMRK, 'Model Filename')
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 //----------------------------------------------------------------------------
 // For expansion to use wbGLOBUnionDecider to display Short, Long, Float
@@ -7115,9 +7259,9 @@ begin
     ]), cpNormal, False),
     wbInteger(IDLC, 'Animation Count', itU8),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
-    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, False),
+    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, False),
     wbMODL
-  ]);
+  ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
@@ -7232,7 +7376,7 @@ begin
     wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True),
     wbFormIDCk(NAM0, 'Linked To', [SLGM])
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   if wbSimpleRecords then begin
 
@@ -8282,7 +8426,7 @@ begin
     wbFloat(RNAM, 'World Location Radius'),
     wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbCNAM
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 end;
 
@@ -8308,7 +8452,362 @@ begin
   wbRecord(DOBJ, 'Default Object Manager', [
     wbArray(DNAM, 'Objects',
       wbStruct('Object', [
-        wbString('Use', 4),
+        //wbString('Use', 4),
+        wbInteger('Use', itU32, wbEnum([], [
+                        0, 'None',
+          Sig2Int('RADA'), 'RADA (Unused)',
+          Sig2Int('MORP'), 'MORP (Unused)',
+          Sig2Int('PPAR'), 'PPAR (Unused)',
+          Sig2Int('MYSN'), 'MYSN (Unused)',
+          Sig2Int('MYSF'), 'MYSF (Unused)',
+          Sig2Int('WWSP'), 'Werewolf Spell',
+          Sig2Int('SALT'), 'Sitting Angle Limit',
+          Sig2Int('APSH'), 'Allow Player Shout',
+          Sig2Int('GOLD'), 'Gold',
+          Sig2Int('LKPK'), 'Lockpick',
+          Sig2Int('SKLK'), 'SkeletonKey',
+          Sig2Int('PFAC'), 'Player Faction',
+          Sig2Int('GFAC'), 'Guard Faction',
+          Sig2Int('DFMS'), 'Default Music',
+          Sig2Int('BTMS'), 'Battle Music',
+          Sig2Int('DTMS'), 'Death Music',
+          Sig2Int('SCMS'), 'Success Music',
+          Sig2Int('LUMS'), 'Level Up Music',
+          Sig2Int('DCMS'), 'Dungeon Cleared Music',
+          Sig2Int('PVMA'), 'Player Voice (Male)',
+          Sig2Int('PVMC'), 'Player Voice (Male Child)',
+          Sig2Int('PVFA'), 'Player Voice (Female)',
+          Sig2Int('PVFC'), 'Player Voice (Female Child)',
+          Sig2Int('EPDF'), 'Eat Package Default Food',
+          Sig2Int('LHEQ'), 'LeftHand Equip',
+          Sig2Int('RHEQ'), 'RightHand Equip',
+          Sig2Int('EHEQ'), 'EitherHand Equip',
+          Sig2Int('VOEQ'), 'Voice Equip',
+          Sig2Int('POEQ'), 'Potion Equip',
+          Sig2Int('EACA'), 'Every Actor Ability',
+          Sig2Int('CACA'), 'Commanded Actor Ability',
+          Sig2Int('DEIS'), 'Drug Wears Off Image Space',
+          Sig2Int('DFTS'), 'Footstep Set',
+          Sig2Int('DLMT'), 'Landscape Material',
+          Sig2Int('DLZM'), 'Dragon Land Zone Marker',
+          Sig2Int('DCZM'), 'Dragon Crash Zone Marker',
+          Sig2Int('CSTY'), 'Combat Style',
+          Sig2Int('PLST'), 'Default Pack List',
+          Sig2Int('PWFD'), 'Wait-For-Dialogue Package',
+          Sig2Int('LRTB'), 'LocRefType Boss',
+          Sig2Int('VLOC'), 'Virtual Location',
+          Sig2Int('PLOC'), 'PersistAll Location',
+          Sig2Int('INVP'), 'Inventory Player',
+          Sig2Int('PTNP'), 'Pathing Test NPC',
+          Sig2Int('FPCS'), 'Favor Cost Small',
+          Sig2Int('FPCM'), 'Favor Cost Medium',
+          Sig2Int('FPCL'), 'Favor Cost Large',
+          Sig2Int('FGPD'), 'Favor Gifts Per Day',
+          Sig2Int('AASW'), 'Action Swim State Change',
+          Sig2Int('AALK'), 'Action Look',
+          Sig2Int('AALA'), 'Action LeftAttack',
+          Sig2Int('AALD'), 'Action LeftReady',
+          Sig2Int('AALR'), 'Action LeftRelease',
+          Sig2Int('AALI'), 'Action LeftInterrupt',
+          Sig2Int('AARA'), 'Action RightAttack',
+          Sig2Int('AARD'), 'Action RightReady',
+          Sig2Int('AARR'), 'Action RightRelease',
+          Sig2Int('AARI'), 'Action RightInterrupt',
+          Sig2Int('AADA'), 'Action DualAttack',
+          Sig2Int('AADL'), 'Action DualRelease',
+          Sig2Int('AAAC'), 'Action Activate',
+          Sig2Int('AAJP'), 'Action Jump',
+          Sig2Int('AAFA'), 'Action Fall',
+          Sig2Int('AALN'), 'Action Land',
+          Sig2Int('AASN'), 'Action Sneak',
+          Sig2Int('AAVC'), 'Action Voice',
+          Sig2Int('AAVD'), 'Action VoiceReady',
+          Sig2Int('AAVR'), 'Action VoiceRelease',
+          Sig2Int('AAVI'), 'Action VoiceInterrupt',
+          Sig2Int('AAID'), 'Action Idle',
+          Sig2Int('AAST'), 'Action Sprint Start',
+          Sig2Int('AASP'), 'Action Sprint Stop',
+          Sig2Int('AADR'), 'Action Draw',
+          Sig2Int('AASH'), 'Action Sheath',
+          Sig2Int('ALPA'), 'Action Left Power Attack',
+          Sig2Int('AAPA'), 'Action Right Power Attack',
+          Sig2Int('ADPA'), 'Action Dual Power Attack',
+          Sig2Int('AAS1'), 'Action Stagger Start',
+          Sig2Int('AABH'), 'Action Block Hit',
+          Sig2Int('AABA'), 'Action Block Anticipate',
+          Sig2Int('AARC'), 'Action Recoil',
+          Sig2Int('AAR2'), 'Action Large Recoil',
+          Sig2Int('AAB1'), 'Action Bleedout Start',
+          Sig2Int('AAB2'), 'Action Bleedout Stop',
+          Sig2Int('AAIS'), 'Action Idle Stop',
+          Sig2Int('AAWH'), 'Action Ward Hit',
+          Sig2Int('AAFQ'), 'Action Force Equip',
+          Sig2Int('AASC'), 'Action Shield Change',
+          Sig2Int('AAPS'), 'Action Path Start',
+          Sig2Int('AAPE'), 'Action Path End',
+          Sig2Int('AALM'), 'Action Large Movement Delta',
+          Sig2Int('AAF1'), 'Action Fly Start',
+          Sig2Int('AAF2'), 'Action Fly Stop',
+          Sig2Int('AAH1'), 'Action Hover Start',
+          Sig2Int('AAH2'), 'Action Hover Stop',
+          Sig2Int('AABI'), 'Action Bumped Into',
+          Sig2Int('AASS'), 'Action Summoned Start',
+          Sig2Int('ATKI'), 'Action Talking Idle',
+          Sig2Int('ALTI'), 'Action Listen Idle',
+          Sig2Int('AADE'), 'Action Death',
+          Sig2Int('AADW'), 'Action Death Wait',
+          Sig2Int('AIDW'), 'Action Idle Warn',
+          Sig2Int('AMST'), 'Action Move Start',
+          Sig2Int('AMSP'), 'Action Move Stop',
+          Sig2Int('ATRI'), 'Action Turn Right',
+          Sig2Int('ATLE'), 'Action Turn Left',
+          Sig2Int('ATSP'), 'Action Turn Stop',
+          Sig2Int('AMFD'), 'Action Move Forward',
+          Sig2Int('AMBK'), 'Action Move Backward',
+          Sig2Int('AMLT'), 'Action Move Left',
+          Sig2Int('AMRT'), 'Action Move Right',
+          Sig2Int('ARAG'), 'Action Reset Animation Graph',
+          Sig2Int('AKDN'), 'Action Knockdown',
+          Sig2Int('AAGU'), 'Action Get Up',
+          Sig2Int('ASID'), 'Action Idle Stop Instant',
+          Sig2Int('ARGI'), 'Action Ragdoll Instant',
+          Sig2Int('AWWS'), 'Action Waterwalk Start',
+          Sig2Int('AREL'), 'Action Reload',
+          Sig2Int('PUSG'), 'Pickup Sound Generic',
+          Sig2Int('PDSG'), 'Putdown Sound Generic',
+          Sig2Int('PUSW'), 'Pickup Sound Weapon',
+          Sig2Int('PDSW'), 'Putdown Sound Weapon',
+          Sig2Int('PUSA'), 'Pickup Sound Armor',
+          Sig2Int('PDSA'), 'Putdown Sound Armor',
+          Sig2Int('PUSB'), 'Pickup Sound Book',
+          Sig2Int('PDSB'), 'Putdown Sound Book',
+          Sig2Int('PUSI'), 'Pickup Sound Ingredient',
+          Sig2Int('PDSI'), 'Putdown Sound Ingredient',
+          Sig2Int('HVSS'), 'Harvest Sound',
+          Sig2Int('HVFS'), 'Harvest Failed Sound',
+          Sig2Int('WBSN'), 'Ward Break Sound',
+          Sig2Int('WASN'), 'Ward Absorb Sound',
+          Sig2Int('WDSN'), 'Ward Deflect Sound',
+          Sig2Int('MFSN'), 'Magic Fail Sound',
+          Sig2Int('SFSN'), 'Shout Fail Sound',
+          Sig2Int('HFSD'), 'Heartbeat Sound Fast',
+          Sig2Int('HSSD'), 'Heartbeat Sound Slow',
+          Sig2Int('IMLH'), 'Imagespace: Low Health',
+          Sig2Int('SCSD'), 'Soul Captured Sound',
+          Sig2Int('NASD'), 'No-Activation Sound',
+          Sig2Int('MMSD'), 'Map Menu Looping Sound',
+          Sig2Int('DDSC'), 'Dialogue Voice Category',
+          Sig2Int('NDSC'), 'Non-Dialogue Voice Category',
+          Sig2Int('SFDC'), 'SFX To Fade In Dialogue Category',
+          Sig2Int('PDMC'), 'Pause During Menu Category (Fade)',
+          Sig2Int('PIMC'), 'Pause During Menu Category (Immediate)',
+          Sig2Int('PDLC'), 'Pause During Loading Menu Category',
+          Sig2Int('MDSC'), 'Music Sound Category',
+          Sig2Int('SMSC'), 'Stats Mute Category',
+          Sig2Int('SSSC'), 'Stats Music',
+          Sig2Int('MTSC'), 'Master Sound Category',
+          Sig2Int('TSSC'), 'Time Sensitive Sound Category',
+          Sig2Int('DOP2'), 'Dialogue Output Model (3D)',
+          Sig2Int('DOP3'), 'Dialogue Output Model (2D)',
+          Sig2Int('POPM'), 'Player''s Output Model (1st Person)',
+          Sig2Int('P3OM'), 'Player''s Output Model (3rd Person)',
+          Sig2Int('IOPM'), 'Interface Output Model',
+          Sig2Int('RVBT'), 'Reverb Type',
+          Sig2Int('UWLS'), 'Underwater Loop Sound',
+          Sig2Int('URVT'), 'Underwater Reverb Type',
+          Sig2Int('HRSK'), 'Keyword - Horse',
+          Sig2Int('UNDK'), 'Keyword - Undead',
+          Sig2Int('NPCK'), 'Keyword - NPC',
+          Sig2Int('KWBR'), 'Keyword - BeastRace',
+          Sig2Int('KWDM'), 'Keyword - DummyObject',
+          Sig2Int('KWGE'), 'Keyword - UseGeometryEmitter',
+          Sig2Int('KWMS'), 'Keyword - MustStop',
+          Sig2Int('KWUA'), 'Keyword - UpdateDuringArchery',
+          Sig2Int('KWOT'), 'Keyword - Skip Outfit Items',
+          Sig2Int('FTHD'), 'Male Face Texture Set: Head',
+          Sig2Int('FTMO'), 'Male Face Texture Set: Mouth',
+          Sig2Int('FTEL'), 'Male Face Texture Set: Eyes',
+          Sig2Int('FTHF'), 'Female Face Texture Set: Head',
+          Sig2Int('FTMF'), 'Female Face Texture Set: Mouth',
+          Sig2Int('FTRF'), 'Female Face Texture Set: Eyes',
+          Sig2Int('IMID'), 'ImageSpaceModifier for inventory menu.',
+          Sig2Int('PTEM'), 'Package template',
+          Sig2Int('MMCL'), 'Main Menu Cell',
+          Sig2Int('DMWL'), 'Default MovementType: Walk',
+          Sig2Int('DMRN'), 'Default MovementType: Run',
+          Sig2Int('DMSW'), 'Default MovementType: Swim',
+          Sig2Int('DMFL'), 'Default MovementType: Fly',
+          Sig2Int('DMSN'), 'Default MovementType: Sneak',
+          Sig2Int('DMSP'), 'Default MovementType: Sprint',
+          Sig2Int('SPFK'), 'Keyword - Special Furniture',
+          Sig2Int('FFFP'), 'Keyword - Furniture Forces 1st Person',
+          Sig2Int('FFTP'), 'Keyword - Furniture Forces 3rd Person',
+          Sig2Int('AFNP'), 'Keyword - Activator Furniture No Player',
+          Sig2Int('TKGS'), 'Telekinesis Grab Sound',
+          Sig2Int('TKTS'), 'Telekinesis Throw Sound',
+          Sig2Int('WMWE'), 'World Map Weather',
+          Sig2Int('HMPC'), 'Help Manual PC',
+          Sig2Int('HMXB'), 'Help Manual XBox',
+          Sig2Int('TKAM'), 'Keyword - Type Ammo',
+          Sig2Int('TKAR'), 'Keyword - Type Armor',
+          Sig2Int('TKBK'), 'Keyword - Type Book',
+          Sig2Int('TKIG'), 'Keyword - Type Ingredient',
+          Sig2Int('TKKY'), 'Keyword - Type Key',
+          Sig2Int('TKMS'), 'Keyword - Type Misc',
+          Sig2Int('TKSG'), 'Keyword - Type SoulGem',
+          Sig2Int('TKWP'), 'Keyword - Type Weapon',
+          Sig2Int('TKPT'), 'Keyword - Type Potion',
+          Sig2Int('BENW'), 'Base Weapon Enchantment',
+          Sig2Int('BENA'), 'Base Armor Enchantment',
+          Sig2Int('BAPO'), 'Base Potion',
+          Sig2Int('BAPS'), 'Base Poison',
+          Sig2Int('DRAK'), 'Keyword - Dragon',
+          Sig2Int('MVBL'), 'Keyword - Movable',
+          Sig2Int('ABSE'), 'Art Object - Absorb Effect',
+          Sig2Int('WEML'), 'Weapon Material List',
+          Sig2Int('ARTL'), 'Armor Material List',
+          Sig2Int('DIEN'), 'Keyword - Disallow Enchanting',
+          Sig2Int('FTML'), 'Favor travel marker location',
+          Sig2Int('LKHO'), 'Keyword - Hold Location',
+          Sig2Int('CWOK'), 'Keyword - Civil War Owner',
+          Sig2Int('CWNE'), 'Keyword - Civil War Neutral',
+          Sig2Int('LRSO'), 'LocRefType - Civil War Soldier',
+          Sig2Int('KWDO'), 'Keyword - ClearableLocation',
+          Sig2Int('LRRD'), 'LocRefType - Resource Destructible',
+          Sig2Int('HCLL'), 'FormList - Hair Color List',
+          Sig2Int('CMPX'), 'Complex Scene Object',
+          Sig2Int('RUSG'), 'Keyword - Reusable SoulGem',
+          Sig2Int('ANML'), 'Keyword - Animal',
+          Sig2Int('DAED'), 'Keyword - Daedra',
+          Sig2Int('BEEP'), 'Keyword - Robot',
+          Sig2Int('NRNT'), 'Keyword - Nirnroot',
+          Sig2Int('FTGF'), 'Fighters'' Guild Faction',
+          Sig2Int('MGGF'), 'Mages'' Guild Faction',
+          Sig2Int('TVGF'), 'Thieves'' Guild Faction',
+          Sig2Int('DBHF'), 'Dark Brotherhood Faction',
+          Sig2Int('JRLF'), 'Jarl Faction',
+          Sig2Int('AWWW'), 'Bunny Faction',
+          Sig2Int('PIVV'), 'Player Is Vampire Variable',
+          Sig2Int('PIWV'), 'Player Is Werewolf Variable',
+          Sig2Int('NMRD'), 'Road Marker',
+          Sig2Int('SAT1'), 'Keyword: Scale Actor To 1.0',
+          Sig2Int('VAMP'), 'Keyword: Vampire',
+          Sig2Int('FORG'), 'Keyword: Forge',
+          Sig2Int('COOK'), 'Keyword: Cooking Pot',
+          Sig2Int('SMLT'), 'Keyword: Smelter',
+          Sig2Int('TANN'), 'Keyword: Tanning Rack',
+          Sig2Int('HBLK'), 'Help - Basic Lockpicking (PC)',
+          Sig2Int('HBLX'), 'Help - Basic Lockpicking (Console)',
+          Sig2Int('HBFG'), 'Help - Basic Forging',
+          Sig2Int('HBCO'), 'Help - Basic Cooking',
+          Sig2Int('HBML'), 'Help - Basic Smelting',
+          Sig2Int('HBTA'), 'Help - Basic Tanning',
+          Sig2Int('HBOC'), 'Help - Basic Object Creation',
+          Sig2Int('HBEC'), 'Help - Basic Enchanting',
+          Sig2Int('HBSM'), 'Help - Basic Smithing Weapon',
+          Sig2Int('HBSA'), 'Help - Basic Smithing Armor',
+          Sig2Int('HBAL'), 'Help - Basic Alchemy',
+          Sig2Int('HBBR'), 'Help - Barter',
+          Sig2Int('HBLU'), 'Help - Leveling up',
+          Sig2Int('HBSK'), 'Help - Skills Menu',
+          Sig2Int('HBMM'), 'Help - Map Menu',
+          Sig2Int('HBJL'), 'Help - Journal',
+          Sig2Int('HBLH'), 'Help - Low Health',
+          Sig2Int('HBLM'), 'Help - Low Magicka',
+          Sig2Int('HBLS'), 'Help - Low Stamina',
+          Sig2Int('HBHJ'), 'Help - Jail',
+          Sig2Int('HBFT'), 'Help - Teamate Favor',
+          Sig2Int('HBWC'), 'Help - Weapon Charge',
+          Sig2Int('HBFS'), 'Help - Favorites',
+          Sig2Int('KHFL'), 'Kinect Help FormList',
+          Sig2Int('HBFM'), 'Help - Flying Mount',
+          Sig2Int('HBTL'), 'Help - Target Lock',
+          Sig2Int('HBAT'), 'Help - Attack Target',
+          Sig2Int('LSIS'), 'Imagespace: Load screen',
+          Sig2Int('WMDA'), 'Keyword - Weapon Material Daedric',
+          Sig2Int('WMDR'), 'Keyword - Weapon Material Draugr',
+          Sig2Int('WMDH'), 'Keyword - Weapon Material DraugrHoned',
+          Sig2Int('WMDW'), 'Keyword - Weapon Material Dwarven',
+          Sig2Int('WMEB'), 'Keyword - Weapon Material Ebony',
+          Sig2Int('WMEL'), 'Keyword - Weapon Material Elven',
+          Sig2Int('WMFA'), 'Keyword - Weapon Material Falmer',
+          Sig2Int('WMFH'), 'Keyword - Weapon Material FalmerHoned',
+          Sig2Int('WMGL'), 'Keyword - Weapon Material Glass',
+          Sig2Int('WMIM'), 'Keyword - Weapon Material Imperial',
+          Sig2Int('WMIR'), 'Keyword - Weapon Material Iron',
+          Sig2Int('WMOR'), 'Keyword - Weapon Material Orcish',
+          Sig2Int('WMST'), 'Keyword - Weapon Material Steel',
+          Sig2Int('WMWO'), 'Keyword - Weapon Material Wood',
+          Sig2Int('WTBA'), 'Keyword - WeaponTypeBoundArrow',
+          Sig2Int('AODA'), 'Keyword - Armor Material Daedric',
+          Sig2Int('AODP'), 'Keyword - Armor Material Dragonplate',
+          Sig2Int('AODS'), 'Keyword - Armor Material Dragonscale',
+          Sig2Int('AODB'), 'Keyword - Armor Material Dragonbone',
+          Sig2Int('AODW'), 'Keyword - Armor Material Dwarven',
+          Sig2Int('AOEB'), 'Keyword - Armor Material Ebony',
+          Sig2Int('AOEL'), 'Keyword - Armor Material Elven',
+          Sig2Int('AOES'), 'Keyword - Armor Material ElvenSplinted',
+          Sig2Int('AOFL'), 'Keyword - Armor Material FullLeather',
+          Sig2Int('AOGL'), 'Keyword - Armor Material Glass',
+          Sig2Int('AOHI'), 'Keyword - Armor Material Hide',
+          Sig2Int('AOIM'), 'Keyword - Armor Material Imperial',
+          Sig2Int('AOIH'), 'Keyword - Armor Material ImperialHeavy',
+          Sig2Int('AOIR'), 'Keyword - Armor Material ImperialReinforced',
+          Sig2Int('AOFE'), 'Keyword - Armor Material Iron',
+          Sig2Int('AOIB'), 'Keyword - Armor Material IronBanded',
+          Sig2Int('AOOR'), 'Keyword - Armor Material Orcish',
+          Sig2Int('AOSC'), 'Keyword - Armor Material Scaled',
+          Sig2Int('AOST'), 'Keyword - Armor Material Steel',
+          Sig2Int('AOSP'), 'Keyword - Armor Material SteelPlate',
+          Sig2Int('AOSK'), 'Keyword - Armor Material Stormcloak',
+          Sig2Int('AOSD'), 'Keyword - Armor Material Studded',
+          Sig2Int('GCK1'), 'Keyword - Generic Craftable Keyword 01',
+          Sig2Int('GCK2'), 'Keyword - Generic Craftable Keyword 02',
+          Sig2Int('GCK3'), 'Keyword - Generic Craftable Keyword 03',
+          Sig2Int('GCK4'), 'Keyword - Generic Craftable Keyword 04',
+          Sig2Int('GCK5'), 'Keyword - Generic Craftable Keyword 05',
+          Sig2Int('GCK6'), 'Keyword - Generic Craftable Keyword 06',
+          Sig2Int('GCK7'), 'Keyword - Generic Craftable Keyword 07',
+          Sig2Int('GCK8'), 'Keyword - Generic Craftable Keyword 08',
+          Sig2Int('GCK9'), 'Keyword - Generic Craftable Keyword 09',
+          Sig2Int('GCKX'), 'Keyword - Generic Craftable Keyword 10',
+          Sig2Int('JWLR'), 'Keyword - Jewelry',
+          Sig2Int('KWCU'), 'Keyword - Cuirass',
+          Sig2Int('MNTK'), 'Keyword - Mount',
+          Sig2Int('LMHP'), 'Local Map Hide Plane',
+          Sig2Int('SLDM'), 'Snow LOD Material',
+          Sig2Int('SLHD'), 'Snow LOD Material (HD)',
+          Sig2Int('ALDM'), 'Ash LOD Material',
+          Sig2Int('ALHD'), 'Ash LOD Material (HD)',
+          Sig2Int('DGFL'), 'DialogueFollower Quest',
+          Sig2Int('PTFR'), 'PotentialFollower Faction',
+          Sig2Int('AVWP'), 'Werewolf Available Perks',
+          Sig2Int('AVVP'), 'Vampire Available Perks',
+          Sig2Int('RIWR'), 'Werewolf Race',
+          Sig2Int('RIVR'), 'Vampire Race',
+          Sig2Int('RIVS'), 'Vampire Spells',
+          Sig2Int('DMXL'), 'Dragon Mount No Land List',
+          Sig2Int('PCMD'), 'Player Can Mount Dragon Here List',
+          Sig2Int('FMYS'), 'Flying Mount - Allowed Spells',
+          Sig2Int('FMNS'), 'Flying Mount - Disallowed Spells',
+          Sig2Int('MNT2'), 'Keyword - Mount',
+          Sig2Int('AIVC'), 'Verlet Cape',
+          Sig2Int('FTNP'), 'Furniture Test NPC',
+          Sig2Int('COEX'), 'Keyword - Conditional Explosion',
+          Sig2Int('VFNC'), 'Vampire Feed No Crime Faction',
+          Sig2Int('KWSP'), 'Skyrim - Worldspace',
+          Sig2Int('ALBM'), 'Keyword - Armor Material Light Bonemold',
+          Sig2Int('ALCH'), 'Keyword - Armor Material Light Chitin',
+          Sig2Int('ALNC'), 'Keyword - Armor Material Light Nordic',
+          Sig2Int('ALSM'), 'Keyword - Armor Material Light Stalhrim',
+          Sig2Int('FMFF'), 'Flying Mount - Fly Fast Worldspaces',
+          Sig2Int('AHBM'), 'Keyword - Armor Material Heavy Bonemold',
+          Sig2Int('AHCH'), 'Keyword - Armor Material Heavy Chitin',
+          Sig2Int('AHNC'), 'Keyword - Armor Material Heavy Nordic',
+          Sig2Int('AHSM'), 'Keyword - Armor Material Heavy Stalhrim',
+          Sig2Int('WPNC'), 'Keyword - Weapon Material Nordic',
+          Sig2Int('WPSM'), 'Keyword - Weapon Material Stalhrim'
+        ])),
         wbFormID('Object ID')
       ]), 0, nil, nil, cpNormal, True
     )
@@ -8408,7 +8907,7 @@ begin
     wbCTDAs,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM)
-  ]);
+  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMQN, 'Story Manager Quest Node', [
     wbEDID,
@@ -8432,7 +8931,7 @@ begin
       wbUnknown(FNAM),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
     ], []))
-  ]);
+  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMEN, 'Story Manager Event Node', [
     wbEDID,
@@ -8443,7 +8942,7 @@ begin
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
     wbString(ENAM, 'Type', 4)
-  ]);
+  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 end;
 
 procedure DefineTES5j;
@@ -8480,7 +8979,7 @@ begin
     wbCITC,
     wbCTDAs,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
-  ]);
+  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(DLVW, 'Dialog View', [
     wbEDID,
@@ -9037,7 +9536,7 @@ begin
         wbUnknown(SCHR),
         wbFormID(QNAM, 'Unknown'),
         wbEmpty(NEXT, 'Marker')
-      ], []), cpIgnore, false, wbNeverShow
+      ], []), cpIgnore, false, nil, nil, wbNeverShow
     ),
     {>>> END leftover from earlier CK versions <<<}
 
@@ -9078,7 +9577,7 @@ begin
       ]))
     ], cpNormal, True),
     wbEffectsReq
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(KEYM, 'Key', [
     wbEDID,
@@ -9096,7 +9595,7 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbQuadrantEnum := wbEnum([
     {0} 'Bottom Left',
@@ -9300,10 +9799,9 @@ begin
         ]),
 				wbCOED
       ], []),
-    LLCT,
-    cpNormal, True),
+    cpNormal, True, nil, wbLVLOsAfterSet),
     wbMODL
-  ]);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   wbRecord(LVLI, 'Leveled Item', [
     wbEDID,
@@ -9327,10 +9825,9 @@ begin
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
         wbCOED
-      ], []),
-    LLCT
+      ], []), cpNormal, False, nil, wbLVLOsAfterSet
     )
-  ]);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
    wbRecord(LVSP, 'Leveled Spell', [
     wbEDID,
@@ -9351,9 +9848,9 @@ begin
         wbInteger('Count', itU16),
         wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
       ])
-      ], [])
+      ], []), cpNormal, False, nil, wbLVLOsAfterSet
     )
-  ]);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   wbMGEFType := wbInteger('Archtype', itU32, wbEnum([
     {00} 'Value Modifier',
@@ -9519,7 +10016,7 @@ begin
     ])),
     wbLStringKC(DNAM, 'Magic Item Description'),
     wbCTDAs
-  ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad});
+  ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbKeywordsAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDID,
@@ -9537,7 +10034,7 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA);
+  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
@@ -9571,7 +10068,7 @@ begin
     wbFormID(CNAM, 'Created Object'),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
     wbInteger(NAM1, 'Created Object Count', itU16)
-  ]);
+  ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)', [
     wbEDID,
@@ -9668,7 +10165,7 @@ begin
         wbFormIDCk('Perk', [PERK]),
         wbInteger('Rank', itU8),
         wbByteArray('Unused', 3, cpIgnore)
-      ])
+      ]), cpNormal, False, nil, wbPRKRsAfterSet
     ),
     wbCOCT,
     wbCNTOs,
@@ -9790,7 +10287,7 @@ begin
         wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
         wbInteger(TIAS, 'Preset', itS16)
       ], []))
-  ], False, nil, cpNormal, False, wbNPCAfterLoad);
+  ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
 
   wbObjectTypeEnum := wbEnum([
     ' NONE',
@@ -9958,9 +10455,9 @@ begin
         wbByteArray('Unknown', 3)
       ], cpNormal, True, nil, 1),
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True),
+      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True),
       wbByteArray(IDLB, 'Unknown', 4, cpIgnore)
-    ], []),
+    ], [], cpNormal, False, nil, False, nil {cannot be totally removed , wbAnimationsAfterSet}),
 
     wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
@@ -9992,7 +10489,7 @@ begin
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
         wbString(ANAM, 'Branch Type'),
-        wbInteger(CITC, 'Condition Count', itU32),
+        wbCITC,
         wbCTDAs,
         wbStruct(PRCB, 'Root', [
           wbInteger('Branch Count', itU32),
@@ -10021,7 +10518,7 @@ begin
           ])
         ),
         wbRArray('Unknown', wbUnknown(PFOR), cpIgnore)
-      ], [], cpNormal, False))
+      ], [], cpNormal, False, nil, False, nil, wbConditionsAfterSet))
     ], []),
     wbUNAMs,
     wbRStruct('OnBegin', [
@@ -10235,7 +10732,7 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], []),
+        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
         // Location Alias
         wbRStruct('Alias', [
@@ -10297,7 +10794,7 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], [])
+        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet)
       ], [])
     ),
     wbString(NNAM, 'Description', 0, cpNormal, False),
@@ -10823,7 +11320,7 @@ begin
     // End Head Data
     wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
     wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
-  ], False, nil, cpNormal, False, wbRACEAfterLoad);
+  ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
 
   wbRecord(REFR, 'Placed Object', [
@@ -11352,7 +11849,7 @@ begin
     ])),
     wbFloat('Charge Time'),
     wbInteger('Cast Type', itU32, wbCastEnum),
-    wbInteger('Type', itU32, wbTargetEnum),
+    wbInteger('Target Type', itU32, wbTargetEnum),
     wbFloat('Cast Duration'),
     wbFloat('Range'),
     wbFormIDCk('Half-cost Perk', [NULL, PERK])
@@ -11369,7 +11866,7 @@ begin
     wbDESCReq,
     wbSPIT,
     wbEffectsReq
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(SCRL, 'Scroll', [
     wbEDID,
@@ -11390,7 +11887,7 @@ begin
     ], cpNormal, True),
     wbSPIT,
     wbEffectsReq
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(STAT, 'Static', [
     wbEDID,
@@ -11483,7 +11980,7 @@ begin
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
     ], cpNormal, True)
-  ]);
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
@@ -11695,7 +12192,7 @@ begin
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
-  ], False, nil, cpNormal, False, wbWEAPAfterLoad);
+  ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,

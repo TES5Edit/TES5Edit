@@ -1,0 +1,4 @@
+LIBRARY	"nvse_plugin_Test"
+EXPORTS
+SKSEPlugin_Query
+SKSEPlugin_Load

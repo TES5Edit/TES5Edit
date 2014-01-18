@@ -1145,16 +1145,12 @@ var
 begin
   Result := 0;
   Element := nil;
-//  if Pos('PROCESS', UpperCase(aElement.BaseName))=0 then
-    Element := FindElement('Package Data', aElement);
-  if not Assigned(Element) or (Element.BaseName <> 'Package Data') then begin
-    Element := FindElement('Package Data', aElement);
-    if not Assigned(Element) or (Element.BaseName <> 'Package Data') then
-      Element := nil;
-  end;
+  Element := FindElement('Package Data', aElement);
+  if not Assigned(Element) or (Element.BaseName <> 'Package Data') then
+    Element := nil;
 
   if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Package Type');
+    Element := Container.GetElementByName('Package Data Type');
     if Assigned(Element) then begin
       case Element.NativeValue of
         0, 1, 3..11, 15: Result := 0;
@@ -1305,37 +1301,31 @@ begin
 end;
 
 function ChangeFormBaseProcessPackageDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  PackageOffset = -4;
 var
   Element   : IwbElement;
   Container : IwbContainer;
+  PackageID : Integer;
 begin
   Result := 0;
-  Element := FindElement('Package Struct', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Package');
-    if Assigned(Element) then begin
-      if Element.NativeValue <> 0 then
-        Result := 1;
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<=Cardinal(aEndPtr)) then begin
+    PackageID := (PCardinal(Cardinal(aBasePtr)+PackageOffset)^) and $00FFFFFF;
+    if PackageID<>0 then
+      Result := 1;
+  end else begin
+    Element := FindElement('Package Struct', aElement);
+    if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+      Element := Container.GetElementByName('Package');
+      if Assigned(Element) then begin
+        if Element.NativeValue <> 0 then
+          Result := 1;
+      end;
     end;
   end;
 end;
 
-function ChangeFormBaseProcessCreatedPackageDecider2(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
-begin
-  Result := 0;
-  Element := FindElement('Package Struct 2', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Package');
-    if Assigned(Element) then
-      if (Element.NativeValue shr 22) = 2 then
-        Result := 1;
-  end;
-end;
-
-function ChangeFormCreatedPackageDecider2(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ChangeFormCreatedPackageDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbContainer;
@@ -1346,16 +1336,18 @@ begin
     Element := Container.GetElementByName('Type');
     if Assigned(Element) then
       case 1+Element.NativeValue of
-         0, 41: Result := 1;
-        10: Result := 2;
-        16, 29: Result := 3;
-        18: Result := 4;
-        19: Result := 5;
-        22: Result := 6;
-        23: Result := 7;
-        24: Result := 8;
-        25: Result := 9;
-        40: Result := 10;
+         0, 41: Result := 1;  // nothing
+        10: Result := 2;      // Change type to 9 (which it should already be), then nothing
+        16, 29: Result := 3;  // TESDialoguePackage::Init
+        18: Result := 4;      // Change type to 0, then nothing
+        19: Result := 5;      // CombatController::Init
+        22: Result := 6;      // AlarmPackage::Init
+        23: Result := 7;      // FleePackage::Init
+        24: Result := 8;      // TressPassPackage::Init
+        25: Result := 9;      // SpectatorPackage::Init
+        40: Result := 10;     // BackupPackage::Init
+      else
+        Result := 0;          // TESPackage::Init
       end;  // 0,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah 0
             // 1,0Ah,0Ah,0Ah,0Ah,0Ah,2,0Ah,3,4; 10
             // 0Ah,0Ah,5,6,7,8,0Ah,0Ah,0Ah,2; 20
@@ -1363,22 +1355,230 @@ begin
             // 9,0                  ; 40
 
   end;
+
+  if result > 5 then Result := 1;
+
 end;
 
-function ChangeFormBaseProcessPackageDecider2(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ChangeFormCreatedPackageHasUnk0A4Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbContainer;
 begin
   Result := 0;
-  Element := FindElement('Package Struct 2', aElement);
+  Element := FindElement('Dialogue Package', aElement);
   if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Package');
-    if Assigned(Element) then begin
+    Element := Container.GetElementByName('Has Unk0A4');
+    if Assigned(Element) then
       if Element.NativeValue <> 0 then
         Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasContentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Combat Controller', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Content Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 1) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasContentFlagBit1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Content Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 2) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasContentFlagBit2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Content Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 4) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasContentFlagBit3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Content Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 8) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasContentFlagBit4Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Content Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 16) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasContentFlagBit5Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Content Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 32) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasPresentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Present Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 1) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasPresentFlagBit1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Present Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 2) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasPresentFlagBit2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Present Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 4) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasPresentFlagBit3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Present Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 8) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCreatedPackageHasPresentFlagBit4Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Unk09C', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Present Flags');
+    if Assigned(Element) then
+      if (Element.NativeValue and 16) <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCombatControllerHasUnk0A0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := 0;
+  Element := FindElement('Combat Controller', aElement);
+  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+    Element := Container.GetElementByName('Has Unk0A0');
+    if Assigned(Element) then
+      if Element.NativeValue <> 0 then
+        Result := 1;
+  end;
+end;
+
+function ChangeFormCombatProcedureTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  CPTypeOffset = -2;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+  CPType    : Integer;
+begin
+  Result := 0;
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<=Cardinal(aEndPtr)) then begin
+    // the same structure is reused multiple times, so the "proper" way of finding the data always returns the first one found
+    // unless aElement is the current structure
+    CPType := PByte(Cardinal(aBasePtr) + CPTypeOffset)^;
+    Result := 1 + CPType;
+  end else begin
+    Element := FindElement('Change Combat Procedure', aElement);
+    if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+      Element := Container.GetElementByName('Combat Procedure Type');
+      if Assigned(Element) then
+        Result := 1 + Element.NativeValue;
     end;
   end;
+  if Result>1+13 then // ie 255
+    Result := 0;
 end;
 
 function ChangedFormRemainingDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1640,8 +1840,13 @@ var
   wbCreatedPackageData    : IwbUnionDef;
   wbActorPackageData      : IwbUnionDef;
   wbPackageStruct         : IwbStructDef;
-  wbPackageStruct2        : IwbStructDef;
   wbChangePackageStruct   : IwbStructDef;
+  wbPathingLocation       : IwbStructDef;
+  wbPathingCoverLocation  : IwbStructDef;
+  wbStructPathing         : IwbStructDef;
+  wbStructUnk128or164     : IwbStructDef;
+  wbCombatProcedure       : IwbStructDef;
+  wbChangeCombatProcedure : IwbStructDef;
 
   wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
 // no actual data    wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
@@ -4318,7 +4523,7 @@ begin
   wbChangePackageStruct := wbStruct('Data', [
       wbStruct('General', [
         wbInteger('Flags', itU32),
-        wbInteger('Type', itU8),
+        wbInteger('Type', itU8, wbPKDTType),
         wbByteArray('Unused', 1),
         wbInteger('Fallout Behavior Flags', itU16),
         wbIntegerT('Specific Type Flags', itU32)
@@ -4326,7 +4531,8 @@ begin
       wbIntegerT('Content Flags', itU8),
       wbUnion('Location Data', ChangedFormPackageCreatedContentFlagsBit0Decider, [wbNull, wbPackageLocationData]),
       wbUnion('Target Data', ChangedFormPackageCreatedContentFlagsBit1Decider, [wbNull, wbPackageTargetData]),
-      wbUnion('Created Package Data', ChangedFormPackageCreatedContentFlagsBit2Decider, [wbNull, wbCreatedPackageData])
+      wbUnion('Created Package Data', ChangedFormPackageCreatedContentFlagsBit2Decider, [wbNull, wbCreatedPackageData]),
+      wbIntegerT('Unk018', itU32)
     ]);
 
   wbUnionCHANGE_PACKAGE_CREATED := wbUnion('Created Package', ChangedFlag11OrCreatedDecider, [wbNull, wbChangePackageStruct]);
@@ -4654,7 +4860,7 @@ begin
       wbIntegerT('Count?', itS32)
     ]),
     wbStruct('Package Data', [
-      wbIntegerT('Package Type', itU8, wbPKDTType),
+      wbIntegerT('Package Data Type', itU8, wbPKDTType),
       wbActorPackageData
     ]),
     wbArrayT('Say TopicInfo once a day', wbStruct('Data', [       // 032
@@ -4738,39 +4944,512 @@ begin
 // not checked !    ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
   ]);
 
+  wbPathingLocation := wbStruct('Pathing Location', [
+    wbByteArray('Unk004', 12+1),
+    wbRefID('NavMesh'),               // NavMeshInfo.map[Navmesh] goes into 010
+    wbRefID('Cell'),                  // Goes into 018
+    wbRefID('Worldspace'),            // goes into 01C
+    wbIntegerT('CoordXandY', itU32),  // key into WorldspaceMap of NavMeshInfo
+    wbIntegerT('Wrd024', itU16),
+    wbIntegerT('Byt026', itU8),
+    wbIntegerT('Unknown', itU8)       // if set, combines Worldspace and Unk020 for the value of unk014 then does the same with cell
+  ]);
+
+  wbPathingCoverLocation := wbStruct('Pathing Cover Location', [
+    wbPathingLocation,
+    wbByteArray('Unk028', 12+1),
+    wbByteArray('Unk034', 12+1),
+    wbByteArray('Unk040', 12+1),
+    wbIntegerT('Byt04C', itU8),
+    wbIntegerT('Byt04D', itU8),
+    wbIntegerT('Byt04E', itU8),
+    wbIntegerT('Byt04F', itU8),
+    wbIntegerT('Byt050', itU8),
+    wbIntegerT('Byt051', itU8),
+    wbIntegerT('Byt052', itU8)
+  ]);
+
+  wbStructPathing := wbStruct('Pathing', [
+    wbInteger('Byt001', itU8),
+    wbInteger('Byt000', itU8),
+    wbInteger('Byt002', itU8),
+    wbInteger('Unk004', itU32),
+    wbByteArray('Unk008', 12+1),
+    wbPathingCoverLocation,
+    wbIntegerT('Unk68', itU32),
+    wbIntegerT('Unk6C', itU32),
+    wbStruct('Unk070', [
+      wbIntegerT('Byt000', itU8),
+      wbIntegerT('Byt001', itU8),
+      wbIntegerT('Byt002', itU8),
+      wbIntegerT('Byt003', itU8),
+      wbIntegerT('Byt004', itU8),
+      wbIntegerT('Byt005', itU8)
+    ])
+  ]);
+
+  wbStructUnk128or164 := wbStruct('Data', [
+    wbByteArray('Unk000', 12+1),
+    wbByteArray('Unk00C', 12+1),
+    wbIntegerT('Unk018', itU32),
+    wbIntegerT('Byt038', itU8),
+    wbIntegerT('Unk030', itU32),
+    wbIntegerT('Unk038', itU32),
+    wbFloatT('Tim01C'),
+    wbArrayT('Unk020', wbPathingCoverLocation, -254)
+  ]);
+
+  wbCombatProcedure := wbStruct('Data', [wbIntegerT('Unk008', itU32)]);
+
+  wbChangeCombatProcedure := wbStruct('Change Combat Procedure', [
+    wbIntegerT('Combat Procedure Type', itU8, wbEnum([
+      'Attack Ranged',
+      'Attack Melee',
+      'Attack Grenade',
+      'Attack Low',
+      'Evade',
+      'Switch Weapon',
+      'Move',
+      'Be In Cover',
+      'Activate Object',
+      'Hide From Target',
+      'Search',
+      'Use Combat Item',
+      'Engage Target'
+    ])),
+    wbUnion('Combat Procedure', ChangeFormCombatProcedureTypeDecider, [
+      wbNull,
+      wbStruct('Attack Ranged', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbByteArray('Unk014', 12+1),
+        wbFloatT('Flt020'),             // Paired
+        wbFloatT('Flt024'),
+        wbFloatT('Flt030'),             // Paired
+        wbFloatT('Flt034'),
+        wbFloatT('Flt040'),             // Paired
+        wbFloatT('Flt044'),
+        wbFloatT('Flt028'),             // Paired
+        wbFloatT('Flt02C'),
+        wbFloatT('Flt038'),             // Paired, if form version 0x0A or greater
+        wbFloatT('Flt03C')              // Paired, if form version 0x0A or greater
+      ]),
+      wbStruct('Attack Melee', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbIntegerT('Unk014', itU32),
+        wbIntegerT('Unk018', itU32),
+        wbFloatT('Unk01C'),
+        wbFloatT('Flt020'),             // Paired
+        wbFloatT('Flt024'),
+        wbFloatT('Flt028'),             // Paired
+        wbFloatT('Flt02C'),
+        wbFloatT('Flt030'),             // Paired
+        wbFloatT('Flt034'),
+        wbFloatT('Flt040'),             // Paired
+        wbFloatT('Flt044'),
+        wbFloatT('Flt048'),             // Paired
+        wbFloatT('Flt04C'),
+        wbFloatT('Tim060'),             // if form version 0x12 or greater
+        wbIntegerT('Byt050', itU8),
+        wbIntegerT('Unk054', itU32)
+      ]),
+      wbStruct('Attack Grenade', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbIntegerT('Unk014', itU32),
+        wbByteArray('Unk018', 12+1),
+        wbByteArray('Unk024', 12+1),
+        wbIntegerT('Byt030', itU8),
+        wbFloatT('Flt034'),             // Paired
+        wbFloatT('Flt038')
+      ]),
+      wbStruct('Attack Low', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbFloatT('Unk014'),
+        wbIntegerT('Unk018', itU32),
+        wbRefIDT('Weapon')
+      ]),
+      wbStruct('Evade', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbIntegerT('Unk014', itU32)
+      ]),
+      wbStruct('Switch Weapon', [
+        wbCombatProcedure,
+        wbRefIDT('Weapon'),
+        wbIntegerT('Unk014', itU8)
+      ]),
+      wbStruct('Move', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbPathingLocation,              // Goes into 014
+        wbPathingLocation,              // Goes into 024
+        wbFloatT('Unk034'),
+        wbRefIDT('Unk038'),
+        wbIntegerT('Unk03C', itU32),
+        wbIntegerT('Unk060', itU32),
+        wbFloatT('Flt064'),             // Paired
+        wbFloatT('Flt068'),
+        wbFloatT('Flt040'),             // Paired
+        wbFloatT('Flt044'),
+        wbFloatT('Flt06C'),             // Paired
+        wbFloatT('Flt070'),
+        wbFloatT('Flt074'),             // Paired, if form version 0x08 or greater
+        wbFloatT('Flt078'),             // Paired, if form version 0x08 or greater
+        wbByteArray('Unk048', 12+1),
+        wbIntegerT('Byt054', itU8),
+        wbIntegerT('Byt05C', itU8)      // if form version 0x0C or greater
+      ]),
+      wbStruct('Be In Cover', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbIntegerT('Bool', itU8),       // Determines what goes into 014
+        wbByteArray('Unk018', 12+1),
+        wbByteArray('Unk024', 12+1),
+        wbByteArray('Unk030', 12+1),
+        wbFloatT('Flt03C'),             // Paired
+        wbFloatT('Flt040'),
+        wbFloatT('Flt044'),             // Paired
+        wbFloatT('Flt048'),
+        wbFloatT('Flt04C'),             // Paired
+        wbFloatT('Flt050'),
+        wbFloatT('Flt054'),             // Paired
+        wbFloatT('Flt058'),
+        wbFloatT('Flt05C'),             // Paired
+        wbFloatT('Flt060'),
+        wbFloatT('Flt064'),             // Paired
+        wbFloatT('Flt068')
+      ]),
+      wbStruct('Activate Object', [
+        wbCombatProcedure,
+        wbRefIDT('Unk010'),
+        wbRefIDT('Bound Object'),
+        wbIntegerT('Unk018', itU8)
+      ]),
+      wbStruct('Hide From Target', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbFloatT('Unk014'),
+        wbFloatT('Flt018'),             // Paired
+        wbFloatT('Flt01C'),
+        wbByteArray('Unk020', 12+1),
+        wbByteArray('Unk02C', 12+1),
+        wbIntegerT('Unk03C', itU8),
+        wbIntegerT('Unk03D', itU8),
+        wbIntegerT('Unknown', itU8)     // Determines what goes into 038
+      ]),
+      wbStruct('Search', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbPathingLocation,              // Goes into 02C
+        wbFloatT('Flt01C'),             // Paired
+        wbFloatT('Flt020'),
+        wbFloatT('Flt014'),             // Paired
+        wbFloatT('Flt018'),
+        wbFloatT('Flt024'),             // Paired
+        wbFloatT('Flt028'),
+        wbRefIDT('Unk03C')
+      ]),
+      wbStruct('Use Combat Item', [
+        wbCombatProcedure,
+        wbRefIDT('Bound Object'),
+        wbIntegerT('Unk014', itU8)
+      ]),
+      wbStruct('Engage Target', [
+        wbCombatProcedure,
+        wbIntegerT('Unk010', itU32),
+        wbFloatT('Unk014'),
+        wbFloatT('Unk018'),
+        wbFloatT('Unk01C'),             // if form version 0x0E or greater, otherwise default value  10000.0
+        wbFloatT('Flt020'),             // Paired
+        wbFloatT('Flt024'),
+        wbFloatT('Flt028'),             // Paired
+        wbFloatT('Flt02C'),
+        wbIntegerT('Byt030', itU8),
+        wbIntegerT('Byt031', itU8),
+        wbIntegerT('Byt032', itU8),
+        wbByteArray('Unk034', 12+1),
+        wbPathingLocation,              // Goes into 040
+        wbPathingLocation,              // Goes into 050
+        wbIntegerT('Byt033', itU8),
+        wbFloatT('Tim060')
+      ])
+    ])
+  ]);
+
   wbPackageStruct := wbStruct('Package Struct', [
     wbRefIDT('Package'),
     wbUnion('Package Info', ChangeFormBaseProcessPackageDecider, [wbNull,
       wbStruct('Package Data', [
-        wbUnion('Created Package', ChangeFormBaseProcessCreatedPackageDecider, [ wbNull, wbIntegerT('Type', itU8)]),
-        wbIntegerT('Package Type', itU8),
+        wbUnion('Created Package', ChangeFormBaseProcessCreatedPackageDecider, [ wbNull,
+          wbStruct('Created Package Struct', [
+            wbIntegerT('Type', itS8, wbPKDTType),
+            wbUnion('Created Package', ChangeFormCreatedPackageDecider, [
+              wbUnionCHANGE_PACKAGE_CREATED,
+              wbNull,
+              wbNull,
+              wbStruct('Dialogue Package', [
+                wbUnionCHANGE_PACKAGE_CREATED,
+                wbRefIDT('Speaker'),
+                wbRefIDT('Subject'),
+                wbRefIDT('Target'),
+                wbRefIDT('Unk0B8'),
+                wbRefIDT('Unk09C'),
+                wbRefIDT('Topic'),
+                wbIntegerT('Unk090', itU32),
+                wbIntegerT('Byt098', itU8),
+                wbIntegerT('Byt0BC', itU8),
+                wbIntegerT('Byt0BD', itU8),
+                wbIntegerT('Byt0BE', itU8),
+                wbIntegerT('Byt0BF', itU8),
+                wbIntegerT('Byt0C0', itU8),
+                wbIntegerT('Byt0C1', itU8),
+                wbIntegerT('Unk0C4', itU32),
+                wbIntegerT('Unk0C8', itU32),
+                wbIntegerT('Byt0A0', itU8),
+                wbIntegerT('Byt0CC', itU8),
+                wbIntegerT('Byt0C2', itU8),   // if form version 03 or greater
+                wbIntegerT('Has Unk0A4', itU8),
+                wbUnion('Unk0A4', ChangeFormCreatedPackageHasUnk0A4Decider, [
+                  wbNull,
+                  wbStruct('Data', [
+                    wbIntegerT('Dialogue Item Index', itU16),
+                    wbIntegerT('Dialoge Response Index', itU16)
+                  ])
+                ])
+              ]),
+              wbNull,
+              wbStruct('Combat Controller', [
+                wbUnionCHANGE_PACKAGE_CREATED,
+                wbRefIDT('Unk0BC'),
+                wbRefIDT('Unk0C0'),
+                wbIntegerT('Unknown', itU32),   // key to lookup unk080 in global array
+                wbStruct('Unk09C', [
+                  wbIntegerT('Byt000', itU8),
+                  wbIntegerT('Unk004', itU32),  // $FFFF is converted to 0
+                  wbArray('Unk00C', wbRefIDT('Weapon'), 6),
+                  wbArrayT('Unk024', wbRefIDT('Weapon'), -254),
+                  wbRefIDT('Weapon'),           // goes into 034
+                  wbIntegerT('Unk038', itU32),
+                  wbArray('Unk03C', wbIntegerT('Unknown', itU32), 7),
+                  wbIntegerT('Unk058', itU32),
+                  wbIntegerT('Unk05C', itU32),
+                  wbIntegerT('Unk064', itU32),
+                  wbIntegerT('Unk068', itU32),
+                  wbIntegerT('Unk06C', itU32),
+                  wbIntegerT('Byt070', itU8),
+                  wbIntegerT('Byt071', itU8),
+                  wbIntegerT('Byt072', itU8),
+                  wbIntegerT('Byt073', itS8),
+                  wbIntegerT('Byt074', itU8),
+                  wbIntegerT('Byt075', itU8),
+                  wbIntegerT('Byt076', itU8),
+                  wbIntegerT('Byt077', itU8),
+                  wbRefIDT('Explosion'),        // goes into 078
+                  wbIntegerT('Unk07C', itU32),
+                  wbIntegerT('Unk080', itU32),
+                  wbByteArray('Unk084', 12+1),
+                  wbIntegerT('Unk090', itU32),
+                  wbIntegerT('Byt0C8', itU8),
+                  wbIntegerT('Byt0C8', itU8),
+                  wbIntegerT('Unk0CC', itU32),
+                  wbIntegerT('Unk0D0', itU32),
+                  wbIntegerT('Unk0D4', itU32),
+                  wbIntegerT('Unk008', itU32),
+                  wbIntegerT('Byt0D8', itU8),
+                  wbRefIDT('Unk0DC'),
+                  wbFloatT('Tim094'),
+                  wbFloatT('Tim098'),
+                  wbFloatT('Tim09C'),
+                  wbFloatT('Tim0A0'),
+                  wbFloatT('Tim0A4'),
+                  wbFloatT('UnkA8'),            // paired with 0AC
+                  wbFloatT('UnkAC'),            // paired with 0A8
+                  wbFloatT('UnkB0'),            // paired with 0B4
+                  wbFloatT('UnkB4'),            // paired with 0B0
+                  wbFloatT('Tim0C0'),
+                  wbFloatT('UnkB8'),            // paired with 0B4, if form version 0x14 or greater
+                  wbFloatT('UnkBC'),            // paired with 0B0, if form version 0x14 or greater
+                  wbFloatT('Tim0E0'),           // if form version 0x14 or greater
+                  wbIntegerT('Content Flags', itU8),
+                  wbUnion('Struct flag bit 0', ChangeFormCreatedPackageHasContentFlagBit0Decider, [ wbNull, wbStructPathing]),
+                  wbUnion('Struct flag bit 2', ChangeFormCreatedPackageHasContentFlagBit2Decider, [ wbNull, wbStructPathing]),
+                  wbUnion('Struct flag bit 4', ChangeFormCreatedPackageHasContentFlagBit4Decider, [ wbNull,
+                    wbStruct('Unk18C', [
+                      wbStruct('Pathing Location', [
+                        wbByteArray('Unk000', 12+1),
+                        wbRefIDT('InteriorCellOrWorldspace')
+                      ]),
+                      wbIntegerT('Unk014', itU32),
+                      wbIntegerT('Unk018', itU32),
+                      wbIntegerT('Unk01C', itU32),
+                      wbRefIDT('Unk010')
+                    ])
+                  ]),
+                  wbUnion('Struct flag bit 5', ChangeFormCreatedPackageHasContentFlagBit5Decider, [ wbNull,
+                    wbStruct('Unk18C', [
+                      wbIntegerT('Unk000', itU8),
+                      wbIntegerT('Unk001', itU8),
+                      wbIntegerT('Unk018', itU32),
+                      wbIntegerT('Unk01C', itU32),
+                      wbRefIDT('Unk004'),
+                      wbStruct('Pathing Location', [
+                        wbByteArray('Unk000', 12+1),
+                        wbRefIDT('InteriorCellOrWorldspace')
+                      ])
+                    ])
+                  ]),
+                  wbUnion('Struct flag bit 1', ChangeFormCreatedPackageHasContentFlagBit1Decider, [ wbNull, wbStructUnk128or164]),
+                  wbUnion('Struct flag bit 3', ChangeFormCreatedPackageHasContentFlagBit3Decider, [ wbNull, wbStructUnk128or164]),
+                  wbArrayT('Unk164', wbStruct('Data', [
+                    wbIntegerT('Unk000', itU32),
+                    wbFloatT('Tim004')
+                  ]), -254),
+                  wbArrayT('Unk174', wbStruct('Data', [
+                    wbStruct('Unk000', [
+                      wbByteArray('Unk000', 12+1),
+                      wbRefIDT('InteriorCellOrWorldspace')
+                    ]),
+                    wbFloatT('Tim010')
+                  ]), -254),
+                  wbFloatT('Tim184'),
+                  wbIntegerT('Byt0188', itS8),
+                  wbIntegerT('Present Flags', itU8),
+                  wbUnion('Present Bit 0', ChangeFormCreatedPackageHasPresentFlagBit0Decider, [wbNull, wbRefIDT('BoundObject')]),
+                  wbUnion('Present Bit 1', ChangeFormCreatedPackageHasPresentFlagBit1Decider, [wbNull, wbRefIDT('BoundObject')]),
+                  wbUnion('Present Bit 2', ChangeFormCreatedPackageHasPresentFlagBit2Decider, [wbNull, wbRefIDT('BoundObject')]),
+                  wbUnion('Present Bit 3', ChangeFormCreatedPackageHasPresentFlagBit3Decider, [wbNull, wbRefIDT('BoundObject')]),
+                  wbUnion('Present Bit 4', ChangeFormCreatedPackageHasPresentFlagBit4Decider, [wbNull, wbRefIDT('BoundObject')]),
+                  wbArray('Unk1A4', wbStruct('Data', [
+                    wbRefIDT('BoundObject'),
+                    wbFloatT('Flt008'),       // Paired
+                    wbFloatT('Flt00C')
+                  ]), 2),
+                  wbIntegerT('Unk1BC', itU32),
+                  wbRefIDT('Unk1C0'),
+                  wbIntegerT('Byt1C8', itU8),
+                  wbIntegerT('Unk228', itU32),    // if form version is 0xF or greater
+                  wbFloatT('Flt1CC'),             // Paired
+                  wbFloatT('Flt1D0'),
+                  wbFloatT('Flt1D4'),             // Paired
+                  wbFloatT('Flt1D8'),
+                  wbFloatT('Flt1DC'),             // Paired
+                  wbFloatT('Flt1E0'),
+                  wbFloatT('Flt1E4'),             // Paired
+                  wbFloatT('Flt1E8'),
+                  wbFloatT('Flt1EC'),             // Paired
+                  wbFloatT('Flt1F0'),
+                  wbFloatT('Flt1F4'),             // Paired
+                  wbFloatT('Flt1F8'),
+                  wbFloatT('Flt1FC'),             // Paired
+                  wbFloatT('Flt200'),
+                  wbFloatT('Flt20C'),             // Paired
+                  wbFloatT('Flt210'),
+                  wbFloatT('Flt204'),             // Paired
+                  wbFloatT('Flt208'),
+                  wbFloatT('Flt214'),             // Paired
+                  wbFloatT('Flt218'),
+                  wbFloatT('Flt21C'),             // Paired
+                  wbFloatT('Flt220')
+                ]),
+                wbChangeCombatProcedure,
+                wbChangeCombatProcedure,
+                wbArrayT('Unk08C', wbChangeCombatProcedure, -254),
+                wbIntegerT('Has Unk0A0', itU8),
+                wbUnion('Unk0A0', ChangeFormCombatControllerHasUnk0A0Decider, [wbNull, wbStruct('Data', [
+                  wbArrayT('Unk000', wbStruct('Data', [
+                    wbIntegerT('Index', itS8),        // Index into global array, that goes into 000
+                    wbIntegerT('Unk00C', itU32)
+                  ]), -1),
+                  wbIntegerT('Unk008', itU32),
+                  wbIntegerT('Index', itS8)           // Index into another global array, that goes into 00C
+                ])]),
+                wbIntegerT('Index', itS8),            // Index into the first global array, that goes into 0A8
+                wbIntegerT('Unk0B0', itU32),
+                wbFloatT('Flt0B4'),                   // Paired
+                wbFloatT('Flt0B8'),
+                wbIntegerT('Byt0C7', itU8),
+                wbIntegerT('Unk0C8', itU32),
+                wbIntegerT('Unk0D8', itU32),
+                wbIntegerT('Unk0DC', itU32),
+                wbIntegerT('Byt0E4', itU8),
+                wbIntegerT('Byt125', itU8),
+                wbIntegerT('Byt126', itU8),
+                wbIntegerT('Unk144', itU32),
+                wbIntegerT('Unk148', itU32),
+                wbArray('Unk0128', wbStruct('Data', [
+                  wbByteArray('Unknown', 12+1),         // Fields stored in two separate array: 128
+                  wbIntegerT('Unknown', itU8)           //                                      140
+                ]), 2),
+                wbIntegerT('Byt142', itU8),
+                wbIntegerT('Byt0C6', itS8),             // if form version 0x0A or greater
+                wbIntegerT('Byt0C5', itU8)              // if form version 0x0A or greater
+              ]),
+              wbStruct('Alarm Package', [
+                wbUnionCHANGE_PACKAGE_CREATED,
+                wbArrayT('Crimes', wbStruct('Crime', [
+                  wbIntegerT('Crime Index', itU8),
+                  wbIntegerT('Crime List Index', itU16)
+                ]), -254)
+              ]),
+              wbStruct('Flee Package', [
+                wbUnionCHANGE_PACKAGE_CREATED,
+                wbIntegerT('Byt080', itU8),
+                wbIntegerT('Byt081', itU8),
+                wbByteArray('Unk084', 12+1),
+                wbFloatT('Flt090'),
+                wbIntegerT('Byt094', itU8),
+                wbIntegerT('Byt0A8', itU8),
+                wbIntegerT('Byt0A9', itU8),
+                wbRefIDT('Unk0A0'),
+                wbRefIDT('Unk0A4'),
+                wbArrayT('Unk098', wbRefIDT('RefID'), -254)
+              ]),
+              wbStruct('TressPass Package', [
+                wbUnionCHANGE_PACKAGE_CREATED,
+                wbFloatT('Flt080'),
+                wbIntegerT('Unk084', itU32),
+                wbIntegerT('Unk090', itU32),
+                wbIntegerT('Unk094', itU32),
+                wbIntegerT('Unk098', itU32),
+                wbRefIDT('Unk088'),
+                wbRefIDT('Unk08C')
+              ]),
+              wbStruct('Spectator Package', [
+                wbUnionCHANGE_PACKAGE_CREATED,
+                wbIntegerT('Delta', itU32),     // dword_11F6394 - this goes into Unk080
+                wbIntegerT('Unk084', itU32),
+                wbFloatT('Unk088'),
+                wbFloatT('Unk08C'),
+                wbIntegerT('Byt090', itU8),
+                wbByteArray('Unk094', 12+1),
+                wbArrayT('Spectator Threat Infos', wbSTruct('Spectator Threat Info', [
+                  wbIntegerT('Unk008', itU32),
+                  wbIntegerT('ElapsedTicks', itU32),   // GetTickCounts - this goes into 00C
+                  wbIntegerT('Unk010', itU32),
+                  wbByteArray('Unk014', 12+1),
+                  wbByteArray('Unk020', 12+1),
+                  wbIntegerT('Byt02C', itU8),
+                  wbIntegerT('Byt02D', itU8),
+                  wbRefIDT('Unk000'),
+                  wbRefIDT('Unk004')
+                ]), -254)
+              ]),
+              wbStruct('BackUp Package', [
+                wbUnionCHANGE_PACKAGE_CREATED,
+                wbByteArray('Unk0080', 12+1)
+              ])
+            ])
+          ])
+        ]),
+        wbIntegerT('Package Data Type', itS8),
         wbActorPackageData,
         wbIntegerT('Unk00C', itU32),
         wbFloatT('Unk010'),
         wbIntegerT('Flags', itU32),
         wbRefIDT('TargetRef')
-      ])
-    ])
-  ]);
-
-  wbPackageStruct2 := wbStruct('Package Struct 2', [ // Duplicating this avoids a false negative size detection.
-    wbRefIDT('Package'),
-    wbUnion('Package Info', ChangeFormBaseProcessPackageDecider2, [wbNull,
-      wbStruct('Package Data', [
-        wbUnion('Created Package', ChangeFormBaseProcessCreatedPackageDecider2, [ wbNull,
-          wbStruct('Created Package Struct', [
-            wbIntegerT('Type', itS8)
-//            wbUnion('Created Package', ChangeFormCreatedPackageDecider2, [
-//              wbNull
-//            ])
-          ])
-        ])
-//        wbIntegerT('Package Type', itU8),
-//        wbActorPackageData,
-//        wbIntegerT('Unk00C', itU32),
-//        wbFloatT('Unk010'),
-//        wbIntegerT('Flags', itU32),
-//        wbRefIDT('TargetRef')
       ])
     ])
   ]);
@@ -4802,79 +5481,79 @@ begin
         ]),
         wbUnion('Low Process', ChangedFormMobileObjectLowProcessDecider, [wbNull,
           wbStruct('Data', [
-//            // wbIntegerT('Unused', itU32), Older than form version 6
-//            // wbIntegerT('Unused', itU32), Older than form version 6
-//            wbIntegerT('Byt030', itU8),
-//            wbIntegerT('Unk0A4', itU32),
-//            wbRefIDT('Bound Object'),     // 034
-//            wbIntegerT('Unk058', itU32),
-//            wbIntegerT('Unk0A8', itU32),
-//            wbIntegerT('Unk0AC', itU32),
-//            wbIntegerT('Byt0B0', itU8),
-//            wbIntegerT('Wrd050', itU16),
-//            wbFloatT('Unk038.Flt000'),
-//            wbFloatT('Unk038.Flt004'),
-//            wbRefIDT('Unk040'),
-//            wbRefIDT('Unk044'),
-//            wbRefIDT('Unk048'),
-//            wbRefIDT('Form List'),        // 04C
-//            wbRefIDT('Unk054'),
-//            wbArrayT('List006C', wbRefIDT('Unknown'), -254),
-//            wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
+            // wbIntegerT('Unused', itU32), Older than form version 6
+            // wbIntegerT('Unused', itU32), Older than form version 6
+            wbIntegerT('Byt030', itU8),
+            wbIntegerT('Unk0A4', itU32),
+            wbRefIDT('Bound Object'),     // 034
+            wbIntegerT('Unk058', itU32),
+            wbIntegerT('Unk0A8', itU32),
+            wbIntegerT('Unk0AC', itU32),
+            wbIntegerT('Byt0B0', itU8),
+            wbIntegerT('Wrd050', itU16),
+            wbFloatT('Unk038.Flt000'),
+            wbFloatT('Unk038.Flt004'),
+            wbRefIDT('Unk040'),
+            wbRefIDT('Unk044'),
+            wbRefIDT('Unk048'),
+            wbRefIDT('Form List'),        // 04C
+            wbRefIDT('Unk054'),
+            wbArrayT('List006C', wbRefIDT('Unknown'), -254),
+            wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
           ])
         ]),
         wbUnion('Middle Low Process', ChangedFormMobileObjectMiddleLowProcessDecider, [wbNull,
           wbStruct('Data', [
-//            wbIntegerT('Unk0B4', itU32),
-//            wbUnionCHANGE_ACTOR_TEMP_MODIFIERS
+            wbIntegerT('Unk0B4', itU32),
+            wbUnionCHANGE_ACTOR_TEMP_MODIFIERS
           ])
         ]),
         wbUnion('Middle High Process', ChangedFormMobileObjectMiddleHighProcessDecider, [wbNull,
           wbStruct('Data', [
-//            wbIntegerT('Unk134', itU8),
-//            wbIntegerT('Unk135', itU8),
-//            wbIntegerT('Unk168', itU8),
-//            wbIntegerT('Unk170', itU32),
-//            wbIntegerT('Unk174', itU32),
-//            wbIntegerT('Unk108', itU32),
-//            wbIntegerT('Unk1DA', itU8),
-//            wbByteArray('Unk0FC', 12+1),
-//            wbIntegerT('Unk0DC', itU32),
-//            wbIntegerT('Byt13D', itU8),
-//            wbIntegerT('Byt144', itU8),
-//            wbIntegerT('Byt156', itU8),
-//            wbIntegerT('Wrd154', itU16),
-//            wbByteArray('Unk148', 12+1),
-//            wbIntegerT('Bool', itU8),     // if actor and Byt13D then call actor.func0108
-//            wbIntegerT('Byt0E0', itU8),
-//            wbIntegerT('Byt188', itU8),
-//            wbIntegerT('Byt189', itU8),
-//            wbIntegerT('Unk0D8', itU32),
-//            wbIntegerT('Byt18B', itU8),
-//            wbIntegerT('Unk1D0', itU32),
-//            wbIntegerT('Unk1D4', itU32),
-//            wbIntegerT('Byt1D8', itU8),
-//            wbIntegerT('Byt1D9', itU8),
-//            wbIntegerT('Byt228', itU8),
-//            wbIntegerT('Wrd22A', itU16),
-//            wbIntegerT('Unk1A8', itU32),
-//            wbIntegerT('Byt0E1', itU8),
-//            wbIntegerT('Unk190', itU32),
-//            wbIntegerT('Unk198', itU32),
-//            wbIntegerT('Byt19C', itU8),
-//            wbIntegerT('Byt19D', itU8),
-//            wbIntegerT('Unk234', itU32),
-//            wbIntegerT('Unk238', itU32),
-//            wbIntegerT('Unk23C', itU32),    // if form version 0xA or later
-//            wbIntegerT('Unk244', itU32),    // if form version 0x3 or later
-//            wbIntegerT('Unk110', itU8),     // if form version 0x7 or later
-//            wbRefIDT('IdleForm10C'),
-//            wbRefIDT('IdleForm194'),
-//            wbRefIDT('Unk158'),
-//            wbRefIDT('Unk140'),
-//            wbIntegerT('Unknown', itU32),
-//            wbArrayT('List0C8', wbRefIDT('Unknown'), -254),
-//            wbPackageStruct2
+            wbIntegerT('Unk134', itU8),
+            wbIntegerT('Unk135', itU8),
+            wbIntegerT('Unk168', itU8),
+            wbIntegerT('Unk170', itU32),
+            wbIntegerT('Unk174', itU32),
+            wbIntegerT('Unk108', itU32),
+            wbIntegerT('Unk1DA', itU8),
+            wbByteArray('Unk0FC', 12+1),
+            wbIntegerT('Unk0DC', itU32),
+            wbIntegerT('Byt13D', itU8),
+            wbIntegerT('Byt144', itU8),
+            wbIntegerT('Byt156', itU8),
+            wbIntegerT('Wrd154', itU16),
+            wbByteArray('Unk148', 12+1),
+            wbIntegerT('Bool', itU8),     // if actor and Byt13D then call actor.func0108
+            wbIntegerT('Byt0E0', itU8),
+            wbIntegerT('Byt188', itU8),
+            wbIntegerT('Byt189', itU8),
+            wbIntegerT('Unk0D8', itU32),
+            wbIntegerT('Byt18B', itU8),
+            wbIntegerT('Unk1D0', itU32),
+            wbIntegerT('Unk1D4', itU32),
+            wbIntegerT('Byt1D8', itU8),
+            wbIntegerT('Byt1D9', itU8),
+            wbIntegerT('Byt228', itU8),
+            wbIntegerT('Wrd22A', itU16),
+            wbIntegerT('Unk1A8', itU32),
+            wbIntegerT('Byt0E1', itU8),
+            wbIntegerT('Unk190', itU32),
+            wbIntegerT('Unk198', itU32),
+            wbIntegerT('Byt19C', itU8),
+            wbIntegerT('Byt19D', itU8),
+            wbIntegerT('Unk234', itU32),
+            wbIntegerT('Unk238', itU32),
+            wbIntegerT('Unk23C', itU32),    // if form version 0xA or later
+            wbIntegerT('Unk244', itU32),    // if form version 0x3 or later
+            wbIntegerT('Unk110', itU8),     // if form version 0x7 or later
+            wbRefIDT('IdleForm10C'),
+            wbRefIDT('IdleForm194'),
+            wbRefIDT('Unk158'),
+            wbRefIDT('Unk140'),
+            wbIntegerT('Unknown', itU32),
+            wbArrayT('List0C8', wbRefIDT('Unknown'), -254) {,
+            wbPackageStruct}
           ])
         ]),
         wbUnion('High Process', ChangedFormMobileObjectHighProcessDecider, [wbNull,

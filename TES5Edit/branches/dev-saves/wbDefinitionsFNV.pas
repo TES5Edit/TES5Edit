@@ -6182,7 +6182,7 @@ begin
     wbSCRIActor,
     wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
     wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
+    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
     wbArrayS(KFFZ, 'Animations', wbStringLC('Animation'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
     wbStruct(DATA, '', [
       {00} wbInteger('Type', itU8, wbCreatureTypeEnum, cpNormal, False, wbActorTemplateUseTraits),
@@ -6334,7 +6334,7 @@ begin
     wbRArray('Unused', wbRStruct('Unused', [
       wbUnknown(INFC, cpIgnore),
       wbUnknown(INFX, cpIgnore)
-    ], []), cpIgnore, False, wbNeverShow),
+    ], []), cpIgnore, False, nil, nil, wbNeverShow),
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbString(TDUM),
@@ -8800,7 +8800,7 @@ begin
     wbSCRIActor,
     wbRArrayS('Items', wbCNTO, cpNormal, False, nil, nil, wbActorTemplateUseInventory),
     wbAIDT,
-    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, wbActorTemplateUseAIPackages),
+    wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil, nil, wbActorTemplateUseAIPackages),
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True, wbActorTemplateUseTraits),
     wbStruct(DATA, '', [
       {00} wbInteger('Base Health', itS32),
@@ -8916,12 +8916,36 @@ begin
            {8} 'Use Item At',
            {9} 'Ambush',
           {10} 'Flee Not Combat',
-          {11} '',
+          {11} 'Package Type 11',
           {12} 'Sandbox',
           {13} 'Patrol',
           {14} 'Guard',
           {15} 'Dialogue',
-          {16} 'Use Weapon'
+          {16} 'Use Weapon',
+          {17} 'Package Type 17',
+          {18} 'Combat Controller',
+          {19} 'Package Type 19',
+          {20} 'Package Type 20',
+          {21} 'Alarm',
+          {22} 'Flee',
+          {23} 'TressPass',
+          {24} 'Spectator',
+          {25} 'Package Type 25',
+          {26} 'Package Type 26',
+          {27} 'Package Type 27',
+          {28} 'Dialogue 2',
+          {29} 'Package Type 29',
+          {30} 'Package Type 30',
+          {31} 'Package Type 31',
+          {32} 'Package Type 35',
+          {33} 'Package Type 33',
+          {34} 'Package Type 34',
+          {35} 'Package Type 35',
+          {36} 'Package Type 36',
+          {37} 'Package Type 37',
+          {38} 'Package Type 38',
+          {39} 'Package Type 39',
+          {40} 'Package Type 40'
         ]);
 
   wbObjectTypeEnum := wbEnum([
@@ -9918,7 +9942,7 @@ begin
       wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
       wbFormIDCk(RDSI, 'Incidental MediaSet', [MSET], False, cpNormal, False, wbREGNSoundDontShow),
-      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, wbREGNSoundDontShow),
+      wbRArray('Battle MediaSets', wbFormIDCk(RDSB, 'Battle MediaSet', [MSET]), cpNormal, False, nil, nil, wbREGNSoundDontShow),
       wbArrayS(RDSD, 'Sounds', wbStructSK([0], 'Sound', [
         wbFormIDCk('Sound', [SOUN]),
         wbInteger('Flags', itU32, wbFlags([
