@@ -3822,10 +3822,12 @@ begin
     Element := Container.ElementByName[aCounterName];
     if not Assigned(Element) then  // Signature not listed in mrDef cannot be added
       Element := Container.Add(Copy(aCounterName, 1, 4));
-    if Assigned(Element) then begin
+    if Assigned(Element) and (Element.Name = aCounterName) then try
       if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
         Element.SetNativeValue(SelfAsContainer.GetElementCount);
       Result := True;
+    except
+      // No exception if the value cannot be set, expected non value
     end;
   end;
 end;
@@ -3923,9 +3925,10 @@ var
   SelfAsContainer : IwbContainer;
 begin
   if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
-    if Supports(aElement, IwbContainer, Container) then begin
+    if Supports(aElement.Container, IwbContainer, Container) then begin
       Element := Container.ElementByPath['IDLC\Animation Count'];
-      if Assigned(Element) and (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+      if Assigned(Element) and Supports(aElement, IwbContainer, SelfAsContainer) and
+        (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
         Element.SetNativeValue(SelfAsContainer.GetElementCount);
     end;
 end;
