@@ -76,7 +76,7 @@
         <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <UsePackages>true</UsePackages>
-		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.31;Comments=</VerInfo_Keys>
+		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -89,7 +89,7 @@
         <Manifest_File>None</Manifest_File>
         <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
-		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.31;Comments=</VerInfo_Keys>
+		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
@@ -113,7 +113,7 @@
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
-		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.31;Comments=</VerInfo_Keys>
+		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
 		<VerInfo_Release>31</VerInfo_Release>
         <VerInfo_Debug>true</VerInfo_Debug>
         <UsePackages>true</UsePackages>
@@ -136,7 +136,7 @@
 		<VerInfo_Release>31</VerInfo_Release>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
-		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.31.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.31;Comments=</VerInfo_Keys>
+		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
         <DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
     </PropertyGroup>
     <ItemGroup>
