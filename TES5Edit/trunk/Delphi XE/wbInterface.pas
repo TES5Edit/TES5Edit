@@ -1856,12 +1856,14 @@ function wbArray(const aName          : string;
                        aDontShow      : TwbDontShowCallback = nil)
                                       : IwbArrayDef; overload;
 
-function wbRArray(const aName     : string;
-                  const aElement  : IwbRecordMemberDef;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbSubRecordArrayDef; overload;
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbSubRecordArrayDef; overload;
 
 function wbArrayS(const aSignature : TwbSignature;
                   const aName      : string;
@@ -3912,7 +3914,8 @@ end;
 function wbSubRecord(const aSignature : TwbSignature;
                      const aName      : string;
                      const aValue     : IwbValueDef;
-                           aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                           aAfterLoad : TwbAfterLoadCallback = nil;
+                           aAfterSet  : TwbAfterSetCallback = nil;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
@@ -4304,9 +4307,9 @@ function wbArray(const aSignature : TwbSignature;
                        aCount     : Integer = 0;
                        aAfterLoad : TwbAfterLoadCallback = nil;
                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil)
                                   : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
@@ -4324,14 +4327,16 @@ begin
 end;
 
 
-function wbRArray(const aName     : string;
-                  const aElement  : IwbRecordMemberDef;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbSubRecordArrayDef; overload;
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil)
+                                   : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, nil, nil, aDontShow, nil);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil);
 end;
 
 function wbArray(const aSignature : TwbSignature;
@@ -4400,11 +4405,12 @@ function wbArrayS(const aSignature : TwbSignature;
                         aCount     : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
 function wbArrayS(const aName      : string;
@@ -4683,7 +4689,7 @@ function wbRStructS(const aName        : string;
                           aDontShow    : TwbDontShowCallback = nil)
                                        : IwbSubRecordArrayDef; overload;
 begin
-  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, aDontShow);
+  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, nil, nil, aDontShow);
 end;
 
 function wbRStructsSK(const aName        : string;
@@ -5501,7 +5507,8 @@ constructor TwbSubRecordDef.Create(aPriority  : TwbConflictPriority; aRequired: 
                              const aSignature : TwbSignature;
                              const aName      : string;
                              const aValue     : IwbValueDef;
-                                   aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                                   aAfterLoad : TwbAfterLoadCallback;
+                                   aAfterSet  : TwbAfterSetCallback;
                                    aSizeMatch : Boolean;
                                    aDontShow  : TwbDontShowCallback);
 begin
@@ -5515,7 +5522,8 @@ constructor TwbSubRecordDef.Create(aPriority   : TwbConflictPriority; aRequired:
                              const aSignatures : array of TwbSignature;
                              const aName       : string;
                              const aValue      : IwbValueDef;
-                                   aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                                   aAfterLoad  : TwbAfterLoadCallback;
+                                   aAfterSet   : TwbAfterSetCallback;
                                    aSizeMatch  : Boolean;
                                    aDontShow   : TwbDontShowCallback);
 begin

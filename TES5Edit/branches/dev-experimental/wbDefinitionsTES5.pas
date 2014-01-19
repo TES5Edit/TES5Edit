@@ -2154,6 +2154,16 @@ begin
   end;
 end;
 
+function wbMHDTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  rMHDT : IwbRecord;
+begin
+  Result := 0;
+  if Supports(aElement.Container, IwbRecord, rMHDT) then
+    if rMHDT.DataSize = 1028 then
+      Result := 1;
+end;
+
 function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
 var
   rEDID      : IwbRecord;
@@ -6137,123 +6147,248 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
   ReferenceRecord(PMIS, 'Placed Missile');
 
-  wbRecord(CELL, 'Cell', [
-    wbEDID,
-    wbFULL,
-    {>>>
-    Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
-    and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
-    So let it be always itU16
-    <<<}
-    wbInteger(DATA, 'Flags', itU16, wbFlags([
-      {0x0001} 'Is Interior Cell',
-      {0x0002} 'Has Water',
-      {0x0004} 'Can''t Travel From Here',
-      {0x0008} 'No LOD Water',
-      {0x0010} 'Unknown 5',
-      {0x0020} 'Public Area',
-      {0x0040} 'Hand Changed',
-      {0x0080} 'Show Sky',
-      {0x0100} 'Use Sky Lighting'
-    ]), cpNormal, True),
-    wbStruct(XCLC, 'Grid', [
-      wbInteger('X', itS32),
-      wbInteger('Y', itS32),
-      wbInteger('Force Hide Land', itU32, wbFlags([
-        'Quad 1',
-        'Quad 2',
-        'Quad 3',
-        'Quad 4'
-      ], True))
-    ], cpNormal, False, nil, 2),
-    wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
+  if wbSimpleRecords then begin
+
+    wbRecord(CELL, 'Cell', [
+      wbEDID,
+      wbFULL,
+      {>>>
+      Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
+      and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
+      So let it be always itU16
+      <<<}
+      wbInteger(DATA, 'Flags', itU16, wbFlags([
+        {0x0001} 'Is Interior Cell',
+        {0x0002} 'Has Water',
+        {0x0004} 'Can''t Travel From Here',
+        {0x0008} 'No LOD Water',
+        {0x0010} 'Unknown 5',
+        {0x0020} 'Public Area',
+        {0x0040} 'Hand Changed',
+        {0x0080} 'Show Sky',
+        {0x0100} 'Use Sky Lighting'
+      ]), cpNormal, True),
+      wbStruct(XCLC, 'Grid', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32),
+        wbInteger('Force Hide Land', itU32, wbFlags([
+          'Quad 1',
+          'Quad 2',
+          'Quad 3',
+          'Quad 4'
+        ], True))
+      ], cpNormal, False, nil, 2),
+      wbStruct(XCLL, 'Lighting', [
+        wbStruct('Ambient Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbStruct('Directional Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbStruct('Fog Color Near', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbFloat('Fog Near'),
+        wbFloat('Fog Far'),
+        wbInteger('Directional Rotation XY', itS32),
+        wbInteger('Directional Rotation Z', itS32),
+        wbFloat('Directional Fade'),
+        wbFloat('Fog Clip Distance'),
+        wbFloat('Fog Power'),
+        wbAmbientColors,
+        wbStruct('Fog Color Far', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbFloat('Fog Max'),
+        wbFloat('Light Fade Begin'),
+        wbFloat('Light Fade End'),
+        wbInteger('Inherits', itU32, wbFlags([
+          {0x00000001}'Ambient Color',
+          {0x00000002}'Directional Color',
+          {0x00000004}'Fog Color',
+          {0x00000008}'Fog Near',
+          {0x00000010}'Fog Far',
+          {0x00000020}'Directional Rotation',
+          {0x00000040}'Directional Fade',
+          {0x00000080}'Clip Distance',
+          {0x00000100}'Fog Power',
+          {0x00000200}'Fog Max',
+          {0x00000400}'Light Fade Distances'
+        ]))
+      ], cpNormal, False, nil, 11),
+
+      wbByteArray(TVDT, 'Unknown', 0, cpNormal),
+      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
+      wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
+      wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
+
+      {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
+      wbFloat(XCLW, 'Water Height'),
+      //wbByteArray(XCLW, 'Water Height', 4),
+      wbString(XNAM, 'Water Noise Texture'),
+      wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
+      wbFormIDCk(XLCN, 'Location', [LCTN]),
+      wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
+      wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+      wbStruct(XWCU, 'Water Velocity', [
+        wbFloat('X Offset'),
+        wbFloat('Y Offset'),
+        wbFloat('Z Offset'),
+        wbByteArray('Unknown', 4),
+        wbFloat('X Angle'),
+        wbFloat('Y Angle'),
+        wbFloat('Z Angle'),
+        wbByteArray('Unknown', 0)
       ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
+      wbFormIDCk(XCWT, 'Water', [WATR]),
+
+      {--- Ownership ---}
+      wbOwnership,
+      wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
+
+      wbString(XWEM, 'Water Environment Map'),
+      wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
+      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+      wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+      wbFormIDCk(XCIM, 'Image Space', [IMGS])
+    ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad)
+
+  end else begin
+
+    wbRecord(CELL, 'Cell', [
+      wbEDID,
+      wbFULL,
+      {>>>
+      Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
+      and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
+      So let it be always itU16
+      <<<}
+      wbInteger(DATA, 'Flags', itU16, wbFlags([
+        {0x0001} 'Is Interior Cell',
+        {0x0002} 'Has Water',
+        {0x0004} 'Can''t Travel From Here',
+        {0x0008} 'No LOD Water',
+        {0x0010} 'Unknown 5',
+        {0x0020} 'Public Area',
+        {0x0040} 'Hand Changed',
+        {0x0080} 'Show Sky',
+        {0x0100} 'Use Sky Lighting'
+      ]), cpNormal, True),
+      wbStruct(XCLC, 'Grid', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32),
+        wbInteger('Force Hide Land', itU32, wbFlags([
+          'Quad 1',
+          'Quad 2',
+          'Quad 3',
+          'Quad 4'
+        ], True))
+      ], cpNormal, False, nil, 2),
+      wbStruct(XCLL, 'Lighting', [
+        wbStruct('Ambient Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbStruct('Directional Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbStruct('Fog Color Near', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbFloat('Fog Near'),
+        wbFloat('Fog Far'),
+        wbInteger('Directional Rotation XY', itS32),
+        wbInteger('Directional Rotation Z', itS32),
+        wbFloat('Directional Fade'),
+        wbFloat('Fog Clip Distance'),
+        wbFloat('Fog Power'),
+        wbAmbientColors,
+        wbStruct('Fog Color Far', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unknown', 1)
+        ]),
+        wbFloat('Fog Max'),
+        wbFloat('Light Fade Begin'),
+        wbFloat('Light Fade End'),
+        wbInteger('Inherits', itU32, wbFlags([
+          {0x00000001}'Ambient Color',
+          {0x00000002}'Directional Color',
+          {0x00000004}'Fog Color',
+          {0x00000008}'Fog Near',
+          {0x00000010}'Fog Far',
+          {0x00000020}'Directional Rotation',
+          {0x00000040}'Directional Fade',
+          {0x00000080}'Clip Distance',
+          {0x00000100}'Fog Power',
+          {0x00000200}'Fog Max',
+          {0x00000400}'Light Fade Distances'
+        ]))
+      ], cpNormal, False, nil, 11),
+
+      wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
+      wbStruct(MHDT, 'Max Height Data', [
+         wbUnion('Unknow', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
+         wbArray('Unknown', wbInteger('Data', itS8))
       ]),
-      wbStruct('Fog Color Near', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
+      wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
+      wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
+
+      {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
+      wbFloat(XCLW, 'Water Height'),
+      //wbByteArray(XCLW, 'Water Height', 4),
+      wbString(XNAM, 'Water Noise Texture'),
+      wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
+      wbFormIDCk(XLCN, 'Location', [LCTN]),
+      wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
+      wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+      wbStruct(XWCU, 'Water Velocity', [
+        wbFloat('X Offset'),
+        wbFloat('Y Offset'),
+        wbFloat('Z Offset'),
+        wbByteArray('Unknown', 4),
+        wbFloat('X Angle'),
+        wbFloat('Y Angle'),
+        wbFloat('Z Angle'),
+        wbByteArray('Unknown', 0)
       ]),
-      wbFloat('Fog Near'),
-      wbFloat('Fog Far'),
-      wbInteger('Directional Rotation XY', itS32),
-      wbInteger('Directional Rotation Z', itS32),
-      wbFloat('Directional Fade'),
-      wbFloat('Fog Clip Distance'),
-      wbFloat('Fog Power'),
-      wbAmbientColors,
-      wbStruct('Fog Color Far', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbFloat('Fog Max'),
-      wbFloat('Light Fade Begin'),
-      wbFloat('Light Fade End'),
-      wbInteger('Inherits', itU32, wbFlags([
-        {0x00000001}'Ambient Color',
-        {0x00000002}'Directional Color',
-        {0x00000004}'Fog Color',
-        {0x00000008}'Fog Near',
-        {0x00000010}'Fog Far',
-        {0x00000020}'Directional Rotation',
-        {0x00000040}'Directional Fade',
-        {0x00000080}'Clip Distance',
-        {0x00000100}'Fog Power',
-        {0x00000200}'Fog Max',
-        {0x00000400}'Light Fade Distances'
-      ]))
-    ], cpNormal, False, nil, 11),
+      wbFormIDCk(XCWT, 'Water', [WATR]),
 
-		wbByteArray(TVDT, 'Unknown', 0, cpNormal),
-		wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
-    wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
-    wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
+      {--- Ownership ---}
+      wbOwnership,
+      wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
 
-    {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
-    wbFloat(XCLW, 'Water Height'),
-    //wbByteArray(XCLW, 'Water Height', 4),
-    wbString(XNAM, 'Water Noise Texture'),
-    wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbFormIDCk(XLCN, 'Location', [LCTN]),
-    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
-    wbStruct(XWCU, 'Water Velocity', [
-      wbFloat('X Offset'),
-      wbFloat('Y Offset'),
-      wbFloat('Z Offset'),
-      wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
-      wbFloat('Y Angle'),
-      wbFloat('Z Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
-    wbFormIDCk(XCWT, 'Water', [WATR]),
+      wbString(XWEM, 'Water Environment Map'),
+      wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
+      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+      wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+      wbFormIDCk(XCIM, 'Image Space', [IMGS])
+    ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
-    {--- Ownership ---}
-    wbOwnership,
-		wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
-
-    wbString(XWEM, 'Water Environment Map'),
-    wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
-    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-    wbFormIDCk(XCIM, 'Image Space', [IMGS])
-  ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
-
+  end;
   wbRecord(CLAS, 'Class', [
     wbEDID,
     wbFULLReq,

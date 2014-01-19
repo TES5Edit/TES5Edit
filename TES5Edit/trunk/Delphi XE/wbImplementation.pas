@@ -4237,6 +4237,9 @@ begin
     Exclude(cntStates, csAsCreatedEmpty);
 
   inherited;
+
+  if esModified in eStates then
+    DoAfterSet(varEmpty, varEmpty);
 end;
 
 procedure TwbContainer.PrepareSave;

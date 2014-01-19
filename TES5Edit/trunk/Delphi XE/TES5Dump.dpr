@@ -283,6 +283,7 @@ begin
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
+  wbSimpleRecords := False;
   StartTime := Now;
 
   try
