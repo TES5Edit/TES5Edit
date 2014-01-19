@@ -3817,18 +3817,22 @@ var
   SelfAsContainer : IwbContainer;
 begin
    Result := False;
-  if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
-     Supports(aElement, IwbContainer, SelfAsContainer) then begin
-    Element := Container.ElementByName[aCounterName];
-    if not Assigned(Element) then  // Signature not listed in mrDef cannot be added
-      Element := Container.Add(Copy(aCounterName, 1, 4));
-    if Assigned(Element) and (Element.Name = aCounterName) then try
-      if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-        Element.SetNativeValue(SelfAsContainer.GetElementCount);
-      Result := True;
-    except
-      // No exception if the value cannot be set, expected non value
+  if wbBeginInternalEdit then try
+    if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
+       Supports(aElement, IwbContainer, SelfAsContainer) then begin
+      Element := Container.ElementByName[aCounterName];
+      if not Assigned(Element) then  // Signature not listed in mrDef cannot be added
+        Element := Container.Add(Copy(aCounterName, 1, 4));
+      if Assigned(Element) and (Element.Name = aCounterName) then try
+        if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+          Element.SetNativeValue(SelfAsContainer.GetElementCount);
+        Result := True;
+      except
+        // No exception if the value cannot be set, expected non value
+      end;
     end;
+  finally
+    wbEndInternalEdit;
   end;
 end;
 
@@ -3839,17 +3843,21 @@ var
   Container       : IwbContainer;
 begin
   Result := False;  // You may need to check alterative counter name
-  if Supports(aElement, IwbContainer, Container) then begin
-    Element := Container.ElementByName[aCounterName];
-    Elems   := Container.ElementByName[anArrayName];
-    if Assigned(Element) then begin
-      if not Assigned(Elems) then
-        if Element.GetNativeValue<>0 then
-          Element.SetNativeValue(0)
-        else if DeleteOnEmpty then
-          Container.RemoveElement(aCounterName);
-      Result := True; // Counter member exists
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainer, Container) then begin
+      Element := Container.ElementByName[aCounterName];
+      Elems   := Container.ElementByName[anArrayName];
+      if Assigned(Element) then begin
+        if not Assigned(Elems) then
+          if Element.GetNativeValue<>0 then
+            Element.SetNativeValue(0)
+          else if DeleteOnEmpty then
+            Container.RemoveElement(aCounterName);
+        Result := True; // Counter member exists
+      end;
     end;
+  finally
+    wbEndInternalEdit;
   end;
 end;
 
@@ -3924,13 +3932,17 @@ var
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-  if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
-    if Supports(aElement.Container, IwbContainer, Container) then begin
-      Element := Container.ElementByPath['IDLC\Animation Count'];
-      if Assigned(Element) and Supports(aElement, IwbContainer, SelfAsContainer) and
-        (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-        Element.SetNativeValue(SelfAsContainer.GetElementCount);
-    end;
+  if wbBeginInternalEdit then try
+    if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
+      if Supports(aElement.Container, IwbContainer, Container) then begin
+        Element := Container.ElementByPath['IDLC\Animation Count'];
+        if Assigned(Element) and Supports(aElement, IwbContainer, SelfAsContainer) and
+          (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+          Element.SetNativeValue(SelfAsContainer.GetElementCount);
+      end;
+  finally
+    wbEndInternalEdit;
+  end;
 end;
 
 procedure wbAnimationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -3939,14 +3951,18 @@ var
   Elems           : IwbElement;
   Container       : IwbContainer;
 begin
-  if not wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
-    if Supports(aElement, IwbContainer, Container) then begin
-      Element := Container.ElementByPath['IDLC\Animation Count'];
-      Elems   := Container.ElementByName['IDLA - Animations'];
-      if Assigned(Element) and not Assigned(Elems) then
-        if Element.GetNativeValue<>0 then
-          Element.SetNativeValue(0);
-    end;
+  if wbBeginInternalEdit then try
+    if not wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
+      if Supports(aElement, IwbContainer, Container) then begin
+        Element := Container.ElementByPath['IDLC\Animation Count'];
+        Elems   := Container.ElementByName['IDLA - Animations'];
+        if Assigned(Element) and not Assigned(Elems) then
+          if Element.GetNativeValue<>0 then
+            Element.SetNativeValue(0);
+      end;
+  finally
+    wbEndInternalEdit;
+  end;
 end;
 
 procedure DefineTES5a;
