@@ -5378,9 +5378,14 @@ var
   _File: IwbFileInternal;
 begin
   inherited;
-  _File := GetFile as IwbFileInternal;
-  if Assigned(_File) then
-    _File.AddMainRecord(Self);
+  try
+    _File := GetFile as IwbFileInternal;
+    if Assigned(_File) then
+      _File.AddMainRecord(Self);
+  except
+    aContainer.RemoveElement(Self);
+    raise;
+  end;
 end;
 
 procedure TwbMainRecord.DecompressIfNeeded;
@@ -12783,24 +12788,6 @@ begin
 
   if Count <> Length(cntElements) then
     ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
-
-//  if Assigned(dcDataBasePtr) then
-//    case arrSizePrefix of
-//      1: Count := PByte(dcDataBasePtr)^;
-//      2: Count := PWord(dcDataBasePtr)^;
-//      4: Count := PCardinal(dcDataBasePtr)^;
-//    else
-//      Count := 0;
-//    end
-//  else
-//    Count := 0;
-
-//    if Count <> Length(cntElements) then
-//      case arrSizePrefix of
-//        1: PByte(GetDataBasePtr)^ := Length(cntElements);
-//        2: PWord(GetDataBasePtr)^ := Length(cntElements);
-//        4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
-//      end;
 end;
 
 procedure TwbArray.CheckTerminator;

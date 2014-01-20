@@ -5373,9 +5373,14 @@ var
   _File: IwbFileInternal;
 begin
   inherited;
-  _File := GetFile as IwbFileInternal;
-  if Assigned(_File) then
-    _File.AddMainRecord(Self);
+  try
+    _File := GetFile as IwbFileInternal;
+    if Assigned(_File) then
+      _File.AddMainRecord(Self);
+  except
+    aContainer.RemoveElement(Self);
+    raise;
+  end;
 end;
 
 procedure TwbMainRecord.DecompressIfNeeded;
