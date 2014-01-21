@@ -5384,9 +5384,15 @@ var
   _File: IwbFileInternal;
 begin
   inherited;
-  _File := GetFile as IwbFileInternal;
-  if Assigned(_File) then
-    _File.AddMainRecord(Self);
+  try
+    _File := GetFile as IwbFileInternal;
+    if Assigned(_File) then
+      _File.AddMainRecord(Self);
+  except
+    if Assigned(aContainer) then
+      aContainer.RemoveElement(Self);
+    raise;
+  end;
 end;
 
 procedure TwbMainRecord.DecompressIfNeeded;
@@ -12789,7 +12795,6 @@ begin
 
   if Count <> Length(cntElements) then
     ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
-
 end;
 
 procedure TwbArray.CheckTerminator;
@@ -13706,8 +13711,14 @@ begin
   dcDataBasePtr := aBasePtr;
   dcDataEndPtr := aEndPtr;
   inherited Create(aContainer);
-  InitDataPtr;
-  aBasePtr := dcEndPtr;
+  try
+    InitDataPtr;
+    aBasePtr := dcEndPtr;
+  except
+    if Assigned(aContainer) then
+      aContainer.RemoveElement(Self);
+    raise;
+  end;
 end;
 
 function TwbDataContainer.DoCheckSizeAfterWrite: Boolean;
@@ -14132,7 +14143,8 @@ begin
     Assign(Low(Integer), aSource, aOnlySK);
     SetModified(True);
   except
-    GetContainer.RemoveElement(Self);
+    if Assigned(aContainer) then
+      aContainer.RemoveElement(Self);
     raise;
   end else begin
     BasePtr := nil;

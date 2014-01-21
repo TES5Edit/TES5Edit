@@ -5383,7 +5383,8 @@ begin
     if Assigned(_File) then
       _File.AddMainRecord(Self);
   except
-    aContainer.RemoveElement(Self);
+    if Assigned(aContainer) then
+      aContainer.RemoveElement(Self);
     raise;
   end;
 end;
@@ -13704,8 +13705,14 @@ begin
   dcDataBasePtr := aBasePtr;
   dcDataEndPtr := aEndPtr;
   inherited Create(aContainer);
-  InitDataPtr;
-  aBasePtr := dcEndPtr;
+  try
+    InitDataPtr;
+    aBasePtr := dcEndPtr;
+  except
+    if Assigned(aContainer) then
+      aContainer.RemoveElement(Self);
+    raise;
+  end;
 end;
 
 function TwbDataContainer.DoCheckSizeAfterWrite: Boolean;
@@ -14130,7 +14137,8 @@ begin
     Assign(Low(Integer), aSource, aOnlySK);
     SetModified(True);
   except
-    GetContainer.RemoveElement(Self);
+    if Assigned(aContainer) then
+      aContainer.RemoveElement(Self);
     raise;
   end else begin
     BasePtr := nil;
