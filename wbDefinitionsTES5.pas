@@ -658,6 +658,7 @@ var
   wbWeaponAnimTypeEnum: IwbEnumDef;
   wbWardStateEnum: IwbEnumDef;
   wbEventFunctionEnum: IwbEnumDef;
+  wbEventMemberEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
@@ -1465,6 +1466,75 @@ begin
   // Swap Subject and Target
   if s[8] = '1' then
     Result := Result or $10;
+end;
+
+var
+  wbEventFunctionAndMemberEditInfo: string;
+
+function wbEventFunctionAndMemberToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  EventFunction, EventMember: Integer;
+  i, j: Integer;
+  s1, s2: string;
+  slMember: TStringList;
+begin
+  Result := '';
+  EventFunction := aInt and $FFFF;
+  EventMember := aInt shr 16;
+  case aType of
+    ctToStr, ctToEditValue: begin
+      Result := wbEventFunctionEnum.ToEditValue(EventFunction, nil);
+      Result := Result + ':' + wbEventMemberEnum.ToEditValue(EventMember, nil);
+    end;
+    ctToSortKey: Result := IntToHex(aInt, 8);
+    ctCheck: begin
+      s1 := wbEventFunctionEnum.Check(EventFunction, nil);
+      if s1 <> '' then
+        s1 := 'EventFunction' + s1;
+      s2 := wbEventMemberEnum.Check(EventMember, nil);
+      if s2 <> '' then
+        s2 := 'EventMember' + s2;
+      if (s1 <> '') or (s2 <> '') then
+        Result := s1 + ':' + s2;
+    end;
+    ctEditType:
+      Result := 'ComboBox';
+    ctEditInfo: begin
+      Result := wbEventFunctionAndMemberEditInfo;
+      if Result = '' then try
+        slMember := TStringList.Create;
+        slMember.CommaText := wbEventMemberEnum.EditInfo[0, nil];
+        with TStringList.Create do try
+          for i := 0 to Pred(wbEventFunctionEnum.NameCount) do
+            for j := 0 to Pred(slMember.Count) do
+              Add(wbEventFunctionEnum.Names[i] + ':' + slMember[j]);
+          Sort;
+          Result := CommaText;
+        finally
+          Free;
+        end;
+        wbEventFunctionAndMemberEditInfo := Result;
+      finally
+        FreeAndNil(slMember);
+      end
+    end;
+  end;
+end;
+
+function wbEventFunctionAndMemberToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  EventFunction, EventMember, i: Integer;
+begin
+  i := Pos(':', aString);
+  if i > 0 then begin
+    EventFunction := wbEventFunctionEnum.FromEditValue(Copy(aString, 1, i-1), nil);
+    EventMember := wbEventMemberEnum.FromEditValue(Copy(aString, i+1, Length(aString)), nil);
+  end
+  else begin
+    EventFunction := 0;
+    EventMember := 0;
+  end;
+  Result := EventMember shl 16 + EventFunction;
 end;
 
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2477,7 +2547,7 @@ type
     ptFurnitureEntry,     // flags
     ptScene,              // SCEN
     ptWardState,          // enum
-    ptEventFunction,      // enum
+    ptEvent,              // Struct
     ptEventData           // LCTN, KYWD or FLST
   );
 
@@ -2774,7 +2844,7 @@ const
 {N} (Index: 571; Name: 'GetCurrentCastingType'; ParamType1: ptCastingSource),
 {N} (Index: 572; Name: 'GetCurrentDeliveryType'; ParamType1: ptCastingSource),
 {N} (Index: 574; Name: 'GetAttackState'),
-{N} (Index: 576; Name: 'GetEventData'; ParamType1: ptEventFunction; ParamType2: ptEventData; ParamType3: ptNone),
+{N} (Index: 576; Name: 'GetEventData'; ParamType1: ptEvent; ParamType2: ptEventData; ParamType3: ptNone),
 {N} (Index: 577; Name: 'IsCloserToAThanB'; ParamType1: ptObjectReference; ParamType2: ptObjectReference),
 {N} (Index: 579; Name: 'GetEquippedShout'; ParamType1: ptShout),
 {N} (Index: 580; Name: 'IsBleedingOut'),
@@ -3916,6 +3986,11 @@ begin
   wbCounterAfterSet('PRKZ - Count', aElement);
 end;
 
+procedure wbSMQNQuestsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('QNAM - Quest Count', aElement);
+end;
+
 procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterAfterSet('CITC - Condition Count', aElement);
@@ -4435,18 +4510,25 @@ begin
     'Break'
   ]);
 
-  wbEventFunctionEnum := wbEnum([], [
-    Int64($00000000), 'None',
-    Int64($324C0000), 'GetIsID, New Location',
-    Int64($314C0000), 'GetIsID, Old Location',
-    Int64($324C0001), 'IsInList, New Location',
-    Int64($314C0001), 'IsInList, Old Location',
-    Int64($324C0002), 'GetValue, New Location',
-    Int64($314C0002), 'GetValue, Old Location',
-    Int64($324C0003), 'HasKeyword, New Location',
-    Int64($314C0003), 'HasKeyword, Old Location',
-    Int64($324C0004), 'GetItemValue, New Location',
-    Int64($314C0004), 'GetItemValue, Old Location'
+  wbEventFunctionEnum := wbEnum([
+    'GetIsID',
+    'IsInList',
+    'GetValue',
+    'HasKeyword',
+    'GetItemValue'
+  ]);
+
+  // Event member names and availability are different depending on event type
+  // Using generic names for the last 3 of them: Form, Value1, Value2
+  wbEventMemberEnum := wbEnum([], [
+    $0000, 'None',
+    $314F, 'CreatedObject',
+    $314C, '(Old)Location',
+    $324C, '(New)Location',
+    $314B, 'Keyword',
+    $3146, 'Form',
+    $3156, 'Value1',
+    $3256, 'Value2'
   ]);
 
   wbWeaponAnimTypeEnum := wbEnum([
@@ -5750,8 +5832,8 @@ begin
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
         wbFormIDCk('Scene', [NULL, SCEN]),
         wbInteger('Ward State', itU32, wbWardStateEnum),
-        wbInteger('Event Function', itU32, wbEventFunctionEnum),
-        wbFormIDCk('Event Data', [NULL, LCTN, KYWD, FLST])
+        wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
+        wbFormID('Event Data')
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         wbByteArray('Unknown', 4),
@@ -5851,8 +5933,8 @@ begin
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
         wbFormIDCk('Scene', [NULL, SCEN]),
         wbInteger('Ward State', itU32, wbWardStateEnum),
-        wbInteger('Event Function', itU32, wbEventFunctionEnum),
-        wbFormIDCk('Event Data', [NULL, LCTN, KYWD, FLST])
+        wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
+        wbFormID('Event Data')
       ]),
       wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',
@@ -9084,7 +9166,7 @@ begin
       wbFormIDCk(NNAM, 'Quest', [QUST]),
       wbUnknown(FNAM),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
-    ], []))
+    ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMEN, 'Story Manager Event Node', [
@@ -9330,7 +9412,7 @@ begin
     ], [], cpIgnore, false, wbNeverShow),
     {>>> END leftover from earlier CK versions <<<}
     wbFormIDCk(PNAM, 'Quest', [QUST]),
-    wbInteger(INAM, 'Action Count', itU32),
+    wbInteger(INAM, 'Last Action Index', itU32),
     wbUnknown(VNAM),
     wbCTDAs
   ]);
