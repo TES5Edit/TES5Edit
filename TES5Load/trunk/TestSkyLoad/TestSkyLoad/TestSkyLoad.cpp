@@ -47,6 +47,19 @@ typedef std::unordered_map<srrectype_t, subrecordinfo_t> CSubrecordInfoMap;
 
 typedef std::unordered_map<srrectype_t, int> CSubrecordCountMap;
 
+namespace std { // utumno: total hack
+	// see: http://stackoverflow.com/a/18548760/281545
+	template <>
+	struct hash<srrectype_t>
+	{
+		typedef srrectype_t argument_type;
+		typedef std::size_t        result_type;
+		std::size_t operator()(srrectype_t key) const {
+			return key.Value;
+		}
+	};
+}
+
 struct recordinfo_t
 {
 	srrectype_t Type;
@@ -56,7 +69,7 @@ struct recordinfo_t
 	dword		MaxSize;
 	dword		MinVersion;
 	dword		MaxVersion;
-	
+
 	CSubrecordInfoMap SubrecordInfos;
 
 	recordinfo_t()
@@ -408,25 +421,25 @@ int _tmain(int argc, _TCHAR* argv[])
 	SystemLog.Open("testload.log");
 	
 
-	//Strings1.Load("D:\\Steam\\steamapps\\common\\skyrim\\Data\\Strings\\Skyrim_english.DLSTRINGS");
-	//Strings2.Load("D:\\Steam\\steamapps\\common\\skyrim\\Data\\Strings\\Skyrim_english.ILSTRINGS");
-	//Strings3.Load("D:\\Steam\\steamapps\\common\\skyrim\\Data\\Strings\\Skyrim_english.STRINGS");
+	//Strings1.Load("C:\\Games\\Steam\\SteamApps\\common\\Skyrim\\Data\\Strings\\Skyrim_english.DLSTRINGS");
+	//Strings2.Load("C:\\Games\\Steam\\SteamApps\\common\\Skyrim\\Data\\Strings\\Skyrim_english.ILSTRINGS");
+	//Strings3.Load("C:\\Games\\Steam\\SteamApps\\common\\Skyrim\\Data\\Strings\\Skyrim_english.STRINGS");
 
 	//Strings1.Dump();
 	//Strings2.Dump();
 	//Strings3.Dump();
 
 	printf("Loading file...\n");
-	TestFile1.Load("D:\\Steam\\steamapps\\common\\skyrim\\Data\\Skyrim.esm");
-	//TestFile.GetEspFile().Save("D:\\Steam\\steamapps\\common\\skyrim\\Data\\Skyrim-2.esm");
+	TestFile1.Load("C:\\Games\\Steam\\SteamApps\\common\\Skyrim\\Data\\Update.esm");
+	//TestFile.GetEspFile().Save("C:\\Games\\Steam\\SteamApps\\common\\Skyrim\\Data\\Skyrim-2.esm");
 	GatherTopLevelInfos(TestFile1);
 	DumpRecordInfos();
 	//DumpRecordInfos1();
 
-	//CreateRawClasses("d:\\temp\\classes\\");
+	//CreateRawClasses("C:\\temp\\classes\\");
 
-	//BsaFile.Load("D:\\Steam\\steamapps\\common\\skyrim\\Data\\skyrim - animations.bsa");
-	//BsaFile.Save("D:\\Steam\\steamapps\\common\\skyrim\\Data\\skyrim - animations1.bsa");
+	//BsaFile.Load("C:\\Games\\Steam\\SteamApps\\common\\Skyrim\\Data\\skyrim - animations.bsa");
+	//BsaFile.Save("C:\\Games\\Steam\\SteamApps\\common\\Skyrim\\Data\\skyrim - animations1.bsa");
 	
 	return 0;
 }
