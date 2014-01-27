@@ -8565,14 +8565,14 @@ begin
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid X', itS16),
-      wbInteger('Grid Y', itS16)
+      wbInteger('Grid Y', itS16),
+      wbInteger('Grid X', itS16)
     ])),
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid X', itS16),
-      wbInteger('Grid Y', itS16)
+      wbInteger('Grid Y', itS16),
+      wbInteger('Grid X', itS16)
     ])),
     {>>> From Danwguard.esm, Does not follow similar previous patterns <<<}
     wbArray(RCPR, 'Reference Cell Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR])),
@@ -8594,15 +8594,15 @@ begin
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid X', itS16),
-      wbInteger('Grid Y', itS16)
+      wbInteger('Grid Y', itS16),
+      wbInteger('Grid X', itS16)
     ])),
     wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT]),
       wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid X', itS16),
-      wbInteger('Grid Y', itS16)
+      wbInteger('Grid Y', itS16),
+      wbInteger('Grid X', itS16)
     ])),
     {>>> Seen in Open Cities <<<}
     wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
@@ -8611,8 +8611,8 @@ begin
       wbStruct(ACEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid X', itS16),
-          wbInteger('Grid Y', itS16)
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
         ]))
       ])
     ),
@@ -8620,8 +8620,8 @@ begin
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid X', itS16),
-          wbInteger('Grid Y', itS16)
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
         ]))
       ])
     ),
@@ -8630,8 +8630,8 @@ begin
       wbStruct(RCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL]),
         wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid X', itS16),
-          wbInteger('Grid Y', itS16)
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
         ]))
       ])
     ),
@@ -8642,14 +8642,14 @@ begin
     wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbInteger('Grid X', itS16),
-      wbInteger('Grid Y', itS16)
+      wbInteger('Grid Y', itS16),
+      wbInteger('Grid X', itS16)
     ])),
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
       wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbInteger('Grid X', itS16),
-      wbInteger('Grid Y', itS16)
+      wbInteger('Grid Y', itS16),
+      wbInteger('Grid X', itS16)
     ])),
 
     wbFULL,
