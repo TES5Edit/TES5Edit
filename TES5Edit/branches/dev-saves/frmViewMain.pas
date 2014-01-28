@@ -5321,6 +5321,10 @@ begin
     Value := wbLoadBSAs;
     Done := True;
   end else
+  if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
+    Value := wbSimpleRecords;
+    Done := True;
+  end else
   if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
     Value := wbTrackAllEditorID;
     Done := True;

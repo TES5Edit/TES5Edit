@@ -315,6 +315,36 @@ begin
   Result := CompressedSize;
 end;
 
+function GetRelativeDeciderInteger(anOffset: Integer; aSize: Integer; aContainerName, anIntegerName: String;
+  aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbContainer;
+begin
+  Result := MaxInt;
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<=Cardinal(aEndPtr)) then begin
+    Assert(anOffset>0); // Offset needs to be a positive number
+    case aSize of
+      4 : Result := (PCardinal(Cardinal(aBasePtr)-anOffset)^);
+      3 : Result := wbReadInteger24(PCardinal(Cardinal(aBasePtr)-anOffset));
+      2 : Result := (PWord(Cardinal(aBasePtr)-anOffset)^);
+    else
+      Result := (PByte(Cardinal(aBasePtr)-anOffset)^);
+    end;
+  end else begin
+    Element := FindElement(aContainerName, aElement);
+    if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
+      if Pos('\', anIntegerName)<>0 then
+        Element := Container.GetElementByPath(anIntegerName)
+      else
+        Element := Container.GetElementByName(anIntegerName);
+      if Assigned(Element) then begin
+        Result := Element.NativeValue;
+      end;
+    end;
+  end;
+end;
+
 function ChangedFormHavokMovedSubBufferCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element    : IwbElement;
@@ -322,6 +352,22 @@ var
 begin
   Result := 0;
   Element := FindElement('Havok Moved SubBuffer', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Length'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
+function ChangedFormHighProcessSubBufferCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+begin
+  Result := 0;
+  Element := FindElement('SubBuffer', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Length'];
@@ -737,6 +783,15 @@ begin
   if Result = 1 then if (ChangedFormGetType(Element) in [1, 2]) then Result := 0;
 end;
 
+function ChangedFlag28ActorDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element: IwbElement;
+begin
+  Element := aElement;
+  Result := ChangedFlagBitXXDecider($10000000, aBasePtr, aEndPtr, aElement);
+  if Result = 1 then if not (ChangedFormGetType(Element) in [1, 2]) then Result := 0;
+end;
+
 function ChangedFlag29Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := ChangedFlagBitXXDecider($20000000, aBasePtr, aEndPtr, aElement);
@@ -861,197 +916,149 @@ begin
   end;
 end;
 
-function ChangedFormPackageCreatedContentFlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
-begin
-  Result := 0;
-  Element := FindElement('Data', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Content Flags'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue and $1;
-    end;
-  end;
-end;
-
 function ChangedFormPackageCreatedFEHasLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Follow/Escort', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Has Location'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Follow/Escort', 'Has Location', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) then
+    Result := 0;
 end;
 
 function ChangedFormPackageCreatedAUEHasLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Ambush/Use Item/Eat', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Has Location'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Ambush/Use Item/Eat', 'Has Location', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) then
+    Result := 0;
 end;
 
 function ChangedFormPackageCreatedDHasLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Dialogue', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Has Location'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Dialogue', 'Has Location', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) then
+    Result := 0;
 end;
 
 function ChangedFormPackageCreatedUWHasLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Use Weapon', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Has Location'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Use Weapon', 'Has Location', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) then
+    Result := 0;
 end;
 
 function ChangedFormPackageCreatedUWHasTargetDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Use Weapon', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Has Target'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Use Weapon', 'Has Target', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) then
+    Result := 0;
 end;
 
 function ChangedFormPackageLocationTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 7;
 begin
-  Result := 0;
-  Element := FindElement('Location', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Type'];
-    if Assigned(Element) then begin
-      case Element.NativeValue of
-        0, 1, 2, 3, 4: Result := 1;
-        5: Result := 2;
-      end;
-    end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Location', 'Type', aBasePtr, aEndPtr, aElement);
+  case Result of
+    0, 1, 2, 3, 4: Result := 1;
+    5: Result := 2;
+  else
+    Result := 0;
   end;
 end;
 
 function ChangedFormPackageTargetTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 12;
 begin
-  Result := 0;
-  Element := FindElement('Target', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Type'];
-    if Assigned(Element) then begin
-      case Element.NativeValue of
-        0, 1: Result := 1;
-        2: Result := 2;
-      end;
-    end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Target', 'Type', aBasePtr, aEndPtr, aElement);
+  case Result of
+    0, 1: Result := 1;
+    2: Result := 2;
+  else
+    Result := 0;
   end;
+end;
+
+var // Remembers the offset of the first decider in the group
+  ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr: Pointer = nil;
+
+function ChangedFormPackageCreatedContentFlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
+begin
+  if Assigned(aBasePtr) then
+    ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr := aBasePtr
+  else
+    ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr := nil;
+
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 1) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangedFormPackageCreatedContentFlagsBit1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Data', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Content Flags'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue and $2;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 2) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangedFormPackageCreatedContentFlagsBit2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Data', aElement);
-
-  if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['Content Flags'];
-    if Assigned(Element) then begin
-      Result := Element.NativeValue and $4;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 4) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
-function ChangedFormPackageCreatedPackageTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element    : IwbElement;
-  Container  : IwbDataContainer;
+//function ChangedFormPackageCreatedPackageTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+//const
+//  Offset = 2;
+//begin
+//  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Current Package', aBasePtr, aEndPtr, aElement);
+//  case Result of
+//    0, 4, 5, 6, 7, 10, 11, 12, 14: Result := 0;
+//    1, 2: Result := 1;
+//    3, 8, 9: Result := 2;
+//    13: Result := 3;
+//    15, 29: Result := 4;
+//    16: Result := 5;
+//  else
+//    Result := 0;
+//  end;
+//end;
+
+function ChangedFormPackageCreatedPackageDataTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = (13 - 4) + 2;
 begin
-  Result := 0;
-  Element := FindElement('Data', aElement);
-
-  if Assigned(Element) and Supports(Element, IwbDataContainer, Container) then
-    Element := Container.ElementByPath['General\Type']
-  else begin
-    Element := FindElement('Current Package', aElement);
-
-    if Assigned(Element) and Supports(Element, IwbDataContainer, Container) then
-      Element := Container.ElementByPath['Type']
-  end;
-  if Assigned(Element) then begin
-    case Element.NativeValue of
-      0, 4, 5, 6, 7, 10, 11, 12, 14: Result := 0;
-      1, 2: Result := 1;
-      3, 8, 9: Result := 2;
-      13: Result := 3;
-      15: Result := 4;
-      16: Result := 5;
-    end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'General\Type', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  case Result of
+    0, 4, 5, 6, 7, 10, 11, 12, 14: Result := 0;
+    1, 2: Result := 1;
+    3, 8, 9: Result := 2;
+    13: Result := 3;
+    15, 28: Result := 4;
+    16: Result := 5;
+  else
+    Result := 0;
   end;
 end;
 
@@ -1138,36 +1145,27 @@ begin
   end;
 end;
 
-function ChangeFormExtraPackageTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
-begin
-  Result := 0;
-  Element := nil;
-  Element := FindElement('Package Data', aElement);
-  if not Assigned(Element) or (Element.BaseName <> 'Package Data') then
-    Element := nil;
-
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Package Data Type');
-    if Assigned(Element) then begin
-      case Element.NativeValue of
-        0, 1, 3..11, 15: Result := 0;
-         2 : Result := 1;
-        12 : Result := 2;
-        13 : Result := 3;
-        14 : Result := 4;
-        16 : Result := 5;
-      end; //   0,5,5,5,5,5,5,5,5,5,1,2,3,5,4
-    end;
-  end;
-end;
-
 function ChangedFormActorBaseRestorer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
   SwappedChangedFormFlags := False;
+end;
+
+function ChangeFormExtraPackageTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Package Data', 'Package Data Type', aBasePtr, aEndPtr, aElement);
+  case Result of
+    0, 1, 3..11, 15: Result := 0;
+     2 : Result := 1;
+    12 : Result := 2;
+    13 : Result := 3;
+    14 : Result := 4;
+    16 : Result := 5;
+  else  // Maxint or 255
+    Result := 0;
+  end; //   0,5,5,5,5,5,5,5,5,5,1,2,3,5,4
 end;
 
 function ChangedExtraUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1284,301 +1282,258 @@ begin
   end;
 end;
 
-function ChangeFormBaseProcessCreatedPackageDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+function ChangedFormList44CData00CDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Package Struct', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Package');
-    if Assigned(Element) then begin
-      if (Element.NativeValue shr 22) = 2 then
-        Result := 1;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 3, 'Data', 'Unk020', aBasePtr, aEndPtr, aElement);
+  if Result = 1 then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function ChangedFormHasUnk3DCDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 25;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 3, 'Unk000', 'Has Unk3DC', aBasePtr, aEndPtr, aElement);
+  if Result = 1 then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function ChangeFormBaseProcessCreatedPackageDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 4;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 3, 'Package Struct', 'Package', aBasePtr, aEndPtr, aElement);
+  if Result = MaxInt then
+    Result := 0
+  else if (Result shr 22) = 2 then
+        Result := 1
+  else
+    Result := 0;
 end;
 
 function ChangeFormBaseProcessPackageDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
-  PackageOffset = -4;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
-  PackageID : Integer;
+  Offset = 4;
 begin
-  Result := 0;
-  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<=Cardinal(aEndPtr)) then begin
-    PackageID := (PCardinal(Cardinal(aBasePtr)+PackageOffset)^) and $00FFFFFF;
-    if PackageID<>0 then
-      Result := 1;
-  end else begin
-    Element := FindElement('Package Struct', aElement);
-    if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-      Element := Container.GetElementByName('Package');
-      if Assigned(Element) then begin
-        if Element.NativeValue <> 0 then
-          Result := 1;
-      end;
-    end;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 3, 'Package Struct', 'Package', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or (Result = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Created Package Struct', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Type');
-    if Assigned(Element) then
-      case 1+Element.NativeValue of
-         0, 41: Result := 1;  // nothing
-        10: Result := 2;      // Change type to 9 (which it should already be), then nothing
-        16, 29: Result := 3;  // TESDialoguePackage::Init
-        18: Result := 4;      // Change type to 0, then nothing
-        19: Result := 5;      // CombatController::Init
-        22: Result := 6;      // AlarmPackage::Init
-        23: Result := 7;      // FleePackage::Init
-        24: Result := 8;      // TressPassPackage::Init
-        25: Result := 9;      // SpectatorPackage::Init
-        40: Result := 10;     // BackupPackage::Init
-      else
-        Result := 0;          // TESPackage::Init
-      end;  // 0,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah 0
-            // 1,0Ah,0Ah,0Ah,0Ah,0Ah,2,0Ah,3,4; 10
-            // 0Ah,0Ah,5,6,7,8,0Ah,0Ah,0Ah,2; 20
-            // 0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah; 30
-            // 9,0                  ; 40
-
-  end;
-
-  if result > 5 then Result := 1;
-
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Created Package Struct', 'Type', aBasePtr, aEndPtr, aElement);
+  if Result = MaxInt then
+    Result := 0
+  else case 1+Result of
+     0, 41, 256: Result := 1;  // nothing
+    10: Result := 2;      // Change type to 9 (which it should already be), then nothing
+    16, 29: Result := 3;  // TESDialoguePackage::Init
+    18: Result := 4;      // Change type to 0, then nothing
+    19: Result := 5;      // CombatController::Init
+    22: Result := 6;      // AlarmPackage::Init
+    23: Result := 7;      // FleePackage::Init
+    24: Result := 8;      // TressPassPackage::Init
+    25: Result := 9;      // SpectatorPackage::Init
+    40: Result := 10;     // BackupPackage::Init
+  else
+    Result := 0;          // TESPackage::Init
+  end;  // 0,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah 0
+        // 1,0Ah,0Ah,0Ah,0Ah,0Ah,2,0Ah,3,4; 10
+        // 0Ah,0Ah,5,6,7,8,0Ah,0Ah,0Ah,2; 20
+        // 0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah; 30
+        // 9,0                  ; 40
 end;
 
-function ChangeFormCreatedPackageHasUnk0A4Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+function ChangeFormCreatedPackageHasDialogueItemsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Dialogue Package', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Has Unk0A4');
-    if Assigned(Element) then
-      if Element.NativeValue <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Dialogue Items Struct', 'Has Dialogue Items', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or (Result = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
+
+var // Remembers the offset of the first decider in the group
+  ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr: Pointer = nil;
 
 function ChangeFormCreatedPackageHasContentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Combat Controller', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Content Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 1) <> 0 then
-        Result := 1;
-  end;
+  if Assigned(aBasePtr) then
+    ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr := aBasePtr
+  else
+    ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr := nil;
+
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 1) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasContentFlagBit1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Content Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 2) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 2) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasContentFlagBit2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Content Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 4) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 4) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasContentFlagBit3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Content Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 8) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 8) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasContentFlagBit4Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Content Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 16) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 16) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasContentFlagBit5Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Content Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 32) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 32) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
+var // Remembers the offset of the first decider in the group
+  ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr: Pointer = nil;
+
 function ChangeFormCreatedPackageHasPresentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Present Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 1) <> 0 then
-        Result := 1;
-  end;
+  if Assigned(aBasePtr) then
+    ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr := aBasePtr
+  else
+    ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr := nil;
+
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 1) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasPresentFlagBit1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Present Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 2) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 2) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasPresentFlagBit2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Present Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 4) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 4) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasPresentFlagBit3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Present Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 8) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 8) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCreatedPackageHasPresentFlagBit4Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Unk09C', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Present Flags');
-    if Assigned(Element) then
-      if (Element.NativeValue and 16) <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+    aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 16) = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCombatControllerHasUnk0A0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
+const
+  Offset = 2;
 begin
-  Result := 0;
-  Element := FindElement('Combat Controller', aElement);
-  if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-    Element := Container.GetElementByName('Has Unk0A0');
-    if Assigned(Element) then
-      if Element.NativeValue <> 0 then
-        Result := 1;
-  end;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Combat Controller', 'Has Unk0A0', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or (Result  = 0) then
+    Result := 0
+  else
+    Result := 1;
 end;
 
 function ChangeFormCombatProcedureTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
-  CPTypeOffset = -2;
-var
-  Element   : IwbElement;
-  Container : IwbContainer;
-  CPType    : Integer;
+  Offset = 2;
 begin
-  Result := 0;
-  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<=Cardinal(aEndPtr)) then begin
-    // the same structure is reused multiple times, so the "proper" way of finding the data always returns the first one found
-    // unless aElement is the current structure
-    CPType := PByte(Cardinal(aBasePtr) + CPTypeOffset)^;
-    Result := 1 + CPType;
-  end else begin
-    Element := FindElement('Change Combat Procedure', aElement);
-    if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
-      Element := Container.GetElementByName('Combat Procedure Type');
-      if Assigned(Element) then
-        Result := 1 + Element.NativeValue;
-    end;
-  end;
-  if Result>1+13 then // ie 255
-    Result := 0;
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Change Combat Procedure', 'Combat Procedure Type', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or (Result  > 14) then
+    Result := 0
+  else
+    Result := 1 + Result;
 end;
 
 function ChangedFormRemainingDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1837,8 +1792,10 @@ var
   wbChangeScriptEventList : IwbStructDef;
   wbPackageLocationData   : IwbStructDef;
   wbPackageTargetData     : IwbStructDef;
-  wbCreatedPackageData    : IwbUnionDef;
+//  wbCreatedPackagePackageData : IwbUnionDef;
+  wbCreatedPackageDataType : IwbUnionDef;
   wbActorPackageData      : IwbUnionDef;
+  wbDialogueItems         : IwbStructDef;
   wbPackageStruct         : IwbStructDef;
   wbChangePackageStruct   : IwbStructDef;
   wbPathingLocation       : IwbStructDef;
@@ -1847,6 +1804,7 @@ var
   wbStructUnk128or164     : IwbStructDef;
   wbCombatProcedure       : IwbStructDef;
   wbChangeCombatProcedure : IwbStructDef;
+  wbNonActorMagicTarget   : IwbArrayDef;
 
   wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
 // no actual data    wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
@@ -1861,8 +1819,9 @@ var
   wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
 // no actual data    wbUnionCHANGE_OBJECT_OPEN_STATE : IwbUnionDef;
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
-// idetical to wbUnionCHANGE_REFR_INVENTORY  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+// identical to wbUnionCHANGE_REFR_INVENTORY  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
   wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION_Actor : IwbUnionDef;
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
   wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
@@ -4188,6 +4147,12 @@ begin
     wbByteArray('Data', ChangedFormAnimationSubBufferCounter)
   ])]);
 
+  wbUnionCHANGE_REFR_ANIMATION_Actor := wbUnion('Animation', ChangedFlag28ActorDecider, [wbNull, wbStruct('Animation SubBuffer', [
+    wbIntegerT('Length', itU6to30),
+    wbByteArray('Data', ChangedFormAnimationSubBufferCounter)
+//    wbArrayT('Data', wbInteger('Unknown', itU8), -254)
+  ])]);
+
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);           // CHANGE_REFR_EXTRAS
   wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);               // CHANGE_REFR_EXTRAS
@@ -4474,7 +4439,53 @@ begin
         wbUnion('ObjectType', ChangedFormPackageTargetTypeDecider, [ wbNull, wbRefIDT('Object'), wbIntegerT('Type', itU32)])
       ]);
 
-  wbCreatedPackageData := wbUnion('Specific Data', ChangedFormPackageCreatedPackageTypeDecider, [
+//  wbCreatedPackagePackageData := wbUnion('Specific Data', ChangedFormPackageCreatedPackageTypeDecider, [
+//    wbNull,
+//    wbStruct('Follow/Escort', [
+//      wbIntegerT('Unknown', itU32),
+//      wbIntegerT('Has Location', itU8),
+//      wbUnion('Location Data', ChangedFormPackageCreatedFEHasLocationDecider, [wbNull, wbPackageLocationData])
+//    ]),
+//    wbStruct('Ambush/Use Item/Eat', [
+//      wbIntegerT('Has Location', itU8),
+//      wbUnion('Location Data', ChangedFormPackageCreatedAUEHasLocationDecider, [wbNull, wbPackageLocationData])
+//    ]),
+//    wbStruct('Patrol', [
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8)
+//    ]),
+//    wbStruct('Dialogue', [
+//      wbIntegerT('Unknown', itU32),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU32),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU32),
+//      wbRefIDT('Topic'),
+//      wbIntegerT('Has Location', itU8),
+//      wbUnion('Location Data', ChangedFormPackageCreatedDHasLocationDecider, [wbNull, wbPackageLocationData])
+//    ]),
+//    wbStruct('Use Weapon', [
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU8),
+//      wbIntegerT('Unknown', itU16),
+//      wbIntegerT('Unknown', itU16),
+//      wbIntegerT('Unknown', itU16),
+//      wbIntegerT('Unknown', itU32),
+//      wbIntegerT('Unknown', itU32),
+//      wbRefIDT('Weapon'),
+//      wbIntegerT('Has Target', itU8),
+//      wbUnion('Target Data', ChangedFormPackageCreatedUWHasTargetDecider, [wbNull, wbPackageTargetData]),
+//      wbIntegerT('Has Location', itU8),
+//      wbUnion('Location Data', ChangedFormPackageCreatedUWHasLocationDecider, [wbNull, wbPackageLocationData])
+//    ])]);
+
+  wbCreatedPackageDataType := wbUnion('Specific Data', ChangedFormPackageCreatedPackageDataTypeDecider, [
     wbNull,
     wbStruct('Follow/Escort', [
       wbIntegerT('Unknown', itU32),
@@ -4531,8 +4542,8 @@ begin
       wbIntegerT('Content Flags', itU8),
       wbUnion('Location Data', ChangedFormPackageCreatedContentFlagsBit0Decider, [wbNull, wbPackageLocationData]),
       wbUnion('Target Data', ChangedFormPackageCreatedContentFlagsBit1Decider, [wbNull, wbPackageTargetData]),
-      wbUnion('Created Package Data', ChangedFormPackageCreatedContentFlagsBit2Decider, [wbNull, wbCreatedPackageData]),
-      wbIntegerT('Unk018', itU32)
+      wbUnion('Created Package Data', ChangedFormPackageCreatedContentFlagsBit2Decider, [wbNull, wbCreatedPackageDataType]),
+      wbIntegerT('Procedure Array Index', itU32)
     ]);
 
   wbUnionCHANGE_PACKAGE_CREATED := wbUnion('Created Package', ChangedFlag11OrCreatedDecider, [wbNull, wbChangePackageStruct]);
@@ -4654,6 +4665,13 @@ begin
     wbInitialDataType05,
     wbInitialDataType06
   ]);
+
+  wbNonActorMagicTarget := wbArrayT('Magic Item List', wbStruct('Magic Item', [
+    wbRefIDT('Magic Form'),
+    wbIntegerT('ArchType', itU8, wbArchtypeEnum),
+    wbIntegerT('Unk098', itU6to30),
+    wbArrayT('Effect Items', wbInteger('Effect Item', itU8), -254)
+  ]), -254);
 
   wbActorPackageData := wbUnion('Package Specific Data', ChangeFormExtraPackageTypeDecider, [    // 031
     wbNull,
@@ -4789,13 +4807,7 @@ begin
     ]),
     wbStruct('Non Actor Magic Target', [                        // 019
       wbRefIDT('Unk01C'),
-      wbArrayT('Magic Item List', wbStruct('Data', [
-        wbRefIDT('Magic Form'),
-        wbIntegerT('Effect Index', itU8),
-        wbIntegerT('Unk098', itU6to30),
-        wbIntegerT('Effect Item Length', itU6to30),
-        wbByteArray('Effect Item Data', ChangedFormExtraNonMagicTargetSubCounter)
-      ]), -254)
+      wbNonActorMagicTarget
     ]),
     wbArrayT('Player Crimes', wbStruct('Data', [                // 01A
       wbIntegerT('Unknown', itU32),
@@ -5179,6 +5191,35 @@ begin
     ])
   ]);
 
+  wbDialogueItems := wbStruct('Dialogues Struct', [
+    wbIntegerT('Has Dialogue Items', itU8),
+    wbUnion('Dialogues', ChangeFormCreatedPackageHasDialogueItemsDecider, [
+      wbNull,
+      wbStruct('Data', [
+        wbArrayT('Dialogue Items', wbStruct('Dialogue Item', [
+          wbArrayT('Dialogue Responses', wbStruct('Dialogue Response', [
+            wbLenStringT('Response Text', -3),
+            wbLenStringT('Voice Filename', -3),
+            wbIntegerT('Emotion Type', itU32),
+            wbIntegerT('Emotion Value', itU32),
+            wbIntegerT('Use emotion animation', itU8),
+            wbRefIDT('Speaker Idle'),
+            wbRefIDT('Listener Idle'),
+            wbRefIDT('Sound')
+          ]), -254),
+          wbIntegerT('Index', itS16),
+          wbRefIDT('TopicInfo'),
+          wbRefIDT('Topic'),
+          wbRefIDT('Quest'),
+          wbRefIDT('Speaker')
+        ]), -254),
+        wbIntegerT('Index', itS16),
+        wbIntegerT('Dialogue Item Index', itS16),
+        wbIntegerT('Dialogue Response Index', itS16)
+      ])
+    ])
+  ]);
+
   wbPackageStruct := wbStruct('Package Struct', [
     wbRefIDT('Package'),
     wbUnion('Package Info', ChangeFormBaseProcessPackageDecider, [wbNull,
@@ -5187,11 +5228,11 @@ begin
           wbStruct('Created Package Struct', [
             wbIntegerT('Type', itS8, wbPKDTType),
             wbUnion('Created Package', ChangeFormCreatedPackageDecider, [
-              wbUnionCHANGE_PACKAGE_CREATED,
+              wbChangePackageStruct,
               wbNull,
               wbNull,
               wbStruct('Dialogue Package', [
-                wbUnionCHANGE_PACKAGE_CREATED,
+                wbChangePackageStruct,
                 wbRefIDT('Speaker'),
                 wbRefIDT('Subject'),
                 wbRefIDT('Target'),
@@ -5211,18 +5252,11 @@ begin
                 wbIntegerT('Byt0A0', itU8),
                 wbIntegerT('Byt0CC', itU8),
                 wbIntegerT('Byt0C2', itU8),   // if form version 03 or greater
-                wbIntegerT('Has Unk0A4', itU8),
-                wbUnion('Unk0A4', ChangeFormCreatedPackageHasUnk0A4Decider, [
-                  wbNull,
-                  wbStruct('Data', [
-                    wbIntegerT('Dialogue Item Index', itU16),
-                    wbIntegerT('Dialoge Response Index', itU16)
-                  ])
-                ])
+                wbDialogueItems
               ]),
               wbNull,
               wbStruct('Combat Controller', [
-                wbUnionCHANGE_PACKAGE_CREATED,
+                wbChangePackageStruct,
                 wbRefIDT('Unk0BC'),
                 wbRefIDT('Unk0C0'),
                 wbIntegerT('Unknown', itU32),   // key to lookup unk080 in global array
@@ -5388,14 +5422,14 @@ begin
                 wbIntegerT('Byt0C5', itU8)              // if form version 0x0A or greater
               ]),
               wbStruct('Alarm Package', [
-                wbUnionCHANGE_PACKAGE_CREATED,
+                wbChangePackageStruct,
                 wbArrayT('Crimes', wbStruct('Crime', [
                   wbIntegerT('Crime Index', itU8),
                   wbIntegerT('Crime List Index', itU16)
                 ]), -254)
               ]),
               wbStruct('Flee Package', [
-                wbUnionCHANGE_PACKAGE_CREATED,
+                wbChangePackageStruct,
                 wbIntegerT('Byt080', itU8),
                 wbIntegerT('Byt081', itU8),
                 wbByteArray('Unk084', 12+1),
@@ -5408,7 +5442,7 @@ begin
                 wbArrayT('Unk098', wbRefIDT('RefID'), -254)
               ]),
               wbStruct('TressPass Package', [
-                wbUnionCHANGE_PACKAGE_CREATED,
+                wbChangePackageStruct,
                 wbFloatT('Flt080'),
                 wbIntegerT('Unk084', itU32),
                 wbIntegerT('Unk090', itU32),
@@ -5418,7 +5452,7 @@ begin
                 wbRefIDT('Unk08C')
               ]),
               wbStruct('Spectator Package', [
-                wbUnionCHANGE_PACKAGE_CREATED,
+                wbChangePackageStruct,
                 wbIntegerT('Delta', itU32),     // dword_11F6394 - this goes into Unk080
                 wbIntegerT('Unk084', itU32),
                 wbFloatT('Unk088'),
@@ -5438,7 +5472,7 @@ begin
                 ]), -254)
               ]),
               wbStruct('BackUp Package', [
-                wbUnionCHANGE_PACKAGE_CREATED,
+                wbChangePackageStruct,
                 wbByteArray('Unk0080', 12+1)
               ])
             ])
@@ -5552,12 +5586,161 @@ begin
             wbRefIDT('Unk158'),
             wbRefIDT('Unk140'),
             wbIntegerT('Unknown', itU32),
-            wbArrayT('List0C8', wbRefIDT('Unknown'), -254) {,
-            wbPackageStruct}
+            wbArrayT('List0C8', wbRefIDT('Unknown'), -254),
+            wbPackageStruct,
+            wbUnionCHANGE_REFR_ANIMATION_Actor,
+            wbNonActorMagicTarget,
+            wbRefIDT('Unk164'),
+            wbRefIDT('Unk160'),
+            wbRefIDT('Unk1BC'),
+            wbArrayT('List230', wbStruct('Data', [
+              wbRefIDT('Bound Object'),
+              wbIntegerT('Unknown', itS32),
+              wbIntegerT('Unk008', itU32),
+              wbIntegerT('Unk00C', itU8),
+              wbIntegerT('Unk00D', itU8),
+              wbIntegerT('Unk00E', itU8),
+              wbIntegerT('Unk00F', itU8),
+              wbIntegerT('Unk010', itU8),
+              wbIntegerT('Unk011', itU8)
+            ]), -254)
           ])
         ]),
         wbUnion('High Process', ChangedFormMobileObjectHighProcessDecider, [wbNull,
           wbStruct('Data', [
+            wbIntegerT('Unk32C', itU8),
+            wbIntegerT('Unk340', itU8),
+            wbIntegerT('Unk374', itU8),
+            wbIntegerT('Unk375', itU8),
+            wbIntegerT('Unk2FC', itU16),
+            // wbIntegerT('Unknown', itU32),  // if form version is older than 0x8
+            wbIntegerT('Unk2B4', itU32),
+            wbIntegerT('Unk2F8', itU32),
+            wbIntegerT('Unk310', itU32),
+            wbIntegerT('Unk330', itU32),
+            wbIntegerT('Unk334', itU32),
+            wbIntegerT('Unk338', itU32),
+            wbIntegerT('Unk34C', itU32),
+            wbIntegerT('Unk294', itU32),
+            wbIntegerT('Unk2B8', itU32),
+            wbIntegerT('Unk2BC', itU32),
+            wbIntegerT('Unk298', itU32),
+            wbIntegerT('Unk2C0', itU16),
+            wbIntegerT('Unk2C2', itU16),
+            wbIntegerT('Unk2C4', itU16),
+            wbIntegerT('Unk349', itU8),
+            wbByteArray('Unk300', 12+1),
+            wbIntegerT('Unk36C', itU32),
+            wbIntegerT('Unk3E8', itU32),
+            wbIntegerT('Unk3EC', itU32),
+            wbIntegerT('Unk33C', itU32),
+            wbIntegerT('Unk2A8', itU32),
+            wbIntegerT('Unk378', itU32),
+            wbIntegerT('Unk3A0', itU8),
+            wbIntegerT('Unk39C', itU32),
+            wbIntegerT('Unk3A8', itU8),
+            wbIntegerT('Unk3A4', itU32),
+            wbIntegerT('Unk420', itU8),
+            wbIntegerT('Unk3BC', itU32),
+            wbIntegerT('Unk3B0', itU32),
+            wbIntegerT('Unk2C6', itU8),
+            wbIntegerT('Unk2D0', itU32),
+            wbIntegerT('Unk2D4', itU32),
+            wbIntegerT('Unk2D8', itU32),
+            wbIntegerT('Unk3B8', itU8),
+            wbIntegerT('Unk2DC', itU8),   // The same member is loaded three times, first two must be obsolete
+            wbIntegerT('Unk2E0', itU32),
+            wbIntegerT('Unk344', itU32),
+            wbIntegerT('Unk2DC', itU8),   // The same member is loaded three times, first two must be obsolete
+            wbIntegerT('Unk2DC', itU8),   // The same member is loaded three times, first two must be obsolete
+            wbIntegerT('Unk3D8modulo12', itU32),  // Unk3D8 = saveValue mod 12
+            wbIntegerT('Unk448', itU32),
+            wbIntegerT('Unk29D', itU8),
+            wbIntegerT('Unk2B0', itU32),
+            wbIntegerT('Unk2C8', itU32),
+            wbIntegerT('Unk418', itU32),
+            wbIntegerT('Unk43C', itU32),
+            wbIntegerT('Unk440', itU32),
+            wbIntegerT('Unk444', itU8),
+            wbIntegerT('Unk445', itU8),
+            wbIntegerT('Unk450', itU32),
+            wbIntegerT('Unk458', itU8),
+            wbIntegerT('Unk430', itU32),
+            wbIntegerT('Unk3E0', itU8),   // if form version 1 or newer
+            wbIntegerT('Unk459', itU8),   // if form version 10 or newer
+            wbIntegerT('Unk2A0', itU32),  // if form version 12 or newer
+            wbStruct('Unknown', [         // if form version 13 or newer
+              wbIntegerT('Unk3D0', itU8),   // if null, set Unk3D1 to null
+              wbIntegerT('Unk3D1', itU8),
+              wbIntegerT('Unk348', itU8),
+              wbIntegerT('Unknown', itU8)   // if not null, set Unk3D1 to 1 and Unk3D0 to 0
+            ]),
+            wbRefIDT('Unk30C'),
+            wbRefIDT('Unk2A4'),
+            wbRefIDT('Unk3F0'),
+            wbRefIDT('Unk41C'),
+            wbRefIDT('Unk37C'),
+            wbRefIDT('Idle'),             // 350
+            wbRefIDT('Unk2AC'),           // if form version 15 or newer
+            wbArrayT('Unknown', wbStruct('Data', [
+              wbRefIDT('Unk3F8'),
+              wbIntegerT('Unk410', itU8)
+            ]), 6), // if form version 4 or newer, array count 5 before
+            wbArrayT('List38C', wbRefIDT('Unknown'), -254),
+            wbArrayT('List394', wbRefIDT('Unknown'), -254),
+            wbArrayT('List264', wbRefIDT('Unknown'), -254),   // if form version 18 or newer
+            wbDialogueItems,
+            wbArrayT('List44C', wbStruct('Data', [
+              wbStruct('Unk000', [
+                wbIntegerT('Byt020', itU8),
+                wbIntegerT('Unk018', itU32),
+                wbIntegerT('Unk01C', itU32),
+                wbByteArray('Unk000', 12+1),
+                wbUnion('Data00C', ChangedFormList44CData00CDecider, [wbNull, wbByteArray('Unk00C', 12+1)])
+              ]),
+              wbFloatT('Unk024'),
+              wbFloatT('Unk02C'),
+              wbRefIDT('Static'),
+              wbRefIDT('Form030')
+            ]), -254),
+            wbArrayT('List25C', wbStruct('Data', [
+              wbRefIDT('Form000'),
+              wbIntegerT('Unk004', itU8),
+              wbIntegerT('Unk008', itU32),
+              wbByteArray('Unk00C', 12+1),
+              wbFloatT('Tim018'),
+              wbIntegerT('Byt01E', itU8),
+              wbIntegerT('Byt01C', itU8),
+              wbIntegerT('Byt01D', itU8),
+              wbIntegerT('Unk020', itU32),
+              wbIntegerT('Byt01F', itU8)      // if form version 8 or newer
+            ]), -254),
+            wbArrayT('List260', wbStruct('Data', [
+              wbRefIDT('Form000'),
+              wbIntegerT('Unk004', itU8),
+              wbIntegerT('Unk008', itU32),
+              wbByteArray('Unk00C', 12+1),
+              wbFloatT('Tim018'),
+              wbIntegerT('Byt01E', itU8),
+              wbIntegerT('Byt01C', itU8),
+              wbIntegerT('Byt01D', itU8),
+              wbIntegerT('Unk020', itU32),
+              wbIntegerT('Byt01F', itU8)      // if form version 8 or newer
+            ]), -254),
+            wbIntegerT('Has Unk3DC', itU8),
+            wbUnion('Data3DC', ChangedFormHasUnk3DCDecider, [wbNull,
+              wbStruct('Unk3DC', [
+                wbIntegerT('Unk000', itU32),
+                wbByteArray('Unk004', 12+1),
+                wbFloatT('Tim010'),
+                wbIntegerT('Unk014', itU32),
+                wbRefIDT('Form018')
+              ])
+            ]),
+            wbStruct('SubBuffer', [
+              wbIntegerT('Length', itU6to30),
+              wbByteArray('Data', ChangedFormHighProcessSubBufferCounter)
+            ])
           ])
         ])
       ])

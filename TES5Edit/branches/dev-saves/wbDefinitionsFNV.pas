@@ -30,6 +30,7 @@ var
   wbConfidenceEnum   : IwbEnumDef;
   wbMoodEnum         : IwbEnumDef;
   wbAssistanceEnum   : IwbEnumDef;
+  wbArchtypeEnum     : IwbEnumDef;
 
   wbSpecializationEnum: IwbEnumDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
@@ -4108,6 +4109,45 @@ begin
   Result := Container.ElementByName['Type'].NativeValue + 1;
 end;
 
+procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Element         : IwbElement;
+  Container       : IwbContainer;
+  SelfAsContainer : IwbContainer;
+begin
+  if wbBeginInternalEdit then try
+//    if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
+      if Supports(aElement.Container, IwbContainer, Container) then begin
+        Element := Container.ElementByPath['IDLC\Animation Count'];
+        if Assigned(Element) and Supports(aElement, IwbContainer, SelfAsContainer) and
+          (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+          Element.SetNativeValue(SelfAsContainer.GetElementCount);
+      end;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+procedure wbAnimationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Element         : IwbElement;
+  Elems           : IwbElement;
+  Container       : IwbContainer;
+begin
+  if wbBeginInternalEdit then try
+//    if not wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
+      if Supports(aElement, IwbContainer, Container) then begin
+        Element := Container.ElementByPath['IDLC\Animation Count'];
+        Elems   := Container.ElementByName['IDLA - Animations'];
+        if Assigned(Element) and not Assigned(Elems) then
+          if Element.GetNativeValue<>0 then
+            Element.SetNativeValue(0);
+      end;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 procedure DefineFNVa;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
@@ -5904,6 +5944,45 @@ begin
     'Helps Friends and Allies'
   ]);
 
+  wbArchtypeEnum := wbEnum([
+    {00} 'Value Modifier',
+    {01} 'Script',
+    {02} 'Dispel',
+    {03} 'Cure Disease',
+    {04} '',
+    {05} '',
+    {06} '',
+    {07} '',
+    {08} '',
+    {09} '',
+    {10} '',
+    {11} 'Invisibility',
+    {12} 'Chameleon',
+    {13} 'Light',
+    {14} '',
+    {15} '',
+    {16} 'Lock',
+    {17} 'Open',
+    {18} 'Bound Item',
+    {19} 'Summon Creature',
+    {20} '',
+    {21} '',
+    {22} '',
+    {23} '',
+    {24} 'Paralysis',
+    {25} '',
+    {26} '',
+    {27} '',
+    {28} '',
+    {29} '',
+    {30} 'Cure Paralysis',
+    {31} 'Cure Addiction',
+    {32} 'Cure Poison',
+    {33} 'Concussion',
+    {34} 'Value And Parts',
+    {35} 'Limb Condition',
+    {36} 'Turbo'
+  ]);
 
   wbAggroRadiusFlags := wbFlags([
     'Aggro Radius Behavior'
@@ -6907,8 +6986,8 @@ begin
       wbByteArray('Unused', 3)
     ], cpNormal, True, nil, 1),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE, NULL]), 0, nil, nil, cpNormal, True)  // NULL looks valid if IDLS\Animation Count is 0
-  ]);
+    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE, NULL]), 0, nil, wbIDLAsAfterSet, cpNormal, True)  // NULL looks valid if IDLS\Animation Count is 0
+  ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
   wbRecord(NOTE, 'Note', [
     wbEDIDReq,
@@ -8608,45 +8687,7 @@ begin
       {52} wbFormIDCk('Area sound', [NULL, SOUN]),
       {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
       {60} wbFloat('Constant Effect barter factor (Unused)'),
-      {64} wbInteger('Archtype', itU32, wbEnum([
-             {00} 'Value Modifier',
-             {01} 'Script',
-             {02} 'Dispel',
-             {03} 'Cure Disease',
-             {04} '',
-             {05} '',
-             {06} '',
-             {07} '',
-             {08} '',
-             {09} '',
-             {10} '',
-             {11} 'Invisibility',
-             {12} 'Chameleon',
-             {13} 'Light',
-             {14} '',
-             {15} '',
-             {16} 'Lock',
-             {17} 'Open',
-             {18} 'Bound Item',
-             {19} 'Summon Creature',
-             {20} '',
-             {21} '',
-             {22} '',
-             {23} '',
-             {24} 'Paralysis',
-             {25} '',
-             {26} '',
-             {27} '',
-             {28} '',
-             {29} '',
-             {30} 'Cure Paralysis',
-             {31} 'Cure Addiction',
-             {32} 'Cure Poison',
-             {33} 'Concussion',
-             {34} 'Value And Parts',
-             {35} 'Limb Condition',
-             {36} 'Turbo'
-           ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
+      {64} wbInteger('Archtype', itU32, wbArchtypeEnum, cpNormal, False, nil, wbMGEFArchtypeAfterSet),
       {68} wbActorValue
     ], cpNormal, True)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
@@ -9188,9 +9229,9 @@ begin
         wbByteArray('Unused', 3)
       ], cpNormal, True, nil, 1),
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, nil, cpNormal, True),
+      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True),
       wbByteArray(IDLB, 'Unused', 4, cpIgnore)
-    ], []),
+    ], [], cpNormal, False, nil, False, nil {cannot be totally removed , wbAnimationsAfterSet}),
     wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbEmpty(PKED, 'Eat Marker'),
     wbInteger(PKE2, 'Escort Distance', itU32),
