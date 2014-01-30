@@ -1028,6 +1028,76 @@ begin
     Result := 1;
 end;
 
+var // Remembers the offset of the first decider in the group
+  ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr: Pointer = nil;
+
+function ChangedFormPackageActorMoverContentFlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
+begin
+  if Assigned(aBasePtr) then
+    ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr := aBasePtr
+  else
+    ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr := nil;
+
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 1) = 0) then
+    Result := 0
+  else
+    Result := 1;
+end;
+
+function ChangedFormPackageActorMoverContentFlagsBit1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 2) = 0) then
+    Result := 0
+  else
+    Result := 1;
+end;
+
+function ChangedFormPackageActorMoverContentFlagsBit2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 4) = 0) then
+    Result := 0
+  else
+    Result := 1;
+end;
+
+function ChangedFormPackageActorMoverContentFlagsBit3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) or ((Result and 8) = 0) then
+    Result := 0
+  else
+    Result := 1;
+end;
+
+function ChangedFormPathingRequestTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 2;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Pathing Request', 'Type', aBasePtr, aEndPtr, aElement);
+  if (Result = MaxInt) then
+    Result := 0;
+end;
+
+function ChangedFormPathingRequestSubStructHasUnk00CDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  Offset = 25;
+begin
+  Result := GetRelativeDeciderInteger(Offset, 1, 'PathingRequest subStruct', 'Byt020', aBasePtr, aEndPtr, aElement);
+  if (Result <> 1) then
+    Result := 0;
+end;
+
 //function ChangedFormPackageCreatedPackageTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 //const
 //  Offset = 2;
@@ -1805,6 +1875,8 @@ var
   wbCombatProcedure       : IwbStructDef;
   wbChangeCombatProcedure : IwbStructDef;
   wbNonActorMagicTarget   : IwbArrayDef;
+  wbPathingRequest        : IwbStructDef;
+  wbPathingRequestSubStruct : IwbStructDef;
 
   wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
 // no actual data    wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
@@ -4157,12 +4229,19 @@ begin
   wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);               // CHANGE_REFR_EXTRAS
 
-  wbUnionCHANGE_ACTOR_LIFESTATE := wbUnion('Life State', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_LIFESTATE := wbUnion('Life State', ChangedFlag10Decider, [wbNull, wbIntegerT('Life State', itU8)]);
+
 // included in Extra...      wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA := wbUnion('Package Data Extra', ChangedFlag11Decider, [wbNull, wbNull]);        // CHANGE_REFR_EXTRAS
 // included in Extra...      wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER := wbUnion('Merchant Container', ChangedFlag12Decider, [wbNull, wbNull]);  // CHANGE_REFR_EXTRAS
 // included in Extra...      wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS := wbUnion('Dismembered Limbs', ChangedFlag17Decider, [wbNull, wbNull]);    // CHANGE_REFR_EXTRAS
 // included in Extra...      wbUnionCHANGE_ACTOR_LEVELED_ACTOR := wbUnion('Leveled Actor', ChangedFlag18Decider, [wbNull, wbNull]);                  // CHANGE_REFR_EXTRAS
-  wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS := wbUnion('Disp Modifiers', ChangedFlag19Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS := wbUnion('Disp Modifiers', ChangedFlag19Decider, [wbNull,
+    wbArrayT('Disp Modifier List', wbStruct('Disp Modifier', [
+      wbRefIDT('Faction'),
+      wbFloatT('Modifier')
+    ]), -254)
+  ]);
 
   wbUnionCHANGE_ACTOR_TEMP_MODIFIERS := wbUnion('Temp Modifiers', ChangedFlag20Decider, [wbNull,
     wbArrayT('Temp Modifier List', wbStruct('Temp Modifier', [
@@ -4178,8 +4257,19 @@ begin
     ]), -254)
   ]);
 
-  wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS := wbUnion('Override Modifiers', ChangedFlag22Decider, [wbNull, wbNull]);
-  wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS := wbUnion('Permanent Modifiers', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS := wbUnion('Override Modifiers', ChangedFlag22Decider, [wbNull,
+    wbArrayT('Override Modifier List', wbStruct('Override Modifier', [
+      wbIntegerT('Actor Value', itU8),
+      wbFloatT('Modifier')
+    ]), -254)
+  ]);
+
+  wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS := wbUnion('Permanent Modifiers', ChangedFlag23Decider, [wbNull,
+    wbArrayT('Permanent Modifier List', wbStruct('Permanent Modifier', [
+      wbIntegerT('Actor Value', itU8),
+      wbFloatT('Modifier')
+    ]), -254)
+  ]);
 
   wbUnionCHANGE_CELL_FLAGS := wbUnion('Flags', ChangedFlag01Decider, [wbNull, wbIntegerT('Change Flags', itU8)]);
 
@@ -4958,11 +5048,11 @@ begin
 
   wbPathingLocation := wbStruct('Pathing Location', [
     wbByteArray('Unk004', 12+1),
-    wbRefID('NavMesh'),               // NavMeshInfo.map[Navmesh] goes into 010
-    wbRefID('Cell'),                  // Goes into 018
-    wbRefID('Worldspace'),            // goes into 01C
-    wbIntegerT('CoordXandY', itU32),  // key into WorldspaceMap of NavMeshInfo
-    wbIntegerT('Wrd024', itU16),
+    wbRefIDT('NavMesh'),               // NavMeshInfo.map[Navmesh] goes into 010
+    wbRefIDT('Cell'),                  // Goes into 018
+    wbRefIDT('Worldspace'),            // goes into 01C
+    wbIntegerT('CoordXandY', itU32),  // key into WorldspaceMap of NavMeshInfo, seems someone created the DEADDEAD key :)
+    wbIntegerT('Wrd024', itS16),
     wbIntegerT('Byt026', itU8),
     wbIntegerT('Unknown', itU8)       // if set, combines Worldspace and Unk020 for the value of unk014 then does the same with cell
   ]);
@@ -5747,20 +5837,280 @@ begin
     ])
   ]);
 
+  wbPathingRequestSubStruct := wbStruct('PathingRequest subStruct', [
+    wbIntegerT('Byt020', itU8),
+    wbIntegerT('Unk018', itU32),
+    wbIntegerT('Unk01C', itU32),
+    wbByteArray('Unk000', 12+1),
+    wbUnion('Unk00C', ChangedFormPathingRequestSubStructHasUnk00CDecider, [wbNull, wbByteArray('Unk00C', 12+1)])
+  ]);
+
+  wbPathingRequest := wbStruct('Pathing Request', [
+    wbPathingLocation,
+    wbPathingLocation,
+    wbIntegerT('Unk068', itU32),
+    wbIntegerT('Unk06C', itU32),
+    wbIntegerT('Unk070', itU32),
+    wbIntegerT('Unk074', itU32),
+    wbIntegerT('Unk078', itU32),
+    wbIntegerT('Unk088', itU32),
+    wbIntegerT('Unk08C', itU32),
+    wbIntegerT('Byt099', itU8),
+    wbIntegerT('Byt098', itU8),
+    wbIntegerT('Byt09A', itU8),
+    wbIntegerT('Byt09B', itU8),
+    wbIntegerT('Byt09C', itU8),
+    wbIntegerT('Byt09D', itU8),
+    wbIntegerT('Byt09F', itU8),     // if form version 13 or greater
+    wbStruct('Unknown', [           // if form version 15 or greater
+      wbIntegerT('Unk090', itU32),
+      wbIntegerT('Byt0A0', itU8),
+      wbIntegerT('Byte0A1', itU8)
+    ]),
+    wbStruct('Unknown', [
+      wbByteArray('Unk07C', 12+1),
+      wbIntegerT('Byt0A2', itU8),
+      wbIntegerT('Byt0A3', itU8),
+      wbIntegerT('Byt0A4', itU8),
+      wbIntegerT('Unk0A8', itU32)
+    ]),
+    wbIntegerT('Byt09E', itU8),     // if form version 20 or greater
+    wbIntegerT('Byt0AC', itU8),     // if form version 21 or greater
+    wbArrayT('Unk094', wbPathingRequestSubStruct, -254)
+  ]);
+
   wbChangedActor := wbStruct('Changed Actor', [
-     wbChangedMobileObject
-    ,wbUnionCHANGE_ACTOR_LIFESTATE
-    ,wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS
-//    ,wbUnionCHANGE_ACTOR_TEMP_MODIFIERS
-//    ,wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
-    ,wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS
-    ,wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS
+    wbChangedMobileObject,
+    wbFloatT('Unk114'),
+    wbIntegerT('Byt124', itU8),
+    wbIntegerT('Byt125', itU8),
+    wbIntegerT('Byt0BC', itU8),
+    wbIntegerT('Byt0C4', itU8),
+    wbIntegerT('Unk0C8', itU32),
+    wbIntegerT('Byt07D', itU8),
+    wbIntegerT('Unk110', itU32),
+    wbIntegerT('Byt118', itU8),
+    wbIntegerT('Byt126', itU8),
+    wbIntegerT('Byt145', itU8),
+    wbIntegerT('Byt146', itU8),
+    wbIntegerT('Byt14C', itU8),
+    wbIntegerT('Byt14D', itU8),
+    wbIntegerT('Unk150', itU32),
+    wbIntegerT('Unk154', itU32),
+    wbIntegerT('Unk158', itU32),
+    wbIntegerT('Byt174', itU8),
+    wbIntegerT('Byt175', itU8),
+    wbIntegerT('Byt18D', itU8),
+    wbIntegerT('Unk1A4', itU32),
+    wbIntegerT('Unk1A8', itU32),
+    wbIntegerT('Byt0F0', itU8),
+    wbIntegerT('Byt0F1', itU8),
+    wbIntegerT('Unk10C', itU32),  // if form version 8 or greater
+    wbStruct('Unk0138', [         // if form version 9 or greater
+      wbIntegerT('Byt000', itU8),
+      wbIntegerT('Unk004', itU32),
+      wbIntegerT('Byt010', itU8),
+      wbIntegerT('Unk008', itU32),
+      wbIntegerT('Unk00C', itU32)
+    ]),
+    wbIntegerT('Unk120', itU32),  // if form version 13 or greater
+    wbRefIDT('Form0C0'),
+    wbRefIDT('Actor Base'),       // 148
+    wbRefIDT('Form070'),
+    wbUnionCHANGE_ACTOR_LIFESTATE,
+    wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS,
+    wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS,
+    wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS,
+    wbStruct('Actor Mover', [
+      wbIntegerT('Wrd040', itU16),
+      wbIntegerT('Wrd042', itU16),
+      wbIntegerT('Byt070', itU8),
+      wbIntegerT('Unk034', itU32),
+      wbIntegerT('Byt071', itU8),
+      wbIntegerT('Unk038', itU32),
+      wbIntegerT('Byt072', itU8),
+      wbIntegerT('Byt073', itU8),
+      wbByteArray('Unk004', 12+1),
+      wbByteArray('Unk010', 12+1),
+      wbIntegerT('Unk03C', itU32),
+      wbIntegerT('Byt074', itU8),
+      wbIntegerT('Byt075', itU8),
+      wbIntegerT('Byt077', itU8),
+      wbIntegerT('Byt076', itU8),
+      wbIntegerT('Byt078', itU8),
+      wbIntegerT('Unk06C', itU32),
+      wbStruct('Unknown', [             // if form version 14 or greater
+        wbIntegerT('Unknown', itU32),   // Sub with globals to fill 07C
+        wbIntegerT('Unk084', itU32)
+      ]),
+      wbPathingLocation,
+      wbRefIDT('Form02C'),
+      wbIntegerT('Content Flags', itU8),
+      wbUnion('Pathing Request', ChangedFormPackageActorMoverContentFlagsBit0Decider, [wbNull, wbStruct('Data', [
+          wbIntegerT('Type', itU8, wbEnum([
+              'PathingRequest',                 // 00
+              'PathingRequestCover',            // 01
+              'PathingRequestClosePoint',       // 02
+              'PathingRequestFlee',             // 03
+              'PathingRequestHide',             // 04
+              'PathingRequestLOS',              // 05
+              '<bad type>',                     // 06
+              'PathingRequestOptimalLocation',  // 07
+              'PathingRequestCoveredMove'       // 08
+            ])),
+            wbUnion('Pathing Request Data', ChangedFormPathingRequestTypeDecider, [
+              wbPathingRequest,
+              wbStruct('PathingRequestCover', [
+                wbPathingRequest
+              ]),
+              wbStruct('PathingRequestClosePoint', [
+                wbPathingRequest,
+                wbFloatT('Unk0B0'),
+                wbFloatT('Unk0B4')
+              ]),
+              wbStruct('PathingRequestFlee', [
+                wbPathingRequest,
+                wbFloatT('Unk0B0')
+              ]),
+              wbStruct('PathingRequestHide', [
+                wbPathingRequest,
+                wbPathingLocation,
+                wbFloatT('Unk0D8')
+              ]),
+              wbStruct('PathingRequestLOS', [
+                wbPathingRequest,
+                wbArrayT('Unk0B4', wbByteArray('NiPoint3', 12+1), -254),
+                wbFloatT('Unk0C4'),
+                wbByteArray('Unk0C8', 12+1),
+                wbFloatT('Unk0D4')
+              ]),
+              wbNull,
+              wbStruct('PathingRequestOptimalLocation', [
+                wbPathingRequest,
+                wbFloatT('Unk0B0'),
+                wbFloatT('Unk0B4')
+              ]),
+              wbStruct('PathingRequestCoveredMode', [
+                wbPathingRequest,
+                wbFloatT('Unk0B0'),
+                wbFloatT('Unk0B4'),
+                wbFloatT('Unk0B8'),
+                wbFloatT('Unk0BC'),
+                wbFloatT('Unk0C0'),
+                wbIntegerT('Unk0C4', itU32),
+                wbByteArray('Unk0C8', 12+1),    // 3 times 32 bits
+                wbByteArray('Unk0D4', 12+1),    // 3 times 32 bits
+                wbIntegerT('Byt0E0', itU8),
+                wbArrayT('Unk0E4', wbIntegerT('Unknown', itU32), -254),
+                wbArrayT('Unk0F4', wbByteArray('NiPoint3', 12+1), -254)
+              ])
+            ])
+        ])
+      ]),
+      wbUnion('Pathing Solution', ChangedFormPackageActorMoverContentFlagsBit1Decider, [wbNull, wbStruct('Data', [
+          wbIntegerT('Byt040', itU8),
+          wbIntegerT('Unk018', itS32),
+          wbIntegerT('Unk01C', itS32),
+          wbArrayT('Virtual Pathing Nodes', wbStruct('Virtual Pathing Node', [
+            wbIntegerT('Unk000', itU32),
+            wbRefIDT('Reference'),
+            wbPathingLocation
+          ]), -254),
+          wbArrayT('Pathing Nodes', wbStruct('Pathing Node', [
+            wbIntegerT('Unk000', itU32),
+            wbByteArray('Unk02C', 12+1),
+            wbRefIDT('Reference'),
+            wbPathingLocation
+          ]), -254),
+          wbArrayT('Unused', wbPathingRequestSubStruct, -254),
+          wbArrayT('Unk030', wbRefIDT('RefID'), -254)                   // if from version 18 or greater
+        ])
+      ]),
+      // The next two are mutually exclusive
+      wbUnion('Virtual Actor Path Handler', ChangedFormPackageActorMoverContentFlagsBit2Decider, [wbNull,
+        wbStruct('Data', [
+          wbIntegerT('Unk014', itU32),
+          wbFloatT('Unk018'),
+          wbFloatT('Unk01C')
+        ])
+      ]),
+      wbUnion('Detailed Actor Path Handler', ChangedFormPackageActorMoverContentFlagsBit3Decider, [wbNull,
+        wbStruct('Data', [
+          wbByteArray('Unk01C', 12+1),
+          wbByteArray('Unk028', 12+1),
+          wbByteArray('Unk034', 12+1),
+          wbByteArray('Unk040', 12+1),
+          wbByteArray('Unk04C', 12+1),
+          wbIntegerT('Unk060', itU32),
+          wbIntegerT('Unk064', itU32),
+          wbIntegerT('Unk068', itU32),
+          wbIntegerT('Unk06C', itU32),
+          wbIntegerT('Unk070', itU32),
+          wbIntegerT('Unk074', itU32),
+          wbIntegerT('Unk078', itU32),
+          wbIntegerT('Unk07C', itU32),
+          wbIntegerT('Unk080', itU32),
+          wbIntegerT('Unk084', itU32),
+          wbIntegerT('Unk088', itU32),
+          wbIntegerT('Unk08C', itU32),
+          wbIntegerT('Unk090', itU32),
+          wbIntegerT('Unk094', itU32),
+          wbIntegerT('Unk098', itU32),
+          wbIntegerT('Unk09C', itU32),
+          wbIntegerT('Unk0AC', itU32),
+          wbIntegerT('Unk0B0', itU32),
+          wbIntegerT('Unk0B4', itU32),
+          wbIntegerT('Unk0B8', itU32),
+          wbStruct('Unk014', [            // if form version 4 or greater
+            wbIntegerT('Unk000', itU32),
+            wbIntegerT('Unk004', itU32)
+          ]),
+          wbIntegerT('Unk0C8', itU32),
+          wbIntegerT('Unk0CC', itU32),
+          wbIntegerT('Unk0D0', itU32),
+          wbIntegerT('Unk0D4', itU32),
+          wbIntegerT('Byt0DC', itU8),
+          wbIntegerT('Byt0DD', itU8),
+          wbIntegerT('Byt0DE', itU8),
+          wbIntegerT('Byt0DF', itU8),
+          wbIntegerT('Byt0E0', itU8),
+          wbIntegerT('Byt0E2', itU8),
+          wbIntegerT('Byt0E1', itU8),
+          wbStruct('Unk0C0', [             // if form version 12 or greater
+            wbIntegerT('Byt000', itU8),
+            wbIntegerT('Byt001', itU8),
+            wbIntegerT('Unk004', itU32)
+          ]),
+          wbStruct('Unknown', [        // if form version 12 or greater
+            wbByteArray('Unk0A0', 12+1),
+            wbIntegerT('Unk0BC', itU32)
+          ]),
+          wbRefIDT('Form0D8'),
+          wbArrayT('List058', wbRefIDT('RefID'), -254)
+        ])
+      ]),
+      wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player Mover', [
+          wbByteArray('Unk088', 12+1),
+          wbIntegerT('Unk094', itU32),
+          wbIntegerT('Unk098', itU32),
+          wbIntegerT('Unk09C', itU32)
+        ])
+      ])
+    ])
   ]);
 
   wbChangedCharacter := wbStruct('Changed Character', [
-    wbChangedActor
+    wbChangedActor,
+    // wbIntegerT('Unused', itU8),    // if form version older than 9
+    // wbIntegerT('Unused', itU32),   // if form version older than 9
+    wbIntegerT('Byt1C0', itU8),
+    wbIntegerT('Byt1C1', itU8)
+    // wbIntegerT('Unused', itU8),    // if form version older than 9
+    // wbIntegerT('Unused', itU32),   // if form version older than 9
+    // wbIntegerT('Unused', itU32)    // if form version older than 9
   ]);
-  wbChangedCreature := wbStruct('Changed Character', [
+
+  wbChangedCreature := wbStruct('Changed Creature', [
     wbChangedActor
   ]);
 
