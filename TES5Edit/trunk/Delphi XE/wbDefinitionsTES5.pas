@@ -7830,7 +7830,7 @@ begin
           ])
         , -1),
         wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
-        wbInteger('Chunk Divisor', itU32),
+        wbInteger('NavMeshGrid Divisor', itU32),
         wbFloat('Max X Distance'),
         wbFloat('Max Y Distance'),
         wbFloat('Min X'),
@@ -7839,7 +7839,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('Chunks', wbArray('Chunk', wbInteger('Triangle', itS16), -1))
+        wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))
       ]),
       wbUnknown(ONAM),
       wbUnknown(PNAM),
