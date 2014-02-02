@@ -4604,11 +4604,21 @@ begin
 
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('scriptName', 2),
-    wbInteger('Unknown', itU8),
+    wbInteger('Flags', itU8, wbEnum([
+      {0x00} 'Local',
+      {0x01} 'Inherited',
+      {0x02} 'Removed',
+      {0x03} 'Inherited and Removed'
+    ])),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
-      wbInteger('Unknown', itU8),
+      wbInteger('Flags', itU8, wbEnum([
+        {0x00} '',
+        {0x01} 'Edited',
+        {0x02} '',
+        {0x03} 'Removed'
+      ])),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbInteger('Null', itU32),
         {01} wbScriptObject,
@@ -7820,7 +7830,7 @@ begin
           ])
         , -1),
         wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
-        wbInteger('Divisor?', itU32),
+        wbInteger('Chunk Divisor', itU32),
         wbFloat('Max X Distance'),
         wbFloat('Max Y Distance'),
         wbFloat('Min X'),
@@ -7829,8 +7839,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
-        wbUnknown
+        wbArray('Chunks', wbArray('Chunk', wbInteger('Triangle', itS16), -1))
       ]),
       wbUnknown(ONAM),
       wbUnknown(PNAM),
