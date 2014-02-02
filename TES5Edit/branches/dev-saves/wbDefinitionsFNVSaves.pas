@@ -4529,52 +4529,6 @@ begin
         wbUnion('ObjectType', ChangedFormPackageTargetTypeDecider, [ wbNull, wbRefIDT('Object'), wbIntegerT('Type', itU32)])
       ]);
 
-//  wbCreatedPackagePackageData := wbUnion('Specific Data', ChangedFormPackageCreatedPackageTypeDecider, [
-//    wbNull,
-//    wbStruct('Follow/Escort', [
-//      wbIntegerT('Unknown', itU32),
-//      wbIntegerT('Has Location', itU8),
-//      wbUnion('Location Data', ChangedFormPackageCreatedFEHasLocationDecider, [wbNull, wbPackageLocationData])
-//    ]),
-//    wbStruct('Ambush/Use Item/Eat', [
-//      wbIntegerT('Has Location', itU8),
-//      wbUnion('Location Data', ChangedFormPackageCreatedAUEHasLocationDecider, [wbNull, wbPackageLocationData])
-//    ]),
-//    wbStruct('Patrol', [
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8)
-//    ]),
-//    wbStruct('Dialogue', [
-//      wbIntegerT('Unknown', itU32),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU32),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU32),
-//      wbRefIDT('Topic'),
-//      wbIntegerT('Has Location', itU8),
-//      wbUnion('Location Data', ChangedFormPackageCreatedDHasLocationDecider, [wbNull, wbPackageLocationData])
-//    ]),
-//    wbStruct('Use Weapon', [
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU8),
-//      wbIntegerT('Unknown', itU16),
-//      wbIntegerT('Unknown', itU16),
-//      wbIntegerT('Unknown', itU16),
-//      wbIntegerT('Unknown', itU32),
-//      wbIntegerT('Unknown', itU32),
-//      wbRefIDT('Weapon'),
-//      wbIntegerT('Has Target', itU8),
-//      wbUnion('Target Data', ChangedFormPackageCreatedUWHasTargetDecider, [wbNull, wbPackageTargetData]),
-//      wbIntegerT('Has Location', itU8),
-//      wbUnion('Location Data', ChangedFormPackageCreatedUWHasLocationDecider, [wbNull, wbPackageLocationData])
-//    ])]);
-
   wbCreatedPackageDataType := wbUnion('Specific Data', ChangedFormPackageCreatedPackageDataTypeDecider, [
     wbNull,
     wbStruct('Follow/Escort', [
@@ -6128,6 +6082,92 @@ begin
          ])])
         ,wbChangedCharacter
         ,wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player data', [
+           wbUnionCHANGE_REFR_ANIMATION_Actor, // There really are two animation subBuffer for the player
+           wbIntegerT('Byt64A', itU8),
+           wbIntegerT('Byt64D', itU8),
+           wbIntegerT('Byt651', itU8),
+           wbIntegerT('Byt652', itU8),
+           wbIntegerT('Unk654', itU32),
+           wbIntegerT('Unk660', itU32),
+           wbIntegerT('Unk664', itU32),
+           wbIntegerT('Unk668', itU32),
+           wbIntegerT('Byt66C', itU8),
+           wbIntegerT('Byt6CC', itU8),
+           wbIntegerT('Unk6D0', itU32),
+           wbIntegerT('Unk6D4', itU32),
+           wbIntegerT('Byt6D8', itU8),
+           wbIntegerT('Unk6DC', itU32),
+           wbIntegerT('Byt6E8', itU8),
+           wbIntegerT('Byt681', itU8),
+           wbIntegerT('Byt75C', itU8),        // linked to FaceGen somehow
+           wbIntegerT('Byt7C6', itU8),
+           wbIntegerT('Unk6E4', itU32),
+           wbStruct('Refr6F4 Pos', [
+             wbFloat('PosX'),
+             wbFloat('PosY'),
+             wbFloatT('PosZ')
+           ]),
+           wbIntegerT('Unk698', itU32),
+           wbIntegerT('Unk67C', itU32),
+           wbIntegerT('Unk738', itU32),
+           wbIntegerT('Byt658', itU8),
+           wbIntegerT('Unk65C', itU32),
+           wbIntegerT('Unk674', itU32),
+           wbIntegerT('Unk670', itU32),
+           wbIntegerT('Byt75C', itU8),
+           wbIntegerT('Unk730', itU32),
+           wbIntegerT('Unk790', itU32),
+           wbIntegerT('Byt680', itU8),
+           wbIntegerT('Byt7C4', itU8),
+           wbIntegerT('Unk63C', itU32),
+           wbIntegerT('Unk640', itU32),
+           wbIntegerT('Unk644', itU32),
+           wbIntegerT('Unk200', itU32),
+           wbIntegerT('Byt240', itU8),
+           wbIntegerT('Byt64E', itU8),
+           wbIntegerT('Byt66D', itU8),
+           wbIntegerT('Unk794', itU32),
+           wbFloatT('flt_11E0B5C'),
+           wbIntegerT('UnkD6C', itU32),
+           wbIntegerT('UnkD70', itU32),
+           wbIntegerT('Unk228', itU32),
+           wbIntegerT('Unk22C', itU32),
+           wbIntegerT('Unk230', itU32),
+           wbIntegerT('Unk234', itU32),
+           wbIntegerT('Byt608', itU8),
+           wbIntegerT('BytDF2', itU8),
+           wbIntegerT('Byt64F', itU8),        // if form version 13 or greater
+           wbIntegerT('Byt650', itU8),        // idem
+           wbIntegerT('Byt7C7', itU8),        // if form version 16 or greater
+           wbIntegerT('Byt5F8', itU8),        // if form version 18 or greater
+           wbStruct('Unknown', [              // if form version 21 or greater
+             wbIntegerT('Unk1FC', itU32),
+             wbIntegerT('Unk684', itU32),
+             wbArray('Unk744', wbIntegerT('Unknown', itU32), 5)
+           ]),
+           wbStruct('Unk878', [
+             wbIntegerT('Byt000', itU8),
+             wbIntegerT('Unk004', itU32)
+           ]),
+           wbRefIDT('Quest'),
+           wbRefIDT('Class'),
+           wbRefIDT('Refr6F4 Parent Cell'),
+           wbRefIDT('Region'),
+           wbRefIDT('Region Weather'),        // Goes into Region::Unk024
+           wbRefIDT('Form208'),
+           wbRefIDT('Form224'),               // if form version 18 or greater
+           wbRefIDT('Form638'),
+           wbRefIDT('Form604'),
+           wbRefIDT('FormD2C'),
+           wbRefIDT('FormD44'),
+           wbArrayT('List6A8', wbRefIDT('Topic'), -254),
+           wbArrayT('List5E4', wbRefIDT('Note'), -254),
+           wbChangedInventory,
+           wbArrayT('ListD48', wbStruct('Data', [
+             wbRefIDT('Form000'),
+             wbIntegerT('Byt004', itU8),
+             wbIntegerT('Byt005', itU8)
+           ]), -254)
          ])])
        ])
       ,wbStruct('Change ACRE Data', [ {03C}
