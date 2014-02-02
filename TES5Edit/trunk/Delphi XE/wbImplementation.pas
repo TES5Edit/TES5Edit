@@ -12675,14 +12675,16 @@ end;
 
 function TwbArray.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
-  Element: IwbElement;
-  ArrayDef: IwbArrayDef;
-  Container: IwbContainer;
-  DataContainer: IwbDataContainer;
-  s: string;
-  i: Integer;
-  SelfRef : IwbContainerElementRef;
-  p, q: Pointer;
+  Element       : IwbElement;
+  sElement      : IwbElement;
+  dElement      : IwbElement;
+  ArrayDef      : IwbArrayDef;
+  Container     : IwbContainer;
+  DataContainer : IwbDataContainer;
+  s             : string;
+  i             : Integer;
+  SelfRef       : IwbContainerElementRef;
+  p, q          : Pointer;
 begin
   Result := nil;
 
@@ -12731,8 +12733,11 @@ begin
       Assert(Container.ElementCount = ArrayDef.ElementCount);
       Assert(GetElementCount = ArrayDef.ElementCount);
 
-      for i := 0 to Pred(Container.ElementCount) do
-        cntElements[i].Assign(Low(Integer), Container.Elements[i], aOnlySK);
+      for i := 0 to Pred(Container.ElementCount) do begin
+        sElement := Container.Elements[i];
+        dElement := GetElementByMemoryOrder(i);
+        dElement.Assign(Low(Integer), sElement, aOnlySK);
+      end;
     end;
 
   end else begin
