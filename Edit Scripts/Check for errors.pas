@@ -1,7 +1,7 @@
 {
   Does the same as internal "Check for errors" function in xEdit
 }
-unit userscript;
+unit CheckForErrorsScript;
 
 function CheckForErrors(aIndent: Integer; aElement: IInterface): Boolean;
 var
@@ -13,8 +13,7 @@ begin
   if Result then begin
     Error := Check(aElement);
     AddMessage(StringOfChar(' ', aIndent * 2) + Name(aElement) + ' -> ' + Error);
-  end else
-    AddMessage('');
+  end;
 
   for i := ElementCount(aElement) - 1 downto 0 do
     Result := CheckForErrors(aIndent + 1, ElementByIndex(aElement, i)) or Result;

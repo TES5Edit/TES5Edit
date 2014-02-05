@@ -2939,11 +2939,14 @@ begin
 
   Settings := TMemIniFile.Create(wbSettingsFileName);
 
-  Left := Settings.ReadInteger(Name, 'Left', Left);
-  Top := Settings.ReadInteger(Name, 'Top', Top);
-  Width := Settings.ReadInteger(Name, 'Width', Width);
-  Height := Settings.ReadInteger(Name, 'Height', Height);
-  WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
+  // skip reading main form positition if Shift is pressed
+  if GetKeyState(VK_SHIFT) >= 0 then begin
+    Left := Settings.ReadInteger(Name, 'Left', Left);
+    Top := Settings.ReadInteger(Name, 'Top', Top);
+    Width := Settings.ReadInteger(Name, 'Width', Width);
+    Height := Settings.ReadInteger(Name, 'Height', Height);
+    WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
+  end;
 
   AddMessage('Loading active plugin list: ' + wbPluginsFileName);
 
@@ -5291,403 +5294,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.JvInterpreterProgram1GetValue(Sender: TObject;
-  Identifier: string; var Value: Variant; Args: TJvInterpreterArgs;
-  var Done: Boolean);
-var
-  Element             : IwbElement;
-  MainRecord          : IwbMainRecord;
-  _File               : IwbFile;
-  Node                : PVirtualNode;
-  NodeData            : PNavNodeData;
-  ConflictThis        : TConflictThis;
-  ConflictAll         : TConflictAll;
-  i                   : Integer;
-begin
-  if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
-    Value := wbGameMode;
-    Done := True;
-  end else
-  if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
-    Value := wbGameName;
-    Done := True;
-  end else
-  if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
-    Value := wbAppName;
-    Done := True;
-  end else
-  if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
-    Value := wbLoadBSAs;
-    Done := True;
-  end else
-  if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
-    Value := wbSimpleRecords;
-    Done := True;
-  end else
-  if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
-    Value := wbTrackAllEditorID;
-    Done := True;
-  end else
-  if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
-    Value := O2V(wbRecordDefMap);
-    Done := True;
-  end else
-  if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
-     (SameText(Identifier, 'wbProgramPath') and (Args.Count = 0)) then begin
-    Value := wbProgramPath;
-    Done := True;
-  end else
-  if (SameText(Identifier,   'ScriptsPath') and (Args.Count = 0)) or
-     (SameText(Identifier, 'wbScriptsPath') and (Args.Count = 0)) then begin
-    Value := wbScriptsPath;
-    Done := True;
-  end else
-  if (SameText(Identifier, 'wbDataPath') and (Args.Count = 0)) or
-     (SameText(Identifier, 'DataPath') and (Args.Count = 0)) then begin
-    Value := wbDataPath;
-    Done := True;
-  end else
-  if (SameText(Identifier, 'wbTempPath') and (Args.Count = 0)) or
-     (SameText(Identifier, 'TempPath') and (Args.Count = 0)) then begin
-    Value := wbTempPath;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
-    Value := FilterApplied;
-    Done := True;
-  end else
-  if SameText(Identifier, 'frmMain') and (Args.Count = 0) then begin
-    Value := O2V(frmMain);
-    Done := True;
-  end else
-  if SameText(Identifier, 'AddMessage') then begin
-    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
-      AddMessage(Args.Values[0]);
-      Done := True;
-      Application.ProcessMessages;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
-    Value := Length(Files);
-    Done := True;
-  end else
-  if SameText(Identifier, 'FileByIndex') then begin
-    if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
-      Value := Files[Integer(Args.Values[0])];
-      Done := True;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
-  end else
-  if SameText(Identifier, 'FileByLoadOrder') then begin
-    if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
-      for i := Low(Files) to High(Files) do
-        if Files[i].LoadOrder = Integer(Args.Values[0]) then begin
-          Value := Files[i];
-          Break;
-        end;
-      Done := True;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
-    AddNewFile(_File);
-    Value := _File;
-    Done := True;
-  end else
-  if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
-    Value := false;
-    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-      if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-        Value := AddRequiredMasters(Element, _File, Args.Values[2]);
-    Done := True;
-  end else
-  if SameText(Identifier, 'RemoveNode') and (Args.Count = 1) then begin
-    Value := False;
-    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-      Node := FindNodeForElement(Element);
-      if Assigned(Node) then begin
-        NodeData := vstNav.GetNodeData(Node);
-        if Supports(Element, IwbMainRecord, MainRecord) then begin
-          CheckHistoryRemove(BackHistory, MainRecord);
-          CheckHistoryRemove(ForwardHistory, MainRecord);
-        end;
-        SetActiveRecord(nil);
-        if Element.Equals(NodeData.Container) then
-          NodeData.Container := nil;
-        if Assigned(NodeData.Container) then
-          NodeData.Container.Remove;
-        Element.Remove;
-        NodeData.Element := nil;
-        NodeData.Container := nil;
-        Element := nil;
-        vstNav.DeleteNode(Node, False);
-        Value := True;
-      end;
-    end;
-    Done := True;
-  end else
-  if SameText(Identifier, 'ConflictThisForMainRecord') and (Args.Count = 1) then begin
-    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
-      Value := ConflictThis;
-      Done := True;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ConflictAllForMainRecord') and (Args.Count = 1) then begin
-    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
-      Value := ConflictAll;
-      Done := True;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ConflictThisForNode') and (Args.Count = 1) then begin
-    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-      Node := FindNodeForElement(Element);
-      if Assigned(Node) then begin
-        NodeData := vstNav.GetNodeData(Node);
-        Value := NodeData.ConflictThis;
-      end;
-      Done := True;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ConflictAllForNode') and (Args.Count = 1) then begin
-    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-      Node := FindNodeForElement(Element);
-      if Assigned(Node) then begin
-        NodeData := vstNav.GetNodeData(Node);
-        Value := NodeData.ConflictAll;
-      end;
-      Done := True;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'JumpTo') and (Args.Count = 2) then begin
-    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      vstNav.EndUpdate;
-      if not vstNav.Enabled then vstNav.Enabled := True;
-      JumpTo(MainRecord, Boolean(Args.Values[1]));
-      Done := True;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ApplyFilter') and (Args.Count = 0) then begin
-    FilterPreset := True; // skip filter dialog
-    try
-      mniNavFilterApplyClick(Sender);
-    finally
-      FilterPreset := False;
-      Done := True;
-    end;
-  end else
-  if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
-    Value := O2V(TfrmFileSelect.Create(nil));
-    Done := True;
-  end;
-end;
-
-procedure TfrmMain.JvInterpreterProgram1SetValue(Sender: TObject;
-  Identifier: string; const Value: Variant; Args: TJvInterpreterArgs;
-  var Done: Boolean);
-var
-  i, v: Integer;
-begin
-  if SameText(Identifier, 'ScriptProcessElements') then begin
-    ScriptProcessElements := [];
-    v := V2S(Value);
-    for i := Integer(Low(TwbElementType)) to Integer(High(TwbElementType)) do
-      if (v and (1 shl i)) > 0 then
-        Include(ScriptProcessElements, TwbElementType(i));
-    if ScriptProcessElements = [] then
-      ScriptProcessElements := [etMainRecord];
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterScripted') then begin
-    FilterScripted := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterConflictAll') then begin
-    FilterConflictAll := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterConflictAllSet') then begin
-    FilterConflictAllSet := [];
-    v := V2S(Value);
-    for i := Integer(Low(TConflictAll)) to Integer(High(TConflictAll)) do
-      if (v and (1 shl i)) > 0 then
-        Include(FilterConflictAllSet, TConflictAll(i));
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterConflictThis') then begin
-    FilterConflictThis := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterConflictThisSet') then begin
-    FilterConflictThisSet := [];
-    v := V2S(Value);
-    for i := Integer(Low(TConflictThis)) to Integer(High(TConflictThis)) do
-      if (v and (1 shl i)) > 0 then
-        Include(FilterConflictThisSet, TConflictThis(i));
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByInjectStatus') then begin
-    FilterByInjectStatus := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterInjectStatus') then begin
-    FilterInjectStatus := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByNotReachableStatus') then begin
-    FilterByNotReachableStatus := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterNotReachableStatus') then begin
-    FilterNotReachableStatus := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByReferencesInjectedStatus') then begin
-    FilterByReferencesInjectedStatus := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterReferencesInjectedStatus') then begin
-    FilterReferencesInjectedStatus := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByEditorID') then begin
-    FilterByEditorID := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterEditorID') then begin
-    FilterEditorID := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByName') then begin
-    FilterByName := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterName') then begin
-    FilterName := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByBaseEditorID') then begin
-    FilterByBaseEditorID := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterBaseEditorID') then begin
-    FilterBaseEditorID := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByBaseName') then begin
-    FilterByBaseName := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterBaseName') then begin
-    FilterBaseName := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterScaledActors') then begin
-    FilterScaledActors := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterBySignature') then begin
-    FilterBySignature := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterSignatures') then begin
-    FilterSignatures := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByBaseSignature') then begin
-    FilterByBaseSignature := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterBaseSignatures') then begin
-    FilterBaseSignatures := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByPersistent') then begin
-    FilterByPersistent := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterPersistent') then begin
-    FilterPersistent := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterUnnecessaryPersistent') then begin
-    FilterUnnecessaryPersistent := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterMasterIsTemporary') then begin
-    FilterMasterIsTemporary := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterIsMaster') then begin
-    FilterIsMaster := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterPersistentPosChanged') then begin
-    FilterPersistentPosChanged := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterDeleted') then begin
-    FilterDeleted := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByVWD') then begin
-    FilterByVWD := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterVWD') then begin
-    FilterVWD := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterByHasVWDMesh') then begin
-    FilterByHasVWDMesh := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FilterHasVWDMesh') then begin
-    FilterHasVWDMesh := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FlattenBlocks') then begin
-    FlattenBlocks := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'FlattenCellChilds') then begin
-    FlattenCellChilds := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'AssignPersWrldChild') then begin
-    AssignPersWrldChild := Value;
-    Done := True;
-  end else
-  if SameText(Identifier, 'InheritConflictByParent') then begin
-    InheritConflictByParent := Value;
-    Done := True;
-  end;
-end;
-
-procedure TfrmMain.JvInterpreterProgram1GetUnitSource(UnitName: string;
-  var Source: string; var Done: Boolean);
-var
-  sl: TStringList;
-  UnitFile: string;
-begin
-  UnitFile := wbScriptsPath + UnitName + '.pas';
-  sl := TStringList.Create;
-  try
-    sl.LoadFromFile(UnitFile);
-    Source := sl.Text;
-    Done := True;
-  finally
-    sl.Free;
-  end;
-end;
-
 procedure TfrmMain.ApplyScript(aScript: string);
 const
   sJustWait                   = 'Applying script. Please wait...';
@@ -5699,11 +5305,19 @@ var
   Count                       : Cardinal;
   StartTick                   : Cardinal;
   jvi                         : TJvInterpreterProgram;
-  i                           : Integer;
+  i, p                        : Integer;
   bCheckUnsaved               : Boolean;
+  bShowMessages               : Boolean;
 begin
+  // prevent execution of new scripts if already executing
+  if Assigned(ScriptEngine) then
+    Exit;
+
   if Trim(aScript) = '' then
     Exit;
+
+  p := Pos('Mode:', aScript);
+  bShowMessages := not ContainsText(Copy(aScript, p, PosEx(#10, aScript, p) - p), 'Silent');
 
   bCheckUnsaved := tmrCheckUnsaved.Enabled;
   tmrCheckUnsaved.Enabled := False;
@@ -5720,7 +5334,7 @@ begin
     jvi.Pas.Text := aScript;
     jvi.Compile;
 
-    pgMain.ActivePage := tbsMessages;
+    if bShowMessages then pgMain.ActivePage := tbsMessages;
     Selection := vstNav.GetSortedSelection(True);
     vstNav.BeginUpdate;
     try
@@ -5729,13 +5343,13 @@ begin
 
       Enabled := False;
 
-      AddMessage('Applying script...');
+      if bShowMessages then AddMessage('Applying script...');
       Application.ProcessMessages;
 
       if jvi.FunctionExists('', 'Initialize') then begin
         jvi.CallFunction('Initialize', nil, []);
         if jvi.VResult <> 0 then begin
-          PostAddMessage(sTerminated + IntToStr(jvi.VResult));
+          if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
           Exit;
         end;
       end;
@@ -5758,10 +5372,11 @@ begin
               if jvi.FunctionExists('', 'Process') then begin
                 jvi.CallFunction('Process', nil, [NodeData.Element]);
                 if jvi.VResult <> 0 then begin
-                  PostAddMessage(sTerminated + IntToStr(jvi.VResult));
+                  if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
                   Exit;
                 end;
-              end;
+              end else
+                Break;
 
               Inc(Count);
             end;
@@ -5783,7 +5398,7 @@ begin
       if jvi.FunctionExists('', 'Finalize') then begin
         jvi.CallFunction('Finalize', nil, []);
         if jvi.VResult <> 0 then begin
-          PostAddMessage(sTerminated + IntToStr(jvi.VResult));
+          if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
           Exit;
         end;
       end;
@@ -5793,7 +5408,7 @@ begin
       vstNav.EndUpdate;
       Enabled := True;
       Caption := Application.Title;
-      PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
+      if bShowMessages then PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
         ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     end;
 
@@ -12189,7 +11804,10 @@ end;
 procedure TfrmMain.vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
   var Allowed: Boolean);
 begin
-  if GetKeyState(VK_MENU) < 0 then
+  // Fullexpand when Alt is pressed
+  // No fullexpand if script is running because it can be hotkeyed to Alt+...
+  // and use JumpTo() command which expands the navigation tree
+  if (GetKeyState(VK_MENU) < 0) and not Assigned(ScriptEngine) then
     Sender.FullExpand(Node);
 end;
 
@@ -12905,6 +12523,410 @@ begin
 
       Element.EditValue := NewText;
     end;
+  end;
+end;
+
+procedure TfrmMain.JvInterpreterProgram1GetValue(Sender: TObject;
+  Identifier: string; var Value: Variant; Args: TJvInterpreterArgs;
+  var Done: Boolean);
+var
+  Element             : IwbElement;
+  MainRecord          : IwbMainRecord;
+  _File               : IwbFile;
+  Node                : PVirtualNode;
+  NodeData            : PNavNodeData;
+  ConflictThis        : TConflictThis;
+  ConflictAll         : TConflictAll;
+  i                   : Integer;
+begin
+  if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
+    Value := wbGameMode;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
+    Value := wbGameName;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
+    Value := wbAppName;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
+    Value := wbLoadBSAs;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
+    Value := wbSimpleRecords;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
+    Value := wbTrackAllEditorID;
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
+    Value := O2V(wbRecordDefMap);
+    Done := True;
+  end else
+  if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'wbProgramPath') and (Args.Count = 0)) then begin
+    Value := wbProgramPath;
+    Done := True;
+  end else
+  if (SameText(Identifier,   'ScriptsPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'wbScriptsPath') and (Args.Count = 0)) then begin
+    Value := wbScriptsPath;
+    Done := True;
+  end else
+  if (SameText(Identifier, 'wbDataPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'DataPath') and (Args.Count = 0)) then begin
+    Value := wbDataPath;
+    Done := True;
+  end else
+  if (SameText(Identifier, 'wbTempPath') and (Args.Count = 0)) or
+     (SameText(Identifier, 'TempPath') and (Args.Count = 0)) then begin
+    Value := wbTempPath;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
+    Value := FilterApplied;
+    Done := True;
+  end else
+  if SameText(Identifier, 'frmMain') and (Args.Count = 0) then begin
+    Value := O2V(frmMain);
+    Done := True;
+  end else
+  if SameText(Identifier, 'AddMessage') then begin
+    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
+      AddMessage(Args.Values[0]);
+      Done := True;
+      Application.ProcessMessages;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
+    Value := Length(Files);
+    Done := True;
+  end else
+  if SameText(Identifier, 'FileByIndex') then begin
+    if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
+      Value := Files[Integer(Args.Values[0])];
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
+  end else
+  if SameText(Identifier, 'FileByLoadOrder') then begin
+    if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
+      for i := Low(Files) to High(Files) do
+        if Files[i].LoadOrder = Integer(Args.Values[0]) then begin
+          Value := Files[i];
+          Break;
+        end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'IsPositionChanged') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      Value := IsPositionChanged(MainRecord);
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
+    AddNewFile(_File);
+    Value := _File;
+    Done := True;
+  end else
+  if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
+    Value := false;
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+      if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
+        Value := AddRequiredMasters(Element, _File, Args.Values[2]);
+    Done := True;
+  end else
+  if SameText(Identifier, 'RemoveNode') and (Args.Count = 1) then begin
+    Value := False;
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+      Node := FindNodeForElement(Element);
+      if Assigned(Node) then begin
+        NodeData := vstNav.GetNodeData(Node);
+        if Supports(Element, IwbMainRecord, MainRecord) then begin
+          CheckHistoryRemove(BackHistory, MainRecord);
+          CheckHistoryRemove(ForwardHistory, MainRecord);
+        end;
+        SetActiveRecord(nil);
+        if Element.Equals(NodeData.Container) then
+          NodeData.Container := nil;
+        if Assigned(NodeData.Container) then
+          NodeData.Container.Remove;
+        Element.Remove;
+        NodeData.Element := nil;
+        NodeData.Container := nil;
+        Element := nil;
+        vstNav.DeleteNode(Node, False);
+        Value := True;
+      end;
+    end;
+    Done := True;
+  end else
+  if SameText(Identifier, 'ConflictThisForMainRecord') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+      Value := ConflictThis;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ConflictAllForMainRecord') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+      Value := ConflictAll;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ConflictThisForNode') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+      Node := FindNodeForElement(Element);
+      if Assigned(Node) then begin
+        NodeData := vstNav.GetNodeData(Node);
+        Value := NodeData.ConflictThis;
+      end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ConflictAllForNode') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+      Node := FindNodeForElement(Element);
+      if Assigned(Node) then begin
+        NodeData := vstNav.GetNodeData(Node);
+        Value := NodeData.ConflictAll;
+      end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'JumpTo') and (Args.Count = 2) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      vstNav.EndUpdate;
+      if not vstNav.Enabled then vstNav.Enabled := True;
+      JumpTo(MainRecord, Boolean(Args.Values[1]));
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ApplyFilter') and (Args.Count = 0) then begin
+    FilterPreset := True; // skip filter dialog
+    try
+      mniNavFilterApplyClick(Sender);
+    finally
+      FilterPreset := False;
+      Done := True;
+    end;
+  end else
+  if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
+    Value := O2V(TfrmFileSelect.Create(nil));
+    Done := True;
+  end;
+end;
+
+procedure TfrmMain.JvInterpreterProgram1SetValue(Sender: TObject;
+  Identifier: string; const Value: Variant; Args: TJvInterpreterArgs;
+  var Done: Boolean);
+var
+  i, v: Integer;
+begin
+  if SameText(Identifier, 'ScriptProcessElements') then begin
+    ScriptProcessElements := [];
+    v := V2S(Value);
+    for i := Integer(Low(TwbElementType)) to Integer(High(TwbElementType)) do
+      if (v and (1 shl i)) > 0 then
+        Include(ScriptProcessElements, TwbElementType(i));
+    if ScriptProcessElements = [] then
+      ScriptProcessElements := [etMainRecord];
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterScripted') then begin
+    FilterScripted := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictAll') then begin
+    FilterConflictAll := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictAllSet') then begin
+    FilterConflictAllSet := [];
+    v := V2S(Value);
+    for i := Integer(Low(TConflictAll)) to Integer(High(TConflictAll)) do
+      if (v and (1 shl i)) > 0 then
+        Include(FilterConflictAllSet, TConflictAll(i));
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictThis') then begin
+    FilterConflictThis := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterConflictThisSet') then begin
+    FilterConflictThisSet := [];
+    v := V2S(Value);
+    for i := Integer(Low(TConflictThis)) to Integer(High(TConflictThis)) do
+      if (v and (1 shl i)) > 0 then
+        Include(FilterConflictThisSet, TConflictThis(i));
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByInjectStatus') then begin
+    FilterByInjectStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterInjectStatus') then begin
+    FilterInjectStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByNotReachableStatus') then begin
+    FilterByNotReachableStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterNotReachableStatus') then begin
+    FilterNotReachableStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByReferencesInjectedStatus') then begin
+    FilterByReferencesInjectedStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterReferencesInjectedStatus') then begin
+    FilterReferencesInjectedStatus := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByEditorID') then begin
+    FilterByEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterEditorID') then begin
+    FilterEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByName') then begin
+    FilterByName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterName') then begin
+    FilterName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseEditorID') then begin
+    FilterByBaseEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseEditorID') then begin
+    FilterBaseEditorID := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseName') then begin
+    FilterByBaseName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseName') then begin
+    FilterBaseName := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterScaledActors') then begin
+    FilterScaledActors := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBySignature') then begin
+    FilterBySignature := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterSignatures') then begin
+    FilterSignatures := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByBaseSignature') then begin
+    FilterByBaseSignature := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterBaseSignatures') then begin
+    FilterBaseSignatures := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByPersistent') then begin
+    FilterByPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterPersistent') then begin
+    FilterPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterUnnecessaryPersistent') then begin
+    FilterUnnecessaryPersistent := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterMasterIsTemporary') then begin
+    FilterMasterIsTemporary := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterIsMaster') then begin
+    FilterIsMaster := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterPersistentPosChanged') then begin
+    FilterPersistentPosChanged := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterDeleted') then begin
+    FilterDeleted := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByVWD') then begin
+    FilterByVWD := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterVWD') then begin
+    FilterVWD := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByHasVWDMesh') then begin
+    FilterByHasVWDMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterHasVWDMesh') then begin
+    FilterHasVWDMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FlattenBlocks') then begin
+    FlattenBlocks := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FlattenCellChilds') then begin
+    FlattenCellChilds := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'AssignPersWrldChild') then begin
+    AssignPersWrldChild := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'InheritConflictByParent') then begin
+    InheritConflictByParent := Value;
+    Done := True;
+  end;
+end;
+
+procedure TfrmMain.JvInterpreterProgram1GetUnitSource(UnitName: string;
+  var Source: string; var Done: Boolean);
+var
+  sl: TStringList;
+  UnitFile: string;
+begin
+  UnitFile := wbScriptsPath + UnitName + '.pas';
+  sl := TStringList.Create;
+  try
+    sl.LoadFromFile(UnitFile);
+    Source := sl.Text;
+    Done := True;
+  finally
+    sl.Free;
   end;
 end;
 
