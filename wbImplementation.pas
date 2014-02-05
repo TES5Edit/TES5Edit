@@ -4422,7 +4422,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
   inherited;
-  if Recursive or Initial then
+  if Recursive or (Initial and not Supports(Self, IwbGroupRecord)) then
     for i := Low(cntElements) to High(cntElements) do
       if cntElements[i].CanContainFormIDs then
         cntElements[i].ReportRequiredMasters(aStrings, aAsNew, Recursive);
