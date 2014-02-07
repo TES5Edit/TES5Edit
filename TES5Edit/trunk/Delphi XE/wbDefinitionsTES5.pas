@@ -689,6 +689,8 @@ var
   wbCTDA: IwbSubRecordStructDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
+  wbCTDAsCount: IwbSubRecordArrayDef;
+  wbCTDAsReqCount: IwbSubRecordArrayDef;
   wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordStructDef;
@@ -716,7 +718,6 @@ var
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
   wbFunctionsEnum: IwbEnumDef;
-  wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
@@ -3886,7 +3887,7 @@ var
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-   Result := False;
+  Result := False;
   if wbBeginInternalEdit then try
     if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
        Supports(aElement, IwbContainer, SelfAsContainer) then begin
@@ -5966,15 +5967,10 @@ begin
     wbString(CIS2, 'Parameter #2')
   ], [], cpNormal);
 
-  wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
-
-  wbEffects :=
-    wbRStructs('Effects', 'Effect', [
-      wbEFID,
-      wbEFIT,
-      wbCTDAs
-    ], []);
+  wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
+  wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
+  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
+  wbCTDAsReqCount := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
 
   wbEffectsReq :=
     wbRStructs('Effects', 'Effect', [
@@ -7293,7 +7289,7 @@ begin
       ]),
     wbPLVD,
     wbCITC,
-    wbCTDAs
+    wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
   wbRecord(FURN, 'Furniture', [
@@ -9149,7 +9145,7 @@ begin
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
@@ -9159,7 +9155,7 @@ begin
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbStruct(DNAM, 'Flags', [
       wbInteger('Node Flags', itU16, wbSMNodeFlags),
       wbInteger('Quest Flags', itU16, wbFlags([
@@ -9183,7 +9179,7 @@ begin
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
     wbString(ENAM, 'Type', 4)
@@ -9222,7 +9218,7 @@ begin
       wbInteger('Loop Count', itU32)
     ]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
@@ -9769,7 +9765,6 @@ begin
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
-      //wbCTDAs,
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
 
@@ -10735,7 +10730,7 @@ begin
       wbRArray('Branches', wbRStruct('Branch', [
         wbString(ANAM, 'Branch Type'),
         wbCITC,
-        wbCTDAs,
+        wbCTDAsCount,
         wbStruct(PRCB, 'Root', [
           wbInteger('Branch Count', itU32),
           wbInteger('Flags', itU32, wbFlags([
