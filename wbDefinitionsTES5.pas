@@ -11980,7 +11980,7 @@ begin
 
       {--- Objects ---}
       wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, STAT, LTEX, MSTT]),
+        wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT]),
         wbInteger('Parent Index', itU16, wbHideFFFF),
         wbByteArray('Unknown', 2),
         wbFloat('Density'),
