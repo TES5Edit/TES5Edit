@@ -7800,7 +7800,7 @@ begin
               'Unknown 8',
               'Unknown 9',
               'Water',
-              'Unknown 11',
+              'Door',
               'Unknown 12',
               'Unknown 13',
               'Unknown 14',
