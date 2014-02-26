@@ -27,6 +27,7 @@ const
   ColorBackground = $000000; // background map color RGB
   ColorTransparent = $000001; // transparent color for overlay
   ColorOverlayDefault = clYellow; // default overlay drawing color
+  ColorCellsDebug = clAqua; // color for cells debug grid
   OverlaySizeReference = 3; // drawing size of reference
   // font sizes for lod level 32, automatically scaled for other lod levels
   FontSizeBlock = 20;
@@ -40,7 +41,7 @@ var
   MapWidthPx, MapHeightPx, CellSizePx: integer;
   PosSizePx, MapViewScale, FontMult: real;
   GridOpacity: integer;
-  fMapDrawn, fMapNormals: boolean;
+  fMapDrawn, fMapNormals, fCellsDebug: boolean;
   CurrentWorld: IInterface;
   slPlugin, slRegion, slWorldspaces: TStringList;
 
@@ -53,7 +54,7 @@ var
   sbxMap: TScrollBox;
   imgMap, imgOver: TImage;
   cmbWorld, cmbMapSize, cmbLODLevel, cmbLODSize, cmbScale, cmbGrid: TComboBox;
-  chkNormals: TCheckBox;
+  chkNormals, chkCellsDebug: TCheckBox;
   PanningX, PanningY: integer;
   SelectedCellX, SelectedCellY: integer;
   ColorOverlay: integer;
@@ -375,6 +376,39 @@ begin
 end;
 
 //============================================================================
+// draw cells on map for ingame debugging
+procedure DrawCellsForDebug(bmp: TBitmap);
+var
+  x, y, i, j, col: integer;
+  r: TRect;
+  s: string;
+  grid: TBitmap;
+begin
+  bmp.Canvas.Brush.Style := bsClear;
+  bmp.Canvas.Font.Style := [fsBold];
+  bmp.Canvas.Font.Size := Round(FontSizeCell*FontMult/4 + 1);
+  bmp.Canvas.Font.Color := ColorCellsDebug;
+  bmp.Canvas.Pen.Color := ColorCellsDebug;
+  y := -MapSizeY;
+  while y < MapSizeY do begin
+    x := -MapSizeX;
+    while x < MapSizeX do begin
+      r := Rect(CellX2Px(x), CellY2Px(y + 1), CellX2Px(x + 1), CellY2px(y));
+      s := Format('%d,%d', [x, y]);
+      bmp.Canvas.TextOut(
+        r.Left + (r.Right - r.Left - bmp.Canvas.TextWidth(s)) div 2,
+        r.Top + (r.Bottom - r.Top - bmp.Canvas.TextHeight(s)) div 2,
+        s
+      );
+      // frame
+      bmp.Canvas.Rectangle(r.Left, r.Top, r.Right, r.Bottom);
+      x := x + 1;
+    end;
+    y := y + 1;
+  end;
+end;
+
+//============================================================================
 // create map from lod textures, requires FormID and EditorID of worldspace
 function CreateWorldspaceMap(wrld: IInterface; bmpMap: TBitMap): Boolean;
 var
@@ -462,6 +496,9 @@ begin
     // draw grid if grid's opacity is not zero
     if GridOpacity > 0 then
       DrawCellGrid(bmp, GridOpacity);
+    // cells grid for debugging
+    if fCellsDebug then
+      DrawCellsForDebug(bmp);
     // stretch TImage of map if scale is not 100%
     if MapViewScale <> 1 then imgMap.Stretch := True
       else imgMap.Stretch := False;
@@ -684,6 +721,7 @@ begin
     MapViewScale := StrToInt(cmbScale.Text)/100;
     GridOpacity := StrToIntDef(cmbGrid.Text, 0);
     fMapNormals := chkNormals.Checked;
+    fCellsDebug := chkCellsDebug.Checked;
     DrawMap(ObjectToElement(cmbWorld.Items.Objects[cmbWorld.ItemIndex]));
   end;
 end;
@@ -1319,7 +1357,7 @@ begin
   frmWorld.Caption := 'Worldspace';
   frmWorld.BorderStyle := bsDialog;
   frmWorld.Position := poMainFormCenter;
-  frmWorld.Width := 265; frmWorld.Height := 265;
+  frmWorld.Width := 265; frmWorld.Height := 285;
   CreateLabel(frmWorld, 'Worldspaces with LOD data', 16, 13);
   CreateLabel(frmWorld, 'Map Size', 16, 69);
   CreateLabel(frmWorld, 'LOD Level', 112, 69);
@@ -1334,9 +1372,11 @@ begin
   cmbGrid := CreateComboList(frmWorld, 16, 144, 78);
   chkNormals := TCheckBox.Create(frmWorld); chkNormals.Parent := frmWorld; chkNormals.Left := 16; chkNormals.Top := 181;
   chkNormals.Width := 89; chkNormals.Caption := 'Normal maps';
-  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 92; btn.Top := 204; btn.Width := 73;
+  chkCellsDebug := TCheckBox.Create(frmWorld); chkCellsDebug.Parent := frmWorld; chkCellsDebug.Left := 16; chkCellsDebug.Top := 200;
+  chkCellsDebug.Width := 200; chkCellsDebug.Caption := 'Draw cells for ingame debugging';
+  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 92; btn.Top := 224; btn.Width := 73;
   btn.Caption := 'Cancel'; btn.ModalResult := mrCancel;
-  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 171; btn.Top := 204; btn.Width := 73;
+  btn := TButton.Create(frmWorld); btn.Parent := frmWorld; btn.Left := 171; btn.Top := 224; btn.Width := 73;
   btn.Caption := 'OK'; btn.ModalResult := mrOk;
   for i := 1 to 4 do
     for j := 1 to 4 do
