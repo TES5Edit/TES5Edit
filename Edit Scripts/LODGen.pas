@@ -7,6 +7,7 @@
 --dontGenerateVertexColors
 you can now specify an individual LOD level to create via --lodLevel <4/8/16> and individual quads via --x <num> and --y <num> inconjuction with lodLevel
 --removeUnseenFaces to remove faces under terrain
+--globalScale 1.01
 }
 unit xLODGen;
 
@@ -22,18 +23,15 @@ const
 var
   slLODTypes, slLOD, slCache, slExport: TStringList;
   lstSkip: TList;
-  lod4, lod8, lod16: integer; // Lod types
-  AddModels, AddModelsLOD4, AddModelsLOD8, AddModelsLOD16: boolean; // add models flags
   bDefaultVWDOnly: boolean;
-  slAddModels: TStringList; // list of models to add
 
   frm: TForm;
-  btnOk, btnCancel, btnSave, btnLoad, btnPath: TButton;
+  btnOk, btnCancel, btnSave, btnLoad, btnDefault, btnExport, btnDestination: TButton;
   cbWorld: TComboBox;
   lvRules: TListView;
   SelectedRuleIndex: integer;
-  gb: TGroupBox;
-  chkDefaultVWDOnly: TCheckBox;
+  gbOptions: TGroupBox;
+  chkDontFixTangents, chkNoTangents, chkNoColors, chkRemoveUnseen: TCheckBox;
   edExport, edDestination: TEdit;
 
 //==========================================================================
@@ -183,11 +181,12 @@ begin
     mFull := LODMeshFor(stat, iLODFull);
     // checking lod rules
     for i := 0 to Pred(slLOD.Count) do begin
-      if (slLOD[i] = '\') and bDefaultVWDOnly then
+      j := slLOD.Objects[i];
+      // VWD only?
+      if j and $01000000 = $01000000 then
         if not GetIsVisibleWhenDistant(stat) then
           Continue;
       if Pos(slLOD[i], mFull) > 0 then begin
-        j := slLOD.Objects[i];
         m4 := LODMeshFor(stat, j and $FF);
         m8 := LODMeshFor(stat, j shr 8 and $FF);
         m16 := LODMeshFor(stat, j shr 16 and $FF);
@@ -290,26 +289,25 @@ end;
 procedure PresetSave(aFileName: string);
 var
   ini: TMemIniFile;
-  i: integer;
+  i, j: integer;
   s: string;
 begin
   ini := TMemIniFile.Create(aFileName);
   ini.WriteString(wbGameName, 'World', cbWorld.Text);
+  ini.WriteString(wbGameName, 'Export', edDestination.Text);
   ini.WriteString(wbGameName, 'Destination', edDestination.Text);
-  ini.WriteString(wbGameName, 'ModelLOD4', cbLOD4.Text);
-  ini.WriteString(wbGameName, 'ModelLOD8', cbLOD8.Text);
-  ini.WriteString(wbGameName, 'ModelLOD16', cbLOD16.Text);
-  ini.WriteBool(wbGameName, 'AddModels', chkAddModels.Checked);
-  ini.WriteBool(wbGameName, 'AddModelsLOD4', chkAddModels4.Checked);
-  ini.WriteBool(wbGameName, 'AddModelsLOD8', chkAddModels8.Checked);
-  ini.WriteBool(wbGameName, 'AddModelsLOD16', chkAddModels16.Checked);
-  for i := 0 to Pred(memoModels.Lines.Count) do begin
-    if Trim(memoModels.Lines[i]) = '' then
-      Continue;
-    if s <> '' then s := s + ',';
-    s := s + memoModels.Lines[i];
+  ini.EraseSection(wbGameName + ' LODGen');
+  for i := 0 to Pred(slLOD.Count) do begin
+    j := slLOD.Objects[i];
+    s := Format('%s,%s,%s,%s,%d', [
+      slLOD[i],
+      slLODTypes[j and $FF],
+      slLODTypes[j shr 8 and $FF],
+      slLODTypes[j shr 16 and $FF],
+      j shr 24
+    ]);
+    ini.WriteString(wbGameName + ' LODGen', 'LODGen' + IntToStr(Succ(i)), s);
   end;
-  ini.WriteString(wbGameName, 'AddModelsText', s);
   ini.UpdateFile;
   ini.Free;
 end;
@@ -372,7 +370,25 @@ begin
 end;
 
 //============================================================================
-procedure btnPathClick(Sender: TObject);
+procedure btnExportClick(Sender: TObject);
+var
+  dlgSave: TSaveDialog;
+begin
+  dlgSave := TSaveDialog.Create(nil);
+  try
+    dlgSave.Options := dlgSave.Options + [ofOverwritePrompt];
+    dlgSave.Filter := 'LODGen data (*.txt)|*.txt';
+    dlgSave.InitialDir := ScriptsPath;
+    dlgSave.FileName := edExport.Text;
+    if dlgSave.Execute then
+      edExport.Text := dlgSave.FileName;
+  finally
+    dlgSave.Free;
+  end;
+end;
+
+//============================================================================
+procedure btnDestinationClick(Sender: TObject);
 var
   s: string;
 begin
@@ -416,6 +432,20 @@ begin
   end;
 end;
 
+//============================================================================
+procedure btnDefaultClick(Sender: TObject);
+begin
+  cbWorldSelect(cbWorld);
+  slLOD.Clear;
+  slLOD.AddObject('\', $01040302);
+  lvRules.Items.Count := slLOD.Count;
+  lvRules.Refresh;
+  chkDontFixTangents.Checked := True;
+  chkNoTangents.Checked := False;
+  chkNoColors.Checked := False;
+  chkRemoveUnseen.Checked := True;
+end;
+
 //===========================================================================
 // on key down event handler for form
 procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -430,12 +460,12 @@ procedure lvRulesData(Sender: TObject; Item: TListItem);
 var
   i: integer;
 begin
-  //Item.Caption := slItems[Item.Index];
   Item.Caption := slLOD[Item.Index];
   i := slLOD.Objects[Item.Index];
   Item.SubItems.Add(slLODTypes[i and $FF]);
   Item.SubItems.Add(slLODTypes[i shr 8 and $FF]);
   Item.SubItems.Add(slLODTypes[i shr 16 and $FF]);
+  if i shr 24 and 1 = 1 then Item.SubItems.Add('Yes') else Item.SubItems.Add('');
 end;
 
 //===========================================================================
@@ -452,7 +482,7 @@ begin
   if Sender <> Source then
     Exit;
   dropItem := lvRules.GetItemAt(X, Y);
-  slLOD.Exchange(SelectedRuleIndex, dropItem.Index);
+  slLOD.Move(SelectedRuleIndex, dropItem.Index);
   dropItem.Selected := True;
   lvRules.Refresh;
 end;
@@ -470,8 +500,69 @@ end;
 // on double click event handler for mesh rules
 procedure lvRulesDblClick(Sender: TObject);
 begin
+  RulesMenuEditClick(nil);
+end;
+
+//===========================================================================
+// click event for lodgen rules Insert menu
+procedure RulesMenuInsertClick(Sender: TObject);
+var
+  mesh: string;
+  idx, lod, lod4, lod8, lod16: integer;
+  vwd: boolean;
+begin
+  if Assigned(lvRules.Selected) then
+    idx := lvRules.Selected.Index
+  else
+    idx := 0;
+  lod4 := 2;
+  lod8 := 3;
+  lod16 := 4;
+  vwd := True;
+  if not EditRuleForm(mesh, lod4, lod8, lod16, vwd) then
+    Exit;
+  lod := 0;
+  if vwd then lod := lod or $01000000;
+  slLOD.InsertObject(idx, mesh, lod + lod4 + lod8 shl 8 + lod16 shl 16);
+  lvRules.Items.Count := slLOD.Count;
+  lvRules.Refresh;
+end;
+
+//===========================================================================
+// click event for lodgen rules Edit menu
+procedure RulesMenuEditClick(Sender: TObject);
+var
+  mesh: string;
+  idx, lod, lod4, lod8, lod16: integer;
+  vwd: boolean;
+begin
   if not Assigned(lvRules.Selected) then
     Exit;
+  idx := lvRules.Selected.Index;
+  mesh := slLOD[idx];
+  lod := slLOD.Objects[idx];
+  if lod and $01000000 = $01000000 then vwd := True;
+  lod4 := lod and $FF;
+  lod8 := lod shr 8 and $FF;
+  lod16 := lod shr 16 and $FF;
+  if not EditRuleForm(mesh, lod4, lod8, lod16, vwd) then
+    Exit;
+  lod := 0;
+  if vwd then lod := lod or $01000000;
+  slLOD[idx] := mesh;
+  slLOD.Objects[idx] := lod + lod4 + lod8 shl 8 + lod16 shl 16;
+  lvRules.Refresh;
+end;
+
+//===========================================================================
+// click event for lodgen rules Delete menu
+procedure RulesMenuDeleteClick(Sender: TObject);
+begin
+  if not Assigned(lvRules.Selected) then
+    Exit;
+  slLOD.Delete(lvRules.Selected.Index);
+  lvRules.Items.Count := slLOD.Count;
+  lvRules.Refresh;
 end;
 
 //============================================================================
@@ -485,26 +576,130 @@ begin
 end;
 
 //============================================================================
+// on close event handler for lodgen rule form
+procedure frmRuleFormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if TForm(Sender).ModalResult <> mrOk then Exit;
+  if TEdit(TForm(Sender).FindComponent('edMesh')).Text = '' then begin
+    MessageDlg('Mesh mask can not be empty', mtInformation, [mbOk], 0);
+    Action := caNone;
+  end;
+end;
+
+//============================================================================
+// edit a mesh rule in a separate form
+function EditRuleForm(var aMesh: string; var aLOD4, aLOD8, aLOD16: integer;
+  var aVWD: Boolean): Boolean;
+var
+  frmRule: TForm;
+  pnl: TPanel;
+  btnOk, btnCancel: TButton;
+  edMesh: TEdit;
+  cb4, cb8, cb16: TComboBox;
+  chkVWD: TCheckBox;
+begin
+  frmRule := TForm.Create(nil);
+  try
+    frmRule.Caption := 'Mesh LODGen export rule';
+    frmRule.Width := 420;
+    frmRule.Height := 224;
+    frmRule.Position := poMainFormCenter;
+    frmRule.BorderStyle := bsDialog;
+    frmRule.KeyPreview := True;
+    frmRule.OnKeyDown := FormKeyDown;
+    frmRule.OnClose := frmRuleFormClose;
+
+    edMesh := TEdit.Create(frmRule); edMesh.Parent := frmRule;
+    edMesh.Name := 'edMesh';
+    edMesh.Left := 80;
+    edMesh.Top := 12;
+    edMesh.Width := frmRule.Width - 100;
+    CreateLabel(frmRule, 16, edMesh.Top + 4, 'Mesh mask');
+
+    cb4 := TComboBox.Create(frmRule); cb4.Parent := frmRule;
+    cb4.Left := 80;
+    cb4.Top := edMesh.Top + 28;
+    cb4.Width := 150;
+    cb4.Style := csDropDownList;
+    cb4.Items.Assign(slLODTypes);
+    CreateLabel(frmRule, 16, cb4.Top + 4, 'LOD 4');
+
+    cb8 := TComboBox.Create(frmRule); cb8.Parent := frmRule;
+    cb8.Left := 80;
+    cb8.Top := cb4.Top + 28;
+    cb8.Width := 150;
+    cb8.Style := csDropDownList;
+    cb8.Items.Assign(slLODTypes);
+    CreateLabel(frmRule, 16, cb8.Top + 4, 'LOD 8');
+
+    cb16 := TComboBox.Create(frmRule); cb16.Parent := frmRule;
+    cb16.Left := 80;
+    cb16.Top := cb8.Top + 28;
+    cb16.Width := 150;
+    cb16.Style := csDropDownList;
+    cb16.Items.Assign(slLODTypes);
+    CreateLabel(frmRule, 16, cb16.Top + 4, 'LOD 16');
+
+    chkVWD := TCheckBox.Create(frmRule); chkVWD.Parent := frmRule;
+    chkVWD.Left := 80;
+    chkVWD.Top := cb16.Top + 28;
+    chkVWD.Width := 200;
+    chkVWD.Caption := 'Visible when distant objects only';
+
+    btnOk := TButton.Create(frmRule); btnOk.Parent := frmRule;
+    btnOk.Caption := 'OK';
+    btnOk.ModalResult := mrOk;
+    btnOk.Left := frmRule.Width - 176;
+    btnOk.Top := frmRule.Height - 62;
+    btnCancel := TButton.Create(frmRule); btnCancel.Parent := frmRule;
+    btnCancel.Caption := 'Cancel';
+    btnCancel.ModalResult := mrCancel;
+    btnCancel.Left := btnOk.Left + btnOk.Width + 8;
+    btnCancel.Top := btnOk.Top;
+    pnl := TPanel.Create(frmRule); pnl.Parent := frmRule; pnl.Left := 8; pnl.Top := btnOk.Top - 12; pnl.Width := frmRule.Width - 20; pnl.Height := 2;
+    
+    edMesh.Text := aMesh;
+    cb4.ItemIndex := aLOD4;
+    cb8.ItemIndex := aLOD8;
+    cb16.ItemIndex := aLOD16;
+    chkVWD.Checked := aVWD;
+    
+    if frmRule.ShowModal <> mrOk then
+      Exit;
+    
+    aMesh := edMesh.Text;
+    aLOD4 := cb4.ItemIndex;
+    aLOD8 := cb8.ItemIndex;
+    aLOD16 := cb16.ItemIndex;
+    aVWD := chkVWD.Checked;
+    Result := True;
+  finally
+    frmRule.Free;
+  end;
+end;
+
+//============================================================================
 procedure OptionsForm;
 var
   i: integer;
+  mnRules: TPopupMenu;
+  MenuItem: TMenuItem;
   pnl: TPanel;
 begin
   frm := TForm.Create(nil);
   try
     frm.Caption := wbAppName + 'LODGen';
-    frm.Width := 560;
-    frm.Height := 410;
+    frm.Width := 600;
+    frm.Height := 470;
     frm.Position := poMainFormCenter;
     frm.BorderStyle := bsDialog;
     frm.KeyPreview := True;
     frm.OnKeyDown := FormKeyDown;
     
-    cbWorld := TComboBox.Create(frm);
-    cbWorld.Parent := frm;
+    cbWorld := TComboBox.Create(frm); cbWorld.Parent := frm;
     cbWorld.Left := 54;
     cbWorld.Top := 12;
-    cbWorld.Width := 220;
+    cbWorld.Width := 260;
     cbWorld.Style := csDropDownList;
     cbWorld.DropDownCount := 20;
     cbWorld.OnSelect := cbWorldSelect;
@@ -513,49 +708,57 @@ begin
     FillWorldspacesWithLOD(cbWorld);
     if cbWorld.Items.Count > 0 then cbWorld.ItemIndex := 0;
 
-    btnSave := TButton.Create(frm);
-    btnSave.Parent := frm;
+    btnSave := TButton.Create(frm); btnSave.Parent := frm;
     btnSave.Caption := 'Save preset';
     btnSave.Left := cbWorld.Left + cbWorld.Width + 8;
     btnSave.Top := cbWorld.Top - 2;
     btnSave.OnClick := btnSaveClick;
 
-    btnLoad := TButton.Create(frm);
-    btnLoad.Parent := frm;
+    btnLoad := TButton.Create(frm); btnLoad.Parent := frm;
     btnLoad.Caption := 'Load preset';
     btnLoad.Left := btnSave.Left + btnSave.Width + 8;
     btnLoad.Top := btnSave.Top;
     btnLoad.OnClick := btnLoadClick;
 
-    edExport := TEdit.Create(frm);
-    edExport.Parent := frm;
+    btnDefault := TButton.Create(frm); btnDefault.Parent := frm;
+    btnDefault.Caption := 'Default';
+    btnDefault.Left := btnLoad.Left + btnLoad.Width + 8;
+    btnDefault.Top := btnSave.Top;
+    btnDefault.OnClick := btnDefaultClick;
+
+    edExport := TEdit.Create(frm); edExport.Parent := frm;
     edExport.Left := 100;
     edExport.Top := cbWorld.Top + cbWorld.Height + 12;
     edExport.Width := cbWorld.Width + 180;
-    edExport.ReadOnly := True;
+    //edExport.ReadOnly := True;
     CreateLabel(frm, 16, edExport.Top + 4, 'LODGen export');
 
-    edDestination := TEdit.Create(frm);
-    edDestination.Parent := frm;
+    btnExport := TButton.Create(frm); btnExport.Parent := frm;
+    btnExport.Top := edExport.Top - 1;
+    btnExport.Left := edExport.Left + edExport.Width + 6;
+    btnExport.Width := 32;
+    btnExport.Height := 22;
+    btnExport.Caption := '...';
+    btnExport.OnClick := btnExportClick;
+
+    edDestination := TEdit.Create(frm); edDestination.Parent := frm;
     edDestination.Left := edExport.Left;
     edDestination.Top := edExport.Top + 28;
     edDestination.Width := edExport.Width;
     edDestination.ReadOnly := True;
     CreateLabel(frm, 16, edDestination.Top + 4, 'LODGen path');
 
-    btnPath := TButton.Create(frm);
-    btnPath.Parent := frm;
-    btnPath.Top := edDestination.Top - 1;
-    btnPath.Left := edDestination.Left + edDestination.Width + 6;
-    btnPath.Width := 32;
-    btnPath.Height := 22;
-    btnPath.Caption := '...';
-    btnPath.OnClick := btnPathClick;
+    btnDestination := TButton.Create(frm); btnDestination.Parent := frm;
+    btnDestination.Top := edDestination.Top - 1;
+    btnDestination.Left := edDestination.Left + edDestination.Width + 6;
+    btnDestination.Width := 32;
+    btnDestination.Height := 22;
+    btnDestination.Caption := '...';
+    btnDestination.OnClick := btnDestinationClick;
 
-    lvRules := TListView.Create(frm);
-    lvRules.Parent := frm;
+    lvRules := TListView.Create(frm); lvRules.Parent := frm;
     lvRules.Left := 16;
-    lvRules.Top := edDestination.Top + 32;
+    lvRules.Top := edDestination.Top + 46;
     lvRules.Width := frm.Width - 40;
     lvRules.Height := 140;
     lvRules.ReadOnly := True;
@@ -565,13 +768,15 @@ begin
     //lvRules.GridLines := True;
     lvRules.DoubleBuffered := True;
     lvRules.Columns.Add.Caption := 'Mesh';
-    lvRules.Columns[0].Width := lvRules.Width - 294;
+    lvRules.Columns[0].Width := lvRules.Width - 354;
     lvRules.Columns.Add.Caption := 'LOD4';
     lvRules.Columns[1].Width := 90;
     lvRules.Columns.Add.Caption := 'LOD8';
     lvRules.Columns[2].Width := 90;
     lvRules.Columns.Add.Caption := 'LOD16';
     lvRules.Columns[3].Width := 90;
+    lvRules.Columns.Add.Caption := 'VWD Only';
+    lvRules.Columns[4].Width := 60;
     lvRules.OwnerData := True;
     lvRules.OnData := lvRulesData;
     lvRules.OnSelectItem := lvRulesSelectItem;
@@ -579,35 +784,79 @@ begin
     lvRules.OnDragOver := lvRulesDragOver;
     lvRules.OnDragDrop := lvRulesDragDrop;
     lvRules.Items.Count := slLOD.Count;
+    CreateLabel(frm, 16, lvRules.Top - 16, 'Mesh lodgen rules (right click for menu, drag&&drop to change order)');
+
+    mnRules := TPopupMenu.Create(frm);
+    lvRules.PopupMenu := mnRules;
+    MenuItem := TMenuItem.Create(mnRules);
+    MenuItem.Caption := 'Insert';
+    MenuItem.OnClick := RulesMenuInsertClick;
+    mnRules.Items.Add(MenuItem);
+    MenuItem := TMenuItem.Create(mnRules);
+    MenuItem.Caption := 'Delete';
+    MenuItem.OnClick := RulesMenuDeleteClick;
+    mnRules.Items.Add(MenuItem);
+    MenuItem := TMenuItem.Create(mnRules);
+    MenuItem.Caption := 'Edit';
+    MenuItem.OnClick := RulesMenuEditClick;
+    mnRules.Items.Add(MenuItem);
     
-    chkDefaultVWDOnly := TCheckBox.Create(frm);
-    chkDefaultVWDOnly.Parent := frm;
-    chkDefaultVWDOnly.Left := lvRules.Left;
-    chkDefaultVWDOnly.Top := lvRules.Top + lvRules.Height + 8;
-    chkDefaultVWDOnly.Width := 250;
-    chkDefaultVWDOnly.Caption := 'Default "\" rule applies only for VWD objects';
-    chkDefaultVWDOnly.Checked := True;
+    gbOptions := TGroupBox.Create(frm); gbOptions.Parent := frm;
+    gbOptions.Left := lvRules.Left;
+    gbOptions.Top := lvRules.Top + lvRules.Height + 16;
+    gbOptions.Width := lvRules.Width;
+    gbOptions.Height := 110;
+    gbOptions.Caption := 'LODGen Options';
     
-    btnOk := TButton.Create(frm);
-    btnOk.Parent := frm;
+    chkDontFixTangents := TCheckBox.Create(frm); chkDontFixTangents.Parent := gbOptions;
+    chkDontFixTangents.Left := 12;
+    chkDontFixTangents.Top := 18;
+    chkDontFixTangents.Width := 140;
+    chkDontFixTangents.Caption := 'Don''t fix tangents';
+    chkDontFixTangents.Hint := 'Don''t fix tangents';
+    chkDontFixTangents.ShowHint := True;
+    chkDontFixTangents.Checked := True;
+
+    chkNoTangents := TCheckBox.Create(frm); chkNoTangents.Parent := gbOptions;
+    chkNoTangents.Left := 12;
+    chkNoTangents.Top := 38;
+    chkNoTangents.Width := 140;
+    chkNoTangents.Caption := 'Don''t generate tangents';
+    chkNoTangents.Hint := 'Don''t generate tangents, might actually look better for some LOD meshes. Reduces lodgen files size.';
+    chkNoTangents.ShowHint := True;
+    chkNoTangents.Checked := False;
+
+    chkNoColors := TCheckBox.Create(frm); chkNoColors.Parent := gbOptions;
+    chkNoColors.Left := 12;
+    chkNoColors.Top := 58;
+    chkNoColors.Width := 180;
+    chkNoColors.Caption := 'Don''t generate vertex colors';
+    chkNoColors.Hint := 'Don''t generate vertex colors. Reduces lodgen files size.';
+    chkNoColors.ShowHint := True;
+    chkNoColors.Checked := False;
+
+    chkRemoveUnseen := TCheckBox.Create(frm); chkRemoveUnseen.Parent := gbOptions;
+    chkRemoveUnseen.Left := 12;
+    chkRemoveUnseen.Top := 78;
+    chkRemoveUnseen.Width := 380;
+    chkRemoveUnseen.Caption := 'Remove unseen faces (requires landscape LOD unpacked in Data folder)';
+    chkRemoveUnseen.Hint := 'Remove mesh parts that are under the landscape or water. You must have landscape LOD files present in Data folder (*.btr files) for selected worldspace';
+    chkRemoveUnseen.ShowHint := True;
+    chkRemoveUnseen.Checked := True;
+
+    btnOk := TButton.Create(frm); btnOk.Parent := frm;
     btnOk.Caption := 'OK';
     btnOk.ModalResult := mrOk;
     btnOk.Left := frm.Width - 176;
     btnOk.Top := frm.Height - 62;
     
-    btnCancel := TButton.Create(frm);
-    btnCancel.Parent := frm;
+    btnCancel := TButton.Create(frm); btnCancel.Parent := frm;
     btnCancel.Caption := 'Cancel';
     btnCancel.ModalResult := mrCancel;
     btnCancel.Left := btnOk.Left + btnOk.Width + 8;
     btnCancel.Top := btnOk.Top;
     
-    pnl := TPanel.Create(frm);
-    pnl.Parent := frm;
-    pnl.Left := 8;
-    pnl.Top := btnOk.Top - 12;
-    pnl.Width := frm.Width - 20;
-    pnl.Height := 2;
+    pnl := TPanel.Create(frm); pnl.Parent := frm; pnl.Left := 8; pnl.Top := btnOk.Top - 12; pnl.Width := frm.Width - 20; pnl.Height := 2;  
     
     //PresetLoad(ScriptsPath + 'LODGen preset default.ini');
     cbWorldSelect(cbWorld);
@@ -623,7 +872,7 @@ begin
       Exit;
     end;
       
-    bDefaultVWDOnly := chkDefaultVWDOnly.Checked;
+    //bDefaultVWDOnly := chkDefaultVWDOnly.Checked;
     
     //PresetSave(ScriptsPath + 'LODGen preset default.ini');
     ExportWorldspace(ObjectToElement(cbWorld.Items.Objects[cbWorld.ItemIndex]));
@@ -650,7 +899,7 @@ begin
   slLOD := TStringList.Create;
   //slLOD.AddObject('\rocks\', $00000201);
   //slLOD.AddObject('ship.nif', $00000000);
-  slLOD.AddObject('\', $00040302);
+  slLOD.AddObject('\', $01040302);
   slCache := TStringList.Create;
   slExport := TStringList.Create;
   lstSkip := TList.Create;
