@@ -337,6 +337,8 @@ begin
     lvAssets.Anchors := [akLeft, akTop, akRight, akBottom];
     lvAssets.ReadOnly := True;
     lvAssets.ViewStyle := vsReport;
+    lvAssets.DoubleBuffered := True;
+    lvAssets.RowSelect := True;
     lvAssets.Columns.Add.Caption := 'File Name';
     lvAssets.Columns[0].Width := lvAssets.Width - 240;
     lvAssets.Columns.Add.Caption := 'Containers';
