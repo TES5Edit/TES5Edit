@@ -689,6 +689,8 @@ var
   wbCTDA: IwbSubRecordStructDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
+  wbCTDAsCount: IwbSubRecordArrayDef;
+  wbCTDAsReqCount: IwbSubRecordArrayDef;
   wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordStructDef;
@@ -716,7 +718,6 @@ var
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
   wbFunctionsEnum: IwbEnumDef;
-  wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
@@ -2867,7 +2868,7 @@ const
 {N} (Index: 606; Name: 'GetKeywordDataForLocation'; ParamType1: ptLocation; ParamType2: ptKeyword),
 {N} (Index: 608; Name: 'GetKeywordDataForAlias'; ParamType1: ptAlias; ParamType2: ptKeyword),
 {N} (Index: 610; Name: 'LocAliasHasKeyword'; ParamType1: ptAlias; ParamType2: ptKeyword),
-{N} (Index: 611; Name: 'IsNullPackageData'; ParamType1: ptPackage),
+{N} (Index: 611; Name: 'IsNullPackageData'; ParamType1: ptPackdata),
 {N} (Index: 612; Name: 'GetNumericPackageData'; ParamType1: ptInteger),
 {N} (Index: 613; Name: 'IsFurnitureAnimType'; ParamType1: ptFurnitureAnim),
 {N} (Index: 614; Name: 'IsFurnitureEntryType'; ParamType1: ptFurnitureEntry),
@@ -3886,7 +3887,7 @@ var
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-   Result := False;
+  Result := False;
   if wbBeginInternalEdit then try
     if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
        Supports(aElement, IwbContainer, SelfAsContainer) then begin
@@ -4604,11 +4605,21 @@ begin
 
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('scriptName', 2),
-    wbInteger('Unknown', itU8),
+    wbInteger('Flags', itU8, wbEnum([
+      {0x00} 'Local',
+      {0x01} 'Inherited',
+      {0x02} 'Removed',
+      {0x03} 'Inherited and Removed'
+    ])),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum),
-      wbInteger('Unknown', itU8),
+      wbInteger('Flags', itU8, wbEnum([
+        {0x00} '',
+        {0x01} 'Edited',
+        {0x02} '',
+        {0x03} 'Removed'
+      ])),
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbInteger('Null', itU32),
         {01} wbScriptObject,
@@ -5956,15 +5967,10 @@ begin
     wbString(CIS2, 'Parameter #2')
   ], [], cpNormal);
 
-  wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
-  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
-
-  wbEffects :=
-    wbRStructs('Effects', 'Effect', [
-      wbEFID,
-      wbEFIT,
-      wbCTDAs
-    ], []);
+  wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
+  wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
+  wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
+  wbCTDAsReqCount := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
 
   wbEffectsReq :=
     wbRStructs('Effects', 'Effect', [
@@ -7283,7 +7289,7 @@ begin
       ]),
     wbPLVD,
     wbCITC,
-    wbCTDAs
+    wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
   wbRecord(FURN, 'Furniture', [
@@ -7794,7 +7800,7 @@ begin
               'Unknown 8',
               'Unknown 9',
               'Water',
-              'Unknown 11',
+              'Door',
               'Unknown 12',
               'Unknown 13',
               'Unknown 14',
@@ -7820,7 +7826,7 @@ begin
           ])
         , -1),
         wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
-        wbInteger('Divisor?', itU32),
+        wbInteger('NavMeshGrid Divisor', itU32),
         wbFloat('Max X Distance'),
         wbFloat('Max Y Distance'),
         wbFloat('Min X'),
@@ -7829,8 +7835,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('(Unknown) Triangles', wbInteger('Triangle', itS16), -1),
-        wbUnknown
+        wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))
       ]),
       wbUnknown(ONAM),
       wbUnknown(PNAM),
@@ -9140,7 +9145,7 @@ begin
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
@@ -9150,7 +9155,7 @@ begin
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbStruct(DNAM, 'Flags', [
       wbInteger('Node Flags', itU16, wbSMNodeFlags),
       wbInteger('Quest Flags', itU16, wbFlags([
@@ -9174,7 +9179,7 @@ begin
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
     wbString(ENAM, 'Type', 4)
@@ -9213,7 +9218,7 @@ begin
       wbInteger('Loop Count', itU32)
     ]),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
@@ -9760,7 +9765,6 @@ begin
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
-      //wbCTDAs,
       wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
     ], [])),
 
@@ -9791,6 +9795,7 @@ begin
     wbKWDAs,
     wbMODL,
     wbICON,
+    wbDEST,
     wbETYP,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
@@ -10726,7 +10731,7 @@ begin
       wbRArray('Branches', wbRStruct('Branch', [
         wbString(ANAM, 'Branch Type'),
         wbCITC,
-        wbCTDAs,
+        wbCTDAsCount,
         wbStruct(PRCB, 'Root', [
           wbInteger('Branch Count', itU32),
           wbInteger('Flags', itU32, wbFlags([
@@ -11976,7 +11981,7 @@ begin
 
       {--- Objects ---}
       wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, STAT, LTEX, MSTT]),
+        wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT]),
         wbInteger('Parent Index', itU16, wbHideFFFF),
         wbByteArray('Unknown', 2),
         wbFloat('Density'),

@@ -111,6 +111,12 @@ begin
   TStrings(Args.Obj).StrictDelimiter := Value;
 end;
 
+procedure TStrings_Write_NameValueSeparator(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  if Length(String(Value)) > 0 then
+    TStrings(Args.Obj).NameValueSeparator := String(Value)[1];
+end;
+
 procedure TStrings_Read_DelimitedText(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TStrings(Args.Obj).DelimitedText;
@@ -120,6 +126,17 @@ procedure TStrings_Write_DelimitedText(const Value: Variant; Args: TJvInterprete
 begin
   TStrings(Args.Obj).DelimitedText := Value;
 end;
+
+procedure TStrings_Read_ValueFromIndex(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TStrings(Args.Obj).ValueFromIndex[Args.Values[0]];
+end;
+
+procedure TStrings_Write_ValueFromIndex(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TStrings(Args.Obj).ValueFromIndex[Args.Values[0]] := Value;
+end;
+
 
 
 { TStringList }
@@ -978,8 +995,11 @@ begin
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'Delimiter', TStrings_Write_Delimiter, 0, [varEmpty]);
     AddSet(TStrings, 'StrictDelimiter', TStrings_Write_StrictDelimiter, 0, [varEmpty]);
+    AddSet(TStrings, 'NameValueSeparator', TStrings_Write_NameValueSeparator, 0, [varEmpty]);
     AddGet(TStrings, 'DelimitedText', TStrings_Read_DelimitedText, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'DelimitedText', TStrings_Write_DelimitedText, 0, [varEmpty]);
+    AddIGet(TStrings, 'ValueFromIndex', TStrings_Read_ValueFromIndex, 1, [varEmpty], varEmpty);
+    AddISet(TStrings, 'ValueFromIndex', TStrings_Write_ValueFromIndex, 1, [varNull]);
 
     { TStringList }
     AddGet(TStrings, 'CaseSensitive', TStringList_Read_CaseSensitive, 0, [varEmpty], varEmpty);

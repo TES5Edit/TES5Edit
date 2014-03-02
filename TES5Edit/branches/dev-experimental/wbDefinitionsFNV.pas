@@ -7162,16 +7162,16 @@ begin
         wbByteArray('Unused', 2)
       ])),
       wbStruct(NVGD, 'NavMesh Grid', [
-        wbInteger('Row and Line count', itU32),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itU16), -2)) // cellCount is row count² , assumed triangle as the values fit the triangle id's
+        wbInteger('NavMeshGrid Divisor', itU32),
+        wbFloat('Max X Distance'),                // Floats named after TES5 definition
+        wbFloat('Max Y Distance'),
+        wbFloat('Min X'),
+        wbFloat('Min Y'),
+        wbFloat('Min Z'),
+        wbFloat('Max X'),
+        wbFloat('Max Y'),
+        wbFloat('Max Z'),
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16), -2)) // Divisor is row count² , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array
