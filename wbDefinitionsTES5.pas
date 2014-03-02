@@ -9795,6 +9795,7 @@ begin
     wbKWDAs,
     wbMODL,
     wbICON,
+    wbDEST,
     wbETYP,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
