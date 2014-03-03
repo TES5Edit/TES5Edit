@@ -18,11 +18,11 @@ var
   lstSkip: TList;
   LODGenWorld: IInterface;
   LODGenExport, LODGenParams: string;
-  sTitle, sExport, sDestination: string;
+  sTitle, sExport, sDestination, sDataPath: string;
   bWarnMissing: Boolean;
 
   frm: TForm;
-  btnOk, btnCancel, btnSave, btnLoad, btnDefault, btnExport, btnDestination: TButton;
+  btnOk, btnCancel, btnSave, btnLoad, btnDefault, btnExport, btnDestination, btnDataPath: TButton;
   btnUnpackLandscape: TButton;
   cbWorld, cbLODLevel, cbLODX, cbLODY: TComboBox;
   lvRules: TListView;
@@ -30,7 +30,7 @@ var
   gbOptions: TGroupBox;
   chkDontFixTangents, chkNoTangents, chkNoColors, chkNoMaterial, chkWarnMissing: TCheckBox;
   chkRemoveUnseen, chkIgnoreWater: TCheckBox;
-  edExport, edDestination, edLODScale: TEdit;
+  edExport, edDestination, edDataPath, edLODScale: TEdit;
 
 //==========================================================================
 function HexArrayToStr(s: string): string;
@@ -306,6 +306,7 @@ begin
   ini.WriteString(wbGameName, 'World', cbWorld.Text);
   ini.WriteString(wbGameName, 'Export', edExport.Text);
   ini.WriteString(wbGameName, 'Destination', edDestination.Text);
+  ini.WriteString(wbGameName, 'DataPath', edDataPath.Text);
   ini.WriteBool(wbGameName, 'DontFixTangents', chkDontFixTangents.Checked);
   ini.WriteBool(wbGameName, 'NoTangents', chkNoTangents.Checked);
   ini.WriteBool(wbGameName, 'NoColors', chkNoColors.Checked);
@@ -344,6 +345,7 @@ begin
   cbWorld.ItemIndex := IndexIn(cbWorld.Items, ini.ReadString(wbGameName, 'World', cbWorld.Text));
   edExport.Text := ini.ReadString(wbGameName, 'Export', edExport.Text);
   edDestination.Text := ini.ReadString(wbGameName, 'Destination', edDestination.Text);
+  edDataPath.Text := ini.ReadString(wbGameName, 'DataPath', edDataPath.Text);
   chkDontFixTangents.Checked := ini.ReadBool(wbGameName, 'DontFixTangents', chkDontFixTangents.Checked);
   chkNoTangents.Checked := ini.ReadBool(wbGameName, 'NoTangents', chkNoTangents.Checked);
   chkNoColors.Checked := ini.ReadBool(wbGameName, 'NoColors', chkNoColors.Checked);
@@ -446,6 +448,16 @@ begin
 end;
 
 //============================================================================
+procedure btnDataPathClick(Sender: TObject);
+var
+  s: string;
+begin
+  s := SelectDirectory('Data folder', '', edDataPath.Text, nil);
+  if s <> '' then
+    edDataPath.Text := s;
+end;
+
+//============================================================================
 procedure btnSaveClick(Sender: TObject);
 var
   dlgSave: TSaveDialog;
@@ -484,6 +496,7 @@ end;
 procedure btnDefaultClick(Sender: TObject);
 begin
   cbWorldSelect(cbWorld);
+  edDataPath.Text := DataPath;
   slLOD.Clear;
   slLOD.AddObject('\', $01040302);
   lvRules.Items.Count := slLOD.Count;
@@ -510,7 +523,8 @@ var
   lodpath, fulllodpath: string;
 begin
   lodpath := 'meshes\terrain\' + LowerCase(cbWorld.Text);
-  fulllodpath := DataPath + lodpath;
+  sDataPath := IncludeTrailingBackslash(edDataPath.Text);
+  fulllodpath := sDataPath + lodpath;
   if DirectoryExists(fulllodpath) then begin
     // path can be long and not fit into message dialog, repeat it in messages tab
     AddMessage('LOD folder already exists ' + fulllodpath + ' Do you wish to unpack there?');
@@ -538,7 +552,7 @@ begin
   try
     try
       for i := 0 to Pred(slFiles.Count) do
-        ResourceCopy('', slFiles[i], DataPath);
+        ResourceCopy('', slFiles[i], sDataPath);
       AddMessage('Done.');
       MessageDlg(IntToStr(slFiles.Count) + ' LOD files were unpacked.', mtInformation, [mbOk], 0);
     except
@@ -820,7 +834,7 @@ begin
   try
     frm.Caption := sTitle;
     frm.Width := 600;
-    frm.Height := 580;
+    frm.Height := 600;
     frm.Position := poMainFormCenter;
     frm.BorderStyle := bsDialog;
     frm.KeyPreview := True;
@@ -887,9 +901,24 @@ begin
     btnDestination.Caption := '...';
     btnDestination.OnClick := btnDestinationClick;
 
+    edDataPath := TEdit.Create(frm); edDataPath.Parent := frm;
+    edDataPath.Left := edExport.Left;
+    edDataPath.Top := edDestination.Top + 28;
+    edDataPath.Width := edExport.Width;
+    edDataPath.ReadOnly := True;
+    CreateLabel(frm, 16, edDataPath.Top + 4, 'Data folder');
+
+    btnDataPath := TButton.Create(frm); btnDataPath.Parent := frm;
+    btnDataPath.Top := edDataPath.Top - 1;
+    btnDataPath.Left := edDataPath.Left + edDataPath.Width + 6;
+    btnDataPath.Width := 32;
+    btnDataPath.Height := 22;
+    btnDataPath.Caption := '...';
+    btnDataPath.OnClick := btnDataPathClick;
+
     lvRules := TListView.Create(frm); lvRules.Parent := frm;
     lvRules.Left := 16;
-    lvRules.Top := edDestination.Top + 46;
+    lvRules.Top := edDataPath.Top + 44;
     lvRules.Width := frm.Width - 40;
     lvRules.Height := 140;
     lvRules.ReadOnly := True;
@@ -934,9 +963,9 @@ begin
     
     gbOptions := TGroupBox.Create(frm); gbOptions.Parent := frm;
     gbOptions.Left := lvRules.Left;
-    gbOptions.Top := lvRules.Top + lvRules.Height + 16;
+    gbOptions.Top := lvRules.Top + lvRules.Height + 12;
     gbOptions.Width := lvRules.Width;
-    gbOptions.Height := 148;
+    gbOptions.Height := 144;
     gbOptions.Caption := 'LODGen Options';
     
     chkDontFixTangents := TCheckBox.Create(frm); chkDontFixTangents.Parent := gbOptions;
@@ -1034,7 +1063,7 @@ begin
     lbl.WordWrap := True;
     lbl.Width := gbOptions.Width;
     lbl.Height := 40;
-    lbl.Caption := 'WARNING! LODGen requires meshes used in LOD to exist in the games'' Data folder ' +
+    lbl.Caption := 'WARNING! LODGen requires meshes used in LOD to exist in the Data folder ' +
                    'to work properly, otherwise there will be missing distant objects in game. ' +
                    'It is highly recommended for a user to unpack BSA archives manually and install meshes with ' +
                    'used Mod Manager to avoid possible conflicts.';
@@ -1060,14 +1089,17 @@ begin
     
     pnl := TPanel.Create(frm); pnl.Parent := frm; pnl.Left := 8; pnl.Top := btnOk.Top - 12; pnl.Width := frm.Width - 20; pnl.Height := 2;  
     
+    edDataPath.Text := DataPath;
     PresetLoad(ScriptsPath + 'LODGen preset default.ini');
-    cbWorldSelect(cbWorld);
+    if (edExport.Text = '') or (edDestination.Text = '') then
+      cbWorldSelect(cbWorld);
     
     if frm.ShowModal <> mrOk then
       Exit;
 
     sExport := edExport.Text;
     sDestination := edDestination.Text;
+    sDataPath := IncludeTrailingBackslash(edDataPath.Text);
     bWarnMissing := chkWarnMissing.Checked;
       
     PresetSave(ScriptsPath + 'LODGen preset default.ini');
@@ -1080,7 +1112,7 @@ begin
     LODGenExport := edExport.Text;
     LODGenParams := Format(' "%s" "%s"', [
       LODGenExport,
-      ExcludeTrailingBackslash(DataPath)
+      ExcludeTrailingBackslash(sDataPath)
     ]);
     if chkDontFixTangents.Checked then
       LODGenParams := LODGenParams + ' --dontFixTangents';
@@ -1130,7 +1162,7 @@ var
 begin
   // remove existing
   for i := Pred(slLODAssets.Count) downto 0 do begin
-    if FileExists(DataPath + slLODAssets[i]) then
+    if FileExists(sDataPath + slLODAssets[i]) then
       slLODAssets.Delete(i);
   end;
   if slLODAssets.Count > 0 then begin
@@ -1144,7 +1176,7 @@ begin
     // unpacking
     AddMessage('Unpacking required LOD meshes...');
     for i := 0 to Pred(slLODAssets.Count) do
-      ResourceCopy('', slLODAssets[i], DataPath);
+      ResourceCopy('', slLODAssets[i], sDataPath);
     AddMessage('Done.');
   end;
   Result := True;
