@@ -4960,7 +4960,7 @@ begin
     wbEnum([
       '',
       'Swinging Melee Weapon',
-      'Throwing Granade',
+      'Throwing Grenade',
       'Fire Weapon',
       'Lay Mine',
       'Z Key Object',

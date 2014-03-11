@@ -4470,7 +4470,10 @@ begin
 
   wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbIntegerT('Gender', itU8, wbSexEnum)]);
 
-  wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull, wbRefIDT('Race')]);
+  wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull, wbStruct('Races', [
+    wbRefIDT('Race'),
+    wbRefIDT('Previous Race')
+  ])]);  // Looks like there are two races (previous race ?)
 
   wbUnionCHANGE_CREATURE_SKILLS := wbUnion('Creature Skills', ChangedFlag09Decider, [wbNull, wbStruct('Data', [
       wbIntegerT('Magic Skill', itU8),
