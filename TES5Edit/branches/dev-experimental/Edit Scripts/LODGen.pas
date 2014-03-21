@@ -289,6 +289,7 @@ begin
   end
   else begin
     MessageDlg('No LOD objects in ' + Name(wrld) + ' world.', mtInformation, [mbOk], 0);
+    Result := False;
     Exit;
   end;
   Result := True;
@@ -313,6 +314,7 @@ begin
   ini.WriteBool(wbGameName, 'NoMaterial', chkNoMaterial.Checked);
   ini.WriteBool(wbGameName, 'RemoveUnseen', chkRemoveUnseen.Checked);
   ini.WriteBool(wbGameName, 'RemoveUnseenIgnoreWater', chkIgnoreWater.Checked);
+  ini.WriteBool(wbGameName, 'WarnMissing', chkWarnMissing.Checked);
   ini.WriteString(wbGameName, 'LODLevel', cbLODLevel.Text);
   ini.WriteString(wbGameName, 'LODX', cbLODX.Text);
   ini.WriteString(wbGameName, 'LODY', cbLODY.Text);
@@ -352,6 +354,7 @@ begin
   chkNoMaterial.Checked := ini.ReadBool(wbGameName, 'NoMaterial', chkNoMaterial.Checked);
   chkRemoveUnseen.Checked := ini.ReadBool(wbGameName, 'RemoveUnseen', chkRemoveUnseen.Checked);
   chkIgnoreWater.Checked := ini.ReadBool(wbGameName, 'RemoveUnseenIgnoreWater', chkIgnoreWater.Checked);
+  chkWarnMissing.Checked := ini.ReadBool(wbGameName, 'WarnMissing', chkWarnMissing.Checked);
   cbLODLevel.ItemIndex := IndexIn(cbLODLevel.Items, ini.ReadString(wbGameName, 'LODLevel', cbLODLevel.Text));
   cbLODX.ItemIndex := IndexIn(cbLODX.Items, ini.ReadString(wbGameName, 'LODX', cbLODX.Text));
   cbLODY.ItemIndex := IndexIn(cbLODY.Items, ini.ReadString(wbGameName, 'LODY', cbLODY.Text));

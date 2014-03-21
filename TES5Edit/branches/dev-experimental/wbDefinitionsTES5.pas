@@ -3892,7 +3892,7 @@ begin
     if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
        Supports(aElement, IwbContainer, SelfAsContainer) then begin
       Element := Container.ElementByName[aCounterName];
-      if not Assigned(Element) then  // Signature not listed in mrDef cannot be added
+      if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
         Element := Container.Add(Copy(aCounterName, 1, 4));
       if Assigned(Element) and (Element.Name = aCounterName) then try
         if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then

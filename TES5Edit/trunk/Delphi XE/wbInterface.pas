@@ -7037,7 +7037,7 @@ end;
 
 function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := 0;
+  if ((arCount = 0) and not Assigned(arCountCallback)) then Result := GetSize(aBasePtr, aEndPtr, aElement) else Result := 0;
 end;
 
 function TwbArrayDef.GetSorted: Boolean;
