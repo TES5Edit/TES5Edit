@@ -2470,6 +2470,13 @@ function wbFormID(const aName      : string;
                         aAfterSet  : TwbAfterSetCallback = nil)
                                    : IwbIntegerDef; overload;
 
+function wbFormIDT(const aName      : string;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil)
+                                    : IwbIntegerDef; overload;
+
 function wbFormIDCk(const aSignature : TwbSignature;
                     const aName      : string;
                     const aValidRefs : array of TwbSignature;
@@ -5566,6 +5573,16 @@ function wbFormID(const aName     : string;
                                   : IwbIntegerDef; overload;
 begin
   Result := wbInteger(aName, itU32, wbFormID, aPriority, aRequired, aDontShow, aAfterSet);
+end;
+
+function wbFormIDT(const aName     : string;
+                         aPriority : TwbConflictPriority = cpNormal;
+                         aRequired : Boolean = False;
+                         aDontShow : TwbDontShowCallback = nil;
+                         aAfterSet : TwbAfterSetCallback = nil)
+                                   : IwbIntegerDef; overload;
+begin
+  Result := wbIntegerT(aName, itU32, wbFormID, aPriority, aRequired, aDontShow, aAfterSet);
 end;
 
 function wbFormIDCk(const aSignature : TwbSignature;

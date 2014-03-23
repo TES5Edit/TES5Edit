@@ -5075,7 +5075,7 @@ begin
       'Search',
       'Use Combat Item',
       'Engage Target'
-    ])),
+    ], [$FF, 'None'])),
     wbUnion('Combat Procedure', ChangeFormCombatProcedureTypeDecider, [
       wbNull,
       wbStruct('Attack Ranged', [
@@ -5105,6 +5105,8 @@ begin
         wbFloatT('Flt02C'),
         wbFloatT('Flt030'),             // Paired
         wbFloatT('Flt034'),
+        wbFloatT('Flt038'),             // Paired
+        wbFloatT('Flt03C'),
         wbFloatT('Flt040'),             // Paired
         wbFloatT('Flt044'),
         wbFloatT('Flt048'),             // Paired
@@ -5437,7 +5439,7 @@ begin
                 ]),
                 wbChangeCombatProcedure,
                 wbChangeCombatProcedure,
-                wbArrayT('Unk08C', wbChangeCombatProcedure, -254),
+                wbArrayT('Combat Procedures 08C', wbChangeCombatProcedure, -254),
                 wbIntegerT('Has Unk0A0', itU8),
                 wbUnion('Unk0A0', ChangeFormCombatControllerHasUnk0A0Decider, [wbNull, wbStruct('Data', [
                   wbArrayT('Unk000', wbStruct('Data', [
@@ -6170,7 +6172,57 @@ begin
              wbRefIDT('Form000'),
              wbIntegerT('Byt004', itU8),
              wbIntegerT('Byt005', itU8)
-           ]), -254)
+           ]), -254),
+           wbArrayT('Perks', wbStruct('Data', [
+             wbRefIDT('Perk'),
+             wbIntegerT('Byt004', itU8)
+           ]), -254),
+           wbArrayT('List60C', wbStruct('Data', [
+             wbIntegerT('Unk000', itU32),
+             wbFloatT('Flt004'),
+             wbRefIDT('FormID')
+           ]), -254),
+           wbArrayT('List610', wbStruct('Data', [
+             wbIntegerT('Unk000', itU32),
+             wbIntegerT('Unk004', itU32),
+             wbIntegerT('Wrd008', itU16)
+           ]), -254),
+           wbArrayT('Cards 614', wbRefIDT('Card'), -254),
+           wbArrayT('Cards 618', wbRefIDT('Card'), -254),
+           wbIntegerT('Unk61C', itU32),
+           wbIntegerT('Unk620', itU32),
+           wbIntegerT('Unk624', itU32),
+           wbIntegerT('Unk628', itU32),
+           wbIntegerT('Unk62C', itU32),
+           wbArrayT('Stages', wbStruct('Data', [
+             wbRefIDT('Quest'),
+             wbIntegerT('Stage', itU8),
+             wbIntegerT('LogEntry', itU8)
+           ]), -254),
+           wbArrayT('Objectives', wbStruct('Data', [
+             wbRefIDT('Quest'),
+             wbIntegerT('Objective', itU32)
+           ]), -254),
+           wbNonActorMagicTarget,
+           wbIntegerT('KeyForUnkD64', itU32),
+           wbStruct('Unknown', [                      // if form version 8 or greater
+             wbFloatT('Unkown 11DFED4'),
+             wbFloatT('Unkown 11DFED8')
+           ]),
+           wbArrayT('Perks AD4', wbStruct('Data', [   // if form version 16 or greater
+             wbRefIDT('Perk'),
+             wbIntegerT('Byt004', itU8)
+           ]), -254),
+           wbIntegerT('HardcoreMode', itU8),          // if form version 17 or greater
+           wbIntegerT('Clears HardcoreFlag', itU8),   // if form version 17 or greater
+           wbIntegerT('Byt66E', itU8),                // if form version 19 or greater
+           wbArrayT('Unknown E3C', wbFormIDT('Form'), 8),  // if form version 1A or greater
+           wbStruct('Lists 11CAC98', [                     // if form version 1B or greater
+             wbArrayT('Enabled',  wbRefIDT('RefID'), -254),
+             wbArrayT('Disabled', wbRefIDT('RefID'), -254),
+             wbArrayT('Unknown',  wbRefIDT('RefID'), -254),
+             wbArrayT('FadeOut',  wbRefIDT('RefID'), -254)
+           ])
          ])])
        ])
       ,wbStruct('Change ACRE Data', [ {03C}
