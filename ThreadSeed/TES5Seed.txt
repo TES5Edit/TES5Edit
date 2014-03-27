@@ -1,15 +1,16 @@
 ﻿[size=5][color=#00BFFF][url=http://www.nexusmods.com/skyrim/mods/25859/]TES5Edit 3.0.31 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
  
-[size=4][color=#FF0000]This is the ninth update of TES5Edit and is still being updated. However, it should still be considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available. Feel free to ask about plugin cleaning in the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/]RELz TES5Edit Plugin Cleaning Emporium[/url][/color]. If you require technical assistance the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color] thread is best for that. As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
+[size=4][color=#FF0000]This is the ninth update of TES5Edit and is still being updated. However, it should still be considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available. Feel free to ask about plugin cleaning in the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/]RELz TES5Edit Plugin Cleaning Emporium[/url][/color]. If you require technical assistance the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1490494-relz-tes5edit/]RELz TES5Edit[/url][/color] thread is best for that. As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
  
 [size=4][color=#FF0000]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
  
 [size=4][color=#FF8C00]TES5Edit 3.0.31 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://www.nexusmods.com/skyrim/users/156622]Zilav[/url], [url=http://www.nexusmods.com/skyrim/users/1102380]Hlp[/url], and [url=http://www.nexusmods.com/skyrim/users/4147439]Sharlikran[/url].[/color][/size]
  
-[size=4][b][color=#00BFFF]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1474325-relz-tes5edit/]RELz TES5Edit[/url][/color][/b][/size]
+[size=4][b][color=#00BFFF]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1490494-relz-tes5edit/]RELz TES5Edit[/url][/color][/b][/size]
  
 Threads:
 [spoiler]
+[topic=1474325]Thread 18[/topic]
 [topic=1466352]Thread 17[/topic]
 [topic=1461810]Thread 16[/topic]
 [topic=1450501]Thread 15[/topic]
@@ -385,4 +386,5 @@ Bethesda: For their awesome program, and for this forum so we can accomplish thi
 Divstator: for his work on Improved NavMesh Decoding
 ElminsterAU: For all his hard work on FO3/FNV/TES4Edit over the years.
 Hlp: For all his hard work helping with the project.
+jonwd7: for his work on Improved NavMesh Decoding
 Zilav: For all his hard work helping with the project.

@@ -70,6 +70,7 @@ Version 3.0.32 contains the following changes:
 - [TES5] TES5LODGen
 - [TES5] renamed armor addon nodes (added slot numbers), please update your scripts if needed
 - [TES5] Record definitions update (WTHR, DOBJ, NAVM, VMAD papyrus data, GetEventData condition)
+  * Improved NavMeshes (thanks to jonwd7)
 - [TES5] Added VMAD (papyrus scripts) to TREE, and LVLG (global) to LVLN. They can't be edited in CK, but it supports them and they confirmed to work in game
 - [TES4] Added XRGD subrecord to REFR
 - [FO3] Do not remove PLD2 subrecord in PACK (as in FNV)
