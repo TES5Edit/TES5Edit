@@ -5371,6 +5371,8 @@ begin
     wbSCRI,
     wbDESCReq,
     wbDEST,
+    wbYNAM,
+    wbZNAM,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
         '',
