@@ -5959,7 +5959,7 @@ begin
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
-        wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True)
+        wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False)
       ]),
       wbInteger('Parameter #3', itS32)
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
@@ -7790,9 +7790,9 @@ begin
               '2 <-> 0'
             ]),
             wbInteger('Flags', itU16, wbFlags([
-              'Unknown 1',
-              'Unknown 2',
-              'Unknown 3',
+              'External1',
+              'External2End',
+              'External3Mid',
               'Unknown 4',
               'Unknown 5',
               'Unknown 6',
