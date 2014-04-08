@@ -3266,7 +3266,7 @@ procedure wbWRLDAfterLoad(const aElement: IwbElement);
 var
   MainRecord: IwbMainRecord;
 begin
-  wbRemoveOFST(aElement);
+//  wbRemoveOFST(aElement);
 
   if wbBeginInternalEdit then try
 
@@ -3585,7 +3585,6 @@ end;
 
 procedure wbRACEAfterLoad(const aElement: IwbElement);
 begin
-  wbRemoveOFST(aElement);
   wbReplaceBODTwithBOD2(aElement);
 end;
 
@@ -3984,7 +3983,7 @@ end;
 
 procedure wbPRKRsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
-  wbCounterAfterSet('PRKZ - Count', aElement);
+  wbCounterAfterSet('PRKZ - Perk Count', aElement);
 end;
 
 procedure wbSMQNQuestsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -4038,6 +4037,26 @@ begin
       end;
   finally
     wbEndInternalEdit;
+  end;
+end;
+
+function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container : IwbDataContainer;
+  Element   : IwbElement;
+begin
+  Result := 0;
+
+  if Supports(aElement.Container, IwbDataContainer, Container) and (Container.Name = 'OFST - Offset Data') and
+     Supports(Container.Container, IwbDataContainer, Container) then begin
+    Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+    if Assigned(Element) then begin
+      Result :=  Element.NativeValue;
+      Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+      if Assigned(Element) then begin
+        Result :=  Element.NativeValue - Result + 1;
+      end;
+    end;
   end;
 end;
 
@@ -12435,103 +12454,202 @@ begin
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
-  wbRecord(WRLD, 'Worldspace', [
-    wbEDID,
-    {>>> BEGIN leftover from earlier CK versions <<<}
-    wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
-    {>>> END leftover from earlier CK versions <<<}
-    wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
-    wbFULL,
-    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itS16),
-      wbInteger('Y', itS16)
-    ]),
-    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
-          {0x0001}'Use Land Data',
-          {0x0002}'Use LOD Data',
-          {0x0004}'Don''t Use Map Data',
-          {0x0008}'Use Water Data',
-          {0x0010}'Use Climate Data',
-          {0x0020}'Use Image Space Data (unused)',
-          {0x0040}'Use Sky Cell'
-        ], True)),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
-    wbString(ICON, 'Map Image'),
-    wbRStruct('Cloud Model', [wbMODL], []),
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
+  if wbSimpleRecords then
+    wbRecord(WRLD, 'Worldspace', [
+      wbEDID,
+      {>>> BEGIN leftover from earlier CK versions <<<}
+      wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
+      {>>> END leftover from earlier CK versions <<<}
+      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
+      wbFULL,
+      wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
       ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
+      wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+      wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+      wbRStruct('Parent', [
+        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+        wbStruct(PNAM, '', [
+          wbInteger('Flags', itU8, wbFlags([
+            {0x0001}'Use Land Data',
+            {0x0002}'Use LOD Data',
+            {0x0004}'Don''t Use Map Data',
+            {0x0008}'Use Water Data',
+            {0x0010}'Use Climate Data',
+            {0x0020}'Use Image Space Data (unused)',
+            {0x0040}'Use Sky Cell'
+          ], True)),
+          wbByteArray('Unknown', 1)
+        ], cpNormal, True)
+      ], []),
+      wbFormIDCk(CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+      wbFloat(NAM4, 'LOD Water Height'),
+      wbStruct(DNAM, 'Land Data', [
+        wbFloat('Default Land Height'),
+        wbFloat('Default Water Height')
+      ]),
+      wbString(ICON, 'Map Image'),
+      wbRStruct('Cloud Model', [wbMODL], []),
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
         ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
+        ]),
+        wbStruct('Camera Data', [
+          wbFloat('Min Height'),
+          wbFloat('Max Height'),
+          wbFloat('Initial Pitch')
         ])
+        //wbByteArray('Unknown')
+      ], cpNormal, False, nil, 2),
+      wbStruct(ONAM, 'World Map Offset Data', [
+        wbFloat('World Map Scale'),
+        wbFloat('Cell X Offset'),
+        wbFloat('Cell Y Offset'),
+        wbFloat('Cell Z Offset')
+      ], cpNormal, True),
+      wbFloat(NAMA, 'Distant LOD Multiplier'),
+      wbInteger(DATA, 'Flags', itU8, wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} 'Unknown 3',
+        {0x08} 'No LOD Water',
+        {0x10} 'No Landscape',
+        {0x20} 'Unknown 6',
+        {0x40} 'Fixed Dimensions',
+        {0x80} 'No Grass'
+      ]), cpNormal, True),
+      {>>> Object Bounds doesn't show up in CK <<<}
+      wbRStruct('Object Bounds', [
+        wbStruct(NAM0, 'Min', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True),
+        wbStruct(NAM9, 'Max', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True)
+      ], []),
+      wbFormIDCk(ZNAM, 'Music', [MUSC]),
+      wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+      wbString(XNAM, 'Water Noise Texture'),
+      wbString(TNAM, 'HD LOD Diffuse Texture'),
+      wbString(UNAM, 'HD LOD Normal Texture'),
+      wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
+      wbByteArray(OFST, 'Offset Data')
+    ], False, nil, cpNormal, False, wbWRLDAfterLoad)
+  else
+      wbRecord(WRLD, 'Worldspace', [
+      wbEDID,
+      {>>> BEGIN leftover from earlier CK versions <<<}
+      wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
+      {>>> END leftover from earlier CK versions <<<}
+      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
+      wbFULL,
+      wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
       ]),
-      wbStruct('Camera Data', [
-        wbFloat('Min Height'),
-        wbFloat('Max Height'),
-        wbFloat('Initial Pitch')
-      ])
-      //wbByteArray('Unknown')
-    ], cpNormal, False, nil, 2),
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset'),
-      wbFloat('Cell Z Offset')
-    ], cpNormal, True),
-    wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'Unknown 6',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True),
-    {>>> Object Bounds doesn't show up in CK <<<}
-    wbRStruct('Object Bounds', [
-      wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True),
-      wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True)
-    ], []),
-    wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-    wbString(XNAM, 'Water Noise Texture'),
-    wbString(TNAM, 'HD LOD Diffuse Texture'),
-    wbString(UNAM, 'HD LOD Normal Texture'),
-    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-    wbByteArray(OFST, 'Unknown')
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+      wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+      wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+      wbRStruct('Parent', [
+        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+        wbStruct(PNAM, '', [
+          wbInteger('Flags', itU8, wbFlags([
+            {0x0001}'Use Land Data',
+            {0x0002}'Use LOD Data',
+            {0x0004}'Don''t Use Map Data',
+            {0x0008}'Use Water Data',
+            {0x0010}'Use Climate Data',
+            {0x0020}'Use Image Space Data (unused)',
+            {0x0040}'Use Sky Cell'
+          ], True)),
+          wbByteArray('Unknown', 1)
+        ], cpNormal, True)
+      ], []),
+      wbFormIDCk(CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+      wbFloat(NAM4, 'LOD Water Height'),
+      wbStruct(DNAM, 'Land Data', [
+        wbFloat('Default Land Height'),
+        wbFloat('Default Water Height')
+      ]),
+      wbString(ICON, 'Map Image'),
+      wbRStruct('Cloud Model', [wbMODL], []),
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
+        ]),
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
+        ]),
+        wbStruct('Camera Data', [
+          wbFloat('Min Height'),
+          wbFloat('Max Height'),
+          wbFloat('Initial Pitch')
+        ])
+        //wbByteArray('Unknown')
+      ], cpNormal, False, nil, 2),
+      wbStruct(ONAM, 'World Map Offset Data', [
+        wbFloat('World Map Scale'),
+        wbFloat('Cell X Offset'),
+        wbFloat('Cell Y Offset'),
+        wbFloat('Cell Z Offset')
+      ], cpNormal, True),
+      wbFloat(NAMA, 'Distant LOD Multiplier'),
+      wbInteger(DATA, 'Flags', itU8, wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} 'Unknown 3',
+        {0x08} 'No LOD Water',
+        {0x10} 'No Landscape',
+        {0x20} 'Unknown 6',
+        {0x40} 'Fixed Dimensions',
+        {0x80} 'No Grass'
+      ]), cpNormal, True),
+      {>>> Object Bounds doesn't show up in CK <<<}
+      wbRStruct('Object Bounds', [
+        wbStruct(NAM0, 'Min', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True),
+        wbStruct(NAM9, 'Max', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True)
+      ], []),
+      wbFormIDCk(ZNAM, 'Music', [MUSC]),
+      wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+      wbString(XNAM, 'Water Noise Texture'),
+      wbString(TNAM, 'HD LOD Diffuse Texture'),
+      wbString(UNAM, 'HD LOD Normal Texture'),
+      wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
+      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
+    ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
