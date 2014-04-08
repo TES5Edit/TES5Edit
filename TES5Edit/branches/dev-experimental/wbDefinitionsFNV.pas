@@ -3541,16 +3541,6 @@ begin
       end;
     end;
 
-    {>>>
-    Removing PLD2 actualy causes troubles
-    http://forums.bethsoft.com/topic/1409718-wipz-tes5dumpfuture-tes5edit/page__view__findpost__p__21536789
-    <<<}
-//    if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
-//      if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-//        Assert(False);
-//      NewContainer.RemoveElement('PLD2');
-//      NewContainer.AddElement(OldContainer);
-//    end;
   finally
     wbEndInternalEdit;
   end;
@@ -4128,6 +4118,26 @@ begin
       end;
   finally
     wbEndInternalEdit;
+  end;
+end;
+
+function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container : IwbDataContainer;
+  Element   : IwbElement;
+begin
+  Result := 0;
+
+  if Supports(aElement.Container, IwbDataContainer, Container) and (Container.Name = 'OFST - Offset Data') and
+     Supports(Container.Container, IwbDataContainer, Container) then begin
+    Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+    if Assigned(Element) then begin
+      Result :=  Element.NativeValue;
+      Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+      if Assigned(Element) then begin
+        Result :=  Element.NativeValue - Result + 1;
+      end;
+    end;
   end;
 end;
 
@@ -5291,8 +5301,8 @@ begin
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
         {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, IMOD],
-                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD]),
         {46} wbInteger('Quest Objective (INVALID)', itS32),
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
@@ -5315,7 +5325,7 @@ begin
         {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
         {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
         {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, PMIS, ACHR, ACRE, PGRE, TRGT], True),
-        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
+        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, CCRD, IMOD]),
         {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
         {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
         {19} wbFormIDCkNoReach('Idle', [IDLE]),
@@ -5384,8 +5394,8 @@ begin
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
         {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, IMOD],
-                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, IMOD, CMNY, CCRD, CHIP]),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD]),
         {46} wbInteger('Quest Objective', itS32, wbCTDAParam2QuestObjectiveToStr, wbCTDAParam2QuestObjectiveToInt),
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
@@ -5651,6 +5661,8 @@ begin
     wbSCRI,
     wbDESCReq,
     wbDEST,
+    wbYNAM,
+    wbZNAM,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
         '',
@@ -7409,7 +7421,8 @@ begin
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Placed Impact Object', [TREE, SOUN, ACTI, DOOR, STAT, FURN,
           CONT, ARMO, AMMO, LVLN, LVLC, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS,
-          ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CHIP, IMOD])
+          ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CHIP, CMNY,
+          CCRD, IMOD])
   ]);
 
   wbRecord(DEBR, 'Debris', [
@@ -9105,7 +9118,7 @@ begin
           wbFormIDCkNoReach('Cell', [CELL]),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, IMOD]),
+          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
           wbInteger('Object Type', itU32, wbObjectTypeEnum),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore)
@@ -9128,7 +9141,7 @@ begin
           wbFormIDCkNoReach('Cell', [CELL]),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore),
-          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, IMOD]),
+          wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
           wbInteger('Object Type', itU32, wbObjectTypeEnum),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore)
@@ -9166,7 +9179,7 @@ begin
       ]), cpNormal, False, nil, nil, 2),
       wbUnion('Target', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, IMOD]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, CMNY, CCRD, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
       ]),
@@ -9252,7 +9265,7 @@ begin
       ])),
       wbUnion('Target', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, IMOD]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, CMNY, CCRD, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
       ]),
@@ -9298,7 +9311,7 @@ begin
         wbFormIDCkNoReach('Cell', [CELL]),
         wbByteArray('Unused', 4, cpIgnore),
         wbByteArray('Unused', 4, cpIgnore),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, IMOD]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, CHIP, CMNY, CCRD, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore),
         wbByteArray('Unused', 4, cpIgnore)
@@ -9511,7 +9524,7 @@ begin
     wbByteArray(RCLR, 'Unused', 0, cpIgnore),
     wbFormIDCk(NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, CHIP,
-                              MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CCRD, IMOD], False, cpNormal, True),
+                              MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, CCRD, IMOD, CMNY], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- ?? ---}
@@ -10535,97 +10548,184 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
-  wbRecord(WRLD, 'Worldspace', [
-    wbEDIDReq,
-    wbFULL,
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
+  if wbSimpleRecords then
+    wbRecord(WRLD, 'Worldspace', [
+      wbEDIDReq,
+      wbFULL,
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+      wbRStruct('Parent', [
+        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+        wbInteger(PNAM, 'Flags', itU16, wbFlags([
           {0x00000001}'Use Land Data',
           {0x00000002}'Use LOD Data',
           {0x00000004}'Use Map Data',
           {0x00000008}'Use Water Data',
           {0x00000010}'Use Climate Data',
           {0x00000020}'Use Image Space Data'
-        ], True)),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
-    wbICON,
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
+          ], True), cpNormal, True)
+      ], []),
+      wbFormIDCk(CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+      wbFloat(NAM4, 'LOD Water Height'),
+      wbStruct(DNAM, 'Land Data', [
+        wbFloat('Default Land Height'),
+        wbFloat('Default Water Height')
       ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
+      wbICON,
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
         ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
         ])
-      ])
-    ]),
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset')
-    ], cpNormal, True),
-    wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} '',
-      {0x08} '',
-      {0x10} 'No LOD Water',
-      {0x20} 'No LOD Noise',
-      {0x40} 'Don''t Allow NPC Fall Damage',
-      {0x80} 'Needs Water Adjustment'
-    ]), cpNormal, True),
-    wbRStruct('Object Bounds', [
-      wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True),
-      wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True)
-    ], []),
-    wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-    wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-    wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-      wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-      wbFormIDCkNoReach('Old', [IPCT]),
-      wbFormIDCk('New', [IPCT, NULL])
-    ])),
-    wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
-      'ConcSolid',
-      'ConcBroken',
-      'MetalSolid',
-      'MetalHollow',
-      'MetalSheet',
-      'Wood',
-      'Sand',
-      'Dirt',
-      'Grass',
-      'Water'
-    ]),
-    wbByteArray(OFST, 'Unknown')
-  ], False, nil, cpNormal, False, wbRemoveOFST);
+      ]),
+      wbStruct(ONAM, 'World Map Offset Data', [
+        wbFloat('World Map Scale'),
+        wbFloat('Cell X Offset'),
+        wbFloat('Cell Y Offset')
+      ], cpNormal, True),
+      wbFormIDCk(INAM, 'Image Space', [IMGS]),
+      wbInteger(DATA, 'Flags', itU8, wbFlags([  // LoadForm supports a DWord here, but only first byte would be used.
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} '',
+        {0x08} '',
+        {0x10} 'No LOD Water',
+        {0x20} 'No LOD Noise',
+        {0x40} 'Don''t Allow NPC Fall Damage',
+        {0x80} 'Needs Water Adjustment'
+      ]), cpNormal, True),
+      wbRStruct('Object Bounds', [
+        wbStruct(NAM0, 'Min', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True),
+        wbStruct(NAM9, 'Max', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True)
+      ], []),
+      wbFormIDCk(ZNAM, 'Music', [MUSC]),
+      wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
+      wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
+      wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
+        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
+        wbFormIDCkNoReach('Old', [IPCT]),
+        wbFormIDCk('New', [IPCT, NULL])
+      ])),
+      wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
+        'ConcSolid',
+        'ConcBroken',
+        'MetalSolid',
+        'MetalHollow',
+        'MetalSheet',
+        'Wood',
+        'Sand',
+        'Dirt',
+        'Grass',
+        'Water'
+      ]),
+      wbByteArray(OFST, 'Offset Data')
+    ])
+  else
+    wbRecord(WRLD, 'Worldspace', [
+      wbEDIDReq,
+      wbFULL,
+      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+      wbRStruct('Parent', [
+        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+        wbInteger(PNAM, 'Flags', itU16, wbFlags([
+          {0x00000001}'Use Land Data',
+          {0x00000002}'Use LOD Data',
+          {0x00000004}'Use Map Data',
+          {0x00000008}'Use Water Data',
+          {0x00000010}'Use Climate Data',
+          {0x00000020}'Use Image Space Data'
+          ], True), cpNormal, True)
+      ], []),
+      wbFormIDCk(CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+      wbFloat(NAM4, 'LOD Water Height'),
+      wbStruct(DNAM, 'Land Data', [
+        wbFloat('Default Land Height'),
+        wbFloat('Default Water Height')
+      ]),
+      wbICON,
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
+        ]),
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
+        ])
+      ]),
+      wbStruct(ONAM, 'World Map Offset Data', [
+        wbFloat('World Map Scale'),
+        wbFloat('Cell X Offset'),
+        wbFloat('Cell Y Offset')
+      ], cpNormal, True),
+      wbFormIDCk(INAM, 'Image Space', [IMGS]),
+      wbInteger(DATA, 'Flags', itU8, wbFlags([  // LoadForm supports a DWord here, but only first byte would be used.
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} '',
+        {0x08} '',
+        {0x10} 'No LOD Water',
+        {0x20} 'No LOD Noise',
+        {0x40} 'Don''t Allow NPC Fall Damage',
+        {0x80} 'Needs Water Adjustment'
+      ]), cpNormal, True),
+      wbRStruct('Object Bounds', [
+        wbStruct(NAM0, 'Min', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True),
+        wbStruct(NAM9, 'Max', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True)
+      ], []),
+      wbFormIDCk(ZNAM, 'Music', [MUSC]),
+      wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
+      wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
+      wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
+        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
+        wbFormIDCkNoReach('Old', [IPCT]),
+        wbFormIDCk('New', [IPCT, NULL])
+      ])),
+      wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
+        'ConcSolid',
+        'ConcBroken',
+        'MetalSolid',
+        'MetalHollow',
+        'MetalSheet',
+        'Wood',
+        'Sand',
+        'Dirt',
+        'Grass',
+        'Water'
+      ]),
+      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0) // cannot be saved by GECK
+    ]);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,

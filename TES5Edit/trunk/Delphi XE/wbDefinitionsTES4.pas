@@ -1901,6 +1901,26 @@ begin
     Result := True;
 end;
 
+function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container : IwbDataContainer;
+  Element   : IwbElement;
+begin
+  Result := 0;
+
+  if Supports(aElement.Container, IwbDataContainer, Container) and (Container.Name = 'OFST - Offset Data') and
+     Supports(Container.Container, IwbDataContainer, Container) then begin
+    Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+    if Assigned(Element) then begin
+      Result :=  Element.NativeValue;
+      Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+      if Assigned(Element) then begin
+        Result :=  Element.NativeValue - Result + 1;
+      end;
+    end;
+  end;
+end;
+
 procedure DefineTES4;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
@@ -4861,53 +4881,102 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(WRLD, 'Worldspace', [
-    wbEDID,
-    wbFULL,
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD])
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbICON,
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
+  if wbSimpleRecords then
+    wbRecord(WRLD, 'Worldspace', [
+      wbEDID,
+      wbFULL,
+      wbRStruct('Parent', [
+        wbFormIDCk(WNAM, 'Worldspace', [WRLD])
+      ], []),
+      wbFormIDCk(CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      wbICON,
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
         ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
         ])
-      ])
-    ]),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small world',
-      {0x02} 'Can''t fast travel',
-      {0x04} 'Oblivion worldspace',
-      {0x08} '',
-      {0x10} 'No LOD water'
-    ]), cpNormal, True),
-    //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbRStruct('Object Bounds', [
-      wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True),
-      wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True)
-    ], []),
-    wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-    wbByteArray(OFST, 'Unknown')
-  ], False, nil, cpNormal, False, wbRemoveOFST);
+      ]),
+      wbInteger(DATA, 'Flags', itU8, wbFlags([
+        {0x01} 'Small world',
+        {0x02} 'Can''t fast travel',
+        {0x04} 'Oblivion worldspace',
+        {0x08} '',
+        {0x10} 'No LOD water'
+      ]), cpNormal, True),
+      //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+      //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+      wbRStruct('Object Bounds', [
+        wbStruct(NAM0, 'Min', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True),
+        wbStruct(NAM9, 'Max', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True)
+      ], []),
+      wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
+      wbByteArray(OFST, 'Offset Data')
+    ])
+  else
+	wbRecord(WRLD, 'Worldspace', [
+      wbEDID,
+      wbFULL,
+      wbRStruct('Parent', [
+        wbFormIDCk(WNAM, 'Worldspace', [WRLD])
+      ], []),
+      wbFormIDCk(CNAM, 'Climate', [CLMT]),
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      wbICON,
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
+        ]),
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
+        ])
+      ]),
+      wbInteger(DATA, 'Flags', itU8, wbFlags([
+        {0x01} 'Small world',
+        {0x02} 'Can''t fast travel',
+        {0x04} 'Oblivion worldspace',
+        {0x08} '',
+        {0x10} 'No LOD water'
+      ]), cpNormal, True),
+      //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+      //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
+      wbRStruct('Object Bounds', [
+        wbStruct(NAM0, 'Min', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True),
+        wbStruct(NAM9, 'Max', [
+          wbFloat('X', cpNormal, False, 1/4096),
+          wbFloat('Y', cpNormal, False, 1/4096)
+        ], cpIgnore, True)
+      ], []),
+      wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
+      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
+    ]);
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,

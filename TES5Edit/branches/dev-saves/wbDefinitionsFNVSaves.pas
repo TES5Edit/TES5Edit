@@ -1953,6 +1953,17 @@ var
 begin
   wbNull := wbByteArray('Unused', -255);
 
+  wbPathingLocation := wbStruct('Pathing Location', [
+    wbByteArray('Unk004', 12+1),
+    wbRefIDT('NavMesh'),               // NavMeshInfo.map[Navmesh] goes into 010
+    wbRefIDT('Cell'),                  // Goes into 018
+    wbRefIDT('Worldspace'),            // goes into 01C
+    wbIntegerT('CoordXandY', itU32),  // key into WorldspaceMap of NavMeshInfo, seems someone created the DEADDEAD key :)
+    wbIntegerT('Wrd024', itS16),
+    wbIntegerT('Byt026', itU8),
+    wbIntegerT('Unknown', itU8)       // if set, combines Worldspace and Unk020 for the value of unk014 then does the same with cell
+  ]);
+
   wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
@@ -4908,7 +4919,7 @@ begin
         wbIntegerT('Unk000', itU8),
         wbIntegerT('Unk001', itU8),
         wbIntegerT('Unk002', itU8),
-        wbIntegerT('Unk003', itU8), // Field "added" since form version 0x10
+        wbIntegerT('Unk003', itU8), // Since form version 0x10
         wbArrayT('Unk004', wbRefIDT('Data'), -254)
       ]), -254)
     ]),
@@ -5001,17 +5012,6 @@ begin
 // not checked !    ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
 // no actual data     ,wbUnionCHANGE_OBJECT_OPEN_STATE
 // not checked !    ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
-  ]);
-
-  wbPathingLocation := wbStruct('Pathing Location', [
-    wbByteArray('Unk004', 12+1),
-    wbRefIDT('NavMesh'),               // NavMeshInfo.map[Navmesh] goes into 010
-    wbRefIDT('Cell'),                  // Goes into 018
-    wbRefIDT('Worldspace'),            // goes into 01C
-    wbIntegerT('CoordXandY', itU32),  // key into WorldspaceMap of NavMeshInfo, seems someone created the DEADDEAD key :)
-    wbIntegerT('Wrd024', itS16),
-    wbIntegerT('Byt026', itU8),
-    wbIntegerT('Unknown', itU8)       // if set, combines Worldspace and Unk020 for the value of unk014 then does the same with cell
   ]);
 
   wbPathingCoverLocation := wbStruct('Pathing Cover Location', [
@@ -6229,16 +6229,16 @@ begin
          wbChangedCreature
        ])
       ,wbStruct('Change PMIS Data', [ {03D}
-//         wbChangedREFR
+         wbChangedREFR
        ])
       ,wbStruct('Change PGRE Data', [ {03E}
-//         wbChangedREFR
+         wbChangedREFR
        ])
       ,wbStruct('Change PBEA Data', [ {03F}
-//         wbChangedREFR
+         wbChangedREFR
        ])
       ,wbStruct('Change PFLA Data', [ {040}
-//         wbChangedREFR
+         wbChangedREFR
        ])
       ,wbStruct('Change CELL Data', [ {039}
          wbUnionCHANGE_FORM_FLAGS
@@ -6418,7 +6418,7 @@ begin
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
       ,wbStruct('Change PCBE Data', [ {069}
-//         wbChangedREFR
+         wbChangedREFR
        ])
       ,wbStruct('Change RCPE Data', [ {06A}
          wbUnionCHANGE_FORM_FLAGS
