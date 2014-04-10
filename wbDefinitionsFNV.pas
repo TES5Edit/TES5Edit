@@ -4547,7 +4547,7 @@ begin
            FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
            LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
            WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
-           TERM, NULL]),
+           TERM, HAIR, EYES, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
