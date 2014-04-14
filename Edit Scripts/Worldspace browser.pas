@@ -419,9 +419,9 @@ var
 begin
   Result := False;
 
-  MapWidthPx := (MapSizeX div LODLevel)*2*LODSize; // Map width in pixels
-  MapHeightPx := (MapSizeY div LODLevel)*2*LODSize; // Map height in pixels
   CellSizePx := LODSize div LODLevel; // Cell size in pixels
+  MapWidthPx := CellSizePx*MapSizeX*2; // Map width in pixels
+  MapHeightPx := CellSizePx*MapSizeY*2; // Map height in pixels
   PosSizePx := CellSizePx / CellSize; // Game unit size in pixels
   FontMult := (32 div LODLevel)*LODSize/256; // font size multiplier depending on lod level and texture size
 
@@ -435,7 +435,7 @@ begin
   
   bmp := TBitmap.Create;
   try
-    bmpMap.SetSize((MapSizeX div LODLevel)*2*LODSize, (MapSizeY div LODLevel)*2*LODSize);
+    bmpMap.SetSize(MapWidthPx, MapHeightPx);
     bmpMap.Canvas.Brush.Color := ColorBackground;
     bmpMap.Canvas.FillRect(Rect(0, 0, bmpMap.Width, bmpMap.Height));
     y := SWy;
@@ -787,7 +787,7 @@ end;
 // save map as separate lod textures to be used with landscape lod meshes
 procedure miWorldspaceSaveAsLODClick(Sender: TObject);
 var
-  x, y, lev, cnt: integer;
+  LODSize32, x, y, lev, cnt: integer;
   tile: TBitmap;
   SrcRect, DestRect: TRect;
   edid, texpath, fname: string;
@@ -804,11 +804,12 @@ begin
   cnt := 0;
   tile := TBitmap.Create;
   tile.PixelFormat := pf32bit;
+  LODSize32 := Round(LODSize*32/LODLevel);
   try
     lev := 32;
     while lev >= 4 do begin
       AddMessage(Format('Savind LOD level %d tiles...', [lev]));
-      tile.SetSize(Round(LODSize*lev/32), Round(LODSize*lev/32));
+      tile.SetSize(Round(LODSize32*lev/32), Round(LODSize32*lev/32));
       DestRect := Rect(0, 0, tile.Width, tile.Height);
       y := -MapSizeY;
       while y < MapSizeY do begin
