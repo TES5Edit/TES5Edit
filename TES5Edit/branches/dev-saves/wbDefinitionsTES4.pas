@@ -3495,15 +3495,19 @@ begin
 
   wbRecord(INFO, 'Dialog response', [
     wbStruct(DATA, '', [
-      wbInteger('Type', itU16, wbEnum([], [
+      wbInteger('Type', itU8, wbEnum([], [
         0, 'Topic',
         1, 'Conversation',
         2, 'Combat',
         3, 'Persuasion',
         4, 'Detection',
         5, 'Service',
-        6, 'Miscellaneous',
-        257, 'Conversation 257'
+        6, 'Miscellaneous'
+      ])),
+      wbInteger('Next Speaker', itU8, wbEnum([
+        {0} 'Target',
+        {1} 'Self',
+        {2} 'Either'
       ])),
       wbInteger('Flags', itU8, wbFlags([
         {0x0001} 'Goodbye',

@@ -491,6 +491,14 @@ begin
     Element.MoveDown;
 end;
 
+procedure IwbElement_ReportRequiredMasters(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Element.ReportRequiredMasters(TStrings(V2O(Args.Values[1])), Args.Values[2], Args.Values[3]);
+end;
+
 procedure IwbElement_BuildRef(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -1514,6 +1522,7 @@ begin
     AddFunction(cUnit, 'ClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'SetElementState', IwbElement_SetElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'GetElementState', IwbElement_GetElementState, 2, [varEmpty, varEmpty], varBoolean);
+    AddFunction(cUnit, 'ReportRequiredMasters', IwbElement_ReportRequiredMasters, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'BuildRef', IwbElement_BuildRef, 1, [varEmpty], varEmpty);
 
     { IwbContainer }

@@ -5406,7 +5406,6 @@ begin
       end;
 
     finally
-      ScriptEngine := nil;
       vstNav.EndUpdate;
       Enabled := True;
       Caption := Application.Title;
@@ -5418,6 +5417,7 @@ begin
     vstNav.Invalidate;
   finally
     jvi.Free;
+    ScriptEngine := nil;
     tmrCheckUnsaved.Enabled := bCheckUnsaved;
   end;
 end;

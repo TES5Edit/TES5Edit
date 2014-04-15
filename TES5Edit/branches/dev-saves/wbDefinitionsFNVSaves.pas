@@ -205,6 +205,22 @@ begin
   Result := FileLocationTableCountCounter('Changed Forms', aBasePtr, aEndPtr, aElement);
 end;
 
+function GlobalData2TableSizeCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+begin
+  Result := 0;
+  Element := FindElement('Global Data 2', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Size'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
 function GlobalDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -226,7 +242,7 @@ begin
       else  if (aType >= 1000) and (aType <= 1000) then // 1000 to 1000 = 1
         Result := aType - 1000 + 12 + 1;
     end;
-    if {(Result < (1001-1000+9+15+1)) and} (Result > 2) then Result := 0; //Others are not decoded yet
+    if (Result > 12) then Result := 0; //Others are not decoded yet
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
@@ -900,6 +916,38 @@ begin
   end;
 end;
 
+function Lst0044HasArr0018DataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+begin
+  Result := 0;
+  Element := FindElement('Lst044 Data', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Unk00D0'];
+    if Assigned(Element) and (Element.NativeValue<>0) then begin
+      Result := 1;
+    end;
+  end;
+end;
+
+function Lst0044Has00D4DataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+begin
+  Result := 0;
+  Element := FindElement('Lst044 Data', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Unk00D0'];
+    if Assigned(Element) and (Element.NativeValue<>0) then begin
+      Result := 1;
+    end;
+  end;
+end;
+
 function ChangedFormExtraNonMagicTargetSubCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element    : IwbElement;
@@ -1425,11 +1473,11 @@ begin
         // 9,0                  ; 40
 end;
 
-function ChangeFormCreatedPackageHasDialogueItemsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function HasDialogueItemsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Dialogue Items Struct', 'Has Dialogue Items', aBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Dialogue Struct', 'Has Dialogue Items', aBasePtr, aEndPtr, aElement);
   if (Result = MaxInt) or (Result = 0) then
     Result := 0
   else
@@ -1774,6 +1822,11 @@ begin
   Result := 0;
 end;
 
+function wbCoordXYZ(aName: String): IwbArrayDef;
+begin
+  Result := wbArrayT(aName, wbFloat('Coord'), 3, ['X', 'Y', 'Z'], nil);
+end;
+
 procedure DefineFNVSavesS;  // This is all based on current UESP, and HexDump, Triria TESSaveLib and the Runtime
 var
   wbHeader                   : IwbStructDef;
@@ -1865,10 +1918,13 @@ var
 //  wbCreatedPackagePackageData : IwbUnionDef;
   wbCreatedPackageDataType : IwbUnionDef;
   wbActorPackageData      : IwbUnionDef;
+  wbDialogueItemsData     : IwbStructDef;
   wbDialogueItems         : IwbStructDef;
+  wbGlobalDialogueItems   : IwbStructDef;
   wbPackageStruct         : IwbStructDef;
   wbChangePackageStruct   : IwbStructDef;
   wbPathingLocation       : IwbStructDef;
+  wbOtherPathingLocation  : IwbStructDef;
   wbPathingCoverLocation  : IwbStructDef;
   wbStructPathing         : IwbStructDef;
   wbStructUnk128or164     : IwbStructDef;
@@ -1953,15 +2009,61 @@ var
 begin
   wbNull := wbByteArray('Unused', -255);
 
+  wbOtherPathingLocation := wbStruct('Pathing Location', [
+    wbCoordXYZ('Coords'),
+    wbRefIDT('Cell/Worldspace')
+  ]);
+
   wbPathingLocation := wbStruct('Pathing Location', [
-    wbByteArray('Unk004', 12+1),
-    wbRefIDT('NavMesh'),               // NavMeshInfo.map[Navmesh] goes into 010
-    wbRefIDT('Cell'),                  // Goes into 018
-    wbRefIDT('Worldspace'),            // goes into 01C
+    wbCoordXYZ('Coords'),
+    wbRefIDT('NavMesh'),              // NavMeshInfo.map[Navmesh] goes into 010
+    wbRefIDT('Cell'),                 // Goes into 018
+    wbRefIDT('Worldspace'),           // goes into 01C
     wbIntegerT('CoordXandY', itU32),  // key into WorldspaceMap of NavMeshInfo, seems someone created the DEADDEAD key :)
     wbIntegerT('Wrd024', itS16),
     wbIntegerT('Byt026', itU8),
     wbIntegerT('Unknown', itU8)       // if set, combines Worldspace and Unk020 for the value of unk014 then does the same with cell
+  ]);
+
+  wbDialogueItemsData := wbStruct('Dialogue Items Data', [
+    wbArrayPT('Dialogue Items', wbStruct('Dialogue Item', [
+      wbArrayPT('Dialogue Responses', wbStruct('Dialogue Response', [
+        wbLenStringT('Response Text', -3),
+        wbLenStringT('Voice Filename', -3),
+        wbIntegerT('Emotion Type', itU32),
+        wbIntegerT('Emotion Value', itU32),
+        wbIntegerT('Use emotion animation', itU8),
+        wbRefIDT('Speaker Idle'),
+        wbRefIDT('Listener Idle'),
+        wbRefIDT('Sound')
+      ]), -254),
+      wbIntegerT('Index', itS16),
+      wbRefIDT('TopicInfo'),
+      wbRefIDT('Topic'),
+      wbRefIDT('Quest'),
+      wbRefIDT('Speaker')
+    ]), -254),
+    wbIntegerT('Index', itS16)
+  ]);
+
+  wbDialogueItems := wbStruct('Dialogues Struct', [
+    wbIntegerT('Has Dialogue Items', itU8),
+    wbUnion('Dialogues', HasDialogueItemsDecider, [
+      wbNull,
+      wbStruct('Data', [
+        wbDialogueItemsData,
+        wbIntegerT('Dialogue Item Index', itS16),
+        wbIntegerT('Dialogue Response Index', itS16)
+      ])
+    ])
+  ]);
+
+  wbGlobalDialogueItems := wbStruct('Dialogues Struct', [
+    wbIntegerT('Has Dialogue Items', itU8),
+    wbUnion('Dialogues', HasDialogueItemsDecider, [
+      wbNull,
+      wbDialogueItemsData
+    ])
   ]);
 
   wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, [
@@ -1970,8 +2072,8 @@ begin
     wbUnion('Data', GlobalDataDecider, [
       wbByteArray('Unknown', DataCounter),  // Single line
       // 0 to 11
-      wbArrayT('Player Locations', wbIntegerT('Location', itU32), -1),
-      wbStruct('TES', [
+      wbArrayPT('Global Data 0', wbIntegerT('Data', itU32), -1),
+      wbStruct('Global Data 1', [
         wbIntegerT('Unknown', itU32),
         wbRefIDT('Worldspace'),
         wbIntegerT('CoordX', itS32),
@@ -1986,89 +2088,247 @@ begin
           wbIntegerT('Unknown', itU8)
         ])
       ]),
-      wbStruct('Global Variables', [
-        wbArrayT('TESActorBase', wbStruct('', [
+      wbStruct('Global Data 2', [
+        wbArrayPT('TESActorBase', wbStruct('Data', [
           wbRefIDT('TESActorBase'),
           wbIntegerT('Unknown', itU16)
-        ]), -254)
-        // wbArrayT('xx', wbArrayT('samecount', wbRefID
+        ]), -254),
+        wbIntegerT('Size', itU32),
+        wbArrayPT('Rows', wbArrayPT('Columns', wbRefIDT('RefID'), GlobalData2TableSizeCounter), GlobalData2TableSizeCounter)
       ]),
-      wbArray('Process List', wbInteger('', itU8), -2),
-      wbArray('Combat', wbInteger('', itU8), -2),
-      wbArray('Interface', wbInteger('', itU8), -2),
-      wbArray('Effects', wbInteger('', itU8), -2),
-      wbStruct('Misc Stats Struct', [
-        wbArray('Misc Stats', wbStruct('Misc Stat',[
-          wbLenString('Misc Stat Name', 2),
-          wbInteger('Category', itU8, wbEnum([
-            '0 = General',
-            '1 = Quest',
-            '2 = Combat',
-            '3 = Magic',
-            '4 = Crafting',
-            '5 = Crime',
-            '6 = Perks?'
-          ])),
-          wbInteger('Value', itU32)
-        ]), -1)
+      wbArrayPT('Global Variables', wbStruct('Global', [
+        wbRefIDT('Variable'),
+        wbFloatT('Value')
+      ]), -254),
+      wbStruct('Global Data 4', [
+        wbIntegerT('Unk0154', itU32),
+        wbIntegerT('Unk0158', itU32),         // if form version 18 or later
+        wbIntegerT('Unk0103B4', itU32),
+        wbIntegerT('Unk0103B8', itU32),
+        wbArrayPT('Lst0044s', wbArrayPT('Lst0044', wbStruct('Data', [
+            wbIntegerT('Unk0000', itU32),
+            wbIntegerT('Unk0004', itU32),
+            wbIntegerT('Unk0010', itU32),
+            wbIntegerT('Unk0018', itU32),
+            wbIntegerT('Unk0028', itU32),
+            wbIntegerT('Unk002C', itU32),
+            wbIntegerT('Unk0030', itU32),
+            wbFloatT('Flt0034'),
+            wbIntegerT('Unk0008', itU32),
+            wbIntegerT('Unk000C', itU32),
+            wbRefIDT('Bound Object'),
+            wbRefIDT('Form0024'),
+            wbArrayPT('Lst001C', wbFormIDT('FormID'), -254),
+            wbArrayPT('Lst0038', wbFormIDT('Faction'), -254)
+          ]), -254),
+        5)
       ]),
-      wbArray('Weather', wbInteger('', itU8), -2),
-      wbArray('Actor Causes', wbInteger('', itU8), -2),
-      wbArray('Radio', wbInteger('', itU8), -2),
-      wbArray('Audio', wbInteger('', itU8), -2),
-      // 1000 to 1000
-      wbStruct('Temp Effect', [
-        wbStruct('Unknown1000_00', [
-          wbArray('Unknown1000_000', wbStruct('Unknown1000_0000', [
-            wbInteger('Unknown1000_00000', itU8),
-            wbUnion('Unknown1000_00001', Unknown1000_00001Decider, [
-              wbRefID('REFR'),
-              wbStruct('Unknown1000_000011', [
-                wbRefID('CELL'),
-                wbInteger('Unknown', itU32)
+      wbStruct('Global Data 5', [
+        wbIntegerT('Unk0034', itU32),
+        wbArrayPT('Lst0044', wbStruct('Lst044 Data', [
+            wbIntegerT('Unknown', itU32),
+            wbIntegerT('Unknown', itU32),
+            wbArrayPT('Pathing Locations', wbStruct('Pathing Location', [
+              wbByteArrayT('Unk0000', 16),
+              wbIntegerT('Unk0010', itU32)
+            ]), -254),
+            wbArrayPT('Combattants', wbStruct('Data', [
+              wbRefIDT('Combattant'),
+              wbIntegerT('Unk0004', itU32),
+              wbIntegerT('Wrd0048', itU16),
+              wbIntegerT('Wrd004A', itU16),
+              wbIntegerT('Byt0064', itU8),
+              wbIntegerT('Byt0065', itU8),
+              wbOtherPathingLocation,
+              wbOtherPathingLocation,
+              wbOtherPathingLocation,
+              wbOtherPathingLocation,      // if form version 14 or later
+              wbFloatT('Tim0050'),
+              wbFloatT('Tim0054'),
+              wbFloatT('Tim0058'),
+              wbFloatT('Tim004C'),
+              wbFloatT('Tim005C'),
+              wbFloatT('Tim0060')    // if form version 13 or later
+            ]), -254),
+            wbArrayPT('Arr0018', wbStruct('Data', [
+              wbRefIDT('RefID'),
+              wbIntegerT('Unk0004', itU32),
+              wbIntegerT('Unk0008', itU32),
+              wbIntegerT('Unk000C', itU32),
+              wbIntegerT('Byte', itS8)      // if not 0xFF then dup in array at offset 0x0138
+            ]), -254),
+            wbIntegerT('Combat Group Strategy Type', itS8),
+            wbIntegerT('Byt002C', itU8),
+            wbFloatT('Flt0030'),          // Paired
+            wbFloatT('Flt0034'),
+            wbFloatT('Flt0038'),          // Paired
+            wbFloatT('Flt003C'),
+            wbIntegerT('Unk0040', itU32),
+            wbFloatT('Tim0044'),
+            wbFloatT('Flt0048'),          // Paired
+            wbFloatT('Flt004C'),
+            wbFloatT('Flt00B0'),          // Paired
+            wbFloatT('Flt00B4'),
+            wbFloatT('Flt00A8'),          // Paired
+            wbFloatT('Flt00AC'),
+            wbArray('Arr0058', wbStruct('Data', [
+              wbFloatT('Flt0000'),          // Paired
+              wbFloatT('Flt0004')
+            ]), 10),
+            wbIntegerT('Unk00D0', itU32),
+            wbUnion('Arr0018 Data', Lst0044HasArr0018DataDecider, [ wbNull,
+              wbStruct('Data', [
+                wbRefIDT('RefID00EC'),
+                wbCoordXYZ('Coords'),
+                wbFloatT('Flt00D8'),          // Paired
+                wbFloatT('Flt00DC'),
+                wbFloatT('Flt00E0'),          // Paired
+                wbFloatT('Flt00E4'),
+                wbFloatT('Tim00E8'),          // if form version 5 or later
+                wbOtherPathingLocation,            // 00F0
+                wbIntegerT('Unk010C', itU32),
+                wbArrayPT('Arr0110', wbStruct('Data', [
+                  wbOtherPathingLocation,
+                  wbIntegerT('Unk0018', itU32),
+                  wbRefIDT('RefID0014'),
+                  wbFloatT('Tim0010')
+                ]), -254),
+                wbArrayPT('Arr0120', wbStruct('Data', [
+                  wbRefIDT('Ref0000'),
+                  wbRefIDT('Ref0004'),
+                  wbIntegerT('Byt0008', itU8),
+                  wbIntegerT('Byt0009', itU8),
+                  wbIntegerT('Byt000A', itU8)
+                ]), -254),
+                wbIntegerT('Has Data00D4', itU8),
+                wbUnion('Data00D4', Lst0044Has00D4DataDecider, [ wbNull,
+                  wbStruct('Data', [
+                    wbArrayPT('Arr0004', wbStruct('Data', [
+                      wbRefIDT('RefID'),    // key
+                      wbRefIDT('Navmesh'),
+                      wbArrayPT('Arr000', wbStruct('Data', [
+                        wbIntegerT('Byt0000', itU8),
+                        wbIntegerT('Unk0018', itU32),
+                        wbArrayPT('Arr0004', wbIntegerT('Byte', itU8), -254)
+                      ]), -254)
+                    ]), -254),
+                    wbIntegerT('Unk0018', itU32),
+                    wbIntegerT('Unk0044', itU32),
+                    wbIntegerT('Unk0048', itU32),
+                    wbPathingLocation
+                  ])
+                ])
               ])
             ]),
-            wbRefID('Texture Set'),
-            wbRefID('Texture Set'),
-            wbArray('Unknown1000_00002', wbInteger('Unknown', itU32), 3),
-            wbArray('Unknown1000_00003', wbInteger('Unknown', itU32), 3),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbArray('Unknown1000_00004', wbInteger('Unknown', itU32), 4), // Check for float
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbUnion('Unknown1000_00005', SaveFormVersionGreaterThan35Decider, [
-              wbNull,
-              wbInteger('Unknown', itU32)
-            ])
+            wbFloatT('Flt0050'),          // Paired
+            wbFloatT('Flt0054'),
+            wbIntegerT('Unk00C0', itU32),
+            wbIntegerT('Unk00C4', itU32),
+            wbIntegerT('Unk00C8', itU32),
+            wbIntegerT('Unk00CC', itU32),
+            wbFloatT('Flt00B8'),          // Paired
+            wbFloatT('Flt00BC'),
+            wbIntegerT('Byt0154', itU8)
+          ]), -254),
+          wbArrayPT('Arr0014', wbStruct('Data', [
+            wbRefIDT('RefID'),
+            wbIntegerT('Unk0004', itU32),
+            wbFloatT('Tim0008'),
+            wbFloatT('Tim000C'),
+            wbIntegerT('Unk0010', itU32)
+          ]), -254),
+          wbArrayPT('Combatant List', wbRefIDT('Combattant'), -254),
+          wbFloatT('Tim0020'),
+          wbFloatT('Flt0024'),          // Paired
+          wbFloatT('Flt0028'),
+          wbFloatT('Flt002C'),          // Paired
+          wbFloatT('Flt0030')
+      ]),
+      wbStruct('Global Data 6', [
+        wbIntegerT('Unknown', itU32),
+        wbIntegerT('Byte', itU8),
+        wbIntegerT('Byte', itU8),
+        wbIntegerT('Byte', itU8),
+        wbIntegerT('Unknown', itU32),
+        wbIntegerT('Unknown', itU32),
+        wbIntegerT('Length', itU32),      // if form version 12 or greater
+        wbByteArray('Unknown')            // if form version 12 or greater
+          // it is interpreted as an array of array of 8 bytes, but the save is truncated, pretty hard to code
+      ]),
+      wbArrayPT('Global Data 7', wbStruct('Data', [
+        wbFloatT('Unknown'),
+        wbFloatT('Unknown'),               // if form version 14 or greater
+        wbRefIDT('Image Space Modifier')
+      ]), -254),
+      wbStruct('Sky', [
+        wbRefIDT('Weather0010'),
+        wbRefIDT('Weather0014'),
+        wbRefIDT('Weather0018'),
+        wbRefIDT('Weather001C'),
+        wbIntegerT('Unk00EC', itU32),
+        wbIntegerT('Unk00F0', itU32),
+        wbIntegerT('Unk00F4', itU32),
+        wbIntegerT('Flags0118 bit 3', itU32),
+        wbIntegerT('Unk0110', itU32),
+        wbStruct('Unk00B4', [                   // if form version 18 or greater
+          wbIntegerT('Unk000', itU32),
+          wbIntegerT('Unk004', itU32),
+          wbIntegerT('Unk008', itU32)
+        ]), // else a 12 bytes array
+        wbIntegerT('Unk00E4', itU32),
+        wbIntegerT('Unk00E8', itU32),
+        wbIntegerT('Unk00F8', itU32)
+      ]),
+      wbStruct('Global Data 9', [
+        wbIntegerT('Unknown 11D60CC', itU32),
+        wbArrayPT('List 11D6124', wbStruct('Data', [
+          wbCoordXYZ('Coords'),
+          wbIntegerT('Unk0014', itU32),
+          wbRefIDT('RefID'),
+          wbArrayPT('Lst0004', wbStruct('Data', [
+            wbRefIDT('Form000'),
+            wbIntegerT('Unk004', itU8),
+            wbIntegerT('Unk008', itU32),
+            wbCoordXYZ('Coords'),
+            wbFloatT('Tim018'),
+            wbIntegerT('Byt01E', itU8),
+            wbIntegerT('Byt01C', itU8),
+            wbIntegerT('Byt01D', itU8),
+            wbIntegerT('Unk020', itU32),
+            wbIntegerT('Byt01F', itU8)      // if form version 8 or newer
           ]), -254)
-        ]),
-        wbInteger('Next ID', itU32),
-        wbArray('Unknown1000_01', wbStruct('Unknown', [
-          wbInteger('Unknown', itU32),
-          wbStruct('Unknown', []) // Needs sample to continue
-        ]), -254),
-        wbArray('Unknown1000_02', wbStruct('Unknown', [
-          wbInteger('Unknown', itU32),
-          wbStruct('Unknown', []) // Needs sample to continue
-        ]), -254),
-        wbArray('Unknown1000_03', wbStruct('Unknown', [
-          wbInteger('Unknown', itU32),
-          wbStruct('Unknown', []) // Needs sample to continue
         ]), -254)
-      ])
+      ]),
+      wbStruct('Global Data 10', [
+        wbIntegerT('Unknown 11DD428', itU32),
+        wbIntegerT('Byte 11DD434', itU8),
+        wbLenStringT('String 11DD448', -3),
+        wbArrayPT('List 11DD58C', wbStruct('Data', [
+          wbRefIDT('FormID'),
+          wbIntegerT('Byt001C', itU8),
+          wbIntegerT('Byt001D', itU8),
+          wbIntegerT('Byt001E', itU8),
+          wbIntegerT('Byt001F', itU8)
+        ]), -254),
+        wbArrayPT('List 11DD554', wbStruct('Data', [
+          wbRefIDT('RefID'),
+          wbStruct('Unk0004', [
+            wbIntegerT('Unk0008', itU32),
+            wbIntegerT('Unk000C', itU32),
+            wbIntegerT('Byt0010', itU8),
+            wbIntegerT('Byt0011', itU8),
+            wbIntegerT('Unk0014', itU32),
+            wbArrayPT('Lst0018', wbRefIDT('RefID'), -254),
+            wbGlobalDialogueItems
+          ])
+        ]), -254),
+        wbRefIDT('BoundObject 11DD42C'),
+        wbRefIDT('BoundObject 11DD430'),
+        wbArrayPT('Radios', wbRefIDT('Radio'), -254)   // if form version 10 or greater
+      ]),
+      wbRefIDT('Sound'),
+      // 1000 to 1000
+      wbNull
     ])
 //    ,wbByteArray('Remainder', DataRemainderCounter)  // Single line
     ,wbArray('Remainder', wbByteArray('Unknown', wbBytesToGroup), DataQuartetCounter) // per Quartet
@@ -4190,7 +4450,7 @@ begin
   ]);
 
   wbChangeScriptEventList := wbStruct('Script Event List', [
-    wbArrayT('Vars', wbStruct('Data', [
+    wbArrayPT('Vars', wbStruct('Data', [
       wbIntegerT('FlagAndVarID', itU32),
       wbUnion('Var', ChangedFormExtraScriptEventDecider, [
         wbRefIDT('RefID'),
@@ -4198,7 +4458,7 @@ begin
       ])
     ]), -254),
     wbIntegerT('has Struct010', itU8),
-    wbUnion('Unknown', ChangedFormEventListHasStruct010Decider, [ wbNull, wbByteArray('Struct010', 8+1)]),
+    wbUnion('Unknown', ChangedFormEventListHasStruct010Decider, [ wbNull, wbByteArrayT('Struct010', 8)]),
     wbIntegerT('Set kEvent_OnLoad', itU8)  // only if form version is 0x15 or greater
   ]);
 
@@ -4233,7 +4493,7 @@ begin
   wbUnionCHANGE_REFR_ANIMATION_Actor := wbUnion('Animation', ChangedFlag28ActorDecider, [wbNull, wbStruct('Animation SubBuffer', [
     wbIntegerT('Length', itU6to30),
     wbByteArray('Data', ChangedFormAnimationSubBufferCounter)
-//    wbArrayT('Data', wbInteger('Unknown', itU8), -254)
+//    wbArrayPT('Data', wbInteger('Unknown', itU8), -254)
   ])]);
 
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);           // CHANGE_REFR_EXTRAS
@@ -4248,35 +4508,35 @@ begin
 // included in Extra...      wbUnionCHANGE_ACTOR_LEVELED_ACTOR := wbUnion('Leveled Actor', ChangedFlag18Decider, [wbNull, wbNull]);                  // CHANGE_REFR_EXTRAS
 
   wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS := wbUnion('Disp Modifiers', ChangedFlag19Decider, [wbNull,
-    wbArrayT('Disp Modifier List', wbStruct('Disp Modifier', [
+    wbArrayPT('Disp Modifier List', wbStruct('Disp Modifier', [
       wbRefIDT('Faction'),
       wbFloatT('Modifier')
     ]), -254)
   ]);
 
   wbUnionCHANGE_ACTOR_TEMP_MODIFIERS := wbUnion('Temp Modifiers', ChangedFlag20Decider, [wbNull,
-    wbArrayT('Temp Modifier List', wbStruct('Temp Modifier', [
+    wbArrayPT('Temp Modifier List', wbStruct('Temp Modifier', [
       wbIntegerT('Actor Value', itU8),
       wbFloatT('Modifier')
     ]), -254)
   ]);
 
   wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS := wbUnion('Damage Modifiers', ChangedFlag21Decider, [wbNull,
-    wbArrayT('Damage Modifier List', wbStruct('Damage Modifier', [
+    wbArrayPT('Damage Modifier List', wbStruct('Damage Modifier', [
       wbIntegerT('Actor Value', itU8),
       wbFloatT('Modifier')
     ]), -254)
   ]);
 
   wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS := wbUnion('Override Modifiers', ChangedFlag22Decider, [wbNull,
-    wbArrayT('Override Modifier List', wbStruct('Override Modifier', [
+    wbArrayPT('Override Modifier List', wbStruct('Override Modifier', [
       wbIntegerT('Actor Value', itU8),
       wbFloatT('Modifier')
     ]), -254)
   ]);
 
   wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS := wbUnion('Permanent Modifiers', ChangedFlag23Decider, [wbNull,
-    wbArrayT('Permanent Modifier List', wbStruct('Permanent Modifier', [
+    wbArrayPT('Permanent Modifier List', wbStruct('Permanent Modifier', [
       wbIntegerT('Actor Value', itU8),
       wbFloatT('Modifier')
     ]), -254)
@@ -4296,7 +4556,7 @@ begin
     wbUnion('Change Seen Data', ChangedFormCellIsInteriorDecider, [
       wbByteArray('Change Seen Data', 33),
       wbStruct('Change Interior Seen Data', [
-        wbArrayT('Unknown', wbStruct('Data', [
+        wbArrayPT('Unknown', wbStruct('Data', [
           wbIntegerT('Unknown', itU8),
           wbIntegerT('Unknown', itS8),
           wbByteArray('Change Seen Data', 33)
@@ -4312,7 +4572,7 @@ begin
   wbUnionCHANGE_QUEST_SCRIPT_DELAY := wbUnion('Quest Script Delay', ChangedFlag02Decider, [wbNull, wbFloatT('Change Delay')]);
 
   wbUnionCHANGE_QUEST_OBJECTIVES := wbUnion('Quest Objectives', ChangedFlag29Decider, [wbNull,
-    wbArrayT('Change Objectives', wbStruct('Objective', [
+    wbArrayPT('Change Objectives', wbStruct('Objective', [
       wbIntegerT('Objective ID', itU32),
       wbIntegerT('Objective Data', itU32)
     ]), -254)
@@ -4321,10 +4581,10 @@ begin
   wbUnionCHANGE_QUEST_SCRIPT := wbUnion('Quest Script', ChangedFlag30Decider, [wbNull, wbChangeScriptEventList]);
 
   wbUnionCHANGE_QUEST_STAGES := wbUnion('Quest Stages', ChangedFlag31Decider, [wbNull,
-    wbArrayT('Change Stages', wbStruct('Data', [
+    wbArrayPT('Change Stages', wbStruct('Data', [
       wbIntegerT('StageID', itU8),
       wbIntegerT('Status?', itU8),
-      wbArrayT('Log Entries', wbStruct('Data', [
+      wbArrayPT('Log Entries', wbStruct('Data', [
         wbIntegerT('Log Entry ID', itU8),
         wbIntegerT('Has Log Data', itU8),
         wbUnion('Log Data', ChangedFormQuestStageHasLogDataDecider, [wbNull, wbStruct('Data', [
@@ -4416,8 +4676,8 @@ begin
   ])]);
 
   wbUnionCHANGE_ACTOR_BASE_SPELLLIST := wbUnion('Spell List', ChangedFlag04Decider, [wbNull, wbStruct('Data', [
-      wbArrayT('Spell List', wbRefIDT('Spell'), -254),
-      wbArrayT('Leveled Spell List', wbRefIDT('Leveled Spell'), -254)
+      wbArrayPT('Spell List', wbRefIDT('Spell'), -254),
+      wbArrayPT('Leveled Spell List', wbRefIDT('Leveled Spell'), -254)
     ])
   ]);
 
@@ -4475,7 +4735,7 @@ begin
       wbRefIDT('Eyes'),
       wbFloatT('Hair Length'),
       wbIntegerT('Hair Color', itU32),
-      wbArrayT('HeadParts', wbRefIDT('HeadPart'), -254)
+      wbArrayPT('HeadParts', wbRefIDT('HeadPart'), -254)
     ])
   ]);
 
@@ -4505,7 +4765,7 @@ begin
 
   wbUnionCHANGE_ENCOUNTER_ZONE_FLAGS := wbUnion('Zone Flags', ChangedFlag01Decider, [wbNull, wbIntegerT('Change Flags', itU8)]);
 
-  wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA := wbUnion('Game Data', ChangedFlag31Decider, [wbNull, wbByteArray('Change Game Data', 10+1)]);
+  wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA := wbUnion('Game Data', ChangedFlag31Decider, [wbNull, wbByteArrayT('Change Game Data', 10)]);
     // Prior to form version 8, only 8+1
 
   wbUnionCHANGE_CLASS_TAG_SKILLS := wbUnion('Tag Skills', ChangedFlag01Decider, [wbNull,
@@ -4515,7 +4775,7 @@ begin
   wbUnionCHANGE_FACTION_FLAGS := wbUnion('Faction Flags', ChangedFlag01Decider, [wbNull, wbIntegerT('Flags', itU32)]);
 
   wbUnionCHANGE_FACTION_REACTIONS := wbUnion('Faction Reactions', ChangedFlag02Decider, [wbNull,
-    wbArrayT('Reactions', wbStruct('Reaction', [
+    wbArrayPT('Reactions', wbStruct('Reaction', [
       wbRefIDT('Faction'),
       wbIntegerT('Modifier', itS32),
       wbIntegerT('Reaction', itU32)
@@ -4606,11 +4866,11 @@ begin
 
   wbUnionCHANGE_PACKAGE_CREATED := wbUnion('Created Package', ChangedFlag11OrCreatedDecider, [wbNull, wbChangePackageStruct]);
 
-  wbUnionCHANGE_FORM_LIST_ADDED_FORM := wbUnion('Added Form', ChangedFlag31Decider, [wbNull, wbArrayT('Forms', wbRefIDT('RefID'), -1)]);
+  wbUnionCHANGE_FORM_LIST_ADDED_FORM := wbUnion('Added Form', ChangedFlag31Decider, [wbNull, wbArrayPT('Forms', wbRefIDT('RefID'), -1)]);
 
   wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT := wbUnion('Added Object', ChangedFlag31Decider, [wbNull,
     wbStruct('Objects List', [
-      wbArrayT('Objects', wbStruct('Object', [
+      wbArrayPT('Objects', wbStruct('Object', [
         wbRefIDT('RefID'),
         wbIntegerT('Level', itU16),
         wbIntegerT('Count', itU16),
@@ -4724,18 +4984,18 @@ begin
     wbInitialDataType06
   ]);
 
-  wbNonActorMagicTarget := wbArrayT('Magic Item List', wbStruct('Magic Item', [
+  wbNonActorMagicTarget := wbArrayPT('Magic Item List', wbStruct('Magic Item', [
     wbRefIDT('Magic Form'),
     wbIntegerT('ArchType', itU8, wbArchtypeEnum),
     wbIntegerT('Unk098', itU6to30),
-    wbArrayT('Effect Items', wbInteger('Effect Item', itU8), -254)
+    wbArrayPT('Effect Items', wbInteger('Effect Item', itU8), -254)
   ]), -254);
 
   wbActorPackageData := wbUnion('Package Specific Data', ChangeFormExtraPackageTypeDecider, [    // 031
     wbNull,
     wbStruct('Escort Actor Package Data', [
       wbRefIDT('Package'),
-      wbArrayT('Unknown', wbRefID('Unknown'), -254)
+      wbArrayPT('Unknown', wbRefID('Unknown'), -254)
     ]),
     wbStruct('Sandbox Actor Package Data', [
       wbIntegerT('Unk004', itU32),
@@ -4757,11 +5017,11 @@ begin
       wbIntegerT('Unk050', itU32),
       wbIntegerT('Unk054', itU32),
       wbIntegerT('Unk058', itU32),
-      wbByteArray('Unk05C', 6), wbString('Unused', 1),
+      wbByteArrayT('Unk05C', 6),
       wbRefIDT('Unk010'),
       wbRefIDT('Unk03C'),
       wbRefIDT('Unk044'),
-      wbArrayT('Unknown', wbStruct('Unknown', [
+      wbArrayPT('Unknown', wbStruct('Unknown', [
         wbIntegerT('Unknown', itU32),
         wbIntegerT('Unknown', itU32),
         wbIntegerT('Unknown', itU32),
@@ -4776,7 +5036,7 @@ begin
       wbIntegerT('Unknown', itU8),
       wbIntegerT('Unknown', itU32),
       wbRefIDT('Package'),
-      wbArrayT('Patrol Points', wbRefIDT('Patrol Point'), -254)
+      wbArrayPT('Patrol Points', wbRefIDT('Patrol Point'), -254)
     ]),
     wbStruct('Guard Actor Package Data', [
       wbIntegerT('Unknown', itU32),
@@ -4787,7 +5047,7 @@ begin
     wbNull  // UseWeaponActorPackageData nothing loaded ???
   ]);
 
-  wbChangedExtraData := wbArrayT('Extras', wbStruct('Extra', [
+  wbChangedExtraData := wbArrayPT('Extras', wbStruct('Extra', [
     wbIntegerT('Extra Type', itU8),
     wbUnion('Extra Union', ChangedExtraUnionDecider, [
      wbByteArray('<ERROR BAD CODE ******************>'), // wbNull,
@@ -4812,12 +5072,12 @@ begin
        wbIntegerT('Unk01A', itU8)
      ]),
      wbRefIDT('TressPass Package'),                             // 004
-     wbArrayT('RunOncePacks', wbStruct('RunOncePack', [         // 005
+     wbArrayPT('RunOncePacks', wbStruct('RunOncePack', [         // 005
        wbRefIDT('Package'),
        wbIntegerT('Unk004', itU8)
      ]), -254),
      wbRefIDT('Reference Pointer'),                             // 006
-     wbArrayT('Follower Array', wbRefIDT('Follower'), -254),    // 007
+     wbArrayPT('Follower Array', wbRefIDT('Follower'), -254),    // 007
      wbIntegerT('Leveled Creature Modifier', itU32),            // 008
      wbNull, // ExtraGhost no data                              // 009
      wbRefIDT('Ownership'),                                     // 00A
@@ -4867,7 +5127,7 @@ begin
       wbRefIDT('Unk01C'),
       wbNonActorMagicTarget
     ]),
-    wbArrayT('Player Crimes', wbStruct('Data', [                // 01A
+    wbArrayPT('Player Crimes', wbStruct('Data', [                // 01A
       wbIntegerT('Unknown', itU32),
       wbIntegerT('Unknown', itU32)
     ]), -254),
@@ -4875,7 +5135,7 @@ begin
     wbRefIDT('Merchant Container'),                             // 01C
     wbNull, // ExtraCannotWear no data                          // 01D
     wbRefIDT('Poison'),                                         // 01E
-    wbArrayT('Friendly Hits', wbFloatT('Time'), -254),          // 01F
+    wbArrayPT('Friendly Hits', wbFloatT('Time'), -254),          // 01F
     wbRefIDT('Heading Target'),                                 // 020
     wbRefIDT('Starting World or Cell'),                         // 021
     wbIntegerT('HotKey', itU8),                                 // 022
@@ -4905,7 +5165,7 @@ begin
     ]),
     wbFloatT('Radius'),                                           // 02A
     wbFloatT('Radiation'),                                        // 02B
-    wbArrayT('Faction Changes', wbStruct('Data', [                // 02C
+    wbArrayPT('Faction Changes', wbStruct('Data', [                // 02C
       wbRefIDT('Faction'),
       wbIntegerT('Rank', itS8)
     ]), -254),
@@ -4915,12 +5175,12 @@ begin
       wbIntegerT('Unk018', itU32),
       wbIntegerT('Unk01C', itU8),
       wbRefIDT('Unk014'),
-      wbArrayT('Unk020', wbStruct('Data', [
+      wbArrayPT('Unk020', wbStruct('Data', [
         wbIntegerT('Unk000', itU8),
         wbIntegerT('Unk001', itU8),
         wbIntegerT('Unk002', itU8),
         wbIntegerT('Unk003', itU8), // Since form version 0x10
-        wbArrayT('Unk004', wbRefIDT('Data'), -254)
+        wbArrayPT('Unk004', wbRefIDT('Data'), -254)
       ]), -254)
     ]),
     wbIntegerT('Actor Cause', itU32),                             // 02E
@@ -4933,7 +5193,7 @@ begin
       wbIntegerT('Package Data Type', itU8, wbPKDTType),
       wbActorPackageData
     ]),
-    wbArrayT('Say TopicInfo once a day', wbStruct('Data', [       // 032
+    wbArrayPT('Say TopicInfo once a day', wbStruct('Data', [       // 032
       wbRefIDT('TopicInfo'),
       wbIntegerT('Unk004', itS32),
       wbFloatT('Unk008')
@@ -4944,18 +5204,18 @@ begin
       wbRefIDT('TopicInfo'),
       wbIntegerT('Unknown', itU8)
     ]),
-    wbArrayT('Guarded Ref Data', wbRefIDT('Guarded Ref Data'), -254),   // 035
+    wbArrayPT('Guarded Ref Data', wbRefIDT('Guarded Ref Data'), -254),   // 035
     wbRefIDT('AshPile Ref'),                                      // 036
     wbStruct('Follower SwimBreadcrumbs', [                        // 037
-      wbByteArray('Unk010', $0C), wbString('Unused', 1),
+      wbByteArrayT('Unk010', $0C),
       wbRefIDT('Unk01C'),   // Present only for form version 0x12 and later
       // wbIntegerT('Unk01C', itU32), // Present only for form version lower than 0x12
       wbIntegerT('Unk00C', itU32),
-      wbArrayT('Unk020', wbStruct('Data', [
-        wbByteArray('Unk000', $0C), wbString('Unused', 1),
+      wbArrayPT('Unk020', wbStruct('Data', [
+        wbByteArrayT('Unk000', $0C),
         wbRefIDT('Unk00C'),   // Present only for form version 0x12 and later
         // wbIntegerT('Unk00C', itU32), // Present only for form version lower than 0x12
-        wbByteArray('Unk010', $0C), wbString('Unused', 1),
+        wbByteArrayT('Unk010', $0C),
         wbRefIDT('Unk01C'),   // Present only for form version 0x12 and later
         // wbIntegerT('Unk01C', itU32), // Present only for form version lower than 0x12
         wbIntegerT('Unk020', itU8)
@@ -4973,10 +5233,10 @@ begin
     ])
   ])]), -254);
 
-  wbChangedInventory := wbArrayT('Entry Datas', wbStruct('Entry Data', [
+  wbChangedInventory := wbArrayPT('Entry Datas', wbStruct('Entry Data', [
     wbRefIDT('Type'),
     wbIntegerT('Delta', itS32),
-    wbArrayT('Extend Datas', wbStruct('Extra Data List', [wbChangedExtraData]), -254)
+    wbArrayPT('Extend Datas', wbChangedExtraData, -254)
   ]), -254);
 
   wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05or27Decider, [wbNull, wbChangedInventory]);
@@ -5016,9 +5276,9 @@ begin
 
   wbPathingCoverLocation := wbStruct('Pathing Cover Location', [
     wbPathingLocation,
-    wbByteArray('Unk028', 12+1),
-    wbByteArray('Unk034', 12+1),
-    wbByteArray('Unk040', 12+1),
+    wbCoordXYZ('Coords 028'),
+    wbCoordXYZ('Coords 034'),
+    wbCoordXYZ('Coords 040'),
     wbIntegerT('Byt04C', itU8),
     wbIntegerT('Byt04D', itU8),
     wbIntegerT('Byt04E', itU8),
@@ -5033,7 +5293,7 @@ begin
     wbInteger('Byt000', itU8),
     wbInteger('Byt002', itU8),
     wbInteger('Unk004', itU32),
-    wbByteArray('Unk008', 12+1),
+    wbCoordXYZ('Coords'),
     wbPathingCoverLocation,
     wbIntegerT('Unk68', itU32),
     wbIntegerT('Unk6C', itU32),
@@ -5048,14 +5308,14 @@ begin
   ]);
 
   wbStructUnk128or164 := wbStruct('Data', [
-    wbByteArray('Unk000', 12+1),
-    wbByteArray('Unk00C', 12+1),
+    wbCoordXYZ('Coords 000'),
+    wbCoordXYZ('Coords 00C'), // ?? must be wrong, should check :)
     wbIntegerT('Unk018', itU32),
     wbIntegerT('Byt038', itU8),
     wbIntegerT('Unk030', itU32),
     wbIntegerT('Unk038', itU32),
     wbFloatT('Tim01C'),
-    wbArrayT('Unk020', wbPathingCoverLocation, -254)
+    wbArrayPT('Unk020', wbPathingCoverLocation, -254)
   ]);
 
   wbCombatProcedure := wbStruct('Data', [wbIntegerT('Unk008', itU32)]);
@@ -5081,7 +5341,7 @@ begin
       wbStruct('Attack Ranged', [
         wbCombatProcedure,
         wbIntegerT('Unk010', itU32),
-        wbByteArray('Unk014', 12+1),
+        wbCoordXYZ('Coords'),
         wbFloatT('Flt020'),             // Paired
         wbFloatT('Flt024'),
         wbFloatT('Flt030'),             // Paired
@@ -5119,8 +5379,8 @@ begin
         wbCombatProcedure,
         wbIntegerT('Unk010', itU32),
         wbIntegerT('Unk014', itU32),
-        wbByteArray('Unk018', 12+1),
-        wbByteArray('Unk024', 12+1),
+        wbCoordXYZ('Coords 018'),
+        wbCoordXYZ('Coords 024'),
         wbIntegerT('Byt030', itU8),
         wbFloatT('Flt034'),             // Paired
         wbFloatT('Flt038')
@@ -5159,7 +5419,7 @@ begin
         wbFloatT('Flt070'),
         wbFloatT('Flt074'),             // Paired, if form version 0x08 or greater
         wbFloatT('Flt078'),             // Paired, if form version 0x08 or greater
-        wbByteArray('Unk048', 12+1),
+        wbCoordXYZ('Coords'),
         wbIntegerT('Byt054', itU8),
         wbIntegerT('Byt05C', itU8)      // if form version 0x0C or greater
       ]),
@@ -5167,9 +5427,9 @@ begin
         wbCombatProcedure,
         wbIntegerT('Unk010', itU32),
         wbIntegerT('Bool', itU8),       // Determines what goes into 014
-        wbByteArray('Unk018', 12+1),
-        wbByteArray('Unk024', 12+1),
-        wbByteArray('Unk030', 12+1),
+        wbCoordXYZ('Coords 018'),
+        wbCoordXYZ('Coords 024'),
+        wbCoordXYZ('Coords 030'),
         wbFloatT('Flt03C'),             // Paired
         wbFloatT('Flt040'),
         wbFloatT('Flt044'),             // Paired
@@ -5195,8 +5455,8 @@ begin
         wbFloatT('Unk014'),
         wbFloatT('Flt018'),             // Paired
         wbFloatT('Flt01C'),
-        wbByteArray('Unk020', 12+1),
-        wbByteArray('Unk02C', 12+1),
+        wbCoordXYZ('Coords 020'),
+        wbCoordXYZ('Coords 02C'),
         wbIntegerT('Unk03C', itU8),
         wbIntegerT('Unk03D', itU8),
         wbIntegerT('Unknown', itU8)     // Determines what goes into 038
@@ -5231,40 +5491,11 @@ begin
         wbIntegerT('Byt030', itU8),
         wbIntegerT('Byt031', itU8),
         wbIntegerT('Byt032', itU8),
-        wbByteArray('Unk034', 12+1),
+        wbCoordXYZ('Coords'),
         wbPathingLocation,              // Goes into 040
         wbPathingLocation,              // Goes into 050
         wbIntegerT('Byt033', itU8),
         wbFloatT('Tim060')
-      ])
-    ])
-  ]);
-
-  wbDialogueItems := wbStruct('Dialogues Struct', [
-    wbIntegerT('Has Dialogue Items', itU8),
-    wbUnion('Dialogues', ChangeFormCreatedPackageHasDialogueItemsDecider, [
-      wbNull,
-      wbStruct('Data', [
-        wbArrayT('Dialogue Items', wbStruct('Dialogue Item', [
-          wbArrayT('Dialogue Responses', wbStruct('Dialogue Response', [
-            wbLenStringT('Response Text', -3),
-            wbLenStringT('Voice Filename', -3),
-            wbIntegerT('Emotion Type', itU32),
-            wbIntegerT('Emotion Value', itU32),
-            wbIntegerT('Use emotion animation', itU8),
-            wbRefIDT('Speaker Idle'),
-            wbRefIDT('Listener Idle'),
-            wbRefIDT('Sound')
-          ]), -254),
-          wbIntegerT('Index', itS16),
-          wbRefIDT('TopicInfo'),
-          wbRefIDT('Topic'),
-          wbRefIDT('Quest'),
-          wbRefIDT('Speaker')
-        ]), -254),
-        wbIntegerT('Index', itS16),
-        wbIntegerT('Dialogue Item Index', itS16),
-        wbIntegerT('Dialogue Response Index', itS16)
       ])
     ])
   ]);
@@ -5313,7 +5544,7 @@ begin
                   wbIntegerT('Byt000', itU8),
                   wbIntegerT('Unk004', itU32),  // $FFFF is converted to 0
                   wbArray('Unk00C', wbRefIDT('Weapon'), 6),
-                  wbArrayT('Unk024', wbRefIDT('Weapon'), -254),
+                  wbArrayPT('Unk024', wbRefIDT('Weapon'), -254),
                   wbRefIDT('Weapon'),           // goes into 034
                   wbIntegerT('Unk038', itU32),
                   wbArray('Unk03C', wbIntegerT('Unknown', itU32), 7),
@@ -5333,7 +5564,7 @@ begin
                   wbRefIDT('Explosion'),        // goes into 078
                   wbIntegerT('Unk07C', itU32),
                   wbIntegerT('Unk080', itU32),
-                  wbByteArray('Unk084', 12+1),
+                  wbCoordXYZ('Coords'),
                   wbIntegerT('Unk090', itU32),
                   wbIntegerT('Byt0C8', itU8),
                   wbIntegerT('Byt0C8', itU8),
@@ -5362,7 +5593,7 @@ begin
                   wbUnion('Struct flag bit 4', ChangeFormCreatedPackageHasContentFlagBit4Decider, [ wbNull,
                     wbStruct('Unk18C', [
                       wbStruct('Pathing Location', [
-                        wbByteArray('Unk000', 12+1),
+                        wbCoordXYZ('Coords'),
                         wbRefIDT('InteriorCellOrWorldspace')
                       ]),
                       wbIntegerT('Unk014', itU32),
@@ -5379,20 +5610,20 @@ begin
                       wbIntegerT('Unk01C', itU32),
                       wbRefIDT('Unk004'),
                       wbStruct('Pathing Location', [
-                        wbByteArray('Unk000', 12+1),
+                        wbCoordXYZ('Coords'),
                         wbRefIDT('InteriorCellOrWorldspace')
                       ])
                     ])
                   ]),
                   wbUnion('Struct flag bit 1', ChangeFormCreatedPackageHasContentFlagBit1Decider, [ wbNull, wbStructUnk128or164]),
                   wbUnion('Struct flag bit 3', ChangeFormCreatedPackageHasContentFlagBit3Decider, [ wbNull, wbStructUnk128or164]),
-                  wbArrayT('Unk164', wbStruct('Data', [
+                  wbArrayPT('Unk164', wbStruct('Data', [
                     wbIntegerT('Unk000', itU32),
                     wbFloatT('Tim004')
                   ]), -254),
-                  wbArrayT('Unk174', wbStruct('Data', [
+                  wbArrayPT('Unk174', wbStruct('Data', [
                     wbStruct('Unk000', [
-                      wbByteArray('Unk000', 12+1),
+                      wbCoordXYZ('Coords'),
                       wbRefIDT('InteriorCellOrWorldspace')
                     ]),
                     wbFloatT('Tim010')
@@ -5439,10 +5670,10 @@ begin
                 ]),
                 wbChangeCombatProcedure,
                 wbChangeCombatProcedure,
-                wbArrayT('Combat Procedures 08C', wbChangeCombatProcedure, -254),
+                wbArrayPT('Combat Procedures 08C', wbChangeCombatProcedure, -254),
                 wbIntegerT('Has Unk0A0', itU8),
                 wbUnion('Unk0A0', ChangeFormCombatControllerHasUnk0A0Decider, [wbNull, wbStruct('Data', [
-                  wbArrayT('Unk000', wbStruct('Data', [
+                  wbArrayPT('Unk000', wbStruct('Data', [
                     wbIntegerT('Index', itS8),        // Index into global array, that goes into 000
                     wbIntegerT('Unk00C', itU32)
                   ]), -1),
@@ -5463,7 +5694,7 @@ begin
                 wbIntegerT('Unk144', itU32),
                 wbIntegerT('Unk148', itU32),
                 wbArray('Unk0128', wbStruct('Data', [
-                  wbByteArray('Unknown', 12+1),         // Fields stored in two separate array: 128
+                  wbCoordXYZ('Coords'),                  // Fields stored in two separate array: 128
                   wbIntegerT('Unknown', itU8)           //                                      140
                 ]), 2),
                 wbIntegerT('Byt142', itU8),
@@ -5472,7 +5703,7 @@ begin
               ]),
               wbStruct('Alarm Package', [
                 wbChangePackageStruct,
-                wbArrayT('Crimes', wbStruct('Crime', [
+                wbArrayPT('Crimes', wbStruct('Crime', [
                   wbIntegerT('Crime Index', itU8),
                   wbIntegerT('Crime List Index', itU16)
                 ]), -254)
@@ -5481,14 +5712,14 @@ begin
                 wbChangePackageStruct,
                 wbIntegerT('Byt080', itU8),
                 wbIntegerT('Byt081', itU8),
-                wbByteArray('Unk084', 12+1),
+                wbCoordXYZ('Coords'),
                 wbFloatT('Flt090'),
                 wbIntegerT('Byt094', itU8),
                 wbIntegerT('Byt0A8', itU8),
                 wbIntegerT('Byt0A9', itU8),
                 wbRefIDT('Unk0A0'),
                 wbRefIDT('Unk0A4'),
-                wbArrayT('Unk098', wbRefIDT('RefID'), -254)
+                wbArrayPT('Unk098', wbRefIDT('RefID'), -254)
               ]),
               wbStruct('TressPass Package', [
                 wbChangePackageStruct,
@@ -5507,13 +5738,13 @@ begin
                 wbFloatT('Unk088'),
                 wbFloatT('Unk08C'),
                 wbIntegerT('Byt090', itU8),
-                wbByteArray('Unk094', 12+1),
-                wbArrayT('Spectator Threat Infos', wbSTruct('Spectator Threat Info', [
+                wbCoordXYZ('Coords'),
+                wbArrayPT('Spectator Threat Infos', wbSTruct('Spectator Threat Info', [
                   wbIntegerT('Unk008', itU32),
                   wbIntegerT('ElapsedTicks', itU32),   // GetTickCounts - this goes into 00C
                   wbIntegerT('Unk010', itU32),
-                  wbByteArray('Unk014', 12+1),
-                  wbByteArray('Unk020', 12+1),
+                  wbCoordXYZ('Coords 014'),
+                  wbCoordXYZ('Coords 020'),
                   wbIntegerT('Byt02C', itU8),
                   wbIntegerT('Byt02D', itU8),
                   wbRefIDT('Unk000'),
@@ -5522,7 +5753,7 @@ begin
               ]),
               wbStruct('BackUp Package', [
                 wbChangePackageStruct,
-                wbByteArray('Unk0080', 12+1)
+                wbCoordXYZ('Coords')
               ])
             ])
           ])
@@ -5581,7 +5812,7 @@ begin
             wbRefIDT('Unk048'),
             wbRefIDT('Form List'),        // 04C
             wbRefIDT('Unk054'),
-            wbArrayT('List006C', wbRefIDT('Unknown'), -254),
+            wbArrayPT('List006C', wbRefIDT('Unknown'), -254),
             wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
           ])
         ]),
@@ -5600,13 +5831,13 @@ begin
             wbIntegerT('Unk174', itU32),
             wbIntegerT('Unk108', itU32),
             wbIntegerT('Unk1DA', itU8),
-            wbByteArray('Unk0FC', 12+1),
+            wbCoordXYZ('Coords'),
             wbIntegerT('Unk0DC', itU32),
             wbIntegerT('Byt13D', itU8),
             wbIntegerT('Byt144', itU8),
             wbIntegerT('Byt156', itU8),
             wbIntegerT('Wrd154', itU16),
-            wbByteArray('Unk148', 12+1),
+            wbCoordXYZ('Coords'),
             wbIntegerT('Bool', itU8),     // if actor and Byt13D then call actor.func0108
             wbIntegerT('Byt0E0', itU8),
             wbIntegerT('Byt188', itU8),
@@ -5635,14 +5866,14 @@ begin
             wbRefIDT('Unk158'),
             wbRefIDT('Unk140'),
             wbIntegerT('Unknown', itU32),
-            wbArrayT('List0C8', wbRefIDT('Unknown'), -254),
+            wbArrayPT('List0C8', wbRefIDT('Unknown'), -254),
             wbPackageStruct,
             wbUnionCHANGE_REFR_ANIMATION_Actor,
             wbNonActorMagicTarget,
             wbRefIDT('Unk164'),
             wbRefIDT('Unk160'),
             wbRefIDT('Unk1BC'),
-            wbArrayT('List230', wbStruct('Data', [
+            wbArrayPT('List230', wbStruct('Data', [
               wbRefIDT('Bound Object'),
               wbIntegerT('Unknown', itS32),
               wbIntegerT('Unk008', itU32),
@@ -5678,7 +5909,7 @@ begin
             wbIntegerT('Unk2C2', itU16),
             wbIntegerT('Unk2C4', itU16),
             wbIntegerT('Unk349', itU8),
-            wbByteArray('Unk300', 12+1),
+            wbCoordXYZ('Coords'),
             wbIntegerT('Unk36C', itU32),
             wbIntegerT('Unk3E8', itU32),
             wbIntegerT('Unk3EC', itU32),
@@ -5731,32 +5962,32 @@ begin
             wbRefIDT('Unk37C'),
             wbRefIDT('Idle'),             // 350
             wbRefIDT('Unk2AC'),           // if form version 15 or newer
-            wbArrayT('Unknown', wbStruct('Data', [
+            wbArrayPT('Unknown', wbStruct('Data', [
               wbRefIDT('Unk3F8'),
               wbIntegerT('Unk410', itU8)
             ]), 6), // if form version 4 or newer, array count 5 before
-            wbArrayT('List38C', wbRefIDT('Unknown'), -254),
-            wbArrayT('List394', wbRefIDT('Unknown'), -254),
-            wbArrayT('List264', wbRefIDT('Unknown'), -254),   // if form version 18 or newer
+            wbArrayPT('List38C', wbRefIDT('Unknown'), -254),
+            wbArrayPT('List394', wbRefIDT('Unknown'), -254),
+            wbArrayPT('List264', wbRefIDT('Unknown'), -254),   // if form version 18 or newer
             wbDialogueItems,
-            wbArrayT('List44C', wbStruct('Data', [
+            wbArrayPT('List44C', wbStruct('Data', [
               wbStruct('Unk000', [
                 wbIntegerT('Byt020', itU8),
                 wbIntegerT('Unk018', itU32),
                 wbIntegerT('Unk01C', itU32),
-                wbByteArray('Unk000', 12+1),
-                wbUnion('Data00C', ChangedFormList44CData00CDecider, [wbNull, wbByteArray('Unk00C', 12+1)])
+                wbCoordXYZ('Coords'),
+                wbUnion('Data00C', ChangedFormList44CData00CDecider, [wbNull, wbCoordXYZ('Coords')])
               ]),
               wbFloatT('Unk024'),
               wbFloatT('Unk02C'),
               wbRefIDT('Static'),
               wbRefIDT('Form030')
             ]), -254),
-            wbArrayT('List25C', wbStruct('Data', [
+            wbArrayPT('List25C', wbStruct('Data', [
               wbRefIDT('Form000'),
               wbIntegerT('Unk004', itU8),
               wbIntegerT('Unk008', itU32),
-              wbByteArray('Unk00C', 12+1),
+              wbCoordXYZ('Coords'),
               wbFloatT('Tim018'),
               wbIntegerT('Byt01E', itU8),
               wbIntegerT('Byt01C', itU8),
@@ -5764,11 +5995,11 @@ begin
               wbIntegerT('Unk020', itU32),
               wbIntegerT('Byt01F', itU8)      // if form version 8 or newer
             ]), -254),
-            wbArrayT('List260', wbStruct('Data', [
+            wbArrayPT('List260', wbStruct('Data', [	// Same as List260 and GlobalData 9 Lst0004
               wbRefIDT('Form000'),
               wbIntegerT('Unk004', itU8),
               wbIntegerT('Unk008', itU32),
-              wbByteArray('Unk00C', 12+1),
+              wbCoordXYZ('Coords'),
               wbFloatT('Tim018'),
               wbIntegerT('Byt01E', itU8),
               wbIntegerT('Byt01C', itU8),
@@ -5780,7 +6011,7 @@ begin
             wbUnion('Data3DC', ChangedFormHasUnk3DCDecider, [wbNull,
               wbStruct('Unk3DC', [
                 wbIntegerT('Unk000', itU32),
-                wbByteArray('Unk004', 12+1),
+                wbCoordXYZ('Coords'),
                 wbFloatT('Tim010'),
                 wbIntegerT('Unk014', itU32),
                 wbRefIDT('Form018')
@@ -5800,8 +6031,8 @@ begin
     wbIntegerT('Byt020', itU8),
     wbIntegerT('Unk018', itU32),
     wbIntegerT('Unk01C', itU32),
-    wbByteArray('Unk000', 12+1),
-    wbUnion('Unk00C', ChangedFormPathingRequestSubStructHasUnk00CDecider, [wbNull, wbByteArray('Unk00C', 12+1)])
+    wbCoordXYZ('Coords'),
+    wbUnion('Unk00C', ChangedFormPathingRequestSubStructHasUnk00CDecider, [wbNull, wbCoordXYZ('Coords')])
   ]);
 
   wbPathingRequest := wbStruct('Pathing Request', [
@@ -5827,7 +6058,7 @@ begin
       wbIntegerT('Byte0A1', itU8)
     ]),
     wbStruct('Unknown', [
-      wbByteArray('Unk07C', 12+1),
+      wbCoordXYZ('Coords'),
       wbIntegerT('Byt0A2', itU8),
       wbIntegerT('Byt0A3', itU8),
       wbIntegerT('Byt0A4', itU8),
@@ -5835,7 +6066,7 @@ begin
     ]),
     wbIntegerT('Byt09E', itU8),     // if form version 20 or greater
     wbIntegerT('Byt0AC', itU8),     // if form version 21 or greater
-    wbArrayT('Unk094', wbPathingRequestSubStruct, -254)
+    wbArrayPT('Unk094', wbPathingRequestSubStruct, -254)
   ]);
 
   wbChangedActor := wbStruct('Changed Actor', [
@@ -5889,8 +6120,8 @@ begin
       wbIntegerT('Unk038', itU32),
       wbIntegerT('Byt072', itU8),
       wbIntegerT('Byt073', itU8),
-      wbByteArray('Unk004', 12+1),
-      wbByteArray('Unk010', 12+1),
+      wbCoordXYZ('Coords 004'),
+      wbCoordXYZ('Coords 010'),
       wbIntegerT('Unk03C', itU32),
       wbIntegerT('Byt074', itU8),
       wbIntegerT('Byt075', itU8),
@@ -5938,9 +6169,9 @@ begin
               ]),
               wbStruct('PathingRequestLOS', [
                 wbPathingRequest,
-                wbArrayT('Unk0B4', wbByteArray('NiPoint3', 12+1), -254),
+                wbArrayPT('Unk0B4', wbCoordXYZ('NiPoint3'), -254),
                 wbFloatT('Unk0C4'),
-                wbByteArray('Unk0C8', 12+1),
+                wbCoordXYZ('Coords'),
                 wbFloatT('Unk0D4')
               ]),
               wbNull,
@@ -5957,11 +6188,11 @@ begin
                 wbFloatT('Unk0BC'),
                 wbFloatT('Unk0C0'),
                 wbIntegerT('Unk0C4', itU32),
-                wbByteArray('Unk0C8', 12+1),    // 3 times 32 bits
-                wbByteArray('Unk0D4', 12+1),    // 3 times 32 bits
+                wbCoordXYZ('Coords 0C8'),
+                wbCoordXYZ('Coords 0D4'),
                 wbIntegerT('Byt0E0', itU8),
-                wbArrayT('Unk0E4', wbIntegerT('Unknown', itU32), -254),
-                wbArrayT('Unk0F4', wbByteArray('NiPoint3', 12+1), -254)
+                wbArrayPT('Unk0E4', wbIntegerT('Unknown', itU32), -254),
+                wbArrayPT('Unk0F4', wbCoordXYZ('NiPoint3'), -254)
               ])
             ])
         ])
@@ -5970,19 +6201,19 @@ begin
           wbIntegerT('Byt040', itU8),
           wbIntegerT('Unk018', itS32),
           wbIntegerT('Unk01C', itS32),
-          wbArrayT('Virtual Pathing Nodes', wbStruct('Virtual Pathing Node', [
+          wbArrayPT('Virtual Pathing Nodes', wbStruct('Virtual Pathing Node', [
             wbIntegerT('Unk000', itU32),
             wbRefIDT('Reference'),
             wbPathingLocation
           ]), -254),
-          wbArrayT('Pathing Nodes', wbStruct('Pathing Node', [
+          wbArrayPT('Pathing Nodes', wbStruct('Pathing Node', [
             wbIntegerT('Unk000', itU32),
-            wbByteArray('Unk02C', 12+1),
+            wbCoordXYZ('Coords'),
             wbRefIDT('Reference'),
             wbPathingLocation
           ]), -254),
-          wbArrayT('Unused', wbPathingRequestSubStruct, -254),
-          wbArrayT('Unk030', wbRefIDT('RefID'), -254)                   // if from version 18 or greater
+          wbArrayPT('Unused', wbPathingRequestSubStruct, -254),
+          wbArrayPT('Unk030', wbRefIDT('RefID'), -254)                   // if from version 18 or greater
         ])
       ]),
       // The next two are mutually exclusive
@@ -5995,11 +6226,11 @@ begin
       ]),
       wbUnion('Detailed Actor Path Handler', ChangedFormPackageActorMoverContentFlagsBit3Decider, [wbNull,
         wbStruct('Data', [
-          wbByteArray('Unk01C', 12+1),
-          wbByteArray('Unk028', 12+1),
-          wbByteArray('Unk034', 12+1),
-          wbByteArray('Unk040', 12+1),
-          wbByteArray('Unk04C', 12+1),
+          wbCoordXYZ('Coords 01C'),
+          wbCoordXYZ('Coords 028'),
+          wbCoordXYZ('Coords 034'),
+          wbCoordXYZ('Coords 040'),
+          wbCoordXYZ('Coords 04C'),
           wbIntegerT('Unk060', itU32),
           wbIntegerT('Unk064', itU32),
           wbIntegerT('Unk068', itU32),
@@ -6041,15 +6272,15 @@ begin
             wbIntegerT('Unk004', itU32)
           ]),
           wbStruct('Unknown', [        // if form version 12 or greater
-            wbByteArray('Unk0A0', 12+1),
+            wbCoordXYZ('Coords'),
             wbIntegerT('Unk0BC', itU32)
           ]),
           wbRefIDT('Form0D8'),
-          wbArrayT('List058', wbRefIDT('RefID'), -254)
+          wbArrayPT('List058', wbRefIDT('RefID'), -254)
         ])
       ]),
       wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player Mover', [
-          wbByteArray('Unk088', 12+1),
+          wbCoordXYZ('Coords'),
           wbIntegerT('Unk094', itU32),
           wbIntegerT('Unk098', itU32),
           wbIntegerT('Unk09C', itU32)
@@ -6165,41 +6396,41 @@ begin
            wbRefIDT('Form604'),
            wbRefIDT('FormD2C'),
            wbRefIDT('FormD44'),
-           wbArrayT('List6A8', wbRefIDT('Topic'), -254),
-           wbArrayT('List5E4', wbRefIDT('Note'), -254),
+           wbArrayPT('List6A8', wbRefIDT('Topic'), -254),
+           wbArrayPT('List5E4', wbRefIDT('Note'), -254),
            wbChangedInventory,
-           wbArrayT('ListD48', wbStruct('Data', [
+           wbArrayPT('ListD48', wbStruct('Data', [
              wbRefIDT('Form000'),
              wbIntegerT('Byt004', itU8),
              wbIntegerT('Byt005', itU8)
            ]), -254),
-           wbArrayT('Perks', wbStruct('Data', [
+           wbArrayPT('Perks', wbStruct('Data', [
              wbRefIDT('Perk'),
              wbIntegerT('Byt004', itU8)
            ]), -254),
-           wbArrayT('List60C', wbStruct('Data', [
+           wbArrayPT('List60C', wbStruct('Data', [
              wbIntegerT('Unk000', itU32),
              wbFloatT('Flt004'),
              wbRefIDT('FormID')
            ]), -254),
-           wbArrayT('List610', wbStruct('Data', [
+           wbArrayPT('List610', wbStruct('Data', [
              wbIntegerT('Unk000', itU32),
              wbIntegerT('Unk004', itU32),
              wbIntegerT('Wrd008', itU16)
            ]), -254),
-           wbArrayT('Cards 614', wbRefIDT('Card'), -254),
-           wbArrayT('Cards 618', wbRefIDT('Card'), -254),
+           wbArrayPT('Cards 614', wbRefIDT('Card'), -254),
+           wbArrayPT('Cards 618', wbRefIDT('Card'), -254),
            wbIntegerT('Unk61C', itU32),
            wbIntegerT('Unk620', itU32),
            wbIntegerT('Unk624', itU32),
            wbIntegerT('Unk628', itU32),
            wbIntegerT('Unk62C', itU32),
-           wbArrayT('Stages', wbStruct('Data', [
+           wbArrayPT('Stages', wbStruct('Data', [
              wbRefIDT('Quest'),
              wbIntegerT('Stage', itU8),
              wbIntegerT('LogEntry', itU8)
            ]), -254),
-           wbArrayT('Objectives', wbStruct('Data', [
+           wbArrayPT('Objectives', wbStruct('Data', [
              wbRefIDT('Quest'),
              wbIntegerT('Objective', itU32)
            ]), -254),
@@ -6209,19 +6440,19 @@ begin
              wbFloatT('Unkown 11DFED4'),
              wbFloatT('Unkown 11DFED8')
            ]),
-           wbArrayT('Perks AD4', wbStruct('Data', [   // if form version 16 or greater
+           wbArrayPT('Perks AD4', wbStruct('Data', [   // if form version 16 or greater
              wbRefIDT('Perk'),
              wbIntegerT('Byt004', itU8)
            ]), -254),
            wbIntegerT('HardcoreMode', itU8),          // if form version 17 or greater
            wbIntegerT('Clears HardcoreFlag', itU8),   // if form version 17 or greater
            wbIntegerT('Byt66E', itU8),                // if form version 19 or greater
-           wbArrayT('Unknown E3C', wbFormIDT('Form'), 8),  // if form version 1A or greater
+           wbArrayPT('Unknown E3C', wbFormIDT('Form'), 8),  // if form version 1A or greater
            wbStruct('Lists 11CAC98', [                     // if form version 1B or greater
-             wbArrayT('Enabled',  wbRefIDT('RefID'), -254),
-             wbArrayT('Disabled', wbRefIDT('RefID'), -254),
-             wbArrayT('Unknown',  wbRefIDT('RefID'), -254),
-             wbArrayT('FadeOut',  wbRefIDT('RefID'), -254)
+             wbArrayPT('Enabled',  wbRefIDT('RefID'), -254),
+             wbArrayPT('Disabled', wbRefIDT('RefID'), -254),
+             wbArrayPT('Unknown',  wbRefIDT('RefID'), -254),
+             wbArrayPT('FadeOut',  wbRefIDT('RefID'), -254)
            ])
          ])])
        ])
@@ -6536,7 +6767,7 @@ begin
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArrayT(wbFilePlugins, wbLenStringT('PluginName', -3), -4)
+    ,wbArrayPT(wbFilePlugins, wbLenStringT('PluginName', -3), -4)
     ,wbFileLocationTable
   ]);
 

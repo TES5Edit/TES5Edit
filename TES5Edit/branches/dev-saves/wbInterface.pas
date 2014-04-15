@@ -1751,6 +1751,13 @@ function wbByteArray(const aName      : string = 'Unknown';
                            aDontShow  : TwbDontShowCallback = nil)
                                       : IwbByteArrayDef; overload;
 
+function wbByteArrayT(const aName      : string = 'Unknown';
+                            aSize      : Int64 = 0;
+                            aPriority  : TwbConflictPriority = cpNormal;
+                            aRequired  : Boolean = False;
+                            aDontShow  : TwbDontShowCallback = nil)
+                                       : IwbByteArrayDef; overload;
+
 function wbByteArray(const aName          : string;
                            aCountCallback : TwbCountCallback;
                            aPriority      : TwbConflictPriority = cpNormal;
@@ -2053,7 +2060,7 @@ function wbArray(const aName          : string;
                        aDontShow      : TwbDontShowCallback = nil)
                                       : IwbArrayDef; overload;
 
-function wbArrayT(const aSignature : TwbSignature;
+function wbArrayPT(const aSignature : TwbSignature;   // case where the prefix is terminated.
                   const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer = 0;
@@ -2064,7 +2071,7 @@ function wbArrayT(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 
-function wbArrayT(const aName     : string;
+function wbArrayPT(const aName     : string;
                   const aElement  : IwbValueDef;
                         aCount    : Integer = 0;
                         aPriority : TwbConflictPriority = cpNormal;
@@ -2072,7 +2079,7 @@ function wbArrayT(const aName     : string;
                         aDontShow : TwbDontShowCallback = nil)
                                   : IwbArrayDef; overload;
 
-function wbArrayT(const aName      : string;
+function wbArrayPT(const aName      : string;
                   const aElement   : IwbValueDef;
                         aCount     : Integer;
                         aAfterLoad : TwbAfterLoadCallback;
@@ -2081,7 +2088,17 @@ function wbArrayT(const aName      : string;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbArrayDef; overload;
 
-function wbArrayT(const aSignature : TwbSignature;
+function wbArrayT(const aName      : string;   // case where members are not terminated, but the array itself yes
+                   const aElement   : IwbValueDef;
+                         aCount     : Integer;
+                   const aLabels    : array of string;
+                         aAfterLoad : TwbAfterLoadCallback;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil)
+                                    : IwbArrayDef; overload;
+
+function wbArrayPT(const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
                   const aLabels    : array of string;
@@ -2090,7 +2107,7 @@ function wbArrayT(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 
-function wbArrayT(const aSignature     : TwbSignature;
+function wbArrayPT(const aSignature     : TwbSignature;
                   const aName          : string;
                   const aElement       : IwbValueDef;
                   const aLabels        : array of string;
@@ -2100,7 +2117,7 @@ function wbArrayT(const aSignature     : TwbSignature;
                         aDontShow      : TwbDontShowCallback = nil)
                                        : IwbSubRecordDef; overload;
 
-function wbArrayT(const aName     : string;
+function wbArrayPT(const aName     : string;
                   const aElement  : IwbValueDef;
                   const aLabels   : array of string;
                         aPriority : TwbConflictPriority = cpNormal;
@@ -2108,7 +2125,7 @@ function wbArrayT(const aName     : string;
                         aDontShow : TwbDontShowCallback = nil)
                                   : IwbArrayDef; overload;
 
-function wbArrayT(const aName          : string;
+function wbArrayPT(const aName          : string;
                   const aElement       : IwbValueDef;
                   const aLabels        : array of string;
                         aCountCallback : TwbCountCallback;
@@ -2117,7 +2134,16 @@ function wbArrayT(const aName          : string;
                         aDontShow      : TwbDontShowCallback = nil)
                                        : IwbArrayDef; overload;
 
-function wbArrayT(const aName          : string;
+function wbArrayT(const aName          : string;   // case where members are not terminated, but the array itself yes
+                   const aElement       : IwbValueDef;
+                   const aLabels        : array of string;
+                         aCountCallback : TwbCountCallback;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil)
+                                        : IwbArrayDef; overload;
+
+function wbArrayPT(const aName          : string;
                   const aElement       : IwbValueDef;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
@@ -3659,7 +3685,8 @@ type
                  const aName          : string;
                        aSize          : Int64;
                        aDontShow      : TwbDontShowCallback;
-                       aCountCallback : TwbCountCallback = nil);
+                       aCountCallback : TwbCountCallback = nil;
+                       aTerminator    : Boolean = False);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3817,6 +3844,7 @@ type
     arLabels        : array of string;
     arSorted        : Boolean;
     arCanAddTo      : Boolean;
+    arTerminated    : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
 
@@ -3829,7 +3857,8 @@ type
                        aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
                        aCanAddTo   : Boolean = True;
-                       aTerminator : Boolean = False); overload;
+                       aTerminator : Boolean = False;
+                       aTerminated : Boolean = False); overload;
 
     constructor Create(aPriority      : TwbConflictPriority;
                        aRequired      : Boolean;
@@ -3841,7 +3870,8 @@ type
                        aAfterLoad     : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                        aDontShow      : TwbDontShowCallback;
                        aCanAddTo      : Boolean = True;
-                       aTerminator    : Boolean = False); overload;
+                       aTerminator    : Boolean = False;
+                       aTerminated    : Boolean = False); overload;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -4573,6 +4603,16 @@ begin
   Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow);
 end;
 
+function wbByteArrayT(const aName     : string = 'Unknown';
+                            aSize     : Int64 = 0;
+                            aPriority : TwbConflictPriority = cpNormal;
+                            aRequired : Boolean = False;
+                            aDontShow : TwbDontShowCallback = nil)
+                                      : IwbByteArrayDef; overload;
+begin
+  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow, nil, True);
+end;
+
 function wbByteArray(const aName          : string;
                            aCountCallback : TwbCountCallback;
                            aPriority      : TwbConflictPriority = cpNormal;
@@ -4925,7 +4965,7 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow);
 end;
 
-function wbArrayT(const aSignature : TwbSignature;
+function wbArrayPT(const aSignature : TwbSignature;
                  const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
@@ -4936,10 +4976,10 @@ function wbArrayT(const aSignature : TwbSignature;
                         aDontShow : TwbDontShowCallback = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayT('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbArrayT(const aName      : string;
+function wbArrayPT(const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer = 0;
                        aPriority  : TwbConflictPriority = cpNormal;
@@ -4950,7 +4990,7 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, True, True);
 end;
 
-function wbArrayT(const aName      : string;
+function wbArrayPT(const aName      : string;
                  const aElement   : IwbValueDef;
                        aCount     : Integer;
                        aAfterLoad : TwbAfterLoadCallback;
@@ -4960,6 +5000,19 @@ function wbArrayT(const aName      : string;
                                   : IwbArrayDef; overload;
 begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, True, True);
+end;
+
+function wbArrayT(const aName      : string;
+                   const aElement   : IwbValueDef;
+                         aCount     : Integer;
+                   const aLabels    : array of string;
+                         aAfterLoad : TwbAfterLoadCallback;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil)
+                                    : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, aLabels, False, aAfterLoad, nil, aDontShow, True, True, True);
 end;
 
 function wbRArray(const aName      : string;
@@ -5033,7 +5086,7 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow);
 end;
 
-function wbArrayT(const aSignature : TwbSignature;
+function wbArrayPT(const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
                   const aLabels    : array of string;
@@ -5042,10 +5095,10 @@ function wbArrayT(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayT('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbArrayT(const aSignature     : TwbSignature;
+function wbArrayPT(const aSignature     : TwbSignature;
                   const aName          : string;
                   const aElement       : IwbValueDef;
                   const aLabels        : array of string;
@@ -5055,10 +5108,10 @@ function wbArrayT(const aSignature     : TwbSignature;
                         aDontShow      : TwbDontShowCallback = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayT('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
-function wbArrayT(const aName     : string;
+function wbArrayPT(const aName     : string;
                   const aElement  : IwbValueDef;
                   const aLabels   : array of string;
                         aPriority : TwbConflictPriority = cpNormal;
@@ -5069,7 +5122,7 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, True, True);
 end;
 
-function wbArrayT(const aName          : string;
+function wbArrayPT(const aName          : string;
                   const aElement       : IwbValueDef;
                   const aLabels        : array of string;
                         aCountCallback : TwbCountCallback;
@@ -5082,6 +5135,18 @@ begin
 end;
 
 function wbArrayT(const aName          : string;
+                   const aElement       : IwbValueDef;
+                   const aLabels        : array of string;
+                         aCountCallback : TwbCountCallback;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil)
+                                        : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, True, True, True);
+end;
+
+function wbArrayPT(const aName          : string;
                   const aElement       : IwbValueDef;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
@@ -7533,10 +7598,12 @@ constructor TwbArrayDef.Create(aPriority   : TwbConflictPriority;
                                aCount      : Integer;
                          const aLabels     : array of string;
                                aSorted     : Boolean;
-                               aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                               aAfterLoad  : TwbAfterLoadCallback;
+                               aAfterSet   : TwbAfterSetCallback;
                                aDontShow   : TwbDontShowCallback;
-                               aCanAddTo   : Boolean = True;
-                               aTerminator : Boolean = False);
+                               aCanAddTo   : Boolean;
+                               aTerminator : Boolean;
+                               aTerminated : Boolean);
 var
   i: Integer;
 begin
@@ -7551,7 +7618,26 @@ begin
     arElement := (aElement as IwbDefInternal).SetParent(Self) as IwbValueDef;
   arSorted := aSorted;
   arCanAddTo := aCanAddTo;
+  arTerminated := aTerminated;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow, aTerminator);
+end;
+
+constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
+                               aRequired      : Boolean;
+                         const aName          : string;
+                         const aElement       : IwbValueDef;
+                               aCountCallback : TwbCountCallback;
+                         const aLabels        : array of string;
+                               aSorted        : Boolean;
+                               aAfterLoad     : TwbAfterLoadCallback;
+                               aAfterSet      : TwbAfterSetCallback;
+                               aDontShow      : TwbDontShowCallback;
+                               aCanAddTo      : Boolean = True;
+                               aTerminator    : Boolean = false;
+                               aTerminated    : Boolean = False);
+begin
+  arCountCallback := aCountCallback;
+  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet,aDontShow, aCanAddTo, aTerminator, aTerminated);
 end;
 
 function TwbArrayDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -7574,27 +7660,10 @@ begin
   with aSource as TwbArrayDef do
     if Assigned(arCountCallback) then
       Self.Create(defPriority, defRequired, noName, arElement, arCountCallback,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo, noTerminator).defRoot := aSource
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo, noTerminator, arTerminated).defRoot := aSource
     else
       Self.Create(defPriority, defRequired, noName, arElement, arCount,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo, noTerminator).defRoot := aSource;
-end;
-
-constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
-                               aRequired      : Boolean;
-                         const aName          : string;
-                         const aElement       : IwbValueDef;
-                               aCountCallback : TwbCountCallback;
-                         const aLabels        : array of string;
-                               aSorted        : Boolean;
-                               aAfterLoad     : TwbAfterLoadCallback;
-                               aAfterSet      : TwbAfterSetCallback;
-                               aDontShow      : TwbDontShowCallback;
-                               aCanAddTo      : Boolean = True;
-                               aTerminator    : Boolean = false);
-begin
-  arCountCallback := aCountCallback;
-  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet,aDontShow, aCanAddTo, aTerminator);
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo, noTerminator, arTerminated).defRoot := aSource;
 end;
 
 function TwbArrayDef.GetCanAddTo: Boolean;
@@ -7806,7 +7875,7 @@ begin
     end;
   end;
 
-  if Assigned(aBasePtr) then
+  if Assigned(BasePtr) then
     Inc(PByte(BasePtr), Prefix);
 
   if Count > 0 then
@@ -7874,6 +7943,7 @@ begin
         Exit;
       end;
     end;
+  Inc(Result, Ord(arTerminated));
 end;
 
 function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -10161,18 +10231,20 @@ end;
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbByteArrayDef do
-    Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack, noTerminator).defRoot := aSource;
 end;
 
-constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority; aRequired: Boolean;
+constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
+                                   aRequired      : Boolean;
                              const aName          : string;
                                    aSize          : Int64;
                                    aDontShow      : TwbDontShowCallback;
-                                   aCountCallback : TwbCountCallback);
+                                   aCountCallback : TwbCountCallback;
+                                   aTerminator    : Boolean);
 begin
   badSize := aSize;
   badCountCallback := aCountCallback;
-  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow);
+  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aTerminator);
 end;
 
 procedure TwbByteArrayDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -10292,6 +10364,7 @@ begin
       end
     else if Result < 0 then Result := 0;
   end;
+  if Result>0 then Inc(Result, Ord(noTerminator));
 end;
 
 function TwbByteArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -10306,7 +10379,8 @@ begin
     -255 : Result := 0; // Explicitly null for wbNull (displays better in unions)
     else
       Result := 0;
-    end
+    end;
+  if Result>0 then Inc(Result, Ord(noTerminator));
 end;
 
 procedure TwbByteArrayDef.Report(const aParents: TwbDefPath);
@@ -11887,7 +11961,11 @@ begin
       Result := 0
     else begin
       Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-      Len := GetPrefixValue(aBasePtr, aEndPtr, aElement)+GetPrefixOffset+Ord(noTerminator);
+      Len := GetPrefixValue(aBasePtr, aEndPtr, aElement);
+      if Len>0 then
+        Len := Len+GetPrefixOffset+Ord(noTerminator)
+      else
+        Len := GetPrefixOffset;
       if Len>Result then
         Exit;
       if Len < Result then
