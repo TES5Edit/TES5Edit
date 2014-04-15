@@ -432,6 +432,29 @@ begin
 end;
 
 
+{ TCustomForm }
+
+procedure TCustomForm_Read_PopupMode(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TCustomForm(Args.Obj).PopupMode;
+end;
+
+procedure TCustomForm_Write_PopupMode(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomForm(Args.Obj).PopupMode := Value;
+end;
+
+procedure TCustomForm_Read_PopupParent(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TCustomForm(Args.Obj).PopupParent);
+end;
+
+procedure TCustomForm_Write_PopupParent(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TCustomForm(Args.Obj).PopupParent := TCustomForm(V2O(Value));
+end;
+
+
 { TCheckListBox }
 
 type
@@ -941,6 +964,9 @@ begin
     AddConst('StdCtrls', 'cbUnchecked', Ord(cbUnchecked));
     AddConst('StdCtrls', 'cbGrayed', Ord(cbGrayed));
     AddConst('Forms', 'poMainFormCenter', Ord(poMainFormCenter));
+    AddConst('Forms', 'pmAuto', Ord(pmAuto));
+    AddConst('Forms', 'pmExplicit', Ord(pmExplicit));
+    AddConst('Forms', 'pmNone', Ord(pmNone));
     AddConst('Menus', 'maAutomatic', Ord(maAutomatic));
     AddConst('Menus', 'maManual', Ord(maManual));
     AddConst('Controls', 'akLeft', Ord(akLeft));
@@ -1039,6 +1065,12 @@ begin
     { TWinControl }
     AddGet(TWinControl, 'DoubleBuffered', TWinControl_Read_DoubleBuffered, 0, [varEmpty], varEmpty);
     AddSet(TWinControl, 'DoubleBuffered', TWinControl_Write_DoubleBuffered, 0, [varEmpty]);
+
+    { TCustomForm }
+    AddGet(TCustomForm, 'PopupMode', TCustomForm_Read_PopupMode, 0, [varEmpty], varEmpty);
+    AddSet(TCustomForm, 'PopupMode', TCustomForm_Write_PopupMode, 0, [varEmpty]);
+    AddGet(TCustomForm, 'PopupParent', TCustomForm_Read_PopupParent, 0, [varEmpty], varEmpty);
+    AddSet(TCustomForm, 'PopupParent', TCustomForm_Write_PopupParent, 0, [varEmpty]);
 
     { TCheckListBox }
     AddClass('CheckLst', TCheckListBox, 'TCheckListBox');
