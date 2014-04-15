@@ -2500,6 +2500,7 @@ var
 type
   TwbRefIDArray = array of Cardinal;
 
+function wbReadInteger24(aBasePtr: pointer): Int64;
 procedure InitializeRefIDArray(anArray: TwbRefIDArray);
 
 implementation
@@ -6380,7 +6381,7 @@ begin
   defReported := True;
 end;
 
-function ReadInteger24(aBasePtr: pointer): Int64;
+function wbReadInteger24(aBasePtr: pointer): Int64;
 var
   Buffer : array[0..3] of Byte;
 begin
@@ -6476,7 +6477,7 @@ begin
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
-        itU24: Value := ReadInteger24(aBasePtr);
+        itU24: Value := wbReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6521,7 +6522,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6709,7 +6710,7 @@ begin
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
-        itU24: Value := ReadInteger24(aBasePtr);
+        itU24: Value := wbReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6842,7 +6843,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6873,7 +6874,7 @@ begin
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
-      itU24: Result := ReadInteger24(aBasePtr);
+      itU24: Result := wbReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6893,7 +6894,7 @@ begin
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
-      itU24: Result := ReadInteger24(aBasePtr);
+      itU24: Result := wbReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6922,7 +6923,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6963,7 +6964,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -7163,7 +7164,7 @@ var
   Index         : Integer; // Used instead of count for easier debugging output.
   Size          : Integer;
   BasePtr       : Pointer;
-  Container     : IwbContainer;
+  ArrayContainer : IwbContainer;
   Element       : IwbElement;
   DataContainer : IwbDataContainer;
   KnownSize     : Boolean;
@@ -7182,7 +7183,7 @@ var
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
           if SameText(aName, aContainer.BaseName) then begin
-            Container := aContainer;
+            ArrayContainer := aContainer;
             Result := true;
             break;
           end else if FindOurself(aContainer, aName) then begin
@@ -7193,33 +7194,42 @@ var
     end;
   end;
 
-begin
-  Result := 0;
+  function Container: IwbContainer;
+  begin
+    if Assigned(ArrayContainer) then
+      Result := ArrayContainer
+    else begin
+      // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
+      // First advance to ourselves :
+      if Assigned(aElement) then begin
+        ArrayContainer := GetContainerFromUnion(aElement);
+        // This can be problematic later on !!!
+        // if (noName = '') then
+        //   aName := GetName
+        // else
+          aName := noName;
 
-  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
-//    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-//      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-    Exit;
+        if Assigned(ArrayContainer) and (Pos('\ '+ aName, ArrayContainer.Path) = 0) then
+          FindOurself(ArrayContainer, aName);
+        if Assigned(ArrayContainer) and (Pos('\ '+ aName, ArrayContainer.Path) = 0) then
+            ArrayContainer := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
+        if not Assigned(ArrayContainer) and (not SameText(aName, 'Unused') or not wbHideUnused) then begin
+          Result := nil;
+          Exit;
+        end;
+      end;
+      Result := ArrayContainer;
+    end;
   end;
 
-  // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
-  // First advance to ourselves :
-  if Assigned(aElement) then begin
-    Container := GetContainerFromUnion(aElement);
-    // This can be problematic later on !!!
-    // if (noName = '') then
-    //   aName := GetName
-    // else
-      aName := noName;
+begin
+  Result := 0;
+  ArrayContainer := nil;
 
-    if Assigned(Container) and (Pos('\ '+ aName, Container.Path) = 0) then
-        FindOurself(Container, aName);
-    if Assigned(Container) and (Pos('\ '+ aName, Container.Path) = 0) then
-        Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
-    if not Assigned(Container) and (not SameText(aName, 'Unused') or not wbHideUnused) then begin
-      Result := High(Integer);
-      Exit;
-    end;
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
+    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+    Exit;
   end;
 
   Prefix := GetPrefixSize(aBasePtr);
@@ -7241,11 +7251,15 @@ begin
     end;
   end;
 
-  if Assigned(aBasePtr) then
+  if Assigned(BasePtr) then
     Inc(PByte(BasePtr), Prefix);
 
   if Count > 0 then
     if arElement.IsVariableSize then begin
+      if Container = nil then begin // Make sure it won't be used if unassigned, and still delay FindOurself until it is effectivly required
+        Result := High(Integer);
+        Exit;
+      end;
 
       if Container.ElementCount = Count then begin
         KnownSize := True;
@@ -8853,7 +8867,7 @@ begin
   end;
 
   if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] <Error: Could not be resolved>';
+    Result := '['+IntToHex64(aInt,8)+'] < Error: Could not be resolved >';
 end;
 
 function TwbFormID.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -9543,7 +9557,7 @@ begin
       end;
   end else begin
     s := IntToHex64(aInt,8);
-    Result := '['+s+'] <Error: Could not be resolved>';
+    Result := '['+s+'] < Error: Could not be resolved >';
     if wbReportMode then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -9729,7 +9743,7 @@ begin
     -255 : Result := 0; // Explicitly null for wbNull (displays better in unions)
     else
       Result := 0;
-    end
+    end;
 end;
 
 procedure TwbByteArrayDef.Report(const aParents: TwbDefPath);
@@ -10473,7 +10487,7 @@ begin
   end;
 
   if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] <Error: Could not be resolved>';
+    Result := '['+IntToHex64(aInt,8)+'] < Error: Could not be resolved >';
 end;
 
 function TwbFormIDChecked.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -11193,7 +11207,7 @@ begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < GetPrefixOffset then begin
     if wbCheckExpectedBytes then
-      Result := Format('Expected at least %d bytes of data, found %d', [Prefix , Len]);
+      Result := Format('Expected at least %d bytes of data, found %d', [Abs(Prefix) , Len]);
     Exit;
   end;
   Size := GetPrefixValue(aBasePtr, aEndPtr, aElement) + GetPrefixOffset;
@@ -11251,7 +11265,10 @@ end;
 
 function TwbLenStringDef.GetDefTypeName: string;
 begin
-  Result := 'String with length of '+IntToStr(Prefix)+' bytes';
+  if Prefix > 0 then
+    Result := 'String with length of '+IntToStr(Prefix)+' bytes'
+  else
+    Result := 'Separated String with length of '+IntToStr(GetPrefixLen)+' bytes'
 end;
 
 function TwbLenStringDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
@@ -11277,7 +11294,7 @@ end;
 
 function TwbLenStringDef.GetPrefixOffset: Integer;
 begin
-    Result := Prefix;
+    Result := Abs(Prefix);
 end;
 
 function TwbLenStringDef.GetPrefixValue(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -11471,7 +11488,7 @@ function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement
 begin
   if Assigned(aElement._File) and aElement._File.IsLocalized then begin
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
-      Result := '<Error: lstring ID should be Int32 value>'
+      Result := '< Error: lstring ID should be Int32 value >'
     else
       Result := AnsiString(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement))
   end else

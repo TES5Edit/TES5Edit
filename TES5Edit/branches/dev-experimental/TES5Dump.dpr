@@ -1009,7 +1009,7 @@ begin
       DumpForms.Sort;
       for i := 0 to DumpForms.Count-1 do try
         c := StrToInt(DumpForms[i]);
-        DumpChapters.Add(IntToStr(10000+c));
+        DumpChapters.Add(IntToStr(wbChangedFormOffset+c));
       finally
       end;
       DumpForms.Free;
@@ -1053,7 +1053,7 @@ begin
       DumpForms.Sort;
       for i := 0 to DumpForms.Count-1 do try
         c := StrToInt(DumpForms[i]);
-        ChaptersToSkip.Add(IntToStr(10000+c));
+        ChaptersToSkip.Add(IntToStr(wbChangedFormOffset+c));
       finally
       end;
       DumpForms.Free;

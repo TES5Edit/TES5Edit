@@ -9,6 +9,7 @@
     Worldspace \ Save as Image - save map as a single large image
     Worldspace \ Save as LOD Tiles - split map image back into separate LOD textures used by a game (Skyrim's format)
     Worldspace \ Load Image - load bitmap image, for example to be split by previous function after adjusting with graphical editors
+    Worldspace \ Filter LOD Tiles - remove unused LOD textures in specified folder that don't have a corresponding LOD mesh
     Overlay \ Region - draw selected regions
     Overlay \ Regional Weather - draw regions with selected weathers
     Overlay \ Map Marker - draw selected map marker types
@@ -19,6 +20,8 @@
       dotted cross: navmesh or pathgrid records (NAVM or PGRD) in this cell are added or overridden
     Overlay \ Change Color - select color to be used by overlay drawing functions
     Overlay \ Clear - clear all overlayed objects
+  Right click menu:
+    Jump to - position on this cell record in xEdit
 }
 unit WorldspaceBrowser;
 
@@ -419,9 +422,9 @@ var
 begin
   Result := False;
 
-  MapWidthPx := (MapSizeX div LODLevel)*2*LODSize; // Map width in pixels
-  MapHeightPx := (MapSizeY div LODLevel)*2*LODSize; // Map height in pixels
   CellSizePx := LODSize div LODLevel; // Cell size in pixels
+  MapWidthPx := CellSizePx*MapSizeX*2; // Map width in pixels
+  MapHeightPx := CellSizePx*MapSizeY*2; // Map height in pixels
   PosSizePx := CellSizePx / CellSize; // Game unit size in pixels
   FontMult := (32 div LODLevel)*LODSize/256; // font size multiplier depending on lod level and texture size
 
@@ -435,11 +438,13 @@ begin
   
   bmp := TBitmap.Create;
   try
-    bmpMap.SetSize((MapSizeX div LODLevel)*2*LODSize, (MapSizeY div LODLevel)*2*LODSize);
+    bmpMap.SetSize(MapWidthPx, MapHeightPx);
     bmpMap.Canvas.Brush.Color := ColorBackground;
     bmpMap.Canvas.FillRect(Rect(0, 0, bmpMap.Width, bmpMap.Height));
     y := SWy;
     while y < MapSizeY do begin
+      frmMain.Caption := Format('Building map %d%%...', [Round((MapSizeY + y)/(2*MapSizeY)*100)]);
+      Application.ProcessMessages;
       x := SWx;
       while x < MapSizeX do begin
         texName := LODTextureFileName(wbGameMode, wrldFormID, wrldEDID, x, y, LODLevel, fMapNormals);
@@ -491,6 +496,7 @@ begin
   bmp := TBitmap.Create;
   bmp.PixelFormat := pf32bit;
   try
+    frmMain.Enabled := False;
     fMapDrawn := CreateWorldSpaceMap(wrld, bmp);
     CurrentWorld := wrld;
     // draw grid if grid's opacity is not zero
@@ -515,6 +521,7 @@ begin
     miOverlayClearClick(nil);
   finally
     bmp.Free;
+    frmMain.Enabled := True;
   end;
   if not fMapDrawn then
     ShowMessage(Format('No LOD level %d textures for worldspace %s, try other levels.', [LODLevel, Name(wrld)]));
@@ -787,7 +794,7 @@ end;
 // save map as separate lod textures to be used with landscape lod meshes
 procedure miWorldspaceSaveAsLODClick(Sender: TObject);
 var
-  x, y, lev, cnt: integer;
+  LODSize32, x, y, lev, cnt: integer;
   tile: TBitmap;
   SrcRect, DestRect: TRect;
   edid, texpath, fname: string;
@@ -804,11 +811,12 @@ begin
   cnt := 0;
   tile := TBitmap.Create;
   tile.PixelFormat := pf32bit;
+  LODSize32 := Round(LODSize*32/LODLevel);
   try
     lev := 32;
     while lev >= 4 do begin
       AddMessage(Format('Savind LOD level %d tiles...', [lev]));
-      tile.SetSize(Round(LODSize*lev/32), Round(LODSize*lev/32));
+      tile.SetSize(Round(LODSize32*lev/32), Round(LODSize32*lev/32));
       DestRect := Rect(0, 0, tile.Width, tile.Height);
       y := -MapSizeY;
       while y < MapSizeY do begin
@@ -830,6 +838,61 @@ begin
     AddMessage('Use http://code.google.com/p/crunch/ to convert bitmap files to dds format: crunch.exe -outsamedir -fileformat dds -dxt1 -file *.bmp');
   finally
     tile.Free;
+  end;
+end;
+
+//============================================================================
+// click event for filter LOD tiles menu
+procedure miWorldspaceFilterLODClick(Sender: TObject);
+var
+  F: TSearchRec;
+  cnt, i: integer;
+  edid, texpath, texmask, lodpath, lodmesh: string;
+  sl: TStringList;
+begin
+  if not fMapDrawn then
+    Exit;
+
+  if wbGameMode < gmTES5 then begin
+    MessageDlg('Games prior to Skyrim are not supported', mtInformation, [mbOk], 0);
+    Exit;
+  end;
+
+  texpath := SelectDirectory('Path with LOD textures', '', '', nil);
+  if (texpath = '') or not DirectoryExists(texpath) then Exit;
+  texpath := IncludeTrailingBackslash(texpath);
+  edid := EditorID(CurrentWorld);
+  lodpath := 'meshes\terrain\' + edid + '\';
+  texmask := edid + '.*.*'; // any texture extension, not only .dds
+  cnt := 0;
+  sl := TStringList.Create;
+  try
+    try
+      if FindFirst(texpath + texmask, faAnyFile, F) = 0 then begin
+        repeat
+          lodmesh := LowerCase(lodpath + ChangeFileExt(F.Name, '.btr'));
+          if not ResourceExists(lodmesh) then
+            sl.Add(F.Name);
+          Inc(cnt);
+        until FindNext(F) <> 0;
+      end
+      else begin
+        AddMessage('No LOD tiles found in ' + texpath);
+        Exit;
+      end;
+    finally
+      FindClose(F);
+    end;
+    
+    if sl.Count = 0 then
+      AddMessage('Nothing to filter, all files are needed in ' + texpath)
+    else
+      if MessageDlg(Format('%d files out of %d are to be removed. Delete now?', [sl.Count, cnt]), mtConfirmation, [mbYes, mbCancel], 0) = mrYes then
+        for i := 0 to Pred(sl.Count) do
+          DeleteFile(texpath + sl[i]);
+    
+  finally
+    sl.Free;
   end;
 end;
 
@@ -1245,6 +1308,7 @@ begin
   frmMain.Width := 900;
   frmMain.Height := 650;
   frmMain.Position := poMainFormCenter;
+  frmMain.PopupMode := pmAuto;
   frmMain.KeyPreview := True;
   frmMain.OnResize := frmMainFormResize;
   //frmMain.OnKeyDown := FormKeyDown;
@@ -1277,6 +1341,11 @@ begin
   mi := TMenuItem.Create(mnMain);
   mi.Caption := 'Save as LOD Tiles';
   mi.OnClick := miWorldspaceSaveAsLODClick;
+  miWorldspace.Add(mi);
+
+  mi := TMenuItem.Create(mnMain);
+  mi.Caption := 'Filter LOD Tiles';
+  mi.OnClick := miWorldspaceFilterLODClick;
   miWorldspace.Add(mi);
   
   miRegion := TMenuItem.Create(mnMain);
@@ -1405,8 +1474,9 @@ begin
       wrlds := GroupBySignature(FileByIndex(i), 'WRLD');
       for j := 0 to Pred(ElementCount(wrlds)) do begin
         wrld := ElementByIndex(wrlds, j);
-        if HasLOD(wrld) then
-          sl.AddObject(EditorID(wrld), MasterOrSelf(wrld));
+        if Signature(wrld) = 'WRLD' then
+          if HasLOD(wrld) then
+            sl.AddObject(EditorID(wrld), MasterOrSelf(wrld));
       end;
     end;
     cmbWorld.Items.Assign(sl);
@@ -1439,7 +1509,7 @@ var
   wrld: IInterface;
 begin
   InitBrowser;
-  //try
+  try
     slWorldspaces := TStringList.Create; slWorldspaces.Duplicates := dupIgnore; slWorldspaces.Sorted := True;
     slRegion := TStringList.Create; slRegion.Duplicates := dupIgnore; slRegion.Sorted := True;
     slPlugin := TStringList.Create;
@@ -1451,13 +1521,13 @@ begin
     if Assigned(wrld) and HasLOD(wrld) then
       DrawMap(wrld);
     frmMain.ShowModal;
-  //finally
+  finally
     frmWorld.Free;
     frmMain.Free;
     slWorldspaces.Free;
     slRegion.Free;
     slPlugin.Free;
-  //end;
+  end;
 
   Result := 1;
 end;
