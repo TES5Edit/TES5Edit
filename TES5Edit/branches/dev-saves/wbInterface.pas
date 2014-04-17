@@ -3263,9 +3263,9 @@ type
 
   TwbSubRecordArrayDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordArrayDef)
   private
-    sraElement    : IwbRecordMemberDef;
-    sraSorted     : Boolean;
-    sraIsSorted   : TwbIsSortedCallback;
+    sraElement  : IwbRecordMemberDef;
+    sraSorted   : Boolean;
+    sraIsSorted : TwbIsSortedCallback;
   public
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
@@ -5164,7 +5164,8 @@ function wbArrayS(const aSignature : TwbSignature;
                         aCount     : Integer = 0;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil)
                                    : IwbSubRecordDef; overload;
 begin
@@ -6323,7 +6324,8 @@ constructor TwbSubRecordDef.Create(aPriority  : TwbConflictPriority; aRequired: 
                              const aSignature : TwbSignature;
                              const aName      : string;
                              const aValue     : IwbValueDef;
-                                   aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                                   aAfterLoad : TwbAfterLoadCallback;
+                                   aAfterSet  : TwbAfterSetCallback;
                                    aSizeMatch : Boolean;
                                    aDontShow  : TwbDontShowCallback);
 begin
@@ -6337,7 +6339,8 @@ constructor TwbSubRecordDef.Create(aPriority   : TwbConflictPriority; aRequired:
                              const aSignatures : array of TwbSignature;
                              const aName       : string;
                              const aValue      : IwbValueDef;
-                                   aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                                   aAfterLoad  : TwbAfterLoadCallback;
+                                   aAfterSet   : TwbAfterSetCallback;
                                    aSizeMatch  : Boolean;
                                    aDontShow   : TwbDontShowCallback);
 begin
@@ -7863,8 +7866,8 @@ begin
     Count := GetPrefixCount(aBasePtr);
     Result := Prefix;
   end else begin
-    if (Count < 1) and Assigned(arCountCallback) then
-      Count := arCountCallback(BasePtr, aEndPtr, Container);
+    if (Count < 1) and Assigned(arCountCallback) and not (Container=nil) then
+      Count := arCountCallback(BasePtr, aEndPtr, ArrayContainer);
 
     if not Assigned(BasePtr) and (Count < 1) then
       Count := 1;

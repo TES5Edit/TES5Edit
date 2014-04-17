@@ -9493,7 +9493,16 @@ begin
     ])), ['Male', 'Female'], cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
+//    wbArray(ATTR, 'Attributes Boosts', wbArray('Attributes', wbInteger('Attribute', itU8), [  // Engine loads that, but data is only a pair of bytes!
+//      'Strength',
+//      'Perception',
+//      'Endurance',
+//      'Charisma',
+//      'Intelligence',
+//      'Agility',
+//      'Luck'
+//    ]), ['Male', 'Female'], cpNormal, True),  // That looks like a leftover from Oblivion
+    wbByteArray(ATTR, 'Unused', 0, cpNormal, True),
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [

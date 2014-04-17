@@ -2841,13 +2841,15 @@ procedure TfrmMain.DoInit;
           end;
         until FindNext(F) <> 0;
         slNew.CustomSort(PluginListCompare);
-        // The for loop won't initialize j if sl.count = 0, we must force it to -1 so inserting will happen at index 0
-        j := -1; // note that the hint saying the value won't be used is FALSE!
         // add esm masters after the last master, add esp plugins at the end
         // find position of the last master
-        for j := Pred(sl.Count) downto 0 do
-          if IsFileESM(sl[j]) then
-            Break;
+        // The for loop won't initialize j if sl.count = 0, we must force it to -1 so inserting will happen at index 0
+        if sl.Count=0 then
+          j := -1
+        else
+          for j := Pred(sl.Count) downto 0 do
+            if IsFileESM(sl[j]) then
+              Break;
         Inc(j);
         for i := 0 to Pred(slNew.Count) do begin
           if IsFileESM(slNew[i]) then begin

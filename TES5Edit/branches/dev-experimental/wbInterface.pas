@@ -7239,8 +7239,8 @@ begin
     Count := GetPrefixCount(aBasePtr);
     Result := Prefix;
   end else begin
-    if (Count < 1) and Assigned(arCountCallback) then
-      Count := arCountCallback(BasePtr, aEndPtr, Container);
+    if (Count < 1) and Assigned(arCountCallback) and not (Container=nil) then
+      Count := arCountCallback(BasePtr, aEndPtr, ArrayContainer);
 
     if not Assigned(BasePtr) and (Count < 1) then
       Count := 1;
