@@ -1807,6 +1807,36 @@ function wbFloat(const aName       : string;
                        aDefault    : Extended = 0.0)
                                    : IwbFloatDef; overload;
 
+function wbDouble(const aSignature  : TwbSignature;
+                  const aName       : string = 'Unknown';
+                        aPriority   : TwbConflictPriority = cpNormal;
+                        aRequired   : Boolean = False;
+                        aScale      : Extended = 1.0;
+                        aDigits     : Integer = -1;
+                        aDontShow   : TwbDontShowCallback = nil;
+                        aNormalizer : TwbFloatNormalizer = nil;
+                        aDefault    : Extended = 0.0)
+                                    : IwbSubRecordDef; overload;
+
+function wbDouble(const aName       : string = 'Unknown';
+                        aPriority   : TwbConflictPriority = cpNormal;
+                        aRequired   : Boolean = False;
+                        aScale      : Extended = 1.0;
+                        aDigits     : Integer = -1;
+                        aDontShow   : TwbDontShowCallback = nil;
+                        aNormalizer : TwbFloatNormalizer = nil;
+                        aDefault    : Extended = 0.0)
+                                    : IwbFloatDef; overload;
+
+function wbDouble(const aName       : string;
+                        aPriority   : TwbConflictPriority;
+                        aRequired   : Boolean;
+                        aDontShow   : TwbDontShowCallback;
+                        aAfterSet   : TwbAfterSetCallback = nil;
+                        aNormalizer : TwbFloatNormalizer = nil;
+                        aDefault    : Extended = 0.0)
+                                    : IwbFloatDef; overload;
+
 {--- wbArray - list of identical elements -------------------------------------}
 function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
@@ -3455,6 +3485,7 @@ type
     fdScale      : Extended;
     fdDigits     : Integer;
     fdNormalizer : TwbFloatNormalizer;
+    fdDouble     : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
     {---IwbDef---}
@@ -3473,6 +3504,8 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+
+    function ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
   public
     constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
                  const aName       : string;
@@ -3482,7 +3515,8 @@ type
                        aDigits     : Integer;
                        aDontShow   : TwbDontShowCallback;
                        aNormalizer : TwbFloatNormalizer;
-                       aDefault    : Extended);
+                       aDefault    : Extended;
+                       aDouble     : Boolean = False);
   end;
 
   TwbArrayDef = class(TwbValueDef, IwbArrayDef)
@@ -4301,6 +4335,20 @@ begin
   Result := wbSubRecord(aSignature, aName, wbFloat('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow);
 end;
 
+function wbDouble(const aSignature  : TwbSignature;
+                  const aName       : string = 'Unknown';
+                        aPriority   : TwbConflictPriority = cpNormal;
+                        aRequired   : Boolean = False;
+                        aScale      : Extended = 1.0;
+                        aDigits     : Integer = -1;
+                        aDontShow   : TwbDontShowCallback = nil;
+                        aNormalizer : TwbFloatNormalizer = nil;
+                        aDefault    : Extended = 0.0)
+                                    : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbDouble('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow);
+end;
+
 function wbFloat(const aName       : string = 'Unknown';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
@@ -4314,6 +4362,19 @@ begin
   Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault);
 end;
 
+function wbDouble(const aName       : string = 'Unknown';
+                        aPriority   : TwbConflictPriority = cpNormal;
+                        aRequired   : Boolean = False;
+                        aScale      : Extended = 1.0;
+                        aDigits     : Integer = -1;
+                        aDontShow   : TwbDontShowCallback = nil;
+                        aNormalizer : TwbFloatNormalizer = nil;
+                        aDefault    : Extended = 0.0)
+                                    : IwbFloatDef; overload;
+begin
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, True);
+end;
+
 function wbFloat(const aName       : string;
                        aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
@@ -4324,6 +4385,18 @@ function wbFloat(const aName       : string;
                                    : IwbFloatDef; overload;
 begin
   Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault);
+end;
+
+function wbDouble(const aName       : string;
+                        aPriority   : TwbConflictPriority;
+                        aRequired   : Boolean;
+                        aDontShow   : TwbDontShowCallback;
+                        aAfterSet   : TwbAfterSetCallback = nil;
+                        aNormalizer : TwbFloatNormalizer = nil;
+                        aDefault    : Extended = 0.0)
+                                    : IwbFloatDef; overload;
+begin
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, True);
 end;
 
 {--- wbArray - list of identical elements -------------------------------------}
@@ -8184,7 +8257,8 @@ end;
 constructor TwbFloatDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFloatDef do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, fdScale, fdDigits, noDontShow, fdNormalizer, fdDefault).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, fdScale, fdDigits, noDontShow,
+      fdNormalizer, fdDefault, fdDouble).defRoot := aSource;
 end;
 
 constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
@@ -8196,12 +8270,14 @@ constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
                                aDigits     : Integer;
                                aDontShow   : TwbDontShowCallback;
                                aNormalizer : TwbFloatNormalizer;
-                               aDefault    : Extended);
+                               aDefault    : Extended;
+                               aDouble     : Boolean = False);
 begin
   fdDefault := aDefault;
   fdScale := aScale;
   fdDigits := aDigits;
   fdNormalizer := aNormalizer;
+  fdDouble := aDouble;
   if fdDigits < 0 then
     fdDigits := wbFloatDigits;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
@@ -8215,31 +8291,48 @@ begin
   if aValue = '' then
     PSingle(aBasePtr)^ := 0.0
   else if SameText(aValue, 'Default') then
+  if fdDouble then
+    PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
+  else
     PCardinal(aBasePtr)^ := $7F7FFFFF
   else begin
     Value := RoundToEx(StrToFloat(aValue), -fdDigits);
     Value := Value / fdScale;
     if Assigned(fdNormalizer) then
       Value := fdNormalizer(aElement, Value);
-    PSingle(aBasePtr)^ := Value;
+    if fdDouble then
+      PDouble(aBasePtr)^ := Value
+    else
+      PSingle(aBasePtr)^ := Value;
   end;
 end;
 
 procedure TwbFloatDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 var
-  Value: Extended;
+  Value : Extended;
+  Size  : Integer;
 begin
   Value := aValue;
-  if SameValue(Value, MaxSingle) or (Value > MaxSingle) then
-    PCardinal(aBasePtr)^ := $7F7FFFFF
-  else begin
-    Value := RoundToEx(Value, -fdDigits);
-    Value := Value / fdScale;
-    aElement.RequestStorageChange(aBasePtr, aEndPtr, 4);
-    if Assigned(fdNormalizer) then
-      Value := fdNormalizer(aElement, Value);
-    PSingle(aBasePtr)^ := Value;
-  end;
+  if fdDouble then
+    Size := SizeOf(Double)
+  else
+    Size := SizeOf(Single);
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, Size);
+  if Assigned(aBasePtr) then
+    if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
+      PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
+    else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
+      PCardinal(aBasePtr)^ := $7F7FFFFF
+    else begin
+      Value := RoundToEx(Value, -fdDigits);
+      Value := Value / fdScale;
+      if Assigned(fdNormalizer) then
+        Value := fdNormalizer(aElement, Value);
+      if fdDouble then
+        PDouble(aBasePtr)^ := Value
+      else
+        PSingle(aBasePtr)^ := Value;
+    end;
 end;
 
 function TwbFloatDef.GetDefType: TwbDefType;
@@ -8256,6 +8349,8 @@ function TwbFloatDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElem
 begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
     Result := 0
+  else if fdDouble then
+    Result := SizeOf(Double)
   else
     Result := SizeOf(Single);
 end;
@@ -8270,22 +8365,45 @@ var
   Value: Extended;
 begin
   Value := ToNativeValue(aBasePtr, aEndPtr, aElement);
-  Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault);
+  if fdDouble then
+    Result := not Assigned(aBasePtr) or not SameValue(Value, fdDefault)
+  else
+    Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault);
   if Result then
     FromNativeValue(aBasePtr, aEndPtr, aElement, fdDefault);
 end;
 
-function TwbFloatDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbFloatDef.ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
 var
   Len   : Cardinal;
   Value : Extended;
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < 4 then
-    Result := ''
-  else try
+  if Len < GetDefaultSize(aBasePtr, aEndPtr, aElement) then
+    Result := NaN
+  else if fdDouble then try
+    if PInt64(aBasePtr)^ = $7FEFFFFFFFFFFFFF then
+      Result := maxDouble
+    else begin
+      Value := PDouble(aBasePtr)^;
+      try
+        if Value <> 0.0 then
+          if SameValue(Value, 0.0) then
+            Value := 0.0;
+      except
+        Value := 0.0;
+      end;
+
+      if Assigned(fdNormalizer) then
+        Value := fdNormalizer(aElement, Value);
+      Value := Value * fdScale;
+      Result := RoundToEx(Value, -fdDigits);
+    end;
+  except
+    Result := NaN;
+  end else try
     if PCardinal(aBasePtr)^ = $7F7FFFFF then
-      Result := 'Default'
+      Result := maxSingle
     else begin
       Value := PSingle(aBasePtr)^;
       try
@@ -8299,117 +8417,82 @@ begin
       if Assigned(fdNormalizer) then
         Value := fdNormalizer(aElement, Value);
       Value := Value * fdScale;
-      Value := RoundToEx(Value, -fdDigits);
-      Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
+      Result := RoundToEx(Value, -fdDigits);
     end;
   except
-    Result := '';
+    Result := NaN;
   end;
+end;
+
+function TwbFloatDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+var
+  Value : Extended;
+begin
+  Value := ToValue(aBasePtr, aEndPtr, aElement);
+  if IsNaN(Value) then
+    Result := ''
+  else if (Value = maxDouble) or (Value = maxSingle) then
+    Result := 'Default'
+  else
+    Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
 end;
 
 function TwbFloatDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
 var
   Value: Extended;
 begin
-  if Cardinal(aEndPtr) - Cardinal(aBasePtr) < 4 then
+  Value := ToValue(aBasePtr, aEndPtr, aElement);
+  if IsNaN(Value) then
     VarClear(Result)
-  else try
-    if PCardinal(aBasePtr)^ = $7F7FFFFF then
-      Result := MaxSingle
-    else begin
-      Value := PSingle(aBasePtr)^;
-      try
-        if Value <> 0.0 then
-          if SingleSameValue(Value, 0.0) then
-            Value := 0.0;
-      except
-        Value := 0.0;
-      end;
-
-      if Assigned(fdNormalizer) then
-        Value := fdNormalizer(aElement, Value);
-      Value := Value * fdScale;
-      Value := RoundToEx(Value, -fdDigits);
-      Result := Value;
-    end;
-  except
-    Result := Null;
-  end;
+  else if Value = maxDouble then
+    Result := maxDouble
+  else if Value = maxSingle then
+    Result := maxSingle
+  else
+    Result := Value;
 end;
 
 function TwbFloatDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 var
-  Len   : Cardinal;
-  f, g  : Extended;
+  Value : Extended;
+  g     : Extended;
 const
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
-  Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < 4 then
+  Value := ToValue(aBasePtr, aEndPtr, aElement);
+  if IsNaN(Value) then
     Result := StringOfChar(' ', 23)
-  else try
-    if PCardinal(aBasePtr)^ = $7F7FFFFF then
-      Result := '+' + StringOfChar('9', 22)
-    else begin
-      f := PSingle(aBasePtr)^;
-      try
-        if IsNan(f) or IsInfinite(f) then
-          f := 0.0
-        else if f <> 0 then
-          if SingleSameValue(f, 0.0) then
-            f := 0.0;
-      except
-        f := 0.0;
-      end;
+  else if (Value = maxDouble) or (Value = maxSingle) then
+    Result := '+' + StringOfChar('9', 22)
+  else begin
+    g := Abs(Value);
+    Result := FloatToStrF(g, ffFixed, 99, fdDigits);
 
-      if Assigned(fdNormalizer) then
-        f := fdNormalizer(aElement, f);
-      f := f * fdScale;
-      try
-        f := RoundToEx(f, -fdDigits);
-      except
-        f := 0.0;
-      end;
-
-      g := Abs(f);
-      g := RoundToEx(g, -fdDigits);
-      Result := FloatToStrF(g, ffFixed, 99, fdDigits);
-
-      if Length(Result) < 22 then
-        Result := StringOfChar('0', 22 - Length(Result)) + Result;
-      Result := PlusMinus[(f < 0) and not IsZero(f, 0.0000009999999999)] + Result;
-    end;
-  except
-    Result := StringOfChar('X', 23);
+    if Length(Result) < 22 then
+      Result := StringOfChar('0', 22 - Length(Result)) + Result;
+    Result := PlusMinus[(Value < 0) and not IsZero(Value, 0.0000009999999999)] + Result;
   end;
 end;
 
 function TwbFloatDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   Len   : Cardinal;
-  f     : Extended;
+  Value : Extended;
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < 4 then begin
+  if Len < GetDefaultSize(aBasePtr, aEndPtr, aElement) then begin
     if wbCheckExpectedBytes then
-      Result := Format('<Error: Expected %d bytes of data, found %d>', [4, Len])
-  end else try
-    if PCardinal(aBasePtr)^ = $7F7FFFFF then
+      Result := Format('<Error: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len])
+  end else begin
+    Value := ToValue(aBasePtr, aEndPtr, aElement);
+    if IsNan(Value) or (Value=maxDouble) or (Value=maxSingle)  then
       Result := 'Default'
-    else begin
-      f := PSingle(aBasePtr)^;
-      if Assigned(fdNormalizer) then
-        f := fdNormalizer(aElement, f);
-      f := RoundToEx(f * fdScale, -fdDigits);
-      Result := FloatToStrF(f, ffFixed, 99, fdDigits);
-    end;
-    if Len > 4 then
+    else
+      Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
+    if Len > GetDefaultSize(aBasePtr, aEndPtr, aElement) then
       if wbCheckExpectedBytes then
-       Result := Format(' <Warning: Expected %d bytes of data, found %d>', [4, Len])
-  except
-    on E: Exception do
-      Result := '$'+IntToHex64(PCardinal(aBasePtr)^, 8)+' <Error: '+E.Message+'>';
+        Result := Format(' <Warning: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len]);
   end;
   Used(aElement, Result);
 end;
