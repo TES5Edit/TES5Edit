@@ -1136,10 +1136,15 @@ type
 
   TwbStruct = class(TwbValueBase)
   protected
+    szCompressedSize   : Integer;
+    szUncompressedSize : Cardinal;
     procedure Init; override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
+    procedure DecompressIfNeeded;
+    function GetIsCompressed: Boolean;
+    property IsCompressed: Boolean read GetIsCompressed;
   end;
 
   TwbFileHeader = class(TwbStruct, IwbFileHeader)
@@ -12941,6 +12946,8 @@ begin
   if GetSkipped then
     Exit;
 
+  DecompressIfNeeded;
+
   BasePtr := GetDataBasePtr;
   StructDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
 end;
@@ -12954,6 +12961,40 @@ procedure TwbStruct.Reset;
 begin
   ReleaseElements;
   inherited;
+end;
+
+procedure TwbStruct.DecompressIfNeeded;
+begin
+  if IsCompressed then try
+    InitDataPtr; // reset...
+
+    SetLength(dcDataStorage, szUncompressedSize );
+
+    DecompressToUserBuf(
+      Pointer(Cardinal(dcDataBasePtr)),
+      GetDataSize,
+      @dcDataStorage[0],
+      PCardinal(dcDataBasePtr)^
+    );
+
+    dcDataEndPtr := Pointer( Cardinal(@dcDataStorage[0]) + szUncompressedSize );
+    dcDataBasePtr := @dcDataStorage[0];
+  except
+    dcDataBasePtr := nil;
+    dcDataEndPtr := nil;
+  end;
+end;
+
+function TwbStruct.GetIsCompressed: Boolean;
+var
+  szDef : IwbStructZDef;
+begin
+  if (szCompressedSize = 0) then
+    if Supports(vbValueDef, IwbStructZDef, szDef)  then
+      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize)
+    else
+      szCompressedSize := -1;
+  Result := szUncompressedSize <> 0
 end;
 
 { TwbUnion }

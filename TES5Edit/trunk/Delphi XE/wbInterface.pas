@@ -1338,6 +1338,10 @@ type
     function GetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   end;
 
+  IwbStructZDef = interface(IwbStructCDef) // Compressible structure !!! NOT SAFE FOR EDIT AT THE MOMEMNT !!!
+    ['{8ED8E461-E4BB-494E-8A3B-B352A245B9A0}']
+  end;
+
   IwbIntegerDefFormater = interface(IwbDef)
     ['{56A6EB7B-3A90-4F09-8E80-D7399569DFCC}']
 
@@ -2061,6 +2065,19 @@ function wbStruct(const aName      : string;
                                    : IwbStructDef; overload;
 
 function wbStructC(const aName                : string;
+                         aSizing              : TwbSizeCallback;
+                         aGetChapterType      : TwbGetChapterTypeCallback;
+                         aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                   const aMembers             : array of IwbValueDef;
+                         aPriority            : TwbConflictPriority = cpNormal;
+                         aRequired            : Boolean = False;
+                         aDontShow            : TwbDontShowCallback = nil;
+                         aOptionalFromElement : Integer = -1;
+                         aAfterLoad           : TwbAfterLoadCallback = nil;
+                         aAfterSet            : TwbAfterSetCallback = nil)
+                                              : IwbStructDef; overload;
+
+function wbStructZ(const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
@@ -3666,6 +3683,9 @@ type
     function GetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String; virtual;
   end;
 
+  TwbStructZDef = class(TwbStructCDef, IwbStructZDef)
+  end;
+
   TwbIntegerDefFormater = class(TwbDef, IwbIntegerDefFormater)
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -4723,6 +4743,22 @@ function wbStructC(const aName                : string;
                                               : IwbStructDef; overload;
 begin
   Result := TwbStructCDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName);
+end;
+
+function wbStructZ(const aName                : string;
+                         aSizing              : TwbSizeCallback;
+                         aGetChapterType      : TwbGetChapterTypeCallback;
+                         aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                   const aMembers             : array of IwbValueDef;
+                         aPriority            : TwbConflictPriority = cpNormal;
+                         aRequired            : Boolean = False;
+                         aDontShow            : TwbDontShowCallback = nil;
+                         aOptionalFromElement : Integer = -1;
+                         aAfterLoad           : TwbAfterLoadCallback = nil;
+                         aAfterSet            : TwbAfterSetCallback = nil)
+                                              : IwbStructDef; overload;
+begin
+  Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName);
 end;
 
 function wbRStruct(const aName           : string;
