@@ -1263,11 +1263,15 @@ type
 
     function GetFormater: IwbIntegerDefFormater;
     function GetIntType: TwbIntType;
+    function GetExpectedLength(aValue: Int64 = 0): Integer;
 
     property Formater: IwbIntegerDefFormater
       read GetFormater;
     property IntType: TwbIntType
       read GetIntType;
+
+    property ExpectedLength[aValue: Int64 = 0]: Integer
+      read GetExpectedLength;
   end;
 
   IwbFloatDef = interface(IwbValueDef)
@@ -1282,6 +1286,10 @@ type
     function GetSorted: Boolean;
     function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
+    function GetPrefixSize(aBasePtr: Pointer): Integer;
+    function GetPrefixLength(aBasePtr: Pointer): Integer;
+    function GetPrefixCount(aBasePtr: Pointer): Cardinal;
+    procedure SetPrefixCount(aBasePtr: Pointer; aCount: Cardinal);
 
     property Element: IwbValueDef
       read GetElement;
@@ -1299,6 +1307,13 @@ type
 
     property CanAddTo: Boolean
       read GetCanAddTo;
+
+    property PrefixSize[aBasePtr: Pointer]: Integer    // how many bytes of storage for the prefix
+      read GetPrefixSize;
+    property PrefixLength[aBasePtr: Pointer]: Integer  // Integer size of the prefix
+      read GetPrefixLength;
+    property PrefixCount[aBasePtr: Pointer]: Cardinal  // Value stored in the prefix
+      read GetPrefixCount write SetPrefixCount;
   end;
 
   IwbStructDef = interface(IwbValueDef)
@@ -2411,6 +2426,7 @@ var
 type
   TwbRefIDArray = array of Cardinal;
 
+function wbReadInteger24(aBasePtr: pointer): Int64;
 procedure InitializeRefIDArray(anArray: TwbRefIDArray);
 
 implementation
@@ -3290,6 +3306,11 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+
+    function GetPrefixLen: Integer;
+    function GetPrefixOffset: Integer;
+    function GetPrefixValue(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+    procedure SetPrefixValue(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aValue: Cardinal);
   end;
 
   TwbByteArrayDef = class(TwbValueDef, IwbByteArrayDef)
@@ -3425,6 +3446,7 @@ type
     procedure FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
     function GetFormater: IwbIntegerDefFormater;
     function GetIntType: TwbIntType;
+    function GetExpectedLength(aValue: Int64 = 0): Integer;
   end;
 
   TwbFloatDef = class(TwbValueDef, IwbFloatDef)
@@ -3515,6 +3537,10 @@ type
     function GetSorted: Boolean;
     function GetCanAddTo: Boolean;
     function GetCountCallBack: TwbCountCallback;
+    function GetPrefixSize(aBasePtr: Pointer): Integer;
+    function GetPrefixLength(aBasePtr: Pointer): Integer;
+    function GetPrefixCount(aBasePtr: Pointer): Cardinal;
+    procedure SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -6149,7 +6175,7 @@ begin
   defReported := True;
 end;
 
-function ReadInteger24(aBasePtr: pointer): Int64;
+function wbReadInteger24(aBasePtr: pointer): Int64;
 var
   Buffer : array[0..3] of Byte;
 begin
@@ -6193,39 +6219,43 @@ var
   Key    : Byte;
 begin
   Result := 0;
-  Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
-  case key of
-    0: Move(PByte(aBasePtr)^,     Result, 1); // The 6 remaining bits are the count.
-    1: Move(PWord(aBasePtr)^,     Result, 2); // 6 + 8 bits of count
-    2: Move(PCardinal(aBasePtr)^, Result, 4); // 6 + 24 bits of count
-    3: ; // Not supposed to exist : zeroed out by the engine
+  if Assigned(aBasePtr) then begin
+    Key := $3 and PByte(aBasePtr)^; // The counter length is coded into the 2 least significant bits
+    case key of
+      0: Move(PByte(aBasePtr)^,     Result, 1); // The 6 remaining bits are the count.
+      1: Move(PWord(aBasePtr)^,     Result, 2); // 6 + 8 bits of count
+      2: Move(PCardinal(aBasePtr)^, Result, 4); // 6 + 24 bits of count
+      3: ; // Not supposed to exist : zeroed out by the engine
+    end;
+    Result := Result shr 2;
   end;
-  Result := Result shr 2;
 end;
 
 procedure WriteIntegerCounter(aBasePtr: pointer; aValue: Int64);
 var
   Buffer : array[0..3] of Byte;
 begin
-  Move(aValue, Buffer, SizeOf(aValue));
-  if Buffer[3] > 0 then begin // 4 bytes counter
-    Buffer[3] := (Buffer[3] shl 2 ) or 3;
-    PByte(aBasePtr)^ := Buffer[3]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[0];
-  end else if Buffer[2] > 0 then begin
-    Buffer[2] := (Buffer[3] shl 2 ) or 2;
-    PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[0];
-  end else if Buffer[1] > 0 then begin
-    Buffer[1] := (Buffer[1] shl 2 ) or 1;
-    PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
-    PByte(aBasePtr)^ := Buffer[0];
-  end else begin
-    Buffer[0] := (Buffer[0] shl 2 ) or 0;
-    PByte(aBasePtr)^ := Buffer[0];
+  if Assigned(aBasePtr) then begin
+    Move(aValue, Buffer, SizeOf(aValue));
+    if Buffer[3] > 0 then begin // 4 bytes counter
+      Buffer[3] := (Buffer[3] shl 2 ) or 3;
+      PByte(aBasePtr)^ := Buffer[3]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[0];
+    end else if Buffer[2] > 0 then begin
+      Buffer[2] := (Buffer[3] shl 2 ) or 2;
+      PByte(aBasePtr)^ := Buffer[2]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[0];
+    end else if Buffer[1] > 0 then begin
+      Buffer[1] := (Buffer[1] shl 2 ) or 1;
+      PByte(aBasePtr)^ := Buffer[1]; aBasePtr := Pointer(Cardinal(aBasePtr)+1);
+      PByte(aBasePtr)^ := Buffer[0];
+    end else begin
+      Buffer[0] := (Buffer[0] shl 2 ) or 0;
+      PByte(aBasePtr)^ := Buffer[0];
+    end;
   end;
 end;
 
@@ -6234,18 +6264,14 @@ end;
 procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 var
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   if Assigned(inFormater) then
-    if Cardinal(aEndPtr) - Cardinal(aBasePtr) >= ExpectedLen[inType] then begin
+    if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) >= GetExpectedLength then begin
       case inType of
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
-        itU24: Value := ReadInteger24(aBasePtr);
+        itU24: Value := wbReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6279,22 +6305,18 @@ function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElem
 var
   Len         : Cardinal;
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then begin
+  if Len < GetExpectedLength then begin
     if wbCheckExpectedBytes then
-      Result := Format('Expected %d bytes of data, found %d', [ExpectedLen[inType] , Len])
+      Result := Format('Expected %d bytes of data, found %d', [GetExpectedLength , Len])
   end else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6366,12 +6388,8 @@ begin
 end;
 
 procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, GetExpectedLength(aValue));
   case inType of
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
@@ -6388,12 +6406,8 @@ begin
 end;
 
 procedure TwbIntegerDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, ExpectedLen[inType]);
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, GetExpectedLength(aValue));
   case inType of
     itS8:  PShortInt(aBasePtr)^ := aValue;
     itU16: PWord(aBasePtr)^ := aValue;
@@ -6430,6 +6444,21 @@ begin
     Result := inherited GetEditType(aBasePtr, aEndPtr, aElement);
 end;
 
+function TwbIntegerDef.GetExpectedLength(aValue: Int64 = 0): Integer;
+const
+  ExpectedLen : array[TwbIntType] of Cardinal = (
+    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
+  );
+begin
+  Result := ExpectedLen[inType];
+  if (inType=itU6to30) and (aValue<>0) then
+    case (aValue and 3) of
+      0 : Result := 1;
+      1 : Result := 2;
+      2 : Result := 4;
+    end;
+end;
+
 function TwbIntegerDef.GetFormater: IwbIntegerDefFormater;
 begin
   Result := inFormater;
@@ -6448,19 +6477,15 @@ end;
 function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
 var
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Result := nil;
   if Assigned(inFormater) then
-    if Cardinal(aEndPtr) - Cardinal(aBasePtr) >= ExpectedLen[inType] then begin
+    if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) >= GetExpectedLength then begin
       case inType of
         itS8:  Value := PShortInt(aBasePtr)^;
         itU16: Value := PWord(aBasePtr)^;
         itS16: Value := PSmallInt(aBasePtr)^;
-        itU24: Value := ReadInteger24(aBasePtr);
+        itU24: Value := wbReadInteger24(aBasePtr);
         itU32: Value := PCardinal(aBasePtr)^;
         itS32: Value := PLongInt(aBasePtr)^;
         itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6583,20 +6608,17 @@ var
   Len   : Cardinal;
   Value : Int64;
 const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then
+  if Len < GetExpectedLength then
     Result := ''
   else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6618,20 +6640,16 @@ end;
 function TwbIntegerDef.ToInt(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Int64;
 var
   Len         : Cardinal;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then
+  if Len < GetExpectedLength then
     Result := 0
   else
     case inType of
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
-      itU24: Result := ReadInteger24(aBasePtr);
+      itU24: Result := wbReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6643,19 +6661,15 @@ begin
 end;
 
 function TwbIntegerDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
-  if Cardinal(aEndPtr) - Cardinal(aBasePtr) < ExpectedLen[inType] then
+  if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) < GetExpectedLength then
     VarClear(Result)
   else
     case inType of
       itS8:  Result := PShortInt(aBasePtr)^;
       itU16: Result := PWord(aBasePtr)^;
       itS16: Result := PSmallInt(aBasePtr)^;
-      itU24: Result := ReadInteger24(aBasePtr);
+      itU24: Result := wbReadInteger24(aBasePtr);
       itU32: Result := PCardinal(aBasePtr)^;
       itS32: Result := PLongInt(aBasePtr)^;
       itU64: Result := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6671,13 +6685,10 @@ var
   Len   : Cardinal;
   Value : Int64;
 const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then
+  if Len < GetExpectedLength then
     if Assigned(inFormater) and inFormater.RequiresKey then
       Result := inFormater.ToSortKey(0, aElement)
     else
@@ -6687,7 +6698,7 @@ begin
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6708,7 +6719,7 @@ begin
         itS32: Value := Value + Abs(Int64(Low(LongInt)));
         itS64: Value := Value + Abs(Int64(Low(Int64)));
       end;
-      Result := Result + IntToHex64(Value, Succ(ExpectedLen[inType] * 2));
+      Result := Result + IntToHex64(Value, Succ(GetExpectedLength(Value) * 2));
     end;
   end;
 end;
@@ -6717,22 +6728,18 @@ function TwbIntegerDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbE
 var
   Len         : Cardinal;
   Value       : Int64;
-const
-  ExpectedLen : array[TwbIntType] of Cardinal = (
-    1, 1, 2, 2, 4, 4, 8, 8, 3, 1
-  );
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < ExpectedLen[inType] then begin
+  if Len < GetExpectedLength then begin
     if wbCheckExpectedBytes then
-      Result := Format('<Error: Expected %d bytes of data, found %d>', [ExpectedLen[inType] , Len])
+      Result := Format('<Error: Expected %d bytes of data, found %d>', [GetExpectedLength, Len])
   end else begin
     case inType of
       itS8:  Value := PShortInt(aBasePtr)^;
       itU16: Value := PWord(aBasePtr)^;
       itS16: Value := PSmallInt(aBasePtr)^;
-      itU24: Value := ReadInteger24(aBasePtr);
+      itU24: Value := wbReadInteger24(aBasePtr);
       itU32: Value := PCardinal(aBasePtr)^;
       itS32: Value := PLongInt(aBasePtr)^;
       itU64: Value := PInt64(aBasePtr)^; //no U64 in delphi...
@@ -6745,9 +6752,9 @@ begin
       Result := inFormater.ToString(Value, aElement)
     else
       Result := IntToStr(Value);
-    if (Len > ExpectedLen[inType]) and not (inType in [itU6to30]) then begin
+    if (Len > GetExpectedLength) and not (inType in [itU6to30]) then begin
       if wbCheckExpectedBytes then
-        Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [ExpectedLen[inType] , Len])
+        Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [GetExpectedLength , Len])
     end;
   end;
   Used(aElement, Result);
@@ -6867,6 +6874,40 @@ begin
   Result := (arCount <= 0) or arElement.IsVariableSize;
 end;
 
+function TwbArrayDef.GetPrefixCount(aBasePtr: Pointer): Cardinal;
+begin
+  Result := 0;
+  if arCount = -255 then
+    Result := 0
+  else if arCount = -254 then
+    Result := ReadIntegerCounter(aBasePtr)
+  else if Assigned(aBasePtr) then
+    case GetPrefixlength(aBasePtr) of
+      1: Result := PByte(aBasePtr)^;
+      2: Result := PWord(aBasePtr)^;
+      4: Result := PCardinal(aBasePtr)^;
+    end;
+end;
+
+function TwbArrayDef.GetPrefixLength(aBasePtr: Pointer): Integer;
+begin
+  Result := 0;
+  if arCount < 0 then
+    if arCount = -1 then
+      Result := 4
+    else if arCount = -2 then
+      Result := 2
+    else if arCount = -4 then
+      Result := 1
+    else if arCount = -254 then
+      Result := ReadIntegerCounterSize(aBasePtr);
+end;
+
+function TwbArrayDef.GetPrefixSize(aBasePtr: Pointer): Integer;
+begin
+  Result := GetPrefixLength(aBasePtr);
+end;
+
 function TwbArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Prefix        : Integer;
@@ -6874,8 +6915,7 @@ var
   Index         : Integer; // Used instead of count for easier debugging output.
   Size          : Integer;
   BasePtr       : Pointer;
-  EndPtr        : Pointer;
-  Container     : IwbContainer;
+  ArrayContainer : IwbContainer;
   Element       : IwbElement;
   DataContainer : IwbDataContainer;
   KnownSize     : Boolean;
@@ -6894,7 +6934,7 @@ var
         Element := theContainer.Elements[i];
         if Supports(Element, IwbContainer, aContainer) then
           if SameText(aName, aContainer.BaseName) then begin
-            Container := aContainer;
+            ArrayContainer := aContainer;
             Result := true;
             break;
           end else if FindOurself(aContainer, aName) then begin
@@ -6905,68 +6945,55 @@ var
     end;
   end;
 
-begin
-  Result := 0;
-  Prefix := 0;
+  function Container: IwbContainer;
+  begin
+    if Assigned(ArrayContainer) then
+      Result := ArrayContainer
+    else begin
+      // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
+      // First advance to ourselves :
+      if Assigned(aElement) then begin
+        ArrayContainer := GetContainerFromUnion(aElement);
+        // This can be problematic later on !!!
+        // if (noName = '') then
+        //   aName := GetName
+        // else
+          aName := noName;
 
-  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
-//    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-//      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-    Exit;
-  end;
-
-  // We need to set aElement so that the starting path of our elements are themselves, as in "Toto #n" .
-  // First advance to ourselves :
-  if Assigned(aElement) then begin
-    Container := GetContainerFromUnion(aElement);
-    // This can be problematic later on !!!
-    // if (noName = '') then
-    //   aName := GetName
-    // else
-      aName := noName;
-
-    if Assigned(Container) and (Pos('\ '+ aName, Container.Path) = 0) then
-        FindOurself(Container, aName);
-    if Assigned(Container) and (Pos('\ '+ aName, Container.Path) = 0) then
-        Container := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
-    if not Assigned(Container) and (not SameText(aName, 'Unused') or not wbHideUnused) then begin
-      Result := High(Integer);
-      Exit;
+        if Assigned(ArrayContainer) and (Pos('\ '+ aName, ArrayContainer.Path) = 0) then
+          FindOurself(ArrayContainer, aName);
+        if Assigned(ArrayContainer) and (Pos('\ '+ aName, ArrayContainer.Path) = 0) then
+            ArrayContainer := nil;  // Happens when called again before initialization is finished (as part of checking for optional members).
+        if not Assigned(ArrayContainer) and (not SameText(aName, 'Unused') or not wbHideUnused) then begin
+          Result := nil;
+          Exit;
+        end;
+      end;
+      Result := ArrayContainer;
     end;
   end;
 
+begin
+  Result := 0;
+  ArrayContainer := nil;
+
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
+    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+    Exit;
+  end;
+
+  Prefix := GetPrefixSize(aBasePtr);
+  BasePtr := aBasePtr;
   Count := arCount;
   if Count < 0 then begin
-    if Count < -1 then
-      if Count < -2 then
-        Prefix := 1
-      else
-        Prefix := 2
-    else
-      Prefix := 4;
-    if Assigned(aBasePtr) then begin
-      case Prefix of
-        1: begin
-             Count := PByte(aBasePtr)^;
-             Inc(PByte(aBasePtr));
-           end;
-        2: begin
-             Count := PWord(aBasePtr)^;
-             Inc(PWord(aBasePtr));
-           end;
-        4: begin
-             Count := PCardinal(aBasePtr)^;
-             Inc(PCardinal(aBasePtr));
-           end;
-      end;
-      Result := Prefix;
-    end else
-      Count := 0;
+    Count := GetPrefixCount(aBasePtr);
+    Result := Prefix;
   end else begin
-    if (Count < 1) and Assigned(arCountCallback) then
-      Count := arCountCallback(aBasePtr, aEndPtr, Container);
+    if (Count < 1) and Assigned(arCountCallback) and not (Container=nil) then
+      Count := arCountCallback(BasePtr, aEndPtr, ArrayContainer);
 
-    if not Assigned(aBasePtr) and (Count < 1) then
+    if not Assigned(BasePtr) and (Count < 1) then
       Count := 1;
 
     if (Count < 1) and not Assigned(arCountCallback) then begin
@@ -6975,8 +7002,15 @@ begin
     end;
   end;
 
+  if Assigned(BasePtr) then
+    Inc(PByte(BasePtr), Prefix);
+
   if Count > 0 then
     if arElement.IsVariableSize then begin
+      if Container = nil then begin // Make sure it won't be used if unassigned, and still delay FindOurself until it is effectivly required
+        Result := High(Integer);
+        Exit;
+      end;
 
       if Container.ElementCount = Count then begin
         KnownSize := True;
@@ -6993,11 +7027,9 @@ begin
       end else
         KnownSize := False;
 
-      EndPtr := aBasePtr;
       Index := 0;
       if not KnownSize then
-        while (Count > Index) and (Cardinal(EndPtr) < Cardinal(aEndPtr)) do begin
-          BasePtr := EndPtr;
+        while (Count > Index) and (Cardinal(BasePtr) < Cardinal(aEndPtr)) do begin
           Element := Container.Elements[Index];
           if not Assigned(Element) then begin
             if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
@@ -7010,27 +7042,32 @@ begin
             Result := High(Integer);
             Exit;
           end;
-          if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
+          Inc(Result, Size);
+          if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+            if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //            wbProgressCallback('Found an array with negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
 //              ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
             Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
             Exit;
           end;
-          Inc(Cardinal(EndPtr), Size);
-          Inc(Result, Size);
+          if Assigned(BasePtr) then
+            Inc(Cardinal(BasePtr), Size);
           Inc(Index);
         end;
 
     end else begin
       Size := arElement.Size[aBasePtr, aEndPtr, aElement];
-      if Size < High(Integer) then begin
-        if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size*Count) then begin
-//          wbProgressCallback('Found an array with negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Size*Count, 8)+
-//            ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-          Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
-          Exit;
-        end;
-        Result := (Count * Size) + Prefix;
+      if Size = High(Integer) then begin
+        Result := High(Integer);
+        Exit;
+      end;
+      Result := (Count * Size) + Prefix;
+      if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+//          wbProgressCallback('Found a static array with a negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+//            ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+        Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
+        Exit;
       end;
     end;
 end;
@@ -7062,6 +7099,19 @@ begin
   end;
 
   defReported := True;
+end;
+
+procedure TwbArrayDef.SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
+begin
+  if arCount = -255 then
+  else if arCount = -254 then
+    WriteIntegerCounter(aBasePtr, aValue)
+  else if Assigned(aBasePtr) then
+    case GetPrefixlength(aBasePtr) of
+      1: PByte(aBasePtr)^ := aValue;
+      2: PWord(aBasePtr)^ := aValue;
+      4: PCardinal(aBasePtr)^ := aValue;
+    end;
 end;
 
 function TwbArrayDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -7150,9 +7200,10 @@ end;
 
 function TwbStructDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i     : Integer;
-  Size  : Integer;
-  scDef : IwbStructCDef;
+  i       : Integer;
+  Size    : Integer;
+  scDef   : IwbStructCDef;
+  BasePtr : Pointer;
 begin
   Result := 0;
   if Supports(Self, IwbStructCDef, scDef) then begin
@@ -7167,23 +7218,26 @@ begin
 //      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSize) then begin
     Result := 0; // assuming we would have called GetDefaultSize otherwise... GetDefaultSize(aBasePtr, aEndPtr, aElement);
-  end else
+  end else begin
+    BasePtr := aBasePtr;
     for i := Low(stMembers) to High(stMembers) do begin
-      Size := stMembers[i].Size[aBasePtr, aEndPtr, aElement];
+      Size := stMembers[i].Size[BasePtr, aEndPtr, aElement];
       if Size = High(Integer) then begin
         Result := High(Integer);
         Break;
       end;
-      if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Size) then begin
+      Inc(Result, Size);
+      if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //        wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
 //          ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-        Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
+        Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
         Break;
       end;
-      if Assigned(aBasePtr) then
-        Inc(Cardinal(aBasePtr), Size);
-      Inc(Result, Size);
+      if Assigned(BasePtr) then
+        Inc(Cardinal(BasePtr), Size);
     end;
+  end;
 end;
 
 function TwbStructDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -8040,9 +8094,7 @@ end;
 
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  {if not Assigned(aBasePtr) or (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
-    Result := 0
-  else} if sdSize > 0 then
+  if sdSize > 0 then
     Result := sdSize
   else begin
     if aBasePtr = nil then
@@ -8513,7 +8565,7 @@ begin
   end;
 
   if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] <Error: Could not be resolved>';
+    Result := '['+IntToHex64(aInt,8)+'] < Error: Could not be resolved >';
 end;
 
 function TwbFormID.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -9203,7 +9255,7 @@ begin
       end;
   end else begin
     s := IntToHex64(aInt,8);
-    Result := '['+s+'] <Error: Could not be resolved>';
+    Result := '['+s+'] < Error: Could not be resolved >';
     if wbReportMode then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -9374,7 +9426,7 @@ begin
     -255 : Result := 0; // Explicitly null for wbNull (displays better in unions)
     else
       Result := 0;
-    end
+    end;
 end;
 
 procedure TwbByteArrayDef.Report(const aParents: TwbDefPath);
@@ -10118,7 +10170,7 @@ begin
   end;
 
   if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] <Error: Could not be resolved>';
+    Result := '['+IntToHex64(aInt,8)+'] < Error: Could not be resolved >';
 end;
 
 function TwbFormIDChecked.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -10536,7 +10588,9 @@ begin
           break;
   end else begin
     Result := aMember.Size[aBasePtr, aEndPtr, aElement];
+    if Result = High(Integer) then Exit;
     if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
+      if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //      wbProgressCallback('Found a union with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
 //        ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
       Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
@@ -10819,19 +10873,12 @@ var
 begin
   Result := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < Prefix then begin
+  if Len < GetPrefixOffset then begin
     if wbCheckExpectedBytes then
-      Result := Format('Expected at least %d bytes of data, found %d', [Prefix , Len]);
+      Result := Format('Expected at least %d bytes of data, found %d', [Abs(Prefix) , Len]);
     Exit;
   end;
-
-  case Prefix of
-    1: Size := PByte(aBasePtr)^ + Prefix;
-    2: Size := PWord(aBasePtr)^ + Prefix;
-    4: Size := PCardinal(aBasePtr)^ + Prefix;
-  else
-    Size := 0; // Just to remove the Hint
-  end;
+  Size := GetPrefixValue(aBasePtr, aEndPtr, aElement) + GetPrefixOffset;
   if Len < Size then begin
     if wbCheckExpectedBytes then
       Result := Format('Expected %d bytes of data, found %d', [Size , Len]);
@@ -10866,19 +10913,10 @@ var
 begin
   s := AnsiString(aValue);
   Len := Length(s);
-//  if (Prefix < 4) and (Len >= (Cardinal(1) shl (Prefix*8))) then
-//    raise Exception.Create('String length overflow');
-
-  NewSize := Len + Prefix;
+  NewSize := Len + GetPrefixOffset;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize);
-
-  p := aBasePtr;
-  case Prefix of
-    1: PByte(p)^ := Len;
-    2: PWord(p)^ := Len;
-    4: PCardinal(p)^ := Len;
-  end;
-  p := Pointer(Cardinal(p) + Prefix);
+  SetPrefixValue(aBasePtr, aEndPtr, aElement, Len);
+  p := Pointer(Cardinal(aBasePtr) + GetPrefixOffset);
   if Len > 0 then
     Move(s[1], p^, Len);
 end;
@@ -10903,6 +10941,33 @@ begin
   Result := True;
 end;
 
+function TwbLenStringDef.GetPrefixLen: Integer;
+begin
+  case Prefix of
+    1: Result := 1;
+    2: Result := 2;
+    4: Result := 4;
+  else
+    Result := 0;
+  end;
+end;
+
+function TwbLenStringDef.GetPrefixOffset: Integer;
+begin
+    Result := Abs(Prefix);
+end;
+
+function TwbLenStringDef.GetPrefixValue(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  case Prefix of
+    1: Result := PByte(aBasePtr)^;
+    2: Result := PWord(aBasePtr)^;
+    4: Result := PCardinal(aBasePtr)^;
+  else
+    Result := 0;
+  end;
+end;
+
 function TwbLenStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Len : Integer;
@@ -10912,27 +10977,28 @@ begin
       Result := 0
     else begin
       Result := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-      if Result < Prefix then
+      Len := GetPrefixValue(aBasePtr, aEndPtr, aElement)+GetPrefixOffset;
+      if Len>Result then
         Exit;
-
-      case Prefix of
-        1: Len := PByte(aBasePtr)^ + Prefix;
-        2: Len := PWord(aBasePtr)^ + Prefix;
-        4: Len := PCardinal(aBasePtr)^ + Prefix;
-      else
-        Len := 0;
-      end;
-
       if Len < Result then
         Result := Len;
     end
   else
-    Result := Prefix;
+    Result := GetPrefixOffset;
 end;
 
 function TwbLenStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := Prefix;
+end;
+
+procedure TwbLenStringDef.SetPrefixValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aValue: Cardinal);
+begin
+  case Prefix of
+    1: PByte(aBasePtr)^ := aValue;
+    2: PWord(aBasePtr)^ := aValue;
+    4: PCardinal(aBasePtr)^ := aValue;
+  end;
 end;
 
 function TwbLenStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer;
@@ -10961,26 +11027,11 @@ var
 begin
   s := '';
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
-  if Len < Prefix then
+  if Len<GetPrefixOffset then
     Exit;
 
-  case Prefix of
-    1: begin
-         Size := PByte(aBasePtr)^;
-         Inc(PByte(aBasePtr));
-       end;
-    2: begin
-         Size := PWord(aBasePtr)^;
-         Inc(PWord(aBasePtr));
-       end;
-    4: begin
-         Size := PCardinal(aBasePtr)^;
-         Inc(PCardinal(aBasePtr));
-       end;
-  else
-    Size := 0;
-  end;
-  Dec(Len, Prefix);
+  Size := GetPrefixValue(aBasePtr, aEndPtr, aElement);
+  Inc(PByte(aBasePtr), GetPrefixOffset);
 
   if Len > Size then
     Len := Size;
@@ -11092,7 +11143,7 @@ function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement
 begin
   if Assigned(aElement._File) and aElement._File.IsLocalized then begin
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
-      Result := '<Error: lstring ID should be Int32 value>'
+      Result := '< Error: lstring ID should be Int32 value >'
     else
       Result := AnsiString(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement))
   end else
