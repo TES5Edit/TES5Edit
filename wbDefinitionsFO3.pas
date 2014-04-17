@@ -4370,7 +4370,7 @@ begin
            BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
            FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
            LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
-           WATR, ENCH, TREE, TERM, HAIR, EYES, NULL]),
+           WATR, ENCH, TREE, TERM, HAIR, EYES, ADDN, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
