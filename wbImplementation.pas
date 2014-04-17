@@ -12525,7 +12525,7 @@ begin
   if not ArrayDef.CanAddTo then
     aContainer.SetElementState(esNotSuitableToAddTo);
 
-  SizePrefix := 0;
+  SizePrefix := ArrayDef.PrefixSize[aBasePtr];
 
   i := 0;
 
@@ -12533,36 +12533,15 @@ begin
   VarSize := ArrayDef.IsVariableSize;
   ArrSize := ArrayDef.ElementCount;
   if ArrSize < 0 then begin
-    if ArrSize < -1 then
-      if ArrSize < -2 then
-        SizePrefix := 1
-      else
-        SizePrefix := 2
-    else
-      SizePrefix := 4;
-
-    if Assigned(aBasePtr) then begin
-      case SizePrefix of
-        1: begin
-             ArrSize := PByte(aBasePtr)^;
-             Inc(PByte(aBasePtr));
-           end;
-        2: begin
-             ArrSize := PWord(aBasePtr)^;
-             Inc(PWord(aBasePtr));
-           end;
-        4: begin
-             ArrSize := PCardinal(aBasePtr)^;
-             Inc(PCardinal(aBasePtr));
-           end;
-      end;
-    end else
-      ArrSize := 0;
+    ArrSize := ArrayDef.PrefixCount[aBasePtr];
   end else
     if (ArrSize < 1) and Assigned(ArrayDef.CountCallback) then
       ArrSize := ArrayDef.CountCallback(aBasePtr, aEndPtr, aContainer)
     else if VarSize then
       ArrSize := High(Integer);
+
+  if Assigned(aBasePtr) then
+    Inc(PByte(aBasePtr), SizePrefix);
 
   if ArrSize > 0 then
     while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr))) do begin
@@ -12719,12 +12698,8 @@ begin
             q := DataContainer.DataBasePtr;
             Move(q^, p^, aElement.DataSize);
           end;
-        end else case ArrayDef.ElementCount of
-          -1: RequestStorageChange(p, q, 4);
-          -2: RequestStorageChange(p, q, 2);
-        else
-          RequestStorageChange(p, q, 1);
-        end;
+        end else
+          RequestStorageChange(p, q, ArrayDef.PrefixSize[nil]);
       NotifyChanged;
 
       for i := 0 to Pred(Container.ElementCount) do
@@ -12803,28 +12778,17 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count : Cardinal;
+  Count    : Cardinal;
+  ArrayDef : IwbArrayDef;
 begin
-  if arrSizePrefix < 1 then
+  if arrSizePrefix = 0 then
     Exit;
 
-  if Assigned(dcDataBasePtr) then
-    case arrSizePrefix of
-      1: Count := PByte(dcDataBasePtr)^;
-      2: Count := PWord(dcDataBasePtr)^;
-      4: Count := PCardinal(dcDataBasePtr)^;
-    else
-      Count := 0;
-    end
-  else
-    Count := 0;
+  ArrayDef := vbValueDef as IwbArrayDef;
+  Count := arrayDef.PrefixCount[dcDataBasePtr];
 
   if Count <> Length(cntElements) then
-    case arrSizePrefix of
-      1: PByte(GetDataBasePtr)^ := Length(cntElements);
-      2: PWord(GetDataBasePtr)^ := Length(cntElements);
-      4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
-    end;
+    ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
 end;
 
 procedure TwbArray.CheckTerminator;
