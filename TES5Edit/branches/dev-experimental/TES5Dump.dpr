@@ -57,7 +57,7 @@ begin
 end;
 
 type
-  TExportFormat = (efUESPWiki, efJava, efRaw);
+  TExportFormat = (efRaw);
   TwbDefProfile = string;
   TwbExportPass = ( epRead, epSimple, epShared, epChapters, epRemaining, epNothing);
 
@@ -69,146 +69,11 @@ begin
   Result := efRaw;
   if Uppercase(aFormat)='RAW' then
     Result := efRaw
-  else if Uppercase(aFormat)='UESPWIKI' then
-    Result := efUESPWiki
-  else if Uppercase(aFormat)='JAVA' then
-    Result := efJava;
 end;
-
-function JavaName(aName: String): String;
-begin
-  while Pos(' ', aName)>0 do
-    aName[Pos(' ', aName)] := '_';
-  Result := aName;
-end;
-
-function JavaType(aType: String): String;
-begin
-  Result := JavaName(aType);
-end;
-
-function UESPName(aName: String): String;
-begin
-  while Pos(' ', aName)>0 do
-    aName[Pos(' ', aName)] := '_';
-  Result := aName;
-end;
-
-function UESPType(aType: String): String;
-
-  function UESParrayType(aType: String): String; forward;
-
-  function UESPsingleType(aType, aStandard, aResult: String): String;
-  var
-    i: Integer;
-    l: Integer;
-  begin
-    i := Pos(UpperCase(aStandard), Uppercase(aType));
-    if i>0 then begin
-      Result := '';
-      l := Length(aStandard);
-      if i>1 then begin
-        Result := Copy(aType, 1, i-1);
-        Delete(aType, 1, i+l-1);
-      end else
-        Delete(aType, 1, l);
-      Result := Result + aResult + aType;
-    end else
-      Result := aType;
-  end;
-
-  function UESParrayCount(aType: String): String;
-  var
-    i: Integer;
-    c: String;
-  begin
-    i := Pos('_', aType);
-    if i>1 then begin
-      c := Copy(aType, 1, i-1);
-      Delete(aType, 1, i);
-    end else
-      c := '';
-    Result := '_'+aType+'['+c+']';
-  end;
-
-  function UESParrayType(aType: String): String;
-  const
-    cArray = '_ARRAY';
-    cof = '_OF_';
-  var
-    i: Integer;
-    j : Integer;
-    l: Integer;
-    t: String;
-  begin
-    i := Pos(cArray, UpperCase(aType));
-    l := Length(cArray);
-    if (i>0) and ((i+l-1) = Length(aType)) then begin
-      Delete(aType, i, l);
-      j := Pos(cOf, UpperCase(aType));
-      if j>1 then begin
-        Result := Copy(aType, 1, j-1);
-        Delete(aType, 1, j+Length(cOf)-1);
-        t := UESParrayCount(aType);
-        Result := Result + t;
-      end;
-    end else
-      Result := aType;
-  end;
-
-begin
-  Result := UESPName(aType);
-  Result := UESParrayType(Result);
-
-  Result := UESPsingleType(Result, 'Unsigned_Bytes', 'uint8');
-  Result := UESPsingleType(Result, 'Signed_Bytes', 'int8');
-  Result := UESPsingleType(Result, 'Bytes', 'int8');
-  Result := UESPsingleType(Result, 'Unsigned_Byte', 'uint8');
-  Result := UESPsingleType(Result, 'Signed_Byte', 'int8');
-  Result := UESPsingleType(Result, 'Byte', 'int8');
-  Result := UESPsingleType(Result, 'Unsigned_DWord', 'uint32');
-  Result := UESPsingleType(Result, 'Signed_DWord', 'int32');
-  Result := UESPsingleType(Result, 'DWord', 'int32');
-  Result := UESPsingleType(Result, 'Unsigned_Word', 'uint16');
-  Result := UESPsingleType(Result, 'Signed_Word', 'int16');
-  Result := UESPsingleType(Result, 'Word', 'int16');
-  Result := UESPsingleType(Result, 'Float', 'float32');
-
-  Result := UESPsingleType(Result, 'FormID', 'formid');
-end;
-
-const
-  UESPWikiTable = '{| class="wikitable" border="1" width="100%"'+#13+#10+
-  '! width="3%" | [[Tes5Mod:File Format Conventions|C]]'+#13+#10+
-  '! width="10%" | SubRecord'+#13+#10+
-  '! width="15%" | Name'+#13+#10+
-  '! width="15%" | [[Tes5Mod:File Format Conventions|Type/Size]]'+#13+#10+
-  '! width="57%" | Info';
-  UESPWikiClose ='|}'+#13+#10;
 
 function AnchorProfile(aFormat: TExportFormat; aIndent, aProfile: String; useProfile: Boolean; aName, aType: String): String;
 begin
   case aFormat of
-    efUESPWiki: begin
-      if aIndent='' then
-        Result := '=== [[Tes5Mod:Save File Format/'+aProfile+'|'+UESPName(aName)+']] ==='+#13+#10+UESPWikiTable
-      else begin
-        Result := '|-'+#13+#10+'|'+UESPName(aName)+#13+#10+'|';
-        if useProfile then
-          Result := Result+'[[Tes5Mod:Save File Format/'+aProfile+'|'+UESPType(aType)+']]'
-        else
-          Result := Result+UESPType(aType);
-        Result := Result+#13+#10+'|';
-      end;
-    end;
-    efJava: begin
-      if aIndent='' then
-        Result := '// '+aProfile
-      else begin
-        Result := 'private '+JavaType(aType)+#9+JavaName(aName)+';';
-        if useProfile then Result := Result+#9+'// '+aProfile
-      end;
-    end;
     efRaw: begin
       Result := aIndent+aName+' as '+aType;
       if useProfile then Result := Result+' ['+aProfile+']';
@@ -377,9 +242,6 @@ begin
     ExportContainer(aFormat, theElement, Profile, Pass, theIndent, skipFirst);
   end;
   if aIndent = '' then begin
-    case aFormat of
-      efUESPWiki: Write(UESPWikiClose);
-    end;
     WriteLN;
   end;
 end;
@@ -1147,8 +1009,6 @@ begin
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Currently supported export formats:');
       WriteLn(ErrOutput, 'RAW          ','Private format for debugging');
-      WriteLn(ErrOutput, 'UESPWIKI     ','UESP Wiki table format [Very WIP]');
-      WriteLn(ErrOutput, 'JAVA         ','Java type definition [Very WIP]');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
