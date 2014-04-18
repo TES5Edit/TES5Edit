@@ -16,13 +16,61 @@ unit wbDefinitionsFNV;
 
 interface
 
+uses
+  wbInterface;
+
+var
+  wbServiceFlags     : IwbFlagsDef;
+  wbAggroRadiusFlags : IwbFlagsDef;
+  wbTemplateFlags    : IwbFlagsDef;
+  wbRecordFlagsFlags : IwbFlagsDef;
+
+  wbSkillEnum        : IwbEnumDef;
+  wbAgressionEnum    : IwbEnumDef;
+  wbConfidenceEnum   : IwbEnumDef;
+  wbMoodEnum         : IwbEnumDef;
+  wbAssistanceEnum   : IwbEnumDef;
+  wbArchtypeEnum     : IwbEnumDef;
+
+  wbSpecializationEnum: IwbEnumDef;
+  wbWeaponAnimTypeEnum: IwbEnumDef;
+  wbReloadAnimEnum: IwbEnumDef;
+  wbMusicEnum: IwbEnumDef;
+  wbSoundLevelEnum: IwbEnumDef;
+  wbHeadPartIndexEnum: IwbEnumDef;
+  wbBodyPartIndexEnum: IwbEnumDef;
+  wbAttackAnimationEnum: IwbEnumDef;
+  wbImpactMaterialTypeEnum: IwbEnumDef;
+  wbCreatureTypeEnum: IwbEnumDef;
+  wbPlayerActionEnum: IwbEnumDef;
+  wbBodyLocationEnum: IwbEnumDef;
+  wbModEffectEnum: IwbEnumDef;
+  wbCrimeTypeEnum: IwbEnumDef;
+  wbVatsValueFunctionEnum: IwbEnumDef;
+  wbEquipTypeEnum: IwbEnumDef;
+  wbFormTypeEnum: IwbEnumDef;
+  wbMenuModeEnum: IwbEnumDef;
+  wbMiscStatEnum: IwbEnumDef;
+  wbAlignmentEnum: IwbEnumDef;
+  wbAxisEnum: IwbEnumDef;
+  wbCriticalStageEnum: IwbEnumDef;
+  wbSexEnum: IwbEnumDef;
+  wbPKDTType: IwbEnumDef;
+  wbObjectTypeEnum: IwbEnumDef;
+  wbQuadrantEnum: IwbEnumDef;
+  wbBlendModeEnum: IwbEnumDef;
+  wbBlendOpEnum: IwbEnumDef;
+  wbZTestFuncEnum: IwbEnumDef;
+  wbFunctionsEnum: IwbEnumDef;
+
+function wbCreaLevelDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
 procedure DefineFNV;
 
 implementation
 
 uses
-  Types, Classes, SysUtils, Math, Variants,
-  wbInterface;
+  Types, Classes, SysUtils, Math, Variants;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -534,19 +582,7 @@ var
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
-  wbSpecializationEnum: IwbEnumDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbReloadAnimEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
   wbSLSD: IwbSubRecordDef;
-  wbHeadPartIndexEnum: IwbEnumDef;
-  wbBodyPartIndexEnum: IwbEnumDef;
-  wbAttackAnimationEnum: IwbEnumDef;
-  wbImpactMaterialTypeEnum: IwbEnumDef;
-  wbCreatureTypeEnum: IwbEnumDef;
-  wbPlayerActionEnum: IwbEnumDef;
-  wbBodyLocationEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordStructDef;
@@ -593,34 +629,15 @@ var
   wbICON: IwbSubRecordStructDef;
   wbICONReq: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
-  wbModEffectEnum: IwbEnumDef;
-  wbCrimeTypeEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
   wbETYP: IwbSubRecordDef;
   wbETYPReq: IwbSubRecordDef;
-  wbEquipTypeEnum: IwbEnumDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbMenuModeEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbAlignmentEnum: IwbEnumDef;
-  wbAxisEnum: IwbEnumDef;
-  wbCriticalStageEnum: IwbEnumDef;
-  wbSexEnum: IwbEnumDef;
-  wbServiceFlags: IwbFlagsDef;
-  wbPKDTType: IwbEnumDef;
-  wbPKDTFlags: IwbFlagsDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbQuadrantEnum: IwbEnumDef;
-  wbBlendModeEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBPNDStruct: IwbSubRecordDef;
+
+  wbPKDTFlags: IwbFlagsDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4165,7 +4182,7 @@ begin
     {0x00040000}'Compressed',
     {0x00080000}'Can''t wait / Platform Specific Texture / Dead',
     {0x00100000}'Unknown 21',
-    {0x00200000}'Unknown 22',
+    {0x00200000}'Unknown 22', // set when beginning to load the form from save
     {0x00400000}'Unknown 23',
     {0x00800000}'Unknown 24',
     {0x01000000}'Destructible (Runtime only)',
@@ -5907,46 +5924,96 @@ begin
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
 
+  wbAgressionEnum := wbEnum([
+    'Unaggressive',
+    'Aggressive',
+    'Very Aggressive',
+    'Frenzied'
+  ]);
+
+  wbConfidenceEnum := wbEnum([
+    'Cowardly',
+    'Cautious',
+    'Average',
+    'Brave',
+    'Foolhardy'
+  ]);
+
+  wbMoodEnum := wbEnum([
+    'Neutral',
+    'Afraid',
+    'Annoyed',
+    'Cocky',
+    'Drugged',
+    'Pleasant',
+    'Angry',
+    'Sad'
+  ]);
+
+  wbAssistanceEnum := wbEnum([
+    'Helps Nobody',
+    'Helps Allies',
+    'Helps Friends and Allies'
+  ]);
+
+  wbArchtypeEnum := wbEnum([
+    {00} 'Value Modifier',
+    {01} 'Script',
+    {02} 'Dispel',
+    {03} 'Cure Disease',
+    {04} '',
+    {05} '',
+    {06} '',
+    {07} '',
+    {08} '',
+    {09} '',
+    {10} '',
+    {11} 'Invisibility',
+    {12} 'Chameleon',
+    {13} 'Light',
+    {14} '',
+    {15} '',
+    {16} 'Lock',
+    {17} 'Open',
+    {18} 'Bound Item',
+    {19} 'Summon Creature',
+    {20} '',
+    {21} '',
+    {22} '',
+    {23} '',
+    {24} 'Paralysis',
+    {25} '',
+    {26} '',
+    {27} '',
+    {28} '',
+    {29} '',
+    {30} 'Cure Paralysis',
+    {31} 'Cure Addiction',
+    {32} 'Cure Poison',
+    {33} 'Concussion',
+    {34} 'Value And Parts',
+    {35} 'Limb Condition',
+    {36} 'Turbo'
+  ]);
+
+  wbAggroRadiusFlags := wbFlags([
+    'Aggro Radius Behavior'
+  ]);
+
   wbAIDT :=
     wbStruct(AIDT, 'AI Data', [
-     {00} wbInteger('Aggression', itU8, wbEnum([
-            'Unaggressive',
-            'Aggressive',
-            'Very Aggressive',
-            'Frenzied'
-          ])),
-     {01} wbInteger('Confidence', itU8, wbEnum([
-            'Cowardly',
-            'Cautious',
-            'Average',
-            'Brave',
-            'Foolhardy'
-          ])),
+     {00} wbInteger('Aggression', itU8, wbAgressionEnum),
+     {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
      {02} wbInteger('Energy Level', itU8),
      {03} wbInteger('Responsibility', itU8),
-     {04} wbInteger('Mood', itU8, wbEnum([
-            'Neutral',
-            'Afraid',
-            'Annoyed',
-            'Cocky',
-            'Drugged',
-            'Pleasant',
-            'Angry',
-            'Sad'
-          ])),
+     {04} wbInteger('Mood', itU8, wbMoodEnum),
           wbByteArray('Unused', 3),
-          wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-          wbInteger('Teaches', itS8, wbSkillEnum),
-          wbInteger('Maximum training level', itU8),
-          wbInteger('Assistance', itS8, wbEnum([
-            'Helps Nobody',
-            'Helps Allies',
-            'Helps Friends and Allies'
-          ])),
-          wbInteger('Aggro Radius Behavior', itU8, wbFlags([
-            'Aggro Radius Behavior'
-          ])),
-          wbInteger('Aggro Radius', itS32)
+     {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
+     {0C} wbInteger('Teaches', itS8, wbSkillEnum),
+     {0D} wbInteger('Maximum training level', itU8),
+     {0E} wbInteger('Assistance', itS8, wbAssistanceEnum),
+     {0F} wbInteger('Aggro Radius Behavior', itU8, wbAggroRadiusFlags),
+     {10} wbInteger('Aggro Radius', itS32)
     ], cpNormal, True, wbActorTemplateUseAIData);
 
   wbAttackAnimationEnum :=
@@ -6088,6 +6155,19 @@ begin
       'Organic Glow'
     ]);
 
+  wbTemplateFlags := wbFlags([
+    'Use Traits',
+    'Use Stats',
+    'Use Factions',
+    'Use Actor Effect List',
+    'Use AI Data',
+    'Use AI Packages',
+    'Use Model/Animation',
+    'Use Base Data',
+    'Use Inventory',
+    'Use Script'
+  ]);
+
   wbRecord(CREA, 'Creature', [
     wbEDIDReq,
     wbOBNDReq,
@@ -6177,18 +6257,7 @@ begin
       {14} wbInteger('Speed Multiplier', itU16, nil, cpNormal, False, wbActorTemplateUseStats),
       {16} wbFloat('Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
       {20} wbInteger('Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
-      {22} wbInteger('Template Flags', itU16, wbFlags([
-        'Use Traits',
-        'Use Stats',
-        'Use Factions',
-        'Use Actor Effect List',
-        'Use AI Data',
-        'Use AI Packages',
-        'Use Model/Animation',
-        'Use Base Data',
-        'Use Inventory',
-        'Use Script'
-      ]))
+      {22} wbInteger('Template Flags', itU16, wbTemplateFlags)
     ], cpNormal, True),
     wbRArrayS('Factions',
       wbStructSK(SNAM, [0], 'Faction', [
@@ -7145,9 +7214,9 @@ begin
           'Water',
           'Contains door',
           'Unknown 12',
-          'Unknown 13',
-          'Unknown 14',
-          'Unknown 15',
+          'Unknown 13', // Cleared on LoadForm
+          'Unknown 14', // Cleared on LoadForm
+          'Unknown 15', // Cleared on LoadForm
           'Unknown 16',
           'Unknown 17',
           'Unknown 18',
@@ -8631,45 +8700,7 @@ begin
       {52} wbFormIDCk('Area sound', [NULL, SOUN]),
       {56} wbFloat('Constant Effect enchantment factor  (Unused)'),
       {60} wbFloat('Constant Effect barter factor (Unused)'),
-      {64} wbInteger('Archtype', itU32, wbEnum([
-             {00} 'Value Modifier',
-             {01} 'Script',
-             {02} 'Dispel',
-             {03} 'Cure Disease',
-             {04} '',
-             {05} '',
-             {06} '',
-             {07} '',
-             {08} '',
-             {09} '',
-             {10} '',
-             {11} 'Invisibility',
-             {12} 'Chameleon',
-             {13} 'Light',
-             {14} '',
-             {15} '',
-             {16} 'Lock',
-             {17} 'Open',
-             {18} 'Bound Item',
-             {19} 'Summon Creature',
-             {20} '',
-             {21} '',
-             {22} '',
-             {23} '',
-             {24} 'Paralysis',
-             {25} '',
-             {26} '',
-             {27} '',
-             {28} '',
-             {29} '',
-             {30} 'Cure Paralysis',
-             {31} 'Cure Addiction',
-             {32} 'Cure Poison',
-             {33} 'Concussion',
-             {34} 'Value And Parts',
-             {35} 'Limb Condition',
-             {36} 'Turbo'
-           ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
+      {64} wbInteger('Archtype', itU32, wbArchtypeEnum, cpNormal, False, nil, wbMGEFArchtypeAfterSet),
       {68} wbActorValue
     ], cpNormal, True)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
@@ -8803,18 +8834,7 @@ begin
       {14} wbInteger('Speed Multiplier', itU16, nil, cpNormal, True, wbActorTemplateUseStats),
       {16} wbFloat('Karma (Alignment)', cpNormal, False, 1, -1, wbActorTemplateUseTraits),
       {20} wbInteger('Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
-      {22} wbInteger('Template Flags', itU16, wbFlags([
-        'Use Traits',
-        'Use Stats',
-        'Use Factions',
-        'Use Actor Effect List',
-        'Use AI Data',
-        'Use AI Packages',
-        'Use Model/Animation',
-        'Use Base Data',
-        'Use Inventory',
-        'Use Script'
-      ]))
+      {22} wbInteger('Template Flags', itU16, wbTemplateFlags)
     ], cpNormal, True),
     wbRArrayS('Factions',
       wbStructSK(SNAM, [0], 'Faction', [
@@ -8950,12 +8970,36 @@ begin
            {8} 'Use Item At',
            {9} 'Ambush',
           {10} 'Flee Not Combat',
-          {11} '',
+          {11} 'Package Type 11',
           {12} 'Sandbox',
           {13} 'Patrol',
           {14} 'Guard',
           {15} 'Dialogue',
-          {16} 'Use Weapon'
+          {16} 'Use Weapon',
+          {17} 'Package Type 17',
+          {18} 'Combat Controller',
+          {19} 'Package Type 19',
+          {20} 'Package Type 20',
+          {21} 'Alarm',
+          {22} 'Flee',
+          {23} 'TressPass',
+          {24} 'Spectator',
+          {25} 'Package Type 25',
+          {26} 'Package Type 26',
+          {27} 'Package Type 27',
+          {28} 'Dialogue 2',
+          {29} 'Package Type 29',
+          {30} 'Package Type 30',
+          {31} 'Package Type 31',
+          {32} 'Package Type 35',
+          {33} 'Package Type 33',
+          {34} 'Package Type 34',
+          {35} 'Package Type 35',
+          {36} 'Package Type 36',
+          {37} 'Package Type 37',
+          {38} 'Package Type 38',
+          {39} 'Package Type 39',
+          {40} 'Package Type 40'
         ]);
 
   wbObjectTypeEnum := wbEnum([
@@ -9449,7 +9493,16 @@ begin
     ])), ['Male', 'Female'], cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
+//    wbArray(ATTR, 'Attributes Boosts', wbArray('Attributes', wbInteger('Attribute', itU8), [  // Engine loads that, but data is only a pair of bytes!
+//      'Strength',
+//      'Perception',
+//      'Endurance',
+//      'Charisma',
+//      'Intelligence',
+//      'Agility',
+//      'Luck'
+//    ]), ['Male', 'Female'], cpNormal, True),  // That looks like a leftover from Oblivion
+    wbByteArray(ATTR, 'Unused', 0, cpNormal, True),
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [

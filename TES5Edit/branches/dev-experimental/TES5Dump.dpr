@@ -38,7 +38,8 @@ uses
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
-  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas';
+  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas',
+  wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -748,11 +749,14 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins]) then begin
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
-      DefineFNV;
+      case wbToolSource of
+        tsSaves:   DefineFNVSaves;
+        tsPlugins: DefineFNV;
+      end;
     end else if isMode('FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';

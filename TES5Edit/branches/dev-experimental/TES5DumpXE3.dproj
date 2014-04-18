@@ -103,6 +103,7 @@
 		<DCCReference Include="wbDefinitionsTES3.pas"/>
 		<DCCReference Include="wbDefinitionsTES4.pas"/>
 		<DCCReference Include="wbDefinitionsTES5.pas"/>
+			<DCCReference Include="wbDefinitionsFNVSaves.pas"/>
 			<DCCReference Include="wbDefinitionsTES5Saves.pas"/>
 		<BuildConfiguration Include="Debug">
 			<Key>Cfg_2</Key>
