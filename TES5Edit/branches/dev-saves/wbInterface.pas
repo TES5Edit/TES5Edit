@@ -3823,7 +3823,8 @@ type
 
     function ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
   public
-    constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
                  const aName       : string;
                        aAfterLoad  : TwbAfterLoadCallback;
                        aAfterSet   : TwbAfterSetCallback;
@@ -3848,13 +3849,15 @@ type
   protected
     constructor Clone(const aSource: TwbDef); override;
 
-    constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
                  const aName       : string;
                  const aElement    : IwbValueDef;
                        aCount      : Integer;
                  const aLabels     : array of string;
                        aSorted     : Boolean;
-                       aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                       aAfterLoad  : TwbAfterLoadCallback;
+                       aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
                        aCanAddTo   : Boolean = True;
                        aTerminator : Boolean = False;
@@ -3867,7 +3870,8 @@ type
                        aCountCallback : TwbCountCallback;
                  const aLabels        : array of string;
                        aSorted        : Boolean;
-                       aAfterLoad     : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                       aAfterLoad     : TwbAfterLoadCallback;
+                       aAfterSet      : TwbAfterSetCallback;            
                        aDontShow      : TwbDontShowCallback;
                        aCanAddTo      : Boolean = True;
                        aTerminator    : Boolean = False;
@@ -12478,9 +12482,11 @@ begin
   case key of
     0: if val = 0 then
          Result := '[00000000] NULL'
-       else if val < Length(wbRefIDArray) then
-         Result := inherited ToString(wbRefIDArray[val - 1], aElement)
-       else
+       else if val < Length(wbRefIDArray) then begin
+         val := wbRefIDArray[val - 1];
+         Result := inherited ToString(val, aElement);
+         Result := Copy(Result, 1, Pos('[', Result)) + IntToHex64(val, 8) + Copy(Result, Pos(']', Result), Length(Result));
+       end else
          Result := '['+IntToHex64(val-1, 8)+'] Index in FormID Array';
     1: Result := inherited ToString(val, aElement);
     2: Result := '[FF'+IntToHex64(val, 6)+'] Created FormID';
