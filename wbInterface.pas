@@ -11781,9 +11781,11 @@ begin
   case key of
     0: if val = 0 then
          Result := '[00000000] NULL'
-       else if val < Length(wbRefIDArray) then
-         Result := inherited ToString(wbRefIDArray[val - 1], aElement)
-       else
+       else if val < Length(wbRefIDArray) then begin
+         val := wbRefIDArray[val - 1];
+         Result := inherited ToString(val, aElement);
+         Result := Copy(Result, 1, Pos('[', Result)) + IntToHex64(val, 8) + Copy(Result, Pos(']', Result), Length(Result));
+       end else
          Result := '['+IntToHex64(val-1, 8)+'] Index in FormID Array';
     1: Result := inherited ToString(val, aElement);
     2: Result := '[FF'+IntToHex64(val, 6)+'] Created FormID';
