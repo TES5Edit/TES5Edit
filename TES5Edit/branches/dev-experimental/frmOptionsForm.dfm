@@ -101,9 +101,9 @@ object frmOptions: TfrmOptions
       object cbSimpleRecords: TCheckBox
         Left = 16
         Top = 176
-        Width = 321
+        Width = 357
         Height = 17
-        Caption = 'Simple records LAND, NAVI, NAVM, CELL (requires restart)'
+        Caption = 'Simple records LAND, NAVI, NAVM, CELL, OFST (requires restart)'
         TabOrder = 7
       end
       object edColumnWidth: TEdit
