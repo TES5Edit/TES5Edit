@@ -4125,6 +4125,7 @@ function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEle
 var
   Container : IwbDataContainer;
   Element   : IwbElement;
+  fResult   : Extended;
 begin
   Result := 0;
 
@@ -4132,10 +4133,18 @@ begin
      Supports(Container.Container, IwbDataContainer, Container) then begin
     Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
     if Assigned(Element) then begin
-      Result :=  Element.NativeValue;
+      fResult :=  Element.NativeValue;
+      if fResult >= MaxInt then
+        Result := 0
+      else
+        Result := Trunc(fResult);
       Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
       if Assigned(Element) then begin
-        Result :=  Element.NativeValue - Result + 1;
+        fResult :=  Element.NativeValue;
+        if fResult >= MaxInt then
+          Result := 1
+        else
+          Result := Trunc(fResult) - Result + 1;
       end;
     end;
   end;
