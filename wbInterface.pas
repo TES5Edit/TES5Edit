@@ -53,6 +53,7 @@ var
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
   wbSortGroupRecord: Boolean{} = False;{}
+  wbRemoveOffsetData: Boolean{} = True;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;

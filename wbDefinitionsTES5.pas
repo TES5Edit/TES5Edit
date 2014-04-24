@@ -3249,6 +3249,9 @@ var
   Container: IwbContainer;
   rOFST: IwbRecord;
 begin
+  if not wbRemoveOffsetData then
+    Exit;
+
   if Supports(aElement, IwbContainer, Container) then begin
     if wbBeginInternalEdit then try
       Container.RemoveElement(OFST);
@@ -3266,7 +3269,7 @@ procedure wbWRLDAfterLoad(const aElement: IwbElement);
 var
   MainRecord: IwbMainRecord;
 begin
-//  wbRemoveOFST(aElement);
+  wbRemoveOFST(aElement);
 
   if wbBeginInternalEdit then try
 
