@@ -2862,6 +2862,19 @@ begin
     Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     FileHeader.UpdateRefs;
   end;
+
+  // remove OFST from WRLDs for non masters
+  {if not FileHeader.IsESM then
+    Exit;
+  GroupRecord := GetGroupBySignature('WRLD');
+  if not Assigned(GroupRecord) then
+    Exit;
+  for i := 0 to Pred(GroupRecord.ElementCount) do begin
+    if not Supports(IwbMainRecord, GroupRecord.Elements[i], Current) then
+      Continue;
+    if Current.Signature = 'WRLD' then
+      Current.RemoveElement('OFST');
+  end;}
 end;
 
 function TwbFile.Reached: Boolean;

@@ -3039,6 +3039,9 @@ var
   Container: IwbContainer;
   rOFST: IwbRecord;
 begin
+  if not wbRemoveOffsetData then
+    Exit;
+
   if Supports(aElement, IwbContainer, Container) then begin
     if wbBeginInternalEdit then try
       Container.RemoveElement(OFST);
@@ -10135,7 +10138,7 @@ begin
         'Water'
       ]),
       wbByteArray(OFST, 'Offset Data')
-    ])
+    ], False, nil, cpNormal, False, wbRemoveOFST)
   else
     wbRecord(WRLD, 'Worldspace', [
       wbEDIDReq,
@@ -10229,7 +10232,7 @@ begin
         'Water'
       ]),
       wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
-    ]);
+    ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
