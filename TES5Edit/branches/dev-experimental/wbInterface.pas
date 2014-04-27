@@ -53,6 +53,7 @@ var
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
   wbSortGroupRecord: Boolean{} = False;{}
+  wbRemoveOffsetData: Boolean{} = True;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
@@ -2822,6 +2823,9 @@ function RadiansNormalize(const aElement: IwbElement; aFloat: Extended): Extende
 begin
 //  Result := RoundToEx(aFloat, -6);
   Result := aFloat;
+
+  if Abs(Result/TwoPi) > 100.0 then
+    Result := Result - Sign(Result)*TwoPi*Trunc(Abs(Result/TwoPi) - 100.0);
 
   while Result < 0.0 do
     Result := Result + TwoPi;
@@ -9349,9 +9353,6 @@ begin
       Result := 'Default'
     else
       Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
-    if Len > GetDefaultSize(aBasePtr, aEndPtr, aElement) then
-      if wbCheckExpectedBytes then
-        Result := Format(' <Warning: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len]);
   end;
   Used(aElement, Result);
 end;

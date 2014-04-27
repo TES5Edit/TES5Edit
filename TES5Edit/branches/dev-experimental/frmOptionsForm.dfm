@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 345
+  ClientHeight = 354
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,30 +20,31 @@ object frmOptions: TfrmOptions
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    345)
+    354)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 297
+    Height = 308
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
+      ExplicitHeight = 273
       object Label5: TLabel
         Left = 16
-        Top = 232
+        Top = 256
         Width = 64
         Height = 13
         Caption = 'Column width'
       end
       object cbIKnow: TCheckBox
         Left = 298
-        Top = 230
+        Top = 254
         Width = 137
         Height = 17
         Caption = 'I know what I am doing'
@@ -100,15 +101,15 @@ object frmOptions: TfrmOptions
       end
       object cbSimpleRecords: TCheckBox
         Left = 16
-        Top = 176
+        Top = 200
         Width = 357
         Height = 17
-        Caption = 'Simple records LAND, NAVI, NAVM, CELL, OFST (requires restart)'
+        Caption = 'Simple records LAND, NAVI, NAVM, CELL, WRLD (requires restart)'
         TabOrder = 7
       end
       object edColumnWidth: TEdit
         Left = 86
-        Top = 228
+        Top = 252
         Width = 51
         Height = 21
         TabOrder = 8
@@ -152,7 +153,7 @@ object frmOptions: TfrmOptions
       end
       object cbShowFlagEnumValue: TCheckBox
         Left = 16
-        Top = 199
+        Top = 223
         Width = 297
         Height = 17
         Hint = 
@@ -161,9 +162,19 @@ object frmOptions: TfrmOptions
         Caption = 'Show values of flags and enumerations (requires restart)'
         TabOrder = 12
       end
+      object cbRemoveOffsetData: TCheckBox
+        Left = 16
+        Top = 176
+        Width = 169
+        Height = 17
+        Hint = 'Sort INFOs in DIAL by previous INFO'
+        Caption = 'Remove OFST offset data'
+        TabOrder = 13
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
+      ExplicitHeight = 269
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -231,6 +242,7 @@ object frmOptions: TfrmOptions
     object tsColors: TTabSheet
       Caption = 'Colors'
       ImageIndex = 2
+      ExplicitHeight = 269
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -285,6 +297,7 @@ object frmOptions: TfrmOptions
     object tsDoNotBuildRefs: TTabSheet
       Caption = 'References building'
       ImageIndex = 3
+      ExplicitHeight = 269
       object Label2: TLabel
         Left = 16
         Top = 13
@@ -296,7 +309,7 @@ object frmOptions: TfrmOptions
         Left = 16
         Top = 32
         Width = 329
-        Height = 225
+        Height = 233
         ItemHeight = 13
         MultiSelect = True
         TabOrder = 0
@@ -323,22 +336,24 @@ object frmOptions: TfrmOptions
   end
   object btnOK: TButton
     Left = 302
-    Top = 312
+    Top = 321
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
+    ExplicitTop = 312
   end
   object btnCancel: TButton
     Left = 383
-    Top = 312
+    Top = 321
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+    ExplicitTop = 312
   end
 end

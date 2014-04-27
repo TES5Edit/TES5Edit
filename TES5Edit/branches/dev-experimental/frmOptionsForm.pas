@@ -47,6 +47,7 @@ type
     Label2: TLabel;
     btnDoNotBuildRefAdd: TButton;
     btnDoNotBuildRefDel: TButton;
+    cbRemoveOffsetData: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
