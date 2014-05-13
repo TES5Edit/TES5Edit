@@ -539,6 +539,7 @@ type
     function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean): Boolean; overload;
     function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile): Boolean; overload;
 
+    function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
     function AddNewFile(out aFile: IwbFile): Boolean;
@@ -1761,6 +1762,24 @@ begin
   end;
 end;
 
+function TfrmMain.CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
+var
+  Error                       : string;
+  Container                   : IwbContainerElementRef;
+  i                           : Integer;
+begin
+  Error := aElement.Check;
+  if Error <> '' then begin
+    Result := aElement.ContainingMainRecord;
+    if (Result <> LastRecord) and Assigned(Result) then
+      wbProgressCallback(Result.Name);
+    wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
+  end;
+  if Supports(aElement, IwbContainerElementRef, Container) then
+    for i := Pred(Container.ElementCount) downto 0 do
+      LastRecord := CheckForErrorsLinear(Container.Elements[i], LastRecord);
+end;
+
 function TfrmMain.CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 var
   Error                       : string;
@@ -1854,11 +1873,13 @@ begin
         if Assigned(NodeData.Container) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
           wbProgressCallback(wbCurrentAction);
-          CheckForErrors(0, NodeData.Container)
+          CheckForErrorsLinear(NodeData.Container, nil)
+          //CheckForErrors(0, NodeData.Container)
         end else if Assigned(NodeData.Element) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Element.Name;
           wbProgressCallback(wbCurrentAction);
-          CheckForErrors(0, NodeData.Element);
+          CheckForErrorsLinear(NodeData.Element, nil)
+          //CheckForErrors(0, NodeData.Element);
         end;
     end;
     wbProgressCallback('All Done!');
