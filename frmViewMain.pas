@@ -2897,8 +2897,6 @@ var
   AgeDateTime  : TDateTime;
 
 begin
-//  while not wbInitDone do Sleep(10);
-
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
