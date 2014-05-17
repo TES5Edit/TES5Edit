@@ -403,7 +403,7 @@ type
     function GetDontShow: Boolean;
     procedure SetToDefault;
 
-    procedure NotifyChanged;
+    procedure NotifyChanged(aContainer: Pointer);
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -11540,7 +11540,7 @@ begin
       { yes, it refers to this file }
       MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew;
       FromStringNative(aBasePtr, aEndPtr, aElement, s);
-      aElement.NotifyChanged;
+      aElement.NotifyChanged(Pointer(aElement.Container));
     end;
 end;
 
@@ -11565,7 +11565,7 @@ begin
         { yes, it refers to this file }
         MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew[i];
         FromStringNative(aBasePtr, aEndPtr, aElement, s);
-        aElement.NotifyChanged;
+        aElement.NotifyChanged(Pointer(aElement.Container));
         Exit;
       end;
 end;
