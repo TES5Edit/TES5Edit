@@ -10473,10 +10473,12 @@ begin
   if esModified in eStates then
     Sort;
   inherited;
-  if esModified in eStates then
-    Sort;
   if Length(cntElements) = 0 then
-    Remove;
+    Remove
+  else if esModified in eStates then begin
+    Exclude(grStates, gsSorted);
+    Sort;
+  end;
 end;
 
 function TwbGroupRecord.Reached: Boolean;
