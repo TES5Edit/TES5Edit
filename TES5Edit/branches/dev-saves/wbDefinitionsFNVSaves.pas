@@ -5537,8 +5537,8 @@ begin
               wbNull,
               wbStruct('Combat Controller', [
                 wbChangePackageStruct,
-                wbRefIDT('Unk0BC'),
-                wbRefIDT('Unk0C0'),
+                wbRefIDT('Attacker'),
+                wbRefIDT('Target'),
                 wbIntegerT('Unknown', itU32),   // key to lookup unk080 in global array
                 wbStruct('Unk09C', [
                   wbIntegerT('Byt000', itU8),

@@ -539,6 +539,7 @@ type
     function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean): Boolean; overload;
     function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile): Boolean; overload;
 
+    function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
     function AddNewFile(out aFile: IwbFile): Boolean;
@@ -1761,6 +1762,24 @@ begin
   end;
 end;
 
+function TfrmMain.CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
+var
+  Error                       : string;
+  Container                   : IwbContainerElementRef;
+  i                           : Integer;
+begin
+  Error := aElement.Check;
+  if Error <> '' then begin
+    Result := aElement.ContainingMainRecord;
+    if (Result <> LastRecord) and Assigned(Result) then
+      wbProgressCallback(Result.Name);
+    wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
+  end;
+  if Supports(aElement, IwbContainerElementRef, Container) then
+    for i := Pred(Container.ElementCount) downto 0 do
+      LastRecord := CheckForErrorsLinear(Container.Elements[i], LastRecord);
+end;
+
 function TfrmMain.CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 var
   Error                       : string;
@@ -1854,11 +1873,13 @@ begin
         if Assigned(NodeData.Container) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
           wbProgressCallback(wbCurrentAction);
-          CheckForErrors(0, NodeData.Container)
+          CheckForErrorsLinear(NodeData.Container, nil)
+          //CheckForErrors(0, NodeData.Container)
         end else if Assigned(NodeData.Element) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Element.Name;
           wbProgressCallback(wbCurrentAction);
-          CheckForErrors(0, NodeData.Element);
+          CheckForErrorsLinear(NodeData.Element, nil)
+          //CheckForErrors(0, NodeData.Element);
         end;
     end;
     wbProgressCallback('All Done!');
@@ -2876,8 +2897,6 @@ var
   AgeDateTime  : TDateTime;
 
 begin
-//  while not wbInitDone do Sleep(10);
-
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
@@ -3019,27 +3038,48 @@ begin
 
         CheckListBox1.Items.Assign(sl);
 
-        // check active files using the game's plugins list
-        sl.LoadFromFile(wbPluginsFileName);
-        for i := Pred(sl.Count) downto 0 do begin
-          s := Trim(sl.Strings[i]);
-          j := Pos('#', s);
-          if j > 0 then
-            System.Delete(s, j, High(Integer));
-          s := Trim(s);
-          if s = '' then begin
-            sl.Delete(i);
-            Continue;
-          end;
+        if (wbToolMode in [tmESMify, tmESPify]) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
+            j := CheckListBox1.Items.IndexOf(wbPluginToUse);
+            if j < 0 then begin
+              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+              frmMain.Close;
+              Exit;
+            end else
+              CheckListBox1.Checked[j] := True;
 
-          j := CheckListBox1.Items.IndexOf(s);
-          if j < 0 then
-            AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
-          else
-            CheckListBox1.Checked[j] := True;
+            // More plugins requested ?
+            while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
+              j := CheckListBox1.Items.IndexOf(s);
+              if j < 0 then begin
+                AddMessage('Note: Selected plugin "' + s + '" does not exist');
+                frmMain.Close;
+                Exit;
+              end else
+                CheckListBox1.Checked[j] := True;
+            end;
+        end else begin
+          // check active files using the game's plugins list
+          sl.LoadFromFile(wbPluginsFileName);
+          for i := Pred(sl.Count) downto 0 do begin
+            s := Trim(sl.Strings[i]);
+            j := Pos('#', s);
+            if j > 0 then
+              System.Delete(s, j, High(Integer));
+            s := Trim(s);
+            if s = '' then begin
+              sl.Delete(i);
+              Continue;
+            end;
+
+            j := CheckListBox1.Items.IndexOf(s);
+            if j < 0 then
+              AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
+            else
+              CheckListBox1.Checked[j] := True;
+          end;
         end;
 
-        if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then begin
+        if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) then begin
           ShowModal;
           if ModalResult <> mrOk then begin
             frmMain.Close;
@@ -3089,7 +3129,7 @@ begin
         Free;
       end;
 
-      if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then
+      if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) then
         with TfrmFileSelect.Create(nil) do try
 
           if (not wbEditAllowed) or wbTranslationMode then begin
@@ -3298,6 +3338,7 @@ begin
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+  wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
   wbResolveAlias := Settings.ReadBool('Options', 'ResolveAliases', wbResolveAlias);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -3877,10 +3918,29 @@ begin
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  s        : string;
-  txt      : AnsiString;
-  fs       : TFileStream;
+
+  procedure SaveLog(s: string);
+  var
+    txt      : AnsiString;
+    fs       : TFileStream;
+
+  begin
+    try
+      if FileExists(s) then begin
+        fs := TFileStream.Create(s, fmOpenReadWrite);
+        fs.Seek(0, soFromEnd);
+      end else
+        fs := TFileStream.Create(s, fmCreate);
+      if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+        fs.Size := 0;
+      txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
+      fs.WriteBuffer(txt[1], Length(txt));
+    finally
+      if Assigned(fs) then
+        FreeAndNil(fs);
+    end;
+  end;
+
 begin
   Action := caFree;
   if LoaderStarted and not wbLoaderDone then begin
@@ -3914,21 +3974,9 @@ begin
     Settings.UpdateFile;
   end;
 
-  try
-    s := wbProgramPath + wbAppName + 'Edit_log.txt';
-    if FileExists(s) then begin
-      fs := TFileStream.Create(s, fmOpenReadWrite);
-      fs.Seek(0, soFromEnd);
-    end else
-      fs := TFileStream.Create(s, fmCreate);
-    if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
-      fs.Size := 0;
-    txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
-    fs.WriteBuffer(txt[1], Length(txt));
-  finally
-    if Assigned(fs) then
-      FreeAndNil(fs);
-  end;
+  SaveLog(wbProgramPath + wbAppName + 'Edit_log.txt');
+  if wbLogFile<>'' then SaveLog(wbLogFile);
+
   if DirectoryExists(wbTempPath) and wbRemoveTempPath then
     DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
@@ -3972,7 +4020,7 @@ begin
   LastUpdate := GetTickCount;
   Font := Screen.IconFont;
   Caption := Application.Title;
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then begin
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;
@@ -9067,6 +9115,7 @@ begin
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSortGroupRecord.Checked := wbSortGroupRecord;
+    cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbResolveAliases.Checked := wbResolveAlias;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbSimpleRecords.Checked := wbSimpleRecords;
@@ -9093,6 +9142,7 @@ begin
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSortGroupRecord := cbSortGroupRecord.Checked;
+    wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbResolveAlias := cbResolveAliases.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
@@ -9116,6 +9166,7 @@ begin
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+    Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ResolveAliases', wbResolveAlias);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
@@ -9853,7 +9904,7 @@ var
 begin
   Result := False;
   for i := Low(Files) to High(Files) do with Files[i] do
-    if IsESM and (not (fsIsHardcoded in FileStates)) and SameText(ExtractFileExt(FileName), '.esp') then begin
+    if IsESM and (not (fsIsHardcoded in FileStates)) and (SameText(ExtractFileExt(FileName), '.esp')) then begin
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Removing ESM Flag: ' + FileName);
       IsESM := False;
       Result := True;
@@ -9899,7 +9950,7 @@ begin
     if Assigned(Settings) then
       cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
-    if (CheckListBox1.Count > 0) and not (wbToolMode in [tmMasterUpdate, tmMasterRestore]) then begin
+    if (CheckListBox1.Count > 0) and not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) then begin
       ShowModal;
       wbDontBackup := not cbBackup.Checked;
       if Assigned(Settings) then begin
@@ -10708,7 +10759,7 @@ begin
       tbsMessages.Highlighted := True;
   end;
 
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbLoaderDone and not wbMasterUpdateDone then begin
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) and wbLoaderDone and not wbMasterUpdateDone then begin
     wbMasterUpdateDone := True;
     if wbLoaderError then begin
       wbDontSave := True;
@@ -10724,7 +10775,7 @@ begin
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
     end else try
-      if (wbToolMode in [tmMasterRestore]) then
+      if (wbToolMode in [tmMasterRestore, tmESPify]) then
         ChangesMade := RestorePluginsFromMaster
       else
         ChangesMade := SetAllToMaster;
@@ -10734,12 +10785,15 @@ begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] You have to close this program to finalize renaming of the .save files.');
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] It is still possible for the renaming to fail if any of your original module files is still open by another process.')
       end else begin
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Non of your active modules required changes.');
+        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] None of your active modules required changes.');
       end;
       if (wbToolMode in [tmMasterUpdate]) then begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
-      end;
+      end else
+        if (wbToolMode in [tmESMify, tmESPify]) then
+          frmMain.Close;
+
     except
       wbDontSave := True;
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= Error =--');
@@ -12954,7 +13008,7 @@ end;
 
 procedure TfrmMain.WMUser(var Message: TMessage);
 var
-  t                           : string;
+  t : string;
 begin
   Pointer(t) := Pointer(Message.WParam);
   if not Assigned(NewMessages) then
@@ -12978,7 +13032,7 @@ begin
 
   if (wbToolMode in [tmLODgen]) then begin
     if not ForceTerminate then
-      tmrGenerator.Enabled := True;
+      tmrGenerator.Enabled := true;
     Exit;
   end;
 
@@ -12990,7 +13044,9 @@ begin
   tbsARMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
-  tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) and not wbIKnowWhatImDoing;
+  tmrCheckUnsaved.Enabled := wbEditAllowed and
+    not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) and
+    not wbIKnowWhatImDoing;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);

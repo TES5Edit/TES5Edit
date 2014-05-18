@@ -3208,6 +3208,9 @@ var
   Container: IwbContainer;
   rOFST: IwbRecord;
 begin
+  if not wbRemoveOffsetData then
+    Exit;
+
   if Supports(aElement, IwbContainer, Container) then begin
     if wbBeginInternalEdit then try
       Container.RemoveElement(OFST);
@@ -4172,9 +4175,9 @@ begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
-    {0x00000004}'',
-    {0x00000008}'',
-    {0x00000010}'Form initialized (Runtime only)',
+    {0x00000004}'',   // Plugin selected (Editor)
+    {0x00000008}'',   // Form cannot be saved (Runtime)/Plugin active (Editor)
+    {0x00000010}'Form initialized (Runtime only)',  // Plugin cannot be active or selected (Editor)
     {0x00000020}'Deleted',
     {0x00000040}'Border Region / Has Tree LOD / Constant / Hidden From Local Map',
     {0x00000080}'Turn Off Fire',
@@ -8289,7 +8292,7 @@ begin
       ]))
     ], cpNormal, True, nil, 3),
     wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpNormal, True),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
+    wbFormIDCk(TPIC, 'Topic', [DIAL]),  // The GECK ignores it for ESM
     wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
     wbRArray('Add Topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
     wbRArray('Responses',
@@ -10698,7 +10701,7 @@ begin
         'Water'
       ]),
       wbByteArray(OFST, 'Offset Data')
-    ])
+    ], False, nil, cpNormal, False, wbRemoveOFST)
   else
     wbRecord(WRLD, 'Worldspace', [
       wbEDIDReq,
@@ -10787,7 +10790,7 @@ begin
         'Water'
       ]),
       wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0) // cannot be saved by GECK
-    ]);
+    ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,

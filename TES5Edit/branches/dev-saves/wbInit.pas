@@ -27,14 +27,26 @@ var
   wbPluginsFileName    : String;
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
+  wbPluginToUse        : string;  // Passing a specific plugin as parameter
+  wbLogFile            : string;  // Optional log file fr this session
+  wbOutputBaseFileName : string;  // Optional root result file name for splitting xDump result into separate files. TBD
 
   wbMasterUpdateDone : Boolean;
+  wbMasterUpdateOK   : Boolean;
   wbDontSave         : Boolean;
   wbDontBackup       : Boolean = False;
-  wbInitDone         : Boolean = False;
   wbRemoveTempPath   : Boolean = True;
+  wbSplitGroups      : Boolean = False; // Split xDump output in different files per each top level group, TBD
+                                        //     {requires wbOutputBaseFileName?}
 
-procedure wbDoInit;
+  wbSplitGroupsLevel : Integer = 0;     // 0 = only top level groups are splitted,
+                                        // 1 = also cell/worldspace blocks,
+                                        // 2 = also C/W sub blocks and Topics
+                                        // 3 = also Primary/Temporary/...
+  wbParamIndex       : integer = 1;     // First unused parameter
+
+function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
+function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
 
 implementation
 
@@ -88,11 +100,80 @@ begin
   end;
 end;
 
+function wbFindCmdLineParam(var   startingIndex : integer;
+                            const aChars        : TSysCharSet;
+                              out aValue        : string)
+                                                : Boolean; overload;
+var
+  i : integer;
+  s : string;
+begin
+  Result := False;
+  aValue := '';
+  for i := startingIndex to ParamCount do begin
+    s := ParamStr(i);
+    if (aChars = []) or (s[1] in aChars) then // skipped
+      Inc(startingIndex)
+    else begin
+      aValue := ParamStr(i);
+      startingIndex := i+1;
+      Result := True;
+      break;
+    end
+  end;
+end;
+
 function wbFindCmdLineParam(const aSwitch : string;
                               out aValue  : string)
                                           : Boolean; overload;
 begin
   Result := wbFindCmdLineParam(aSwitch, SwitchChars, True, aValue);
+end;
+
+function wbFindCmdLineParam(var startingIndex : integer; out aValue  : string) : Boolean; overload;
+begin
+  Result := wbFindCmdLineParam(startingIndex, SwitchChars, aValue);
+end;
+
+function wbCheckForValidExtension(aFilePath : string; const anExtension : string): Boolean; overload;
+begin
+  Result := UpperCase(ExtractFileExt(aFilePath)) = UpperCase(anExtension);
+end;
+
+function wbCheckForPluginExtension(aFilePath : string): Boolean;
+begin
+  Result := wbCheckForValidExtension(aFilePath, '.esp') or wbCheckForValidExtension(aFilePath, '.esm');
+end;
+
+function wbCheckForValidExtension(aFilePath : string): Boolean; overload;
+begin
+  Result := wbCheckForPluginExtension(aFilePath) or
+            wbCheckForValidExtension(aFilePath, '.fos') or wbCheckForValidExtension(aFilePath, '.ess');
+end;
+
+function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
+begin
+  Result := wbFindCmdLineParam(startingIndex, SwitchChars, aValue);
+  if Result and not FileExists(aValue) then
+    if (defaultPath<>'') then
+      if FileExists(defaultPath+'\'+aValue) then
+        aValue := ExpandFileName(defaultPath+'\'+aValue)
+      else
+        Result := False
+    else
+      Result := False;
+end;
+
+function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
+begin
+  repeat
+    Result := wbFindNextValidCmdLineFileName(startingIndex, aValue, defaultPath);
+  until not Result or wbCheckForPluginExtension(aValue);
+  if Result  then
+    if (AnsiCompareText(ExpandFileName(ExtractFilePath(aValue)), ExpandFileName(defaultPath)) = 0) then
+      aValue := ExtractFileName(aValue)
+    else
+      Result := False;
 end;
 
 // several ini settings should be read before record definitions
@@ -144,7 +225,7 @@ begin
   end;
 end;
 
-procedure DoInitPath;
+procedure DoInitPath(const ParamIndex: Integer);
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
@@ -208,22 +289,18 @@ begin
       wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
   end;
 
-  wbPluginsFileName := '';
-  if ParamCount >= 1 then begin
-    wbPluginsFileName := ParamStr(ParamCount);
-    if (Length(wbPluginsFileName) > 0) and (wbPluginsFileName[1] in SwitchChars) then
-      wbPluginsFileName := '';
-  end;
+  wbParamIndex := ParamIndex;
+  if not wbFindCmdLineParam('P', wbPluginsFileName) then
+    if not wbFindNextValidCmdLineFileName(wbParamIndex, wbPluginsFileName) or wbCheckForValidExtension(wbPluginsFileName) then begin
+      wbParamIndex := ParamIndex;
+      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
+      if wbPluginsFileName = '' then begin
+        ShowMessage('Fatal: Could not determine the local application data folder');
+        Exit;
+      end;
 
-  if wbPluginsFileName = '' then begin
-    wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
-    if wbPluginsFileName = '' then begin
-      ShowMessage('Fatal: Could not determine the local application data folder');
-      Exit;
+      wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
     end;
-
-    wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
-  end;
   wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
 
   wbBackupPath := '';
@@ -233,6 +310,8 @@ begin
       if not ForceDirectories(wbBackupPath) then
         wbBackupPath := wbDataPath;
   end;
+  wbFindCmdLineParam('L', wbLogFile);
+  wbFindCmdLineParam('O', wbOutputBaseFileName);
 end;
 
 function isMode(aMode: String): Boolean;
@@ -261,9 +340,6 @@ begin
     wbToolName    := 'View';
     wbEditAllowed := False;
     wbDontSave    := True;
-  end else if isMode('Edit') then begin
-    wbToolMode    := tmEdit;
-    wbToolName    := 'Edit';
   end else if isMode('MasterUpdate') then begin
     wbToolMode    := tmMasterUpdate;
     wbToolName    := 'MasterUpdate';
@@ -278,8 +354,17 @@ begin
   end else if isMode('Translate') then begin
     wbToolMode    := tmTranslate;
     wbToolName    := 'Trans';
+  end else if isMode('setESM') then begin
+    wbToolMode    := tmESMify;
+    wbToolName    := 'SettingESMflag';
+  end else if isMode('clearESM') then begin
+    wbToolMode    := tmESPify;
+    wbToolName    := 'ClearingESMflag';
+  end else if isMode('Edit') then begin
+    wbToolMode    := tmEdit;
+    wbToolName    := 'Edit';
   end else begin
-    ShowMessage('Application name must contain Edit, View, LODgen, MasterUpdate or MasterRestore to select mode.');
+    ShowMessage('Application name must contain Edit, View, LODgen, MasterUpdate, MasterRestore, setESM or clearESM to select mode.');
     Exit;
   end;
 
@@ -287,7 +372,7 @@ begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -299,7 +384,7 @@ begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -323,7 +408,7 @@ begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
-    if not (wbToolMode in [tmView, tmEdit, tmLODgen]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmESMify, tmESPify]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -335,7 +420,7 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
-    if not (wbToolMode in [tmView, tmEdit, tmTranslate]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmTranslate, tmESMify, tmESPify]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -348,7 +433,7 @@ begin
     Exit;
   end;
 
-  DoInitPath;
+  DoInitPath(wbParamIndex);
 
   if isMode('FNV') then begin
     wbVWDInTemporary := True;
@@ -419,25 +504,34 @@ begin
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
 
+  if wbToolMode in [tmESMify, tmESPify] then // look for the file name
+    if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbDataPath) then begin
+      ShowMessage(wbToolName+' mode requires a valid plugin name!');
+      Exit;
+    end;
+
   if wbToolMode = tmLODgen then begin
     wbIKnowWhatImDoing := True;
     wbAllowInternalEdit := False;
     wbShowInternalEdit := False;
     wbLoadBSAs := True;
     wbBuildRefs := False;
-  end else if wbToolMode = tmMasterUpdate then begin
+  end else if wbToolMode in [tmMasterUpdate, tmESMify] then begin
     wbIKnowWhatImDoing := True;
     wbAllowInternalEdit := False;
     wbShowInternalEdit := False;
     wbLoadBSAs := False;
     wbBuildRefs := False;
+    wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
     if FindCmdLineSwitch('filteronam') then
+      wbMasterUpdateFilterONAM := True
+    else if FindCmdLineSwitch('noFilteronam') then
       wbMasterUpdateFilterONAM := True;
     if FindCmdLineSwitch('FixPersistence') then
       wbMasterUpdateFixPersistence := True
     else if FindCmdLineSwitch('NoFixPersistence') then
       wbMasterUpdateFixPersistence := False;
-  end else if wbToolMode = tmMasterRestore then begin
+  end else if wbToolMode in [tmMasterRestore, tmESPify] then begin
     wbIKnowWhatImDoing := True;
     wbAllowInternalEdit := False;
     wbShowInternalEdit := False;
@@ -456,8 +550,6 @@ begin
     wbFixupPGRD := True;
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
-
-  wbInitDone := True;
 end;
 
 initialization

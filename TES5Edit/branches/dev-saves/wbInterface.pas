@@ -53,6 +53,7 @@ var
   wbSortSubRecords: Boolean;
   wbSortFLST: Boolean = True;
   wbSortGroupRecord: Boolean{} = False;{}
+  wbRemoveOffsetData: Boolean{} = True;{}
   wbEditAllowed: Boolean;
   wbFlagsAsArray: Boolean;
   wbDelayLoadRecords: Boolean = True;
@@ -402,7 +403,7 @@ type
     function GetDontShow: Boolean;
     procedure SetToDefault;
 
-    procedure NotifyChanged;
+    procedure NotifyChanged(aContainer: Pointer);
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -2636,7 +2637,7 @@ var
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate);
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate, tmESMify, tmESPify);
   TwbToolSource = (tsPlugins, tsSaves);
 
 var
@@ -2822,6 +2823,9 @@ function RadiansNormalize(const aElement: IwbElement; aFloat: Extended): Extende
 begin
 //  Result := RoundToEx(aFloat, -6);
   Result := aFloat;
+
+  if Abs(Result/TwoPi) > 100.0 then
+    Result := Result - Sign(Result)*TwoPi*Trunc(Abs(Result/TwoPi) - 100.0);
 
   while Result < 0.0 do
     Result := Result + TwoPi;
@@ -12237,7 +12241,7 @@ begin
       { yes, it refers to this file }
       MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew;
       FromStringNative(aBasePtr, aEndPtr, aElement, s);
-      aElement.NotifyChanged;
+      aElement.NotifyChanged(Pointer(aElement.Container));
     end;
 end;
 
@@ -12262,7 +12266,7 @@ begin
         { yes, it refers to this file }
         MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew[i];
         FromStringNative(aBasePtr, aEndPtr, aElement, s);
-        aElement.NotifyChanged;
+        aElement.NotifyChanged(Pointer(aElement.Container));
         Exit;
       end;
 end;
