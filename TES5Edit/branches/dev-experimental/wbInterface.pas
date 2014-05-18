@@ -403,7 +403,7 @@ type
     function GetDontShow: Boolean;
     procedure SetToDefault;
 
-    procedure NotifyChanged;
+    procedure NotifyChanged(aContainer: Pointer);
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -9353,6 +9353,9 @@ begin
       Result := 'Default'
     else
       Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
+    if Len > GetDefaultSize(aBasePtr, aEndPtr, aElement) then
+      if wbCheckExpectedBytes then
+        Result := Format(' <Warning: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len]);
   end;
   Used(aElement, Result);
 end;
@@ -12238,7 +12241,7 @@ begin
       { yes, it refers to this file }
       MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew;
       FromStringNative(aBasePtr, aEndPtr, aElement, s);
-      aElement.NotifyChanged;
+      aElement.NotifyChanged(Pointer(aElement.Container));
     end;
 end;
 
@@ -12263,7 +12266,7 @@ begin
         { yes, it refers to this file }
         MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew[i];
         FromStringNative(aBasePtr, aEndPtr, aElement, s);
-        aElement.NotifyChanged;
+        aElement.NotifyChanged(Pointer(aElement.Container));
         Exit;
       end;
 end;

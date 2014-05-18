@@ -201,7 +201,7 @@ type
     function BeginDecide: Boolean;
     procedure EndDecide;
 
-    procedure NotifyChanged; virtual;
+    procedure NotifyChanged(aContainer: Pointer); virtual;
 
     procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); virtual;
 
@@ -420,7 +420,7 @@ type
 
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement); virtual;
-    procedure NotifyChanged; override;
+    procedure NotifyChanged(aContainer: Pointer); override;
 
     function CompareExchangeFormID(aOldFormID: Cardinal; aNewFormID: Cardinal): Boolean; override;
 
@@ -1336,7 +1336,7 @@ type
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
     procedure Remove; override;
-    procedure NotifyChanged; override;
+    procedure NotifyChanged(aContainer: Pointer); override;
 
 
 
@@ -3232,7 +3232,7 @@ begin
   SetLength(cntElements, Succ(Length(cntElements)));
   cntElements[High(cntElements)] := aElement as IwbElementInternal;
   cntElements[High(cntElements)].SetContainer(Self);
-  NotifyChanged;
+  NotifyChanged(eContainer);
 end;
 
 function TwbContainer.IndexOf(const aElement: IwbElement): Integer;
@@ -3308,7 +3308,7 @@ begin
 
   cntElements[aPosition] := aElement as IwbElementInternal;
   cntElements[aPosition].SetContainer(Self);
-  NotifyChanged;
+  NotifyChanged(eContainer);
 end;
 
 function TwbContainer.IsElementEditable(const aElement: IwbElement): Boolean;
@@ -3627,7 +3627,7 @@ end;
 
 procedure TwbContainer.ElementChanged(const aElement: IwbElement);
 begin
-  NotifyChanged;
+  NotifyChanged(eContainer);
 end;
 
 {$D-}
@@ -4234,7 +4234,7 @@ begin
   end;
 end;
 
-procedure TwbContainer.NotifyChanged;
+procedure TwbContainer.NotifyChanged(aContainer: Pointer);
 begin
   if csInitializing in cntStates then
     Exit;
@@ -4460,7 +4460,7 @@ begin
   end;
 
   SetLength(cntElements, Pred(Length(cntElements)));
-  NotifyChanged;
+  NotifyChanged(eContainer);
 end;
 
 procedure TwbContainer.Reset;
@@ -7657,7 +7657,7 @@ begin
 
   if wbDisplayLoadOrderFormID then begin
     SetLoadOrderFormID(StrToInt64('$'+aValue));
-    NotifyChanged;
+    NotifyChanged(eContainer);
   end else
     raise Exception.Create('FormID can only be edited if wbDisplayLoadOrderFormID is active');
 end;
@@ -7890,7 +7890,7 @@ begin
 
   if wbDisplayLoadOrderFormID then begin
     SetLoadOrderFormID(aValue);
-    NotifyChanged;
+    NotifyChanged(eContainer);
   end else
     raise Exception.Create('FormID can only be edited if wbDisplayLoadOrderFormID is active');
 end;
@@ -9440,7 +9440,7 @@ begin
       Reset;
       Init;
     end;
-    NotifyChanged;
+    NotifyChanged(eContainer);
   end;
 end;
 
@@ -9476,7 +9476,7 @@ begin
     Reset;
     Init;
   end;
-  NotifyChanged;
+  NotifyChanged(eContainer);
 end;
 
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
@@ -10444,13 +10444,15 @@ begin
   end;
 end;
 
-procedure TwbGroupRecord.NotifyChanged;
+procedure TwbGroupRecord.NotifyChanged(aContainer: Pointer);
 begin
   if gsSorting in grStates then
     Exit;
 
   inherited;
-  Exclude(grStates, gsSorted);
+  // Let's try to sort only when the group membership change and not when one of its member change.
+  if (Pointer(Self) = aContainer) then
+    Exclude(grStates, gsSorted);
 end;
 
 procedure TwbGroupRecord.PrepareSave;
@@ -10458,10 +10460,12 @@ begin
   if esModified in eStates then
     Sort;
   inherited;
-  if esModified in eStates then
-    Sort;
   if Length(cntElements) = 0 then
-    Remove;
+    Remove
+  else if esModified in eStates then begin
+    Exclude(grStates, gsSorted);
+    Sort;
+  end;
 end;
 
 function TwbGroupRecord.Reached: Boolean;
@@ -11567,7 +11571,7 @@ begin
   (IwbContainer(eContainer) as IwbContainerInternal).NextElementMember(Self);
 end;
 
-procedure TwbElement.NotifyChanged;
+procedure TwbElement.NotifyChanged(aContainer: Pointer);
 begin
   if Assigned(eContainer) then
     (IwbContainer(eContainer) as IwbContainerInternal).ElementChanged(Self);
@@ -12705,7 +12709,7 @@ begin
           end;
         end else
           RequestStorageChange(p, q, ArrayDef.PrefixSize[nil]);
-      NotifyChanged;
+      NotifyChanged(eContainer);
 
       for i := 0 to Pred(Container.ElementCount) do
         Assign(i, Container.Elements[i], aOnlySK);
@@ -13363,7 +13367,7 @@ begin
     end;
     NewValue := GetNativeValue;
     DoAfterSet(OldValue, NewValue);
-    NotifyChanged;
+    NotifyChanged(eContainer);
     if vIsFlags and (csInit in cntStates) then begin
       if vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] <> aValue then begin
         Reset;
@@ -13388,7 +13392,7 @@ begin
   end;
   NewValue := GetNativeValue;
   DoAfterSet(OldValue, NewValue);
-  NotifyChanged;
+  NotifyChanged(eContainer);
   if vIsFlags and (csInit in cntStates) then begin
     Reset;
     Init;
@@ -13998,7 +14002,7 @@ begin
     if ValueDef.SetToDefault(GetDataBasePtr, GetDataEndPtr, Self) then begin
       NewValue := GetNativeValue;
       DoAfterSet(OldValue, NewValue);
-      NotifyChanged;
+      NotifyChanged(eContainer);
 
       if IsFlags and (csInit in cntStates) then begin
         Reset;
@@ -14350,7 +14354,7 @@ begin
     vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
     NewValue := GetNativeValue;
     DoAfterSet(OldValue, NewValue);
-    NotifyChanged;
+    NotifyChanged(eContainer);
   end;
 end;
 
@@ -14366,7 +14370,7 @@ begin
   vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
   NewValue := GetNativeValue;
   DoAfterSet(OldValue, NewValue);
-  NotifyChanged;
+  NotifyChanged(eContainer);
 end;
 
 { TwbRecordHeaderStruct }
