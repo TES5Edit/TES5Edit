@@ -2231,8 +2231,9 @@ var
 begin
   Result := 0;
   if Supports(aElement.Container, IwbRecord, rMHDT) then
-    if rMHDT.DataSize = 1028 then
-      Result := 1;
+    if Assigned(aBasePtr) then  // if not assigned we cannot conclude anyway
+      if rMHDT.DataSize = 1028 then
+          Result := 1;
 end;
 
 function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
@@ -6488,7 +6489,7 @@ begin
 
       wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
       wbStruct(MHDT, 'Max Height Data', [
-         wbUnion('Unknow', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
+         wbUnion('Unknown', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
          wbArray('Unknown', wbInteger('Data', itS8))
       ]),
       wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
@@ -7821,9 +7822,9 @@ begin
               '2 <-> 0'
             ]),
             wbInteger('Flags', itU16, wbFlags([
-              'External1',
-              'External2End',
-              'External3Mid',
+              'Edge0External',
+              'Edge1External',
+              'Edge2External',
               'Unknown 4',
               'Unknown 5',
               'Unknown 6',
