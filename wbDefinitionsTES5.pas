@@ -7815,16 +7815,16 @@ begin
         ]), -1),
         wbArray('Triangles',
           wbStruct('Triangle', [
-            wbArray('Vertices', wbInteger('Vertex', itS16), 3),
-            wbArray('Edges', wbInteger('Triangle', itS16), [
-              '0 <-> 1',
-              '1 <-> 2',
-              '2 <-> 0'
-            ]),
+            wbInteger('Vertex 0', itS16),
+            wbInteger('Vertex 1', itS16),
+            wbInteger('Vertex 2', itS16),
+            wbInteger('Edge 0-1', itS16),
+            wbInteger('Edge 1-2', itS16),
+            wbInteger('Edge 2-0', itS16),
             wbInteger('Flags', itU16, wbFlags([
-              'Edge0External',
-              'Edge1External',
-              'Edge2External',
+              'Edge 0-1 link',
+              'Edge 1-2 link',
+              'Edge 2-0 link',
               'Unknown 4',
               'Unknown 5',
               'Unknown 6',
@@ -7843,8 +7843,8 @@ begin
             wbInteger('Cover Edge #2 Flags', itU8)
           ])
         , -1),
-        wbArray('External Connections',
-          wbStruct('Connection', [
+        wbArray('Edge Links',
+          wbStruct('Edge Link', [
             wbByteArray('Unknown', 4),
             wbFormIDCk('Mesh', [NAVM]),
             wbInteger('Triangle', itS16)
