@@ -4175,9 +4175,9 @@ begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
-    {0x00000004}'',
-    {0x00000008}'',
-    {0x00000010}'Form initialized (Runtime only)',
+    {0x00000004}'',   // Plugin selected (Editor)
+    {0x00000008}'',   // Form cannot be saved (Runtime)/Plugin active (Editor)
+    {0x00000010}'Form initialized (Runtime only)',  // Plugin cannot be active or selected (Editor)
     {0x00000020}'Deleted',
     {0x00000040}'Border Region / Has Tree LOD / Constant / Hidden From Local Map',
     {0x00000080}'Turn Off Fire',
@@ -7863,27 +7863,25 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
-    wbRUnion('Body Part Data', [
-      wbRStructS('Body Parts', 'Body Part', [
-        wbString(BPTN, 'Part Name', 0, cpNormal, True),
-        wbString(BPNN, 'Part Node', 0, cpNormal, True),
-        wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-        wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
-        wbBPNDStruct,
-        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-        wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
-      ], [], cpNormal, True),
-      wbRStructS('Body Parts', 'Body Part', [
-        wbString(BPNN, 'Part Node', 0, cpNormal, True),
-        wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-        wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
-        wbBPNDStruct,
-        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-        wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
-      ], [], cpNormal, True)
-    ], [], cpNormal, true),
+    wbRStructS('Body Parts', 'Body Part', [ // When the Part Name is provided
+      wbString(BPTN, 'Part Name', 0, cpNormal, True),
+      wbString(BPNN, 'Part Node', 0, cpNormal, True),
+      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
+      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+      wbBPNDStruct,
+      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+    ], [], cpNormal, False),
+    wbRStructS('Unnamed Body Parts', 'Body Part', [ // When the Part Name is not provided
+      wbString(BPNN, 'Part Node', 0, cpNormal, True),
+      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
+      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+      wbBPNDStruct,
+      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+    ], [], cpNormal, False),
     wbFormIDCk(RAGA, 'Ragdoll', [RGDL])
   ]);
 
@@ -8292,7 +8290,7 @@ begin
       ]))
     ], cpNormal, True, nil, 3),
     wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpNormal, True),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
+    wbFormIDCk(TPIC, 'Topic', [DIAL]),  // The GECK ignores it for ESM
     wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
     wbRArray('Add Topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
     wbRArray('Responses',

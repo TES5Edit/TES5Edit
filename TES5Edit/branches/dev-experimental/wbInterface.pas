@@ -2637,18 +2637,23 @@ var
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate);
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate,
+                    tmESMify, tmESPify);
   TwbToolSource = (tsPlugins, tsSaves);
+  TwbSetOfMode  = set of TwbToolMode;
 
 var
-  wbGameMode   : TwbGameMode;
-  wbToolMode   : TwbToolMode;
-  wbToolSource : TwbToolSource;
-  wbAppName    : string;
-  wbGameName   : string;
-  wbToolName   : string;
-  wbSourceName : String;
-  wbLanguage   : string;
+  wbGameMode    : TwbGameMode;
+  wbToolMode    : TwbToolMode;
+  wbToolSource  : TwbToolSource;
+  wbAppName     : string;
+  wbGameName    : string;
+  wbToolName    : string;
+  wbSourceName  : String;
+  wbLanguage    : string;
+  wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
+                    tmESMify, tmESPify ];
+  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify ];  // Auto modes that require a specific plugin to be povided.
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;

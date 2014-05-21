@@ -4975,7 +4975,7 @@ begin
             if Member.DefType = dtSubRecordUnion then begin
               if Assigned(aElement) then begin
                 Supports(aElement, IwbDataContainer, DataContainer);
-                Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer)
+                Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer);
               end else
                 Member := (Member as IwbRecordDef).Members[0];
               Assert(Assigned(Member));
