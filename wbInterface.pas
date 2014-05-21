@@ -357,6 +357,7 @@ type
     function GetShortName: string;
     function GetPath: string;
     function GetFullPath: string;
+    function GetPathName: string;
     function GetSkipped: Boolean;
     function GetDef: IwbNamedDef;
     function GetValueDef: IwbValueDef;
@@ -465,6 +466,8 @@ type
       read GetPath;
     property FullPath: string
       read GetFullPath;
+    property PathName: string
+      read GetPathName;
     property Skipped: Boolean
       read GetSkipped;
 
@@ -8667,9 +8670,6 @@ begin
       Result := 'Default'
     else
       Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
-// why would it suddenly be true ?   if Len > GetDefaultSize(aBasePtr, aEndPtr, aElement) then
-//      if wbCheckExpectedBytes then
-//        Result := Format(' <Warning: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len]);
   end;
   Used(aElement, Result);
 end;

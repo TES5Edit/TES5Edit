@@ -31,10 +31,8 @@ var
   wbMasterUpdateDone : Boolean;
   wbDontSave         : Boolean;
   wbDontBackup       : Boolean = False;
-  wbInitDone         : Boolean = False;
   wbRemoveTempPath   : Boolean = True;
 
-procedure wbDoInit;
 
 implementation
 
@@ -261,9 +259,6 @@ begin
     wbToolName    := 'View';
     wbEditAllowed := False;
     wbDontSave    := True;
-  end else if isMode('Edit') then begin
-    wbToolMode    := tmEdit;
-    wbToolName    := 'Edit';
   end else if isMode('MasterUpdate') then begin
     wbToolMode    := tmMasterUpdate;
     wbToolName    := 'MasterUpdate';
@@ -278,6 +273,9 @@ begin
   end else if isMode('Translate') then begin
     wbToolMode    := tmTranslate;
     wbToolName    := 'Trans';
+  end else if isMode('Edit') then begin
+    wbToolMode    := tmEdit;
+    wbToolName    := 'Edit';
   end else begin
     ShowMessage('Application name must contain Edit, View, LODgen, MasterUpdate or MasterRestore to select mode.');
     Exit;
@@ -456,8 +454,6 @@ begin
     wbFixupPGRD := True;
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
-
-  wbInitDone := True;
 end;
 
 initialization

@@ -227,6 +227,7 @@ type
     function GetShortName: string; virtual;
     function GetPath: string; virtual;
     function GetFullPath: string; virtual;
+    function GetPathName: string; virtual;
     function GetSkipped: Boolean; virtual;
     function GetDef: IwbNamedDef; virtual;
     function GetValueDef: IwbValueDef; virtual;
@@ -960,6 +961,7 @@ type
     destructor Destroy; override;
 
     function GetName: string; override;
+    function GetShortName: string; override;
     function GetDisplayName: string; override;
   end;
 
@@ -2862,19 +2864,6 @@ begin
     Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     FileHeader.UpdateRefs;
   end;
-
-  // remove OFST from WRLDs for non masters
-  {if not FileHeader.IsESM then
-    Exit;
-  GroupRecord := GetGroupBySignature('WRLD');
-  if not Assigned(GroupRecord) then
-    Exit;
-  for i := 0 to Pred(GroupRecord.ElementCount) do begin
-    if not Supports(IwbMainRecord, GroupRecord.Elements[i], Current) then
-      Continue;
-    if Current.Signature = 'WRLD' then
-      Current.RemoveElement('OFST');
-  end;}
 end;
 
 function TwbFile.Reached: Boolean;
@@ -3497,7 +3486,8 @@ function TwbContainer.CanChangeElementMember(const aElement: IwbElement): Boolea
 var
   SubRecordArrayDef : IwbSubRecordArrayDef;
 begin
-  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef) and
+  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and
+    Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef) and
     IsElementEditable(Self);
 end;
 
@@ -4211,7 +4201,8 @@ begin
     Exit;
   if not CanChangeElementMember(aElement) then
     Exit;
-  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
+  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or
+     not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
     Exit;
   if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
     Exit;
@@ -4290,7 +4281,8 @@ begin
     Exit;
   if not CanChangeElementMember(aElement) then
     Exit;
-  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
+  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or
+     not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
     Exit;
   if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
     Exit;
@@ -4988,7 +4980,7 @@ begin
             if Member.DefType = dtSubRecordUnion then begin
               if Assigned(aElement) then begin
                 Supports(aElement, IwbDataContainer, DataContainer);
-                Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer)
+                Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer);
               end else
                 Member := (Member as IwbRecordDef).Members[0];
               Assert(Assigned(Member));
@@ -6491,7 +6483,7 @@ begin
     Result := Self;
 end;
 
-function TwbMainRecord.GetName: string;
+function TwbMainRecord.GetShortName: string;
 var
 //  Rec: IwbRecord;
   s : string;
@@ -6518,12 +6510,6 @@ var
     else
       Result := Result + '[' + GetSignature + ':' + IntToHex64(mrStruct.mrsFormID, 8) + ']';
 
-    if Assigned(mrDef) then begin
-      s := Trim(mrDef.AdditionalInfoFor(Self));
-      if s <> '' then
-        Result := Result + ' (' + s + ')';
-    end;
-
   end else begin
     Result := inherited GetName;
 
@@ -6543,11 +6529,18 @@ var
     if s <> '' then
       Result := Result + ' "' + s +'"';
 
-    if Assigned(mrDef) then begin
-      s := Trim(mrDef.AdditionalInfoFor(Self));
-      if s <> '' then
-        Result := Result + ' (' + s + ')';
-    end;
+  end;
+end;
+
+function TwbMainRecord.GetName: string;
+var
+  s : string;
+begin
+  Result := GetShortName;
+  if Assigned(mrDef) then begin
+    s := Trim(mrDef.AdditionalInfoFor(Self));
+    if s <> '' then
+      Result := Result + ' (' + s + ')';
   end;
 end;
 
@@ -10337,11 +10330,11 @@ begin
     3: Result := 'Sub-Block ' + IntToStr(grStruct.grsLabel);
     4: Result := 'Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
     5: Result := 'Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
-    6: Result := 'Children';
-    7: Result := 'Children';
-    8: Result := 'Persistent';
-    9: Result := 'Temporary';
-    10: Result := 'Visible when Distant';
+    6: Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
+    7: Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
+    8: Result := 'Persistent of ' + IntToHex(grStruct.grsLabel, 8);
+    9: Result := 'Temporary of ' + IntToHex(grStruct.grsLabel, 8);
+    10: Result := 'Visible when Distant of ' + IntToHex(grStruct.grsLabel, 8);
   else
     Result := Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
   end;
@@ -11266,6 +11259,18 @@ begin
   if Assigned(eContainer) then
     Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+'] ';
   Result := Result + GetName;
+end;
+
+function TwbElement.GetPathName: string;
+begin
+  if Assigned(eContainer) then
+    Result := IwbElement(eContainer).PathName
+  else
+    Result := '';
+  Result := Result + '\';
+  if Assigned(eContainer) then
+    Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+'] ';
+  Result := Result + GetShortName;
 end;
 
 function TwbElement.GetInjectionSourceFiles: TDynFiles;

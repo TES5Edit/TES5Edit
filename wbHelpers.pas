@@ -27,6 +27,7 @@ function FindMatchText(Strings: TStrings; const Str: string): Integer;
 function IsFileESM(const aFileName: string): Boolean;
 function IsFileESP(const aFileName: string): Boolean;
 procedure DeleteDirectory(const DirName: string);
+function FullPathToFilename(aString: string): string;
 procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer); // MirrorType: 1 - horizontal, 2 - vertical, 0 - both
 function wbAlphaBlend(DestDC, X, Y, Width, Height,
   SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
@@ -253,6 +254,23 @@ begin
   FileOp.pFrom := PChar(DirName+#0);//double zero-terminated
   FileOp.fFlags := FOF_SILENT or FOF_NOERRORUI or FOF_NOCONFIRMATION;
   SHFileOperation(FileOp);
+end;
+
+function FullPathToFilename(aString: string): string;
+var
+  i: Integer;
+  s: string;
+begin
+  s := aString;
+  for i := Length(s) downto 1 do
+    if Copy(s, i, 3) = ' \ ' then begin
+      Delete(s, i, 1);
+      Delete(s, i+1, 1);
+  	end else if s[i] = '"' then
+      s[i] := ''''
+  	else if s[i] = ':' then
+      s[i] := '-';
+  Result := s;
 end;
 
 procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer);
