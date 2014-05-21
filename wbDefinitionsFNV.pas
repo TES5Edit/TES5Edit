@@ -7794,27 +7794,25 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
     wbMODLReq,
-    wbRUnion('Body Part Data', [
-      wbRStructS('Body Parts', 'Body Part', [
-        wbString(BPTN, 'Part Name', 0, cpNormal, True),
-        wbString(BPNN, 'Part Node', 0, cpNormal, True),
-        wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-        wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
-        wbBPNDStruct,
-        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-        wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
-      ], [], cpNormal, True),
-      wbRStructS('Body Parts', 'Body Part', [
-        wbString(BPNN, 'Part Node', 0, cpNormal, True),
-        wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-        wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
-        wbBPNDStruct,
-        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-        wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
-      ], [], cpNormal, True)
-    ], [], cpNormal, true),
+    wbRStructS('Body Parts', 'Body Part', [ // When the Part Name is provided
+      wbString(BPTN, 'Part Name', 0, cpNormal, True),
+      wbString(BPNN, 'Part Node', 0, cpNormal, True),
+      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
+      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+      wbBPNDStruct,
+      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+    ], [], cpNormal, False),
+    wbRStructS('Unnamed Body Parts', 'Body Part', [ // When the Part Name is not provided
+      wbString(BPNN, 'Part Node', 0, cpNormal, True),
+      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
+      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+      wbBPNDStruct,
+      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+    ], [], cpNormal, False),
     wbFormIDCk(RAGA, 'Ragdoll', [RGDL])
   ]);
 
