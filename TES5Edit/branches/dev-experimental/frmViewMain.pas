@@ -12645,6 +12645,10 @@ begin
     Value := wbTempPath;
     Done := True;
   end else
+  if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
+    Value := wbSettingsFileName;
+    Done := True;
+  end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
     Value := FilterApplied;
     Done := True;
@@ -12656,6 +12660,14 @@ begin
   if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       AddMessage(Args.Values[0]);
+      Done := True;
+      Application.ProcessMessages;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'FullPathToFilename') then begin
+    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
+      Value := FullPathToFilename(Args.Values[0]);
       Done := True;
       Application.ProcessMessages;
     end else
