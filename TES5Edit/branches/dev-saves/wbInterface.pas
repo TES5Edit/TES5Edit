@@ -357,6 +357,7 @@ type
     function GetShortName: string;
     function GetPath: string;
     function GetFullPath: string;
+    function GetPathName: string;
     function GetSkipped: Boolean;
     function GetDef: IwbNamedDef;
     function GetValueDef: IwbValueDef;
@@ -465,6 +466,8 @@ type
       read GetPath;
     property FullPath: string
       read GetFullPath;
+    property PathName: string
+      read GetPathName;
     property Skipped: Boolean
       read GetSkipped;
 
@@ -2637,18 +2640,23 @@ var
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate, tmESMify, tmESPify);
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate,
+                    tmESMify, tmESPify, tmSortAndCleanMasters, tmRunScript);
   TwbToolSource = (tsPlugins, tsSaves);
+  TwbSetOfMode  = set of TwbToolMode;
 
 var
-  wbGameMode   : TwbGameMode;
-  wbToolMode   : TwbToolMode;
-  wbToolSource : TwbToolSource;
-  wbAppName    : string;
-  wbGameName   : string;
-  wbToolName   : string;
-  wbSourceName : String;
-  wbLanguage   : string;
+  wbGameMode    : TwbGameMode;
+  wbToolMode    : TwbToolMode;
+  wbToolSource  : TwbToolSource;
+  wbAppName     : string;
+  wbGameName    : string;
+  wbToolName    : string;
+  wbSourceName  : String;
+  wbLanguage    : string;
+  wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
+                    tmESMify, tmESPify, tmSortAndCleanMasters, tmRunScript ];
+  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters, tmRunScript ];  // Auto modes that require a specific plugin to be povided.
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;

@@ -16,6 +16,9 @@ unit wbInit;
 
 interface
 
+uses
+  Classes;
+
 var
   wbApplicationTitle   : string;
   wbTheGameIniFileName : String;
@@ -27,8 +30,8 @@ var
   wbPluginsFileName    : String;
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
-  wbPluginToUse        : string;  // Passing a specific plugin as parameter
-  wbLogFile            : string;  // Optional log file fr this session
+  wbPluginToUse        : string;  // Passed a specific plugin as parameter
+  wbLogFile            : string;  // Optional log file for this session
   wbOutputBaseFileName : string;  // Optional root result file name for splitting xDump result into separate files. TBD
 
   wbMasterUpdateDone : Boolean;
@@ -44,6 +47,7 @@ var
                                         // 2 = also C/W sub blocks and Topics
                                         // 3 = also Primary/Temporary/...
   wbParamIndex       : integer = 1;     // First unused parameter
+  wbPluginsToUse     : TStringList;
 
 function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
@@ -170,9 +174,11 @@ begin
     Result := wbFindNextValidCmdLineFileName(startingIndex, aValue, defaultPath);
   until not Result or wbCheckForPluginExtension(aValue);
   if Result  then
-    if (AnsiCompareText(ExpandFileName(ExtractFilePath(aValue)), ExpandFileName(defaultPath)) = 0) then
-      aValue := ExtractFileName(aValue)
-    else
+    if (AnsiCompareText(ExpandFileName(ExtractFilePath(aValue)), ExpandFileName(defaultPath)) = 0) then begin
+      aValue := ExtractFileName(aValue);
+      if not Assigned(wbPluginsToUse) then wbPluginsToUse := TStringList.Create;
+      wbPluginsToUse.Add(aValue);
+    end else
       Result := False;
 end;
 
@@ -360,6 +366,9 @@ begin
   end else if isMode('clearESM') then begin
     wbToolMode    := tmESPify;
     wbToolName    := 'ClearingESMflag';
+  end else if isMode('SortAndClean') then begin
+    wbToolMode    := tmSortAndCleanMasters;
+    wbToolName    := 'SortAndCleanMasters';
   end else if isMode('Edit') then begin
     wbToolMode    := tmEdit;
     wbToolName    := 'Edit';
@@ -504,7 +513,7 @@ begin
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
 
-  if wbToolMode in [tmESMify, tmESPify] then // look for the file name
+  if wbToolMode in wbPluginModes then // look for the file name
     if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbDataPath) then begin
       ShowMessage(wbToolName+' mode requires a valid plugin name!');
       Exit;

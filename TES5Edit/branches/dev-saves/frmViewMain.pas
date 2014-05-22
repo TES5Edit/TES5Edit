@@ -3038,7 +3038,7 @@ begin
 
         CheckListBox1.Items.Assign(sl);
 
-        if (wbToolMode in [tmESMify, tmESPify]) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
+        if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
             j := CheckListBox1.Items.IndexOf(wbPluginToUse);
             if j < 0 then begin
               ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
@@ -3079,7 +3079,7 @@ begin
           end;
         end;
 
-        if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) then begin
+        if not (wbToolMode in wbAutoModes) then begin
           ShowModal;
           if ModalResult <> mrOk then begin
             frmMain.Close;
@@ -3129,7 +3129,7 @@ begin
         Free;
       end;
 
-      if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) then
+      if not (wbToolMode in wbAutoModes) then
         with TfrmFileSelect.Create(nil) do try
 
           if (not wbEditAllowed) or wbTranslationMode then begin
@@ -4020,7 +4020,7 @@ begin
   LastUpdate := GetTickCount;
   Font := Screen.IconFont;
   Caption := Application.Title;
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) then begin
+  if (wbToolMode in wbAutoModes) then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;
@@ -9904,7 +9904,7 @@ var
 begin
   Result := False;
   for i := Low(Files) to High(Files) do with Files[i] do
-    if IsESM and (not (fsIsHardcoded in FileStates)) and (SameText(ExtractFileExt(FileName), '.esp')) then begin
+    if IsESM and (not (fsIsHardcoded in FileStates)) and SameText(ExtractFileExt(FileName), '.esp') then begin
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Removing ESM Flag: ' + FileName);
       IsESM := False;
       Result := True;
@@ -9950,7 +9950,7 @@ begin
     if Assigned(Settings) then
       cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
-    if (CheckListBox1.Count > 0) and not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) then begin
+    if (CheckListBox1.Count > 0) and ((wbToolMode = tmLodGen) or not (wbToolMode in wbAutoModes)) then begin
       ShowModal;
       wbDontBackup := not cbBackup.Checked;
       if Assigned(Settings) then begin
@@ -10747,6 +10747,7 @@ end;
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
 var
   ChangesMade : Boolean;
+  i, dummy: Integer;
 begin
   if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
     mmoMessages.Lines.AddStrings(NewMessages);
@@ -10759,8 +10760,9 @@ begin
       tbsMessages.Highlighted := True;
   end;
 
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) and wbLoaderDone and not wbMasterUpdateDone then begin
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) and wbLoaderDone and not wbMasterUpdateDone then begin
     wbMasterUpdateDone := True;
+    ChangesMade := False;
     if wbLoaderError then begin
       wbDontSave := True;
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= Error =--');
@@ -10775,7 +10777,14 @@ begin
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
     end else try
-      if (wbToolMode in [tmMasterRestore, tmESPify]) then
+      if (wbToolMode = tmSortAndCleanMasters) then begin
+        for i := Low(Files) to High(Files) do
+          if wbPluginsToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
+            Files[i].SortMasters;
+            Files[i].CleanMasters;
+            ChangesMade := ChangesMade or Files[i].Modified;
+          end
+      end else if (wbToolMode in [tmMasterRestore, tmESPify]) then
         ChangesMade := RestorePluginsFromMaster
       else
         ChangesMade := SetAllToMaster;
@@ -10791,7 +10800,7 @@ begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
       end else
-        if (wbToolMode in [tmESMify, tmESPify]) then
+        if (wbToolMode in wbPluginModes) then
           frmMain.Close;
 
     except
@@ -12663,6 +12672,10 @@ begin
     Value := wbTempPath;
     Done := True;
   end else
+  if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
+    Value := wbSettingsFileName;
+    Done := True;
+  end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
     Value := FilterApplied;
     Done := True;
@@ -12674,6 +12687,14 @@ begin
   if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       AddMessage(Args.Values[0]);
+      Done := True;
+      Application.ProcessMessages;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'FullPathToFilename') then begin
+    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
+      Value := FullPathToFilename(Args.Values[0]);
       Done := True;
       Application.ProcessMessages;
     end else
@@ -13032,7 +13053,7 @@ begin
 
   if (wbToolMode in [tmLODgen]) then begin
     if not ForceTerminate then
-      tmrGenerator.Enabled := true;
+      tmrGenerator.Enabled := True;
     Exit;
   end;
 
@@ -13045,7 +13066,7 @@ begin
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
   tmrCheckUnsaved.Enabled := wbEditAllowed and
-    not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen, tmESMify, tmESPify]) and
+    not (wbToolMode in wbAutoModes) and
     not wbIKnowWhatImDoing;
 end;
 

@@ -6,8 +6,8 @@ unit UserScript;
 var
   slScripts, sl: TStringList;
   basePath, extension: string;
-	debug: boolean;
-		
+  debug: boolean;
+    
 function Initialize: integer;
 var
   i: TIniFile;
@@ -16,8 +16,9 @@ begin
   sl := TStringList.Create;
   i := TIniFile.Create(wbSettingsFileName);
   basePath := i.ReadString('ExportText', 'BasePath', wbTempPath);
-  extension := i.ReadString('ExportText', 'Extension', '.geck');
-	debug := false;
+  if Pos('\\?\', basePath)=0 then basePath := '\\?\'+basePath;  // allows program to handle very long file names
+  extension := i.ReadString('ExportText', 'Extension', '.txt');
+  debug := false {true};
 end;
 
 function Process(e: IInterface): integer;
@@ -29,36 +30,37 @@ begin
   
   if ((DefType(e) = dtString) or (DefType(e) = dtLString) or (DefType(e) = dtLenString)) then begin
     x := PathName(e);
-		x := FullPathToFilename(x);
+    x := FullPathToFilename(x);
     c := basePath + x + extension;
     x := ExtractFilePath(c);
-		c := ExtractFileName(c);
+    c := ExtractFileName(c);
     if debug then AddMessage('Processing: '+c+' at '+x);
+    
     ForceDirectories(x);
-		if DirectoryExists(x) then begin
-			x := x+c;
-			s := GetEditValue(e);
-			slScripts.Text := s;
-			if FileExists(x) then begin
-				if debug then AddMessage(x+' existe');
-				sl.Clear;
-				sl.LoadFromFile(x);
-				if sl.Text <> slScripts.Text then
-					slScripts.SaveToFile(x);
-			end else
-				slScripts.SaveToFile(x);
-		end else
-			if debug then AddMessage('Directory not created : '+x);
+    if DirectoryExists(x) then begin
+      x := x+c;
+      s := GetEditValue(e);
+      slScripts.Text := s;
+      if FileExists(x) then begin
+        if debug then AddMessage(x+' exists');
+        sl.Clear;
+        sl.LoadFromFile(x);
+        if sl.Text <> slScripts.Text then
+          slScripts.SaveToFile(x);
+      end else
+        slScripts.SaveToFile(x);
+    end else
+      if debug then AddMessage('Directory not created : '+x);
   end;
   
   for i := 0 to ElementCount(e) - 1 do
-		Process(ElementByIndex(e, i));
+    Process(ElementByIndex(e, i));
 end;
 
 function finalize: integer;
 begin
   sl.Free;
-	slScripts.Free;
+  slScripts.Free;
 end;
 
 end.

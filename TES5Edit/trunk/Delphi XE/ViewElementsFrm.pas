@@ -123,11 +123,12 @@ end;
 
 procedure TfrmViewElements.btnCompareClick(Sender: TObject);
 var
-  TabSheet : TTabSheet;
+  TabSheet1, TabSheet2 : TTabSheet;
   idx: integer;
   Path, aFile1, aFile2, aExe, aParams: string;
   StartUpInfo: TStartUpInfo;
   ProcessInfo: TProcessInformation;
+  sl: TStringList;
 begin
   if pcView.PageCount < 2 then
     Exit;
@@ -141,14 +142,14 @@ begin
   aParams := Copy(CompareCmdLine, Succ(Length(aExe)), Length(CompareCmdLine));
 
   try
-    TabSheet := pcView.Pages[idx];
-    aFile2 := Path + TabSheet.Caption + '.txt';
-    TMemo(TabSheet.Controls[0]).Lines.SaveToFile(aFile2);
+    TabSheet2 := pcView.Pages[idx];
+    aFile2 := Path + TabSheet2.Caption + '.txt';
+    TMemo(TabSheet2.Controls[0]).Lines.SaveToFile(aFile2);
     aParams := StringReplace(aParams, '%2', '"'+aFile2+'"', []);
 
-    TabSheet := pcView.Pages[Pred(idx)];
-    aFile1 := Path + TabSheet.Caption + '.txt';
-    TMemo(TabSheet.Controls[0]).Lines.SaveToFile(aFile1);
+    TabSheet1 := pcView.Pages[Pred(idx)];
+    aFile1 := Path + TabSheet1.Caption + '.txt';
+    TMemo(TabSheet1.Controls[0]).Lines.SaveToFile(aFile1);
     aParams := StringReplace(aParams, '%1', '"'+aFile1+'"', []);
 
     FillChar(StartUpInfo, SizeOf(TStartUpInfo), 0);
@@ -168,6 +169,27 @@ begin
       //GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
       CloseHandle(ProcessInfo.hThread);
       CloseHandle(ProcessInfo.hProcess);
+      sl := TStringList.Create;
+      try
+        sl.LoadfromFile(aFile1);
+        with TMemo(TabSheet1.Controls[0]) do
+          if (sl.Text<>Lines.Text) and not ReadOnly then begin
+            TMemo(TabSheet1.Controls[0]).Lines.Text := sl.Text;
+            TMemo(TabSheet1.Controls[0]).Modified := True;
+            with TabSheet1 do
+              if (Length(Caption)>0) and (Caption[Length(Caption)]<>'*') then Caption := Caption + '*';
+          end;
+        sl.LoadfromFile(aFile2);
+        with TMemo(TabSheet2.Controls[0]) do
+          if (sl.Text<>Lines.Text) and not ReadOnly then begin
+            TMemo(TabSheet2.Controls[0]).Lines.Text := sl.Text;
+            TMemo(TabSheet2.Controls[0]).Modified := True;
+            with TabSheet2 do
+              if (Length(Caption)>0) and (Caption[Length(Caption)]<>'*') then Caption := Caption + '*';
+          end;
+      finally
+        FreeAndNil(sl);
+      end;
       DeleteFile(aFile1);
       DeleteFile(aFile2);
     end else
