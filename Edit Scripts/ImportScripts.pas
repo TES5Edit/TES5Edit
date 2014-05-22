@@ -1,5 +1,5 @@
 {
-  Export all the text in selected records.
+  Import the text of scripts in selected records.
 }
 unit UserScript;
 
@@ -15,9 +15,9 @@ begin
   slScripts := TStringList.Create;
   sl := TStringList.Create;
   i := TIniFile.Create(wbSettingsFileName);
-  basePath := i.ReadString('ExportText', 'BasePath', wbTempPath);
+  basePath := i.ReadString('ExportScripts', 'BasePath', wbTempPath);
   if Pos('\\?\', basePath)=0 then basePath := '\\?\'+basePath;  // allows program to handle very long file names
-  extension := i.ReadString('ExportText', 'Extension', '.txt');
+  extension := i.ReadString('ExportScripts', 'Extension', '.geck');
   debug := false {true};
 end;
 
@@ -28,7 +28,7 @@ var
   i: integer;
 begin
   
-  if ((DefType(e) = dtString) or (DefType(e) = dtLString) or (DefType(e) = dtLenString)) then begin
+  if Signature(e) = 'SCTX' then begin
     x := PathName(e);
     x := FullPathToFilename(x);
     c := basePath + x + extension;
@@ -45,12 +45,12 @@ begin
         if debug then AddMessage(x+' exists');
         sl.Clear;
         sl.LoadFromFile(x);
-        if sl.Text <> slScripts.Text then
-          slScripts.SaveToFile(x);
-      end else
-        slScripts.SaveToFile(x);
-    end else
-      if debug then AddMessage('Directory not created : '+x);
+        if sl.Text <> slScripts.Text then begin
+          if debug then AddMessage(x+' modified');
+          SetEditValue(e, sl.Text);
+        end;
+      end;
+    end;
   end;
   
   for i := 0 to ElementCount(e) - 1 do

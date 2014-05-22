@@ -1,5 +1,5 @@
 {
-  Export all the text in selected records.
+  Import all the text in selected records.
 }
 unit UserScript;
 
@@ -45,12 +45,12 @@ begin
         if debug then AddMessage(x+' exists');
         sl.Clear;
         sl.LoadFromFile(x);
-        if sl.Text <> slScripts.Text then
-          slScripts.SaveToFile(x);
-      end else
-        slScripts.SaveToFile(x);
-    end else
-      if debug then AddMessage('Directory not created : '+x);
+        if sl.Text <> slScripts.Text then begin
+          if debug then AddMessage(x+' modified');
+          SetEditValue(e, sl.Text);
+        end;
+      end;
+    end;
   end;
   
   for i := 0 to ElementCount(e) - 1 do
