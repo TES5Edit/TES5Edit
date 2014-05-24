@@ -10332,9 +10332,9 @@ begin
     5: Result := 'Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
     6: Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
     7: Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
-    8: Result := 'Persistent of ' + IntToHex(grStruct.grsLabel, 8);
-    9: Result := 'Temporary of ' + IntToHex(grStruct.grsLabel, 8);
-    10: Result := 'Visible when Distant of ' + IntToHex(grStruct.grsLabel, 8);
+    8: Result := 'Persistent';
+    9: Result := 'Temporary';
+    10: Result := 'Visible when Distant';
   else
     Result := Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
   end;
