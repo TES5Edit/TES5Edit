@@ -78,31 +78,32 @@ begin
     rb2.Caption := 'Import';
     rb2.Width := 75;
     
-    rg2 := TRadioGroup.Create(frm);
-    rg2.Parent := pnl;
-    rg2.Left := 16;
-    rg2.Height := 60;
-    rg2.Top := rg.Top + rg.Height + 1;
-    rg2.Width := 220;
-    rg2.Caption := 'Selection ?';
-    rg2.ClientHeight := 45;
-    rg2.ClientWidth := 220;
-    
-    rb4 := TRadioButton.Create(rg);
-    rb4.Parent := rg2;
-    rb4.Left := 26;
-    rb4.Top := 18;
-    rb4.Caption := 'All texts';
-    rb4.Width := 80;
-    rb4.Checked := True;
-    
-    rb5 := TRadioButton.Create(rg);
-    rb5.Parent := rg2;
-    rb5.Left := rb1.Left + rb1.Width + 30;
-    rb5.Top := rb1.Top;
-    rb5.Caption := 'Only scripts';
-    rb5.Width := 75;
-    
+		if wbGameMode <> gmTES5 then begin
+			rg2 := TRadioGroup.Create(frm);
+			rg2.Parent := pnl;
+			rg2.Left := 16;
+			rg2.Height := 60;
+			rg2.Top := rg.Top + rg.Height + 1;
+			rg2.Width := 220;
+			rg2.Caption := 'Selection ?';
+			rg2.ClientHeight := 45;
+			rg2.ClientWidth := 220;
+			
+			rb4 := TRadioButton.Create(rg);
+			rb4.Parent := rg2;
+			rb4.Left := 26;
+			rb4.Top := 18;
+			rb4.Caption := 'All texts';
+			rb4.Width := 80;
+			rb4.Checked := True;
+			
+			rb5 := TRadioButton.Create(rg);
+			rb5.Parent := rg2;
+			rb5.Left := rb1.Left + rb1.Width + 30;
+			rb5.Top := rb1.Top;
+			rb5.Caption := 'Only scripts';
+			rb5.Width := 75;
+    end;
 		
     btnOk := TButton.Create(frm);
     btnOk.Parent := pnl;
@@ -123,8 +124,11 @@ begin
     if frm.ShowModal = mrOk then begin
 			if rb1.Checked then doImport := False else
 			if rb2.Checked then doImport := True;
-			if rb4.Checked then doScriptsOnly := False else
-			if rb5.Checked then doScriptsOnly := True;
+			if wbGameMode = gmTES5 then
+			  doScriptsOnly := False
+			else
+				if rb4.Checked then doScriptsOnly := False else
+				if rb5.Checked then doScriptsOnly := True;
 			doStop := False;
 		end else
 			doStop := True;
@@ -137,6 +141,7 @@ function Initialize: integer;
 var
   i: TIniFile;
 begin
+  debug := False;
   slText := TStringList.Create;
   sl := TStringList.Create;
   i := TIniFile.Create(wbSettingsFileName);
@@ -153,7 +158,6 @@ begin
 		extension := i.ReadString('ExportTexts', 'Extension', '.txt');
 	end;
 	if Pos('\\?\', basePath)=0 then basePath := '\\?\'+basePath;  // allows program to handle very long file names
-  debug := true;
 	if debug then AddMessage('Using directory: "'+basePath+'" and extension: "'+extension+'"');
 end;
 
