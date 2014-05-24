@@ -7828,12 +7828,12 @@ begin
               'Unknown 4',
               'Unknown 5',
               'Unknown 6',
-              'Preferred pathing',
+              'Preferred',
               'Unknown 8',
               'Unknown 9',
               'Water',
               'Door',
-              'Unknown 12',
+              'Tested',
               'Unknown 13',
               'Unknown 14',
               'Unknown 15',
@@ -11865,7 +11865,7 @@ begin
 
     {--- Map Data ---}
     wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Start Marker'),
+      wbEmpty(XMRK, 'Map Marker Data'),
       wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
         {0x01} 'Visible',
         {0x02} 'Can Travel To',

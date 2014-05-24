@@ -9219,10 +9219,11 @@ begin
 
     {--- Map Data ---}
     wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Data Marker'),
+      wbEmpty(XMRK, 'Map Marker Data'),
       wbInteger(FNAM, 'Flags', itU8, wbFlags([
         {0x01} 'Visible',
-        {0x02} 'Can Travel To'
+        {0x02} 'Can Travel To',
+        {0x04} '"Show All" Hidden'
       ]), cpNormal, True),
       wbFULLReq,
       wbStruct(TNAM, '', [

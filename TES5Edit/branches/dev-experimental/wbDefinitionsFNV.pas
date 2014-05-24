@@ -9681,10 +9681,11 @@ begin
 
     {--- Map Data ---}
     wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Start Marker'),
+      wbEmpty(XMRK, 'Map Marker Data'),
       wbInteger(FNAM, 'Flags', itU8, wbFlags([
         {0x01} 'Visible',
-        {0x02} 'Can Travel To'
+        {0x02} 'Can Travel To',
+        {0x04} '"Show All" Hidden'
       ]), cpNormal, True),
       wbFULLReq,
       wbStruct(TNAM, '', [
@@ -11336,8 +11337,6 @@ begin
   wbAddGroupOrder(CLMT);
   wbAddGroupOrder(REGN);
   wbAddGroupOrder(NAVI);
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(WRLD);
   wbAddGroupOrder(DIAL);
   wbAddGroupOrder(QUST);
   wbAddGroupOrder(IDLE);
@@ -11386,6 +11385,9 @@ begin
   wbAddGroupOrder(DEHY);
   wbAddGroupOrder(HUNG);
   wbAddGroupOrder(SLPD);
+  // Forced at the end.
+  wbAddGroupOrder(CELL);
+  wbAddGroupOrder(WRLD);
 end;
 
 procedure DefineFNV;
