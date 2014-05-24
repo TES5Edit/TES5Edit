@@ -6487,11 +6487,13 @@ begin
         ]))
       ], cpNormal, False, nil, 11),
 
-      wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
-      wbStruct(MHDT, 'Max Height Data', [
-         wbUnion('Unknown', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
-         wbArray('Unknown', wbInteger('Data', itS8))
-      ]),
+      wbByteArray(TVDT, 'Unknown', 0, cpNormal),
+      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
+//      wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
+//      wbStruct(MHDT, 'Max Height Data', [ // Rolled back temporarily due to issues while copying.
+//         wbUnion('Unknown', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
+//         wbArray('Unknown', wbInteger('Data', itS8))
+//      ]),
       wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
       wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
