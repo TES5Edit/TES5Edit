@@ -11865,7 +11865,7 @@ begin
 
     {--- Map Data ---}
     wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Start Marker'),
+      wbEmpty(XMRK, 'Map Marker Data'),
       wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
         {0x01} 'Visible',
         {0x02} 'Can Travel To',
