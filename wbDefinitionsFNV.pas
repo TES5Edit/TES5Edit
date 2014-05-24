@@ -11284,8 +11284,6 @@ begin
   wbAddGroupOrder(CLMT);
   wbAddGroupOrder(REGN);
   wbAddGroupOrder(NAVI);
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(WRLD);
   wbAddGroupOrder(DIAL);
   wbAddGroupOrder(QUST);
   wbAddGroupOrder(IDLE);
@@ -11334,6 +11332,9 @@ begin
   wbAddGroupOrder(DEHY);
   wbAddGroupOrder(HUNG);
   wbAddGroupOrder(SLPD);
+  // Forced at the end.
+  wbAddGroupOrder(CELL);
+  wbAddGroupOrder(WRLD);
 end;
 
 procedure DefineFNV;
