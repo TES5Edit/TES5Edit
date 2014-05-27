@@ -4933,7 +4933,9 @@ begin
       {11} 'Silence',
       {12} 'Split Beam',
       {13} 'VATS Bonus',
-      {14} 'Increase Zoom'
+      {14} 'Increase Zoom',
+      {15} '',
+      {16} 'Suppressor'
     ]);
 
   wbSkillEnum :=
@@ -8247,7 +8249,7 @@ begin
           ])),
           wbByteArray('Unused', 3)
         ], cpNormal, False, nil, 5),
-        wbString(NAM1, 'Response Text', 0, cpTranslate, True),
+        wbStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
         wbString(NAM2, 'Script Notes', 0, cpTranslate, True),
         wbString(NAM3, 'Edits'),
         wbFormIDCk(SNAM, 'Speaker Animation', [IDLE]),
@@ -9189,7 +9191,7 @@ begin
       ]), cpNormal, False, nil, nil, 2),
       wbUnion('Target', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, CMNY, CCRD, IMOD]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, CMNY, CCRD, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
       ]),
@@ -9275,7 +9277,7 @@ begin
       ])),
       wbUnion('Target', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
-        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, CMNY, CCRD, IMOD]),
+        wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, CMNY, CCRD, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
       ]),

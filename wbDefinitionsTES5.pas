@@ -9795,7 +9795,7 @@ begin
         ])),
         wbByteArray('Unused', 3)
       ]),
-      wbLString(NAM1, 'Response Text', 0),
+      wbLStringKC(NAM1, 'Response Text', 0),
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
