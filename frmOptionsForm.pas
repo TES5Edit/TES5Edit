@@ -27,7 +27,7 @@ type
     cbHideNeverShow: TCheckBox;
     cbLoadBSAs: TCheckBox;
     cbSortFLST: TCheckBox;
-    tsColors: TTabSheet;
+    tsUISettings: TTabSheet;
     clbConflictThis: TColorBox;
     Label3: TLabel;
     cbConflictThis: TComboBox;
@@ -48,6 +48,9 @@ type
     btnDoNotBuildRefAdd: TButton;
     btnDoNotBuildRefDel: TButton;
     cbRemoveOffsetData: TCheckBox;
+    pnlFontRecords: TPanel;
+    pnlFontMessages: TPanel;
+    pnlFontViewer: TPanel;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
@@ -57,6 +60,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnDoNotBuildRefAddClick(Sender: TObject);
     procedure btnDoNotBuildRefDelClick(Sender: TObject);
+    procedure pnlFontRecordsClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -171,6 +175,17 @@ procedure TfrmOptions.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   if Key = VK_ESCAPE then
     ModalResult := mrCancel;
+end;
+
+procedure TfrmOptions.pnlFontRecordsClick(Sender: TObject);
+begin
+  with TFontDialog.Create(Self) do try
+    Font := TPanel(Sender).Font;
+    if Execute then
+      TPanel(Sender).Font := Font;
+  finally
+    Free;
+  end;
 end;
 
 end.

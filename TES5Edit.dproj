@@ -52,12 +52,12 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<VerInfo_Release>32</VerInfo_Release>
+			<VerInfo_Release>33</VerInfo_Release>
 			<Manifest_File>None</Manifest_File>
 			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<UsePackages>true</UsePackages>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.33.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.33;Comments=</VerInfo_Keys>
 			<VerInfo_PreRelease>true</VerInfo_PreRelease>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -162,7 +162,7 @@
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">3</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">32</VersionInfo>
+						<VersionInfo Name="Release">33</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
@@ -175,13 +175,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.0.32.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.0.33.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">xEdit from ElminsterAU</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">3.0.32</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.0.33</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>
