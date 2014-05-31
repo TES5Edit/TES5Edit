@@ -68,6 +68,11 @@ begin
   end;
 end;
 
+procedure _FullPathToFilename(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := FullPathToFilename(String(Args.Values[0]));
+end;
+
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbTestWrite := True;
@@ -1492,6 +1497,7 @@ begin
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'FullPathToFilename', _FullPathToFilename, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFilterStrings', wbFilterStrings, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
