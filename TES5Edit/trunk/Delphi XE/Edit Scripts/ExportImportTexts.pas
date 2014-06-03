@@ -13,19 +13,20 @@ var
 // OptionsForm: Provides user with options for merging
 procedure OptionsForm;
 var
+  sf: TMemIniFile;
   frm: TForm;
-  btnOk, btnCancel, btnFocus: TButton;
-  cb: TGroupBox;
-  cbArray: Array[0..254] of TCheckBox;
+  btnOk, btnCancel: TButton;
   rb1, rb2, rb4, rb5: TRadioButton;
-  lbl1, lbl2: TLabel;
   rg, rg2: TRadioGroup;
+  lb1, lb2: TLabel;
+  ed1, ed2: TEdit;
   pnl: TPanel;
   sb: TScrollBox;
   i, j, k, height, m, more: integer;
   holder: TObject;
   masters, e, f: IInterface;
   s: string;
+  doCloseSF: boolean;
 begin
   more := 0;
   frm := TForm.Create(nil);
@@ -135,30 +136,134 @@ begin
   finally
     frm.Free;
   end;
+
+  if not doStop then begin
+    frm := TForm.Create(nil);
+    if Assigned(wbSettings) then begin
+      sf := wbSettings;
+      doCloseSF := False;
+    end else begin
+      sf := TIniFile.Create(wbSettingsFileName);
+      doCloseSF := True;
+    end;
+    try
+      if doScriptsOnly then
+        if doImport then
+          frm.Caption := 'Import Scripts from'
+        else
+          frm.Caption := 'Export Scripts to'
+      else
+        if doImport then
+          frm.Caption := 'Import texts from'
+        else
+          frm.Caption := 'Export texts to';
+
+      if doScriptsOnly then begin
+        basePath := sf.ReadString('ExportScripts', 'BasePath', wbTempPath);
+        extension := sf.ReadString('ExportScripts', 'Extension', '.geck');
+      end else begin
+        basePath := sf.ReadString('ExportTexts', 'BasePath', wbTempPath);
+        extension := sf.ReadString('ExportTexts', 'Extension', '.txt');
+      end;
+
+      frm.Width := Screen.Width / 3 * 2;
+      frm.Position := poScreenCenter;
+      height := 240;
+      if height > (Screen.Height - 100) then begin
+        frm.Height := Screen.Height - 100;
+        sb := TScrollBox.Create(frm);
+        sb.Parent := frm;
+        sb.Height := Screen.Height - 290;
+        sb.Align := alTop;
+        holder := sb;
+      end
+      else begin
+        frm.Height := height;
+        holder := frm;
+      end;
+
+      pnl := TPanel.Create(frm);
+      pnl.Parent := frm;
+      pnl.BevelOuter := bvNone;
+      pnl.Align := alBottom;
+      pnl.Height := 190;
+      
+      lb1 := TLabel.Create(frm);
+      lb1.Parent := pnl;
+      lb1.Left := 26;
+      lb1.Top := 18;
+      lb1.Caption := 'Path';
+      lb1.Width := 80;
+      
+      ed1 := TEdit.Create(frm);
+      ed1.Parent := pnl;
+      ed1.Left := lb1.Left + lb1.width;
+      ed1.Top := lb1.top;
+      ed1.Width := frm.Width - lb1.Width - 60;
+      ed1.Text := basePath;
+      
+      lb2 := TLabel.Create(frm);
+      lb2.Parent := pnl;
+      lb2.Left := lb1.Left;
+      lb2.Top := lb1.Top + lb1.Height + 30;
+      lb2.Caption := 'Extension';
+      lb2.Width := lb1.Width;
+
+      ed2 := TEdit.Create(frm);
+      ed2.Parent := pnl;
+      ed2.Left := lb2.Left + lb2.width;
+      ed2.Top := lb2.top;
+      ed2.Width := ed1.Width;
+      ed2.Text := extension;
+      
+      btnOk := TButton.Create(frm);
+      btnOk.Parent := pnl;
+      btnOk.Caption := 'OK';
+      btnOk.ModalResult := mrOk;
+      btnOk.Left := 60;
+      btnOk.Top := pnl.Height - 40;
+      
+      btnCancel := TButton.Create(frm);
+      btnCancel.Parent := pnl;
+      btnCancel.Caption := 'Cancel';
+      btnCancel.ModalResult := mrCancel;
+      btnCancel.Left := btnOk.Left + btnOk.Width + 16;
+      btnCancel.Top := btnOk.Top;
+      
+      frm.ActiveControl := btnOk;
+      
+      if frm.ShowModal = mrOk then begin
+        basePath := ed1.Text;
+        extension := ed2.Text;
+        if doScriptsOnly then begin
+          sf.WriteString('ExportScripts', 'BasePath', basePath);
+          sf.WriteString('ExportScripts', 'Extension', extension);
+        end else begin
+          sf.WriteString('ExportTexts', 'BasePath', basePath);
+          sf.WriteString('ExportTexts', 'Extension', extension);
+        end;
+      end;
+    finally
+      if doCloseSF then
+        sf.Free;
+      frm.Free;
+    end;
+  end;
+  
 end;
 
 function Initialize: integer;
-var
-  i: TIniFile;
 begin
-  debug := False;
   slText := TStringList.Create;
   sl := TStringList.Create;
-  i := TIniFile.Create(wbSettingsFileName);
 
 	OptionsForm;
 
 	if doStop then Exit;
 	
-  if doScriptsOnly then begin
-		basePath := i.ReadString('ExportScripts', 'BasePath', wbTempPath);
-		extension := i.ReadString('ExportScripts', 'Extension', '.geck');
-	end else begin
-		basePath := i.ReadString('ExportTexts', 'BasePath', wbTempPath);
-		extension := i.ReadString('ExportTexts', 'Extension', '.txt');
-	end;
 	if Pos('\\?\', basePath)=0 then basePath := '\\?\'+basePath;  // allows program to handle very long file names
-	if debug then AddMessage('Using directory: "'+basePath+'" and extension: "'+extension+'"');
+  debug := False;
+	AddMessage('Using directory: "'+basePath+'" and extension: "'+extension+'"');
 end;
 
 function Process(e: IInterface): integer;

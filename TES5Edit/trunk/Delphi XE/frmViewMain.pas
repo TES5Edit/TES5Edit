@@ -12631,6 +12631,10 @@ begin
     Value := wbSettingsFileName;
     Done := True;
   end else
+  if (SameText(Identifier, 'wbSettings') and (Args.Count = 0)) then begin
+    Value := O2V(Settings);
+    Done := True;
+  end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
     Value := FilterApplied;
     Done := True;
