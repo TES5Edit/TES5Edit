@@ -4645,7 +4645,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -4668,7 +4668,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -4739,7 +4739,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -4762,7 +4762,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -5315,8 +5315,8 @@ begin
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
         {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD],
-                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD]),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN]),
         {46} wbInteger('Quest Objective (INVALID)', itS32),
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
@@ -5408,8 +5408,8 @@ begin
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
         {44} wbInteger('Body Location', itS32, wbBodyLocationEnum),
-        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD],
-                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD]),
+        {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN],
+                                                [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, CHIP, CMNY, CCRD, IMOD, LVLC, LVLN]),
         {46} wbInteger('Quest Objective', itS32, wbCTDAParam2QuestObjectiveToStr, wbCTDAParam2QuestObjectiveToInt),
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
@@ -7256,7 +7256,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -7279,7 +7279,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -7352,7 +7352,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -7375,7 +7375,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -9754,7 +9754,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -9777,7 +9777,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
           wbFloat('Delay')
         ])
       )

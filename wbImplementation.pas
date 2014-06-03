@@ -6487,7 +6487,7 @@ function TwbMainRecord.GetShortName: string;
 var
 //  Rec: IwbRecord;
   s : string;
- begin
+begin
   if wbDisplayShorterNames then begin
     Result := '';
 
