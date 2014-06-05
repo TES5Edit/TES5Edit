@@ -5,6 +5,7 @@
   and multifile unpack/copy preserving paths.
   
   Hotkey: Ctrl+F3
+  Mode: Silent
 }
 
 unit AssetsBrowser;
@@ -40,13 +41,11 @@ var
   i: integer;
 begin
   slAssets.Clear;
-  AddMessage('Loading resources, please wait...');
   for i := 0 to Pred(slContainers.Count) do
     if (aIndex = 0) or (Pred(aIndex) = i) then begin
       //AddMessage('Loading files list from ' + SimpleName(slContainers[i]));
       ResourceList(slContainers[i], slAssets);
     end;
-  AddMessage('Done.');
 end;
   
 //===========================================================================
@@ -412,9 +411,7 @@ function Initialize: integer;
 begin
   slContainers := TStringList.Create;
   
-  slAssets := THashedStringList.Create;
-  slAssets.Sorted := True;
-  slAssets.Duplicates := dupIgnore;
+  slAssets := TwbFastStringList.Create;
 
   slTextures := THashedStringList.Create;
   slTextures.Sorted := True;
@@ -428,10 +425,14 @@ begin
     MessageDlg('Loading of BSA archives is disabled in xEdit options, only files in Data folder will be shown', mtInformation, [mbOk], 0);
 
   ResourceContainerList(slContainers);
+  //AddMessage('Loading resources, please wait...');
   LoadAssetsList(0);
+  //AddMessage('Done.');
+
+  slAssets.Sorted := True;
+  slAssets.Duplicates := dupIgnore;
     
-  AddMessage('Opening browser...');
-  
+  //AddMessage('Opening browser...');
   ShowBrowser;
   
   slAssets.Free;

@@ -3552,7 +3552,7 @@ begin
           wbInteger('Response number', itU8),
           wbByteArray('Unused', 3)
         ]),
-        wbString(NAM1, 'Response Text', 0, cpTranslate),
+        wbStringKC(NAM1, 'Response Text', 0, cpTranslate),
         wbString(NAM2, 'Actor notes', 0, cpTranslate)
       ], [])
     ),

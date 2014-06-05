@@ -21,7 +21,7 @@ uses
   Graphics;
 
 const
-  VersionString               = '3.0.32 EXPERIMENTAL';
+  VersionString               = '3.0.33 EXPERIMENTAL';
 
   clOrange                    = $004080FF;
   wbFloatDigits               = 6;
@@ -74,7 +74,7 @@ var
   wbUDRSetZ: Boolean = True;
   wbUDRSetZValue: Single = -30000;
   wbUDRSetMSTT: Boolean = True;
-  wbUDRSetMSTTValue: Int64 = $0000003B; { XMarker }
+  wbUDRSetMSTTValue: Int64 = $0000001B; { AshPile01 }
 
   wbMasterUpdateFilterONAM: Boolean;
   wbMasterUpdateFixPersistence: Boolean = True;

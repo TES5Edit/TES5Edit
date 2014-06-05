@@ -2962,7 +2962,11 @@ begin
 
   Settings := TMemIniFile.Create(wbSettingsFileName);
 
-  // skip reading main form positition if Shift is pressed
+  LoadFont(Settings, 'UI', 'FontRecords', vstNav.Font);
+  LoadFont(Settings, 'UI', 'FontRecords', vstView.Font);
+  LoadFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
+
+  // skip reading main form position if Shift is pressed
   if GetKeyState(VK_SHIFT) >= 0 then begin
     Left := Settings.ReadInteger(Name, 'Left', Left);
     Top := Settings.ReadInteger(Name, 'Top', Top);
@@ -9109,6 +9113,9 @@ var
 begin
   with TfrmOptions.Create(Self) do try
 
+    pnlFontRecords.Font := vstNav.Font;
+    pnlFontMessages.Font := mmoMessages.Font;
+    pnlFontViewer.Font := Self.Font; LoadFont(Settings, 'UI', 'FontViewer', pnlFontViewer.Font);
     cbHideUnused.Checked := wbHideUnused;
     cbHideIgnored.Checked := wbHideIgnored;
     cbHideNeverShow.Checked := wbHideNeverShow;
@@ -9136,6 +9143,9 @@ begin
     if ShowModal <> mrOK then
       Exit;
 
+    vstNav.Font := pnlFontRecords.Font;
+    vstView.Font := pnlFontRecords.Font;
+    mmoMessages.Font := pnlFontMessages.Font;
     wbHideUnused := cbHideUnused.Checked;
     wbHideIgnored := cbHideIgnored.Checked;
     wbHideNeverShow := cbHideNeverShow.Checked;
@@ -9159,6 +9169,9 @@ begin
     wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
     wbDoNotBuildRefsFor.Assign(lbDoNotBuildRef.Items);
 
+    SaveFont(Settings, 'UI', 'FontRecords', vstNav.Font);
+    SaveFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
+    SaveFont(Settings, 'UI', 'FontViewer', pnlFontViewer.Font);
     Settings.WriteBool('Options', 'AutoSave', AutoSave);
     Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
     Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
@@ -12674,6 +12687,10 @@ begin
   end else
   if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
     Value := wbSettingsFileName;
+    Done := True;
+  end else
+  if (SameText(Identifier, 'wbSettings') and (Args.Count = 0)) then begin
+    Value := O2V(Settings);
     Done := True;
   end else
   if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
