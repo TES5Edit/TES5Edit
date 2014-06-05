@@ -22,7 +22,8 @@ const
   wmNone = 0;
   wmCheck = 1;
   wmList = 2;
-  wmCopy = 3;
+  wmListDump = 3;
+  wmCopy = 4;
 
   // records to skip without assets
   sSkipSignatures = 'REFR,ACHR,ACRE,PGRE,LAND,NAVM,PGRD,PACK';
@@ -31,11 +32,12 @@ const
   sMusicSignatures = 'MUSC,MUST,MSET';
 
 var
-  slAssetsType, slAssetsExt, sl, slRes: TStringList;
+  slAssetsType, slAssetsExt, sl, slRes, slDump: TStringList;
   slContainers, slTextures: TwbFastStringList;
   CurrentRecord: IInterface;
   optAsset, optMode: integer;
   optPath: string;
+  ResDescrPrefix: string;
 
   frm: TForm;
   lbl: TLabel;
@@ -104,6 +106,7 @@ begin
     frm.Height := 450;
     frm.Position := poScreenCenter;
     frm.BorderStyle := bsDialog;
+    frm.PopupMode := pmAuto;
     frm.KeyPreview := True;
     frm.OnKeyDown := frmFormKeyDown;
     frm.OnClose := frmFormClose;
@@ -272,8 +275,16 @@ begin
 
       if rbModeCheck.Checked then
         optMode := wmCheck
-      else if rbModeList.Checked then
-        optMode := wmList
+      else if rbModeList.Checked then begin
+        i := MessageDlg('List information to spreadsheet file [YES] or to messages pane [NO]? Saving to file is much faster and recommended for large mods.',
+          mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+        if i = mrYes then begin
+          optMode := wmListDump;
+          slDump := TStringList.Create;
+        end
+        else if i = mrNo then optMode := wmList
+        else i := wmNone;
+      end
       else if rbModeCopy.Checked then begin
         optMode := wmCopy;
         optPath := IncludeTrailingBackslash(edPath.Text);
@@ -355,9 +366,17 @@ begin
   if optAsset and aResType = 0 then
     Exit;
 
+  aResDescr := ResDescrPrefix + aResDescr;
+  
   // listing of referenced assets doesn't require the existence of asset, show before even resolving
   if optMode = wmList then
-    AddMessage(aResName + '   <-- ' + aResDescr);
+    AddMessage(aResName + '   <-- ' + aResDescr)
+  else if optMode = wmListDump then
+    slDump.Add(Format('[%s];%s;%s', [
+      IntToHex(GetLoadOrderFormID(CurrentRecord), 8),
+      aResName,
+      aResDescr
+    ]));
 
   slRes.Clear;
   ResourceCount(aResName, slRes);
@@ -416,7 +435,10 @@ begin
   value := LowerCase(value);
   
   if valuedescr = '' then
-    valuedescr := Name(CurrentRecord) +  ' \ ' + Path(el);
+    if ResDescrPrefix = '' then
+      valuedescr := Name(CurrentRecord) +  ' \ ' + Path(el)
+    else
+      valuedescr := Path(el);
 
   rescont := ProcessResource(value, valuedescr, atype);
 
@@ -481,6 +503,18 @@ var
 begin
   if not Assigned(e) then
     Exit;
+
+  // special scanning case for Alternate textures
+  if SameText(Name(e), 'Alternate Texture') then begin
+    ResDescrPrefix := Format('Alternate texture for node %s in %s from %s \ ', [
+      GetElementEditValues(e, '3D Name'), // node name
+      GetEditValue(ElementByIndex(GetContainer(GetContainer(e)), 0)), // model file name
+      Name(LinksTo(ElementByName(e, 'New Texture'))) // TXST record name
+    ]);
+    ScanForAssets(LinksTo(ElementByName(e, 'New Texture')));
+    ResDescrPrefix := '';
+    Exit;
+  end;
 
   i := DefType(e);
   if (i = dtString) or (i = dtLenString) then
@@ -591,7 +625,7 @@ begin
     Exit;
   
   // generic model common for all records
-  ProcessAsset(ElementByPath(e, 'Model\MODL'));
+  ScanForAssets(ElementByName(e, 'Model'));
 
   // generic icon common for all records
   ProcessAsset(ElementBySignature(e, 'ICON'));
@@ -627,14 +661,18 @@ begin
           else if SameText(Copy(s, Length(s)-5, 6), '_0.nif') then
             ProcessAssetEx(ent, Copy(s, 1, Length(s)-6) + '_1.nif', '', atMesh);
         end;
+        // the last element in the same container as model is alternate textures
+        ent := ElementByIndex(GetContainer(ent), ElementCount(GetContainer(ent)) - 1);
+        if Pos('Alternate', Name(ent)) > 0 then
+          ScanForAssets(ent);
       end;
       ScanForAssets(ElementByPath(e, 'Icon 2 (female)'));
     end
     
     else if (sig = 'ARMO') then begin
-      ProcessAsset(ElementByPath(e, 'Male world model\MOD2'));
-      ProcessAsset(ElementByPath(e, 'Female world model\MOD4'));
-      ScanForAssets(ElementByPath(e, 'Icon 2 (female)'));
+      ScanForAssets(ElementByName(e, 'Male world model'));
+      ScanForAssets(ElementByName(e, 'Female world model'));
+      ScanForAssets(ElementByName(e, 'Icon 2 (female)'));
     end
 
     else if (sig = 'CELL') then begin
@@ -714,7 +752,7 @@ begin
       ProcessAsset(ElementByPath(e, 'NAM2'))
 
     else if (sig = 'WRLD') then begin
-      ProcessAsset(ElementByPath(e, 'Cloud Model\Model\MODL'));
+      ScanForAssets(ElementByPath(e, 'Cloud Model\Model'));
       ProcessAsset(ElementByPath(e, 'XNAM'));
       ProcessAsset(ElementByPath(e, 'TNAM'));
       ProcessAsset(ElementByPath(e, 'UNAM'));
@@ -729,10 +767,10 @@ begin
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
 
     if (sig = 'ARMA') or (sig = 'ARMO') then begin
-      ProcessAsset(ElementByPath(e, 'Male biped model\MODL'));
-      ProcessAsset(ElementByPath(e, 'Male world model\MOD2'));
-      ProcessAsset(ElementByPath(e, 'Female biped model\MOD3'));
-      ProcessAsset(ElementByPath(e, 'Female world model\MOD4'));
+      ScanForAssets(ElementByPath(e, 'Male biped model'));
+      ScanForAssets(ElementByPath(e, 'Male world model'));
+      ScanForAssets(ElementByPath(e, 'Female biped model'));
+      ScanForAssets(ElementByPath(e, 'Female world model'));
       ProcessAsset(ElementBySignature(e, 'MICO'));
       ProcessAsset(ElementBySignature(e, 'ICO2'));
       ProcessAsset(ElementBySignature(e, 'MIC2'));
@@ -822,9 +860,9 @@ begin
       ProcessAsset(ElementByPath(e, 'NNAM'))
 
     else if (sig = 'WEAP') then begin
-      ProcessAsset(ElementByPath(e, 'Shell Casing Model\MOD2'));
-      ProcessAsset(ElementByPath(e, 'Scope Model\MOD3'));
-      ProcessAsset(ElementByPath(e, 'World Model\MOD4'));
+      ScanForAssets(ElementByPath(e, 'Shell Casing Model'));
+      ScanForAssets(ElementByPath(e, 'Scope Model'));
+      ScanForAssets(ElementByPath(e, 'World Model'));
       ScanForAssets(ElementByPath(e, 'Model with Mods'));
     end
 
@@ -844,7 +882,24 @@ end;
 
 //==========================================================================
 function Finalize: integer;
+var
+  dlgSave: TSaveDialog;
 begin
+  if optMode = wmListDump then begin
+    dlgSave := TSaveDialog.Create(nil);
+    try
+      dlgSave.Options := dlgSave.Options + [ofOverwritePrompt];
+      dlgSave.InitialDir := DataPath;
+      dlgSave.FileName := 'UsedAssets.csv';
+      if dlgSave.Execute then begin
+        AddMessage('Saving assets list to ' + dlgSave.FileName);
+        slDump.SaveToFile(dlgSave.FileName);
+      end;
+    finally
+      dlgSave.Free;
+    end;
+    slDump.Free;
+  end;
   slAssetsType.Free;
   slAssetsExt.Free;
   slContainers.Free;
