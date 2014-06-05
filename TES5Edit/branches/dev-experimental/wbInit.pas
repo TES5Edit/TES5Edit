@@ -16,6 +16,9 @@ unit wbInit;
 
 interface
 
+uses
+  Classes;
+
 var
   wbApplicationTitle   : string;
   wbTheGameIniFileName : String;
@@ -36,6 +39,7 @@ var
   wbRemoveTempPath   : Boolean = True;
 
   wbParamIndex       : integer = 1;     // First unused parameter
+  wbPluginsToUse     : TStringList;
 
 function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
@@ -162,9 +166,11 @@ begin
     Result := wbFindNextValidCmdLineFileName(startingIndex, aValue, defaultPath);
   until not Result or wbCheckForPluginExtension(aValue);
   if Result  then
-    if (AnsiCompareText(ExpandFileName(ExtractFilePath(aValue)), ExpandFileName(defaultPath)) = 0) then
-      aValue := ExtractFileName(aValue)
-    else
+    if (AnsiCompareText(ExpandFileName(ExtractFilePath(aValue)), ExpandFileName(defaultPath)) = 0) then begin
+      aValue := ExtractFileName(aValue);
+      if not Assigned(wbPluginsToUse) then wbPluginsToUse := TStringList.Create;
+      wbPluginsToUse.Add(aValue);
+    end else
       Result := False;
 end;
 

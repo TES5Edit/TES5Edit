@@ -68,7 +68,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ShellApi;
+  wbHelpers, ShellApi;
 
 { TfrmViewElements }
 
@@ -92,6 +92,7 @@ begin
 
   Memo := TMemo.Create(TabSheet);
   Memo.Parent := TabSheet;
+  LoadFont(Settings, 'UI', 'FontViewer', Memo.Font);
   if aEditable then begin
     Memo.Lines.Text := aElement.EditValue;
     btnOK.Visible := True;
@@ -223,7 +224,7 @@ end;
 
 procedure TfrmViewElements.FormCreate(Sender: TObject);
 begin
-  Font := Screen.IconFont;
+  //Font := Screen.IconFont;
 end;
 
 procedure TfrmViewElements.FormDestroy(Sender: TObject);

@@ -217,9 +217,9 @@ begin
     Exit;
 
   Layer := lbCloudLayers.ItemIndex;
+  SetElementEditValues(Weather, slCloudSignatures[Layer], cmbCloudTexture.Text);
 
   if wbGameMode = gmTES5 then begin
-    SetElementEditValues(Weather, slCloudSignatures[Layer], cmbCloudTexture.Text);
     SetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]), edCloudXSpeed.Text);
     SetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]), edCloudYSpeed.Text);
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunrise', [Layer]), edCloudAlpha1.Text);
@@ -355,6 +355,7 @@ begin
     CopyElement(WeatherFrom, Weather, 'Cloud Speed');
     CopyElement(WeatherFrom, Weather, 'JNAM');
     CopyElement(WeatherFrom, Weather, 'PNAM');
+    CopyElement(WeatherFrom, Weather, 'Sky Statics');
   end
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
     CopyElement(WeatherFrom, Weather, 'ONAM');
@@ -702,7 +703,7 @@ var
   i: integer;
 begin
   Weather := e;
-  slCloudTextures := TStringList.Create;
+  slCloudTextures := TwbFastStringList.Create;
   slCloudTextures.Sorted := True;
   slCloudTextures.Duplicates := dupIgnore;
   slCloudSignatures := TStringList.Create;
@@ -718,7 +719,7 @@ begin
 
   // list of available cloud textures
   slContainers := TStringList.Create;
-  slAssets := TStringList.Create;
+  slAssets := TwbFastStringList.Create;
   try
     ResourceContainerList(slContainers);
     for i := 0 to Pred(slContainers.Count) do begin

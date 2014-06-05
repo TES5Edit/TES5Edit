@@ -30,6 +30,12 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Platform)'=='Win32' and '$(Cfg_4)'=='true' or '$(Cfg_4_Win32)'!=''">
+			<Cfg_4_Win32>true</Cfg_4_Win32>
+			<CfgParent>Cfg_4</CfgParent>
+			<Cfg_4>true</Cfg_4>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
 			<DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
@@ -76,6 +82,9 @@
 			<DCC_MapFile>3</DCC_MapFile>
 			<ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_4_Win32)'!=''">
+			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="TES5Edit.dpr">
@@ -162,7 +171,7 @@
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">3</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">32</VersionInfo>
+						<VersionInfo Name="Release">33</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
@@ -175,13 +184,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.0.32.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.0.33.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">xEdit from ElminsterAU</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">3.0.32</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.0.33</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>

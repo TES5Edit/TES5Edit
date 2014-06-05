@@ -17,7 +17,12 @@ unit wbHelpers;
 interface
 
 uses
-  Classes, Windows, SysUtils, Graphics, ShellAPI,
+  Classes,
+  Windows,
+  SysUtils,
+  Graphics,
+  ShellAPI,
+  IniFiles,
   wbInterface;
 
 function wbDistance(const a, b: TwbVector): Single; overload
@@ -31,6 +36,8 @@ function FullPathToFilename(aString: string): string;
 procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer); // MirrorType: 1 - horizontal, 2 - vertical, 0 - both
 function wbAlphaBlend(DestDC, X, Y, Width, Height,
   SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
+procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
+procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -329,6 +336,24 @@ begin
   else
     BlendFunc.AlphaFormat := 0;
   Result := Windows.AlphaBlend(DestDC, X, Y, Width, Height, SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, BlendFunc);
+end;
+
+procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
+begin
+  aIni.WriteString(aSection, aName + 'Name', aFont.Name);
+  aIni.WriteInteger(aSection, aName + 'CharSet', aFont.CharSet);
+  aIni.WriteInteger(aSection, aName + 'Color', aFont.Color);
+  aIni.WriteInteger(aSection, aName + 'Size', aFont.Size);
+  aIni.WriteInteger(aSection, aName + 'Style', Byte(aFont.Style));
+end;
+
+procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
+begin
+  aFont.Name    := aIni.ReadString(aSection, aName + 'Name', aFont.Name);
+  aFont.CharSet := TFontCharSet(aIni.ReadInteger(aSection, aName + 'CharSet', aFont.CharSet));
+  aFont.Color   := TColor(aIni.ReadInteger(aSection, aName + 'Color', aFont.Color));
+  aFont.Size    := aIni.ReadInteger(aSection, aName + 'Size', aFont.Size);
+  aFont.Style   := TFontStyles(Byte(aIni.ReadInteger(aSection, aName + 'Style', Byte(aFont.Style))));
 end;
 
 
