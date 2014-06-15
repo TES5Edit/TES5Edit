@@ -1771,13 +1771,16 @@ begin
   Error := aElement.Check;
   if Error <> '' then begin
     Result := aElement.ContainingMainRecord;
-    if (Result <> LastRecord) and Assigned(Result) then
+    // first error in this record - show record's name
+    if Assigned(Result) and (Result <> LastRecord) then
       wbProgressCallback(Result.Name);
     wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
-  end;
+  end else
+    // passing through last record with error
+    Result := LastRecord;
   if Supports(aElement, IwbContainerElementRef, Container) then
-    for i := Pred(Container.ElementCount) downto 0 do
-      LastRecord := CheckForErrorsLinear(Container.Elements[i], LastRecord);
+    for i := 0 to Pred(Container.ElementCount) do
+      Result := CheckForErrorsLinear(Container.Elements[i], Result);
 end;
 
 function TfrmMain.CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;

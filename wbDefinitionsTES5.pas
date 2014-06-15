@@ -7841,8 +7841,26 @@ begin
               'Unknown 15',
               'Unknown 16'
             ])),
-            wbInteger('Cover Edge #1 Flags', itU8),
-            wbInteger('Cover Edge #2 Flags', itU8)
+            wbInteger('Cover Flags', itU16, wbFlags([
+              'Edge 0-1 wall',
+              'Edge 0-1 ledge cover',
+              'Unknown 3',
+              'Unknown 4',
+              'Edge 0-1 left',
+              'Edge 0-1 right',
+              'Edge 1-2 wall',
+              'Edge 1-2 ledge cover',
+              'Unknown 9',
+              'Unknown 10',
+              'Edge 1-2 left',
+              'Edge 1-2 right',
+              'Unknown 13',
+              'Unknown 14',
+              'Unknown 15',
+              'Unknown 16'
+            ]))
+            //wbInteger('Cover Edge #1 Flags', itU8),
+            //wbInteger('Cover Edge #2 Flags', itU8)
           ])
         , -1),
         wbArray('Edge Links',
