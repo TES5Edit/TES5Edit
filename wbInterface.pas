@@ -66,6 +66,7 @@ var
   wbRequireLoadOrder: Boolean;
   wbVWDInTemporary: Boolean;
   wbResolveAlias: Boolean{} = False;{}
+  wbActorTemplateHide: Boolean{} = True;{}
   wbDoNotBuildRefsFor: TStringList;
 
   wbUDRSetXESP: Boolean = True;

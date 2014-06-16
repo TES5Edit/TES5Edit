@@ -3321,6 +3321,7 @@ begin
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  wbActorTemplateHide := Settings.ReadBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
@@ -9076,6 +9077,7 @@ begin
     cbHideUnused.Checked := wbHideUnused;
     cbHideIgnored.Checked := wbHideIgnored;
     cbHideNeverShow.Checked := wbHideNeverShow;
+    cbActorTemplateHide.Checked := wbActorTemplateHide;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSortGroupRecord.Checked := wbSortGroupRecord;
@@ -9106,6 +9108,7 @@ begin
     wbHideUnused := cbHideUnused.Checked;
     wbHideIgnored := cbHideIgnored.Checked;
     wbHideNeverShow := cbHideNeverShow.Checked;
+    wbActorTemplateHide := cbActorTemplateHide.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSortGroupRecord := cbSortGroupRecord.Checked;
@@ -9133,6 +9136,7 @@ begin
     Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
     Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
+    Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
