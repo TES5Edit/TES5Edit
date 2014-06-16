@@ -51,6 +51,7 @@ type
     pnlFontRecords: TPanel;
     pnlFontMessages: TPanel;
     pnlFontViewer: TPanel;
+    cbActorTemplateHide: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
