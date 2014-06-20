@@ -1394,6 +1394,36 @@ begin
   Value := wbIsInGridCell(Var2wbVector(Args.Values[0]), Var2wbGridCell(Args.Values[1]));
 end;
 
+procedure Misc_wbCRC32Data(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbCRC32Data(Args.Values[0]);
+end;
+
+procedure Misc_wbCRC32File(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbCRC32File(string(Args.Values[0]));
+end;
+
+procedure Misc_wbSHA1Data(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbSHA1Data(Args.Values[0]);
+end;
+
+procedure Misc_wbSHA1File(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbSHA1File(string(Args.Values[0]));
+end;
+
+procedure Misc_wbMD5Data(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbMD5Data(Args.Values[0]);
+end;
+
+procedure Misc_wbMD5File(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbMD5File(string(Args.Values[0]));
+end;
+
 
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -1656,6 +1686,12 @@ begin
     AddFunction(cUnit, 'wbBlockFromSubBlock', Misc_wbBlockFromSubBlock, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbGridCellToGroupLabel', Misc_wbGridCellToGroupLabel, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbIsInGridCell', Misc_wbIsInGridCell, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbCRC32Data', Misc_wbCRC32Data, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbCRC32File', Misc_wbCRC32File, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbSHA1Data', Misc_wbSHA1Data, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbMD5File', Misc_wbMD5File, 1, [varEmpty], varEmpty);
   end;
 end;
 

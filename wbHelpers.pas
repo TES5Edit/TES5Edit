@@ -38,6 +38,12 @@ function wbAlphaBlend(DestDC, X, Y, Width, Height,
   SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
 procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
+function wbCRC32Data(aData: TBytes): Cardinal;
+function wbCRC32File(aFileName: string): Cardinal;
+function wbSHA1Data(aData: TBytes): string;
+function wbSHA1File(aFileName: string): string;
+function wbMD5Data(aData: TBytes): string;
+function wbMD5File(aFileName: string): string;
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -356,6 +362,255 @@ begin
   aFont.Style   := TFontStyles(Byte(aIni.ReadInteger(aSection, aName + 'Style', Byte(aFont.Style))));
 end;
 
+var
+  crctbl: array[0..7] of array[0..255] of cardinal;
+
+procedure CRCInit;
+var
+  c: cardinal;
+  i, j: integer;
+begin;
+  for i:=0 to 255 do begin;
+    c:=i;
+    for j:=1 to 8 do if odd(c)
+                     then c:=(c shr 1) xor $EDB88320
+                     else c:=(c shr 1);
+    crctbl[0][i]:=c;
+    end;
+
+  for i:=0 to 255 do begin;
+    c:=crctbl[0][i];
+    for j:=1 to 7 do begin;
+      c:=(c shr 8) xor crctbl[0][byte(c)];
+      crctbl[j][i]:=c;
+      end;
+    end;
+end;
+
+function ShaCrcRefresh(OldCRC: cardinal; BufPtr: pointer; BufLen: integer): cardinal;
+// Fast CRC32 calculator
+// (c) Aleksandr Sharahov 2009
+// Free for any use
+asm
+  test edx, edx
+  jz   @ret
+  neg  ecx
+  jz   @ret
+  push ebx
+@head:
+  test dl, 3
+  jz   @bodyinit
+  movzx ebx, byte [edx]
+  inc  edx
+  xor  bl, al
+  shr  eax, 8
+  xor  eax, [ebx*4 + crctbl]
+  inc  ecx
+  jnz  @head
+  pop  ebx
+@ret:
+  ret
+@bodyinit:
+  sub  edx, ecx
+  add  ecx, 8
+  jg   @bodydone
+  push esi
+  push edi
+  mov  edi, edx
+  mov  edx, eax
+@bodyloop:
+  mov ebx, [edi + ecx - 4]
+  xor edx, [edi + ecx - 8]
+  movzx esi, bl
+  mov eax, [esi*4 + crctbl + 1024*3]
+  movzx esi, bh
+  xor eax, [esi*4 + crctbl + 1024*2]
+  shr ebx, 16
+  movzx esi, bl
+  xor eax, [esi*4 + crctbl + 1024*1]
+  movzx esi, bh
+  xor eax, [esi*4 + crctbl + 1024*0]
+
+  movzx esi, dl
+  xor eax, [esi*4 + crctbl + 1024*7]
+  movzx esi, dh
+  xor eax, [esi*4 + crctbl + 1024*6]
+  shr edx, 16
+  movzx esi, dl
+  xor eax, [esi*4 + crctbl + 1024*5]
+  movzx esi, dh
+  xor eax, [esi*4 + crctbl + 1024*4]
+
+  add ecx, 8
+  jg  @done
+
+  mov ebx, [edi + ecx - 4]
+  xor eax, [edi + ecx - 8]
+  movzx esi, bl
+  mov edx, [esi*4 + crctbl + 1024*3]
+  movzx esi, bh
+  xor edx, [esi*4 + crctbl + 1024*2]
+  shr ebx, 16
+  movzx esi, bl
+  xor edx, [esi*4 + crctbl + 1024*1]
+  movzx esi, bh
+  xor edx, [esi*4 + crctbl + 1024*0]
+
+  movzx esi, al
+  xor edx, [esi*4 + crctbl + 1024*7]
+  movzx esi, ah
+  xor edx, [esi*4 + crctbl + 1024*6]
+  shr eax, 16
+  movzx esi, al
+  xor edx, [esi*4 + crctbl + 1024*5]
+  movzx esi, ah
+  xor edx, [esi*4 + crctbl + 1024*4]
+
+  add ecx, 8
+  jle @bodyloop
+  mov eax, edx
+@done:
+  mov edx, edi
+  pop edi
+  pop esi
+@bodydone:
+  sub ecx, 8
+  jl @tail
+  pop ebx
+  ret
+@tail:
+  movzx ebx, byte [edx + ecx];
+  xor bl,al;
+  shr eax,8;
+  xor eax, [ebx*4 + crctbl];
+  inc ecx;
+  jnz @tail;
+  pop ebx
+  ret
+end;
+
+function wbCRC32Data(aData: TBytes): Cardinal;
+begin
+  Result := not ShaCrcRefresh($FFFFFFFF, @aData[0], Length(aData));
+end;
+
+function wbCRC32File(aFileName: string): Cardinal;
+var
+  Data: TBytes;
+begin
+  Result := 0;
+  if FileExists(aFileName) then
+    with TFileStream.Create(aFileName, fmOpenRead + fmShareDenyNone) do try
+      SetLength(Data, Size);
+      ReadBuffer(Data[0], Length(Data));
+      Result := wbCRC32Data(Data);
+    finally
+      Free;
+    end;
+end;
+
+function CryptAcquireContext(var phProv: DWORD;
+  pszContainer, pszProvider: LPCSTR; dwProvType, dwFlags: DWORD): BOOL;
+  stdcall; external advapi32 name 'CryptAcquireContextA';
+function CryptCreateHash(hProv,Algid,hKey,dwFlags: DWORD;
+  var phHash: DWORD): BOOL; stdcall; external advapi32;
+function CryptHashData(hHash: DWORD; pbData: PBYTE; dwDataLen,
+  dwFlags: DWORD): BOOL; stdcall; external advapi32;
+function CryptGetHashParam(hHash, dwParam: DWORD; pbData: PBYTE;
+  var pdwDataLen: DWORD; dwFlags: DWORD): BOOL; stdcall; external advapi32;
+function CryptDestroyHash(hHash: DWORD): BOOL; stdcall; external advapi32;
+function CryptReleaseContext(hProv: DWORD; dwFlags: DWORD): BOOL; stdcall; external advapi32;
+
+function CryptoAPIGetHash(Data: Pointer; nSize: Cardinal; HashType: Cardinal): TBytes;
+const
+  HP_HASHVAL           = $0002; {hash value}
+  PROV_RSA_FULL        = 1;
+  CRYPT_VERIFYCONTEXT  = $F0000000;
+var
+  hProv, hHash: Cardinal;
+begin
+  if CryptAcquireContext(hProv, nil, nil, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT) then try
+    if CryptCreateHash(hProv, HashType, 0, 0, hHash) then try
+      if CryptHashData(hHash, Data, nSize, 0) then begin
+        if CryptGetHashParam(hHash, HP_HASHVAL, nil, nSize, 0) then begin
+          SetLength(Result, nSize);
+          if not CryptGetHashParam(hHash, HP_HASHVAL, @Result[0], nSize, 0) then
+            SetLength(Result, 0);
+        end;
+      end;
+    finally
+      CryptDestroyHash(hHash);
+    end;
+  finally
+    CryptReleaseContext(hProv, 0);
+  end;
+end;
+
+const
+  ALG_CRC32 = $0001;
+  ALG_MD2 = $8001;
+  ALG_MD4 = $8002;
+  ALG_MD5 = $8003;
+  ALG_SHA = $8004;
+
+function wbCryptoApiHashData(aData: TBytes; aALG: Cardinal): string;
+  function BytesToHexStr(aBytes: TBytes): string;
+  var
+    i: Cardinal;
+    bt: Byte;
+  const
+    Hex = '0123456789abcdef';
+  begin
+    Result:= '';
+    for i:= Low(aBytes) to High(aBytes) do begin
+      bt := aBytes[i];
+      Result:= Result + Hex[bt shr $4 + 1] + Hex[bt and $0f + 1]
+    end;
+  end;
+begin
+  Result := BytesToHexStr(CryptoAPIGetHash(@aData[0], Length(aData), aALG));
+end;
+
+function wbSHA1Data(aData: TBytes): string;
+begin
+  Result := wbCryptoApiHashData(aData, ALG_SHA);
+end;
+
+function wbSHA1File(aFileName: string): string;
+var
+  Data: TBytes;
+begin
+  Result := '';
+  if FileExists(aFileName) then
+    with TFileStream.Create(aFileName, fmOpenRead + fmShareDenyNone) do try
+      SetLength(Data, Size);
+      ReadBuffer(Data[0], Length(Data));
+      Result := wbSHA1Data(Data);
+    finally
+      Free;
+    end;
+end;
+
+function wbMD5Data(aData: TBytes): string;
+begin
+  Result := wbCryptoApiHashData(aData, ALG_MD5);
+end;
+
+function wbMD5File(aFileName: string): string;
+var
+  Data: TBytes;
+begin
+  Result := '';
+  if FileExists(aFileName) then
+    with TFileStream.Create(aFileName, fmOpenRead + fmShareDenyNone) do try
+      SetLength(Data, Size);
+      ReadBuffer(Data[0], Length(Data));
+      Result := wbMD5Data(Data);
+    finally
+      Free;
+    end;
+end;
+
 
 { TnxFastStringList }
 
@@ -395,5 +650,8 @@ begin
   CaseSensitive := True;
   {x$ENDIF}
 end;
+
+initialization
+  CRCInit;
 
 end.
