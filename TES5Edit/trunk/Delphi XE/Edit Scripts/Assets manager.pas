@@ -643,6 +643,8 @@ begin
   slAssetsExt.AddObject('.spt', atMesh); // speedtree is in mesh category
   slAssetsExt.AddObject('.psa', atMesh); // pose is in mesh category
   slAssetsExt.AddObject('.seq', atSeqFile);
+  slAssetsExt.AddObject('.pex', atPapyrusScript);
+  slAssetsExt.AddObject('.psc', atPapyrusScript);
 
   // selection list
   slAssetsType := TStringList.Create;
