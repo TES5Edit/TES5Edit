@@ -351,11 +351,12 @@ begin
     IsCompressed := not IsCompressed;
   bfStream.Position := aOffset;
   if (bfVersion = BSAHEADER_VERSION_SK) and ((bfFlags and BSAARCHIVE_PREFIXFULLFILENAMES) <> 0) then
-    aSize := aSize - Length(bfStream.ReadStringLen);
+    aSize := aSize - Length(bfStream.ReadStringLen) - 2; // size - file name length - (string length field + trailing zero)
   if IsCompressed then begin
     SetLength(Result, bfStream.ReadCardinal);
-    if (Length(Result) > 0) and (aSize > 4) then begin
-      SetLength(Buffer, aSize-4);
+    aSize := aSize - 4;
+    if (Length(Result) > 0) and (aSize > 0) then begin
+      SetLength(Buffer, aSize);
       bfStream.ReadBuffer(Buffer[0], Length(Buffer));
       DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
     end;

@@ -33,11 +33,13 @@ const
 
 var
   slAssetsType, slAssetsExt, sl, slRes, slDump: TStringList;
-  slContainers, slTextures: TwbFastStringList;
+  slContainers, slTextures, slChecksum: TwbFastStringList;
   CurrentRecord: IInterface;
   optAsset, optMode: integer;
   optPath: string;
   ResDescrPrefix: string;
+  ChecksumsFileName: string;
+  bSkipChecksum: boolean;
 
   frm: TForm;
   lbl: TLabel;
@@ -46,7 +48,8 @@ var
   MenuItem: TMenuItem;
   rbModeCheck, rbModeList, rbModeCopy: TRadioButton;
   edPath: TLabeledEdit;
-  btnPath, btnOk, btnCancel: TButton;
+  chkSkipChecksums: TCheckBox;
+  btnChecksums, btnPath, btnOk, btnCancel: TButton;
 
   
 //===========================================================================
@@ -63,6 +66,7 @@ procedure rbModeClick(Sender: TObject);
 begin
   edPath.Enabled := rbModeCopy.Checked;
   btnPath.Enabled := rbModeCopy.Checked;
+  chkSkipChecksums.Enabled := rbModeCopy.Checked and FileExists(ChecksumsFileName);
 end;
 
 //===========================================================================
@@ -73,6 +77,46 @@ begin
   s := SelectDirectory('Destination path to copy files to', '', edPath.Text, nil);
   if s <> '' then
     edPath.Text := s;
+end;
+
+//===========================================================================
+procedure btnChecksumsClick(Sender: TObject);
+var
+  i, j: integer;
+  cont, fname: string;
+  slAssets: TStringList;
+begin
+  if MessageDlg('Build checksums index of files from selected containers? Warning: this can take some time, wait for a message box to appear.', mtConfirmation, [mbOk, mbCancel], 0) <> mrOk then
+    Exit;
+  
+  slAssets := TStringList.Create;
+  slChecksum.Clear;
+  for i := 0 to Pred(clbContainers.Items.Count) do begin
+    if not clbContainers.Checked[i] then
+      Continue;
+    cont := slContainers[i];
+    AddMessage('Building index for ' + clbContainers.Items[i]);
+    slAssets.Clear;
+    ResourceList(cont, slAssets);
+    for j := 0 to Pred(slAssets.Count) do begin
+      fname := slAssets[j];
+      // index only valid assets
+      try
+        if slAssetsExt.IndexOf(ExtractFileExt(fname)) <> -1 then
+          slChecksum.Values[fname] := IntToHex(wbCRC32Data(ResourceOpenData(cont, fname)), 8);
+      except
+        AddMessage('Error reading file ' + fname + ' from ' + cont);
+        Exit;
+      end;
+    end;
+  end;
+  if slChecksum.Count > 0 then begin
+    slChecksum.SaveToFile(ChecksumsFileName);
+    chkSkipChecksums.Enabled := rbModeCopy.Checked;
+    ShowMessage(Format('%d files were indexed.', [slChecksum.Count]));
+  end else
+    ShowMessage('Nothing to index.');
+  slAssets.Free;
 end;
 
 //===========================================================================
@@ -103,7 +147,7 @@ begin
   try
     frm.Caption := wbGameName + ' Assets Manager';
     frm.Width := 700;
-    frm.Height := 450;
+    frm.Height := 550;
     frm.Position := poScreenCenter;
     frm.BorderStyle := bsDialog;
     frm.PopupMode := pmAuto;
@@ -137,11 +181,20 @@ begin
     clbContainers.Top := clbAssets.Top + clbAssets.Height + 32;
     clbContainers.Left := 8;
     clbContainers.Width := 250;
-    clbContainers.Height := 220;
+    clbContainers.Height := 320;
     for i := 0 to Pred(slContainers.Count) do
       clbContainers.Items.Add(SimpleName(slContainers[i]));
     clbContainers.CheckAll(cbChecked, False, False);
     
+    btnChecksums := TButton.Create(frm);
+    btnChecksums.Parent := frm;
+    btnChecksums.Width := 100;
+    btnChecksums.Height := 22;
+    btnChecksums.Top := clbContainers.Top - 24;
+    btnChecksums.Left := clbContainers.Left + clbContainers.Width - btnChecksums.Width;
+    btnChecksums.Caption := 'Build cheksums';
+    btnChecksums.OnClick := btnChecksumsClick;
+
     mnPopup := TPopupMenu.Create(frm);
     clbContainers.PopupMenu := mnPopup;
     MenuItem := TMenuItem.Create(mnPopup);
@@ -229,11 +282,18 @@ begin
     btnPath.Caption := '...';
     btnPath.OnClick := btnPathClick;
     
+    chkSkipChecksums := TCheckBox.Create(frm);
+    chkSkipChecksums.Parent := frm;
+    chkSkipChecksums.Top := edPath.Top + 32;
+    chkSkipChecksums.Left := edPath.Left;
+    chkSkipChecksums.Width := 360;
+    chkSkipChecksums.Caption := 'Skip copying files with matching checksums (requires built checksums)';
+
     lbl := TLabel.Create(frm);
     lbl.Parent := frm;
     lbl.AutoSize := False;
     lbl.Wordwrap := True;
-    lbl.Top := edPath.Top + 50;
+    lbl.Top := chkSkipChecksums.Top + 80;
     lbl.Left := rbModeCopy.Left;
     lbl.Width := edPath.Width + 40;
     lbl.Height := 60;
@@ -393,12 +453,22 @@ begin
     if Result = '' then
       AddMessage(aResName + '   <-- ' + aResDescr);
   end
-  else if optMode = wmCopy then begin
+  else if (optMode = wmCopy) and (Result <> '') then begin
     // do not overwrite existing files or copy same files several times
-    if (Result <> '') and not FileExists(optPath + aResName) then begin
-      AddMessage(aResName + '   <-- ' + aResDescr);
-      ResourceCopy(Result, aResName, optPath);
+    if FileExists(optPath + aResName) then
+      Exit;
+    // skip matching checksums
+    if bSkipChecksum then begin
+      i := slChecksum.IndexOfName(aResName);
+      if i <> - 1 then
+        if slChecksum.ValueFromIndex[i] = IntToHex(wbCRC32Data(ResourceOpenData(Result, aResName)), 8) then begin
+          AddMessage('[Skipped] matching checksum: ' + aResName + '   <-- ' + aResDescr);
+          Result := '';
+          Exit;
+        end;
     end;
+    AddMessage(aResName + '   <-- ' + aResDescr);
+    ResourceCopy(Result, aResName, optPath);
   end;
 end;
 
@@ -589,11 +659,15 @@ begin
   slTextures.Sorted := True;
   slTextures.Duplicates := dupIgnore;
 
+  slChecksum := TwbFastStringList.Create;
+
   slContainers := TwbFastStringList.Create;
   ResourceContainerList(slContainers);
 
   slRes := TStringList.Create;
   sl := TStringList.Create;
+  
+  ChecksumsFileName := Format('%sAssets manager %s checksums.txt', [ScriptsPath, wbGameName]);
 
   ShowOptions;
   
@@ -601,8 +675,12 @@ begin
     AddMessage('LIST OF MISSING ASSET FILES:')
   else if optMode = wmList then
     AddMessage('LIST OF USED ASSET FILES:')
-  else if optMode = wmCopy then
-    AddMessage('COPYING USED ASSET FILES:')
+  else if optMode = wmCopy then begin
+    bSkipChecksum := chkSkipChecksums.Checked;
+    if bSkipChecksum and (slChecksum.Count = 0) and FileExists(ChecksumsFileName) then
+      slChecksum.LoadFromFile(ChecksumsFileName);
+    AddMessage('COPYING USED ASSET FILES:');
+  end
   else if optMode = wmNone then begin
     Finalize;
     Result := 1;
@@ -904,6 +982,7 @@ begin
   slAssetsExt.Free;
   slContainers.Free;
   slTextures.Free;
+  slChecksum.Free;
   slRes.Free;
   sl.Free;
 end;
