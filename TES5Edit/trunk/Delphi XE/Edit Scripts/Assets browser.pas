@@ -12,7 +12,7 @@ unit AssetsBrowser;
 
 var
   slContainers, slResList, sl: TStringList;
-  slAssets, slItems, slTextures: THashedStringList;
+  slAssets, slItems, slTextures: TwbFastStringList;
   frm: TForm;
   edFilter: TLabeledEdit;
   edClipboard: TEdit;
@@ -42,10 +42,8 @@ var
 begin
   slAssets.Clear;
   for i := 0 to Pred(slContainers.Count) do
-    if (aIndex = 0) or (Pred(aIndex) = i) then begin
-      //AddMessage('Loading files list from ' + SimpleName(slContainers[i]));
+    if (aIndex = 0) or (Pred(aIndex) = i) then
       ResourceList(slContainers[i], slAssets);
-    end;
 end;
   
 //===========================================================================
@@ -412,12 +410,13 @@ begin
   slContainers := TStringList.Create;
   
   slAssets := TwbFastStringList.Create;
-
-  slTextures := THashedStringList.Create;
+  slAssets.Sorted := True;
+  slAssets.Duplicates := dupIgnore;
+  slTextures := TwbFastStringList.Create;
   slTextures.Sorted := True;
   slTextures.Duplicates := dupIgnore;
 
-  slItems := THashedStringList.Create;
+  slItems := TwbFastStringList.Create;
   slResList := TStringList.Create;
   sl := TStringList.Create;
 
@@ -425,12 +424,9 @@ begin
     MessageDlg('Loading of BSA archives is disabled in xEdit options, only files in Data folder will be shown', mtInformation, [mbOk], 0);
 
   ResourceContainerList(slContainers);
-  //AddMessage('Loading resources, please wait...');
+  AddMessage('Assets Browser: loading resources, please wait...');
   LoadAssetsList(0);
   //AddMessage('Done.');
-
-  slAssets.Sorted := True;
-  slAssets.Duplicates := dupIgnore;
     
   //AddMessage('Opening browser...');
   ShowBrowser;
