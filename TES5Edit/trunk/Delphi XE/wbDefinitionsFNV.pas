@@ -8091,7 +8091,7 @@ begin
       'Unarmed Crouch PA',
       'Unarmed Counter PA',
       'Spotter Effect',
-      'Item Detected Efect',
+      'Item Detected Effect',
       'Cateye Mobile Effect (NYI)'
     ], cpNormal, True)
   ]);
