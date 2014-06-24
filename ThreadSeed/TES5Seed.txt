@@ -1,10 +1,10 @@
-﻿[size=5][color=#00BFFF][url=http://www.nexusmods.com/skyrim/mods/25859/]TES5Edit 3.0.31 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
+﻿[size=5][color=#00BFFF][url=http://www.nexusmods.com/skyrim/mods/25859/]TES5Edit 3.0.32 EXPERIMENTAL[/url] is now available on the Nexus.[/color][/size]
  
 [size=4][color=#FF0000]This is the ninth update of TES5Edit and is still being updated. However, it should still be considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available. Feel free to ask about plugin cleaning in the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/]RELz TES5Edit Plugin Cleaning Emporium[/url][/color]. If you require technical assistance the official [color=#00BFFF][url=http://forums.bethsoft.com/topic/1490494-relz-tes5edit/]RELz TES5Edit[/url][/color] thread is best for that. As always backup you plugins, save games, and use with caution. (at your own risk)[/color][/size]
  
 [size=4][color=#FF0000]NOTE: This is the actual version of FNVEdit, FO3Edit, and TES4Edit by ElminsterAU being updated for Skyrim. He has allowed us to host both TES5Dump and TES5Edit under the same MPL.[/color][/size]
  
-[size=4][color=#FF8C00]TES5Edit 3.0.31 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://www.nexusmods.com/skyrim/users/156622]Zilav[/url], [url=http://www.nexusmods.com/skyrim/users/1102380]Hlp[/url], and [url=http://www.nexusmods.com/skyrim/users/4147439]Sharlikran[/url].[/color][/size]
+[size=4][color=#FF8C00]TES5Edit 3.0.32 EXPERIMENTAL by ElminsterAU updated for Skyrim by [url=http://www.nexusmods.com/skyrim/users/156622]Zilav[/url], [url=http://www.nexusmods.com/skyrim/users/1102380]Hlp[/url], and [url=http://www.nexusmods.com/skyrim/users/4147439]Sharlikran[/url].[/color][/size]
  
 [size=4][b][color=#00BFFF]If possible please post in the Bethesda forum: [url=http://forums.bethsoft.com/topic/1490494-relz-tes5edit/]RELz TES5Edit[/url][/color][/b][/size]
  
@@ -51,9 +51,26 @@ My Video [url=http://www.youtube.com/watch?v=ciRPWx3OhBQ]Making a Merge Patch.[/
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to FO3Edit.exe to work with Fallout3.
 Rename to FNVEdit.exe to work with New Vegas.
+
+[size=4][color=#00BFFF]End user documentation:[/color][/size]
  
 Fallout3 [url=http://www.nexusmods.com/fallout3/mods/8629]Training Manual[/url] for FO3Edit (applies to all game versions)
 Fallout New Vegas [url=http://www.nexusmods.com/newvegas/mods/38413]FNVEdit Training Manual[/url] for FNVEdit (applies to all game versions)
+
+[size=4][color=#00BFFF]Developer documentation:[/color][/size]
+
+Documentation for Fallout 3 and Fallout: New Vegas plugin file formats can be found on [url=https://github.com/WrinklyNinja/fopdoc]GitHub/fopdoc[/url] courtesy of WrinklyNinja
+[LIST]
+[*][url=https://github.com/WrinklyNinja/fopdoc/blob/master/Fallout3/Records.md]Fallout 3 Records[/url][/*]
+[*][url=https://github.com/WrinklyNinja/fopdoc/blob/master/FalloutNV/Records.md]Fallout: New Vegas Records[/url][/*]
+[/LIST]
+
+Documentation for Oblivion and Skyrim file formats can be found on [url=http://www.uesp.net/wiki/Main_Page]UESP[/url] Wiki
+[LIST]
+[*][url=http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format]Skyrim Records[/url][/*]
+[*][url=http://www.uesp.net/wiki/Tes4Mod:Mod_File_Format]Oblivion Records[/url][/*]
+[*][url=http://www.uesp.net/wiki/Tes3Mod:File_Format]Morrowind Records[/url] - Morrowind is not supported with xEdit[/*]
+[/LIST]
  
 [color=#FF8C00]Important for Older Systems:[/color]
 If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version. [url=http://www.microsoft.com/en-us/download/details.aspx?id=8109]DirectX End-User Runtimes (June 2010)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=23611]DirectX End-User Runtimes (March 2008)[/url] or [url=http://www.microsoft.com/en-us/download/details.aspx?id=35]DirectX End-User Runtime Web Installer[/url]. (make sure to install it after unpacking it)
@@ -62,7 +79,34 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
  
 [color=#FF0000]With each new version of TES5Edit you may want to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.[/color]
 
+[color=#00BFFF]Version 3.0.32 contains the following changes:[/color]
+[LIST]
+[*]- issue 69: automatic updating of counter fields to reflect the proper amount of elements in containers[/*]
+[*]- issue 149: FormID indexes in master file header ONAM forms[/*]
+[*]- issue 162: reference rotation angle normalization (TES4LODGen hanging on several mods)[/*]
+[*]- hotkeys in plugins selection window (Enter - confirm, numpad '+' select all, '-' select none, '*' invert)[/*]
+[*]- hold Shift while starting xEdit to skip restoring window state (for users stuck with xEdit outside of viewable desktop area)[/*]
+[*]- hold Shift while clicking OK in plugins selection window for one time skipping of building references for all plugins[/*]
+[*]- exclude building references for plugins list available in options[/*]
+[*]- option to display integer values of flags and enumerations (off by default)[/*]
+[*]- Ctrl+C copies only Node text to clipboard, Esc closes the View window[/*]
+[*]- definitions update for all games to reduce false positives when checking for errors[/*]
+[*]- custom scripted filtering, demo 'Apply custom scripted filter.pas'[/*]
+[*]- new scripting functions and scripts: Weather Editor script (Ctrl+W), Worldspace Browser (Alt+F3)[/*]
+[*]- scripted persistent bookmarking of records: Ctrl+1..5 to set a bookmark, Alt+1..5 to go back[/*]
+[*]- removing offset data in WRLD is optional now, 'on' by default[/*]
+[*]- [TES5] TES5LODGen (beta version, has several issues)[/*]
+[*]- [TES5] renamed armor addon nodes (added slot numbers), please update your scripts if needed[/*]
+[*]- [TES5] Record definitions update (WTHR, DOBJ, NAVM, VMAD papyrus data, GetEventData condition), improved NavMeshes (thanks to jonwd7)[/*]
+[*]- [TES5] Added VMAD (papyrus scripts) to TREE, and LVLG (global) to LVLN. They can't be edited in CK, but it supports them and they confirmed to work in game[/*]
+[*]- [TES4] Added XRGD subrecord to REFR, INFO flags update[/*]
+[*]- [FO3] Do not remove PLD2 subrecord in PACK (as in FNV)[/*]
+[*]- [FNV] BPTD update to support body parts without BPTN name[/*]
+[*]- [FNV] Relocated CELL and WRLD groups at the end of file[/*]
+[*]- [TES4/TES5/FO3/FNV] WRLD offset data OFST definition (when 'Simple records' option is off)[/*]
+[/LIST]
 [color=#00BFFF]Version 3.0.31 contains the following changes:[/color]
+[spoiler]
 [LIST]
 [*]- esp files can be loaded before esm[/*]
 [*]- issue 136: no stack overflow and progress indication for long operations[/*]
@@ -87,6 +131,8 @@ If you get an error about d3dx9_*.dll not being installed, you need to update yo
 [*]- [TES4] fixed "Unsused data in XSED" warning[/*]
 [*]- [FO3/FNV] fixed issues when copying NPC_, definitions update.[/*]
 [/LIST]
+[/spoiler]
+
 [color=#00BFFF]Version 3.0.30 contains the following changes:[/color]
 [spoiler]
 [LIST]
