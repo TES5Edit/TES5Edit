@@ -39,7 +39,6 @@ type
     edColumnWidth: TEdit;
     cbAutoSave: TCheckBox;
     cbTrackAllEditorID: TCheckBox;
-    cbResolveAliases: TCheckBox;
     cbSortGroupRecord: TCheckBox;
     cbShowFlagEnumValue: TCheckBox;
     tsDoNotBuildRefs: TTabSheet;

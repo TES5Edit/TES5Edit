@@ -34,7 +34,6 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitHeight = 280
       object Label5: TLabel
         Left = 16
         Top = 280
@@ -89,7 +88,7 @@ object frmOptions: TfrmOptions
       end
       object cbSortFLST: TCheckBox
         Left = 16
-        Top = 154
+        Top = 131
         Width = 121
         Height = 17
         Hint = 
@@ -101,7 +100,7 @@ object frmOptions: TfrmOptions
       end
       object cbSimpleRecords: TCheckBox
         Left = 16
-        Top = 224
+        Top = 201
         Width = 357
         Height = 17
         Caption = 'Simple records LAND, NAVI, NAVM, CELL, WRLD (requires restart)'
@@ -131,45 +130,34 @@ object frmOptions: TfrmOptions
         Caption = 'Track all EditorID'
         TabOrder = 5
       end
-      object cbResolveAliases: TCheckBox
-        Left = 16
-        Top = 131
-        Width = 169
-        Height = 17
-        Hint = 
-          'Show/Check/Edit aliases by name in alias refs, slows down xEdit ' +
-          'and requires more memory'
-        Caption = '[TES5] Resolve quest aliases'
-        TabOrder = 10
-      end
       object cbSortGroupRecord: TCheckBox
         Left = 16
-        Top = 177
+        Top = 154
         Width = 81
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
         Caption = 'Sort INFOs'
-        TabOrder = 11
+        TabOrder = 10
       end
       object cbShowFlagEnumValue: TCheckBox
         Left = 16
-        Top = 247
+        Top = 224
         Width = 297
         Height = 17
         Hint = 
           'Add integer values of flags and enumerations in () brackets at t' +
           'he end'
         Caption = 'Show values of flags and enumerations (requires restart)'
-        TabOrder = 12
+        TabOrder = 11
       end
       object cbRemoveOffsetData: TCheckBox
         Left = 16
-        Top = 200
+        Top = 177
         Width = 169
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
         Caption = 'Remove OFST offset data'
-        TabOrder = 13
+        TabOrder = 12
       end
       object cbActorTemplateHide: TCheckBox
         Left = 16
@@ -177,12 +165,11 @@ object frmOptions: TfrmOptions
         Width = 169
         Height = 17
         Caption = 'Hide templated fields on actors'
-        TabOrder = 14
+        TabOrder = 13
       end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitHeight = 280
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -250,7 +237,6 @@ object frmOptions: TfrmOptions
     object tsDoNotBuildRefs: TTabSheet
       Caption = 'References building'
       ImageIndex = 3
-      ExplicitHeight = 280
       object Label2: TLabel
         Left = 16
         Top = 13
@@ -289,7 +275,6 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
-      ExplicitHeight = 280
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -405,7 +390,6 @@ object frmOptions: TfrmOptions
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
-    ExplicitTop = 321
   end
   object btnCancel: TButton
     Left = 383
@@ -416,6 +400,5 @@ object frmOptions: TfrmOptions
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 321
   end
 end
