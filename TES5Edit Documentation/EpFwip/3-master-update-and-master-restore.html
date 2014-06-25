@@ -1,0 +1,271 @@
+﻿<!DOCTYPE HTML>
+
+<html>
+
+<head>
+	<title>Miax's Tome of FO3Edit</title>
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<script type="text/javascript" src="js/lib/jquery.js"></script>
+	<script type="text/javascript" src="js/lib/jcarousellite.js"></script>
+	<script type="text/javascript" src="js/t5e.js"></script>
+
+</head>
+
+<body>
+	<div class="toc">
+		<div class="global">
+			<h2>Main Table of Contents</h2>
+
+			<ul class="first">
+				<li><a href="index.html">1. Introduction</a></li>
+				<li><a href="2-overview.html">2. Overview</a></li>
+				<li><a href="3-master-update-and-master-restore.html">3. Master Update and Master Restore</a></li>
+				<li><a href="4-conflict-detection-and-resolution.html">4. Conflict Detection and Resolution</a></li>
+				<li><a href="5-mod-cleaning-and-error-checking.html">5. Mod Cleaning and Error Checking</a></li>
+				<li><a href="6-managing-mod-files.html">6. Managing Mod Files</a></li>
+				<li><a href="7-mod-utilities.html">7. Mod Utilities</a></li>
+				<li><a href="8-fo3edit-faq.html">8. FO3Edit FAQ</a></li>
+				<li><a href="9-appendix.html">9. Appendix</a></li>
+				<li><a href="10-cheat-sheets-and-quick-reference-charts.html">10. Cheat Sheets and Quick Reference Charts</a></li>
+
+			</ul>
+
+		</div><!--/.global-->
+
+		<div class="local">
+			<h3>Section Table of Contents</h3>
+			<ul class="second">
+				<li><a href="#s_3-1">3.1 Overview</a></li>
+				<li><a href="#s_3-2">3.2 Master Update Mode</a></li>
+				<li><a href="#s_3-3">3.3 Master Restore Mode</a></li>
+				<li><a href="#s_3-4">3.4 Using Master Update with Merged Patches ("Modding-Up")"</a></li>
+
+			</ul>
+
+		</div><!--/.local-->
+
+	</div><!--/.toc-->
+
+	<section id="_Toc237480249">
+		<h1>3. Master Update and Master Restore</h1>
+
+		<button class="ctrl-all" onclick="toggle_all(this);">Collapse All</button>
+
+		<div class="content clearfix">
+
+			<div class="level-2" id="s_3-1">
+				<h2 class="ctrl">3.1 Overview</h2>
+
+				<div class="content">
+					<p>Master Update Mode is the solution to the bugs introduced in Patch 1.5 in regards to Plug-ins, as well as the white-face bug and a number of older issues with mod conflicts. Master Update (<abbr title="Master Update Mode">MUM</abbr>) is highly recommended for all modders, as it can prevent crashes, incompatibilities and may provide you with a smoother gaming experience.</p>
+
+					<p><a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> also provides the native ability to reverse the Master Update process, returning all <abbr title="Master Update Mode">MUM</abbr>(ified) plug-ings back to their original ESP state. This process is called Master Restore Mode (<abbr title="Master Restore Mode">MRM</abbr>), and will all you to edit your plug-in with the GECK. As the GECK will not allow you to set a Master (<abbr title="Elder-Scrolls Master File">ESM</abbr>) as the Active file, the <abbr title="Master Restore Mode">MRM</abbr>(er) process is required in order for you to modify your plug-ins again after running Master Update Mode.</p>
+
+					<p>Thus in the tradition of UNIX nomenclature, you must first <abbr title="Master Update Mode">MUM</abbr>ify your plug-ins to play, and them <abbr title="Master Restore Mode">MRM</abbr>er at them to edit them in the GECK. This section describes both processes at depth.</p>
+
+				</div><!--/.content-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_3-2">
+				<h2 class="ctrl">3.2 Master Update Mode</h2>
+
+				<div class="content">
+					<p>Master Update Mode is activated by creating another copy of the program, and renaming it to, &#8220;FO3MasterUpdate.exe&#8221;. When FO3Edit runs, it will recognize its filename and run in Master Update Mode accordingly.</p>
+
+					<ul>
+						<li>When Master Update Mode is activated, the following operations are performed without further user interaction:</li>
+						<li>All modules in the Data folder are assigned into 2 groups, masters and Plug-ins, based on their file extension (.esm or .esp).</li>
+						<li>The modules in each group are sorted by file modification date/time.</li>
+						<li>All module files are re-dated, first all masters, then all Plug-ins, in 1 minute intervals.</li>
+						<li>All active modules are then loaded, the <abbr title="Elder Scrolls Master">ESM</abbr> flag set in the file header if not yet present, and the ONAM sub records build if required.</li>
+						<li>Any temporary overriding world space record that has at least one previous version that is persistent is marked as persistent.</li>
+						<li>All modified modules are saved.</li>
+					</ul>
+
+					<div class="p-img">
+						<p class="img"><img  height="505" src="img/image028.jpg" width="576"></p>
+
+						<p>This process will result in a better-integrated group of mods, and will likely result in less crashes than without having run Master Update Mode. The process of creating the 2<sup>nd</sup> copy of <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> for Master Update Mode is illustrated below:</p>
+
+					</div>
+
+					<p>This makes it possible to take an existing setup using patch 1.4 or older which contains mods that are broken by the bugs in patch 1.5 to be updated to patch 1.5 (likewise with v1.6), and used with existing save games without being messed up by the bugs.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="556" src="img/image030.jpg" width="576"></p>
+
+						<p>The screenshot below shows you screenshots of a common setup, and the output of Master Update and Master Restore Modes:</p>
+
+					</div>
+
+					<p>You must close the program to finalize and save the settings, or your <abbr title="Master Update Mode">MUM</abbr>ifcation will not be completed. Running Fallout3 with <abbr title="Master Update Mode">MUM</abbr> open will cause problems, so make sure you close the program when you see the, &#8220;--= All Done =--&#8220;indication.</p>
+
+					<p>It is recommended that you create icons for both <abbr title="Master Update Mode">MUM</abbr> and <abbr title="Master Restore Mode">MRM</abbr> (along side of the FO3Edit Icon) so that you can conveniently run either depending on whether you&#8217;re playing or modding in the GECK. This is considered the best practice.</p>
+
+					<p>You can safely delete the Backup files at any time; these are created for your protection. You can restore a mod from one of these backups simply by renaming the backup file to the original plug-in filename.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_3-1" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_3-3">
+				<h2 class="ctrl">3.3 Master Restore Mode</h2>
+
+				<div class="content">
+					<p>There is also a MasterRestore mode which reverses the <abbr title="Master Update Mode">MUM</abbr> process by removing the <abbr title="Elder Scrolls Master">ESM</abbr> flag again from all .esp files. Similar to Master Update Mode, you need to copy/paste the FO3Edit.exe. Program, and rename the new copy to, &#8220;FO3MasterRestore.exe&#8221;.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="567" src="img/image032.jpg" width="575"></p>
+
+						<p>This will give you 3 icons; FO3Edit.exe, FO3MasterUpdate.exe and FO3MasterRestore.exe. Once you launch the Master Restore Mode (<abbr title="Master Restore Mode">MRM</abbr>), the rest of the action is automatic. The screenshot below illustrates the output of Master Restore Mode:</p>
+
+					</div>
+
+					<p>You must close the program to finalize and save the settings, or your <abbr title="Master Update Mode">MUM</abbr>ifcation will not be completed. Running Fallout3 with <abbr title="Master Update Mode">MUM</abbr> open will cause problems, so make sure you close the program when you see the, &#8220;--= All Done =--&#8220;indication.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_3-2" class="up">Previous Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_3-4">
+				<h2 class="ctrl">3.4 Using Master Update with Merged Patches (&#8220;Modding-Up&#8221;)</h2>
+
+				<div class="content">
+
+				<p>The best practice for produce the most-stable conditions possible for your mod-list, we recommend that you use both a Merged Patch and Master Update Mode (<abbr title="Master Update Mode">MUM</abbr>). This will resolve as many conflicts as possible via the Merged Patch, which will prevent crashes and mod issues. By then running <abbr title="Master Update Mode">MUM</abbr> before you play, you will resolve some Fallout3 bugs not fixed in the Bethesda patches and will rebuild and re-sync the ONAM records between the master files.</p>
+
+				<p>The author has found this combination of Merged Patch and <abbr title="Master Update Mode">MUM</abbr> to be outstanding in bringing large numbers of mods together with a crash-free gaming experience. I describe the process as, &#8220;Modding-Up&#8221;. The process of Modding-Up is seven steps long and very simple, requiring almost no analytic thought as described below:</p>
+
+				<ol>
+					<li>Launch <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> and Uncheck any previous merged patches,
+					then close <abbr title="Fallout Mod Manager">FOMM</abbr></li>
+
+					<li>Launch <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>, making sure the correct mods are
+					checked, select, &#8220;OK&#8221;</li>
+
+					<li>Right-click in Left-Side Panel and select, &#8220;Create Merged Patch&#8221;</li>
+
+					<li>Close FO3Edit and Save the new Merged Patch.</li>
+
+					<li>Launch <abbr title="Fallout Mod Manager">FOMM</abbr> and Check/Select the new Merged Patch,
+					then close <abbr title="Fallout Mod Manager">FOMM</abbr></li>
+
+					<li>Launch <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a>, ensure no errors occur, then close the program</li>
+
+					<li>Launch <abbr title="Fallout Mod Manager">FOMM</abbr> and select, &#8220;Launch <a href="http://www.fallout3nexus.com/downloads/file.php?id=4888"><abbr title="Fallout Script Extender">FOSE</abbr></a>&#8221; to play!</li>
+
+				</ol>
+
+				<ol class="steps">
+					<li>
+						<div class="p-img">
+						<p class="img"><img  height="358" src="img/image034.jpg" width="370"></p>
+						<p>The process is diagrammed an illustrated below. To start Modding-Up, Launch <abbr title="Fallout Mod Manager">FOMM</abbr> (A) and check the mod-list to make sure any pervious Merged Patches are un-checked/not-selected to load (B). Then close <abbr title="Fallout Mod Manager">FOMM</abbr> to save the load order (C):</p>
+
+						</div>
+					</li>
+
+					<li>
+						<div class="p-img">
+						<p class="img"><img  height="288" src="img/image036.jpg" width="246"></p>
+						<p>In Step #2, launch FO3Edit (A) and review/ensure the mod-order list is exactly as you want it (B). If you find problems in the load order, close FO3Edit and change it in <abbr title="Fallout Mod Manager">FOMM</abbr> first. Once satisfied with the order, select, &#8220;OK&#8221; (C) to load the mod list into FO3Edit:</p>
+
+						</div>
+
+						<div class="p-img">
+						<p class="img"><img  height="224" src="img/image038.jpg" width="576"></p>
+						<p>Once FO3Edit loads, check the <a href="2-overview.html#s_2-3-5">Messages Tab</a> (A and B) for any errors noted. If you find errors, you should either resolve them or remove the mod from your load order list. Any errors found at this stage are bad and can cause crashes later no mater what you do.</p>
+						<p>Once satisfied that your load-order is clean, proceed forward to create the merged patch!</p>
+
+						</div>
+					</li>
+
+					<li>
+						<div class="p-img">
+						<p class="img"><img  height="365" src="img/image040.jpg" width="555"></p>
+						<p>To create the merged-patch in Step #3, Right-click anywhere in the Left-Side Panel of FO3Edit (A) to render the main context menu, then select, &#8220; <a href="4-conflict-detection-and-resolution.html#s_4-8">Create Merged Patch</a>&#8221; (C) as shown in the screenshot below:</p>
+
+						</div>
+
+						<div class="p-img">
+	<p class="img"><img  height="243" src="img/image042.jpg" width="487"></p>
+						<p>You will be prompted to enter a new filename for the new merged patch as shown below. Select a unique filename, preferable something that is self-explanatory as a merged-patch and not a real mod:</p>
+
+						</div>
+
+						<div class="p-img">
+	<p class="img"><img  height="266" src="img/image044.jpg" width="576"></p>
+						<p>Once the filename is chosen, FO3Edit will create the merged-patch while showing you the logfile output in the <a href="2-overview.html#s_2-3-5">Messages Tab</a> (A). Note that the master file references for almost (if not every) mod in your list are added to the merged-patch. This allows the merged-patch to contain records for any/every mod file, merging together the conflicts as shown in the screenshot below:</p>
+
+						</div>
+					</li>
+
+					<li>
+						<div class="p-img">
+	<p class="img"><img  height="289" src="img/image046.jpg" width="256"></p>
+						<p>For Step #4, simply close FO3Edit. This will present you with a Save Changed Files window, in which you must ensure that your newly-created merged-patch is checked for saving (A). Select, &#8220;OK&#8221; to save the merged-patch (B) as shown below:</p>
+
+						</div>
+					</li>
+
+					<li>
+						<div class="p-img">
+	<p class="img"><img  height="372" src="img/image048.jpg" width="384"></p>
+						<p>For Step #5, re-launch <abbr title="Fallout Mod Manager">FOMM</abbr> (A) and select/Left-click your new merged-patch (B), which should be listed as the last entry in the load list. Once done, close <abbr title="Fallout Mod Manager">FOMM</abbr> (C) to save the load-order to disk.</p>
+
+						</div>
+					</li>
+
+					<li>
+						<div class="p-img">
+	<p class="img"><img  height="335" src="img/image050.jpg" width="576"></p>
+						<p>In Step #6 it&#8217;s time to launch <a href="3-master-update-and-master-restore.html">FO3MasterUpdate</a> (A), which shows output similar to the screenshot below. Note that a successful run of FO3MasterUpdate will end with an &#8220;All Done&#8221; message (B). If you see this, you&#8217;re good to go! Close FO3MasterUpdate (C):</p>
+
+						</div>
+					</li>
+
+					<li>
+						<div class="p-img">
+	<p class="img"><img  height="386" src="img/image052.jpg" width="399"></p>
+						<p>Lastly, for Step #7 you launch <abbr title="Fallout Mod Manager">FOMM</abbr> for the final time (A) and select, &#8220;Launch <a href="http://www.fallout3nexus.com/downloads/file.php?id=4888"><abbr title="Fallout Script Extender">FOSE</abbr></a>&#8221; (B) to play Fallout3! You will now be running with the best-configuration possible.</p>
+
+						</div>
+					</li>
+				</ol>
+
+				<p>Modding-Up is a highly recommended practice for all modders. After you&#8217;ve done it a few times, the process will become second nature and you will thank yourself many times over for it. The author Mods-Up every time he plays, running 100+ mods, and almost never crash or have mod issues. So, are you <a href="#s_3-4">Modded-Up</a>?!?</p>
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_3-3" class="up">Previous Section</a><a href="#s_3-4" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+		</div><!--/.content-->
+
+		<div class="section-nav">
+			<a href="2-overview.html" class="prev">&laquo; Previous Page</a><a href="4-conflict-detection-and-resolution.html" class="next">Next Page &raquo;</a>
+
+		</div><!--/.section-nav-->
+
+	</section>
+
+</body>
+</html>

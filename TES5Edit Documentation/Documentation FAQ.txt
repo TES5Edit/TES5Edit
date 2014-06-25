@@ -1,0 +1,244 @@
+= FNVEdit FAQ =
+== Overview ==
+The idea behind the FAQ is to make it easier for you to find the FNVEdit information that you need, without having to read this entire manual – that could put anyone into a coma. As I really don‟t want the hassle of law suits, it is in both of our best interest that this tutorial is simple to navigate and quick to find resolution to the tasks at hand.
+FAQ Navigation really means using the FAQ to direct you to the right cell (section) of the document that describes what you need to do. In some cases, the FAQ itself will be all the help that is required. In other cases, you may want/need to learn the process at depth. Each Question/Answer combination has a teleport XMarker that you can activate by holding down Control and Left-Clicking on the XMarker with your mouse. Activation of the XMarker will teleport you to the appropriate cell in the document for further details.
+The FAQ is divided into Beginner, Intermediate and Advanced sections to better organize the questions, and further insulate your brain from over-exposure to technical documentation. The idea being that most users should start in the Beginner section and advance forward until find the answers you seek. If you do not find the answers you were looking for, please post them in the Bethesda GECK Forum so that we can update the FAQ.
+Note: All Acquisition and Installation questions are covered in Chapter 2 above.
+== Beginner Questions ==
+The Beginner FAQ covers two key functions of FNVEdit; Conflict Detection / Resolution and Master Update Mode (MUM). As these are the two most heavily used functions of FNVEdit, we focus beginners on these processes and questions. We start with MUM and end with Conflict Detection / Resolution.
+=== “What mods do I select when I first load FNVEdit?” ===
+Question: When loading FNVEdit, do I select all of the mods at once and apply a filter or does it need to be done individually?
+Two Answers here, depending on what you‟re trying to accomplish:
+Answer: If you‟re de-conflicting your mods so that you can play crash-free, then you want to select All of the mods (with the single exception of any previous patch plug-in you created, you don‟t want to load that if you‟re building a new patch plug-in).
+Answer: If you‟re cleaning your mod or wanting to modify/work on just your own mod, then; Right-click in the load-window and choose, “Select None”. Then find your mod in the list and just select that mod. The loader will automatically pick-up any ESM Master files that your mod depends upon. The section on Mod Cleaning and Error Checking will describe the process at depth.
+FNVEdit FAQ
+Training Manual for FNVEdit 148
+=== “Appling conflict filters shows almost every mod has conflicts!” ===
+Question: When I apply my conflict detection filter, almost all of the mods in my list have Red backgrounds! Am I totally conflicted here?
+Answer: Red isn't necessarily bad, although it does point you to conflicts. With that many mods, a merged patch Plugin is a must. Following the instructions in the section on Patch Plugins, and you should see that all of the intended edits will be playing nicer with each other. The chapter on Conflict Detection and Resolution will show you the differences.
+=== “Should I make changes to the mods if there is a conflict?” ===
+Question: When de-conflicting my mod, is it okay to drag/drop changes into the mod with a conflict, or just edit the field in the mod to fix the conflict right in that mod file?
+Answer: No, you shouldn't be modifying mods you didn't create yourself like that or you'll just get into trouble the next time one of these mods is updated. Instead you should use "copy as override into" a new Plugin on the currently winning record version and then drag n' drop the changes from all other record versions together. Creating a patch plug-in which can be loaded after all the conflicting mods to resolve these conflicts. The chapter on Conflict Detection and Resolution will show you the differences.
+=== “Where in the load-order should my patch plug-in be placed?” ===
+Question: Where in the load-order should my patch plug-in be placed?
+Answer: Yes your merged-patch loads last, and the Masters (.ESM files) which it patches (.ESM's and .esp's) will be automatically added.
+=== “What does the patch plug-in really do for my Fallout: New Vegas load order?” ===
+Question: What does the patch plug-in really do for my Fallout: New Vegas load order? Do I really need to go through this trouble to create one?
+Answer: If you run more than 25 mods, you really do need to create a patch plug-in in most cases. What the patch does is to join edits to a mod in such a way that both edits will work on the same thing.
+Say for example mod #1 says you'll find raiders with flamers and mod #2 adds rocket launchers to them instead. If mod #2 loads last, it will be the conflict winner and you'll find raiders with flamers. If you use a patch Plugin, you'll find raiders with both flamers and rocket launchers. It doesn‟t always work out this smoothly, but it does in most cases. For an in-depth discussion see the chapter on Conflict Detection and Resolution.
+FNVEdit FAQ
+Training Manual for FNVEdit 149
+=== “Does FNVEdit MasterUpdate correct the white face bug?” ===
+Question: Does FNVEdit MasterUpdate correct the white face bug? It is the only one I have been able to find since trying this - it is great otherwise.
+Answer: Reports we got during testing seems to indicate that FNVMasterUpdate fixes the white face bug.
+=== “What version of Fallout: New Vegas edit do I need FNVEdit for?” ===
+Question: Do I need to run FNVEdit under Fallout: New Vegas v1.4 first and then apply the v1.5 patch?
+Answer: No you don't need to reinstall. All you need to do is to make sure that you run FNVMasterUpdate after any change to your load order. You can run FNVEdit under any version of Fallout: New Vegas.
+=== “Does FNVEdit fix Enclave radio broken by the Broken Steel?” ===
+Question: Can the MasterUpdate using FNVEdit cause Enclave radio to come back on air during broken steel?
+Answer: I'm pretty sure I've heard about people complaining about this here on the Forum before I ever released FNVMasterUpdate even for testing. I would guess it's one of (many) bugs in BrokenSteel.ESM or a conflict with some other mod you've installed.
+=== “What happens if I can‟t get rid of my conflicts?” ===
+Question: What happens if I still have mod conflicts in-game even after creating a patch Plugin and running MasterUpdate mode (i.e. “Modding-Up”)?
+Answer: There is frankly nothing that FNVEdit can do different in FNVMasterUpdate, all it does is turn everything into a Master and creates the necessary ONAM records for the Masters to talk back and forth. Any problems that show up after patching up to 1.5 and running FNVMasterUpdate are the result of either:
+ General bugs in Patch release your running.
+ A problem specific to how Masters are handled.
+ A module file that's broken in some way (which might show up more or at all because 1.5+ESM is now doing something RIGHT at the engine level).
+ Conflicts between installed modules (ditto)
+ See the chapter on Conflict Detection and Resolution if you‟re still stuck for instructions on how to “Slay the Bug”.
+FNVEdit FAQ
+Training Manual for FNVEdit 150
+=== “I get an error, „Record XXXX is not contained in a group‟?” ===
+Question: What should I do when I get an error during loading FNVEdit like this:
+"Record fBloodSplatterFadeStart [GMST:080304D5] is not contained in a group." and I had to disable it to get the Master update to complete. Is this something I've done wrong with load order or some sort of conflict, or something that needs to be reported to the mod author to correct in the esp?
+Answer: As I said before, there are still many mods out there that have been hacked together in FOMM and are not actually structurally valid Fallout: New Vegas module files.
+Important with such mods: Do NOT just disable it, run FNVMasterUpdate and then ENABLE it again. FNVMasterUpdate will only work correctly if it has processed ALL the modules you load into your game. This is an all or nothing deal.
+Any module that gives trouble during loading or saving in FNVEdit/FNVMasterUpdate is BROKEN anyway and should never be loaded into any game, no matter if it's as Plugin into pre-1.5 or ESM'ified into 1.5.
+=== “Does MasterRemove remove the ONAM records added by MasterUpdate?” ===
+Question: A question about MasterRestore mode: does it remove the ONAM records added by MasterUpdate, or are the ONAM records harmless on Plugin files?
+Answer: When with MasterRestore the ESM flag is turned off, the ONAM's automatically go away. "Yes" and "Yes, as far as I know".
+=== “Can I run MasterUpdate one-mod-at-a-time, to check them out?” ===
+Question: Is there any downside to checking one mod in FOMM, and then running FNVMasterUpdate. Then after it's finished, and there's no errors, checking the next mod in FOMM and running MasterUpdate again? Doing it mod by mod like that until eventually they're all checked?
+Answer: No, that should be fine as long as you don‟t Play the game in-between these steps. FNVMasterUpdate MUST be run with your full mod-list checked before you play.
+=== “What‟s with all these backup files building-up in my Data directory?” ===
+Question: I've been getting a lot of 0/1kb insertmodnamehere.esp save/backup files in my data folder. What exactly are these?
+Answer: When FNVEdit/FNVMasterUpdate saves a file, it first writes a new file with .esp/m.save.<datetime> as extension. When you then close the program (and in case of FNVMasterUpdate, only if there weren't any errors when saving any of the files) then the existing original module files are renamed to .esp/m.backup.<datetime> and the newest .esp/m.save.<datetime> file for each module is renamed to .esp/m. These can be deleted without worry of harming your game or mods, and are purely for backup purposes.
+FNVEdit FAQ
+Training Manual for FNVEdit 151
+=== “How many mods can F03Edit load?” ===
+Question: How many mods can F03Edit load? I can't seem to get but just half of my mods loaded at one time. I have over 170 mod to edit am I missing something or doing something wrong?
+Answer: You can have 256 total mods in Fallout: New Vegas and FNVEdit, one more then the game engine itself. However, FNVEdit is uses a lot of memory to load entire mod lists and compare everything – and that goes up the more mods you add. If you find that you cannot run FNVEdit with a huge number of mods, check to see that your computer is not running out of memory. FNVEdit will warn you that memory is exhausted in most cases.
+I have made FNVEdit work successfully with close to 200 mods loaded on a Windows XP machine with 3 gigs of Ram.
+=== “Will MasterUpdate work if I have 200+ mods?” ===
+Question: With the MasterUpdate function, can I use this if I have lots of mods (.esp and .ESM files) installed and have never done the MasterUpdate before? Or does it have to be started with a fresh game install and then performed one mod at a time? Hopefully my question makes sense.
+Answer: There is no problem running FNVMasterUpdate with a large number of mods. If you currently have a large setup that works correctly under pre-1.5, you can just run FNVMasterUpdate on it, patch to 1.5, remove the fake patch if you use it, and everything should work. FNVMasterUpdate mode also takes less Ram then when doing conflict detection with FNVEdit itself.
+=== “After Filtering for conflicts, I don‟t see anything on the Left-hand side!” ===
+Question: After I run FNVEdit, and after filtering for conflict detection, if there's nothing on the left side, does that mean my load order is fine?
+Answer: Yes if you ran through the conflict resolution process and get no red or yellow coloring, you‟re clean! Nice work!
+=== “Why does the change confirmation window force me to wait?” ===
+Question: When I first make changes to a mod, I get a huge timed warning that forces me to wait before allowing me to click Yes. Is there any way to turn the three-second modify warning off?
+Answer: Yes, but it's there for a reason. Also, the 3 second delay gets reduced by a few fractions of a second every time you confirm that dialog till after a while it's completely gone.
+FNVEdit FAQ
+Training Manual for FNVEdit 152
+=== “I deleted a plug-in file but FNVEdit seems to think it‟s still there?” ===
+Question: I deleted a plug-in file but FNVEdit seems to think it‟s still there? When FNVEdit load itself, I see the messages about "Error: Active Plugin List contains nonexistent file "merged.esp"". I'm absolutely sure- I remove this ESP from load order and from disk with help of FOMM. What‟s the deal?
+Answer: That means that you deleted the file from disk, but it's still listed as an active Plugin in your Plugins.txt (see the message log for the location of that file). The Plugins.txt file is used by the game engine to decide which modules to load.
+Any listed module which doesn't exist in the file system is just ignored by the game engine (and FNVEdit). So there is nothing to worry about with that error message. It has no further consequences. If you want to remove the error message, edit the Plugins.txt file and remove its entry from that file.
+=== “How do I start the Master update mode?” ===
+Question: How do I start the Master update mode? Do I just load FNVMasterUpdate.exe and it does it automatically? I didn't see any special options after right clicking any mods.
+Answer: If you renamed your FNVEdit.exe to FNVMasterUpdate.exe, then all you need to do is start it. FNVMasterUpdate should run through and do its work automatically.
+If you get an --= All Done =-- at the end of the log you are fine and ready to play after closing the program. However if you get an --= Error =-- then you need to read the log closely and resolve whatever is the problem till you get the All Done.
+Do not make any changes to your load order (activating/deactivating/moving any modules) between running FNVMasterUpdate and playing the game. If you do make changes to your load order, run FNVMasterUpdate again.
+=== “Should I make a new merged patch if I change my load order in FOMM?” ===
+Question: So if I make a new load order in FOMM, should I make a new merged patch as well right?
+Answer: That is correct, if you change the load order you need to create a new merged patch so that the data is always kept in the right order. Failure to do this can result in CTD‟s. That‟s why Patch Plugin‟s should be a last resort and not automatically what you do to resolve conflicts.
+The best practice is to create a patch plug-in once you are reasonably sure that your load-order is settled and static for your current game/character. After you start playing, altering the load order can result in problems for that character, so it‟s best to put the effort into a patch plug-in once you‟re ready to start seriously gaming OR if you have serious conflicts that can‟t be resolved by changing the load-order alone.
+FNVEdit FAQ
+Training Manual for FNVEdit 153
+=== “I am having problems getting FNVEdit to work on Vista” ===
+Question: I am having problems getting FNVEdit to work on Vista in the Program Files folder. Am I doing something wrong?
+Answer: It is possible to install the game to the Program Files folder under Vista, but you have to deal with the UAC security first. You have three options:
+1. Disable the UAC completely, but this will leave your system more vulnerable.
+2. Install in a folder not controlled by UAC.
+3. A much better way to solve the problem (of write-redirection to the VirtualStore) is to simply give the "Users" group "Full Control" of the Fallout: New Vegas folder.
+=== “After FNVEdit loads, I can‟t get the context menu on the left to load!” ===
+Question: After FNVEdit loads, I can‟t get the context menu on the left-hand side to load up! I can right-click in the right-window, but the left window gives me nothing. What‟s up with that?”
+Answer: In these cases there is actually a problem with your files or your load-order, and FNVEdit is unable to process them. Exit FNVEdit and use FOMM to check/correct any load-order issues. Make sure your patch plug-ins (if you have one) loads last as well and re-run FNVEdit. See the Interface Tour to gain a better understanding of the views.
+== Intermediate Questions ==
+=== “Should I clean all of the mods that I use including FOOK, FWE, MMM, etc.?” ===
+Question: Should I clean all of the mods that I use including FOOK, FWE, MMM, etc.?
+Answer: No, you should only clean a mod that you own or are on a team that owns. If you think that a mod is very dirty and should be cleaned, the best approach is to recommend it to the mod author on the forums. See the section on Mod Cleaning and Error Checking for more information
+=== “Is there a function that pops up if you double click something?” ===
+Question: Is there a function to the window that pops up if you double click something? There doesn't seem to be a way to edit anything in that window.
+Answer: Yes, it makes it possible to read long texts like script source. See the section on Adding and Editing References for more information.
+=== “What is the difference between 'copy as override' and 'deep copy as override'?” ===
+Question: What is the difference between 'copy as override' and 'deep copy as override'?
+FNVEdit FAQ
+Training Manual for FNVEdit 154
+Answer: If you copy a DIAL record as override it only copies that DIAL record, if you use "deep copy" as override then it also copies all the INFO records underneath. See the section on creating a Manual Patch Plugin for examples of how to use Overrides and Deep Overrides.
+=== “Replicating a dialogue block with all topic blocks that belong to it” ===
+Question: What if I want to replicate a dialogue block with all topic blocks that belong to it?
+Answer: You need to get a copy of a DIAL and all INFO records under it as new records using the following:
+ Use "Deep Copy as Override into...".
+ Go to the override copy of the DIAL record (you can just Ctrl+click on the "Record Header \ FormID" field of the override copy in the detail view)
+ Select that record in the navigation tree view.
+ Press F2 (opens the change FormID dialog)
+ Backspace (clears the FormID)
+ Enter (shows the dialog again with a newly generated unique FormID)
+ Enter (confirms the change)
+ Repeat for the INFO records (Cursor Down, F2, Backspace, Enter, Enter, repeat)
+ See the section on creating a Manual Patch Plugin for examples of similar actions using Copy as Override / Deep Override Into.
+=== “Having troubles updating stuff from one mod version to another” ===
+Question: I am running into issues trying to update stuff from one version of a mod to another.
+Answer: For comparing / moving data between 2 versions of the same mod:
+ When starting FNVEdit, only load ONE of the 2 versions.
+ Select the file in the navigation tree view.
+ context menu -> Compare to
+ select the 2nd file in the file open dialog (it needs to be in the data folder for this to work currently)
+ the 2nd file now gets loaded with the same load order index as the first file
+ See the section on creating a Manual Patch Plugin for examples of similar actions using Copy as Override / Deep Override Into.
+Doing that FNVEdit would have recognized the records in the 2 modules as being overrides of each other which would have simplified copying stuff around a lot. Also see the section on Comparing Two Versions of a Mod for examples of how to compare them efficiently.
+FNVEdit FAQ
+Training Manual for FNVEdit 155
+=== “How do I convert an ESP into an ESM?” ===
+Question: I'm trying to turn an .esp into an .ESM using FNVEdit, but I can't seem to find a way to save the file as an .ESM or "convert" it as it were. I know that there is a way to do it, I believe there's supposed to be a copy into... function, yet I can't seem to find it.
+Answer: Look at the File Header. Set the ESM Record Flag. Save. You are done. The file extensions do not matter for the game engine. But if you want you can now rename your file from .esp to .ESM. See the section on Converting a Plugin into a Master for a detailed description.
+=== “Why should I “clean” my mod? It works just fine how it is!” ===
+Question: Why should I “clean” my mod? It works just fine how it is!
+Answer: The large majority of mods currently in circulation are unfortunately in rather appalling condition, with dirty edits, deleted references, unintended changes, you name it. GECK makes it very easy for these things to slip in. Even worse, there are still a significant number of mods out there which have been hacked together in FOMM or even hex editors that in no way shape or form conform to the implicit rules of the FO3 module file format. See the chapter on Mod Cleaning and Error Checking for a detailed description of how this is done.
+What is needed from all mod authors is a concentrated effort to clean up their mods and in general minimize the number of vanilla records they touch to reduce conflict potential.
+=== “Many of my NPCs in-game has stark white-faces!?” ===
+Question: Many of my NPCs in-game has stark white-faces! Did FNVEdit do this?
+Answer: The white face bug is Not fixed by FNVEdit. The bug that FNVEdit fixes is the white BODY bug. To fix the white face bug, you have to edit your fallout.ini and add this line below the [General] statement:
+bLoadFaceGenHeadEGTFiles=1
+=== “I have FOOK and get a load error like this, did I do something wrong?” ===
+Question: I have FOOK and get a load error like this, did I do something wrong?
+“[00:20] Background Loader: Error: record LVLI contains unexpected (or out of order) sub record LVLI 494C564C”
+Answer: Nothing you or FNVEdit did wrong. I'm aware for some time now that FOOK 1.6 contains this broken deleted record. Besides being broken, it shouldn't have been deleted in the first place and can cause CTDs.
+You can fix it with FNVEdit by loading FOOK.esp (as you are obviously doing) then going to that record (enter 0002968D into the FormID search edit above the navigation tree view and press enter) and then REMOVE that record from FOOK.esp. Make sure that you are removing it from the right file! (It should have the "Deleted" Record Flag set in FOOK.esp).
+FNVEdit FAQ
+Training Manual for FNVEdit 156
+=== “I found records that I‟ve changed don‟t exist in FalloutNV.ESM!” ===
+Question: When opening an esp in FNVEdit, it shows that of all the iXPReward**** records I‟ve changed, that these ones do not exist in FalloutNV.ESM. The other Game Settings I‟ve edited show the yellow/green colors of "override without conflict", but these 5 are simply black on white, as if these are brand new settings. Is this a bug in FNVEdit?
+Answer: No it is not. The default values for the different GMSTs are hardcoded in the exe (both GECK and game engine). GMST sub records in FalloutNV.ESM are only present for the GMSTs that have been overridden by the game designers from their hardcoded default values (which were set by the programmers in source code).
+=== “How do I reverse MasterUpdate so I can edit my ESP in the GECK?” ===
+Question: I checked the OP for instructions on how to reverse FNVMasterUpdate... how is it done?
+Answer: Either run FNVMasterRestore.exe (preferred) or revert to the last backup made when MasterUpdate ran last.
+=== “How can I see individual records from a mod?” ===
+Question: How can I see individual records from a mod?
+Answer: By navigating that tree view you can look at every single record in any of your modules. Once a record has been selected the detailed contents of that record is shown on the right side. The detail view shows all versions of the selected record from all modules which contain it. See the Right-Side View Tab tour for details.
+=== “How do I view all of the references in a mod, not just conflicts?” ===
+Question: When I load the ESP I've been working with, which depends on 2 ESMs (Fallout: New Vegas of course, and BHRM--Bobblehead Remove and Move), neither the ESP, nor the additional ESM, will show me everything until I tell it to filter some of the extraneous information out. How do I view all of the references?
+Answer: In the Right-Side View Tab, right click and make sure "hide no conflict rows" is unchecked.
+=== “I cleaned my mod and am getting CTDs with NAVM errors?” ===
+Question: I just cleaned my mod and am having CTD‟s and all sorts of errors with NAVM records? Did the cleaning process break my mod?
+Answer: NAVM and NAVI records work together in that the NAVI is an index of sorts for the NAVM records. Thus if the cleaning process removes any NAVM records, you must update the NAVI data as well. Thus after any cleaning which touches NAVM records you will have to simply Load and Re-Save the file GECK so that the NAVI records are re-built (which the GECK does automatically when you save). After saving, run MasterUpdate and you should be good to go.
+FNVEdit FAQ
+Training Manual for FNVEdit 157
+=== “How do I reverse an un-intended change?” ===
+Question: I made some un-intended changes to the main game files and don‟t know how to un-do those changes so that the original versions return. How is this done?
+Answer: Normally the word "remove" is used to describe removing a record from a module (in which case, if it was an override record, the original will "shine through" again). While "delete" normally refers to setting the "Deleted" flag on a record (in which case this "deleted" record will hide away whatever original record it overrides).
+== Advanced Questions ==
+=== “What is FalloutNV.hardcoded.esp?” ===
+Question: What is FalloutNV.hardcoded.esp?
+Answer: This file contains some records which are hardcoded in GECK and the game engine (not contained in FalloutNV.ESM) but referenced from records in FalloutNV.ESM. PlaneMarker and PortalMarker STAT records to name just one example. The FalloutNV.hardcoded.esp must be in the same folder as the FNVEdit.exe and NOT in the Data folder. The game engine or GECK will never see that file and never load it.
+When you start GECK without loading FalloutNV.ESM, you can see that there are some records already defined. The reason is that these records are hardcoded in the exe already. Some of these records are overridden in FalloutNV.ESM. Some others are not. But FalloutNV.ESM contains records with references to some of these hardcoded records that are not being overridden.
+If you now load FalloutNV.ESM alone in FNVEdit, which doesn't have these "hardcoded" records in the exe itself like GECK. Then it appears as if FalloutNV.ESM contains a lot of invalid references. This is where FalloutNV.hardcoded.esp comes in. It contains all the hardcoded records which are not overridden in FalloutNV.ESM already. By loading this esp at the same load order ID as FalloutNV.ESM it is as if these records were defined in FalloutNV.ESM.
+=== “Can I have a plug-in that references another plug-in as its Master?” ===
+Question: Can I have a plug-in that references another plug-in as its Master? FNVEdit seems to do this, but I don‟t see how to do it in the GECK.
+Answer: FNVEdit can handle Plugins (.esp) having other Plugins as Master. GECK cannot, so such a file can no longer be simply opened in GECK. See the section on Adding Masters to a Plugin for more details.
+FNVEdit FAQ
+Training Manual for FNVEdit 158
+=== “Can I remove the delay between clicking an entry and the edit box?” ===
+Question: When trying to Edit a cell, there is a delay between clicking an entry the second time and having the edit-box appear. Can this delay be removed?
+Answer: Just use F2. I'm not quite sure where that delay comes from (but probably has to wait until the system wide configured double click time expires to be sure it's a single click and not a double click).
+=== “Is there a “GoTo” option in the context menu for pulling-up a FormID?” ===
+Question: For sub-records which are form IDs, it would be great to have a 'go to' option in the context menu which would then just select that form ID in the tree view.
+Answer: Hold CTRL down, and then click. Also, for fields where the text doesn't fit, hold SHIFT down and move the mouse over them to get a tooltip with the full text.
+With the Ctrl+Click, you can do that any number of times and then simply return to where you came from with the little back and forward buttons in the top right corner. If you have a mouse with more than 2 keys you can also use the "back" and "forward" keys on your mouse.
+=== “Can you help me with the Optcodes for IsInCombat?” ===
+Question: I've just got a query about how we're supposed to input conditions. I'm trying to make a perk that works when you activate something out of combat, but I can't seem to input the "IsInCombat" function. I've tried using the optcode from this list, and I've tried converting the optcode to decimal, but it doesn't display the name.
+Answer: You have to cut off the first 1. So 1121 is 121 -> 289 -> IsInCombat. Just tested and works fine. The first 0/1 is for console/non-console. Also, there‟s a minor typo in the PRKC label. It's not Index, it controls the reference the CTDA is called on.
+0 = player
+1 = current weapon/activation target
+2 = hit target (for combat)
+=== “During the loading process, I notice some of the mods show Errors” ===
+Question: During the background loading process, I notice some of the mods show Errors, but FNVEdit seems to load them anyway.
+Answer: Many files that have been hacked together using FOMM or even a Hex Editor are not conforming exactly to this standard structure and FNVEdit will reject saving such a file (or depending on how severe the problem is might even reject loading such a file). I'd suggest loading it in FOMM, running the sanitize spell, resaving it and then try FNVEdit on it again. Sanitize will at least fix the missing group problem that FNVEdit doesn't like.
+FNVEdit FAQ
+Training Manual for FNVEdit 159
+=== “Is there a way to look up the records opt-codes?” ===
+Question: Is there a way to look up the records opt-codes?
+Answer: The numbers there are the opcodes for the functions used. The full list of functions is here: http://fose.silverlock.org/Fallout: New VegasCommands.html.
+=== “is "HasPerk" available in the CTDAs?” ===
+Question: Shortcut question: is "HasPerk" (which IS a script command) available as far as you know, in the CTDAs?
+Answer: Those numbers are in hexadecimal code, you need to drop the first 1, and then convert the last 3 digits to decimal. So on that list, GetPermAV is 11EF. You drop the 1 to make it 1EF, then convert that to decimal, which gives 495. To make your life easier, HasPerk is 449.
+=== “Can we edit text in the expanded windows?” ===
+Question: Can we edit text in the expanded windows? I'm trying to write a script and it's a bit inconvenient to write it in notepad and copy-paste across.
+Answer: This works by double clicking while holding the shift key.
+=== “Where can I learn more about FLST Lists?” ===
+Question: Where can I learn more about FLST Lists?
+Answer: An advanced discussion can be found on the Bethesda Forums.
+=== “Can we list the mod index for each Master/Plugin loaded in the dump?” ===
+Question: Would it be possible to list the mod index for each Master/Plugin loaded (included the module specified) in the dump? Then you could determine a record's module directly from its FormID.
+Answer: Different then what FNVEdit is showing you, the dump is NOT showing load order corrected FormIDs. You see the FormIDs as they are stored in the file. This means that the MAST sub records from the TES4 file header directly give you all the information you need to map FormIDs to files. e.g. if there are 3 MAST sub records then FormIDs starting with 00, 01 and 02 belong to these 3 files in that order, everything starting with 03 (or higher!) belongs to the file you are dumping.
+=== “I have a lot of house-mods that are conflicting, how do I fix this?” ===
+Question: My load list is smaller than most here, but I have a large selection of houses that were causing problems, as well as a few others like the vertibird that would crash if you left it and walked away. How do I fix this?
+FNVEdit FAQ
+Training Manual for FNVEdit 160
+Answer: First, check if any of your active modules are NOT Masters. You can see that easily in FOMM if any of them are not shown in bold. If yes, run FNVMasterUpdate again and see if the problem if gone.
+If not, determine the FormID of the problematic character(s). Then start FNVEdit and don't make any changes to the to-be-loaded modules. Now put the FormID into the FormID search box (above the navigation tree view) and hit enter. Check if that record is touched by any of you installed mods. Also check the NPC record that the ACHR is based on (you can hold down CTRL and then click on the NAME field to jump to that record).
+=== “Will FNVEdit merge the Eyes, Hairs, Mouth pieces, etc.?” ===
+Question: When merging patches that modify facial characteristics, will FNVEdit merge the Eyes, Hairs, Mouth pieces, etc.?
+Answer: Important with that: eyes and hairs are merged, the rest not. So if you (or anyone) have a mod which makes changes to something other than hairs or eyes, load that mod last so that the hair and eye changes get merged into it.
+So that means that TK's eyelash mod has to be last since it mods a lot of the head parts (like merging the whole mouth to make an open slot for the eyelashes).
+=== “Can I merge destruction-data into my patch plug-in?” ===
+Question: Is it possible to get the destruction data that I created for my mod into the merged patch or should I just do it by hand?
+Answer: Destruction data is not one of the things handled by the merged patch function, so you will need to add those elements by-hand to the patch Plugin.
+Cheat Sheets and Quick Reference Charts
+Training Manual for FNVEdit 161
+
+= Credits =
+
+This has been adapted from [http://fallout3.nexusmods.com/mods/8629 Fallout3 Training Manual] and [http://newvegas.nexusmods.com/mods/38413 FNVEdit Training Manual] by ElminsterEU, JustinOther and Miaximus.
+
+Thanks also go to ElminsterEU, Sharlikran, Hlp, and Zilav for their work with TES5Edit.

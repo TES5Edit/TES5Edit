@@ -1,0 +1,667 @@
+﻿<!DOCTYPE HTML>
+
+<html>
+<head>
+	<title>Miax's Tome of FO3Edit</title>
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<script type="text/javascript" src="js/lib/jquery.js"></script>
+	<script type="text/javascript" src="js/lib/jcarousellite.js"></script>
+	<script type="text/javascript" src="js/t5e.js"></script>
+
+</head>
+
+<body>
+	<div class="toc">
+		<div class="global">
+			<h2>Main Table of Contents</h2>
+
+			<ul class="first">
+				<li><a href="index.html">1. Introduction</a></li>
+				<li><a href="2-overview.html">2. Overview</a></li>
+				<li><a href="3-master-update-and-master-restore.html">3. Master Update and Master Restore</a></li>
+				<li><a href="4-conflict-detection-and-resolution.html">4. Conflict Detection and Resolution</a></li>
+				<li><a href="5-mod-cleaning-and-error-checking.html">5. Mod Cleaning and Error Checking</a></li>
+				<li><a href="6-managing-mod-files.html">6. Managing Mod Files</a></li>
+				<li><a href="7-mod-utilities.html">7. Mod Utilities</a></li>
+				<li><a href="8-fo3edit-faq.html">8. FO3Edit FAQ</a></li>
+				<li><a href="9-appendix.html">9. Appendix</a></li>
+				<li><a href="10-cheat-sheets-and-quick-reference-charts.html">10. Cheat Sheets and Quick Reference Charts</a></li>
+
+			</ul>
+
+		</div><!--/.global-->
+
+		<div class="local">
+			<h3>Section Table of Contents</h3>
+
+			<ul class="second">
+				<li><a href="#s_6-1">6.1 Overview</a></li>
+				<li><a href="#s_6-2">6.2 Adding Master Files to a Plug-in</a></li>
+				<li><a href="#s_6-3">6.3 Changing Mod FormIDs</a></li>
+				<li><a href="#s_6-4">6.4 Merging a Plug-in into another Plug-in or Master</a></li>
+				<li><a href="#s_6-5">6.5 Converting a Plug-in into a Master</a></li>
+				<li><a href="#s_6-6">6.6 Splitting a Plug-in into a Plug-in/Master Pair"</a></li>
+				<li><a href="#s_6-7">6.7 Comparing Two Versions of a Mod</a></li>
+
+			</ul>
+
+		</div><!--/.local-->
+
+	</div><!--/.toc-->
+
+	<section id="_Toc237480273">
+		<h1>6. Managing Mod Files</h1>
+
+		<button class="ctrl-all" onclick="toggle_allthis;">Collapse All</button>
+
+		<div class="content clearfix">
+
+			<div class="level-2" id="s_6-1">
+				<h2 class="ctrl">6.1 Overview</h2>
+
+				<div class="content">
+
+				<p>This chapter is dedicated to mod authors, and describes a number of functions and actions that <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> provides to make mod authors lives easier and their products more standardized. Like the chapter on <a href="5-mod-cleaning-and-error-checking.html">Mod Cleaning and Error Checking</a>, these functions hole mod authors produce products that will be less conflicting with other mods, and will open doors to possibilities that mod authors may not have known existed. Actions like merging mods, splitting them apart into Plug-in/Master pairs, adding Master file references and more are documented in the sections below.</p>
+				</div><!--/.content-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_6-2">
+				<h2 class="ctrl">6.2 Adding Master Files to a Plug-in</h2>
+
+				<div class="content">
+					<p>To reference a record from ExampleMaster.<abbr title="Elder-Scrolls Master File">ESM</abbr> in Plug-in.esp you need to add ExampleMaster.<abbr title="Elder-Scrolls Master File">ESM</abbr> to the MASTer list in the File Header of Plug-in.esp. This allows the plug-in to add/change items found in the ExampleMaster.<abbr title="Elder-Scrolls Master File">ESM</abbr>. <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> does this by adding a new master to the MAST sub record in the file header and correctly renumbering the FormIDs in the module. This can be very handy for mod authors, as it simplifies the process down to a few mouse clicks, so the mod author can focus on more important things like modding!</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="331" src="img/image156.jpg" width="371"></p>
+
+						<p>In this example we showcase <a href="http://www.fallout3nexus.com/downloads/file.php?id=5178">Saiden Storm&#8217;s Weapon Effects</a> mod and the taylorsd&#8217;s <a href="http://www.fallout3nexus.com/downloads/file.php?id=503">Better Frag Grenade Physics</a> mods, two excellent enhancements to Fallout3. Here we will add the SS Weapon Effects.esm Master file to the Better Frag Grenade Physics plug-in, so that we can add one of Saiden Storm&#8217;s cool plasma blasts to a frag grenade for kicks! To start the action, select &#8220;Add Masters&#8221; from the context menu as shown:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="192" src="img/image158.jpg" width="216"></p>
+
+						<p>This will present the File selection menu, from which you can Check the Master file(s) that you want to add as references in the Plug-in&#8217;s header as shown:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="201" src="img/image160.jpg" width="576"></p>
+
+						<p>Once <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> adds the master file as a reference in the Plug-in, you see results similar to the screenshot below showing the <a href="2-overview.html#s_2-3-5">Messages Tab</a> log-entry:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="201" src="img/image162.jpg" width="576"></p>
+
+						<p>Note that &#8220;SS Weapon Effects.esm&#8221; has now be added to RealFragGrenade3.esp, making it possible to attach one of <a href="http://www.fallout3nexus.com/downloads/file.php?id=5178">Saiden Storm&#8217;s Weapon Effects</a> explosions to the grenade effect in <a href="http://www.fallout3nexus.com/downloads/file.php?id=503">Better Frag Grenade Physics</a>. The View Tab shows the specific entry:</p>
+
+
+					</div>
+
+					<p class="Note"><strong>Note:</strong> If you plan to release a mod to the public, then you should ONLY do this with permission from the modauthor, in this case Saiden Storm. If you wanted to use his weapon effects in a mod of your own and release it, you need permission!</p>
+
+					<p>Below <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=380528">Elminster</a> describes why this function is important for mod authors wanting to add master file references to their own mods:</p>
+
+					<blockquote>&#8220;With FormIDs it's important to realize that the FormIDs that FO3Edit shows you are NOT the ones that are actually written into the module file. The FormIDs that FO3Edit shows you are &quot;load order corrected&quot; ones, while the FormIDs in the file itself are &quot;file specific&quot; ones.
+						<p>FormIDs are made up of 2 parts, the first byte (2 characters) is the &quot;module index&quot;, the last 3 bytes (6 characters) are the &quot;module specific ID&quot;.</p>
+
+						<p>Mapping from &quot;file specific&quot; to &quot;load order corrected&quot; FormIDs and back only affects the &quot;module index&quot; and leaves the &quot;module specific ID&quot; untouched.</p>
+
+						<p>An example, suppose you got a bunch of modules loaded:</p>
+
+						<ul>
+							<li>[00] Fallout3.esm</li>
+							<li>[04] MasterA.esm</li>
+							<li>[10] MasterB.esm</li>
+							<li>[15] MasterC.esm</li>
+							<li>[20] Plug-in.esp</li>
+
+						</ul>
+
+						<p>And lets suppose the MAST sub record in the File Header of Plug-in.esp lists:</p>
+
+						<ul>
+							<li>Fallout3.esm</li>
+							<li>MasterB.esm</li>
+							<li>MasterA.esm</li>
+
+						</ul>
+
+						<p>If you now see a record in Plug-in.esp that overrides a record from Fallout3.esm, then you would see a FormID like 00123456 for it. In this particular case that record would also have the same (00123456) FormID inside the Plug-in.esp module file.</p>
+
+						<p>But if you have a record that overrides a record from MasterA.esm, e.g. with a FormID like 04ABCDEF (you can see the 04 as &quot;module index&quot; matches the load order of MasterA.esm) then it would be saved as 02ABCDEF in the Plug-in.esp module file, because 02 is the index of MasterA.esm in the list of MASTer files in the File Header of Plug-in.esp.</p>
+
+						<p>And an override for a record in MasterB.esm (e.g. 10654321) would be saved as 01654321 in the Plug-in.esp module file because 01 is the index of MasterB.esm in the list of MASTer files in the File Header.</p>
+
+						<p>Last but not least, a NEW record in Plug-in.esp which belongs to Plug-in.esp and which FO3Edit would show you e.g. as 20FEDCBA gets stored as 03FEDCBA in the file (because 03 is equal to the number of entries in the MASTer list, as indices into that list start at 00, 03 is one higher then the highest valid index into that list).</p>
+
+						<p>You will also notice that it's not possible to have an override record for a record from Master3.esm in Plug-in.esp or in any other form reference such a record, because there is no way to map a load order corrected FormID of 15A1B2C3 to a file specific one that's valid in Plug-in.esp.</p>
+
+						<p>To reference a record from Master3.esm in Plug-in.esp you need to add Master3.esm to the MASTer list in the File Header of Plug-in.esp. But if you just go there and do that manually, then you've just added Master3.esm with the index 03 to the file. Which means that all the records that used to belong to Plug-in.esp are suddenly considered override records for records from Master3.esm and will show up with 15xxxxxx FormIDs instead of 20xxxxxx FormIDs! A real mess.</p>
+
+						<p>If you instead use the Add Masters function, then FO3Edit will not only add then new entry into the MASTer list, it will also renumber all (file specific) 03xxxxxx FormIDs into 04xxxxxx FormIDs first to preserve their meaning (which is &quot;this record belongs to this file&quot;).</p>
+
+						<p>There are rare cases where editing the MAST list directly is what you actually want. e.g. when splitting an .esp into an .esm/.esp pair. In that case you would make a copy of the .esp, rename it to .esm, load it alone into FO3Edit to set the <abbr title="Elder Scrolls Master">ESM</abbr> flag in it's header, then restart FO3Edit to load both the .esm and the .esp and modify the MAST sub record in the File Header of the .esp by adding the .esm as last entry. After restarting FO3Edit and loading both files you will see that all records in the .esp are now considered overrides for the same records from the .esm&#8221;</p>
+
+					</blockquote>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_6-1" class="up">Previous Section</a><a href="#s_6-2" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_6-3">
+				<h2 class="ctrl">6.3 Changing Mod FormIDs</h2>
+
+				<div class="content">
+					<p>There are times in which you may need to renumber the FormIDs for all records in a plug-in to avoid conflicts. This can become necessary if two plug-ins share the same FormIDs (or some of them), which can result in bad conflicts in-game. Renumbering FormIDs from will change all FormIDs of records belonging to the Mod-file (but not any override records which might be contained in that mod file) so that they start at the specified value.</p>
+
+					<p>This Function is useful if you have multiple modules that you plan to update in the future, but also want to always provide a merged version (e.g. using FO3Plug-in). By assigning non overlapping FormIDs to the different modules, you can make sure that no FormID reassignment of conflicting FormIDs has to take place when merging.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="432" src="img/image164.jpg" width="469"></p>
+
+						<p>To renumber the FormIDs of a Mod file, Right-click on that mod file in the <a href="2-overview.html#s_2-3-2">Left-hand Panel</a> to present the main context menu (A). Then select, &#8220;Renumber FormIDs from&#8230;&#8221; from the menu as shown in the screenshot below:</p>
+
+					</div>
+
+					<p>When selected, the function will present a, &#8220;Start from&#8230;&#8221; window asking you what number you want to start the renumbering at as shown below.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="258" src="img/image166.jpg" width="455"></p>
+
+						<p>Normally a FormID is 8 characters long, with the first 2 representing the mod file&#8217;s index and the last 6 the reference&#8217;s specific index within that specific mod. Thus pick a number between 100000 and FFFFFF in hex:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="256" src="img/image168.jpg" width="576"></p>
+
+						<p>Once the new module specific start FormID (in hex) has been input (A) and the OK button selected (B), <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> will begin changing the FormIDs and present the output in the <a href="2-overview.html#s_2-3-5">Messages Tab</a> as shown in the screenshot below:</p>
+
+					</div>
+
+					<p>When changing the FormIDs of a huge mod like <a href="http://www.fallout3nexus.com/downloads/file.php?id=5370">Reykjavik</a> by Alexander Sigur&eth;sson, the process took 3-4 minutes on a high-end computer. The results shown in the Messges Tab reveal just a few examples of FO3Edit renumbering a FormID, discovering all references to it in all mod files, and correcting the numbering to prevent conflicts.</p>
+
+					<p class="Note"><strong>Note:</strong>Changing the FormIDs of an existing module will make it SaveGame incompatible and will break any other
+					module that uses this module as master! If you have any dependant modules, you need to have them all loaded into FO3Edit at the time you change
+					to FormIDs so that they will all be updated accordingly.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_6-2" class="up">Previous Section</a><a href="#s_6-3" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_6-4">
+				<h2 class="ctrl">6.4 Merging a Plug-in into another Plug-in or Master</h2>
+
+				<div class="content">
+					<div class="p-img">
+						<p class="img"><img  height="372" src="img/image170.jpg" width="384"></p>
+
+						<p>One of the common tasks that many mod authors face is the need to merge mod files together into a single plug-in or master file. Many mod players also like to merge all of their favorite plug-ins into a single master file (one modder affectionately calls it, &#8220;BORG.esm&#8221;). <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> can be used to accomplish both of these needs, and will ensure that the resulting plug-in is synchronized correctly against it&#8217;s combined references, and that the load orders are correct. The process is illustrated below, starting with loading <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> and ordering the files correctly as shown below:</p>
+
+					</div>
+
+					<p>In this example we will be merging Skykappa&#8217;s Destructible <a href="http://www.fallout3nexus.com/downloads/file.php?id=6782">Building Materials 3000</a> ( <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=997699">WIPz</a>) (here-after referred to as DBM 3000) into the <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=970549">500 Rads Bar (WIPz)</a>, so that the Bar can utilize the destructible building materials. Note that Skykappa&#8217;s DBM 3000 is a modders resource, and was released by the author to be used in other mods for the low price of mentioning in the mod&#8217;s credits.</p>
+
+					<p>Load order is important when merging mods together, mainly because FO3Edit is very precise about the numbering and order of FormIDs and references amongst mods. Its is Very easy to conflict the FromIDs of mods being merged together (as is discussed at depth below). As such FO3Edit requires us to place the mod that is receiving the content (A) Below the mod being assimilated (B) in the load-order of <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>. This is important, but if you get it wrong don&#8217;t worry, FO3Edit will warn you about it (also shown below).</p>
+
+					<p>You can also merge many mods into one at once, you don&#8217;t have to do it one-by-one if you happen to have several mods that needs to be combined together (as in when a modder lumps everything into one giant BORG.esm). The only requirement is that the assimilator (BORG.esm) is at the bottom, below the assimilates. Once you have the load order correct, exit <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> to save the load order.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="262" src="img/image172.jpg" width="576"></p>
+
+						<p>Now launch FO3Edit, which should offer the list of mods in the correct order with the assimilator at the bottom as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="243" src="img/image174.jpg" width="576"></p>
+
+						<p>Note the load order is exactly as we specified in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>. If everything is checked, you can always Right-click in the Master/Plugin Selection window and click, &#8220;Select None&#8221; to clear all the checks. Then select the assimilator and assimilatees (A). Click okay to load the mods into FO3Edit (B), which yields the following output:</p>
+
+					</div>
+
+					<p>Note how the only files loaded are the main Fallout3 master files and the mod files we are merging together (B and C). We are now in a position to merge the <a href="http://www.fallout3nexus.com/downloads/file.php?id=6782">DBM 3000</a> into the <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=970549">500 Rads Bar</a>!</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="326" src="img/image176.jpg" width="400"></p>
+
+						<p>To execute the merger, first open the assimilatee&#8217;s (mod being copied) by Left-clicking on its plus sign (A), and then selecting all of the record headings within the mod (B) using the mouse and the shift-key. Next Right-click at (B) to render the context menu, and select, &#8220;Deep copy as override into&#8230;&#8221; (C) As shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="298" src="img/image178.jpg" width="455"></p>
+
+						<p>This action performs our traditional, &#8220;Copy&#8221; of the material we want to merge, and will present you with a menu option where you can select the file you want to merge these records into (our traditional, &#8220;Paste&#8221;):</p>
+
+					</div>
+
+					<p>When presented with the, &#8220;Which files do&#8230;&#8221; menu, select the mod that you want to Paste the content into (A), and select OK to perform the merge (B). You may be prompted to add the copying mod as a master, select, &#8220;Yes&#8221; to this (C).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="240" src="img/image180.jpg" width="575"></p>
+
+						<p>You will now be presented with the output, which can be seen in the <a href="2-overview.html#s_2-3-5">Messages Tab</a>:</p>
+
+					</div>
+
+					<p>Note how the <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=970549">500 Rads Bar</a> now has Bold text over its name, indicating that new records have been copied into to and that it is marked as modified (A). The <a href="2-overview.html#s_2-3-5">Messages Tab</a> displays the output of any master connections we made during the process (B), and any errors that may have occurred (none in this example).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="298" src="img/image182.jpg" width="576"></p>
+
+						<p>If you now open the two mods, you will see how the references from <a href="http://www.fallout3nexus.com/downloads/file.php?id=6782">DBM 3000</a> are duplicated into <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=970549">500 Rads Bar</a>. Each record can be seen in the <a href="2-overview.html#s_2-3-7">View Tab</a> down to the variable and reference level, as shown below:</p>
+
+					</div>
+
+						<p>Each record can be compared in the <a href="2-overview.html#s_2-3-7">View Tab</a> as desired; showing that each has been copied into the <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=970549">500 Rads Bar</a> and will now save as part of that plug-in. Any errors that occur will show up in the <a href="2-overview.html#s_2-3-5">Messages Tab</a>, and may likely prevent a merger from taking place. If you see errors in the <a href="2-overview.html#s_2-3-5">Messages Tab</a>, you should assume that the mods did not merge and you&#8217;ll need to address the errors noted.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="329" src="img/image184.jpg" width="282"></p>
+
+						<p>With the merger complete, it&#8217;s time to save our newly-combined mod file! This is done most conveniently by hitting, &#8220;Alt-S&#8221; or closing FO3Edit. Either will present you with the Save Changed Files window as shown below:</p>
+
+					</div>
+
+					<p>Simply ensure the mod you just merged together is Checked for saving (A), and click &#8220;OK&#8221; to save the mod. Also note that the only file FO3Edit wants us to save is <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=970549">500 Rads Bar</a>, while <a href="http://www.fallout3nexus.com/downloads/file.php?id=6782">DBM 3000</a> is not shown. This is correct behavior, indicating that we copied stuff into <a href="http://www.bethsoft.com/bgsforums/index.php?showtopic=970549">500 Rads Bar</a> and effectively did nothing to <a href="http://www.fallout3nexus.com/downloads/file.php?id=6782">DBM 3000</a>.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="94" src="img/image186.jpg" width="576"></p>
+
+						<p>If you get the load order wrong in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> when trying to merge two mod files, FO3Edit will present you with the following error:</p>
+
+					</div>
+
+					<p>Note that the error is very specific about the load-order issue, in an attempt to better guide you into the right load order for whichever mods you are trying to merge. If you see this error, exit FO3Edit, correct the mod load-order in <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>, re-launch FO3Edit and perform the merger operation again.</p>
+
+					<p>If you don&#8217;t see any errors through the process or after saving, exit FO3Edit and either test the combined mod file or load it up in the GECK so you can start adding destructible building materials to your mod! Have a nice day, thank you for playing.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_6-3" class="up">Previous Section</a><a href="#s_6-4" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_6-5">
+				<h2 class="ctrl">6.5 Converting a Plug-in into a Master</h2>
+
+				<div class="content">
+					<div class="p-img">
+						<p class="img"><img  height="272" src="img/image188.jpg" width="575"></p>
+
+						<p>Converting a Plug-in (ESP) into a Master (<abbr title="Elder-Scrolls Master File">ESM</abbr>) file is a simple process that can be doing using <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> in less than five minutes. The file extension of a Plug-in as well as the <abbr title="Elder Scrolls Master">ESM</abbr> flag within its file header must be changed in order to make the transition to a Master file. The screenshot below starts the action by launching FO3Edit:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="282" src="img/image190.jpg" width="575"></p>
+
+						<p>First you need to de-select all of the mods using Right-click in the Master/Plugin Selection window (A). Then click/check just the mod your converting (B), in this example we&#8217;re converting <a href="http://www.fallout3nexus.com/modules/members/index.php?id=60908">Antistar&#8217;s</a> <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> plug-in into a master file. Click &#8220;OK&#8221; (C) to load FO3Edit with just the mod being changed as shown:</p>
+
+					</div>
+
+					<p>Note that <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> is successfully loaded into FO3Edit (B), and that it is the only file listed aside from the Fallout3 master files (A). You are now ready to convert the Plug-in into a Master file.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="392" src="img/image192.jpg" width="502"></p>
+
+						<p>To make the conversion, all we have to do is change one flag in the File Header, which can be accessed by Left-clicking open the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> record in the <a href="2-overview.html#s_2-3-2">Left-hand Panel</a>. Immediately beneath name of the mod is the File Header row (A) as shown below. You will then see the File Header data printed into the <a href="2-overview.html#s_2-3-7">View Tab</a> (B):</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="178" src="img/image194.jpg" width="339"></p>
+
+						<p>The File Header record is divided into different sub-headings and variables, including the Record Flags, Version, Author, mod Description and any Master file references that the plug-in requires. We will be changing the Record Flags variable by Right-clicking into the open space next to it (C), which will render a small context menu. You can then click, &#8220;Edit&#8221; (D) to change the values. Doing so will present a warning window as shown below:</p>
+
+					</div>
+
+					<p>This window is a default/standard in FO3Edit, and exists to make sure that anytime you are about to change a mod file for the first time, you know about it. It may seem annoying to some, but often the worst conflicts between mods come from changes that a mod author did not intend to make. Simply select, &#8220;Yes&#8221; (A) to move along.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="349" src="img/image196.jpg" width="311"></p>
+
+						<p>You will next be present with a menu of available/known flags that you can select:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="318" src="img/image198.jpg" width="576"></p>
+
+						<p>Note that many of the flags are blank or unknown, because literally the community does not know what those flag values mean. Fortunately the flag we need is the first one on the list (A), simply Left-click it and then click, &#8220;OK&#8221; to save the flag settings.</p>
+
+					</div>
+
+					<p>With that you are done! Note the File Header text is now Bold (A) indicating a change, and the Record Flags in the View Tab (C) show that the <abbr title="Elder Scrolls Master">ESM</abbr> flag is set (B).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="245" src="img/image200.jpg" width="235"></p>
+
+						<p>Once done with FO3Edit, you will want to change the file extension from <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esp to <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esm so that the extension matches the File Header flagging. The GECK and Fallout3 don&#8217;t really care about the file extension (ESP/<abbr title="Elder-Scrolls Master File">ESM</abbr>), what matters is that File Header flag. The Extension is for humans to keep them sorted correctly! Now all you need to do is exit FO3Edit or press, &#8220;Alt-S&#8221; and Save your new Master file as shown below:</p>
+
+					</div>
+
+					<p>It is also possible to change a Plug-in to a Master using just <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> or other tools, but there is always the potential of problems with ONAM records. ONAM records are special records created that allow Master files to communicate with one-another when references need to be passed. FO3Edit ensures that as part of the conversion process, these ONAM records are built and correctly ordered. This is why it is better to make the Plug-in to Master conversion using FO3Edit.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_6-4" class="up">Previous Section</a><a href="#s_6-5" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_6-6">
+				<h2 class="ctrl">6.6 Splitting a Plug-in into a Plug-in/Master Pair</h2>
+
+				<div class="content">
+					<div class="p-img">
+						<p class="img"><img  height="308" src="img/image202.jpg" width="444"></p>
+
+						<p>Splitting a single Plug-in (ESP) into a Master (<abbr title="Elder-Scrolls Master File">ESM</abbr>)/Plug-in (ESP) pair can be useful in many situations, especially when a mod author wants to share resources from one Plug-in with other Plug-ins. The only way to share resources between Plug-ins is to convert those resources into a Master file. The split is a two-part operation in which you first split the single Plug-in into a duplicate Plug-in and Master at the file (windows explorer) level. You then change the Flagging on one of the two duplicates to turn it into a Master, and change the flagging on the Plug-in copy to make reference its new master file. The action begins in windows explorer as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="247" src="img/image204.jpg" width="445"></p>
+
+						<p>With the mod copied, the next screenshot shows the paste:</p>
+
+					</div>
+
+					<p>This will create a duplicate of the WeaponModKits.esp Plug-in. This may seem a very basic part of the process to duplicate, but was done for thoroughness and for those who can&#8217;t read English and depend on the diagrams for the process.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="317" src="img/image206.jpg" width="532"></p>
+
+						<p>Now we need to re-name the copy to make it our Master file version.</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="103" src="img/image208.jpg" width="576"></p>
+
+						<p>You will be presented with a warning about changing the file extension, which is a common windows warning. Simply select, &#8220;Yes&#8221; when prompted. The screenshot below shows the last part of the duplication process:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="217" src="img/image210.jpg" width="535"></p>
+
+						<p>You will then be presented with the output; both a Plug-in and Master file that are identical at this point. The screenshot below shows the Master (A) and Plug-in (B):</p>
+
+					</div>
+
+					<p>With the file duplication part done, it&#8217;s time to launch the <a href="http://www.fallout3nexus.com/downloads/file.php?id=640">Fallout Mod Manager</a> ( <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a>) to set our loading order for the new Master file as shown below:</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="333" src="img/image212.jpg" width="344"></p>
+
+						<p>Once <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> is loaded, find the WeaponModKits.ESP (B) and WeaponModKits.<abbr title="Elder-Scrolls Master File">ESM</abbr> (A) versions of the mod in the list and ensure that both of them are Checked/Selected to load. The screenshot shows how <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> will look when first loaded after the split, showing the ESP (B) is still checked (as it was before), while the new Master we just created is not yet checked (A) as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="243" src="img/image214.jpg" width="576"></p>
+
+						<p>Here you must also ensure that the Master (<abbr title="Elder-Scrolls Master File">ESM</abbr>) version loads Before the Plug-in (ESP) version as this is a Fallout3 requirement. The recommendation is to move the Master (<abbr title="Elder-Scrolls Master File">ESM</abbr>) higher-up in the load order before all other Plug-ins, and load the Plug-in (ESP) version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> somewhere below the Masters. With that done, close <a href="http://www.fallout3nexus.com/downloads/file.php?id=640"><abbr title="Fallout Mod Manager">FOMM</abbr></a> and load <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a>. Your new load order with the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esm loading before the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esp should be visible in FO3Edits as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="206" src="img/image216.jpg" width="538"></p>
+
+						<p>To load just the Master and Plug-in, first Right-click in open space (A) and select, &#8220;None&#8221; from the context menu as shown above, and then check-off just the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esp and <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esm files (C), and click, &#8220;OK&#8221; to load them into FO3Edit. This will load just the two <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> files and the Fallout3 masters into FO3Edit as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="425" src="img/image217.jpg" width="544"></p>
+
+						<p>Note that both our Master and Plugin version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> is loaded and ready for conversion (A). The loader confirms a successful boot-up in the <a href="2-overview.html#s_2-3-5">Messages Tab</a> (B), indicating we are good to go for the conversions. Next we need to set the Record Flags to <abbr title="Elder Scrolls Master">ESM</abbr> (or Master) as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="238" src="img/image219.jpg" width="454"></p>
+
+						<p>With the File Header block of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esp selected (A), Right &#8211;click in the open space next to the, &#8220;Record Flags&#8221; section (C) which will render a small context Menu. Select, &#8220;Edit&#8221; (D) from this small menu to add the <abbr title="Elder Scrolls Master">ESM</abbr> Master flag, which effectively converts the Plug-in into a Master. Before you can proceed however, you will get a warning message from FO3Edit about changing the mod&#8217;s contents. This is normal and provided for your protection. Simply select, &#8220;Yes&#8221; (A) to continue.</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="417" src="img/image220.jpg" width="334"></p>
+
+						<p>The screenshot below shows you the Flags menu that is rendered:</p>
+
+					</div>
+
+					<p>This, &#8220;Edit Value&#8221; menu shows you all of the known (and unknown) flags available for setting in a Fallout3 mod file for Record Flags. Many of the flags are known and can be selected, while a few still remain unknown. The only flag we care about is the, &#8220;<abbr title="Elder-Scrolls Master File">ESM</abbr>&#8221; flag (A), which you should check-off and then click, &#8220;OK&#8221; (B) to accept the new flag values.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="318" src="img/image221.jpg" width="576"></p>
+
+						<p>Once done you will be presented with the outcome as shown below, which now has the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esp entry and its File Header in Bold text (A) in the <a href="2-overview.html#s_2-3-7">Left-hand Panel</a>, indicating the change. In the Right-hand <a href="2-overview.html#s_2-3-7">View Tab</a> (C), the Record Flag row is now also in Bold text with the new, &#8220;<abbr title="Elder-Scrolls Master File">ESM</abbr>&#8221; flag now populated with it (B) as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="303" src="img/image223.jpg" width="576"></p>
+
+						<p>Next we need to add the new Master version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> (<abbr title="Elder-Scrolls Master File">ESM</abbr>) into the Plug-in version (ESP) as a master file reference, so that the Plug-in references the Master. This will allow the Plug-in (ESP) to use the Master (<abbr title="Elder-Scrolls Master File">ESM</abbr>) records going forward. The screenshot below shows you the first step in the process of adding a Master reference:</p>
+
+					</div>
+
+					<p>Note that we&#8217;re changing the File Header section just as we did when adding the <abbr title="Elder Scrolls Master">ESM</abbr> master flag, but this time we Right-click in the Master Files row (B), and then selecting, &#8220;Add&#8221; from the context menu.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="358" src="img/image225.jpg" width="576"></p>
+
+					<p>This will create a new, blank Master File reference in the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a> Plug-in that you can now assign to our new Master file as shown below (D), which we can then modify as needed. For our example we need to assign the new master file entry to <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>.esp. To make the change simply Right-click in open space to the right of the, &#8220;MAST &#8211; Filename&#8221; entry (B), which will render a small context menu. Then select, &#8220;Edit&#8221; (C) as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="129" src="img/image227.jpg" width="576"></p>
+
+						<p>Clicking Edit will open a, &#8220;Edit Value&#8221; window, allowing you to type-in the name of the Master file you want to assign as the reference (A). Click, &#8220;OK&#8221; when done (B) to save the reference, which will take you back to the View Tab.</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="325" src="img/image229.jpg" width="575"></p>
+
+						<p> You should use the same case that the master file does, in this case, &#8220;WeaponModKits.esm&#8221; to ensure that there are no conflicts. And with that we&#8217;re done! Note that the WeaponModKits.esm is listed next to the, &#8220;MAST &#8211; Filename&#8221; entry (B), and that the File Header also has Bold text (A) indicating the change as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="237" src="img/image230.jpg" width="228"></p>
+
+						<p>And for the final step, you need to save the changes. Use, &#8220;Alt-S&#8221; or close FO3Edit to present the Save Files window as shown below:</p>
+
+					</div>
+
+					<p>With this, you now have a Master/Plug-in version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3388">Weapon Mod Kits</a>, and the process works exactly the same for any mod that you want to split. You can change the esp file extension to <abbr title="Elder-Scrolls Master File">ESM</abbr>, then open and save it with the GECK and it will tick the <abbr title="Elder Scrolls Master">ESM</abbr> flag on, but won't produce ONAM's like FO3Edit will which are needed for any overrides to Fallout3.<abbr title="Elder-Scrolls Master File">ESM</abbr>'s references. Unless your Plug-in has no CELL and/or WRLD group, you're better off using FO3Edit.</p>
+
+					<p class="Note"><strong>Note:</strong>An .esp <em>can</em> be the master of another .esp.</p>
+
+					<p class="Note"><strong>Note:</strong>If you have a Plug-in with multiple masters, you'll have to edit your GeckCustom.ini &quot;bAllowMultipleMasterLoads=1&quot;</p>
+
+					<p class="Note"><strong>Note:</strong>The GECK won't edit .esm's, so you have to ESP'ify, edit in GECK, then <abbr title="Elder-Scrolls Master File">ESM</abbr>'ify.</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_6-5" class="up">Previous Section</a><a href="#s_6-6" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+			<div class="level-2" id="s_6-7">
+				<h2 class="ctrl">6.7 Comparing Two Versions of a Mod</h2>
+
+				<div class="content">
+					<p>One of the common tasks that mod authors face is to compare two versions of their own mods, either during construction or in subsequent updates. There are also times when mod authors encounter difficult to solve problems with a new version of a mod, and need to revert back to a previous backup. The <a href="http://www.fallout3nexus.com/downloads/file.php?id=637">FO3Edit</a> compare function can provide a valuable and convenient way of copying data from one version of a mod to another, without having to sort through records that don&#8217;t belong to their mods. Whatever the case may be, this section is devoted to teaching you how to compare two versions of a mod file, and how to copy records over if the need arises.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="226" src="img/image232.jpg" width="484"></p>
+
+						<p>For this section we feature <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=20313">Quarn&#8217;s</a> <a href="http://www.fallout3nexus.com/downloads/file.php?id=3808">Unofficial Fallout3 Patch</a>, which has helped to resolve countless bugs in Fallout3 and has improved the gaming experience for thousands of modders. To start the action, launch FO3Edit and select One of the two mod files that you wish to compare as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="209" src="img/image234.jpg" width="466"></p>
+
+						<p>As shown above, by Right-clicking in open-space in the Master/Plugin selection window (A), you will render the selection menu (B) where you can, &#8220;Select None&#8221;. This will un-check everything on the list. Then select just One of the two mods (C) and Click &#8220;OK&#8221; to load it (D). The screenshot below shows the result:</p>
+
+					</div>
+
+					<p>Here we have just One of the two mod files loaded along with the Fallout3 master files it depends on. We will need to hide these master files from view so that we are Only looking at the mod file that we want to compare.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="340" src="img/image236.jpg" width="345"></p>
+
+						<p>To hide the master file references from view, we need to select each one of them in-turn with a Right-mouse click (A), which will present the main context menu. There you can select, &#8220;Hidden&#8221; (B), which is the last option on the list as shown below:</p>
+
+					</div>
+
+					<p>You won&#8217;t see any outward-change in the in the FO3Edit view afterwards, but you can confirm that they are marked as hidden by Right-clicking on them again &#8211; you will see a Check-mark next to, &#8220;Hidden&#8221; menu option indicating that they are hidden (from filters).</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="280" src="img/image238.jpg" width="451"></p>
+
+						<p>Next we need to load the other version of the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3808">Unofficial Fallout3 Patch</a> mod file we&#8217;re comparing (the new/current version). You can do this by Right-clicking on the loaded-version of the mod (A), which will present the main context menu. Select, &#8220;Compare to&#8230;&#8221; from the context menu (B) as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="283" src="img/image240.jpg" width="379"></p>
+
+						<p>Selecting &#8220;Compare To&#8221; will present the, &#8220;Open&#8221; window as shown below, where you can select the current version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3808">Unofficial Fallout3 Patch</a> (A), and then, &#8220;Open&#8221; (B) to load it into FO3Edit as shown below:</p>
+
+					</div>
+
+					<p>The &#8220;Compare To&#8221; version of the mod is loaded as read-only into FO3Edit, so you will not be able to make any changes to it, but you can copy from it into the version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3808">Unofficial Fallout3 Patch</a> that we loaded into FO3Edit at boot time. You can change the order and load either/any version of the mod first, so that you can edit/copy records into whatever version you loaded.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="228" src="img/image242.jpg" width="575"></p>
+
+						<p>Once the Compare To function loads the other version of the mod as read-only into FO3Edit, you will see a view similar to the one below. Note the two versions that appear together in the <a href="2-overview.html#s_2-3-2">Left-hand panel</a> (A), and no errors noted in the <a href="2-overview.html#s_2-3-5">Messages Tab</a> (B):</p>
+
+					</div>
+
+					<p>With both versions of the mod now loaded with the Compare To function, the last step is to apply a Filter to find the changed records between them. Note that with the Fallout3 master files now listed as, &#8220;Hidden&#8221;, they will not show up at all after we apply the filter &#8211; which is exactly what we want.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="286" src="img/image244.jpg" width="405"></p>
+
+						<p>To apply a Filter Right-click in open-space (A) in the Left-side Panel to render the main context menu. Click, &#8220;Apply Filter&#8221; (B) to open up the Filter menu as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="395" src="img/image246.jpg" width="554"></p>
+
+						<p>The main Filter window will render, where you can select the Mod Comparison Filter Settings as shown in the screenshot below:</p>
+
+					</div>
+
+					<p>Selecting the, &#8220;By conflict status for this particular record&#8221; (A), &#8220;Identical to Master&#8221; (B), &#8220;Override without Conflict&#8221; (C) and &#8220;Conflict status inherited by Parent&#8221; (D) sets the Mod Comparison Filters. You can then select, &#8220;Filter&#8221; (E) to apply the filter.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="108" src="img/image248.jpg" width="576"></p>
+
+						<p>The Mod Comparison Filter should process quite quickly in most cases, unless you&#8217;re working with a very large mod file. The screenshot below highlights the status bar, which will tell you how far along the filter operation are towards completion:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="190" src="img/image250.jpg" width="480"></p>
+
+						<p>Once done, the screenshot below illustrates the result. Both versions of the mod (at the top level) have Yellow backgrounds in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> (A), indicating that they are not identical (of course). In the <a href="2-overview.html#s_2-3-5">Message Tab</a> we see that now errors were encountered by the Filter (B), along with some statistics:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="324" src="img/image252.jpg" width="480"></p>
+
+						<p>Opening one of the mods in the <a href="2-overview.html#s_2-3-2">Left-Side Panel</a> and selecting a record highlights the similarities where they are identical between the two mods with Green backgrounds (A) and records that are different with Yellow backgrounds (B).</p>
+
+					</div>
+
+					<p>At this point we are done with the comparison. You can browse through the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3808">Unofficial Fallout3 Patch</a> records between the new and old versions, and compare the differences at will. If you don&#8217;t need to make changes, you can simply close FO3Edit when done.</p>
+
+					<div class="p-img">
+						<p class="img"><img  height="259" src="img/image254.jpg" width="576"></p>
+
+						<p>If however there is a need to copy records from one version of the mod to the other, the process below will guide you through the steps. There are a few limitations to be aware of, such as you can&#8217;t drag-n-drop records from the version you loaded at boot time into the version you loaded with the &#8220;Compare To&#8221; function, but you can still copy from that version as shown below:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="239" src="img/image256.jpg" width="576"></p>
+
+						<p>Here we Left-click-and-hold the record we want to copy with the mouse (A), and drag it horizontally to the mod we loaded when FO3Edit booted-up (B). Dropping the record into the row will copy that record (and all of its attributers) into the other mod. The screenshot below shows the results, with both sides now identical (A) and the background of both now Green (B) indicating they are indeed duplicates:</p>
+
+					</div>
+
+					<div class="p-img">
+						<p class="img"><img  height="234" src="img/image258.jpg" width="576"></p>
+
+						<p>The screenshot below illustrates how FO3Edit will prevent you from drag-n-dropping records from the loaded version of <a href="http://www.fallout3nexus.com/downloads/file.php?id=3808">Unofficial Fallout3 Patch</a> into the &#8220;Compare To&#8221; version (which is loaded read-only). Note how when trying the drag-n-drop, you get a blocked-circle (B), indicating that you can&#8217;t drop records into the read-only version:</p>
+
+					  </div>
+
+					<div class="p-img">
+						<p class="img"><img  height="309" src="img/image260.jpg" width="286"></p>
+
+						<p>When you&#8217;re done making changes, you&#8217;ll need to save them. You can either close FO3Edit or press, &#8220;Alt-S&#8221; to render the Save Changed Files window:</p>
+
+					</div>
+
+					<p>With that, we&#8217;re done with mod comparisons and updates! Of course you should not change the <a href="http://www.fallout3nexus.com/downloads/file.php?id=3808">Unofficial Fallout3 Patch</a> as that is for <a href="http://www.bethsoft.com/bgsforums/index.php?showuser=20313">Quarn</a> to do, but there is no harm in experimenting with the mods to learn the process (just make sure to have a backup of the files before you do!).</p>
+
+				</div><!--/.content-->
+
+				<div class="level-nav">
+					<a href="#s_6-6" class="up">Previous Section</a><a href="#s_6-7" class="top">Top of this Section</a>
+
+				</div><!--/.level-nav-->
+
+			</div><!--/.level-2-->
+
+		</div><!--/.content-->
+
+		<div class="section-nav">
+			<a href="5-mod-cleaning-and-error-checking.html" class="prev">&laquo; Previous Page</a><a href="7-mod-utilities.html" class="next">Next Page &raquo;</a>
+
+		</div><!--/.section-nav-->
+
+	</section>
+</body>
+</html>
