@@ -3328,7 +3328,6 @@ begin
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
-  wbResolveAlias := Settings.ReadBool('Options', 'ResolveAliases', wbResolveAlias);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -9084,7 +9083,6 @@ begin
     cbSortFLST.Checked := wbSortFLST;
     cbSortGroupRecord.Checked := wbSortGroupRecord;
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
-    cbResolveAliases.Checked := wbResolveAlias;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
@@ -9115,7 +9113,6 @@ begin
     wbSortFLST := cbSortFLST.Checked;
     wbSortGroupRecord := cbSortGroupRecord.Checked;
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
-    wbResolveAlias := cbResolveAliases.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
@@ -9143,7 +9140,6 @@ begin
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
-    Settings.WriteBool('Options', 'ResolveAliases', wbResolveAlias);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
