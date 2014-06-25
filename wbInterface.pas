@@ -2827,7 +2827,7 @@ type
   TwbDefClass = class of TwbDef;
   TwbDef = class(TInterfacedObject, IwbDef, IwbDefInternal)
   private
-    defRoot     : IwbDef;
+    defSource   : IwbDef;
     defParent   : TwbDef;
 
     defPriority : TwbConflictPriority;
@@ -5197,7 +5197,7 @@ end;
 constructor TwbDef.Clone(const aSource: TwbDef);
 begin
   with aSource do
-    Self.Create(defPriority, defRequired).defRoot := aSource;
+    Self.Create(defPriority, defRequired).defSource := aSource;
 end;
 
 constructor TwbDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean);
@@ -5249,9 +5249,11 @@ end;
 
 function TwbDef.GetRoot: IwbDef;
 begin
-  Result := defRoot;
+  Result := defSource;
   if not Assigned(Result) then
-    Result := Self;
+    Result := Self
+  else
+    Result := Result.GetRoot;
 end;
 
 function TwbDef.IsNotRequired: Boolean;
@@ -5369,7 +5371,7 @@ end;
 constructor TwbNamedDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbNamedDef) do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow).defSource := aSource;
 end;
 
 constructor TwbNamedDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
@@ -5441,7 +5443,7 @@ end;
 constructor TwbSignatureDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbSignatureDef) do
-    Self.Create(defPriority, defRequired, soSignatures, noName, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, soSignatures, noName, noAfterLoad, noAfterSet, noDontShow).defSource := aSource;
 end;
 
 constructor TwbSignatureDef.Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
@@ -5524,7 +5526,7 @@ constructor TwbRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbRecordDef do
     Self.Create(defPriority, defRequired, GetDefaultSignature, noName, recMembers,
-      recAllowUnordered, recAddInfoCallback, noAfterLoad, noAfterSet).defRoot := aSource;
+      recAllowUnordered, recAddInfoCallback, noAfterLoad, noAfterSet).defSource := aSource;
 end;
 
 function TwbRecordDef.ContainsMemberFor(aSignature     : TwbSignature;
@@ -5709,7 +5711,7 @@ end;
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordDef do
-    Self.Create(defPriority, defRequired, soSignatures, noName, srValue, noAfterLoad, noAfterSet, srSizeMatch, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, soSignatures, noName, srValue, noAfterLoad, noAfterSet, srSizeMatch, noDontShow).defSource := aSource;
 end;
 
 constructor TwbSubRecordDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
@@ -5827,7 +5829,7 @@ constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
     Self.Create(defPriority, defRequired, noName, sraElement, sraSorted,
-      noAfterLoad, noAfterSet, noDontShow, sraIsSorted).defRoot := aSource;
+      noAfterLoad, noAfterSet, noDontShow, sraIsSorted).defSource := aSource;
 end;
 
 constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
@@ -5988,7 +5990,7 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet).defSource := aSource;
   end;
 end;
 
@@ -6213,7 +6215,7 @@ begin
       for i := 0 to Pred(sruSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(sruSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, sruMembers, SkipSigs, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, sruMembers, SkipSigs, noDontShow).defSource := aSource;
   end;
 end;
 
@@ -6541,7 +6543,7 @@ end;
 constructor TwbIntegerDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDef do
-    Self.Create(defPriority, defRequired, noName, inType, inFormater, noDontShow, noAfterSet, inDefault).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, inType, inFormater, noDontShow, noAfterSet, inDefault).defSource := aSource;
 end;
 
 function TwbIntegerDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: Cardinal): Boolean;
@@ -7047,10 +7049,10 @@ begin
   with aSource as TwbArrayDef do
     if Assigned(arCountCallback) then
       Self.Create(defPriority, defRequired, noName, arElement, arCountCallback,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defRoot := aSource
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defSource := aSource
     else
       Self.Create(defPriority, defRequired, noName, arElement, arCount,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defRoot := aSource;
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo).defSource := aSource;
 end;
 
 constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -7409,7 +7411,7 @@ constructor TwbStructDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStructDef do
     Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
-      stExSortKey, stElementMap, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet).defRoot := aSource;
+      stExSortKey, stElementMap, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet).defSource := aSource;
 end;
 
 constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
@@ -7701,7 +7703,7 @@ end;
 constructor TwbFlagsDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFlagsDef do
-    Self.Create(flgNames, flgDontShows, flgUnknownIsUnused).defRoot := aSource;
+    Self.Create(flgNames, flgDontShows, flgUnknownIsUnused).defSource := aSource;
 end;
 
 constructor TwbFlagsDef.Create(const aNames           : array of string;
@@ -7972,7 +7974,7 @@ var
   i: Integer;
 begin
   with aSource as TwbEnumDef do begin
-    inherited Create(defPriority, defRequired).defRoot := aSource;
+    inherited Create(defPriority, defRequired).defSource := aSource;
     Self.enNames := Copy(enNames, 0, Length(enNames));
     Self.enSparseNames := Copy(enSparseNames, 0, Length(enSparseNames));
     Self.enEditInfo := enEditInfo;
@@ -8321,7 +8323,7 @@ end;
 constructor TwbStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStringDef do
-    Self.Create(defPriority, defRequired, noName, sdSize, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, sdSize, noAfterLoad, noAfterSet, noDontShow).defSource := aSource;
 end;
 
 constructor TwbStringDef.Create(aPriority  : TwbConflictPriority;
@@ -8500,7 +8502,7 @@ constructor TwbFloatDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFloatDef do
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, fdScale, fdDigits, noDontShow,
-      fdNormalizer, fdDefault, fdDouble).defRoot := aSource;
+      fdNormalizer, fdDefault, fdDouble).defSource := aSource;
 end;
 
 constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
@@ -8772,7 +8774,7 @@ end;
 constructor TwbChar4.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbChar4 do
-    Self.Create(defPriority, defRequired).defRoot := aSource;
+    Self.Create(defPriority, defRequired).defSource := aSource;
 end;
 
 function TwbChar4.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -8903,7 +8905,7 @@ end;
 constructor TwbFormID.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFormID do
-    Self.Create(defPriority, defRequired).defRoot := aSource;
+    Self.Create(defPriority, defRequired).defSource := aSource;
 end;
 
 function TwbFormID.CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
@@ -9623,7 +9625,7 @@ end;
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbByteArrayDef do
-    Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack).defSource := aSource;
 end;
 
 constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority; aRequired: Boolean;
@@ -10094,7 +10096,7 @@ end;
 constructor TwbDivDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbDivDef do
-    Self.Create(ddValue).defRoot := aSource;
+    Self.Create(ddValue).defSource := aSource;
 end;
 
 constructor TwbDivDef.Create(aValue: Integer);
@@ -10146,7 +10148,7 @@ end;
 constructor TwbMulDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMulDef do
-    Self.Create(mdValue).defRoot := aSource;
+    Self.Create(mdValue).defSource := aSource;
 end;
 
 constructor TwbMulDef.Create(aValue: Integer);
@@ -10204,7 +10206,7 @@ end;
 constructor TwbCallbackDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbCallbackDef do
-    Self.Create(cdToStr, cdToInt).defRoot := aSource;
+    Self.Create(cdToStr, cdToInt).defSource := aSource;
 end;
 
 constructor TwbCallbackDef.Create(const aToStr : TwbIntToStrCallback;
@@ -10382,7 +10384,7 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet).defSource := aSource;
   end;
 end;
 
@@ -10546,7 +10548,7 @@ end;
 constructor TwbFormIDChecked.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFormIDChecked do
-    Self.Create(fidcValidRefsArr, fidcValidFlstRefsArr, fidcPersistent, fidcNoReach).defRoot := aSource;
+    Self.Create(fidcValidRefsArr, fidcValidFlstRefsArr, fidcPersistent, fidcNoReach).defSource := aSource;
 end;
 
 constructor TwbFormIDChecked.Create(const aValidRefs     : array of TwbSignature;
@@ -10691,7 +10693,7 @@ end;
 constructor TwbIntegerDefFormater.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDefFormater do
-    Self.Create(defPriority, defRequired).defRoot := aSource;
+    Self.Create(defPriority, defRequired).defSource := aSource;
 end;
 
 function TwbIntegerDefFormater.CompareExchangeFormID(var aInt: Int64;
@@ -10807,7 +10809,7 @@ end;
 constructor TwbUnionDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbUnionDef do
-    Self.Create(defPriority, defRequired, noName, udDecider, udMembers, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, udDecider, udMembers, noDontShow).defSource := aSource;
 end;
 
 constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
@@ -11026,7 +11028,7 @@ end;
 constructor TwbEmptyDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbEmptyDef do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, edSorted).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, edSorted).defSource := aSource;
 end;
 
 constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
@@ -11250,7 +11252,7 @@ end;
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbLenStringDef do
-    Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow).defRoot := aSource;
+    Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow).defSource := aSource;
 end;
 
 constructor TwbLenStringDef.Create(aPriority  : TwbConflictPriority;
@@ -11891,7 +11893,7 @@ begin
   with aSource as TwbStructCDef do
     Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
       stExSortKey, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet,
-      scSizeCallback, scGetChapterType, scGetChapterTypeName).defRoot := aSource;
+      scSizeCallback, scGetChapterType, scGetChapterTypeName).defSource := aSource;
 end;
 
 constructor TwbStructCDef.Create(aPriority: TwbConflictPriority;
