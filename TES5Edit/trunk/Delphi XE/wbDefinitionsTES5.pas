@@ -719,6 +719,7 @@ var
   wbEFIT: IwbSubRecordDef;
   wbFunctionsEnum: IwbEnumDef;
   wbEffectsReq: IwbSubRecordArrayDef;
+  wbFirstPersonFlagsU32: IwbIntegerDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
   wbBODTBOD2: IwbSubRecordUnionDef;
@@ -4192,8 +4193,10 @@ begin
     {0x80000000} '61 - FX01'
   ], True);
 
+  wbFirstPersonFlagsU32 := wbInteger('First Person Flags', itU32, wbBipedObjectFlags);
+
   wbBODT := wbStruct(BODT, 'Body Template', [
-    wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+    wbFirstPersonFlagsU32,
     wbInteger('General Flags', itU8, wbFlags([
       {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
       {0x00000002}'Unknown 2',
@@ -4209,14 +4212,14 @@ begin
   ], cpNormal, False, nil, 3);
 
   wbBOD2 := wbStruct(BOD2, 'Biped Body Template', [
-    wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+    wbFirstPersonFlagsU32,
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, False);
 
   wbBODTBOD2 :=
     wbRUnion('Biped Body Template', [
       wbStruct(BOD2, 'Biped Body Template', [
-        wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+        wbFirstPersonFlagsU32,
         wbInteger('General Flags', it0, wbFlags([
           {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
           {0x00000002}'Unknown 2',
@@ -4231,7 +4234,7 @@ begin
         wbInteger('Armor Type', itU32, wbArmorTypeEnum)
       ], cpNormal, False),
       wbStruct(BODT, 'Body Template', [
-        wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+        wbFirstPersonFlagsU32,
         wbInteger('General Flags', itU8, wbFlags([
           {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
           {0x00000002}'Unknown 2',
