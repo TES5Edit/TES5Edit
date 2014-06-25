@@ -656,4 +656,6 @@ initialization
   StringCache := TwbFastStringList.Create;
   StringCache.Sorted := True;
   StringCache.Duplicates := dupIgnore;
+finalization
+  FreeAndNil(StringCache);
 end.

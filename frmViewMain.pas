@@ -2752,6 +2752,8 @@ begin
   inherited;
   FreeAndNil(NewMessages);
   FreeAndNil(ScriptHotkeys);
+  FreeAndNil(ModGroups);
+  FreeAndNil(Settings);
 end;
 
 procedure TfrmMain.DoGenerateLOD;
