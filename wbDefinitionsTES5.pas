@@ -721,6 +721,7 @@ var
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
+  wbBODTBOD2: IwbSubRecordUnionDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbUnionDef;
@@ -4079,15 +4080,15 @@ var
 
 begin
   wbNull := wbByteArray('Unused', -255);
-  wbLLCT := wbInteger(LLCT, 'Count', itU8);
-  wbCITC := wbInteger(CITC, 'Condition Count', itU32);
+  wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
+  wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
-  wbSPCT := wbInteger(SPCT, 'Count', itU32);
+  wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
 
-  wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32);
+  wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
   wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
@@ -4108,7 +4109,7 @@ begin
       ]),
       wbCOED
     ], []);
-  wbCOCT := wbInteger(COCT, 'Count', itU32);
+  wbCOCT := wbInteger(COCT, 'Count', itU32, nil, cpBenign);
   wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
 
   wbArmorTypeEnum := wbEnum([
@@ -4206,10 +4207,45 @@ begin
     wbByteArray('Unused', 3, cpIgnore),
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, False, nil, 3);
+
   wbBOD2 := wbStruct(BOD2, 'Biped Body Template', [
     wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, False);
+
+  wbBODTBOD2 :=
+    wbRUnion('Biped Body Template', [
+      wbStruct(BOD2, 'Biped Body Template', [
+        wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+        wbInteger('General Flags', it0, wbFlags([
+          {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
+          {0x00000002}'Unknown 2',
+          {0x00000004}'Unknown 3',
+          {0x00000008}'Unknown 4',
+          {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
+          {0x00000020}'Unknown 6',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8'
+        ], True)),
+        wbEmpty('Unused'),
+        wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+      ], cpNormal, False),
+      wbStruct(BODT, 'Body Template', [
+        wbInteger('First Person Flags', itU32, wbBipedObjectFlags),
+        wbInteger('General Flags', itU8, wbFlags([
+          {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
+          {0x00000002}'Unknown 2',
+          {0x00000004}'Unknown 3',
+          {0x00000008}'Unknown 4',
+          {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
+          {0x00000020}'Unknown 6',
+          {0x00000040}'Unknown 7',
+          {0x00000080}'Unknown 8'
+        ], True)),
+        wbByteArray('Unused', 3, cpIgnore),
+        wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+      ], cpNormal, False, nil, 3)
+    ], []);
 
   wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
   wbCNAM := wbStruct(CNAM, 'Color', [
@@ -4632,7 +4668,7 @@ begin
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unknown', itU16)
-    ])
+    ], [2, 1, 0])
   ]);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
@@ -6104,8 +6140,9 @@ begin
       wbMO4S
     ], []),
     wbICO2,
-    wbBODT,
-    wbBOD2,
+//    wbBODT,
+//    wbBOD2,
+    wbBODTBOD2,
     wbDEST,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
@@ -6128,8 +6165,9 @@ begin
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
-    wbBODT,
-    wbBOD2,
+//    wbBODT,
+//    wbBOD2,
+    wbBODTBOD2,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Male Priority', itU8),
@@ -6955,7 +6993,7 @@ begin
       ]))
     ]),
     wbString(SNAM, 'Subtype Name', 4),
-    wbInteger(TIFC, 'Info Count', itU32)
+    wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign)
   ]);
 
   wbRecord(DOOR, 'Door', [
@@ -7533,7 +7571,7 @@ begin
       'Unknown 3',
       'Ignored by Sandbox'
     ]), cpNormal, False),
-    wbInteger(IDLC, 'Animation Count', itU8),
+    wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
     wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, False),
     wbMODL
@@ -8723,7 +8761,32 @@ begin
 
 end;
 
+{this is required to prevent XE6 compiler error}
+type
+  TVarRecs = array of TVarRec;
+
+function CombineVarRecs(const a, b : array of const)
+                                   : TVarRecs;
+begin
+  SetLength(Result, Length(a) + Length(b));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+  if Length(b) > 0 then
+    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
+end;
+
+function MakeVarRecs(const a : array of const)
+                             : TVarRecs;
+begin
+  SetLength(Result, Length(a));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+end;
+
+
 procedure DefineTES5i;
+var
+  a, b, c : TVarRecs;
 begin
   wbRecord(MESG, 'Message', [
     wbEDID,
@@ -8742,11 +8805,7 @@ begin
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
-  wbRecord(DOBJ, 'Default Object Manager', [
-    wbArray(DNAM, 'Objects',
-      wbStruct('Object', [
-        //wbString('Use', 4),
-        wbInteger('Use', itU32, wbEnum([], [
+  a := MakeVarRecs([
                         0, 'None',
           Sig2Int('RADA'), 'RADA (Unused)',
           Sig2Int('MORP'), 'MORP (Unused)',
@@ -8971,7 +9030,10 @@ begin
           Sig2Int('CMPX'), 'Complex Scene Object',
           Sig2Int('RUSG'), 'Keyword - Reusable SoulGem',
           Sig2Int('ANML'), 'Keyword - Animal',
-          Sig2Int('DAED'), 'Keyword - Daedra',
+          Sig2Int('DAED'), 'Keyword - Daedra'
+        ]);
+
+  b := MakeVarRecs([
           Sig2Int('BEEP'), 'Keyword - Robot',
           Sig2Int('NRNT'), 'Keyword - Nirnroot',
           Sig2Int('FTGF'), 'Fighters'' Guild Faction',
@@ -9100,7 +9162,15 @@ begin
           Sig2Int('AHSM'), 'Keyword - Armor Material Heavy Stalhrim',
           Sig2Int('WPNC'), 'Keyword - Weapon Material Nordic',
           Sig2Int('WPSM'), 'Keyword - Weapon Material Stalhrim'
-        ])),
+        ]);
+
+  c := CombineVarRecs(a, b);
+
+  wbRecord(DOBJ, 'Default Object Manager', [
+    wbArray(DNAM, 'Objects',
+      wbStruct('Object', [
+        //wbString('Use', 4),
+        wbInteger('Use', itU32, wbEnum([], c)),
         wbFormID('Object ID')
       ]), 0, nil, nil, cpNormal, True
     )
@@ -9218,7 +9288,7 @@ begin
     ]),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(MNAM, 'Num quests to run', itU32),
-    wbInteger(QNAM, 'Quest Count', itU32),
+    wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
       wbUnknown(FNAM),
@@ -10452,7 +10522,7 @@ begin
     wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-    wbInteger(PRKZ, 'Perk Count', itU32),
+    wbInteger(PRKZ, 'Perk Count', itU32, nil, cpBenign),
     wbRArrayS('Perks',
       wbStructSK(PRKR, [0], 'Perk', [
         wbFormIDCk('Perk', [PERK]),
@@ -10744,7 +10814,7 @@ begin
         13, 'Run in Sequence, Do Once'
       ]), cpNormal, True),
       wbStruct(IDLC, '', [
-        wbInteger('Animation Count', itU8),
+        wbInteger('Animation Count', itU8, nil, cpBenign),
         wbByteArray('Unknown', 3)
       ], cpNormal, True, nil, 1),
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
@@ -11441,8 +11511,9 @@ begin
     wbSPCT,
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-    wbBODT,
-    wbBOD2,
+//    wbBODT,
+//    wbBOD2,
+    wbBODTBOD2,
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
