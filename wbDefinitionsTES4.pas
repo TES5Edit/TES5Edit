@@ -1975,9 +1975,9 @@ begin
   wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
-  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
-  wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
-  wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
+  wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);
+  wbFULLReq := wbStringKC(FULL, 'Name', 0, cpNormal, True);
+  wbDESC := wbStringKC(DESC, 'Description', 0, cpTranslate);
   wbXSCL := wbFloat(XSCL, 'Scale');
 
   wbPosRot :=
