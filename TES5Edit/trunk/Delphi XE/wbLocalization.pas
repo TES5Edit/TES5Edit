@@ -637,5 +637,6 @@ end;
 
 initialization
   wbLocalizationHandler := TwbLocalizationHandler.Create;
-
+finalization
+  FreeAndNil(wbLocalizationHandler);
 end.

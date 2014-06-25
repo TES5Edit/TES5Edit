@@ -329,6 +329,7 @@ type
   TwbContainer = class(TwbElement, IwbContainerElementRef, IwbContainer, IwbContainerInternal)
   protected
     cntElements    : TDynElementInternals;
+    cntElementsMap : TDynCardinalArray;
     cntElementRefs : Integer;
     cntStates      : TwbContainerStates;
 
@@ -694,14 +695,10 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure SetReferencesInjected(aValue: Boolean);
+    procedure ClearForRelease;
 
     procedure MakeHeaderWriteable;
     function mrStruct: PwbMainRecordStruct;
-
-    function GetPrev: IwbMainRecordInternal;
-
-    property Prev: IwbMainRecordInternal
-      read GetPrev;
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -758,7 +755,6 @@ type
     mrDef              : IwbRecordDef;
     mrLoadOrderFormID  : Cardinal;
     mrFixedFormID      : Cardinal;
-    mrPrev             : IwbMainRecordInternal;
     mrMaster           : Pointer{IwbMainRecord};
     mrOverrides        : TDynMainRecords;
     mrOverridesSorted  : Boolean;
@@ -932,7 +928,7 @@ type
     procedure SetChildGroup(const aGroup: IwbGroupRecord);
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure SetReferencesInjected(aValue: Boolean);
-    function GetPrev: IwbMainRecordInternal;
+    procedure ClearForRelease;
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -2311,7 +2307,13 @@ begin
 end;
 
 procedure TwbFile.ForceClosed;
+var
+  i: Integer;
 begin
+  for i := High(flRecords) downto Low(flRecords) do
+    (flRecords[i] as IwbMainRecordInternal).ClearForRelease;
+  for i := High(flInjectedRecords) downto Low(flInjectedRecords) do
+    (flInjectedRecords[i] as IwbMainRecordInternal).ClearForRelease;
   flMasters                := nil;
   flRecords                := nil;
   flRecordsByEditorID      := nil;
@@ -3021,15 +3023,21 @@ begin
         if Assigned(Groups[GroupRecord.SortOrder]) then begin
           flProgress('Warning: File contains duplicated top level group: ' + cntElements[i].Name);
           if wbBeginInternalEdit(True) then try
-            j := 0;
-            while GroupRecord.ElementCount > 0 do begin
-              Groups[GroupRecord.SortOrder].AddElement(GroupRecord.RemoveElement(0, True));
-              Inc(j);
+            if Groups[GroupRecord.SortOrder].ElementCount = 0 then begin
+              Groups[GroupRecord.SortOrder].Remove;
+              Groups[GroupRecord.SortOrder] := nil;
+              Groups[GroupRecord.SortOrder] := GroupRecord;
+            end else begin
+              j := 0;
+              while GroupRecord.ElementCount > 0 do begin
+                Groups[GroupRecord.SortOrder].AddElement(GroupRecord.RemoveElement(0, True));
+                Inc(j);
+              end;
+              (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).Sort;
+              (Groups[GroupRecord.SortOrder] as IwbElementInternal).Modified := True;
+              flProgress('Merged ' + IntToStr(j) + ' record from duplicated group: ' + cntElements[i].Name);
+              GroupRecord.Remove;
             end;
-            (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).Sort;
-            (Groups[GroupRecord.SortOrder] as IwbElementInternal).Modified := True;
-            flProgress('Merged ' + IntToStr(j) + ' record from duplicated group: ' + cntElements[i].Name);
-            GroupRecord.Remove;
           finally
             wbEndInternalEdit;
           end;
@@ -3575,18 +3583,23 @@ end;
 
 procedure TwbContainer.DoInit;
 var
-  i: Integer;
+  i        : Integer;
+  ValueDef : IwbValueDef;
 begin
   if csInit in cntStates then
     Exit;
   Include(cntStates, csInitializing);
   try
+    cntElementsMap := nil;
     Include(cntStates, csInit);
     Include(cntStates, csInitOnce);
     Init;
     Include(cntStates, csInitDone);
     for i := Low(cntElements) to High(cntElements) do
       cntElements[i].MemoryOrder := i;
+    ValueDef := GetValueDef;
+    if Assigned(ValueDef) then
+      cntElementsMap := ValueDef.GetElementMap;
   finally
     Exclude(cntStates, csInitializing);
   end;
@@ -3614,6 +3627,7 @@ begin
   try
     Exclude(cntStates, csInitDone);
     Reset;
+    cntElementsMap := nil;
   finally
     LockedDec(cntElementRefs);
     Exclude(cntStates, csInit);
@@ -3734,8 +3748,11 @@ begin
       wbProgressCallback('Debugger: ['+ IwbElement(Self).Path +'] Index ' + IntToStr(aIndex) + ' greater than max '+
         IntToStr(Length(cntElements)-1));
     Result := nil
-  end else
+  end else begin
+    if Length(cntElementsMap) = Length(cntElements) then
+      aIndex := cntElementsMap[aIndex];
     Result := IInterface(cntElements[aIndex]) as IwbElement;
+  end;
 end;
 
 function TwbContainer.GetElementByName(const aName: string): IwbElement;
@@ -4458,6 +4475,7 @@ begin
 
   Result := IInterface(cntElements[aPos]) as IwbElement;
   cntElements[aPos].SetContainer(nil);
+  cntElements[aPos] := nil;
 
   if aPos < High(cntElements) then begin
     Move(cntElements[Succ(aPos)], cntElements[aPos], (High(cntElements) - aPos) * SizeOf(Pointer));
@@ -5260,6 +5278,15 @@ begin
     raise Exception.Create(Group1.GetName + ' is not contained in a group.');
   if not (Group2.GroupType in [6]) then
     raise Exception.Create(Group1.GetName + ' is not contained in a group of type "Cell Children"');
+end;
+
+procedure TwbMainRecord.ClearForRelease;
+begin
+  mrMaster := nil;
+  mrOverrides := nil;
+  mrReferencedBy := nil;
+  mrGroup := nil;
+  ReleaseElements;
 end;
 
 function TwbMainRecord.CompareExchangeFormID(aOldFormID, aNewFormID: Cardinal): Boolean;
@@ -6625,11 +6652,6 @@ begin
     end;
   end;
   Result := True;
-end;
-
-function TwbMainRecord.GetPrev: IwbMainRecordInternal;
-begin
-  Result := mrPrev;
 end;
 
 function TwbMainRecord.GetPrevEntry: IwbMainRecordEntry;
@@ -15052,25 +15074,33 @@ initialization
   wbContainedInDef[6] := wbFormIDCk('Cell', [CELL], False, cpNormal, True);
   wbContainedInDef[7] := wbFormIDCk('Topic', [DIAL], False, cpNormal, True);
 
-  SubRecordOrderList := TStringList.Create;
+  SubRecordOrderList := TwbFastStringList.Create;
   SubRecordOrderList.Sorted := True;
   SubRecordOrderList.Duplicates := dupIgnore;
 
-  RecordToSkip := TStringList.Create;
+  RecordToSkip := TwbFastStringList.Create;
   RecordToSkip.Sorted := True;
   RecordToSkip.Duplicates := dupIgnore;
 
-  GroupToSkip := TStringList.Create;
+  GroupToSkip := TwbFastStringList.Create;
   GroupToSkip.Sorted := True;
   GroupToSkip.Duplicates := dupIgnore;
 
-  ChaptersToSkip := TStringList.Create;
+  ChaptersToSkip := TwbFastStringList.Create;
   ChaptersToSkip.Sorted := True;
   ChaptersToSkip.Duplicates := dupIgnore;
 
-  FilesMap := TStringList.Create;
+  FilesMap := TwbFastStringList.Create;
   FilesMap.Sorted := True;
   FilesMap.Duplicates := dupError;
 finalization
   WriteSubRecordOrderList;
+  FreeAndNil(SubRecordOrderList);
+  FreeAndNil(RecordToSkip);
+  FreeAndNil(GroupToSkip);
+  FreeAndNil(ChaptersToSkip);
+  FreeAndNil(FilesMap);
+  wbContainedInDef[1] := nil;
+  wbContainedInDef[6] := nil;
+  wbContainedInDef[7] := nil;
 end.
