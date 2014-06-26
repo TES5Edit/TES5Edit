@@ -716,6 +716,8 @@ type
     function GetNextEntry: IwbMainRecordEntry;
     procedure SetNextEntry(const aEntry: IwbMainRecordEntry);
 
+    function GetIsInList: Boolean;
+
     property PrevEntry: IwbMainRecordEntry
       read GetPrevEntry
       write SetPrevEntry;
@@ -723,6 +725,9 @@ type
     property NextEntry: IwbMainRecordEntry
       read GetNextEntry
       write SetNextEntry;
+
+    property IsInList: Boolean
+      read GetIsInList;
   end;
 
   TwbMainRecordState = (
@@ -943,6 +948,8 @@ type
 
     function GetNextEntry: IwbMainRecordEntry;
     procedure SetNextEntry(const aEntry: IwbMainRecordEntry);
+
+    function GetIsInList: Boolean;
 
     {--- IwbContainedIn ---}
     procedure ContainerChanged;
@@ -6417,6 +6424,12 @@ begin
   Result := mrsIsInjected in mrStates;
 end;
 
+function TwbMainRecord.GetIsInList: Boolean;
+begin
+  with mreHeader do
+    Result := mrehInUse and (mrehGeneration = mreGeneration);
+end;
+
 function TwbMainRecord.GetIsMaster: Boolean;
 begin
   Result := not Assigned(mrMaster);
@@ -10746,8 +10759,33 @@ var
   ElementRefs      : array of IwbContainerElementRef;
   ElementRefsCount : Integer;
 
-
 procedure TwbGroupRecord.Sort;
+
+  procedure DoInserRecord(const InsertRecord: IwbMainRecordEntry);
+  var
+    TargetRecord: IwbMainRecordEntry;
+  begin
+    SetLength(ElementRefs, Succ(Length(ElementRefs)));
+    if not Supports(InsertRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
+      Assert(False);
+
+    if Supports(InsertRecord.ElementLinksTo['PNAM'], IwbMainRecordEntry, TargetRecord) then begin
+
+      SetLength(ElementRefs, Succ(Length(ElementRefs)));
+      if not Supports(TargetRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
+        Assert(False);
+
+      if not TargetRecord.IsInList then
+        DoInserRecord(TargetRecord);
+
+      InsertRecord.InsertEntryAfter(TargetRecord);
+
+    end else if InsertRecord.ElementExists['PNAM'] then
+      InsertRecord.InsertEntryHead
+    else
+      InsertRecord.InsertEntryTail;
+  end;
+
 var
   ChildrenOf  : IwbMainRecord;
   MainRecords : TDynMainRecords;
@@ -10762,6 +10800,7 @@ var
   InfoQuest2  : Int64;
   Inserted    : Boolean;
   NewElements : TDynElementInternals;
+
 begin
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
@@ -10799,25 +10838,8 @@ begin
           for i := Low(Groups) to High(Groups) do
             if Supports(Groups[i], IwbContainerElementRef, Group) then
               for j := 0 to Pred(Group.ElementCount) do
-                if Supports(Group.Elements[j], IwbMainRecordEntry, InsertRecord) then begin
-
-                  SetLength(ElementRefs, Succ(Length(ElementRefs)));
-                  if not Supports(InsertRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
-                    Assert(False);
-
-                  if Supports(InsertRecord.ElementLinksTo['PNAM'], IwbMainRecordEntry, TargetRecord) then begin
-
-                    SetLength(ElementRefs, Succ(Length(ElementRefs)));
-                    if not Supports(TargetRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
-                      Assert(False);
-
-                    InsertRecord.InsertEntryAfter(TargetRecord);
-
-                  end else if InsertRecord.ElementExists['PNAM'] then
-                    InsertRecord.InsertEntryHead
-                  else
-                    InsertRecord.InsertEntryTail;
-                end;
+                if Supports(Group.Elements[j], IwbMainRecordEntry, InsertRecord) then
+                   DoInserRecord(InsertRecord);
           TargetRecord := IwbMainRecordEntry(mreHeader.mrehTail);
           while Assigned(TargetRecord) do begin
             PrevRecord := TargetRecord.PrevEntry;
