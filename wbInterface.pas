@@ -7445,7 +7445,7 @@ begin
     stElementMap[i] := aElementMap[i];
   if Length(stElementMap) > 0 then begin
     Assert(Length(stElementMap) = Length(stMembers));
-    // should really check aht the element map only contains valid values
+    // should really check that the element map only contains valid values
     // and that there are no optional elements...
   end;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow);
