@@ -4663,14 +4663,14 @@ begin
 
   wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
-      wbInteger('Unknown', itU16),
+      wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbFormID('FormID')
     ]),
     wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
-      wbInteger('Unknown', itU16)
+      wbInteger('Unused', itU16, nil, cpIgnore)
     ], [2, 1, 0])
   ]);
 
@@ -4766,8 +4766,8 @@ begin
       ]), wbScriptFragmentsQuestCounter),
     wbArrayS('Aliases', wbStructSK([0], 'Alias', [
       wbScriptObject,
-      wbInteger('Version', itS16),
-      wbInteger('Object Format', itS16),
+      wbInteger('Version', itS16, nil, cpIgnore),
+      wbInteger('Object Format', itS16, nil, cpIgnore),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
 	  ]), -2)
   ], cpNormal, false, wbScriptFragmentsDontShow);
@@ -4802,8 +4802,8 @@ begin
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16),
-    wbInteger('Object Format', itS16),
+    wbInteger('Version', itS16, nil, cpIgnore),
+    wbInteger('Object Format', itS16, nil, cpIgnore),
     wbUnion('Data', wbScriptFragmentExistsDecider, [
       wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
       wbStruct('Info VMAD', [
@@ -6571,6 +6571,7 @@ begin
     ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   end;
+
   wbRecord(CLAS, 'Class', [
     wbEDID,
     wbFULLReq,
