@@ -114,7 +114,7 @@ begin
     // Num Blocks
     NifNumBlocks := data.ReadUInt32;
     if NifNumBlocks > cNifMaxBlocks then
-      raise Exception.CreateFmt('Probably invalid Nif file, NifNumBlocks > %s', [cNifMaxBlocks]);
+      raise Exception.CreateFmt('Probably invalid Nif file, NifNumBlocks > %d', [cNifMaxBlocks]);
     //WriteLn(Format('NumBlocks = %d', [NifNumBlocks]));
 
     data.ReadUInt32; // skip User version 2
