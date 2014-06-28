@@ -30,6 +30,9 @@ implementation
 function NifTextures(aNifData: TBytes; aTextures: TStrings): Boolean;
 const
   NifMagic = 'Gamebryo File Format';
+  cNifMaxBlocks = 7000;
+  cNifMaxBlockTypes = 2000;
+  cNifMaxSizedString = 1024;
 
   // read string terminated by $0A
   function ReadLineString(data: TBinaryReader): string;
@@ -57,8 +60,8 @@ const
     i: integer;
   begin
     i := data.ReadInt32;
-    if i > 1000 then
-      raise Exception.Create('Probably invalid Nif file, SizedString length > 1000');
+    if i > cNifMaxSizedString then
+      raise Exception.CreateFmt('Probably invalid Nif file, SizedString length > %d', [cNifMaxSizedString]);
     Result := TEncoding.ASCII.GetString(data.ReadBytes(i));
   end;
 
@@ -110,8 +113,8 @@ begin
 
     // Num Blocks
     NifNumBlocks := data.ReadUInt32;
-    if NifNumBlocks > 5000 then
-      raise Exception.Create('Probably invalid Nif file, NifNumBlocks > 5000');
+    if NifNumBlocks > cNifMaxBlocks then
+      raise Exception.CreateFmt('Probably invalid Nif file, NifNumBlocks > %s', [cNifMaxBlocks]);
     //WriteLn(Format('NumBlocks = %d', [NifNumBlocks]));
 
     data.ReadUInt32; // skip User version 2
@@ -121,8 +124,8 @@ begin
 
     // Num Block Types
     NifNumBlockTypes := data.ReadUInt16;
-    if NifNumBlockTypes > 1000 then
-      raise Exception.Create('Probably invalid Nif file, NifNumBlockTypes > 1000');
+    if NifNumBlockTypes > cNifMaxBlockTypes then
+      raise Exception.CreateFmt('Probably invalid Nif file, NifNumBlockTypes > %d', [cNifMaxBlockTypes]);
     //WriteLn(Format('NumBlockTypes = %d', [NifNumBlockTypes]));
     //WriteLn('Position = ' + IntToHex(aStream.Position, 8));
 
