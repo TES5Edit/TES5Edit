@@ -790,6 +790,7 @@ type
     function IsDangerous: Boolean; inline;
     function IsCompressed: Boolean; inline;
     function CantWait: Boolean; inline;
+    function HasLODtree: Boolean; inline;
 
     procedure SetESM(aValue: Boolean);
     procedure SetDeleted(aValue: Boolean);
@@ -11115,6 +11116,11 @@ end;
 function TwbMainRecordStructFlags.CastsShadows: Boolean;
 begin
   Result := (_Flags and $00000200) <> 0;
+end;
+
+function TwbMainRecordStructFlags.HasLODtree: Boolean;
+begin
+  Result := (_Flags and $00000040) <> 0;
 end;
 
 function TwbMainRecordStructFlags.IsCompressed: Boolean;
