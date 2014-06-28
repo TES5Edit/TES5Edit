@@ -695,6 +695,8 @@ var
   el, ent, ents: IInterface;
   sig, s, contnr: string;
   i, i1, i2: integer;
+  DisabledClouds: LongWord;
+  sl: TStringList;
 begin
   CurrentRecord := e;
   
@@ -838,8 +840,18 @@ begin
       ProcessAsset(ElementByPath(e, 'UNAM'));
     end
 
-    else if (sig = 'WTHR') then
-      ScanForAssets(e);
+    else if (sig = 'WTHR') then begin
+      // check cloud texture layers except disabled ones
+      sl := TStringList.Create;
+      sl.CommaText := '00TX,10TX,20TX,30TX,40TX,50TX,60TX,70TX,80TX,90TX,:0TX,;0TX,<0TX,=0TX,>0TX,?0TX,@0TX,A0TX,B0TX,C0TX,D0TX,E0TX,F0TX,G0TX,H0TX,I0TX,J0TX,K0TX,L0TX';
+      DisabledClouds := GetElementNativeValues(e, 'NAM1');
+      for i := 0 to Pred(sl.Count) do begin
+        if DisabledClouds and (1 shl i) = 0 then
+          ProcessAsset(ElementBySignature(e, sl[i]));
+      end;
+      sl.Free;
+      ProcessAsset(ElementByPath(e, 'Aurora\Model\MODL'));
+    end;
     
   end
   
