@@ -3705,6 +3705,7 @@ var
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
   UndeletedCount              : Cardinal;
+  NotDeletedCount             : Cardinal;
   DeletedNAVM                 : Cardinal;
   StartTick                   : Cardinal;
   i {, n}                     : Integer;
@@ -3712,6 +3713,26 @@ var
   Element                     : IwbElement;
   Position                    : TwbVector;
   Cntr {, Cntr2}              : IwbContainerElementRef;
+
+  function canUndelete: Boolean;
+  begin
+    Result := True;
+    with MainRecord do
+      if Signature = 'NAVM' then begin
+        Result := False;
+        Inc(DeletedNAVM);
+      end else if (wbGameMode in [gmFNV]) then begin
+        IsDeleted := True;
+        IsDeleted := False;
+        Element := MainRecord.ElementBySignature['NAME'];
+        if Assigned(Element) then
+          if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
+            Result := not LinksToRecord.Flags.HasLODtree;
+        IsDeleted := True;
+      end;
+    if not Result then Inc(notDeletedCount);
+  end;
+
 begin
   if not wbEditAllowed then
     Exit;
@@ -3760,6 +3781,7 @@ begin
     Enabled := False;
 
     UndeletedCount := 0;
+    NotDeletedCount := 0;
     DeletedNAVM := 0;
     Count := 0;
     for i := Low(Selection) to High(Selection) do try
@@ -3790,7 +3812,7 @@ begin
                (Signature = 'PHZD')    {>>> Skyrim <<<}
              ) then
           //begin
-          if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
+          if canUndelete then begin
             IsDeleted := True;
             IsDeleted := False;
             PostAddMessage('Undeleting: ' + MainRecord.Name);
@@ -3863,6 +3885,8 @@ begin
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     if DeletedNAVM > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
+    if NotDeletedCount > 0 then
+      PostAddMessage('<Warning: Plugin contains ' + IntToStr(NotDeletedCount) + ' deleted references which can not be undeleted>');
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
