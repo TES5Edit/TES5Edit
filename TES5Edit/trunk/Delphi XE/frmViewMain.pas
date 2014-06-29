@@ -1285,7 +1285,7 @@ function TfrmMain.ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aN
 var
   Element             : IwbElement;
   CompareElement      : IwbElement;
-  i{, j }             : Integer;
+  i, j                : Integer;
   UniqueValues        : TnxFastStringListCS;
 
   FirstElement        : IwbElement;
@@ -1329,6 +1329,22 @@ begin
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
+          Priority := Element.ConflictPriority;
+          if Priority = cpNormalIgnoreEmpty then begin
+            FirstElement := Element;
+            for j := Pred(aNodeCount) downto i do begin
+              LastElement := aNodeDatas[j].Element;
+              if Assigned(LastElement) then
+                Break;
+            end;
+          end;
+          Break;
+        end;
+      end;
+
+      for i := 0 to Pred(aNodeCount) do begin
+        Element := aNodeDatas[i].Element;
+        if Assigned(Element) then begin
           FoundAny := True;
           Priority := Element.ConflictPriority;
           if Priority = cpIgnore then begin
@@ -1345,9 +1361,12 @@ begin
             UniqueValues.Add(Element.SortKey[True]);
         end else
           if not (vnfIgnore in aNodeDatas[i].ViewNodeFlags) then
-            UniqueValues.Add('');
+            if Priority <> cpNormalIgnoreEmpty then
+              UniqueValues.Add('');
 
-        if Priority = cpIgnore then
+        if (Priority = cpNormalIgnoreEmpty) and not Assigned(Element) then
+          aNodeDatas[i].ConflictThis := ctIgnored
+        else if Priority = cpIgnore then
           aNodeDatas[i].ConflictThis := ctIgnored
         else if aSiblingCompare then
           aNodeDatas[i].ConflictThis := ctOnlyOne
