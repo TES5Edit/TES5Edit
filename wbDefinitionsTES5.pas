@@ -784,12 +784,13 @@ var
   wbUNAMs: IwbSubRecordArrayDef;
   wbNull: IwbValueDef;
 
-function Sig2Int(aSignature: TwbSignature): Int64; inline;
+function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
-  Result := Ord(aSignature[3]) shl 24 +
+  Result := PCardinal(@aSignature)^;
+{  Result := Ord(aSignature[3]) shl 24 +
             Ord(aSignature[2]) shl 16 +
             Ord(aSignature[1]) shl  8 +
-            Ord(aSignature[0]);
+            Ord(aSignature[0]);}
 end;
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -3278,6 +3279,28 @@ begin
     if MainRecord.ElementExists['Unused RNAM'] then
       MainRecord.RemoveElement('Unused RNAM');
 
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
+var
+  ObjectsContainer : IwbContainerElementRef;
+  i                : Integer;
+  ObjectContainer  : IwbContainerElementRef;
+begin
+  wbRemoveOFST(aElement);
+
+  if wbBeginInternalEdit then try
+
+    if not Supports(aElement, IwbContainerElementRef, ObjectsContainer) then
+      Exit;
+
+    for i := Pred(ObjectsContainer.ElementCount) downto 0 do
+      if Supports(ObjectsContainer.Elements[i], IwbContainerElementRef, ObjectContainer) then
+        if ObjectContainer.ElementNativeValues['Use'] = 0 then
+          ObjectsContainer.RemoveElement(i, True);
   finally
     wbEndInternalEdit;
   end;
@@ -9170,10 +9193,9 @@ begin
     wbEDID,
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
-        //wbString('Use', 4),
-        wbInteger('Use', itU32, wbEnum([], c)),
-        wbFormID('Object ID')
-      ]), 0, cpNormal, True
+        wbInteger('Use', itU32, wbEnum([], c), cpNormalIgnoreEmpty),
+        wbFormID('Object ID', cpNormalIgnoreEmpty)
+      ]), 0, cpNormalIgnoreEmpty, True, wbDOBJObjectsAfterLoad
     )
   ]);
 
