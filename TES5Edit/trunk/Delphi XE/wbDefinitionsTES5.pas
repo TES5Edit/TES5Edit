@@ -1248,8 +1248,6 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  Result := IntToStr(aInt); Exit;
-
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
   while Assigned(Container) and (Container.ElementType <> etMainRecord) do
@@ -1268,10 +1266,18 @@ begin
   else if MainRecord.Signature = PACK then
     Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType)
   else if MainRecord.Signature = INFO then begin
-    // discovered memory leak
-    // test on 00015C73
+    // get DIAL for INFO
     if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
-      Result := wbAliasToStr(aInt, GroupRecord.ChildrenOf.ElementBySignature['QNAM'], aType);
+      if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
+        Result := wbAliasToStr(aInt, MainRecord.ElementBySignature['QNAM'], aType);
+  end else
+  // this should never be called since aliases in conditions can be in the forms above only
+  // but just in case
+  case aType of
+    ctToStr, ctToEditValue: Result := IntToStr(aInt);
+    ctToSortKey: Result := IntToHex64(aInt, 8);
+  else
+    Result := '';
   end;
 end;
 
@@ -1308,16 +1314,6 @@ begin
     Result := IntToHex64(aInt, 4)
   else if aType = ctToStr then
     Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
-  else
-    Result := '';
-end;
-
-function wbAlocTime(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  if aType = ctToSortKey then
-    Result := IntToHex64(aInt, 4)
-  else if aType = ctToStr then
-    Result := TimeToStr( aInt / 256 )
   else
     Result := '';
 end;
@@ -4135,7 +4131,7 @@ begin
     '40 - Tail',
     '41 - LongHair',
     '42 - Circlet',
-    '43 - Unnamed',
+    '43 - Ears',
     '44 - Unnamed',
     '45 - Unnamed',
     '46 - Unnamed',
@@ -4172,7 +4168,7 @@ begin
     {0x00000400} '40 - Tail',
     {0x00000800} '41 - LongHair',
     {0x00001000} '42 - Circlet',
-    {0x00002000} '43 - Unnamed',
+    {0x00002000} '43 - Ears',
     {0x00004000} '44 - Unnamed',
     {0x00008000} '45 - Unnamed',
     {0x00010000} '46 - Unnamed',
