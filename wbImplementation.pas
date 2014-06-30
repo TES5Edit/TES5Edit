@@ -1193,6 +1193,7 @@ type
     function IsElementEditable(const aElement: IwbElement): Boolean; override;
     function GetIsEditable: Boolean; override;
     procedure ElementChanged(const aElement: IwbElement); override;
+    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
   end;
 
   TwbValue = class(TwbValueBase, IwbSortableContainer)
@@ -4848,12 +4849,19 @@ begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit;
 
-    Assert(aElement.SortOrder >= 0);
-    Assert(aElement.SortOrder < mrDef.MemberCount);
     Assert(Assigned(aElement.Def));
-    Assert(aElement.Def.Equals(mrDef.Members[aElement.SortOrder]));
+    if aElement.SortOrder < 0 then begin
+      Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+      Assert(Assigned(Result));
+      Assert(Assigned(Result.Def));
+      Assert(aElement.Def.Equals(Result.Def));
+    end else begin
+      Assert(aElement.SortOrder >= 0);
+      Assert(aElement.SortOrder < mrDef.MemberCount);
+      Assert(aElement.Def.Equals(mrDef.Members[aElement.SortOrder]));
+      Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+    end;
 
-    Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
     if not Assigned(Result) then begin
       Assign(aElement.SortOrder, aElement, not aDeepCopy);
       Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
@@ -14431,6 +14439,38 @@ end;
 
 { TwbRecordHeaderStruct }
 
+function TwbRecordHeaderStruct.AddIfMissing(const aElement      : IwbElement;
+                                                  aAsNew        : Boolean;
+                                                  aDeepCopy     : Boolean;
+                                            const aPrefixRemove : string;
+                                            const aPrefix       : string;
+                                            const aSuffix       : string)
+                                                                : IwbElement;
+var
+  StructDef : IwbStructDef;
+  SelfRef   : IwbContainerElementRef;
+begin
+  Result := nil;
+
+  if not wbEditAllowed then
+    raise Exception.Create(GetName + ' can not be assigned.');
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit;
+
+  if not Supports(GetDef, IwbStructDef, StructDef) then
+    Exit;
+
+  Assert(aElement.SortOrder >= 0);
+  Assert(aElement.SortOrder < StructDef.MemberCount);
+  Assert(Assigned(aElement.Def));
+  Assert(aElement.Def.Equals(StructDef.Members[aElement.SortOrder]));
+
+  Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
+  Assert(Assigned(Result));
+  Result.Assign(Low(Integer), aElement, not aDeepCopy);
+end;
+
 procedure TwbRecordHeaderStruct.BuildRef;
 begin
 end;
@@ -14449,7 +14489,7 @@ procedure TwbRecordHeaderStruct.ElementChanged(const aElement: IwbElement);
 var
   MainRecordInternal       : IwbMainRecordInternal;
   DataContainer            : IwbDataContainer;
-  Flags                   : TwbMainRecordStructFlags;
+  Flags                    : TwbMainRecordStructFlags;
   p                        : Pointer;
 
   ToggleDeleted            : Boolean;
