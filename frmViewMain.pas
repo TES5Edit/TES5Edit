@@ -283,6 +283,7 @@ type
     mniViewPreviousMember: TMenuItem;
     mniViewHeaderJumpTo: TMenuItem;
     acScript: TAction;
+    mniNavFilterConflicts: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -487,6 +488,7 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
+    procedure mniNavFilterConflictsClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -2912,14 +2914,18 @@ procedure TfrmMain.DoInit;
   end;
 
 var
-  i, j, k      : Integer;
+  i, j, k, l   : Integer;
   s            : string;
-  sl, sl2      : TStringList;
+  sl, sl2, sl3 : TStringList;
   ConflictAll  : TConflictAll;
   ConflictThis : TConflictThis;
   Age          : Integer;
   AgeDateTime  : TDateTime;
 
+  ModGroupFile : string;
+  MessagePrefix: string;
+  IsOptional   : Boolean;
+  MessageGiven : Boolean;
 begin
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -2963,7 +2969,6 @@ begin
   vstSpreadSheetAmmo.TreeOptions.PaintOptions := vstSpreadSheetAmmo.TreeOptions.PaintOptions + [toZebra, toAdvHotTrack];
 
   ModGroups := TStringList.Create;
-
 
   AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
@@ -3086,7 +3091,7 @@ begin
             CheckListBox1.Checked[j] := True;
         end;
 
-        if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then begin
+        if not ((wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) or wbQuickShowConflicts) then begin
           ShowModal;
           if ModalResult <> mrOk then begin
             frmMain.Close;
@@ -3170,51 +3175,83 @@ begin
             end;
           end;
 
-          s := wbModGroupFileName;
-          if FileExists(s) then
-            with TMemIniFile.Create(s) do try
-              ReadSections(ModGroups);
-              for i := Pred(ModGroups.Count) downto 0 do begin
-                sl2 := TStringList.Create;
+          for l := 0 to sl.Count do begin
+            if l >= sl.Count then
+              ModGroupFile := wbModGroupFileName
+            else
+              ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
+
+            if FileExists(ModGroupFile) then
+              with TMemIniFile.Create(ModGroupFile) do try
+                ModGroupFile := ExtractFileName(ModGroupFile);
+                sl3 := TStringList.Create;
                 try
-                  ReadSectionValues(ModGroups[i], sl2);
+                ReadSections(sl3);
+                for i := 0 to Pred(sl3.Count) do begin
+                  MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
+                  sl2 := TStringList.Create;
+                  try
+                    if ModGroups.IndexOf(sl3[i]) >= 0 then
+                      AddMessage(MessagePrefix + 'ModGroup of same name already defined')
+                    else begin
+                      MessageGiven := False;
+                      ReadSectionValues(sl3[i], sl2);
 
-                  for j := Pred(sl2.Count) downto 0 do begin
-                    s := sl2[j];
-                    k := sl.IndexOf(s);
-                    if k >= 0 then
-                      sl2.Objects[j] := TObject(k)
-                    else
-                      sl2.Delete(j);
-                  end;
+                      for j := Pred(sl2.Count) downto 0 do begin
+                        s := sl2[j];
+                        if Length(s) > 0 then begin
+                          IsOptional := s[1] = '+';
+                          if IsOptional then
+                            Delete(s, 1, 1);
+                        end;
+                        if Length(s) > 0 then begin
+                          k := sl.IndexOf(s);
+                          if k >= 0 then
+                            sl2.Objects[j] := TObject(k)
+                          else begin
+                            if IsOptional then
+                              sl2.Delete(j)
+                            else begin
+                              AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                              MessageGiven := True;
+                              sl2.Clear;
+                              break;
+                            end
+                          end;
+                        end else
+                          sl2.Delete(j);
+                      end;
 
-                  if sl2.Count < 2 then begin
-                    AddMessage('Ignoring ModGroup ' + ModGroups[i] + ': less then 2 plugins active');
-                    ModGroups.Delete(i);
-                  end
-                  else begin
-                    k := Integer(sl2.Objects[0]);
-                    for j := 1 to Pred(sl2.Count) do begin
-                      if Integer(sl2.Objects[j]) <= k then begin
-                        sl2.Clear;
-                        AddMessage('Ignoring ModGroup ' + ModGroups[i] + ': plugins are not in the correct order');
-                        ModGroups.Delete(i);
-                        Break;
+                      if sl2.Count < 2 then begin
+                        if not MessageGiven then
+                          AddMessage(MessagePrefix + 'less then 2 plugins active');
+                      end else begin
+                        k := Integer(sl2.Objects[0]);
+                        for j := 1 to Pred(sl2.Count) do begin
+                          if Integer(sl2.Objects[j]) <= k then begin
+                            sl2.Clear;
+                            AddMessage(MessagePrefix + 'plugins are not in the correct order');
+                            Break;
+                          end;
+                        end;
+                        if sl2.Count >= 2 then begin
+                          ModGroups.AddObject(sl3[i], sl2);
+                          sl2 := nil;
+                        end;
                       end;
                     end;
-                    if sl2.Count >= 2 then begin
-                      ModGroups.Objects[i] := sl2;
-                      sl2 := nil;
-                    end;
-                  end;
 
-                finally
-                  FreeAndNil(sl2);
+                  finally
+                    FreeAndNil(sl2);
+                  end;
                 end;
+                finally
+                  FreeAndNil(sl3);
+                end;
+              finally
+                Free;
               end;
-            finally
-              Free;
-            end;
+          end;
         finally
           Free;
         end;
@@ -3231,10 +3268,11 @@ begin
 
             CheckListBox1.Items.Assign(ModGroups);
             for i := Pred(ModGroups.Count) downto 0 do
-              if sl2.IndexOf(ModGroups[i]) >= 0 then
+              if wbQuickShowConflicts or (sl2.IndexOf(ModGroups[i]) >= 0) then
                 CheckListBox1.Checked[i] := True;
 
-            ShowModal;
+            if not wbQuickShowConflicts then
+              ShowModal;
 
             sl2.Clear;
             for i := Pred(ModGroups.Count) downto 0 do
@@ -3243,8 +3281,10 @@ begin
               else
                 sl2.Add(ModGroups[i]);
 
-            Settings.WriteString('ModGroups', 'Selection', sl2.CommaText);
-            Settings.UpdateFile;
+            if not wbQuickShowConflicts then begin
+              Settings.WriteString('ModGroups', 'Selection', sl2.CommaText);
+              Settings.UpdateFile;
+            end;
           finally
             FreeAndNil(sl2);
           end;
@@ -9042,6 +9082,71 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavFilterConflictsClick(Sender: TObject);
+begin
+  FilterConflictAll := False;
+  FilterConflictThis := True;
+
+  FilterByInjectStatus := False;
+  FilterInjectStatus := False;
+
+  FilterByNotReachableStatus := False;
+  FilterNotReachableStatus := False;
+
+  FilterByReferencesInjectedStatus := False;
+  FilterReferencesInjectedStatus := False;
+
+  FilterByEditorID := False;
+  FilterEditorID := '';
+
+  FilterByName := False;
+  FilterName := '';
+
+  FilterByBaseEditorID := False;
+  FilterBaseEditorID := '';
+
+  FilterByBaseName := False;
+  FilterBaseName := '';
+
+  FilterScaledActors := False;
+
+  FilterByPersistent := False;
+  FilterPersistent := False;
+  FilterUnnecessaryPersistent := False;
+  FilterMasterIsTemporary := False;
+  FilterIsMaster := False;
+  FilterPersistentPosChanged := False;
+
+  FilterDeleted := False;
+
+  FilterByVWD := False;
+  FilterVWD := False;
+
+  FilterByHasVWDMesh := False;
+  FilterHasVWDMesh := False;
+
+  FilterBySignature := False;
+  FilterSignatures := '';
+
+  FilterByBaseSignature := False;
+  FilterBaseSignatures := '';
+
+  FilterConflictAllSet := [];
+  FilterConflictThisSet := [ctConflictLoses];
+
+  FlattenBlocks := True;
+  FlattenCellChilds := True;
+  AssignPersWrldChild := True;
+  InheritConflictByParent := True;
+
+  FilterPreset := True;
+  try
+    mniNavFilterApplyClick(Sender);
+  finally
+    FilterPreset := False;
+  end;
+end;
+
 procedure TfrmMain.mniNavFilterForCleaningClick(Sender: TObject);
 begin
   FilterConflictAll := False;
@@ -13070,6 +13175,9 @@ begin
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
   tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) and not wbIKnowWhatImDoing;
+
+  if wbQuickShowConflicts then
+    mniNavFilterConflicts.Click;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
