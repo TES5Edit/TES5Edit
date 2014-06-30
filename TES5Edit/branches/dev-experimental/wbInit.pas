@@ -33,13 +33,14 @@ var
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
   wbLogFile            : string;  // Optional log file for this session
 
-  wbMasterUpdateDone : Boolean;
-  wbDontSave         : Boolean;
-  wbDontBackup       : Boolean = False;
-  wbRemoveTempPath   : Boolean = True;
+  wbMasterUpdateDone   : Boolean;
+  wbDontSave           : Boolean;
+  wbDontBackup         : Boolean = False;
+  wbRemoveTempPath     : Boolean = True;
+  wbQuickShowConflicts : Boolean;
 
-  wbParamIndex       : integer = 1;     // First unused parameter
-  wbPluginsToUse     : TStringList;
+  wbParamIndex         : integer = 1;     // First unused parameter
+  wbPluginsToUse       : TStringList;
 
 function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
@@ -497,6 +498,9 @@ begin
     wbShowInternalEdit := True
   else if FindCmdLineSwitch('hidefixup') then
     wbShowInternalEdit := False;
+
+  if FindCmdLineSwitch('quickshowconflicts') then
+    wbQuickShowConflicts := True;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;

@@ -951,6 +951,8 @@ end;
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
   with JvInterpreterAdapter do begin
+    AddConst('System', 'MaxInt', Ord(MaxInt));
+    AddConst('System', 'MinInt', Low(Integer));
     AddConst('SysUtils', 'rfReplaceAll', Ord(rfReplaceAll));
     AddConst('SysUtils', 'rfIgnoreCase', Ord(rfIgnoreCase));
     AddConst('SysUtils', 'fmCreate', Ord(fmCreate));

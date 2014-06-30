@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 354
+  ClientHeight = 379
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,14 +20,14 @@ object frmOptions: TfrmOptions
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    354)
+    379)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 308
+    Height = 337
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
@@ -36,14 +36,14 @@ object frmOptions: TfrmOptions
       ImageIndex = 1
       object Label5: TLabel
         Left = 16
-        Top = 256
+        Top = 280
         Width = 64
         Height = 13
         Caption = 'Column width'
       end
       object cbIKnow: TCheckBox
         Left = 298
-        Top = 254
+        Top = 278
         Width = 137
         Height = 17
         Caption = 'I know what I am doing'
@@ -76,7 +76,7 @@ object frmOptions: TfrmOptions
       end
       object cbLoadBSAs: TCheckBox
         Left = 16
-        Top = 84
+        Top = 108
         Width = 81
         Height = 17
         Hint = 
@@ -88,7 +88,7 @@ object frmOptions: TfrmOptions
       end
       object cbSortFLST: TCheckBox
         Left = 16
-        Top = 130
+        Top = 131
         Width = 121
         Height = 17
         Hint = 
@@ -100,7 +100,7 @@ object frmOptions: TfrmOptions
       end
       object cbSimpleRecords: TCheckBox
         Left = 16
-        Top = 200
+        Top = 201
         Width = 357
         Height = 17
         Caption = 'Simple records LAND, NAVI, NAVM, CELL, WRLD (requires restart)'
@@ -108,7 +108,7 @@ object frmOptions: TfrmOptions
       end
       object edColumnWidth: TEdit
         Left = 86
-        Top = 252
+        Top = 276
         Width = 51
         Height = 21
         TabOrder = 8
@@ -130,44 +130,41 @@ object frmOptions: TfrmOptions
         Caption = 'Track all EditorID'
         TabOrder = 5
       end
-      object cbResolveAliases: TCheckBox
-        Left = 16
-        Top = 107
-        Width = 169
-        Height = 17
-        Hint = 
-          'Show/Check/Edit aliases by name in alias refs, slows down xEdit ' +
-          'and requires more memory'
-        Caption = '[TES5] Resolve quest aliases'
-        TabOrder = 10
-      end
       object cbSortGroupRecord: TCheckBox
         Left = 16
-        Top = 153
+        Top = 154
         Width = 81
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
         Caption = 'Sort INFOs'
-        TabOrder = 11
+        TabOrder = 10
       end
       object cbShowFlagEnumValue: TCheckBox
         Left = 16
-        Top = 223
+        Top = 224
         Width = 297
         Height = 17
         Hint = 
           'Add integer values of flags and enumerations in () brackets at t' +
           'he end'
         Caption = 'Show values of flags and enumerations (requires restart)'
-        TabOrder = 12
+        TabOrder = 11
       end
       object cbRemoveOffsetData: TCheckBox
         Left = 16
-        Top = 176
+        Top = 177
         Width = 169
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
         Caption = 'Remove OFST offset data'
+        TabOrder = 12
+      end
+      object cbActorTemplateHide: TCheckBox
+        Left = 16
+        Top = 84
+        Width = 169
+        Height = 17
+        Caption = 'Hide templated fields on actors'
         TabOrder = 13
       end
     end
@@ -251,7 +248,7 @@ object frmOptions: TfrmOptions
         Left = 16
         Top = 32
         Width = 329
-        Height = 233
+        Height = 257
         ItemHeight = 13
         MultiSelect = True
         TabOrder = 0
@@ -386,7 +383,7 @@ object frmOptions: TfrmOptions
   end
   object btnOK: TButton
     Left = 302
-    Top = 321
+    Top = 346
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -396,7 +393,7 @@ object frmOptions: TfrmOptions
   end
   object btnCancel: TButton
     Left = 383
-    Top = 321
+    Top = 346
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
