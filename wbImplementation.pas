@@ -13613,11 +13613,12 @@ var
 begin
   if wbTranslationMode then
     Result := cpIgnore
+  else if fFlagsDef.FlagIgnoreConflict[fIndex] then
+    Result := cpIgnore
+  else if Assigned(fIntegerDef) then
+    Result := fIntegerDef.ConflictPriority
   else
-    if Assigned(fIntegerDef) then
-      Result := fIntegerDef.ConflictPriority
-    else
-      Result := cpNormal;
+    Result := cpNormal;
 
   if Result = cpFormID then begin
     Result := cpCritical;

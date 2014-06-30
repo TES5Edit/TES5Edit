@@ -4378,7 +4378,7 @@ begin
     {0x40000000}'NavMeshGround NoRespawn',
     {>>> 0x80000000 REFR: MultiBound <<<}
     {0x80000000}'MultiBound'
-  ]);
+  ], [18]);
   wbRecordFlags := wbInteger('Record Flags', itU32, wbRecordFlagsEnum);
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
