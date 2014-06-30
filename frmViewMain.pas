@@ -3205,24 +3205,25 @@ begin
                           IsRequired := s[1] = '-';
                           if IsOptional or IsRequired then
                             Delete(s, 1, 1);
-                        end;
-                        if Length(s) > 0 then begin
-                          k := sl.IndexOf(s);
-                          if k >= 0 then begin
-                            if IsRequired then
-                              sl2.Delete(j)
-                            else
-                              sl2.Objects[j] := TObject(k)
-                          end else begin
-                            if IsOptional then
-                              sl2.Delete(j)
-                            else begin
-                              AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                              MessageGiven := True;
-                              sl2.Clear;
-                              break;
-                            end
-                          end;
+                          if Length(s) > 0 then begin
+                            k := sl.IndexOf(s);
+                            if k >= 0 then begin
+                              if IsRequired then
+                                sl2.Delete(j)
+                              else
+                                sl2.Objects[j] := TObject(k)
+                            end else begin
+                              if IsOptional then
+                                sl2.Delete(j)
+                              else begin
+                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                                MessageGiven := True;
+                                sl2.Clear;
+                                break;
+                              end
+                            end;
+                          end else
+                            sl2.Delete(j);
                         end else
                           sl2.Delete(j);
                       end;
@@ -10910,7 +10911,7 @@ begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] You have to close this program to finalize renaming of the .save files.');
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] It is still possible for the renaming to fail if any of your original module files is still open by another process.')
       end else begin
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Non of your active modules required changes.');
+        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] None of your active modules required changes.');
       end;
       if (wbToolMode in [tmMasterUpdate]) then begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
@@ -13143,7 +13144,7 @@ end;
 
 procedure TfrmMain.WMUser(var Message: TMessage);
 var
-  t                           : string;
+  t : string;
 begin
   Pointer(t) := Pointer(Message.WParam);
   if not Assigned(NewMessages) then
