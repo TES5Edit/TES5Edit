@@ -3231,6 +3231,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3248,6 +3249,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3265,6 +3267,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3277,7 +3280,10 @@ end;
 
 function wbActorTemplateUseStatsAutoCalc(const aElement: IwbElement): Boolean;
 begin
-  Result := wbActorTemplateUseStats(aElement) or wbActorAutoCalcDontShow(aElement);
+  if not wbActorTemplateHide then
+    Result := False
+  else
+    Result := wbActorTemplateUseStats(aElement) or wbActorAutoCalcDontShow(aElement);
 end;
 
 function wbActorTemplateUseFactions(const aElement: IwbElement): Boolean;
@@ -3287,6 +3293,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3304,6 +3311,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3321,6 +3329,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3338,6 +3347,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3355,6 +3365,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3372,6 +3383,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3389,6 +3401,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -3406,6 +3419,7 @@ var
   i          : Int64;
 begin
   Result := False;
+  if not wbActorTemplateHide then Exit;
   Element := GetElementFromUnion(aElement);
   MainRecord := nil;
   while Assigned(Element) and not Supports(Element, IwbMainRecord, MainRecord) do
@@ -8146,7 +8160,7 @@ begin
       'Unarmed Crouch PA',
       'Unarmed Counter PA',
       'Spotter Effect',
-      'Item Detected Efect',
+      'Item Detected Effect',
       'Cateye Mobile Effect (NYI)'
     ], cpNormal, True)
   ]);

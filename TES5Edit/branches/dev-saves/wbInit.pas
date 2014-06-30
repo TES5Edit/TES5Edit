@@ -34,20 +34,21 @@ var
   wbLogFile            : string;  // Optional log file for this session
   wbOutputBaseFileName : string;  // Optional root result file name for splitting xDump result into separate files. TBD
 
-  wbMasterUpdateDone : Boolean;
-  wbMasterUpdateOK   : Boolean;
-  wbDontSave         : Boolean;
-  wbDontBackup       : Boolean = False;
-  wbRemoveTempPath   : Boolean = True;
-  wbSplitGroups      : Boolean = False; // Split xDump output in different files per each top level group, TBD
-                                        //     {requires wbOutputBaseFileName?}
+  wbMasterUpdateDone   : Boolean;
+  wbMasterUpdateOK     : Boolean;
+  wbDontSave           : Boolean;
+  wbDontBackup         : Boolean = False;
+  wbRemoveTempPath     : Boolean = True;
+  wbQuickShowConflicts : Boolean;
+  wbSplitGroups        : Boolean = False; // Split xDump output in different files per each top level group, TBD
+                                          //     {requires wbOutputBaseFileName?}
 
-  wbSplitGroupsLevel : Integer = 0;     // 0 = only top level groups are splitted,
-                                        // 1 = also cell/worldspace blocks,
-                                        // 2 = also C/W sub blocks and Topics
-                                        // 3 = also Primary/Temporary/...
-  wbParamIndex       : integer = 1;     // First unused parameter
-  wbPluginsToUse     : TStringList;
+  wbSplitGroupsLevel   : Integer = 0;     // 0 = only top level groups are splitted,
+                                          // 1 = also cell/worldspace blocks,
+                                          // 2 = also C/W sub blocks and Topics
+                                          // 3 = also Primary/Temporary/...
+  wbParamIndex         : integer = 1;     // First unused parameter
+  wbPluginsToUse       : TStringList;
 
 function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
@@ -381,7 +382,7 @@ begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -509,6 +510,9 @@ begin
     wbShowInternalEdit := True
   else if FindCmdLineSwitch('hidefixup') then
     wbShowInternalEdit := False;
+
+  if FindCmdLineSwitch('quickshowconflicts') then
+    wbQuickShowConflicts := True;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;

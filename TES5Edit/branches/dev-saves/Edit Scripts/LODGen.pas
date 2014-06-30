@@ -155,9 +155,9 @@ var
   stat: IInterface;
   s, mFull, m4, m8, m16: string;
 begin
-  // get the last override and check if deleted or disabled
+  // get the last override and check if deleted or disabled, or enabled via parent
   e := WinningOverride(e);
-  if GetIsDeleted(e) or GetIsInitiallyDisabled(e) then
+  if GetIsDeleted(e) or GetIsInitiallyDisabled(e) or ElementExists(e, 'XESP') then
     Exit;
   
   // no position

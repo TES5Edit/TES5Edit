@@ -283,6 +283,7 @@ type
     mniViewPreviousMember: TMenuItem;
     mniViewHeaderJumpTo: TMenuItem;
     acScript: TAction;
+    mniNavFilterConflicts: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -487,6 +488,7 @@ type
     procedure mniViewPreviousMemberClick(Sender: TObject);
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
+    procedure mniNavFilterConflictsClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -1285,7 +1287,7 @@ function TfrmMain.ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aN
 var
   Element             : IwbElement;
   CompareElement      : IwbElement;
-  i{, j }             : Integer;
+  i, j                : Integer;
   UniqueValues        : TnxFastStringListCS;
 
   FirstElement        : IwbElement;
@@ -1329,6 +1331,22 @@ begin
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
+          Priority := Element.ConflictPriority;
+          if Priority = cpNormalIgnoreEmpty then begin
+            FirstElement := Element;
+            for j := Pred(aNodeCount) downto i do begin
+              LastElement := aNodeDatas[j].Element;
+              if Assigned(LastElement) then
+                Break;
+            end;
+          end;
+          Break;
+        end;
+      end;
+
+      for i := 0 to Pred(aNodeCount) do begin
+        Element := aNodeDatas[i].Element;
+        if Assigned(Element) then begin
           FoundAny := True;
           Priority := Element.ConflictPriority;
           if Priority = cpIgnore then begin
@@ -1345,9 +1363,12 @@ begin
             UniqueValues.Add(Element.SortKey[True]);
         end else
           if not (vnfIgnore in aNodeDatas[i].ViewNodeFlags) then
-            UniqueValues.Add('');
+            if Priority <> cpNormalIgnoreEmpty then
+              UniqueValues.Add('');
 
-        if Priority = cpIgnore then
+        if (Priority = cpNormalIgnoreEmpty) and not Assigned(Element) then
+          aNodeDatas[i].ConflictThis := ctIgnored
+        else if Priority = cpIgnore then
           aNodeDatas[i].ConflictThis := ctIgnored
         else if aSiblingCompare then
           aNodeDatas[i].ConflictThis := ctOnlyOne
@@ -1771,13 +1792,16 @@ begin
   Error := aElement.Check;
   if Error <> '' then begin
     Result := aElement.ContainingMainRecord;
-    if (Result <> LastRecord) and Assigned(Result) then
+    // first error in this record - show record's name
+    if Assigned(Result) and (Result <> LastRecord) then
       wbProgressCallback(Result.Name);
     wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
-  end;
+  end else
+    // passing through last record with error
+    Result := LastRecord;
   if Supports(aElement, IwbContainerElementRef, Container) then
-    for i := Pred(Container.ElementCount) downto 0 do
-      LastRecord := CheckForErrorsLinear(Container.Elements[i], LastRecord);
+    for i := 0 to Pred(Container.ElementCount) do
+      Result := CheckForErrorsLinear(Container.Elements[i], Result);
 end;
 
 function TfrmMain.CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
@@ -2749,6 +2773,8 @@ begin
   inherited;
   FreeAndNil(NewMessages);
   FreeAndNil(ScriptHotkeys);
+  FreeAndNil(ModGroups);
+  FreeAndNil(Settings);
 end;
 
 procedure TfrmMain.DoGenerateLOD;
@@ -2888,14 +2914,19 @@ procedure TfrmMain.DoInit;
   end;
 
 var
-  i, j, k      : Integer;
+  i, j, k, l   : Integer;
   s            : string;
-  sl, sl2      : TStringList;
+  sl, sl2, sl3 : TStringList;
   ConflictAll  : TConflictAll;
   ConflictThis : TConflictThis;
   Age          : Integer;
   AgeDateTime  : TDateTime;
 
+  ModGroupFile : string;
+  MessagePrefix: string;
+  IsOptional   : Boolean;
+  IsRequired   : Boolean;
+  MessageGiven : Boolean;
 begin
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -2939,7 +2970,6 @@ begin
   vstSpreadSheetAmmo.TreeOptions.PaintOptions := vstSpreadSheetAmmo.TreeOptions.PaintOptions + [toZebra, toAdvHotTrack];
 
   ModGroups := TStringList.Create;
-
 
   AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
@@ -3083,7 +3113,7 @@ begin
           end;
         end;
 
-        if not (wbToolMode in wbAutoModes) then begin
+        if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
           ShowModal;
           if ModalResult <> mrOk then begin
             frmMain.Close;
@@ -3167,51 +3197,88 @@ begin
             end;
           end;
 
-          s := wbModGroupFileName;
-          if FileExists(s) then
-            with TMemIniFile.Create(s) do try
-              ReadSections(ModGroups);
-              for i := Pred(ModGroups.Count) downto 0 do begin
-                sl2 := TStringList.Create;
+          for l := 0 to sl.Count do begin
+            if l >= sl.Count then
+              ModGroupFile := wbModGroupFileName
+            else
+              ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
+
+            if FileExists(ModGroupFile) then
+              with TMemIniFile.Create(ModGroupFile) do try
+                ModGroupFile := ExtractFileName(ModGroupFile);
+                sl3 := TStringList.Create;
                 try
-                  ReadSectionValues(ModGroups[i], sl2);
+                ReadSections(sl3);
+                for i := 0 to Pred(sl3.Count) do begin
+                  MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
+                  sl2 := TStringList.Create;
+                  try
+                    if ModGroups.IndexOf(sl3[i]) >= 0 then
+                      AddMessage(MessagePrefix + 'ModGroup of same name already defined')
+                    else begin
+                      MessageGiven := False;
+                      ReadSectionValues(sl3[i], sl2);
 
-                  for j := Pred(sl2.Count) downto 0 do begin
-                    s := sl2[j];
-                    k := sl.IndexOf(s);
-                    if k >= 0 then
-                      sl2.Objects[j] := TObject(k)
-                    else
-                      sl2.Delete(j);
-                  end;
+                      for j := Pred(sl2.Count) downto 0 do begin
+                        s := sl2[j];
+                        if Length(s) > 0 then begin
+                          IsOptional := s[1] = '+';
+                          IsRequired := s[1] = '-';
+                          if IsOptional or IsRequired then
+                            Delete(s, 1, 1);
+                          if Length(s) > 0 then begin
+                            k := sl.IndexOf(s);
+                            if k >= 0 then begin
+                              if IsRequired then
+                                sl2.Delete(j)
+                              else
+                                sl2.Objects[j] := TObject(k)
+                            end else begin
+                              if IsOptional then
+                                sl2.Delete(j)
+                              else begin
+                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                                MessageGiven := True;
+                                sl2.Clear;
+                                break;
+                              end
+                            end;
+                          end else
+                            sl2.Delete(j);
+                        end else
+                          sl2.Delete(j);
+                      end;
 
-                  if sl2.Count < 2 then begin
-                    AddMessage('Ignoring ModGroup ' + ModGroups[i] + ': less then 2 plugins active');
-                    ModGroups.Delete(i);
-                  end
-                  else begin
-                    k := Integer(sl2.Objects[0]);
-                    for j := 1 to Pred(sl2.Count) do begin
-                      if Integer(sl2.Objects[j]) <= k then begin
-                        sl2.Clear;
-                        AddMessage('Ignoring ModGroup ' + ModGroups[i] + ': plugins are not in the correct order');
-                        ModGroups.Delete(i);
-                        Break;
+                      if sl2.Count < 2 then begin
+                        if not MessageGiven then
+                          AddMessage(MessagePrefix + 'less then 2 plugins active');
+                      end else begin
+                        k := Integer(sl2.Objects[0]);
+                        for j := 1 to Pred(sl2.Count) do begin
+                          if Integer(sl2.Objects[j]) <= k then begin
+                            sl2.Clear;
+                            AddMessage(MessagePrefix + 'plugins are not in the correct order');
+                            Break;
+                          end;
+                        end;
+                        if sl2.Count >= 2 then begin
+                          ModGroups.AddObject(sl3[i], sl2);
+                          sl2 := nil;
+                        end;
                       end;
                     end;
-                    if sl2.Count >= 2 then begin
-                      ModGroups.Objects[i] := sl2;
-                      sl2 := nil;
-                    end;
-                  end;
 
-                finally
-                  FreeAndNil(sl2);
+                  finally
+                    FreeAndNil(sl2);
+                  end;
                 end;
+                finally
+                  FreeAndNil(sl3);
+                end;
+              finally
+                Free;
               end;
-            finally
-              Free;
-            end;
+          end;
         finally
           Free;
         end;
@@ -3228,10 +3295,11 @@ begin
 
             CheckListBox1.Items.Assign(ModGroups);
             for i := Pred(ModGroups.Count) downto 0 do
-              if sl2.IndexOf(ModGroups[i]) >= 0 then
+              if wbQuickShowConflicts or (sl2.IndexOf(ModGroups[i]) >= 0) then
                 CheckListBox1.Checked[i] := True;
 
-            ShowModal;
+            if not wbQuickShowConflicts then
+              ShowModal;
 
             sl2.Clear;
             for i := Pred(ModGroups.Count) downto 0 do
@@ -3240,8 +3308,10 @@ begin
               else
                 sl2.Add(ModGroups[i]);
 
-            Settings.WriteString('ModGroups', 'Selection', sl2.CommaText);
-            Settings.UpdateFile;
+            if not wbQuickShowConflicts then begin
+              Settings.WriteString('ModGroups', 'Selection', sl2.CommaText);
+              Settings.UpdateFile;
+            end;
           finally
             FreeAndNil(sl2);
           end;
@@ -3339,11 +3409,11 @@ begin
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  wbActorTemplateHide := Settings.ReadBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
   wbColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', wbColumnWidth);
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
-  wbResolveAlias := Settings.ReadBool('Options', 'ResolveAliases', wbResolveAlias);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -3721,6 +3791,7 @@ var
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
   UndeletedCount              : Cardinal;
+  NotDeletedCount             : Cardinal;
   DeletedNAVM                 : Cardinal;
   StartTick                   : Cardinal;
   i {, n}                     : Integer;
@@ -3728,6 +3799,26 @@ var
   Element                     : IwbElement;
   Position                    : TwbVector;
   Cntr {, Cntr2}              : IwbContainerElementRef;
+
+  function canUndelete: Boolean;
+  begin
+    Result := True;
+    with MainRecord do
+      if Signature = 'NAVM' then begin
+        Result := False;
+        Inc(DeletedNAVM);
+      end else if (wbGameMode in [gmFNV]) then begin
+        IsDeleted := True;
+        IsDeleted := False;
+        Element := MainRecord.ElementBySignature['NAME'];
+        if Assigned(Element) then
+          if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
+            Result := not LinksToRecord.Flags.HasLODtree;
+        IsDeleted := True;
+      end;
+    if not Result then Inc(notDeletedCount);
+  end;
+
 begin
   if not wbEditAllowed then
     Exit;
@@ -3776,6 +3867,7 @@ begin
     Enabled := False;
 
     UndeletedCount := 0;
+    NotDeletedCount := 0;
     DeletedNAVM := 0;
     Count := 0;
     for i := Low(Selection) to High(Selection) do try
@@ -3806,7 +3898,7 @@ begin
                (Signature = 'PHZD')    {>>> Skyrim <<<}
              ) then
           //begin
-          if Signature = 'NAVM' then Inc(DeletedNAVM) else begin
+          if canUndelete then begin
             IsDeleted := True;
             IsDeleted := False;
             PostAddMessage('Undeleting: ' + MainRecord.Name);
@@ -3879,6 +3971,8 @@ begin
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     if DeletedNAVM > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
+    if NotDeletedCount > 0 then
+      PostAddMessage('<Warning: Plugin contains ' + IntToStr(NotDeletedCount) + ' deleted references which can not be undeleted>');
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -9040,6 +9134,71 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavFilterConflictsClick(Sender: TObject);
+begin
+  FilterConflictAll := False;
+  FilterConflictThis := True;
+
+  FilterByInjectStatus := False;
+  FilterInjectStatus := False;
+
+  FilterByNotReachableStatus := False;
+  FilterNotReachableStatus := False;
+
+  FilterByReferencesInjectedStatus := False;
+  FilterReferencesInjectedStatus := False;
+
+  FilterByEditorID := False;
+  FilterEditorID := '';
+
+  FilterByName := False;
+  FilterName := '';
+
+  FilterByBaseEditorID := False;
+  FilterBaseEditorID := '';
+
+  FilterByBaseName := False;
+  FilterBaseName := '';
+
+  FilterScaledActors := False;
+
+  FilterByPersistent := False;
+  FilterPersistent := False;
+  FilterUnnecessaryPersistent := False;
+  FilterMasterIsTemporary := False;
+  FilterIsMaster := False;
+  FilterPersistentPosChanged := False;
+
+  FilterDeleted := False;
+
+  FilterByVWD := False;
+  FilterVWD := False;
+
+  FilterByHasVWDMesh := False;
+  FilterHasVWDMesh := False;
+
+  FilterBySignature := False;
+  FilterSignatures := '';
+
+  FilterByBaseSignature := False;
+  FilterBaseSignatures := '';
+
+  FilterConflictAllSet := [];
+  FilterConflictThisSet := [ctConflictLoses];
+
+  FlattenBlocks := True;
+  FlattenCellChilds := True;
+  AssignPersWrldChild := True;
+  InheritConflictByParent := True;
+
+  FilterPreset := True;
+  try
+    mniNavFilterApplyClick(Sender);
+  finally
+    FilterPreset := False;
+  end;
+end;
+
 procedure TfrmMain.mniNavFilterForCleaningClick(Sender: TObject);
 begin
   FilterConflictAll := False;
@@ -9119,11 +9278,11 @@ begin
     cbHideUnused.Checked := wbHideUnused;
     cbHideIgnored.Checked := wbHideIgnored;
     cbHideNeverShow.Checked := wbHideNeverShow;
+    cbActorTemplateHide.Checked := wbActorTemplateHide;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSortGroupRecord.Checked := wbSortGroupRecord;
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
-    cbResolveAliases.Checked := wbResolveAlias;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbSimpleRecords.Checked := wbSimpleRecords;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
@@ -9149,11 +9308,11 @@ begin
     wbHideUnused := cbHideUnused.Checked;
     wbHideIgnored := cbHideIgnored.Checked;
     wbHideNeverShow := cbHideNeverShow.Checked;
+    wbActorTemplateHide := cbActorTemplateHide.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSortGroupRecord := cbSortGroupRecord.Checked;
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
-    wbResolveAlias := cbResolveAliases.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
@@ -9176,11 +9335,11 @@ begin
     Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
     Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
     Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
+    Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
-    Settings.WriteBool('Options', 'ResolveAliases', wbResolveAlias);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
@@ -12709,13 +12868,10 @@ begin
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end else
-  if SameText(Identifier, 'FullPathToFilename') then begin
-    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
-      Value := FullPathToFilename(Args.Values[0]);
-      Done := True;
-      Application.ProcessMessages;
-    end else
-      JvInterpreterError(ieDirectInvalidArgument, 0);
+  if SameText(Identifier, 'ClearMessages') and (Args.Count = 0) then begin
+    mmoMessages.Clear;
+    Done := True;
+    Application.ProcessMessages;
   end else
   if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
     Value := Length(Files);
@@ -13085,6 +13241,8 @@ begin
   tmrCheckUnsaved.Enabled := wbEditAllowed and
     not (wbToolMode in wbAutoModes) and
     not wbIKnowWhatImDoing;
+  if wbQuickShowConflicts then
+    mniNavFilterConflicts.Click;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
