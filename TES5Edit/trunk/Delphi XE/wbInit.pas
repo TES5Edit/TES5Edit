@@ -28,10 +28,11 @@ var
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
 
-  wbMasterUpdateDone : Boolean;
-  wbDontSave         : Boolean;
-  wbDontBackup       : Boolean = False;
-  wbRemoveTempPath   : Boolean = True;
+  wbMasterUpdateDone   : Boolean;
+  wbDontSave           : Boolean;
+  wbDontBackup         : Boolean = False;
+  wbRemoveTempPath     : Boolean = True;
+  wbQuickShowConflicts : Boolean;
 
 
 implementation
@@ -413,6 +414,9 @@ begin
     wbShowInternalEdit := True
   else if FindCmdLineSwitch('hidefixup') then
     wbShowInternalEdit := False;
+
+  if FindCmdLineSwitch('quickshowconflicts') then
+    wbQuickShowConflicts := True;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
