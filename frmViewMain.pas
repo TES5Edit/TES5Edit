@@ -2925,6 +2925,7 @@ var
   ModGroupFile : string;
   MessagePrefix: string;
   IsOptional   : Boolean;
+  IsRequired   : Boolean;
   MessageGiven : Boolean;
 begin
   SetDoubleBuffered(Self);
@@ -3201,14 +3202,18 @@ begin
                         s := sl2[j];
                         if Length(s) > 0 then begin
                           IsOptional := s[1] = '+';
-                          if IsOptional then
+                          IsRequired := s[1] = '-';
+                          if IsOptional or IsRequired then
                             Delete(s, 1, 1);
                         end;
                         if Length(s) > 0 then begin
                           k := sl.IndexOf(s);
-                          if k >= 0 then
-                            sl2.Objects[j] := TObject(k)
-                          else begin
+                          if k >= 0 then begin
+                            if IsRequired then
+                              sl2.Delete(j)
+                            else
+                              sl2.Objects[j] := TObject(k)
+                          end else begin
                             if IsOptional then
                               sl2.Delete(j)
                             else begin
@@ -9417,7 +9422,7 @@ begin
             sl.Assign(TStrings(ModGroups.Objects[i]));
             for j := Pred(sl.Count) downto 0 do begin
               k := Records.IndexOf(sl[j]);
-              if K >= 0 then
+              if K > 0 then { >, not >=, never hide the original master}
                 sl.Objects[j] := TObject(k)
               else
                 sl.Delete(j);
