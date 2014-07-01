@@ -3114,6 +3114,9 @@ begin
             sl2.Clear;
             for i := 0 to Pred(sl.Count) do
               wbMastersForFile(wbDataPath + sl[i], sl2);
+            {make sure messages for the memo have been processed}
+            Application.ProcessMessages;
+            tmrMessagesTimer(nil);
 
             sl.Clear;
             if sl2.Count > 0 then
@@ -3203,27 +3206,28 @@ begin
                         if Length(s) > 0 then begin
                           IsOptional := s[1] = '+';
                           IsRequired := s[1] = '-';
-                          if IsOptional or IsRequired then
+                          if IsOptional or IsRequired then begin
                             Delete(s, 1, 1);
-                          if Length(s) > 0 then begin
-                            k := sl.IndexOf(s);
-                            if k >= 0 then begin
-                              if IsRequired then
-                                sl2.Delete(j)
-                              else
-                                sl2.Objects[j] := TObject(k)
-                            end else begin
-                              if IsOptional then
-                                sl2.Delete(j)
-                              else begin
-                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                                MessageGiven := True;
-                                sl2.Clear;
-                                break;
-                              end
-                            end;
-                          end else
-                            sl2.Delete(j);
+                            sl2[j] := s;
+                          end;
+                        end;
+                        if Length(s) > 0 then begin
+                          k := sl.IndexOf(s);
+                          if k >= 0 then begin
+                            if IsRequired then
+                              sl2.Objects[j] := TObject(-k)
+                            else
+                              sl2.Objects[j] := TObject(k)
+                          end else begin
+                            if IsOptional then
+                              sl2.Delete(j)
+                            else begin
+                              AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                              MessageGiven := True;
+                              sl2.Clear;
+                              break;
+                            end
+                          end;
                         end else
                           sl2.Delete(j);
                       end;
@@ -3232,18 +3236,24 @@ begin
                         if not MessageGiven then
                           AddMessage(MessagePrefix + 'less then 2 plugins active');
                       end else begin
-                        k := Integer(sl2.Objects[0]);
+                        k := Abs(Integer(sl2.Objects[0]));
                         for j := 1 to Pred(sl2.Count) do begin
-                          if Integer(sl2.Objects[j]) <= k then begin
+                          if Abs(Integer(sl2.Objects[j])) <= k then begin
                             sl2.Clear;
+                            MessageGiven := True;
                             AddMessage(MessagePrefix + 'plugins are not in the correct order');
                             Break;
                           end;
                         end;
+                        for j := Pred(sl2.Count) downto 0 do
+                          if Integer(sl2.Objects[j]) < 0 then
+                            sl2.Delete(j);
                         if sl2.Count >= 2 then begin
                           ModGroups.AddObject(sl3[i], sl2);
                           sl2 := nil;
-                        end;
+                        end else
+                          if not MessageGiven then
+                            AddMessage(MessagePrefix + 'less then 2 plugins active');
                       end;
                     end;
 
