@@ -4307,7 +4307,7 @@ begin
     'ReloadX',
     'ReloadY',
     'ReloadZ'
-  ]);
+  ],[255, 'None']);   // 255 seen in DLC, though Geck converts to 0
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
@@ -6598,7 +6598,7 @@ begin
       wbByteArray('Unused', 4),
       wbInteger('Flags', itU8, wbFlags([
         'No Auto-Calc',
-        '',
+        'Auto Calculate',
         'Hide Effect'
       ])),
       wbByteArray('Unused', 3)
