@@ -2563,7 +2563,7 @@ type
 
 const
   {>> N means New, V means verified that the name has not changed <<<}
-  wbCTDAFunctions : array[0..394] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..399] of TCTDAFunction = (
 {N} (Index:   0; Name: 'GetWantBlocking'),
 {V} (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
 {V} (Index:   5; Name: 'GetLocked'),
@@ -2958,15 +2958,16 @@ const
 {N} (Index: 730; Name: 'IsOnFlyingMount'),
 {N} (Index: 731; Name: 'CanFlyHere'),
 {N} (Index: 732; Name: 'IsFlyingMountPatrolQueud'),
-{N} (Index: 733; Name: 'IsFlyingMountFastTravelling')
-{added by SKSE:
-1400 GetSKSEVersion [cond]
-1401 GetSKSEVersionMinor [cond]
-1402 GetSKSEVersionBeta [cond]
-1403 GetSKSERelease [cond]
-1404 ClearInvalidRegistrations [cond]
-}
+{N} (Index: 733; Name: 'IsFlyingMountFastTravelling'),
+
+    // Added by SKSE
+    (Index: 1024; Name: 'GetSKSEVersion'; ),
+    (Index: 1025; Name: 'GetSKSEVersionMinor'; ),
+    (Index: 1026; Name: 'GetSKSEVersionBeta'; ),
+    (Index: 1027; Name: 'GetSKSERelease'; ),
+    (Index: 1028; Name: 'ClearInvalidRegistrations'; )
   );
+
 var
   wbCTDAFunctionEditInfo: string;
 

@@ -2084,7 +2084,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..249] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..277] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2286,7 +2286,7 @@ const
     (Index: 436; Name: 'GetDialogueEmotionValue'),
     (Index: 438; Name: 'GetIsCreatureType'; ParamType1: ptCreatureType),
     (Index: 446; Name: 'GetInZone'; ParamType1: ptEncounterZone),
-    (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger{Alt?}),
+    (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger {boolean Alt}),	// PlayerCharacter has 2 lists of perks
     (Index: 450; Name: 'GetFactionRelation'; ParamType1: ptActor),
     (Index: 451; Name: 'IsLastIdlePlayed'; ParamType1: ptIdleForm),
     (Index: 454; Name: 'GetPlayerTeammate'),
@@ -2334,31 +2334,43 @@ const
     (Index: 610; Name: 'GetCasinoWinningStage'; ParamType1: ptCasino),
     (Index: 612; Name: 'PlayerInRegion'; ParamType1: ptRegion),
     (Index: 614; Name: 'GetChallengeCompleted'; ParamType1: ptChallenge),
-    (Index: 619; Name: 'IsAlwaysHardcore')
-{added by NVSE:
-1400 GetNVSEVersion
-1401 GetNVSERevision
-1402 GetNVSEBeta
-1404 GetWeight: (item)
-1434 GetWeaponHasScope: (item)
-1441 ListGetFormIndex: form list, form
-1453 IsKeyPressed: int, (int)
-146B IsControlPressed: int
-14F7 HasOwnership: (ref)
-14F8 IsOwned: (actor reference)
-14FA GetDialogueTarget, GDT: (actor reference)
-14FB GetDialogueSubject, GDS: (actor reference)
-14FC GetDialogueSpeaker, GDK: (actor reference)
-14FE GetAgeClass: (NPC)
-1506 GetTokenValue, GetTV: form
-1508 GetTokenRef, GetTR: form
-150B GetPaired: item, actor
-150C GetRespawn: (NPC)
-150E GetPermanent: (ref)
-1511 IsRefInList: form list, form
-1515 GetPackageCount: (ref)
-}
+    (Index: 619; Name: 'IsAlwaysHardcore'),
+
+    // Added by NVSE
+    (Index: 1024; Name: 'GetNVSEVersion'; ),
+    (Index: 1025; Name: 'GetNVSERevision'; ),
+    (Index: 1026; Name: 'GetNVSEBeta'; ),
+    (Index: 1028; Name: 'GetWeight'; ParamType1: ptInventoryObject; ),
+    (Index: 1076; Name: 'GetWeaponHasScope'; ParamType1: ptInventoryObject; ),
+    (Index: 1089; Name: 'ListGetFormIndex'; ParamType1: ptFormList; ParamType2: ptFormType;),
+    (Index: 1107; Name: 'IsKeyPressed'; ParamType1: ptInteger; ParamType2: ptInteger;),
+    (Index: 1131; Name: 'IsControlPressed'; ParamType1: ptInteger; ),
+    (Index: 1271; Name: 'HasOwnership'; ParamType1: ptObjectReference; ),
+    (Index: 1272; Name: 'IsOwned'; ParamType1: ptActor ),
+    (Index: 1274; Name: 'GetDialogueTarget'; ParamType1: ptActor; ),
+    (Index: 1275; Name: 'GetDialogueSubject'; ParamType1: ptActor; ),
+    (Index: 1276; Name: 'GetDialogueSpeaker'; ParamType1: ptActor; ),
+    (Index: 1278; Name: 'GetAgeClass'; ParamType1: ptActorBase; ),
+    (Index: 1286; Name: 'GetTokenValue'; ParamType1: ptFormType; ),
+    (Index: 1288; Name: 'GetTokenRef'; ParamType1: ptFormType; ),
+    (Index: 1291; Name: 'GetPaired'; ParamType1: ptInventoryObject; ParamType2: ptActorBase;),
+    (Index: 1292; Name: 'GetRespawn'; ParamType1: ptACtorBase; ),
+    (Index: 1294; Name: 'GetPermanent'; ParamType1: ptObjectReference; ),
+    (Index: 1297; Name: 'IsRefInList'; ParamType1: ptFormList; ParamType2: ptFormType;),
+    (Index: 1301; Name: 'GetPackageCount'; ParamType1: ptObjectReference; ),
+    (Index: 1440; Name: 'IsPlayerSwimming'; ),
+    (Index: 1441; Name: 'GetTFC'; ),
+
+    // Added by nvse_plugin_ExtendedActorVariable
+    (Index: 4352; Name: 'GetExtendedActorVariable'; ParamType1: ptInventoryObject; ),
+    (Index: 4353; Name: 'GetBaseExtendedActorVariable'; ParamType1: ptInventoryObject; ),
+    (Index: 4355; Name: 'GetModExtendedActorVariable'; ParamType1: ptInventoryObject; ),
+
+    // Added by nvse_extender
+    (Index: 4420; Name: 'NX_GetEVFl'; ParamType1: ptNone; ),  // Actually ptString, but it cannot be used in GECK
+    (Index: 4426; Name: 'NX_GetQVEVFl'; ParamType1: ptQuest; ParamType2: ptInteger;)
   );
+
 var
   wbCTDAFunctionEditInfo: string;
 
@@ -5462,7 +5474,7 @@ begin
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
-        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
+        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
       ])
     ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
   wbCTDAs := wbRArray('Conditions', wbCTDA);
@@ -9498,7 +9510,7 @@ begin
     ])), ['Male', 'Female'], cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
+    wbByteArray(ATTR, 'Unused', 0, cpNormal, True),
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
@@ -11244,7 +11256,7 @@ begin
     wbStruct(DATA, 'Data', [
       wbInteger('Skill', itS32, wbActorValueEnum),
       wbInteger('Level', itU32),
-      wbFormIDCk('Category', [RCCT]),
+      wbFormIDCk('Category', [RCCT, NULL]),   // Some of DeadMoney are NULL
       wbFormIDCk('Sub-Category', [RCCT])
     ]),
     wbRStructs('Ingredients', 'Ingredient', [
