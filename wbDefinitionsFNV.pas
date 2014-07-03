@@ -2335,6 +2335,29 @@ const
     (Index: 612; Name: 'PlayerInRegion'; ParamType1: ptRegion),
     (Index: 614; Name: 'GetChallengeCompleted'; ParamType1: ptChallenge),
     (Index: 619; Name: 'IsAlwaysHardcore')
+{added by NVSE:
+1400 GetNVSEVersion
+1401 GetNVSERevision
+1402 GetNVSEBeta
+1404 GetWeight: (item)
+1434 GetWeaponHasScope: (item)
+1441 ListGetFormIndex: form list, form
+1453 IsKeyPressed: int, (int)
+146B IsControlPressed: int
+14F7 HasOwnership: (ref)
+14F8 IsOwned: (actor reference)
+14FA GetDialogueTarget, GDT: (actor reference)
+14FB GetDialogueSubject, GDS: (actor reference)
+14FC GetDialogueSpeaker, GDK: (actor reference)
+14FE GetAgeClass: (NPC)
+1506 GetTokenValue, GetTV: form
+1508 GetTokenRef, GetTR: form
+150B GetPaired: item, actor
+150C GetRespawn: (NPC)
+150E GetPermanent: (ref)
+1511 IsRefInList: form list, form
+1515 GetPackageCount: (ref)
+}
   );
 var
   wbCTDAFunctionEditInfo: string;
