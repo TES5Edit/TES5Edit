@@ -909,6 +909,31 @@ const
     (Index: 361; Name: 'GetTimeDead'),
     (Index: 362; Name: 'GetPlayerHasLastRiddenHorse'),
     (Index: 365; Name: 'GetPlayerInSEWorld')
+{added by OBSE:
+1453 IsAmmo, IsAmmo: (int)
+175C GetPCTrainingSessionsUsed
+18A5 GetPackageOffersServices: (package)
+18A6 GetPackageMustReachLocation: (package)
+18A7 GetPackageMustComplete: (package)
+18A8 GetPackageLockDoorsAtStart: (package)
+18A9 GetPackageLockDoorsAtEnd: (package)
+18AA GetPackageLockDoorsAtLocation: (package)
+18AB GetPackageUnlockDoorsAtStart: (package)
+18AC GetPackageUnlockDoorsAtEnd: (package)
+18AD GetPackageUnlockDoorsAtLocation: (package)
+18AE GetPackageContinueIfPCNear: (package)
+18AF GetPackageOncePerDay: (package)
+18B0 GetPackageSkipFalloutBehavior: (package)
+18B1 GetPackageAlwaysRun: (package)
+18B2 GetPackageAlwaysSneak: (package)
+18B3 GetPackageAllowSwimming: (package)
+18B4 GetPackageAllowFalls: (package)
+18B5 GetPackageArmorUnequipped: (package)
+18B6 GetPackageWeaponsUnequipped: (package)
+18B7 GetPackageDefensiveCombat: (package)
+18B8 GetPackageUseHorse: (package)
+18B9 GetPackageNoIdleAnims: (package)
+}
   );
 
 var

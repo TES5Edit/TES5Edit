@@ -2959,6 +2959,13 @@ const
 {N} (Index: 731; Name: 'CanFlyHere'),
 {N} (Index: 732; Name: 'IsFlyingMountPatrolQueud'),
 {N} (Index: 733; Name: 'IsFlyingMountFastTravelling')
+{added by SKSE:
+1400 GetSKSEVersion [cond]
+1401 GetSKSEVersionMinor [cond]
+1402 GetSKSEVersionBeta [cond]
+1403 GetSKSERelease [cond]
+1404 ClearInvalidRegistrations [cond]
+}
   );
 var
   wbCTDAFunctionEditInfo: string;
