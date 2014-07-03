@@ -669,10 +669,17 @@ type
     PluggySpellFormID: Cardinal;
     PluggyLinkThread: TPluggyLinkThread;
 
+    FileCRCs: TwbFastStringListIC;
+
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
+
+    function ValidateCRC(const aFileName  : string;
+                         const aValidCRCs : TDynCardinalArray;
+                           out aFileCRC   : Cardinal)
+                                          : Boolean;
 
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 //    procedure ScriptScanProgress(aTotalCount, aCount: Integer);
@@ -2775,6 +2782,7 @@ begin
   FreeAndNil(ScriptHotkeys);
   FreeAndNil(ModGroups);
   FreeAndNil(Settings);
+  FreeAndNil(FileCRCs);
 end;
 
 procedure TfrmMain.DoGenerateLOD;
@@ -2927,6 +2935,8 @@ var
   IsOptional   : Boolean;
   IsRequired   : Boolean;
   MessageGiven : Boolean;
+  ValidCRCs    : TDynCardinalArray;
+  FileCRC      : Cardinal;
 begin
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -3202,7 +3212,12 @@ begin
                       ReadSectionValues(sl3[i], sl2);
 
                       for j := Pred(sl2.Count) downto 0 do begin
-                        s := sl2[j];
+                        s := Trim(sl2[j]);
+                        k := Pos(';', s);
+                        if k > 0 then begin
+                          Delete(s, k, High(Integer));
+                          s := Trim(s);
+                        end;
                         if Length(s) > 0 then begin
                           IsOptional := s[1] = '+';
                           IsRequired := s[1] = '-';
@@ -3211,13 +3226,28 @@ begin
                             sl2[j] := s;
                           end;
                         end;
+                        ValidCRCs := nil;
+                        if Length(s) > 0 then begin
+                          k := Pos(':', s);
+                          if k > 1 then begin
+                            ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                            Delete(s, k, High(Integer));
+                            s := Trim(s);
+                          end;
+                        end;
                         if Length(s) > 0 then begin
                           k := sl.IndexOf(s);
                           if k >= 0 then begin
-                            if IsRequired then
-                              sl2.Objects[j] := TObject(-k)
-                            else
-                              sl2.Objects[j] := TObject(k)
+                            if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
+                              AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
+                              MessageGiven := True;
+                              sl2.Clear;
+                              break;
+                            end else
+                              if IsRequired then
+                                sl2.Objects[j] := TObject(-k)
+                              else
+                                sl2.Objects[j] := TObject(k)
                           end else begin
                             if IsOptional then
                               sl2.Delete(j)
@@ -10815,6 +10845,34 @@ begin
     end;
 end;
 
+function TfrmMain.ValidateCRC(const aFileName  : string;
+                              const aValidCRCs : TDynCardinalArray;
+                                out aFileCRC   : Cardinal)
+                                               : Boolean;
+var
+  i: Integer;
+begin
+  aFileCRC := 0;
+  Result := Length(aValidCRCs) < 1;
+  if not Result then begin
+    if Assigned(FileCRCs) and FileCRCs.Find(aFileName, i) then
+      aFileCRC := Cardinal(FileCRCs.Objects[i])
+    else begin
+      try
+        aFileCRC := wbCRC32File(wbDataPath + aFileName);
+      except
+        aFileCRC := 0;
+      end;
+      if not Assigned(FileCRCs) then
+        FileCRCs := TwbFastStringListIC.CreateSorted;
+      FileCRCs.AddObject(aFileName, TObject(aFileCRC));
+    end;
+    for i := Low(aValidCRCs) to High(aValidCRCs) do
+      if aValidCRCs[i] = aFileCRC then
+        Exit(True);
+  end;
+end;
+
 procedure TfrmMain.tmrCheckUnsavedTimer(Sender: TObject);
 var
   i, j                        : Integer;
@@ -13780,3 +13838,7 @@ begin  // Let's show from 1 to 32 lines to pick from
 end;
 
 end.
+
+
+
+
