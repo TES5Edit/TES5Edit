@@ -739,7 +739,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..168] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..191] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -908,32 +908,32 @@ const
     (Index: 358; Name: 'IsPlayerMovingIntoNewSpace'),
     (Index: 361; Name: 'GetTimeDead'),
     (Index: 362; Name: 'GetPlayerHasLastRiddenHorse'),
-    (Index: 365; Name: 'GetPlayerInSEWorld')
-{added by OBSE:
-1453 IsAmmo, IsAmmo: (int)
-175C GetPCTrainingSessionsUsed
-18A5 GetPackageOffersServices: (package)
-18A6 GetPackageMustReachLocation: (package)
-18A7 GetPackageMustComplete: (package)
-18A8 GetPackageLockDoorsAtStart: (package)
-18A9 GetPackageLockDoorsAtEnd: (package)
-18AA GetPackageLockDoorsAtLocation: (package)
-18AB GetPackageUnlockDoorsAtStart: (package)
-18AC GetPackageUnlockDoorsAtEnd: (package)
-18AD GetPackageUnlockDoorsAtLocation: (package)
-18AE GetPackageContinueIfPCNear: (package)
-18AF GetPackageOncePerDay: (package)
-18B0 GetPackageSkipFalloutBehavior: (package)
-18B1 GetPackageAlwaysRun: (package)
-18B2 GetPackageAlwaysSneak: (package)
-18B3 GetPackageAllowSwimming: (package)
-18B4 GetPackageAllowFalls: (package)
-18B5 GetPackageArmorUnequipped: (package)
-18B6 GetPackageWeaponsUnequipped: (package)
-18B7 GetPackageDefensiveCombat: (package)
-18B8 GetPackageUseHorse: (package)
-18B9 GetPackageNoIdleAnims: (package)
-}
+    (Index: 365; Name: 'GetPlayerInSEWorld'),
+
+    // Added by OBSE:
+    (Index: 1107; Name: 'IsAmmo,'; ParamType1: ptInteger),
+    (Index: 1884; Name: 'GetPCTrainingSessionsUsed'; ParamType1: ptPackage),
+    (Index: 2213; Name: 'GetPackageOffersServices'; ParamType1: ptPackage),
+    (Index: 2214; Name: 'GetPackageMustReachLocation'; ParamType1: ptPackage),
+    (Index: 2215; Name: 'GetPackageMustComplete'; ParamType1: ptPackage),
+    (Index: 2216; Name: 'GetPackageLockDoorsAtStart'; ParamType1: ptPackage),
+    (Index: 2217; Name: 'GetPackageLockDoorsAtEnd'; ParamType1: ptPackage),
+    (Index: 2218; Name: 'GetPackageLockDoorsAtLocation'; ParamType1: ptPackage),
+    (Index: 2219; Name: 'GetPackageUnlockDoorsAtStart'; ParamType1: ptPackage),
+    (Index: 2220; Name: 'GetPackageUnlockDoorsAtEnd'; ParamType1: ptPackage),
+    (Index: 2221; Name: 'GetPackageUnlockDoorsAtLocation'; ParamType1: ptPackage),
+    (Index: 2222; Name: 'GetPackageContinueIfPCNear'; ParamType1: ptPackage),
+    (Index: 2223; Name: 'GetPackageOncePerDay'; ParamType1: ptPackage),
+    (Index: 2224; Name: 'GetPackageSkipFalloutBehavior'; ParamType1: ptPackage),
+    (Index: 2225; Name: 'GetPackageAlwaysRun'; ParamType1: ptPackage),
+    (Index: 2226; Name: 'GetPackageAlwaysSneak'; ParamType1: ptPackage),
+    (Index: 2227; Name: 'GetPackageAllowSwimming'; ParamType1: ptPackage),
+    (Index: 2228; Name: 'GetPackageAllowFalls'; ParamType1: ptPackage),
+    (Index: 2229; Name: 'GetPackageArmorUnequipped'; ParamType1: ptPackage),
+    (Index: 2230; Name: 'GetPackageWeaponsUnequipped'; ParamType1: ptPackage),
+    (Index: 2231; Name: 'GetPackageDefensiveCombat'; ParamType1: ptPackage),
+    (Index: 2232; Name: 'GetPackageUseHorse'; ParamType1: ptPackage),
+    (Index: 2233; Name: 'GetPackageNoIdleAnims'; ParamType1: ptPackage)
   );
 
 var
