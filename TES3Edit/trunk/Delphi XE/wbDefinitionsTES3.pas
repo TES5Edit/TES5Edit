@@ -105,6 +105,7 @@ const
   ICO2 : TwbSignature = 'ICO2';
   ICON : TwbSignature = 'ICON';
   IDLE : TwbSignature = 'IDLE';
+  INTV : TwbSignature = 'INTV'; { Morrowind }
   NULL : TwbSignature = 'NULL';
   INAM : TwbSignature = 'INAM';
   INDX : TwbSignature = 'INDX';
@@ -214,6 +215,7 @@ const
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
   STAT : TwbSignature = 'STAT';
+  STRV : TwbSignature = 'STRV'; { Morrowind }
   TCLF : TwbSignature = 'TCLF';
   TCLT : TwbSignature = 'TCLT';
   TES3 : TwbSignature = 'TES3';
@@ -3073,12 +3075,12 @@ begin
   ]);
 
   wbRecord(GMST, 'Game Setting', [
-    wbEDID,
-    wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbString('', 0, cpTranslate),
-      wbInteger('', itS32),
-      wbFloat('')
-    ], cpNormal, True)
+    wbString(NAME, 'Name'),
+    wbRUnion('Value', [
+      wbString(STRV, 'String Value'),
+      wbInteger(INTV, 'Interer Value', its32),
+      wbFloat(FLTV, 'Float Value')
+    ], [])
   ]);
 
   wbRecord(GRAS, 'Grass', [
@@ -4688,17 +4690,19 @@ begin
   ]);
 
   wbRecord(TES3, 'Main File Header', [
-    wbStruct(HEDR, 'Header', [
-      wbFloat('Version'),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 32),
-      wbByteArray('Unknown', 256),
-      wbInteger('Number of Records', its32)
-    ], cpNormal, True),
-    wbRArray('Master Files', wbRStruct('Master File', [
-      wbString(MAST, 'Filename', 0, cpNormal, True),
-      wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
-    ], []))
+    wbRStruct('Header Info', [
+      wbStruct(HEDR, 'Header', [
+        wbFloat('Version'),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 32),
+        wbByteArray('Unknown', 256),
+        wbInteger('Number of Records', itU32)
+      ], cpNormal, True),
+      wbRArray('Master Files', wbRStruct('Master File', [
+        wbString(MAST, 'Filename', 0, cpNormal, True),
+        wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
+      ], []))
+    ], [])
   ], False, nil, cpNormal, True);
 
   wbRecord(TREE, 'Tree', [
