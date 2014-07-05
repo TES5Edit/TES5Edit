@@ -620,18 +620,19 @@ begin
   end;
 end;
 
-function wbGMSTUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbGLOBUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  rEDID: IwbRecord;
+  rValue: IwbRecord;
   s: string;
 begin
-  Result := 1;
-  rEDID := aElement.Container.RecordBySignature[EDID];
-  if Assigned(rEDID) then begin
-    s := rEDID.Value;
+  Result := 0;
+  rValue := aElement.Container.RecordBySignature[FNAM];
+  if Assigned(rValue) then begin
+    s := rValue.Value;
     if Length(s) > 0 then
       case s[1] of
         's': Result := 0;
+        'l': Result := 1;
         'f': Result := 2;
       end;
   end;
@@ -3069,9 +3070,13 @@ begin
   ]);
 
   wbRecord(GLOB, 'Global', [
-    wbEDID,
-    wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
-    wbFloat(FLTV, 'Value', cpNormal, True)
+    wbString(NAME, 'Name'),
+    wbString(FNAM, 'Type', 1),
+    wbUnion(FLTV, 'Value', wbGLOBUnionDecider, [
+      wbFloat('Comparison Value - Short'),
+      wbFloat('Comparison Value - Long'),
+      wbFloat('Comparison Value - Float')
+    ])
   ]);
 
   wbRecord(GMST, 'Game Setting', [
