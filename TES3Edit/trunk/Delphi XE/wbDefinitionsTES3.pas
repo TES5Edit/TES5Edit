@@ -1888,7 +1888,8 @@ end;
 procedure DefineTES3;
 begin
   wbHeaderSignature := 'TES3';
-  
+  wbSizeOfSubRecordHeaderStruct := wbSizeOfSubRecordHeaderStructOld;
+
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
