@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{12317C9C-736E-45A4-8CB7-E43FF92DD93C}</ProjectGuid>
-        <MainSource>TES5Edit.dpr</MainSource>
+        <MainSource>TES3Edit.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">DebugLite</Config>
         <AppType>Application</AppType>
@@ -54,7 +54,7 @@
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
         <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
         <DCC_COMBINING_SIGNED_UNSIGNED>false</DCC_COMBINING_SIGNED_UNSIGNED>
-        <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>TES3Edit_Icon.ico</Icon_MainIcon>
         <DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
         <DCC_COMPARING_SIGNED_UNSIGNED>false</DCC_COMPARING_SIGNED_UNSIGNED>
         <Manifest_File>None</Manifest_File>
@@ -73,7 +73,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 		<VerInfo_Release>31</VerInfo_Release>
         <Manifest_File>None</Manifest_File>
-        <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>TES3Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <UsePackages>true</UsePackages>
 		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
@@ -87,7 +87,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 		<VerInfo_Release>31</VerInfo_Release>
         <Manifest_File>None</Manifest_File>
-        <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>TES3Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
 		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
@@ -109,7 +109,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <Debugger_RunParams>-edit -showfixup</Debugger_RunParams>
-        <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>TES3Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
@@ -117,7 +117,7 @@
 		<VerInfo_Release>31</VerInfo_Release>
         <VerInfo_Debug>true</VerInfo_Debug>
         <UsePackages>true</UsePackages>
-        <DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
+        <DCC_ExeOutput>.\TES3Dump</DCC_ExeOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
         <DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
@@ -217,7 +217,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">TES5Edit.dpr</Source>
+                    <Source Name="MainSource">TES3Edit.dpr</Source>
                 </Source>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">True</VersionInfo>

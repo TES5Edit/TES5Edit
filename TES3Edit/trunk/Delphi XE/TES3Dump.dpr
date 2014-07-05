@@ -16,7 +16,7 @@
 // JCL_DEBUG_EXPERT_GENERATEJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 
-program TES5Dump;
+program TES3Dump;
 
 {$I Compilers.inc}
 

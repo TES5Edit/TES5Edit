@@ -1,7 +1,7 @@
 ﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{12317C9C-736E-45A4-8CB7-E43FF92DD93C}</ProjectGuid>
-			<MainSource>TES5Edit.dpr</MainSource>
+			<MainSource>TES3Edit.dpr</MainSource>
 			<Base>True</Base>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 			<AppType>Application</AppType>
@@ -36,7 +36,7 @@
 			<DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
 			<DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
 			<DCC_COMBINING_SIGNED_UNSIGNED>false</DCC_COMBINING_SIGNED_UNSIGNED>
-			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
+			<Icon_MainIcon>TES3Edit_Icon.ico</Icon_MainIcon>
 			<DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
 			<DCC_COMPARING_SIGNED_UNSIGNED>false</DCC_COMPARING_SIGNED_UNSIGNED>
 			<Manifest_File>None</Manifest_File>
@@ -54,7 +54,7 @@
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<VerInfo_Release>33</VerInfo_Release>
 			<Manifest_File>None</Manifest_File>
-			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
+			<Icon_MainIcon>TES3Edit_Icon.ico</Icon_MainIcon>
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<UsePackages>true</UsePackages>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.33.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.33;Comments=</VerInfo_Keys>
@@ -78,7 +78,7 @@
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 		</PropertyGroup>
 		<ItemGroup>
-			<DelphiCompile Include="TES5Edit.dpr">
+			<DelphiCompile Include="TES3Edit.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="VirtualTrees.pas"/>
@@ -155,7 +155,7 @@
 			<BorlandProject>
 				<Delphi.Personality>
 					<Source>
-						<Source Name="MainSource">TES5Edit.dpr</Source>
+						<Source Name="MainSource">TES3Edit.dpr</Source>
 					</Source>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

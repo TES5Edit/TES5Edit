@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<ProjectGuid>{8CD0A7C7-3B98-4D5D-892F-E91C7E50D144}</ProjectGuid>
-		<MainSource>TES5Dump.dpr</MainSource>
+		<MainSource>TES3Dump.dpr</MainSource>
 		<Base>True</Base>
 		<Config Condition="'$(Config)'==''">Debug</Config>
 		<TargetedPlatforms>1</TargetedPlatforms>
@@ -66,11 +66,11 @@
 		<VerInfo_MajorVer>3</VerInfo_MajorVer>
 		<VerInfo_PreRelease>true</VerInfo_PreRelease>
 		<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-		<Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
+		<Icon_MainIcon>TES3Dump_Icon.ico</Icon_MainIcon>
 		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32.0;Comments=</VerInfo_Keys>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Cfg_2)'!=''">
-		<DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
+		<DCC_ExeOutput>.\TES3Dump</DCC_ExeOutput>
 		<DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
 		<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		<DCC_Optimize>false</DCC_Optimize>
@@ -84,10 +84,10 @@
 		<VerInfo_Release>32</VerInfo_Release>
 	<VerInfo_Debug>true</VerInfo_Debug>
 	<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-	<Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
+	<Icon_MainIcon>TES3Dump_Icon.ico</Icon_MainIcon>
 		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
 	<Debugger_RunParams></Debugger_RunParams>
-	<DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
+	<DCC_ExeOutput>.\TES3Dump</DCC_ExeOutput>
 	</PropertyGroup>
 	<ItemGroup>
 	<DelphiCompile Include="$(MainSource)">
@@ -123,7 +123,7 @@
 		<BorlandProject>
 			<Delphi.Personality>
 				<Source>
-					<Source Name="MainSource">TES5Dump.dpr</Source>
+					<Source Name="MainSource">TES3Dump.dpr</Source>
 				</Source>
 				<VersionInfo>
 					<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
