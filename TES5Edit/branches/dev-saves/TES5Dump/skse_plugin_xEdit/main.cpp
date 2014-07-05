@@ -12,48 +12,8 @@ IDebugLog		gLog("skse_plugin_xEdit.log");
 PluginHandle	g_pluginHandle = kPluginHandle_Invalid;
 SKSEInterface * SaveSKSE;
 
-extern "C" {
-
-bool SKSEPlugin_Query(const SKSEInterface * skse, PluginInfo * info)
+bool DoTheWork()
 {
-	// fill out the info structure
-	info->infoVersion = PluginInfo::kInfoVersion;
-	info->name = "skse_plugin_xEdit";
-	info->version = 1;
-
-	// version checks
-	if(skse->skseVersion < SKSE_VERSION_INTEGER)
-	{
-		_ERROR("skse version too old (got %08X expected at least %08X)", skse->skseVersion, SKSE_VERSION_INTEGER);
-		return false;
-	}
-
-	if(!skse->isEditor)
-	{
-		if(skse->runtimeVersion < RUNTIME_VERSION_1_9_32_0)
-		{
-			_ERROR("incorrect runtime version (got %08X need at least %08X)", skse->runtimeVersion, RUNTIME_VERSION_1_9_32_0);
-			return false;
-		}
-
-	}
-	else
-	{
-		return false;
-	}
-
-	// version checks pass
-
-	return true;
-}
-
-bool SKSEPlugin_Load(const SKSEInterface * skse)
-{
-	g_pluginHandle = skse->GetPluginHandle();
-
-	// save the SKSEinterface in cas we need it later
-	SaveSKSE = (SKSEInterface *)skse;
-
 	#if RUNTIME_VERSION == RUNTIME_VERSION_1_9_32_0
 		static const UInt32 s_doShowChangeFlagsName = 0x00675DB0;		// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510	FalloutNV: 0x0083FEF0
 		static const UInt32 s_ChangeToFormType = 0x012724C0;			// Skyrim: 012724C0							Fallout3: 00F6D1D0	FalloutNV: 0x011A2428
@@ -198,6 +158,53 @@ bool SKSEPlugin_Load(const SKSEInterface * skse)
 	_MESSAGE("  ]);\n");
 
 	_MESSAGE("*****************************************************************************************************");
+	_MESSAGE("\n\n\n");
+  
+extern "C" {
+
+bool SKSEPlugin_Query(const SKSEInterface * skse, PluginInfo * info)
+{
+	// fill out the info structure
+	info->infoVersion = PluginInfo::kInfoVersion;
+	info->name = "skse_plugin_xEdit";
+	info->version = 2;
+
+	// version checks
+	if(skse->skseVersion < SKSE_VERSION_INTEGER)
+	{
+		_ERROR("skse version too old (got %08X expected at least %08X)", skse->skseVersion, SKSE_VERSION_INTEGER);
+		return false;
+	}
+
+	if(!skse->isEditor)
+	{
+		if(skse->runtimeVersion < RUNTIME_VERSION_1_9_32_0)
+		{
+			_ERROR("incorrect runtime version (got %08X need at least %08X)", skse->runtimeVersion, RUNTIME_VERSION_1_9_32_0);
+			return false;
+		}
+
+	}
+	else
+	{
+		return false;
+	}
+
+	// version checks pass
+
+	return true;
+}
+
+bool SKSEPlugin_Load(const SKSEInterface * skse)
+{
+	g_pluginHandle = skse->GetPluginHandle();
+
+	// save the SKSEinterface in cas we need it later
+	SaveSKSE = (SKSEInterface *)skse;
+	SaveCT = (NVSECommandTableInterface *)nvse->QueryInterface(kInterface_CommandTable);
+	SaveMsg = (NVSEMessagingInterface *)nvse->QueryInterface(kInterface_Messaging);
+	SaveMsg->RegisterListener(g_pluginHandle, "NVSE", MessageHandler);
+
 
 	return true;
 }
