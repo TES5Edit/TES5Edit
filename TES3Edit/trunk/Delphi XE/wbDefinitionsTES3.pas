@@ -4675,7 +4675,17 @@ begin
   ]);
 
   wbRecord(TES3, 'Main File Header', [
-    wbUnknown(HEDR)
+    wbStruct(HEDR, 'Header', [
+      wbFloat('Version'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 32),
+      wbByteArray('Unknown', 256),
+      wbInteger('Number of Records', itU32)
+    ], cpNormal, True),
+    wbRArray('Master Files', wbRStruct('Master File', [
+      wbString(MAST, 'Filename', 0, cpNormal, True),
+      wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
+    ], []))
   ], False, nil, cpNormal, True);
 
   wbRecord(TREE, 'Tree', [
