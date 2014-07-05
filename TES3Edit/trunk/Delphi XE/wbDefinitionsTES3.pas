@@ -1910,12 +1910,10 @@ begin
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbRecordFlags,
-    wbFormID('FormID', cpFormID),
-    wbByteArray('Unknown', 4, cpIgnore)
+    wbByteArray('Unknown', 4)
   ]);
 
-  wbSizeOfMainRecordStruct := 20;
+  wbSizeOfMainRecordStruct := 12;
 
   wbIgnoreRecords.Add(XXXX);
 
@@ -4677,20 +4675,8 @@ begin
   ]);
 
   wbRecord(TES3, 'Main File Header', [
-    wbStruct(HEDR, 'Header', [
-      wbFloat('Version'),
-      wbInteger('Number of Records', itU32),
-      wbInteger('Next Object ID', itU32)
-    ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
-    wbString(CNAM, 'Author', 0, cpTranslate, True),
-    wbString(SNAM, 'Description', 0, cpTranslate),
-    wbRArray('Master Files', wbRStruct('Master File', [
-      wbString(MAST, 'Filename', 0, cpNormal, True),
-      wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
-    ], []))
-  ], False, nil, cpNormal, True, wbRemoveOFST);
+    wbUnknown(HEDR)
+  ], False, nil, cpNormal, True);
 
   wbRecord(TREE, 'Tree', [
     wbEDID,
