@@ -971,7 +971,7 @@ type
   PwbSubRecordHeaderStruct = ^TwbSubRecordHeaderStruct;
   TwbSubRecordHeaderStruct = packed record
     srsSignature : TwbSignature;
-    srsDataSize  : Word;
+    srsDataSize  : Cardinal;
   end;
 
   IwbSubRecordInternal = interface(IwbSubRecord)
