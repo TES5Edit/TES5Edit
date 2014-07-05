@@ -2384,11 +2384,9 @@ function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 
 var
-  wbRecordFlags                    : IwbIntegerDef;
-  wbMainRecordHeader               : IwbStructDef;
-  wbSizeOfMainRecordStruct         : Integer;
-  wbSizeOfSubRecordHeaderStruct    : Integer;
-  wbSizeOfSubRecordHeaderStructOld : Integer;
+  wbRecordFlags            : IwbIntegerDef;
+  wbMainRecordHeader       : IwbStructDef;
+  wbSizeOfMainRecordStruct : Integer;
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
