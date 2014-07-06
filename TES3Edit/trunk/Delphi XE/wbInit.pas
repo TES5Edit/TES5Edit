@@ -359,6 +359,7 @@ begin
   end else if isMode('TES3') then begin
     wbLoadBSAs := False;
     wbAllowInternalEdit := false;
+    wbSizeOfSubRecordHeaderStruct := wbSizeOfSubRecordHeaderStructOld;
     ReadSettings;
   end else if isMode('TES4') then begin
     wbLoadBSAs := True;

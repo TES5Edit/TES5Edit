@@ -342,6 +342,7 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
+      wbSizeOfSubRecordHeaderStruct := wbSizeOfSubRecordHeaderStructOld;
       DefineTES3;
     end else if isMode('TES4') then begin
       wbGameMode := gmTES4;

@@ -4323,7 +4323,7 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region', [
-    wbString(NAME, 'Regin ID'),
+    wbString(NAME, 'Region ID'),
     wbString(FNAM, 'Sound Filename'),
     wbStruct(WEAT, 'Weather Type', [
       wbInteger('Clear', itU8),

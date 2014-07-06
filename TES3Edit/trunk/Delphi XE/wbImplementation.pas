@@ -968,11 +968,17 @@ type
     function GetDisplayName: string; override;
   end;
 
-  PwbSubRecordHeaderStruct = ^TwbSubRecordHeaderStruct;
-  TwbSubRecordHeaderStruct = packed record
+  PwbSubRecordHeaderStructTES3 = ^TwbSubRecordHeaderStructTES3;
+  TwbSubRecordHeaderStructTES3 = packed record
     srsSignature : TwbSignature;
     srsDataSize  : Cardinal;
   end;
+  PwbSubRecordHeaderStructTES4= ^TwbSubRecordHeaderStructTES4;
+  TwbSubRecordHeaderStructTES4 = packed record
+    srsSignature : TwbSignature;
+    srsDataSize  : Word;
+  end;
+  PwbSubRecordHeaderStruct = PwbSubRecordHeaderStructTES4;
 
   IwbSubRecordInternal = interface(IwbSubRecord)
     ['{AB66BAE8-2618-4B85-80CE-A108C3B80808}']
@@ -8884,7 +8890,7 @@ end;
 destructor TwbSubRecord.Destroy;
 begin
   if not Assigned(dcEndPtr) and Assigned(dcBasePtr) then
-    FreeMem(dcBasePtr, SizeOf(TwbSubRecordHeaderStruct) );
+    FreeMem(dcBasePtr, wbSizeOfSubRecordHeaderStruct );
   inherited;
 end;
 
@@ -9266,7 +9272,7 @@ begin
   Assert(Assigned(dcBasePtr));
   Assert(Assigned(dcEndPtr));
 
-  SizeNeeded := SizeOf(TwbSubRecordHeaderStruct);
+  SizeNeeded := wbSizeOfSubRecordHeaderStruct;
   SizeAvailable := Cardinal( aEndPtr ) - Cardinal( aBasePtr );
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -9287,7 +9293,7 @@ var
   Container  : IwbContainer;
 begin
   if Assigned(dcBasePtr) then begin
-    dcDataBasePtr := Pointer( Cardinal( dcBasePtr ) + SizeOf(TwbSubRecordHeaderStruct) );
+    dcDataBasePtr := Pointer( Cardinal( dcBasePtr ) + wbSizeOfSubRecordHeaderStruct );
 
     lDataSize := srStruct.srsDataSize;
 
@@ -9307,7 +9313,7 @@ begin
     dcDataEndPtr := Pointer( Cardinal( dcDataBasePtr ) + lDataSize );
     dcEndPtr := dcDataEndPtr;
   end else begin
-    GetMem(dcBasePtr, SizeOf(TwbSubRecordHeaderStruct) );
+    GetMem(dcBasePtr, wbSizeOfSubRecordHeaderStruct );
     if Assigned(srDef) then
       srStruct.srsSignature := srDef.DefaultSignature
     else
@@ -9370,7 +9376,7 @@ var
   BasePtr       : Pointer;
 begin
   Assert(Assigned(dcBasePtr));
-  SizeNeeded := SizeOf(TwbSubRecordHeaderStruct);
+  SizeNeeded := wbSizeOfSubRecordHeaderStruct;
   SizeAvailable := Cardinal( aEndPtr ) - Cardinal( aBasePtr );
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -9520,9 +9526,18 @@ begin
   NotifyChanged(eContainer);
 end;
 
+var
+  theSrsStruct: TwbSubRecordHeaderStructTES3;
+
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
 begin
-  Result := PwbSubRecordHeaderStruct(dcBasePtr);
+  if wbGameMode in [gmTES3] then begin
+    Assert(PwbSubRecordHeaderStructTES3(dcBasePtr).srsDataSize <= High(Word));
+    theSrsStruct.srsSignature := PwbSubRecordHeaderStructTES3(dcBasePtr).srsSignature;
+    theSrsStruct.srsDataSize  := Word(PwbSubRecordHeaderStructTES3(dcBasePtr).srsDataSize);
+    Result := @theSrsStruct;
+  end else
+    Result := PwbSubRecordHeaderStruct(dcBasePtr);
 end;
 
 procedure TwbSubRecord.WriteToStream(aStream: TStream);
@@ -9530,7 +9545,8 @@ var
   CurrentPosition   : Int64;
   NewPosition       : Int64;
   BigDataSize       : Cardinal;
-  SubHeader         : TwbSubRecordHeaderStruct;
+  SubHeader         : TwbSubRecordHeaderStructTES4;
+  SubHeaderOld      : TwbSubRecordHeaderStructTES3;
   SelfRef           : IwbContainerElementRef;
 begin
   if (esModified in eStates) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
@@ -9538,19 +9554,25 @@ begin
     DoInit;
 
     BigDataSize := GetDataSize;
-    if BigDataSize > High(Word) then begin
-      SubHeader.srsSignature := 'XXXX';
-      SubHeader.srsDataSize := SizeOf(Cardinal);
-      aStream.WriteBuffer(SubHeader, SizeOf(TwbSubRecordHeaderStruct) );
-      aStream.WriteBuffer(BigDataSize, SizeOf(BigDataSize) );
-      SubHeader.srsSignature := srStruct.srsSignature;
-      SubHeader.srsDataSize := 0;
+    if wbGameMode in [gmTES3] then begin
+      SubHeaderOld.srsSignature := srStruct.srsSignature;
+      SubHeaderOld.srsDataSize := BigDataSize;
+      aStream.WriteBuffer(SubHeaderOld, wbSizeOfSubRecordHeaderStruct );
     end else begin
-      SubHeader.srsSignature := srStruct.srsSignature;
-      SubHeader.srsDataSize := BigDataSize;
+      if BigDataSize > High(Word) then begin
+        SubHeader.srsSignature := 'XXXX';
+        SubHeader.srsDataSize := SizeOf(Cardinal);
+        aStream.WriteBuffer(SubHeader, wbSizeOfSubRecordHeaderStruct );
+        aStream.WriteBuffer(BigDataSize, SizeOf(BigDataSize) );
+        SubHeader.srsSignature := srStruct.srsSignature;
+        SubHeader.srsDataSize := 0;
+      end else begin
+        SubHeader.srsSignature := srStruct.srsSignature;
+        SubHeader.srsDataSize := BigDataSize;
+      end;
+      aStream.WriteBuffer(SubHeader, wbSizeOfSubRecordHeaderStruct );
     end;
 
-    aStream.WriteBuffer(SubHeader, SizeOf(TwbSubRecordHeaderStruct) );
     CurrentPosition := aStream.Position;
     inherited;
     NewPosition := aStream.Position;
@@ -9558,7 +9580,7 @@ begin
       Assert(BigDataSize = NewPosition - CurrentPosition );
 
   end else begin
-    aStream.WriteBuffer(dcBasePtr^, SizeOf(TwbSubRecordHeaderStruct) );
+    aStream.WriteBuffer(dcBasePtr^, wbSizeOfSubRecordHeaderStruct );
     CurrentPosition := aStream.Position;
     inherited;
     if CurrentPosition + srStruct.srsDataSize <> aStream.Position then
@@ -13605,11 +13627,12 @@ var
 begin
   if wbTranslationMode then
     Result := cpIgnore
+  else if fFlagsDef.FlagIgnoreConflict[fIndex] then
+    Result := cpIgnore
+  else if Assigned(fIntegerDef) then
+    Result := fIntegerDef.ConflictPriority
   else
-    if Assigned(fIntegerDef) then
-      Result := fIntegerDef.ConflictPriority
-    else
-      Result := cpNormal;
+    Result := cpNormal;
 
   if Result = cpFormID then begin
     Result := cpCritical;
@@ -14449,7 +14472,7 @@ procedure TwbRecordHeaderStruct.ElementChanged(const aElement: IwbElement);
 var
   MainRecordInternal       : IwbMainRecordInternal;
   DataContainer            : IwbDataContainer;
-  Flags                   : TwbMainRecordStructFlags;
+  Flags                    : TwbMainRecordStructFlags;
   p                        : Pointer;
 
   ToggleDeleted            : Boolean;
@@ -15115,6 +15138,10 @@ initialization
   FilesMap := TwbFastStringList.Create;
   FilesMap.Sorted := True;
   FilesMap.Duplicates := dupError;
+
+  wbSizeOfSubRecordHeaderStruct := SizeOf(TwbSubRecordHeaderStructTES4);
+  wbSizeOfSubRecordHeaderStructOld := sizeof(TwbSubRecordHeaderStructTES3);
+
 finalization
   WriteSubRecordOrderList;
   FreeAndNil(SubRecordOrderList);
