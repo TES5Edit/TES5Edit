@@ -1984,7 +1984,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..235] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..243] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2040,6 +2040,7 @@ const
     (Index:  81; Name: 'GetArmorRating'),
     (Index:  84; Name: 'GetDeadCount'; ParamType1: ptActorBase),
     (Index:  91; Name: 'GetIsAlerted'),
+    (Index:  98; Name: 'GetPlayerControlsDisabled'; ParamType1: ptInteger; ParamType2: ptInteger{; ParamType3: ptInteger; ParamType4: ptInteger; ParamType5: ptInteger; ParamType6: ptInteger; ParamType7: ptInteger}),
     (Index:  99; Name: 'GetHeadingAngle'; ParamType1: ptObjectReference),
     (Index: 101; Name: 'IsWeaponOut'),
     (Index: 102; Name: 'IsTorchOut'),
@@ -2220,7 +2221,16 @@ const
     (Index: 550; Name: 'IsGoreDisabled'),
     (Index: 555; Name: 'GetSpellUsageNum'; ParamType1: ptMagicItem),
     (Index: 557; Name: 'GetActorsInHigh'),
-    (Index: 558; Name: 'HasLoaded3D')
+    (Index: 558; Name: 'HasLoaded3D'),
+
+    // Added by FOSE:
+    (Index: 1024; Name: 'GetFOSEVersion'; ),
+    (Index: 1025; Name: 'GetFOSERevision'; ),
+    (Index: 1028; Name: 'GetWeight'; ParamType1: ptInventoryObject; ),
+    (Index: 1082; Name: 'IsKeyPressed'; ParamType1: ptInteger;),
+    (Index: 1165; Name: 'GetWeaponHasScope'; ParamType1: ptInventoryObject; ),
+    (Index: 1166; Name: 'IsControlPressed'; ParamType1: ptInteger; ),
+    (Index: 1213; Name: 'GetFOSEBeta'; )
   );
 var
   wbCTDAFunctionEditInfo: string;

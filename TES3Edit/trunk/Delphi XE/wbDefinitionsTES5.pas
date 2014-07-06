@@ -784,12 +784,13 @@ var
   wbUNAMs: IwbSubRecordArrayDef;
   wbNull: IwbValueDef;
 
-function Sig2Int(aSignature: TwbSignature): Int64; inline;
+function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
-  Result := Ord(aSignature[3]) shl 24 +
+  Result := PCardinal(@aSignature)^;
+{  Result := Ord(aSignature[3]) shl 24 +
             Ord(aSignature[2]) shl 16 +
             Ord(aSignature[1]) shl  8 +
-            Ord(aSignature[0]);
+            Ord(aSignature[0]);}
 end;
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -1248,8 +1249,6 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  Result := IntToStr(aInt); Exit;
-
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
   while Assigned(Container) and (Container.ElementType <> etMainRecord) do
@@ -1268,10 +1267,18 @@ begin
   else if MainRecord.Signature = PACK then
     Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType)
   else if MainRecord.Signature = INFO then begin
-    // discovered memory leak
-    // test on 00015C73
+    // get DIAL for INFO
     if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
-      Result := wbAliasToStr(aInt, GroupRecord.ChildrenOf.ElementBySignature['QNAM'], aType);
+      if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
+        Result := wbAliasToStr(aInt, MainRecord.ElementBySignature['QNAM'], aType);
+  end else
+  // this should never be called since aliases in conditions can be in the forms above only
+  // but just in case
+  case aType of
+    ctToStr, ctToEditValue: Result := IntToStr(aInt);
+    ctToSortKey: Result := IntToHex64(aInt, 8);
+  else
+    Result := '';
   end;
 end;
 
@@ -1308,16 +1315,6 @@ begin
     Result := IntToHex64(aInt, 4)
   else if aType = ctToStr then
     Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
-  else
-    Result := '';
-end;
-
-function wbAlocTime(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  if aType = ctToSortKey then
-    Result := IntToHex64(aInt, 4)
-  else if aType = ctToStr then
-    Result := TimeToStr( aInt / 256 )
   else
     Result := '';
 end;
@@ -2566,7 +2563,7 @@ type
 
 const
   {>> N means New, V means verified that the name has not changed <<<}
-  wbCTDAFunctions : array[0..394] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..399] of TCTDAFunction = (
 {N} (Index:   0; Name: 'GetWantBlocking'),
 {V} (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
 {V} (Index:   5; Name: 'GetLocked'),
@@ -2961,8 +2958,16 @@ const
 {N} (Index: 730; Name: 'IsOnFlyingMount'),
 {N} (Index: 731; Name: 'CanFlyHere'),
 {N} (Index: 732; Name: 'IsFlyingMountPatrolQueud'),
-{N} (Index: 733; Name: 'IsFlyingMountFastTravelling')
+{N} (Index: 733; Name: 'IsFlyingMountFastTravelling'),
+
+    // Added by SKSE
+    (Index: 1024; Name: 'GetSKSEVersion'; ),
+    (Index: 1025; Name: 'GetSKSEVersionMinor'; ),
+    (Index: 1026; Name: 'GetSKSEVersionBeta'; ),
+    (Index: 1027; Name: 'GetSKSERelease'; ),
+    (Index: 1028; Name: 'ClearInvalidRegistrations'; )
   );
+
 var
   wbCTDAFunctionEditInfo: string;
 
@@ -3282,6 +3287,28 @@ begin
     if MainRecord.ElementExists['Unused RNAM'] then
       MainRecord.RemoveElement('Unused RNAM');
 
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
+var
+  ObjectsContainer : IwbContainerElementRef;
+  i                : Integer;
+  ObjectContainer  : IwbContainerElementRef;
+begin
+  wbRemoveOFST(aElement);
+
+  if wbBeginInternalEdit then try
+
+    if not Supports(aElement, IwbContainerElementRef, ObjectsContainer) then
+      Exit;
+
+    for i := Pred(ObjectsContainer.ElementCount) downto 0 do
+      if Supports(ObjectsContainer.Elements[i], IwbContainerElementRef, ObjectContainer) then
+        if ObjectContainer.ElementNativeValues['Use'] = 0 then
+          ObjectsContainer.RemoveElement(i, True);
   finally
     wbEndInternalEdit;
   end;
@@ -4135,7 +4162,7 @@ begin
     '40 - Tail',
     '41 - LongHair',
     '42 - Circlet',
-    '43 - Unnamed',
+    '43 - Ears',
     '44 - Unnamed',
     '45 - Unnamed',
     '46 - Unnamed',
@@ -4172,7 +4199,7 @@ begin
     {0x00000400} '40 - Tail',
     {0x00000800} '41 - LongHair',
     {0x00001000} '42 - Circlet',
-    {0x00002000} '43 - Unnamed',
+    {0x00002000} '43 - Ears',
     {0x00004000} '44 - Unnamed',
     {0x00008000} '45 - Unnamed',
     {0x00010000} '46 - Unnamed',
@@ -4359,7 +4386,7 @@ begin
     {0x40000000}'NavMeshGround NoRespawn',
     {>>> 0x80000000 REFR: MultiBound <<<}
     {0x80000000}'MultiBound'
-  ]);
+  ], [18]);
   wbRecordFlags := wbInteger('Record Flags', itU32, wbRecordFlagsEnum);
 
 (*   wbInteger('Record Flags 2', itU32, wbFlags([
@@ -8662,93 +8689,93 @@ begin
     wbEDID,
 
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid Y', itS16),
-      wbInteger('Grid X', itS16)
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign),
+      wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid Y', itS16),
-      wbInteger('Grid X', itS16)
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign),
+      wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     {>>> From Danwguard.esm, Does not follow similar previous patterns <<<}
-    wbArray(RCPR, 'Reference Cell Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR])),
+    wbArray(RCPR, 'Reference Cell Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign)),
 
     wbArray(ACUN, 'Actor Cell Unique', wbStruct('', [
-      wbFormIDCk('Actor', [NPC_]),
-      wbFormIDCk('Ref', [ACHR]),
-      wbFormIDCk('Location', [LCTN, NULL])
+      wbFormIDCk('Actor', [NPC_], False, cpBenign),
+      wbFormIDCk('Ref', [ACHR], False, cpBenign),
+      wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ])),
     wbArray(LCUN, 'Location Cell Unique', wbStruct('', [
-      wbFormIDCk('Actor', [NPC_]),
-      wbFormIDCk('Ref', [ACHR]),
-      wbFormIDCk('Location', [LCTN, NULL])
+      wbFormIDCk('Actor', [NPC_], False, cpBenign),
+      wbFormIDCk('Ref', [ACHR], False, cpBenign),
+      wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ])),
     {>>> in Unofficial Skyrim patch <<<}
-    wbArray(RCUN, 'Reference Cell Unique', wbFormIDCk('Actor', [NPC_])),
+    wbArray(RCUN, 'Reference Cell Unique', wbFormIDCk('Actor', [NPC_], False, cpBenign)),
 
     wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
-      wbFormIDCk('Loc Ref Type', [LCRT]),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid Y', itS16),
-      wbInteger('Grid X', itS16)
+      wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
+      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign),
+      wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
-      wbFormIDCk('Loc Ref Type', [LCRT]),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Location', [WRLD, CELL]),
-      wbInteger('Grid Y', itS16),
-      wbInteger('Grid X', itS16)
+      wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
+      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign),
+      wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     {>>> Seen in Open Cities <<<}
-    wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR])),
+    wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign)),
 
     wbRArray('Actor Cell Encounter Cell',
       wbStruct(ACEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL]),
+        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
         wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid Y', itS16),
-          wbInteger('Grid X', itS16)
+          wbInteger('Grid Y', itS16, nil, cpBenign),
+          wbInteger('Grid X', itS16, nil, cpBenign)
         ]))
       ])
     ),
     wbRArray('Location Cell Encounter Cell',
       wbStruct(LCEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL]),
+        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
         wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid Y', itS16),
-          wbInteger('Grid X', itS16)
+          wbInteger('Grid Y', itS16, nil, cpBenign),
+          wbInteger('Grid X', itS16, nil, cpBenign)
         ]))
       ])
     ),
     {>>> Seen in Open Cities <<<}
     wbRArray('Reference Cell Encounter Cell',
       wbStruct(RCEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL]),
+        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
         wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid Y', itS16),
-          wbInteger('Grid X', itS16)
+          wbInteger('Grid Y', itS16, nil, cpBenign),
+          wbInteger('Grid X', itS16, nil, cpBenign)
         ]))
       ])
     ),
 
-    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
-    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
+    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
 
     wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbInteger('Grid Y', itS16),
-      wbInteger('Grid X', itS16)
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign),
+      wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      wbInteger('Grid Y', itS16),
-      wbInteger('Grid X', itS16)
+      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign),
+      wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
 
     wbFULL,
@@ -9171,12 +9198,12 @@ begin
   c := CombineVarRecs(a, b);
 
   wbRecord(DOBJ, 'Default Object Manager', [
-    wbArray(DNAM, 'Objects',
-      wbStruct('Object', [
-        //wbString('Use', 4),
-        wbInteger('Use', itU32, wbEnum([], c)),
-        wbFormID('Object ID')
-      ]), 0, nil, nil, cpNormal, True
+    wbEDID,
+    wbArrayS(DNAM, 'Objects',
+      wbStructSK([0], 'Object', [
+        wbInteger('Use', itU32, wbEnum([], c), cpNormalIgnoreEmpty),
+        wbFormID('Object ID', cpNormalIgnoreEmpty)
+      ]), 0, cpNormalIgnoreEmpty, True, wbDOBJObjectsAfterLoad
     )
   ]);
 
@@ -9269,7 +9296,7 @@ begin
   wbRecord(SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
-    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
     wbCITC,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
@@ -9279,7 +9306,7 @@ begin
   wbRecord(SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
-    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
     wbCITC,
     wbCTDAsCount,
     wbStruct(DNAM, 'Flags', [
@@ -9819,7 +9846,8 @@ begin
     wbCTDAs,
     wbString(DNAM, 'Filename'),
     wbString(ENAM, 'Animation Event'),
-    wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [AACT, IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
+    wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [AACT, IDLE, NULL], False, cpBenign),
+      ['Parent', 'Previous Sibling'], cpBenign, True),
     wbStruct(DATA, 'Data (unused)', [
       wbStruct('Looping seconds (both 255 forever)', [
         wbInteger('Min', itU8),
@@ -9862,7 +9890,7 @@ begin
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL]),
+    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
     wbInteger(CNAM, 'Favor Level', itU8, wbEnum([
       'None',
       'Small',

@@ -739,7 +739,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..168] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..191] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -908,7 +908,32 @@ const
     (Index: 358; Name: 'IsPlayerMovingIntoNewSpace'),
     (Index: 361; Name: 'GetTimeDead'),
     (Index: 362; Name: 'GetPlayerHasLastRiddenHorse'),
-    (Index: 365; Name: 'GetPlayerInSEWorld')
+    (Index: 365; Name: 'GetPlayerInSEWorld'),
+
+    // Added by OBSE:
+    (Index: 1107; Name: 'IsAmmo,'; ParamType1: ptInteger),
+    (Index: 1884; Name: 'GetPCTrainingSessionsUsed'; ParamType1: ptPackage),
+    (Index: 2213; Name: 'GetPackageOffersServices'; ParamType1: ptPackage),
+    (Index: 2214; Name: 'GetPackageMustReachLocation'; ParamType1: ptPackage),
+    (Index: 2215; Name: 'GetPackageMustComplete'; ParamType1: ptPackage),
+    (Index: 2216; Name: 'GetPackageLockDoorsAtStart'; ParamType1: ptPackage),
+    (Index: 2217; Name: 'GetPackageLockDoorsAtEnd'; ParamType1: ptPackage),
+    (Index: 2218; Name: 'GetPackageLockDoorsAtLocation'; ParamType1: ptPackage),
+    (Index: 2219; Name: 'GetPackageUnlockDoorsAtStart'; ParamType1: ptPackage),
+    (Index: 2220; Name: 'GetPackageUnlockDoorsAtEnd'; ParamType1: ptPackage),
+    (Index: 2221; Name: 'GetPackageUnlockDoorsAtLocation'; ParamType1: ptPackage),
+    (Index: 2222; Name: 'GetPackageContinueIfPCNear'; ParamType1: ptPackage),
+    (Index: 2223; Name: 'GetPackageOncePerDay'; ParamType1: ptPackage),
+    (Index: 2224; Name: 'GetPackageSkipFalloutBehavior'; ParamType1: ptPackage),
+    (Index: 2225; Name: 'GetPackageAlwaysRun'; ParamType1: ptPackage),
+    (Index: 2226; Name: 'GetPackageAlwaysSneak'; ParamType1: ptPackage),
+    (Index: 2227; Name: 'GetPackageAllowSwimming'; ParamType1: ptPackage),
+    (Index: 2228; Name: 'GetPackageAllowFalls'; ParamType1: ptPackage),
+    (Index: 2229; Name: 'GetPackageArmorUnequipped'; ParamType1: ptPackage),
+    (Index: 2230; Name: 'GetPackageWeaponsUnequipped'; ParamType1: ptPackage),
+    (Index: 2231; Name: 'GetPackageDefensiveCombat'; ParamType1: ptPackage),
+    (Index: 2232; Name: 'GetPackageUseHorse'; ParamType1: ptPackage),
+    (Index: 2233; Name: 'GetPackageNoIdleAnims'; ParamType1: ptPackage)
   );
 
 var

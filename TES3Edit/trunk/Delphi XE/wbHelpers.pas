@@ -38,10 +38,16 @@ function wbAlphaBlend(DestDC, X, Y, Width, Height,
   SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
 procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
+
 function wbCRC32Data(aData: TBytes): Cardinal;
 function wbCRC32File(aFileName: string): Cardinal;
+
+function wbDecodeCRCList(const aList: string): TDynCardinalArray;
+
+
 function wbSHA1Data(aData: TBytes): string;
 function wbSHA1File(aFileName: string): string;
+
 function wbMD5Data(aData: TBytes): string;
 function wbMD5File(aFileName: string): string;
 
@@ -507,6 +513,35 @@ begin
     finally
       Free;
     end;
+end;
+
+function wbDecodeCRCList(const aList: string): TDynCardinalArray;
+var
+  i: Integer;
+  s: string;
+  j: Int64;
+begin
+  Result := nil;
+  try
+    with TStringList.Create do try
+      CommaText := aList;
+      for i := 0 to Pred(Count) do begin
+        s := Trim(Strings[i]);
+        if Length(s) <> 8 then
+          Abort;
+        j := StrToInt64('$'+s);
+        if (j < Low(Cardinal)) or (j > High(Cardinal)) then
+          Abort;
+        SetLength(Result, Succ(Length(Result)));
+        Result[High(Result)] := j;
+      end;
+    finally
+      Free;
+    end;
+  except
+    SetLength(Result, 1);
+    Result[0] := $FFFFFFFF;
+  end;
 end;
 
 function CryptAcquireContext(var phProv: DWORD;
