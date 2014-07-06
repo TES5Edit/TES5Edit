@@ -209,7 +209,7 @@ const
   SCHD : TwbSignature = 'SCHD'; { Morrowind }
   SCHR : TwbSignature = 'SCHR';
   SCIT : TwbSignature = 'SCIT';
-  SCPT : TwbSignature = 'SCPT';
+  SCPT : TwbSignature = 'SCPT'; { Morrowind }
   SCRI : TwbSignature = 'SCRI';
   SCRO : TwbSignature = 'SCRO';
   SCRV : TwbSignature = 'SCRV';
@@ -4503,7 +4503,7 @@ begin
       wbInteger('ScriptDataSize', itS32),
       wbInteger('LocalVarSize', itS32)
     ]),
-    wbString(SCVR, 'Name', 0, cpCritical),
+    wbString(SCVR, 'Script Variables', 0, cpCritical),
     wbByteArray(SCDT, 'Compiled Script'),
     wbStringScript(SCTX, 'Script Source', 0, cpNormal, True)
   ]);
