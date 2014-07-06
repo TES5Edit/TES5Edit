@@ -87,7 +87,7 @@ const
   EFIX : TwbSignature = 'EFIX';
   EFME : TwbSignature = 'EFME';
   EFSH : TwbSignature = 'EFSH';
-  ENAM : TwbSignature = 'ENAM';
+  ENAM : TwbSignature = 'ENAM'; { Morrowind }
   ENCH : TwbSignature = 'ENCH';
   ENIT : TwbSignature = 'ENIT';
   ESCE : TwbSignature = 'ESCE';
@@ -137,6 +137,7 @@ const
   LVLO : TwbSignature = 'LVLO';
   LVSP : TwbSignature = 'LVSP';
   MAST : TwbSignature = 'MAST';
+  MCDT : TwbSignature = 'MCDT'; { Morrowind }
   MEDT : TwbSignature = 'MEDT'; { Morrowind }
   MGEF : TwbSignature = 'MGEF'; { Morrowind }
   MISC : TwbSignature = 'MISC';
@@ -210,7 +211,7 @@ const
   SCHR : TwbSignature = 'SCHR';
   SCIT : TwbSignature = 'SCIT';
   SCPT : TwbSignature = 'SCPT'; { Morrowind }
-  SCRI : TwbSignature = 'SCRI';
+  SCRI : TwbSignature = 'SCRI'; { Morrowind }
   SCRO : TwbSignature = 'SCRO';
   SCRV : TwbSignature = 'SCRV';
   SCTX : TwbSignature = 'SCTX'; { Morrowind }
@@ -3714,31 +3715,9 @@ begin
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [
-    wbEDID,
-    wbICON,
-    wbStruct(HNAM, 'Havok Data', [
-      wbInteger('Material Type', itU8, wbEnum([
-        {00} 'STONE',
-        {01} 'CLOTH',
-        {02} 'DIRT',
-        {03} 'GLASS',
-        {04} 'GRASS',
-        {05} 'METAL',
-        {06} 'ORGANIC',
-        {07} 'SKIN',
-        {08} 'WATER',
-        {09} 'WOOD',
-        {10} 'HEAVY STONE',
-        {11} 'HEAVY METAL',
-        {12} 'HEAVY WOOD',
-        {13} 'CHAIN',
-        {14} 'SNOW'
-      ]), cpNormal, True, nil, nil, 2),
-      wbInteger('Friction', itU8, nil, cpNormal, True, nil, nil, 30),
-      wbInteger('Restitution', itU8, nil, cpNormal, True, nil, nil, 30)
-    ], cpNormal, True),
-    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True, False, nil, nil, 30),
-    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbString(NAME, 'Landscape ID'),
+    wbInteger(INTV, 'Landscape ID Number', itU32),
+    wbString(DATA, 'FileName')
   ]);
 
   wbRecord(LVLC, 'Leveled Creature', [
@@ -3841,30 +3820,17 @@ begin
   ]);
 
   wbRecord(MISC, 'Misc. Item', [
-    wbEDID,
-    wbFULL,
+    wbString(NAME, 'Item ID Name'),
     wbMODL,
-    wbICON,
-    wbSCRI,
-    wbStruct(DATA, '', [
-      wbUnion('', wbMISCActorValueDecider, [
-        wbInteger('Value', itS32),
-        wbFormIDCk('Actor Value', [ACVA])
-      ]),
-      wbUnion('', wbMISCActorValueDecider, [
-        wbFloat('Weight'),
-        wbInteger('Group', itU32, wbEnum([], [
-          $40E00000, ' [NONE]',
-          $40400000, 'AI',
-          $00000000, 'Attribute',
-          $40C00000, 'Combat',
-          $40A00000, 'Misc',
-          $40000000, 'Skill',
-          $40800000, 'Social',
-          $3F800000, 'Stat'
-        ]))
-      ])
-    ], cpNormal, True)
+    wbString(FNAM, 'Item Name'),
+    wbStruct(MCDT, '', [
+      wbFloat('Weight'),
+      wbInteger('Value', itU32),
+      wbInteger('Unknown', itS32)
+    ]),
+    wbString(ITEX, 'Iventory Icon Filename'),
+    wbString(ENAM, 'Enchantment ID'),
+    wbString(SCRI, 'Script ID')
   ]);
 
   wbFaceGen := wbRStruct('FaceGen Data', [
@@ -4357,7 +4323,7 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region', [
-    wbString(NAME, 'Sound ID'),
+    wbString(NAME, 'Regin ID'),
     wbString(FNAM, 'Sound Filename'),
     wbStruct(WEAT, 'Weather Type', [
       wbInteger('Clear', itU8),
