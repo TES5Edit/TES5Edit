@@ -56,6 +56,7 @@ const
   CLMT : TwbSignature = 'CLMT';
   CLOT : TwbSignature = 'CLOT';
   CNAM : TwbSignature = 'CNAM'; { Morrowind }
+  CNDT : TwbSignature = 'CNDT'; { Morrowind }
   CNTO : TwbSignature = 'CNTO';
   CONT : TwbSignature = 'CONT';
   CREA : TwbSignature = 'CREA';
@@ -97,6 +98,7 @@ const
   FGGA : TwbSignature = 'FGGA';
   FGGS : TwbSignature = 'FGGS';
   FGTS : TwbSignature = 'FGTS';
+  FLAG : TwbSignature = 'FLAG'; { Morrowind }
   FLOR : TwbSignature = 'FLOR';
   FLTV : TwbSignature = 'FLTV'; { Morrowind }
   FNAM : TwbSignature = 'FNAM'; { Morrowind }
@@ -162,6 +164,7 @@ const
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NPC_ : TwbSignature = 'NPC_';
+  NPCO : TwbSignature = 'NPCO'; { Morrowind }
   OFST : TwbSignature = 'OFST';
   OBME : TwbSignature = 'OBME';
   ONAM : TwbSignature = 'ONAM';
@@ -209,6 +212,7 @@ const
   SCDT : TwbSignature = 'SCDT'; { Morrowind }
   SCHD : TwbSignature = 'SCHD'; { Morrowind }
   SCHR : TwbSignature = 'SCHR';
+  SCIP : TwbSignature = 'SCIP'; { Morrowind }
   SCIT : TwbSignature = 'SCIT';
   SCPT : TwbSignature = 'SCPT'; { Morrowind }
   SCRI : TwbSignature = 'SCRI'; { Morrowind }
@@ -231,7 +235,7 @@ const
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
   SSCR : TwbSignature = 'SSCR'; { Morrowind }
-  STAT : TwbSignature = 'STAT';
+  STAT : TwbSignature = 'STAT'; { Morrowind }
   STRV : TwbSignature = 'STRV'; { Morrowind }
   TCLF : TwbSignature = 'TCLF';
   TCLT : TwbSignature = 'TCLT';
@@ -2627,17 +2631,28 @@ begin
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
   wbRecord(CONT, 'Container', [
-    wbEDID,
-    wbFULL,
+    wbString(NAME, 'Container ID Name'),
     wbMODL,
-    wbSCRI,
-    wbCNTOs,
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
+    wbString(FNAM, 'Container Name'),
+    wbStruct(CNDT, 'Container Data', [
       wbFloat('Weight')
-    ], cpNormal, True),
-    wbFormIDCk(SNAM, 'Open sound', [SOUN]),
-    wbFormIDCk(QNAM, 'Close sound', [SOUN])
+    ]),
+    wbStruct(FLAG, 'Container Flags', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x00000001} 'Organic',
+        {0x00000002} 'Respawns, organic only',
+        {0x00000004} 'Unknown3',
+        {0x00000008} 'Default, unknown',
+        {0x00000010} 'Unknown5',
+        {0x00000020} 'Unknown6',
+        {0x00000040} 'Unknown7',
+        {0x00000080} 'Unknown8'
+      ]))
+    ]),
+    wbStruct(NPCO, 'Item Record ', [
+      wbInteger('Count', itU32),
+      wbString('Item Name', 32)
+    ])
   ]);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
@@ -2867,20 +2882,12 @@ begin
   ], True);
 
   wbRecord(DOOR, 'Door', [
-    wbEDID,
-    wbFULL,
+    wbString(NAME, 'Container ID Name'),
     wbMODL,
-    wbSCRI,
-    wbFormIDCk(SNAM, 'Open sound', [SOUN]),
-    wbFormIDCk(ANAM, 'Close sound', [SOUN]),
-    wbFormIDCk(BNAM, 'Loop sound', [SOUN]),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0x01} 'Oblivion gate',
-      {0x02} 'Automatic door',
-      {0x04} 'Hidden',
-      {0x08} 'Minimal use'
-    ]), cpNormal, True),
-    wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
+    wbString(FNAM, 'Container Name'),
+    wbStringScript(SCIP, 'Script Source', 0),
+    wbString(SNAM, 'Sound name open'),
+    wbString(ANAM, 'Sound name close')
   ]);
 
   wbBlendModeEnum := wbEnum([
@@ -4515,7 +4522,7 @@ begin
   ]);
 
   wbRecord(STAT, 'Static', [
-    wbEDID,
+    wbString(NAME, 'Static ID Name'),
     wbMODL
   ]);
 
