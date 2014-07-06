@@ -3059,7 +3059,7 @@ begin
   wbRecord(FACT, 'Faction', [
     wbString(NAME, 'Class ID string'),
     wbString(FNAM, 'Class name string'),
-    wbRArray('Ranks', wbString(RNAM, 'Rank', 32)),
+    wbRArray('Ranks', wbStringForward(RNAM, 'Rank')),
     wbStruct(FADT, '', [
       wbInteger('AttributeID1', itS32),
       wbInteger('AttributeID1', its32),
@@ -4549,7 +4549,7 @@ begin
       ], cpNormal, True),
       wbRArray('Master Files', wbRStruct('Master File', [
         wbString(MAST, 'Filename', 0, cpNormal, True),
-        wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
+        wbInteger(DATA, 'Master Size', itU64)
       ], []))
     ], [])
   ], False, nil, cpNormal, True);
