@@ -44,7 +44,7 @@ const
   ATXT : TwbSignature = 'ATXT';
   AVFX : TwbSignature = 'AVFX'; { Morrowind }
   BMDT : TwbSignature = 'BMDT';
-  BNAM : TwbSignature = 'BNAM';
+  BNAM : TwbSignature = 'BNAM'; { Morrowind }
   BOOK : TwbSignature = 'BOOK';
   BSGN : TwbSignature = 'BSGN';
   BSND : TwbSignature = 'BSND'; { Morrowind }
@@ -55,7 +55,7 @@ const
   CLDT : TwbSignature = 'CLDT'; { Morrowind }
   CLMT : TwbSignature = 'CLMT';
   CLOT : TwbSignature = 'CLOT';
-  CNAM : TwbSignature = 'CNAM';
+  CNAM : TwbSignature = 'CNAM'; { Morrowind }
   CNTO : TwbSignature = 'CNTO';
   CONT : TwbSignature = 'CONT';
   CREA : TwbSignature = 'CREA';
@@ -198,7 +198,7 @@ const
   RDWT : TwbSignature = 'RDWT';
   REFR : TwbSignature = 'REFR';
   PLYR : TwbSignature = 'PLYR';
-  REGN : TwbSignature = 'REGN';
+  REGN : TwbSignature = 'REGN'; { Morrowind }
   RNAM : TwbSignature = 'RNAM'; { Morrowind }
   ROAD : TwbSignature = 'ROAD';
   RPLD : TwbSignature = 'RPLD';
@@ -220,7 +220,7 @@ const
   SLCP : TwbSignature = 'SLCP';
   SLGM : TwbSignature = 'SLGM';
   SLSD : TwbSignature = 'SLSD';
-  SNAM : TwbSignature = 'SNAM';
+  SNAM : TwbSignature = 'SNAM'; { Morrowind }
   SNDD : TwbSignature = 'SNDD';
   SNDX : TwbSignature = 'SNDX';
   SOUL : TwbSignature = 'SOUL';
@@ -228,6 +228,7 @@ const
   SPEL : TwbSignature = 'SPEL';
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
+  SSCR : TwbSignature = 'SSCR'; { Morrowind }
   STAT : TwbSignature = 'STAT';
   STRV : TwbSignature = 'STRV'; { Morrowind }
   TCLF : TwbSignature = 'TCLF';
@@ -245,6 +246,7 @@ const
   VTXT : TwbSignature = 'VTXT';
   WATR : TwbSignature = 'WATR';
   WEAP : TwbSignature = 'WEAP';
+  WEAT : TwbSignature = 'WEAT'; { Morrowind }
   WLST : TwbSignature = 'WLST';
   WNAM : TwbSignature = 'WNAM';
   WRLD : TwbSignature = 'WRLD';
@@ -4355,112 +4357,61 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region', [
-    wbEDID,
-    wbICON,
-    wbStruct(RCLR, 'Map Color', [
+    wbString(NAME, 'Sound ID'),
+    wbString(FNAM, 'Sound Filename'),
+    wbStruct(WEAT, 'Weather Type', [
+      wbInteger('Clear', itU8),
+      wbInteger('Cloudy', itU8),
+      wbInteger('Foggy', itU8),
+      wbInteger('Overcast', itU8),
+      wbInteger('Rain', itU8),
+      wbInteger('Thunder', itU8),
+      wbInteger('Ash', itU8),
+      wbInteger('Blight', itU8)
+    ]),
+    wbString(BNAM, 'Sleep creature string'),
+    wbStruct(CNAM, 'Map Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8),
       wbByteArray('Unused', 1)
-    ], cpNormal, True),
-    wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-
-    wbRArray('Region Areas', wbRStruct('Region Area', [
-      wbInteger(RPLI, 'Edge Fall-off', itU32),
-      wbArray(RPLD, 'Region Point List Data', wbStruct('Point', [
-        wbFloat('X'),
-        wbFloat('Y')
-      ]), 0, wbRPLDAfterLoad)
-    ], []), cpNormal, True),
-
-    wbRArrayS('Region Data Entries', wbRStructSK([0], 'Region Data Entry', [
-      {always starts with an RDAT}
-      wbStructSK(RDAT, [0], 'Data Header', [
-        wbInteger('Type', itU32, wbEnum([
-          {0}'',
-          {1}'',
-          {2}'Objects',
-          {3}'Weather',
-          {4}'Map',
-          {5}'',
-          {6}'Grass',
-          {7}'Sound',
-          {8}'',
-          {9}''
-        ])),
-        wbInteger('Flags', itU8, wbFlags([
-          'Override'
-        ])),
-        wbInteger('Priority', itU8),
-        wbByteArray('Unused', 2)
-      ], cpNormal, True, nil, 3),
-
-      {followed by one of these: }
-
-      {--- Objects ---}
-      wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX]),
-        wbInteger('Parent Index', itU16, wbHideFFFF),
-        wbByteArray('Unused', 2),
-        wbFloat('Density'),
-        wbInteger('Clustering', itU8),
-        wbInteger('Min Slope', itU8),
-        wbInteger('Max Slope', itU8),
-        wbInteger('Flags', itU8, wbFlags([
-          {0}'Conform to slope',
-          {1}'Paint Vertices',
-          {2}'Size Variance +/-',
-          {3}'X +/-',
-          {4}'Y +/-',
-          {5}'Z +/-',
-          {6}'Tree',
-          {7}'Huge Rock'
-        ])),
-        wbInteger('Radius wrt Parent', itU16),
-        wbInteger('Radius', itU16),
-        wbByteArray('Unknown', 4),
-        wbFloat('Max Height'),
-        wbFloat('Sink'),
-        wbFloat('Sink Variance'),
-        wbFloat('Size Variance'),
-        wbStruct('Angle Variance', [
-          wbInteger('X', itU16),
-          wbInteger('Y', itU16),
-          wbInteger('Z', itU16)
+    ]),
+    wbRArray('Sound Records',
+      wbStruct(SNAM, 'Sound Record', [
+        wbstring('SoundName', 16),
+        wbStruct('Sound Info 1', [
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8)
         ]),
-        wbByteArray('Unused', 2),
-        wbByteArray('Unknown', 4)
-      ])),
+        wbStruct('Sound Info 2', [
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8)
+        ]),
+        wbStruct('Sound Info 3', [
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8)
+        ]),
+        wbStruct('Sound Info 4', [
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8)
+        ]),
+        wbInteger('Chance', itU8)
+      ])
+    )
+  ]);
 
-      {--- Map ---}
-      wbString(RDMP, 'Map Name', 0, cpTranslate),
-
-      {--- Grass ---}
-      wbArrayS(RDGS, 'Grasses', wbStructSK([0], 'Grass', [
-        wbFormIDCk('Grass', [GRAS]),
-        wbByteArray('Unused', 4)
-      ])),
-
-      {--- Sound ---}
-      wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum),
-      wbArrayS(RDSD, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SOUN]),
-        wbInteger('Flags', itU32, wbFlags([
-          'Pleasant',
-          'Cloudy',
-          'Rainy',
-          'Snowy'
-        ])),
-        wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
-      ])),
-
-      {--- Weather ---}
-      wbArrayS(RDWT, 'Weather Types', wbStructSK([0], 'Weather Type', [
-        wbFormIDCk('Weather', [WTHR]),
-        wbInteger('Chance', itU32)
-      ]))
-    ], []))
-  ], True);
+  wbRecord(SSCR, 'StartScript', [
+    wbByteArray(DATA, 'Unknown', 0),
+    wbString(NAME, 'Script Name')
+  ]);
 
   wbRecord(ROAD, 'Road', [
     wbPGRP,
@@ -4503,7 +4454,7 @@ begin
       wbInteger('ScriptDataSize', itS32),
       wbInteger('LocalVarSize', itS32)
     ]),
-    wbString(SCVR, 'Script Variables', 0, cpCritical),
+    wbArray(SCVR, 'Script Variables', wbString('Script Variables')),
     wbByteArray(SCDT, 'Compiled Script'),
     wbStringScript(SCTX, 'Script Source', 0, cpNormal, True)
   ]);
