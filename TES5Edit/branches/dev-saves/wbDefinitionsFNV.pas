@@ -70,7 +70,12 @@ procedure DefineFNV;
 implementation
 
 uses
-  Types, Classes, SysUtils, Math, Variants;
+  Types,
+  Classes,
+  SysUtils,
+  Math,
+  Variants,
+  wbHelpers;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -631,13 +636,12 @@ var
   wbActorValue: IwbIntegerDef;
   wbETYP: IwbSubRecordDef;
   wbETYPReq: IwbSubRecordDef;
+  wbPKDTFlags: IwbFlagsDef;
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBPNDStruct: IwbSubRecordDef;
-
-  wbPKDTFlags: IwbFlagsDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1825,7 +1829,8 @@ begin
   if Assigned(Element) then
     ArchType := Element.NativeValue
   else if Supports(Container, IwbDataContainer, DataContainer) and
-          DataContainer.IsValidOffset(aBasePtr, aEndPtr, OffsetArchtype) then begin // we are part a proper structure
+          DataContainer.IsValidOffset(aBasePtr, aEndPtr, OffsetArchtype) then
+  	begin // we are part of a proper structure
       aBasePtr := Pointer(Cardinal(aBasePtr) + OffsetArchtype);
       ArchType := PCardinal(aBasePtr)^;
     end;
@@ -1876,6 +1881,16 @@ begin
   end;
 end;
 
+procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterByPathAfterSet('DATA - Data\Counter effect count', aElement);
+end;
+
+procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'Counter Effects', aElement);
+end;
+
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -1914,6 +1929,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize in [132, 148] then
       Result := 1;
@@ -1948,6 +1964,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   i := Container.ElementByName['Flags'].NativeValue;
   if i and $00000080 <> 0 then
     Result := 1;
@@ -2101,7 +2118,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..249] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..277] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2303,7 +2320,7 @@ const
     (Index: 436; Name: 'GetDialogueEmotionValue'),
     (Index: 438; Name: 'GetIsCreatureType'; ParamType1: ptCreatureType),
     (Index: 446; Name: 'GetInZone'; ParamType1: ptEncounterZone),
-    (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger{Alt?}),
+    (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger {boolean Alt}),	// PlayerCharacter has 2 lists of perks
     (Index: 450; Name: 'GetFactionRelation'; ParamType1: ptActor),
     (Index: 451; Name: 'IsLastIdlePlayed'; ParamType1: ptIdleForm),
     (Index: 454; Name: 'GetPlayerTeammate'),
@@ -2351,8 +2368,43 @@ const
     (Index: 610; Name: 'GetCasinoWinningStage'; ParamType1: ptCasino),
     (Index: 612; Name: 'PlayerInRegion'; ParamType1: ptRegion),
     (Index: 614; Name: 'GetChallengeCompleted'; ParamType1: ptChallenge),
-    (Index: 619; Name: 'IsAlwaysHardcore')
+    (Index: 619; Name: 'IsAlwaysHardcore'),
+
+    // Added by NVSE
+    (Index: 1024; Name: 'GetNVSEVersion'; ),
+    (Index: 1025; Name: 'GetNVSERevision'; ),
+    (Index: 1026; Name: 'GetNVSEBeta'; ),
+    (Index: 1028; Name: 'GetWeight'; ParamType1: ptInventoryObject; ),
+    (Index: 1076; Name: 'GetWeaponHasScope'; ParamType1: ptInventoryObject; ),
+    (Index: 1089; Name: 'ListGetFormIndex'; ParamType1: ptFormList; ParamType2: ptFormType;),
+    (Index: 1107; Name: 'IsKeyPressed'; ParamType1: ptInteger; ParamType2: ptInteger;),
+    (Index: 1131; Name: 'IsControlPressed'; ParamType1: ptInteger; ),
+    (Index: 1271; Name: 'HasOwnership'; ParamType1: ptObjectReference; ),
+    (Index: 1272; Name: 'IsOwned'; ParamType1: ptActor ),
+    (Index: 1274; Name: 'GetDialogueTarget'; ParamType1: ptActor; ),
+    (Index: 1275; Name: 'GetDialogueSubject'; ParamType1: ptActor; ),
+    (Index: 1276; Name: 'GetDialogueSpeaker'; ParamType1: ptActor; ),
+    (Index: 1278; Name: 'GetAgeClass'; ParamType1: ptActorBase; ),
+    (Index: 1286; Name: 'GetTokenValue'; ParamType1: ptFormType; ),
+    (Index: 1288; Name: 'GetTokenRef'; ParamType1: ptFormType; ),
+    (Index: 1291; Name: 'GetPaired'; ParamType1: ptInventoryObject; ParamType2: ptActorBase;),
+    (Index: 1292; Name: 'GetRespawn'; ParamType1: ptACtorBase; ),
+    (Index: 1294; Name: 'GetPermanent'; ParamType1: ptObjectReference; ),
+    (Index: 1297; Name: 'IsRefInList'; ParamType1: ptFormList; ParamType2: ptFormType;),
+    (Index: 1301; Name: 'GetPackageCount'; ParamType1: ptObjectReference; ),
+    (Index: 1440; Name: 'IsPlayerSwimming'; ),
+    (Index: 1441; Name: 'GetTFC'; ),
+
+    // Added by nvse_plugin_ExtendedActorVariable
+    (Index: 4352; Name: 'GetExtendedActorVariable'; ParamType1: ptInventoryObject; ),
+    (Index: 4353; Name: 'GetBaseExtendedActorVariable'; ParamType1: ptInventoryObject; ),
+    (Index: 4355; Name: 'GetModExtendedActorVariable'; ParamType1: ptInventoryObject; ),
+
+    // Added by nvse_extender
+    (Index: 4420; Name: 'NX_GetEVFl'; ParamType1: ptNone; ),  // Actually ptString, but it cannot be used in GECK
+    (Index: 4426; Name: 'NX_GetQVEVFl'; ParamType1: ptQuest; ParamType2: ptInteger;)
   );
+
 var
   wbCTDAFunctionEditInfo: string;
 
@@ -2402,6 +2454,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
 end;
@@ -2415,6 +2468,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType1));
@@ -2428,6 +2482,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Parameter #1'].NativeValue;
 end;
 
@@ -2440,6 +2495,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType2));
@@ -4084,6 +4140,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   Result := Container.ElementByName['Type'].NativeValue;
 end;
 
@@ -4096,6 +4153,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize = 8 then
       Result := 1;
@@ -4110,6 +4168,7 @@ begin
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
+
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize = 8 then
       Exit;
@@ -4208,7 +4267,7 @@ begin
     {0x00040000}'Compressed',
     {0x00080000}'Can''t wait / Platform Specific Texture / Dead',
     {0x00100000}'Unknown 21',
-    {0x00200000}'Unknown 22', // set when beginning to load the form from save
+    {0x00200000}'Load Started (Runtime Only)', // set when beginning to load the form from save
     {0x00400000}'Unknown 23',
     {0x00800000}'Unknown 24',
     {0x01000000}'Destructible (Runtime only)',
@@ -4324,7 +4383,7 @@ begin
     'ReloadX',
     'ReloadY',
     'ReloadZ'
-  ]);
+  ],[255, 'None']);   // 255 seen in DLC, though Geck converts to 0
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
@@ -5456,7 +5515,7 @@ begin
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
-        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE], True)
+        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
       ])
     ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
   wbCTDAs := wbRArray('Conditions', wbCTDA);
@@ -5982,46 +6041,6 @@ begin
     'Helps Nobody',
     'Helps Allies',
     'Helps Friends and Allies'
-  ]);
-
-  wbArchtypeEnum := wbEnum([
-    {00} 'Value Modifier',
-    {01} 'Script',
-    {02} 'Dispel',
-    {03} 'Cure Disease',
-    {04} '',
-    {05} '',
-    {06} '',
-    {07} '',
-    {08} '',
-    {09} '',
-    {10} '',
-    {11} 'Invisibility',
-    {12} 'Chameleon',
-    {13} 'Light',
-    {14} '',
-    {15} '',
-    {16} 'Lock',
-    {17} 'Open',
-    {18} 'Bound Item',
-    {19} 'Summon Creature',
-    {20} '',
-    {21} '',
-    {22} '',
-    {23} '',
-    {24} 'Paralysis',
-    {25} '',
-    {26} '',
-    {27} '',
-    {28} '',
-    {29} '',
-    {30} 'Cure Paralysis',
-    {31} 'Cure Addiction',
-    {32} 'Cure Poison',
-    {33} 'Concussion',
-    {34} 'Value And Parts',
-    {35} 'Limb Condition',
-    {36} 'Turbo'
   ]);
 
   wbAggroRadiusFlags := wbFlags([
@@ -6667,7 +6686,7 @@ begin
       wbByteArray('Unused', 4),
       wbInteger('Flags', itU8, wbFlags([
         'No Auto-Calc',
-        '',
+        'Auto Calculate',
         'Hide Effect'
       ])),
       wbByteArray('Unused', 3)
@@ -8662,6 +8681,46 @@ begin
     )
   ]);
 
+  wbArchtypeEnum := wbEnum([
+    {00} 'Value Modifier',
+    {01} 'Script',
+    {02} 'Dispel',
+    {03} 'Cure Disease',
+    {04} '',
+    {05} '',
+    {06} '',
+    {07} '',
+    {08} '',
+    {09} '',
+    {10} '',
+    {11} 'Invisibility',
+    {12} 'Chameleon',
+    {13} 'Light',
+    {14} '',
+    {15} '',
+    {16} 'Lock',
+    {17} 'Open',
+    {18} 'Bound Item',
+    {19} 'Summon Creature',
+    {20} '',
+    {21} '',
+    {22} '',
+    {23} '',
+    {24} 'Paralysis',
+    {25} '',
+    {26} '',
+    {27} '',
+    {28} '',
+    {29} '',
+    {30} 'Cure Paralysis',
+    {31} 'Cure Addiction',
+    {32} 'Cure Poison',
+    {33} 'Concussion',
+    {34} 'Value And Parts',
+    {35} 'Limb Condition',
+    {36} 'Turbo'
+  ]);
+
   wbRecord(MGEF, 'Base Effect', [
     wbEDIDReq,
     wbFULL,
@@ -8714,7 +8773,7 @@ begin
         -1, 'None'
       ])),
       {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-      {20} wbInteger('Unknown', itU16),
+      {20} wbInteger('Counter effect count', itU16),
       {22} wbByteArray('Unused', 2),
       {24} wbFormIDCk('Light', [LIGH, NULL]),
       {28} wbFloat('Projectile speed'),
@@ -8728,8 +8787,9 @@ begin
       {60} wbFloat('Constant Effect barter factor (Unused)'),
       {64} wbInteger('Archtype', itU32, wbArchtypeEnum, cpNormal, False, nil, wbMGEFArchtypeAfterSet),
       {68} wbActorValue
-    ], cpNormal, True)
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+    ], cpNormal, True),
+    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet)
+  ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDIDReq,
@@ -9017,7 +9077,7 @@ begin
           {29} 'Package Type 29',
           {30} 'Package Type 30',
           {31} 'Package Type 31',
-          {32} 'Package Type 35',
+          {32} 'Package Type 32',
           {33} 'Package Type 33',
           {34} 'Package Type 34',
           {35} 'Package Type 35',
@@ -9519,15 +9579,6 @@ begin
     ])), ['Male', 'Female'], cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-//    wbArray(ATTR, 'Attributes Boosts', wbArray('Attributes', wbInteger('Attribute', itU8), [  // Engine loads that, but data is only a pair of bytes!
-//      'Strength',
-//      'Perception',
-//      'Endurance',
-//      'Charisma',
-//      'Intelligence',
-//      'Agility',
-//      'Luck'
-//    ]), ['Male', 'Female'], cpNormal, True),  // That looks like a leftover from Oblivion
     wbByteArray(ATTR, 'Unused', 0, cpNormal, True),
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
@@ -10730,7 +10781,8 @@ begin
           {0x00000004}'Use Map Data',
           {0x00000008}'Use Water Data',
           {0x00000010}'Use Climate Data',
-          {0x00000020}'Use Image Space Data'
+          {0x00000020}'Use Image Space Data'  // in order to use this "Image Space" needs to be NULL.
+                                              //  Other parent flags are checked before the form value.
           ], True), cpNormal, True)
       ], []),
       wbFormIDCk(CNAM, 'Climate', [CLMT]),
@@ -11274,7 +11326,7 @@ begin
     wbStruct(DATA, 'Data', [
       wbInteger('Skill', itS32, wbActorValueEnum),
       wbInteger('Level', itU32),
-      wbFormIDCk('Category', [RCCT]),
+      wbFormIDCk('Category', [RCCT, NULL]),   // Some of DeadMoney are NULL
       wbFormIDCk('Sub-Category', [RCCT])
     ]),
     wbRStructs('Ingredients', 'Ingredient', [

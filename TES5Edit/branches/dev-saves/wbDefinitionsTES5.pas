@@ -21,8 +21,13 @@ procedure DefineTES5;
 implementation
 
 uses
-  Types, Classes, SysUtils, Math, Variants,
-  wbInterface;
+  Types,
+  Classes,
+  SysUtils,
+  Math,
+  Variants,
+  wbInterface,
+  wbHelpers;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -2563,7 +2568,7 @@ type
 
 const
   {>> N means New, V means verified that the name has not changed <<<}
-  wbCTDAFunctions : array[0..394] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..399] of TCTDAFunction = (
 {N} (Index:   0; Name: 'GetWantBlocking'),
 {V} (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
 {V} (Index:   5; Name: 'GetLocked'),
@@ -2958,8 +2963,16 @@ const
 {N} (Index: 730; Name: 'IsOnFlyingMount'),
 {N} (Index: 731; Name: 'CanFlyHere'),
 {N} (Index: 732; Name: 'IsFlyingMountPatrolQueud'),
-{N} (Index: 733; Name: 'IsFlyingMountFastTravelling')
+{N} (Index: 733; Name: 'IsFlyingMountFastTravelling'),
+
+    // Added by SKSE
+    (Index: 1024; Name: 'GetSKSEVersion'; ),
+    (Index: 1025; Name: 'GetSKSEVersionMinor'; ),
+    (Index: 1026; Name: 'GetSKSEVersionBeta'; ),
+    (Index: 1027; Name: 'GetSKSERelease'; ),
+    (Index: 1028; Name: 'ClearInvalidRegistrations'; )
   );
+
 var
   wbCTDAFunctionEditInfo: string;
 
@@ -3905,57 +3918,6 @@ begin
     wbProgressCallback('"'+Container.Name+'" does not contain an element named Type');
 end;
 
-function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
-var
-  Element         : IwbElement;
-  Container       : IwbContainer;
-  SelfAsContainer : IwbContainer;
-begin
-  Result := False;
-  if wbBeginInternalEdit then try
-    if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
-       Supports(aElement, IwbContainer, SelfAsContainer) then begin
-      Element := Container.ElementByName[aCounterName];
-      if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
-        Element := Container.Add(Copy(aCounterName, 1, 4));
-      if Assigned(Element) and (Element.Name = aCounterName) then try
-        if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
-          Element.SetNativeValue(SelfAsContainer.GetElementCount);
-        Result := True;
-      except
-        // No exception if the value cannot be set, expected non value
-      end;
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
-var
-  Element         : IwbElement;
-  Elems           : IwbElement;
-  Container       : IwbContainer;
-begin
-  Result := False;  // You may need to check alterative counter name
-  if wbBeginInternalEdit then try
-    if Supports(aElement, IwbContainer, Container) then begin
-      Element := Container.ElementByName[aCounterName];
-      Elems   := Container.ElementByName[anArrayName];
-      if Assigned(Element) then begin
-        if not Assigned(Elems) then
-          if Element.GetNativeValue<>0 then
-            Element.SetNativeValue(0)
-          else if DeleteOnEmpty then
-            Container.RemoveElement(aCounterName);
-        Result := True; // Counter member exists
-      end;
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterAfterSet('COCT - Count', aElement);
@@ -4024,6 +3986,18 @@ end;
 procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterContainerAfterSet('CITC - Condition Count', 'Conditions', aElement);
+end;
+
+procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  // if it is really possible to have both counter effects and multiple data, this is going to be tricky.
+  wbCounterByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', aElement);
+end;
+
+procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbKeywordsAfterSet(aElement, aOldValue, aNewValue);
+  wbCounterContainerByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', 'Counter Effects', aElement);
 end;
 
 procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -6547,11 +6521,13 @@ begin
         ]))
       ], cpNormal, False, nil, 11),
 
-      wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
-      wbStruct(MHDT, 'Max Height Data', [
-         wbUnion('Unknown', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
-         wbArray('Unknown', wbInteger('Data', itS8))
-      ]),
+      wbByteArray(TVDT, 'Unknown', 0, cpNormal),
+      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
+//      wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
+//      wbStruct(MHDT, 'Max Height Data', [ // Rolled back temporarily due to issues while copying.
+//         wbUnion('Unknown', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
+//         wbArray('Unknown', wbInteger('Data', itS8))
+//      ]),
       wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
       wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
@@ -10337,7 +10313,8 @@ begin
       ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbInteger('Magic Skill', itS32, wbActorValueEnum),
       wbInteger('Resist Value', itS32, wbActorValueEnum),
-      wbByteArray('Unknown', 4),
+      wbInteger('Counter Effect count', itU16),
+      wbByteArray('Unused', 2),
       wbFormIDCk('Casting Light', [LIGH, NULL]),
       wbFloat('Taper Weight'),
       wbFormIDCk('Hit Shader', [EFSH, NULL]),
@@ -10387,7 +10364,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbMGEFData,
-    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF])),
+    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet),
     wbArray(SNDD, 'Sounds', wbStruct('', [
       wbInteger('Type', itU32, wbEnum([
         'Sheathe/Draw',
@@ -10401,7 +10378,7 @@ begin
     ])),
     wbLStringKC(DNAM, 'Magic Item Description'),
     wbCTDAs
-  ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDID,
