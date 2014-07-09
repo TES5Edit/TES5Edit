@@ -2404,16 +2404,17 @@ type
   TwbSetOfMode  = set of TwbToolMode;
 
 var
-  wbGameMode   : TwbGameMode;
-  wbToolMode   : TwbToolMode;
-  wbToolSource : TwbToolSource;
-  wbAppName    : string;
-  wbGameName   : string;
-  wbToolName   : string;
-  wbSourceName : String;
-  wbLanguage   : string;
-  wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen ]; // Tool modes that run without user interaction until final status
-  wbPluginModes : TwbSetOfMode = [ ];  // Modes that require a specific plugin to be provided.
+  wbGameMode    : TwbGameMode;
+  wbToolMode    : TwbToolMode;
+  wbToolSource  : TwbToolSource;
+  wbAppName     : string;
+  wbGameName    : string;
+  wbToolName    : string;
+  wbSourceName  : String;
+  wbLanguage    : string;
+  wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
+                    tmESMify, tmESPify, tmSortAndCleanMasters ];
+  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters ];  // Auto modes that require a specific plugin to be povided.
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
