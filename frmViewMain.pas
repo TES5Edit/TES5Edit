@@ -3082,27 +3082,48 @@ begin
 
         CheckListBox1.Items.Assign(sl);
 
-        // check active files using the game's plugins list
-        sl.LoadFromFile(wbPluginsFileName);
-        for i := Pred(sl.Count) downto 0 do begin
-          s := Trim(sl.Strings[i]);
-          j := Pos('#', s);
-          if j > 0 then
-            System.Delete(s, j, High(Integer));
-          s := Trim(s);
-          if s = '' then begin
-            sl.Delete(i);
-            Continue;
-          end;
+        if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
+            j := CheckListBox1.Items.IndexOf(wbPluginToUse);
+            if j < 0 then begin
+              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+              frmMain.Close;
+              Exit;
+            end else
+              CheckListBox1.Checked[j] := True;
 
-          j := CheckListBox1.Items.IndexOf(s);
-          if j < 0 then
-            AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
-          else
-            CheckListBox1.Checked[j] := True;
+            // More plugins requested ?
+            while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
+              j := CheckListBox1.Items.IndexOf(s);
+              if j < 0 then begin
+                AddMessage('Note: Selected plugin "' + s + '" does not exist');
+                frmMain.Close;
+                Exit;
+              end else
+                CheckListBox1.Checked[j] := True;
+            end;
+        end else begin
+          // check active files using the game's plugins list
+          sl.LoadFromFile(wbPluginsFileName);
+          for i := Pred(sl.Count) downto 0 do begin
+            s := Trim(sl.Strings[i]);
+            j := Pos('#', s);
+            if j > 0 then
+              System.Delete(s, j, High(Integer));
+            s := Trim(s);
+            if s = '' then begin
+              sl.Delete(i);
+              Continue;
+            end;
+
+            j := CheckListBox1.Items.IndexOf(s);
+            if j < 0 then
+              AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
+            else
+              CheckListBox1.Checked[j] := True;
+          end;
         end;
 
-        if not ((wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) or wbQuickShowConflicts) then begin
+        if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
           ShowModal;
           if ModalResult <> mrOk then begin
             frmMain.Close;
@@ -3155,7 +3176,7 @@ begin
         Free;
       end;
 
-      if not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then
+      if not (wbToolMode in wbAutoModes) then
         with TfrmFileSelect.Create(nil) do try
 
           if (not wbEditAllowed) or wbTranslationMode then begin
@@ -3225,6 +3246,9 @@ begin
                             Delete(s, 1, 1);
                             sl2[j] := s;
                           end;
+                        end else begin // Only to quiet the compiler (W1036).
+                          IsOptional := False;
+                          IsRequired := False;
                         end;
                         ValidCRCs := nil;
                         if Length(s) > 0 then begin
@@ -4035,10 +4059,29 @@ begin
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  s        : string;
-  txt      : AnsiString;
-  fs       : TFileStream;
+
+  procedure SaveLog(s: string);
+  var
+    txt      : AnsiString;
+    fs       : TFileStream;
+
+  begin
+    try
+      if FileExists(s) then begin
+        fs := TFileStream.Create(s, fmOpenReadWrite);
+        fs.Seek(0, soFromEnd);
+      end else
+        fs := TFileStream.Create(s, fmCreate);
+      if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+        fs.Size := 0;
+      txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
+      fs.WriteBuffer(txt[1], Length(txt));
+    finally
+      if Assigned(fs) then
+        FreeAndNil(fs);
+    end;
+  end;
+
 begin
   Action := caFree;
   if LoaderStarted and not wbLoaderDone then begin
@@ -4072,21 +4115,9 @@ begin
     Settings.UpdateFile;
   end;
 
-  try
-    s := wbProgramPath + wbAppName + 'Edit_log.txt';
-    if FileExists(s) then begin
-      fs := TFileStream.Create(s, fmOpenReadWrite);
-      fs.Seek(0, soFromEnd);
-    end else
-      fs := TFileStream.Create(s, fmCreate);
-    if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
-      fs.Size := 0;
-    txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
-    fs.WriteBuffer(txt[1], Length(txt));
-  finally
-    if Assigned(fs) then
-      FreeAndNil(fs);
-  end;
+  SaveLog(wbProgramPath + wbAppName + 'Edit_log.txt');
+  if wbLogFile<>'' then SaveLog(wbLogFile);
+
   if DirectoryExists(wbTempPath) and wbRemoveTempPath then
     DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
@@ -4130,7 +4161,7 @@ begin
   LastUpdate := GetTickCount;
   Font := Screen.IconFont;
   Caption := Application.Title;
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) then begin
+  if (wbToolMode in wbAutoModes) then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;
@@ -10116,7 +10147,7 @@ begin
     if Assigned(Settings) then
       cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
-    if (CheckListBox1.Count > 0) and not (wbToolMode in [tmMasterUpdate, tmMasterRestore]) then begin
+    if (CheckListBox1.Count > 0) and ((wbToolMode = tmLodGen) or not (wbToolMode in wbAutoModes)) then begin
       ShowModal;
       wbDontBackup := not cbBackup.Checked;
       if Assigned(Settings) then begin
@@ -10984,7 +11015,10 @@ begin
       if (wbToolMode in [tmMasterUpdate]) then begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
-      end;
+      end else
+        if (wbToolMode in wbPluginModes) then
+          frmMain.Close;
+
     except
       wbDontSave := True;
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= Error =--');
@@ -13248,8 +13282,9 @@ begin
   tbsARMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
   tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
 
-  tmrCheckUnsaved.Enabled := wbEditAllowed and not (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmLODgen]) and not wbIKnowWhatImDoing;
-
+  tmrCheckUnsaved.Enabled := wbEditAllowed and
+    not (wbToolMode in wbAutoModes) and
+    not wbIKnowWhatImDoing;
   if wbQuickShowConflicts then
     mniNavFilterConflicts.Click;
 end;
@@ -13838,7 +13873,3 @@ begin  // Let's show from 1 to 32 lines to pick from
 end;
 
 end.
-
-
-
-
