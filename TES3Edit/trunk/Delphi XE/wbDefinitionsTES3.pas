@@ -651,6 +651,16 @@ begin
   end;
 end;
 
+function wbNPCDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  SubRecord: IwbSubRecord;
+begin
+  Result := 0;
+  if Assigned(aElement) and Supports(aElement.Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 12 then
+      Result := 1;
+end;
+
 function wbGLOBUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   rValue: IwbRecord;
@@ -3867,27 +3877,40 @@ begin
     wbString(KNAM, 'Hair model', 0, cpNormal, True),
     wbStringScript(SCRI, 'Script Source', 0),
     wbStruct(NPDT, 'NPC Data', [
-      wbInteger('Level', itU16),
-      wbInteger('Strength', itU8),
-      wbInteger('Intelligence', itU8),
-      wbInteger('Willpower', itU8),
-      wbInteger('Agility', itU8),
-      wbInteger('Speed', itU8),
-      wbInteger('Endurance', itU8),
-      wbInteger('Personality', itU8),
-      wbInteger('Luck', itU8),
-      wbInteger('Skills', itU8),
-      wbInteger('Reputation', itU8),
-      wbInteger('Health', itU16),
-      wbInteger('SpellPts', itU16),
-      wbInteger('Fatigue', itU16),
-      wbInteger('Disposition', itU8),
-      wbInteger('FactionID', itU8),
-      wbInteger('Rank', itU8),
-      wbInteger('Unknown1', itU8),
-      wbInteger('Gold', itU32)
-    {this is 11 for now to make 12 bytes, needs to be resolved differently}
-    ], cpNormal, False, nil, 11),
+      wbUnion('Data', wbNPCDataDecider, [
+        wbStruct('Data 52', [
+          wbInteger('Level', itU16),
+          wbInteger('Strength', itU8),
+          wbInteger('Intelligence', itU8),
+          wbInteger('Willpower', itU8),
+          wbInteger('Agility', itU8),
+          wbInteger('Speed', itU8),
+          wbInteger('Endurance', itU8),
+          wbInteger('Personality', itU8),
+          wbInteger('Luck', itU8),
+          wbArray('Skills', wbInteger('Value', itU8), 27),
+          wbInteger('Reputation', itU8),
+          wbInteger('Health', itU16),
+          wbInteger('SpellPts', itU16),
+          wbInteger('Fatigue', itU16),
+          wbInteger('Disposition', itU8),
+          wbInteger('FactionID', itU8),
+          wbInteger('Rank', itU8),
+          wbInteger('Unknown1', itU8),
+          wbInteger('Gold', itU32)
+        ]),
+        wbStruct('Data 12', [
+          wbInteger('Level', itU16),
+          wbInteger('Disposition', itU8),
+          wbInteger('FactionID', itU8),
+          wbInteger('Rank', itU8),
+          wbInteger('Unknown1', itU8),
+          wbInteger('Unknown2', itU8),
+          wbInteger('Unknown3', itU8),
+          wbInteger('Gold', itU32)
+        ])
+      ])
+    ]),
     wbStruct(FLAG, 'NPC Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x000001} 'Female',
