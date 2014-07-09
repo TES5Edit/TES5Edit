@@ -669,10 +669,17 @@ type
     PluggySpellFormID: Cardinal;
     PluggyLinkThread: TPluggyLinkThread;
 
+    FileCRCs: TwbFastStringListIC;
+
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
+
+    function ValidateCRC(const aFileName  : string;
+                         const aValidCRCs : TDynCardinalArray;
+                           out aFileCRC   : Cardinal)
+                                          : Boolean;
 
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 //    procedure ScriptScanProgress(aTotalCount, aCount: Integer);
@@ -2775,6 +2782,7 @@ begin
   FreeAndNil(ScriptHotkeys);
   FreeAndNil(ModGroups);
   FreeAndNil(Settings);
+  FreeAndNil(FileCRCs);
 end;
 
 procedure TfrmMain.DoGenerateLOD;
@@ -2927,6 +2935,8 @@ var
   IsOptional   : Boolean;
   IsRequired   : Boolean;
   MessageGiven : Boolean;
+  ValidCRCs    : TDynCardinalArray;
+  FileCRC      : Cardinal;
 begin
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -3135,6 +3145,9 @@ begin
             sl2.Clear;
             for i := 0 to Pred(sl.Count) do
               wbMastersForFile(wbDataPath + sl[i], sl2);
+            {make sure messages for the memo have been processed}
+            Application.ProcessMessages;
+            tmrMessagesTimer(nil);
 
             sl.Clear;
             if sl2.Count > 0 then
@@ -3220,31 +3233,55 @@ begin
                       ReadSectionValues(sl3[i], sl2);
 
                       for j := Pred(sl2.Count) downto 0 do begin
-                        s := sl2[j];
+                        s := Trim(sl2[j]);
+                        k := Pos(';', s);
+                        if k > 0 then begin
+                          Delete(s, k, High(Integer));
+                          s := Trim(s);
+                        end;
                         if Length(s) > 0 then begin
                           IsOptional := s[1] = '+';
                           IsRequired := s[1] = '-';
-                          if IsOptional or IsRequired then
+                          if IsOptional or IsRequired then begin
                             Delete(s, 1, 1);
-                          if Length(s) > 0 then begin
-                            k := sl.IndexOf(s);
-                            if k >= 0 then begin
+                            sl2[j] := s;
+                          end;
+                        end else begin // Only to quiet the compiler (W1036).
+                          IsOptional := False;
+                          IsRequired := False;
+                        end;
+                        ValidCRCs := nil;
+                        if Length(s) > 0 then begin
+                          k := Pos(':', s);
+                          if k > 1 then begin
+                            ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                            Delete(s, k, High(Integer));
+                            s := Trim(s);
+                          end;
+                        end;
+                        if Length(s) > 0 then begin
+                          k := sl.IndexOf(s);
+                          if k >= 0 then begin
+                            if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
+                              AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
+                              MessageGiven := True;
+                              sl2.Clear;
+                              break;
+                            end else
                               if IsRequired then
-                                sl2.Delete(j)
+                                sl2.Objects[j] := TObject(-k)
                               else
                                 sl2.Objects[j] := TObject(k)
-                            end else begin
-                              if IsOptional then
-                                sl2.Delete(j)
-                              else begin
-                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                                MessageGiven := True;
-                                sl2.Clear;
-                                break;
-                              end
-                            end;
-                          end else
-                            sl2.Delete(j);
+                          end else begin
+                            if IsOptional then
+                              sl2.Delete(j)
+                            else begin
+                              AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                              MessageGiven := True;
+                              sl2.Clear;
+                              break;
+                            end
+                          end;
                         end else
                           sl2.Delete(j);
                       end;
@@ -3253,18 +3290,24 @@ begin
                         if not MessageGiven then
                           AddMessage(MessagePrefix + 'less then 2 plugins active');
                       end else begin
-                        k := Integer(sl2.Objects[0]);
+                        k := Abs(Integer(sl2.Objects[0]));
                         for j := 1 to Pred(sl2.Count) do begin
-                          if Integer(sl2.Objects[j]) <= k then begin
+                          if Abs(Integer(sl2.Objects[j])) <= k then begin
                             sl2.Clear;
+                            MessageGiven := True;
                             AddMessage(MessagePrefix + 'plugins are not in the correct order');
                             Break;
                           end;
                         end;
+                        for j := Pred(sl2.Count) downto 0 do
+                          if Integer(sl2.Objects[j]) < 0 then
+                            sl2.Delete(j);
                         if sl2.Count >= 2 then begin
                           ModGroups.AddObject(sl3[i], sl2);
                           sl2 := nil;
-                        end;
+                        end else
+                          if not MessageGiven then
+                            AddMessage(MessagePrefix + 'less then 2 plugins active');
                       end;
                     end;
 
@@ -9451,7 +9494,7 @@ begin
             sl.Assign(TStrings(ModGroups.Objects[i]));
             for j := Pred(sl.Count) downto 0 do begin
               k := Records.IndexOf(sl[j]);
-              if K >= 0 then
+              if K > 0 then { >, not >=, never hide the original master}
                 sl.Objects[j] := TObject(k)
               else
                 sl.Delete(j);
@@ -10831,6 +10874,34 @@ begin
       for i := 0 to Pred(vstView.Header.Columns.Count) do
         vstView.Header.Columns[i].Width := ColWidth;
     end;
+end;
+
+function TfrmMain.ValidateCRC(const aFileName  : string;
+                              const aValidCRCs : TDynCardinalArray;
+                                out aFileCRC   : Cardinal)
+                                               : Boolean;
+var
+  i: Integer;
+begin
+  aFileCRC := 0;
+  Result := Length(aValidCRCs) < 1;
+  if not Result then begin
+    if Assigned(FileCRCs) and FileCRCs.Find(aFileName, i) then
+      aFileCRC := Cardinal(FileCRCs.Objects[i])
+    else begin
+      try
+        aFileCRC := wbCRC32File(wbDataPath + aFileName);
+      except
+        aFileCRC := 0;
+      end;
+      if not Assigned(FileCRCs) then
+        FileCRCs := TwbFastStringListIC.CreateSorted;
+      FileCRCs.AddObject(aFileName, TObject(aFileCRC));
+    end;
+    for i := Low(aValidCRCs) to High(aValidCRCs) do
+      if aValidCRCs[i] = aFileCRC then
+        Exit(True);
+  end;
 end;
 
 procedure TfrmMain.tmrCheckUnsavedTimer(Sender: TObject);
