@@ -358,6 +358,9 @@ begin
   end else if isMode('clearESM') then begin
     wbToolMode    := tmESPify;
     wbToolName    := 'ClearingESMflag';
+  end else if isMode('SortAndClean') then begin
+    wbToolMode    := tmSortAndCleanMasters;
+    wbToolName    := 'SortAndCleanMasters';
   end else if isMode('Edit') then begin
     wbToolMode    := tmEdit;
     wbToolName    := 'Edit';
@@ -370,7 +373,7 @@ begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
