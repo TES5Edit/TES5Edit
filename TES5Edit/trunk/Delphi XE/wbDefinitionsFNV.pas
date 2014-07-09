@@ -8680,7 +8680,7 @@ begin
         -1, 'None'
       ])),
       {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-      {20} wbInteger('Unknown', itU16),
+      {20} wbInteger('Counter effects count', itU16),
       {22} wbByteArray('Unused', 2),
       {24} wbFormIDCk('Light', [LIGH, NULL]),
       {28} wbFloat('Projectile speed'),
@@ -8732,7 +8732,8 @@ begin
              {36} 'Turbo'
            ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
       {68} wbActorValue
-    ], cpNormal, True)
+    ], cpNormal, True),
+    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]))
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
 
   wbRecord(MISC, 'Misc. Item', [
