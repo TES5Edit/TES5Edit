@@ -10972,6 +10972,7 @@ end;
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
 var
   ChangesMade : Boolean;
+  i, dummy: Integer;
 begin
   if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
     mmoMessages.Lines.AddStrings(NewMessages);
@@ -10984,8 +10985,9 @@ begin
       tbsMessages.Highlighted := True;
   end;
 
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbLoaderDone and not wbMasterUpdateDone then begin
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) and wbLoaderDone and not wbMasterUpdateDone then begin
     wbMasterUpdateDone := True;
+    ChangesMade := False;
     if wbLoaderError then begin
       wbDontSave := True;
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= Error =--');
@@ -11000,7 +11002,14 @@ begin
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
     end else try
-      if (wbToolMode in [tmMasterRestore]) then
+      if (wbToolMode = tmSortAndCleanMasters) then begin
+        for i := Low(Files) to High(Files) do
+          if wbPluginsToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
+            Files[i].SortMasters;
+            Files[i].CleanMasters;
+            ChangesMade := ChangesMade or Files[i].Modified;
+          end
+      end else if (wbToolMode in [tmMasterRestore, tmESPify]) then
         ChangesMade := RestorePluginsFromMaster
       else
         ChangesMade := SetAllToMaster;
