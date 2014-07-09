@@ -21,8 +21,13 @@ procedure DefineTES4;
 implementation
 
 uses
-  Types, Classes, SysUtils, Math, Variants,
-  wbInterface;
+  Types,
+  Classes,
+  SysUtils,
+  Math,
+  Variants,
+  wbInterface,
+  wbHelpers;
 
 const
   ACBS : TwbSignature = 'ACBS';
@@ -1530,6 +1535,15 @@ begin
   end;
 end;
 
+procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterByPathAfterSet('DATA - Data\Counter effect count', aElement);
+end;
+
+procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'Counter Effects', aElement);
+end;
 
 procedure wbEFITAfterLoad(const aElement: IwbElement);
 var
@@ -3971,8 +3985,8 @@ begin
       wbFloat('Constant Effect enchantment factor'),
       wbFloat('Constant Effect barter factor')
     ], cpNormal, True, nil, 10),
-    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4){wbInteger('Counter Effect', itU32, wbChar4)})
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4), 0, cpNormal, False, nil, wbCounterEffectsAfterSet)
+  ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDID,

@@ -21,8 +21,13 @@ procedure DefineFNV;
 implementation
 
 uses
-  Types, Classes, SysUtils, Math, Variants,
-  wbInterface;
+  Types,
+  Classes,
+  SysUtils,
+  Math,
+  Variants,
+  wbInterface,
+  wbHelpers;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -1857,6 +1862,16 @@ begin
       Container.ElementNativeValues['..\Actor Value'] := -1;
     end;
   end;
+end;
+
+procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterByPathAfterSet('DATA - Data\Counter effect count', aElement);
+end;
+
+procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'Counter Effects', aElement);
 end;
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -8680,7 +8695,7 @@ begin
         -1, 'None'
       ])),
       {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-      {20} wbInteger('Counter effects count', itU16),
+      {20} wbInteger('Counter effect count', itU16),
       {22} wbByteArray('Unused', 2),
       {24} wbFormIDCk('Light', [LIGH, NULL]),
       {28} wbFloat('Projectile speed'),
@@ -8733,8 +8748,8 @@ begin
            ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
       {68} wbActorValue
     ], cpNormal, True),
-    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]))
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet)
+  ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDIDReq,

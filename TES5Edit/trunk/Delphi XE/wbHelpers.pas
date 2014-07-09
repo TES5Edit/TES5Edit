@@ -78,6 +78,12 @@ type
   TnxFastStringListIC = class(TnxFastStringList)
   end;
 
+function wbExtractNameFromPath(aPathName: String): String;
+
+function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
+function wbCounterByPathAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
+function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
+function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
 
 implementation
 
@@ -684,6 +690,113 @@ begin
   {x$IFDEF DCC6OrLater}
   CaseSensitive := True;
   {x$ENDIF}
+end;
+
+function wbExtractNameFromPath(aPathName: String): String;
+begin
+  Result := aPathName;
+  while Pos('\', Result)>0 do
+    Delete(Result, 1, Pos('\', Result))
+end;
+
+function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
+var
+  Element         : IwbElement;
+  Container       : IwbContainer;
+  SelfAsContainer : IwbContainer;
+begin
+  Result := False;
+  if wbBeginInternalEdit then try
+    if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
+       Supports(aElement, IwbContainer, SelfAsContainer) then begin
+      Element := Container.ElementByName[aCounterName];
+      if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
+        Element := Container.Add(Copy(aCounterName, 1, 4));
+      if Assigned(Element) and (SameText(Element.Name, aCounterName)) then try
+        if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+          Element.SetNativeValue(SelfAsContainer.GetElementCount);
+        Result := True;
+      except
+        // No exception if the value cannot be set, expected non value
+      end;
+    end;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+function wbCounterByPathAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
+var
+  Element         : IwbElement;
+  Container       : IwbContainer;
+  SelfAsContainer : IwbContainer;
+begin
+  Result := False;
+  if wbBeginInternalEdit then try
+    if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
+       Supports(aElement, IwbContainer, SelfAsContainer) then begin
+      Element := Container.ElementByPath[aCounterName];
+//      if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
+//        Element := Container.Add(Copy(aCounterName, 1, 4));
+      if Assigned(Element) and (SameText(Element.Name, wbExtractNameFromPath(aCounterName))) then try
+        if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+          Element.SetNativeValue(SelfAsContainer.GetElementCount);
+        Result := True;
+      except
+        // No exception if the value cannot be set, expected non value
+      end;
+    end;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
+var
+  Element         : IwbElement;
+  Elems           : IwbElement;
+  Container       : IwbContainer;
+begin
+  Result := False;  // You may need to check alterative counter name
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainer, Container) then begin
+      Element := Container.ElementByName[aCounterName];
+      Elems   := Container.ElementByName[anArrayName];
+      if Assigned(Element) then begin
+        if not Assigned(Elems) then
+          if Element.GetNativeValue<>0 then
+            Element.SetNativeValue(0)
+          else if DeleteOnEmpty then
+            Container.RemoveElement(aCounterName);
+        Result := True; // Counter member exists
+      end;
+    end;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
+var
+  Element         : IwbElement;
+  Elems           : IwbElement;
+  Container       : IwbContainer;
+begin
+  Result := False;  // You may need to check alterative counter name
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainer, Container) then begin
+      Element := Container.ElementByPath[aCounterName];
+      Elems   := Container.ElementByName[anArrayName];
+      if Assigned(Element) then begin
+        if not Assigned(Elems) then
+          if Element.GetNativeValue<>0 then
+            Element.SetNativeValue(0);
+        Result := True; // Counter member exists
+      end;
+    end;
+  finally
+    wbEndInternalEdit;
+  end;
 end;
 
 initialization
