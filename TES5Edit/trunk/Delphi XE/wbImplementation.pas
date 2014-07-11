@@ -1296,6 +1296,9 @@ type
     procedure InvalidateParentStorage; override;
 
     function GetIsEditable: Boolean; override;
+    function GetIsRemoveable: Boolean; override;
+
+    procedure Remove; override;
 
     function GetEditValue: string; override;
     procedure SetEditValue(const aValue: string); override;
@@ -13739,6 +13742,11 @@ begin
   Result := wbIsInternalEdit or GetContainer.IsEditable;
 end;
 
+function TwbFlag.GetIsRemoveable: Boolean;
+begin
+  Result := wbIsInternalEdit or GetContainer.IsEditable;
+end;
+
 function TwbFlag.GetName: string;
 begin
   Result := fFlagsDef.Flags[fIndex];
@@ -13806,6 +13814,11 @@ end;
 procedure TwbFlag.InvalidateParentStorage;
 begin
   {not inherited}
+end;
+
+procedure TwbFlag.Remove;
+begin
+  SetEditValue('0');
 end;
 
 procedure TwbFlag.SetEditValue(const aValue: string);
