@@ -249,6 +249,7 @@ type
     procedure SetNativeValue(const aValue: Variant); virtual;
     procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal); virtual;
     function GetConflictPriority: TwbConflictPriority; virtual;
+    function GetConflictPriorityCanChange: Boolean; virtual;
     function GetModified: Boolean;
     procedure MarkModifiedRecursive; virtual;
     function GetIsInjected: Boolean; virtual;
@@ -1205,6 +1206,7 @@ type
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
+    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function IsFlags: Boolean; override;
 
@@ -1257,7 +1259,18 @@ type
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
   end;
 
-  TwbFlag = class(TwbElement)
+  IwbFlag = interface(IwbElement)
+  ['{EED55516-C6D5-4ADD-B147-36B115E7449D}']
+    function GetFlagsDef: IwbFlagsDef;
+    function GetFlagIndex: Integer;
+
+    property FlagsDef: IwbFlagsDef
+      read GetFlagsDef;
+    property FlagIndex: Integer
+      read GetFlagIndex;
+  end;
+
+  TwbFlag = class(TwbElement, IwbFlag)
   protected {private}
     fBasePtr    : Pointer;
     fEndPtr     : Pointer;
@@ -1283,6 +1296,9 @@ type
     procedure InvalidateParentStorage; override;
 
     function GetIsEditable: Boolean; override;
+    function GetIsRemoveable: Boolean; override;
+
+    procedure Remove; override;
 
     function GetEditValue: string; override;
     procedure SetEditValue(const aValue: string); override;
@@ -1291,6 +1307,10 @@ type
     procedure SetNativeValue(const aValue: Variant); override;
 
     function GetElementType: TwbElementType; override;
+
+    {--- IwbFlag ---}
+    function GetFlagsDef: IwbFlagsDef;
+    function GetFlagIndex: Integer;
   end;
 
   PwbGroupRecordStruct = ^TwbGroupRecordStruct;
@@ -4864,7 +4884,8 @@ begin
     end else begin
       Assert(aElement.SortOrder >= 0);
       Assert(aElement.SortOrder < mrDef.MemberCount);
-      Assert(aElement.Def.Equals(mrDef.Members[aElement.SortOrder]));
+      if not aElement.Def.Equals(mrDef.Members[aElement.SortOrder]) then
+        Assert(Self.CanAssign(aElement.SortOrder, aElement, True));
       Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
     end;
 
@@ -8525,11 +8546,13 @@ end;
 
 function TwbSubRecord.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
-  SelfRef   : IwbContainerElementRef;
-  i         : Integer;
-  s         : string;
-  ArrayDef  : IwbArrayDef;
-  StructDef : IwbStructDef;
+  SelfRef    : IwbContainerElementRef;
+  i          : Integer;
+  s          : string;
+  ArrayDef   : IwbArrayDef;
+  StructDef  : IwbStructDef;
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
 begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be modified.');
@@ -8591,10 +8614,15 @@ begin
         Assert(aElement.SortOrder >= 0);
         Assert(aElement.SortOrder < StructDef.MemberCount );
         Assert(Assigned(aElement.ValueDef));
-        Assert(aElement.ValueDef.Equals(StructDef.Members[aElement.SortOrder]));
+        Assert(StructDef.Members[aElement.SortOrder].CanAssign(Low(Integer), aElement.ValueDef));
 
         Result := GetElementBySortOrder(aElement.SortOrder);
         Assert(Assigned(Result));
+
+        if not aDeepCopy then
+          if Supports(Result.ValueDef, IwbIntegerDef, IntegerDef) then
+            if Supports(IntegerDef.Formater, IwbFlagsDef, FlagsDef) then
+              Exit(Result);
 
         Result.Assign(Low(Integer), aElement, not aDeepCopy);
       end;
@@ -11208,7 +11236,7 @@ begin
     Def := GetDef;
 
   if Assigned(Def) then
-    Result := Def.ConflictPriority;
+    Result := Def.ConflictPriority[Self];
 
   if wbTranslationMode then begin
     if Result <> cpTranslate then
@@ -11226,6 +11254,22 @@ begin
     if Assigned(MainRecord) and (MainRecord.Signature = 'GMST') then
       Result := cpBenign;
   end;
+end;
+
+function TwbElement.GetConflictPriorityCanChange: Boolean;
+var
+  Def        : IwbDef;
+//  MainRecord : IwbMainRecord;
+begin
+  Result := False;
+
+  Def := GetValueDef;
+
+  if not Assigned(Def) then
+    Def := GetDef;
+
+  if Assigned(Def) then
+    Result := Def.ConflictPriorityCanChange;
 end;
 
 function TwbElement.GetContainer: IwbContainer;
@@ -13212,6 +13256,35 @@ end;
 
 { TwbValue }
 
+function TwbValue.AddIfMissing(const aElement      :  IwbElement;
+                                     aAsNew        :  Boolean;
+                                     aDeepCopy     :  Boolean;
+                               const aPrefixRemove : string;
+                               const aPrefix       : string;
+                               const aSuffix       : string)
+                                                   : IwbElement;
+var
+  Flag       : IwbFlag;
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
+  s          : string;
+begin
+  if vIsFlags and Supports(aElement, IwbFlag, Flag) then
+    if Supports(vbValueDef, IwbIntegerDef, IntegerDef) then
+      if Supports(IntegerDef.Formater, IwbFlagsDef, FlagsDef) then
+        if FlagsDef.CanAssign(Low(Integer), Flag.FlagsDef) then begin
+          s := GetEditValue;
+          s := s + StringOfChar('0', 64 - Length(s));
+          if (Flag.FlagIndex >= 0) and (Flag.FlagIndex < Length(s)) then begin
+            s[Succ(Flag.FlagIndex)] := '1';
+            SetEditValue(s);
+            Exit(GetElementBySortOrder(Flag.FlagIndex));
+          end;
+        end;
+
+  Result := inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
+end;
+
 function TwbValue.CompareExchangeFormID(aOldFormID, aNewFormID: Cardinal): Boolean;
 var
   SelfRef     : IwbContainerElementRef;
@@ -13628,7 +13701,7 @@ begin
   else if fFlagsDef.FlagIgnoreConflict[fIndex] then
     Result := cpIgnore
   else if Assigned(fIntegerDef) then
-    Result := fIntegerDef.ConflictPriority
+    Result := fIntegerDef.ConflictPriority[Self]
   else
     Result := cpNormal;
 
@@ -13666,7 +13739,22 @@ begin
   Result := etFlag;
 end;
 
+function TwbFlag.GetFlagIndex: Integer;
+begin
+  Result := fIndex;
+end;
+
+function TwbFlag.GetFlagsDef: IwbFlagsDef;
+begin
+  Result := fFlagsDef;
+end;
+
 function TwbFlag.GetIsEditable: Boolean;
+begin
+  Result := wbIsInternalEdit or GetContainer.IsEditable;
+end;
+
+function TwbFlag.GetIsRemoveable: Boolean;
 begin
   Result := wbIsInternalEdit or GetContainer.IsEditable;
 end;
@@ -13738,6 +13826,11 @@ end;
 procedure TwbFlag.InvalidateParentStorage;
 begin
   {not inherited}
+end;
+
+procedure TwbFlag.Remove;
+begin
+  SetEditValue('0');
 end;
 
 procedure TwbFlag.SetEditValue(const aValue: string);
@@ -13823,7 +13916,7 @@ begin
     Def := Resolve(ValueDef, GetDataBasePtr, GetDataEndPtr, Self);
 
   if Assigned(Def) then
-    Result := Def.ConflictPriority;
+    Result := Def.ConflictPriority[Self];
 
   if wbTranslationMode then begin
     if Result <> cpTranslate then
