@@ -256,7 +256,8 @@ type
     function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
     function GetDefID: Cardinal;
     function Equals(const aDef: IwbDef): Boolean;
-    function GetConflictPriority: TwbConflictPriority;
+    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
+    function GetConflictPriorityCanChange: Boolean;
     function GetRequired: Boolean;
     function CanContainFormIDs: Boolean;
     function GetDontShow(const aElement: IwbElement): Boolean;
@@ -276,8 +277,10 @@ type
       read GetDefTypeName;
     property DefID: Cardinal
       read GetDefID;
-    property ConflictPriority: TwbConflictPriority
+    property ConflictPriority[const aElement: IwbElement]: TwbConflictPriority
       read GetConflictPriority;
+    property ConflictPriorityCanChange: Boolean
+      read GetConflictPriorityCanChange;
     property Required: Boolean
       read GetRequired;
     property DontShow[const aElement: IwbElement]: Boolean
@@ -383,6 +386,7 @@ type
     function GetIsRemoveable: Boolean;
     procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal);
     function GetConflictPriority: TwbConflictPriority;
+    function GetConflictPriorityCanChange: Boolean;
     function GetModified: Boolean;
     procedure MarkModifiedRecursive;
     function GetIsInjected: Boolean;
@@ -518,6 +522,8 @@ type
 
     property ConflictPriority: TwbConflictPriority
       read GetConflictPriority;
+    property ConflictPriorityCanChange: Boolean
+      read GetConflictPriorityCanChange;
 
     property DataSize: Integer
       read GetDataSize
@@ -1058,6 +1064,7 @@ type
   TwbAfterSetCallback = procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
   TwbDontShowCallback = function(const aElement: IwbElement): Boolean;
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
+  TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
   TwbIntToStrCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
@@ -1425,6 +1432,8 @@ type
     function GetFlagIgnoreConflict(aIndex: Integer): Boolean;
     function GetFlagDontShow(const aElement: IwbElement; aIndex: Integer): Boolean;
     function GetFlagHasDontShow(aIndex: Integer): Boolean;
+    procedure FlagGetCP(const aElement: IwbElement; aIndex: Integer; var aCP: TwbConflictPriority);
+    function GetFlagHasGetCP(aIndex: Integer): Boolean;
 
     property Flags[aIndex: Integer] : string
       read GetFlag;
@@ -1438,6 +1447,8 @@ type
       read GetFlagDontShow;
     property FlagHasDontShow[aIndex: Integer]: Boolean
       read GetFlagHasDontShow;
+    property FlagHasGetCP[aIndex: Integer]: Boolean
+      read GetFlagHasGetCP;
   end;
 
   IwbEnumDef = interface(IwbIntegerDefFormater)
@@ -1548,21 +1559,25 @@ function wbRecord(const aSignature      : TwbSignature;
 function wbSubRecord(const aSignature : TwbSignature;
                      const aName      : string;
                      const aValue     : IwbValueDef;
-                           aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                           aAfterLoad : TwbAfterLoadCallback = nil;
+                           aAfterSet  : TwbAfterSetCallback = nil;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
 function wbSubRecord(const aSignatures : array of TwbSignature;
                      const aName       : string;
                      const aValue      : IwbValueDef;
-                           aAfterLoad  : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
+                           aAfterLoad  : TwbAfterLoadCallback = nil;
+                           aAfterSet   : TwbAfterSetCallback = nil;
                            aPriority   : TwbConflictPriority = cpNormal;
                            aRequired   : Boolean = False;
                            aSizeMatch  : Boolean = False;
-                           aDontShow   : TwbDontShowCallback = nil)
+                           aDontShow   : TwbDontShowCallback = nil;
+                           aGetCP      : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef; overload;
 
 function wbString(const aSignature : TwbSignature;
@@ -1571,7 +1586,8 @@ function wbString(const aSignature : TwbSignature;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbString(const aName      : string = 'Unknown';
@@ -1579,7 +1595,8 @@ function wbString(const aName      : string = 'Unknown';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbStringDef; overload;
 
 function wbStringT(const aSignature : TwbSignature;
@@ -1588,7 +1605,8 @@ function wbStringT(const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
 function wbStringT(const aName      : string = 'Unknown';
@@ -1596,7 +1614,8 @@ function wbStringT(const aName      : string = 'Unknown';
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbStringDef; overload;
 
 function wbStringScript(const aSignature : TwbSignature;
@@ -1605,7 +1624,8 @@ function wbStringScript(const aSignature : TwbSignature;
                               aPriority  : TwbConflictPriority = cpNormal;
                               aRequired  : Boolean = False;
                               aDontShow  : TwbDontShowCallback = nil;
-                              aAfterSet  : TwbAfterSetCallback = nil)
+                              aAfterSet  : TwbAfterSetCallback = nil;
+                              aGetCP     : TwbGetConflictPriority = nil)
                                          : IwbSubRecordDef; overload;
 
 function wbStringScript(const aName      : string;
@@ -1613,7 +1633,8 @@ function wbStringScript(const aName      : string;
                               aPriority  : TwbConflictPriority = cpNormal;
                               aRequired  : Boolean = False;
                               aDontShow  : TwbDontShowCallback = nil;
-                              aAfterSet  : TwbAfterSetCallback = nil)
+                              aAfterSet  : TwbAfterSetCallback = nil;
+                              aGetCP     : TwbGetConflictPriority = nil)
                                          : IwbStringDef; overload;
 
 function wbStringLC(const aSignature : TwbSignature;
@@ -1622,7 +1643,8 @@ function wbStringLC(const aSignature : TwbSignature;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
 function wbStringLC(const aName      : string;
@@ -1630,7 +1652,8 @@ function wbStringLC(const aName      : string;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 
 function wbStringKC(const aSignature : TwbSignature;
@@ -1639,7 +1662,8 @@ function wbStringKC(const aSignature : TwbSignature;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
 function wbStringKC(const aName      : string;
@@ -1647,42 +1671,47 @@ function wbStringKC(const aName      : string;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 
 function wbLString(const aSignature : TwbSignature;
-                    const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbSubRecordDef; overload;
+                   const aName      : string;
+                         aSize      : Integer = 0;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
 
 function wbLString(const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
+                         aSize      : Integer = 0;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbStringDef; overload;
 
 function wbLStringKC(const aSignature : TwbSignature;
-                    const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbSubRecordDef; overload;
+                     const aName      : string;
+                           aSize      : Integer = 0;
+                           aPriority  : TwbConflictPriority = cpNormal;
+                           aRequired  : Boolean = False;
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aAfterSet  : TwbAfterSetCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
+                                      : IwbSubRecordDef; overload;
 
 function wbLStringKC(const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
+                           aSize      : Integer = 0;
+                           aPriority  : TwbConflictPriority = cpNormal;
+                           aRequired  : Boolean = False;
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aAfterSet  : TwbAfterSetCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
+                                      : IwbStringDef; overload;
 
 function wbStringMgefCode(const aSignature : TwbSignature;
                           const aName      : string;
@@ -1690,7 +1719,8 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                                 aPriority  : TwbConflictPriority = cpNormal;
                                 aRequired  : Boolean = False;
                                 aDontShow  : TwbDontShowCallback = nil;
-                                aAfterSet  : TwbAfterSetCallback = nil)
+                                aAfterSet  : TwbAfterSetCallback = nil;
+                                aGetCP     : TwbGetConflictPriority = nil)
                                            : IwbSubRecordDef; overload;
 
 function wbStringMgefCode(const aName      : string;
@@ -1698,7 +1728,8 @@ function wbStringMgefCode(const aName      : string;
                                 aPriority  : TwbConflictPriority = cpNormal;
                                 aRequired  : Boolean = False;
                                 aDontShow  : TwbDontShowCallback = nil;
-                                aAfterSet  : TwbAfterSetCallback = nil)
+                                aAfterSet  : TwbAfterSetCallback = nil;
+                                aGetCP     : TwbGetConflictPriority = nil)
                                            : IwbStringDef; overload;
 
 function wbLenString(const aSignature : TwbSignature;
@@ -1706,14 +1737,16 @@ function wbLenString(const aSignature : TwbSignature;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
 function wbLenString(const aName      : string;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbLenStringDef; overload;
 
 function wbLenStringT(const aSignature : TwbSignature;
@@ -1721,14 +1754,16 @@ function wbLenStringT(const aSignature : TwbSignature;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil)
+                            aDontShow  : TwbDontShowCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef; overload;
 
 function wbLenStringT(const aName      : string;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil)
+                            aDontShow  : TwbDontShowCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbLenStringDef; overload;
 function wbUnion(const aSignature : TwbSignature;
                  const aName      : string;
@@ -1736,7 +1771,8 @@ function wbUnion(const aSignature : TwbSignature;
                  const aMembers   : array of IwbValueDef;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
 function wbUnion(const aName     : string;
@@ -1745,7 +1781,8 @@ function wbUnion(const aName     : string;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
                        aDontShow : TwbDontShowCallback = nil;
-                       aAfterSet : TwbAfterSetCallback = nil)
+                       aAfterSet : TwbAfterSetCallback = nil;
+                       aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbUnionDef; overload;
 
 
@@ -1755,39 +1792,45 @@ function wbByteArray(const aSignature : TwbSignature;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
 function wbByteArray(const aName      : string = 'Unknown';
                            aSize      : Int64 = 0;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbByteArrayDef; overload;
 
 function wbByteArrayT(const aName      : string = 'Unknown';
                             aSize      : Int64 = 0;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil)
+                            aDontShow  : TwbDontShowCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbByteArrayDef; overload;
 
 function wbByteArray(const aName          : string;
                            aCountCallback : TwbCountCallback;
                            aPriority      : TwbConflictPriority = cpNormal;
                            aRequired      : Boolean = False;
-                           aDontShow      : TwbDontShowCallback = nil)
+                           aDontShow      : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                           : IwbByteArrayDef; overload;
 
 function wbUnknown(const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
 function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
                    aRequired : Boolean = False;
-                   aDontShow : TwbDontShowCallback = nil)
+                   aDontShow : TwbDontShowCallback = nil;
+                   aGetCP    : TwbGetConflictPriority = nil)
                              : IwbByteArrayDef; overload;
 
 function wbInteger(const aSignature : TwbSignature;
@@ -1799,7 +1842,8 @@ function wbInteger(const aSignature : TwbSignature;
                          aMatchSize : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
-                         aDefault   : Int64 = 0)
+                         aDefault   : Int64 = 0;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
 function wbInteger(const aName     : string;
@@ -1809,7 +1853,8 @@ function wbInteger(const aName     : string;
                          aRequired : Boolean = False;
                          aDontShow : TwbDontShowCallback = nil;
                          aAfterSet : TwbAfterSetCallback = nil;
-                         aDefault  : Int64= 0)
+                         aDefault  : Int64 = 0;
+                         aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 
 function wbInteger(const aSignature : TwbSignature;
@@ -1821,7 +1866,8 @@ function wbInteger(const aSignature : TwbSignature;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
-                         aDefault   : Int64 = 0)
+                         aDefault   : Int64 = 0;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
 function wbInteger(const aName     : string;
@@ -1832,7 +1878,8 @@ function wbInteger(const aName     : string;
                          aRequired : Boolean = False;
                          aDontShow : TwbDontShowCallback = nil;
                          aAfterSet : TwbAfterSetCallback = nil;
-                         aDefault  : Int64 = 0)
+                         aDefault  : Int64 = 0;
+                         aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 
 
@@ -1845,7 +1892,8 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aMatchSize : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
-                          aDefault   : Int64 = 0)
+                          aDefault   : Int64 = 0;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
 function wbIntegerT(const aName     : string;
@@ -1855,7 +1903,8 @@ function wbIntegerT(const aName     : string;
                           aRequired : Boolean = False;
                           aDontShow : TwbDontShowCallback = nil;
                           aAfterSet : TwbAfterSetCallback = nil;
-                          aDefault  : Int64= 0)
+                          aDefault  : Int64= 0;
+                          aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 
 function wbIntegerT(const aSignature : TwbSignature;
@@ -1867,7 +1916,8 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
-                          aDefault   : Int64 = 0)
+                          aDefault   : Int64 = 0;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
 function wbIntegerT(const aName     : string;
@@ -1878,7 +1928,8 @@ function wbIntegerT(const aName     : string;
                           aRequired : Boolean = False;
                           aDontShow : TwbDontShowCallback = nil;
                           aAfterSet : TwbAfterSetCallback = nil;
-                          aDefault  : Int64 = 0)
+                          aDefault  : Int64 = 0;
+                          aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 
 function wbFloat(const aSignature  : TwbSignature;
@@ -1889,7 +1940,8 @@ function wbFloat(const aSignature  : TwbSignature;
                        aDigits     : Integer = -1;
                        aDontShow   : TwbDontShowCallback = nil;
                        aNormalizer : TwbFloatNormalizer = nil;
-                       aDefault    : Extended = 0.0)
+                       aDefault    : Extended = 0.0;
+                       aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbFloat(const aName       : string = 'Unknown';
@@ -1899,7 +1951,8 @@ function wbFloat(const aName       : string = 'Unknown';
                        aDigits     : Integer = -1;
                        aDontShow   : TwbDontShowCallback = nil;
                        aNormalizer : TwbFloatNormalizer = nil;
-                       aDefault    : Extended = 0.0)
+                       aDefault    : Extended = 0.0;
+                       aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 
 function wbFloat(const aName       : string;
@@ -1908,7 +1961,8 @@ function wbFloat(const aName       : string;
                        aDontShow   : TwbDontShowCallback;
                        aAfterSet   : TwbAfterSetCallback = nil;
                        aNormalizer : TwbFloatNormalizer = nil;
-                       aDefault    : Extended = 0.0)
+                       aDefault    : Extended = 0.0;
+                       aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 
 function wbDouble(const aSignature  : TwbSignature;
@@ -1919,7 +1973,8 @@ function wbDouble(const aSignature  : TwbSignature;
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
 function wbDouble(const aName       : string = 'Unknown';
@@ -1929,7 +1984,8 @@ function wbDouble(const aName       : string = 'Unknown';
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
 function wbDouble(const aName       : string;
@@ -1938,7 +1994,8 @@ function wbDouble(const aName       : string;
                         aDontShow   : TwbDontShowCallback;
                         aAfterSet   : TwbAfterSetCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
 function wbFloatT(const aSignature  : TwbSignature;
@@ -1949,7 +2006,8 @@ function wbFloatT(const aSignature  : TwbSignature;
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 
 function wbFloatT(const aName       : string = 'Unknown';
@@ -1959,7 +2017,8 @@ function wbFloatT(const aName       : string = 'Unknown';
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
 function wbFloatT(const aName       : string;
@@ -1968,7 +2027,8 @@ function wbFloatT(const aName       : string;
                         aDontShow   : TwbDontShowCallback;
                         aAfterSet   : TwbAfterSetCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 
 function wbDoubleT(const aSignature  : TwbSignature;
@@ -1979,7 +2039,8 @@ function wbDoubleT(const aSignature  : TwbSignature;
                          aDigits     : Integer = -1;
                          aDontShow   : TwbDontShowCallback = nil;
                          aNormalizer : TwbFloatNormalizer = nil;
-                         aDefault    : Extended = 0.0)
+                         aDefault    : Extended = 0.0;
+                         aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
 function wbDoubleT(const aName       : string = 'Unknown';
@@ -1989,7 +2050,8 @@ function wbDoubleT(const aName       : string = 'Unknown';
                          aDigits     : Integer = -1;
                          aDontShow   : TwbDontShowCallback = nil;
                          aNormalizer : TwbFloatNormalizer = nil;
-                         aDefault    : Extended = 0.0)
+                         aDefault    : Extended = 0.0;
+                         aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 
 function wbDoubleT(const aName       : string;
@@ -1998,7 +2060,8 @@ function wbDoubleT(const aName       : string;
                          aDontShow   : TwbDontShowCallback;
                          aAfterSet   : TwbAfterSetCallback = nil;
                          aNormalizer : TwbFloatNormalizer = nil;
-                         aDefault    : Extended = 0.0)
+                         aDefault    : Extended = 0.0;
+                         aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 
 {--- wbArray - list of identical elements -------------------------------------}
@@ -2010,7 +2073,8 @@ function wbArray(const aSignature : TwbSignature;
                        aAfterSet  : TwbAfterSetCallback = nil;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
 function wbArray(const aName     : string;
@@ -2018,7 +2082,8 @@ function wbArray(const aName     : string;
                        aCount    : Integer = 0;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil)
+                       aDontShow : TwbDontShowCallback = nil;
+                       aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbArrayDef; overload;
 
 function wbArray(const aName      : string;
@@ -2027,7 +2092,8 @@ function wbArray(const aName      : string;
                        aAfterLoad : TwbAfterLoadCallback;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbArrayDef; overload;
 
 function wbArray(const aSignature : TwbSignature;
@@ -2036,7 +2102,8 @@ function wbArray(const aSignature : TwbSignature;
                  const aLabels    : array of string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
 function wbArray(const aSignature     : TwbSignature;
@@ -2046,7 +2113,8 @@ function wbArray(const aSignature     : TwbSignature;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
                        aRequired      : Boolean = False;
-                       aDontShow      : TwbDontShowCallback = nil)
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
 function wbArray(const aName     : string;
@@ -2054,7 +2122,8 @@ function wbArray(const aName     : string;
                  const aLabels   : array of string;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil)
+                       aDontShow : TwbDontShowCallback = nil;
+                       aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbArrayDef; overload;
 
 function wbArray(const aName          : string;
@@ -2063,7 +2132,8 @@ function wbArray(const aName          : string;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
                        aRequired      : Boolean = False;
-                       aDontShow      : TwbDontShowCallback = nil)
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 
 function wbArray(const aName          : string;
@@ -2071,99 +2141,110 @@ function wbArray(const aName          : string;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
                        aRequired      : Boolean = False;
-                       aDontShow      : TwbDontShowCallback = nil)
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 
 function wbArrayPT(const aSignature : TwbSignature;   // case where the prefix is terminated.
-                  const aName      : string;
-                  const aElement   : IwbValueDef;
-                        aCount     : Integer = 0;
-                        aAfterLoad : TwbAfterLoadCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil)
-                                   : IwbSubRecordDef; overload;
+                   const aName      : string;
+                   const aElement   : IwbValueDef;
+                         aCount     : Integer = 0;
+                         aAfterLoad : TwbAfterLoadCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
 
 function wbArrayPT(const aName     : string;
-                  const aElement  : IwbValueDef;
-                        aCount    : Integer = 0;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbArrayDef; overload;
-
-function wbArrayPT(const aName      : string;
-                  const aElement   : IwbValueDef;
-                        aCount     : Integer;
-                        aAfterLoad : TwbAfterLoadCallback;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil)
+                   const aElement  : IwbValueDef;
+                         aCount    : Integer = 0;
+                         aPriority : TwbConflictPriority = cpNormal;
+                         aRequired : Boolean = False;
+                         aDontShow : TwbDontShowCallback = nil;
+                         aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
-function wbArrayT(const aName      : string;   // case where members are not terminated, but the array itself yes
+function wbArrayPT(const aName      : string;
                    const aElement   : IwbValueDef;
                          aCount     : Integer;
-                   const aLabels    : array of string;
                          aAfterLoad : TwbAfterLoadCallback;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbArrayDef; overload;
 
-function wbArrayPT(const aSignature : TwbSignature;
-                  const aName      : string;
+function wbArrayT(const aName      : string;   // case where members are not terminated, but the array itself yes
                   const aElement   : IwbValueDef;
+                        aCount     : Integer;
                   const aLabels    : array of string;
+                        aAfterLoad : TwbAfterLoadCallback;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil)
-                                   : IwbSubRecordDef; overload;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbArrayDef; overload;
+
+function wbArrayPT(const aSignature : TwbSignature;
+                   const aName      : string;
+                   const aElement   : IwbValueDef;
+                   const aLabels    : array of string;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
 
 function wbArrayPT(const aSignature     : TwbSignature;
-                  const aName          : string;
-                  const aElement       : IwbValueDef;
-                  const aLabels        : array of string;
-                        aCountCallback : TwbCountCallback;
-                        aPriority      : TwbConflictPriority = cpNormal;
-                        aRequired      : Boolean = False;
-                        aDontShow      : TwbDontShowCallback = nil)
-                                       : IwbSubRecordDef; overload;
-
-function wbArrayPT(const aName     : string;
-                  const aElement  : IwbValueDef;
-                  const aLabels   : array of string;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbArrayDef; overload;
-
-function wbArrayPT(const aName          : string;
-                  const aElement       : IwbValueDef;
-                  const aLabels        : array of string;
-                        aCountCallback : TwbCountCallback;
-                        aPriority      : TwbConflictPriority = cpNormal;
-                        aRequired      : Boolean = False;
-                        aDontShow      : TwbDontShowCallback = nil)
-                                       : IwbArrayDef; overload;
-
-function wbArrayT(const aName          : string;   // case where members are not terminated, but the array itself yes
+                   const aName          : string;
                    const aElement       : IwbValueDef;
                    const aLabels        : array of string;
                          aCountCallback : TwbCountCallback;
                          aPriority      : TwbConflictPriority = cpNormal;
                          aRequired      : Boolean = False;
-                         aDontShow      : TwbDontShowCallback = nil)
-                                        : IwbArrayDef; overload;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef; overload;
+
+function wbArrayPT(const aName     : string;
+                   const aElement  : IwbValueDef;
+                   const aLabels   : array of string;
+                         aPriority : TwbConflictPriority = cpNormal;
+                         aRequired : Boolean = False;
+                         aDontShow : TwbDontShowCallback = nil;
+                         aGetCP    : TwbGetConflictPriority = nil)
+                                   : IwbArrayDef; overload;
 
 function wbArrayPT(const aName          : string;
+                   const aElement       : IwbValueDef;
+                   const aLabels        : array of string;
+                         aCountCallback : TwbCountCallback;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbArrayDef; overload;
+
+function wbArrayT(const aName          : string;   // case where members are not terminated, but the array itself yes
                   const aElement       : IwbValueDef;
+                  const aLabels        : array of string;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
                         aRequired      : Boolean = False;
-                        aDontShow      : TwbDontShowCallback = nil)
+                        aDontShow      : TwbDontShowCallback = nil;
+                        aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
+
+function wbArrayPT(const aName          : string;
+                   const aElement       : IwbValueDef;
+                         aCountCallback : TwbCountCallback;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbArrayDef; overload;
 
 function wbRArray(const aName      : string;
                   const aElement   : IwbRecordMemberDef;
@@ -2171,7 +2252,8 @@ function wbRArray(const aName      : string;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordArrayDef; overload;
 
 function wbArrayS(const aSignature : TwbSignature;
@@ -2182,7 +2264,8 @@ function wbArrayS(const aSignature : TwbSignature;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbArrayS(const aName      : string;
@@ -2193,7 +2276,8 @@ function wbArrayS(const aName      : string;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aCanAddTo  : Boolean = True)
+                        aCanAddTo  : Boolean = True;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
 function wbArrayS(const aName      : string;
@@ -2203,7 +2287,8 @@ function wbArrayS(const aName      : string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
 function wbArrayS(const aName          : string;
@@ -2213,7 +2298,8 @@ function wbArrayS(const aName          : string;
                         aRequired      : Boolean = False;
                         aAfterLoad     : TwbAfterLoadCallback = nil;
                         aAfterSet      : TwbAfterSetCallback = nil;
-                        aDontShow      : TwbDontShowCallback = nil)
+                        aDontShow      : TwbDontShowCallback = nil;
+                        aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 
 function wbArrayS(const aSignature : TwbSignature;
@@ -2224,7 +2310,8 @@ function wbArrayS(const aSignature : TwbSignature;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbArrayS(const aName      : string;
@@ -2234,7 +2321,8 @@ function wbArrayS(const aName      : string;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 
 
@@ -2245,7 +2333,8 @@ function wbRArrayS(const aName      : string;
                          aAfterLoad : TwbAfterLoadCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
                          aDontShow  : TwbDontShowCallback = nil;
-                         aIsSorted  : TwbIsSortedCallback = nil)
+                         aIsSorted  : TwbIsSortedCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordArrayDef; overload;
 
 
@@ -2258,7 +2347,8 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
                           aAfterLoad           : TwbAfterLoadCallback = nil;
-                          aAfterSet            : TwbAfterSetCallback = nil)
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 
 function wbStructSK(const aSortKey             : array of Integer;
@@ -2270,7 +2360,8 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
                           aAfterLoad           : TwbAfterLoadCallback = nil;
-                          aAfterSet            : TwbAfterSetCallback = nil)
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 
 function wbStructSK(const aSignature : TwbSignature;
@@ -2282,7 +2373,8 @@ function wbStructSK(const aSignature : TwbSignature;
                           aDontShow  : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
                           aAfterLoad : TwbAfterLoadCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
 function wbMultiStructSK(const aSignatures : array of TwbSignature;
@@ -2292,9 +2384,10 @@ function wbMultiStructSK(const aSignatures : array of TwbSignature;
                                aPriority   : TwbConflictPriority = cpNormal;
                                aRequired   : Boolean = False;
                                aDontShow   : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                               aOptionalFromElement : Integer = -1;
+                               aAfterLoad  : TwbAfterLoadCallback = nil;
+                               aAfterSet   : TwbAfterSetCallback = nil;
+                               aGetCP      : TwbGetConflictPriority = nil)
                                            : IwbSubRecordDef;
 
 function wbStructExSK(const aSortKey   : array of Integer;
@@ -2304,9 +2397,10 @@ function wbStructExSK(const aSortKey   : array of Integer;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
                             aDontShow  : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                            aOptionalFromElement : Integer = -1;
+                            aAfterLoad : TwbAfterLoadCallback = nil;
+                            aAfterSet  : TwbAfterSetCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbStructDef; overload;
 
 function wbStructExSK(const aSignature : TwbSignature;
@@ -2317,9 +2411,10 @@ function wbStructExSK(const aSignature : TwbSignature;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
                             aDontShow  : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                            aOptionalFromElement : Integer = -1;
+                            aAfterLoad : TwbAfterLoadCallback = nil;
+                            aAfterSet  : TwbAfterSetCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef; overload;
 
 function wbStruct(const aSignature : TwbSignature;
@@ -2330,7 +2425,8 @@ function wbStruct(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
                         aAfterLoad : TwbAfterLoadCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbStruct(const aName      : string;
@@ -2340,7 +2436,8 @@ function wbStruct(const aName      : string;
                         aDontShow  : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
                         aAfterLoad : TwbAfterLoadCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbStructDef; overload;
 
 function wbStructC(const aName                : string;
@@ -2353,7 +2450,8 @@ function wbStructC(const aName                : string;
                          aDontShow            : TwbDontShowCallback = nil;
                          aOptionalFromElement : Integer = -1;
                          aAfterLoad           : TwbAfterLoadCallback = nil;
-                         aAfterSet            : TwbAfterSetCallback = nil)
+                         aAfterSet            : TwbAfterSetCallback = nil;
+                         aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 
 function wbStructZ(const aName                : string;
@@ -2366,7 +2464,8 @@ function wbStructZ(const aName                : string;
                          aDontShow            : TwbDontShowCallback = nil;
                          aOptionalFromElement : Integer = -1;
                          aAfterLoad           : TwbAfterLoadCallback = nil;
-                         aAfterSet            : TwbAfterSetCallback = nil)
+                         aAfterSet            : TwbAfterSetCallback = nil;
+                         aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 
 function wbRStruct(const aName           : string;
@@ -2377,7 +2476,8 @@ function wbRStruct(const aName           : string;
                          aDontShow       : TwbDontShowCallback = nil;
                          aAllowUnordered : Boolean = False;
                          aAfterLoad      : TwbAfterLoadCallback = nil;
-                         aAfterSet       : TwbAfterSetCallback = nil)
+                         aAfterSet       : TwbAfterSetCallback = nil;
+                         aGetCP          : TwbGetConflictPriority = nil)
                                          : IwbSubRecordStructDef; overload;
 
 function wbRStructSK(const aSortKey        : array of Integer;
@@ -2389,7 +2489,8 @@ function wbRStructSK(const aSortKey        : array of Integer;
                            aDontShow       : TwbDontShowCallback = nil;
                            aAllowUnordered : Boolean = False;
                            aAfterLoad      : TwbAfterLoadCallback = nil;
-                           aAfterSet       : TwbAfterSetCallback = nil)
+                           aAfterSet       : TwbAfterSetCallback = nil;
+                           aGetCP          : TwbGetConflictPriority = nil)
                                            : IwbSubRecordStructDef; overload;
 
 function wbRStructExSK(const aSortKey        : array of Integer;
@@ -2402,7 +2503,8 @@ function wbRStructExSK(const aSortKey        : array of Integer;
                              aDontShow       : TwbDontShowCallback = nil;
                              aAllowUnordered : Boolean = False;
                              aAfterLoad      : TwbAfterLoadCallback = nil;
-                             aAfterSet       : TwbAfterSetCallback = nil)
+                             aAfterSet       : TwbAfterSetCallback = nil;
+                             aGetCP          : TwbGetConflictPriority = nil)
                                              : IwbSubRecordStructDef; overload;
 
 function wbRUnion(const aName     : string;
@@ -2410,7 +2512,8 @@ function wbRUnion(const aName     : string;
                   const aSkipSigs : array of TwbSignature;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
+                        aDontShow : TwbDontShowCallback = nil;
+                        aGetCP    : TwbGetConflictPriority = nil)
                                   : IwbSubRecordUnionDef;
 
 {--- wbStructS - array of struct ----------------------------------------------}
@@ -2420,7 +2523,8 @@ function wbStructS(const aSignature   : TwbSignature;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;
                          aRequired    : Boolean = False;
-                         aDontShow    : TwbDontShowCallback = nil)
+                         aDontShow    : TwbDontShowCallback = nil;
+                         aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
 function wbStructS(const aName        : string;
@@ -2428,7 +2532,8 @@ function wbStructS(const aName        : string;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;
                          aRequired    : Boolean = False;
-                         aDontShow    : TwbDontShowCallback = nil)
+                         aDontShow    : TwbDontShowCallback = nil;
+                         aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 
 function wbRStructS(const aName        : string;
@@ -2437,7 +2542,8 @@ function wbRStructS(const aName        : string;
                     const aSkipSigs    : array of TwbSignature;
                           aPriority    : TwbConflictPriority = cpNormal;
                           aRequired    : Boolean = False;
-                          aDontShow    : TwbDontShowCallback = nil)
+                          aDontShow    : TwbDontShowCallback = nil;
+                          aGetCP       : TwbGetConflictPriority = nil)
                                        : IwbSubRecordArrayDef; overload;
 
 function wbRStructsSK(const aName        : string;
@@ -2447,22 +2553,26 @@ function wbRStructsSK(const aName        : string;
                       const aSkipSigs    : array of TwbSignature;
                             aPriority    : TwbConflictPriority = cpNormal;
                             aRequired    : Boolean = False;
-                            aAfterLoad   : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
-                            aDontShow    : TwbDontShowCallback = nil)
+                            aAfterLoad   : TwbAfterLoadCallback = nil;
+                            aAfterSet    : TwbAfterSetCallback = nil;
+                            aDontShow    : TwbDontShowCallback = nil;
+                            aGetCP       : TwbGetConflictPriority = nil)
                                          : IwbSubRecordArrayDef; overload;
 
 function wbEmpty(const aSignature : TwbSignature;
                  const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 
 function wbEmpty(const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
-                       aSorted    : Boolean = False)
+                       aSorted    : Boolean = False;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbValueDef; overload;
 
 function wbRefID: IwbRefID; overload;
@@ -2478,7 +2588,8 @@ function wbRefIDT(const aName      : string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 
 function wbDumpInteger : IwbIntegerDefFormater; overload;
@@ -2513,7 +2624,8 @@ function wbFormID(const aSignature : TwbSignature;
                   const aName      : string = 'Unknown';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 
 function wbFormID(const aName      : string;
@@ -2527,7 +2639,8 @@ function wbFormIDT(const aName      : string;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 
 function wbFormIDCk(const aSignature : TwbSignature;
@@ -2536,7 +2649,8 @@ function wbFormIDCk(const aSignature : TwbSignature;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil)
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
@@ -2545,7 +2659,8 @@ function wbFormIDCkNoReach(const aSignature : TwbSignature;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
-                                 aDontShow  : TwbDontShowCallback = nil)
+                                 aDontShow  : TwbDontShowCallback = nil;
+                                 aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbSubRecordDef; overload;
 
 function wbFormIDCk(const aName      : string;
@@ -2562,7 +2677,8 @@ function wbFormIDCkNoReach(const aName      : string;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
-                                 aDontShow  : TwbDontShowCallback = nil)
+                                 aDontShow  : TwbDontShowCallback = nil;
+                                 aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbIntegerDef; overload;
 
 function wbFormIDCk(const aSignature     : TwbSignature;
@@ -2572,7 +2688,8 @@ function wbFormIDCk(const aSignature     : TwbSignature;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
-                          aDontShow      : TwbDontShowCallback = nil)
+                          aDontShow      : TwbDontShowCallback = nil;
+                          aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbSubRecordDef; overload;
 
 function wbFormIDCk(const aName          : string;
@@ -2581,7 +2698,8 @@ function wbFormIDCk(const aName          : string;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
-                          aDontShow      : TwbDontShowCallback = nil)
+                          aDontShow      : TwbDontShowCallback = nil;
+                          aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbIntegerDef; overload;
 
 function wbFormIDCkNoReach(const aName          : string;
@@ -2590,7 +2708,8 @@ function wbFormIDCkNoReach(const aName          : string;
                                  aPersistent    : Boolean = False;
                                  aPriority      : TwbConflictPriority = cpNormal;
                                  aRequired      : Boolean = False;
-                                 aDontShow      : TwbDontShowCallback = nil)
+                                 aDontShow      : TwbDontShowCallback = nil;
+                                 aGetCP         : TwbGetConflictPriority = nil)
                                                 : IwbIntegerDef; overload;
 
 function wbChar4: IwbChar4;
@@ -3113,6 +3232,7 @@ type
     defParent   : TwbDef;
 
     defPriority : TwbConflictPriority;
+    defGetCP    : TwbGetConflictPriority;
     defRequired : Boolean;
 
     defUsed     : Boolean;
@@ -3125,7 +3245,7 @@ type
     UnknownValues    : TStringList;
   protected
     constructor Clone(const aSource: TwbDef); virtual;
-    constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean);
+    constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; virtual; abstract;
@@ -3133,7 +3253,8 @@ type
     function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; virtual;
     function GetDefID: Cardinal;
     function Equals(const aDef: IwbDef): Boolean; reintroduce; virtual;
-    function GetConflictPriority: TwbConflictPriority;
+    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
+    function GetConflictPriorityCanChange: Boolean;
     function GetRequired: Boolean;
     function CanContainFormIDs: Boolean; virtual;
     function GetDontShow(const aElement: IwbElement): Boolean; virtual;
@@ -3168,8 +3289,8 @@ type
                        aAfterLoad  : TwbAfterLoadCallback;
                        aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
-                       aTerminator : Boolean = False);
-
+                       aGetCP      : TwbGetConflictPriority;
+                       aTerminator : Boolean);
     {--- IwbDef ---}
     function GetDontShow(const aElement: IwbElement): Boolean; override;
     function GetHasDontShow: Boolean; override;
@@ -3188,16 +3309,22 @@ type
     soSignatures : TwbSignatures;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+    constructor Create(aPriority  : TwbConflictPriority;
+                       aRequired  : Boolean;
                  const aSignature : TwbSignature;
                  const aName      : string;
-                       aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                       aDontShow  : TwbDontShowCallback); overload;
-    constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
+                       aAfterLoad : TwbAfterLoadCallback;
+                       aAfterSet  : TwbAfterSetCallback;
+                       aDontShow  : TwbDontShowCallback;
+                       aGetCP     : TwbGetConflictPriority); overload;
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
                  const aSignatures : array of TwbSignature;
                  const aName       : string;
-                       aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                       aDontShow   : TwbDontShowCallback); overload;
+                       aAfterLoad  : TwbAfterLoadCallback;
+                       aAfterSet   : TwbAfterSetCallback;
+                       aDontShow   : TwbDontShowCallback;
+                       aGetCP      : TwbGetConflictPriority); overload;
 
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature;
@@ -3221,10 +3348,11 @@ type
     recContainsEditorID  : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
-                 const aSignature : TwbSignature;
-                 const aName      : string;
-                 const aMembers   : array of IwbRecordMemberDef;
+    constructor Create(aPriority        : TwbConflictPriority;
+                       aRequired        : Boolean;
+                 const aSignature       : TwbSignature;
+                 const aName            : string;
+                 const aMembers          : array of IwbRecordMemberDef;
                        aAllowUnordered  : Boolean;
                        aAddInfoCallback : TwbAddInfoCallback;
                        aAfterLoad       : TwbAfterLoadCallback;
@@ -3267,20 +3395,26 @@ type
     srHasUnusedData: Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+    constructor Create(aPriority  : TwbConflictPriority;
+                       aRequired  : Boolean;
                  const aSignature : TwbSignature;
                  const aName      : string;
                  const aValue     : IwbValueDef;
-                       aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                       aAfterLoad : TwbAfterLoadCallback;
+                       aAfterSet  : TwbAfterSetCallback;
                        aSizeMatch : Boolean;
-                       aDontShow  : TwbDontShowCallback); overload;
-    constructor Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
+                       aDontShow  : TwbDontShowCallback;
+                       aGetCP     : TwbGetConflictPriority); overload;
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
                  const aSignatures : array of TwbSignature;
                  const aName       : string;
                  const aValue      : IwbValueDef;
-                       aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
+                       aAfterLoad  : TwbAfterLoadCallback;
+                       aAfterSet   : TwbAfterSetCallback;
                        aSizeMatch  : Boolean;
-                       aDontShow   : TwbDontShowCallback); overload;
+                       aDontShow   : TwbDontShowCallback;
+                       aGetCP      : TwbGetConflictPriority); overload;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3311,7 +3445,8 @@ type
                        aAfterLoad : TwbAfterLoadCallback;
                        aAfterSet  : TwbAfterSetCallback;
                        aDontShow  : TwbDontShowCallback;
-                       aIsSorted  : TwbIsSortedCallback);
+                       aIsSorted  : TwbIsSortedCallback;
+                       aGetCP     : TwbGetConflictPriority);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3355,7 +3490,8 @@ type
                        aDontShow       : TwbDontShowCallback;
                        aAllowUnordered : Boolean;
                        aAfterLoad      : TwbAfterLoadCallback;
-                       aAfterSet       : TwbAfterSetCallback);
+                       aAfterSet       : TwbAfterSetCallback;
+                       aGetCP          : TwbGetConflictPriority);
     destructor Destroy; override;
 
     {---IwbDef---}
@@ -3411,7 +3547,8 @@ type
                  const aName     : string;
                  const aMembers  : array of IwbRecordMemberDef;
                  const aSkipSigs : array of TwbSignature;
-                       aDontShow : TwbDontShowCallback);
+                       aDontShow : TwbDontShowCallback;
+                       aGetCP    : TwbGetConflictPriority);
     destructor Destroy; override;
 
     {---IwbDef---}
@@ -3459,16 +3596,18 @@ type
     srsMemberInSK : array of Boolean;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
-                 const aName      : string;
-                 const aMembers   : array of IwbRecordMemberDef;
-                 const aSkipSigs  : array of TwbSignature;
-                 const aSortKey   : array of Integer;
-                 const aExSortKey : array of Integer;
-                       aDontShow  : TwbDontShowCallback;
+    constructor Create(aPriority       : TwbConflictPriority;
+                       aRequired       : Boolean;
+                 const aName           : string;
+                 const aMembers        : array of IwbRecordMemberDef;
+                 const aSkipSigs       : array of TwbSignature;
+                 const aSortKey        : array of Integer;
+                 const aExSortKey      : array of Integer;
+                       aDontShow       : TwbDontShowCallback;
                        aAllowUnordered : Boolean;
                        aAfterLoad      : TwbAfterLoadCallback;
-                       aAfterSet       : TwbAfterSetCallback);
+                       aAfterSet       : TwbAfterSetCallback;
+                       aGetCP          : TwbGetConflictPriority);
 
     {---IwbHasSortKeyDef---}
     function GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
@@ -3517,7 +3656,8 @@ type
                        aDecider  : TwbUnionDecider;
                  const aMembers  : array of IwbValueDef;
                        aDontShow : TwbDontShowCallback;
-                       aAfterSet : TwbAfterSetCallback = nil);
+                       aAfterSet : TwbAfterSetCallback;
+                       aGetCP    : TwbGetConflictPriority);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3571,8 +3711,8 @@ type
                        aAfterLoad  : TwbAfterLoadCallback;
                        aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
-                       aTerminator : Boolean = False); virtual;
-
+                       aGetCP      : TwbGetConflictPriority; 
+                       aTerminator : Boolean); virtual;
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; virtual;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 
@@ -3655,14 +3795,15 @@ type
   protected
     Prefix: Integer;
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority      : TwbConflictPriority;
-                       aRequired      : Boolean;
-                 const aName          : string;
-                       aPrefix        : integer;
-                       aAfterLoad     : TwbAfterLoadCallback;
-                       aAfterSet      : TwbAfterSetCallback;
-                       aDontShow      : TwbDontShowCallback;
-                       aTerminator    : Boolean = False);
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
+                 const aName       : string;
+                       aPrefix     : integer;
+                       aAfterLoad  : TwbAfterLoadCallback;
+                       aAfterSet   : TwbAfterSetCallback;
+                       aDontShow   : TwbDontShowCallback;
+                       aGetCP      : TwbGetConflictPriority;
+                       aTerminator : Boolean);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3718,13 +3859,14 @@ type
     badCountCallback        : TwbCountCallBack;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority      : TwbConflictPriority; aRequired: Boolean;
+    constructor Create(aPriority      : TwbConflictPriority;
+                       aRequired      : Boolean;
                  const aName          : string;
                        aSize          : Int64;
                        aDontShow      : TwbDontShowCallback;
-                       aCountCallback : TwbCountCallback = nil;
-                       aTerminator    : Boolean = False);
-
+                       aCountCallback : TwbCountCallback;
+                       aGetCP         : TwbGetConflictPriority;
+                       aTerminator    : Boolean);
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
@@ -3756,7 +3898,8 @@ type
                  const aName      : string;
                        aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                        aDontShow  : TwbDontShowCallback;
-                       aSorted    : Boolean);
+                       aSorted    : Boolean;
+                       aGetCP     : TwbGetConflictPriority);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3789,9 +3932,10 @@ type
                  const aIntType    : TwbIntType;
                  const aFormater   : IwbIntegerDefFormater;
                        aDontShow   : TwbDontShowCallback;
-                       aAfterSet   : TwbAfterSetCallback = nil;
-                       aDefault    : Int64 = 0;
-                       aTerminator : Boolean = False);
+                       aAfterSet   : TwbAfterSetCallback;
+                       aDefault    : Int64;
+                       aGetCP      : TwbGetConflictPriority;
+                       aTerminator : Boolean);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3870,8 +4014,9 @@ type
                        aDontShow   : TwbDontShowCallback;
                        aNormalizer : TwbFloatNormalizer;
                        aDefault    : Extended;
-                       aDouble     : Boolean = False;
-                       aTerminator : Boolean = False);
+                       aGetCP      : TwbGetConflictPriority;
+                       aDouble     : Boolean;
+                       aTerminator : Boolean);
   end;
 
   TwbArrayDef = class(TwbValueDef, IwbArrayDef)
@@ -3896,9 +4041,10 @@ type
                        aAfterLoad  : TwbAfterLoadCallback;
                        aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
-                       aCanAddTo   : Boolean = True;
-                       aTerminator : Boolean = False;
-                       aTerminated : Boolean = False); overload;
+                       aGetCP      : TwbGetConflictPriority;
+                       aCanAddTo   : Boolean;
+                       aTerminator : Boolean;
+                       aTerminated : Boolean); overload;
 
     constructor Create(aPriority      : TwbConflictPriority;
                        aRequired      : Boolean;
@@ -3908,11 +4054,12 @@ type
                  const aLabels        : array of string;
                        aSorted        : Boolean;
                        aAfterLoad     : TwbAfterLoadCallback;
-                       aAfterSet      : TwbAfterSetCallback;            
+                       aAfterSet      : TwbAfterSetCallback;
                        aDontShow      : TwbDontShowCallback;
-                       aCanAddTo      : Boolean = True;
-                       aTerminator    : Boolean = False;
-                       aTerminated    : Boolean = False); overload;
+                       aGetCP         : TwbGetConflictPriority;
+                       aCanAddTo      : Boolean;
+                       aTerminator    : Boolean;
+                       aTerminated    : Boolean); overload;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -3961,7 +4108,8 @@ type
                        aOptionalFromElement : Integer;
                        aDontShow            : TwbDontShowCallback;
                        aAfterLoad           : TwbAfterLoadCallback;
-                       aAfterSet            : TwbAfterSetCallback);
+                       aAfterSet            : TwbAfterSetCallback;
+                       aGetCP               : TwbGetConflictPriority);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -4003,7 +4151,8 @@ type
                        aAfterSet            : TwbAfterSetCallback;
                        aSizeCallBack        : TwbSizeCallback;
                        aGetChapterType      : TwbGetChapterTypeCallback;
-                       aGetChapterTypeName  : TwbGetChapterTypeNameCallback);
+                       aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                       aGetCP               : TwbGetConflictPriority);
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
   public
@@ -4161,6 +4310,8 @@ type
     flgUnusedMask      : Int64;
     flgIgnoreMask      : Int64;
     flgUnknownIsUnused : Boolean;
+    flgGetCPs          : array of TwbGetConflictPriority;
+    flgHasGetCPs       : Boolean;
 
     UnknownFlags       : array[0..63] of Integer;
     HasUnknownFlags    : Boolean;
@@ -4169,7 +4320,8 @@ type
     constructor Create(const aNames           : array of string;
                        const aDontShows       : array of TwbDontShowCallback;
                              aUnknownIsUnused : Boolean;
-                             aIgnoreMask      : Int64);
+                             aIgnoreMask      : Int64;
+                       const aGetCPs          : array of TwbGetConflictPriority);
 
     {---IwbDef---}
     procedure Report(const aParents: TwbDefPath); override;
@@ -4196,6 +4348,8 @@ type
     function GetFlagIgnoreConflict(aIndex: Integer): Boolean;
     function GetFlagDontShow(const aElement: IwbElement; aIndex: Integer): Boolean;
     function GetFlagHasDontShow(aIndex: Integer): Boolean;
+    procedure FlagGetCP(const aElement: IwbElement; aIndex: Integer; var aCP: TwbConflictPriority);
+    function GetFlagHasGetCP(aIndex: Integer): Boolean;
   end;
 
   PwbSparseName = ^TwbSparseName;
@@ -4357,10 +4511,11 @@ function wbSubRecord(const aSignature : TwbSignature;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef;
 begin
-  Result := TwbSubRecordDef.Create(aPriority, aRequired, aSignature, aName, aValue, aAfterLoad, aAfterSet,aSizeMatch, aDontShow);
+  Result := TwbSubRecordDef.Create(aPriority, aRequired, aSignature, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow, aGetCP);
 end;
 
 function wbSubRecord(const aSignatures : array of TwbSignature;
@@ -4370,10 +4525,11 @@ function wbSubRecord(const aSignatures : array of TwbSignature;
                            aPriority   : TwbConflictPriority = cpNormal;
                            aRequired   : Boolean = False;
                            aSizeMatch  : Boolean = False;
-                           aDontShow   : TwbDontShowCallback = nil)
+                           aDontShow   : TwbDontShowCallback = nil;
+                           aGetCP      : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef;
 begin
-  Result := TwbSubRecordDef.Create(aPriority, aRequired, aSignatures, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow);
+  Result := TwbSubRecordDef.Create(aPriority, aRequired, aSignatures, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow, aGetCP);
 end;
 
 
@@ -4383,10 +4539,11 @@ function wbString(const aSignature : TwbSignature;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbString(const aName      : string = 'Unknown';
@@ -4394,10 +4551,11 @@ function wbString(const aName      : string = 'Unknown';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbStringDef; overload;
 begin
-  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function wbStringT(const aSignature : TwbSignature;
@@ -4406,10 +4564,11 @@ function wbStringT(const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringT('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStringT('', aSize, aPriority, aRequired, aDontShow, aAfterSet, aGetCP), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStringT(const aName      : string = 'Unknown';
@@ -4417,33 +4576,36 @@ function wbStringT(const aName      : string = 'Unknown';
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbStringDef; overload;
 begin
-  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, True);
+  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, True);
 end;
 
 function wbStringScript(const aSignature : TwbSignature;
-                  const aName      : string;
-                        aSize      : Integer = 0;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil)
-                                   : IwbSubRecordDef; overload;
+                        const aName      : string;
+                              aSize      : Integer = 0;
+                              aPriority  : TwbConflictPriority = cpNormal;
+                              aRequired  : Boolean = False;
+                              aDontShow  : TwbDontShowCallback = nil;
+                              aAfterSet  : TwbAfterSetCallback = nil;
+                              aGetCP     : TwbGetConflictPriority = nil)
+                                         : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringScript('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStringScript('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStringScript(const aName      : string;
-                             aSize      : Integer = 0;
-                             aPriority  : TwbConflictPriority = cpNormal;
-                             aRequired  : Boolean = False;
-                             aDontShow  : TwbDontShowCallback = nil;
-                             aAfterSet  : TwbAfterSetCallback = nil)
-                                        : IwbStringDef; overload;
+                              aSize      : Integer = 0;
+                              aPriority  : TwbConflictPriority = cpNormal;
+                              aRequired  : Boolean = False;
+                              aDontShow  : TwbDontShowCallback = nil;
+                              aAfterSet  : TwbAfterSetCallback = nil;
+                              aGetCP     : TwbGetConflictPriority = nil)
+                                         : IwbStringDef; overload;
 begin
-  Result := TwbStringScriptDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+  Result := TwbStringScriptDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function wbStringLC(const aSignature : TwbSignature;
@@ -4452,10 +4614,11 @@ function wbStringLC(const aSignature : TwbSignature;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringLC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStringLC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStringLC(const aName      : string;
@@ -4463,10 +4626,11 @@ function wbStringLC(const aName      : string;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 begin
-  Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+  Result := TwbStringLCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function wbStringKC(const aSignature : TwbSignature;
@@ -4475,10 +4639,11 @@ function wbStringKC(const aSignature : TwbSignature;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStringKC(const aName      : string;
@@ -4486,56 +4651,61 @@ function wbStringKC(const aName      : string;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbStringDef; overload;
 begin
-  Result := TwbStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+  Result := TwbStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbLString(const  aSignature : TwbSignature;
-                    const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbSubRecordDef; overload;
+function wbLString(const aSignature : TwbSignature;
+                   const aName      : string;
+                         aSize      : Integer = 0;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbLString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbLString(const  aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
+function wbLString(const aName      : string;
+                         aSize      : Integer = 0;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbStringDef; overload;
 begin
-  Result := TwbLStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+  Result := TwbLStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
-function wbLStringKC(const  aSignature : TwbSignature;
-                    const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbSubRecordDef; overload;
+function wbLStringKC(const aSignature : TwbSignature;
+                     const aName      : string;
+                           aSize      : Integer = 0;
+                           aPriority  : TwbConflictPriority = cpNormal;
+                           aRequired  : Boolean = False;
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aAfterSet  : TwbAfterSetCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
+                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbLStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbLStringKC(const  aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
+function wbLStringKC(const aName      : string;
+                           aSize      : Integer = 0;
+                           aPriority  : TwbConflictPriority = cpNormal;
+                           aRequired  : Boolean = False;
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aAfterSet  : TwbAfterSetCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
+                                      : IwbStringDef; overload;
 begin
-  Result := TwbLStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+  Result := TwbLStringKCDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function wbStringMgefCode(const aSignature : TwbSignature;
@@ -4544,21 +4714,23 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
+                          aAfterSet  : TwbAfterSetCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringMgefCode('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStringMgefCode('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStringMgefCode(const aName      : string;
-                          aSize      : Integer = 0;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil)
-                                     : IwbStringDef; overload;
+                                aSize      : Integer = 0;
+                                aPriority  : TwbConflictPriority = cpNormal;
+                                aRequired  : Boolean = False;
+                                aDontShow  : TwbDontShowCallback = nil;
+                                aAfterSet  : TwbAfterSetCallback = nil;
+                                aGetCP     : TwbGetConflictPriority = nil)
+                                           : IwbStringDef; overload;
 begin
-  Result := TwbStringMgefCodeDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow);
+  Result := TwbStringMgefCodeDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function wbLenString(const aSignature : TwbSignature;
@@ -4566,20 +4738,22 @@ function wbLenString(const aSignature : TwbSignature;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenString('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbLenString('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbLenString(const aName      : string;
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbLenStringDef; overload;
 begin
-  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow);
+  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow, aGetCP, False);
 end;
 
 function wbLenStringT(const aSignature : TwbSignature;
@@ -4587,20 +4761,22 @@ function wbLenStringT(const aSignature : TwbSignature;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil)
+                            aDontShow  : TwbDontShowCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenStringT('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbLenStringT('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbLenStringT(const aName      : string;
                             aPrefix    : Integer = 4;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil)
+                            aDontShow  : TwbDontShowCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbLenStringDef; overload;
 begin
-  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow{, nil}, True);
+  Result := TwbLenStringDef.Create(aPriority, aRequired, aName, aPrefix, nil, nil, aDontShow, aGetCP, True);
 end;
 
 function wbUnion(const aSignature : TwbSignature;
@@ -4609,10 +4785,11 @@ function wbUnion(const aSignature : TwbSignature;
                  const aMembers   : array of IwbValueDef;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbUnion('', aDecider, aMembers, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbUnion('', aDecider, aMembers, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbUnion(const aName     : string;
@@ -4621,10 +4798,11 @@ function wbUnion(const aName     : string;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
                        aDontShow : TwbDontShowCallback = nil;
-                       aAfterSet : TwbAfterSetCallback = nil)
+                       aAfterSet : TwbAfterSetCallback = nil;
+                       aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbUnionDef; overload;
 begin
-  Result := TwbUnionDef.Create(aPriority, aRequired, aName, aDecider, aMembers, aDontShow, aAfterSet);
+  Result := TwbUnionDef.Create(aPriority, aRequired, aName, aDecider, aMembers, aDontShow, aAfterSet, aGetCP);
 end;
 
 
@@ -4634,57 +4812,63 @@ function wbByteArray(const aSignature : TwbSignature;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aSizeMatch : Boolean = False;
-                           aDontShow  : TwbDontShowCallback = nil)
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbByteArray('', aSize, aPriority), nil, nil, aPriority, aRequired, aSizeMatch, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbByteArray('', aSize, aPriority), nil, nil, aPriority, aRequired, aSizeMatch, aDontShow, aGetCP);
 end;
 
 function wbByteArray(const aName     : string = 'Unknown';
                            aSize     : Int64 = 0;
                            aPriority : TwbConflictPriority = cpNormal;
                            aRequired : Boolean = False;
-                           aDontShow : TwbDontShowCallback = nil)
+                           aDontShow : TwbDontShowCallback = nil;
+                           aGetCP    : TwbGetConflictPriority = nil)
                                      : IwbByteArrayDef; overload;
 begin
-  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow);
+  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow, nil, aGetCP, False);
 end;
 
 function wbByteArrayT(const aName     : string = 'Unknown';
                             aSize     : Int64 = 0;
                             aPriority : TwbConflictPriority = cpNormal;
                             aRequired : Boolean = False;
-                            aDontShow : TwbDontShowCallback = nil)
+                            aDontShow : TwbDontShowCallback = nil;
+                            aGetCP    : TwbGetConflictPriority = nil)
                                       : IwbByteArrayDef; overload;
 begin
-  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow, nil, True);
+  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, aSize, aDontShow, nil, aGetCP, True);
 end;
 
 function wbByteArray(const aName          : string;
                            aCountCallback : TwbCountCallback;
                            aPriority      : TwbConflictPriority = cpNormal;
                            aRequired      : Boolean = False;
-                           aDontShow      : TwbDontShowCallback = nil)
+                           aDontShow      : TwbDontShowCallback = nil;
+                           aGetCP         : TwbGetConflictPriority = nil)
                                           : IwbByteArrayDef; overload;
 begin
-  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, 0, aDontShow, aCountCallback);
+  Result := TwbByteArrayDef.Create(aPriority, aRequired, aName, 0, aDontShow, aCountCallback, aGetCP, False);
 end;
 
 function wbUnknown(const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef;
 begin
-  Result := wbByteArray(aSignature, 'Unknown', 0, aPriority, aRequired, False, aDontShow);
+  Result := wbByteArray(aSignature, 'Unknown', 0, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
                    aRequired : Boolean = False;
-                   aDontShow : TwbDontShowCallback = nil)
+                   aDontShow : TwbDontShowCallback = nil;
+                   aGetCP    : TwbGetConflictPriority = nil)
                              : IwbByteArrayDef;
 begin
-  Result := wbByteArray('Unknown', 0, aPriority, aRequired, aDontShow);
+  Result := wbByteArray('Unknown', 0, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
 function wbInteger(const aSignature : TwbSignature;
@@ -4696,10 +4880,11 @@ function wbInteger(const aSignature : TwbSignature;
                          aMatchSize : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
-                         aDefault   : Int64 = 0)
+                         aDefault   : Int64 = 0;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbInteger('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbInteger('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
 end;
 
 function wbIntegerT(const aSignature : TwbSignature;
@@ -4711,10 +4896,11 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aMatchSize : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
-                          aDefault   : Int64 = 0)
+                          aDefault   : Int64 = 0;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbIntegerT('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbIntegerT('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
 end;
 
 function wbInteger(const aName     : string;
@@ -4724,10 +4910,11 @@ function wbInteger(const aName     : string;
                          aRequired : Boolean = False;
                          aDontShow : TwbDontShowCallback = nil;
                          aAfterSet : TwbAfterSetCallback = nil;
-                         aDefault  : Int64 = 0)
+                         aDefault  : Int64 = 0;
+                         aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 begin
-  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault);
+  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, False);
 end;
 
 function wbIntegerT(const aName     : string;
@@ -4737,10 +4924,11 @@ function wbIntegerT(const aName     : string;
                           aRequired : Boolean = False;
                           aDontShow : TwbDontShowCallback = nil;
                           aAfterSet : TwbAfterSetCallback = nil;
-                          aDefault  : Int64 = 0)
+                          aDefault  : Int64 = 0;
+                          aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 begin
-  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, true);
+  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, True);
 end;
 
 function wbInteger(const aSignature : TwbSignature;
@@ -4752,7 +4940,8 @@ function wbInteger(const aSignature : TwbSignature;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
-                         aDefault   : Int64 = 0)
+                         aDefault   : Int64 = 0;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 var
   Callback: IwbIntegerDefFormater;
@@ -4771,14 +4960,15 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aRequired  : Boolean = False;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
-                          aDefault   : Int64 = 0)
+                          aDefault   : Int64 = 0;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 var
   Callback: IwbIntegerDefFormater;
 begin
   if Assigned(aToStr) then
     Callback := wbCallback(aToStr, aToInt);
-  Result := wbIntegerT(aSignature, aName, aIntType, Callback, aPriority, aRequired, False, aDontShow, aAfterSet, aDefault);
+  Result := wbIntegerT(aSignature, aName, aIntType, Callback, aPriority, aRequired, False, aDontShow, aAfterSet, aDefault, aGetCP);
 end;
 
 function wbInteger(const aName     : string;
@@ -4789,7 +4979,8 @@ function wbInteger(const aName     : string;
                          aRequired : Boolean = False;
                          aDontShow : TwbDontShowCallback = nil;
                          aAfterSet : TwbAfterSetCallback = nil;
-                         aDefault  : Int64 = 0)
+                         aDefault  : Int64 = 0;
+                         aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 var
   Callback: IwbIntegerDefFormater;
@@ -4800,21 +4991,22 @@ begin
 end;
 
 function wbIntegerT(const aName     : string;
-                   const aIntType  : TwbIntType;
-                   const aToStr    : TwbIntToStrCallback;
-                   const aToInt    : TwbStrToIntCallback = nil;
-                         aPriority : TwbConflictPriority = cpNormal;
-                         aRequired : Boolean = False;
-                         aDontShow : TwbDontShowCallback = nil;
-                         aAfterSet : TwbAfterSetCallback = nil;
-                         aDefault  : Int64 = 0)
-                                   : IwbIntegerDef; overload;
+                    const aIntType  : TwbIntType;
+                    const aToStr    : TwbIntToStrCallback;
+                    const aToInt    : TwbStrToIntCallback = nil;
+                          aPriority : TwbConflictPriority = cpNormal;
+                          aRequired : Boolean = False;
+                          aDontShow : TwbDontShowCallback = nil;
+                          aAfterSet : TwbAfterSetCallback = nil;
+                          aDefault  : Int64 = 0;
+                          aGetCP    : TwbGetConflictPriority = nil)
+                                    : IwbIntegerDef; overload;
 var
   Callback: IwbIntegerDefFormater;
 begin
   if Assigned(aToStr) then
     Callback := wbCallback(aToStr, aToInt);
-  Result := wbIntegerT(aName, aIntType, Callback, aPriority, aRequired, aDontShow, aAfterSet, aDefault);
+  Result := wbIntegerT(aName, aIntType, Callback, aPriority, aRequired, aDontShow, aAfterSet, aDefault, aGetCP);
 end;
 
 function wbFloat(const aSignature  : TwbSignature;
@@ -4825,10 +5017,11 @@ function wbFloat(const aSignature  : TwbSignature;
                        aDigits     : Integer = -1;
                        aDontShow   : TwbDontShowCallback = nil;
                        aNormalizer : TwbFloatNormalizer = nil;
-                       aDefault    : Extended = 0.0)
+                       aDefault    : Extended = 0.0;
+                       aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbFloat('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbFloat('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault, aGetCP), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbDouble(const aSignature  : TwbSignature;
@@ -4839,10 +5032,11 @@ function wbDouble(const aSignature  : TwbSignature;
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbDouble('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbDouble('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbFloat(const aName       : string = 'Unknown';
@@ -4852,10 +5046,11 @@ function wbFloat(const aName       : string = 'Unknown';
                        aDigits     : Integer = -1;
                        aDontShow   : TwbDontShowCallback = nil;
                        aNormalizer : TwbFloatNormalizer = nil;
-                       aDefault    : Extended = 0.0)
+                       aDefault    : Extended = 0.0;
+                       aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
 end;
 
 function wbDouble(const aName       : string = 'Unknown';
@@ -4865,10 +5060,11 @@ function wbDouble(const aName       : string = 'Unknown';
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
 end;
 
 function wbFloat(const aName       : string;
@@ -4877,10 +5073,11 @@ function wbFloat(const aName       : string;
                        aDontShow   : TwbDontShowCallback;
                        aAfterSet   : TwbAfterSetCallback = nil;
                        aNormalizer : TwbFloatNormalizer = nil;
-                       aDefault    : Extended = 0.0)
+                       aDefault    : Extended = 0.0;
+                       aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
 end;
 
 function wbDouble(const aName       : string;
@@ -4889,10 +5086,11 @@ function wbDouble(const aName       : string;
                         aDontShow   : TwbDontShowCallback;
                         aAfterSet   : TwbAfterSetCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
 end;
 
 function wbFloatT(const aSignature  : TwbSignature;
@@ -4903,10 +5101,11 @@ function wbFloatT(const aSignature  : TwbSignature;
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
-                                   : IwbSubRecordDef; overload;
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbFloatT('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbFloatT('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbDoubleT(const aSignature  : TwbSignature;
@@ -4917,10 +5116,11 @@ function wbDoubleT(const aSignature  : TwbSignature;
                          aDigits     : Integer = -1;
                          aDontShow   : TwbDontShowCallback = nil;
                          aNormalizer : TwbFloatNormalizer = nil;
-                         aDefault    : Extended = 0.0)
-                                    : IwbSubRecordDef; overload;
+                         aDefault    : Extended = 0.0;
+                         aGetCP      : TwbGetConflictPriority = nil)
+                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbDoubleT('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbDoubleT('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbFloatT(const aName       : string = 'Unknown';
@@ -4930,10 +5130,11 @@ function wbFloatT(const aName       : string = 'Unknown';
                         aDigits     : Integer = -1;
                         aDontShow   : TwbDontShowCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, False, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
 end;
 
 function wbDoubleT(const aName       : string = 'Unknown';
@@ -4943,10 +5144,11 @@ function wbDoubleT(const aName       : string = 'Unknown';
                          aDigits     : Integer = -1;
                          aDontShow   : TwbDontShowCallback = nil;
                          aNormalizer : TwbFloatNormalizer = nil;
-                         aDefault    : Extended = 0.0)
+                         aDefault    : Extended = 0.0;
+                         aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, True, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
 end;
 
 function wbFloatT(const aName       : string;
@@ -4955,22 +5157,24 @@ function wbFloatT(const aName       : string;
                         aDontShow   : TwbDontShowCallback;
                         aAfterSet   : TwbAfterSetCallback = nil;
                         aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
+                        aDefault    : Extended = 0.0;
+                        aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, False, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
 end;
 
 function wbDoubleT(const aName       : string;
-                        aPriority   : TwbConflictPriority;
-                        aRequired   : Boolean;
-                        aDontShow   : TwbDontShowCallback;
-                        aAfterSet   : TwbAfterSetCallback = nil;
-                        aNormalizer : TwbFloatNormalizer = nil;
-                        aDefault    : Extended = 0.0)
-                                    : IwbFloatDef; overload;
+                         aPriority   : TwbConflictPriority;
+                         aRequired   : Boolean;
+                         aDontShow   : TwbDontShowCallback;
+                         aAfterSet   : TwbAfterSetCallback = nil;
+                         aNormalizer : TwbFloatNormalizer = nil;
+                         aDefault    : Extended = 0.0;
+                         aGetCP      : TwbGetConflictPriority = nil)
+                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, True, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
 end;
 
 {--- wbArray - list of identical elements -------------------------------------}
@@ -4982,10 +5186,11 @@ function wbArray(const aSignature : TwbSignature;
                        aAfterSet  : TwbAfterSetCallback = nil;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbArray(const aName      : string;
@@ -4993,10 +5198,11 @@ function wbArray(const aName      : string;
                        aCount     : Integer = 0;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
 
@@ -5006,60 +5212,65 @@ function wbArray(const aName      : string;
                        aAfterLoad : TwbAfterLoadCallback;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, aGetCP, True, False, False);
 end;
 
 function wbArrayPT(const aSignature : TwbSignature;
-                 const aName      : string;
-                 const aElement   : IwbValueDef;
-                       aCount     : Integer = 0;
-                       aAfterLoad : TwbAfterLoadCallback = nil;
-                       aAfterSet  : TwbAfterSetCallback = nil;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbSubRecordDef; overload;
+                   const aName      : string;
+                   const aElement   : IwbValueDef;
+                         aCount     : Integer = 0;
+                         aAfterLoad : TwbAfterLoadCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbArrayPT(const aName      : string;
-                 const aElement   : IwbValueDef;
-                       aCount     : Integer = 0;
-                       aPriority  : TwbConflictPriority = cpNormal;
-                       aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
-                                  : IwbArrayDef; overload;
+                   const aElement   : IwbValueDef;
+                         aCount     : Integer = 0;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, True, True);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, aGetCP, True, True, False);
 end;
 
 function wbArrayPT(const aName      : string;
-                 const aElement   : IwbValueDef;
-                       aCount     : Integer;
-                       aAfterLoad : TwbAfterLoadCallback;
-                       aPriority  : TwbConflictPriority = cpNormal;
-                       aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
-                                  : IwbArrayDef; overload;
-begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, True, True);
-end;
-
-function wbArrayT(const aName      : string;
                    const aElement   : IwbValueDef;
                          aCount     : Integer;
-                   const aLabels    : array of string;
                          aAfterLoad : TwbAfterLoadCallback;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
-                         aDontShow  : TwbDontShowCallback = nil)
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, aLabels, False, aAfterLoad, nil, aDontShow, True, True, True);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, aAfterLoad, nil, aDontShow, aGetCP, True, True, False);
+end;
+
+function wbArrayT(const aName      : string;
+                  const aElement   : IwbValueDef;
+                        aCount     : Integer;
+                  const aLabels    : array of string;
+                        aAfterLoad : TwbAfterLoadCallback;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, aLabels, False, aAfterLoad, nil, aDontShow, aGetCP, True, True, True);
 end;
 
 function wbRArray(const aName      : string;
@@ -5068,10 +5279,11 @@ function wbRArray(const aName      : string;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
 end;
 
 function wbArray(const aSignature : TwbSignature;
@@ -5080,10 +5292,11 @@ function wbArray(const aSignature : TwbSignature;
                  const aLabels    : array of string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbArray(const aSignature     : TwbSignature;
@@ -5093,10 +5306,11 @@ function wbArray(const aSignature     : TwbSignature;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
                        aRequired      : Boolean = False;
-                       aDontShow      : TwbDontShowCallback = nil)
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbArray(const aName     : string;
@@ -5104,10 +5318,11 @@ function wbArray(const aName     : string;
                  const aLabels   : array of string;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil)
+                       aDontShow : TwbDontShowCallback = nil;
+                       aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
 function wbArray(const aName          : string;
@@ -5116,10 +5331,11 @@ function wbArray(const aName          : string;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
                        aRequired      : Boolean = False;
-                       aDontShow      : TwbDontShowCallback = nil)
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
 function wbArray(const aName          : string;
@@ -5127,81 +5343,88 @@ function wbArray(const aName          : string;
                        aCountCallback : TwbCountCallback;
                        aPriority      : TwbConflictPriority = cpNormal;
                        aRequired      : Boolean = False;
-                       aDontShow      : TwbDontShowCallback = nil)
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
 function wbArrayPT(const aSignature : TwbSignature;
-                  const aName      : string;
-                  const aElement   : IwbValueDef;
-                  const aLabels    : array of string;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil)
-                                   : IwbSubRecordDef; overload;
+                   const aName      : string;
+                   const aElement   : IwbValueDef;
+                   const aLabels    : array of string;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbArrayPT(const aSignature     : TwbSignature;
-                  const aName          : string;
-                  const aElement       : IwbValueDef;
-                  const aLabels        : array of string;
-                        aCountCallback : TwbCountCallback;
-                        aPriority      : TwbConflictPriority = cpNormal;
-                        aRequired      : Boolean = False;
-                        aDontShow      : TwbDontShowCallback = nil)
-                                      : IwbSubRecordDef; overload;
-begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow);
-end;
-
-function wbArrayPT(const aName     : string;
-                  const aElement  : IwbValueDef;
-                  const aLabels   : array of string;
-                        aPriority : TwbConflictPriority = cpNormal;
-                        aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
-                                  : IwbArrayDef; overload;
-begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, True, True);
-end;
-
-function wbArrayPT(const aName          : string;
-                  const aElement       : IwbValueDef;
-                  const aLabels        : array of string;
-                        aCountCallback : TwbCountCallback;
-                        aPriority      : TwbConflictPriority = cpNormal;
-                        aRequired      : Boolean = False;
-                        aDontShow      : TwbDontShowCallback = nil)
-                                      : IwbArrayDef; overload;
-begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, True, True);
-end;
-
-function wbArrayT(const aName          : string;
+                   const aName          : string;
                    const aElement       : IwbValueDef;
                    const aLabels        : array of string;
                          aCountCallback : TwbCountCallback;
                          aPriority      : TwbConflictPriority = cpNormal;
                          aRequired      : Boolean = False;
-                         aDontShow      : TwbDontShowCallback = nil)
-                                        : IwbArrayDef; overload;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, True, True, True);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+end;
+
+function wbArrayPT(const aName     : string;
+                   const aElement  : IwbValueDef;
+                   const aLabels   : array of string;
+                         aPriority : TwbConflictPriority = cpNormal;
+                         aRequired : Boolean = False;
+                         aDontShow : TwbDontShowCallback = nil;
+                         aGetCP    : TwbGetConflictPriority = nil)
+                                   : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, False, nil, nil, aDontShow, aGetCP, True, True, False);
 end;
 
 function wbArrayPT(const aName          : string;
+                   const aElement       : IwbValueDef;
+                   const aLabels        : array of string;
+                         aCountCallback : TwbCountCallback;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, True, False);
+end;
+
+function wbArrayT(const aName          : string;
                   const aElement       : IwbValueDef;
+                  const aLabels        : array of string;
                         aCountCallback : TwbCountCallback;
                         aPriority      : TwbConflictPriority = cpNormal;
                         aRequired      : Boolean = False;
-                        aDontShow      : TwbDontShowCallback = nil)
+                        aDontShow      : TwbDontShowCallback = nil;
+                        aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow, True, True);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, aLabels, False, nil, nil, aDontShow, aGetCP, True, True, True);
+end;
+
+function wbArrayPT(const aName          : string;
+                   const aElement       : IwbValueDef;
+                         aCountCallback : TwbCountCallback;
+                         aPriority      : TwbConflictPriority = cpNormal;
+                         aRequired      : Boolean = False;
+                         aDontShow      : TwbDontShowCallback = nil;
+                         aGetCP         : TwbGetConflictPriority = nil)
+                                        : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, nil, nil, aDontShow, aGetCP, True, True, False);
 end;
 
 {--- wbArrayS - list of identical elements - gets sorted ----------------------}
@@ -5213,10 +5436,11 @@ function wbArrayS(const aSignature : TwbSignature;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbArrayS(const aName      : string;
@@ -5227,10 +5451,11 @@ function wbArrayS(const aName      : string;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil;
-                        aCanAddTo  : Boolean = True)
+                        aCanAddTo  : Boolean = True;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aCanAddTo);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, aCanAddTo, False, False);
 end;
 
 function wbArrayS(const aName      : string;
@@ -5240,10 +5465,11 @@ function wbArrayS(const aName      : string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet,aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
 function wbArrayS(const aName          : string;
@@ -5253,10 +5479,11 @@ function wbArrayS(const aName          : string;
                         aRequired      : Boolean = False;
                         aAfterLoad     : TwbAfterLoadCallback = nil;
                         aAfterSet      : TwbAfterSetCallback = nil;
-                        aDontShow      : TwbDontShowCallback = nil)
+                        aDontShow      : TwbDontShowCallback = nil;
+                        aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], True, aAfterLoad, aAfterSet, aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
 function wbRArrayS(const aName      : string;
@@ -5266,10 +5493,11 @@ function wbRArrayS(const aName      : string;
                          aAfterLoad : TwbAfterLoadCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
                          aDontShow  : TwbDontShowCallback = nil;
-                         aIsSorted  : TwbIsSortedCallback = nil)
+                         aIsSorted  : TwbIsSortedCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet,aDontShow, aIsSorted);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet, aDontShow, aIsSorted, aGetCP);
 end;
 
 function wbArrayS(const aSignature : TwbSignature;
@@ -5278,11 +5506,13 @@ function wbArrayS(const aSignature : TwbSignature;
                   const aLabels    : array of string;
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aAfterLoad : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aLabels, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aLabels, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbArrayS(const aName      : string;
@@ -5292,10 +5522,11 @@ function wbArrayS(const aName      : string;
                         aRequired  : Boolean = False;
                         aAfterLoad : TwbAfterLoadCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbArrayDef; overload;
 begin
-  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, True, aAfterLoad, aAfterSet,aDontShow);
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
 
@@ -5310,10 +5541,11 @@ function wbStructSK(const aSignature           : TwbSignature;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
                           aAfterLoad           : TwbAfterLoadCallback = nil;
-                          aAfterSet            : TwbAfterSetCallback = nil)
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbMultiStructSK(const aSignatures          : array of TwbSignature;
@@ -5325,10 +5557,11 @@ function wbMultiStructSK(const aSignatures          : array of TwbSignature;
                                aDontShow            : TwbDontShowCallback = nil;
                                aOptionalFromElement : Integer = -1;
                                aAfterLoad           : TwbAfterLoadCallback = nil;
-                               aAfterSet            : TwbAfterSetCallback = nil)
+                               aAfterSet            : TwbAfterSetCallback = nil;
+                               aGetCP               : TwbGetConflictPriority = nil)
                                                     : IwbSubRecordDef;
 begin
-  Result := wbSubRecord(aSignatures, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignatures, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStructSK(const aSortKey             : array of Integer;
@@ -5339,10 +5572,11 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
                           aAfterLoad           : TwbAfterLoadCallback = nil;
-                          aAfterSet            : TwbAfterSetCallback = nil)
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
+  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function wbStructSK(const aSortKey             : array of Integer;
@@ -5354,10 +5588,11 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
                           aAfterLoad           : TwbAfterLoadCallback = nil;
-                          aAfterSet            : TwbAfterSetCallback = nil)
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, [], aElementMap, aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
+  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, [], aElementMap, aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 
@@ -5369,12 +5604,13 @@ function wbStructExSK(const aSignature : TwbSignature;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
                             aDontShow  : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                            aOptionalFromElement : Integer = -1;
+                            aAfterLoad : TwbAfterLoadCallback = nil;
+                            aAfterSet  : TwbAfterSetCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStructExSK(aSortKey, aExSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStructExSK(aSortKey, aExSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStructExSK(const aSortKey   : array of Integer;
@@ -5384,12 +5620,13 @@ function wbStructExSK(const aSortKey   : array of Integer;
                             aPriority  : TwbConflictPriority = cpNormal;
                             aRequired  : Boolean = False;
                             aDontShow  : TwbDontShowCallback = nil;
-                          aOptionalFromElement : Integer = -1;
-                         aAfterLoad : TwbAfterLoadCallback = nil;
-                         aAfterSet  : TwbAfterSetCallback = nil)
+                            aOptionalFromElement : Integer = -1;
+                            aAfterLoad : TwbAfterLoadCallback = nil;
+                            aAfterSet  : TwbAfterSetCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
                                        : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
+  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function wbStruct(const aSignature           : TwbSignature;
@@ -5400,10 +5637,11 @@ function wbStruct(const aSignature           : TwbSignature;
                         aDontShow            : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
                         aAfterLoad           : TwbAfterLoadCallback = nil;
-                        aAfterSet            : TwbAfterSetCallback = nil)
+                        aAfterSet            : TwbAfterSetCallback = nil;
+                        aGetCP               : TwbGetConflictPriority = nil)
                                              : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStruct('', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbStruct('', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbStruct(const aName                : string;
@@ -5413,10 +5651,11 @@ function wbStruct(const aName                : string;
                         aDontShow            : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
                         aAfterLoad           : TwbAfterLoadCallback = nil;
-                        aAfterSet            : TwbAfterSetCallback = nil)
+                        aAfterSet            : TwbAfterSetCallback = nil;
+                        aGetCP               : TwbGetConflictPriority = nil)
                                              : IwbStructDef; overload;
 begin
-  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, [], [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
+  Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, [], [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function wbStructC(const aName                : string;
@@ -5429,10 +5668,11 @@ function wbStructC(const aName                : string;
                          aDontShow            : TwbDontShowCallback = nil;
                          aOptionalFromElement : Integer = -1;
                          aAfterLoad           : TwbAfterLoadCallback = nil;
-                         aAfterSet            : TwbAfterSetCallback = nil)
+                         aAfterSet            : TwbAfterSetCallback = nil;
+                         aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 begin
-  Result := TwbStructCDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName);
+  Result := TwbStructCDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, aGetCP);
 end;
 
 function wbStructZ(const aName                : string;
@@ -5445,10 +5685,11 @@ function wbStructZ(const aName                : string;
                          aDontShow            : TwbDontShowCallback = nil;
                          aOptionalFromElement : Integer = -1;
                          aAfterLoad           : TwbAfterLoadCallback = nil;
-                         aAfterSet            : TwbAfterSetCallback = nil)
+                         aAfterSet            : TwbAfterSetCallback = nil;
+                         aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 begin
-  Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName);
+  Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, aGetCP);
 end;
 
 function wbRStruct(const aName           : string;
@@ -5459,10 +5700,11 @@ function wbRStruct(const aName           : string;
                          aDontShow       : TwbDontShowCallback = nil;
                          aAllowUnordered : Boolean = False;
                          aAfterLoad      : TwbAfterLoadCallback = nil;
-                         aAfterSet       : TwbAfterSetCallback = nil)
+                         aAfterSet       : TwbAfterSetCallback = nil;
+                         aGetCP          : TwbGetConflictPriority = nil)
                                          : IwbSubRecordStructDef; overload;
 begin
-  Result := TwbSubRecordStructDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet);
+  Result := TwbSubRecordStructDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function wbRStructSK(const aSortKey        : array of Integer;
@@ -5474,10 +5716,11 @@ function wbRStructSK(const aSortKey        : array of Integer;
                            aDontShow       : TwbDontShowCallback = nil;
                            aAllowUnordered : Boolean = False;
                            aAfterLoad      : TwbAfterLoadCallback = nil;
-                           aAfterSet       : TwbAfterSetCallback = nil)
+                           aAfterSet       : TwbAfterSetCallback = nil;
+                           aGetCP          : TwbGetConflictPriority = nil)
                                            : IwbSubRecordStructDef; overload;
 begin
-  Result := TwbSubRecordStructSKDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, [], aDontShow, aAllowUnordered, aAfterLoad, aAfterSet);
+  Result := TwbSubRecordStructSKDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, [], aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function wbRStructExSK(const aSortKey        : array of Integer;
@@ -5490,10 +5733,11 @@ function wbRStructExSK(const aSortKey        : array of Integer;
                              aDontShow       : TwbDontShowCallback = nil;
                              aAllowUnordered : Boolean = False;
                              aAfterLoad      : TwbAfterLoadCallback = nil;
-                             aAfterSet       : TwbAfterSetCallback = nil)
+                             aAfterSet       : TwbAfterSetCallback = nil;
+                             aGetCP          : TwbGetConflictPriority = nil)
                                              : IwbSubRecordStructDef; overload;
 begin
-  Result := TwbSubRecordStructSKDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, aExSortKey, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet);
+  Result := TwbSubRecordStructSKDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aSortKey, aExSortKey, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function wbRUnion(const aName     : string;
@@ -5501,10 +5745,11 @@ function wbRUnion(const aName     : string;
                   const aSkipSigs : array of TwbSignature;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False;
-                        aDontShow : TwbDontShowCallback = nil)
+                        aDontShow : TwbDontShowCallback = nil;
+                        aGetCP    : TwbGetConflictPriority = nil)
                                   : IwbSubRecordUnionDef; overload;
 begin
-  Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow);
+  Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aGetCP);
 end;
 
 {--- wbStructS - array of struct ----------------------------------------------}
@@ -5514,10 +5759,11 @@ function wbStructS(const aSignature   : TwbSignature;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;
                          aRequired    : Boolean = False;
-                         aDontShow    : TwbDontShowCallback = nil)
+                         aDontShow    : TwbDontShowCallback = nil;
+                         aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 begin
-  Result := wbArray(aSignature, aName, wbStruct(aElementName, aMembers, aPriority), 0, nil, nil, aPriority, aRequired, aDontShow);
+  Result := wbArray(aSignature, aName, wbStruct(aElementName, aMembers, aPriority), 0, nil, nil, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
 function wbStructS(const aName        : string;
@@ -5525,10 +5771,11 @@ function wbStructS(const aName        : string;
                    const aMembers     : array of IwbValueDef;
                          aPriority    : TwbConflictPriority = cpNormal;
                          aRequired    : Boolean = False;
-                         aDontShow    : TwbDontShowCallback = nil)
+                         aDontShow    : TwbDontShowCallback = nil;
+                         aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 begin
-  Result := wbArray(aName, wbStruct(aElementName, aMembers, aPriority), 0, aPriority, aRequired, aDontShow);
+  Result := wbArray(aName, wbStruct(aElementName, aMembers, aPriority), 0, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
 function wbRStructS(const aName        : string;
@@ -5537,10 +5784,11 @@ function wbRStructS(const aName        : string;
                     const aSkipSigs    : array of TwbSignature;
                           aPriority    : TwbConflictPriority = cpNormal;
                           aRequired    : Boolean = False;
-                          aDontShow    : TwbDontShowCallback = nil)
+                          aDontShow    : TwbDontShowCallback = nil;
+                          aGetCP       : TwbGetConflictPriority = nil)
                                        : IwbSubRecordArrayDef; overload;
 begin
-  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, nil, nil, aDontShow);
+  Result := wbRArray(aName, wbRStruct(aElementName, aMembers, aSkipSigs ,aPriority), aPriority, aRequired, nil, nil, aDontShow, aGetCP);
 end;
 
 function wbRStructsSK(const aName        : string;
@@ -5550,36 +5798,40 @@ function wbRStructsSK(const aName        : string;
                       const aSkipSigs    : array of TwbSignature;
                             aPriority    : TwbConflictPriority = cpNormal;
                             aRequired    : Boolean = False;
-                            aAfterLoad   : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
-                            aDontShow    : TwbDontShowCallback = nil)
+                            aAfterLoad   : TwbAfterLoadCallback = nil;
+                            aAfterSet    : TwbAfterSetCallback = nil;
+                            aDontShow    : TwbDontShowCallback = nil;
+                            aGetCP       : TwbGetConflictPriority = nil)
                                          : IwbSubRecordArrayDef; overload;
 begin
-  Result := wbRArrayS(aName, wbRStructSK(aSortKey, aElementName, aMembers, aSkipSigs, aPriority), aPriority, aRequired, aAfterLoad, aAfterSet,aDontShow);
+  Result := wbRArrayS(aName, wbRStructSK(aSortKey, aElementName, aMembers, aSkipSigs, aPriority), aPriority, aRequired, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
 end;
 
 function wbEmpty(const aSignature : TwbSignature;
                  const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil)
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef;
 begin
-  Result := wbSubRecord(aSignature, aName, wbEmpty('', aPriority, aRequired), nil, nil, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbEmpty('', aPriority, aRequired), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbEmpty(const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
-                       aSorted    : Boolean = False)
+                       aSorted    : Boolean = False;
+                       aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbValueDef;
 begin
-  Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted);
+  Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted, aGetCP);
 end;
 
 function wbDumpInteger : IwbIntegerDefFormater;
 begin
-  Result := TwbDumpIntegerDefFormater.Create(cpNormal, False);
+  Result := TwbDumpIntegerDefFormater.Create(cpNormal, False, nil);
 end;
 
 function wbKey2Data6Enum(const aNames : array of string) : IwbKey2Data6EnumDef;
@@ -5598,10 +5850,10 @@ var
 function wbRefID: IwbRefID;
 begin
   if wbReportMode then
-    Result := TwbRefID.Create(cpNormal, False)
+    Result := TwbRefID.Create(cpNormal, False, nil)
   else begin
     if not Assigned(_RefID) then
-      _RefID := TwbRefID.Create(cpNormal, False);
+      _RefID := TwbRefID.Create(cpNormal, False, nil);
     Result := _RefID;
   end;
 end;
@@ -5617,13 +5869,14 @@ begin
 end;
 
 function wbRefIDT(const aName     : string;
-                       aPriority : TwbConflictPriority = cpNormal;
-                       aRequired : Boolean = False;
-                       aDontShow : TwbDontShowCallback = nil;
-                       aAfterSet : TwbAfterSetCallback = nil)
-                                 : IwbIntegerDef; overload;
+                        aPriority : TwbConflictPriority = cpNormal;
+                        aRequired : Boolean = False;
+                        aDontShow : TwbDontShowCallback = nil;
+                        aAfterSet : TwbAfterSetCallback = nil;
+                        aGetCP    : TwbGetConflictPriority = nil)
+                                  : IwbIntegerDef; overload;
 begin
-  Result := wbIntegerT(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet);
+  Result := wbIntegerT(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
 end;
 
 var
@@ -5632,10 +5885,10 @@ var
 function wbFormID: IwbFormID;
 begin
   if wbReportMode then
-    Result := TwbFormID.Create(cpNormal, False)
+    Result := TwbFormID.Create(cpNormal, False, nil)
   else begin
     if not Assigned(_FormID) then
-      _FormID := TwbFormID.Create(cpNormal, False);
+      _FormID := TwbFormID.Create(cpNormal, False, nil);
     Result := _FormID;
   end;
 end;
@@ -5673,14 +5926,15 @@ end;
 
 function wbChar4: IwbChar4;
 begin
-  Result := TwbChar4.Create(cpNormal, False);
+  Result := TwbChar4.Create(cpNormal, False, nil);
 end;
 
 function wbFormID(const aSignature : TwbSignature;
                   const aName      : string = 'Unknown';
                         aPriority  : TwbConflictPriority = cpNormal;
                         aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil)
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordDef; overload;
 begin
   Result := wbInteger(
@@ -5691,7 +5945,10 @@ begin
               aPriority,
               aRequired,
               False,
-              aDontShow);
+              aDontShow,
+              nil,
+              0,
+              aGetCP);
 end;
 
 function wbFormID(const aName     : string;
@@ -5708,10 +5965,11 @@ function wbFormIDT(const aName     : string;
                          aPriority : TwbConflictPriority = cpNormal;
                          aRequired : Boolean = False;
                          aDontShow : TwbDontShowCallback = nil;
-                         aAfterSet : TwbAfterSetCallback = nil)
+                         aAfterSet : TwbAfterSetCallback = nil;
+                         aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 begin
-  Result := wbIntegerT(aName, itU32, wbFormID, aPriority, aRequired, aDontShow, aAfterSet);
+  Result := wbIntegerT(aName, itU32, wbFormID, aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
 end;
 
 function wbFormIDCk(const aSignature : TwbSignature;
@@ -5720,10 +5978,11 @@ function wbFormIDCk(const aSignature : TwbSignature;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil)
+                          aDontShow  : TwbDontShowCallback = nil;
+                          aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormID(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow);
+  Result := wbInteger(aSignature, aName, itU32, wbFormID(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
 end;
 
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
@@ -5732,10 +5991,11 @@ function wbFormIDCkNoReach(const aSignature : TwbSignature;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
-                                 aDontShow  : TwbDontShowCallback = nil)
+                                 aDontShow  : TwbDontShowCallback = nil;
+                                 aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormIDNoReach(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow);
+  Result := wbInteger(aSignature, aName, itU32, wbFormIDNoReach(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
 end;
 
 function wbFormIDCk(const aName      : string;
@@ -5755,10 +6015,11 @@ function wbFormIDCkNoReach(const aName      : string;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
-                                 aDontShow  : TwbDontShowCallback = nil)
+                                 aDontShow  : TwbDontShowCallback = nil;
+                                 aGetCP     : TwbGetConflictPriority = nil)
                                             : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormIDNoReach(aValidRefs, aPersistent), aPriority, aRequired, aDontShow);
+  Result := wbInteger(aName, itU32, wbFormIDNoReach(aValidRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
 end;
 
 
@@ -5769,10 +6030,11 @@ function wbFormIDCk(const aSignature     : TwbSignature;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
-                          aDontShow      : TwbDontShowCallback = nil)
+                          aDontShow      : TwbDontShowCallback = nil;
+                          aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbSubRecordDef; overload;
 begin
-  Result := wbInteger(aSignature, aName, itU32, wbFormID(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, False, aDontShow);
+  Result := wbInteger(aSignature, aName, itU32, wbFormID(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
 end;
 
 function wbFormIDCk(const aName          : string;
@@ -5781,10 +6043,11 @@ function wbFormIDCk(const aName          : string;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
-                          aDontShow      : TwbDontShowCallback = nil)
+                          aDontShow      : TwbDontShowCallback = nil;
+                          aGetCP         : TwbGetConflictPriority = nil)
                                          : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormID(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow);
+  Result := wbInteger(aName, itU32, wbFormID(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
 end;
 
 function wbFormIDCkNoReach(const aName          : string;
@@ -5793,10 +6056,11 @@ function wbFormIDCkNoReach(const aName          : string;
                                  aPersistent    : Boolean = False;
                                  aPriority      : TwbConflictPriority = cpNormal;
                                  aRequired      : Boolean = False;
-                                 aDontShow      : TwbDontShowCallback = nil)
+                                 aDontShow      : TwbDontShowCallback = nil;
+                                 aGetCP         : TwbGetConflictPriority = nil)
                                                 : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU32, wbFormIDNoReach(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow);
+  Result := wbInteger(aName, itU32, wbFormIDNoReach(aValidRefs, aValidFlstRefs, aPersistent), aPriority, aRequired, aDontShow, nil, 0, aGetCP);
 end;
 
 
@@ -5804,7 +6068,7 @@ function wbFlags(const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef;
 begin
-  Result := TwbFlagsDef.Create(aNames, [], aUnknownIsUnused, 0);
+  Result := TwbFlagsDef.Create(aNames, [], aUnknownIsUnused, 0, []);
 end;
 
 function wbFlags(const aNames           : array of string;
@@ -5821,7 +6085,7 @@ begin
     if (Index >= 0) and (Index <= High(aNames)) then
       IgnoreMask := IgnoreMask or (1 shl Index);
   end;
-  Result := TwbFlagsDef.Create(aNames, [], False, IgnoreMask);
+  Result := TwbFlagsDef.Create(aNames, [], False, IgnoreMask, []);
 end;
 
 
@@ -5830,7 +6094,7 @@ function wbFlags(const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
 begin
-  Result := TwbFlagsDef.Create(aNames, aDontShows, aUnknownIsUnused, 0);
+  Result := TwbFlagsDef.Create(aNames, aDontShows, aUnknownIsUnused, 0, []);
 end;
 
 
@@ -5882,13 +6146,14 @@ end;
 constructor TwbDef.Clone(const aSource: TwbDef);
 begin
   with aSource do
-    Self.Create(defPriority, defRequired).defSource := aSource;
+    Self.Create(defPriority, defRequired, defGetCP).defSource := aSource;
 end;
 
-constructor TwbDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean);
+constructor TwbDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
 begin
   defPriority := aPriority;
   defRequired := aRequired;
+  defGetCP := aGetCP;
   inherited Create;
 end;
 
@@ -5902,9 +6167,16 @@ begin
   Result := Assigned(aDef) and (aDef.DefID = GetDefID);
 end;
 
-function TwbDef.GetConflictPriority: TwbConflictPriority;
+function TwbDef.GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
 begin
   Result := defPriority;
+  if Assigned(defGetCP) then
+    defGetCP(aElement, Result);
+end;
+
+function TwbDef.GetConflictPriorityCanChange: Boolean;
+begin
+  Result := Assigned(defGetCP);
 end;
 
 function TwbDef.GetDefID: Cardinal;
@@ -6056,7 +6328,7 @@ end;
 constructor TwbNamedDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbNamedDef) do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, noTerminator).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
 end;
 
 constructor TwbNamedDef.Create(aPriority   : TwbConflictPriority;
@@ -6065,7 +6337,8 @@ constructor TwbNamedDef.Create(aPriority   : TwbConflictPriority;
                                aAfterLoad  : TwbAfterLoadCallback;
                                aAfterSet   : TwbAfterSetCallback;
                                aDontShow   : TwbDontShowCallback;
-                               aTerminator : Boolean = False);
+                               aGetCP      : TwbGetConflictPriority;
+                               aTerminator : Boolean);
 begin
   noName := aName;
   noDontShow := aDontShow;
@@ -6075,7 +6348,7 @@ begin
   if aPriority = cpNormal then
     if aName = 'Unused' then
       aPriority := cpIgnore;
-  inherited Create(aPriority, aRequired);
+  inherited Create(aPriority, aRequired, aGetCP);
 
   if Pos('unknown', LowerCase(aName)) > 0 then
     IsUnknown := True;
@@ -6118,28 +6391,34 @@ begin
   Result := aSignature = GetDefaultSignature;
 end;
 
-constructor TwbSignatureDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+constructor TwbSignatureDef.Create(aPriority  : TwbConflictPriority;
+                                   aRequired  : Boolean;
                              const aSignature : TwbSignature;
                              const aName      : string;
-                                   aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                                   aDontShow  : TwbDontShowCallback);
+                                   aAfterLoad : TwbAfterLoadCallback;
+                                   aAfterSet  : TwbAfterSetCallback;
+                                   aDontShow  : TwbDontShowCallback;
+                                   aGetCP     : TwbGetConflictPriority);
 begin
   SetLength(soSignatures, 1);
   soSignatures[0] := aSignature;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 constructor TwbSignatureDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbSignatureDef) do
-    Self.Create(defPriority, defRequired, soSignatures, noName, noAfterLoad, noAfterSet, noDontShow).defSource := aSource;
+    Self.Create(defPriority, defRequired, soSignatures, noName, noAfterLoad, noAfterSet, noDontShow, defGetCP).defSource := aSource;
 end;
 
-constructor TwbSignatureDef.Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
+constructor TwbSignatureDef.Create(aPriority   : TwbConflictPriority;
+                                   aRequired   : Boolean;
                              const aSignatures : array of TwbSignature;
                              const aName       : string;
-                                   aAfterLoad  : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
-                                   aDontShow   : TwbDontShowCallback);
+                                   aAfterLoad  : TwbAfterLoadCallback;
+                                   aAfterSet   : TwbAfterSetCallback;
+                                   aDontShow   : TwbDontShowCallback;
+                                   aGetCP      : TwbGetConflictPriority);
 var
   i: Integer;
 begin
@@ -6147,7 +6426,7 @@ begin
   SetLength(soSignatures, Length(aSignatures));
   for i := Low(soSignatures) to High(soSignatures) do
     soSignatures[i] := aSignatures[i];
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 
@@ -6282,7 +6561,7 @@ begin
     end;
   end;
 
-  inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, nil);
+  inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, nil, nil);
 end;
 
 function TwbRecordDef.GetMember(aIndex: Integer): IwbRecordMemberDef;
@@ -6400,37 +6679,41 @@ end;
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordDef do
-    Self.Create(defPriority, defRequired, soSignatures, noName, srValue, noAfterLoad, noAfterSet, srSizeMatch, noDontShow).defSource := aSource;
+    Self.Create(defPriority, defRequired, soSignatures, noName, srValue, noAfterLoad, noAfterSet, srSizeMatch, noDontShow, defGetCP).defSource := aSource;
 end;
 
-constructor TwbSubRecordDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+constructor TwbSubRecordDef.Create(aPriority  : TwbConflictPriority;
+                                   aRequired  : Boolean;
                              const aSignature : TwbSignature;
                              const aName      : string;
                              const aValue     : IwbValueDef;
                                    aAfterLoad : TwbAfterLoadCallback;
                                    aAfterSet  : TwbAfterSetCallback;
                                    aSizeMatch : Boolean;
-                                   aDontShow  : TwbDontShowCallback);
+                                   aDontShow  : TwbDontShowCallback;
+                                   aGetCP     : TwbGetConflictPriority);
 begin
   srSizeMatch := aSizeMatch;
   if Assigned(aValue) then
     srValue := (aValue as IwbDefInternal).SetParent(Self) as IwbValueDef;
-  inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet,aDontShow);
+  inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP);
 end;
 
-constructor TwbSubRecordDef.Create(aPriority   : TwbConflictPriority; aRequired: Boolean;
+constructor TwbSubRecordDef.Create(aPriority   : TwbConflictPriority;
+                                   aRequired   : Boolean;
                              const aSignatures : array of TwbSignature;
                              const aName       : string;
                              const aValue      : IwbValueDef;
                                    aAfterLoad  : TwbAfterLoadCallback;
                                    aAfterSet   : TwbAfterSetCallback;
                                    aSizeMatch  : Boolean;
-                                   aDontShow   : TwbDontShowCallback);
+                                   aDontShow   : TwbDontShowCallback;
+                                   aGetCP      : TwbGetConflictPriority);
 begin
   srSizeMatch := aSizeMatch;
   if Assigned(aValue) then
     srValue := (aValue as IwbDefInternal).SetParent(Self) as IwbValueDef;
-  inherited Create(aPriority, aRequired, aSignatures, aName, aAfterLoad, aAfterSet,aDontShow);
+  inherited Create(aPriority, aRequired, aSignatures, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP);
 end;
 
 function TwbSubRecordDef.GetDefType: TwbDefType;
@@ -6518,7 +6801,7 @@ constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
     Self.Create(defPriority, defRequired, noName, sraElement, sraSorted,
-      noAfterLoad, noAfterSet, noDontShow, sraIsSorted).defSource := aSource;
+      noAfterLoad, noAfterSet, noDontShow, sraIsSorted, defGetCP).defSource := aSource;
 end;
 
 constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
@@ -6528,13 +6811,14 @@ constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequi
                                         aAfterLoad : TwbAfterLoadCallback;
                                         aAfterSet  : TwbAfterSetCallback;
                                         aDontShow  : TwbDontShowCallback;
-                                        aIsSorted  : TwbIsSortedCallback);
+                                        aIsSorted  : TwbIsSortedCallback;
+                                        aGetCP     : TwbGetConflictPriority);
 begin
   if Assigned(aElement) then
     sraElement := (aElement as IwbDefInternal).SetParent(Self) as IwbRecordMemberDef;
   sraSorted := aSorted;
   sraIsSorted := aIsSorted;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function TwbSubRecordArrayDef.GetElement: IwbRecordMemberDef;
@@ -6679,7 +6963,7 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet, defGetCP).defSource := aSource;
   end;
 end;
 
@@ -6700,7 +6984,8 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
                                          aDontShow       : TwbDontShowCallback;
                                          aAllowUnordered : Boolean;
                                          aAfterLoad      : TwbAfterLoadCallback;
-                                         aAfterSet       : TwbAfterSetCallback);
+                                         aAfterSet       : TwbAfterSetCallback;
+                                         aGetCP          : TwbGetConflictPriority);
 var
   i,j: Integer;
 begin
@@ -6721,7 +7006,7 @@ begin
       srsSkipSignatures.Add(aSkipSigs[i]);
   end;
 
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 destructor TwbSubRecordStructDef.Destroy;
@@ -6904,7 +7189,7 @@ begin
       for i := 0 to Pred(sruSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(sruSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, sruMembers, SkipSigs, noDontShow).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, sruMembers, SkipSigs, noDontShow, defGetCP).defSource := aSource;
   end;
 end;
 
@@ -6920,7 +7205,8 @@ constructor TwbSubRecordUnionDef.Create(aPriority : TwbConflictPriority;
                                   const aName     : string;
                                   const aMembers  : array of IwbRecordMemberDef;
                                   const aSkipSigs : array of TwbSignature;
-                                        aDontShow : TwbDontShowCallback);
+                                        aDontShow : TwbDontShowCallback;
+                                        aGetCP    : TwbGetConflictPriority);
 var
   i,j: Integer;
 begin
@@ -6940,7 +7226,7 @@ begin
       sruSkipSignatures.Add(aSkipSigs[i]);
   end;
 
-  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow);
+  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, False);
 end;
 
 destructor TwbSubRecordUnionDef.Destroy;
@@ -7232,7 +7518,7 @@ end;
 constructor TwbIntegerDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDef do
-    Self.Create(defPriority, defRequired, noName, inType, inFormater, noDontShow, noAfterSet, inDefault, noTerminator).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, inType, inFormater, noDontShow, noAfterSet, inDefault, defGetCP, noTerminator).defSource := aSource;
 end;
 
 function TwbIntegerDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: Cardinal): Boolean;
@@ -7254,15 +7540,16 @@ constructor TwbIntegerDef.Create(aPriority   : TwbConflictPriority;
                            const aIntType    : TwbIntType;
                            const aFormater   : IwbIntegerDefFormater;
                                  aDontShow   : TwbDontShowCallback;
-                                 aAfterSet   : TwbAfterSetCallback = nil;
-                                 aDefault    : Int64 = 0;
-                                 aTerminator : Boolean = False);
+                                 aAfterSet   : TwbAfterSetCallback;
+                                 aDefault    : Int64;
+                                 aGetCP      : TwbGetConflictPriority;
+                                 aTerminator : Boolean);
 begin
   inDefault := aDefault;
   inType := aIntType;
   if Assigned(aFormater) then
   inFormater := (aFormater as IwbDefInternal).SetParent(Self) as IwbIntegerDefFormater;
-  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aTerminator);
+  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbIntegerDef.FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
@@ -7707,6 +7994,7 @@ constructor TwbArrayDef.Create(aPriority   : TwbConflictPriority;
                                aAfterLoad  : TwbAfterLoadCallback;
                                aAfterSet   : TwbAfterSetCallback;
                                aDontShow   : TwbDontShowCallback;
+                               aGetCP      : TwbGetConflictPriority;
                                aCanAddTo   : Boolean;
                                aTerminator : Boolean;
                                aTerminated : Boolean);
@@ -7725,7 +8013,7 @@ begin
   arSorted := aSorted;
   arCanAddTo := aCanAddTo;
   arTerminated := aTerminated;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow, aTerminator);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 function TwbArrayDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -7748,10 +8036,10 @@ begin
   with aSource as TwbArrayDef do
     if Assigned(arCountCallback) then
       Self.Create(defPriority, defRequired, noName, arElement, arCountCallback,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo, noTerminator, arTerminated).defSource := aSource
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, defGetCP, arCanAddTo, noTerminator, arTerminated).defSource := aSource
     else
       Self.Create(defPriority, defRequired, noName, arElement, arCount,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, arCanAddTo, noTerminator, arTerminated).defSource := aSource;
+        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, defGetCP, arCanAddTo, noTerminator, arTerminated).defSource := aSource;
 end;
 
 constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -7764,12 +8052,13 @@ constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
                                aAfterLoad     : TwbAfterLoadCallback;
                                aAfterSet      : TwbAfterSetCallback;
                                aDontShow      : TwbDontShowCallback;
-                               aCanAddTo      : Boolean = True;
-                               aTerminator    : Boolean = false;
-                               aTerminated    : Boolean = False);
+                               aGetCP         : TwbGetConflictPriority;
+                               aCanAddTo      : Boolean;
+                               aTerminator    : Boolean;
+                               aTerminated    : Boolean);
 begin
   arCountCallback := aCountCallback;
-  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet,aDontShow, aCanAddTo, aTerminator, aTerminated);
+  Create(aPriority, aRequired, aName, aElement, 0, aLabels, aSorted, aAfterLoad, aAfterSet, aDontShow, aGetCP, aCanAddTo, aTerminator, aTerminated);
 end;
 
 function TwbArrayDef.GetCanAddTo: Boolean;
@@ -8127,7 +8416,7 @@ constructor TwbStructDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStructDef do
     Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
-      stExSortKey, stElementMap, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet).defSource := aSource;
+      stExSortKey, stElementMap, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet, defGetCP).defSource := aSource;
 end;
 
 constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
@@ -8140,7 +8429,8 @@ constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
                                 aOptionalFromElement : Integer;
                                 aDontShow            : TwbDontShowCallback;
                                 aAfterLoad           : TwbAfterLoadCallback;
-                                aAfterSet            : TwbAfterSetCallback);
+                                aAfterSet            : TwbAfterSetCallback;
+                                aGetCP               : TwbGetConflictPriority);
 var
   i: Integer;
 begin
@@ -8164,7 +8454,7 @@ begin
     // should really check that the element map only contains valid values
     // and that there are no optional elements...
   end;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 function TwbStructDef.GetDefType: TwbDefType;
@@ -8419,13 +8709,14 @@ end;
 constructor TwbFlagsDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFlagsDef do
-    Self.Create(flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask).defSource := aSource;
+    Self.Create(flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask, flgGetCPs).defSource := aSource;
 end;
 
 constructor TwbFlagsDef.Create(const aNames           : array of string;
                                const aDontShows       : array of TwbDontShowCallback;
                                      aUnknownIsUnused : Boolean;
-                                     aIgnoreMask      : Int64);
+                                     aIgnoreMask      : Int64;
+                               const aGetCPs          : array of TwbGetConflictPriority);
 var
   i: Integer;
 begin
@@ -8448,7 +8739,14 @@ begin
     flgDontShows[i] := aDontShows[i];
     flgHasDontShows := flgHasDontShows or Assigned(flgDontShows[i]);
   end;
-  inherited Create(cpNormal, False);
+
+  SetLength(flgGetCPs, Length(aGetCPs));
+  for i := Low(flgGetCPs) to High(flgGetCPs) do begin
+    flgGetCPs[i] := aGetCPs[i];
+    flgHasGetCPs := flgHasGetCPs or Assigned(flgGetCPs[i]);
+  end;
+
+  inherited Create(cpNormal, False, nil);
 end;
 
 function TwbFlagsDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -8542,9 +8840,22 @@ begin
     Result := flgDontShows[aIndex](aElement);
 end;
 
+procedure TwbFlagsDef.FlagGetCP(const aElement : IwbElement;
+                                     aIndex   : Integer;
+                                 var aCP      : TwbConflictPriority);
+begin
+  if flgHasGetCPs and (aIndex <= High(flgGetCPs)) and Assigned(flgGetCPs[aIndex]) then
+    flgGetCPs[aIndex](aElement, aCP);
+end;
+
 function TwbFlagsDef.GetFlagHasDontShow(aIndex: Integer): Boolean;
 begin
   Result := flgHasDontShows and (aIndex <= High(flgDontShows)) and Assigned(flgDontShows[aIndex]);
+end;
+
+function TwbFlagsDef.GetFlagHasGetCP(aIndex: Integer): Boolean;
+begin
+  Result := flgHasGetCPs and (aIndex <= High(flgGetCPs)) and Assigned(flgGetCPs[aIndex]);
 end;
 
 function TwbFlagsDef.GetFlagIgnoreConflict(aIndex: Integer): Boolean;
@@ -8697,7 +9008,7 @@ var
   i: Integer;
 begin
   with aSource as TwbEnumDef do begin
-    inherited Create(defPriority, defRequired).defSource := aSource;
+    inherited Create(defPriority, defRequired, defGetCP).defSource := aSource;
     Self.enNames := Copy(enNames, 0, Length(enNames));
     Self.enSparseNames := Copy(enSparseNames, 0, Length(enSparseNames));
     Self.enEditInfo := enEditInfo;
@@ -8768,7 +9079,7 @@ begin
   if Length(enSparseNames) > 0 then
     QuickSort(@enSparseNamesMap[0], Low(enSparseNames), High(enSparseNames), CompareSparseName);
 
-  inherited Create(cpNormal, False);
+  inherited Create(cpNormal, False, nil);
 end;
 
 function CmpB8(a, b: Byte): Integer;
@@ -9046,7 +9357,7 @@ end;
 constructor TwbStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStringDef do
-    Self.Create(defPriority, defRequired, noName, sdSize, noAfterLoad, noAfterSet, noDontShow, noTerminator).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, sdSize, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
 end;
 
 constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
@@ -9056,10 +9367,11 @@ constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
                                 aAfterLoad  : TwbAfterLoadCallback;
                                 aAfterSet   : TwbAfterSetCallback;
                                 aDontShow   : TwbDontShowCallback;
-                                aTerminator : Boolean = False);
+                                aGetCP      : TwbGetConflictPriority;
+                                aTerminator : Boolean);
 begin
   sdSize := aSize;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow, aTerminator);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -9229,7 +9541,7 @@ constructor TwbFloatDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFloatDef do
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, fdScale, fdDigits, noDontShow,
-      fdNormalizer, fdDefault, fdDouble, noTerminator).defSource := aSource;
+      fdNormalizer, fdDefault, defGetCP, fdDouble, noTerminator).defSource := aSource;
 end;
 
 constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
@@ -9242,8 +9554,9 @@ constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
                                aDontShow   : TwbDontShowCallback;
                                aNormalizer : TwbFloatNormalizer;
                                aDefault    : Extended;
-                               aDouble     : Boolean = False;
-                               aTerminator : Boolean = False);
+                               aGetCP      : TwbGetConflictPriority;
+                               aDouble     : Boolean;
+                               aTerminator : Boolean);
 begin
   fdDefault := aDefault;
   fdScale := aScale;
@@ -9252,7 +9565,7 @@ begin
   fdDouble := aDouble;
   if fdDigits < 0 then
     fdDigits := wbFloatDigits;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aTerminator);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbFloatDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -9508,7 +9821,7 @@ end;
 constructor TwbChar4.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbChar4 do
-    Self.Create(defPriority, defRequired).defSource := aSource;
+    Self.Create(defPriority, defRequired, defGetCP).defSource := aSource;
 end;
 
 function TwbChar4.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -9639,7 +9952,7 @@ end;
 constructor TwbFormID.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFormID do
-    Self.Create(defPriority, defRequired).defSource := aSource;
+    Self.Create(defPriority, defRequired, defGetCP).defSource := aSource;
 end;
 
 function TwbFormID.CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
@@ -10359,7 +10672,7 @@ end;
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbByteArrayDef do
-    Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack, noTerminator).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack, defGetCP, noTerminator).defSource := aSource;
 end;
 
 constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -10368,11 +10681,12 @@ constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
                                    aSize          : Int64;
                                    aDontShow      : TwbDontShowCallback;
                                    aCountCallback : TwbCountCallback;
+                                   aGetCP         : TwbGetConflictPriority;
                                    aTerminator    : Boolean);
 begin
   badSize := aSize;
   badCountCallback := aCountCallback;
-  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aTerminator);
+  inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbByteArrayDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -10840,7 +11154,7 @@ end;
 constructor TwbDivDef.Create(aValue: Integer);
 begin
   ddValue := aValue;
-  inherited Create(cpNormal, False);
+  inherited Create(cpNormal, False, nil);
 end;
 
 function TwbDivDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -10892,7 +11206,7 @@ end;
 constructor TwbMulDef.Create(aValue: Integer);
 begin
   mdValue := aValue;
-  inherited Create(cpNormal, False);
+  inherited Create(cpNormal, False, nil);
 end;
 
 function TwbMulDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -10952,7 +11266,7 @@ constructor TwbCallbackDef.Create(const aToStr : TwbIntToStrCallback;
 begin
   cdToStr := aToStr;
   cdToInt := aToInt;
-  inherited Create(cpNormal, False);
+  inherited Create(cpNormal, False, nil);
 end;
 
 function TwbCallbackDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -11122,20 +11436,22 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet, defGetCP).defSource := aSource;
   end;
 end;
 
-constructor TwbSubRecordStructSKDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
-                                     const aName      : string;
-                                     const aMembers   : array of IwbRecordMemberDef;
-                                     const aSkipSigs  : array of TwbSignature;
-                                     const aSortKey   : array of Integer;
-                                     const aExSortKey : array of Integer;
-                                           aDontShow  : TwbDontShowCallback;
+constructor TwbSubRecordStructSKDef.Create(aPriority       : TwbConflictPriority;
+                                           aRequired       : Boolean;
+                                     const aName           : string;
+                                     const aMembers        : array of IwbRecordMemberDef;
+                                     const aSkipSigs       : array of TwbSignature;
+                                     const aSortKey        : array of Integer;
+                                     const aExSortKey      : array of Integer;
+                                           aDontShow       : TwbDontShowCallback;
                                            aAllowUnordered : Boolean;
                                            aAfterLoad      : TwbAfterLoadCallback;
-                                           aAfterSet       : TwbAfterSetCallback);
+                                           aAfterSet       : TwbAfterSetCallback;
+                                           aGetCP          : TwbGetConflictPriority);
 var
   i: Integer;
 begin
@@ -11153,7 +11469,7 @@ begin
   for i := Low(srsExSortKey) to High(srsExSortKey) do
     srsExSortKey[i] := aExSortKey[i];
 
-  inherited Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet);
+  inherited Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aAllowUnordered, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function TwbSubRecordStructSKDef.GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
@@ -11313,7 +11629,7 @@ begin
     fidcValidFlstRefs.Add(aValidFlstRefs[i]);
   end;
 
-  inherited Create(cpNormal, False);
+  inherited Create(cpNormal, False, nil);
 end;
 
 destructor TwbFormIDChecked.Destroy;
@@ -11431,7 +11747,7 @@ end;
 constructor TwbIntegerDefFormater.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDefFormater do
-    Self.Create(defPriority, defRequired).defSource := aSource;
+    Self.Create(defPriority, defRequired, defGetCP).defSource := aSource;
 end;
 
 function TwbIntegerDefFormater.CompareExchangeFormID(var aInt: Int64;
@@ -11547,7 +11863,7 @@ end;
 constructor TwbUnionDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbUnionDef do
-    Self.Create(defPriority, defRequired, noName, udDecider, udMembers, noDontShow).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, udDecider, udMembers, noDontShow, noAfterSet, defGetCP).defSource := aSource;
 end;
 
 constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
@@ -11556,11 +11872,12 @@ constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
                                aDecider  : TwbUnionDecider;
                          const aMembers  : array of IwbValueDef;
                                aDontShow : TwbDontShowCallback;
-                               aAfterSet : TwbAfterSetCallback);
+                               aAfterSet : TwbAfterSetCallback;
+                               aGetCP    : TwbGetConflictPriority);
 var
   i: Integer;
 begin
-  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow);
+  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, False);
   udDecider := aDecider;
   SetLength(udMembers, Length(aMembers));
   for I := Low(udMembers) to High(udMembers) do begin
@@ -11766,7 +12083,7 @@ end;
 constructor TwbEmptyDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbEmptyDef do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, edSorted).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, edSorted, defGetCP).defSource := aSource;
 end;
 
 constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
@@ -11774,10 +12091,11 @@ constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
                          const aName      : string;
                                aAfterLoad : TwbAfterLoadCallback; aAfterSet : TwbAfterSetCallback;
                                aDontShow  : TwbDontShowCallback;
-                               aSorted    : Boolean);
+                               aSorted    : Boolean;
+                               aGetCP     : TwbGetConflictPriority);
 begin
   edSorted := aSorted;
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet,aDontShow);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
 procedure TwbEmptyDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -11995,23 +12313,24 @@ end;
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbLenStringDef do
-    Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow, noTerminator).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
 end;
 
-constructor TwbLenStringDef.Create(aPriority      : TwbConflictPriority;
-                                   aRequired      : Boolean;
-                             const aName          : string;
-                                   aPrefix        : Integer;
-                                   aAfterLoad     : TwbAfterLoadCallback;
-                                   aAfterSet      : TwbAfterSetCallback;
-                                   aDontShow      : TwbDontShowCallback;
-                                   aTerminator    : Boolean = False);
+constructor TwbLenStringDef.Create(aPriority    : TwbConflictPriority;
+                                   aRequired    : Boolean;
+                             const aName        : string;
+                                   aPrefix      : Integer;
+                                   aAfterLoad   : TwbAfterLoadCallback;
+                                   aAfterSet    : TwbAfterSetCallback;
+                                   aDontShow    : TwbDontShowCallback;
+                                   aGetCP       : TwbGetConflictPriority;
+                                   aTerminator  : Boolean);
 begin
   Prefix := aPrefix;
   if not (Abs(Prefix) in [1, 2, 3, 4, 5]) then
     Prefix := 4;
 
-  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aTerminator);
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbLenStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
@@ -12647,7 +12966,7 @@ begin
   with aSource as TwbStructCDef do
     Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
       stExSortKey, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet,
-      scSizeCallback, scGetChapterType, scGetChapterTypeName).defSource := aSource;
+      scSizeCallback, scGetChapterType, scGetChapterTypeName, defGetCP).defSource := aSource;
 end;
 
 constructor TwbStructCDef.Create(aPriority: TwbConflictPriority;
@@ -12661,12 +12980,13 @@ constructor TwbStructCDef.Create(aPriority: TwbConflictPriority;
                                  aAfterSet            : TwbAfterSetCallback;
                                  aSizeCallBack        : TwbSizeCallback;
                                  aGetChapterType      : TwbGetChapterTypeCallback;
-                                 aGetChapterTypeName  : TwbGetChapterTypeNameCallback);
+                                 aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                                 aGetCP               : TwbGetConflictPriority);
 begin
   scSizeCallback := aSizeCallback;
   scGetChapterType := aGetChapterType;
   scGetChapterTypeName := aGetChapterTypeName;
-  inherited Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet);
+  inherited Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
 
 function TwbStructCDef.GetDefType: TwbDefType;
