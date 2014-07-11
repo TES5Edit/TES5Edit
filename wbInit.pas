@@ -421,7 +421,7 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
-    if not (wbToolMode in [tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
