@@ -3703,7 +3703,6 @@ end;
 procedure wbCELLDATAAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainer;
-  Old, New  : Integer;
 begin
   if not Assigned(aElement) then
     Exit;

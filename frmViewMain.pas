@@ -11352,16 +11352,6 @@ procedure TfrmMain.vstViewCreateEditor(Sender: TBaseVirtualTree;
 var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
-
-  {$IFNDEF LiteVersion}
-  i                           : Integer;
-  TextLink                    : TcxTextEditLink;
-  ComboLink                   : TcxComboEditLink;
-  CheckComboLink              : TcxCheckComboEditLink;
-  {$ELSE}
-  ComboLink                   : TwbComboEditLink;
-  CheckComboLink              : TwbCheckComboEditLink;
-  {$ENDIF}
 begin
   if Column < 1 then
     Exit;
