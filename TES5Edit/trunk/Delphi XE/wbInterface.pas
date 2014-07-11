@@ -1817,7 +1817,7 @@ function wbByteArray(const aName          : string;
                            aPriority      : TwbConflictPriority = cpNormal;
                            aRequired      : Boolean = False;
                            aDontShow      : TwbDontShowCallback = nil;
-                           aGetCP     : TwbGetConflictPriority = nil)
+                           aGetCP         : TwbGetConflictPriority = nil)
                                           : IwbByteArrayDef; overload;
 
 function wbUnknown(const aSignature : TwbSignature;
@@ -2364,81 +2364,81 @@ function wbStructSK(const aSortKey             : array of Integer;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbStructDef; overload;
 
-function wbStructSK(const aSignature : TwbSignature;
-                    const aSortKey   : array of Integer;
-                    const aName      : string;
-                    const aMembers   : array of IwbValueDef;
-                          aPriority  : TwbConflictPriority = cpNormal;
-                          aRequired  : Boolean = False;
-                          aDontShow  : TwbDontShowCallback = nil;
+function wbStructSK(const aSignature           : TwbSignature;
+                    const aSortKey             : array of Integer;
+                    const aName                : string;
+                    const aMembers             : array of IwbValueDef;
+                          aPriority            : TwbConflictPriority = cpNormal;
+                          aRequired            : Boolean = False;
+                          aDontShow            : TwbDontShowCallback = nil;
                           aOptionalFromElement : Integer = -1;
-                          aAfterLoad : TwbAfterLoadCallback = nil;
-                          aAfterSet  : TwbAfterSetCallback = nil;
-                          aGetCP     : TwbGetConflictPriority = nil)
-                                     : IwbSubRecordDef; overload;
+                          aAfterLoad           : TwbAfterLoadCallback = nil;
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
+                                               : IwbSubRecordDef; overload;
 
-function wbMultiStructSK(const aSignatures : array of TwbSignature;
-                         const aSortKey    : array of Integer;
-                         const aName       : string;
-                         const aMembers    : array of IwbValueDef;
-                               aPriority   : TwbConflictPriority = cpNormal;
-                               aRequired   : Boolean = False;
-                               aDontShow   : TwbDontShowCallback = nil;
+function wbMultiStructSK(const aSignatures          : array of TwbSignature;
+                         const aSortKey             : array of Integer;
+                         const aName                : string;
+                         const aMembers             : array of IwbValueDef;
+                               aPriority            : TwbConflictPriority = cpNormal;
+                               aRequired            : Boolean = False;
+                               aDontShow            : TwbDontShowCallback = nil;
                                aOptionalFromElement : Integer = -1;
-                               aAfterLoad  : TwbAfterLoadCallback = nil;
-                               aAfterSet   : TwbAfterSetCallback = nil;
-                               aGetCP      : TwbGetConflictPriority = nil)
-                                           : IwbSubRecordDef;
+                               aAfterLoad           : TwbAfterLoadCallback = nil;
+                               aAfterSet            : TwbAfterSetCallback = nil;
+                               aGetCP               : TwbGetConflictPriority = nil)
+                                                    : IwbSubRecordDef;
 
-function wbStructExSK(const aSortKey   : array of Integer;
-                      const aExSortKey : array of Integer;
-                      const aName      : string;
-                      const aMembers   : array of IwbValueDef;
-                            aPriority  : TwbConflictPriority = cpNormal;
-                            aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil;
+function wbStructExSK(const aSortKey             : array of Integer;
+                      const aExSortKey           : array of Integer;
+                      const aName                : string;
+                      const aMembers             : array of IwbValueDef;
+                            aPriority            : TwbConflictPriority = cpNormal;
+                            aRequired            : Boolean = False;
+                            aDontShow            : TwbDontShowCallback = nil;
                             aOptionalFromElement : Integer = -1;
-                            aAfterLoad : TwbAfterLoadCallback = nil;
-                            aAfterSet  : TwbAfterSetCallback = nil;
-                            aGetCP     : TwbGetConflictPriority = nil)
-                                       : IwbStructDef; overload;
+                            aAfterLoad           : TwbAfterLoadCallback = nil;
+                            aAfterSet            : TwbAfterSetCallback = nil;
+                            aGetCP               : TwbGetConflictPriority = nil)
+                                                 : IwbStructDef; overload;
 
-function wbStructExSK(const aSignature : TwbSignature;
-                      const aSortKey   : array of Integer;
-                      const aExSortKey : array of Integer;
-                      const aName      : string;
-                      const aMembers   : array of IwbValueDef;
-                            aPriority  : TwbConflictPriority = cpNormal;
-                            aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil;
+function wbStructExSK(const aSignature           : TwbSignature;
+                      const aSortKey             : array of Integer;
+                      const aExSortKey           : array of Integer;
+                      const aName                : string;
+                      const aMembers             : array of IwbValueDef;
+                            aPriority            : TwbConflictPriority = cpNormal;
+                            aRequired            : Boolean = False;
+                            aDontShow            : TwbDontShowCallback = nil;
                             aOptionalFromElement : Integer = -1;
-                            aAfterLoad : TwbAfterLoadCallback = nil;
-                            aAfterSet  : TwbAfterSetCallback = nil;
-                            aGetCP     : TwbGetConflictPriority = nil)
-                                       : IwbSubRecordDef; overload;
+                            aAfterLoad           : TwbAfterLoadCallback = nil;
+                            aAfterSet            : TwbAfterSetCallback = nil;
+                            aGetCP               : TwbGetConflictPriority = nil)
+                                                 : IwbSubRecordDef; overload;
 
-function wbStruct(const aSignature : TwbSignature;
-                  const aName      : string;
-                  const aMembers   : array of IwbValueDef;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
+function wbStruct(const aSignature           : TwbSignature;
+                  const aName                : string;
+                  const aMembers             : array of IwbValueDef;
+                        aPriority            : TwbConflictPriority = cpNormal;
+                        aRequired            : Boolean = False;
+                        aDontShow            : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
-                        aAfterLoad : TwbAfterLoadCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+                        aAfterLoad           : TwbAfterLoadCallback = nil;
+                        aAfterSet            : TwbAfterSetCallback = nil;
+                        aGetCP               : TwbGetConflictPriority = nil)
+                                             : IwbSubRecordDef; overload;
 
-function wbStruct(const aName      : string;
-                  const aMembers   : array of IwbValueDef;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
+function wbStruct(const aName                : string;
+                  const aMembers             : array of IwbValueDef;
+                        aPriority            : TwbConflictPriority = cpNormal;
+                        aRequired            : Boolean = False;
+                        aDontShow            : TwbDontShowCallback = nil;
                         aOptionalFromElement : Integer = -1;
-                        aAfterLoad : TwbAfterLoadCallback = nil;
-                        aAfterSet  : TwbAfterSetCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbStructDef; overload;
+                        aAfterLoad           : TwbAfterLoadCallback = nil;
+                        aAfterSet            : TwbAfterSetCallback = nil;
+                        aGetCP               : TwbGetConflictPriority = nil)
+                                             : IwbStructDef; overload;
 
 function wbStructC(const aName                : string;
                          aSizing              : TwbSizeCallback;
@@ -2581,7 +2581,8 @@ function wbRefID(const aName      : string;
                        aPriority  : TwbConflictPriority = cpNormal;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
-                       aAfterSet  : TwbAfterSetCallback = nil)
+                       aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP    : TwbGetConflictPriority = nil)
                                   : IwbIntegerDef; overload;
 
 function wbRefIDT(const aName      : string;
@@ -3352,7 +3353,7 @@ type
                        aRequired        : Boolean;
                  const aSignature       : TwbSignature;
                  const aName            : string;
-                 const aMembers          : array of IwbRecordMemberDef;
+                 const aMembers         : array of IwbRecordMemberDef;
                        aAllowUnordered  : Boolean;
                        aAddInfoCallback : TwbAddInfoCallback;
                        aAfterLoad       : TwbAfterLoadCallback;
@@ -5596,35 +5597,35 @@ begin
 end;
 
 
-function wbStructExSK(const aSignature : TwbSignature;
-                      const aSortKey   : array of Integer;
-                      const aExSortKey : array of Integer;
-                      const aName      : string;
-                      const aMembers   : array of IwbValueDef;
-                            aPriority  : TwbConflictPriority = cpNormal;
-                            aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil;
+function wbStructExSK(const aSignature           : TwbSignature;
+                      const aSortKey             : array of Integer;
+                      const aExSortKey           : array of Integer;
+                      const aName                : string;
+                      const aMembers             : array of IwbValueDef;
+                            aPriority            : TwbConflictPriority = cpNormal;
+                            aRequired            : Boolean = False;
+                            aDontShow            : TwbDontShowCallback = nil;
                             aOptionalFromElement : Integer = -1;
-                            aAfterLoad : TwbAfterLoadCallback = nil;
-                            aAfterSet  : TwbAfterSetCallback = nil;
-                            aGetCP     : TwbGetConflictPriority = nil)
-                                       : IwbSubRecordDef; overload;
+                            aAfterLoad           : TwbAfterLoadCallback = nil;
+                            aAfterSet            : TwbAfterSetCallback = nil;
+                            aGetCP               : TwbGetConflictPriority = nil)
+                                                 : IwbSubRecordDef; overload;
 begin
   Result := wbSubRecord(aSignature, aName, wbStructExSK(aSortKey, aExSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbStructExSK(const aSortKey   : array of Integer;
-                      const aExSortKey : array of Integer;
-                      const aName      : string;
-                      const aMembers   : array of IwbValueDef;
-                            aPriority  : TwbConflictPriority = cpNormal;
-                            aRequired  : Boolean = False;
-                            aDontShow  : TwbDontShowCallback = nil;
+function wbStructExSK(const aSortKey             : array of Integer;
+                      const aExSortKey           : array of Integer;
+                      const aName                : string;
+                      const aMembers             : array of IwbValueDef;
+                            aPriority            : TwbConflictPriority = cpNormal;
+                            aRequired            : Boolean = False;
+                            aDontShow            : TwbDontShowCallback = nil;
                             aOptionalFromElement : Integer = -1;
-                            aAfterLoad : TwbAfterLoadCallback = nil;
-                            aAfterSet  : TwbAfterSetCallback = nil;
-                            aGetCP     : TwbGetConflictPriority = nil)
-                                       : IwbStructDef; overload;
+                            aAfterLoad           : TwbAfterLoadCallback = nil;
+                            aAfterSet            : TwbAfterSetCallback = nil;
+                            aGetCP               : TwbGetConflictPriority = nil)
+                                                 : IwbStructDef; overload;
 begin
   Result := TwbStructDef.Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
 end;
@@ -5862,10 +5863,11 @@ function wbRefID(const aName     : string;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
                        aDontShow : TwbDontShowCallback = nil;
-                       aAfterSet : TwbAfterSetCallback = nil)
+                       aAfterSet : TwbAfterSetCallback = nil;
+                       aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbIntegerDef; overload;
 begin
-  Result := wbInteger(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet);
+  Result := wbInteger(aName, itU24, wbRefID, aPriority, aRequired, aDontShow, aAfterSet, 0, aGetCP);
 end;
 
 function wbRefIDT(const aName     : string;
