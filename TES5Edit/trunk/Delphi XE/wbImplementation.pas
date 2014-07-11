@@ -249,6 +249,7 @@ type
     procedure SetNativeValue(const aValue: Variant); virtual;
     procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal); virtual;
     function GetConflictPriority: TwbConflictPriority; virtual;
+    function GetConflictPriorityCanChange: Boolean; virtual;
     function GetModified: Boolean;
     procedure MarkModifiedRecursive; virtual;
     function GetIsInjected: Boolean; virtual;
@@ -11202,7 +11203,7 @@ begin
     Def := GetDef;
 
   if Assigned(Def) then
-    Result := Def.ConflictPriority;
+    Result := Def.ConflictPriority[Self];
 
   if wbTranslationMode then begin
     if Result <> cpTranslate then
@@ -11220,6 +11221,22 @@ begin
     if Assigned(MainRecord) and (MainRecord.Signature = 'GMST') then
       Result := cpBenign;
   end;
+end;
+
+function TwbElement.GetConflictPriorityCanChange: Boolean;
+var
+  Def        : IwbDef;
+  MainRecord : IwbMainRecord;
+begin
+  Result := False;
+
+  Def := GetValueDef;
+
+  if not Assigned(Def) then
+    Def := GetDef;
+
+  if Assigned(Def) then
+    Result := Def.ConflictPriorityCanChange;
 end;
 
 function TwbElement.GetContainer: IwbContainer;
@@ -13616,7 +13633,7 @@ begin
   else if fFlagsDef.FlagIgnoreConflict[fIndex] then
     Result := cpIgnore
   else if Assigned(fIntegerDef) then
-    Result := fIntegerDef.ConflictPriority
+    Result := fIntegerDef.ConflictPriority[Self]
   else
     Result := cpNormal;
 
@@ -13811,7 +13828,7 @@ begin
     Def := Resolve(ValueDef, GetDataBasePtr, GetDataEndPtr, Self);
 
   if Assigned(Def) then
-    Result := Def.ConflictPriority;
+    Result := Def.ConflictPriority[Self];
 
   if wbTranslationMode then begin
     if Result <> cpTranslate then

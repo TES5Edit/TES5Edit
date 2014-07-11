@@ -749,6 +749,8 @@ var
   wbCOCT: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
+  wbReqKWDAs: IwbSubRecordDef;
+  wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
   wbCNAMReq: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef;
@@ -3662,6 +3664,56 @@ begin
   end;
 end;
 
+procedure wbCELLXCLWGetConflictPriority(const aElement: IwbElement; var aCP: TwbConflictPriority);
+var
+  Container  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  DataRec    : IwbElement;
+  Flags      : Cardinal;
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  if Container.ElementCount < 1 then
+    Exit;
+
+  if not Supports(Container, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if MainRecord.IsDeleted then
+    Exit;
+
+  DataRec := MainRecord.ElementBySignature[DATA];
+
+  if not Assigned(DataRec) then
+    Exit;
+
+  Flags := DataRec.NativeValue;
+
+  {0x0001 Is Interior Cell}
+  {0x0002 Has Water}
+  if (Flags and 3) = 1 then
+    {Interior and no Water}
+    aCP := cpIgnore;
+end;
+
+procedure wbCELLDATAAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Old, New  : Integer;
+begin
+  if not Assigned(aElement) then
+    Exit;
+  Container := aElement.Container;
+  while Assigned(Container) and not (Container.Def.DefType = dtRecord) do
+    Container := Container.Container;
+  if Assigned(Container) then
+    Container.ResetConflict;
+end;
+
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
@@ -4084,6 +4136,12 @@ begin
 
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
   wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
+  wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True, nil, wbKWDAsAfterSet);
+
+  wbKeywords := wbRStruct('Keywords', [
+    wbKSIZ,
+    wbReqKWDAs
+  ], []);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -6340,7 +6398,7 @@ begin
         {0x0040} 'Hand Changed',
         {0x0080} 'Show Sky',
         {0x0100} 'Use Sky Lighting'
-      ]), cpNormal, True),
+      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
       wbStruct(XCLC, 'Grid', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32),
@@ -6408,7 +6466,7 @@ begin
       wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
       {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
-      wbFloat(XCLW, 'Water Height'),
+      wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
       //wbByteArray(XCLW, 'Water Height', 4),
       wbString(XNAM, 'Water Noise Texture'),
       wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
@@ -6459,7 +6517,7 @@ begin
         {0x0040} 'Hand Changed',
         {0x0080} 'Show Sky',
         {0x0100} 'Use Sky Lighting'
-      ]), cpNormal, True),
+      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
       wbStruct(XCLC, 'Grid', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32),
@@ -6532,7 +6590,7 @@ begin
       wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
       {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
-      wbFloat(XCLW, 'Water Height'),
+      wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
       //wbByteArray(XCLW, 'Water Height', 4),
       wbString(XNAM, 'Water Noise Texture'),
       wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
