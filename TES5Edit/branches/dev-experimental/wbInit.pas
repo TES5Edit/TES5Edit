@@ -365,7 +365,7 @@ begin
     wbToolMode    := tmEdit;
     wbToolName    := 'Edit';
   end else begin
-    ShowMessage('Application name must contain Edit, View, LODgen, MasterUpdate, MasterRestore, setESM or clearESM to select mode.');
+    ShowMessage('Application name must contain Edit, View, LODgen, MasterUpdate, MasterRestore, setESM, clearESM or sortAndCleanMasters to select mode.');
     Exit;
   end;
 
@@ -385,7 +385,7 @@ begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -409,7 +409,7 @@ begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
-    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmESMify, tmESPify]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -421,7 +421,7 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
-    if not (wbToolMode in [tmView, tmEdit, tmTranslate, tmESMify, tmESPify]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
