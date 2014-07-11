@@ -1206,6 +1206,7 @@ type
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
+    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function IsFlags: Boolean; override;
 
@@ -1258,7 +1259,18 @@ type
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
   end;
 
-  TwbFlag = class(TwbElement)
+  IwbFlag = interface(IwbElement)
+  ['{EED55516-C6D5-4ADD-B147-36B115E7449D}']
+    function GetFlagsDef: IwbFlagsDef;
+    function GetFlagIndex: Integer;
+
+    property FlagsDef: IwbFlagsDef
+      read GetFlagsDef;
+    property FlagIndex: Integer
+      read GetFlagIndex;
+  end;
+
+  TwbFlag = class(TwbElement, IwbFlag)
   protected {private}
     fBasePtr    : Pointer;
     fEndPtr     : Pointer;
@@ -1292,6 +1304,10 @@ type
     procedure SetNativeValue(const aValue: Variant); override;
 
     function GetElementType: TwbElementType; override;
+
+    {--- IwbFlag ---}
+    function GetFlagsDef: IwbFlagsDef;
+    function GetFlagIndex: Integer;
   end;
 
   PwbGroupRecordStruct = ^TwbGroupRecordStruct;
@@ -4859,7 +4875,8 @@ begin
     end else begin
       Assert(aElement.SortOrder >= 0);
       Assert(aElement.SortOrder < mrDef.MemberCount);
-      Assert(aElement.Def.Equals(mrDef.Members[aElement.SortOrder]));
+      if not aElement.Def.Equals(mrDef.Members[aElement.SortOrder]) then
+        Assert(Self.CanAssign(aElement.SortOrder, aElement, True));
       Result := GetElementBySortOrder(aElement.SortOrder + GetAdditionalElementCount);
     end;
 
@@ -8520,11 +8537,13 @@ end;
 
 function TwbSubRecord.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
-  SelfRef   : IwbContainerElementRef;
-  i         : Integer;
-  s         : string;
-  ArrayDef  : IwbArrayDef;
-  StructDef : IwbStructDef;
+  SelfRef    : IwbContainerElementRef;
+  i          : Integer;
+  s          : string;
+  ArrayDef   : IwbArrayDef;
+  StructDef  : IwbStructDef;
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
 begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be modified.');
@@ -8586,10 +8605,15 @@ begin
         Assert(aElement.SortOrder >= 0);
         Assert(aElement.SortOrder < StructDef.MemberCount );
         Assert(Assigned(aElement.ValueDef));
-        Assert(aElement.ValueDef.Equals(StructDef.Members[aElement.SortOrder]));
+        Assert(StructDef.Members[aElement.SortOrder].CanAssign(Low(Integer), aElement.ValueDef));
 
         Result := GetElementBySortOrder(aElement.SortOrder);
         Assert(Assigned(Result));
+
+        if not aDeepCopy then
+          if Supports(Result.ValueDef, IwbIntegerDef, IntegerDef) then
+            if Supports(IntegerDef.Formater, IwbFlagsDef, FlagsDef) then
+              Exit(Result);
 
         Result.Assign(Low(Integer), aElement, not aDeepCopy);
       end;
@@ -13223,6 +13247,35 @@ end;
 
 { TwbValue }
 
+function TwbValue.AddIfMissing(const aElement      :  IwbElement;
+                                     aAsNew        :  Boolean;
+                                     aDeepCopy     :  Boolean;
+                               const aPrefixRemove : string;
+                               const aPrefix       : string;
+                               const aSuffix       : string)
+                                                   : IwbElement;
+var
+  Flag       : IwbFlag;
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
+  s          : string;
+begin
+  if vIsFlags and Supports(aElement, IwbFlag, Flag) then
+    if Supports(vbValueDef, IwbIntegerDef, IntegerDef) then
+      if Supports(IntegerDef.Formater, IwbFlagsDef, FlagsDef) then
+        if FlagsDef.CanAssign(Low(Integer), Flag.FlagsDef) then begin
+          s := GetEditValue;
+          s := s + StringOfChar('0', 64 - Length(s));
+          if (Flag.FlagIndex >= 0) and (Flag.FlagIndex < Length(s)) then begin
+            s[Succ(Flag.FlagIndex)] := '1';
+            SetEditValue(s);
+            Exit(GetElementBySortOrder(Flag.FlagIndex));
+          end;
+        end;
+
+  Result := inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
+end;
+
 function TwbValue.CompareExchangeFormID(aOldFormID, aNewFormID: Cardinal): Boolean;
 var
   SelfRef     : IwbContainerElementRef;
@@ -13669,6 +13722,16 @@ end;
 function TwbFlag.GetElementType: TwbElementType;
 begin
   Result := etFlag;
+end;
+
+function TwbFlag.GetFlagIndex: Integer;
+begin
+  Result := fIndex;
+end;
+
+function TwbFlag.GetFlagsDef: IwbFlagsDef;
+begin
+  Result := fFlagsDef;
 end;
 
 function TwbFlag.GetIsEditable: Boolean;
