@@ -284,6 +284,9 @@ type
     mniViewHeaderJumpTo: TMenuItem;
     acScript: TAction;
     mniNavFilterConflicts: TMenuItem;
+    mniModGroups: TMenuItem;
+    mniModGroupsEnabled: TMenuItem;
+    mniModGroupsDisabled: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -328,6 +331,7 @@ type
     procedure vstNavInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
     procedure vstNavInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstNavPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
+    procedure vstNavKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     {--- pmuNavPopup ---}
     procedure pmuNavPopup(Sender: TObject);
@@ -384,6 +388,7 @@ type
     procedure vstViewNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
     procedure vstViewPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure vstViewResize(Sender: TObject);
+    procedure vstViewCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
 
     {--- pmuViewPopup ---}
     procedure pmuViewPopup(Sender: TObject);
@@ -450,9 +455,6 @@ type
     procedure lvReferencedByColumnClick(Sender: TObject; Column: TListColumn);
     procedure lvReferencedByCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
-    procedure vstViewCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; out EditLink: IVTEditLink);
-    procedure vstNavKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure pmuPathPopup(Sender: TObject);
     procedure mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
     procedure mniNavMarkModifiedClick(Sender: TObject);
@@ -489,6 +491,9 @@ type
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
     procedure mniNavFilterConflictsClick(Sender: TObject);
+    procedure mniModGroupsClick(Sender: TObject);
+    procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -587,6 +592,7 @@ type
     LoaderStarted: Boolean;
     ForceTerminate: Boolean;
     ModGroups: TStringList;
+    ModGroupsEnabled : Boolean;
     Settings: TMemIniFile;
     AutoSave: Boolean;
 
@@ -682,6 +688,7 @@ type
                                           : Boolean;
 
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 //    procedure ScriptScanProgress(aTotalCount, aCount: Integer);
   public
     destructor Destroy; override;
@@ -1303,6 +1310,7 @@ var
   SameAsFirst         : Boolean;
   OverallConflictThis : TConflictThis;
   Priority            : TwbConflictPriority;
+  ThisPriority        : TwbConflictPriority;
 //  IgnoreConflicts     : Boolean;
   FoundAny            : Boolean;
 begin
@@ -1338,6 +1346,7 @@ begin
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
+          FoundAny := True;
           Priority := Element.ConflictPriority;
           if Priority = cpNormalIgnoreEmpty then begin
             FirstElement := Element;
@@ -1347,25 +1356,29 @@ begin
                 Break;
             end;
           end;
+          if Element.ConflictPriorityCanChange then begin
+            for j := Succ(i) to Pred(aNodeCount) do begin
+              Element := aNodeDatas[j].Element;
+              if Assigned(Element) then begin
+                ThisPriority := Element.ConflictPriority;
+                if ThisPriority > Priority then
+                  Priority := ThisPriority;
+              end;
+            end;
+          end;
           Break;
         end;
       end;
 
+      if aSiblingCompare then
+        if Priority > cpBenign then
+          Priority := cpBenign;
+      if aInjected and (Priority >= cpNormal) then
+        Priority := cpCritical;
+
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
-          FoundAny := True;
-          Priority := Element.ConflictPriority;
-          if Priority = cpIgnore then begin
-//            IgnoreConflicts := True;
-//            for j := 0 to Pred(i) do
-//              aNodeDatas[j].ConflictThis := ctIgnored
-          end else if aSiblingCompare then
-            if Priority > cpBenign then
-              Priority := cpBenign;
-          if aInjected and (Priority >= cpNormal) then
-            Priority := cpCritical;
-
           if Priority <> cpIgnore then
             UniqueValues.Add(Element.SortKey[True]);
         end else
@@ -1419,9 +1432,6 @@ begin
           OverallConflictThis := aNodeDatas[i].ConflictThis;
       end;
 
-//      if IgnoreConflicts then
-//        Result := caNoConflict
-//      else
       case UniqueValues.Count of
         0: Result := caNoConflict;
         1: Result := caNoConflict;
@@ -2724,8 +2734,8 @@ begin
           j := (Element as IwbContainer).AdditionalElementCount;
           if i >= j then
             with (Element.Def as IwbRecordDef).Members[i - j] do
-              if (wbTranslationMode and (ConflictPriority <> cpTranslate)) or
-                (wbTranslationMode and (ConflictPriority = cpIgnore)) then
+              if (wbTranslationMode and (ConflictPriority[nil] <> cpTranslate)) or
+                (wbTranslationMode and (ConflictPriority[nil] = cpIgnore)) then
                 ConflictThis := ctIgnored;
         end;
 
@@ -2937,6 +2947,7 @@ var
   MessageGiven : Boolean;
   ValidCRCs    : TDynCardinalArray;
   FileCRC      : Cardinal;
+  FoundAll     : Boolean;
 begin
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -3363,6 +3374,49 @@ begin
           Free;
         end;
       end;
+
+      for i := 0 to Pred(ModGroups.Count)-1 do begin
+        sl2 := ModGroups.Objects[i] as TStringList;
+        if Assigned(sl2) then
+          for j := Succ(i) to Pred(ModGroups.Count) do begin
+            sl3 := ModGroups.Objects[j] as TStringList;
+            if Assigned(sl3) then begin
+              FoundAll := True;
+              for k := 0 to Pred(sl3.Count) do
+                if sl2.IndexOf(sl3[k]) < 0 then begin
+                  FoundAll := False;
+                  break;
+                end;
+              if FoundAll then begin
+                AddMessage('Disabled ModGroup "' + ModGroups[j] + '" as it''s fully contained in ModGroup "' + ModGroups[i] + '"');
+                ModGroups.Objects[j] := nil;
+                FreeAndNil(sl3);
+              end else begin
+                FoundAll := True;
+                for k := 0 to Pred(sl2.Count) do
+                  if sl3.IndexOf(sl2[k]) < 0 then begin
+                    FoundAll := False;
+                    break;
+                  end;
+                if FoundAll then begin
+                  AddMessage('Disabled ModGroup "' + ModGroups[i] + '" as it''s fully contained in ModGroup "' + ModGroups[j] + '"');
+                  ModGroups.Objects[i] := nil;
+                  FreeAndNil(sl2);
+                  break;
+                end;
+              end;
+            end;
+          end;
+      end;
+
+      for i := Pred(ModGroups.Count) downto 0 do
+        if not Assigned(ModGroups.Objects[i]) then
+          ModGroups.Delete(i);
+
+      mniModGroups.Visible := ModGroups.Count > 0;
+      ModGroupsEnabled := ModGroups.Count > 0;
+      mniModGroupsEnabled.Checked := ModGroupsEnabled;
+      mniModGroupsDisabled.Checked := not ModGroupsEnabled;
 
       // hold shift to skip bulding references
       if GetKeyState(VK_SHIFT) < 0 then begin
@@ -5101,8 +5155,8 @@ begin
             i := (Element as IwbContainer).AdditionalElementCount;
             if Integer(aNode.Index) >= i then
               with (Element.Def as IwbRecordDef).Members[Integer(aNode.Index) - i] do begin
-                if (wbTranslationMode and (ConflictPriority <> cpTranslate)) or
-                  (wbTranslationMode and (ConflictPriority = cpIgnore)) then begin
+                if (wbTranslationMode and (ConflictPriority[nil] <> cpTranslate)) or
+                  (wbTranslationMode and (ConflictPriority[nil] = cpIgnore)) then begin
                   ConflictThis := ctIgnored;
                   for i := Low(ActiveRecords) to High(ActiveRecords) do
                     aNodeDatas[i].ConflictThis := ConflictThis;
@@ -5135,7 +5189,7 @@ begin
               i := (Element as IwbContainer).AdditionalElementCount;
               if Integer(aNode.Index) >= i then
                 with (Element.Def as IwbRecordDef).Members[Integer(aNode.Index) - i] do
-                  if ConflictPriority = cpIgnore then
+                  if ConflictPriority[nil] = cpIgnore then
                     ConflictThis := ctIgnored;
             end;
           end;
@@ -5869,6 +5923,16 @@ begin
   edFormIDSearch.Text := s;
   Key := VK_RETURN;
   edFormIDSearchKeyDown(edFormIDSearch, Key, []);
+end;
+
+procedure TfrmMain.mniModGroupsClick(Sender: TObject);
+begin
+  (Sender as TMenuItem).Checked := True;
+  if ModGroupsEnabled <> mniModGroupsEnabled.Checked then begin
+    ModGroupsEnabled := mniModGroupsEnabled.Checked;
+    PostResetActiveTree;
+    InvalidateElementsTreeView(NoNodes);
+  end;
 end;
 
 procedure TfrmMain.mniNavAddClick(Sender: TObject);
@@ -9469,7 +9533,7 @@ begin
       end;
   end;
 
-  if (Length(Result) > 1) and ((ModGroups.Count > 0) or AnyHidden) or IsGMST then begin
+  if (Length(Result) > 1) and (ModGroupsEnabled or AnyHidden) or IsGMST then begin
 
     Records := TStringList.Create;
     try
@@ -9486,7 +9550,7 @@ begin
         end;
       end;
 
-      repeat
+      if ModGroupsEnabled then repeat
         MadeChanges := False;
         sl := TStringList.Create;
         try
@@ -10827,7 +10891,7 @@ begin
       with vstSpreadSheet.Header.Columns do
         for i := 0 to Pred(Count) do
           with Items[i] do
-            MaxWidth := 200;
+            MaxWidth := 250;
       vstSpreadSheet.Header.AutoFitColumns(False);
       with vstSpreadSheet.Header.Columns do
         for i := 0 to Pred(Count) do
@@ -11060,14 +11124,25 @@ begin
 
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
-  NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
-  Rec := MainRecord.RecordBySignature['DATA'];
-  if Assigned(Rec) then begin
-    NodeDatas[5].Element := Rec.ElementByName['Speed'];
-    NodeDatas[6].Element := Rec.ElementByName['Value'];
-    NodeDatas[7].Element := Rec.ElementByName['Weight'];
-    NodeDatas[8].Element := Rec.ElementByName['Damage'];
+  if wbGameMode = gmTES4 then begin
+    NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
+
+    Rec := MainRecord.RecordBySignature['DATA'];
+    if Assigned(Rec) then begin
+      NodeDatas[5].Element := Rec.ElementByName['Speed'];
+      NodeDatas[6].Element := Rec.ElementByName['Value'];
+      NodeDatas[7].Element := Rec.ElementByName['Weight'];
+      NodeDatas[8].Element := Rec.ElementByName['Damage'];
+    end;
+  end else begin
+    Rec := MainRecord.RecordBySignature['DATA'];
+    if Assigned(Rec) then begin
+      NodeDatas[4].Element := Rec.ElementByName['Projectile'];
+      NodeDatas[6].Element := Rec.ElementByName['Value'];
+      NodeDatas[8].Element := Rec.ElementByName['Damage'];
+      NodeDatas[9].Element := Rec.ElementByName['Flags'];
+    end;
   end;
 end;
 
@@ -11086,20 +11161,51 @@ begin
 
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
-  NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
-  Rec := MainRecord.RecordBySignature['BMDT'];
-  if Assigned(Rec) then begin
-    NodeDatas[5].Element := Rec.Elements[0];
-    NodeDatas[6].Element := Rec.Elements[1];
-  end;
+  if wbGameMode = gmTES4 then begin
+    NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
-  Rec := MainRecord.RecordBySignature['DATA'];
-  if Assigned(Rec) then begin
-    NodeDatas[7].Element := Rec.Elements[0];
-    NodeDatas[8].Element := Rec.Elements[1];
-    NodeDatas[9].Element := Rec.Elements[2];
-    NodeDatas[10].Element := Rec.Elements[3];
+    Rec := MainRecord.RecordBySignature['BMDT'];
+    if Assigned(Rec) then begin
+      NodeDatas[5].Element := Rec.Elements[0];
+      NodeDatas[6].Element := Rec.Elements[1];
+    end;
+
+    Rec := MainRecord.RecordBySignature['DATA'];
+    if Assigned(Rec) then begin
+      NodeDatas[7].Element := Rec.Elements[0];
+      NodeDatas[8].Element := Rec.Elements[1];
+      NodeDatas[9].Element := Rec.Elements[2];
+      NodeDatas[10].Element := Rec.Elements[3];
+    end;
+  end else begin
+    {Enchantment}
+    NodeDatas[4].Element := MainRecord.RecordBySignature['EITM'];
+
+    Rec := MainRecord.RecordBySignature['BODT'];
+    if not Assigned(Rec) then
+      Rec := MainRecord.RecordBySignature['BOD2'];
+
+    if Assigned(Rec) then begin
+      {Slots}
+      NodeDatas[5].Element := Rec.Elements[0];
+      {Type}
+      NodeDatas[6].Element := Rec.Elements[3];
+    end;
+
+    {Armor}
+    NodeDatas[7].Element := MainRecord.RecordBySignature['DNAM'];
+
+    Rec := MainRecord.RecordBySignature['DATA'];
+    if Assigned(Rec) then begin
+      {Value}
+      NodeDatas[8].Element := Rec.Elements[0];
+      {Weight}
+      NodeDatas[10].Element := Rec.Elements[1];
+    end;
+
+    NodeDatas[11].Element := MainRecord.RecordBySignature['ETYP'];
+    NodeDatas[12].Element := MainRecord.RecordBySignature['TNAM'];
   end;
 end;
 
@@ -11275,7 +11381,22 @@ begin
   if not Assigned(Element) then
     Exit;
 
-  case Element.EditType of
+  vstCreateEditor(Element, EditLink);
+end;
+
+procedure TfrmMain.vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
+var
+  {$IFNDEF LiteVersion}
+  i                           : Integer;
+  TextLink                    : TcxTextEditLink;
+  ComboLink                   : TcxComboEditLink;
+  CheckComboLink              : TcxCheckComboEditLink;
+  {$ELSE}
+  ComboLink                   : TwbComboEditLink;
+  CheckComboLink              : TwbCheckComboEditLink;
+  {$ENDIF}
+begin
+  case aElement.EditType of
   {$IFNDEF LiteVersion}
     etDefault: begin
       TextLink := TcxTextEditLink.Create;
@@ -11284,9 +11405,9 @@ begin
     etComboBox: begin
       ComboLink := TcxComboEditLink.Create;
       EditLink := ComboLink;
-      if Element.ElementID <> EditInfoCacheID then begin
-        EditInfoCacheID := Element.ElementID;
-        EditInfoCache := Element.EditInfo;
+      if aElement.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := aElement.ElementID;
+        EditInfoCache := aElement.EditInfo;
       end;
       ComboLink.Properties.Items.CommaText := EditInfoCache;
       ComboLink.Properties.Sorted := True;
@@ -11295,7 +11416,7 @@ begin
       CheckComboLink := TcxCheckComboEditLink.Create;
       EditLink := CheckComboLink;
       with TStringList.Create do try
-        CommaText := Element.EditInfo;
+        CommaText := aElement.EditInfo;
         for i := 0 to Pred(Count) do
           CheckComboLink.Properties.Items.AddCheckItem(Strings[i]);
         CheckComboLink.Properties.DropDownRows := Count;
@@ -11306,16 +11427,15 @@ begin
       end;
       CheckComboLink.Properties.Delimiter := ', ';
       CheckComboLink.Properties.ShowEmptyText := False;
-//      CheckComboLink.Properties.DropDownSizeable := True;
       CheckComboLink.Properties.DropDownAutoWidth := True;
     end;
     {$ELSE}
     etComboBox: begin
       ComboLink := TwbComboEditLink.Create(Self);
       EditLink := ComboLink;
-      if Element.ElementID <> EditInfoCacheID then begin
-        EditInfoCacheID := Element.ElementID;
-        EditInfoCache := Element.EditInfo;
+      if aElement.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := aElement.ElementID;
+        EditInfoCache := aElement.EditInfo;
       end;
       ComboLink.PickList.CommaText := EditInfoCache;
       ComboLink.Sorted := True;
@@ -11323,9 +11443,9 @@ begin
     etCheckComboBox: begin
       CheckComboLink := TwbCheckComboEditLink.Create;
       EditLink := CheckComboLink;
-      if Element.ElementID <> EditInfoCacheID then begin
-        EditInfoCacheID := Element.ElementID;
-        EditInfoCache := Element.EditInfo;
+      if aElement.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := aElement.ElementID;
+        EditInfoCache := aElement.EditInfo;
       end;
       CheckComboLink.PickList.CommaText := EditInfoCache;
     end;
@@ -12661,22 +12781,19 @@ begin
   case Column of
     0: CellText := Element._File.Name;
     1: CellText := IntToHex64((Element as IwbMainRecord).LoadOrderFormID, 8);
-    4: begin
-        Element := NodeDatas[Column].Element;
-        if not Assigned(Element) then
-          Exit;
-        Element := Element.LinksTo;
-        if Supports(Element, IwbMainRecord, MainRecord) then begin
-          CellText := MainRecord.EditorID;
-          if CellText = '' then
-            CellText := IntToHex64(MainRecord.LoadOrderFormID, 8);
-        end;
-      end
   else
     Element := NodeDatas[Column].Element;
     if not Assigned(Element) then
       Exit;
-    CellText := Element.Value;
+    if Element.Def.CanContainFormIDs then begin
+      Element := Element.LinksTo;
+      if Supports(Element, IwbMainRecord, MainRecord) then begin
+        CellText := MainRecord.EditorID;
+        if CellText = '' then
+          CellText := IntToHex64(MainRecord.LoadOrderFormID, 8);
+      end;
+    end else
+      CellText := Element.Value;
   end;
 end;
 
@@ -12751,11 +12868,34 @@ begin
   Result := 0;
 end;
 
+procedure TfrmMain.vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+var
+  NodeDatas                   : PSpreadSheetNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  if Column < Sender.Tag then
+    Exit;
+
+  NodeDatas := Sender.GetNodeData(Node);
+  if not Assigned(NodeDatas) then
+    Exit;
+
+  Element := NodeDatas[Column].Element;
+
+  if not Assigned(Element) then
+    Exit;
+
+  vstCreateEditor(Element, EditLink);
+end;
+
 procedure TfrmMain.vstSpreadSheetWeaponInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
   NodeDatas                   : PSpreadsheetNodeDatas;
   MainRecord                  : IwbMainRecord;
-  DATA                        : IwbRecord;
+  Rec                        : IwbRecord;
 begin
   NodeDatas := Sender.GetNodeData(Node);
   if not Assigned(NodeDatas) then
@@ -12764,19 +12904,82 @@ begin
   if not Supports(NodeDatas[0].Element, IwbMainRecord, MainRecord) then
     Exit;
 
+  {EditorID}
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
-  NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
-  NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
-  DATA := MainRecord.RecordBySignature['DATA'];
-  if Assigned(DATA) then begin
-    NodeDatas[5].Element := DATA.Elements[0];
-    NodeDatas[6].Element := DATA.Elements[1];
-    NodeDatas[7].Element := DATA.Elements[2];
-    NodeDatas[8].Element := DATA.Elements[4];
-    NodeDatas[9].Element := DATA.Elements[5];
-    NodeDatas[10].Element := DATA.Elements[6];
-    NodeDatas[11].Element := DATA.Elements[7];
+  {Weapon Name}
+  NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
+
+  if wbGameMode = gmTES4 then begin
+    {Enchantment}
+    NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
+
+    Rec := MainRecord.RecordBySignature['DATA'];
+    if Assigned(Rec) then begin
+      NodeDatas[5].Element := Rec.Elements[0];
+      NodeDatas[6].Element := Rec.Elements[1];
+      NodeDatas[7].Element := Rec.Elements[2];
+      NodeDatas[8].Element := Rec.Elements[4];
+      NodeDatas[9].Element := Rec.Elements[5];
+      NodeDatas[10].Element := Rec.Elements[6];
+      NodeDatas[11].Element := Rec.Elements[7];
+    end;
+  end else begin
+    {Enchantment}
+    NodeDatas[4].Element := MainRecord.RecordBySignature['EITM'];
+    {Amount}
+    NodeDatas[12].Element := MainRecord.RecordBySignature['EAMT'];
+
+    {Type}
+    NodeDatas[5].Element := MainRecord.RecordBySignature['ETYP'];
+
+    Rec := MainRecord.RecordBySignature['DATA'];
+    if Assigned(Rec) then begin
+      {Value}
+      NodeDatas[8].Element := Rec.Elements[0];
+
+      {Weight}
+      NodeDatas[10].Element := Rec.Elements[1];
+
+      {Damage}
+      NodeDatas[11].Element := Rec.Elements[2];
+    end;
+
+    Rec := MainRecord.RecordBySignature['DNAM'];
+    if Assigned(Rec) then begin
+      {Speed}
+      NodeDatas[6].Element := Rec.Elements[2];
+
+      {Reach}
+      NodeDatas[7].Element := Rec.Elements[3];
+
+      {Skill}
+      NodeDatas[13].Element := Rec.ElementByName['Skill'];
+
+      {Stagger}
+      NodeDatas[14].Element := Rec.ElementByName['Stagger'];
+
+      {Range Min}
+      NodeDatas[17].Element := Rec.ElementByName['Range Min'];
+
+      {Range Max}
+      NodeDatas[18].Element := Rec.ElementByName['Range Max'];
+    end;
+
+    Rec := MainRecord.RecordBySignature['CRDT'];
+    if Assigned(Rec) then begin
+      {CritDamage}
+      NodeDatas[15].Element := Rec.ElementByName['Damage'];
+
+      {Range Max}
+      NodeDatas[16].Element := Rec.ElementByName['% Mult'];
+    end;
+
+    {Detection Sound}
+    NodeDatas[19].Element := MainRecord.RecordBySignature['VNAM'];
+
+    {Detection Sound}
+    NodeDatas[20].Element := MainRecord.RecordBySignature['CNAM'];
   end;
 end;
 
@@ -12792,6 +12995,7 @@ begin
   if (Column < 0) or (Column >= TVirtualEditTree(Sender).Header.Columns.Count) then
     Exit;
 
+  Element := nil;
   if Column >= Sender.Tag then begin
     NodeDatas := Sender.GetNodeData(Node);
     if Assigned(NodeDatas) then
@@ -12799,10 +13003,12 @@ begin
   end;
 
   if Assigned(Element) then begin
+
     if Element.Modified then
-      TargetCanvas.Font.Style := [fsBold]
+      TargetCanvas.Font.Style := TargetCanvas.Font.Style + [fsBold]
     else
-      TargetCanvas.Font.Style := [];
+      TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsBold];
+
     if Element.IsInjected then
       TargetCanvas.Font.Style := TargetCanvas.Font.Style + [fsItalic]
     else
@@ -13269,6 +13475,25 @@ begin
 end;
 
 procedure TfrmMain.WMUser2(var Message: TMessage);
+
+  procedure SetupTreeView(aTreeView: TVirtualEditTree);
+  var
+    j: Integer;
+  begin
+    with aTreeView.Header.Columns do
+      for j := 0 to Pred(Count) do
+        with Items[j] do begin
+          if Options * [coVisible, coEnabled] = [coVisible, coEnabled] then
+            Options := Options + [coAllowFocus]
+          else
+            Options := Options - [coAllowFocus];
+          if j < 3 then
+            Options := Options + [coFixed];
+        end;
+  end;
+
+var
+  i: Integer;
 begin
   wbLoaderDone := True;
 
@@ -13287,9 +13512,38 @@ begin
 
   vstNav.PopupMenu := pmuNav;
 
-  tbsWEAPSpreadsheet.TabVisible := wbGameMode = gmTES4;
-  tbsARMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
-  tbsAMMOSpreadsheet.TabVisible := wbGameMode = gmTES4;
+  if wbGameMode = gmTES5 then begin
+    with vstSpreadSheetWeapon.Header.Columns[9] do
+      Options := Options - [coVisible];
+    for i := 12 to 20 do
+      with vstSpreadSheetWeapon.Header.Columns[i] do
+        Options := Options + [coVisible];
+
+    with vstSpreadsheetArmor.Header.Columns[9] do
+      Options := Options - [coVisible];
+    with vstSpreadsheetArmor.Header.Columns[6] do
+      Text := 'Armor Type';
+    for i := 11 to 12 do
+      with vstSpreadsheetArmor.Header.Columns[i] do
+        Options := Options + [coVisible];
+
+    with vstSpreadSheetAmmo.Header.Columns[5] do
+      Options := Options - [coVisible];
+    with vstSpreadSheetAmmo.Header.Columns[7] do
+      Options := Options - [coVisible];
+    with vstSpreadSheetAmmo.Header.Columns[4] do
+      Text := 'Projectile';
+    with vstSpreadSheetAmmo.Header.Columns[9] do
+      Options := Options + [coVisible];
+  end;
+
+  SetupTreeView(vstSpreadSheetWeapon);
+  SetupTreeView(vstSpreadsheetArmor);
+  SetupTreeView(vstSpreadSheetAmmo);
+
+  tbsWEAPSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5];
+  tbsARMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5];
+  tbsAMMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5];
 
   tmrCheckUnsaved.Enabled := wbEditAllowed and
     not (wbToolMode in wbAutoModes) and
