@@ -1299,20 +1299,20 @@ end;
 
 function TfrmMain.ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
 var
-  Element             : IwbElement;
-  CompareElement      : IwbElement;
-  i, j                : Integer;
-  UniqueValues        : TnxFastStringListCS;
+  Element                : IwbElement;
+  CompareElement         : IwbElement;
+  i, j                   : Integer;
+  UniqueValues           : TnxFastStringListCS;
 
-  FirstElement        : IwbElement;
-  LastElement         : IwbElement;
-  SameAsLast          : Boolean;
-  SameAsFirst         : Boolean;
-  OverallConflictThis : TConflictThis;
-  Priority            : TwbConflictPriority;
-  ThisPriority        : TwbConflictPriority;
-//  IgnoreConflicts     : Boolean;
-  FoundAny            : Boolean;
+  FirstElement           : IwbElement;
+  FirstElementNotIgnored : IwbElement;
+  LastElement            : IwbElement;
+  SameAsLast             : Boolean;
+  SameAsFirst            : Boolean;
+  OverallConflictThis    : TConflictThis;
+  Priority               : TwbConflictPriority;
+  ThisPriority           : TwbConflictPriority;
+  FoundAny               : Boolean;
 begin
 //  if aSiblingCompare then
 //    Priority := cpBenign
@@ -1376,19 +1376,27 @@ begin
       if aInjected and (Priority >= cpNormal) then
         Priority := cpCritical;
 
+      if (Priority > cpIgnore) and (not Assigned(FirstElement) or (FirstElement.ConflictPriority = cpIgnore)) then
+        FirstElementNotIgnored := nil
+      else
+        FirstElementNotIgnored := FirstElement;
+
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
-          if Priority <> cpIgnore then
+          ThisPriority := Element.ConflictPriority;
+          if ThisPriority <> cpIgnore then
             UniqueValues.Add(Element.SortKey[True]);
-        end else
+        end else begin
+          ThisPriority := Priority;
           if not (vnfIgnore in aNodeDatas[i].ViewNodeFlags) then
             if Priority <> cpNormalIgnoreEmpty then
               UniqueValues.Add('');
+        end;
 
-        if (Priority = cpNormalIgnoreEmpty) and not Assigned(Element) then
+        if (ThisPriority = cpNormalIgnoreEmpty) and not Assigned(Element) then
           aNodeDatas[i].ConflictThis := ctIgnored
-        else if Priority = cpIgnore then
+        else if ThisPriority = cpIgnore then
           aNodeDatas[i].ConflictThis := ctIgnored
         else if aSiblingCompare then
           aNodeDatas[i].ConflictThis := ctOnlyOne
@@ -1406,14 +1414,15 @@ begin
             );
 
           SameAsFirst := not (
-            (Assigned(Element) <> Assigned(FirstElement)) or
-            (Assigned(Element) and not SameStr(Element.SortKey[True], FirstElement.SortKey[True]))
+            (Assigned(Element) <> Assigned(FirstElementNotIgnored)) or
+            (Assigned(Element) and not SameStr(Element.SortKey[True], FirstElementNotIgnored.SortKey[True]))
             );
+
           if not SameAsFirst and
-             (Priority = cpBenignIfAdded) and
+             (ThisPriority = cpBenignIfAdded) and
              SameAsLast and  // We are not overriden later
-             not Assigned(FirstElement) then begin // The master did not have that element
-            Priority := cpBenign;
+             not Assigned(FirstElementNotIgnored) then begin // The master did not have that element
+            ThisPriority := cpBenign;
             SameAsFirst := True;
           end;
 
@@ -1425,7 +1434,7 @@ begin
             aNodeDatas[i].ConflictThis := ctConflictLoses;
         end;
 
-        if (Priority = cpBenign) and (aNodeDatas[i].ConflictThis > ctConflictBenign) then
+        if (ThisPriority = cpBenign) and (aNodeDatas[i].ConflictThis > ctConflictBenign) then
           aNodeDatas[i].ConflictThis := ctConflictBenign;
 
         if aNodeDatas[i].ConflictThis > OverallConflictThis then
