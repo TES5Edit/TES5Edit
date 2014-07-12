@@ -5320,9 +5320,55 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-
   {>>> wbRecordFlags: 0x00000000 ACTI: Collision Geometry (default) <<<}
-  wbRecord(ACTI, 'Activator', [
+  wbRecord(ACTI, 'Activator', wbFlags([
+    {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
+    {0x00000001}'Unused',
+    {0x00000002}'Unknown 2',
+    {0x00000004}'NotPlayable',
+    {0x00000008}'Unknown 4',
+    {0x00000010}'Unknown 5',
+    {0x00000020}'Deleted',
+    {>>> 0x00000040 ACTI: Has Tree LOD <<<}
+    {0x00000040}'HasTreeLOD',
+    {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
+    {>>> 0x00000100 ACTI: Must Update Anims <<<}
+    {0x00000100}'MustUpdateAnims',
+    {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
+    {0x00000200}'HiddenFromLocalMap',
+    {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
+    {0x00000800}'InitiallyDisabled',
+    {0x00001000}'Ignored',
+    {0x00002000}'ActorChanged',
+    {0x00004000}'Unknown 15',
+    {0x00008000}'VWD',
+    {>>> 0x00010000 ACTI: Random Animation Start <<<}
+    {0x00010000}'RandomAnimationStart',
+    {>>> 0x00020000 ACTI: Dangerous <<<}
+    {0x00020000}'Dangerous',
+    {0x00040000}'Compressed',
+    {0x00080000}'CantWait',
+    {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
+    {0x00100000}'IgnoreObjectInteraction',
+    {0x00200000}'(Used in Memory Changed Form)',
+    {0x00400000}'Unknown 23',
+    {>>> 0x00800000 ACTI: Is Marker <<<}
+    {0x00800000}'IsMarker',
+    {0x01000000}'Unknown 25',
+    {>>> 0x02000000 ACTI: Obstacle <<<}
+    {0x02000000}'Obstacle',
+    {>>> 0x04000000 ACTI: Filter <<<}
+    {0x04000000}'NavMeshFilter',
+    {>>> 0x08000000 ACTI: Bounding Box <<<}
+    {0x08000000}'NavMeshBoundingBox',
+    {0x10000000}'MustExitToTalk ShowInWorldMap',
+    {>>> 0x20000000 ACTI: Child Can Use <<<}
+    {0x20000000}'ChildCanUse',
+    {>>> 0x40000000 ACTI: GROUND <<<}
+    {0x40000000}'NavMeshGround',
+    {>>> 0x80000000 REFR: MultiBound <<<}
+    {0x80000000}'MultiBound'
+  ], [0, 18]), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
