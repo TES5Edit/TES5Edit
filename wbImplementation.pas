@@ -27,6 +27,10 @@ uses
   wbInterface,
   Zlibex;
 
+const
+  DefaultVCS1 = 0;
+  DefaultVCS2 = 0;
+
 var
   RecordToSkip       : TStringList;
   GroupToSkip        : TStringList;
@@ -4979,10 +4983,10 @@ begin
           MakeHeaderWriteable;
           with TwbMainRecord(MainRecord.ElementID) do begin
             Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
-            Self.mrStruct.mrsVCS1 := 0;
+            Self.mrStruct.mrsVCS1 := DefaultVCS1;
             if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
               Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
-              Self.mrStruct.mrsVCS2 := 0; //mrStruct.mrsVCS2;
+              Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
             end;
           end;
         end;
@@ -4996,7 +5000,7 @@ begin
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -5368,12 +5372,12 @@ begin
   BasePtr.mrsDataSize := 0;
   BasePtr.mrsFlags._Flags := 0;
   BasePtr.mrsFormID := aFormID;
-  BasePtr.mrsVCS1 := 0;
+  BasePtr.mrsVCS1 := DefaultVCS1;
   if wbGameMode >= gmTES5 then
     BasePtr.mrsVersion := 43
   else
     BasePtr.mrsVersion := 15;
-  BasePtr.mrsVCS2 := 0;
+  BasePtr.mrsVCS2 := DefaultVCS2;
 
   Group := nil;
   if Supports(lContainer, IwbGroupRecordInternal, Group) then
@@ -5504,7 +5508,7 @@ begin
   GroupRecord := nil;
 
   BasePtr := dcBasePtr;
-  with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
+  with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
     Include(dcFlags, dcfDontSave);
     SetSortOrder(-1);
     SetMemoryOrder(Low(Integer));
@@ -5574,7 +5578,7 @@ begin
     GroupRecord := nil;
 
     CurrentPtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, Pointer( Cardinal(CurrentPtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, Pointer( Cardinal(CurrentPtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -7773,7 +7777,7 @@ begin
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), wbMainRecordHeader, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
