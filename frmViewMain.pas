@@ -6623,7 +6623,7 @@ begin
       EditValue := Element.EditValue;
 
       // flags editor
-      if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef, Flags) then begin
+      if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
           Caption := 'Edit Value';

@@ -217,6 +217,7 @@ type
     dtByteArray,
     dtInteger,
     dtIntegerFormater,
+    dtIntegerFormaterUnion,
     dtFloat,
     dtArray,
     dtStruct,
@@ -253,7 +254,7 @@ type
     ['{C7739FBD-3B58-48A2-9DD0-8057D3496892}']
     function GetDefType: TwbDefType;
     function GetDefTypeName: string;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
     function GetDefID: Cardinal;
     function Equals(const aDef: IwbDef): Boolean;
     function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
@@ -1069,6 +1070,7 @@ type
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
   TwbUnionDecider = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+  TwbIntegerDefFormaterUnionDecider = function(const aElement: IwbElement): Integer;
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
   TwbCountCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
@@ -1287,12 +1289,15 @@ type
     function ToInt(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Int64;
     procedure FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 
-    function GetFormater: IwbIntegerDefFormater;
+    function GetFormater(const aElement: IwbElement): IwbIntegerDefFormater;
+    function GetFormaterCanChange: Boolean;
     function GetIntType: TwbIntType;
     function GetExpectedLength(aValue: Int64 = 0): Integer;
 
-    property Formater: IwbIntegerDefFormater
+    property Formater[const aElement: IwbElement]: IwbIntegerDefFormater
       read GetFormater;
+    property FormaterCanChange: Boolean
+      read GetFormaterCanChange;
     property IntType: TwbIntType
       read GetIntType;
 
@@ -1388,11 +1393,11 @@ type
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
     function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement;
 
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 
-    function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64;
-    function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64;
-    procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters);
+    function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64;
+    function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64;
+    procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
 
     function GetRequiresKey: Boolean;
@@ -1409,6 +1414,17 @@ type
 
     property RequiresKey: Boolean
       read GetRequiresKey;
+  end;
+
+  IwbIntegerDefFormaterUnion = interface(IwbIntegerDefFormater)
+    ['{C04B1181-A570-41AE-A31E-7977B722EE0A}']
+    function Decide(const aElement: IwbElement): IwbIntegerDefFormater;
+
+    function GetMember(aIndex: Integer): IwbIntegerDefFormater;
+    function GetMemberCount: Integer;
+
+    property Members[aIndex: Integer]: IwbIntegerDefFormater read GetMember;
+    property MemberCount: Integer read GetMemberCount;
   end;
 
   IwbDumpIntegerDefFormater = interface(IwbIntegerDefFormater)
@@ -1440,6 +1456,7 @@ type
 
   IwbFlagsDef = interface(IwbIntegerDefFormater)
     ['{EF564466-A671-453A-88CF-42A0AA32D849}']
+    function GetBaseFlagsDef: IwbFlagsDef;
     function GetFlag(aIndex: Integer): string;
     function GetFlagCount: Integer;
     function GetFlagIgnoreConflict(aIndex: Integer): Boolean;
@@ -1447,6 +1464,9 @@ type
     function GetFlagHasDontShow(aIndex: Integer): Boolean;
     procedure FlagGetCP(const aElement: IwbElement; aIndex: Integer; var aCP: TwbConflictPriority);
     function GetFlagHasGetCP(aIndex: Integer): Boolean;
+
+    property BaseFlagsDef: IwbFlagsDef
+      read GetBaseFlagsDef;
 
     property Flags[aIndex: Integer] : string
       read GetFlag;
@@ -1571,7 +1591,7 @@ function wbRecord(const aSignature      : TwbSignature;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
-                  const aRecordFlags    : IwbFlagsDef;
+                  const aRecordFlags    : IwbIntegerDefFormater;
                   const aMembers        : array of IwbRecordMemberDef;
                         aAllowUnordered : Boolean = False;
                         aAddInfoCallback: TwbAddInfoCallback = nil;
@@ -2750,6 +2770,21 @@ function wbFlags(const aNames           : array of string;
                  const aDontShows       : array of TwbDontShowCallback;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
+
+function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
+                       aUnknownIsUnused : Boolean = False)
+                                        : IwbFlagsDef; overload;
+function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
+                 const aFlagsToIgnore   : array of integer)
+                                        : IwbFlagsDef; overload;
+function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
+                 const aDontShows       : array of TwbDontShowCallback;
+                       aUnknownIsUnused : Boolean = False)
+                                        : IwbFlagsDef; overload;
+
 function wbEnum(const aNames : array of string)
                              : IwbEnumDef; overload;
 function wbEnum(const aNames       : array of string;
@@ -2765,6 +2800,9 @@ function wbCallback(const aToStr : TwbIntToStrCallback;
                     const aToInt : TwbStrToIntCallback)
                                  : IwbIntegerDefFormater;
 
+function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
+                         aMembers : array of IwbIntegerDefFormater)
+                                  : IwbIntegerDefFormaterUnion;
 
 var
   wbRecordDefs       : array of IwbRecordDef;
@@ -3276,7 +3314,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; virtual; abstract;
     function GetDefTypeName: string; virtual; abstract;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; virtual;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; virtual;
     function GetDefID: Cardinal;
     function Equals(const aDef: IwbDef): Boolean; reintroduce; virtual;
     function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
@@ -3365,7 +3403,7 @@ type
 
   TwbRecordDef = class(TwbSignatureDef, IwbRecordDef)
   private
-    recRecordFlags        : IwbFlagsDef;
+    recRecordFlags        : IwbIntegerDefFormater;
     recRecordHeaderStruct : IwbStructDef;
     recMembers            : array of IwbRecordMemberDef;
     recSignatures         : TStringList;
@@ -3380,7 +3418,7 @@ type
                        aRequired        : Boolean;
                  const aSignature       : TwbSignature;
                  const aName            : string;
-                 const aRecordFlags     : IwbFlagsDef;
+                 const aRecordFlags     : IwbIntegerDefFormater;
                  const aMembers         : array of IwbRecordMemberDef;
                        aAllowUnordered  : Boolean;
                        aAddInfoCallback : TwbAddInfoCallback;
@@ -3449,7 +3487,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbSubRecordDef---}
@@ -3481,7 +3519,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
 
@@ -3527,7 +3565,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
 
@@ -3585,7 +3623,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
 
@@ -3694,7 +3732,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
 
@@ -3756,7 +3794,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
 
     {---IwbValueDef---}
@@ -3840,7 +3878,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
 
     {---IwbValueDef---}
@@ -3902,7 +3940,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
 
     procedure Report(const aParents: TwbDefPath); override;
@@ -3972,7 +4010,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
     function GetNoReach: Boolean; override;
@@ -4002,7 +4040,8 @@ type
     {---IwbIntegerDef---}
     function ToInt(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Int64;
     procedure FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
-    function GetFormater: IwbIntegerDefFormater;
+    function GetFormater(const aElement: IwbElement): IwbIntegerDefFormater;
+    function GetFormaterCanChange: Boolean;
     function GetIntType: TwbIntType;
     function GetExpectedLength(aValue: Int64 = 0): Integer;
 
@@ -4022,7 +4061,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
 
     {---IwbValueDef---}
@@ -4108,7 +4147,7 @@ type
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetIsVariableSize: Boolean; override;
     function GetCanBeZeroSize: Boolean; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     {---IwbArrayDef---}
     function GetElement: IwbValueDef;
@@ -4158,7 +4197,7 @@ type
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetIsVariableSize: Boolean; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function GetElementMap: TDynCardinalArray; override;
 
     {---IwbStructDef---}
@@ -4222,14 +4261,63 @@ type
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; virtual;
     function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement; virtual;
 
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
-    function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64; virtual;
-    function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64; virtual;
-    procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters); virtual;
+    function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64; virtual;
+    function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64; virtual;
+    procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); virtual;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; virtual;
 
     function GetRequiresKey: Boolean; virtual;
+  end;
+
+  TwbIntegerDefFormaterUnion = class(TwbIntegerDefFormater, IwbIntegerDefFormaterUnion)
+  private
+    idfuDecider: TwbIntegerDefFormaterUnionDecider;
+    idfuMembers: array of IwbIntegerDefFormater;
+  protected
+    constructor Clone(const aSource: TwbDef); override;
+    constructor Create(aPriority : TwbConflictPriority;
+                       aRequired : Boolean;
+                       aGetCP    : TwbGetConflictPriority;
+                       aDecider  : TwbIntegerDefFormaterUnionDecider;
+                 const aMembers  : array of IwbIntegerDefFormater);
+
+    {---IwbDef---}
+    function GetDefType: TwbDefType; override;
+    function CanContainFormIDs: Boolean; override;
+    procedure Report(const aParents: TwbDefPath); override;
+    function GetNoReach: Boolean; override;
+
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+    function Check(aInt: Int64; const aElement: IwbElement): string; override;
+    procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
+
+    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
+
+    function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
+    function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
+    function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
+    function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement; override;
+
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+
+    function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64; override;
+    function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64; override;
+    procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override;
+    function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
+
+    {---IwbIntegerDefFormaterUnion---}
+    function Decide(const aElement: IwbElement): IwbIntegerDefFormater;
+
+    function GetMember(aIndex: Integer): IwbIntegerDefFormater;
+    function GetMemberCount: Integer;
+
+    property Members[aIndex: Integer]: IwbIntegerDefFormater read GetMember;
+    property MemberCount: Integer read GetMemberCount;
   end;
 
   TwbDumpIntegerDefFormater = class(TwbIntegerDefFormater, IwbDumpIntegerDefFormater)
@@ -4270,12 +4358,12 @@ type
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
     function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement; override;
 
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
 
-    function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64; override;
-    function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64; override;
-    procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters); override;
+    function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64; override;
+    function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64; override;
+    procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
   end;
 
@@ -4314,7 +4402,7 @@ type
     {---IwbIntegerDefFormater---}
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     {---IwbFormIDChecked---}
     function GetSignature(aIndex: Integer): TwbSignature;
@@ -4329,7 +4417,7 @@ type
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4340,6 +4428,7 @@ type
 
   TwbFlagsDef = class(TwbIntegerDefFormater, IwbFlagsDef)
   private
+    flgBaseFlagsDef    : IwbFlagsDef;
     flgNames           : array of string;
     flgDontShows       : array of TwbDontShowCallback;
     flgHasDontShows    : Boolean;
@@ -4353,7 +4442,8 @@ type
     HasUnknownFlags    : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(const aNames           : array of string;
+    constructor Create(const aBaseFlagsDef    : IwbFlagsDef;
+                       const aNames           : array of string;
                        const aDontShows       : array of TwbDontShowCallback;
                              aUnknownIsUnused : Boolean;
                              aIgnoreMask      : Int64;
@@ -4367,7 +4457,7 @@ type
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
@@ -4378,7 +4468,9 @@ type
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
 
     function GetRequiresKey: Boolean; override;
+
     {---IwbFlagsDef---}
+    function GetBaseFlagsDef: IwbFlagsDef;
     function GetFlag(aIndex: Integer): string;
     function GetFlagCount: Integer;
     function GetFlagIgnoreConflict(aIndex: Integer): Boolean;
@@ -4419,7 +4511,7 @@ type
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
     function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4459,7 +4551,7 @@ type
     {---IwbIntegerDefFormater---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -4478,7 +4570,7 @@ type
     {---IwbIntegerDefFormater---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -4500,7 +4592,7 @@ type
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
-    function CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
     function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4530,7 +4622,7 @@ end;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
-                  const aRecordFlags    : IwbFlagsDef;
+                  const aRecordFlags    : IwbIntegerDefFormater;
                   const aMembers        : array of IwbRecordMemberDef;
                         aAllowUnordered : Boolean = False;
                         aAddInfoCallback: TwbAddInfoCallback = nil;
@@ -6118,10 +6210,35 @@ function wbFlags(const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef;
 begin
-  Result := TwbFlagsDef.Create(aNames, [], aUnknownIsUnused, 0, []);
+  Result := wbFlags(nil, aNames, aUnknownIsUnused);
 end;
 
 function wbFlags(const aNames           : array of string;
+                 const aFlagsToIgnore   : array of integer)
+                                        : IwbFlagsDef; overload;
+begin
+  Result := wbFlags(nil, aNames, aFlagsToIgnore);
+end;
+
+
+function wbFlags(const aNames           : array of string;
+                 const aDontShows       : array of TwbDontShowCallback;
+                       aUnknownIsUnused : Boolean = False)
+                                        : IwbFlagsDef; overload;
+begin
+  Result := wbFlags(nil, aNames, aDontShows, aUnknownIsUnused);
+end;
+
+function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
+                       aUnknownIsUnused : Boolean = False)
+                                        : IwbFlagsDef;
+begin
+  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, [], aUnknownIsUnused, 0, []);
+end;
+
+function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
                  const aFlagsToIgnore   : array of integer)
                                         : IwbFlagsDef; overload;
 var
@@ -6135,18 +6252,18 @@ begin
     if (Index >= 0) and (Index <= High(aNames)) then
       IgnoreMask := IgnoreMask or (1 shl Index);
   end;
-  Result := TwbFlagsDef.Create(aNames, [], False, IgnoreMask, []);
+  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, [], False, IgnoreMask, []);
 end;
 
 
-function wbFlags(const aNames           : array of string;
+function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
                  const aDontShows       : array of TwbDontShowCallback;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
 begin
-  Result := TwbFlagsDef.Create(aNames, aDontShows, aUnknownIsUnused, 0, []);
+  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, aDontShows, aUnknownIsUnused, 0, []);
 end;
-
 
 function wbEnum(const aNames : array of string)
                               : IwbEnumDef;
@@ -6181,9 +6298,16 @@ begin
   Result := TwbCallbackDef.Create(aToStr, aToInt);
 end;
 
+function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
+                         aMembers : array of IwbIntegerDefFormater)
+                                  : IwbIntegerDefFormaterUnion;
+begin
+  Result := TwbIntegerDefFormaterUnion.Create(cpNormal, False, nil, aDecider, aMembers);
+end;
+
 { TwbDef }
 
-function TwbDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := False;
 end;
@@ -6316,8 +6440,8 @@ end;
 function TwbDef.SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef;
 begin
   Assert(Assigned(aParent));
-  if Assigned(defParent) then
-    Result := Duplicate.SetParent(aParent, aForceDuplicate)
+  if Assigned(defParent) or aForceDuplicate then
+    Result := Duplicate.SetParent(aParent, False)
   else begin
     Result := Self;
     defParent := aParent;
@@ -6560,7 +6684,7 @@ constructor TwbRecordDef.Create(aPriority        : TwbConflictPriority;
                                 aRequired        : Boolean;
                           const aSignature       : TwbSignature;
                           const aName            : string;
-                          const aRecordFlags     : IwbFlagsDef;
+                          const aRecordFlags     : IwbIntegerDefFormater;
                           const aMembers         : array of IwbRecordMemberDef;
                                 aAllowUnordered  : Boolean;
                                 aAddInfoCallback : TwbAddInfoCallback;
@@ -6717,14 +6841,14 @@ end;
 
 { TwbSubRecordDef }
 
-function TwbSubRecordDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbSubRecordDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   SubRecordDef : IwbSubRecordDef;
 begin
   if Supports(aDef, IwbSubRecordDef, SubRecordDef) then
-    Result := Equals(aDef) or Assigned(srValue) and srValue.CanAssign(aIndex, SubRecordDef.Value)
+    Result := Equals(aDef) or Assigned(srValue) and srValue.CanAssign(aElement, aIndex, SubRecordDef.Value)
   else
-    Result := Assigned(srValue) and srValue.CanAssign(aIndex, aDef);
+    Result := Assigned(srValue) and srValue.CanAssign(aElement, aIndex, aDef);
 end;
 
 function TwbSubRecordDef.CanContainFormIDs: Boolean;
@@ -6837,15 +6961,15 @@ begin
   end;
 end;
 
-function TwbSubRecordArrayDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbSubRecordArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   SubRecordArrayDef : IwbSubRecordArrayDef;
 begin
   if aIndex = Low(Integer) then
     Result := Supports(aDef, IwbSubRecordArrayDef, SubRecordArrayDef) and
-      GetElement.CanAssign(aIndex, SubRecordArrayDef.Element)
+      GetElement.CanAssign(aElement, aIndex, SubRecordArrayDef.Element)
   else if aIndex = High(Integer) then
-    Result := GetElement.CanAssign(Low(Integer), aDef)
+    Result := GetElement.CanAssign(aElement, Low(Integer), aDef)
   else
     Result := False;
 end;
@@ -6980,7 +7104,7 @@ begin
   Result := srsAllowUnordered;
 end;
 
-function TwbSubRecordStructDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbSubRecordStructDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   SubRecordStructDef : IwbSubRecordStructDef;
   RecordDef          : IwbRecordDef;
@@ -6993,7 +7117,7 @@ begin
       (GetMemberCount = RecordDef.MemberCount)then begin
       Result := True;
       for i := 0 to Pred(GetMemberCount) do
-        if not srsMembers[i].CanAssign(aIndex, RecordDef.Members[i]) then begin
+        if not srsMembers[i].CanAssign(aElement, aIndex, RecordDef.Members[i]) then begin
           Result := False;
           Break;
         end;
@@ -7201,14 +7325,14 @@ begin
   Result := True;
 end;
 
-function TwbSubRecordUnionDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbSubRecordUnionDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   SubRecordUnionDef : IwbSubRecordUnionDef;
   RecordDef         : IwbRecordDef;
   i                 : Integer;
 begin
   for i := Low(sruMembers) to High(sruMembers) do begin
-    Result := sruMembers[i].CanAssign(aIndex, aDef);
+    Result := sruMembers[i].CanAssign(aElement, aIndex, aDef);
     if Result = True then
       Exit;
   end;
@@ -7220,7 +7344,7 @@ begin
       (GetMemberCount = RecordDef.MemberCount)then begin
       Result := True;
       for i := 0 to Pred(GetMemberCount) do
-        if not sruMembers[i].CanAssign(aIndex, RecordDef.Members[i]) then begin
+        if not sruMembers[i].CanAssign(aElement, aIndex, RecordDef.Members[i]) then begin
           Result := False;
           Break;
         end;
@@ -7541,16 +7665,16 @@ begin
     end;
 end;
 
-function TwbIntegerDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbIntegerDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   IntegerDef: IwbIntegerDef;
 begin
   Result := Supports(aDef, IwbIntegerDef, IntegerDef);
   if Result then
     if Assigned(inFormater) then
-      Result := inFormater.CanAssign(aIndex, IntegerDef.Formater)
-    else if Assigned(IntegerDef.Formater) then
-      Result := IntegerDef.Formater.CanAssign(aIndex, inFormater);
+      Result := inFormater.CanAssign(aElement, aIndex, IntegerDef.Formater[aElement])
+    else if Assigned(IntegerDef.Formater[aElement]) then
+      Result := IntegerDef.Formater[aElement].CanAssign(aElement, aIndex, GetFormater(aElement));
 end;
 
 function TwbIntegerDef.CanContainFormIDs: Boolean;
@@ -7630,7 +7754,7 @@ end;
 procedure TwbIntegerDef.FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
 begin
   if Assigned(inFormater) then
-    inFormater.FindUsedMasters(ToInt(aBasePtr, aEndPtr, aElement), aMasters)
+    inFormater.FindUsedMasters(ToInt(aBasePtr, aEndPtr, aElement), aMasters, aElement)
   else
     inherited FindUsedMasters(aBasePtr, aEndPtr, aElement, aMasters);
 end;
@@ -7744,9 +7868,18 @@ begin
   end;
 end;
 
-function TwbIntegerDef.GetFormater: IwbIntegerDefFormater;
+function TwbIntegerDef.GetFormater(const aElement: IwbElement): IwbIntegerDefFormater;
+var
+  Union: IwbIntegerDefFormaterUnion;
 begin
   Result := inFormater;
+  while Supports(Result, IwbIntegerDefFormaterUnion, Union) do
+    Result := Union.Decide(aElement);
+end;
+
+function TwbIntegerDef.GetFormaterCanChange: Boolean;
+begin
+  Result := Supports(inFormater, IwbIntegerDefFormaterUnion);
 end;
 
 function TwbIntegerDef.GetIntType: TwbIntType;
@@ -7837,7 +7970,7 @@ var
 begin
   if Assigned(inFormater) then begin
     OldValue := ToInt(aBasePtr, aEndPtr, aElement);
-    NewValue := inFormater.MasterCountUpdated(OldValue, aOld, aNew);
+    NewValue := inFormater.MasterCountUpdated(OldValue, aOld, aNew, aElement);
     if OldValue <> NewValue then
       FromInt(NewValue, aBasePtr, aEndPtr, aElement)
   end else
@@ -7851,7 +7984,7 @@ var
 begin
   if Assigned(inFormater) then begin
     OldValue := ToInt(aBasePtr, aEndPtr, aElement);
-    NewValue := inFormater.MasterIndicesUpdated(OldValue, aOld, aNew);
+    NewValue := inFormater.MasterIndicesUpdated(OldValue, aOld, aNew, aElement);
     if OldValue <> NewValue then
       FromInt(NewValue, aBasePtr, aEndPtr, aElement)
   end else
@@ -7860,8 +7993,9 @@ end;
 
 procedure TwbIntegerDef.ReplaceFormater(const aFormater: IwbIntegerDefFormater);
 begin
+  defSource := nil;
   if Assigned(aFormater) then
-    inFormater := (aFormater as IwbDefInternal).SetParent(Self, False) as IwbIntegerDefFormater
+    inFormater := (aFormater as IwbDefInternal).SetParent(Self, True) as IwbIntegerDefFormater
   else
     inFormater := nil
 end;
@@ -8099,14 +8233,14 @@ begin
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
-function TwbArrayDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   ArrayDef: IwbArrayDef;
 begin
   Result := (aIndex = Low(Integer)) and
     Supports(aDef, IwbArrayDef, ArrayDef) and
     ( ( arCount <= 0 ) or (arCount = ArrayDef.ElementCount) ) and
-    arElement.CanAssign(aIndex, ArrayDef.Element);
+    arElement.CanAssign(aElement, aIndex, ArrayDef.Element);
 end;
 
 function TwbArrayDef.CanContainFormIDs: Boolean;
@@ -8474,7 +8608,7 @@ end;
 
 { TwbStructDef }
 
-function TwbStructDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbStructDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   StructDef : IwbStructDef;
   i         : Integer;
@@ -8484,7 +8618,7 @@ begin
     ( GetMemberCount = StructDef.MemberCount);
   if Result and not Equals(aDef) then
     for i := 0 to Pred(GetMemberCount) do
-      if not stMembers[i].CanAssign(Low(Integer), StructDef.Members[i]) then begin
+      if not stMembers[i].CanAssign(aElement, Low(Integer), StructDef.Members[i]) then begin
         Result := False;
         Exit;
       end;
@@ -8759,7 +8893,7 @@ end;
 
 { TwbFlagsDef }
 
-function TwbFlagsDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbFlagsDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   FlagsDef: IwbFlagsDef;
   i: Integer;
@@ -8802,10 +8936,11 @@ end;
 constructor TwbFlagsDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFlagsDef do
-    Self.Create(flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask, flgGetCPs).defSource := aSource;
+    Self.Create(flgBaseFlagsDef, flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask, flgGetCPs).defSource := aSource;
 end;
 
-constructor TwbFlagsDef.Create(const aNames           : array of string;
+constructor TwbFlagsDef.Create(const aBaseFlagsDef    : IwbFlagsDef;
+                               const aNames           : array of string;
                                const aDontShows       : array of TwbDontShowCallback;
                                      aUnknownIsUnused : Boolean;
                                      aIgnoreMask      : Int64;
@@ -8813,6 +8948,8 @@ constructor TwbFlagsDef.Create(const aNames           : array of string;
 var
   i: Integer;
 begin
+  if Assigned(aBaseFlagsDef) then
+    flgBaseFlagsDef := aBaseFlagsDef.Root as IwbFlagsDef;
   flgIgnoreMask := aIgnoreMask;
   flgUnknownIsUnused := aUnknownIsUnused;
   flgUnusedMask := 0;
@@ -8855,6 +8992,14 @@ begin
       raise Exception.Create('"'+aValue[i]+'" is not a valid character for a flag');
     end;
   Result := Result and not flgUnusedMask;
+end;
+
+function TwbFlagsDef.GetBaseFlagsDef: IwbFlagsDef;
+begin
+  if Assigned(flgBaseFlagsDef) then
+    Result := flgBaseFlagsDef
+  else
+    Result := GetRoot as IwbFlagsDef;
 end;
 
 function TwbFlagsDef.GetDefTypeName: string;
@@ -9043,7 +9188,7 @@ end;
 
 { TwbEnumDef }
 
-function TwbEnumDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbEnumDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   EnumDef: IwbEnumDef;
   i: Integer;
@@ -9434,7 +9579,7 @@ end;
 
 { TwbStringDef }
 
-function TwbStringDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbStringDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   StringDef: IwbStringDef;
 begin
@@ -9618,7 +9763,7 @@ end;
 
 { TwbFloatDef }
 
-function TwbFloatDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbFloatDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   FloatDef: IwbFloatDef;
 begin
@@ -9901,7 +10046,7 @@ begin
   end;
 end;
 
-function TwbChar4.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbChar4.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := Supports(aDef, IwbChar4);
 end;
@@ -9999,7 +10144,7 @@ begin
     aElement.AddReferencedFromID(aInt);
 end;
 
-function TwbFormID.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbFormID.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := Supports(aDef, IwbFormID);
 end;
@@ -10162,7 +10307,7 @@ begin
   except end;
 end;
 
-procedure TwbFormID.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters);
+procedure TwbFormID.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
 var
   OldValue   : Cardinal;
   FileID     : Integer;
@@ -10461,7 +10606,7 @@ begin
   Result := True;
 end;
 
-function TwbFormID.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64;
+function TwbFormID.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64;
 var
   OldValue   : Cardinal;
   NewValue   : Cardinal;
@@ -10502,7 +10647,7 @@ begin
     end;
 end;
 
-function TwbFormID.MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64;
+function TwbFormID.MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64;
 var
   OldValue   : Cardinal;
   NewValue   : Cardinal;
@@ -10747,7 +10892,7 @@ end;
 
 { TwbByteArrayDef }
 
-function TwbByteArrayDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbByteArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   ByteArrayDef: IwbByteArrayDef;
 begin
@@ -11228,7 +11373,7 @@ end;
 
 { TwbDivDef }
 
-function TwbDivDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbDivDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := True;
 end;
@@ -11280,7 +11425,7 @@ end;
 
 { TwbMulDef }
 
-function TwbMulDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbMulDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := True;
 end;
@@ -11330,7 +11475,7 @@ end;
 
 { TwbCallbackDef }
 
-function TwbCallbackDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbCallbackDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   CallbackDef: IwbCallbackDef;
 begin
@@ -11587,7 +11732,7 @@ end;
 
 { TwbFormIDChecked }
 
-function TwbFormIDChecked.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbFormIDChecked.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   FormIDChecked : IwbFormIDChecked;
   i             : Integer;
@@ -11602,7 +11747,7 @@ begin
           Exit;
         end;
   end else
-    Result := inherited CanAssign(aIndex, aDef);
+    Result := inherited CanAssign(aElement, aIndex, aDef);
 end;
 
 function TwbFormIDChecked.Check(aInt: Int64;
@@ -11826,7 +11971,7 @@ begin
   { nothing }
 end;
 
-function TwbIntegerDefFormater.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbIntegerDefFormater.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := False;
 end;
@@ -11849,7 +11994,7 @@ begin
   Result := False; // ? Should be overriden
 end;
 
-procedure TwbIntegerDefFormater.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters);
+procedure TwbIntegerDefFormater.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
 begin
   {can be overriden}
 end;
@@ -11895,12 +12040,12 @@ begin
   Result := False;
 end;
 
-function TwbIntegerDefFormater.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte): Int64;
+function TwbIntegerDefFormater.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64;
 begin
   Result := aInt;
 end;
 
-function TwbIntegerDefFormater.MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes): Int64;
+function TwbIntegerDefFormater.MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64;
 begin
   Result := aInt;
 end;
@@ -11919,7 +12064,7 @@ begin
   Decide(aBasePtr, aEndPtr, aElement).BuildRef(aBasePtr, aEndPtr, aElement);
 end;
 
-function TwbUnionDef.CanAssign(aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbUnionDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   UnionDef : IwbUnionDef;
   i        : Integer;
@@ -11928,7 +12073,7 @@ begin
     Result := Equals(aDef);
     if not Result then
       for i := 0 to Pred(UnionDef.MemberCount) do begin
-        Result := CanAssign(aIndex, UnionDef.Members[i]);
+        Result := CanAssign(aElement, aIndex, UnionDef.Members[i]);
         if Result then
           Exit;
       end;
@@ -11936,7 +12081,7 @@ begin
   end else begin
     Result := False;
     for i := 0 to Pred(GetMemberCount) do begin
-      Result := udMembers[i].CanAssign(aIndex, aDef);
+      Result := udMembers[i].CanAssign(aElement, aIndex, aDef);
       if Result then
         Exit;
     end;
@@ -12374,7 +12519,7 @@ end;
 
 { TwbLenStringDef }
 
-function TwbLenStringDef.CanAssign(aIndex: Integer; const aDef: IwbDef) : Boolean;
+function TwbLenStringDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef) : Boolean;
 begin
   Result := aDef.DefType in [dtString, dtLString, dtLenString];
 end;
@@ -13169,6 +13314,187 @@ begin
     2: Result := Result + ' Large size';
     3: Result := '0' + ' Null size';
   end;
+end;
+
+{ TwbIntegerDefFormaterUnion }
+
+procedure TwbIntegerDefFormaterUnion.BuildRef(aInt     : Int64;
+                                        const aElement : IwbElement);
+begin
+  Decide(aElement).BuildRef(aInt, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.CanAssign(const aElement : IwbElement;
+                                                    aIndex   : Integer;
+                                              const aDef     : IwbDef)
+                                                             : Boolean;
+begin
+  Result := Decide(aElement).CanAssign(aElement, aIndex, aDef);
+end;
+
+function TwbIntegerDefFormaterUnion.CanContainFormIDs: Boolean;
+var
+  i: Integer;
+begin
+  for i := Low(idfuMembers) to High(idfuMembers) do
+    if idfuMembers[i].CanContainFormIDs then
+      Exit(True);
+  Result := False;
+end;
+
+function TwbIntegerDefFormaterUnion.Check(aInt     : Int64;
+                                    const aElement : IwbElement)
+                                                   : string;
+begin
+  Result := Decide(aElement).Check(aInt, aElement);
+end;
+
+constructor TwbIntegerDefFormaterUnion.Clone(const aSource: TwbDef);
+begin
+  with aSource as TwbIntegerDefFormaterUnion do
+    Self.Create(defPriority, defRequired, defGetCP, idfuDecider, idfuMembers).defSource := aSource;
+end;
+
+function TwbIntegerDefFormaterUnion.CompareExchangeFormID(var aInt       : Int64;
+                                                              aOldFormID : Cardinal;
+                                                              aNewFormID : Cardinal;
+                                                        const aElement   : IwbElement)
+                                                                         : Boolean;
+begin
+  Result := Decide(aElement).CompareExchangeFormID(aInt, aOldFormID, aNewFormID, aElement);
+end;
+
+constructor TwbIntegerDefFormaterUnion.Create(aPriority : TwbConflictPriority;
+                                              aRequired : Boolean;
+                                              aGetCP    : TwbGetConflictPriority;
+                                              aDecider  : TwbIntegerDefFormaterUnionDecider;
+                                        const aMembers  : array of IwbIntegerDefFormater);
+var
+  i: Integer;
+begin
+  inherited Create(aPriority, aRequired, aGetCP);
+  idfuDecider := aDecider;
+  SetLength(idfuMembers, Length(aMembers));
+  for i := Low(aMembers) to High(aMembers) do
+    idfuMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbIntegerDefFormater;
+end;
+
+function TwbIntegerDefFormaterUnion.Decide(const aElement : IwbElement)
+                                                          : IwbIntegerDefFormater;
+begin
+  Result := idfuMembers[idfuDecider(aElement)];
+end;
+
+procedure TwbIntegerDefFormaterUnion.FindUsedMasters(aInt     : Int64;
+                                                     aMasters : PwbUsedMasters;
+                                               const aElement : IwbElement);
+begin
+  Decide(aElement).FindUsedMasters(aInt, aMasters, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.FromEditValue(const aValue   : string;
+                                                  const aElement : IwbElement)
+                                                                 : Int64;
+begin
+  Result := Decide(aElement).FromEditValue(aValue, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.GetDefType: TwbDefType;
+begin
+  Result := dtIntegerFormaterUnion;
+end;
+
+function TwbIntegerDefFormaterUnion.GetEditInfo(aInt     : Int64;
+                                          const aElement : IwbElement)
+                                                         : string;
+begin
+  Result := Decide(aElement).GetEditInfo(aInt, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.GetEditType(aInt     : Int64;
+                                          const aElement : IwbElement)
+                                                         : TwbEditType;
+begin
+  Result := Decide(aElement).GetEditType(aInt, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.GetIsEditable(aInt     : Int64;
+                                            const aElement : IwbElement)
+                                                           : Boolean;
+begin
+  Result := Decide(aElement).GetIsEditable(aInt, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.GetLinksTo(aInt     : Int64;
+                                         const aElement : IwbElement)
+                                                        : IwbElement;
+begin
+  Result := Decide(aElement).GetLinksTo(aInt, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.GetMember(aIndex: Integer): IwbIntegerDefFormater;
+begin
+  Result := idfuMembers[aIndex];
+end;
+
+function TwbIntegerDefFormaterUnion.GetMemberCount: Integer;
+begin
+  Result := Length(idfuMembers);
+end;
+
+function TwbIntegerDefFormaterUnion.GetNoReach: Boolean;
+var
+  i: Integer;
+begin
+  for i := Low(idfuMembers) to High(idfuMembers) do
+    if idfuMembers[i].NoReach then
+      Exit(True);
+  Result := False;
+end;
+
+function TwbIntegerDefFormaterUnion.MasterCountUpdated(aInt     : Int64;
+                                                       aOld     : Byte;
+                                                       aNew     : Byte;
+                                                 const aElement : IwbElement)
+                                                                : Int64;
+begin
+  Result := Decide(aElement).MasterCountUpdated(aInt, aOld, aNew, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.MasterIndicesUpdated(aInt     : Int64;
+                                                   const aOld     : TBytes;
+                                                   const aNew     : TBytes;
+                                                   const aElement : IwbElement)
+                                                                  : Int64;
+begin
+  Result := Decide(aElement).MasterIndicesUpdated(aInt, aOld, aNew, aElement);
+end;
+
+procedure TwbIntegerDefFormaterUnion.Report(const aParents: TwbDefPath);
+begin
+  inherited;
+
+end;
+
+function TwbIntegerDefFormaterUnion.ToEditValue(aInt     : Int64;
+                                          const aElement : IwbElement)
+                                                         : string;
+begin
+  Result := Decide(aElement).ToEditValue(aInt, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.ToSortKey(aInt     : Int64;
+                                        const aElement : IwbElement)
+                                                       : string;
+begin
+  Result := Decide(aElement).ToSortKey(aInt, aElement);
+end;
+
+function TwbIntegerDefFormaterUnion.ToString(aInt     : Int64;
+                                       const aElement : IwbElement)
+                                                      : string;
+begin
+  Result := Decide(aElement).ToString(aInt, aElement);
 end;
 
 initialization

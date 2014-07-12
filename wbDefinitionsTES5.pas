@@ -4119,9 +4119,38 @@ begin
   end;
 end;
 
-procedure DefineTES5a;
+function wbREFRRecordFlagsDecider(const aElement: IwbElement): Integer;
 var
-  wbRecordFlagsEnum : IwbFlagsDef;
+  MainRecord : IwbMainRecord;
+  NameRec    : IwbElement;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+
+  if not Assigned(MainRecord) then
+    Exit;
+
+  NameRec := MainRecord.ElementBySignature[NAME];
+  if not Assigned(NameRec) then
+    Exit;
+
+  if not Supports(NameRec.LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if MainRecord.Signature = ACTI then
+    Result := 1
+  else if MainRecord.Signature = MSTT then
+    Result := 2;
+end;
+
+var
+  wbRecordFlagsFlags : IwbFlagsDef;
+
+procedure DefineTES5a;
 
 begin
   wbNull := wbByteArray('Unused', -255);
@@ -4340,7 +4369,7 @@ begin
     ])
   ]);
 
-  wbRecordFlagsEnum := wbFlags([
+  wbRecordFlagsFlags := wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
     {0x00000002}'Unknown 2',
@@ -4410,42 +4439,7 @@ begin
     {>>> 0x80000000 REFR: MultiBound <<<}
     {0x80000000}'MultiBound'
   ], [18]);
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbRecordFlagsEnum);
-
-(*   wbInteger('Record Flags 2', itU32, wbFlags([
-    {0x00000001}'Unknown 1',
-    {0x00000002}'Unknown 2',
-    {0x00000004}'Unknown 3',
-    {0x00000008}'Unknown 4',
-    {0x00000010}'Unknown 5',
-    {0x00000020}'Unknown 6',
-    {0x00000040}'Unknown 7',
-    {0x00000080}'Unknown 8',
-    {0x00000100}'Unknown 9',
-    {0x00000200}'Unknown 10',
-    {0x00000400}'Unknown 11',
-    {0x00000800}'Unknown 12',
-    {0x00001000}'Unknown 13',
-    {0x00002000}'Unknown 14',
-    {0x00004000}'Unknown 15',
-    {0x00008000}'Unknown 16',
-    {0x00010000}'Unknown 17',
-    {0x00020000}'Unknown 18',
-    {0x00040000}'Unknown 19',
-    {0x00080000}'Unknown 20',
-    {0x00100000}'Unknown 21',
-    {0x00200000}'Unknown 22',
-    {0x00400000}'Unknown 23',
-    {0x00800000}'Unknown 24',
-    {0x01000000}'Unknown 25',
-    {0x02000000}'Unknown 26',
-    {0x03000000}'Unknown 27',
-    {0x08000000}'Unknown 28',
-    {0x10000000}'Unknown 29',
-    {0x20000000}'Unknown 30',
-    {0x40000000}'Unknown 31',
-    {0x80000000}'Unknown 32'
-  ]));                (**)
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbRecordFlagsFlags);
 
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
@@ -5321,7 +5315,7 @@ begin
   ], True, wbPlacedAddInfo);
 
   {>>> wbRecordFlags: 0x00000000 ACTI: Collision Geometry (default) <<<}
-  wbRecord(ACTI, 'Activator', wbFlags([
+  wbRecord(ACTI, 'Activator', wbFlags(wbRecordFlagsFlags, [
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'Unused',
     {0x00000002}'Unknown 2',
@@ -11789,7 +11783,149 @@ begin
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
 
-  wbRecord(REFR, 'Placed Object', [
+  wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+    wbRecordFlagsFlags,
+    {ACTI} wbFlags(wbRecordFlagsFlags, [
+      {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
+      {0x00000001}'ESM',
+      {0x00000002}'Unknown 2 ACTI',
+      {>>> 0x00000004 ARMO: Not playable <<<}
+      {0x00000004}'NotPlayable X',
+      {0x00000008}'Unknown 4',
+      {0x00000010}'Unknown 5',
+      {0x00000020}'Deleted',
+      {>>> 0x00000040 ACTI: Has Tree LOD <<<}
+      {>>> 0x00000040 REGN: Border Region <<<}
+      {>>> 0x00000040 STAT: Has Tree LOD <<<}
+      {>>> 0x00000040 REFR: Hidden From Local Map <<<}
+      {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
+      {>>> 0x00000080 TES4: Localized <<<}
+      {>>> 0x00000080 PHZD: Turn Off Fire <<<}
+      {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
+      {>>> 0x00000080 STAT: Add-on LOD Object <<<}
+      {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
+      {>>> 0x00000100 ACTI: Must Update Anims <<<}
+      {>>> 0x00000100 REFR: Inaccessible <<<}
+      {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
+      {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
+      {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
+      {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
+      {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
+      {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
+      {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
+      {0x00000800}'InitiallyDisabled',
+      {0x00001000}'Ignored',
+      {0x00002000}'ActorChanged',
+      {0x00004000}'Unknown 15',
+      {>>> 0x00008000 STAT: Has Distant LOD <<<}
+      {0x00008000}'VWD',
+      {>>> 0x00010000 ACTI: Random Animation Start <<<}
+      {>>> 0x00010000 REFR light: Never fades <<<}
+      {0x00010000}'RandomAnimationStart NeverFades',
+      {>>> 0x00020000 ACTI: Dangerous <<<}
+      {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
+      {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
+      {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
+      {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
+      {0x00040000}'Compressed',
+      {>>> 0x00080000 STAT: Has Currents <<<}
+      {0x00080000}'CantWait HasCurrents',
+      {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
+      {0x00100000}'IgnoreObjectInteraction',
+      {0x00200000}'(Used in Memory Changed Form)',
+      {0x00400000}'Unknown 23',
+      {>>> 0x00800000 ACTI: Is Marker <<<}
+      {0x00800000}'IsMarker',
+      {0x01000000}'Unknown 25',
+      {>>> 0x02000000 ACTI: Obstacle <<<}
+      {>>> 0x02000000 REFR: No AI Acquire <<<}
+      {0x02000000}'Obstacle NoAIAcquire',
+      {>>> 0x04000000 ACTI: Filter <<<}
+      {0x04000000}'NavMeshFilter',
+      {>>> 0x08000000 ACTI: Bounding Box <<<}
+      {0x08000000}'NavMeshBoundingBox',
+      {>>> 0x10000000 STAT: Show in World Map <<<}
+      {0x10000000}'MustExitToTalk ShowInWorldMap',
+      {>>> 0x20000000 ACTI: Child Can Use <<<}
+      {>>> 0x20000000 REFR: Don't Havok Settle <<<}
+      {0x20000000}'ChildCanUse DontHavokSettle',
+      {>>> 0x40000000 ACTI: GROUND <<<}
+      {>>> 0x40000000 REFR: NoRespawn <<<}
+      {0x40000000}'NavMeshGround NoRespawn',
+      {>>> 0x80000000 REFR: MultiBound <<<}
+      {0x80000000}'MultiBound'
+    ], [18]),
+    {MSTT} wbFlags(wbRecordFlagsFlags, [
+      {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
+      {0x00000001}'ESM',
+      {0x00000002}'Unknown 2 MSTT',
+      {>>> 0x00000004 ARMO: Not playable <<<}
+      {0x00000004}'NotPlayable X',
+      {0x00000008}'Unknown 4',
+      {0x00000010}'Unknown 5',
+      {0x00000020}'Deleted',
+      {>>> 0x00000040 ACTI: Has Tree LOD <<<}
+      {>>> 0x00000040 REGN: Border Region <<<}
+      {>>> 0x00000040 STAT: Has Tree LOD <<<}
+      {>>> 0x00000040 REFR: Hidden From Local Map <<<}
+      {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
+      {>>> 0x00000080 TES4: Localized <<<}
+      {>>> 0x00000080 PHZD: Turn Off Fire <<<}
+      {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
+      {>>> 0x00000080 STAT: Add-on LOD Object <<<}
+      {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
+      {>>> 0x00000100 ACTI: Must Update Anims <<<}
+      {>>> 0x00000100 REFR: Inaccessible <<<}
+      {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
+      {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
+      {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
+      {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
+      {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
+      {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
+      {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
+      {0x00000800}'InitiallyDisabled',
+      {0x00001000}'Ignored',
+      {0x00002000}'ActorChanged',
+      {0x00004000}'Unknown 15',
+      {>>> 0x00008000 STAT: Has Distant LOD <<<}
+      {0x00008000}'VWD',
+      {>>> 0x00010000 ACTI: Random Animation Start <<<}
+      {>>> 0x00010000 REFR light: Never fades <<<}
+      {0x00010000}'RandomAnimationStart NeverFades',
+      {>>> 0x00020000 ACTI: Dangerous <<<}
+      {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
+      {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
+      {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
+      {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
+      {0x00040000}'Compressed',
+      {>>> 0x00080000 STAT: Has Currents <<<}
+      {0x00080000}'CantWait HasCurrents',
+      {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
+      {0x00100000}'IgnoreObjectInteraction',
+      {0x00200000}'(Used in Memory Changed Form)',
+      {0x00400000}'Unknown 23',
+      {>>> 0x00800000 ACTI: Is Marker <<<}
+      {0x00800000}'IsMarker',
+      {0x01000000}'Unknown 25',
+      {>>> 0x02000000 ACTI: Obstacle <<<}
+      {>>> 0x02000000 REFR: No AI Acquire <<<}
+      {0x02000000}'Obstacle NoAIAcquire',
+      {>>> 0x04000000 ACTI: Filter <<<}
+      {0x04000000}'NavMeshFilter',
+      {>>> 0x08000000 ACTI: Bounding Box <<<}
+      {0x08000000}'NavMeshBoundingBox',
+      {>>> 0x10000000 STAT: Show in World Map <<<}
+      {0x10000000}'MustExitToTalk ShowInWorldMap',
+      {>>> 0x20000000 ACTI: Child Can Use <<<}
+      {>>> 0x20000000 REFR: Don't Havok Settle <<<}
+      {0x20000000}'ChildCanUse DontHavokSettle',
+      {>>> 0x40000000 ACTI: GROUND <<<}
+      {>>> 0x40000000 REFR: NoRespawn <<<}
+      {0x40000000}'NavMeshGround NoRespawn',
+      {>>> 0x80000000 REFR: MultiBound <<<}
+      {0x80000000}'MultiBound'
+    ], [18])
+  ]), [
     wbEDID,
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
