@@ -222,7 +222,7 @@ type
 
     function GetValue: string; virtual;
     function GetCheck: string; virtual;
-    function GetSortKey(aExtended: Boolean): string;
+    function GetSortKey(aExtended: Boolean): string; virtual;
     function GetSortKeyInternal(aExtended: Boolean): string; virtual;
     function GetSortPriority: Integer; virtual;
     function GetName: string; virtual;
@@ -1280,6 +1280,7 @@ type
     fEndPtr     : Pointer;
     fIntegerDef : IwbIntegerDef;
     fFlagsDef   : IwbFlagsDef;
+    fLastDefID  : Cardinal;
     fIndex      : Integer;
   protected
     constructor Create(const aContainer  : IwbContainer;
@@ -1292,6 +1293,7 @@ type
     function GetName: string; override;
 
     function GetValue: string; override;
+    function GetSortKey(aExtended: Boolean): string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetConflictPriority: TwbConflictPriority; override;
     function GetDontShow: Boolean; override;
@@ -3424,7 +3426,7 @@ begin
         ( Assigned(ValueDef) and
           (
             ValueDef.Equals(aElement.ValueDef) or
-            ValueDef.CanAssign(aIndex, aElement.ValueDef)
+            ValueDef.CanAssign(Self, aIndex, aElement.ValueDef)
           )
         ) then
           for i := Low(cntElements) to High(cntElements) do begin
@@ -3505,7 +3507,7 @@ begin
         ( Assigned(ValueDef) and
           (
             ValueDef.Equals(aElement.ValueDef) or
-            ValueDef.CanAssign(aIndex, aElement.ValueDef)
+            ValueDef.CanAssign(Self, aIndex, aElement.ValueDef)
           )
         );
     end;
@@ -5024,8 +5026,8 @@ begin
     end else begin
       if (aIndex >= 0) and (aIndex < mrDef.MemberCount) then begin
         Member := mrDef.Members[aIndex];
-        IsAdd := not Assigned(aElement) or Member.CanAssign(Low(Integer), aElement.Def);
-        IsAddChild := not IsAdd and Assigned(aElement) and Member.CanAssign(High(Integer), aElement.Def);
+        IsAdd := not Assigned(aElement) or Member.CanAssign(Self, Low(Integer), aElement.Def);
+        IsAddChild := not IsAdd and Assigned(aElement) and Member.CanAssign(Self, High(Integer), aElement.Def);
         if IsAdd or IsAddChild then begin
           Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
           if Assigned(Element) then begin
@@ -5269,8 +5271,8 @@ begin
     else begin
       Result := (aIndex >= 0) and (aIndex < mrDef.MemberCount) and
         (
-          mrDef.Members[aIndex].CanAssign(Low(Integer), aElement.Def) or
-          mrDef.Members[aIndex].CanAssign(High(Integer), aElement.Def)
+          mrDef.Members[aIndex].CanAssign(Self, Low(Integer), aElement.Def) or
+          mrDef.Members[aIndex].CanAssign(Self, High(Integer), aElement.Def)
         );
       if Result and aCheckDontShow then
         Result := not mrDef.Members[aIndex].DontShow[Self];
@@ -8612,14 +8614,15 @@ begin
         Assert(aElement.SortOrder >= 0);
         Assert(aElement.SortOrder < StructDef.MemberCount );
         Assert(Assigned(aElement.ValueDef));
-        Assert(StructDef.Members[aElement.SortOrder].CanAssign(Low(Integer), aElement.ValueDef));
 
         Result := GetElementBySortOrder(aElement.SortOrder);
         Assert(Assigned(Result));
 
+        Assert(StructDef.Members[aElement.SortOrder].CanAssign(Result, Low(Integer), aElement.ValueDef));
+
         if not aDeepCopy then
           if Supports(Result.ValueDef, IwbIntegerDef, IntegerDef) then
-            if Supports(IntegerDef.Formater, IwbFlagsDef, FlagsDef) then
+            if Supports(IntegerDef.Formater[Result], IwbFlagsDef, FlagsDef) then
               Exit(Result);
 
         Result.Assign(Low(Integer), aElement, not aDeepCopy);
@@ -8664,7 +8667,7 @@ begin
 
         ArrayDef := srValueDef as IwbArrayDef;
 
-        if (aIndex = Low(Integer)) and ArrayDef.CanAssign(aIndex, aElement.ValueDef) then begin
+        if (aIndex = Low(Integer)) and ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) then begin
 
           if aOnlySK then
             Exit;
@@ -8694,7 +8697,7 @@ begin
           end;
 
         end else begin
-          if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = High(Integer)) or ArrayDef.Element.CanAssign(Low(Integer), aElement.ValueDef)) then begin
+          if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = High(Integer)) or ArrayDef.Element.CanAssign(Self, Low(Integer), aElement.ValueDef)) then begin
             {add one entry}
 
             if srSorted then
@@ -8780,15 +8783,15 @@ begin
       Exit;
     end;
     Result :=
-       ArrayDef.CanAssign(aIndex, aElement.ValueDef) or
-       ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Low(Integer), aElement.ValueDef) );
+       ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) or
+       ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, Low(Integer), aElement.ValueDef) );
   end else begin
     if not Assigned(aElement) then
       Exit;
 
     Result := inherited CanAssign(aIndex, aElement, aCheckDontShow);
     if not Result and Assigned(srDef) then
-      Result := srDef.CanAssign(aIndex, aElement.Def);
+      Result := srDef.CanAssign(Self, aIndex, aElement.Def);
   end;
 end;
 
@@ -8859,8 +8862,8 @@ end;
 
 function Resolve(const aValueDef: IwbValueDef; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
 var
-  Internal   : IwbElementInternal;
-  UnionDef   : IwbUnionDef;
+  Internal  : IwbElementInternal;
+  UnionDef  : IwbUnionDef;
   CanDecide : Boolean;
 begin
   Result := aValueDef;
@@ -11056,7 +11059,7 @@ begin
   if aElement.ValueDef = nil then
     Exit;
 
-  Result := GetValueDef.CanAssign(aIndex, aElement.ValueDef);
+  Result := GetValueDef.CanAssign(Self, aIndex, aElement.ValueDef);
 
   if Result and aCheckDontShow and GetDontShow then
     Result := False;
@@ -11978,7 +11981,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
 
-  if (aIndex = Low(Integer)) and arcDef.CanAssign(aIndex, aElement.Def) then begin
+  if (aIndex = Low(Integer)) and arcDef.CanAssign(Self, aIndex, aElement.Def) then begin
 
     if aOnlySK then
       Exit;
@@ -11992,8 +11995,8 @@ begin
     for i := 0 to Pred(Container.ElementCount) do
       Assign(i, Container.Elements[i], aOnlySK);
 
-  end else if (aIndex >= 0) and (not Assigned(aElement) or arcDef.Element.CanAssign(Low(Integer), aElement.Def))  or
-    ((aIndex = Low(Integer)) and arcDef.Element.CanAssign(aIndex, aElement.Def)) then begin
+  end else if (aIndex >= 0) and (not Assigned(aElement) or arcDef.Element.CanAssign(Self, Low(Integer), aElement.Def))  or
+    ((aIndex = Low(Integer)) and arcDef.Element.CanAssign(Self, aIndex, aElement.Def)) then begin
 
     Element := nil;
 
@@ -12064,9 +12067,9 @@ begin
     Exit;
   end;
 
-  Result := arcDef.CanAssign(aIndex, aElement.Def);
+  Result := arcDef.CanAssign(Self, aIndex, aElement.Def);
   if not Result then begin
-    Result := arcDef.Element.CanAssign(Low(Integer), aElement.Def);
+    Result := arcDef.Element.CanAssign(Self, Low(Integer), aElement.Def);
     if Result then
       if aCheckDontShow and arcDef.Element.DontShow[aElement] then
         Result := False;
@@ -12347,7 +12350,7 @@ begin
 
     if (aIndex >= 0) and (aIndex < srcDef.MemberCount) then begin
       Member := srcDef.Members[aIndex];
-      if not Assigned(aElement) or Member.CanAssign(Low(Integer), aElement.Def) then begin
+      if not Assigned(aElement) or Member.CanAssign(Self, Low(Integer), aElement.Def) then begin
         Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
         if Assigned(Element) then begin
           if Assigned(aElement) then
@@ -12410,7 +12413,7 @@ begin
       Result := srcDef.Equals(aElement.Def)
     else begin
       Result := (aIndex >= 0) and (aIndex < srcDef.MemberCount) and
-        srcDef.Members[aIndex].CanAssign(Low(Integer), aElement.Def);
+        srcDef.Members[aIndex].CanAssign(Self, Low(Integer), aElement.Def);
       if Result and aCheckDontShow then
         if srcDef.Members[aIndex].DontShow[Self] then
           Result := False;
@@ -12802,7 +12805,7 @@ begin
 
   ArrayDef := vbValueDef as IwbArrayDef;
 
-  if (aIndex = Low(Integer)) and ArrayDef.CanAssign(aIndex, aElement.ValueDef) then begin
+  if (aIndex = Low(Integer)) and ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) then begin
 
     if aOnlySK then
       Exit;
@@ -12843,7 +12846,7 @@ begin
     end;
 
   end else begin
-    if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = High(Integer)) or ArrayDef.Element.CanAssign(Low(Integer), aElement.ValueDef)) then begin
+    if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = High(Integer)) or ArrayDef.Element.CanAssign(Self, Low(Integer), aElement.ValueDef)) then begin
       {add one entry}
 
       if arrSorted then
@@ -12894,8 +12897,8 @@ begin
     Exit;
   end;
   Result :=
-     ArrayDef.CanAssign(aIndex, aElement.ValueDef) or
-     ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Low(Integer), aElement.ValueDef) );
+     ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) or
+     ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, Low(Integer), aElement.ValueDef) );
 end;
 
 function TwbArray.CanMoveElement: Boolean;
@@ -13029,7 +13032,7 @@ begin
       if over then begin
         aEndPtr := aBasePtr;
         ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
-        if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater, IwbFlagsDef) then
+        if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater[aContainer], IwbFlagsDef) then
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
         else
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
@@ -13269,8 +13272,8 @@ var
 begin
   if vIsFlags and Supports(aElement, IwbFlag, Flag) then
     if Supports(vbValueDef, IwbIntegerDef, IntegerDef) then
-      if Supports(IntegerDef.Formater, IwbFlagsDef, FlagsDef) then
-        if FlagsDef.CanAssign(Low(Integer), Flag.FlagsDef) then begin
+      if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
+        if FlagsDef.CanAssign(Self, Low(Integer), Flag.FlagsDef) then begin
           s := GetEditValue;
           s := s + StringOfChar('0', 64 - Length(s));
           if (Flag.FlagIndex >= 0) and (Flag.FlagIndex < Length(s)) then begin
@@ -13316,7 +13319,7 @@ begin
 
   if wbFlagsAsArray then
     if Supports(ValueDef, IwbIntegerDef, IntegerDef) then
-      if Supports(IntegerDef.Formater, IwbFlagsDef, FlagsDef) then begin
+      if Supports(IntegerDef.Formater[aElement], IwbFlagsDef, FlagsDef) then begin
 
         if Assigned(aBasePtr) and (FlagsDef.FlagCount > 0) then begin
           j := IntegerDef.ToInt(aBasePtr, aEndPtr, aContainer);
@@ -13677,7 +13680,8 @@ begin
   fBasePtr    := aBasePtr;
   fEndPtr     := aEndPtr;
   fIntegerDef := aIntegerDef;
-  fFlagsDef   := aFlagsDef;
+  if not fIntegerDef.FormaterCanChange then
+    fFlagsDef := aFlagsDef;
   fIndex      := aIndex;
   inherited Create(aContainer);
   SetSortOrder(aIndex);
@@ -13690,7 +13694,7 @@ var
 begin
   if wbTranslationMode then
     Result := cpIgnore
-  else if fFlagsDef.FlagIgnoreConflict[fIndex] then
+  else if GetFlagsDef.FlagIgnoreConflict[fIndex] then
     Result := cpIgnore
   else if Assigned(fIntegerDef) then
     Result := fIntegerDef.ConflictPriority[Self]
@@ -13712,7 +13716,7 @@ end;
 
 function TwbFlag.GetDontShow: Boolean;
 begin
-  Result := fFlagsDef.FlagDontShow[Self, fIndex];
+  Result := GetFlagsDef.FlagDontShow[Self, fIndex];
 end;
 
 function TwbFlag.GetEditValue: string;
@@ -13738,7 +13742,10 @@ end;
 
 function TwbFlag.GetFlagsDef: IwbFlagsDef;
 begin
-  Result := fFlagsDef;
+  if Assigned(fFlagsDef) then
+    Result := fFlagsDef
+  else
+    Result := fIntegerDef.Formater[IwbContainer(eContainer)] as IwbFlagsDef;
 end;
 
 function TwbFlag.GetIsEditable: Boolean;
@@ -13753,7 +13760,7 @@ end;
 
 function TwbFlag.GetName: string;
 begin
-  Result := fFlagsDef.Flags[fIndex];
+  Result := GetFlagsDef.Flags[fIndex];
 end;
 
 function TwbFlag.GetNativeValue: Variant;
@@ -13767,17 +13774,42 @@ begin
     Result := False;
 end;
 
-function TwbFlag.GetSortKeyInternal(aExtended: Boolean): string;
-//var
-//  i: Int64;
-begin
-  Result := IntToHex64(Cardinal(fFlagsDef.Root), 8) + IntToHex64(fIndex, 2);
+function TwbFlag.GetSortKey(aExtended: Boolean): string;
 
-{  i := fIntegerDef.ToInt(fBasePtr, fEndPtr, Self);
-  if (i and (Int64(1) shl fIndex)) <> 0 then
-    Result := Result + '+'
-  else
-    Result := Result + '-';}
+  procedure CheckFlagsChanged;
+  var
+    FlagsDef     : IwbFlagsDef;
+  begin
+    FlagsDef := GetFlagsDef.Root as IwbFlagsDef;
+    if FlagsDef.DefID <> fLastDefID then begin
+      Exclude(eStates, esExtendedSortKeyValid);
+      Exclude(eStates, esSortKeyValid);
+    end;
+  end;
+
+begin
+  if not Assigned(fFlagsDef) then
+    CheckFlagsChanged;
+  Result := inherited GetSortKey(aExtended);
+end;
+
+function TwbFlag.GetSortKeyInternal(aExtended: Boolean): string;
+var
+  s            : string;
+  FlagsDef     : IwbFlagsDef;
+  BaseFlagsDef : IwbFlagsDef;
+begin
+  FlagsDef := GetFlagsDef.Root as IwbFlagsDef;
+  BaseFlagsDef := FlagsDef.BaseFlagsDef;
+
+  s := IntToHex64(BaseFlagsDef.DefID, 8);
+  Result := s + IntToHex64(fIndex, 2);
+  if not FlagsDef.Equals(BaseFlagsDef) then begin
+    s := FlagsDef.Flags[fIndex];
+    if not SameText(s, BaseFlagsDef.Flags[fIndex]) then
+      Result := Result + s;
+  end;
+  fLastDefID := FlagsDef.DefID;
 end;
 
 function TwbFlag.GetValue: string;
@@ -13794,7 +13826,7 @@ begin
     if Assigned(Def) then
       Def.Used;
   end;
-  Result := fFlagsDef.Flags[fIndex];
+  Result := GetFlagsDef.Flags[fIndex];
 {
   i := fIntegerDef.ToInt(fBasePtr, fEndPtr, Self);
   if (i and (Int64(1) shl fIndex)) <> 0 then
@@ -14600,7 +14632,7 @@ begin
   ToggleVisibleWhenDistant := False;
 
   if Supports(IInterface(eContainer) , IwbMainRecordInternal, MainRecordInternal) then begin
-    if aElement.Def.Equals(wbRecordFlags) then begin
+    if SameText(aElement.Def.Name, 'Record Flags') then begin
       if Supports(aElement, IwbDataContainer, DataContainer) then begin
         Flags._Flags := PCardinal(DataContainer.DataBasePtr)^;
         UpdateStorageFromElements;
@@ -14629,16 +14661,7 @@ begin
 
         MainRecordInternal.mrStruct.mrsFlags := Flags;
       end;
-    end{ else if aElement.Def.Equals(wbRecordFlags2) then begin
-      if Supports(aElement, IwbDataContainer, DataContainer) then begin
-        Flags3._Flags := PCardinal(DataContainer.DataBasePtr)^;
-        UpdateStorageFromElements;
-        dcDataStorage := nil;
-        Exclude(dcFlags, dcfStorageInvalid);
-        MainRecordInternal.MakeHeaderWriteable;
-        MainRecordInternal.mrStruct.mrsFlags3 := Flags3;
-      end;
-    end};
+    end;
     p := MainRecordInternal.mrStruct;
     InformStorage(p, Pointer(Cardinal(p) + wbSizeOfMainRecordStruct ));
 
@@ -14666,7 +14689,7 @@ end;
 function TwbRecordHeaderStruct.IsElementEditable(const aElement: IwbElement): Boolean;
 begin
   Result := Assigned(aElement) and Assigned(aElement.ValueDef) and
-    (aElement.ValueDef.Equals(wbRecordFlags){ or aElement.ValueDef.Equals(wbRecordFlags2)});
+    SameText(aElement.ValueDef.Name, 'Record Flags');
   if Result and Assigned(eContainer) then
     Result := IwbContainer(eContainer).IsElementEditable(Self);
 end;
