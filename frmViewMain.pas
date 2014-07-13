@@ -10830,87 +10830,242 @@ end;
 
 procedure TfrmMain.tbsSpreadsheetShow(Sender: TObject);
 var
+  Signature                   : TwbSignature;
+
+  procedure CollectKeywords(const aElement: IwbElement; slKeywords: TwbFastStringListCS; var arKeywords: TDynMainRecords);
+  var
+    MainRecord : IwbMainRecord;
+    CER1       : IwbContainerElementRef;
+    Keywords   : IwbContainerElementRef;
+    Keyword    : IwbMainRecord;
+    i          : Integer;
+    s          : string;
+  begin
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    Supports(MainRecord, IwbContainerElementRef, CER1);
+
+    if not Supports(MainRecord.ElementBySignature['KWDA'], IwbContainerElementRef, Keywords) then
+      Exit;
+
+    for i := 0 to Pred(Keywords.ElementCount) do
+      if Supports(Keywords.Elements[i].LinksTo, IwbMainRecord, Keyword) then begin
+        s := IntToHex64(Keyword.LoadOrderFormID, 8);
+        if slKeywords.IndexOf(s) < 0 then begin
+          SetLength(arKeywords, Succ(Length(arKeywords)));
+          arKeywords[High(arKeywords)] := Keyword;
+          slKeywords.AddObject(s, Pointer(Keyword)); //uncounted ref, kept alive via arKeywords reference
+        end;
+      end;
+  end;
+
+  function CheckHasKeywords(const aElement: IwbElement; aKeywords: TwbFastStringListCS): Boolean;
+  var
+    slItemKeywords : TwbFastStringListCS;
+    arItemKeywords : TDynMainRecords;
+    i, j           : Integer;
+    FoundIt        : Boolean;
+  begin
+    Result := True;
+
+    slItemKeywords := TwbFastStringListCS.CreateSorted;
+    try
+      CollectKeywords(aElement, slItemKeywords, arItemKeywords);
+      if slItemKeywords.Count < aKeywords.Count then
+        Exit(False); //no chance for slItemKeywords to include all of aKeywords;
+
+      { Both slItemKeywords and aKeywords are sorted here. slItemKeywords must
+        include all of aKeywords, but can contain more. }
+      j := 0;
+      for i := 0 to Pred(aKeywords.Count) do begin
+        FoundIt := False;
+        while j < slItemKeywords.Count do begin
+          Inc(j);
+          case CompareStr(aKeywords[i], slItemKeywords[Pred(j)]) of
+            {aKeywords < slItemKeywords}
+            Low(Integer)..-1: Exit(False); //a required keyword is missing, exit function
+            {identical}
+            0: begin
+              FoundIt := True;
+              Break;                      //exit the while loop
+            end;
+            {aKeywords > slItemKeywords}
+            1..High(Integer): ;            //additional keyword in slItemKeywords, keep looping
+          end;
+        end;
+        if not FoundIt then
+          Exit(False);
+      end;
+    finally
+      FreeAndNil(slItemKeywords);
+    end;
+  end;
+
+  procedure ShowKeywordSelection(slKeywords: TwbFastStringListCS; var arKeywords: TDynMainRecords);
+  var
+    i           : Integer;
+    NewKeywords : TDynMainRecords;
+    sl2         : TwbFastStringListIC;
+  begin
+    sl2 := TwbFastStringListIC.CreateSorted(dupIgnore);
+    try
+      sl2.CommaText := Settings.ReadString(Signature + ' Spreadsheet', 'Keywords', '');
+
+      with TfrmFileSelect.Create(nil) do try
+        Caption := 'Select Keywords to filter on';
+
+        for i := Low(arKeywords) to High(arKeywords) do begin
+          CheckListBox1.AddItem(arKeywords[i].Name, Pointer(arKeywords[i]));
+          if sl2.IndexOf(arKeywords[i].EditorID) >= 0 then
+            CheckListBox1.Checked[Pred(CheckListBox1.Count)] := True;
+        end;
+        CheckListBox1.Sorted := True;
+
+        ShowModal;
+
+        slKeywords.Clear;
+        slKeywords.Sorted := False;
+        NewKeywords := nil;
+
+        with CheckListBox1 do
+          for i := 0 to Pred(Count) do
+            if Checked[i] then
+              slKeywords.AddObject(IntToHex64(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID, 8), Items.Objects[i]);
+
+        slKeywords.Sorted := True;
+
+        sl2.Clear;
+        with slKeywords do begin
+          SetLength(NewKeywords, Count);
+          for i := 0 to Pred(Count) do begin
+            NewKeywords[i] := IwbMainRecord(Pointer(Objects[i]));
+            sl2.Add(NewKeywords[i].EditorID);
+          end;
+        end;
+
+        arKeywords := NewKeywords;
+      finally
+        Free;
+      end;
+
+      Settings.WriteString(Signature + ' Spreadsheet', 'Keywords', sl2.CommaText);
+      Settings.UpdateFile;
+    finally
+      sl2.Free;
+    end;
+  end;
+
+var
   i                           : Integer;
   j                           : Integer;
   _File                       : IwbFile;
   Group                       : IwbGroupRecord;
   Element                     : IwbElement;
   vstSpreadSheet              : TVirtualEditTree;
-  Signature                   : TwbSignature;
   sl2                         : TStringList;
+  slKeywords                  : TwbFastStringListCS;
+  arKeywords                  : TDynMainRecords;
 begin
   if not wbLoaderDone then
     Exit;
 
-  pnlNav.Hide;
-  lblPath.Visible := False;
+  arKeywords := nil;
+  slKeywords := nil;
+  try
+    pnlNav.Hide;
+    lblPath.Visible := False;
 
-  vstSpreadSheet := ((Sender as TTabSheet).Controls[0] as TVirtualEditTree);
-  if vstSpreadSheet.NodeDataSize > 0 then
-    Exit;
+    vstSpreadSheet := ((Sender as TTabSheet).Controls[0] as TVirtualEditTree);
+    if vstSpreadSheet.NodeDataSize > 0 then
+      Exit;
 
-  Signature := StrToSignature(Copy((Sender as TComponent).Name, 4, 4));
-  with TfrmFileSelect.Create(nil) do try
+    Signature := StrToSignature(Copy((Sender as TComponent).Name, 4, 4));
+    with TfrmFileSelect.Create(nil) do try
 
-    Caption := 'Select files to compare';
+      Caption := 'Select files to compare';
 
-    sl2 := TStringList.Create;
-    try
-      sl2.Sorted := True;
-      sl2.Duplicates := dupIgnore;
-      sl2.CommaText := Settings.ReadString(Signature + ' Spreadsheet', 'Selection', '');
+      sl2 := TStringList.Create;
+      try
+        sl2.Sorted := True;
+        sl2.Duplicates := dupIgnore;
+        sl2.CommaText := Settings.ReadString(Signature + ' Spreadsheet', 'Selection', '');
 
-      for i := Low(Files) to High(Files) do
-        if Files[i].HasGroup(Signature) then begin
-          CheckListBox1.AddItem(Files[i].FileName, Pointer(Files[i]));
-          if sl2.IndexOf(Files[i].FileName) >= 0 then
-            CheckListBox1.Checked[Pred(CheckListBox1.Items.Count)] := True;
-        end;
-      CheckListBox1.Sorted := True;
-
-      ShowModal;
-
-      sl2.Clear;
-      for i := 0 to Pred(CheckListBox1.Count) do
-        if CheckListBox1.Checked[i] then
-          sl2.Add(CheckListBox1.Items[i]);
-
-      Settings.WriteString(Signature + ' Spreadsheet', 'Selection', sl2.CommaText);
-      Settings.UpdateFile;
-    finally
-      FreeAndNil(sl2);
-    end;
-
-    vstSpreadSheet.BeginUpdate;
-    try
-      vstSpreadSheet.Clear;
-      vstSpreadSheet.NodeDataSize := vstSpreadSheet.Header.Columns.Count * SizeOf(TSpreadSheetNodeData);
-
-      for i := 0 to Pred(CheckListBox1.Count) do
-        if CheckListBox1.Checked[i] then begin
-          _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-          Group := _File.GroupBySignature[Signature];
-          for j := 0 to Pred(Group.ElementCount) do begin
-            Element := Group.Elements[j];
-            vstSpreadSheet.AddChild(nil, Pointer(Element));
-            Element._AddRef;
+        for i := Low(Files) to High(Files) do
+          if Files[i].HasGroup(Signature) then begin
+            CheckListBox1.AddItem(Files[i].FileName, Pointer(Files[i]));
+            if sl2.IndexOf(Files[i].FileName) >= 0 then
+              CheckListBox1.Checked[Pred(CheckListBox1.Items.Count)] := True;
           end;
-        end;
+        CheckListBox1.Sorted := True;
 
-      with vstSpreadSheet.Header.Columns do
-        for i := 0 to Pred(Count) do
-          with Items[i] do
-            MaxWidth := 250;
-      vstSpreadSheet.Header.AutoFitColumns(False);
-      with vstSpreadSheet.Header.Columns do
-        for i := 0 to Pred(Count) do
-          with Items[i] do
-            MaxWidth := 1000;
+        ShowModal;
+
+        sl2.Clear;
+        for i := 0 to Pred(CheckListBox1.Count) do
+          if CheckListBox1.Checked[i] then
+            sl2.Add(CheckListBox1.Items[i]);
+
+        Settings.WriteString(Signature + ' Spreadsheet', 'Selection', sl2.CommaText);
+        Settings.UpdateFile;
+      finally
+        FreeAndNil(sl2);
+      end;
+
+      if wbGameMode in [gmTES5] then begin
+        slKeywords := TwbFastStringListCS.CreateSorted;
+        for i := 0 to Pred(CheckListBox1.Count) do
+          if CheckListBox1.Checked[i] then begin
+            _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
+            Group := _File.GroupBySignature[Signature];
+            for j := 0 to Pred(Group.ElementCount) do begin
+              Element := Group.Elements[j];
+              CollectKeywords(Element, slKeywords, arKeywords);
+            end;
+          end;
+        if slKeywords.Count > 0 then
+          ShowKeywordSelection(slKeywords, arKeywords);
+
+        if slKeywords.Count < 1 then
+          FreeAndNil(slKeywords);
+      end;
+
+      vstSpreadSheet.BeginUpdate;
+      try
+        vstSpreadSheet.Clear;
+        vstSpreadSheet.NodeDataSize := vstSpreadSheet.Header.Columns.Count * SizeOf(TSpreadSheetNodeData);
+
+        for i := 0 to Pred(CheckListBox1.Count) do
+          if CheckListBox1.Checked[i] then begin
+            _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
+            Group := _File.GroupBySignature[Signature];
+            for j := 0 to Pred(Group.ElementCount) do begin
+              Element := Group.Elements[j];
+              if not Assigned(slKeywords) or CheckHasKeywords(Element, slKeywords) then begin
+                vstSpreadSheet.AddChild(nil, Pointer(Element));
+                Element._AddRef;
+              end;
+            end;
+          end;
+
+        with vstSpreadSheet.Header.Columns do
+          for i := 0 to Pred(Count) do
+            with Items[i] do
+              MaxWidth := 250;
+        vstSpreadSheet.Header.AutoFitColumns(False);
+        with vstSpreadSheet.Header.Columns do
+          for i := 0 to Pred(Count) do
+            with Items[i] do
+              MaxWidth := 1000;
+      finally
+        vstSpreadSheet.EndUpdate;
+      end;
     finally
-      vstSpreadSheet.EndUpdate;
+      Free;
     end;
   finally
-    Free;
+    FreeAndNil(slKeywords);
+    arKeywords := nil;
   end;
 end;
 
