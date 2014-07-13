@@ -482,6 +482,11 @@ begin
   if wbFindCmdLineParam('l', s) then
     wbLanguage := s;
 
+  if FindCmdLineSwitch('speed') then
+    wbSpeedOverMemory := True;
+  if FindCmdLineSwitch('memory') then
+    wbSpeedOverMemory := False;
+
   if FindCmdLineSwitch('report') then
     wbReportMode := (DebugHook <> 0);
   if FindCmdLineSwitch('MoreInfoForIndex') then

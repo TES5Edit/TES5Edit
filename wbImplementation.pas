@@ -338,12 +338,8 @@ type
     cntElementRefs : Integer;
     cntStates      : TwbContainerStates;
 
+    function _AddRef: Integer; override; stdcall;
     function _Release: Integer; override; stdcall;
-
-    function IwbContainer._AddRef = _AddRef;
-    function IwbContainer._Release = _Release;
-    function IwbContainerInternal._AddRef = _AddRef;
-    function IwbContainerInternal._Release = _Release;
 
     {---IwbContainerElementRef---}
     function ElementAddRef: Integer; stdcall;
@@ -4669,11 +4665,23 @@ begin
 end;
 
 {$D-}
+function TwbContainer._AddRef: Integer;
+begin
+  if wbSpeedOverMemory then
+    Result := ElementAddRef
+  else
+    Result := inherited _AddRef;
+end;
+
 function TwbContainer._Release: Integer;
 begin
-  Result := inherited _Release;
-  if (Result > 0) and (cntElementRefs = 0) and (csInit in cntStates) then
-    DoReset(False);
+  if wbSpeedOverMemory then
+    Result := ElementRelease
+  else begin
+    Result := inherited _Release;
+    if (Result > 0) and (cntElementRefs = 0) and (csInit in cntStates) then
+      DoReset(False);
+  end;
 end;
 {$D+}
 
