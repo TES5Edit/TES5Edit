@@ -38,78 +38,80 @@ threadvar
   wbStartTime        : TDateTime;
   wbShowStartTime    : Integer;
 
-
 var
-  wbDisplayLoadOrderFormID : Boolean;
-  wbSimpleRecords : Boolean = True;
-  wbFixupPGRD : Boolean = False;
-  wbIKnowWhatImDoing : Boolean = False;
-  wbHideUnused : Boolean{} = True;{}
-  wbHideIgnored : Boolean{} = True;{}
-  wbHideNeverShow : Boolean{} = True;{}
-  wbShowFormVersion : Boolean{} = False;{}
-  wbShowFlagEnumValue : Boolean{} = False;{}
-  wbDisplayShorterNames : Boolean;
-  wbSortSubRecords: Boolean;
-  wbSortFLST: Boolean = True;
-  wbSortGroupRecord: Boolean{} = False;{}
-  wbRemoveOffsetData: Boolean{} = True;{}
-  wbEditAllowed: Boolean;
-  wbFlagsAsArray: Boolean;
-  wbDelayLoadRecords: Boolean = True;
-  wbMoreInfoForUnknown: Boolean = False;
-  wbMoreInfoForIndex: Boolean = False;
-  wbTranslationMode: Boolean;
-  wbTestWrite: Boolean = False;
-  wbForceNewHeader: Boolean = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
-  wbNewHeaderAddon: Cardinal = 40; // 4 additional bytes, 40 - new form version field
-  wbRequireLoadOrder: Boolean;
-  wbVWDInTemporary: Boolean;
-  wbResolveAlias: Boolean{} = True;{}
-  wbActorTemplateHide: Boolean{} = True;{}
-  wbDoNotBuildRefsFor: TStringList;
+  wbDisplayLoadOrderFormID : Boolean  = False;
+  wbSimpleRecords          : Boolean  = True;
+  wbFixupPGRD              : Boolean  = False;
+  wbIKnowWhatImDoing       : Boolean  = False;
+  wbHideUnused             : Boolean  = True;
+  wbHideIgnored            : Boolean  = True;
+  wbHideNeverShow          : Boolean  = True;
+  wbShowFormVersion        : Boolean  = False;
+  wbShowFlagEnumValue      : Boolean  = False;
+  wbDisplayShorterNames    : Boolean  = False;
+  wbSortSubRecords         : Boolean  = False;
+  wbSortFLST               : Boolean  = True;
+  wbSortGroupRecord        : Boolean  = False;
+  wbRemoveOffsetData       : Boolean  = True;
+  wbEditAllowed            : Boolean  = False;
+  wbFlagsAsArray           : Boolean  = False;
+  wbDelayLoadRecords       : Boolean  = True;
+  wbMoreInfoForUnknown     : Boolean  = False;
+  wbMoreInfoForIndex       : Boolean  = False;
+  wbTranslationMode        : Boolean  = False;
+  wbTestWrite              : Boolean  = False;
+  wbForceNewHeader         : Boolean  = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
+  wbNewHeaderAddon         : Cardinal = 40;    // 4 additional bytes, 40 - new form version field
+  wbRequireLoadOrder       : Boolean  = False;
+  wbVWDInTemporary         : Boolean  = False;
+  wbResolveAlias           : Boolean  = True;
+  wbActorTemplateHide      : Boolean  = True;
+  wbDoNotBuildRefsFor      : TStringList;
 
-  wbUDRSetXESP: Boolean = True;
-  wbUDRSetScale: Boolean = False;
-  wbUDRSetScaleValue: Single = 0.0;
-  wbUDRSetZ: Boolean = True;
-  wbUDRSetZValue: Single = -30000;
-  wbUDRSetMSTT: Boolean = True;
-  wbUDRSetMSTTValue: Int64 = $0000001B; { AshPile01 }
+  wbUDRSetXESP       : Boolean = True;
+  wbUDRSetScale      : Boolean = False;
+  wbUDRSetScaleValue : Single  = 0.0;
+  wbUDRSetZ          : Boolean = True;
+  wbUDRSetZValue     : Single  = -30000;
+  wbUDRSetMSTT       : Boolean = True;
+  wbUDRSetMSTTValue  : Int64   = $0000001B; { AshPile01 }
 
-  wbMasterUpdateFilterONAM: Boolean;
-  wbMasterUpdateFixPersistence: Boolean = True;
-  wbAllowInternalEdit: Boolean{} = True{};
-  wbShowInternalEdit: Boolean{ = True{};
+  wbMasterUpdateFilterONAM     : Boolean = False;
+  wbMasterUpdateFixPersistence : Boolean = True;
 
-  wbReportMode: Boolean{ = True{};
-  wbReportUnused: Boolean{ = True{};
-  wbReportRequired: Boolean{} = True{};
-  wbReportUnusedData: Boolean{} = True{};
-  wbReportUnknownFormIDs: Boolean{} = True{};
-  wbReportUnknownFloats: Boolean{} = True{};
-  wbReportUnknownStrings: Boolean{} = True{};
-  wbReportEmpty: Boolean{} = True{};
-  wbReportSometimesEmpty: Boolean {}= True{};
-  wbReportFormIDs: Boolean{} = True{};
-  wbReportNotFoundButAllowedFormIDs: Boolean{} = True{};
-  wbReportUnknownFlags: Boolean{} = True{};
-  wbReportUnknownEnums: Boolean{} = True{};
-  wbReportFormIDNotAllowedReferences: Boolean{} = True{};
-  wbReportUnknown: Boolean{} = True{};
-  wbMoreInfoForRequired: Boolean = False;
-  wbMoreInfoForDecider: Boolean = False;
-  wbTrackAllEditorID: Boolean{} = False{};
+  wbAllowInternalEdit : Boolean = True;
+  wbShowInternalEdit  : Boolean = False;
 
-  wbCheckExpectedBytes: Boolean{} = True{};
+  wbReportMode                       : Boolean = False;
+  wbReportUnused                     : Boolean = False;
+  wbReportRequired                   : Boolean = True;
+  wbReportUnusedData                 : Boolean = True;
+  wbReportUnknownFormIDs             : Boolean = True;
+  wbReportUnknownFloats              : Boolean = True;
+  wbReportUnknownStrings             : Boolean = True;
+  wbReportEmpty                      : Boolean = True;
+  wbReportSometimesEmpty             : Boolean = True;
+  wbReportFormIDs                    : Boolean = True;
+  wbReportNotFoundButAllowedFormIDs  : Boolean = True;
+  wbReportUnknownFlags               : Boolean = True;
+  wbReportUnknownEnums               : Boolean = True;
+  wbReportFormIDNotAllowedReferences : Boolean = True;
+  wbReportUnknown                    : Boolean = True;
+  wbMoreInfoForRequired              : Boolean = False;
+  wbMoreInfoForDecider               : Boolean = False;
+  wbTrackAllEditorID                 : Boolean = False;
+
+  wbCheckExpectedBytes : Boolean = True;
 
   wbRotationFactor : Extended = 180/Pi;
   wbRotationScale  : Integer = 4;
 
-  wbDumpOffset     : Integer = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
-  wbBaseOffset     : Cardinal = 0;
+  wbDumpOffset : Integer  = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
+  wbBaseOffset : Cardinal = 0;
 
-  wbDataPath       : string;
+  wbDataPath : string;
+
+  wbSpeedOverMemory : Boolean = False;
 
 type
   TConflictAll = (
