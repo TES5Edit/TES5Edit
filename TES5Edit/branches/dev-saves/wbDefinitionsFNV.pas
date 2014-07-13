@@ -4252,7 +4252,7 @@ begin
     {0x00000008}'',   // Form cannot be saved (Runtime)/Plugin active (Editor)
     {0x00000010}'Form initialized (Runtime only)',  // Plugin cannot be active or selected (Editor)
     {0x00000020}'Deleted',
-    {0x00000040}'Border Region / Has Tree LOD / Constant / Hidden From Local Map',
+    {0x00000040}'Border Region / Has Tree LOD / Constant / Hidden From Local Map / Plugin Endian',
     {0x00000080}'Turn Off Fire',
     {0x00000100}'Inaccessible',
     {0x00000200}'Casts shadows / On Local Map / Motion Blur',
