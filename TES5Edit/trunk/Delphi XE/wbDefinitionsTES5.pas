@@ -3281,8 +3281,13 @@ begin
 end;
 
 procedure wbWRLDAfterLoad(const aElement: IwbElement);
+  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
+  begin
+    Result := (aValue < -aRange) or (aValue > aRange);
+  end;
 var
   MainRecord: IwbMainRecord;
+  Container: IwbContainer;
 begin
   wbRemoveOFST(aElement);
 
@@ -3293,6 +3298,16 @@ begin
 
     if MainRecord.ElementExists['Unused RNAM'] then
       MainRecord.RemoveElement('Unused RNAM');
+
+    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
+    // CK can occasionally set them wrong, so make a warning
+    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
+      if OutOfRange(Container.ElementNativeValues['NAM0\X']) or
+         OutOfRange(Container.ElementNativeValues['NAM0\Y']) or
+         OutOfRange(Container.ElementNativeValues['NAM9\X']) or
+         OutOfRange(Container.ElementNativeValues['NAM9\Y'])
+      then
+        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
 
   finally
     wbEndInternalEdit;
@@ -3694,9 +3709,8 @@ begin
   Flags := DataRec.NativeValue;
 
   {0x0001 Is Interior Cell}
-  {0x0002 Has Water}
-  if (Flags and 3) = 1 then
-    {Interior and no Water}
+  if (Flags and 1) = 1 then
+    {Interior cells don't use water level in Skyrim at all}
     aCP := cpIgnore;
 end;
 
@@ -11930,7 +11944,7 @@ begin
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL], False, cpNormal, True),
+                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL, ARTO], False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
@@ -12895,7 +12909,7 @@ begin
       wbByteArray(OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbWRLDAfterLoad)
   else
-      wbRecord(WRLD, 'Worldspace', [
+    wbRecord(WRLD, 'Worldspace', [
       wbEDID,
       {>>> BEGIN leftover from earlier CK versions <<<}
       wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
