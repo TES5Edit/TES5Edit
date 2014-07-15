@@ -1423,6 +1423,7 @@ begin
              SameAsLast and  // We are not overriden later
              not Assigned(FirstElementNotIgnored) then begin // The master did not have that element
             ThisPriority := cpBenign;
+            Priority := cpBenign;
             SameAsFirst := True;
           end;
 
