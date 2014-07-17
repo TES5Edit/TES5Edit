@@ -1304,6 +1304,7 @@ var
   i, j                   : Integer;
   UniqueValues           : TnxFastStringListCS;
 
+  MasterPosition         : Integer;
   FirstElement           : IwbElement;
   FirstElementNotIgnored : IwbElement;
   LastElement            : IwbElement;
@@ -1320,6 +1321,7 @@ begin
 //    Priority := cpNormal;
 //  IgnoreConflicts := False;
   FoundAny := False;
+  MasterPosition := 0;
   OverallConflictThis := ctUnknown;
   case aNodeCount of
     0: Result := caUnknown;
@@ -1350,6 +1352,7 @@ begin
           Priority := Element.ConflictPriority;
           if Priority = cpNormalIgnoreEmpty then begin
             FirstElement := Element;
+            MasterPosition := i;
             for j := Pred(aNodeCount) downto i do begin
               LastElement := aNodeDatas[j].Element;
               if Assigned(LastElement) then
@@ -1400,7 +1403,7 @@ begin
           aNodeDatas[i].ConflictThis := ctIgnored
         else if aSiblingCompare then
           aNodeDatas[i].ConflictThis := ctOnlyOne
-        else if i = 0 then begin
+        else if i = MasterPosition then begin
 
           if Assigned(Element) then
             aNodeDatas[i].ConflictThis := ctMaster
