@@ -4500,7 +4500,7 @@ begin
 
   if aMarkModified then begin
     SetModified(True);
-    InvalidateParentStorage;
+    InvalidateStorage;
   end;
 
   Result := IInterface(cntElements[aPos]) as IwbElement;

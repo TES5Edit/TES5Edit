@@ -4234,7 +4234,7 @@ begin
     {0x00000800}'Initially disabled',
     {0x00001000}'Ignored',
     {0x00002000}'No Voice Filter',
-    {0x00004000}'Cannot Save (Runtime only)',
+    {0x00004000}'Cannot Save (Runtime only)',  // Ignore VC info
     {0x00008000}'Visible when distant',
     {0x00010000}'Random Anim Start / High Priority LOD',
     {0x00020000}'Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
@@ -4294,9 +4294,9 @@ begin
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
-    wbByteArray('Version Control Info 1', 4, cpIgnore),
+    wbInteger('Version Control Master FormID', itU32, nil, cpIgnore),
     wbInteger('Form Version', itU16, nil, cpIgnore),
-    wbByteArray('Version Control Info 2', 2, cpIgnore)
+    wbInteger('Version Control Info 2', itU16, nil, cpIgnore)  // limited to values from 0 to 0xF
   ]);
 
   wbSizeOfMainRecordStruct := 24;
@@ -8783,18 +8783,31 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbFaceGen := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True);
+  if wbSimpleRecords then begin
+    wbFaceGen := wbRStruct('FaceGen Data', [
+      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
+      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
+      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+    ], [], cpNormal, True);
 
-  wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
+    wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
+      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
+      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
+      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+    ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
+  end else begin
+    wbFaceGen := wbRStruct('FaceGen Data', [
+      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
+    ], [], cpNormal, True);
 
+    wbFaceGenNPC := wbRStruct('FaceGen Data', [
+      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
+    ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
+  end;
 
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDIDReq,
@@ -9571,12 +9584,12 @@ begin
       wbRStruct('Male FaceGen Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
         wbFaceGen,
-        wbUnknown(SNAM, cpNormal, True)
+        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female FaceGen Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbFaceGen,
-        wbUnknown(SNAM, cpNormal, True)
+        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)	// will effectivly overwrite the SNAM from the male :)
       ], [], cpNormal, True)
     ], [], cpNormal, True)
   ]);
@@ -10728,7 +10741,8 @@ begin
           {0x00000004}'Use Map Data',
           {0x00000008}'Use Water Data',
           {0x00000010}'Use Climate Data',
-          {0x00000020}'Use Image Space Data'
+          {0x00000020}'Use Image Space Data'  // in order to use this "Image Space" needs to be NULL.
+                                              //  Other parent flags are checked before the form value.
           ], True), cpNormal, True)
       ], []),
       wbFormIDCk(CNAM, 'Climate', [CLMT]),
