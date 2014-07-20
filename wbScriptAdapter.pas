@@ -89,8 +89,8 @@ begin
   if not Assigned(sl) then
     Exit;
 
-  for i := 0 to Pred(wbRecordDefMap.Count) do
-    with IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])) do
+  for i := Low(wbRecordDefs) to High(wbRecordDefs) do
+    with wbRecordDefs[i].rdeDef do
       sl.Add(DefaultSignature + ' - ' + GetName);
 end;
 
