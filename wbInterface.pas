@@ -8462,7 +8462,7 @@ var
   Element          : IwbElement;
   DataContainer    : IwbDataContainer;
   KnownSize        : Boolean;
-  aName            : String;
+//  aName            : String;
 
   function CheckContainer: IwbContainerElementRef;
   begin
@@ -8486,8 +8486,8 @@ begin
   ArrayContainer := nil;
 
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
-    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
+//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
     Exit;
   end;
 
@@ -8552,9 +8552,9 @@ begin
           end;
           Inc(Result, Size);
           if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
-            if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
-//            wbProgressCallback('Found an array with negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
-//              ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//            if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+//              wbProgressCallback('Found an array with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+//                ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
             Result := Cardinal(aEndPtr)-Cardinal(aBasePtr)+Result;
             Exit;
           end;
@@ -8576,7 +8576,7 @@ begin
       end;
       Result := (Count * Size) + Prefix;
       if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
-        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+//        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //          wbProgressCallback('Found a static array with a negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
 //            ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
         Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
@@ -8761,7 +8761,7 @@ begin
   end;
   if (Cardinal(aBasePtr) > Cardinal(aEndPtr)) then begin // if aBasePtr >= aEndPtr then no allocation (or error)
 //    wbProgressCallback('Found a struct with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-//      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
+//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
   end else if (not Assigned(aBasePtr) or (Cardinal(aBasePtr) = Cardinal(aEndPtr))) and (GetIsVariableSizeInternal) then begin
     Result := 0; // assuming we would have called GetDefaultSize otherwise... GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else begin
@@ -8776,9 +8776,9 @@ begin
         end;
         Inc(Result, Size);
         if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
-          if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
-  //        wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
-  //          ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//          if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+//          wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
+//            ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
           Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
           Break;
         end;
@@ -8794,9 +8794,9 @@ begin
         end;
         Inc(Result, Size);
         if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
-          if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
-  //        wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
-  //          ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//          if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+//            wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+//              ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
           Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
           Break;
         end;
@@ -12284,10 +12284,10 @@ var
   Container : IwbContainerElementRef;
   Element   : IwbElement;
 begin
-  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
+//  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
 //    wbProgressCallback('Found a union with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-//      ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
-  end;
+//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//  end;
   aMember := Decide(aBasePtr, aEndPtr, aElement);
   if not Assigned(aMember) then begin
     Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];
@@ -12313,9 +12313,9 @@ begin
     Result := aMember.Size[aBasePtr, aEndPtr, Element];
     if Result = High(Integer) then Exit;
     if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)+Result) then begin
-      if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
-//      wbProgressCallback('Found a union with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
-//        ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//      if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+//        wbProgressCallback('Found a union with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+//          ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
       Result := Cardinal(aEndPtr)-Cardinal(aBasePtr);
     end;
   end;
@@ -13571,7 +13571,7 @@ var
   Hash     : Integer;
   Index    : Integer;
   RDE      : PwbRecordDefEntry;
-  NewIndex : Integer;
+//  NewIndex : Integer;
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
   Index := Pred(wbRecordDefHashMap[Hash]);
