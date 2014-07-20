@@ -838,6 +838,8 @@ uses
   {$IFNDEF VER220}
   UITypes,
   {$ENDIF VER220}
+  wbSort,
+  wbStreams,
   wbScriptAdapter,
   FilterOptionsFrm,
   FileSelectFrm,
@@ -1264,7 +1266,10 @@ var
   NodeDatas                   : TDynViewNodeDatas;
   i                           : Integer;
   Master                      : IwbMainRecord;
+  KeepAliveRoot               : IwbKeepAliveRoot;
 begin
+  KeepAliveRoot := wbCreateKeepAliveRoot;
+
   aConflictAll := aMainRecord.ConflictAll;
   aConflictThis := aMainRecord.ConflictThis;
 
@@ -2834,7 +2839,7 @@ begin
     end;
 
     if Length(WorldSpaces) > 1 then begin
-      QuickSort(@WorldSpaces[0], Low(WorldSpaces), High(WorldSpaces), CompareElementsFormIDAndLoadOrder);
+      wbMergeSort(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
 
       j := 0;
       for i := Succ(Low(WorldSpaces)) to High(WorldSpaces) do begin
@@ -3212,12 +3217,13 @@ begin
               sl2.Duplicates := dupIgnore;
               sl2.CommaText := Settings.ReadString('RecordsToSkip', 'Selection', 'LAND,ROAD,PGRD,REGN,NAVI,NAVM,IMAD');
 
-              for i := 0 to Pred(wbRecordDefMap.Count) do
-                with IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])) do begin
+              for i := Low(wbRecordDefs) to High(wbRecordDefs) do
+                with wbRecordDefs[i].rdeDef do begin
                   j := CheckListBox1.Items.Add(DefaultSignature + ' - ' + GetName);
                   if sl2.IndexOf(DefaultSignature) >= 0 then
                     CheckListBox1.Checked[j] := True;
                 end;
+              CheckListBox1.Sorted := True;
 
               ShowModal;
 
@@ -3913,20 +3919,24 @@ var
   function canUndelete: Boolean;
   begin
     Result := True;
-    with MainRecord do
-      if Signature = 'NAVM' then begin
-        Result := False;
-        Inc(DeletedNAVM);
-      end else if (wbGameMode in [gmFNV]) then begin
-        IsDeleted := True;
-        IsDeleted := False;
-        Element := MainRecord.ElementBySignature['NAME'];
-        if Assigned(Element) then
-          if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
-            Result := not LinksToRecord.Flags.HasLODtree;
-        IsDeleted := True;
-      end;
-    if not Result then Inc(notDeletedCount);
+    LinksToRecord := MainRecord.MasterOrSelf.BaseRecord;
+    // skip navmeshes
+    if MainRecord.Signature = 'NAVM' then begin
+      Result := False;
+      Inc(DeletedNAVM);
+    end
+    // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
+    else if MainRecord.IsInjected or (not Assigned(LinksToRecord)) then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end
+    // skip refs of TREEs with LOD in FNV
+    else if (wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end;
+    if not Result then
+      PostAddMessage('Skipping: ' + MainRecord.Name);
   end;
 
 begin
@@ -4419,7 +4429,7 @@ var
   Cells      : array of array of PRefInfo;
   RefInfo    : PRefInfo;
   RefsInCell : array of PRefInfo;
-  CmpStream  : TwbFileStream;
+  CmpStream  : TwbWriteCachedFileStream;
   LODScale   : Single;
   LODAdd     : Single;
   F          : TSearchRec;
@@ -4475,7 +4485,7 @@ begin
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
 
-      QuickSort(@REFRs[0], Low(REFRs), High(REFRs), CompareElementsFormIDAndLoadOrder);
+      wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
 
       Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
         ' Unique References Found: ' + IntToStr(0) +
@@ -4642,7 +4652,7 @@ begin
   end;
 
   if Rule > rClear then begin
-    CmpStream := TwbFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp', fmCreate);
+    CmpStream := TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp');
     try
       Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -4691,7 +4701,7 @@ begin
               Inc(Count);
             end;
 
-            QuickSort(@RefsInCell[0], Low(RefsInCell), High(RefsInCell), CompareRefInfos);
+            wbMergeSort(@RefsInCell[0], Length(RefsInCell), CompareRefInfos);
 
             l := 0;
             for k := Succ(Low(RefsInCell)) to High(RefsInCell) do begin
@@ -4704,7 +4714,7 @@ begin
             end;
             SetLength(RefsInCell, Succ(l));
 
-            with TwbFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod', fmCreate) do try
+            with TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod') do try
               WriteCardinal(Length(RefsInCell));
 
               for l := Low(RefsInCell) to High(RefsInCell) do begin
@@ -4927,7 +4937,7 @@ begin
     0: Result := nil;
     1: SetLength(Result, 1);
   else
-    QuickSort(@Result[0], 0, Pred(j), CompareElementID);
+    wbMergeSort(@Result[0], j, CompareElementID);
     k := 1;
     LastID := Result[0].ElementID;
     for i := 1 to Pred(j) do
@@ -6958,7 +6968,7 @@ begin
   end;
 
   if Length(WorldSpaces) > 1 then begin
-    QuickSort(@WorldSpaces[0], Low(WorldSpaces), High(WorldSpaces), CompareElementsFormIDAndLoadOrder);
+    wbMergeSort(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
 
     j := 0;
     for i := Succ(Low(WorldSpaces)) to High(WorldSpaces) do begin
@@ -7315,7 +7325,7 @@ begin
     SetLength(Elements, j);
 
     if Length(Elements) > 1 then begin
-      QuickSort(@Elements[0], Low(Elements), High(Elements), CompareElementsFormIDAndLoadOrder);
+      wbMergeSort(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
 
       j := 0;
       for i := Succ(Low(Elements)) to High(Elements) do begin
@@ -13238,7 +13248,7 @@ begin
     Done := True;
   end else
   if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
-    Value := O2V(wbRecordDefMap);
+    Value := O2V(_wbRecordDefMap);
     Done := True;
   end else
   if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or

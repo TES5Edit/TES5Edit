@@ -415,20 +415,21 @@ end;
 
 procedure ProfileHeader(aFormat: TExportFormat; Pass: TwbExportPass);
 var
-  R         : Integer;
-  RecordDef : IwbRecordDef;
+//  R         : Integer;
+  RecordDef : PwbRecordDef;
   Profile   : String;
 begin
   Profile := '';
   case wbToolSource of
     tsPlugins: begin
-      R := wbRecordDefMap.IndexOf(wbHeaderSignature);
-      if R >= 0 then
-        RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
-      else
-        RecordDef := nil;
-      if Assigned(RecordDef) then
-        ProfileElement(aFormat, RecordDef, Profile, Pass, '');
+//      R := wbRecordDefMap.IndexOf(wbHeaderSignature);
+//      if R >= 0 then
+//        RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
+//      else
+//        RecordDef := nil;
+//      if Assigned(RecordDef) then
+      if wbFindRecordDef(wbHeaderSignature, RecordDef) then
+        ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
     end;
     tsSaves: begin
       ProfileElement(aFormat, wbFileHeader, Profile, Pass, '');
@@ -439,21 +440,22 @@ end;
 procedure ProfileArray(aFormat: TExportFormat; Pass: TwbExportPass);
 var
   i         : Integer;
-  R         : Integer;
-  RecordDef : IwbRecordDef;
+//  R         : Integer;
+  RecordDef : PwbRecordDef;
   Profile   : String;
 begin
   case wbToolSource of
     tsPlugins: for i := 0 to Pred(wbGroupOrder.Count) do
       if wbGroupOrder[i]<>wbHeaderSignature then begin
         Profile := '';
-        R := wbRecordDefMap.IndexOf(wbGroupOrder[i]);
-        if R >= 0 then
-          RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
-        else
-          RecordDef := nil;
-        if Assigned(RecordDef) then
-          ProfileElement(aFormat, RecordDef, Profile, Pass, '');
+//        R := wbRecordDefMap.IndexOf(wbGroupOrder[i]);
+//        if R >= 0 then
+//          RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
+//        else
+//          RecordDef := nil;
+//        if Assigned(RecordDef) then
+        if wbFindRecordDef(AnsiString(wbGroupOrder[i]), RecordDef) then
+          ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
       end;
   end;
 end;

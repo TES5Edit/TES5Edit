@@ -92,7 +92,8 @@ uses
 
 procedure TfrmFilterOptions.FormCreate(Sender: TObject);
 var
-  i: Integer;
+  i : Integer;
+  s : string;
 begin
   Font := Screen.IconFont;
   if Font.Size > 8 then
@@ -116,11 +117,14 @@ begin
   clbConflictThis.Items.Add('Conflict winner');
   clbConflictThis.Items.Add('Conflict loser');
 
-  for i := 0 to Pred(wbRecordDefMap.Count) do
-    with IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])) do begin
-      clbRecordSignatures.Items.Add(DefaultSignature + ' - ' + GetName);
-      clbBaseRecordSignatures.Items.Add(DefaultSignature + ' - ' + GetName);
+  for i := Low(wbRecordDefs) to High(wbRecordDefs) do
+    with wbRecordDefs[i].rdeDef do begin
+      s := DefaultSignature + ' - ' + GetName;
+      clbRecordSignatures.Items.Add(s);
+      clbBaseRecordSignatures.Items.Add(s);
     end;
+  clbRecordSignatures.Sorted := True;
+  clbBaseRecordSignatures.Sorted := True;
 end;
 
 function TfrmFilterOptions.GetBaseRecordSignatures: string;
