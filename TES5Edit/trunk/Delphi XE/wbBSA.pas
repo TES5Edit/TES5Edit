@@ -21,22 +21,10 @@ uses
 
 function wbCreateContainerHandler: IwbContainerHandler;
 
-type
-  TwbFileStream = class(TFileStream)
-    function Duplicate: TwbFileStream;
-    function ReadSignature: TwbSignature;
-    function ReadCardinal: Cardinal;
-    function ReadInt64: Int64;
-    function ReadStringLen: string;
-    function ReadStringTerm: string;
-
-    procedure WriteCardinal(aCardinal: Cardinal);
-    procedure WriteSmallInt(aSmallInt: SmallInt);
-  end;
-
 implementation
 
 uses
+  wbStreams,
   zlibEx;
 
 const
@@ -89,7 +77,7 @@ type
 
   TwbBSAFile = class(TInterfacedObject, IwbResourceContainer, IwbBSAFile, IwbBSAFileInternal)
   private
-    bfStream      : TwbFileStream;
+    bfStream      : TwbReadOnlyCachedFileStream;
     bfFileName    : string;
     bfVersion     : Cardinal;
     bfOffset      : Cardinal;
@@ -324,7 +312,7 @@ end;
 constructor TwbBSAFile.Create(const aFileName: string);
 begin
   bfFileName := aFileName;
-  bfStream := TwbFileStream.Create(aFileName, fmOpenRead or fmShareDenyWrite);
+  bfStream := TwbReadOnlyCachedFileStream.Create(aFileName);
   ReadDirectory;
 end;
 
@@ -486,71 +474,6 @@ begin
   end;
 end;
 
-{ TwbFileStream }
-
-function TwbFileStream.Duplicate: TwbFileStream;
-begin
-  Result := TwbFileStream.Create(FileName, fmOpenRead or fmShareDenyRead);
-  Result.Position := Position;
-end;
-
-function TwbFileStream.ReadCardinal: Cardinal;
-begin
-  ReadBuffer(Result, SizeOf(Result));
-end;
-
-function TwbFileStream.ReadInt64: Int64;
-begin
-  ReadBuffer(Result, SizeOf(Result));
-end;
-
-function TwbFileStream.ReadSignature: TwbSignature;
-begin
-  ReadBuffer(Result, SizeOf(Result));
-end;
-
-var
-  StringCache: TStringList;
-
-function TwbFileStream.ReadStringLen: string;
-var
-  Len: Byte;
-  s: AnsiString;
-begin
-  ReadBuffer(Len, 1);
-  SetLength(s, Len);
-  ReadBuffer(s[1], Len);
-  SetLength(s, Pred(Length(s)));
-  Result := s;
-  //Result := StringCache[StringCache.Add(Result)];
-end;
-
-function TwbFileStream.ReadStringTerm: string;
-var
-  i: Integer;
-  s: AnsiString;
-begin
-  SetLength(s, 256);
-  i := 0;
-  repeat
-    Inc(i);
-    ReadBuffer(s[i], 1);
-  until s[i] = #0;
-  SetLength(s, Pred(i));
-  Result := s;
-  //Result := StringCache[StringCache.Add(Result)];
-end;
-
-procedure TwbFileStream.WriteCardinal(aCardinal: Cardinal);
-begin
-  WriteBuffer(aCardinal, SizeOf(aCardinal));
-end;
-
-procedure TwbFileStream.WriteSmallInt(aSmallInt: SmallInt);
-begin
-  WriteBuffer(aSmallInt, SizeOf(aSmallInt));
-end;
-
 { TwbBSAResource }
 
 constructor TwbBSAResource.Create(aFile: TwbBSAFile; aSize, aOffset: Cardinal);
@@ -643,7 +566,7 @@ end;
 
 function TwbFolderResource.GetData: TBytes;
 begin
-  with TwbFileStream.Create(frFileName, fmOpenRead or fmShareDenyWrite) do try
+  with TFileStream.Create(frFileName, fmOpenRead or fmShareDenyWrite) do try
     SetLength(Result, Size);
     if Length(Result) > 0 then
       ReadBuffer(Result[0], Length(Result));
@@ -652,10 +575,4 @@ begin
   end;
 end;
 
-initialization
-  StringCache := TwbFastStringList.Create;
-  StringCache.Sorted := True;
-  StringCache.Duplicates := dupIgnore;
-finalization
-  FreeAndNil(StringCache);
 end.
