@@ -12305,7 +12305,7 @@ begin
   end else begin
     if GetIsVariableSize and Supports(aElement, IwbContainerElementRef, Container) and Equals(Container.ValueDef) and (Container.ElementCount = 1) then begin
       Element := Container.Elements[0];
-      if not Element.ValueDef.Equals(aMember) then
+      if not aMember.Equals(Element.ValueDef) then
         Element := nil;
     end;
     if not Assigned(Element) then
