@@ -87,6 +87,9 @@ function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: Str
 
 implementation
 
+uses
+  wbSort;
+
 procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
 var
   Stack    : TnxLeveledListCheckCircularStack;
@@ -233,7 +236,7 @@ begin
 
 
   if Length(Result) > 1 then begin
-    QuickSort(@Result[0], Low(Result), High(Result), CompareElementsFormIDAndLoadOrder);
+    wbMergeSort(@Result[0], Length(Result), CompareElementsFormIDAndLoadOrder);
 
     j := 0;
     for i := Succ(Low(Result)) to High(Result) do begin
