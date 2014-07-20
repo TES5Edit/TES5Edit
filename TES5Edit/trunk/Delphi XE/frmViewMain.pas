@@ -3913,20 +3913,24 @@ var
   function canUndelete: Boolean;
   begin
     Result := True;
-    with MainRecord do
-      if Signature = 'NAVM' then begin
-        Result := False;
-        Inc(DeletedNAVM);
-      end else if (wbGameMode in [gmFNV]) then begin
-        IsDeleted := True;
-        IsDeleted := False;
-        Element := MainRecord.ElementBySignature['NAME'];
-        if Assigned(Element) then
-          if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
-            Result := not LinksToRecord.Flags.HasLODtree;
-        IsDeleted := True;
-      end;
-    if not Result then Inc(notDeletedCount);
+    LinksToRecord := MainRecord.MasterOrSelf.BaseRecord;
+    // skip navmeshes
+    if MainRecord.Signature = 'NAVM' then begin
+      Result := False;
+      Inc(DeletedNAVM);
+    end
+    // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
+    else if MainRecord.IsInjected or (not Assigned(LinksToRecord)) then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end
+    // skip refs of TREEs with LOD in FNV
+    else if (wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end;
+    if not Result then
+      PostAddMessage('Skipping: ' + MainRecord.Name);
   end;
 
 begin
