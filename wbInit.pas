@@ -14,6 +14,8 @@
 
 unit wbInit;
 
+{$I wbDefines.inc}
+
 interface
 
 uses

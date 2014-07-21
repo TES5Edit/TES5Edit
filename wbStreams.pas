@@ -11,7 +11,10 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbStreams;
+
+{$I wbDefines.inc}
 
 interface
 
