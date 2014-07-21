@@ -1,3 +1,0 @@
-#summary What is a FormID?
-
-In Oblivion, all objects (a book, a race, a spawn point, a spawned npc) are identified by FormIDs. FormIDs are eight digit hexadecimal numbers (e.g.0A012C436), where the first two digits represent the source mod and the following six digits are the object index.

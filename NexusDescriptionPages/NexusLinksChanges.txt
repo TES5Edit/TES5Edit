@@ -1,9 +1,0 @@
-http://fallout3.nexusmods.com/mods/
-http://newvegas.nexusmods.com/mods/
-http://oblivion.nexusmods.com/mods/
-http://skyrim.nexusmods.com/mods/
-
-http://www.nexusmods.com/fallout3/mods/
-http://www.nexusmods.com/newvegas/mods/
-http://www.nexusmods.com/oblivion/mods/
-http://www.nexusmods.com/skyrim/mods/
