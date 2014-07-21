@@ -140,29 +140,24 @@ var
   Container   : IwbContainer;
   Target      : IwbElement;
 begin
-  wbBeginKeepAlive;
-  try
-    if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
-      wbProgressCallback('');
-      wbCurrentTick := GetTickCount;
-    end;
-    Container := aSource.Container;
-    if Assigned(Container) then begin
-      if Supports(Container, IwbMainRecord, MainRecord) then
-        Container := MainRecord.HighestOverrideOrSelf[aFile.LoadOrder];
-      Target := wbCopyElementToFile(Container, aFile, False, False, aPrefixRemove, aPrefix, aSuffix)
-    end else begin
-      Result := aFile;
-      Exit;
-    end;
-
-    if Assigned(Target) then
-      Result := Target.AddIfMissing(aSource, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
-    else
-      Result := nil;
-  finally
-    wbEndKeepAlive;
+  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+    wbProgressCallback('');
+    wbCurrentTick := GetTickCount;
   end;
+  Container := aSource.Container;
+  if Assigned(Container) then begin
+    if Supports(Container, IwbMainRecord, MainRecord) then
+      Container := MainRecord.HighestOverrideOrSelf[aFile.LoadOrder];
+    Target := wbCopyElementToFile(Container, aFile, False, False, aPrefixRemove, aPrefix, aSuffix)
+  end else begin
+    Result := aFile;
+    Exit;
+  end;
+
+  if Assigned(Target) then
+    Result := Target.AddIfMissing(aSource, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
+  else
+    Result := nil;
 end;
 
 function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRecord; aAsNew, aDeepCopy: Boolean): IwbElement;
@@ -5172,117 +5167,122 @@ begin
 
   if Assigned(mrDef) then begin
 
-    SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    //wbBeginKeepAlive;
+    try
+      SelfRef := Self as IwbContainerElementRef;
+      DoInit;
 
-    if aIndex = Low(Integer) then begin
+      if aIndex = Low(Integer) then begin
 
-      NeedUpdate := CheckChildOfCell;
+        NeedUpdate := CheckChildOfCell;
 
-      SetModified(True);
-      InvalidateStorage;
-      ReleaseElements;
+        SetModified(True);
+        InvalidateStorage;
+        ReleaseElements;
 
-      if Assigned(aElement) then begin
-        Container := aElement as IwbContainerElementRef;
+        if Assigned(aElement) then begin
+          Container := aElement as IwbContainerElementRef;
 
-        if Supports(aElement, IwbMainRecord, MainRecord) then begin
-          MakeHeaderWriteable;
-          with TwbMainRecord(MainRecord.ElementID) do begin
-            Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
-            Self.mrStruct.mrsVCS1 := DefaultVCS1;
-            if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
-              Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
-              Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
+          if Supports(aElement, IwbMainRecord, MainRecord) then begin
+            MakeHeaderWriteable;
+            with TwbMainRecord(MainRecord.ElementID) do begin
+              Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
+              Self.mrStruct.mrsVCS1 := DefaultVCS1;
+              if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
+                Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
+                Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
+              end;
             end;
           end;
         end;
-      end;
 
-      if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-        if GroupRecord.GroupType in [1, 4..10] then
-          with TwbContainedInElement.Create(Self) do begin
-            _AddRef; _Release;
-          end;
-      GroupRecord := nil;
+        if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+          if GroupRecord.GroupType in [1, 4..10] then
+            with TwbContainedInElement.Create(Self) do begin
+              _AddRef; _Release;
+            end;
+        GroupRecord := nil;
 
-      BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
-        Include(dcFlags, dcfDontSave);
-        SetSortOrder(-1);
-        SetMemoryOrder(Low(Integer));
-        _AddRef; _Release;
-      end;
-
-      if Assigned(aElement) then begin
-        for i := 0 to Pred(Container.ElementCount) do begin
-          Element := Container.Elements[i];
-          Assign(Element.SortOrder, Element, aOnlySK);
+        BasePtr := dcBasePtr;
+        with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
+          Include(dcFlags, dcfDontSave);
+          SetSortOrder(-1);
+          SetMemoryOrder(Low(Integer));
+          _AddRef; _Release;
         end;
+
+        if Assigned(aElement) then begin
+          for i := 0 to Pred(Container.ElementCount) do begin
+            Element := Container.Elements[i];
+            Assign(Element.SortOrder, Element, aOnlySK);
+          end;
+        end else begin
+          for i := 0 to Pred(mrDef.MemberCount) do
+            if mrDef.Members[i].Required then
+              Assign(i, nil, False);
+        end;
+
+        if NeedUpdate then
+          UpdateCellChildGroup;
+
       end else begin
-        for i := 0 to Pred(mrDef.MemberCount) do
-          if mrDef.Members[i].Required then
-            Assign(i, nil, False);
-      end;
-
-      if NeedUpdate then
-        UpdateCellChildGroup;
-
-    end else begin
-      if (aIndex >= 0) and (aIndex < mrDef.MemberCount) then begin
-        Member := mrDef.Members[aIndex];
-        IsAdd := not Assigned(aElement) or Member.CanAssign(Self, Low(Integer), aElement.Def);
-        IsAddChild := not IsAdd and Assigned(aElement) and Member.CanAssign(Self, High(Integer), aElement.Def);
-        if IsAdd or IsAddChild then begin
-          Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
-          if Assigned(Element) then begin
-            if IsAdd and Assigned(aElement) then
-              Element.Assign(Low(Integer), aElement, aOnlySK)
-            else if IsAddChild then
-              Element.Assign(High(Integer), aElement, aOnlySK);
-          end else begin
-
-            if Member.DefType = dtSubRecordUnion then begin
-              if Assigned(aElement) then begin
-                Supports(aElement, IwbDataContainer, DataContainer);
-                Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer);
-              end else
-                Member := (Member as IwbRecordDef).Members[0];
-              Assert(Assigned(Member));
-            end;
-
-            case Member.DefType of
-              dtSubRecord:
-                Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
-              dtSubRecordArray:
-                Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
-              dtSubRecordStruct:
-                Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
-            else
-              Assert(False);
-            end;
-
-            if Assigned(Element) then try
-              Element.SortOrder := aIndex;
-              Element.MemoryOrder := aIndex;
+        if (aIndex >= 0) and (aIndex < mrDef.MemberCount) then begin
+          Member := mrDef.Members[aIndex];
+          IsAdd := not Assigned(aElement) or Member.CanAssign(Self, Low(Integer), aElement.Def);
+          IsAddChild := not IsAdd and Assigned(aElement) and Member.CanAssign(Self, High(Integer), aElement.Def);
+          if IsAdd or IsAddChild then begin
+            Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
+            if Assigned(Element) then begin
               if IsAdd and Assigned(aElement) then
                 Element.Assign(Low(Integer), aElement, aOnlySK)
               else if IsAddChild then
                 Element.Assign(High(Integer), aElement, aOnlySK);
-            except
-              Element.Container.RemoveElement(Element);
-              raise;
-            end;
+            end else begin
 
+              if Member.DefType = dtSubRecordUnion then begin
+                if Assigned(aElement) then begin
+                  Supports(aElement, IwbDataContainer, DataContainer);
+                  Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer);
+                end else
+                  Member := (Member as IwbRecordDef).Members[0];
+                Assert(Assigned(Member));
+              end;
+
+              case Member.DefType of
+                dtSubRecord:
+                  Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
+                dtSubRecordArray:
+                  Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
+                dtSubRecordStruct:
+                  Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
+              else
+                Assert(False);
+              end;
+
+              if Assigned(Element) then try
+                Element.SortOrder := aIndex;
+                Element.MemoryOrder := aIndex;
+                if IsAdd and Assigned(aElement) then
+                  Element.Assign(Low(Integer), aElement, aOnlySK)
+                else if IsAddChild then
+                  Element.Assign(High(Integer), aElement, aOnlySK);
+              except
+                Element.Container.RemoveElement(Element);
+                raise;
+              end;
+
+            end;
+            Result := Element;
           end;
+        end else if (aIndex = -2) then begin
+          Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
+          if Assigned(Element) then
+            Element.Assign(Low(Integer), aElement, False);
           Result := Element;
         end;
-      end else if (aIndex = -2) then begin
-        Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
-        if Assigned(Element) then
-          Element.Assign(Low(Integer), aElement, False);
-        Result := Element;
       end;
+    finally
+    //  wbEndKeepAlive;
     end;
 
     if wbSortSubRecords and (Length(cntElements) > 1) then

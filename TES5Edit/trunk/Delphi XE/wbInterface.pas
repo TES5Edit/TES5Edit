@@ -8629,7 +8629,10 @@ begin
   if Count > 0 then
     if arElement.IsVariableSize then begin
       if Container = nil then begin // Make sure it won't be used if unassigned, and still delay FindOurself until it is effectivly required
-        Result := High(Integer);
+        if not Assigned(BasePtr) then
+          Result := arElement.DefaultSize[nil, nil, aElement]
+        else
+          Result := High(Integer);
         Exit;
       end;
 
@@ -13739,7 +13742,10 @@ begin
         aRecordDef := @RDE.rdeDef;
         Exit(True);
       end;
-      RDE := @wbRecordDefs[RDE.rdeNext];
+      if RDE.rdeNext >= 0 then
+        RDE := @wbRecordDefs[RDE.rdeNext]
+      else
+        RDE := nil;
     end;
   end;
   aRecordDef := nil;
