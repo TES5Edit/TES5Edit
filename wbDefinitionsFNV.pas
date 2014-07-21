@@ -14,6 +14,8 @@
 
 unit wbDefinitionsFNV;
 
+{$I wbDefines.inc}
+
 interface
 
 procedure DefineFNV;

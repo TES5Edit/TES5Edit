@@ -14,6 +14,8 @@
 
 unit wbDefinitionsTES5;
 
+{$I wbDefines.inc}
+
 interface
 
 procedure DefineTES5;
@@ -4724,12 +4726,12 @@ begin
       wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbFormID('FormID')
-    ]),
+    ], [2, 1, 0]),
     wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unused', itU16, nil, cpIgnore)
-    ], [2, 1, 0])
+    ])
   ]);
 
   wbScriptEntry := wbStructSK([0], 'Script', [

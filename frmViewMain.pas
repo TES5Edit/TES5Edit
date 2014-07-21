@@ -14,6 +14,8 @@
 
 unit frmViewMain;
 
+{$I wbDefines.inc}
+
 interface
 
 uses
@@ -287,6 +289,7 @@ type
     mniModGroups: TMenuItem;
     mniModGroupsEnabled: TMenuItem;
     mniModGroupsDisabled: TMenuItem;
+    mniNavOtherCodeSiteLogging: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -494,6 +497,7 @@ type
     procedure mniModGroupsClick(Sender: TObject);
     procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+    procedure mniNavOtherCodeSiteLoggingClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -1703,14 +1707,18 @@ begin
 
               for j := Low(aElements) to High(aElements) do begin
                 MainRecord := aElements[j] as IwbMainRecord;
+                wbProgressCallback('Copying ' + MainRecord.Name);
 
                 MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix) as IwbMainRecord;
+                wbProgressCallback('');
+
                 Assert(Assigned(MainRecord2));
                 if not Multiple then
                   MainRecord2.EditorID := EditorID;
 
                 EditorID := MainRecord.EditorID;
                 MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '') as IwbMainRecord;
+                wbProgressCallback('');
                 Assert(Assigned(MainRecord));
                 MainRecord.Assign(Low(Integer), nil, False);
                 LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
@@ -1723,36 +1731,47 @@ begin
                 LeveledListEntry.ElementByName['Level'].EditValue := '1';
                 MainRecord.EditorID := EditorID;
                 Result[j] := MainRecord;
+                wbProgressCallback('');
               end;
 
             end
             else if Multiple then begin
               for j := Low(aElements) to High(aElements) do
                 try
-                  if DeepCopy and Supports(aElements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then
-                    Result[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix)
-                  else begin
+                  if DeepCopy and Supports(aElements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+                    wbProgressCallback('Copying ' + MainRecord.ChildGroup.Name);
+                    Result[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
+                    wbProgressCallback('');
+                  end else begin
+                    wbProgressCallback('Copying ' + aElements[j].Name);
                     CopiedElement := wbCopyElementToFile(aElements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
+                    wbProgressCallback('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
                         aAfterCopyCallback(CopiedElement);
                     end;
                     Result[j] := CopiedElement;
+                    wbProgressCallback('');
                   end;
                 except
                   on E: Exception do
-                    AddMessage('Error while copying '+aElements[j].Name+': '+E.Message);
+                    wbProgressCallback('Error while copying '+aElements[j].Name+': '+E.Message);
                 end;
             end else begin
               MainRecord := nil;
-              if DeepCopy and Supports(aElements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then
-                Result[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '')
-              else begin
+              if DeepCopy and Supports(aElements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+                wbProgressCallback('Copying ' + MainRecord.ChildGroup.Name);
+                Result[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '');
+                wbProgressCallback('');
+              end else begin
+                wbProgressCallback('Copying ' + aElements[0].Name);
                 CopiedElement := wbCopyElementToFile(aElements[0], ReferenceFile, AsNew, True, '', '', '');
+                wbProgressCallback('');
                 if Assigned(CopiedElement) then begin
                   if Assigned(aAfterCopyCallback) then
                     aAfterCopyCallback(CopiedElement);
                 end;
+                wbProgressCallback('');
                 Result[0] := CopiedElement;
                 if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
                   MainRecord := nil;
@@ -9478,6 +9497,20 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavOtherCodeSiteLoggingClick(Sender: TObject);
+begin
+  {$IFDEF USE_CODESITE}
+  mniNavOtherCodeSiteLogging.Checked := not mniNavOtherCodeSiteLogging.Checked;
+  if mniNavOtherCodeSiteLogging.Checked then
+    wbBeginCodeSiteLogging
+  else
+    wbEndCodeSiteLogging;
+  {$ELSE}
+  mniNavOtherCodeSiteLogging.Visible := False;
+  mniNavOtherCodeSiteLogging.Enabled := False;
+  {$ENDIF}
+end;
+
 procedure TfrmMain.mniViewNextMemberClick(Sender: TObject);
 var
   NodeDatas                   : PViewNodeDatas;
@@ -9669,6 +9702,11 @@ var
   sl                          : TStringList;
 begin
   mniNavTest.Visible := DebugHook <> 0;
+
+  {$IFNDEF USE_CODESITE}
+  mniNavOtherCodeSiteLogging.Visible := False;
+  mniNavOtherCodeSiteLogging.Enabled := False;
+  {$ENDIF}
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if Assigned(NodeData) then
@@ -13833,13 +13871,12 @@ var
   s,t                         : string;
   F                           : TSearchRec;
 begin
+  wbStartTime := Now;
   LoaderProgress('starting...');
   try
     frmMain.LoaderStarted := True;
     wbProgressCallback := LoaderProgress;
     try
-      wbStartTime := Now;
-
       if not Assigned(wbContainerHandler) then begin
         wbContainerHandler := wbCreateContainerHandler;
 

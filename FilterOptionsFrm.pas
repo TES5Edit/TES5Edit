@@ -14,6 +14,8 @@
 
 unit FilterOptionsFrm;
 
+{$I wbDefines.inc}
+
 interface
 
 uses

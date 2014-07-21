@@ -11,7 +11,10 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbInterface;
+
+{$I wbDefines.inc}
 
 interface
 
@@ -112,6 +115,28 @@ var
   wbDataPath : string;
 
   wbSpeedOverMemory : Boolean = False;
+
+{$IFDEF USE_CODESITE}
+type
+  TwbLoggingArea = (
+    laAddIfMissing,
+    laElementAssign,
+    laElementCanAssign
+  );
+  TwbLoggingAreas = set of TwbLoggingArea;
+
+var
+  wbLoggingAreas : TwbLoggingAreas = [
+    //laAddIfMissing,
+    laElementAssign,
+    laElementCanAssign
+  ];
+
+function wbCodeSiteLoggingEnabled: Boolean;
+function wbBeginCodeSiteLogging: Integer;
+function wbEndCodeSiteLogging: Integer;
+{$ENDIF}
+
 
 type
   TConflictAll = (
@@ -220,6 +245,7 @@ type
     dtInteger,
     dtIntegerFormater,
     dtIntegerFormaterUnion,
+    dtFlag,
     dtFloat,
     dtArray,
     dtStruct,
@@ -257,6 +283,7 @@ type
     function GetDefType: TwbDefType;
     function GetDefTypeName: string;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
     function GetDefID: Cardinal;
     function Equals(const aDef: IwbDef): Boolean;
     function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
@@ -338,7 +365,8 @@ type
     esTagged,
     esDeciding,
     esNotSuitableToAddTo,
-    esDummy {Used in wbScriptAdapter as a default value}
+    esDummy, {Used in wbScriptAdapter as a default value}
+    esConstructionComplete
   );
 
   TwbElementStates = set of TwbElementState;
@@ -1467,6 +1495,19 @@ type
     ['{CF657B3A-E7A6-48FE-AC68-8DF15962A531}']
   end;
 
+  IwbFlagsDef = interface;
+
+  IwbFlagDef = interface(IwbValueDef)
+    ['{CCD4FBC4-D1CA-4B91-9E2F-6EE6118D5D07}']
+    function GetFlagsDef: IwbFlagsDef;
+    function GetFlagIndex: Integer;
+
+    property FlagsDef: IwbFlagsDef
+      read GetFlagsDef;
+    property FlagIndex: Integer
+      read GetFlagIndex;
+  end;
+
   IwbFlagsDef = interface(IwbIntegerDefFormater)
     ['{EF564466-A671-453A-88CF-42A0AA32D849}']
     function GetBaseFlagsDef: IwbFlagsDef;
@@ -1477,6 +1518,7 @@ type
     function GetFlagHasDontShow(aIndex: Integer): Boolean;
     procedure FlagGetCP(const aElement: IwbElement; aIndex: Integer; var aCP: TwbConflictPriority);
     function GetFlagHasGetCP(aIndex: Integer): Boolean;
+    function GetFlagDef(aIndex : Integer): IwbFlagDef;
 
     property BaseFlagsDef: IwbFlagsDef
       read GetBaseFlagsDef;
@@ -1495,6 +1537,9 @@ type
       read GetFlagHasDontShow;
     property FlagHasGetCP[aIndex: Integer]: Boolean
       read GetFlagHasGetCP;
+
+    property FlagDef[aIndex: Integer]: IwbFlagDef
+      read GetFlagDef;
   end;
 
   IwbEnumDef = interface(IwbIntegerDefFormater)
@@ -3322,10 +3367,11 @@ type
     function GetDefType: TwbDefType; virtual; abstract;
     function GetDefTypeName: string; virtual; abstract;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; virtual;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
     function GetDefID: Cardinal;
     function Equals(const aDef: IwbDef): Boolean; reintroduce; virtual;
-    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
-    function GetConflictPriorityCanChange: Boolean;
+    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority; virtual;
+    function GetConflictPriorityCanChange: Boolean; virtual;
     function GetRequired: Boolean;
     function CanContainFormIDs: Boolean; virtual;
     function GetDontShow(const aElement: IwbElement): Boolean; virtual;
@@ -4028,6 +4074,7 @@ type
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
     function GetNoReach: Boolean; override;
@@ -4454,6 +4501,7 @@ type
     flgUnknownIsUnused : Boolean;
     flgGetCPs          : array of TwbGetConflictPriority;
     flgHasGetCPs       : Boolean;
+    flgFlagDefs        : array of IwbFlagDef;
 
     UnknownFlags       : array[0..63] of Integer;
     HasUnknownFlags    : Boolean;
@@ -4475,6 +4523,7 @@ type
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function CanContainFormIDs: Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
@@ -4495,6 +4544,41 @@ type
     function GetFlagHasDontShow(aIndex: Integer): Boolean;
     procedure FlagGetCP(const aElement: IwbElement; aIndex: Integer; var aCP: TwbConflictPriority);
     function GetFlagHasGetCP(aIndex: Integer): Boolean;
+    function GetFlagDef(aIndex : Integer): IwbFlagDef;
+  end;
+
+  TwbFlagDef = class(TwbValueDef, IwbFlagDef)
+  private
+    fdFlagIndex : Integer;
+  protected
+    constructor Clone(const aSource: TwbDef); override;
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
+                 const aName       : string;
+                       aAfterLoad  : TwbAfterLoadCallback;
+                       aAfterSet   : TwbAfterSetCallback;
+                       aDontShow   : TwbDontShowCallback;
+                       aGetCP      : TwbGetConflictPriority;
+                       aTerminator : Boolean;
+                       aFlagIndex  : Integer);
+
+    {---IwbDef---}
+    function GetDefType: TwbDefType; override;
+    function CanContainFormIDs: Boolean; override;
+    function GetHasDontShow: Boolean; override;
+    function GetDontShow(const aElement: IwbElement): Boolean; override;
+    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority; override;
+    function GetConflictPriorityCanChange: Boolean; override;
+    function GetCanBeZeroSize: Boolean; override;
+
+    {---IwbValueDef---}
+    function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+
+    {---IwbFlagDef---}
+    function GetFlagsDef: IwbFlagsDef;
+    function GetFlagIndex: Integer;
   end;
 
   PwbSparseName = ^TwbSparseName;
@@ -6343,6 +6427,16 @@ end;
 
 { TwbDef }
 
+function TwbDef.Assign(const aTarget : IwbElement;
+                             aIndex  : Integer;
+                       const aSource : IwbElement;
+                             aOnlySK : Boolean)
+                                     : IwbElement;
+begin
+  Result := nil;
+  aTarget.SetEditValue(aSource.EditValue);
+end;
+
 function TwbDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := False;
@@ -7698,6 +7792,18 @@ end;
 
 { TwbIntegerDef }
 
+function TwbIntegerDef.Assign(const aTarget : IwbElement;
+                                    aIndex  : Integer;
+                              const aSource : IwbElement;
+                                    aOnlySK : Boolean)
+                                            : IwbElement;
+begin
+  if Assigned(inFormater) then
+    Result := inFormater.Assign(aTarget, aIndex, aSource, aOnlySK)
+  else
+    Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK)
+end;
+
 procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 var
   Value       : Int64;
@@ -7724,14 +7830,17 @@ end;
 
 function TwbIntegerDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
-  IntegerDef: IwbIntegerDef;
+  IntegerDef : IwbIntegerDef;
 begin
   Result := Supports(aDef, IwbIntegerDef, IntegerDef);
-  if Result then
+  if Result then begin
     if Assigned(inFormater) then
       Result := inFormater.CanAssign(aElement, aIndex, IntegerDef.Formater[aElement])
     else if Assigned(IntegerDef.Formater[aElement]) then
       Result := IntegerDef.Formater[aElement].CanAssign(aElement, aIndex, GetFormater(aElement));
+  end else
+    if Assigned(inFormater) then
+      Result := inFormater.CanAssign(aElement, aIndex, aDef);
 end;
 
 function TwbIntegerDef.CanContainFormIDs: Boolean;
@@ -8943,18 +9052,45 @@ end;
 
 { TwbFlagsDef }
 
+function TwbFlagsDef.Assign(const aTarget : IwbElement;
+                                  aIndex  : Integer;
+                            const aSource : IwbElement;
+                                  aOnlySK : Boolean)
+                                          : IwbElement;
+var
+  FlagDef : IwbFlagDef;
+  i       : Int64;
+begin
+  if Supports(aSource.ValueDef, IwbFlagDef, FlagDef) then begin
+    i := aTarget.NativeValue;
+    i := i or (1 shl FlagDef.FlagIndex);
+    aTarget.NativeValue := i;
+  end else
+    Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK);
+end;
+
 function TwbFlagsDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
-  FlagsDef: IwbFlagsDef;
-  i: Integer;
+  FlagsDef : IwbFlagsDef;
+  FlagDef  : IwbFlagDef;
+  i        : Integer;
 begin
-  Result := Supports(aDef, IwbFlagsDef, FlagsDef) and (FlagsDef.FlagCount = GetFlagCount);
-  if Result and not Equals(FlagsDef) then
-    for i := 0 to Pred(GetFlagCount) do
-      if not SameStr(FlagsDef.Flags[i], GetFlag(i)) then begin
-        Result := False;
-        Exit;
-      end;
+  if Supports(aDef, IwbFlagsDef, FlagsDef) then begin
+    Result := FlagsDef.FlagCount = GetFlagCount;
+    if Result and not GetRoot.Equals(FlagsDef.Root) then
+      for i := 0 to Pred(GetFlagCount) do
+        if not SameStr(FlagsDef.Flags[i], GetFlag(i)) then begin
+          Result := False;
+          Exit;
+        end;
+  end else if Supports(aDef, IwbFlagDef, FlagDef) then begin
+    FlagsDef := FlagDef.FlagsDef;
+    Result := GetBaseFlagsDef.Equals(FlagsDef.BaseFlagsDef);
+    if Result then begin
+      i := FlagDef.FlagIndex;
+      Result := SameStr(FlagsDef.Flags[i], GetFlag(i));
+    end;
+  end;
 end;
 
 function TwbFlagsDef.CanContainFormIDs: Boolean;
@@ -9013,6 +9149,7 @@ begin
     else if flgUnknownIsUnused and (flgNames[i] <> '') then
       flgUnusedMask := flgUnusedMask and not (Int64(1) shl i);
   end;
+  SetLength(flgFlagDefs, Length(flgNames));
 
   SetLength(flgDontShows, Length(aDontShows));
   for i := Low(flgDontShows) to High(flgDontShows) do begin
@@ -9119,6 +9256,22 @@ end;
 function TwbFlagsDef.GetFlagCount: Integer;
 begin
   Result := Length(flgNames);
+end;
+
+function TwbFlagsDef.GetFlagDef(aIndex: Integer): IwbFlagDef;
+var
+  FlagDef: IwbFlagDef;
+begin
+  Result := flgFlagDefs[aIndex];
+  if not Assigned(Result) then begin
+    FlagDef := TwbFlagDef.Create(defPriority, False, flgNames[aIndex], nil, nil,
+      nil, nil, False, aIndex).SetParent(Self, False) as IwbFlagDef;
+
+    {this really should be done threadsafe with a locked compare exchange}
+    flgFlagDefs[aIndex] := FlagDef;
+
+    Result := flgFlagDefs[aIndex];
+  end;
 end;
 
 function TwbFlagsDef.GetFlagDontShow(const aElement: IwbElement; aIndex: Integer): Boolean;
@@ -13571,7 +13724,7 @@ var
   Hash     : Integer;
   Index    : Integer;
   RDE      : PwbRecordDefEntry;
-//  NewIndex : Integer;
+
 begin
   Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
   Index := Pred(wbRecordDefHashMap[Hash]);
@@ -13612,6 +13765,118 @@ begin
     wbRecordDefMap.Sorted := True;
   end;
   Result := wbRecordDefMap;
+end;
+
+{$IFDEF USE_CODESITE}
+threadvar
+  wbCodeSiteLoggingCount: Integer;
+
+function wbCodeSiteLoggingEnabled: Boolean;
+begin
+  Result := wbCodeSiteLoggingCount > 0;
+end;
+
+function wbBeginCodeSiteLogging: Integer;
+begin
+  Result := Succ(wbCodeSiteLoggingCount);
+  wbCodeSiteLoggingCount := Result;
+end;
+
+function wbEndCodeSiteLogging: Integer;
+begin
+  Result := Pred(wbCodeSiteLoggingCount);
+  wbCodeSiteLoggingCount := Result;
+end;
+{$ENDIF}
+
+{ TwbFlagDef }
+
+function TwbFlagDef.CanContainFormIDs: Boolean;
+begin
+  Result := False;
+end;
+
+constructor TwbFlagDef.Clone(const aSource: TwbDef);
+begin
+  with (aSource as TwbFlagDef) do
+    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet,
+      noDontShow, defGetCP, noTerminator, fdFlagIndex).defSource := aSource;
+end;
+
+constructor TwbFlagDef.Create(aPriority   : TwbConflictPriority;
+                              aRequired   : Boolean;
+                        const aName       : string;
+                              aAfterLoad  : TwbAfterLoadCallback;
+                              aAfterSet   : TwbAfterSetCallback;
+                              aDontShow   : TwbDontShowCallback;
+                              aGetCP      : TwbGetConflictPriority;
+                              aTerminator : Boolean;
+                              aFlagIndex  : Integer);
+begin
+  fdFlagIndex := aFlagIndex;
+  inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
+end;
+
+function TwbFlagDef.GetCanBeZeroSize: Boolean;
+begin
+  Result := True;
+end;
+
+function TwbFlagDef.GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
+begin
+  with GetFlagsDef do begin
+    if FlagIgnoreConflict[GetFlagIndex] then
+      Result := cpIgnore
+    else
+      Result := cpNormal;
+    FlagGetCP(aElement, GetFlagIndex, Result);
+  end;
+end;
+
+function TwbFlagDef.GetConflictPriorityCanChange: Boolean;
+begin
+  Result := GetFlagsDef.FlagHasGetCP[GetFlagIndex];
+end;
+
+function TwbFlagDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+end;
+
+function TwbFlagDef.GetDefType: TwbDefType;
+begin
+  Result := dtFlag;
+end;
+
+function TwbFlagDef.GetDontShow(const aElement: IwbElement): Boolean;
+begin
+  GetFlagsDef.FlagDontShow[aElement, GetFlagIndex];
+end;
+
+function TwbFlagDef.GetFlagIndex: Integer;
+begin
+  Result := fdFlagIndex;
+end;
+
+function TwbFlagDef.GetFlagsDef: IwbFlagsDef;
+begin
+  Result := defParent as IwbFlagsDef;
+end;
+
+function TwbFlagDef.GetHasDontShow: Boolean;
+begin
+  GetFlagsDef.FlagHasDontShow[GetFlagIndex];
+end;
+
+function TwbFlagDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+end;
+
+function TwbFlagDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Assert(False);
+  Result := '';
 end;
 
 initialization

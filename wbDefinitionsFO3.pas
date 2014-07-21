@@ -14,6 +14,8 @@
 
 unit wbDefinitionsFO3;
 
+{$I wbDefines.inc}
+
 interface
 
 procedure DefineFO3;
