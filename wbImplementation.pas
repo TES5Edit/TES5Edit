@@ -610,6 +610,7 @@ type
     function GetFileStates: TwbFileStates;
     function GetRecord(aIndex: Integer): IwbMainRecord;
     function GetRecordCount: Integer;
+    function GetHeader: IwbMainRecord;
 
     function GetLoadOrder: Integer;
     procedure SetLoadOrder(aValue: Integer);
@@ -2532,6 +2533,21 @@ begin
       Exit;
 
   Result := nil;
+end;
+
+function TwbFile.GetHeader: IwbMainRecord;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+  DoInit;
+
+  if (Length(cntElements) > 0) and
+     (Supports(cntElements[0], IwbMainRecord, Result)) and
+     (Result.Signature = wbHeaderSignature) then begin
+    {Result already set}
+  end else
+    Result := nil;
 end;
 
 function TwbFile.GetIsEditable: Boolean;
