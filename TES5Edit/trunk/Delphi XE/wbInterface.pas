@@ -738,6 +738,7 @@ type
 
     function GetRecord(aIndex: Integer): IwbMainRecord;
     function GetRecordCount: Integer;
+    function GetHeader: IwbMainRecord;
 
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
@@ -767,6 +768,9 @@ type
       read GetRecord;
     property RecordCount: Integer
       read GetRecordCount;
+
+    property Header: IwbMainRecord
+      read GetHeader;
 
     property LoadOrder: Integer
       read GetLoadOrder;

@@ -3130,46 +3130,47 @@ begin
 
         CheckListBox1.Items.Assign(sl);
 
-        if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
-            j := CheckListBox1.Items.IndexOf(wbPluginToUse);
-            if j < 0 then begin
-              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
-              frmMain.Close;
-              Exit;
-            end else
-              CheckListBox1.Checked[j] := True;
-
-            // More plugins requested ?
-            while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
-              j := CheckListBox1.Items.IndexOf(s);
+        if not wbQuickClean then
+          if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
+              j := CheckListBox1.Items.IndexOf(wbPluginToUse);
               if j < 0 then begin
-                AddMessage('Note: Selected plugin "' + s + '" does not exist');
+                ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
                 frmMain.Close;
                 Exit;
               end else
                 CheckListBox1.Checked[j] := True;
-            end;
-        end else begin
-          // check active files using the game's plugins list
-          sl.LoadFromFile(wbPluginsFileName);
-          for i := Pred(sl.Count) downto 0 do begin
-            s := Trim(sl.Strings[i]);
-            j := Pos('#', s);
-            if j > 0 then
-              System.Delete(s, j, High(Integer));
-            s := Trim(s);
-            if s = '' then begin
-              sl.Delete(i);
-              Continue;
-            end;
 
-            j := CheckListBox1.Items.IndexOf(s);
-            if j < 0 then
-              AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
-            else
-              CheckListBox1.Checked[j] := True;
+              // More plugins requested ?
+              while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
+                j := CheckListBox1.Items.IndexOf(s);
+                if j < 0 then begin
+                  AddMessage('Note: Selected plugin "' + s + '" does not exist');
+                  frmMain.Close;
+                  Exit;
+                end else
+                  CheckListBox1.Checked[j] := True;
+              end;
+          end else begin
+            // check active files using the game's plugins list
+            sl.LoadFromFile(wbPluginsFileName);
+            for i := Pred(sl.Count) downto 0 do begin
+              s := Trim(sl.Strings[i]);
+              j := Pos('#', s);
+              if j > 0 then
+                System.Delete(s, j, High(Integer));
+              s := Trim(s);
+              if s = '' then begin
+                sl.Delete(i);
+                Continue;
+              end;
+
+              j := CheckListBox1.Items.IndexOf(s);
+              if j < 0 then
+                AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
+              else
+                CheckListBox1.Checked[j] := True;
+            end;
           end;
-        end;
 
         if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
           ShowModal;
@@ -3188,6 +3189,13 @@ begin
           for i := 0 to Pred(CheckListBox1.Count) do
             if CheckListBox1.Checked[i] then
               sl.Add(CheckListBox1.Items[i]);
+
+          if wbQuickClean then
+            if sl.Count <> 1 then begin
+              MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
+              frmMain.Close;
+              Exit;
+            end;
 
           while sl.Count > 0 do begin
             sl2.Clear;
@@ -3259,121 +3267,125 @@ begin
             end;
           end;
 
-          for l := 0 to sl.Count do begin
-            if l >= sl.Count then
-              ModGroupFile := wbModGroupFileName
-            else
-              ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
+          if not wbQuickClean then
+            for l := 0 to sl.Count do begin
+              if l >= sl.Count then
+                ModGroupFile := wbModGroupFileName
+              else
+                ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
 
-            if FileExists(ModGroupFile) then
-              with TMemIniFile.Create(ModGroupFile) do try
-                ModGroupFile := ExtractFileName(ModGroupFile);
-                sl3 := TStringList.Create;
-                try
-                ReadSections(sl3);
-                for i := 0 to Pred(sl3.Count) do begin
-                  MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
-                  sl2 := TStringList.Create;
+              if FileExists(ModGroupFile) then
+                with TMemIniFile.Create(ModGroupFile) do try
+                  ModGroupFile := ExtractFileName(ModGroupFile);
+                  sl3 := TStringList.Create;
                   try
-                    if ModGroups.IndexOf(sl3[i]) >= 0 then
-                      AddMessage(MessagePrefix + 'ModGroup of same name already defined')
-                    else begin
-                      MessageGiven := False;
-                      ReadSectionValues(sl3[i], sl2);
+                  ReadSections(sl3);
+                  for i := 0 to Pred(sl3.Count) do begin
+                    MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
+                    sl2 := TStringList.Create;
+                    try
+                      if ModGroups.IndexOf(sl3[i]) >= 0 then
+                        AddMessage(MessagePrefix + 'ModGroup of same name already defined')
+                      else begin
+                        MessageGiven := False;
+                        ReadSectionValues(sl3[i], sl2);
 
-                      for j := Pred(sl2.Count) downto 0 do begin
-                        s := Trim(sl2[j]);
-                        k := Pos(';', s);
-                        if k > 0 then begin
-                          Delete(s, k, High(Integer));
-                          s := Trim(s);
-                        end;
-                        if Length(s) > 0 then begin
-                          IsOptional := s[1] = '+';
-                          IsRequired := s[1] = '-';
-                          if IsOptional or IsRequired then begin
-                            Delete(s, 1, 1);
-                            sl2[j] := s;
-                          end;
-                        end else begin // Only to quiet the compiler (W1036).
-                          IsOptional := False;
-                          IsRequired := False;
-                        end;
-                        ValidCRCs := nil;
-                        if Length(s) > 0 then begin
-                          k := Pos(':', s);
-                          if k > 1 then begin
-                            ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                        for j := Pred(sl2.Count) downto 0 do begin
+                          s := Trim(sl2[j]);
+                          k := Pos(';', s);
+                          if k > 0 then begin
                             Delete(s, k, High(Integer));
                             s := Trim(s);
                           end;
-                        end;
-                        if Length(s) > 0 then begin
-                          k := sl.IndexOf(s);
-                          if k >= 0 then begin
-                            if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
-                              AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
-                              MessageGiven := True;
-                              sl2.Clear;
-                              break;
-                            end else
-                              if IsRequired then
-                                sl2.Objects[j] := TObject(-k)
-                              else
-                                sl2.Objects[j] := TObject(k)
-                          end else begin
-                            if IsOptional then
-                              sl2.Delete(j)
-                            else begin
-                              AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                              MessageGiven := True;
-                              sl2.Clear;
-                              break;
-                            end
+                          if Length(s) > 0 then begin
+                            IsOptional := s[1] = '+';
+                            IsRequired := s[1] = '-';
+                            if IsOptional or IsRequired then begin
+                              Delete(s, 1, 1);
+                              sl2[j] := s;
+                            end;
+                          end else begin // Only to quiet the compiler (W1036).
+                            IsOptional := False;
+                            IsRequired := False;
                           end;
-                        end else
-                          sl2.Delete(j);
-                      end;
-
-                      if sl2.Count < 2 then begin
-                        if not MessageGiven then
-                          AddMessage(MessagePrefix + 'less then 2 plugins active');
-                      end else begin
-                        k := Abs(Integer(sl2.Objects[0]));
-                        for j := 1 to Pred(sl2.Count) do begin
-                          if Abs(Integer(sl2.Objects[j])) <= k then begin
-                            sl2.Clear;
-                            MessageGiven := True;
-                            AddMessage(MessagePrefix + 'plugins are not in the correct order');
-                            Break;
+                          ValidCRCs := nil;
+                          if Length(s) > 0 then begin
+                            k := Pos(':', s);
+                            if k > 1 then begin
+                              ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                              Delete(s, k, High(Integer));
+                              s := Trim(s);
+                            end;
                           end;
-                        end;
-                        for j := Pred(sl2.Count) downto 0 do
-                          if Integer(sl2.Objects[j]) < 0 then
+                          if Length(s) > 0 then begin
+                            k := sl.IndexOf(s);
+                            if k >= 0 then begin
+                              if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
+                                AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
+                                MessageGiven := True;
+                                sl2.Clear;
+                                break;
+                              end else
+                                if IsRequired then
+                                  sl2.Objects[j] := TObject(-k)
+                                else
+                                  sl2.Objects[j] := TObject(k)
+                            end else begin
+                              if IsOptional then
+                                sl2.Delete(j)
+                              else begin
+                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                                MessageGiven := True;
+                                sl2.Clear;
+                                break;
+                              end
+                            end;
+                          end else
                             sl2.Delete(j);
-                        if sl2.Count >= 2 then begin
-                          ModGroups.AddObject(sl3[i], sl2);
-                          sl2 := nil;
-                        end else
+                        end;
+
+                        if sl2.Count < 2 then begin
                           if not MessageGiven then
                             AddMessage(MessagePrefix + 'less then 2 plugins active');
+                        end else begin
+                          k := Abs(Integer(sl2.Objects[0]));
+                          for j := 1 to Pred(sl2.Count) do begin
+                            if Abs(Integer(sl2.Objects[j])) <= k then begin
+                              sl2.Clear;
+                              MessageGiven := True;
+                              AddMessage(MessagePrefix + 'plugins are not in the correct order');
+                              Break;
+                            end;
+                          end;
+                          for j := Pred(sl2.Count) downto 0 do
+                            if Integer(sl2.Objects[j]) < 0 then
+                              sl2.Delete(j);
+                          if sl2.Count >= 2 then begin
+                            ModGroups.AddObject(sl3[i], sl2);
+                            sl2 := nil;
+                          end else
+                            if not MessageGiven then
+                              AddMessage(MessagePrefix + 'less then 2 plugins active');
+                        end;
                       end;
-                    end;
 
-                  finally
-                    FreeAndNil(sl2);
+                    finally
+                      FreeAndNil(sl2);
+                    end;
                   end;
-                end;
+                  finally
+                    FreeAndNil(sl3);
+                  end;
                 finally
-                  FreeAndNil(sl3);
+                  Free;
                 end;
-              finally
-                Free;
-              end;
-          end;
+            end;
         finally
           Free;
         end;
+
+      if wbQuickClean then
+        Assert(ModGroups.Count = 0);
 
       if ModGroups.Count > 0 then begin
         with TfrmFileSelect.Create(nil) do try
@@ -3457,10 +3469,13 @@ begin
       mniModGroupsDisabled.Checked := not ModGroupsEnabled;
 
       // hold shift to skip bulding references
-      if GetKeyState(VK_SHIFT) < 0 then begin
+      if (GetKeyState(VK_SHIFT) < 0) then begin
         wbBuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
+
+      if wbQuickClean then
+        wbBuildRefs := False;
 
       wbStartTime := Now;
       TLoaderThread.Create(sl);
@@ -13756,6 +13771,28 @@ begin
     not wbIKnowWhatImDoing;
   if wbQuickShowConflicts then
     mniNavFilterConflicts.Click;
+
+  if wbQuickClean then begin
+    mniNavFilterForCleaning.Click;
+    JumpTo(Files[High(Files)].Header, False);
+    vstNav.ClearSelection;
+    vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+    vstNav.Selected[vstNav.FocusedNode] := True;
+    SetActiveRecord(nil);
+    pgMain.ActivePage := tbsMessages;
+    mniNavUndeleteAndDisableReferences.Click;
+    mniNavRemoveIdenticalToMaster.Click;
+
+    mniNavFilterForCleaning.Click;
+    JumpTo(Files[High(Files)].Header, False);
+    vstNav.ClearSelection;
+    vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+    vstNav.Selected[vstNav.FocusedNode] := True;
+    SetActiveRecord(nil);
+    pgMain.ActivePage := tbsMessages;
+    mniNavUndeleteAndDisableReferences.Click;
+    mniNavRemoveIdenticalToMaster.Click;
+  end;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
