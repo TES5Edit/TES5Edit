@@ -117,7 +117,7 @@ begin
 end;
 
 const
-  TheEmptyPlugin = 'EmptyPlugin.esp';
+  TheEmptyPlugin = 'SavesEmptyPlugin.esp';
 
 type
   TwbMainRecordEntryHeader = record
@@ -301,7 +301,7 @@ type
     function GetSkipped: Boolean; virtual;
     function GetDef: IwbNamedDef; virtual;
     function GetValueDef: IwbValueDef; virtual;
-    function GetElementType: TwbElementType; virtual; abstract;
+    function GetElementType: TwbElementType; virtual;
     procedure DoReset(aForce: Boolean); virtual;
     function GetContainer: IwbContainer;
     function GetContainingMainRecord: IwbMainRecord; virtual;
@@ -2486,7 +2486,7 @@ begin
     Sorted := False;
 
     for i := Pred(Count) downto 0 do
-      if wbFindRecordDef(Strings[i], RecordDef) then
+      if wbFindRecordDef(AnsiString(Strings[i]), RecordDef) then
         Strings[i] := Strings[i] + ' - ' + RecordDef.Name
       else
         Delete(i);
@@ -5590,7 +5590,7 @@ const
 procedure TwbMainRecord.CollapseStorage;
 var
   Stream  : TMemoryStream;
-  Len     : Cardinal;
+//  Len     : Cardinal;
 begin
   if (esModified in eStates) then begin
     PrepareSave;
@@ -6180,7 +6180,7 @@ begin
 
   j := 0;
   for i := Low(Result) to High(Result) do
-    if wbFindRecordDef(Result[i], RecordDef) then begin
+    if wbFindRecordDef(AnsiString(Result[i]), RecordDef) then begin
       Result[j] := Result[i] + ' - ' + RecordDef.Name;
       Inc(j);
     end;
@@ -10607,7 +10607,7 @@ begin
   end;
   j := 0;
   for i := Low(Result) to High(Result) do
-    if wbFindRecordDef(Result[i], RecordDef) then begin
+    if wbFindRecordDef(AnsiString(Result[i]), RecordDef) then begin
       Result[j] := Result[i] + ' - ' + RecordDef.Name;
       Inc(j);
     end;
@@ -10706,7 +10706,7 @@ begin
   case grStruct.grsGroupType of
     0: begin
       Result := PwbSignature(@grStruct.grsLabel)^;
-      if wbFindRecordDef(Result, RecordDef) then
+      if wbFindRecordDef(AnsiString(Result), RecordDef) then
         Result := RecordDef.GetName;
     end;
     1: Result := 'World Children';
@@ -11822,6 +11822,12 @@ end;
 function TwbElement.GetElementStates: TwbElementStates;
 begin
   Result := eStates;
+end;
+
+function TwbElement.GetElementType: TwbElementType;
+begin
+  Assert(False, 'This method is abstract');
+  Result := TwbElementType(-1);
 end;
 
 function TwbElement.GetFile: IwbFile;
@@ -15786,8 +15792,10 @@ begin
         AddMaster(fPath)
       else if wbUseFalsePlugins then begin
         fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        if not FileExists(fPath) then
+          fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(CreateTemporaryCopy(fPath, MasterFiles[i].Value), True);
+          AddMaster(CreateTemporaryCopy(fPath, ChangeFileExt(MasterFiles[i].Value,'.000')), True);
       end;
     end;
 

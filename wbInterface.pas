@@ -112,7 +112,8 @@ var
   wbDumpOffset : Integer  = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
   wbBaseOffset : Cardinal = 0;
 
-  wbDataPath : string;
+  wbProgramPath : string;
+  wbDataPath    : string;
 
   wbSpeedOverMemory : Boolean = False;
 
@@ -4576,6 +4577,7 @@ type
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
+    function GetDefTypeName: string; override;
     function CanContainFormIDs: Boolean; override;
     function GetHasDontShow: Boolean; override;
     function GetDontShow(const aElement: IwbElement): Boolean; override;
@@ -13893,6 +13895,11 @@ begin
   Result := dtFlag;
 end;
 
+function TwbFlagDef.GetDefTypeName: string;
+begin
+  Result := 'FlagDef';
+end;
+
 function TwbFlagDef.GetDontShow(const aElement: IwbElement): Boolean;
 begin
   Result := GetFlagsDef.FlagDontShow[aElement, GetFlagIndex];
@@ -13936,6 +13943,8 @@ initialization
   wbDoNotBuildRefsFor := TStringList.Create;
   wbDoNotBuildRefsFor.Sorted := True;
   wbDoNotBuildRefsFor.Duplicates := dupIgnore;
+
+  wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbDoNotBuildRefsFor);
