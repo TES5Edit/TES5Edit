@@ -295,13 +295,15 @@ end;
 
 function TwbBaseCachedFileStream.ReadStringLen: string;
 var
-  Len: Byte;
-  s: AnsiString;
+  Len : Byte;
+  s   : AnsiString;
 begin
   ReadBuffer(Len, 1);
   SetLength(s, Len);
-  ReadBuffer(s[1], Len);
-  SetLength(s, Pred(Length(s)));
+  if Len > 0 then begin
+    ReadBuffer(s[1], Len);
+    SetLength(s, Pred(Length(s)));
+  end;
   Result := s;
 end;
 
