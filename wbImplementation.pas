@@ -377,6 +377,7 @@ type
 
     function BeginUpdate: Integer;
     function EndUpdate: Integer;
+    procedure UpdatedEnded; virtual;
 
     constructor Create(const aContainer: IwbContainer);
     procedure BeforeDestruction; override;
@@ -1423,7 +1424,8 @@ type
 
   TwbGroupState = (
     gsSorted,
-    gsSorting
+    gsSorting,
+    gsSortPostponed
   );
 
   TwbGroupStates = set of TwbGroupState;
@@ -1460,6 +1462,9 @@ type
     function GetAddList: TDynStrings; override;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
     procedure Sort;
+
+    procedure UpdatedEnded; override;
+
 
     procedure PrepareSave; override;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
@@ -5590,7 +5595,7 @@ const
 procedure TwbMainRecord.CollapseStorage;
 var
   Stream  : TMemoryStream;
-//  Len     : Cardinal;
+
 begin
   if (esModified in eStates) then begin
     PrepareSave;
@@ -11153,6 +11158,11 @@ begin
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
 
+  if eUpdateCount > 0 then begin
+    Include(grStates, gsSortPostponed);
+    Exit;
+  end;
+
   Include(grStates, gsSorting);
   try
     ChildrenOf := GetChildrenOf;
@@ -11264,6 +11274,15 @@ begin
   end;
 end;
 
+procedure TwbGroupRecord.UpdatedEnded;
+begin
+  if gsSortPostponed in grStates then begin
+    Exclude(grStates, gsSortPostponed);
+    Sort;
+  end;
+  inherited;
+end;
+
 procedure TwbGroupRecord.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
 var
   CurrentPosition   : Int64;
@@ -11325,11 +11344,13 @@ begin
     end else
         CodeSite.Send('aElement', 'nil');
   end;
-  try
   {$ENDIF}
+  BeginUpdate;
+  try
     Result := AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
-  {$IFDEF USE_CODESITE}
   finally
+    EndUpdate;
+  {$IFDEF USE_CODESITE}
     if Log then begin
       CodeSite.Send('Self.Value', Self.GetValue);
       if Assigned(Result) then begin
@@ -11340,8 +11361,8 @@ begin
         CodeSite.Send('Result', 'nil');
       CodeSite.ExitMethod(Self, 'AddIfMissing');
     end;
-  end;
   {$ENDIF}
+  end;
 end;
 
 function TwbElement.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
@@ -11660,25 +11681,11 @@ end;
 
 function TwbElement.EndUpdate: Integer;
 
-  procedure UpdateModified;
-  begin
-    (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
-  end;
-
 begin
   Result := Pred(eUpdateCount);
   eUpdateCount := Result;
-  if (Result = 0) then begin
-    if esChangeNotified in eStates then begin
-      Exclude(eStates, esChangeNotified);
-      NotifyChanged(eContainer);
-    end;
-    if esModifiedUpdated in eStates then begin
-      Exclude(eStates, esModifiedUpdated);
-      if Assigned(eContainer) and (esModified in eStates) then
-        UpdateModified;
-    end;
-  end;
+  if Result = 0 then
+    UpdatedEnded;
 end;
 
 function TwbElement.Equals(const aElement: IwbElement): Boolean;
@@ -12423,6 +12430,19 @@ end;
 procedure TwbElement.Tag;
 begin
   Include(eStates, esTagged);
+end;
+
+procedure TwbElement.UpdatedEnded;
+begin
+  if esChangeNotified in eStates then begin
+    Exclude(eStates, esChangeNotified);
+    NotifyChanged(eContainer);
+  end;
+  if esModifiedUpdated in eStates then begin
+    Exclude(eStates, esModifiedUpdated);
+    if Assigned(eContainer) and (esModified in eStates) then
+      (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
+  end;
 end;
 
 procedure TwbElement.WriteToStream(aStream: TStream; aResetModified: Boolean);
