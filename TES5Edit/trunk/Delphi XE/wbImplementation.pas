@@ -11411,11 +11411,13 @@ begin
     CodeSite.EnterMethod(Self, 'Assign');
     CodeSite.Send('Self.Name', Self.GetName);
     CodeSite.Send('Self.Path', Self.GetPath);
+    CodeSite.Send('Self.DataSize', Self.GetDataSize);
     CodeSite.Send('Self.Value', Self.GetValue);
     CodeSite.Send('aIndex', aIndex);
     if Assigned(aElement) then begin
       CodeSite.Send('aElement.Name', aElement.Name);
       CodeSite.Send('aElement.Path', aElement.Path);
+      CodeSite.Send('aElement.DataSize', aElement.GetDataSize);
       CodeSite.Send('aElement.Value', aElement.Value);
     end else
       CodeSite.Send('aElement', 'nil');
@@ -11430,9 +11432,11 @@ begin
   {$IFDEF USE_CODESITE}
     if Log then begin
       CodeSite.Send('Self.Value', Self.GetValue);
+      CodeSite.Send('Self.DataSize', Self.GetDataSize);
       if Assigned(Result) then begin
         CodeSite.Send('Result.Name', Result.Name);
         CodeSite.Send('Result.Path', Result.Path);
+        CodeSite.Send('Result.DataSize', Result.GetDataSize);
         CodeSite.Send('Result.Value', Result.Value);
       end else
         CodeSite.Send('Result', 'nil');
@@ -13658,12 +13662,12 @@ begin
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
 
-    if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
+    {if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
       with aContainer do begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
       end;
-    end else begin
+    end else} begin
       Element.SetSortOrder(i);
       Element.SetMemoryOrder(i);
     end;
@@ -13764,12 +13768,12 @@ begin
   end;
 
   if Assigned(Element) then
-    if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
+    {if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
       with aContainer do begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
       end;
-    end else begin
+    end else} begin
       Element.SetSortOrder(0);
       Element.SetMemoryOrder(0);
     end;
@@ -14596,7 +14600,7 @@ end;
 
 function TwbDataContainer.GetDataSize: Integer;
 begin
-  if (dcfStorageInvalid in dcFlags) or not Assigned(dcDataBasePtr) then
+  if (dcfStorageInvalid in dcFlags) or not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr) then
     Result := inherited GetDataSize + GetDataPrefixSize
   else
     Result := Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr );
